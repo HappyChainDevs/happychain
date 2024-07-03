@@ -1,0 +1,44 @@
+{
+    "name": "@happychain/frontend",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "browser": {
+        "fs": false,
+        "path": false,
+        "os": false
+    },
+    "dependencies": {
+        "@rainbow-me/rainbowkit": "^2.1.3",
+        "@tanstack/react-query": "^5.49.2",
+        "burner-connector": "^0.0.8",
+        "daisyui": "^4.12.10",
+        "jotai": "^2.8.4",
+        "jotai-devtools": "^0.10.0",
+        "next": "^14.2.4",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "tslib": "^2.6.3",
+        "viem": "^2.17.0",
+        "wagmi": "^2.10.9"
+    },
+    "devDependencies": {
+        "@types/eslint": "^8.56.10",
+        "@types/node": "^20.14.9",
+        "@types/react": "^18.3.3",
+        "@types/react-dom": "^18.3.0",
+        "@typescript-eslint/eslint-plugin": "^7.15.0",
+        "@typescript-eslint/parser": "^7.15.0",
+        "@wagmi/cli": "^2.1.13",
+        "autoprefixer": "^10.4.19",
+        "eslint": "^8.57.0",
+        "eslint-config-next": "^14.2.4",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-simple-import-sort": "^12.1.1",
+        "postcss": "^8.4.39",
+        "prettier": "3.3.2",
+        "prettier-plugin-tailwindcss": "^0.6.5",
+        "tailwindcss": "^3.4.4",
+        "typescript": "^5.5.3"
+    }
+}

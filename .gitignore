@@ -1,0 +1,24 @@
+# Environment variables
+*.env
+
+# MacOS
+.DS_Store
+
+# Node
+node_modules
+.pnpm-debug.log*
+
+# Contract outputs
+packages/contracts/cache/
+packages/contracts/out/
+packages/contracts/broadcast/
+packages/frontend/src/generated.ts
+
+# IntelliJ config
+.idea/
+*.iml
+
+# frontend outputs
+packages/frontend/.next
+packages/frontend/next-env.d.ts
+packages/frontend/tsconfig.tsbuildinfo
