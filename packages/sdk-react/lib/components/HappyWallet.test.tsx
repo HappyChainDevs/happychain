@@ -1,0 +1,96 @@
+import { render, screen } from "@testing-library/react";
+
+import { describe, expect, it } from "vitest";
+
+import clsx from "clsx";
+import { Provider } from "jotai";
+
+import { useHydrateAtoms } from "jotai/utils";
+import type { PropsWithChildren } from "react";
+
+import { userAtom } from "../state/happyUser";
+import { HappyWallet } from "./HappyWallet";
+
+const HydrateAtoms = ({
+	initialValues,
+	children,
+}: PropsWithChildren<{
+	initialValues: unknown[][];
+}>) => {
+	useHydrateAtoms(
+		initialValues as unknown as Parameters<typeof useHydrateAtoms>[0],
+	);
+	return children;
+};
+
+const JotaiTestProvider = ({
+	initialValues,
+	children,
+}: PropsWithChildren<{
+	initialValues: unknown[][];
+}>) => (
+	<Provider>
+		<HydrateAtoms initialValues={initialValues}>{children}</HydrateAtoms>
+	</Provider>
+);
+
+const BASE_CLASS_NAMES = "hc-fixed hc-top-0 hc-right-0";
+
+describe("loads and displays greeting", () => {
+	it("inserts iframe in document", async () => {
+		render(<HappyWallet />);
+
+		expect(screen.getByTitle("happy-iframe")).toBeInTheDocument();
+	});
+
+	it("loads with initial classes", async () => {
+		render(<HappyWallet />);
+
+		await screen.findByTestId("happy-iframe");
+
+		expect(screen.getByTitle("happy-iframe")?.parentNode).toHaveClass(
+			clsx(
+				BASE_CLASS_NAMES,
+				"hc-w-28",
+				"hc-h-20",
+				"hc-rounded-lg",
+				"hc-overflow-hidden",
+			),
+		);
+	});
+
+	it("opens modal via message bus", async () => {
+		const initialValues = [
+			[
+				userAtom,
+				{
+					uid: "1",
+					email: "happy@example.com",
+					name: "Happy User",
+					avatar: "http://example.com",
+					provider: "testing",
+					type: "injected",
+					ens: "",
+					address: "0x1234",
+					addresses: ["0x12234"],
+				},
+			],
+		];
+
+		render(
+			<JotaiTestProvider initialValues={initialValues}>
+				<HappyWallet />
+			</JotaiTestProvider>,
+		);
+
+		expect(screen.getByTitle("happy-iframe")?.parentNode).toHaveClass(
+			clsx(
+				BASE_CLASS_NAMES,
+				"hc-w-52", // wider
+				"hc-h-20",
+				"hc-rounded-lg",
+				"hc-overflow-hidden",
+			),
+		);
+	});
+});
