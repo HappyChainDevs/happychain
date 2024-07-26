@@ -95,6 +95,20 @@ describe("EIP1193ProviderProxy", () => {
 		const providerBus = eventBus(busConfig);
 
 		const provider = new EIP1193ProviderProxy(providerBus, config);
-		const off = provider.on("connect", () => {});
+
+		const callback = mock(() => {});
+		provider.on("connect", callback);
+
+		provider.emit("connect");
+
+		expect(callback).toHaveBeenCalledTimes(1);
+
+		provider.removeListener("connect", callback);
+
+		provider.emit("connect");
+		provider.emit("connect");
+		provider.emit("connect");
+
+		expect(callback).toHaveBeenCalledTimes(1);
 	});
 });
