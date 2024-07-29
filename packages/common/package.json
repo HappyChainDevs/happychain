@@ -1,0 +1,17 @@
+{
+	"name": "@happychain/common",
+	"version": "1.0.0",
+	"description": "",
+	"main": "lib/index.ts",
+	"type": "module",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/react": "^18.3.3",
+		"react": "^18.3.1"
+	}
+}

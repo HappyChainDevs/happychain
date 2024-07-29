@@ -16,7 +16,6 @@ export const LocalStorage = {
 			return JSON.parse(data) as StorageSchema[T];
 		}
 
-		console.error(`localStorage missing object with key ${key}`);
 		return null;
 	},
 
