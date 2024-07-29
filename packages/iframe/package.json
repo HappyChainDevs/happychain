@@ -30,6 +30,7 @@
 		"@vitejs/plugin-react-swc": "^3.7.0",
 		"autoprefixer": "^10.4.19",
 		"daisyui": "^4.12.10",
+		"empty-module": "^0.0.2",
 		"eslint": "^8.57.0",
 		"eslint-plugin-react-hooks": "^4.6.2",
 		"eslint-plugin-react-refresh": "^0.4.9",

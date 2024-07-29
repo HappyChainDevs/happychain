@@ -1,4 +1,4 @@
-import { useIsHydrated } from "@happychain/common";
+// import { useIsHydrated } from "@happychain/common";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { lazy } from "react";
 // import { JotaiDebug } from "../components/JotaiDebug";
@@ -23,7 +23,7 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-	const isHydrated = useIsHydrated();
+	// const isHydrated = useIsHydrated();
 	return (
 		<>
 			<Outlet />

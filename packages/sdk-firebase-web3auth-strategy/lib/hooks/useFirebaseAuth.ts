@@ -7,24 +7,15 @@ import {
 	onAuthStateChanged,
 	signInWithPopup,
 } from "firebase/auth";
-import {
-	atom,
-	type createStore,
-	getDefaultStore,
-	useAtom,
-	type useAtomValue,
-	useSetAtom,
-} from "jotai";
+import { atom, useAtom, useSetAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { createContext, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import type { EIP1193Provider } from "viem";
 import { firebaseAuth } from "../services/firebase";
 import { connect, disconnect, web3AuthEvmProvider } from "../services/web3auth";
 
 export type SignInProvider = "google";
 
-// const internalStateContext = createContext("unauthenticated");
-// let internalStateContext = "unauthenticated";
 const internalAuthStateAtom = atomWithStorage(
 	"firebase-auth",
 	"unauthenticated",
@@ -38,65 +29,13 @@ const firebaseAuthStateAtom = atom<{
 	provider: web3AuthEvmProvider,
 });
 
-const store = getDefaultStore();
-
-// const store = createStore();
-// onAuthStateChanged(firebaseAuth, async (_user) => {
-// 	if (!_user?.uid) {
-// 		await disconnect();
-
-// 		store.set(firebaseAuthStateAtom, {
-// 			user: null,
-// 			provider: web3AuthEvmProvider,
-// 		});
-// 		internalStateContext = "unauthenticated";
-// 		// store.set(internalAuthStateAtom, "unauthenticated");
-// 		return;
-// 	}
-
-// 	const token = await _user.getIdTokenResult(true);
-
-// 	if (!token.claims.sub) {
-// 		throw new Error("No verified ID");
-// 	}
-// 	const idTokenLoginParams = {
-// 		verifier: "supabase-1", // actually firebase tho
-// 		verifierId: token.claims.sub,
-// 		idToken: token.token,
-// 	} satisfies IdTokenLoginParams;
-
-// 	const addresses = await connect(idTokenLoginParams);
-
-// 	const nextUser: HappyUser = {
-// 		// connection type
-// 		type: "social",
-// 		provider: "google",
-// 		// social details
-// 		uid: _user.uid,
-// 		email: _user.email || "",
-// 		name: _user.displayName || "",
-// 		ens: "", // TODO?
-// 		avatar: _user.photoURL || "",
-// 		// web3 details
-// 		address: addresses[0],
-// 		addresses,
-// 	};
-
-// 	store.set(firebaseAuthStateAtom, {
-// 		user: nextUser,
-// 		provider: web3AuthEvmProvider,
-// 	});
-// 	internalStateContext = "authenticated";
-// 	// store.set(internalAuthStateAtom, "authenticated");
-// });
-
 async function signInWithGoogle(auth: Auth) {
 	const googleProvider = new GoogleAuthProvider();
 	return await signInWithPopup(auth, googleProvider).then((a) => a.user);
 }
 
 function useSignIn(auth: Auth) {
-	const setAuthState = useSetAtom(internalAuthStateAtom, { store });
+	const setAuthState = useSetAtom(internalAuthStateAtom);
 	const signIn = useCallback(
 		async (provider: SignInProvider) => {
 			setAuthState("loading");
@@ -125,9 +64,8 @@ function useSignOut(auth: Auth) {
 function useOnAuthChange() {
 	const [internalAuthState, setInternalAuthState] = useAtom(
 		internalAuthStateAtom,
-		{ store },
 	);
-	const [userAuth, setUserAuth] = useAtom(firebaseAuthStateAtom, { store });
+	const [userAuth, setUserAuth] = useAtom(firebaseAuthStateAtom);
 	useEffect(() => {
 		onAuthStateChanged(firebaseAuth, async (_user) => {
 			if (!_user?.uid) {
