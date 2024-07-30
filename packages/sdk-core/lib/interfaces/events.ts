@@ -1,10 +1,9 @@
-import type { EventHandler, EventKey } from "../services/eventBus";
 import type { HappyUser } from "./happyUser";
 
-export interface HappyEvents extends Record<EventKey, EventHandler> {
+export interface HappyEvents {
 	// modal states
-	"modal-toggle": EventHandler<boolean>;
+	"modal-toggle": boolean;
 
 	// user auth
-	"auth-changed": EventHandler<HappyUser | null>;
+	"auth-changed": HappyUser | null;
 }

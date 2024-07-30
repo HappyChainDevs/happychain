@@ -1,3 +1,5 @@
+import type { Logger } from "../logger";
+
 /**
  * Port1 & Port2 communicate exclusively with each other
  * There can be at most one of each per scope
@@ -14,27 +16,38 @@ export enum EventBusChannel {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export type EventHandler<TPayload = any> = (payload: TPayload) => void;
+export type EventPayload<T = any> = T;
 export type EventKey = string | number | symbol;
-export type EventMap = Record<EventKey, EventHandler>;
-export type Bus = Map<EventKey, Set<EventHandler>>;
 
-export interface EventBus<T extends EventMap = EventMap> {
-	on<Key extends keyof T>(key: Key, handler: T[Key]): () => void;
-	off<Key extends keyof T>(key: Key, handler: T[Key]): void;
-	emit<Key extends keyof T>(key: Key, payload: Parameters<T[Key]>[0]): void;
-	once<Key extends keyof T>(key: Key, handler: T[Key]): void;
+export type EventHandler<T extends EventPayload = EventPayload> = (
+	payload: T,
+) => void;
+
+export type EventSchema = Record<EventKey, EventPayload>;
+export type EventMap = Map<EventKey, Set<EventHandler>>;
+
+export interface EventBus<T extends EventSchema> {
+	on<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): () => void;
+	off<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): void;
+	once<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): void;
+	emit<Key extends keyof T>(key: Key, payload: T[Key]): void;
 	clear(): void;
 
 	// compatibility methods
 	removeAllListeners(): void;
-	addListener<Key extends keyof T>(key: Key, handler: T[Key]): () => void;
-	removeListener<Key extends keyof T>(key: Key, handler: T[Key]): void;
+	addListener<Key extends keyof T>(
+		key: Key,
+		handler: EventHandler<T[Key]>,
+	): () => void;
+	removeListener<Key extends keyof T>(
+		key: Key,
+		handler: EventHandler<T[Key]>,
+	): void;
 }
 
 export type EventBusOptions = {
 	scope: string;
-	logger?: Pick<typeof console, "log" | "warn" | "error">;
+	logger?: Logger;
 	onError?: (...params: unknown[]) => void;
 } & (
 	| { mode: EventBusChannel.Port1; target: Window }
@@ -43,10 +56,11 @@ export type EventBusOptions = {
 	| { mode: EventBusChannel.Forced; port: MessagePort | BroadcastChannel }
 );
 
-export function eventBus<E extends EventMap>(
+export function eventBus<TDefinition extends EventSchema>(
 	config: EventBusOptions,
-): EventBus<E> {
-	const bus: Bus = new Map();
+): EventBus<TDefinition> {
+	const handlerMap: EventMap = new Map();
+
 	let port: MessagePort | BroadcastChannel | null = null;
 
 	/**
@@ -93,7 +107,7 @@ export function eventBus<E extends EventMap>(
 				return;
 			}
 
-			for (const fn of bus.get(event.data.type) ?? []) {
+			for (const fn of handlerMap.get(event.data.type) ?? []) {
 				try {
 					fn(event.data.payload);
 				} catch (e) {
@@ -113,22 +127,22 @@ export function eventBus<E extends EventMap>(
 	}
 
 	// public event bus functions
-	const off: EventBus<E>["off"] = (key, handler) => {
-		bus.get(key)?.delete(handler);
-		if (bus.get(key)?.size === 0) {
-			bus.delete(key);
+	const off: EventBus<TDefinition>["off"] = (key, handler) => {
+		handlerMap.get(key)?.delete(handler);
+		if (handlerMap.get(key)?.size === 0) {
+			handlerMap.delete(key);
 		}
 	};
 
-	const on: EventBus<E>["on"] = (key, handler) => {
-		const prev = bus.get(key) ?? new Set();
-		bus.set(key, prev.add(handler));
+	const on: EventBus<TDefinition>["on"] = (key, handler) => {
+		const prev = handlerMap.get(key) ?? new Set();
+		handlerMap.set(key, prev.add(handler));
 
 		// unsubscribe function
 		return () => off(key, handler);
 	};
 
-	const emit: EventBus<E>["emit"] = (key, payload) => {
+	const emit: EventBus<TDefinition>["emit"] = (key, payload) => {
 		if (!port) {
 			config.logger?.warn(
 				`[EventBus] Port not initialized ${config.mode}=>${config.scope}`,
@@ -140,19 +154,19 @@ export function eventBus<E extends EventMap>(
 		return Boolean(port); // if port exists, assume successful
 	};
 
-	const once: EventBus<E>["once"] = (key, handler) => {
-		const handleOnce = (payload: Parameters<typeof handler>) => {
+	const once: EventBus<TDefinition>["once"] = (key, handler) => {
+		const handleOnce: typeof handler = (payload) => {
 			handler(payload);
-			off(key, handleOnce as typeof handler);
+			off(key, handleOnce);
 		};
 
-		on(key, handleOnce as typeof handler);
+		on(key, handleOnce);
 	};
 
-	const clear: EventBus<E>["clear"] = () => {
-		for (const [key, handlers] of bus) {
+	const clear: EventBus<TDefinition>["clear"] = () => {
+		for (const [key, handlers] of handlerMap) {
 			for (const handler of handlers) {
-				off(key, handler as E[typeof key]);
+				off(key, handler);
 			}
 		}
 	};

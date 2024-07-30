@@ -1,30 +1,51 @@
-import type { EIP1193EventMap, EIP1193RequestFn, RpcSchema } from "viem";
-import type { EventHandler, EventKey } from "../eventBus";
+import type {
+	EIP1193EventMap,
+	EIP1193RequestFn,
+	EIP1474Methods,
+	RpcSchema,
+	RpcSchemaOverride,
+} from "viem";
+
 import type { EIP1193ErrorObject } from "./errors";
+
+// pulled from Viem internals
+type DerivedRpcSchema<
+	rpcSchema extends RpcSchema | undefined,
+	rpcSchemaOverride extends RpcSchemaOverride | undefined,
+> = rpcSchemaOverride extends RpcSchemaOverride
+	? [rpcSchemaOverride & { Method: string }]
+	: rpcSchema;
 
 export type EventUUID = ReturnType<typeof crypto.randomUUID>;
 export type EIP1193RequestArg = Parameters<EIP1193RequestFn>[0];
+
 export type EIP1193RequestResult<
-	TRpcSchema extends RpcSchema | undefined = undefined,
-> = Awaited<ReturnType<EIP1193RequestFn<TRpcSchema>>>;
+	TParams extends EIP1193RequestArg = EIP1193RequestArg,
+> = DerivedRpcSchema<EIP1474Methods, undefined> extends RpcSchema
+	? Extract<
+			DerivedRpcSchema<EIP1474Methods, undefined>[number],
+			{ Method: TParams["method"] }
+		>["ReturnType"]
+	: unknown;
+
 export type EIP1193EventName = keyof EIP1193EventMap;
 
-export interface EIP1193ProxiedEvents extends Record<EventKey, EventHandler> {
+export interface EIP1193ProxiedEvents {
 	// user approves request
-	"request:approve": EventHandler<{
+	"request:approve": {
 		key: EventUUID;
 		error: null;
 		payload: EIP1193RequestArg;
-	}>;
+	};
 	// user rejects request
-	"request:reject": EventHandler<{
+	"request:reject": {
 		key: EventUUID;
 		error: EIP1193ErrorObject;
 		payload: null;
-	}>;
+	};
 
-	// request completed (success or fail) TODO: split?
-	"provider:request:complete": EventHandler<
+	// request completed (success or fail) TODO: split into seperate success/fail functions?
+	"provider:request:complete":
 		| {
 				key: EventUUID;
 				error: EIP1193ErrorObject;
@@ -33,13 +54,11 @@ export interface EIP1193ProxiedEvents extends Record<EventKey, EventHandler> {
 		| {
 				key: EventUUID;
 				error: null;
-				// TODO: complex viem types ReturnType<typeof walletClient.request | typeof publicClient.request>
 				payload: EIP1193RequestResult;
-		  }
-	>;
+		  };
 
 	// eip1193 events proxy
-	"provider:event": EventHandler<{
+	"provider:event": {
 		payload: { event: EIP1193EventName; args: unknown };
-	}>;
+	};
 }

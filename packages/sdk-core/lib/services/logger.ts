@@ -1,1 +1,3 @@
-export const logger: Pick<typeof console, "log" | "warn" | "error"> = console;
+export type Logger = Pick<typeof console, "log" | "warn" | "error">;
+
+export const logger: Logger = console;
