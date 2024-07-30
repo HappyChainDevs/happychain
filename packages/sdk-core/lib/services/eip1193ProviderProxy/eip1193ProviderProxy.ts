@@ -60,8 +60,8 @@ export class EIP1193ProviderProxy
 	) {
 		super();
 
-		bus.on("provider:event", this.handleProviderNativeEvent);
-		bus.on("provider:request:complete", this.handleCompletedRequest);
+		bus.on("provider:event", this.handleProviderNativeEvent.bind(this));
+		bus.on("provider:request:complete", this.handleCompletedRequest.bind(this));
 		config.logger?.log("EIP1193Provider Created");
 	}
 

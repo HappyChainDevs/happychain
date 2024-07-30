@@ -96,7 +96,7 @@ describe("EIP1193ProviderProxy", () => {
 				method: "eth_getBlockByNumber",
 				params: ["latest", false],
 			}),
-		).resolves.toBe(emptyBlock);
+		).resolves.toStrictEqual(emptyBlock);
 	});
 
 	it("rejects on error", async () => {
