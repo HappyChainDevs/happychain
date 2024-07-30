@@ -17,10 +17,16 @@ webdev:
 	cd packages/frontend && make dev
 .PHONY: webdev
 
+iframe:
+	cd packages/iframe && make dev
+.PHONY: iframe
+
 # Builds the frontend and the contracts.
 build:
 	cd packages/contracts && make build
 	cd packages/frontend && make build
+	cd packages/sdk-react && make build
+	cd packages/iframe && make build
 .PHONY: build
 
 # Deploys to the contracts to the local node (requires anvil to be running).

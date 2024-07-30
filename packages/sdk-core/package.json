@@ -3,9 +3,6 @@
 	"version": "1.0.0",
 	"description": "",
 	"main": "lib/index.ts",
-	"scripts": {
-		"test": "bun test"
-	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
