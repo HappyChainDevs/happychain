@@ -8,7 +8,7 @@ const Iframe = memo(() => (
 	<iframe
 		title="happy-iframe"
 		data-testid="happy-iframe"
-		src={`${config.happyPath}/connect`}
+		src={`${config.iframePath}/connect`}
 		style={{ width: "100%", height: "100%" }}
 	/>
 ));

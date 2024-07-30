@@ -1,16 +1,22 @@
 import {
+	type EIP1193ErrorObject,
 	type EIP1193ProxiedEvents,
+	type EIP1193RequestResult,
 	EventBusChannel,
-	type EventHandler,
-	type EventKey,
 	type EventUUID,
+	type HappyEvents,
 	eventBus,
 } from "@happychain/core";
 
-export const messageBus = eventBus<EIP1193ProxiedEvents>({
+export const eip1193providerBus = eventBus<EIP1193ProxiedEvents>({
 	target: window.parent,
 	mode: EventBusChannel.Port1,
-	scope: "happy-chain-events",
+	scope: "happy-chain-eip1193-provider",
+});
+
+export const messageBus = eventBus<HappyEvents>({
+	mode: EventBusChannel.Port2,
+	scope: "happy-chain-eip1193-provider",
 });
 
 /**
@@ -18,17 +24,17 @@ export const messageBus = eventBus<EIP1193ProxiedEvents>({
  * Main use case is iframe<->popup communication
  */
 
-export interface BroadcastEvents extends Record<EventKey, EventHandler> {
-	"request:approve": EventHandler<{
+export interface BroadcastEvents {
+	"request:approve": {
 		error: null;
 		key: EventUUID;
-		payload: unknown;
-	}>;
-	"request:reject": EventHandler<{
-		error: { code: number; message: string; data: string };
+		payload: EIP1193RequestResult;
+	};
+	"request:reject": {
+		error: EIP1193ErrorObject;
 		key: EventUUID;
 		payload: null;
-	}>;
+	};
 }
 
 export const broadcastBus = eventBus<BroadcastEvents>({

@@ -214,9 +214,6 @@ importers:
       '@metamask/safe-event-emitter':
         specifier: ^3.1.1
         version: 3.1.1
-      '@types/bun':
-        specifier: latest
-        version: 1.1.6
       viem:
         specifier: ^2.18.4
         version: 2.18.4(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8)
@@ -224,6 +221,9 @@ importers:
       '@happy-dom/global-registrator':
         specifier: ^14.12.3
         version: 14.12.3
+      '@types/bun':
+        specifier: ^1.1.6
+        version: 1.1.6
       happy-dom:
         specifier: ^14.12.3
         version: 14.12.3
@@ -9884,7 +9884,7 @@ snapshots:
   '@grpc/grpc-js@1.9.15':
     dependencies:
       '@grpc/proto-loader': 0.7.13
-      '@types/node': 22.0.0
+      '@types/node': 20.14.13
 
   '@grpc/proto-loader@0.7.13':
     dependencies:
@@ -11808,7 +11808,7 @@ snapshots:
 
   '@types/bn.js@5.1.5':
     dependencies:
-      '@types/node': 22.0.0
+      '@types/node': 20.14.13
 
   '@types/bun@1.1.6':
     dependencies:
@@ -11890,7 +11890,7 @@ snapshots:
 
   '@types/secp256k1@4.0.6':
     dependencies:
-      '@types/node': 20.14.9
+      '@types/node': 20.14.13
 
   '@types/stack-utils@2.0.3': {}
 
@@ -11898,7 +11898,7 @@ snapshots:
 
   '@types/ws@8.5.12':
     dependencies:
-      '@types/node': 20.12.14
+      '@types/node': 20.14.13
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -16601,7 +16601,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.0.0
+      '@types/node': 20.14.13
       long: 5.2.3
 
   proxy-compare@2.5.1: {}

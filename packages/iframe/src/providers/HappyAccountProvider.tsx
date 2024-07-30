@@ -4,7 +4,11 @@ import { useAtomValue } from "jotai";
 import { type ReactNode, useEffect, useState } from "react";
 import { userAtom } from "../hooks/useHappyAccount";
 import { useInjectedProviders } from "../hooks/useInjectedProviders";
-import { broadcastBus, messageBus } from "../services/eventBus";
+import {
+	broadcastBus,
+	eip1193providerBus,
+	messageBus,
+} from "../services/eventBus";
 import {
 	providerAtom,
 	publicClientAtom,
@@ -35,7 +39,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
 	useEffect(() => {
 		const proxyEvent = (name: EIP1193EventName) => (event: unknown) => {
-			messageBus.emit("provider:event", {
+			eip1193providerBus.emit("provider:event", {
 				payload: { event: name, args: event },
 			});
 		};
@@ -66,7 +70,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 					payload.payload as Parameters<typeof walletClient.request>, // TODO: fix proper payload types instead of casting
 				);
 
-				messageBus.emit("provider:request:complete", {
+				eip1193providerBus.emit("provider:request:complete", {
 					key: payload.key,
 					error: null,
 					payload: result,
@@ -78,7 +82,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 			}
 		});
 		const offReject = broadcastBus.on("request:reject", (payload) => {
-			messageBus.emit("provider:request:complete", payload);
+			eip1193providerBus.emit("provider:request:complete", payload);
 		});
 		return () => {
 			offApprove();
@@ -89,49 +93,52 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 	// Untrusted requests can be called directly from the frontend and bypass the popup screen
 	// host:iframe communication
 	useEffect(() => {
-		const offApprove = messageBus.on("request:approve", async (data) => {
-			try {
-				const isPublicMethod = ["eth_call", "eth_getBlockByNumber"].includes(
-					data.payload.method,
-				);
+		const offApprove = eip1193providerBus.on(
+			"request:approve",
+			async (data) => {
+				try {
+					const isPublicMethod = ["eth_call", "eth_getBlockByNumber"].includes(
+						data.payload.method,
+					);
 
-				const isInjected = happyUser?.type === "injected";
+					const isInjected = happyUser?.type === "injected";
 
-				const injectedProvider = web3providers.find(
-					(i) => `injected:${isInjected}` === i.id,
-				);
+					const injectedProvider = web3providers.find(
+						(i) => `injected:${isInjected}` === i.id,
+					);
 
-				// TODO: use a proper list with shared config in the front
-				if (!injectedProvider && !isPublicMethod) {
-					// emit not allowed error
-					console.warn("can not execute untrusted request", data);
-					return;
+					// TODO: use a proper list with shared config in the front
+					if (!injectedProvider && !isPublicMethod) {
+						// emit not allowed error
+						console.warn("can not execute untrusted request", data);
+						return;
+					}
+
+					// injected providers are allowed to bypass the popup screen
+					// as they have their own in-built popup security model
+
+					const result =
+						isInjected && walletClient
+							? // TODO: fix with proper payload types
+								await walletClient.request(
+									data.payload as Parameters<typeof walletClient.request>,
+								)
+							: await publicClient.request(
+									data.payload as Parameters<typeof publicClient.request>,
+								);
+
+					eip1193providerBus.emit("provider:request:complete", {
+						key: data.key,
+						error: null,
+						payload: result,
+					});
+				} catch (e) {
+					// TODO: emit broken request error
+					console.error(e);
+					console.error("error executing request", data);
 				}
-
-				// injected providers are allowed to bypass the popup screen
-				// as they have their own in-built popup security model
-
-				const result =
-					isInjected && walletClient
-						? // TODO: fix with proper payload types
-							await walletClient.request(
-								data.payload as Parameters<typeof walletClient.request>,
-							)
-						: await publicClient.request(
-								data.payload as Parameters<typeof publicClient.request>,
-							);
-
-				messageBus.emit("provider:request:complete", {
-					key: data.key,
-					error: null,
-					payload: result,
-				});
-			} catch (e) {
-				// TODO: emit broken request error
-				console.error(e);
-				console.error("error executing request", data);
-			}
-		});
+			},
+		);
 		return () => {
 			offApprove();
 		};
