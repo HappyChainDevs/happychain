@@ -1,7 +1,7 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter";
 import type { EIP1193Provider, EIP1193RequestFn, EIP1474Methods } from "viem";
 import type { config } from "../../config";
-import type { EventBus } from "../eventBus";
+import type { IEventBus } from "../eventBus";
 import type { Logger } from "../logger";
 import {
 	EIP1193UserRejectedRequestError,
@@ -56,7 +56,7 @@ export class EIP1193ProviderProxy
 	private timer: Timer | null = null;
 
 	constructor(
-		private bus: EventBus<EIP1193ProxiedEvents>,
+		private bus: IEventBus<EIP1193ProxiedEvents>,
 		private config: EIP1193ProviderProxyConfig
 	) {
 		super();

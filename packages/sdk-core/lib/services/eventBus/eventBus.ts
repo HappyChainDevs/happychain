@@ -26,7 +26,7 @@ export type EventHandler<T extends EventPayload = EventPayload> = (
 export type EventSchema = Record<EventKey, EventPayload>;
 export type EventMap = Map<EventKey, Set<EventHandler>>;
 
-export interface EventBus<T extends EventSchema> {
+export interface IEventBus<T extends EventSchema> {
 	on<Key extends keyof T>(
 		key: Key,
 		handler: EventHandler<T[Key]>
@@ -36,7 +36,7 @@ export interface EventBus<T extends EventSchema> {
 	emit<Key extends keyof T>(key: Key, payload: T[Key]): void;
 	clear(): void;
 
-	// compatibility methods
+	// event emitter compatibility methods
 	removeAllListeners(): void;
 	addListener<Key extends keyof T>(
 		key: Key,
@@ -59,125 +59,123 @@ export type EventBusOptions = {
 	| { mode: EventBusChannel.Forced; port: MessagePort | BroadcastChannel }
 );
 
-export function eventBus<TDefinition extends EventSchema>(
-	config: EventBusOptions
-): EventBus<TDefinition> {
-	const handlerMap: EventMap = new Map();
+export class EventBus<TDefinition extends EventSchema>
+	implements IEventBus<TDefinition>
+{
+	private handlerMap: EventMap = new Map();
+	private port: MessagePort | BroadcastChannel | null = null;
 
-	let port: MessagePort | BroadcastChannel | null = null;
-
-	/**
-	 * Initialization Strategies
-	 */
-
-	switch (config.mode) {
-		case EventBusChannel.Forced:
-			registerPortListener(config.port);
-			break;
-		case EventBusChannel.Broadcast:
-			registerPortListener(new BroadcastChannel(config.scope));
-			break;
-		case EventBusChannel.Port1: {
-			const mc = new MessageChannel();
-			registerPortListener(mc.port1);
-			const message = `happychain:${config.scope}:init`;
-			config.target.postMessage(message, "*", [mc.port2]);
-			break;
-		}
-		case EventBusChannel.Port2: {
-			addEventListener("message", (e: MessageEvent) => {
+	constructor(private config: EventBusOptions) {
+		switch (config.mode) {
+			case EventBusChannel.Forced:
+				this.registerPortListener(config.port);
+				break;
+			case EventBusChannel.Broadcast:
+				this.registerPortListener(new BroadcastChannel(config.scope));
+				break;
+			case EventBusChannel.Port1: {
+				const mc = new MessageChannel();
+				this.registerPortListener(mc.port1);
 				const message = `happychain:${config.scope}:init`;
-				if (e.data === message && !port) {
-					registerPortListener(e.ports[0]);
-				}
-			});
-			break;
+				config.target.postMessage(message, "*", [mc.port2]);
+				break;
+			}
+			case EventBusChannel.Port2: {
+				addEventListener("message", (e: MessageEvent) => {
+					const message = `happychain:${config.scope}:init`;
+					if (e.data === message && !this.port) {
+						this.registerPortListener(e.ports[0]);
+					}
+				});
+				break;
+			}
+			default:
+				throw new Error("Unable to register event bus");
 		}
-		default:
-			throw new Error("Unable to register event bus");
+
+		// bind aliases
+		this.removeAllListeners = this.clear.bind(this);
+		this.addListener = this.on.bind(this);
+		this.removeListener = this.off.bind(this);
 	}
 
-	function registerPortListener(_port: MessagePort | BroadcastChannel) {
-		port = _port;
+	private registerPortListener(_port: MessagePort | BroadcastChannel) {
+		this.port = _port;
 		// @notice - if using .addEventListener(...) syntax, .start() must be called manually
 		// https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/start
-		port.onmessage = (event) => {
-			if (event.data.scope !== config.scope) {
+		this.port.onmessage = (event) => {
+			if (event.data.scope !== this.config.scope) {
 				return;
 			}
 
-			for (const fn of handlerMap.get(event.data.type) ?? []) {
+			for (const fn of this.handlerMap.get(event.data.type) ?? []) {
 				try {
 					fn(event.data.payload);
 				} catch (e) {
-					config.onError?.(e);
+					this.config.onError?.(e);
 				}
 			}
 		};
 
-		port.onmessageerror = (event) => {
-			const onError = config.onError ?? config.logger?.warn;
+		this.port.onmessageerror = (event) => {
+			const onError = this.config.onError ?? this.config.logger?.warn;
 			onError?.(event);
 		};
-		config.logger?.log(
-			`[EventBus] Port initialized ${config.mode}=>${config.scope}`,
+		this.config.logger?.log(
+			`[EventBus] Port initialized ${this.config.mode}=>${this.config.scope}`,
 			location.origin
 		);
 	}
 
-	// public event bus functions
-	const off: EventBus<TDefinition>["off"] = (key, handler) => {
-		handlerMap.get(key)?.delete(handler);
-		if (handlerMap.get(key)?.size === 0) {
-			handlerMap.delete(key);
+	public removeListener: IEventBus<TDefinition>["off"];
+	public off: IEventBus<TDefinition>["off"] = (key, handler) => {
+		this.handlerMap.get(key)?.delete(handler);
+		if (this.handlerMap.get(key)?.size === 0) {
+			this.handlerMap.delete(key);
 		}
 	};
 
-	const on: EventBus<TDefinition>["on"] = (key, handler) => {
-		const prev = handlerMap.get(key) ?? new Set();
-		handlerMap.set(key, prev.add(handler));
+	public addListener: IEventBus<TDefinition>["on"];
+	public on: IEventBus<TDefinition>["on"] = (key, handler) => {
+		const prev = this.handlerMap.get(key) ?? new Set();
+		this.handlerMap.set(key, prev.add(handler));
 
 		// unsubscribe function
-		return () => off(key, handler);
+		return () => this.off(key, handler);
 	};
 
-	const emit: EventBus<TDefinition>["emit"] = (key, payload) => {
-		if (!port) {
-			config.logger?.warn(
-				`[EventBus] Port not initialized ${config.mode}=>${config.scope}`,
+	public emit: IEventBus<TDefinition>["emit"] = (key, payload) => {
+		if (!this.port) {
+			this.config.logger?.warn(
+				`[EventBus] Port not initialized ${this.config.mode}=>${this.config.scope}`,
 				location.origin
 			);
 		}
 
-		port?.postMessage({ scope: config.scope, type: key, payload });
-		return Boolean(port); // if port exists, assume successful
+		this.port?.postMessage({
+			scope: this.config.scope,
+			type: key,
+			payload,
+		});
+		return Boolean(this.port); // if port exists, assume successful
 	};
 
-	const once: EventBus<TDefinition>["once"] = (key, handler) => {
+	public once: IEventBus<TDefinition>["once"] = (key, handler) => {
 		const handleOnce: typeof handler = (payload) => {
 			handler(payload);
-			off(key, handleOnce);
+			this.off(key, handleOnce);
 		};
 
-		on(key, handleOnce);
+		this.on(key, handleOnce);
 	};
 
-	const clear: EventBus<TDefinition>["clear"] = () => {
-		for (const [key, handlers] of handlerMap) {
+	// alias
+	public removeAllListeners: IEventBus<TDefinition>["clear"];
+	public clear: IEventBus<TDefinition>["clear"] = () => {
+		for (const [key, handlers] of this.handlerMap) {
 			for (const handler of handlers) {
-				off(key, handler);
+				this.off(key, handler);
 			}
 		}
-	};
-
-	return {
-		on,
-		off,
-		emit,
-		once,
-		clear,
-		removeAllListeners: clear,
-		addListener: on,
-		removeListener: off,
 	};
 }
