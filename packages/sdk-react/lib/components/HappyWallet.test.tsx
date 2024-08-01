@@ -1,38 +1,22 @@
 import { render, screen } from "@testing-library/react";
-
 import { describe, expect, it } from "vitest";
-
 import clsx from "clsx";
-// import { Provider } from "jotai";
-
 import { useHydrateAtoms } from "jotai/utils";
 import type { PropsWithChildren } from "react";
-
 import { userAtom } from "../state/happyUser";
 import { HappyWallet } from "./HappyWallet";
 
-const HydrateAtoms = ({
+const JotaiHydrateAtoms = ({
 	initialValues,
 	children,
 }: PropsWithChildren<{
 	initialValues: unknown[][];
 }>) => {
 	useHydrateAtoms(
-		initialValues as unknown as Parameters<typeof useHydrateAtoms>[0],
+		initialValues as unknown as Parameters<typeof useHydrateAtoms>[0]
 	);
 	return children;
 };
-
-const JotaiTestProvider = ({
-	initialValues,
-	children,
-}: PropsWithChildren<{
-	initialValues: unknown[][];
-}>) => (
-	// <Provider>
-	<HydrateAtoms initialValues={initialValues}>{children}</HydrateAtoms>
-	// </Provider>
-);
 
 const BASE_CLASS_NAMES = "hc-fixed hc-top-0 hc-right-0";
 
@@ -54,8 +38,8 @@ describe("loads and displays greeting", () => {
 				"hc-w-28",
 				"hc-h-20",
 				"hc-rounded-lg",
-				"hc-overflow-hidden",
-			),
+				"hc-overflow-hidden"
+			)
 		);
 	});
 
@@ -78,9 +62,9 @@ describe("loads and displays greeting", () => {
 		];
 
 		render(
-			<JotaiTestProvider initialValues={initialValues}>
+			<JotaiHydrateAtoms initialValues={initialValues}>
 				<HappyWallet />
-			</JotaiTestProvider>,
+			</JotaiHydrateAtoms>
 		);
 
 		expect(screen.getByTitle("happy-iframe")?.parentNode).toHaveClass(
@@ -89,8 +73,8 @@ describe("loads and displays greeting", () => {
 				"hc-w-52", // wider
 				"hc-h-20",
 				"hc-rounded-lg",
-				"hc-overflow-hidden",
-			),
+				"hc-overflow-hidden"
+			)
 		);
 	});
 });

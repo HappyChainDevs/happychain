@@ -1,5 +1,5 @@
 export function createStorage<TSchema extends { [k: string]: unknown }>(
-	prefix: string,
+	prefix: string
 ) {
 	type Key = keyof TSchema;
 
@@ -8,7 +8,6 @@ export function createStorage<TSchema extends { [k: string]: unknown }>(
 			// Return type will depend on the key
 			const data = localStorage.getItem(`${prefix}:${key as string}`);
 
-			//type ReturnType = ???
 			if (data !== null) {
 				return JSON.parse(data) as TSchema[Key];
 			}
@@ -17,7 +16,10 @@ export function createStorage<TSchema extends { [k: string]: unknown }>(
 		},
 
 		set<T extends Key>(key: T, value: TSchema[T]) {
-			localStorage.setItem(`${prefix}:${key as string}`, JSON.stringify(value));
+			localStorage.setItem(
+				`${prefix}:${key as string}`,
+				JSON.stringify(value)
+			);
 		},
 
 		remove(key: Key) {

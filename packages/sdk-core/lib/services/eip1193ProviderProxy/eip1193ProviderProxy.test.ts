@@ -2,12 +2,7 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { setTimeout } from "node:timers/promises";
 import type { RpcBlock } from "viem";
 import { config } from "../../config";
-import {
-	EventBusChannel,
-	EventBus,
-	type EventBusOptions,
-	eventBus,
-} from "../eventBus";
+import { EventBusChannel, EventBus, type EventBusOptions } from "../eventBus";
 import { EIP1193ProviderProxy } from "./eip1193ProviderProxy";
 import { GenericProviderRpcError } from "./errors";
 import type { EIP1193ProxiedEvents } from "./events";
