@@ -3,18 +3,19 @@ import {
 	type EIP1193ProxiedEvents,
 	type EIP1193RequestResult,
 	EventBusChannel,
+	EventBus,
 	type EventUUID,
 	type HappyEvents,
 	eventBus,
 } from "@happychain/core";
 
-export const eip1193providerBus = eventBus<EIP1193ProxiedEvents>({
+export const eip1193providerBus = new EventBus<EIP1193ProxiedEvents>({
 	target: window.parent,
 	mode: EventBusChannel.Port1,
 	scope: "happy-chain-eip1193-provider",
 });
 
-export const messageBus = eventBus<HappyEvents>({
+export const messageBus = new EventBus<HappyEvents>({
 	mode: EventBusChannel.Port2,
 	scope: "happy-chain-eip1193-provider",
 });
@@ -37,7 +38,7 @@ export interface BroadcastEvents {
 	};
 }
 
-export const broadcastBus = eventBus<BroadcastEvents>({
+export const broadcastBus = new EventBus<BroadcastEvents>({
 	mode: EventBusChannel.Broadcast,
 	scope: "server:popup",
 });
