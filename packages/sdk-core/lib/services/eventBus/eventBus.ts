@@ -9,9 +9,14 @@ import type { Logger } from "../logger";
  * using the same scope, on the same domain
  */
 export enum EventBusChannel {
-	Port1 = "messagechannel:port1",
-	Port2 = "messagechannel:port2",
+	// cross domain point A to point B messages
+	Port1 = "messagechannel:port1", // iframe port
+	Port2 = "messagechannel:port2", // dapp window port
+
+	// same-domain broadcasts
 	Broadcast = "broadcastchannel",
+
+	// Testing. Port are supplied directly during construction
 	Forced = "forced",
 }
 
