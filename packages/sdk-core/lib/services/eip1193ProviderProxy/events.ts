@@ -21,15 +21,22 @@ export type EIP1193RequestArg = Parameters<EIP1193RequestFn>[0];
 
 export type EIP1193RequestResult<
 	TParams extends EIP1193RequestArg = EIP1193RequestArg,
-> = DerivedRpcSchema<EIP1474Methods, undefined> extends RpcSchema
-	? Extract<
-			DerivedRpcSchema<EIP1474Methods, undefined>[number],
-			{ Method: TParams["method"] }
-		>["ReturnType"]
-	: unknown;
+> =
+	DerivedRpcSchema<EIP1474Methods, undefined> extends RpcSchema
+		? Extract<
+				DerivedRpcSchema<EIP1474Methods, undefined>[number],
+				{ Method: TParams["method"] }
+			>["ReturnType"]
+		: unknown;
 
 export type EIP1193EventName = keyof EIP1193EventMap;
 
+/**
+ * Naming Convention:
+ * 'request:' => these are user tx requests and are sent from the dapp (prioviderProxy) to the iframe
+ *
+ * 'provider:' => this is the response the the eip1193 request
+ */
 export interface EIP1193ProxiedEvents {
 	// user approves request
 	"request:approve": {
