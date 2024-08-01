@@ -1,6 +1,6 @@
-import { DevTools, useAtomsDebugValue, useAtomsDevtools } from "jotai-devtools"
+import { DevTools, useAtomsDebugValue, useAtomsDevtools } from 'jotai-devtools'
 
-import "jotai-devtools/styles.css"
+import 'jotai-devtools/styles.css'
 
 const JotaiDebug = () => {
     // An atom that contains a list of all the names and values of all the atoms in the app.
@@ -10,7 +10,7 @@ const JotaiDebug = () => {
     useAtomsDebugValue()
     // Enables tracking atom value changes in the Redux dev tool, as well as time travelling, etc
     // The Redux dev tool needs to be open and a state change to happen for it to display anything.
-    useAtomsDevtools("atomDevtools")
+    useAtomsDevtools('atomDevtools')
     return <DevTools />
 }
 

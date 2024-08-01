@@ -1,9 +1,9 @@
-import { useEffect } from "react"
+import { useEffect } from 'react'
 
-import { ConnectButton } from "@rainbow-me/rainbowkit"
-import { atom, useAtom } from "jotai"
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { atom, useAtom } from 'jotai'
 
-import { AppPage } from "src/pages/_app"
+import type { AppPage } from 'src/pages/_app'
 
 const X = atom(0)
 

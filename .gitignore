@@ -1,5 +1,15 @@
 # Environment variables
-*.env
+*.env*
+!*.env*.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # MacOS
 .DS_Store
@@ -7,6 +17,14 @@
 # Node
 node_modules
 .pnpm-debug.log*
+*.local
+
+# Build outputs
+.next
+next-env.d.ts
+tsconfig.tsbuildinfo
+dist
+dist-ssr
 
 # Contract outputs
 packages/contracts/cache/
@@ -14,11 +32,16 @@ packages/contracts/out/
 packages/contracts/broadcast/
 packages/frontend/src/generated.ts
 
-# IntelliJ config
-.idea/
+# Editor configs and files
+.idea
 *.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# frontend outputs
-packages/frontend/.next
-packages/frontend/next-env.d.ts
-packages/frontend/tsconfig.tsbuildinfo

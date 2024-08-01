@@ -1,15 +1,12 @@
-import { useAtomValue } from "jotai";
-
-import { useRef } from "react";
-import { eip1193Provider } from "../services/eip1193Provider";
-import { userAtom } from "../state/happyUser";
+import { useAtomValue } from 'jotai'
+import { eip1193Provider } from 'lib/services/eip1193Provider'
+import { userAtom } from 'lib/state/happyUser'
 
 export function useHappyChain() {
-	const user = useAtomValue(userAtom);
-	const provider = useRef(eip1193Provider);
+    const user = useAtomValue(userAtom)
 
-	return {
-		provider: provider.current,
-		user,
-	};
+    return {
+        provider: eip1193Provider,
+        user,
+    }
 }

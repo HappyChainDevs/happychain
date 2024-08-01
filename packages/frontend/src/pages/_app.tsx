@@ -3,19 +3,19 @@
 // import "src/setup"
 // import "src/store/setup"
 
-import { NextPage } from "next"
-import type { AppProps } from "next/app"
-import Head from "next/head"
+import type { NextPage } from 'next'
+import type { AppProps } from 'next/app'
+import Head from 'next/head'
 
-import { lightTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { WagmiProvider } from "wagmi"
+import { useIsHydrated } from '@happychain/common'
+import { lightTheme, RainbowKitProvider } from '@rainbow-me/rainbowkit'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { WagmiProvider } from 'wagmi'
 
-import { setBurnerTestPrivateKey, wagmiConfig } from "src/chain"
-import { jotaiDebug } from "src/components/lib/jotaiDebug"
-import { useIsHydrated } from "src/hooks/useIsHydrated"
+import { setBurnerTestPrivateKey, wagmiConfig } from 'src/chain'
+import { jotaiDebug } from 'src/components/lib/jotaiDebug'
 
-import "@rainbow-me/rainbowkit/styles.css"
+import '@rainbow-me/rainbowkit/styles.css'
 
 // =================================================================================================
 
@@ -23,7 +23,7 @@ import "@rainbow-me/rainbowkit/styles.css"
  * Make pages in the app conform to this type.
  * See [@link useIsHydrated] for more info on the meaning of the `isHydrated` prop.
  */
-export type AppPage = NextPage<{ isHydrated: boolean }>
+export type AppPage = NextPage
 
 // =================================================================================================
 

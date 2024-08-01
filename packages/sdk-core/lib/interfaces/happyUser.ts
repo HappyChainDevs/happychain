@@ -1,29 +1,29 @@
 export interface HappyUser {
-	uid: string;
+    uid: string
 
-	/**
-	 * Social
-	 */
-	email: string;
-	name: string;
-	avatar: string;
+    /**
+     * Social
+     */
+    email: string
+    name: string
+    avatar: string
 
-	/**
-	 * Connection Details
-	 */
-	/** Connectino Provider (rabby, metamask, google) */
-	provider: string;
-	/** Connected Wallet Type */
-	type: "social" | "injected";
+    /**
+     * Connection Details
+     */
+    /** Connectino Provider (rabby, metamask, google) */
+    provider: string
+    /** Connected Wallet Type */
+    type: 'social' | 'injected'
 
-	/**
-	 * On-Chain
-	 */
-	/** Active Address's ENS */
-	ens: string;
+    /**
+     * On-Chain
+     */
+    /** Active Address's ENS */
+    ens: string
 
-	/** Currently active address */
-	address: `0x${string}`;
-	/** All owned addresses */
-	addresses: `0x${string}`[];
+    /** Currently active address */
+    address: `0x${string}`
+    /** All owned addresses */
+    addresses: `0x${string}`[]
 }
