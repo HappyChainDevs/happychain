@@ -14,6 +14,7 @@ import {
 	publicClientAtom,
 	walletClientAtom,
 } from "../services/provider";
+import { requiresApproval } from "@happychain/core/lib/services/permissions";
 
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
 	const happyUser = useAtomValue(userAtom);
@@ -64,23 +65,28 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
 	// trusted events may only be sent from same-origin (popup approval screen)
 	useEffect(() => {
-		const offApprove = broadcastBus.on("request:approve", async (payload) => {
-			try {
-				const result = await walletClient?.request(
-					payload.payload as Parameters<typeof walletClient.request>, // TODO: fix proper payload types instead of casting
-				);
+		const offApprove = broadcastBus.on(
+			"request:approve",
+			async (payload) => {
+				try {
+					const result = await walletClient?.request(
+						payload.payload as Parameters<
+							typeof walletClient.request
+						> // TODO: fix proper payload types instead of casting
+					);
 
-				eip1193providerBus.emit("provider:request:complete", {
-					key: payload.key,
-					error: null,
-					payload: result,
-				});
-			} catch (e) {
-				// TODO: emit broken request error
-				console.error(e);
-				console.error("error executing request", payload);
+					eip1193providerBus.emit("provider:request:complete", {
+						key: payload.key,
+						error: null,
+						payload: result,
+					});
+				} catch (e) {
+					// TODO: emit broken request error
+					console.error(e);
+					console.error("error executing request", payload);
+				}
 			}
-		});
+		);
 		const offReject = broadcastBus.on("request:reject", (payload) => {
 			eip1193providerBus.emit("provider:request:complete", payload);
 		});
@@ -97,14 +103,12 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 			"request:approve",
 			async (data) => {
 				try {
-					const isPublicMethod = ["eth_call", "eth_getBlockByNumber"].includes(
-						data.payload.method,
-					);
+					const isPublicMethod = !requiresApproval(data.payload);
 
 					const isInjected = happyUser?.type === "injected";
 
 					const injectedProvider = web3providers.find(
-						(i) => `injected:${isInjected}` === i.id,
+						(i) => `injected:${isInjected}` === i.id
 					);
 
 					// TODO: use a proper list with shared config in the front
@@ -121,10 +125,14 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 						isInjected && walletClient
 							? // TODO: fix with proper payload types
 								await walletClient.request(
-									data.payload as Parameters<typeof walletClient.request>,
+									data.payload as Parameters<
+										typeof walletClient.request
+									>
 								)
 							: await publicClient.request(
-									data.payload as Parameters<typeof publicClient.request>,
+									data.payload as Parameters<
+										typeof publicClient.request
+									>
 								);
 
 					eip1193providerBus.emit("provider:request:complete", {
@@ -137,7 +145,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 					console.error(e);
 					console.error("error executing request", data);
 				}
-			},
+			}
 		);
 		return () => {
 			offApprove();

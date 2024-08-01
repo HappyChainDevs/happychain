@@ -13,6 +13,7 @@ import type {
 	EIP1193RequestArg,
 	EventUUID,
 } from "./events";
+import { requiresApproval } from "../permissions";
 
 type Timer = ReturnType<typeof setInterval>;
 
@@ -40,7 +41,7 @@ class RestrictedEventEmitter extends SafeEventEmitter {
 		// restrict types to only allow provider events
 		eventName: EIP1193EventName,
 		// biome-ignore lint/suspicious/noExplicitAny: TODO: Update with generics when SafeEventEmitter permits it https://github.com/HappyChainDevs/happychain/pull/1#discussion_r1697113957
-		handler: (...args: any[]) => void,
+		handler: (...args: any[]) => void
 	) {
 		super.on(eventName, handler);
 		return this;
@@ -56,23 +57,26 @@ export class EIP1193ProviderProxy
 
 	constructor(
 		private bus: EventBus<EIP1193ProxiedEvents>,
-		private config: EIP1193ProviderProxyConfig,
+		private config: EIP1193ProviderProxyConfig
 	) {
 		super();
 
 		bus.on("provider:event", this.handleProviderNativeEvent.bind(this));
-		bus.on("provider:request:complete", this.handleCompletedRequest.bind(this));
+		bus.on(
+			"provider:request:complete",
+			this.handleCompletedRequest.bind(this)
+		);
 		config.logger?.log("EIP1193Provider Created");
 	}
 
 	private handleProviderNativeEvent(
-		data: EIP1193ProxiedEvents["provider:event"],
+		data: EIP1193ProxiedEvents["provider:event"]
 	) {
 		this.emit(data.payload.event, data.payload.args);
 	}
 
 	private handleCompletedRequest(
-		data: EIP1193ProxiedEvents["provider:request:complete"],
+		data: EIP1193ProxiedEvents["provider:request:complete"]
 	) {
 		const req = this.inFlight.get(data.key);
 
@@ -90,7 +94,7 @@ export class EIP1193ProviderProxy
 					code: data.error.code,
 					message: "",
 					data: data.error.data,
-				}),
+				})
 			);
 		} else if (resolve) {
 			resolve(data.payload);
@@ -110,7 +114,7 @@ export class EIP1193ProviderProxy
 
 	private queueRequest(
 		key: string,
-		{ resolve, reject, popup }: InFlightRequest,
+		{ resolve, reject, popup }: InFlightRequest
 	) {
 		this.inFlight.set(key, { resolve, reject, popup });
 
@@ -147,11 +151,9 @@ export class EIP1193ProviderProxy
 		const key = crypto.randomUUID();
 
 		return new Promise((resolve, reject) => {
-			const unrestricted = ["eth_call", "eth_getBlockByNumber"].includes(
-				args.method,
-			);
+			const restricted = requiresApproval(args);
 
-			const requiresUserApproval = !unrestricted && !this.walletIsInjected();
+			const requiresUserApproval = restricted && !this.walletIsInjected();
 
 			const popup = requiresUserApproval
 				? this.promptUser(key, args)
@@ -171,7 +173,7 @@ export class EIP1193ProviderProxy
 		return window.open(
 			`${this.config.iframePath}/request?args=${b64}&key=${key}`,
 			"_blank",
-			POPUP_FEATURES,
+			POPUP_FEATURES
 		);
 	}
 }
