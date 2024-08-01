@@ -20,14 +20,17 @@ export type EventPayload<T = any> = T;
 export type EventKey = string | number | symbol;
 
 export type EventHandler<T extends EventPayload = EventPayload> = (
-	payload: T,
+	payload: T
 ) => void;
 
 export type EventSchema = Record<EventKey, EventPayload>;
 export type EventMap = Map<EventKey, Set<EventHandler>>;
 
 export interface EventBus<T extends EventSchema> {
-	on<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): () => void;
+	on<Key extends keyof T>(
+		key: Key,
+		handler: EventHandler<T[Key]>
+	): () => void;
 	off<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): void;
 	once<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): void;
 	emit<Key extends keyof T>(key: Key, payload: T[Key]): void;
@@ -37,11 +40,11 @@ export interface EventBus<T extends EventSchema> {
 	removeAllListeners(): void;
 	addListener<Key extends keyof T>(
 		key: Key,
-		handler: EventHandler<T[Key]>,
+		handler: EventHandler<T[Key]>
 	): () => void;
 	removeListener<Key extends keyof T>(
 		key: Key,
-		handler: EventHandler<T[Key]>,
+		handler: EventHandler<T[Key]>
 	): void;
 }
 
@@ -57,7 +60,7 @@ export type EventBusOptions = {
 );
 
 export function eventBus<TDefinition extends EventSchema>(
-	config: EventBusOptions,
+	config: EventBusOptions
 ): EventBus<TDefinition> {
 	const handlerMap: EventMap = new Map();
 
@@ -74,28 +77,24 @@ export function eventBus<TDefinition extends EventSchema>(
 		case EventBusChannel.Broadcast:
 			registerPortListener(new BroadcastChannel(config.scope));
 			break;
-		case EventBusChannel.Port1:
-			initializePort1(config.target);
+		case EventBusChannel.Port1: {
+			const mc = new MessageChannel();
+			registerPortListener(mc.port1);
+			const message = `happychain:${config.scope}:init`;
+			config.target.postMessage(message, "*", [mc.port2]);
 			break;
-		case EventBusChannel.Port2:
-			waitForPort2();
+		}
+		case EventBusChannel.Port2: {
+			addEventListener("message", (e: MessageEvent) => {
+				const message = `happychain:${config.scope}:init`;
+				if (e.data === message && !port) {
+					registerPortListener(e.ports[0]);
+				}
+			});
 			break;
+		}
 		default:
 			throw new Error("Unable to register event bus");
-	}
-
-	function initializePort1(target: Window) {
-		const mc = new MessageChannel();
-		registerPortListener(mc.port1);
-		target.postMessage(`happychain:${config.scope}:init`, "*", [mc.port2]);
-	}
-
-	function waitForPort2() {
-		addEventListener("message", (e: MessageEvent) => {
-			if (e.data === `happychain:${config.scope}:init` && !port) {
-				registerPortListener(e.ports[0]);
-			}
-		});
 	}
 
 	function registerPortListener(_port: MessagePort | BroadcastChannel) {
@@ -122,7 +121,7 @@ export function eventBus<TDefinition extends EventSchema>(
 		};
 		config.logger?.log(
 			`[EventBus] Port initialized ${config.mode}=>${config.scope}`,
-			location.origin,
+			location.origin
 		);
 	}
 
@@ -146,7 +145,7 @@ export function eventBus<TDefinition extends EventSchema>(
 		if (!port) {
 			config.logger?.warn(
 				`[EventBus] Port not initialized ${config.mode}=>${config.scope}`,
-				location.origin,
+				location.origin
 			);
 		}
 
