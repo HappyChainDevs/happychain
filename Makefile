@@ -17,15 +17,24 @@ webdev:
 	cd packages/frontend && make dev
 .PHONY: webdev
 
-iframe:
+iframe-dev:
 	cd packages/iframe && make dev
 .PHONY: iframe
 
+sdk-react-dev:
+	cd packages/sdk-react && make dev
+.PHONY: sdk-react
+
+sdk-dev:
+	make -j 2 iframe-dev sdk-react-dev
+.PHONY: sdk-dev
+
 # Builds the frontend and the contracts.
 build:
+	cd packages/sdk-react && make build
+
 	cd packages/contracts && make build
 	cd packages/frontend && make build
-	cd packages/sdk-react && make build
 	cd packages/iframe && make build
 .PHONY: build
 
@@ -34,16 +43,36 @@ deploy:
 	cd packages/contracts && make deploy
 .PHONY: deploy
 
+# Run tests
+test:
+	cd packages/sdk-core && make test
+	cd packages/sdk-react && make test
+.PHONY: test
+
 # Performs code-quality checks.
 check:
+	cd packages/common && make check
+	cd packages/sdk-core && make check
+	cd packages/sdk-firebase-web3auth-strategy && make check
+
+	cd packages/sdk-react && make check
+
 	cd packages/contracts && make check
 	cd packages/frontend && make check
+	cd packages/iframe && make check
 .PHONY: check
 
 # Performs code formatting for the webapp files and contracts in their respective directories.
 format:
+	cd packages/common && make format
+	cd packages/sdk-core && make format
+	cd packages/sdk-firebase-web3auth-strategy && make format
+
+	cd packages/sdk-react && make format
+
 	cd packages/contracts && make format
 	cd packages/frontend && make format
+	cd packages/iframe && make format
 .PHONY: format
 
 # ==================================================================================================
