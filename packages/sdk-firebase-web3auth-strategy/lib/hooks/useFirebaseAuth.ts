@@ -12,13 +12,17 @@ import { atomWithStorage } from "jotai/utils";
 import { useCallback, useEffect } from "react";
 import type { EIP1193Provider } from "viem";
 import { firebaseAuth } from "../services/firebase";
-import { connect, disconnect, web3AuthEvmProvider } from "../services/web3auth";
+import {
+	web3AuthConnect,
+	web3AuthDisconnect,
+	web3AuthEvmProvider,
+} from "../services/web3auth";
 
 export type SignInProvider = "google";
 
 const internalAuthStateAtom = atomWithStorage(
 	"firebase-auth",
-	"unauthenticated",
+	"unauthenticated"
 );
 
 const firebaseAuthStateAtom = atom<{
@@ -48,7 +52,7 @@ function useSignIn(auth: Auth) {
 					throw new Error(`Unknown provider: ${provider}`);
 			}
 		},
-		[auth, setAuthState],
+		[auth, setAuthState]
 	);
 
 	return { signIn };
@@ -63,13 +67,13 @@ function useSignOut(auth: Auth) {
 
 function useOnAuthChange() {
 	const [internalAuthState, setInternalAuthState] = useAtom(
-		internalAuthStateAtom,
+		internalAuthStateAtom
 	);
 	const [userAuth, setUserAuth] = useAtom(firebaseAuthStateAtom);
 	useEffect(() => {
 		onAuthStateChanged(firebaseAuth, async (_user) => {
 			if (!_user?.uid) {
-				await disconnect();
+				await web3AuthDisconnect();
 
 				setUserAuth({
 					user: null,
@@ -90,7 +94,7 @@ function useOnAuthChange() {
 				idToken: token.token,
 			} satisfies IdTokenLoginParams;
 
-			const addresses = await connect(idTokenLoginParams);
+			const addresses = await web3AuthConnect(idTokenLoginParams);
 
 			const nextUser: HappyUser = {
 				// connection type
@@ -117,7 +121,12 @@ function useOnAuthChange() {
 
 	const isHydrated = useIsHydrated();
 	const onAuthChange = useCallback(
-		(callback: (user: HappyUser | null, provider: EIP1193Provider) => void) => {
+		(
+			callback: (
+				user: HappyUser | null,
+				provider: EIP1193Provider
+			) => void
+		) => {
 			if (!isHydrated) {
 				return;
 			}
@@ -130,7 +139,7 @@ function useOnAuthChange() {
 				return callback(userAuth.user, userAuth.provider);
 			}
 		},
-		[isHydrated, userAuth, internalAuthState],
+		[isHydrated, userAuth, internalAuthState]
 	);
 
 	return { onAuthChange };

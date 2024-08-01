@@ -26,7 +26,8 @@ const ethereumSigningProvider = new EthereumSigningProvider({
 			chainId: import.meta.env.VITE_WEB3AUTH_CHAIN_ID,
 			rpcTarget: import.meta.env.VITE_WEB3AUTH_CHAIN_RPC,
 			displayName: import.meta.env.VITE_WEB3AUTH_CHAIN_DISPLAYNAME,
-			blockExplorerUrl: import.meta.env.VITE_WEB3AUTH_CHAIN_BLOCK_EXPLORER,
+			blockExplorerUrl: import.meta.env
+				.VITE_WEB3AUTH_CHAIN_BLOCK_EXPLORER,
 			ticker: import.meta.env.VITE_WEB3AUTH_CHAIN_TOKEN_SYMBOL,
 			tickerName: import.meta.env.VITE_WEB3AUTH_CHAIN_TOKEN_NAME,
 		},
@@ -36,7 +37,7 @@ ethereumSigningProvider.setupProvider(web3Auth);
 export const web3AuthEvmProvider = ethereumSigningProvider as EIP1193Provider;
 
 let lastToken = "";
-export async function connect(jwt: IdTokenLoginParams) {
+export async function web3AuthConnect(jwt: IdTokenLoginParams) {
 	if (jwt.idToken !== lastToken) {
 		lastToken = jwt.idToken;
 		await web3Auth.loginWithJWT(jwt);
@@ -53,6 +54,6 @@ export async function connect(jwt: IdTokenLoginParams) {
 	return addresses;
 }
 
-export async function disconnect() {
+export async function web3AuthDisconnect() {
 	await web3Auth.logout();
 }
