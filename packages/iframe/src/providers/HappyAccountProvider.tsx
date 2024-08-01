@@ -1,4 +1,4 @@
-import type { EIP1193EventName } from "@happychain/core";
+import { logger, type EIP1193EventName } from "@happychain/core";
 import { init as web3AuthInit } from "@happychain/firebase-web3auth-strategy";
 import { useAtomValue } from "jotai";
 import { type ReactNode, useEffect, useState } from "react";
@@ -29,7 +29,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 		const init = async () => {
 			await web3AuthInit();
 			setIsLoaded(true);
-			console.log("Web3Auth is initialized");
+			logger.log("Web3Auth is initialized");
 		};
 		init();
 	}, []);

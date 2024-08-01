@@ -10,10 +10,10 @@ import { messageBus } from "../services/eventBus";
 import { AuthState, authStateAtom } from "../state/app";
 
 export const Route = createLazyFileRoute("/connect")({
-	component: Index,
+	component: Connect,
 });
 
-function Index() {
+function Connect() {
 	const authState = useAtomValue(authStateAtom);
 	const { user } = useHappyAccount();
 	const web3Providers = useInjectedProviders();
@@ -36,8 +36,6 @@ function Index() {
 		setIsOpen(false);
 		messageBus.emit("modal-toggle", false);
 	}
-
-	// return <div>{authState}</div>;
 
 	if (authState === AuthState.Loading) {
 		return (

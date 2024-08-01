@@ -5,10 +5,10 @@ import { PersonalSign } from "../components/requests/PersonalSign";
 import { broadcastBus } from "../services/eventBus";
 
 export const Route = createLazyFileRoute("/request")({
-	component: About,
+	component: Request,
 });
 
-function About() {
+function Request() {
 	const [isLoading, setIsLoading] = useState(false);
 	const { args, key } = Route.useSearch();
 	const req = JSON.parse(atob(args));
@@ -27,7 +27,11 @@ function About() {
 
 	function accept() {
 		setIsLoading(true);
-		broadcastBus.emit("request:approve", { error: null, key, payload: req });
+		broadcastBus.emit("request:approve", {
+			error: null,
+			key,
+			payload: req,
+		});
 	}
 
 	if (isLoading) {

@@ -19,9 +19,11 @@ export function ConnectButton() {
 
 	function close() {
 		setIsOpen(false);
+		// delay to match fadeout transition/animation
+		const animationTimeInMs = 300;
 		setTimeout(() => {
 			messageBus.emit("modal-toggle", false);
-		}, 300);
+		}, animationTimeInMs);
 	}
 
 	async function connect(provider: ConnectionProvider) {
@@ -42,9 +44,11 @@ export function ConnectButton() {
 				{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
 				<div
 					className={clsx(
+						// using opacity here so fade in/out can be animated
+						// the button itself is conditionally rendered, so once connected this is all unmounted
 						!isOpen && "opacity-0 pointer-events-none",
 						isOpen && "opacity-100",
-						"bg-slate-900/50 backdrop-blur-sm fixed top-0 bottom-0 right-0 left-0 flex items-center justify-center transition duration-300",
+						"bg-slate-900/50 backdrop-blur-sm fixed top-0 bottom-0 right-0 left-0 flex items-center justify-center transition duration-300"
 					)}
 					onClick={close}
 				>
@@ -64,23 +68,25 @@ export function ConnectButton() {
 							</div>
 						</div>
 						<div className="flex flex-col gap-4">
-							{socialProviders.concat(web3Providers).map((prov) => {
-								return (
-									<button
-										type="button"
-										key={prov.id}
-										onClick={() => connect(prov)}
-										className="flex w-full items-center gap-4 bg-zinc-200 px-4 py-2 shadow-md hover:scale-[103%] hover:bg-white active:scale-[95%] focus:shadow transition"
-									>
-										<img
-											className="w-8 h-8"
-											src={prov.icon}
-											alt={`${prov.name} icon`}
-										/>
-										{prov.name}
-									</button>
-								);
-							})}
+							{socialProviders
+								.concat(web3Providers)
+								.map((prov) => {
+									return (
+										<button
+											type="button"
+											key={prov.id}
+											onClick={() => connect(prov)}
+											className="flex w-full items-center gap-4 bg-zinc-200 px-4 py-2 shadow-md hover:scale-[103%] hover:bg-white active:scale-[95%] focus:shadow transition"
+										>
+											<img
+												className="w-8 h-8"
+												src={prov.icon}
+												alt={`${prov.name} icon`}
+											/>
+											{prov.name}
+										</button>
+									);
+								})}
 						</div>
 					</div>
 				</div>
