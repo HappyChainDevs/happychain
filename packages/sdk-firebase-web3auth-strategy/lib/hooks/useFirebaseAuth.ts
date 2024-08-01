@@ -20,12 +20,12 @@ import {
 
 export type SignInProvider = "google";
 
-const internalAuthStateAtom = atomWithStorage(
+const cachedFirebaseAuthStateAtom = atomWithStorage(
 	"firebase-auth",
 	"unauthenticated"
 );
 
-const firebaseAuthStateAtom = atom<{
+const firebaseAuthAtom = atom<{
 	user: HappyUser | null;
 	provider: EIP1193Provider;
 }>({
@@ -39,7 +39,7 @@ async function signInWithGoogle(auth: Auth) {
 }
 
 function useSignIn(auth: Auth) {
-	const setAuthState = useSetAtom(internalAuthStateAtom);
+	const setAuthState = useSetAtom(cachedFirebaseAuthStateAtom);
 	const signIn = useCallback(
 		async (provider: SignInProvider) => {
 			setAuthState("loading");
@@ -67,9 +67,9 @@ function useSignOut(auth: Auth) {
 
 function useOnAuthChange() {
 	const [internalAuthState, setInternalAuthState] = useAtom(
-		internalAuthStateAtom
+		cachedFirebaseAuthStateAtom
 	);
-	const [userAuth, setUserAuth] = useAtom(firebaseAuthStateAtom);
+	const [userAuth, setUserAuth] = useAtom(firebaseAuthAtom);
 	useEffect(() => {
 		onAuthStateChanged(firebaseAuth, async (_user) => {
 			if (!_user?.uid) {
