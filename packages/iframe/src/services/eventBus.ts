@@ -6,18 +6,29 @@ import {
 	EventBus,
 	type EventUUID,
 	type HappyEvents,
-	eventBus,
 } from "@happychain/core";
 
+/**
+ * Event system between the EIP1193ProviderProxy in the dapp
+ * and the iframe provider/executor
+ *
+ * This is port1 so its created and initialized first, then waits for port2 to connect
+ */
 export const eip1193providerBus = new EventBus<EIP1193ProxiedEvents>({
 	target: window.parent,
 	mode: EventBusChannel.Port1,
 	scope: "happy-chain-eip1193-provider",
 });
 
+/**
+ * General purpose message system
+ * auth updates, user actions etc
+ * between iframe & dapp
+ */
 export const messageBus = new EventBus<HappyEvents>({
-	mode: EventBusChannel.Port2,
-	scope: "happy-chain-eip1193-provider",
+	target: window.parent,
+	mode: EventBusChannel.Port1,
+	scope: "happy-chain-bus",
 });
 
 /**
@@ -38,6 +49,11 @@ export interface BroadcastEvents {
 	};
 }
 
+/**
+ * Same domain Messages between iframe & popup
+ *
+ * primarily user approvals/rejections
+ */
 export const broadcastBus = new EventBus<BroadcastEvents>({
 	mode: EventBusChannel.Broadcast,
 	scope: "server:popup",
