@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import clsx from "clsx";
-import { Provider } from "jotai";
+// import { Provider } from "jotai";
 
 import { useHydrateAtoms } from "jotai/utils";
 import type { PropsWithChildren } from "react";
@@ -29,9 +29,9 @@ const JotaiTestProvider = ({
 }: PropsWithChildren<{
 	initialValues: unknown[][];
 }>) => (
-	<Provider>
-		<HydrateAtoms initialValues={initialValues}>{children}</HydrateAtoms>
-	</Provider>
+	// <Provider>
+	<HydrateAtoms initialValues={initialValues}>{children}</HydrateAtoms>
+	// </Provider>
 );
 
 const BASE_CLASS_NAMES = "hc-fixed hc-top-0 hc-right-0";

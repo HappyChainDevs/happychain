@@ -1,22 +1,22 @@
 {
-  "name": "@happychain/core",
-  "version": "1.0.0",
-  "description": "",
-  "main": "lib/index.ts",
-  "scripts": {
-    "test": "bun test"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "dependencies": {
-    "@metamask/safe-event-emitter": "^3.1.1",
-    "@types/bun": "latest",
-    "viem": "^2.17.0"
-  },
-  "devDependencies": {
-    "@happy-dom/global-registrator": "^14.12.3",
-    "happy-dom": "^14.12.3"
-  }
+	"name": "@happychain/core",
+	"version": "1.0.0",
+	"description": "",
+	"main": "lib/index.ts",
+	"scripts": {
+		"test": "bun test"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"type": "module",
+	"dependencies": {
+		"@metamask/safe-event-emitter": "^3.1.1",
+		"@types/bun": "latest",
+		"viem": "^2.18.4"
+	},
+	"devDependencies": {
+		"@happy-dom/global-registrator": "^14.12.3",
+		"happy-dom": "^14.12.3"
+	}
 }

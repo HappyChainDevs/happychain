@@ -1,5 +1,6 @@
 export * from "./config";
 
+export * from "./interfaces/eip1193Provider";
 export * from "./interfaces/events";
 export * from "./interfaces/happyUser";
 

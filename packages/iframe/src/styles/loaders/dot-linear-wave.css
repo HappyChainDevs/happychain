@@ -1,0 +1,63 @@
+
+/* https://www.loadership.com/loaders/dot_linear_wave */
+.loadership_JYJXM {
+    display: flex;
+    position: relative;
+    width: 86px;
+    height: 45px;
+  }
+  
+  .loadership_JYJXM div {
+    position: absolute;
+    top: 0px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #49bfc1;
+    animation: loadership_JYJXM_wave alternate 1.2s infinite;
+    animation-timing-function: cubic-bezier(0.56, -0.01, 0.48, 1);
+  }
+  
+  .loadership_JYJXM div:nth-child(1) {
+    animation-delay: 0s;
+    left: 0px;
+  }
+  .loadership_JYJXM div:nth-child(2) {
+    animation-delay: 0.15s;
+    left: 11px;
+  }
+  .loadership_JYJXM div:nth-child(3) {
+    animation-delay: 0.3s;
+    left: 22px;
+  }
+  .loadership_JYJXM div:nth-child(4) {
+    animation-delay: 0.45s;
+    left: 33px;
+  }
+  .loadership_JYJXM div:nth-child(5) {
+    animation-delay: 0.6s;
+    left: 44px;
+  }
+  .loadership_JYJXM div:nth-child(6) {
+    animation-delay: 0.75s;
+    left: 55px;
+  }
+  .loadership_JYJXM div:nth-child(7) {
+    animation-delay: 0.9s;
+    left: 66px;
+  }
+  .loadership_JYJXM div:nth-child(8) {
+    animation-delay: 1.05s;
+    left: 77px;
+  }
+  
+  @keyframes loadership_JYJXM_wave {
+    0%,
+    100% {
+      transform: translatey(0px);
+    }
+    50% {
+      transform: translatey(36px);
+    }
+  }
+  
