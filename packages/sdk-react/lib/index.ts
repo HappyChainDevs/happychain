@@ -1,5 +1,5 @@
 /** Components */
-export { HappyWallet } from "./components/HappyWallet";
+export { HappyWallet } from './components/HappyWallet'
 
 /** Hooks */
-export { useHappyChain } from "./hooks/useHappyChain";
+export { useHappyChain } from './hooks/useHappyChain'
