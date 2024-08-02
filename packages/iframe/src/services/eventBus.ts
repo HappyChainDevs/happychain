@@ -1,12 +1,12 @@
 import {
-	type EIP1193ErrorObject,
-	type EIP1193ProxiedEvents,
-	type EIP1193RequestResult,
-	EventBusChannel,
-	EventBus,
-	type EventUUID,
-	type HappyEvents,
-} from "@happychain/core";
+    type EIP1193ErrorObject,
+    type EIP1193ProxiedEvents,
+    type EIP1193RequestResult,
+    EventBusChannel,
+    EventBus,
+    type EventUUID,
+    type HappyEvents,
+} from '@happychain/core'
 
 /**
  * Event system between the EIP1193ProviderProxy in the dapp
@@ -15,10 +15,10 @@ import {
  * This is port1 so its created and initialized first, then waits for port2 to connect
  */
 export const eip1193providerBus = new EventBus<EIP1193ProxiedEvents>({
-	target: window.parent,
-	mode: EventBusChannel.Port1,
-	scope: "happy-chain-eip1193-provider",
-});
+    target: window.parent,
+    mode: EventBusChannel.IframePort,
+    scope: 'happy-chain-eip1193-provider',
+})
 
 /**
  * General purpose message system
@@ -26,10 +26,10 @@ export const eip1193providerBus = new EventBus<EIP1193ProxiedEvents>({
  * between iframe & dapp
  */
 export const messageBus = new EventBus<HappyEvents>({
-	target: window.parent,
-	mode: EventBusChannel.Port1,
-	scope: "happy-chain-bus",
-});
+    target: window.parent,
+    mode: EventBusChannel.IframePort,
+    scope: 'happy-chain-bus',
+})
 
 /**
  * Broadcasts events on same domain
@@ -37,16 +37,16 @@ export const messageBus = new EventBus<HappyEvents>({
  */
 
 export interface BroadcastEvents {
-	"request:approve": {
-		error: null;
-		key: EventUUID;
-		payload: EIP1193RequestResult;
-	};
-	"request:reject": {
-		error: EIP1193ErrorObject;
-		key: EventUUID;
-		payload: null;
-	};
+    'request:approve': {
+        error: null
+        key: EventUUID
+        payload: EIP1193RequestResult
+    }
+    'request:reject': {
+        error: EIP1193ErrorObject
+        key: EventUUID
+        payload: null
+    }
 }
 
 /**
@@ -55,6 +55,6 @@ export interface BroadcastEvents {
  * primarily user approvals/rejections
  */
 export const broadcastBus = new EventBus<BroadcastEvents>({
-	mode: EventBusChannel.Broadcast,
-	scope: "server:popup",
-});
+    mode: EventBusChannel.Broadcast,
+    scope: 'server:popup',
+})
