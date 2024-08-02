@@ -1,3 +1,3 @@
-export { createStorage } from "./services/storage";
+export { createStorage } from './services/storage'
 
-export { useIsHydrated } from "./hooks/isHydrated";
+export { useIsHydrated } from './hooks/isHydrated'

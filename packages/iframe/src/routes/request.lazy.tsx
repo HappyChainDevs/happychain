@@ -1,5 +1,7 @@
-import { createLazyFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+
+import { createLazyFileRoute } from '@tanstack/react-router'
+
 import { DotLinearWaveLoader } from '../components/loaders/DotLinearWaveLoader'
 import { PersonalSign } from '../components/requests/PersonalSign'
 import { popupBus } from '../services/eventBus'

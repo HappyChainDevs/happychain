@@ -1,9 +1,9 @@
-import type { HappyUser } from "./happyUser";
+import type { HappyUser } from './happyUser'
 
 export interface HappyEvents {
-	// modal states
-	"modal-toggle": boolean;
+    // modal states
+    'modal-toggle': boolean
 
-	// user auth
-	"auth-changed": HappyUser | null;
+    // user auth
+    'auth-changed': HappyUser | null
 }
