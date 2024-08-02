@@ -1,7 +1,6 @@
 {
-    "$schema": "https://json.schemastore.org/tsconfig",
-    "display": "Next.js",
-    "extends": "./base.json",
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"display": "Next.js",
 	"compilerOptions": {
 		"target": "es2022",
 		"lib": ["dom", "dom.iterable", "es2022"],

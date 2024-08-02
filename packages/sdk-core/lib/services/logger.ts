@@ -1,7 +1,4 @@
-export type Logger = Pick<typeof console, "log" | "warn" | "error">;
+export type Logger = Pick<typeof console, 'log' | 'warn' | 'error'>
 
-const noop = () => {};
-export const logger: Logger =
-	import.meta.env.NODE_ENV === "production"
-		? { log: noop, warn: noop, error: noop }
-		: console;
+const noop = () => {}
+export const logger: Logger = { log: noop, warn: noop, error: noop }
