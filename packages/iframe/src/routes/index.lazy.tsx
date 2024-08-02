@@ -11,7 +11,8 @@ function Index() {
 
 	return (
 		<>
-			<div className="flex items-stretch gap-4">Home Page</div>
+			{/* Stub to develop Wallet details page */}
+			<div className="flex items-stretch gap-4">Wallet Details Page</div>
 			<pre>{JSON.stringify(user, null, 2)}</pre>
 		</>
 	);

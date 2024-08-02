@@ -1,114 +1,153 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { setTimeout } from "node:timers/promises";
-import { config } from "../../config";
-import { EventBusChannel, type EventBusOptions, eventBus } from "../eventBus";
-import { EIP1193ProviderProxy } from "./eip1193ProviderProxy";
-import { ProviderRpcError } from "./errors";
+// eslint-disable-next-line import/no-unresolved
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { setTimeout } from 'node:timers/promises'
+import type { RpcBlock } from 'viem'
 
-describe("EIP1193ProviderProxy", () => {
-	let busConfig: EventBusOptions;
-	beforeEach(() => {
-		busConfig = {
-			scope: crypto.randomUUID(),
-			logger: { log: mock(), warn: mock(), error: mock() },
-			mode: EventBusChannel.Broadcast,
-		} satisfies EventBusOptions;
-	});
+import { config } from '../../config'
+import { EventBus, EventBusChannel, type EventBusOptions } from '../eventBus'
 
-	it("transmits payload using bus", async () => {
-		const recieverBus = eventBus(busConfig);
-		const providerBus = eventBus(busConfig);
+import { EIP1193ProviderProxy } from './eip1193ProviderProxy'
+import { GenericProviderRpcError } from './errors'
+import type { EIP1193ProxiedEvents } from './events'
 
-		const provider = new EIP1193ProviderProxy(providerBus, config);
+const emptyRpcBlock = {
+    baseFeePerGas: null,
+    blobGasUsed: '0x',
+    difficulty: '0x',
+    excessBlobGas: '0x',
+    extraData: '0x',
+    gasLimit: '0x',
+    gasUsed: '0x',
+    hash: null,
+    logsBloom: null,
+    miner: '0x',
+    mixHash: '0x',
+    nonce: null,
+    number: null,
+    parentHash: '0x',
+    receiptsRoot: '0x',
+    sealFields: [],
+    sha3Uncles: '0x',
+    size: '0x',
+    stateRoot: '0x',
+    timestamp: '0x',
+    totalDifficulty: '0x',
+    transactions: [],
+    transactionsRoot: '0x',
+    uncles: [],
+} satisfies RpcBlock
 
-		const callback = mock(({ key, error, payload }) => {});
-		const payload = {
-			method: "eth_getBlockByNumber",
-			params: ["latest", false],
-		};
+describe('EIP1193ProviderProxy', () => {
+    let busConfig: EventBusOptions
+    beforeEach(() => {
+        busConfig = {
+            scope: crypto.randomUUID(),
+            logger: { log: mock(), warn: mock(), error: mock() },
+            mode: EventBusChannel.Broadcast,
+        } satisfies EventBusOptions
+    })
 
-		// within iframe
-		recieverBus.on("request:approve", callback);
+    it('transmits payload using bus', async () => {
+        const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-		// provider request, unanswered so don't await
-		provider.request(payload);
+        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
 
-		await setTimeout(0);
+        const callback = mock(({ key, error, payload }) => {})
 
-		expect(callback).toBeCalledTimes(1);
-		expect(callback.mock.calls[0][0].error).toBe(null);
-		expect(callback.mock.calls[0][0].key).toBeString();
-		expect(callback.mock.calls[0][0].payload).toEqual(payload);
-	});
+        const payload = {
+            method: 'eth_getBlockByNumber',
+            params: ['latest', false],
+        } as {
+            // make viem happy
+            method: 'eth_getBlockByNumber'
+            params: ['latest', false]
+        }
 
-	it("resolves on success", async () => {
-		const recieverBus = eventBus(busConfig);
-		const providerBus = eventBus(busConfig);
+        // within iframe
+        eip1193ProviderBusIframe.on('request:approve', callback)
 
-		const provider = new EIP1193ProviderProxy(providerBus, config);
-		const callback = mock(({ key }) => {
-			recieverBus.emit("provider:request:complete", {
-				key,
-				error: null,
-				payload: "0x1234",
-			});
-		});
+        // provider request, unanswered so don't await
+        provider.request(payload)
 
-		const payload = {
-			method: "eth_getBlockByNumber",
-			params: ["latest", false],
-		};
+        await setTimeout(0)
 
-		// within iframe
-		recieverBus.on("request:approve", callback);
+        expect(callback).toBeCalledTimes(1)
+        expect(callback.mock.calls[0][0].error).toBe(null)
+        expect(callback.mock.calls[0][0].key).toBeString()
+        expect(callback.mock.calls[0][0].payload).toEqual(payload)
+    })
 
-		// provider request
-		expect(provider.request(payload)).resolves.toBe("0x1234");
-	});
+    it('resolves on success', async () => {
+        const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-	it("rejects on error", async () => {
-		const recieverBus = eventBus(busConfig);
-		const providerBus = eventBus(busConfig);
+        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
 
-		const provider = new EIP1193ProviderProxy(providerBus, config);
-		const callback = mock(({ key }) => {
-			recieverBus.emit("provider:request:complete", {
-				key,
-				error: { code: 4001, message: "User Rejected", data: "User Rejected " },
-				payload: null,
-			});
-		});
+        // within iframe
+        eip1193ProviderBusIframe.on('request:approve', ({ key }) => {
+            eip1193ProviderBusIframe.emit('response:complete', {
+                key,
+                error: null,
+                payload: emptyRpcBlock,
+            })
+        })
 
-		const payload = {
-			method: "eth_getBlockByNumber",
-			params: ["latest", false],
-		};
+        // provider request
+        expect(
+            provider.request({
+                method: 'eth_getBlockByNumber',
+                params: ['latest', false],
+            }),
+        ).resolves.toStrictEqual(emptyRpcBlock)
+    })
 
-		// within iframe
-		recieverBus.on("request:approve", callback);
+    it('rejects on error', async () => {
+        const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-		// provider request
-		expect(provider.request(payload)).rejects.toThrowError(ProviderRpcError);
-	});
+        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
 
-	it("subscribe an unsubscribe", async () => {
-		const providerBus = eventBus(busConfig);
+        // within iframe
+        eip1193ProviderBusIframe.on('request:approve', ({ key }) => {
+            eip1193ProviderBusIframe.emit('response:complete', {
+                key,
+                error: {
+                    code: 4001,
+                    message: 'User Rejected',
+                    data: 'User Rejected ',
+                },
+                payload: null,
+            })
+        })
 
-		const provider = new EIP1193ProviderProxy(providerBus, config);
+        // provider request
+        expect(
+            provider.request({
+                method: 'eth_getBlockByNumber',
+                params: ['latest', false],
+            }),
+        ).rejects.toThrowError(GenericProviderRpcError)
+    })
 
-		const callback = mock(() => {});
-		provider.on("connect", callback);
+    it('subscribes and unsubscribes to native eip1193 events', async () => {
+        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-		provider.emit("connect");
+        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
 
-		expect(callback).toHaveBeenCalledTimes(1);
+        const callback = mock(() => {})
+        provider.on('connect', callback)
 
-		provider.removeListener("connect", callback);
+        provider.emit('connect')
 
-		provider.emit("connect");
-		provider.emit("connect");
-		provider.emit("connect");
+        expect(callback).toHaveBeenCalledTimes(1)
 
-		expect(callback).toHaveBeenCalledTimes(1);
-	});
-});
+        provider.removeListener('connect', callback)
+
+        provider.emit('connect')
+        provider.emit('connect')
+        provider.emit('connect')
+
+        expect(callback).toHaveBeenCalledTimes(1)
+    })
+})

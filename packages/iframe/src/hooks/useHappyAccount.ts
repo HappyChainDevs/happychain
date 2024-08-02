@@ -1,56 +1,37 @@
-import type { HappyUser } from "@happychain/core";
-import { getDefaultStore, useAtomValue } from "jotai";
-import { atomWithStorage } from "jotai/utils";
-import {
-	type EIP1193Provider,
-	createPublicClient,
-	createWalletClient,
-	custom,
-} from "viem";
-import {
-	providerAtom,
-	publicClientAtom,
-	walletClientAtom,
-} from "../services/provider";
-import { AuthState, authStateAtom } from "../state/app";
+import type { HappyUser } from '@happychain/core'
+import { getDefaultStore, useAtomValue } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
+import { createPublicClient, createWalletClient, custom, type EIP1193Provider } from 'viem'
 
-// TODO: https://jotai.org/docs/recipes/atom-with-broadcast
-export const userAtom = atomWithStorage<null | HappyUser>(
-	"happychain:cached-user",
-	null,
-);
-userAtom.debugLabel = "userAtom";
+import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
+import { AuthState, authStateAtom } from '../state/app'
 
-const store = getDefaultStore();
+export const userAtom = atomWithStorage<null | HappyUser>('happychain:cached-user', null)
+userAtom.debugLabel = 'userAtom'
 
-export function setUserWithProvider(
-	user: HappyUser | null,
-	provider: EIP1193Provider,
-) {
-	// set user values (or null)
-	// set provider
-	// createPublicClient
-	// createWalletClient or set to null if no user
-	const publicClient = createPublicClient({ transport: custom(provider) });
-	const walletClient = user
-		? createWalletClient({ account: user.address, transport: custom(provider) })
-		: null;
+const store = getDefaultStore()
 
-	store.set(providerAtom, () => provider);
-	store.set(publicClientAtom, () => publicClient);
-	store.set(walletClientAtom, () => walletClient);
-	store.set(userAtom, () => user);
+export function setUserWithProvider(user: HappyUser | null, provider: EIP1193Provider) {
+    // set user values (or null)
+    // set provider
+    // createPublicClient
+    // createWalletClient or set to null if no user
+    const publicClient = createPublicClient({ transport: custom(provider) })
+    const walletClient = user ? createWalletClient({ account: user.address, transport: custom(provider) }) : null
 
-	// user auth state
-	store.set(authStateAtom, () =>
-		user ? AuthState.Authenticated : AuthState.Unauthenticated,
-	);
+    store.set(providerAtom, () => provider)
+    store.set(publicClientAtom, () => publicClient)
+    store.set(walletClientAtom, () => walletClient)
+    store.set(userAtom, () => user)
+
+    // user auth state
+    store.set(authStateAtom, () => (user ? AuthState.Authenticated : AuthState.Unauthenticated))
 }
 
 export function useHappyAccount() {
-	const user = useAtomValue(userAtom);
+    const user = useAtomValue(userAtom)
 
-	return {
-		user,
-	};
+    return {
+        user,
+    }
 }

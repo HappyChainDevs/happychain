@@ -1,145 +1,137 @@
-import { useIsHydrated } from "@happychain/common";
-import type { HappyUser } from "@happychain/core";
-import type { IdTokenLoginParams } from "@web3auth/mpc-core-kit";
-import {
-	type Auth,
-	GoogleAuthProvider,
-	onAuthStateChanged,
-	signInWithPopup,
-} from "firebase/auth";
-import { atom, useAtom, useSetAtom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
-import { useCallback, useEffect } from "react";
-import type { EIP1193Provider } from "viem";
-import { firebaseAuth } from "../services/firebase";
-import { connect, disconnect, web3AuthEvmProvider } from "../services/web3auth";
+import { useCallback, useEffect } from 'react'
 
-export type SignInProvider = "google";
+import { useIsHydrated } from '@happychain/common'
+import type { HappyUser } from '@happychain/core'
+import type { IdTokenLoginParams } from '@web3auth/mpc-core-kit'
+import { type Auth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from 'firebase/auth'
+import { atom, useAtom, useSetAtom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
+import type { EIP1193Provider } from 'viem'
 
-const internalAuthStateAtom = atomWithStorage(
-	"firebase-auth",
-	"unauthenticated",
-);
+import { firebaseAuth } from '../services/firebase'
+import { web3AuthConnect, web3AuthDisconnect, web3AuthEvmProvider } from '../services/web3auth'
 
-const firebaseAuthStateAtom = atom<{
-	user: HappyUser | null;
-	provider: EIP1193Provider;
+export type SignInProvider = 'google'
+
+const cachedFirebaseAuthStateAtom = atomWithStorage('firebase-auth', 'unauthenticated')
+
+const firebaseAuthAtom = atom<{
+    user: HappyUser | null
+    provider: EIP1193Provider
 }>({
-	user: null,
-	provider: web3AuthEvmProvider,
-});
+    user: null,
+    provider: web3AuthEvmProvider,
+})
 
 async function signInWithGoogle(auth: Auth) {
-	const googleProvider = new GoogleAuthProvider();
-	return await signInWithPopup(auth, googleProvider).then((a) => a.user);
+    const googleProvider = new GoogleAuthProvider()
+    return await signInWithPopup(auth, googleProvider).then((a) => a.user)
 }
 
 function useSignIn(auth: Auth) {
-	const setAuthState = useSetAtom(internalAuthStateAtom);
-	const signIn = useCallback(
-		async (provider: SignInProvider) => {
-			setAuthState("loading");
-			switch (provider) {
-				case "google":
-					await signInWithGoogle(auth);
-					return;
-				default:
-					setAuthState("unauthenticated");
-					throw new Error(`Unknown provider: ${provider}`);
-			}
-		},
-		[auth, setAuthState],
-	);
+    const setAuthState = useSetAtom(cachedFirebaseAuthStateAtom)
+    const signIn = useCallback(
+        async (provider: SignInProvider) => {
+            setAuthState('loading')
+            switch (provider) {
+                case 'google':
+                    await signInWithGoogle(auth)
+                    return
+                default:
+                    setAuthState('unauthenticated')
+                    throw new Error(`Unknown provider: ${provider}`)
+            }
+        },
+        [auth, setAuthState],
+    )
 
-	return { signIn };
+    return { signIn }
 }
 
 function useSignOut(auth: Auth) {
-	const signOut = useCallback(async () => {
-		await auth.signOut();
-	}, [auth]);
-	return { signOut };
+    const signOut = useCallback(async () => {
+        await auth.signOut()
+    }, [auth])
+    return { signOut }
 }
 
 function useOnAuthChange() {
-	const [internalAuthState, setInternalAuthState] = useAtom(
-		internalAuthStateAtom,
-	);
-	const [userAuth, setUserAuth] = useAtom(firebaseAuthStateAtom);
-	useEffect(() => {
-		onAuthStateChanged(firebaseAuth, async (_user) => {
-			if (!_user?.uid) {
-				await disconnect();
+    const [internalAuthState, setInternalAuthState] = useAtom(cachedFirebaseAuthStateAtom)
+    const [userAuth, setUserAuth] = useAtom(firebaseAuthAtom)
+    useEffect(() => {
+        onAuthStateChanged(firebaseAuth, async (_user) => {
+            if (!_user?.uid) {
+                await web3AuthDisconnect()
 
-				setUserAuth({
-					user: null,
-					provider: web3AuthEvmProvider,
-				});
-				setInternalAuthState("unauthenticated");
-				return;
-			}
+                setUserAuth({
+                    user: null,
+                    provider: web3AuthEvmProvider,
+                })
+                setInternalAuthState('unauthenticated')
+                return
+            }
 
-			const token = await _user.getIdTokenResult(true);
+            const token = await _user.getIdTokenResult(true)
 
-			if (!token.claims.sub) {
-				throw new Error("No verified ID");
-			}
-			const idTokenLoginParams = {
-				verifier: "supabase-1", // actually firebase tho
-				verifierId: token.claims.sub,
-				idToken: token.token,
-			} satisfies IdTokenLoginParams;
+            if (!token.claims.sub) {
+                throw new Error('No verified ID')
+            }
+            const idTokenLoginParams = {
+                verifier: 'supabase-1', // actually firebase tho
+                verifierId: token.claims.sub,
+                idToken: token.token,
+            } satisfies IdTokenLoginParams
 
-			const addresses = await connect(idTokenLoginParams);
+            const addresses = await web3AuthConnect(idTokenLoginParams)
 
-			const nextUser: HappyUser = {
-				// connection type
-				type: "social",
-				provider: "google",
-				// social details
-				uid: _user.uid,
-				email: _user.email || "",
-				name: _user.displayName || "",
-				ens: "", // TODO?
-				avatar: _user.photoURL || "",
-				// web3 details
-				address: addresses[0],
-				addresses,
-			};
+            const nextUser: HappyUser = {
+                // connection type
+                type: 'social',
+                provider: 'google',
+                // social details
+                uid: _user.uid,
+                email: _user.email || '',
+                name: _user.displayName || '',
+                ens: '', // TODO?
+                avatar: _user.photoURL || '',
+                // web3 details
+                address: addresses[0],
+                addresses,
+            }
 
-			setUserAuth({
-				user: nextUser,
-				provider: web3AuthEvmProvider,
-			});
-			setInternalAuthState("authenticated");
-		});
-	}, [setUserAuth, setInternalAuthState]);
+            setUserAuth({
+                user: nextUser,
+                provider: web3AuthEvmProvider,
+            })
+            setInternalAuthState('authenticated')
+        })
+    }, [setUserAuth, setInternalAuthState])
 
-	const isHydrated = useIsHydrated();
-	const onAuthChange = useCallback(
-		(callback: (user: HappyUser | null, provider: EIP1193Provider) => void) => {
-			if (!isHydrated) {
-				return;
-			}
+    const isHydrated = useIsHydrated()
+    const onAuthChange = useCallback(
+        (callback: (user: HappyUser | null, provider: EIP1193Provider) => void) => {
+            if (!isHydrated) {
+                return
+            }
 
-			if (internalAuthState === "authenticated" && userAuth.user) {
-				return callback(userAuth.user, userAuth.provider);
-			}
+            if (internalAuthState === 'authenticated' && userAuth.user) {
+                return callback(userAuth.user, userAuth.provider)
+            }
 
-			if (internalAuthState === "unauthenticated" && !userAuth.user) {
-				return callback(userAuth.user, userAuth.provider);
-			}
-		},
-		[isHydrated, userAuth, internalAuthState],
-	);
+            if (internalAuthState === 'unauthenticated' && !userAuth.user) {
+                return callback(userAuth.user, userAuth.provider)
+            }
+        },
+        [isHydrated, userAuth, internalAuthState],
+    )
 
-	return { onAuthChange };
+    return { onAuthChange }
 }
 
 export function useFirebaseAuth(auth: Auth) {
-	const { signIn } = useSignIn(auth);
-	const { signOut } = useSignOut(auth);
-	const { onAuthChange } = useOnAuthChange();
+    const { signIn } = useSignIn(auth)
+    const { signOut } = useSignOut(auth)
+    const { onAuthChange } = useOnAuthChange()
 
-	return { signIn, signOut, onAuthChange };
+    return { signIn, signOut, onAuthChange }
 }

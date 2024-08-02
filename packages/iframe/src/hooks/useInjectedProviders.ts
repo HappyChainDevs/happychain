@@ -17,7 +17,7 @@ function isEip6963Event(evt: Event): evt is EIP6963AnnounceProviderEvent {
 			typeof evt.detail === "object" &&
 			evt.detail &&
 			"info" in evt.detail &&
-			"provider" in evt.detail,
+			"provider" in evt.detail
 	);
 }
 
@@ -27,31 +27,34 @@ export function useInjectedProviders(): ConnectionProvider[] {
 	const setAuthState = useSetAtom(authStateAtom);
 	// user injected extensions
 	const [injectedProviders, setInjectedProviders] = useState<ProviderMap>(
-		new Map(),
+		new Map()
 	);
 
-	const enable = useCallback(async (eip1193Provider: EIP6963ProviderDetail) => {
-		const addresses = await eip1193Provider.provider.request({
-			method: "eth_requestAccounts",
-		});
+	const enable = useCallback(
+		async (eip1193Provider: EIP6963ProviderDetail) => {
+			const addresses = await eip1193Provider.provider.request({
+				method: "eth_requestAccounts",
+			});
 
-		const user: HappyUser = {
-			// connection type
-			type: "injected",
-			provider: eip1193Provider.info.rdns,
-			// social details
-			uid: addresses[0],
-			email: "",
-			name: `${addresses[0].slice(0, 6)}...${addresses[0].slice(-4)}`,
-			ens: "", // TODO?
-			avatar: `https://avatar.vercel.sh/${addresses[0]}?size=400`,
-			// web3 details
-			address: addresses[0],
-			addresses,
-		};
+			const user: HappyUser = {
+				// connection type
+				type: "injected",
+				provider: eip1193Provider.info.rdns,
+				// social details
+				uid: addresses[0],
+				email: "",
+				name: `${addresses[0].slice(0, 6)}...${addresses[0].slice(-4)}`,
+				ens: "", // TODO?
+				avatar: `https://avatar.vercel.sh/${addresses[0]}?size=400`,
+				// web3 details
+				address: addresses[0],
+				addresses,
+			};
 
-		setUserWithProvider(user, eip1193Provider.provider);
-	}, []);
+			setUserWithProvider(user, eip1193Provider.provider);
+		},
+		[]
+	);
 
 	const disable = useCallback(
 		async (eip1193Provider: EIP6963ProviderDetail) => {
@@ -60,7 +63,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
 				setUserWithProvider(null, eip1193Provider.provider);
 			}
 		},
-		[],
+		[]
 	);
 
 	useEffect(() => {
@@ -72,7 +75,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
 				!evt.detail.provider.isPhantom
 			) {
 				setInjectedProviders(
-					(map) => new Map(map.set(evt.detail.info.uuid, evt.detail)),
+					(map) => new Map(map.set(evt.detail.info.uuid, evt.detail))
 				);
 			}
 
@@ -101,17 +104,19 @@ export function useInjectedProviders(): ConnectionProvider[] {
 					name: eip1193Provider.info.name,
 					icon: eip1193Provider.info.icon,
 					enable: async () => {
+						// will automatically disable loading state when user+provider are set
 						setAuthState(AuthState.Loading);
 						await enable(eip1193Provider);
 					},
 					disable: async () => {
+						// will automatically disable loading state when user+provider are set
 						setAuthState(AuthState.Loading);
 						await disable(eip1193Provider);
 					},
 					getProvider: () => eip1193Provider.provider,
 				};
 			}),
-		[enable, disable, setAuthState, injectedProviders],
+		[enable, disable, setAuthState, injectedProviders]
 	);
 
 	return providers;

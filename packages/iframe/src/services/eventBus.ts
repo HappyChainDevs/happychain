@@ -1,37 +1,60 @@
 import {
-	type EIP1193ProxiedEvents,
-	EventBusChannel,
-	type EventHandler,
-	type EventKey,
-	type EventUUID,
-	eventBus,
-} from "@happychain/core";
+    type EIP1193ErrorObject,
+    type EIP1193ProxiedEvents,
+    type EIP1193RequestResult,
+    EventBus,
+    EventBusChannel,
+    type EventUUID,
+    type HappyEvents,
+} from '@happychain/core'
 
-export const messageBus = eventBus<EIP1193ProxiedEvents>({
-	target: window.parent,
-	mode: EventBusChannel.Port1,
-	scope: "happy-chain-events",
-});
+/**
+ * Event system between the EIP1193ProviderProxy in the dapp
+ * and the iframe provider/executor
+ *
+ * This is port1 so its created and initialized first, then waits for port2 to connect
+ */
+export const eip1193ProviderBus = new EventBus<EIP1193ProxiedEvents>({
+    target: window.parent,
+    mode: EventBusChannel.IframePort,
+    scope: 'happy-chain-eip1193-provider',
+})
+
+/**
+ * General purpose message system
+ * auth updates, user actions etc
+ * between iframe & dapp
+ */
+export const dappMessageBus = new EventBus<HappyEvents>({
+    target: window.parent,
+    mode: EventBusChannel.IframePort,
+    scope: 'happy-chain-bus',
+})
 
 /**
  * Broadcasts events on same domain
  * Main use case is iframe<->popup communication
  */
 
-export interface BroadcastEvents extends Record<EventKey, EventHandler> {
-	"request:approve": EventHandler<{
-		error: null;
-		key: EventUUID;
-		payload: unknown;
-	}>;
-	"request:reject": EventHandler<{
-		error: { code: number; message: string; data: string };
-		key: EventUUID;
-		payload: null;
-	}>;
+export interface BroadcastEvents {
+    'request:approve': {
+        error: null
+        key: EventUUID
+        payload: EIP1193RequestResult
+    }
+    'request:reject': {
+        error: EIP1193ErrorObject
+        key: EventUUID
+        payload: null
+    }
 }
 
-export const broadcastBus = eventBus<BroadcastEvents>({
-	mode: EventBusChannel.Broadcast,
-	scope: "server:popup",
-});
+/**
+ * Same domain Messages between iframe & popup
+ *
+ * primarily user approvals/rejections
+ */
+export const popupBus = new EventBus<BroadcastEvents>({
+    mode: EventBusChannel.Broadcast,
+    scope: 'server:popup',
+})

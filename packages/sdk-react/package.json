@@ -1,48 +1,46 @@
 {
-	"name": "@happychain/react",
-	"private": true,
-	"version": "0.0.0",
-	"type": "module",
-	"files": ["dist"],
-	"main": "./dist/index.umd.js",
-	"module": "./dist/index.es.js",
-	"exports": {
-		".": {
-			"import": "./dist/index.es.js",
-			"require": "./dist/index.umd.js"
-		}
-	},
-	"scripts": {
-		"dev": "vite",
-		"build": "vite build",
-		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-		"preview": "vite preview",
-		"test": "vitest"
-	},
-	"dependencies": {
-		"@happychain/core": "workspace:^",
-		"@happychain/common": "workspace:^",
-		"jotai": "^2.8.4",
-		"react": "^18.3.1",
-		"react-dom": "^18.3.1"
-	},
-	"devDependencies": {
-		"@testing-library/dom": "^10.4.0",
-		"@testing-library/jest-dom": "^6.4.8",
-		"@testing-library/react": "^16.0.0",
-		"@types/react": "^18.3.3",
-		"@types/react-dom": "^18.3.0",
-		"@typescript-eslint/eslint-plugin": "^7.15.0",
-		"@typescript-eslint/parser": "^7.15.0",
-		"@vitejs/plugin-react-swc": "^3.5.0",
-		"clsx": "^2.1.1",
-		"eslint": "^8.57.0",
-		"eslint-plugin-react-hooks": "^4.6.2",
-		"eslint-plugin-react-refresh": "^0.4.7",
-		"jsdom": "^24.1.1",
-		"typescript": "^5.5.4",
-		"vite": "^5.3.4",
-		"vite-plugin-dts": "4.0.0-beta.1",
-		"vitest": "^2.0.4"
-	}
+    "name": "@happychain/react",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "main": "./dist/index.umd.js",
+    "module": "./dist/index.es.js",
+    "exports": {
+        ".": {
+            "import": "./dist/index.es.js",
+            "require": "./dist/index.umd.js"
+        }
+    },
+    "dependencies": {
+        "@happychain/core": "workspace:^",
+        "@happychain/common": "workspace:^",
+        "jotai": "^2.8.4",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    },
+    "devDependencies": {
+        "@happychain/eslint-config": "workspace:^",
+        "@happychain/prettier-config": "workspace:^",
+        "@happychain/typescript-config": "workspace:^",
+        "@testing-library/dom": "^10.4.0",
+        "@testing-library/jest-dom": "^6.4.8",
+        "@testing-library/react": "^16.0.0",
+        "@types/react": "^18.3.3",
+        "@types/react-dom": "^18.3.0",
+        "@typescript-eslint/eslint-plugin": "^7.15.0",
+        "@typescript-eslint/parser": "^7.15.0",
+        "@vitejs/plugin-react-swc": "^3.5.0",
+        "clsx": "^2.1.1",
+        "eslint": "^8.57.0",
+        "eslint-plugin-react-hooks": "^4.6.2",
+        "eslint-plugin-react-refresh": "^0.4.7",
+        "jsdom": "^24.1.1",
+        "typescript": "^5.5.4",
+        "vite": "^5.3.4",
+        "vite-plugin-dts": "4.0.0-beta.1",
+        "vitest": "^2.0.4"
+    }
 }
