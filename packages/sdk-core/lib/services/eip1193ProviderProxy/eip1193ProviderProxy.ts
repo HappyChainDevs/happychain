@@ -47,7 +47,7 @@ export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1
         super()
 
         bus.on('provider:event', this.handleProviderNativeEvent.bind(this))
-        bus.on('provider:request:complete', this.handleCompletedRequest.bind(this))
+        bus.on('response:complete', this.handleCompletedRequest.bind(this))
         config.logger?.log('EIP1193Provider Created')
     }
 
@@ -55,7 +55,7 @@ export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1
         this.emit(data.payload.event, data.payload.args)
     }
 
-    private handleCompletedRequest(data: EIP1193ProxiedEvents['provider:request:complete']) {
+    private handleCompletedRequest(data: EIP1193ProxiedEvents['response:complete']) {
         const req = this.inFlight.get(data.key)
 
         if (!req) {

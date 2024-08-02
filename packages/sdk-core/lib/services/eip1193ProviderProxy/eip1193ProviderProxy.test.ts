@@ -86,7 +86,7 @@ describe('EIP1193ProviderProxy', () => {
 
         // within iframe
         iframeBus.on('request:approve', ({ key }) => {
-            iframeBus.emit('provider:request:complete', {
+            iframeBus.emit('response:complete', {
                 key,
                 error: null,
                 payload: emptyRpcBlock,
@@ -110,7 +110,7 @@ describe('EIP1193ProviderProxy', () => {
 
         // within iframe
         iframeBus.on('request:approve', ({ key }) => {
-            iframeBus.emit('provider:request:complete', {
+            iframeBus.emit('response:complete', {
                 key,
                 error: {
                     code: 4001,
