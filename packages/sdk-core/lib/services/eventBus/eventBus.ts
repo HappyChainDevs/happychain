@@ -16,7 +16,7 @@ export enum EventBusChannel {
     // same-domain broadcasts
     Broadcast = 'broadcastchannel',
 
-    // Testing. Port are supplied directly during construction
+    // For testing. The port is supplied directly during construction.
     Forced = 'forced',
 }
 
