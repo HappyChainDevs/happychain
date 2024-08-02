@@ -1,6 +1,8 @@
+import { useState } from 'react'
+
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { useAtomValue } from 'jotai'
-import { useState } from 'react'
+
 import { ConnectButton } from '../components/ConnectButton'
 import { DotLinearMotionBlurLoader } from '../components/loaders/DotLinearMotionBlurLoader'
 import { useHappyAccount } from '../hooks/useHappyAccount'

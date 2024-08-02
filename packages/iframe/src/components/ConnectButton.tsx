@@ -1,6 +1,8 @@
+import { useState } from 'react'
+
 import type { ConnectionProvider } from '@happychain/core'
 import clsx from 'clsx'
-import { useState } from 'react'
+
 import { useInjectedProviders } from '../hooks/useInjectedProviders'
 import { useSocialProviders } from '../hooks/useSocialProviders'
 import { dappMessageBus } from '../services/eventBus'

@@ -1,6 +1,8 @@
-import { type HappyUser, config } from '@happychain/core'
-import { clsx } from 'clsx'
 import { memo, useEffect, useMemo, useState } from 'react'
+
+import { config, type HappyUser } from '@happychain/core'
+import { clsx } from 'clsx'
+
 import { useHappyChain } from '../hooks/useHappyChain'
 import { dappMessageBus } from '../services/eventBus'
 

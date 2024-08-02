@@ -2,13 +2,13 @@ import SafeEventEmitter from '@metamask/safe-event-emitter'
 import type { EIP1193Provider, EIP1193RequestFn, EIP1474Methods } from 'viem'
 
 import type { config } from '../../config'
+import type { HappyUser } from '../../interfaces/happyUser'
 import type { IEventBus } from '../eventBus'
 import type { Logger } from '../logger'
 import { requiresApproval } from '../permissions'
 
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from './errors'
 import type { EIP1193EventName, EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
-import type { HappyUser } from '../../interfaces/happyUser'
 
 type Timer = ReturnType<typeof setInterval>
 

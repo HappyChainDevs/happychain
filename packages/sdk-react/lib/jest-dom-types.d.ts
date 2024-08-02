@@ -1,16 +1,14 @@
-import type { TestingLibraryMatchers } from "@testing-library/jest-dom/matchers";
+import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers'
 
 // shim for bun
-declare module "bun:test" {
-	interface Matchers<R = void>
-		extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
-	interface AsymmetricMatchers extends TestingLibraryMatchers {}
+declare module 'bun:test' {
+    interface Matchers<R = void> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
+    interface AsymmetricMatchers extends TestingLibraryMatchers {}
 }
 
 // shim for vitest
 declare global {
-	namespace jest {
-		interface Matchers<R = void>
-			extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
-	}
+    namespace jest {
+        interface Matchers<R = void> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
+    }
 }

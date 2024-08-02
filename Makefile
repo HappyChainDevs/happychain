@@ -12,11 +12,6 @@ anvil:
 	cd packages/contracts && make anvil
 .PHONY: anvil
 
-# Runs the frontend in dev mode.
-webdev:
-	cd packages/frontend && make dev
-.PHONY: webdev
-
 iframe-dev:
 	cd packages/iframe && make dev
 .PHONY: iframe
@@ -29,12 +24,11 @@ sdk-dev:
 	make -j 2 iframe-dev sdk-react-dev
 .PHONY: sdk-dev
 
-# Builds the frontend and the contracts.
+# Builds the sdk and the contracts.
 build:
 	cd packages/sdk-react && make build
-	cd packages/contracts && make build
-	cd packages/frontend && make build
 	cd packages/iframe && make build
+	cd packages/contracts && make build
 .PHONY: build
 
 # Deploys to the contracts to the local node (requires anvil to be running).
@@ -55,7 +49,6 @@ check:
 	cd packages/sdk-firebase-web3auth-strategy && make check
 	cd packages/sdk-react && make check
 	cd packages/contracts && make check
-	cd packages/frontend && make check
 	cd packages/iframe && make check
 .PHONY: check
 
@@ -66,7 +59,6 @@ format:
 	cd packages/sdk-firebase-web3auth-strategy && make format
 	cd packages/sdk-react && make format
 	cd packages/contracts && make format
-	cd packages/frontend && make format
 	cd packages/iframe && make format
 .PHONY: format
 
