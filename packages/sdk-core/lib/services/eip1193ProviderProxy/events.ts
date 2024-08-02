@@ -32,14 +32,14 @@ export interface EIP1193ProxiedEvents {
         payload: EIP1193RequestArg
     }
     // user rejects request
-    'request:reject':
-        | {
-              key: EventUUID
-              error: EIP1193ErrorObject
-              payload: null
-          }
+    'request:reject': {
+        key: EventUUID
+        error: EIP1193ErrorObject
+        payload: null
+    }
 
-        // request completed (success or fail)
+    // request completed (success or fail)
+    'response:complete':
         | {
               key: EventUUID
               error: EIP1193ErrorObject
