@@ -8,6 +8,7 @@ declare module 'bun:test' {
 
 // shim for vitest
 declare global {
+    // biome-ignore lint/style/noNamespace: <explanation>
     namespace jest {
         interface Matchers<R = void> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
     }

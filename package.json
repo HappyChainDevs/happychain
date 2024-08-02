@@ -1,12 +1,12 @@
 {
-	"name": "@happychain/monorepo",
-	"author": "Happy Devs",
-	"license": "BSD-3-Clause-Clear",
-	"version": "1.0.0",
-	"private": true,
-	"packageManager": "pnpm@9.4.0",
-	"devDependencies": {
-		"@biomejs/biome": "^1.8.3",
-		"typescript": "^5.5.4"
-	}
+    "name": "@happychain/monorepo",
+    "author": "Happy Devs",
+    "license": "BSD-3-Clause-Clear",
+    "version": "1.0.0",
+    "private": true,
+    "packageManager": "pnpm@9.4.0",
+    "devDependencies": {
+        "@biomejs/biome": "^1.8.3",
+        "typescript": "^5.5.4"
+    }
 }

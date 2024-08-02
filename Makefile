@@ -62,6 +62,18 @@ format:
 	cd packages/iframe && make format
 .PHONY: format
 
+# quick check using biome
+# Not a perfect 1:1 of eslint/prettier, but very close and much faster
+check-fast:
+	bunx @biomejs/biome check ./
+.PHONT: check-fast
+
+# quick format using biome
+# Not a perfect 1:1 of eslint/prettier, but very close and much faster
+format-fast:
+	bunx @biomejs/biome check ./ --write
+.PHONT: format-fast
+
 # ==================================================================================================
 # IMPLEMENTATION DETAILS
 

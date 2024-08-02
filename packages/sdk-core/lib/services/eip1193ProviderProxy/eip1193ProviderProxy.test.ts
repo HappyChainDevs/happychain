@@ -53,8 +53,7 @@ describe('EIP1193ProviderProxy', () => {
 
         const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const callback = mock(({ key, error, payload }) => {})
+        const callback = mock(({ key: _key, error: _error, payload: _payload }) => {})
 
         const payload = {
             method: 'eth_getBlockByNumber',

@@ -1,9 +1,9 @@
 {
-	"name": "@happychain/prettier-config",
-	"version": "0.0.0",
-	"private": true,
+    "name": "@happychain/prettier-config",
+    "version": "0.0.0",
+    "private": true,
     "type": "module",
-	"devDependencies": {
-		"prettier-plugin-tailwindcss": "^0.6.5"
-	}
+    "devDependencies": {
+        "prettier-plugin-tailwindcss": "^0.6.5"
+    }
 }
