@@ -52,6 +52,49 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(typescript@5.5.4)
 
+  packages/demo-react:
+    dependencies:
+      '@happychain/react':
+        specifier: workspace:^
+        version: link:../sdk-react
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@happychain/eslint-config':
+        specifier: workspace:^
+        version: link:../eslint-config
+      '@happychain/prettier-config':
+        specifier: workspace:^
+        version: link:../prettier-config
+      '@happychain/typescript-config':
+        specifier: workspace:^
+        version: link:../typescript-config
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.3
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.0
+      '@vitejs/plugin-react-swc':
+        specifier: ^3.5.0
+        version: 3.7.0(@swc/helpers@0.5.5)(vite@5.3.5(@types/node@22.0.0)(terser@5.31.3))
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.0
+      prettier:
+        specifier: ^3.3.3
+        version: 3.3.3
+      typescript:
+        specifier: ^5.5.4
+        version: 5.5.4
+      vite:
+        specifier: ^5.3.4
+        version: 5.3.5(@types/node@22.0.0)(terser@5.31.3)
+
   packages/eslint-config:
     devDependencies:
       '@happychain/prettier-config':
@@ -3646,6 +3689,7 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
