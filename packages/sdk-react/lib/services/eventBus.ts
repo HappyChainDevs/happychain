@@ -1,4 +1,4 @@
-import { type EIP1193ProxiedEvents, EventBusChannel, EventBus, type HappyEvents } from '@happychain/core'
+import { type EIP1193ProxiedEvents, EventBus, EventBusChannel, type HappyEvents } from '@happychain/core'
 
 /**
  * Event system between the EIP1193ProviderProxy in the dapp
