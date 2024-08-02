@@ -1,12 +1,14 @@
-import { logger, type EIP1193EventName } from '@happychain/core'
+import { type ReactNode, useEffect, useState } from 'react'
+
+import { type EIP1193EventName, logger } from '@happychain/core'
+import { requiresApproval } from '@happychain/core/lib/services/permissions'
 import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
 import { useAtomValue } from 'jotai'
-import { type ReactNode, useEffect, useState } from 'react'
+
 import { userAtom } from '../hooks/useHappyAccount'
 import { useInjectedProviders } from '../hooks/useInjectedProviders'
-import { popupBus, eip1193ProviderBus, dappMessageBus } from '../services/eventBus'
+import { dappMessageBus, eip1193ProviderBus, popupBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
-import { requiresApproval } from '@happychain/core/lib/services/permissions'
 
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
     const happyUser = useAtomValue(userAtom)
@@ -59,9 +61,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const offApprove = popupBus.on('request:approve', async (payload) => {
             try {
-                const result = await walletClient?.request(
-                    payload.payload as Parameters<typeof walletClient.request>, // TODO: fix proper payload types instead of casting
-                )
+                const result = await walletClient?.request(payload.payload as Parameters<typeof walletClient.request>)
 
                 eip1193ProviderBus.emit('response:complete', {
                     key: payload.key,
@@ -69,7 +69,6 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
                     payload: result,
                 })
             } catch (e) {
-                // TODO: emit broken request error
                 console.error(e)
                 console.error('error executing request', payload)
             }
@@ -94,7 +93,6 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
                 const injectedProvider = web3providers.find((i) => `injected:${isInjected}` === i.id)
 
-                // TODO: use a proper list with shared config in the front
                 if (!injectedProvider && !isPublicMethod) {
                     // emit not allowed error
                     console.warn('can not execute untrusted request', data)
@@ -106,8 +104,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
                 const result =
                     isInjected && walletClient
-                        ? // TODO: fix with proper payload types
-                          await walletClient.request(data.payload as Parameters<typeof walletClient.request>)
+                        ? await walletClient.request(data.payload as Parameters<typeof walletClient.request>)
                         : await publicClient.request(data.payload as Parameters<typeof publicClient.request>)
 
                 eip1193ProviderBus.emit('response:complete', {
@@ -116,7 +113,6 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
                     payload: result,
                 })
             } catch (e) {
-                // TODO: emit broken request error
                 console.error(e)
                 console.error('error executing request', data)
             }

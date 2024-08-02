@@ -8,6 +8,7 @@ import { requiresApproval } from '../permissions'
 
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from './errors'
 import type { EIP1193EventName, EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
+import type { HappyUser } from '../../interfaces/happyUser'
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -28,7 +29,7 @@ class RestrictedEventEmitter extends SafeEventEmitter {
     on(
         // restrict types to only allow provider events
         eventName: EIP1193EventName,
-        // biome-ignore lint/suspicious/noExplicitAny: TODO: Update with generics when SafeEventEmitter permits it https://github.com/HappyChainDevs/happychain/pull/1#discussion_r1697113957
+        // biome-ignore lint/suspicious/noExplicitAny: SafeEventEmitter looses base EventEmitter generics
         handler: (...args: any[]) => void,
     ) {
         super.on(eventName, handler)
@@ -82,12 +83,17 @@ export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1
     }
 
     private walletIsInjected() {
-        // TODO: improve check. if wallet is injected (extension), we can simply proxy
-        // the request to the iframe. if its not injected, we need to display the
-        // approval popup.
-        // NOTE: this is a UX optimization, actual wallet injection check occurs within
-        // the iframe for security
-        return false
+        const cached = localStorage.getItem('happychain:user')
+        if (!cached) {
+            return false
+        }
+
+        try {
+            const user = JSON.parse(cached) as HappyUser
+            return user?.type === 'injected'
+        } catch {
+            return false
+        }
     }
 
     private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
