@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai'
 import { type ReactNode, useEffect, useState } from 'react'
 import { userAtom } from '../hooks/useHappyAccount'
 import { useInjectedProviders } from '../hooks/useInjectedProviders'
-import { broadcastBus, eip1193providerBus, messageBus } from '../services/eventBus'
+import { popupBus, eip1193ProviderBus, dappMessageBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
 import { requiresApproval } from '@happychain/core/lib/services/permissions'
 
@@ -27,12 +27,12 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     }, [])
 
     useEffect(() => {
-        messageBus.emit('auth-changed', happyUser)
+        dappMessageBus.emit('auth-changed', happyUser)
     }, [happyUser])
 
     useEffect(() => {
         const proxyEvent = (name: EIP1193EventName) => (event: unknown) => {
-            eip1193providerBus.emit('provider:event', {
+            eip1193ProviderBus.emit('provider:event', {
                 payload: { event: name, args: event },
             })
         }
@@ -57,13 +57,13 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
     // trusted events may only be sent from same-origin (popup approval screen)
     useEffect(() => {
-        const offApprove = broadcastBus.on('request:approve', async (payload) => {
+        const offApprove = popupBus.on('request:approve', async (payload) => {
             try {
                 const result = await walletClient?.request(
                     payload.payload as Parameters<typeof walletClient.request>, // TODO: fix proper payload types instead of casting
                 )
 
-                eip1193providerBus.emit('response:complete', {
+                eip1193ProviderBus.emit('response:complete', {
                     key: payload.key,
                     error: null,
                     payload: result,
@@ -74,8 +74,8 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
                 console.error('error executing request', payload)
             }
         })
-        const offReject = broadcastBus.on('request:reject', (payload) => {
-            eip1193providerBus.emit('response:complete', payload)
+        const offReject = popupBus.on('request:reject', (payload) => {
+            eip1193ProviderBus.emit('response:complete', payload)
         })
         return () => {
             offApprove()
@@ -86,7 +86,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // Untrusted requests can be called directly from the frontend and bypass the popup screen
     // host:iframe communication
     useEffect(() => {
-        const offApprove = eip1193providerBus.on('request:approve', async (data) => {
+        const offApprove = eip1193ProviderBus.on('request:approve', async (data) => {
             try {
                 const isPublicMethod = !requiresApproval(data.payload)
 
@@ -110,7 +110,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
                           await walletClient.request(data.payload as Parameters<typeof walletClient.request>)
                         : await publicClient.request(data.payload as Parameters<typeof publicClient.request>)
 
-                eip1193providerBus.emit('response:complete', {
+                eip1193ProviderBus.emit('response:complete', {
                     key: data.key,
                     error: null,
                     payload: result,

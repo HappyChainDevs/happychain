@@ -2,8 +2,8 @@ import {
     type EIP1193ErrorObject,
     type EIP1193ProxiedEvents,
     type EIP1193RequestResult,
-    EventBusChannel,
     EventBus,
+    EventBusChannel,
     type EventUUID,
     type HappyEvents,
 } from '@happychain/core'
@@ -14,7 +14,7 @@ import {
  *
  * This is port1 so its created and initialized first, then waits for port2 to connect
  */
-export const eip1193providerBus = new EventBus<EIP1193ProxiedEvents>({
+export const eip1193ProviderBus = new EventBus<EIP1193ProxiedEvents>({
     target: window.parent,
     mode: EventBusChannel.IframePort,
     scope: 'happy-chain-eip1193-provider',
@@ -25,7 +25,7 @@ export const eip1193providerBus = new EventBus<EIP1193ProxiedEvents>({
  * auth updates, user actions etc
  * between iframe & dapp
  */
-export const messageBus = new EventBus<HappyEvents>({
+export const dappMessageBus = new EventBus<HappyEvents>({
     target: window.parent,
     mode: EventBusChannel.IframePort,
     scope: 'happy-chain-bus',
@@ -54,7 +54,7 @@ export interface BroadcastEvents {
  *
  * primarily user approvals/rejections
  */
-export const broadcastBus = new EventBus<BroadcastEvents>({
+export const popupBus = new EventBus<BroadcastEvents>({
     mode: EventBusChannel.Broadcast,
     scope: 'server:popup',
 })

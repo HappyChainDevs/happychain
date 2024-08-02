@@ -48,10 +48,10 @@ describe('EIP1193ProviderProxy', () => {
     })
 
     it('transmits payload using bus', async () => {
-        const iframeBus = new EventBus<EIP1193ProxiedEvents>(busConfig)
-        const providerProxyBus = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy(providerProxyBus, config)
+        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
 
         const callback = mock(({ key, error, payload }) => {})
 
@@ -65,7 +65,7 @@ describe('EIP1193ProviderProxy', () => {
         }
 
         // within iframe
-        iframeBus.on('request:approve', callback)
+        eip1193ProviderBusIframe.on('request:approve', callback)
 
         // provider request, unanswered so don't await
         provider.request(payload)
@@ -79,14 +79,14 @@ describe('EIP1193ProviderProxy', () => {
     })
 
     it('resolves on success', async () => {
-        const iframeBus = new EventBus<EIP1193ProxiedEvents>(busConfig)
-        const providerProxyBus = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy(providerProxyBus, config)
+        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
 
         // within iframe
-        iframeBus.on('request:approve', ({ key }) => {
-            iframeBus.emit('response:complete', {
+        eip1193ProviderBusIframe.on('request:approve', ({ key }) => {
+            eip1193ProviderBusIframe.emit('response:complete', {
                 key,
                 error: null,
                 payload: emptyRpcBlock,
@@ -103,14 +103,14 @@ describe('EIP1193ProviderProxy', () => {
     })
 
     it('rejects on error', async () => {
-        const iframeBus = new EventBus<EIP1193ProxiedEvents>(busConfig)
-        const providerProxyBus = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy(providerProxyBus, config)
+        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
 
         // within iframe
-        iframeBus.on('request:approve', ({ key }) => {
-            iframeBus.emit('response:complete', {
+        eip1193ProviderBusIframe.on('request:approve', ({ key }) => {
+            eip1193ProviderBusIframe.emit('response:complete', {
                 key,
                 error: {
                     code: 4001,
@@ -131,9 +131,9 @@ describe('EIP1193ProviderProxy', () => {
     })
 
     it('subscribes and unsubscribes to native eip1193 events', async () => {
-        const providerProxyBus = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy(providerProxyBus, config)
+        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
 
         const callback = mock(() => {})
         provider.on('connect', callback)
