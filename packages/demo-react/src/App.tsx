@@ -1,35 +1,84 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react'
+
+import { HappyWallet, useHappyChain } from '@happychain/react'
+
+import { useViemClient } from './hooks/useViemClient'
 
 function App() {
-  const [count, setCount] = useState(0)
+    const { walletClient, publicClient } = useViemClient()
+    const [signatureResult, setSignatureResult] = useState<string>()
+    const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    const { user } = useHappyChain()
+
+    async function signMessage() {
+        setSignatureResult('')
+        if (!walletClient) {
+            console.warn('no wallet client connected')
+            return
+        }
+
+        if (!user) {
+            console.warn('no user connected')
+            return
+        }
+
+        const message = 'Hello'
+
+        const signature = await walletClient.signMessage({ message })
+
+        const valid = await publicClient.verifyMessage({
+            address: user.address,
+            message,
+            signature,
+        })
+
+        if (valid) {
+            setSignatureResult(signature)
+        }
+    }
+
+    async function getBlock() {
+        const block = await publicClient.getBlock()
+        setBlockResult(block)
+    }
+
+    useEffect(() => {
+        if (!user) {
+            setSignatureResult('')
+            setBlockResult(null)
+        }
+    }, [user])
+
+    return (
+        <main className="flex min-h-dvh w-full flex-col items-center gap-4 bg-[url('/francesco-ungaro-Wn8JoB8FP70-unsplash.jpg')] bg-[100vw_auto] p-4">
+            <br />
+
+            <div className="w-96 overflow-auto bg-gray-200 p-4">
+                <p className="text-lg font-bold">User Details</p>
+                <pre>{JSON.stringify(user, null, 2)}</pre>
+            </div>
+
+            <button type="button" onClick={signMessage} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Sign Message
+            </button>
+
+            <div className="w-96 overflow-auto bg-gray-200 p-4">
+                <p className="text-lg font-bold">Results:</p>
+                <pre>{signatureResult}</pre>
+            </div>
+
+            <button type="button" onClick={getBlock} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Get Block
+            </button>
+            <div className="w-96 overflow-auto bg-gray-200 p-4">
+                <p className="text-lg font-bold">Results:</p>
+                <pre>{JSON.stringify(blockResult, (_, v) => (typeof v === 'bigint' ? v.toString() : v), 2)}</pre>
+            </div>
+
+            <HappyWallet />
+        </main>
+    )
 }
 
 export default App
