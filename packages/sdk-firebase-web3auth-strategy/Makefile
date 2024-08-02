@@ -1,25 +1,3 @@
-dev:
-	pnpm vite
-.PHONY: dev
-
-build:
-	tsc -b && pnpm vite build
-.PHONY: build
-
-# build only stylesheet
-styles:
-	mkdir -p dist && pnpm postcss lib/index.css -d ./dist/
-.PHONY: styles
-
-preview:
-	pnpm vite preview
-.PHONY: preview
-
-# Using vitest+jsdon for better react testing support
-test:
-	pnpm vitest --watch=false
-.PHONY: test
-
 lint:
 	pnpm eslint . --report-unused-disable-directives --max-warnings 0
 .PHONY: lint

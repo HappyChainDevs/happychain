@@ -1,13 +1,14 @@
 {
-	"compilerOptions": {
-		"composite": true,
-		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-		"skipLibCheck": true,
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"allowSyntheticDefaultImports": true,
-		"strict": true,
-		"noEmit": true
-	},
-	"include": ["vite.config.ts", "test"]
+    "extends": "@happychain/typescript-config/tsconfig.vite-node.json",
+    "compilerOptions": {
+        "target": "ES2020",
+        "jsx": "react-jsx",
+        "baseUrl": "./",
+        "paths": {
+            "lib/*": ["./lib/*"],
+            "src/*": ["./src/*"],
+            "test/*": ["./test/*"]
+        }
+    },
+    "include": ["vite.config.ts", "lib", "test", "src"]
 }
