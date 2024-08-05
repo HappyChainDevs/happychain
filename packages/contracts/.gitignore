@@ -1,0 +1,2 @@
+# All the subdirectories are created/symlinked by `make setup`
+lib/
