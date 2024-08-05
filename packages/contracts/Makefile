@@ -3,24 +3,51 @@
 -include .env
 
 # Set CONFIG to "LOCAL" by default. Other valid values: "TEST" or "MAIN".
-CONFIG?=LOCAL
-export CONFIG
+CONFIG ?= LOCAL
 
-# See README.md for documentation.
+# Deployment mode:
+# - "deploy" — deploy contracts normally
+# - "dry" — for a dry-run that doesn't send transactions
+# - "resume" — resumes the previous deployment
+DEPLOY ?= deploy
+
+# Deployment name, used by `make save-deployment` (will save under deployments/$DEPLOYMENT_NAME).
+DEPLOYMENT_NAME ?= $(CONFIG)
+
+# Script to run for deployments, or deployment to save for `make save-deployment`.
+DEPLOY_SCRIPT ?= DeployL1Upgradeable.s.sol
+
+# See README.md for more documentation.
 
 # The reason for this weird setup is that the IntelliJ solidity plugin will not resolve imports
 # if they're not in `lib` and do not have a `src` directory (the `remappings.txt` file is ignored).
 setup:
 	if [ ! -f .env ]; then cp .env.example .env; fi
 	mkdir -p lib
-	ln -sf ../node_modules/forge-std lib/forge-std
+	ln -shF ../node_modules/forge-std lib/forge-std
 	mkdir -p lib/openzeppelin
-	ln -sf ../../node_modules/@openzeppelin/contracts lib/openzeppelin/src
+	ln -shF ../../node_modules/@openzeppelin/contracts lib/openzeppelin/src
+	mkdir -p lib/oz-upgradeable
+	ln -shF ../../node_modules/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
 .PHONY: setup
+
+####################################################################################################
+# Build
 
 build:
 	forge build
 .PHONY: build
+
+watch:
+	forge test --watch src/
+.PHONY: watch
+
+clean:
+	forge clean
+.PHONY: clean
+
+####################################################################################################
+# Testing
 
 test:
 	forge test -vv
@@ -34,17 +61,12 @@ test-gas:
 	forge test --gas-report
 .PHONY: test-gas
 
-watch:
-	forge test --watch src/
-.PHONY: watch
-
 test-fork:
-	forge test --gas-report --fork-url ${ETH_NODE}
+	forge test --gas-report --fork-url $(RPC_$(CONFIG))
 .PHONY: test-fork
 
-clean:
-	forge clean
-.PHONY: clean
+####################################################################################################
+# Code Quality
 
 check: lint format-check
 .PHONY: check
@@ -61,50 +83,123 @@ format:
 	forge fmt src/*.sol src/test/*.sol src/deploy/*.sol
 .PHONY: format
 
+####################################################################################################
+# Devnet
+
 # The 1337 chain id matches "localhost" in Wagmi & "Localhost 8545" in MetaMask.
-#
-# Note that (for now) the block time specification is crucial here and needs to be << the proof
-# generation time, otherwise the simulation of that tx will be made as though it was in the block
-# where the public randomness is supposed to be derived from, which will yield a 0 blockhash and
-# random value.
+# (Unfortunately some tools will mistakenly report this as not having the Shangai fork activated.)
 anvil:
-	anvil --chain-id 1337 --code-size-limit 30000 --block-time 2
+	anvil --chain-id 1337 --block-time 2
 .PHONY: anvil
 
-# Dumps function, event and error selectors to out/selectors.txt
-selectors:
-	forge upload-selectors --all > out/selectors.txt
-.PHONY: selectors
+####################################################################################################
+# Deployment
 
-# Deploys locally, to testnet or mainnet depending on the $CONFIG value (locally if not set).
-deploy: build
-	@forge script src/deploy/Deploy.s.sol:Deploy \
-		--fork-url $(RPC_$(CONFIG)) \
-		--private-key $(PRIVATE_KEY_$(CONFIG)) \
-		--broadcast \
-		--non-interactive \
-		| grep "address " > out/deployment.txt
-	@cat out/deployment.txt
-	@node scripts/extract_contract_addresses_abis.js \
-		out/deployment.txt \
-		out/abis.json \
-		> out/deployment.json
-	@rm out/deployment.txt
-	@cd ../frontend && pnpm wagmi generate
+VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
+CHECK_UPGRADE := make validate-upgrade
+
+ifeq ($(DEPLOY),deploy)
+	BROADCAST_FLAG := --broadcast
+endif
+
+ifeq ($(DEPLOY),dry)
+	BROADCAST_FLAG :=
+	VERIFY_FLAG :=
+endif
+
+ifeq ($(DEPLOY),resume)
+	BROADCAST_FLAG := --resume
+	CHECK_UPGRADE :=
+endif
+
+# Deploys contracts locally, to testnet or mainnet depending on the $CONFIG value.
+# You can also specify MODE=dry to not submit the tx, or MODE=resume to resume the last deployment.
+deploy:
+	$(CHECK_UPGRADE)
+	$(call run-deploy-script,src/deploy/$(DEPLOY_SCRIPT))
+	$(call post-deploy,$(DEPLOY_SCRIPT))
 .PHONY: deploy
 
-# Sometimes the deployment crashes, this allows us to see why. Hardcoded to only use local
-# deployment.
-debug-deploy:
-	forge script src/deploy/Deploy.s.sol:Deploy \
-		--fork-url http://localhost:8545 \
-		--private-key $(PRIVATE_KEY_LOCAL) \
-		--broadcast
-.PHONY: debug-deploy
+# Performs checks related to contract upgradeability.
+# cf. https://docs.openzeppelin.com/upgrades-plugins/1.x/api-core
+validate-upgrade:
+	forge clean && forge build # doesn't work with incremental builds
+	pnpm openzeppelin-upgrades-core validate --contract HappyERC20Upgradeable
+	pnpm openzeppelin-upgrades-core validate --contract HappyERC20Upgraded
+.PHONY: validate-upgrade
 
-# My hatred for git modules runs so deep, I'm straight up vendoring all of forge-std.
-update-forge-std:
-	rm -rf lib/forge-std
-	cd lib && git clone git@github.com:foundry-rs/forge-std.git
-	cd lib/forge-std && git submodule update --init --recursive
-.PHONY: update-forge-std
+# Defines run-deploy-script to use environment variable keys or Foundry accounts depending on the
+# value of USE_FOUNDRY_ACCOUNT.
+define run-deploy-script
+	$(eval __USE_ACC := $(findstring true,$(USE_FOUNDRY_ACCOUNT)))
+	$(eval __DEPLOY_FUNC := $(if $(__USE_ACC),run-deploy-script-account,run-deploy-script-key))
+	$(call $(__DEPLOY_FUNC),$(1))
+endef
+
+# Deploys using a private key supplied in an environment variable (dependent on the $CONFIG value).
+define run-deploy-script-key
+    @# Command intentionally output.
+	forge script $(1) \
+		--fork-url $(RPC_$(CONFIG)) \
+		--private-key $(PRIVATE_KEY_$(CONFIG)) \
+		$(BROADCAST_FLAG) \
+		$(VERIFY_FLAG)
+endef
+
+# Deploys using a private key supplied by a Foundry account. The account name and password file
+# are supplied in environment variables (dependent on the $CONFIG value).
+define run-deploy-script-account
+	@$(eval DEPLOY_SENDER := `cast wallet address \
+		--account $(ACCOUNT_$(CONFIG)) \
+		--password-file $(PASSFILE_$(CONFIG))`)
+	@# Command intentionally output.
+	forge script $(1) \
+		--fork-url $(RPC_$(CONFIG)) \
+		--account $(ACCOUNT_$(CONFIG)) \
+		--password-file $(PASSFILE_$(CONFIG)) \
+		--sender $(DEPLOY_SENDER) \
+		$(BROADCAST_FLAG) \
+		$(VERIFY_FLAG)
+endef
+
+define post-deploy
+	@# Print address logs from the deploy script.
+	@cat out/deployment.json && echo "\n"
+
+	$(eval __CHAIN_ID := `cast chain-id --rpc-url $(RPC_$(CONFIG))`)
+	$(eval __DRY_RUN_PREFIX := $(if $(findstring dry,$(DEPLOY)),dry-run/,))
+
+	@# Forge script deployment outputs file.
+	$(eval __RUN_FILE := broadcast/$(1)/$(__CHAIN_ID)/$(__DRY_RUN_PREFIX)run-latest.json)
+
+	@# Save list of deployed contract names to out/contracts.txt.
+	@pnpm jq '.transactions[] | select(.transactionType == "CREATE") | .contractName' $(__RUN_FILE) \
+		| uniq \
+		> out/contracts.txt
+
+	@# Extract ABIs from the deployed contracts and save to out/abis.json.
+	@cat out/contracts.txt \
+		| xargs -L1 -I'{}' forge inspect {} abi \
+		| pnpm jq --slurp --slurpfile contracts out/contracts.txt '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
+		> out/abis.json
+	@rm out/contracts.txt
+
+	@# If we wanted to generate typesafe typescript bindings.
+    @# @cd ../frontend && pnpm wagmi generate
+endef
+
+####################################################################################################
+# Save Deployment Information
+
+# Saves all information pertaining to a deployment to deployments/$NAME.
+# Will save the latest deployment from $DEPLOY_SCRIPT.
+save-deployment:
+	@mkdir -p deployments/$(DEPLOYMENT_NAME)
+	@cp -f out/deployment.json out/abiMap.json out/abis.json deployments/$(DEPLOYMENT_NAME)
+	$(eval __CHAIN_ID := `cast chain-id --rpc-url $(RPC_$(CONFIG))`)
+	$(eval __RUN_FILE := broadcast/$(DEPLOY_SCRIPT)/$(__CHAIN_ID)/run-latest.json)
+	@cp $(__RUN_FILE) deployments/$(DEPLOYMENT_NAME)/transactions.json
+	@echo "Saved deployment to deployments/$(DEPLOYMENT_NAME)"
+.PHONY: save-deployment
+
+####################################################################################################

@@ -1,6 +1,7 @@
 # Environment variables
 *.env*
 !*.env*.example
+*.password*
 
 # Logs
 logs
