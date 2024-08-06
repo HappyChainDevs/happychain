@@ -1,8 +1,8 @@
-import './style.css'
-import { BrowserProvider } from 'ethers'
-
 // register web-component & import useful functions
 import { eip1193Provider, onUserUpdate, register } from '@happychain/js'
+import { BrowserProvider } from 'ethers'
+
+import './style.css'
 
 register()
 
