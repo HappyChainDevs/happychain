@@ -21,7 +21,7 @@ const JotaiHydrateAtoms = ({
 
 const BASE_CLASS_NAMES = 'hc-fixed hc-top-0 hc-right-0'
 
-describe('loads and displays greeting', () => {
+describe('loads and displays wallet', () => {
     it('inserts iframe in document', async () => {
         render(<HappyWallet />)
 

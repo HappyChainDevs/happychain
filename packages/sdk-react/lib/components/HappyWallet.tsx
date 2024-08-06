@@ -39,7 +39,11 @@ export function HappyWallet() {
     const [isOpen, setIsOpen] = useState(false)
     const { user } = useHappyChain()
 
-    useEffect(() => onModalUpdate((state) => setIsOpen(state)), [])
+    useEffect(() => {
+        onModalUpdate((state) => {
+            setIsOpen(state)
+        })
+    }, [])
 
     const iframeContainerClasses = useMemo(() => generateContainerClasses(user, isOpen), [user, isOpen])
 

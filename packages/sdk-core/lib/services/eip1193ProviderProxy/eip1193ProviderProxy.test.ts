@@ -4,11 +4,12 @@ import { setTimeout } from 'node:timers/promises'
 import type { RpcBlock } from 'viem'
 
 import { config } from '../../config'
+import type { HappyEvents } from '../../interfaces/events'
 import { EventBus, EventBusChannel, type EventBusOptions } from '../eventBus'
 
 import { EIP1193ProviderProxy } from './eip1193ProviderProxy'
 import { GenericProviderRpcError } from './errors'
-import type { EIP1193ProxiedEvents } from './events'
+import type { EIP1193ProxiedEvents } from '.faces/events'
 
 const emptyRpcBlock = {
     baseFeePerGas: null,
@@ -51,7 +52,15 @@ describe('EIP1193ProviderProxy', () => {
         const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
         const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
+        const provider = new EIP1193ProviderProxy({
+            iframePath: config.iframePath,
+            providerBus: eip1193ProviderBusProviderProxy,
+            dappBus: new EventBus<HappyEvents>({
+                mode: EventBusChannel.Forced,
+                scope: crypto.randomUUID(),
+                port: new BroadcastChannel('dapp-channel'),
+            }),
+        })
 
         const callback = mock(({ key: _key, error: _error, payload: _payload }) => {})
 
@@ -82,7 +91,15 @@ describe('EIP1193ProviderProxy', () => {
         const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
         const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
+        const provider = new EIP1193ProviderProxy({
+            iframePath: config.iframePath,
+            providerBus: eip1193ProviderBusProviderProxy,
+            dappBus: new EventBus<HappyEvents>({
+                mode: EventBusChannel.Forced,
+                scope: crypto.randomUUID(),
+                port: new BroadcastChannel('dapp-channel'),
+            }),
+        })
 
         // within iframe
         eip1193ProviderBusIframe.on('request:approve', ({ key }) => {
@@ -106,7 +123,15 @@ describe('EIP1193ProviderProxy', () => {
         const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
         const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
+        const provider = new EIP1193ProviderProxy({
+            iframePath: config.iframePath,
+            providerBus: eip1193ProviderBusProviderProxy,
+            dappBus: new EventBus<HappyEvents>({
+                mode: EventBusChannel.Forced,
+                scope: crypto.randomUUID(),
+                port: new BroadcastChannel('dapp-channel'),
+            }),
+        })
 
         // within iframe
         eip1193ProviderBusIframe.on('request:approve', ({ key }) => {
@@ -133,7 +158,15 @@ describe('EIP1193ProviderProxy', () => {
     it('subscribes and unsubscribes to native eip1193 events', async () => {
         const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy(eip1193ProviderBusProviderProxy, config)
+        const provider = new EIP1193ProviderProxy({
+            iframePath: config.iframePath,
+            providerBus: eip1193ProviderBusProviderProxy,
+            dappBus: new EventBus<HappyEvents>({
+                mode: EventBusChannel.Forced,
+                scope: crypto.randomUUID(),
+                port: new BroadcastChannel('dapp-channel'),
+            }),
+        })
 
         const callback = mock(() => {})
         provider.on('connect', callback)
