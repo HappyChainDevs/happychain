@@ -44,11 +44,18 @@ export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1
     private inFlight = new Map<string, InFlightRequest>()
     private timer: Timer | null = null
 
+    private user: HappyUser | null = null
+
     constructor(private config: EIP1193ProviderProxyConfig) {
         super()
 
         config.providerBus.on('provider:event', this.handleProviderNativeEvent.bind(this))
         config.providerBus.on('response:complete', this.handleCompletedRequest.bind(this))
+
+        config.dappBus.on('auth-changed', (user) => {
+            this.user = user
+        })
+
         config.logger?.log('EIP1193Provider Created')
     }
 
@@ -83,17 +90,7 @@ export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1
     }
 
     private walletIsInjected() {
-        const cached = localStorage.getItem('happychain:user')
-        if (!cached) {
-            return false
-        }
-
-        try {
-            const user = JSON.parse(cached) as HappyUser
-            return user?.type === 'injected'
-        } catch {
-            return false
-        }
+        return this.user?.type === 'injected'
     }
 
     private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {

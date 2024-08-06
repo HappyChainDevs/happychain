@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
     return {
         plugins: [
             hmrPlugin({
-                include: ['./src/**/*.ts'],
+                include: ['./lib/**/*.ts'],
                 presets: [presets.lit],
             }),
             dts({
@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
         build: {
             lib: {
                 name: 'happy-wallet',
-                entry: 'src/main.ts',
+                entry: 'lib/main.ts',
                 fileName: (format) => `index.${format}.js`,
             },
             rollupOptions: {
