@@ -53,7 +53,7 @@ export type EventBusOptions = {
     | { mode: EventBusChannel.Forced; port: MessagePort | BroadcastChannel }
 )
 
-export class EventBus<TDefinition extends EventSchema> implements IEventBus<TDefinition> {
+export class EventBus<TDefinition extends EventSchema = EventSchema> implements IEventBus<TDefinition> {
     private handlerMap: EventMap = new Map()
     private port: MessagePort | BroadcastChannel | null = null
 

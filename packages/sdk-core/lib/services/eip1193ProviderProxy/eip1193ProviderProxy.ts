@@ -2,6 +2,7 @@ import SafeEventEmitter from '@metamask/safe-event-emitter'
 import type { EIP1193Provider, EIP1193RequestFn, EIP1474Methods } from 'viem'
 
 import type { config } from '../../config'
+import type { HappyEvents } from '../../interfaces/events'
 import type { HappyUser } from '../../interfaces/happyUser'
 import type { IEventBus } from '../eventBus'
 import type { Logger } from '../logger'
@@ -14,6 +15,8 @@ type Timer = ReturnType<typeof setInterval>
 
 type EIP1193ProviderProxyConfig = Pick<typeof config, 'iframePath'> & {
     logger?: Logger
+    providerBus: IEventBus<EIP1193ProxiedEvents>
+    dappBus: IEventBus<HappyEvents>
 }
 
 type InFlightRequest = {
@@ -41,14 +44,11 @@ export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1
     private inFlight = new Map<string, InFlightRequest>()
     private timer: Timer | null = null
 
-    constructor(
-        private bus: IEventBus<EIP1193ProxiedEvents>,
-        private config: EIP1193ProviderProxyConfig,
-    ) {
+    constructor(private config: EIP1193ProviderProxyConfig) {
         super()
 
-        bus.on('provider:event', this.handleProviderNativeEvent.bind(this))
-        bus.on('response:complete', this.handleCompletedRequest.bind(this))
+        config.providerBus.on('provider:event', this.handleProviderNativeEvent.bind(this))
+        config.providerBus.on('response:complete', this.handleCompletedRequest.bind(this))
         config.logger?.log('EIP1193Provider Created')
     }
 
@@ -143,7 +143,7 @@ export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1
     }
 
     private autoApprove(key: EventUUID, args: EIP1193RequestArg) {
-        this.bus.emit('request:approve', { key, error: null, payload: args })
+        this.config.providerBus.emit('request:approve', { key, error: null, payload: args })
         return null
     }
 

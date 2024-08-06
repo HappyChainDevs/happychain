@@ -1,10 +1,10 @@
 import { memo, useEffect, useMemo, useState } from 'react'
 
-import { config, type HappyUser } from '@happychain/core'
+import type { HappyUser } from '@happychain/core'
+import { config, onModalUpdate } from '@happychain/core'
 import { clsx } from 'clsx'
 
 import { useHappyChain } from '../hooks/useHappyChain'
-import { dappMessageBus } from '../services/eventBus'
 
 const Iframe = memo(() => (
     <iframe
@@ -15,7 +15,7 @@ const Iframe = memo(() => (
     />
 ))
 
-function getClasses(user: HappyUser | null, isOpen: boolean) {
+function generateContainerClasses(user: HappyUser | null, isOpen: boolean) {
     // not logged in, connect modal closed
     if (!user && !isOpen) {
         return 'hc-h-20 hc-w-28 hc-rounded-lg hc-overflow-hidden'
@@ -39,18 +39,13 @@ export function HappyWallet() {
     const [isOpen, setIsOpen] = useState(false)
     const { user } = useHappyChain()
 
-    useEffect(() => {
-        const off = dappMessageBus.on('modal-toggle', (state) => {
-            setIsOpen(state)
-        })
-        return () => off()
-    }, [])
+    useEffect(() => onModalUpdate((state) => setIsOpen(state)), [])
 
-    const iframeWrapperClasses = useMemo(() => getClasses(user, isOpen), [user, isOpen])
+    const iframeContainerClasses = useMemo(() => generateContainerClasses(user, isOpen), [user, isOpen])
 
     return (
         <>
-            <div className={clsx('hc-fixed hc-top-0 hc-right-0', iframeWrapperClasses)}>
+            <div className={clsx('hc-fixed hc-top-0 hc-right-0', iframeContainerClasses)}>
                 <Iframe />
             </div>
         </>
