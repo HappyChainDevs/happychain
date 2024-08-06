@@ -1,43 +1,43 @@
-import "./style.css";
-import { BrowserProvider } from "ethers";
+import './style.css'
+import { BrowserProvider } from 'ethers'
 
 // register web-component & import useful functions
-import { eip1193Provider, onUserUpdate, register } from "@happychain/js";
+import { eip1193Provider, onUserUpdate, register } from '@happychain/js'
 
-register();
+register()
 
-const ethersProvider = new BrowserProvider(eip1193Provider);
+const ethersProvider = new BrowserProvider(eip1193Provider)
 
 // buttons
-const elSignMessageButton = document.querySelector("#sign-message-btn");
-const elGetBlockButton = document.querySelector("#get-block-btn");
+const elSignMessageButton = document.querySelector('#sign-message-btn')
+const elGetBlockButton = document.querySelector('#get-block-btn')
 
 // data dump elements
-const elUserDump = document.querySelector("#user-dump");
-const elSignatureDump = document.querySelector("#signature-dump");
-const elBlockDump = document.querySelector("#block-dump");
+const elUserDump = document.querySelector('#user-dump')
+const elSignatureDump = document.querySelector('#signature-dump')
+const elBlockDump = document.querySelector('#block-dump')
 
 onUserUpdate((user) => {
-  if (!user) {
-    // if theres no user, clear all dumps
-    elUserDump.innerHTML = "";
-    elSignatureDump.innerHTML = "";
-    elBlockDump.innerHTML = "";
-    return;
-  }
+    if (!user) {
+        // if theres no user, clear all dumps
+        elUserDump.innerHTML = ''
+        elSignatureDump.innerHTML = ''
+        elBlockDump.innerHTML = ''
+        return
+    }
 
-  // update user
-  const userString = JSON.stringify(user, null, 2);
-  elUserDump.innerHTML = userString;
-});
+    // update user
+    const userString = JSON.stringify(user, null, 2)
+    elUserDump.innerHTML = userString
+})
 
-elSignMessageButton.addEventListener("click", async () => {
-  const signer = await ethersProvider.getSigner();
-  const sig = await signer.signMessage("Hello, World!");
-  elSignatureDump.innerHTML = sig;
-});
+elSignMessageButton.addEventListener('click', async () => {
+    const signer = await ethersProvider.getSigner()
+    const sig = await signer.signMessage('Hello, World!')
+    elSignatureDump.innerHTML = sig
+})
 
-elGetBlockButton.addEventListener("click", async () => {
-  const result = await ethersProvider.getBlock();
-  elBlockDump.innerHTML = JSON.stringify(result, null, 2);
-});
+elGetBlockButton.addEventListener('click', async () => {
+    const result = await ethersProvider.getBlock()
+    elBlockDump.innerHTML = JSON.stringify(result, null, 2)
+})

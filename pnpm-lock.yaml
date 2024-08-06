@@ -405,6 +405,12 @@ importers:
         specifier: ^3.1.4
         version: 3.2.0
     devDependencies:
+      '@happychain/eslint-config':
+        specifier: workspace:^
+        version: link:../eslint-config
+      '@happychain/prettier-config':
+        specifier: workspace:^
+        version: link:../prettier-config
       typescript:
         specifier: ^5.2.2
         version: 5.5.4
@@ -3854,6 +3860,7 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}

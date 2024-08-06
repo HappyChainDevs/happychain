@@ -1,9 +1,9 @@
-import { config } from './config'
 import type { HappyEvents } from './interfaces/events'
 import type { HappyUser } from './interfaces/happyUser'
 import type { EIP1193ProxiedEvents } from './services/eip1193ProviderProxy'
 import { EIP1193ProviderProxy } from './services/eip1193ProviderProxy'
 import { EventBus, EventBusChannel } from './services/eventBus'
+import { config } from './config'
 
 export { config }
 
@@ -17,9 +17,7 @@ export * from './services/logger'
 
 function registerDappCallbacks(bus: EventBus<HappyEvents>) {
     const onUserUpdateCallbacks = new Set<(user: HappyUser | null) => void>()
-    function onUserUpdate(callback: (user: HappyUser | null) => void) {
-        onUserUpdateCallbacks.add(callback)
-    }
+    const onUserUpdate = (callback: (user: HappyUser | null) => void) => onUserUpdateCallbacks.add(callback)
     bus.on('auth-changed', (user) => {
         for (const call of onUserUpdateCallbacks) {
             call(user)
@@ -27,9 +25,7 @@ function registerDappCallbacks(bus: EventBus<HappyEvents>) {
     })
 
     const onModalUpdateCallbacks = new Set<(isOpen: boolean) => void>()
-    function onModalUpdate(callback: (isOpen: boolean) => void) {
-        onModalUpdateCallbacks.add(callback)
-    }
+    const onModalUpdate = (callback: (isOpen: boolean) => void) => onModalUpdateCallbacks.add(callback)
     bus.on('modal-toggle', (isOpen) => {
         for (const call of onModalUpdateCallbacks) {
             call(isOpen)
