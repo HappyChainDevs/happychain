@@ -16,12 +16,13 @@ Typescript configs to be shared between packages
 pnpm install
 ```
 
-3. add or update `tsconfig.json` with your preferred config
+3. add or update `tsconfig.json` with your preferred config `tsconfig.*.json`
 
 ```json
 // tsconfig.json
 {
-	"extends": "@happychain/typescript-config/tsconfig.vite-lib.json",
+	// tsconfig.vite-lib.json, tsconfig.vite-node.json, tsconfig.next.json
+	"extends": "@happychain/typescript-config/tsconfig.bun.json",
 	"compilerOptions": {
 		"baseUrl": "./lib",
 		"paths": {

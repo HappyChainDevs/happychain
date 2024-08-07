@@ -1,6 +1,8 @@
 # Firebase + Web3Auth Social Account Providers
 
-This package provides the logic used for Firebase social accounts (google login) along with Web3Auth EVM provider. This takes advantage of the Web3Auth MPC CoreKit
+> To be consumed exclusively by the frame
+
+This package provides the logic used for Firebase social accounts (google login) along with Web3Auth EVM provider. This takes advantage of the Web3Auth MPC CoreKit.
 
 -   https://github.com/Web3Auth/mpc-core-kit
 -   https://web3auth.io/docs/sdk/core-kit/mpc-core-kit
