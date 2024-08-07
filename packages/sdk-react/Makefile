@@ -4,6 +4,7 @@ dev:
 
 build:
 	tsc -b && pnpm vite build
+	make styles
 .PHONY: build
 
 # build only stylesheet
