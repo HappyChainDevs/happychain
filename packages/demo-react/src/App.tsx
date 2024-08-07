@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { HappyWallet, useHappyChain } from '@happychain/react'
-
-import { useViemClient } from './hooks/useViemClient'
+import { createPublicClient, createWalletClient, custom } from 'viem'
 
 function App() {
-    const { walletClient, publicClient } = useViemClient()
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { user } = useHappyChain()
+    const { provider, user } = useHappyChain()
+
+    const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
+    const walletClient = useMemo(
+        () => (user?.address ? createWalletClient({ account: user.address, transport: custom(provider) }) : null),
+        [user, provider],
+    )
 
     async function signMessage() {
         setSignatureResult('')
