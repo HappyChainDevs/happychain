@@ -7,7 +7,6 @@ export enum AuthState {
     Loading = 'loading',
     Authenticated = 'authenticated',
 }
-
-export const authStateAtom = atom<AuthState>(storage.get('cached-user') ? AuthState.Loading : AuthState.Unauthenticated)
-
+const initialState = storage.get('cached-user') ? AuthState.Loading : AuthState.Unauthenticated
+export const authStateAtom = atom<AuthState>(initialState)
 authStateAtom.debugLabel = 'authStateAtom'

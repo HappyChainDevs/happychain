@@ -33,7 +33,6 @@ export const web3AuthEvmProvider = ethereumSigningProvider as EIP1193Provider
 
 let lastToken = ''
 export async function web3AuthConnect(jwt: IdTokenLoginParams) {
-    console.log('CONNECTING...')
     if (jwt.idToken !== lastToken) {
         lastToken = jwt.idToken
         await web3Auth.loginWithJWT(jwt)

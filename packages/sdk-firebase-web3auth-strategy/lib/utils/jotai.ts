@@ -10,7 +10,6 @@ export function atomWithCompare<Value>(initialValue: Value, areEqual: (prev: Val
         if (areEqual(prev, next)) {
             return prev
         }
-
         return next
     })
 }

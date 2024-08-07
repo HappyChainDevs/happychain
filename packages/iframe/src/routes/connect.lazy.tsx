@@ -24,9 +24,7 @@ function Connect() {
     const [isOpen, setIsOpen] = useState(false)
 
     function disconnectAll() {
-        console.log('disconnecting...')
         for (const prov of socialProviders.concat(web3Providers)) {
-            console.log({ prov })
             prov.disable()
         }
     }
