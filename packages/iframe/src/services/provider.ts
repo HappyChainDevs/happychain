@@ -24,9 +24,4 @@ walletClientAtom.debugLabel = 'walletClientAtom'
 export const createAccountWalletClient = (account: `0x${string}`, provider: Parameters<typeof custom>[0]) =>
     createWalletClient({ account, transport: custom(provider) })
 
-const make = (...params: Parameters<typeof createWalletClient> & { account: `0x${string}` }) =>
-    createWalletClient(...params)
-
-JSON.stringify({ make })
-
 export type AccountWalletClient = ReturnType<typeof createAccountWalletClient>

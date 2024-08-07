@@ -1,12 +1,12 @@
 // register web-component & import useful functions
-import { eip1193Provider, onUserUpdate, register } from '@happychain/js'
+import { onUserUpdate, provider, register } from '@happychain/js'
 import { BrowserProvider } from 'ethers'
 
 import './style.css'
 
 register()
 
-const ethersProvider = new BrowserProvider(eip1193Provider)
+const ethersProvider = new BrowserProvider(provider)
 
 // buttons
 const elSignMessageButton = document.querySelector('#sign-message-btn')
