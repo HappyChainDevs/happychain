@@ -1,12 +1,9 @@
 {
     "name": "@happychain/firebase-web3auth-strategy",
     "version": "1.0.0",
-    "description": "",
-    "main": "lib/index.ts",
+    "private": true,
     "type": "module",
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
+    "main": "lib/index.ts",
     "dependencies": {
         "@happychain/core": "workspace:^",
         "@happychain/common": "workspace:^",

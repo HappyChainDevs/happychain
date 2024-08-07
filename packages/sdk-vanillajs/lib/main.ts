@@ -2,7 +2,8 @@ import { eip1193Provider, onUserUpdate } from '@happychain/core'
 
 import { HappyWallet } from './happy-wallet'
 
-export { onUserUpdate, eip1193Provider, HappyWallet }
+export const provider = eip1193Provider
+export { onUserUpdate, HappyWallet }
 
 export function register() {
     if (document.querySelector('happy-wallet')) {

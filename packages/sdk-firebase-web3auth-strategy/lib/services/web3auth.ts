@@ -1,6 +1,6 @@
 import { EthereumSigningProvider } from '@web3auth/ethereum-mpc-provider'
 import { COREKIT_STATUS, type IdTokenLoginParams, Web3AuthMPCCoreKit } from '@web3auth/mpc-core-kit'
-import { createWalletClient, custom, type EIP1193Provider } from 'viem'
+import { type EIP1193Provider, createWalletClient, custom } from 'viem'
 
 /***
  * Setup
@@ -33,6 +33,7 @@ export const web3AuthEvmProvider = ethereumSigningProvider as EIP1193Provider
 
 let lastToken = ''
 export async function web3AuthConnect(jwt: IdTokenLoginParams) {
+    console.log('CONNECTING...')
     if (jwt.idToken !== lastToken) {
         lastToken = jwt.idToken
         await web3Auth.loginWithJWT(jwt)

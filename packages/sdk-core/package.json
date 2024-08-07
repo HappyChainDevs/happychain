@@ -1,8 +1,9 @@
 {
     "name": "@happychain/core",
     "version": "1.0.0",
-    "main": "lib/index.ts",
+    "private": true,
     "type": "module",
+    "main": "lib/index.ts",
     "dependencies": {
         "@metamask/safe-event-emitter": "^3.1.1",
         "viem": "^2.18.4"

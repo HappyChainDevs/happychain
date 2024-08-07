@@ -49,7 +49,7 @@ export function HappyWallet() {
 
     return (
         <>
-            <div className={clsx('hc-fixed hc-top-0 hc-right-0', iframeContainerClasses)}>
+            <div className={clsx('hc-fixed hc-right-0 hc-top-0', iframeContainerClasses)}>
                 <Iframe />
             </div>
         </>

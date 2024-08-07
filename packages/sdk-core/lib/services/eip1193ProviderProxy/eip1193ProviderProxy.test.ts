@@ -9,7 +9,7 @@ import { EventBus, EventBusChannel, type EventBusOptions } from '../eventBus'
 
 import { EIP1193ProviderProxy } from './eip1193ProviderProxy'
 import { GenericProviderRpcError } from './errors'
-import type { EIP1193ProxiedEvents } from '.faces/events'
+import type { EIP1193ProxiedEvents } from './events'
 
 const emptyRpcBlock = {
     baseFeePerGas: null,

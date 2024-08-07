@@ -1,12 +1,29 @@
-# Configs
+# ESLint Configs
 
-shared configs for various toolings within the monorepo
+Eslint configs to be shared between packages
 
+1. first add to the packages package.json
 
-## ESLint
+```json
+"devDependencies": {
+    "@happychain/eslint-config": "workspace:^",
+}
+```
 
-<!-- How to setup eslint -->
+2. Install
 
-## Prettier
+```sh
+pnpm install
+```
 
-<!-- How to setup prettier -->
+3. add a `.eslintrc.cjs` with your preferred config
+
+```js
+// .eslintrc.cjs
+/** @type {import("eslint").Linter.Config} */
+module.exports = {
+    root: true,
+    extends: ['@happychain/eslint-config/vite.cjs'], // vite.cjs, next.cjs
+    parser: '@typescript-eslint/parser',
+}
+```

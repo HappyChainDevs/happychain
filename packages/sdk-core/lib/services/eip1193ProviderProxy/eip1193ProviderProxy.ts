@@ -9,7 +9,7 @@ import type { Logger } from '../logger'
 import { requiresApproval } from '../permissions'
 
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from './errors'
-import type { EIP1193EventName, EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
+import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -28,19 +28,7 @@ type InFlightRequest = {
 
 const POPUP_FEATURES = ['width=400', 'height=800', 'popup=true', 'toolbar=0', 'menubar=0'].join(',')
 
-class RestrictedEventEmitter extends SafeEventEmitter {
-    on(
-        // restrict types to only allow provider events
-        eventName: EIP1193EventName,
-        // biome-ignore lint/suspicious/noExplicitAny: SafeEventEmitter looses base EventEmitter generics
-        handler: (...args: any[]) => void,
-    ) {
-        super.on(eventName, handler)
-        return this
-    }
-}
-
-export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1193Provider {
+export class EIP1193ProviderProxy extends SafeEventEmitter implements EIP1193Provider {
     private inFlight = new Map<string, InFlightRequest>()
     private timer: Timer | null = null
 

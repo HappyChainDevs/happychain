@@ -16,7 +16,7 @@ export type EIP1193RequestResult<TParams extends EIP1193RequestArg = EIP1193Requ
         ? Extract<DerivedRpcSchema<EIP1474Methods, undefined>[number], { Method: TParams['method'] }>['ReturnType']
         : unknown
 
-export type EIP1193EventName = keyof EIP1193EventMap
+export type EIP1193EventName<T extends string = keyof EIP1193EventMap> = T
 
 /**
  * Naming Convention:

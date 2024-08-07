@@ -1,21 +1,21 @@
 # Firestarter
 
-Web3 project temmplate.
+Web3 project template.
 
 ## Installation
 
 1. Install pre-requisite tooling:
-   - Make
-   - [Foundry](https://github.com/foundry-rs/foundry)
-   - Node.js & [PNPM](https://pnpm.io/) (`npm install -g pnpm`)
-     - Tested with Node v20.1.0
-     - The appropriate pnpm version is listed under the "packageManager key in [`package.json`](./package.json)
-     - If you have any issues while installing dependencies with pnpm you can try to use `corepack` to make sure you use correct version of pnpm.
-       - `corepack enable`
-       - `corepack pnpm install`
+    - Make
+    - [Foundry](https://github.com/foundry-rs/foundry)
+    - Node.js & [PNPM](https://pnpm.io/) (`npm install -g pnpm`)
+        - Tested with Node v20.1.0
+        - The appropriate pnpm version is listed under the "packageManager key in [`package.json`](./package.json)
+        - If you have any issues while installing dependencies with pnpm you can try to use `corepack` to make sure you use correct version of pnpm.
+            - `corepack enable`
+            - `corepack pnpm install`
 2. **Run `make setup`**
 3. Run contract tests for basic sanity testing:
-   - `(cd packages/contracts && make test)`
+    - `(cd packages/contracts && make test)`
 
 ## IDEs
 
@@ -36,10 +36,10 @@ make webdev
 
 This will do the following:
 
-- Run anvil (local EVM node) at localhost:8545 with chain ID 1337
-  (this chain comes preconfigured in Metamask and other wallets as "Localhost")
-- Run the NextJS dev command (web server + live reload)
-- Deploy the contracts to the local node
+-   Run anvil (local EVM node) at localhost:8545 with chain ID 1337
+    (this chain comes pre-configured in Metamask and other wallets as "Localhost")
+-   Run the NextJS dev command (web server + live reload)
+-   Deploy the contracts to the local node
 
 After that, you can visit the app at http://localhost:3000/ (if that port is already occupied,
 NextJS might affect another one).

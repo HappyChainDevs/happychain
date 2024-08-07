@@ -59,7 +59,9 @@ function useOnAuthChange() {
     const [internalAuthState, setInternalAuthState] = useAtom(cachedFirebaseAuthStateAtom)
     const [userAuth, setUserAuth] = useAtom(firebaseAuthAtom)
     useEffect(() => {
-        onAuthStateChanged(firebaseAuth, async (_user) => {
+        console.log('what')
+        return onAuthStateChanged(firebaseAuth, async (_user) => {
+            console.log({ _user })
             if (!_user?.uid) {
                 await web3AuthDisconnect()
 

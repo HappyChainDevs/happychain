@@ -14,7 +14,15 @@ anvil:
 
 iframe-dev:
 	cd packages/iframe && make dev
-.PHONY: iframe
+.PHONY: iframe-dev
+
+demo-react-dev:
+	cd packages/demo-react && make dev
+.PHONY: demo-react-dev
+
+demo-vanilla-dev:
+	cd packages/demo-vanillajs && make dev
+.PHONY: demo-vanilla-dev
 
 sdk-react-dev:
 	cd packages/sdk-react && make dev
@@ -51,8 +59,9 @@ check:
 	cd packages/sdk-react && make check
 	cd packages/sdk-vanillajs && make check
 	cd packages/demo-vanillajs && make check
-	cd packages/contracts && make check
 	cd packages/iframe && make check
+	cd packages/demo-react && make check
+	cd packages/contracts && make check
 .PHONY: check
 
 # Performs code formatting for the webapp files and contracts in their respective directories.
@@ -63,9 +72,21 @@ format:
 	cd packages/sdk-react && make format
 	cd packages/sdk-vanillajs && make format
 	cd packages/demo-vanillajs && make format
-	cd packages/contracts && make format
 	cd packages/iframe && make format
+	cd packages/demo-react && make format
+	cd packages/contracts && make format
 .PHONY: format
+
+# runs the full react demo. site available at localhost:5173
+demo-react:
+	cd packages/sdk-react && make build
+	make -j 2 iframe-dev demo-react-dev
+.PHONY: demo-react
+
+demo-vanilla:
+	cd packages/sdk-vanillajs && make build
+	make -j 2 iframe-dev demo-vanilla-dev
+.PHONY: demo-vanilla
 
 # quick check using biome
 # Not a perfect 1:1 of eslint/prettier, but very close and much faster

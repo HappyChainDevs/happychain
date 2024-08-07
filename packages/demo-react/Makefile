@@ -1,5 +1,5 @@
 dev:
-	pnpm vite --port 5160
+	pnpm vite
 .PHONY: dev
 
 build:
