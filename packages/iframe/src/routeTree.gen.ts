@@ -23,54 +23,54 @@ const IndexLazyImport = createFileRoute('/')()
 // Create/Update Routes
 
 const ConnectLazyRoute = ConnectLazyImport.update({
-    path: '/connect',
-    getParentRoute: () => rootRoute,
+  path: '/connect',
+  getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/connect.lazy').then((d) => d.Route))
 
 const RequestRoute = RequestImport.update({
-    path: '/request',
-    getParentRoute: () => rootRoute,
+  path: '/request',
+  getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/request.lazy').then((d) => d.Route))
 
 const IndexLazyRoute = IndexLazyImport.update({
-    path: '/',
-    getParentRoute: () => rootRoute,
+  path: '/',
+  getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
-    interface FileRoutesByPath {
-        '/': {
-            id: '/'
-            path: '/'
-            fullPath: '/'
-            preLoaderRoute: typeof IndexLazyImport
-            parentRoute: typeof rootRoute
-        }
-        '/request': {
-            id: '/request'
-            path: '/request'
-            fullPath: '/request'
-            preLoaderRoute: typeof RequestImport
-            parentRoute: typeof rootRoute
-        }
-        '/connect': {
-            id: '/connect'
-            path: '/connect'
-            fullPath: '/connect'
-            preLoaderRoute: typeof ConnectLazyImport
-            parentRoute: typeof rootRoute
-        }
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexLazyImport
+      parentRoute: typeof rootRoute
     }
+    '/request': {
+      id: '/request'
+      path: '/request'
+      fullPath: '/request'
+      preLoaderRoute: typeof RequestImport
+      parentRoute: typeof rootRoute
+    }
+    '/connect': {
+      id: '/connect'
+      path: '/connect'
+      fullPath: '/connect'
+      preLoaderRoute: typeof ConnectLazyImport
+      parentRoute: typeof rootRoute
+    }
+  }
 }
 
 // Create and export the route tree
 
 export const routeTree = rootRoute.addChildren({
-    IndexLazyRoute,
-    RequestRoute,
-    ConnectLazyRoute,
+  IndexLazyRoute,
+  RequestRoute,
+  ConnectLazyRoute,
 })
 
 /* prettier-ignore-end */
