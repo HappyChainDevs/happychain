@@ -1,0 +1,4 @@
+{
+    "extends": "@happychain/configs/tsconfig.bun.json",
+    "include": ["lib"]
+}

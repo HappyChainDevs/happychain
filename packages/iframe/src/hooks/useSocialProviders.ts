@@ -1,7 +1,9 @@
 import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
-import { AuthState, type ConnectionProvider, WalletType } from "@happychain/sdk-shared"
+import { usePrivyStrategy } from "@happychain/privy-strategy"
+import { AuthState, type ConnectionProvider, type HappyUser } from "@happychain/sdk-shared"
 import { useAtomValue, useSetAtom } from "jotai"
-import { useEffect, useMemo } from "react"
+import { useCallback, useEffect, useMemo } from "react"
+import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { setPermission } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
@@ -13,29 +15,53 @@ export function useSocialProviders() {
     const userValue = useAtomValue(userAtom)
     const chains = useAtomValue(chainsAtom)
 
-    const { providers, onAuthChange } = useFirebaseWeb3AuthStrategy()
+    const { providers: privyProviders, onAuthChange: privyOnAuthChange } = usePrivyStrategy()
+    const { providers: firebaseProviders, onAuthChange: firebaseOnAuthChange } = useFirebaseWeb3AuthStrategy()
+
+    const providers = useMemo(
+        () => new Array<ConnectionProvider>().concat(privyProviders, firebaseProviders),
+        [privyProviders, firebaseProviders],
+    )
+
+    const authChangeCallback = useCallback(
+        async (user: HappyUser | undefined, provider: EIP1193Provider | undefined) => {
+            if (provider) {
+                await Promise.allSettled(
+                    Object.values(chains).map((chain) => {
+                        provider.request({ method: "wallet_addEthereumChain", params: [chain] })
+                    }),
+                )
+            }
+            setUserWithProvider(user, provider)
+        },
+        [chains],
+    )
 
     useEffect(() => {
-        onAuthChange(async (user, provider) => {
-            // sync local user+provider state with internal plugin updates
-            // not logged in and
+        const privyUnsub = privyOnAuthChange((user: HappyUser | undefined, provider: EIP1193Provider | undefined) => {
+            // not logged in and incoming user
             const loggingIn = Boolean(!userValue?.type && user)
-            const loggedIn = userValue?.type === WalletType.Social
+            // logged in with privy
+            const loggedIn = userValue?.type === "social" && userValue?.provider === "privy"
             if (loggingIn || loggedIn) {
-                // pre-add all our supported chains (as defined by sdk-shared)
-                // Social Auth will come with all required chains ready to go
-                // injected wallets, may need to add them manually
-                if (provider) {
-                    await Promise.allSettled(
-                        Object.values(chains).map((chain) => {
-                            provider.request({ method: "wallet_addEthereumChain", params: [chain] })
-                        }),
-                    )
-                }
-                setUserWithProvider(user, provider)
+                authChangeCallback(user, provider)
             }
         })
-    }, [onAuthChange, userValue, chains])
+
+        firebaseOnAuthChange((user: HappyUser | undefined, provider: EIP1193Provider | undefined) => {
+            // not logged in and incoming user
+            const loggingIn = Boolean(!userValue?.type && user)
+            // logged in with privy
+            const loggedIn = userValue?.type === "social" && userValue?.provider === "firebase"
+            if (loggingIn || loggedIn) {
+                authChangeCallback(user, provider)
+            }
+        })
+
+        return () => {
+            privyUnsub()
+        }
+    }, [privyOnAuthChange, firebaseOnAuthChange, userValue, authChangeCallback])
 
     const providersMemo = useMemo(
         () =>

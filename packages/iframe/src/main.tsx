@@ -1,10 +1,8 @@
+import { PrivyProvider } from "@happychain/privy-strategy"
+import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
-
-import { RouterProvider, createRouter } from "@tanstack/react-router"
-
 import { HappyAccountProvider } from "./providers/HappyAccountProvider"
-// Import the generated route tree
 import { routeTree } from "./routeTree.gen"
 
 import "./listeners"
@@ -25,9 +23,14 @@ const rootElement = document.getElementById("root")
 if (rootElement && !rootElement.innerHTML) {
     ReactDOM.createRoot(rootElement).render(
         <StrictMode>
-            <HappyAccountProvider>
-                <RouterProvider router={router} />
-            </HappyAccountProvider>
+            <PrivyProvider
+                appId={import.meta.env.VITE_PRIVY_APP_ID}
+                config={{ embeddedWallets: { createOnLogin: "users-without-wallets" } }}
+            >
+                <HappyAccountProvider>
+                    <RouterProvider router={router} />
+                </HappyAccountProvider>
+            </PrivyProvider>
         </StrictMode>,
     )
 }

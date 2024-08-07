@@ -1,11 +1,8 @@
-import { useMemo } from "react"
-
+import { googleLogo } from "@happychain/common"
 import type { ConnectionProvider, HappyUser } from "@happychain/sdk-shared"
+import { useMemo } from "react"
 import type { EIP1193Provider } from "viem"
-
-import { googleLogo } from "../logos"
 import { firebaseAuth } from "../services/firebase"
-
 import { useFirebaseAuth } from "./useFirebaseAuth"
 
 export function useFirebaseWeb3AuthStrategy(): {

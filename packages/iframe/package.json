@@ -6,6 +6,7 @@
     "dependencies": {
         "@happychain/common": "workspace:^",
         "@happychain/firebase-web3auth-strategy": "workspace:^",
+        "@happychain/privy-strategy": "workspace:^",
         "@happychain/sdk-shared": "workspace:^",
         "@phosphor-icons/react": "^2.1.7",
         "@tanstack/react-router": "^1.51.0",
