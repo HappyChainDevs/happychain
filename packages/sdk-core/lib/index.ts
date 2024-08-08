@@ -15,47 +15,34 @@ export * from './services/eip1193ProviderProxy'
 export * from './services/eventBus'
 export * from './services/logger'
 
-function registerDappCallbacks(bus: EventBus<HappyEvents>) {
-    const onUserUpdateCallbacks = new Set<(user: HappyUser | null) => void>()
-    const onUserUpdate = (callback: (user: HappyUser | null) => void) => onUserUpdateCallbacks.add(callback)
-    bus.on('auth-changed', (user) => {
-        for (const call of onUserUpdateCallbacks) {
-            call(user)
-        }
-    })
+const dappMessageBus = new EventBus<HappyEvents>({
+    mode: EventBusChannel.DappPort,
+    scope: 'happy-chain-dapp-bus',
+})
 
-    const onModalUpdateCallbacks = new Set<(isOpen: boolean) => void>()
-    const onModalUpdate = (callback: (isOpen: boolean) => void) => onModalUpdateCallbacks.add(callback)
-    bus.on('modal-toggle', (isOpen) => {
-        for (const call of onModalUpdateCallbacks) {
-            call(isOpen)
-        }
-    })
+const onUserUpdateCallbacks = new Set<(user: HappyUser | null) => void>()
+const onModalUpdateCallbacks = new Set<(isOpen: boolean) => void>()
 
-    return { onUserUpdate, onModalUpdate }
-}
+dappMessageBus.on('auth-changed', (user) => {
+    for (const call of onUserUpdateCallbacks) {
+        call(user)
+    }
+})
+dappMessageBus.on('modal-toggle', (isOpen) => {
+    for (const call of onModalUpdateCallbacks) {
+        call(isOpen)
+    }
+})
 
-function setup() {
-    const dappMessageBus = new EventBus<HappyEvents>({
+export const onUserUpdate = (callback: (user: HappyUser | null) => void) => onUserUpdateCallbacks.add(callback)
+export const onModalUpdate = (callback: (isOpen: boolean) => void) => onModalUpdateCallbacks.add(callback)
+export const eip1193Provider = new EIP1193ProviderProxy({
+    iframePath: config.iframePath,
+
+    providerBus: new EventBus<EIP1193ProxiedEvents>({
         mode: EventBusChannel.DappPort,
-        scope: 'happy-chain-dapp-bus',
-    })
+        scope: 'happy-chain-eip1193-provider',
+    }),
 
-    const eip1193Provider = new EIP1193ProviderProxy({
-        iframePath: config.iframePath,
-
-        providerBus: new EventBus<EIP1193ProxiedEvents>({
-            mode: EventBusChannel.DappPort,
-            scope: 'happy-chain-eip1193-provider',
-        }),
-
-        dappBus: dappMessageBus,
-    })
-
-    return { eip1193Provider, dappMessageBus }
-}
-
-const { eip1193Provider, dappMessageBus } = setup()
-
-export const { onUserUpdate, onModalUpdate } = registerDappCallbacks(dappMessageBus)
-export { eip1193Provider }
+    dappBus: dappMessageBus,
+})
