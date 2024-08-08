@@ -26,7 +26,7 @@ export function useFirebaseWeb3AuthStrategy(): {
     )
 
     return {
-        providers: providers,
+        providers,
         onAuthChange,
     }
 }
