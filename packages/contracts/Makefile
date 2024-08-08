@@ -23,11 +23,9 @@ DEPLOY_SCRIPT ?= DeployL1Upgradeable.s.sol
 # if they're not in `lib` and do not have a `src` directory (the `remappings.txt` file is ignored).
 setup:
 	if [ ! -f .env ]; then cp .env.example .env; fi
-	mkdir -p lib
+	mkdir -p lib/{openzeppelin,oz-upgradeable}
 	ln -shF ../node_modules/forge-std lib/forge-std
-	mkdir -p lib/openzeppelin
 	ln -shF ../../node_modules/@openzeppelin/contracts lib/openzeppelin/src
-	mkdir -p lib/oz-upgradeable
 	ln -shF ../../node_modules/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
 .PHONY: setup
 

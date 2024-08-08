@@ -5,13 +5,13 @@ import { requiresApproval } from '@happychain/core/lib/services/permissions'
 import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
 import { useAtomValue } from 'jotai'
 
-import { userAtom } from '../hooks/useHappyAccount'
+import { useHappyAccount } from '../hooks/useHappyAccount'
 import { useInjectedProviders } from '../hooks/useInjectedProviders'
 import { dappMessageBus, eip1193ProviderBus, popupBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
 
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
-    const happyUser = useAtomValue(userAtom)
+    const { user: happyUser } = useHappyAccount()
     const provider = useAtomValue(providerAtom)
     const publicClient = useAtomValue(publicClientAtom)
     const walletClient = useAtomValue(walletClientAtom)

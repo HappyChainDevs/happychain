@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from 'react'
 
-import { useIsHydrated } from '@happychain/common'
+import { atomWithCompare, useIsHydrated } from '@happychain/common'
 import type { HappyUser } from '@happychain/core'
 import type { IdTokenLoginParams } from '@web3auth/mpc-core-kit'
 import { type Auth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from 'firebase/auth'
-import { atom, useAtom, useSetAtom } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 import type { EIP1193Provider } from 'viem'
 
@@ -15,13 +15,7 @@ export type SignInProvider = 'google'
 
 const cachedFirebaseAuthStateAtom = atomWithStorage('firebase-auth', 'unauthenticated')
 
-const firebaseAuthAtom = atom<{
-    user: HappyUser | null
-    provider: EIP1193Provider
-}>({
-    user: null,
-    provider: web3AuthEvmProvider,
-})
+const firebaseAuthUserAtom = atomWithCompare<HappyUser | null>(null, (a, b) => a?.uid === b?.uid)
 
 async function signInWithGoogle(auth: Auth) {
     const googleProvider = new GoogleAuthProvider()
@@ -57,16 +51,13 @@ function useSignOut(auth: Auth) {
 
 function useOnAuthChange() {
     const [internalAuthState, setInternalAuthState] = useAtom(cachedFirebaseAuthStateAtom)
-    const [userAuth, setUserAuth] = useAtom(firebaseAuthAtom)
+    const [userAuth, setUserAuth] = useAtom(firebaseAuthUserAtom)
     useEffect(() => {
-        onAuthStateChanged(firebaseAuth, async (_user) => {
+        return onAuthStateChanged(firebaseAuth, async (_user) => {
             if (!_user?.uid) {
                 await web3AuthDisconnect()
 
-                setUserAuth({
-                    user: null,
-                    provider: web3AuthEvmProvider,
-                })
+                setUserAuth(null)
                 setInternalAuthState('unauthenticated')
                 return
             }
@@ -99,10 +90,7 @@ function useOnAuthChange() {
                 addresses,
             }
 
-            setUserAuth({
-                user: nextUser,
-                provider: web3AuthEvmProvider,
-            })
+            setUserAuth(nextUser)
             setInternalAuthState('authenticated')
         })
     }, [setUserAuth, setInternalAuthState])
@@ -114,12 +102,12 @@ function useOnAuthChange() {
                 return
             }
 
-            if (internalAuthState === 'authenticated' && userAuth.user) {
-                return callback(userAuth.user, userAuth.provider)
+            if (internalAuthState === 'authenticated' && userAuth) {
+                return callback(userAuth, web3AuthEvmProvider)
             }
 
-            if (internalAuthState === 'unauthenticated' && !userAuth.user) {
-                return callback(userAuth.user, userAuth.provider)
+            if (internalAuthState === 'unauthenticated' && !userAuth) {
+                return callback(userAuth, web3AuthEvmProvider)
             }
         },
         [isHydrated, userAuth, internalAuthState],

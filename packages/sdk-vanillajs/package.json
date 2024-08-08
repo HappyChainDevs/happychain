@@ -1,0 +1,28 @@
+{
+    "name": "@happychain/js",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "main": "./dist/index.umd.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.es.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.es.d.ts",
+            "import": "./dist/index.es.js",
+            "require": "./dist/index.umd.js"
+        }
+    },
+    "dependencies": {
+        "@happychain/core": "workspace:^",
+        "lit": "^3.1.4"
+    },
+    "devDependencies": {
+        "@happychain/eslint-config": "workspace:^",
+        "@happychain/prettier-config": "workspace:^",
+        "typescript": "^5.2.2",
+        "vite": "^5.3.4",
+        "vite-plugin-dts": "4.0.0-beta.1",
+        "vite-plugin-web-components-hmr": "^0.1.3"
+    }
+}

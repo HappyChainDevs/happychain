@@ -28,7 +28,7 @@ export const eip1193ProviderBus = new EventBus<EIP1193ProxiedEvents>({
 export const dappMessageBus = new EventBus<HappyEvents>({
     target: window.parent,
     mode: EventBusChannel.IframePort,
-    scope: 'happy-chain-bus',
+    scope: 'happy-chain-dapp-bus',
 })
 
 /**

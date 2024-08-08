@@ -2,18 +2,21 @@ import SafeEventEmitter from '@metamask/safe-event-emitter'
 import type { EIP1193Provider, EIP1193RequestFn, EIP1474Methods } from 'viem'
 
 import type { config } from '../../config'
+import type { HappyEvents } from '../../interfaces/events'
 import type { HappyUser } from '../../interfaces/happyUser'
 import type { IEventBus } from '../eventBus'
 import type { Logger } from '../logger'
 import { requiresApproval } from '../permissions'
 
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from './errors'
-import type { EIP1193EventName, EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
+import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
 
 type Timer = ReturnType<typeof setInterval>
 
 type EIP1193ProviderProxyConfig = Pick<typeof config, 'iframePath'> & {
     logger?: Logger
+    providerBus: IEventBus<EIP1193ProxiedEvents>
+    dappBus: IEventBus<HappyEvents>
 }
 
 type InFlightRequest = {
@@ -25,30 +28,22 @@ type InFlightRequest = {
 
 const POPUP_FEATURES = ['width=400', 'height=800', 'popup=true', 'toolbar=0', 'menubar=0'].join(',')
 
-class RestrictedEventEmitter extends SafeEventEmitter {
-    on(
-        // restrict types to only allow provider events
-        eventName: EIP1193EventName,
-        // biome-ignore lint/suspicious/noExplicitAny: SafeEventEmitter looses base EventEmitter generics
-        handler: (...args: any[]) => void,
-    ) {
-        super.on(eventName, handler)
-        return this
-    }
-}
-
-export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1193Provider {
+export class EIP1193ProviderProxy extends SafeEventEmitter implements EIP1193Provider {
     private inFlight = new Map<string, InFlightRequest>()
     private timer: Timer | null = null
 
-    constructor(
-        private bus: IEventBus<EIP1193ProxiedEvents>,
-        private config: EIP1193ProviderProxyConfig,
-    ) {
+    private user: HappyUser | null = null
+
+    constructor(private config: EIP1193ProviderProxyConfig) {
         super()
 
-        bus.on('provider:event', this.handleProviderNativeEvent.bind(this))
-        bus.on('response:complete', this.handleCompletedRequest.bind(this))
+        config.providerBus.on('provider:event', this.handleProviderNativeEvent.bind(this))
+        config.providerBus.on('response:complete', this.handleCompletedRequest.bind(this))
+
+        config.dappBus.on('auth-changed', (user) => {
+            this.user = user
+        })
+
         config.logger?.log('EIP1193Provider Created')
     }
 
@@ -83,17 +78,7 @@ export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1
     }
 
     private walletIsInjected() {
-        const cached = localStorage.getItem('happychain:user')
-        if (!cached) {
-            return false
-        }
-
-        try {
-            const user = JSON.parse(cached) as HappyUser
-            return user?.type === 'injected'
-        } catch {
-            return false
-        }
+        return this.user?.type === 'injected'
     }
 
     private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
@@ -143,7 +128,7 @@ export class EIP1193ProviderProxy extends RestrictedEventEmitter implements EIP1
     }
 
     private autoApprove(key: EventUUID, args: EIP1193RequestArg) {
-        this.bus.emit('request:approve', { key, error: null, payload: args })
+        this.config.providerBus.emit('request:approve', { key, error: null, payload: args })
         return null
     }
 

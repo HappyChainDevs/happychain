@@ -1,0 +1,18 @@
+{
+    "name": "demo-vanillajs",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "dependencies": {
+        "@happychain/js": "workspace:^",
+        "ethers": "^6.13.2"
+    },
+    "devDependencies": {
+        "@happychain/eslint-config": "workspace:^",
+        "@happychain/prettier-config": "workspace:^",
+        "autoprefixer": "^10.4.19",
+        "postcss": "^8.4.40",
+        "tailwindcss": "^3.4.7",
+        "vite": "^5.3.4"
+    }
+}

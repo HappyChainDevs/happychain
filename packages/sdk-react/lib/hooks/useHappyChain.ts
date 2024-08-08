@@ -1,6 +1,6 @@
+import { eip1193Provider } from '@happychain/core'
 import { useAtomValue } from 'jotai'
 
-import { eip1193Provider } from '../services/eip1193Provider'
 import { userAtom } from '../state/happyUser'
 
 export function useHappyChain() {
