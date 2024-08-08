@@ -38,7 +38,7 @@ function registerDappCallbacks(bus: EventBus<HappyEvents>) {
 function setup() {
     const dappMessageBus = new EventBus<HappyEvents>({
         mode: EventBusChannel.DappPort,
-        scope: 'happy-chain-bus',
+        scope: 'happy-chain-dapp-bus',
     })
 
     const eip1193Provider = new EIP1193ProviderProxy({

@@ -32,12 +32,19 @@ sdk-dev:
 	make -j 2 iframe-dev sdk-react-dev
 .PHONY: sdk-dev
 
-# Builds the sdk and the contracts.
-build:
-	cd packages/sdk-react && make build
-	cd packages/sdk-vanillajs && make build
-	cd packages/iframe && make build
-	cd packages/contracts && make build
+# Builds the sdks, apps, contracts & demos
+build:	
+	for name in packages/sdk-{react,vanillajs}; do\
+        cd $${name} && make build && cd ../../;\
+    done
+
+	for name in packages/{contracts,iframe}; do\
+        cd $${name} && make build && cd ../../;\
+    done
+
+	for name in packages/demo-{react,vanillajs}; do\
+        cd $${name} && make build && cd ../../;\
+    done
 .PHONY: build
 
 # Deploys to the contracts to the local node (requires anvil to be running).
@@ -54,27 +61,27 @@ test:
 # Performs code-quality checks.
 check:
 	cd packages/common && make check
+	cd packages/contracts && make check
+	cd packages/demo-react && make check
+	cd packages/demo-vanillajs && make check
+	cd packages/iframe && make check
 	cd packages/sdk-core && make check
 	cd packages/sdk-firebase-web3auth-strategy && make check
 	cd packages/sdk-react && make check
 	cd packages/sdk-vanillajs && make check
-	cd packages/demo-vanillajs && make check
-	cd packages/iframe && make check
-	cd packages/demo-react && make check
-	cd packages/contracts && make check
 .PHONY: check
 
 # Performs code formatting for the webapp files and contracts in their respective directories.
 format:
 	cd packages/common && make format
+	cd packages/contracts && make format
+	cd packages/demo-react && make format
+	cd packages/demo-vanillajs && make format
+	cd packages/iframe && make format
 	cd packages/sdk-core && make format
 	cd packages/sdk-firebase-web3auth-strategy && make format
 	cd packages/sdk-react && make format
 	cd packages/sdk-vanillajs && make format
-	cd packages/demo-vanillajs && make format
-	cd packages/iframe && make format
-	cd packages/demo-react && make format
-	cd packages/contracts && make format
 .PHONY: format
 
 # runs the full react demo. site available at localhost:5173

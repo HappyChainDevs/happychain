@@ -7,7 +7,7 @@ Native Web Component and vanillaJS/Typescript SDK (framework agnostic)
 Register the webcomponent in your app
 
 ```js
-import "@happychain/js";
+import '@happychain/js'
 ```
 
 then include somewhere in your html
@@ -15,37 +15,57 @@ then include somewhere in your html
 ```html
 <!doctype html>
 <html lang="en">
-	<body>
-		<happy-wallet></happy-wallet>
-	</body>
+    <body>
+        <happy-wallet></happy-wallet>
+    </body>
 </html>
 ```
 
 Alternatively, you can call `register` to auto-register the component on the page
 
 ```js
-import { register } from "@happychain/js";
+import { register } from '@happychain/js'
 
-register();
+register()
+```
+
+## EIP1193Provider
+
+The raw eip1193provider is exposed directly, so you can initialize any compatible web3 library of your choosing. Viem, ethers, wagmi, web3 are all supported.
+
+```jsx
+import { happyProvider } from '@happychain/js'
 ```
 
 ## User Updates
 
-to subscribe to user updates (log in/log out) you may import the `onUserUpdate` action
+User changes (logging in, logging out) can be subscribed to using the `onUserUpdate` function. Pass it the callback you wish to execute when user details are updated
 
-```js
-import { onUserUpdate } from "@happychain/js";
+```ts
+import { onUserUpdate } from '@happychain/js'
 
 onUserUpdate((user) => {
-	if (!user) {
-		// user has logged out
-		return;
-	}
+    if (!user) {
+        // user is logged out
+        return
+    }
 
-	// various user properties are available if the user is logged in
-	// check HappyUser type for more details
-	// user.email
-	// user.address
-	// user.name
-});
+    // user is logged in, see HappyUser interface below
+})
+```
+
+```ts
+interface HappyUser {
+    /**
+     * Social Details
+     */
+    email: string
+    name: string
+    avatar: string
+
+    /**
+     * Currently active wallet address
+     */
+    address: `0x${string}`
+}
 ```

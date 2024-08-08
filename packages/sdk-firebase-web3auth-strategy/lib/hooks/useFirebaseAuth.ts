@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react'
 
-import { useIsHydrated } from '@happychain/common'
+import { atomWithCompare, useIsHydrated } from '@happychain/common'
 import type { HappyUser } from '@happychain/core'
 import type { IdTokenLoginParams } from '@web3auth/mpc-core-kit'
 import { type Auth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from 'firebase/auth'
@@ -10,7 +10,6 @@ import type { EIP1193Provider } from 'viem'
 
 import { firebaseAuth } from '../services/firebase'
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEvmProvider } from '../services/web3auth'
-import { atomWithCompare } from '../utils/jotai'
 
 export type SignInProvider = 'google'
 

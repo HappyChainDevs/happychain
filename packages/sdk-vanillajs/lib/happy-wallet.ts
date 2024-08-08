@@ -1,13 +1,7 @@
-import { onModalUpdate, onUserUpdate } from '@happychain/core'
+import { config, onModalUpdate, onUserUpdate } from '@happychain/core'
 import { css, html, LitElement } from 'lit'
 import { customElement } from 'lit/decorators.js'
 
-/**
- * An example element.
- *
- * @slot - This element has a slot
- * @csspart button - The button
- */
 @customElement('happy-wallet')
 export class HappyWallet extends LitElement {
     constructor() {
@@ -41,7 +35,7 @@ export class HappyWallet extends LitElement {
         return html`
             <iframe
                 title="happy-iframe"
-                src="http://localhost:5160/connect"
+                src="${config.iframePath}/connect"
                 style="width: 100%; height: 100%; border: none;"
             />
         `

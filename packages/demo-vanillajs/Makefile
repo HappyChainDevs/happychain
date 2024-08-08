@@ -3,7 +3,7 @@ dev:
 .PHONY: dev
 
 build:
-	tsc -b && pnpm vite build
+	pnpm vite build
 .PHONY: build
 
 preview:
