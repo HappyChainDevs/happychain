@@ -12,11 +12,10 @@ export default defineConfig({
             fileName: (format) => `index.${format}.js`,
         },
         rollupOptions: {
-            external: ['react', 'react-dom', 'jotai'],
+            external: ['react', 'react-dom'],
             output: {
                 globals: {
                     react: 'React',
-                    jotai: 'jotai',
                     // "react-dom": "ReactDOM",
                 },
             },
@@ -30,17 +29,9 @@ export default defineConfig({
         alias: {
             lib: resolve('./lib'),
             src: resolve('./src'),
-
-            // required for absolute paths from imported typescript libraries
-            'sdk-core': resolve('../sdk-core/lib'),
         },
     },
 
-    test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: './test/setup.ts',
-    },
     plugins: [
         react(),
         dts({

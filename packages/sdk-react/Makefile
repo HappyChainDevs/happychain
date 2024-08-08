@@ -4,13 +4,11 @@ dev:
 
 build:
 	tsc -b && pnpm vite build
-	make styles
 .PHONY: build
 
-# build only stylesheet
-styles:
-	mkdir -p dist && pnpm postcss lib/index.css -d ./dist/
-.PHONY: styles
+build.watch:
+	pnpm vite build --watch
+.PHONY: build.watch
 
 preview:
 	pnpm vite preview

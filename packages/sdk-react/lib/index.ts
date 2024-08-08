@@ -1,8 +1,8 @@
 /** Components */
-export { HappyWallet } from './components/HappyWallet'
+export { HappyWalletProvider } from './components/HappyWalletProvider'
 
 /** Hooks */
 export { useHappyChain } from './hooks/useHappyChain'
 
 /** Direct Access for outside of components */
-export { eip1193Provider as happyProvider, onUserUpdate } from '@happychain/core'
+export { happyProvider, onUserUpdate, type HappyUser } from '@happychain/js'

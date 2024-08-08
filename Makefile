@@ -34,7 +34,7 @@ sdk-dev:
 
 # Builds the sdks, apps, contracts & demos
 build:	
-	for name in packages/sdk-{react,vanillajs}; do\
+	for name in packages/sdk-{vanillajs,react}; do\
         cd $${name} && make build && cd ../../;\
     done
 
@@ -42,7 +42,7 @@ build:
         cd $${name} && make build && cd ../../;\
     done
 
-	for name in packages/demo-{react,vanillajs}; do\
+	for name in packages/demo-{vanillajs,react}; do\
         cd $${name} && make build && cd ../../;\
     done
 .PHONY: build

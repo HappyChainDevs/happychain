@@ -6,18 +6,20 @@
 npm i @happychain/react
 ```
 
-## Wallet Component
+## Wallet Provider
 
-```jsx
-import { HappyWallet } from '@happychain/react'
+Use the HappyWalletProvider component to inject the wallet into the page
 
-function App() {
-    return (
-        <main>
-            <HappyWallet />
-        </main>
-    )
-}
+```diff
++import { HappyWalletProvider } from '@happychain/react'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
++        <HappyWalletProvider>
+            <App />
++        </HappyWalletProvider>
+    </React.StrictMode>,
+)
 ```
 
 ## useHappyChain hook
@@ -31,7 +33,7 @@ function App() {
     // viem
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
     const walletClient = useMemo(
-        () => (user?.address ? createWalletClient({ account: user.address, transport: custom(provider) }) : undefined),
+        () => user?.address && createWalletClient({ account: user.address, transport: custom(provider) }),
         [provider, user?.address],
     )
 
