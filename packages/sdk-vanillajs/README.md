@@ -1,6 +1,6 @@
 # VanillaJS SDK
 
-Native Web Component and vanillaJS/Typescript SDK (framework agnostic)
+Framework-agnostic Vanilla JS / Typescript SDK.
 
 ## Quick Start
 
@@ -35,6 +35,22 @@ The raw eip1193provider is exposed directly, so you can initialize any compatibl
 
 ```jsx
 import { happyProvider } from '@happychain/js'
+
+// viem
+const publicClient = createPublicClient({ transport: custom(provider) })
+let walletClient
+onUserUpdate((user) => {
+    walletClient = user?.address ? createWalletClient({
+        account: user.address,
+        transport: custom(provider)
+    })
+})
+
+// ethers v5
+const ethersV5Provider = new ethers.providers.Web3Provider(provider)
+
+// ethers v6
+const ethersV6Provider = new BrowserProvider(provider)
 ```
 
 ## User Updates
