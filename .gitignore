@@ -30,6 +30,7 @@ dist-ssr
 # Contract outputs
 packages/contracts/cache/
 packages/contracts/out/
+packages/contracts/lib
 packages/contracts/broadcast/
 packages/frontend/src/generated.ts
 
@@ -45,3 +46,9 @@ packages/frontend/src/generated.ts
 *.njsproj
 *.sln
 *.sw?
+
+# Tanstack Router
+src/routeTree.gen.ts
+
+# handled by parent, but need to be sync'ed so that prettier respects it
+packages/*/.gitignore
