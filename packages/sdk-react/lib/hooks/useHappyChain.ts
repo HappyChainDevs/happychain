@@ -1,13 +1,17 @@
-import { eip1193Provider } from '@happychain/core'
-import { useAtomValue } from 'jotai'
+import { useContext } from 'react'
 
-import { userAtom } from '../state/happyUser'
+import type { EIP1193ProviderProxy, HappyUser } from '@happychain/js'
+import { happyProvider } from '@happychain/js'
+import { HappyContext } from 'lib/components/HappyContext'
 
-export function useHappyChain() {
-    const user = useAtomValue(userAtom)
+export function useHappyChain(): {
+    provider: EIP1193ProviderProxy
+    user: HappyUser | null
+} {
+    const user = useContext(HappyContext)
 
     return {
-        provider: eip1193Provider,
+        provider: happyProvider,
         user,
     }
 }

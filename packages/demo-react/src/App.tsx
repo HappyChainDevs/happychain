@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { HappyWallet, useHappyChain } from '@happychain/react'
+import { useHappyChain } from '@happychain/react'
 import { createPublicClient, createWalletClient, custom } from 'viem'
 
 function App() {
@@ -11,23 +11,16 @@ function App() {
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
     const walletClient = useMemo(
-        () => (user?.address ? createWalletClient({ account: user.address, transport: custom(provider) }) : null),
+        () => user?.address && createWalletClient({ account: user.address, transport: custom(provider) }),
         [user, provider],
     )
 
-    async function signMessage() {
+    async function signMessage(message: string) {
+        if (!user || !walletClient) {
+            alert('no user connected')
+            return
+        }
         setSignatureResult('')
-        if (!walletClient) {
-            console.warn('no wallet client connected')
-            return
-        }
-
-        if (!user) {
-            console.warn('no user connected')
-            return
-        }
-
-        const message = 'Hello'
 
         const signature = await walletClient.signMessage({ message })
 
@@ -63,7 +56,11 @@ function App() {
                 <pre>{JSON.stringify(user, null, 2)}</pre>
             </div>
 
-            <button type="button" onClick={signMessage} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+            <button
+                type="button"
+                onClick={() => signMessage('Hello, World!')}
+                className="rounded-lg bg-sky-300 p-2 shadow-xl"
+            >
                 Sign Message
             </button>
 
@@ -79,8 +76,6 @@ function App() {
                 <p className="text-lg font-bold">Results:</p>
                 <pre>{JSON.stringify(blockResult, (_, v) => (typeof v === 'bigint' ? v.toString() : v), 2)}</pre>
             </div>
-
-            <HappyWallet />
         </main>
     )
 }

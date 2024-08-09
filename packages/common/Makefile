@@ -9,6 +9,10 @@ lint-fix:
 PRETTIER_PATHS="**/*.{js,cjs,mjs,jsx,ts,tsx,json,css}"
 PRETTIER_IGNORE_PATHS=".next/*"
 
+# Emtpty Stub
+build:
+.PHONY: build
+
 # Runs code quality checks.
 check:
 	make lint

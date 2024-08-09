@@ -41,7 +41,6 @@ export class HappyWallet extends LitElement {
         `
     }
 
-    // hc-fixed hc-top-0 hc-right-0 hc-h-20 hc-w-28 hc-rounded-lg hc-overflow-hidden
     static styles = css`
         :host {
             position: fixed;

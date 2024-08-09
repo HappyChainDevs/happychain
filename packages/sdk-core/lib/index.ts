@@ -34,8 +34,18 @@ dappMessageBus.on('modal-toggle', (isOpen) => {
     }
 })
 
-export const onUserUpdate = (callback: (user: HappyUser | null) => void) => onUserUpdateCallbacks.add(callback)
-export const onModalUpdate = (callback: (isOpen: boolean) => void) => onModalUpdateCallbacks.add(callback)
+export const onUserUpdate = (callback: (user: HappyUser | null) => void) => {
+    onUserUpdateCallbacks.add(callback)
+    return () => {
+        onUserUpdateCallbacks.delete(callback)
+    }
+}
+export const onModalUpdate = (callback: (isOpen: boolean) => void) => {
+    onModalUpdateCallbacks.add(callback)
+    return () => {
+        onModalUpdateCallbacks.delete(callback)
+    }
+}
 export const eip1193Provider = new EIP1193ProviderProxy({
     iframePath: config.iframePath,
 

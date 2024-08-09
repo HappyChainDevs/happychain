@@ -10,6 +10,11 @@ lint-fix:
 	pnpm eslint . --report-unused-disable-directives --max-warnings 0 --fix
 .PHONY: lint-fix
 
+
+# Emtpty Stub
+build:
+.PHONY: build
+
 PRETTIER_PATHS="**/*.{js,cjs,mjs,jsx,ts,tsx,json,css}"
 
 # Runs code quality checks.

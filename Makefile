@@ -1,3 +1,9 @@
+# Packages
+SDK_PKGS := sdk-vanillajs,sdk-react
+OTHER_PKGS := contracts,iframe,common,sdk-core,sdk-firebase-web3auth-strategy
+DEMO_PKGS := demo-vanillajs,demo-react
+CONFIG_PKGS := eslint-config,prettier-config,typescript-config
+
 # ==================================================================================================
 # BASICS COMMANDS
 #   To get the project running locally.
@@ -34,17 +40,20 @@ sdk-dev:
 
 # Builds the sdks, apps, contracts & demos
 build:	
-	for name in packages/sdk-{react,vanillajs}; do\
-        cd $${name} && make build && cd ../../;\
-    done
+	for name in packages/{$(SDK_PKGS)}; do\
+		echo "Building $${name}";\
+		cd $${name} && make build && cd ../../;\
+	done
 
-	for name in packages/{contracts,iframe}; do\
-        cd $${name} && make build && cd ../../;\
-    done
+	for name in packages/{$(OTHER_PKGS)}; do\
+		echo "Building $${name}";\
+		cd $${name} && make build && cd ../../;\
+	done
 
-	for name in packages/demo-{react,vanillajs}; do\
-        cd $${name} && make build && cd ../../;\
-    done
+	for name in packages/{$(DEMO_PKGS)}; do\
+		echo "Building $${name}";\
+		cd $${name} && make build && cd ../../;\
+	done
 .PHONY: build
 
 # Deploys to the contracts to the local node (requires anvil to be running).
@@ -60,28 +69,52 @@ test:
 
 # Performs code-quality checks.
 check:
-	cd packages/common && make check
-	cd packages/contracts && make check
-	cd packages/demo-react && make check
-	cd packages/demo-vanillajs && make check
-	cd packages/iframe && make check
-	cd packages/sdk-core && make check
-	cd packages/sdk-firebase-web3auth-strategy && make check
-	cd packages/sdk-react && make check
-	cd packages/sdk-vanillajs && make check
+	make sync-gitignore
+
+	for name in packages/{$(SDK_PKGS)}; do\
+		echo "Checking $${name}";\
+		cd $${name} && make check && cd ../../;\
+	done
+
+	for name in packages/{$(OTHER_PKGS)}; do\
+		echo "Checking $${name}";\
+		cd $${name} && make check && cd ../../;\
+	done
+
+	for name in packages/{$(DEMO_PKGS)}; do\
+		echo "Checking $${name}";\
+		cd $${name} && make check && cd ../../;\
+	done
+
+	for name in packages/{$(CONFIG_PKGS)}; do\
+		echo "Checking $${name}";\
+		cd $${name} && make check && cd ../../;\
+	done
 .PHONY: check
 
 # Performs code formatting for the webapp files and contracts in their respective directories.
 format:
-	cd packages/common && make format
-	cd packages/contracts && make format
-	cd packages/demo-react && make format
-	cd packages/demo-vanillajs && make format
-	cd packages/iframe && make format
-	cd packages/sdk-core && make format
-	cd packages/sdk-firebase-web3auth-strategy && make format
-	cd packages/sdk-react && make format
-	cd packages/sdk-vanillajs && make format
+	make sync-gitignore
+
+	for name in packages/{$(SDK_PKGS)}; do\
+		echo "Formatting $${name}";\
+		cd $${name} && make format && cd ../../;\
+	done
+
+	for name in packages/{$(OTHER_PKGS)}; do\
+		echo "Formatting $${name}";\
+		cd $${name} && make format && cd ../../;\
+	done
+
+	for name in packages/{$(DEMO_PKGS)}; do\
+		echo "Formatting $${name}";\
+		cd $${name} && make format && cd ../../;\
+	done
+
+	for name in packages/{$(CONFIG_PKGS)}; do\
+		echo "Formatting $${name}";\
+		cd $${name} && make format && cd ../../;\
+	done
 .PHONY: format
 
 # runs the full react demo. site available at localhost:5173
