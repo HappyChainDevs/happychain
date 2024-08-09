@@ -13,7 +13,7 @@ contract HappyERC20 is ERC20, ERC20Permit, ERC20Burnable, Ownable {
     // Adds safeXXX functions that revert instead of returning false.
     using SafeERC20 for ERC20;
 
-    uint256 private constant INITIAL_SUPPLY = 10_000_000_000;
+    uint256 private constant INITIAL_SUPPLY = 10_000_000_000 ether;
 
     constructor() ERC20("HappyChain", "HAPPY") ERC20Permit("HappyChain") Ownable(msg.sender) {
         _mint(msg.sender, INITIAL_SUPPLY);
