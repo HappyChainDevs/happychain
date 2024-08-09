@@ -24,7 +24,7 @@ contract HappyERC20Upgradeable is
     // Adds safeXXX functions that revert instead of returning false.
     using SafeERC20 for ERC20Upgradeable;
 
-    uint256 private constant INITIAL_SUPPLY = 10_000_000_000;
+    uint256 private constant INITIAL_SUPPLY = 10_000_000_000 ether;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {

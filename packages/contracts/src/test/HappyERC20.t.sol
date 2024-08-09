@@ -18,7 +18,7 @@ contract HappyERC20Test is Test {
     HappyERC20Upgradeable private uHappyERC20;
 
     /// @dev Expected initial token supply, must match HappyERC20.sol.
-    uint256 private constant INITIAL_SUPPLY = 10_000_000_000;
+    uint256 private constant INITIAL_SUPPLY = 10_000_000_000 ether;
 
     // =============================================================================================
 
