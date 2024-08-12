@@ -39,7 +39,7 @@ sdk-dev:
 .PHONY: sdk-dev
 
 # Builds the sdks, apps, contracts & demos
-build:	
+build:
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Building $${name}";\
 		cd $${name} && make build && cd ../../;\
@@ -213,3 +213,9 @@ disable-hooks:
 .PHONY: disable-hooks
 
 # ==================================================================================================
+
+# Run Github Workflows Locally
+# https://nektosact.com/
+debug-github-workflow:
+	act push
+.PHONY:debug-github-workflow
