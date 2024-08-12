@@ -18,6 +18,10 @@ lint-fix:
 	pnpm eslint . --report-unused-disable-directives --max-warnings 0 --fix
 .PHONY: lint-fix
 
+lint-fix-diff:
+	pnpm eslint . --report-unused-disable-directives --max-warnings 0 --fix
+.PHONY: lint-fix-diff
+
 PRETTIER_PATHS="**/*.{js,cjs,mjs,jsx,ts,tsx,json,css}"
 
 # Runs code quality checks.
@@ -32,3 +36,8 @@ format:
 	make lint-fix
 	pnpm prettier --write $(PRETTIER_PATHS)
 .PHONY: format
+
+format-diff:
+	make lint-fix-diff
+	pnpm prettier --write $(PRETTIER_PATHS)
+.PHONY: format-diff

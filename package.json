@@ -1,17 +1,14 @@
 {
-  "name": "@happychain/monorepo",
-  "author": "Happy Devs",
-  "license": "BSD-3-Clause-Clear",
-  "version": "1.0.0",
-  "private": true,
-  "packageManager": "pnpm@9.4.0",
-  "devDependencies": {
-    "@biomejs/biome": "^1.8.3",
-    "husky": "^9.1.4",
-    "lint-staged": "^15.2.8",
-    "typescript": "^5.5.4"
-  },
-  "scripts": {
-    "prepare": "husky"
-  }
+	"name": "@happychain/monorepo",
+	"author": "Happy Devs",
+	"license": "BSD-3-Clause-Clear",
+	"version": "1.0.0",
+	"private": true,
+	"packageManager": "pnpm@9.4.0",
+	"devDependencies": {
+		"@biomejs/biome": "^1.8.3",
+		"husky": "^9.1.4",
+		"lint-staged": "^15.2.8",
+		"typescript": "^5.5.4"
+	}
 }

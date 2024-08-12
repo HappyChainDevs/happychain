@@ -201,3 +201,15 @@ reset-modules:
 .PHONY: reset-modules
 
 # ==================================================================================================
+
+# Git Hooks
+
+enable-hooks:
+	pnpm husky
+.PHONY: enable-hooks
+
+disable-hooks:
+	git config --unset core.hooksPath
+.PHONY: disable-hooks
+
+# ==================================================================================================
