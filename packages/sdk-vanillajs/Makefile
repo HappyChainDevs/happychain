@@ -7,7 +7,7 @@ build:
 .PHONY: build
 
 build.watch:
-	tsc -b && pnpm vite build --watch
+	pnpm vite build --watch
 .PHONY: build.watch
 
 # build only stylesheet

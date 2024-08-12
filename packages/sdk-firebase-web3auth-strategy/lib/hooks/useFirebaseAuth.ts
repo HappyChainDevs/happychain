@@ -78,7 +78,7 @@ function useOnAuthChange() {
             const nextUser: HappyUser = {
                 // connection type
                 type: 'social',
-                provider: 'google',
+                provider: 'firebase',
                 // social details
                 uid: _user.uid,
                 email: _user.email || '',

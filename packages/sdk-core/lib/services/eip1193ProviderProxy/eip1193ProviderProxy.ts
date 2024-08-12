@@ -1,139 +1,48 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter'
 import type { EIP1193Provider, EIP1193RequestFn, EIP1474Methods } from 'viem'
 
-import type { config } from '../../config'
-import type { HappyEvents } from '../../interfaces/events'
-import type { HappyUser } from '../../interfaces/happyUser'
-import type { IEventBus } from '../eventBus'
-import type { Logger } from '../logger'
-import { requiresApproval } from '../permissions'
-
-import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from './errors'
-import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
-
-type Timer = ReturnType<typeof setInterval>
-
-type EIP1193ProviderProxyConfig = Pick<typeof config, 'iframePath'> & {
-    logger?: Logger
-    providerBus: IEventBus<EIP1193ProxiedEvents>
-    dappBus: IEventBus<HappyEvents>
-}
-
-type InFlightRequest = {
-    // biome-ignore lint/suspicious/noExplicitAny: currently needed as a work around for Viem generics. Unsure how to pass proper type here derived from `provider.request` method parameter
-    resolve: (value: any) => void
-    reject: (reason?: unknown) => void
-    popup: Window | null
-}
-
-const POPUP_FEATURES = ['width=400', 'height=800', 'popup=true', 'toolbar=0', 'menubar=0'].join(',')
+import { LocalConnectionHandler } from './eip1193LocalConnection'
+import { RemoteConnectionHandler } from './eip1193RemoteConnection'
+import type { EIP1193ConnectionHandler, EIP1193ProviderProxyConfig } from './interface'
 
 export class EIP1193ProviderProxy extends SafeEventEmitter implements EIP1193Provider {
-    private inFlight = new Map<string, InFlightRequest>()
-    private timer: Timer | null = null
+    private connections: EIP1193ConnectionHandler[]
 
-    private user: HappyUser | null = null
-
-    constructor(private config: EIP1193ProviderProxyConfig) {
+    constructor(config: EIP1193ProviderProxyConfig) {
         super()
 
-        config.providerBus.on('provider:event', this.handleProviderNativeEvent.bind(this))
-        config.providerBus.on('response:complete', this.handleCompletedRequest.bind(this))
-
-        config.dappBus.on('auth-changed', (user) => {
-            this.user = user
-        })
-
         config.logger?.log('EIP1193Provider Created')
-    }
 
-    private handleProviderNativeEvent(data: EIP1193ProxiedEvents['provider:event']) {
-        this.emit(data.payload.event, data.payload.args)
-    }
+        // Injected Wallets
+        const localConnection = new LocalConnectionHandler(config)
+        this.registerConnectionHandlerEvents(localConnection)
 
-    private handleCompletedRequest(data: EIP1193ProxiedEvents['response:complete']) {
-        const req = this.inFlight.get(data.key)
+        // Iframe/Social Auth
+        const remoteConnection = new RemoteConnectionHandler(config)
+        this.registerConnectionHandlerEvents(remoteConnection)
 
-        if (!req) {
-            return { resolve: null, reject: null }
-        }
-
-        const { resolve, reject, popup } = req
-        this.inFlight.delete(data.key)
-        popup?.close()
-
-        if (reject && data.error) {
-            reject(
-                new GenericProviderRpcError({
-                    code: data.error.code,
-                    message: '',
-                    data: data.error.data,
-                }),
-            )
-        } else if (resolve) {
-            resolve(data.payload)
-        } else {
-            // no key associated, perhaps from another tab context?
-        }
-    }
-
-    private walletIsInjected() {
-        return this.user?.type === 'injected'
-    }
-
-    private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
-        this.inFlight.set(key, { resolve, reject, popup })
-
-        if (!this.timer && popup) {
-            this.timer = setInterval(() => {
-                let withPopups = 0
-                for (const [k, req] of this.inFlight) {
-                    if (!req.popup) {
-                        continue
-                    }
-
-                    if (req.popup.closed) {
-                        // manually closed without explicit rejection
-                        req.reject(new EIP1193UserRejectedRequestError())
-                        this.inFlight.delete(k)
-                    } else {
-                        // still open
-                        withPopups++
-                    }
-                }
-
-                if (this.timer && !withPopups) {
-                    clearInterval(this.timer)
-                }
-            }, 500) // every half second, check if popup has been manually closed
-        }
+        // initialized in order of priority to check on requests
+        this.connections = [localConnection, remoteConnection]
     }
 
     request: EIP1193RequestFn<EIP1474Methods> = async (args) => {
-        // Every request gets proxied through this function.
-        // If it is eth_call or a non-tx non-signature request, we can auto-approve
-        // by posting the request args using request:approve,
-        // otherwise we open the popup and pass the request args through the hash URL.
-        const key = crypto.randomUUID()
+        type StrictArgsCast = Exclude<typeof args, { method: string; params: unknown }>
 
-        return new Promise((resolve, reject) => {
-            const restricted = requiresApproval(args)
+        for (const connection of this.connections) {
+            if (connection.isConnected()) {
+                return await connection.request(args as StrictArgsCast)
+            }
+        }
 
-            const requiresUserApproval = restricted && !this.walletIsInjected()
-
-            const popup = requiresUserApproval ? this.promptUser(key, args) : this.autoApprove(key, args)
-
-            this.queueRequest(key, { resolve, reject, popup })
-        })
+        throw new Error('No Connected Providers')
     }
 
-    private autoApprove(key: EventUUID, args: EIP1193RequestArg) {
-        this.config.providerBus.emit('request:approve', { key, error: null, payload: args })
-        return null
-    }
-
-    private promptUser(key: EventUUID, args: EIP1193RequestArg) {
-        const b64 = btoa(JSON.stringify(args))
-        return window.open(`${this.config.iframePath}/request?args=${b64}&key=${key}`, '_blank', POPUP_FEATURES)
+    /** Simply forward all provider events transparently */
+    private registerConnectionHandlerEvents(handler: EIP1193ConnectionHandler) {
+        handler.on('accountsChanged', (accounts) => this.emit('accountsChanged', accounts))
+        handler.on('chainChanged', (chainId) => this.emit('chainChanged', chainId))
+        handler.on('connect', (connectInfo) => this.emit('connect', connectInfo))
+        handler.on('disconnect', (error) => this.emit('disconnect', error))
+        handler.on('message', (message) => this.emit('message', message))
     }
 }

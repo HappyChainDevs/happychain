@@ -1,22 +1,34 @@
-import { defaultProvider as web3AuthEvmProvider } from '@happychain/firebase-web3auth-strategy'
 import { atom } from 'jotai'
-import type { EIP1193Provider } from 'viem'
-import { createPublicClient, createWalletClient, custom } from 'viem'
+import type { CustomTransport, EIP1193Provider, HttpTransport } from 'viem'
+import { createPublicClient, createWalletClient, custom, http } from 'viem'
 
 import { userAtom } from '../hooks/useHappyAccount'
 
-const DEFAULT_PROVIDER = web3AuthEvmProvider as EIP1193Provider
-
-export const providerAtom = atom<EIP1193Provider>(DEFAULT_PROVIDER)
+export const providerAtom = atom<EIP1193Provider | null>(null)
 providerAtom.debugLabel = 'providerAtom'
 
-export const publicClientAtom = atom((get) => createPublicClient({ transport: custom(get(providerAtom)) }))
+export const transportAtom = atom<HttpTransport | CustomTransport>((get) => {
+    const provider = get(providerAtom)
+    return provider ? custom(provider) : http('https://eth.llamarpc.com')
+})
+transportAtom.debugLabel = 'transportAtom'
+
+export const publicClientAtom = atom((get) => {
+    const transport = get(transportAtom)
+    return createPublicClient({ transport })
+})
 publicClientAtom.debugLabel = 'publicClientAtom'
 
 export const walletClientAtom = atom<AccountWalletClient | null>((get) => {
     const user = get(userAtom)
     const provider = get(providerAtom)
-    return user?.address ? createWalletClient({ account: user.address, transport: custom(provider) }) : null
+    if (!user?.address || !provider) {
+        return null
+    }
+
+    const transport = get(transportAtom) as CustomTransport
+
+    return createWalletClient({ account: user.address, transport })
 })
 walletClientAtom.debugLabel = 'walletClientAtom'
 

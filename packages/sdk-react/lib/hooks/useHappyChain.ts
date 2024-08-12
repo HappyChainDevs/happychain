@@ -2,7 +2,8 @@ import { useContext } from 'react'
 
 import type { EIP1193ProviderProxy, HappyUser } from '@happychain/js'
 import { happyProvider } from '@happychain/js'
-import { HappyContext } from 'lib/components/HappyContext'
+
+import { HappyContext } from '../components/HappyContext'
 
 export function useHappyChain(): {
     provider: EIP1193ProviderProxy

@@ -44,16 +44,16 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
         const chainChangedCallback = proxyEvent('chainChanged')
         const accountsChangedCallback = proxyEvent('accountsChanged')
 
-        provider.on('connect', connectCallback)
-        provider.on('disconnect', disconnectCallback)
-        provider.on('chainChanged', chainChangedCallback)
-        provider.on('accountsChanged', accountsChangedCallback)
+        provider?.on('connect', connectCallback)
+        provider?.on('disconnect', disconnectCallback)
+        provider?.on('chainChanged', chainChangedCallback)
+        provider?.on('accountsChanged', accountsChangedCallback)
 
         return () => {
-            provider.removeListener('connect', connectCallback)
-            provider.removeListener('disconnect', disconnectCallback)
-            provider.removeListener('chainChanged', chainChangedCallback)
-            provider.removeListener('accountsChanged', accountsChangedCallback)
+            provider?.removeListener('connect', connectCallback)
+            provider?.removeListener('disconnect', disconnectCallback)
+            provider?.removeListener('chainChanged', chainChangedCallback)
+            provider?.removeListener('accountsChanged', accountsChangedCallback)
         }
     }, [provider])
 

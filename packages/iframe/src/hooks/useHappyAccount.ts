@@ -11,7 +11,7 @@ userAtom.debugLabel = 'userAtom'
 
 const store = getDefaultStore()
 
-export function setUserWithProvider(user: HappyUser | null, provider: EIP1193Provider) {
+export function setUserWithProvider(user: HappyUser | null, provider: EIP1193Provider | null) {
     store.set(providerAtom, () => provider)
     store.set(userAtom, () => user)
 
