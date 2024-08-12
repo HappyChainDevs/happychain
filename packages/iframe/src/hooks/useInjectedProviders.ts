@@ -1,15 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import type {
-    ConnectionProvider,
-    EIP6963AnnounceProviderEvent,
-    EIP6963ProviderDetail,
-    // HappyUser,
-} from '@happychain/core'
-// import { web3AuthEvmProvider } from '@happychain/firebase-web3auth-strategy/lib/services/web3auth'
+import type { ConnectionProvider, EIP6963AnnounceProviderEvent, EIP6963ProviderDetail } from '@happychain/core'
 import { useSetAtom } from 'jotai'
 
-// import { createPublicClient, custom, http } from 'viem'
 import { dappMessageBus } from '../services/eventBus'
 import { storage } from '../services/storage'
 import { AuthState, authStateAtom } from '../state/app'
