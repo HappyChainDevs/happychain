@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 # Packages
 SDK_PKGS := sdk-vanillajs,sdk-react
 OTHER_PKGS := contracts,iframe,common,sdk-shared,sdk-firebase-web3auth-strategy
@@ -39,7 +40,7 @@ sdk-dev:
 .PHONY: sdk-dev
 
 # Builds the sdks, apps, contracts & demos
-build:
+build:	
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Building $${name}";\
 		cd $${name} && make build && cd ../../;\
@@ -75,6 +76,8 @@ test:
 
 # Performs code-quality checks.
 check:
+	make sync-gitignore
+
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Checking $${name}";\
 		cd $${name} && make check && cd ../../;\
@@ -201,21 +204,3 @@ reset-modules:
 .PHONY: reset-modules
 
 # ==================================================================================================
-
-# Git Hooks
-
-enable-hooks:
-	pnpm husky
-.PHONY: enable-hooks
-
-disable-hooks:
-	git config --unset core.hooksPath
-.PHONY: disable-hooks
-
-# ==================================================================================================
-
-# Run Github Workflows Locally
-# https://nektosact.com/
-debug-github-workflow:
-	act push
-.PHONY:debug-github-workflow
