@@ -75,7 +75,7 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
             case EventBusChannel.DappPort: {
                 addEventListener('message', (e: MessageEvent) => {
                     const message = `happychain:${config.scope}:init`
-                    if (e.data === message && !this.port) {
+                    if (e.data === message) {
                         this.registerPortListener(e.ports[0])
                     }
                 })
