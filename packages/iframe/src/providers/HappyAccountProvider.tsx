@@ -6,7 +6,6 @@ import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
 import { useAtomValue } from 'jotai'
 
 import { useHappyAccount } from '../hooks/useHappyAccount'
-import { useInjectedProviders } from '../hooks/useInjectedProviders'
 import { dappMessageBus, eip1193ProviderBus, popupBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
 
@@ -16,8 +15,6 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     const publicClient = useAtomValue(publicClientAtom)
     const walletClient = useAtomValue(walletClientAtom)
     const [isLoaded, setIsLoaded] = useState(false)
-
-    const web3providers = useInjectedProviders()
 
     useEffect(() => {
         const init = async () => {
@@ -57,7 +54,8 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
         }
     }, [provider])
 
-    // trusted events may only be sent from same-origin (popup approval screen)
+    // trusted requests may only be sent from same-origin (popup approval screen)
+    // and can be sent through the walletClient
     useEffect(() => {
         const offApprove = popupBus.on('request:approve', async (payload) => {
             try {
@@ -82,18 +80,14 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
         }
     }, [walletClient])
 
-    // Untrusted requests can be called directly from the frontend and bypass the popup screen
-    // host:iframe communication
+    // Untrusted requests can only be called using the public client 
+    // as they bypass the popup approval screen
     useEffect(() => {
         const offApprove = eip1193ProviderBus.on('request:approve', async (data) => {
             try {
                 const isPublicMethod = !requiresApproval(data.payload)
 
-                const isInjected = happyUser?.type === 'injected'
-
-                const injectedProvider = web3providers.find((i) => `injected:${isInjected}` === i.id)
-
-                if (!injectedProvider && !isPublicMethod) {
+                if (!isPublicMethod) {
                     // emit not allowed error
                     console.warn('can not execute untrusted request', data)
                     return
@@ -102,10 +96,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
                 // injected providers are allowed to bypass the popup screen
                 // as they have their own in-built popup security model
 
-                const result =
-                    isInjected && walletClient
-                        ? await walletClient.request(data.payload as Parameters<typeof walletClient.request>)
-                        : await publicClient.request(data.payload as Parameters<typeof publicClient.request>)
+                const result = await publicClient.request(data.payload as Parameters<typeof publicClient.request>)
 
                 eip1193ProviderBus.emit('response:complete', {
                     key: data.key,
@@ -120,7 +111,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
         return () => {
             offApprove()
         }
-    }, [walletClient, publicClient, web3providers, happyUser])
+    }, [publicClient])
 
     if (!isLoaded) {
         return null
