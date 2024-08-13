@@ -1,10 +1,10 @@
 import { atom } from 'jotai'
 import type { CustomTransport, EIP1193Provider, HttpTransport } from 'viem'
-import { createPublicClient, createWalletClient, custom, http } from 'viem'
+import { http, createPublicClient, createWalletClient, custom } from 'viem'
 
 import { userAtom } from '../hooks/useHappyAccount'
 
-export const providerAtom = atom<EIP1193Provider | null>(null)
+export const providerAtom = atom<EIP1193Provider | undefined>()
 providerAtom.debugLabel = 'providerAtom'
 
 export const transportAtom = atom<HttpTransport | CustomTransport>((get) => {
@@ -19,16 +19,16 @@ export const publicClientAtom = atom((get) => {
 })
 publicClientAtom.debugLabel = 'publicClientAtom'
 
-export const walletClientAtom = atom<AccountWalletClient | null>((get) => {
+export const walletClientAtom = atom<AccountWalletClient | undefined>((get) => {
     const user = get(userAtom)
     const provider = get(providerAtom)
     if (!user?.address || !provider) {
-        return null
+        return
     }
 
     const transport = get(transportAtom) as CustomTransport
 
-    return createWalletClient({ account: user.address, transport })
+    return createWalletClient({ account: user.address, transport }) as AccountWalletClient
 })
 walletClientAtom.debugLabel = 'walletClientAtom'
 

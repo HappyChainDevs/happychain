@@ -7,7 +7,7 @@ import { HappyContext } from '../components/HappyContext'
 
 export function useHappyChain(): {
     provider: HappyProvider
-    user: HappyUser | null
+    user?: HappyUser
 } {
     const user = useContext(HappyContext)
 

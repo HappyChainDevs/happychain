@@ -5,10 +5,10 @@ export interface HappyEvents {
     'modal-toggle': boolean
 
     // user auth
-    'auth-changed': HappyUser | null
+    'auth-changed': HappyUser | undefined
 
     'wallet-connect:request': string
-    'wallet-connect:response': { user: HappyUser | null }
+    'wallet-connect:response': { user?: HappyUser }
 
-    'wallet-disconnect:request': null
+    'wallet-disconnect:request': undefined
 }

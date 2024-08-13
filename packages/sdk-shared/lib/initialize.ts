@@ -1,15 +1,15 @@
+import { config } from './config'
 import type { HappyEvents } from './interfaces/events'
 import type { HappyUser } from './interfaces/happyUser'
 import { type EIP1193ProxiedEvents, HappyProvider } from './services/eip1193ProviderProxy'
 import { EventBus, EventBusChannel } from './services/eventBus'
-import { config } from './config'
 
 const dappMessageBus = new EventBus<HappyEvents>({
     mode: EventBusChannel.DappPort,
     scope: 'happy-chain-dapp-bus',
 })
 
-const onUserUpdateCallbacks = new Set<(user: HappyUser | null) => void>()
+const onUserUpdateCallbacks = new Set<(user?: HappyUser) => void>()
 const onModalUpdateCallbacks = new Set<(isOpen: boolean) => void>()
 
 dappMessageBus.on('auth-changed', (user) => {
@@ -23,7 +23,7 @@ dappMessageBus.on('modal-toggle', (isOpen) => {
     }
 })
 
-export const onUserUpdate = (callback: (user: HappyUser | null) => void) => {
+export const onUserUpdate = (callback: (user?: HappyUser) => void) => {
     onUserUpdateCallbacks.add(callback)
     return () => {
         onUserUpdateCallbacks.delete(callback)

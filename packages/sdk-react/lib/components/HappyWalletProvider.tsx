@@ -9,7 +9,7 @@ import { HappyContext } from './HappyContext'
 register()
 
 export function HappyWalletProvider({ children }: PropsWithChildren) {
-    const [user, setUser] = useState<HappyUser | null>(null)
+    const [user, setUser] = useState<HappyUser | undefined>()
 
     // subscription to user changes
     useEffect(() => onUserUpdate((user) => setUser(user)), [])

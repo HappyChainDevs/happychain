@@ -33,7 +33,7 @@ export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193C
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
-        this.config.dappBus.emit('wallet-connect:response', { user: null })
+        this.config.dappBus.emit('wallet-connect:response', { user: undefined })
         this.localConnection = undefined
     }
 
@@ -66,7 +66,7 @@ export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193C
             const user = this.createHappyUserFromAddress(rdns, address)
             this.config.dappBus.emit('wallet-connect:response', { user })
         } catch {
-            this.config.dappBus.emit('wallet-connect:response', { user: null })
+            this.config.dappBus.emit('wallet-connect:response', { user: undefined })
         }
     }
 

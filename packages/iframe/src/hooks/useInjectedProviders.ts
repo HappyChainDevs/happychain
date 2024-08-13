@@ -29,7 +29,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
 
     useEffect(() => {
         return dappMessageBus.on('wallet-connect:response', ({ user }) => {
-            setUserWithProvider(user, null)
+            setUserWithProvider(user, undefined)
         })
     }, [])
     //
@@ -38,8 +38,8 @@ export function useInjectedProviders(): ConnectionProvider[] {
     }, [])
 
     const disable = useCallback(async () => {
-        dappMessageBus.emit('wallet-disconnect:request', null)
-        setUserWithProvider(null, null)
+        dappMessageBus.emit('wallet-disconnect:request', undefined)
+        setUserWithProvider(undefined, undefined)
     }, [])
 
     useEffect(() => {

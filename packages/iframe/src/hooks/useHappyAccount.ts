@@ -6,12 +6,12 @@ import type { EIP1193Provider } from 'viem'
 import { providerAtom } from '../services/provider'
 import { AuthState, authStateAtom } from '../state/app'
 
-export const userAtom = atomWithStorage<null | HappyUser>('happychain:cached-user', null)
+export const userAtom = atomWithStorage<HappyUser | undefined>('happychain:cached-user', undefined)
 userAtom.debugLabel = 'userAtom'
 
 const store = getDefaultStore()
 
-export function setUserWithProvider(user: HappyUser | null, provider: EIP1193Provider | null) {
+export function setUserWithProvider(user?: HappyUser, provider?: EIP1193Provider) {
     store.set(providerAtom, () => provider)
     store.set(userAtom, () => user)
 
