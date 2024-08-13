@@ -27,7 +27,7 @@ export {
     logger,
     onModalUpdate,
     onUserUpdate,
-} from '@happychain/core'
+} from '@happychain/sdk-shared'
 
 export type {
     ConnectionProvider,
@@ -51,4 +51,4 @@ export type {
     IEventBus,
     IProviderRpcError,
     Logger,
-} from '@happychain/core'
+} from '@happychain/sdk-shared'

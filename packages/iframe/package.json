@@ -5,7 +5,7 @@
     "type": "module",
     "dependencies": {
         "@happychain/common": "workspace:^",
-        "@happychain/core": "workspace:^",
+        "@happychain/sdk-shared": "workspace:^",
         "@happychain/firebase-web3auth-strategy": "workspace:^",
         "@tanstack/react-router": "^1.45.11",
         "clsx": "^2.1.1",

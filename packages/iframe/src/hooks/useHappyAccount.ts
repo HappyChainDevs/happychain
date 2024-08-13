@@ -1,4 +1,4 @@
-import type { HappyUser } from '@happychain/core'
+import type { HappyUser } from '@happychain/sdk-shared'
 import { getDefaultStore, useAtomValue } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 import type { EIP1193Provider } from 'viem'

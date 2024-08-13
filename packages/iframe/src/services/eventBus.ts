@@ -6,7 +6,7 @@ import {
     EventBusChannel,
     type EventUUID,
     type HappyEvents,
-} from '@happychain/core'
+} from '@happychain/sdk-shared'
 
 /**
  * Event system between the HappyProvider in the dapp

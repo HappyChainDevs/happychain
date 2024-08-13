@@ -1,4 +1,4 @@
-import type { EventUUID } from '@happychain/core'
+import type { EventUUID } from '@happychain/sdk-shared'
 import { createFileRoute } from '@tanstack/react-router'
 
 type RequestArgs = {

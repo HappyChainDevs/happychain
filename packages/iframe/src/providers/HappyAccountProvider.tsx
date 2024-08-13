@@ -1,8 +1,8 @@
 import { type ReactNode, useEffect, useState } from 'react'
 
-import { type EIP1193EventName, logger } from '@happychain/core'
-import { requiresApproval } from '@happychain/core/lib/services/permissions'
 import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
+import { type EIP1193EventName, logger } from '@happychain/sdk-shared'
+import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
 import { useAtomValue } from 'jotai'
 
 import { useHappyAccount } from '../hooks/useHappyAccount'

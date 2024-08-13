@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import type { ConnectionProvider, EIP6963AnnounceProviderEvent, EIP6963ProviderDetail } from '@happychain/core'
+import type { ConnectionProvider, EIP6963AnnounceProviderEvent, EIP6963ProviderDetail } from '@happychain/sdk-shared'
 import { useSetAtom } from 'jotai'
 
 import { dappMessageBus } from '../services/eventBus'

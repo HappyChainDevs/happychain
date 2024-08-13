@@ -188,12 +188,12 @@ importers:
       '@happychain/common':
         specifier: workspace:^
         version: link:../common
-      '@happychain/core':
-        specifier: workspace:^
-        version: link:../sdk-core
       '@happychain/firebase-web3auth-strategy':
         specifier: workspace:^
         version: link:../sdk-firebase-web3auth-strategy
+      '@happychain/sdk-shared':
+        specifier: workspace:^
+        version: link:../sdk-shared
       '@tanstack/react-router':
         specifier: ^1.45.11
         version: 1.45.11(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -286,51 +286,14 @@ importers:
         specifier: ^0.6.5
         version: 0.6.5(prettier@3.3.3)
 
-  packages/sdk-core:
-    dependencies:
-      '@metamask/safe-event-emitter':
-        specifier: ^3.1.1
-        version: 3.1.1
-      mipd:
-        specifier: ^0.0.7
-        version: 0.0.7(typescript@5.5.4)
-      viem:
-        specifier: ^2.18.4
-        version: 2.18.4(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8)
-    devDependencies:
-      '@happy-dom/global-registrator':
-        specifier: ^14.12.3
-        version: 14.12.3
-      '@happychain/eslint-config':
-        specifier: workspace:^
-        version: link:../eslint-config
-      '@happychain/prettier-config':
-        specifier: workspace:^
-        version: link:../prettier-config
-      '@happychain/typescript-config':
-        specifier: workspace:^
-        version: link:../typescript-config
-      '@types/bun':
-        specifier: ^1.1.6
-        version: 1.1.6
-      eslint:
-        specifier: ^8.57.0
-        version: 8.57.0
-      happy-dom:
-        specifier: ^14.12.3
-        version: 14.12.3
-      prettier:
-        specifier: ^3.3.3
-        version: 3.3.3
-
   packages/sdk-firebase-web3auth-strategy:
     dependencies:
       '@happychain/common':
         specifier: workspace:^
         version: link:../common
-      '@happychain/core':
+      '@happychain/sdk-shared':
         specifier: workspace:^
-        version: link:../sdk-core
+        version: link:../sdk-shared
       '@web3auth/ethereum-mpc-provider':
         specifier: ^8.12.0
         version: 8.12.0(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@5.0.10)
@@ -421,11 +384,48 @@ importers:
         specifier: 4.0.0-beta.1
         version: 4.0.0-beta.1(@types/node@22.0.0)(rollup@4.19.1)(typescript@5.5.4)(vite@5.3.5(@types/node@22.0.0)(terser@5.31.3))
 
+  packages/sdk-shared:
+    dependencies:
+      '@metamask/safe-event-emitter':
+        specifier: ^3.1.1
+        version: 3.1.1
+      mipd:
+        specifier: ^0.0.7
+        version: 0.0.7(typescript@5.5.4)
+      viem:
+        specifier: ^2.18.4
+        version: 2.18.4(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8)
+    devDependencies:
+      '@happy-dom/global-registrator':
+        specifier: ^14.12.3
+        version: 14.12.3
+      '@happychain/eslint-config':
+        specifier: workspace:^
+        version: link:../eslint-config
+      '@happychain/prettier-config':
+        specifier: workspace:^
+        version: link:../prettier-config
+      '@happychain/typescript-config':
+        specifier: workspace:^
+        version: link:../typescript-config
+      '@types/bun':
+        specifier: ^1.1.6
+        version: 1.1.6
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.0
+      happy-dom:
+        specifier: ^14.12.3
+        version: 14.12.3
+      prettier:
+        specifier: ^3.3.3
+        version: 3.3.3
+
   packages/sdk-vanillajs:
     dependencies:
-      '@happychain/core':
+      '@happychain/sdk-shared':
         specifier: workspace:^
-        version: link:../sdk-core
+        version: link:../sdk-shared
       lit:
         specifier: ^3.1.4
         version: 3.2.0
@@ -3660,6 +3660,7 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}

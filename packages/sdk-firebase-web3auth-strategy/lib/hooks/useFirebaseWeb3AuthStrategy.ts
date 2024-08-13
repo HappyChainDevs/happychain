@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import type { ConnectionProvider, HappyUser } from '@happychain/core'
+import type { ConnectionProvider, HappyUser } from '@happychain/sdk-shared'
 import type { EIP1193Provider } from 'viem'
 
 import { googleLogo } from '../logos'

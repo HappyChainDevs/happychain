@@ -1,4 +1,4 @@
-import { config, onModalUpdate, onUserUpdate } from '@happychain/core'
+import { config, onModalUpdate, onUserUpdate } from '@happychain/sdk-shared'
 import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'

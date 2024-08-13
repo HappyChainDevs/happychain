@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react'
 
 import { atomWithCompare, useIsHydrated } from '@happychain/common'
-import type { HappyUser } from '@happychain/core'
+import type { HappyUser } from '@happychain/sdk-shared'
 import type { IdTokenLoginParams } from '@web3auth/mpc-core-kit'
 import { type Auth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from 'firebase/auth'
 import { useAtom, useSetAtom } from 'jotai'
