@@ -1,0 +1,1 @@
+pnpm biome check $(git diff --name-only $(git rev-parse --abbrev-ref HEAD) $(git merge-base $(git rev-parse --abbrev-ref HEAD) master))
