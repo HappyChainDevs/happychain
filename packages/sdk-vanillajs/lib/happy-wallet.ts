@@ -10,12 +10,7 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
 @customElement('happy-wallet')
 export class HappyWallet extends LitElement {
     @state()
-    classes = {
-        open: false,
-        closed: true,
-        connected: false,
-        disconnected: true,
-    }
+    _classes = { open: false, closed: true, connected: false, disconnected: true }
 
     @property({ type: String })
     'rpc-url': string | undefined
@@ -31,14 +26,14 @@ export class HappyWallet extends LitElement {
         super.connectedCallback()
 
         onUserUpdate((user) => {
-            this.classes.connected = Boolean(user)
-            this.classes.disconnected = !user
+            this._classes.connected = Boolean(user)
+            this._classes.disconnected = !user
             this.requestUpdate()
         })
 
         onModalUpdate((isOpen) => {
-            this.classes.open = isOpen
-            this.classes.closed = !isOpen
+            this._classes.open = isOpen
+            this._classes.closed = !isOpen
             this.requestUpdate()
         })
     }
@@ -58,7 +53,7 @@ export class HappyWallet extends LitElement {
             <iframe
                 title="happy-iframe"
                 src="${url.href}?${searchParams}"
-                class=${classMap(this.classes)}
+                class=${classMap(this._classes)}
                 style="border: none;"
             />
         `

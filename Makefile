@@ -202,3 +202,9 @@ reset-modules:
 .PHONY: reset-modules
 
 # ==================================================================================================
+
+# install this to run github workflows locally
+# https://nektosact.com/
+debug-github-workflow:
+	act push
+.PHONY: debug-github-workflow
