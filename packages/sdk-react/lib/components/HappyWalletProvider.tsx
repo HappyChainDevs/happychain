@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useState } from 'react'
+import { type PropsWithChildren, useEffect, useState } from 'react'
 
 import type { HappyUser } from '@happychain/js'
 import { onUserUpdate, register } from '@happychain/js'

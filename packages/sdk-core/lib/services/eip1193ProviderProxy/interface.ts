@@ -1,4 +1,4 @@
-import SafeEventEmitter from '@metamask/safe-event-emitter'
+import type SafeEventEmitter from '@metamask/safe-event-emitter'
 import type { EIP1193RequestFn, EIP1474Methods } from 'viem'
 
 import type { config } from '../../config'

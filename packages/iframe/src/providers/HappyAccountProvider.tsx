@@ -80,7 +80,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
         }
     }, [walletClient])
 
-    // Untrusted requests can only be called using the public client 
+    // Untrusted requests can only be called using the public client
     // as they bypass the popup approval screen
     useEffect(() => {
         const offApprove = eip1193ProviderBus.on('request:approve', async (data) => {

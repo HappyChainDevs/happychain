@@ -24,8 +24,8 @@ function Connect() {
     const [isOpen, setIsOpen] = useState(false)
 
     const activeProvider = useMemo(
-        () => socialProviders.concat(web3Providers).find(a => user && a.id === `${user.type}:${user.provider}`), 
-        [user, socialProviders, web3Providers]
+        () => socialProviders.concat(web3Providers).find((a) => user && a.id === `${user.type}:${user.provider}`),
+        [user, socialProviders, web3Providers],
     )
 
     async function disconnect() {
@@ -44,7 +44,7 @@ function Connect() {
 
     if (authState === AuthState.Loading) {
         return (
-            <main className="min-h-dvh w-screen" onClick={disconnect}>
+            <main className="min-h-dvh w-screen">
                 <div className="fixed right-4 top-4 flex h-12 w-20 items-center justify-center">
                     <DotLinearMotionBlurLoader />
                 </div>

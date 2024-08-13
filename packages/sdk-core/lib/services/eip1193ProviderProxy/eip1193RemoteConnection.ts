@@ -10,6 +10,7 @@ import type { EIP1193ConnectionHandler, EIP1193ProviderProxyConfig } from './int
 type Timer = ReturnType<typeof setInterval>
 
 type InFlightRequest = {
+    // biome-ignore lint/suspicious/noExplicitAny: difficult type, viem _returnType
     resolve: (value: any) => void
     reject: (reason?: unknown) => void
     popup: Window | null
