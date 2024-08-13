@@ -76,8 +76,6 @@ test:
 
 # Performs code-quality checks.
 check:
-	make sync-gitignore
-
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Checking $${name}";\
 		cd $${name} && make check && cd ../../;\

@@ -23,5 +23,6 @@ jobs:
       - name: Fake contract deployment
         run: mkdir -p packages/contracts/out && echo "{}" > packages/contracts/out/deployment.json
       - run: make install-frozen
+      - run: make setup
       - run: make build
       - run: make check

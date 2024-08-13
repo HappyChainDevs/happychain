@@ -27,7 +27,9 @@
         "rules": {
             "recommended": true,
             "nursery": {
-                // "useSortedClasses": "error", // not a drop in replacement for prettier-plugin-tailwindcss
+                // not a drop in replacement for prettier-plugin-tailwindcss
+                // doesn't auto correct, and has different sort order
+                // "useSortedClasses": "error", 
             },
             "correctness": {
                 "noUnusedVariables": "warn",

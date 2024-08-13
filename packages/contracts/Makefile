@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 # include .env file and export its env vars
 # (-include to ignore error if it does not exist)
 -include .env
@@ -23,10 +24,13 @@ DEPLOY_SCRIPT ?= DeployL1Upgradeable.s.sol
 # if they're not in `lib` and do not have a `src` directory (the `remappings.txt` file is ignored).
 setup:
 	if [ ! -f .env ]; then cp .env.example .env; fi
+	rm -rf lib
 	mkdir -p lib/{openzeppelin,oz-upgradeable}
-	ln -shF ../node_modules/forge-std lib/forge-std
-	ln -shF ../../node_modules/@openzeppelin/contracts lib/openzeppelin/src
-	ln -shF ../../node_modules/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
+	ln ./node_modules/forge-std lib/forge-std
+	ln ./node_modules/@openzeppelin/contracts lib/openzeppelin/src
+	ln ./node_modules/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
+	ls lib/openzeppelin/src
+	ls ./node_modules/@openzeppelin/contracts
 .PHONY: setup
 
 ####################################################################################################
