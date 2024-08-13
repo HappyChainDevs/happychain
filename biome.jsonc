@@ -29,7 +29,7 @@
             "nursery": {
                 // not a drop in replacement for prettier-plugin-tailwindcss
                 // doesn't auto correct, and has different sort order
-                // "useSortedClasses": "error", 
+                // "useSortedClasses": "error",
             },
             "correctness": {
                 "noUnusedVariables": "warn",

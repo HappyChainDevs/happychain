@@ -29,8 +29,6 @@ setup:
 	ln ./node_modules/forge-std lib/forge-std
 	ln ./node_modules/@openzeppelin/contracts lib/openzeppelin/src
 	ln ./node_modules/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
-	ls lib/openzeppelin/src
-	ls ./node_modules/@openzeppelin/contracts
 .PHONY: setup
 
 ####################################################################################################
