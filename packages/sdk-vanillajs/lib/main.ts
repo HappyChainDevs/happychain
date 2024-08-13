@@ -1,4 +1,5 @@
 import { uuid } from '@happychain/sdk-shared'
+
 import { HappyWallet } from './happy-wallet'
 
 export { HappyWallet }
