@@ -5,7 +5,6 @@
             "./**/*/node_modules",
             "./**/*/.next",
             "./**/*/dist",
-            "./**/*/routeTree.gen.ts",
             "./**/*/generated.ts",
             "./**/*/tsconfig.json",
             "./**/*/tsconfig.*.json",
