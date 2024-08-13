@@ -1,5 +1,5 @@
 import { config, onModalUpdate, onUserUpdate } from '@happychain/core'
-import { css, html, LitElement } from 'lit'
+import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 
@@ -45,7 +45,6 @@ export class HappyWallet extends LitElement {
             position: fixed;
             top: 0;
             right: 0;
-            background: red;
         }
 
         iframe.disconnected.closed {
