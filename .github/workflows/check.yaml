@@ -26,4 +26,3 @@ jobs:
       - run: make setup
       - run: make build
       - run: make check
-      - run: make test

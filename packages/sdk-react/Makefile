@@ -16,7 +16,7 @@ preview:
 
 # Using vitest+jsdon for better react testing support
 test:
-	@echo "No sdk-react tests yet"
+	@echo "No sdk-react tests"
 .PHONY: test
 
 lint:
