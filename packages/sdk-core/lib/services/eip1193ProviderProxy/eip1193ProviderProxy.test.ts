@@ -110,13 +110,12 @@ describe('EIP1193ProviderProxy', () => {
             })
         })
 
+        const resultBlock = provider.request({
+            method: 'eth_getBlockByNumber',
+            params: ['latest', false],
+        })
         // provider request
-        expect(
-            provider.request({
-                method: 'eth_getBlockByNumber',
-                params: ['latest', false],
-            }),
-        ).resolves.toStrictEqual(emptyRpcBlock)
+        expect(resultBlock).resolves.toStrictEqual(emptyRpcBlock)
     })
 
     it('rejects on error', async () => {

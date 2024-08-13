@@ -1,25 +1,24 @@
 import { config, onModalUpdate, onUserUpdate } from '@happychain/core'
 import { css, html, LitElement } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
-import {classMap} from 'lit/directives/class-map.js';
-
+import { classMap } from 'lit/directives/class-map.js'
 
 @customElement('happy-wallet')
 export class HappyWallet extends LitElement {
     @state()
-    classes = { 
-        open: false, 
-        closed: true, 
-        connected: false, 
-        disconnected: true
-    };
+    classes = {
+        open: false,
+        closed: true,
+        connected: false,
+        disconnected: true,
+    }
 
     connectedCallback(): void {
         super.connectedCallback()
 
         onUserUpdate((user) => {
             this.classes.connected = Boolean(user)
-            this.classes.disconnected = !Boolean(user)
+            this.classes.disconnected = !user
             this.requestUpdate()
         })
 

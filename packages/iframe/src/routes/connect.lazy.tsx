@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { useAtomValue } from 'jotai'
@@ -23,10 +23,13 @@ function Connect() {
 
     const [isOpen, setIsOpen] = useState(false)
 
-    function disconnectAll() {
-        for (const prov of socialProviders.concat(web3Providers)) {
-            prov.disable()
-        }
+    const activeProvider = useMemo(
+        () => socialProviders.concat(web3Providers).find((a) => user && a.id === `${user.type}:${user.provider}`),
+        [user, socialProviders, web3Providers],
+    )
+
+    async function disconnect() {
+        await activeProvider?.disable()
     }
 
     function open() {
@@ -65,7 +68,7 @@ function Connect() {
                                 <p>{user?.email || user?.name}</p>
                             </div>
                             <div className="flex h-full w-full grow flex-col items-end justify-end rounded bg-slate-200 p-4">
-                                <button type="button" onClick={disconnectAll} className="btn btn-warning">
+                                <button type="button" onClick={disconnect} className="btn btn-warning">
                                     Logout
                                 </button>
                             </div>

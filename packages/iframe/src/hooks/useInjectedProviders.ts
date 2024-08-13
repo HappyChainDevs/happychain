@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import type {
-    ConnectionProvider,
-    EIP6963AnnounceProviderEvent,
-    EIP6963ProviderDetail,
-    HappyUser,
-} from '@happychain/core'
+import type { ConnectionProvider, EIP6963AnnounceProviderEvent, EIP6963ProviderDetail } from '@happychain/core'
 import { useSetAtom } from 'jotai'
 
+import { dappMessageBus } from '../services/eventBus'
 import { storage } from '../services/storage'
 import { AuthState, authStateAtom } from '../state/app'
 
@@ -31,46 +27,26 @@ export function useInjectedProviders(): ConnectionProvider[] {
     // user injected extensions
     const [injectedProviders, setInjectedProviders] = useState<ProviderMap>(new Map())
 
-    const enable = useCallback(async (eip1193Provider: EIP6963ProviderDetail) => {
-        const addresses = await eip1193Provider.provider.request({
-            method: 'eth_requestAccounts',
+    useEffect(() => {
+        return dappMessageBus.on('wallet-connect:response', ({ user }) => {
+            setUserWithProvider(user, null)
         })
-
-        const user: HappyUser = {
-            // connection type
-            type: 'injected',
-            provider: eip1193Provider.info.rdns,
-            // social details
-            uid: addresses[0],
-            email: '',
-            name: `${addresses[0].slice(0, 6)}...${addresses[0].slice(-4)}`,
-            ens: '', // TODO?
-            avatar: `https://avatar.vercel.sh/${addresses[0]}?size=400`,
-            // web3 details
-            address: addresses[0],
-            addresses,
-        }
-
-        setUserWithProvider(user, eip1193Provider.provider)
+    }, [])
+    //
+    const enable = useCallback(async (eip1193Provider: EIP6963ProviderDetail) => {
+        dappMessageBus.emit('wallet-connect:request', eip1193Provider.info.rdns)
     }, [])
 
-    const disable = useCallback(async (eip1193Provider: EIP6963ProviderDetail) => {
-        const user = storage.get('cached-user')
-        if (eip1193Provider.info.rdns === user?.provider) {
-            setUserWithProvider(null, eip1193Provider.provider)
-        }
+    const disable = useCallback(async () => {
+        dappMessageBus.emit('wallet-disconnect:request', null)
+        setUserWithProvider(null, null)
     }, [])
 
     useEffect(() => {
         const callback = async (evt: Event) => {
             if (!isEip6963Event(evt)) return
-            if (
-                // phantom seems to not connect from within iframe
-                !('isPhantom' in evt.detail.provider) ||
-                !evt.detail.provider.isPhantom
-            ) {
-                setInjectedProviders((map) => new Map(map.set(evt.detail.info.uuid, evt.detail)))
-            }
+
+            setInjectedProviders((map) => new Map(map.set(evt.detail.info.uuid, evt.detail)))
 
             // autoconnect
             const user = storage.get('cached-user')
@@ -103,7 +79,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
                     disable: async () => {
                         // will automatically disable loading state when user+provider are set
                         setAuthState(AuthState.Loading)
-                        await disable(eip1193Provider)
+                        await disable()
                     },
                     getProvider: () => eip1193Provider.provider,
                 }

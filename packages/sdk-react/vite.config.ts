@@ -27,8 +27,7 @@ export default defineConfig({
 
     resolve: {
         alias: {
-            lib: resolve('./lib'),
-            src: resolve('./src'),
+            '@happychain/js': resolve('../sdk-vanillajs/lib/main.ts'),
         },
     },
 

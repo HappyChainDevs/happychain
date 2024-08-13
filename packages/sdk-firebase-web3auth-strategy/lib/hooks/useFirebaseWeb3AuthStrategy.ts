@@ -19,7 +19,7 @@ export function useFirebaseWeb3AuthStrategy(): {
         () => [
             {
                 type: 'social',
-                id: 'firebase:google',
+                id: 'social:firebase',
                 name: 'Google',
                 icon: googleLogo,
                 enable: () => signIn('google'),

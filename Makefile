@@ -69,8 +69,6 @@ test:
 
 # Performs code-quality checks.
 check:
-	make sync-gitignore
-
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Checking $${name}";\
 		cd $${name} && make check && cd ../../;\
@@ -94,8 +92,6 @@ check:
 
 # Performs code formatting for the webapp files and contracts in their respective directories.
 format:
-	make sync-gitignore
-
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Formatting $${name}";\
 		cd $${name} && make format && cd ../../;\

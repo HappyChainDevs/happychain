@@ -1,4 +1,4 @@
-import { type EIP1193ProviderProxy, type HappyUser } from '@happychain/core'
+import type { EIP1193ProviderProxy, HappyUser } from '@happychain/core'
 import { eip1193Provider, onUserUpdate } from '@happychain/core'
 
 import { HappyWallet } from './happy-wallet'
