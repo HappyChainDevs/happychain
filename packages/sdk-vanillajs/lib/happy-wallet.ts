@@ -1,33 +1,32 @@
 import { config, onModalUpdate, onUserUpdate } from '@happychain/core'
 import { css, html, LitElement } from 'lit'
-import { customElement } from 'lit/decorators.js'
+import { customElement, state } from 'lit/decorators.js'
+import {classMap} from 'lit/directives/class-map.js';
+
 
 @customElement('happy-wallet')
 export class HappyWallet extends LitElement {
-    constructor() {
-        super()
+    @state()
+    classes = { 
+        open: false, 
+        closed: true, 
+        connected: false, 
+        disconnected: true
+    };
 
-        this.classList.add('closed')
-        this.classList.add('disconnected')
+    connectedCallback(): void {
+        super.connectedCallback()
 
         onUserUpdate((user) => {
-            if (user) {
-                this.classList.add('connected')
-                this.classList.remove('disconnected')
-            } else {
-                this.classList.add('disconnected')
-                this.classList.remove('connected')
-            }
+            this.classes.connected = Boolean(user)
+            this.classes.disconnected = !Boolean(user)
+            this.requestUpdate()
         })
 
         onModalUpdate((isOpen) => {
-            if (isOpen) {
-                this.classList.add('open')
-                this.classList.remove('closed')
-            } else {
-                this.classList.add('closed')
-                this.classList.remove('open')
-            }
+            this.classes.open = isOpen
+            this.classes.closed = !isOpen
+            this.requestUpdate()
         })
     }
 
@@ -36,38 +35,42 @@ export class HappyWallet extends LitElement {
             <iframe
                 title="happy-iframe"
                 src="${config.iframePath}/connect"
-                style="width: 100%; height: 100%; border: none;"
+                class=${classMap(this.classes)}
+                style="border: none;"
             />
         `
     }
 
     static styles = css`
-        :host {
+        iframe {
             position: fixed;
             top: 0;
             right: 0;
+            background: red;
         }
 
-        :host(.disconnected.closed) {
+        iframe.disconnected.closed {
             height: 5rem;
             width: 7rem;
             border-radius: 0.25rem;
             overflow: hidden;
         }
 
-        :host(.disconnected.open) {
+        iframe.disconnected.open {
             bottom: 0;
             left: 0;
+            width: 100vw;
+            height: 100vh;
         }
 
-        :host(.connected.closed) {
+        iframe.closed.connected {
             height: 5rem;
             width: 13rem;
             border-radius: 0.5rem;
             overflow: hidden;
         }
 
-        :host(.connected.open) {
+        iframe.connected.open {
             height: 20rem;
             width: 20rem;
             border-radius: 0.5rem;
