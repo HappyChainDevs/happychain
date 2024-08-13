@@ -3,12 +3,12 @@ import type { EIP1193Provider, EIP1193RequestFn, EIP1474Methods } from 'viem'
 
 import { LocalConnectionHandler } from './eip1193LocalConnection'
 import { RemoteConnectionHandler } from './eip1193RemoteConnection'
-import type { EIP1193ConnectionHandler, EIP1193ProviderProxyConfig } from './interface'
+import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
 
-export class EIP1193ProviderProxy extends SafeEventEmitter implements EIP1193Provider {
+export class HappyProvider extends SafeEventEmitter implements EIP1193Provider {
     private connections: EIP1193ConnectionHandler[]
 
-    constructor(config: EIP1193ProviderProxyConfig) {
+    constructor(config: HappyProviderConfig) {
         super()
 
         config.logger?.log('EIP1193Provider Created')

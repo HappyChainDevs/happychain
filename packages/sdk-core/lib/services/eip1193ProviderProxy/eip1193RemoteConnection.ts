@@ -5,7 +5,7 @@ import { requiresApproval } from '../permissions'
 
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from './errors'
 import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
-import type { EIP1193ConnectionHandler, EIP1193ProviderProxyConfig } from './interface'
+import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -22,7 +22,7 @@ export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193
     private inFlight = new Map<string, InFlightRequest>()
     private timer: Timer | null = null
 
-    constructor(private config: EIP1193ProviderProxyConfig) {
+    constructor(private config: HappyProviderConfig) {
         super()
 
         config.providerBus.on('provider:event', this.handleProviderNativeEvent.bind(this))

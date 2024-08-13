@@ -1,12 +1,10 @@
-import type { EIP1193ProviderProxy, HappyUser } from '@happychain/core'
-import { eip1193Provider, onUserUpdate } from '@happychain/core'
+import type { HappyProvider, HappyUser } from '@happychain/core'
+import { happyProvider, onUserUpdate } from '@happychain/core'
 
 import { HappyWallet } from './happy-wallet'
 
-export const happyProvider = eip1193Provider
-
-export { onUserUpdate, HappyWallet }
-export type { HappyUser, EIP1193ProviderProxy }
+export { onUserUpdate, happyProvider, HappyWallet }
+export type { HappyUser, HappyProvider }
 
 export function register() {
     if (document.querySelector('happy-wallet')) {

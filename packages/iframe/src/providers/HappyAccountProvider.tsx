@@ -6,7 +6,7 @@ import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
 import { useAtomValue } from 'jotai'
 
 import { useHappyAccount } from '../hooks/useHappyAccount'
-import { dappMessageBus, eip1193ProviderBus, popupBus } from '../services/eventBus'
+import { dappMessageBus, happyProviderBus, popupBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
 
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
@@ -31,7 +31,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const proxyEvent = (name: EIP1193EventName) => (event: unknown) => {
-            eip1193ProviderBus.emit('provider:event', {
+            happyProviderBus.emit('provider:event', {
                 payload: { event: name, args: event },
             })
         }
@@ -61,7 +61,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
             try {
                 const result = await walletClient?.request(payload.payload as Parameters<typeof walletClient.request>)
 
-                eip1193ProviderBus.emit('response:complete', {
+                happyProviderBus.emit('response:complete', {
                     key: payload.key,
                     error: null,
                     payload: result,
@@ -72,7 +72,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
             }
         })
         const offReject = popupBus.on('request:reject', (payload) => {
-            eip1193ProviderBus.emit('response:complete', payload)
+            happyProviderBus.emit('response:complete', payload)
         })
         return () => {
             offApprove()
@@ -83,7 +83,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // Untrusted requests can only be called using the public client
     // as they bypass the popup approval screen
     useEffect(() => {
-        const offApprove = eip1193ProviderBus.on('request:approve', async (data) => {
+        const offApprove = happyProviderBus.on('request:approve', async (data) => {
             try {
                 const isPublicMethod = !requiresApproval(data.payload)
 
@@ -98,7 +98,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
                 const result = await publicClient.request(data.payload as Parameters<typeof publicClient.request>)
 
-                eip1193ProviderBus.emit('response:complete', {
+                happyProviderBus.emit('response:complete', {
                     key: data.key,
                     error: null,
                     payload: result,

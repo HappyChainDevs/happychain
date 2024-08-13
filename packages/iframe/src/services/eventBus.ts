@@ -9,12 +9,12 @@ import {
 } from '@happychain/core'
 
 /**
- * Event system between the EIP1193ProviderProxy in the dapp
+ * Event system between the HappyProvider in the dapp
  * and the iframe provider/executor
  *
  * This is port1 so its created and initialized first, then waits for port2 to connect
  */
-export const eip1193ProviderBus = new EventBus<EIP1193ProxiedEvents>({
+export const happyProviderBus = new EventBus<EIP1193ProxiedEvents>({
     target: window.parent,
     mode: EventBusChannel.IframePort,
     scope: 'happy-chain-eip1193-provider',
