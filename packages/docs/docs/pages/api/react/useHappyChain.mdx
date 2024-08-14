@@ -1,0 +1,32 @@
+# useHappyChain
+
+```tsx twoslash
+import React from 'react'
+import { useHappyChain } from '@happychain/react'
+import { useMemo, useEffect, useState } from 'react'
+import { createPublicClient, custom } from 'viem'
+
+
+export function MyComponent() {
+    const { user, provider } = useHappyChain()
+
+    const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
+    const [block, setBlock] = useState<Awaited<ReturnType<typeof publicClient.getBlock>> | null>(null)
+
+
+    
+    useEffect(() => {
+        (async () => setBlock(await publicClient.getBlock()))()
+    }, [publicClient])
+
+
+
+    return (
+        <div>
+            <div>Block {block?.number?.toString()}</div>
+            <div>Loaded User {user?.address}</div>
+        </div>
+    )
+
+}
+```

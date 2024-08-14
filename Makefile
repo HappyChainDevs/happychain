@@ -54,7 +54,13 @@ build:
 		echo "Building $${name}";\
 		cd $${name} && make build && cd ../../;\
 	done
+
+	cd packages/docs && make build
 .PHONY: build
+
+docs:
+	cd packages/docs && make dev
+.PHONY: docs
 
 # Deploys to the contracts to the local node (requires anvil to be running).
 deploy:

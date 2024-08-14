@@ -1,0 +1,72 @@
+# Quick Start
+
+## Install 
+:::code-group
+
+```bash [npm]
+npm install @happychain/react
+```
+
+```bash [pnpm]
+pnpm add @happychain/react
+```
+
+```bash [yarn]
+yarn add @happychain/react
+```
+
+```bash [bun]
+bun add @happychain/react
+```
+
+:::
+
+## Consume
+
+:::code-group
+
+```tsx twoslash [main.tsx]
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { HappyWalletProvider } from '@happychain/react' // [!code focus]
+import App from './App.tsx'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+    <HappyWalletProvider> // [!code focus]
+        <App />
+    </HappyWalletProvider>// [!code focus]
+)
+```
+
+```tsx twoslash [App.tsx] filename="App.tsx"
+import React from 'react'
+import { useHappyChain } from '@happychain/react' // [!code focus]
+import { useMemo, useEffect, useState } from 'react'
+import { createPublicClient, custom } from 'viem'
+
+
+export function App() {
+    const { user, provider } = useHappyChain() // [!code focus]
+
+    const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
+    const [block, setBlock] = useState<Awaited<ReturnType<typeof publicClient.getBlock>> | null>(null)
+
+
+    
+    useEffect(() => {
+        (async () => setBlock(await publicClient.getBlock()))()
+    }, [publicClient])
+
+
+
+    return (
+        <div>
+            <div>Block {block?.number?.toString()}</div>
+            <div>Loaded User {user?.address}</div>
+        </div>
+    )
+
+}
+```
+
+:::
