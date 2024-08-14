@@ -44,20 +44,15 @@ import { useHappyChain } from '@happychain/react' // [!code focus]
 import { useMemo, useEffect, useState } from 'react'
 import { createPublicClient, custom } from 'viem'
 
-
 export function App() {
     const { user, provider } = useHappyChain() // [!code focus]
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
     const [block, setBlock] = useState<Awaited<ReturnType<typeof publicClient.getBlock>> | null>(null)
-
-
     
     useEffect(() => {
         (async () => setBlock(await publicClient.getBlock()))()
     }, [publicClient])
-
-
 
     return (
         <div>
@@ -65,7 +60,6 @@ export function App() {
             <div>Loaded User {user?.address}</div>
         </div>
     )
-
 }
 ```
 
