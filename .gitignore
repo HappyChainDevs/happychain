@@ -30,6 +30,7 @@ dist-ssr
 # Contract outputs
 packages/contracts/cache/
 packages/contracts/out/
+
 packages/contracts/lib
 packages/contracts/broadcast/
 packages/frontend/src/generated.ts
@@ -47,5 +48,4 @@ packages/frontend/src/generated.ts
 *.sln
 *.sw?
 
-# Tanstack Router
-src/routeTree.gen.ts
+packages/**/.gitignore

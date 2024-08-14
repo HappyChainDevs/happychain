@@ -18,6 +18,8 @@ DEPLOYMENT_NAME ?= $(CONFIG)
 # Script to run for deployments, or deployment to save for `make save-deployment`.
 DEPLOY_SCRIPT ?= DeployL1Upgradeable.s.sol
 
+LN_FLAGS := $(if $(findstring Darwin,$(shell uname)),-shF,-sfT)
+
 # See README.md for more documentation.
 
 # The reason for this weird setup is that the IntelliJ solidity plugin will not resolve imports
@@ -26,9 +28,9 @@ setup:
 	if [ ! -f .env ]; then cp .env.example .env; fi
 	rm -rf lib
 	mkdir -p lib/{openzeppelin,oz-upgradeable}
-	ln ./node_modules/forge-std lib/forge-std
-	ln ./node_modules/@openzeppelin/contracts lib/openzeppelin/src
-	ln ./node_modules/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
+	ln $(LN_FLAGS) ../node_modules/forge-std lib/forge-std
+	ln $(LN_FLAGS) ../../node_modules/@openzeppelin/contracts lib/openzeppelin/src
+	ln $(LN_FLAGS) ../../node_modules/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
 .PHONY: setup
 
 ####################################################################################################

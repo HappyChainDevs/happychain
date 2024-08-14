@@ -1,9 +1,16 @@
 SHELL := /bin/bash
 # Packages
 SDK_PKGS := sdk-vanillajs,sdk-react
-OTHER_PKGS := contracts,iframe,common,sdk-shared,sdk-firebase-web3auth-strategy
+OTHER_PKGS := iframe,common,sdk-core,sdk-firebase-web3auth-strategy
 DEMO_PKGS := demo-vanillajs,demo-react
 CONFIG_PKGS := eslint-config,prettier-config,typescript-config
+
+# Currently Active Branch
+YOUR_BRANCH = $(git rev-parse --abbrev-ref HEAD)
+# Lead branch
+DEFAULT_BRANCH = master
+
+LN_FLAGS := $(if $(findstring Darwin,$(shell uname)),-shF,-sfT)
 
 # ==================================================================================================
 # BASICS COMMANDS
@@ -40,20 +47,23 @@ sdk-dev:
 .PHONY: sdk-dev
 
 # Builds the sdks, apps, contracts & demos
-build:	
+build:
+	echo "Building packages/contracts";\
+	cd packages/contracts && make build;\
+
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../;\
+		cd $${name} && make build && cd ../../; || exit 1\
 	done
 
 	for name in packages/{$(OTHER_PKGS)}; do\
 		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../;\
+		cd $${name} && make build && cd ../../; || exit 1\
 	done
 
 	for name in packages/{$(DEMO_PKGS)}; do\
 		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../;\
+		cd $${name} && make build && cd ../../ || exit 1;\
 	done
 
 	cd packages/docs && make build
@@ -76,47 +86,52 @@ test:
 
 # Performs code-quality checks.
 check:
+	echo "Checking packages/contracts";\
+	cd packages/contracts && make check;\
+
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../;\
+		cd $${name} && make check && cd ../../ || exit 1;\
 	done
 
 	for name in packages/{$(OTHER_PKGS)}; do\
 		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../;\
+		cd $${name} && make check && cd ../../ || exit 1;\
 	done
-
 	for name in packages/{$(DEMO_PKGS)}; do\
 		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../;\
+		cd $${name} && make check && cd ../../ || exit 1;\
 	done
 
 	for name in packages/{$(CONFIG_PKGS)}; do\
 		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../;\
+		cd $${name} && make check && cd ../../ || exit 1;\
 	done
 .PHONY: check
 
 # Performs code formatting for the webapp files and contracts in their respective directories.
 format:
+	echo "Formatting packages/contracts";\
+	cd packages/contracts && make format;\
+
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Formatting $${name}";\
-		cd $${name} && make format && cd ../../;\
+		cd $${name} && make format && cd ../../ || exit 1;\
 	done
 
 	for name in packages/{$(OTHER_PKGS)}; do\
 		echo "Formatting $${name}";\
-		cd $${name} && make format && cd ../../;\
+		cd $${name} && make format && cd ../../ || exit 1;\
 	done
 
 	for name in packages/{$(DEMO_PKGS)}; do\
 		echo "Formatting $${name}";\
-		cd $${name} && make format && cd ../../;\
+		cd $${name} && make format && cd ../../ || exit 1;\
 	done
 
 	for name in packages/{$(CONFIG_PKGS)}; do\
 		echo "Formatting $${name}";\
-		cd $${name} && make format && cd ../../;\
+		cd $${name} && make format && cd ../../ || exit 1;\
 	done
 .PHONY: format
 
@@ -134,8 +149,13 @@ demo-vanilla:
 # quick check using biome
 # Not a perfect 1:1 of eslint/prettier, but very close and much faster
 check-fast:
-	bunx @biomejs/biome check ./
+	pnpm biome check ./
 .PHONT: check-fast
+
+# quickly format change files between <your branch> and master
+format-fast-diff:
+	pnpm biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH))) --write
+.PHONY: format-fast-diff
 
 # quick format using biome
 # Not a perfect 1:1 of eslint/prettier, but very close and much faster
@@ -208,3 +228,37 @@ reset-modules:
 debug-github-workflow:
 	act push
 .PHONY: debug-github-workflow
+
+# Enable Git Hooks
+enable-hooks:
+	pnpm husky
+.PHONY: enable-hooks
+
+# Disable Git Hooks
+disable-hooks:
+	git config --unset core.hooksPath
+.PHONY: disable-hooks
+
+symlink-gitignore:
+	for name in packages/{$(SDK_PKGS)}; do\
+		echo "Linking $${name}";\
+		ln $(LN_FLAGS) ../../.gitignore $${name}/.gitignore || exit 1;\
+	done
+
+	# Don't symlink Contracts as it doesn't use prettier/eslint
+
+	for name in packages/{$(OTHER_PKGS)}; do\
+		echo "Linking $${name}";\
+		ln $(LN_FLAGS) ../../.gitignore $${name}/.gitignore || exit 1;\
+	done
+
+	for name in packages/{$(DEMO_PKGS)}; do\
+		echo "Linking $${name}";\
+		ln $(LN_FLAGS) ../../.gitignore $${name}/.gitignore || exit 1;\
+	done
+
+	for name in packages/{$(CONFIG_PKGS)}; do\
+		echo "Linking $${name}";\
+		ln $(LN_FLAGS) ../../.gitignore $${name}/.gitignore || exit 1;\
+	done
+.PHONY: symlink-gitignore

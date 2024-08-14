@@ -1,56 +1,56 @@
 {
-    "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
-    "files": {
-        "ignore": [
-            "./**/*/.next",
-            "./**/*/dist",
-            "./**/*/generated.ts",
-            "./**/*/node_modules",
-            "./**/*/routeTree.gen.ts",
-            "./**/*/tsconfig.*.json",
-            "./**/*/tsconfig.json",
-            "./packages/contracts/**"
-        ]
-    },
-    "formatter": {
-        "enabled": true,
-        "formatWithErrors": false,
-        "indentStyle": "space",
-        "indentWidth": 4,
-        "lineEnding": "lf",
-        "lineWidth": 120,
-        "attributePosition": "auto"
-    },
-    "organizeImports": { "enabled": true },
-    "linter": {
-        "enabled": true,
-        "rules": {
-            "recommended": true,
-            "nursery": {
-                // not a drop in replacement for prettier-plugin-tailwindcss
-                // doesn't auto correct, and has different sort order
-                // "useSortedClasses": "error",
-            },
-            "correctness": {
-                "noUnusedVariables": "warn",
-                "useHookAtTopLevel": "error"
-            },
-            "style": {
-                "noNamespace": "error"
-            }
-        }
-    },
-    "javascript": {
-        "formatter": {
-            "jsxQuoteStyle": "double",
-            "quoteProperties": "asNeeded",
-            "trailingCommas": "all",
-            "semicolons": "asNeeded",
-            "arrowParentheses": "always",
-            "bracketSpacing": true,
-            "bracketSameLine": false,
-            "quoteStyle": "single",
-            "attributePosition": "auto"
-        }
-    }
+	"$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+	"files": {
+		"ignore": [
+			"./**/*/.next",
+			"./**/*/dist",
+			"./**/*/generated.ts",
+			"./**/*/node_modules",
+			"./**/*/routeTree.gen.ts",
+			"./**/*/tsconfig.*.json",
+			"./**/*/tsconfig.json",
+			"./packages/contracts/**"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"indentStyle": "space",
+		"indentWidth": 4,
+		"lineEnding": "lf",
+		"lineWidth": 120,
+		"attributePosition": "auto"
+	},
+	"organizeImports": { "enabled": true },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"nursery": {
+				// not a drop in replacement for prettier-plugin-tailwindcss
+				// doesn't auto correct, and has different sort order
+				// "useSortedClasses": "error",
+			},
+			"correctness": {
+				"noUnusedVariables": "warn",
+				"useHookAtTopLevel": "error"
+			},
+			"style": {
+				"noNamespace": "error"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"trailingCommas": "all",
+			"semicolons": "asNeeded",
+			"arrowParentheses": "always",
+			"bracketSpacing": true,
+			"bracketSameLine": false,
+			"quoteStyle": "single",
+			"attributePosition": "auto"
+		}
+	}
 }
