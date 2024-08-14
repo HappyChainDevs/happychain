@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
         ],
         build: {
             lib: {
-                name: 'happy-wallet',
+                name: 'HappyChain',
                 entry: 'lib/main.ts',
                 fileName: (format) => `index.${format}.js`,
             },
