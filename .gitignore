@@ -47,5 +47,3 @@ packages/frontend/src/generated.ts
 *.njsproj
 *.sln
 *.sw?
-
-packages/**/.gitignore

@@ -10,7 +10,6 @@ YOUR_BRANCH = $(git rev-parse --abbrev-ref HEAD)
 # Lead branch
 DEFAULT_BRANCH = master
 
-LN_FLAGS := $(if $(findstring Darwin,$(shell uname)),-shF,-sfT)
 
 # ==================================================================================================
 # BASICS COMMANDS
@@ -53,12 +52,12 @@ build:
 
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../; || exit 1\
+		cd $${name} && make build && cd ../../ || exit 1;\
 	done
 
 	for name in packages/{$(OTHER_PKGS)}; do\
 		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../; || exit 1\
+		cd $${name} && make build && cd ../../ || exit 1;\
 	done
 
 	for name in packages/{$(DEMO_PKGS)}; do\
@@ -239,26 +238,26 @@ disable-hooks:
 	git config --unset core.hooksPath
 .PHONY: disable-hooks
 
-symlink-gitignore:
+copy-gitignore:
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Linking $${name}";\
-		ln $(LN_FLAGS) ../../.gitignore $${name}/.gitignore || exit 1;\
+		cp .gitignore $${name}/.gitignore || exit 1;\
 	done
 
 	# Don't symlink Contracts as it doesn't use prettier/eslint
 
 	for name in packages/{$(OTHER_PKGS)}; do\
 		echo "Linking $${name}";\
-		ln $(LN_FLAGS) ../../.gitignore $${name}/.gitignore || exit 1;\
+		cp .gitignore $${name}/.gitignore || exit 1;\
 	done
 
 	for name in packages/{$(DEMO_PKGS)}; do\
 		echo "Linking $${name}";\
-		ln $(LN_FLAGS) ../../.gitignore $${name}/.gitignore || exit 1;\
+		cp .gitignore $${name}/.gitignore || exit 1;\
 	done
 
 	for name in packages/{$(CONFIG_PKGS)}; do\
 		echo "Linking $${name}";\
-		ln $(LN_FLAGS) ../../.gitignore $${name}/.gitignore || exit 1;\
+		cp .gitignore $${name}/.gitignore || exit 1;\
 	done
 .PHONY: symlink-gitignore

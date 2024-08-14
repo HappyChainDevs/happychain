@@ -1,1 +1,51 @@
-../../.gitignore
+# Environment variables
+*.env*
+!*.env*.example
+*.password*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# MacOS
+.DS_Store
+
+# Node
+node_modules
+.pnpm-debug.log*
+*.local
+
+# Build outputs
+.next
+next-env.d.ts
+tsconfig.tsbuildinfo
+dist
+dist-ssr
+
+# Contract outputs
+packages/contracts/cache/
+packages/contracts/out/
+
+packages/contracts/lib
+packages/contracts/broadcast/
+packages/frontend/src/generated.ts
+
+# Editor configs and files
+.idea
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+packages/**/.gitignore
