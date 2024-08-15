@@ -1,25 +1,21 @@
 # useHappyChain
 
 ```tsx twoslash
-import React from 'react'
-import { useHappyChain } from '@happychain/react'
-import { useMemo, useEffect, useState } from 'react'
-import { createPublicClient, custom } from 'viem'
+import { useHappyChain, happyProvider } from '@happychain/react'
+import React, { useMemo, useEffect, useState } from 'react'
+import { createPublicClient, custom, type Block } from 'viem'
 
+const publicClient = createPublicClient({ 
+    transport: custom(happyProvider) 
+})
 
 export function MyComponent() {
-    const { user, provider } = useHappyChain()
+    const { user } = useHappyChain()
+    const [block, setBlock] = useState<Block | null>(null)
 
-    const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
-    const [block, setBlock] = useState<Awaited<ReturnType<typeof publicClient.getBlock>> | null>(null)
-
-
-    
     useEffect(() => {
-        (async () => setBlock(await publicClient.getBlock()))()
-    }, [publicClient])
-
-
+        publicClient.getBlock().then(setBlock)
+    }, [])
 
     return (
         <div>
@@ -27,6 +23,5 @@ export function MyComponent() {
             <div>Loaded User {user?.address}</div>
         </div>
     )
-
 }
 ```
