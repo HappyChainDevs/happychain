@@ -10,6 +10,7 @@ import type { EIP1193ProxiedEvents } from './events'
 
 export type HappyProviderConfig = Pick<typeof config, 'iframePath'> & {
     logger?: Logger
+    uuid: ReturnType<typeof crypto.randomUUID>
     providerBus: IEventBus<EIP1193ProxiedEvents>
     dappBus: IEventBus<HappyEvents>
 }

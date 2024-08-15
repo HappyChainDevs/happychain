@@ -1,7 +1,11 @@
 import { config, onModalUpdate, onUserUpdate } from '@happychain/sdk-shared'
-import { css, html, LitElement } from 'lit'
-import { customElement, state } from 'lit/decorators.js'
+import { LitElement, css, html } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
+
+function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
+    return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }
+}
 
 @customElement('happy-wallet')
 export class HappyWallet extends LitElement {
@@ -11,6 +15,16 @@ export class HappyWallet extends LitElement {
         closed: true,
         connected: false,
         disconnected: true,
+    }
+
+    @property({ type: String })
+    rpcUrl: string | undefined
+
+    @property({ type: String })
+    chainId: string | undefined
+
+    constructor(private uuid: ReturnType<typeof crypto.randomUUID>) {
+        super()
     }
 
     connectedCallback(): void {
@@ -30,10 +44,20 @@ export class HappyWallet extends LitElement {
     }
 
     render() {
+        const url = new URL('connect', config.iframePath)
+
+        const searchParams = new URLSearchParams(
+            filterUndefinedValues({
+                uuid: this.uuid,
+                chainId: this.chainId,
+                rpcUrl: this.rpcUrl,
+            }),
+        ).toString()
+
         return html`
             <iframe
                 title="happy-iframe"
-                src="${config.iframePath}/connect"
+                src="${url.href}?${searchParams}"
                 class=${classMap(this.classes)}
                 style="border: none;"
             />

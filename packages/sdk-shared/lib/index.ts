@@ -1,6 +1,6 @@
 export { config } from './config'
 export { logger } from './services/logger'
-export { onUserUpdate, onModalUpdate, happyProvider } from './initialize'
+export { onUserUpdate, onModalUpdate, happyProvider, uuid } from './initialize'
 export { EventBus, EventBusChannel } from './services/eventBus'
 export {
     HappyProvider,

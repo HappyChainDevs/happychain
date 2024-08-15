@@ -39,12 +39,18 @@ export const dappMessageBus = new EventBus<HappyEvents>({
 export interface BroadcastEvents {
     'request:approve': {
         error: null
+        // request key
         key: EventUUID
+        // window uuid
+        uuid: ReturnType<typeof crypto.randomUUID>
         payload: EIP1193RequestResult
     }
     'request:reject': {
         error: EIP1193ErrorObject
+        // request key
         key: EventUUID
+        // window uuid
+        uuid: ReturnType<typeof crypto.randomUUID>
         payload: null
     }
 }

@@ -1,8 +1,10 @@
+import { config } from './config'
 import type { HappyEvents } from './interfaces/events'
 import type { HappyUser } from './interfaces/happyUser'
 import { type EIP1193ProxiedEvents, HappyProvider } from './services/eip1193ProviderProxy'
 import { EventBus, EventBusChannel } from './services/eventBus'
-import { config } from './config'
+
+export const uuid = crypto.randomUUID()
 
 const dappMessageBus = new EventBus<HappyEvents>({
     mode: EventBusChannel.DappPort,
@@ -37,6 +39,8 @@ export const onModalUpdate = (callback: (isOpen: boolean) => void) => {
 }
 export const happyProvider = new HappyProvider({
     iframePath: config.iframePath,
+
+    uuid,
 
     providerBus: new EventBus<EIP1193ProxiedEvents>({
         mode: EventBusChannel.DappPort,
