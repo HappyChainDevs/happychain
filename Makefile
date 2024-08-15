@@ -237,27 +237,3 @@ enable-hooks:
 disable-hooks:
 	git config --unset core.hooksPath
 .PHONY: disable-hooks
-
-copy-gitignore:
-	for name in packages/{$(SDK_PKGS)}; do\
-		echo "Linking $${name}";\
-		cp .gitignore $${name}/.gitignore || exit 1;\
-	done
-
-	# Don't symlink Contracts as it doesn't use prettier/eslint
-
-	for name in packages/{$(OTHER_PKGS)}; do\
-		echo "Linking $${name}";\
-		cp .gitignore $${name}/.gitignore || exit 1;\
-	done
-
-	for name in packages/{$(DEMO_PKGS)}; do\
-		echo "Linking $${name}";\
-		cp .gitignore $${name}/.gitignore || exit 1;\
-	done
-
-	for name in packages/{$(CONFIG_PKGS)}; do\
-		echo "Linking $${name}";\
-		cp .gitignore $${name}/.gitignore || exit 1;\
-	done
-.PHONY: symlink-gitignore
