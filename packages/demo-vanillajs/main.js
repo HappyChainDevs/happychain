@@ -5,7 +5,6 @@ import { BrowserProvider } from 'ethers'
 // If included via a script tag through a CDN, then exports will be made available
 // on the global HappyChain object
 // const  { happyProvider, onUserUpdate, register } = window.HappyChain
-
 import './style.css'
 
 register()
