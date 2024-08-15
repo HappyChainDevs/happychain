@@ -54,7 +54,7 @@ const safeList = new Set([
     'net_version',
     'wallet_getPermissions', // https://eips.ethereum.org/EIPS/eip-2255
     'wallet_revokePermissions', // essentially disconnect... rabby does not implement this
-    'web3_clientVersion', // TODO: customize!
+    'web3_clientVersion',
     'web3_sha3',
 ])
 

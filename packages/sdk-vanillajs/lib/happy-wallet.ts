@@ -18,7 +18,7 @@ export class HappyWallet extends LitElement {
     }
 
     @property({ type: String })
-    rpcUrl: string | undefined
+    'rpc-url': string | undefined
 
     @property({ type: String })
     chainId: string | undefined
@@ -49,8 +49,8 @@ export class HappyWallet extends LitElement {
         const searchParams = new URLSearchParams(
             filterUndefinedValues({
                 uuid: this.uuid,
-                chainId: this.chainId,
-                rpcUrl: this.rpcUrl,
+                'chain:chainId': this.chainId,
+                'chain:rpcUrls': this['rpc-url'],
             }),
         ).toString()
 
