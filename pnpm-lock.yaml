@@ -312,6 +312,12 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      viem:
+        specifier: ^2.18.4
+        version: 2.18.4(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8)
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@happychain/eslint-config':
         specifier: workspace:^
@@ -334,12 +340,6 @@ importers:
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
-      viem:
-        specifier: ^2.18.4
-        version: 2.18.4(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8)
-      vite:
-        specifier: ^5.3.5
-        version: 5.3.5(@types/node@22.0.0)(terser@5.31.3)
 
   packages/sdk-react:
     dependencies:
