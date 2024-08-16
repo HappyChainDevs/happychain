@@ -4,6 +4,7 @@ import { createLazyFileRoute } from '@tanstack/react-router'
 
 import { DotLinearWaveLoader } from '../components/loaders/DotLinearWaveLoader'
 import { PersonalSign } from '../components/requests/PersonalSign'
+import { SendTransaction } from '../components/requests/SendTransaction'
 import { popupBus } from '../services/eventBus'
 
 export const Route = createLazyFileRoute('/request')({
@@ -44,5 +45,14 @@ function Request() {
         return <PersonalSign method={req.method} params={req.params} reject={reject} accept={accept} />
     }
 
-    return <main>UNKNOWN REQUEST: {JSON.stringify(req)}</main>
+    if (req.method === 'eth_sendTransaction') {
+        return <SendTransaction method={req.method} params={req.params} reject={reject} accept={accept} />
+    }
+
+    return (
+        <main>
+            UNKNOWN REQUEST:
+            <pre>{JSON.stringify(req)}</pre>
+        </main>
+    )
 }

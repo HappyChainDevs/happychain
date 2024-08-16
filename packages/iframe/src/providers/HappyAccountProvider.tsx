@@ -5,12 +5,10 @@ import { type EIP1193EventName, logger } from '@happychain/sdk-shared'
 import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
 import { useAtomValue } from 'jotai'
 
-import { useHappyAccount } from '../hooks/useHappyAccount'
-import { dappMessageBus, happyProviderBus, popupBus } from '../services/eventBus'
+import { happyProviderBus, popupBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
 
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
-    const { user: happyUser } = useHappyAccount()
     const provider = useAtomValue(providerAtom)
     const publicClient = useAtomValue(publicClientAtom)
     const walletClient = useAtomValue(walletClientAtom)
@@ -24,10 +22,6 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
         }
         init()
     }, [])
-
-    useEffect(() => {
-        dappMessageBus.emit('auth-changed', happyUser)
-    }, [happyUser])
 
     useEffect(() => {
         const proxyEvent = (name: EIP1193EventName) => (event: unknown) => {

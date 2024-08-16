@@ -2,11 +2,11 @@
 import { happyProvider, onUserUpdate, register } from '@happychain/js'
 import { BrowserProvider } from 'ethers'
 
+import './style.css'
+
 // If included via a script tag through a CDN, then exports will be made available
 // on the global HappyChain object
 // const  { happyProvider, onUserUpdate, register } = window.HappyChain
-
-import './style.css'
 
 register()
 

@@ -1,6 +1,6 @@
 import { atom } from 'jotai'
 import type { CustomTransport, EIP1193Provider, HttpTransport } from 'viem'
-import { http, createPublicClient, createWalletClient, custom } from 'viem'
+import { createPublicClient, createWalletClient, custom, http } from 'viem'
 
 import { userAtom } from '../hooks/useHappyAccount'
 
@@ -9,7 +9,7 @@ providerAtom.debugLabel = 'providerAtom'
 
 export const transportAtom = atom<HttpTransport | CustomTransport>((get) => {
     const provider = get(providerAtom)
-    return provider ? custom(provider) : http('https://eth.llamarpc.com')
+    return provider ? custom(provider) : http(import.meta.env.VITE_WEB3AUTH_CHAIN_RPC)
 })
 transportAtom.debugLabel = 'transportAtom'
 
