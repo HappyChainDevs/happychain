@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 # Packages
 SDK_PKGS := sdk-vanillajs,sdk-react
-OTHER_PKGS := iframe,common,sdk-core,sdk-firebase-web3auth-strategy
+OTHER_PKGS := iframe,common,sdk-shared,sdk-firebase-web3auth-strategy
 DEMO_PKGS := demo-vanillajs,demo-react
 CONFIG_PKGS := eslint-config,prettier-config,typescript-config
 
@@ -17,6 +17,7 @@ DEFAULT_BRANCH = master
 
 # To be run when first setting up the repository.
 setup: install-frozen
+	make enable-hooks
 	cd packages/contracts && make setup
 .PHONY: setup
 

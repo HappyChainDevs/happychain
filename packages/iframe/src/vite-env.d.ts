@@ -1,7 +1,5 @@
 /// <reference types="vite/client" />
-
-// extend strategies config
-import '@happychain/firebase-web3auth-strategy/lib/vite-env'
+/// <reference types="@happychain/firebase-web3auth-strategy/lib/vite-env" />
 
 interface ImportMetaEnv {
     /**

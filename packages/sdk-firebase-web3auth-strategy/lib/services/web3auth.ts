@@ -1,6 +1,7 @@
 import { EthereumSigningProvider } from '@web3auth/ethereum-mpc-provider'
 import { COREKIT_STATUS, type IdTokenLoginParams, Web3AuthMPCCoreKit } from '@web3auth/mpc-core-kit'
 import type { EIP1193Provider } from 'viem'
+
 import { config } from './config'
 
 /***
