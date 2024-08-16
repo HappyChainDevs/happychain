@@ -1,31 +1,22 @@
-# Happy Provider
+// Don't include this in the snippet!
+import { happyProvider } from '@happychain/js'
 
-The HappyProvider is an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) EVM provider. This means you can use it to initialize any standard web3 library as you normally would.
-
-:::code-group
-
-```ts [Viem] twoslash
-import { happyProvider } from '@happychain/js' 
+// [!region viem]
 import { createPublicClient, createWalletClient, custom } from 'viem'
 
 const transport = custom(happyProvider) // [!code focus]
 const publicClient = createPublicClient({ transport }) // [!code focus]
 const walletClient = createWalletClient({ transport }) // [!code focus]
-```
+// [!endregion viem]
 
-```ts [Ethers] twoslash
-import { happyProvider } from '@happychain/js'
+// [!region ethers]
 import { BrowserProvider } from 'ethers'
 
 const ethersProvider = new BrowserProvider(happyProvider) // [!code focus]
-```
+// [!endregion ethers]
 
-
-```ts [Web3.js] twoslash
-import { happyProvider } from '@happychain/js'
+// [!region web3]
 import Web3 from 'web3'
 
 const web3 = new Web3(happyProvider) // [!code focus]
-```
-
-:::
+// [!endregion web3]

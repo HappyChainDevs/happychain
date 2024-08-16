@@ -1,0 +1,88 @@
+# Getting Started With React
+
+## Install 
+:::code-group
+
+```bash [npm]
+npm install @happychain/react
+```
+
+```bash [pnpm]
+pnpm add @happychain/react
+```
+
+```bash [yarn]
+yarn add @happychain/react
+```
+
+```bash [bun]
+bun add @happychain/react
+```
+
+:::
+
+## Setup
+
+After installing, the first thing you will need to do, is wrap your app in the `HappyWalletProvider`.
+
+```tsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { HappyWalletProvider } from '@happychain/react' // [!code focus]
+import App from './App.tsx'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+    <HappyWalletProvider> // [!code focus]
+        <App />
+    </HappyWalletProvider> // [!code focus]
+)
+```
+
+## Usage
+
+### Web3 Integration
+
+Next you will want to setup your web3 integration using the `happyProvider`. 
+The HappyProvider is an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) EVM provider. 
+This means you can use it to initialize any standard web3 library as you normally would. 
+The most common examples are below, but it should be fully compatible with most libraries.
+
+:::code-group
+
+```ts [Viem] twoslash
+import { happyProvider } from '@happychain/react' 
+// [!include ~/snippets/createClients.ts:viem]
+```
+
+```ts [Ethers] twoslash
+import { happyProvider } from '@happychain/react'
+// [!include ~/snippets/createClients.ts:ethers]
+```
+
+
+```ts [Web3.js] twoslash
+import { happyProvider } from '@happychain/react'
+// [!include ~/snippets/createClients.ts:web3]
+```
+
+:::
+
+### Getting the Active User
+
+The `useHappyChain` hook returns the current user as a [HappyUser](/js/api-reference#happyuser)
+if the user is connected, otherwise it returns undefined.
+
+```tsx twoslash
+import React from 'react'
+import { useHappyChain } from '@happychain/react'
+
+function UserAddressComponent() {
+    const { user } = useHappyChain()
+
+    if (!user) {
+        return <div>Not connected</div>
+    }
+
+    return <div>{user.address}</div>
+}
+```
