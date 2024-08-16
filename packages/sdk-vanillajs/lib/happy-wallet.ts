@@ -1,6 +1,6 @@
 import { config, onModalUpdate, onUserUpdate } from '@happychain/sdk-shared'
 import { css, html, LitElement } from 'lit'
-import { customElement, property, state } from 'lit/decorators.js'
+import { customElement } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
@@ -9,13 +9,14 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
 
 @customElement('happy-wallet')
 export class HappyWallet extends LitElement {
-    @state()
+    static properties = {
+        _classes: { state: true },
+        'rpc-url': { state: false },
+        'chain-id': { state: false },
+    }
+
     _classes = { open: false, closed: true, connected: false, disconnected: true }
-
-    @property({ type: String })
     'rpc-url': string | undefined
-
-    @property({ type: String })
     chainId: string | undefined
 
     constructor(private uuid: ReturnType<typeof crypto.randomUUID>) {
