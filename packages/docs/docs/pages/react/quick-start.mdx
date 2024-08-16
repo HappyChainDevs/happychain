@@ -39,20 +39,19 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 ```
 
 ```tsx twoslash [App.tsx] filename="App.tsx"
-import React from 'react'
-import { useHappyChain } from '@happychain/react' // [!code focus]
-import { useMemo, useEffect, useState } from 'react'
-import { createPublicClient, custom } from 'viem'
+import { useHappyChain, happyProvider } from '@happychain/react'
+import React, { useMemo, useEffect, useState } from 'react'
+import { createPublicClient, custom, type Block } from 'viem'
 
-export function App() {
-    const { user, provider } = useHappyChain() // [!code focus]
+const publicClient = createPublicClient({ transport: custom(happyProvider) })
 
-    const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
-    const [block, setBlock] = useState<Awaited<ReturnType<typeof publicClient.getBlock>> | null>(null)
-    
+export function MyComponent() {
+    const { user } = useHappyChain()
+    const [block, setBlock] = useState<Block | null>(null)
+
     useEffect(() => {
-        (async () => setBlock(await publicClient.getBlock()))()
-    }, [publicClient])
+        publicClient.getBlock().then(setBlock)
+    }, [])
 
     return (
         <div>

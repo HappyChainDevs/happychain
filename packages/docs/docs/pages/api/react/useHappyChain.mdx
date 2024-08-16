@@ -5,9 +5,7 @@ import { useHappyChain, happyProvider } from '@happychain/react'
 import React, { useMemo, useEffect, useState } from 'react'
 import { createPublicClient, custom, type Block } from 'viem'
 
-const publicClient = createPublicClient({ 
-    transport: custom(happyProvider) 
-})
+const publicClient = createPublicClient({ transport: custom(happyProvider) })
 
 export function MyComponent() {
     const { user } = useHappyChain()

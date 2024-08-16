@@ -8,23 +8,20 @@ The HappyProvider is an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) EVM 
 import { happyProvider } from '@happychain/js' 
 import { createPublicClient, createWalletClient, custom } from 'viem'
 
-const publicClient = createPublicClient({ 
-    transport: custom(happyProvider)
-})
-const walletClient = createWalletClient({  // [!code focus]
-    transport: custom(happyProvider) // [!code focus]
-}) // [!code focus]
+const transport = custom(happyProvider) // [!code focus]
+const publicClient = createPublicClient({ transport }) // [!code focus]
+const walletClient = createWalletClient({ transport }) // [!code focus]
 ```
 
 ```ts [Ethers] twoslash
 import { happyProvider } from '@happychain/js'
 import { BrowserProvider } from 'ethers'
 
-const ethersProvider = new BrowserProvider(happyProvider)  // [!code focus]
+const ethersProvider = new BrowserProvider(happyProvider) // [!code focus]
 ```
 
 
-```ts [Web3] twoslash
+```ts [Web3.js] twoslash
 import { happyProvider } from '@happychain/js'
 import Web3 from 'web3'
 
