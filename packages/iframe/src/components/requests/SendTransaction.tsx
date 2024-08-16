@@ -15,7 +15,7 @@ const signatureTypes: Record<string, string> = {
 const safeGet = (key: string) => {
     try {
         return JSON.parse(localStorage.getItem(key) || 'null')
-    } catch (e) {
+    } catch {
         return null
     }
 }
