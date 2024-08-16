@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 # Packages
 SDK_PKGS := sdk-vanillajs,sdk-react
-OTHER_PKGS := iframe,common,sdk-shared,sdk-firebase-web3auth-strategy
+OTHER_PKGS := contracts,iframe,common,sdk-shared,sdk-firebase-web3auth-strategy
 DEMO_PKGS := demo-vanillajs,demo-react
 CONFIG_PKGS := eslint-config,prettier-config,typescript-config
 
@@ -48,9 +48,6 @@ sdk-dev:
 
 # Builds the sdks, apps, contracts & demos
 build:
-	echo "Building packages/contracts";\
-	cd packages/contracts && make build;\
-
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Building $${name}";\
 		cd $${name} && make build && cd ../../ || exit 1;\
@@ -81,14 +78,10 @@ deploy:
 # Run tests
 test:
 	cd packages/sdk-shared && make test
-	cd packages/sdk-react && make test
 .PHONY: test
 
 # Performs code-quality checks.
 check:
-	echo "Checking packages/contracts";\
-	cd packages/contracts && make check;\
-
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Checking $${name}";\
 		cd $${name} && make check && cd ../../ || exit 1;\
@@ -111,9 +104,6 @@ check:
 
 # Performs code formatting for the webapp files and contracts in their respective directories.
 format:
-	echo "Formatting packages/contracts";\
-	cd packages/contracts && make format;\
-
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Formatting $${name}";\
 		cd $${name} && make format && cd ../../ || exit 1;\
