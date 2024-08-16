@@ -13,3 +13,33 @@ export function atomWithCompare<Value>(initialValue: Value, areEqual: (prev: Val
         return next
     })
 }
+
+export function atomWithCompareAndStorage<Value>(
+    key: string,
+    initialValue: Value,
+    areEqual: (prev: Value, next: Value) => boolean,
+) {
+    // https://jotai.org/docs/guides/persistence
+    const getInitialValue = () => {
+        const item = localStorage.getItem(key)
+        if (item !== null) {
+            return JSON.parse(item)
+        }
+        return initialValue
+    }
+
+    const resolvedInitialValue = getInitialValue()
+
+    return atomWithReducer(resolvedInitialValue, (prev: Value, next: Value) => {
+        if (areEqual(prev, next)) {
+            return prev
+        }
+
+        if (next === undefined) {
+            localStorage.removeItem(key)
+        } else {
+            localStorage.setItem(key, JSON.stringify(next))
+        }
+        return next
+    })
+}

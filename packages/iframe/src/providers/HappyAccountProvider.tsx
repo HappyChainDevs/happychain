@@ -1,16 +1,16 @@
 import { type ReactNode, useEffect, useState } from 'react'
 
-import { type EIP1193EventName, logger } from '@happychain/core'
-import { requiresApproval } from '@happychain/core/lib/services/permissions'
 import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
+import { type EIP1193EventName, logger } from '@happychain/sdk-shared'
+import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
 import { useAtomValue } from 'jotai'
 
-import { useHappyAccount } from '../hooks/useHappyAccount'
-import { dappMessageBus, eip1193ProviderBus, popupBus } from '../services/eventBus'
+import { happyProviderBus, popupBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
 
+const providedUUID = new URLSearchParams(window.location.search).get('uuid')
+
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
-    const { user: happyUser } = useHappyAccount()
     const provider = useAtomValue(providerAtom)
     const publicClient = useAtomValue(publicClientAtom)
     const walletClient = useAtomValue(walletClientAtom)
@@ -26,12 +26,8 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     }, [])
 
     useEffect(() => {
-        dappMessageBus.emit('auth-changed', happyUser)
-    }, [happyUser])
-
-    useEffect(() => {
         const proxyEvent = (name: EIP1193EventName) => (event: unknown) => {
-            eip1193ProviderBus.emit('provider:event', {
+            happyProviderBus.emit('provider:event', {
                 payload: { event: name, args: event },
             })
         }
@@ -57,22 +53,26 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // trusted requests may only be sent from same-origin (popup approval screen)
     // and can be sent through the walletClient
     useEffect(() => {
-        const offApprove = popupBus.on('request:approve', async (payload) => {
-            try {
-                const result = await walletClient?.request(payload.payload as Parameters<typeof walletClient.request>)
+        const offApprove = popupBus.on('request:approve', async (data) => {
+            if (data.uuid !== providedUUID) return
 
-                eip1193ProviderBus.emit('response:complete', {
-                    key: payload.key,
+            try {
+                const result = await walletClient?.request(data.payload as Parameters<typeof walletClient.request>)
+
+                happyProviderBus.emit('response:complete', {
+                    key: data.key,
+                    uuid: data.uuid,
                     error: null,
                     payload: result,
                 })
             } catch (e) {
                 console.error(e)
-                console.error('error executing request', payload)
+                console.error('error executing request', data)
             }
         })
-        const offReject = popupBus.on('request:reject', (payload) => {
-            eip1193ProviderBus.emit('response:complete', payload)
+        const offReject = popupBus.on('request:reject', (data) => {
+            if (data.uuid !== providedUUID) return
+            happyProviderBus.emit('response:complete', data)
         })
         return () => {
             offApprove()
@@ -83,7 +83,8 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // Untrusted requests can only be called using the public client
     // as they bypass the popup approval screen
     useEffect(() => {
-        const offApprove = eip1193ProviderBus.on('request:approve', async (data) => {
+        const offApprove = happyProviderBus.on('request:approve', async (data) => {
+            if (data.uuid !== providedUUID) return
             try {
                 const isPublicMethod = !requiresApproval(data.payload)
 
@@ -98,8 +99,9 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
                 const result = await publicClient.request(data.payload as Parameters<typeof publicClient.request>)
 
-                eip1193ProviderBus.emit('response:complete', {
+                happyProviderBus.emit('response:complete', {
                     key: data.key,
+                    uuid: data.uuid,
                     error: null,
                     payload: result,
                 })

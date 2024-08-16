@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import type { ConnectionProvider } from '@happychain/core'
+import type { ConnectionProvider } from '@happychain/sdk-shared'
 import clsx from 'clsx'
 
 import { useInjectedProviders } from '../hooks/useInjectedProviders'

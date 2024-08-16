@@ -5,24 +5,26 @@
     "type": "module",
     "main": "lib/index.ts",
     "dependencies": {
-        "@happychain/core": "workspace:^",
-        "@happychain/common": "workspace:^",
         "@web3auth/ethereum-mpc-provider": "^8.12.0",
         "@web3auth/mpc-core-kit": "^2.3.3",
-        "firebase": "^10.12.4",
-        "jotai": "^2.9.1",
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1"
+        "firebase": "^10.12.4"
     },
     "devDependencies": {
         "@happychain/eslint-config": "workspace:^",
         "@happychain/prettier-config": "workspace:^",
         "@happychain/typescript-config": "workspace:^",
-        "eslint": "^8.57.0",
-        "prettier": "^3.3.3",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
+        "eslint": "^8.57.0",
+        "prettier": "^3.3.3"
+    },
+    "peerDependencies": {
+        "@happychain/common": "workspace:^",
+        "@happychain/sdk-shared": "workspace:^",
+        "jotai": "^2.9.1",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
         "viem": "^2.18.4",
-        "vite": "^5.3.5"
+        "zod": "^3.23.8"
     }
 }

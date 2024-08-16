@@ -16,7 +16,7 @@ preview:
 
 # Using vitest+jsdon for better react testing support
 test:
-	pnpm vitest --watch=false
+	@echo "No sdk-react tests yet"
 .PHONY: test
 
 lint:

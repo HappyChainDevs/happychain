@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react'
 
 import { atomWithCompare, useIsHydrated } from '@happychain/common'
-import type { HappyUser } from '@happychain/core'
+import type { HappyUser } from '@happychain/sdk-shared'
 import type { IdTokenLoginParams } from '@web3auth/mpc-core-kit'
 import { type Auth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from 'firebase/auth'
 import { useAtom, useSetAtom } from 'jotai'
@@ -15,7 +15,7 @@ export type SignInProvider = 'google'
 
 const cachedFirebaseAuthStateAtom = atomWithStorage('firebase-auth', 'unauthenticated')
 
-const firebaseAuthUserAtom = atomWithCompare<HappyUser | null>(null, (a, b) => a?.uid === b?.uid)
+const firebaseAuthUserAtom = atomWithCompare<HappyUser | undefined>(undefined, (a, b) => a?.uid === b?.uid)
 
 async function signInWithGoogle(auth: Auth) {
     const googleProvider = new GoogleAuthProvider()
@@ -57,7 +57,7 @@ function useOnAuthChange() {
             if (!_user?.uid) {
                 await web3AuthDisconnect()
 
-                setUserAuth(null)
+                setUserAuth(undefined)
                 setInternalAuthState('unauthenticated')
                 return
             }
@@ -97,7 +97,7 @@ function useOnAuthChange() {
 
     const isHydrated = useIsHydrated()
     const onAuthChange = useCallback(
-        (callback: (user: HappyUser | null, provider: EIP1193Provider) => void) => {
+        (callback: (user: HappyUser | undefined, provider: EIP1193Provider) => void) => {
             if (!isHydrated) {
                 return
             }

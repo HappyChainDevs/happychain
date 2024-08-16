@@ -5,7 +5,7 @@ import { requiresApproval } from '../permissions'
 
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from './errors'
 import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
-import type { EIP1193ConnectionHandler, EIP1193ProviderProxyConfig } from './interface'
+import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -22,7 +22,7 @@ export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193
     private inFlight = new Map<string, InFlightRequest>()
     private timer: Timer | null = null
 
-    constructor(private config: EIP1193ProviderProxyConfig) {
+    constructor(private config: HappyProviderConfig) {
         super()
 
         config.providerBus.on('provider:event', this.handleProviderNativeEvent.bind(this))
@@ -109,12 +109,22 @@ export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193
     }
 
     private autoApprove(key: EventUUID, args: EIP1193RequestArg) {
-        this.config.providerBus.emit('request:approve', { key, error: null, payload: args })
+        this.config.providerBus.emit('request:approve', {
+            key,
+            uuid: this.config.uuid,
+            error: null,
+            payload: args,
+        })
         return null
     }
 
     private promptUser(key: EventUUID, args: EIP1193RequestArg) {
-        const b64 = btoa(JSON.stringify(args))
-        return window.open(`${this.config.iframePath}/request?args=${b64}&key=${key}`, '_blank', POPUP_FEATURES)
+        const url = new URL('request', this.config.iframePath)
+        const searchParams = new URLSearchParams({
+            key: key,
+            args: btoa(JSON.stringify(args)),
+            uuid: this.config.uuid,
+        }).toString()
+        return window.open(`${url}?${searchParams}`, '_blank', POPUP_FEATURES)
     }
 }

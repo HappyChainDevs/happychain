@@ -1,26 +1,17 @@
+import { config } from './config'
 import type { HappyEvents } from './interfaces/events'
 import type { HappyUser } from './interfaces/happyUser'
-import type { EIP1193ProxiedEvents } from './services/eip1193ProviderProxy'
-import { EIP1193ProviderProxy } from './services/eip1193ProviderProxy'
+import { type EIP1193ProxiedEvents, HappyProvider } from './services/eip1193ProviderProxy'
 import { EventBus, EventBusChannel } from './services/eventBus'
-import { config } from './config'
 
-export { config }
-
-export * from './interfaces/eip1193Provider'
-export * from './interfaces/events'
-export * from './interfaces/happyUser'
-
-export * from './services/eip1193ProviderProxy'
-export * from './services/eventBus'
-export * from './services/logger'
+export const uuid = crypto.randomUUID()
 
 const dappMessageBus = new EventBus<HappyEvents>({
     mode: EventBusChannel.DappPort,
     scope: 'happy-chain-dapp-bus',
 })
 
-const onUserUpdateCallbacks = new Set<(user: HappyUser | null) => void>()
+const onUserUpdateCallbacks = new Set<(user?: HappyUser) => void>()
 const onModalUpdateCallbacks = new Set<(isOpen: boolean) => void>()
 
 dappMessageBus.on('auth-changed', (user) => {
@@ -34,7 +25,7 @@ dappMessageBus.on('modal-toggle', (isOpen) => {
     }
 })
 
-export const onUserUpdate = (callback: (user: HappyUser | null) => void) => {
+export const onUserUpdate = (callback: (user?: HappyUser) => void) => {
     onUserUpdateCallbacks.add(callback)
     return () => {
         onUserUpdateCallbacks.delete(callback)
@@ -46,8 +37,10 @@ export const onModalUpdate = (callback: (isOpen: boolean) => void) => {
         onModalUpdateCallbacks.delete(callback)
     }
 }
-export const eip1193Provider = new EIP1193ProviderProxy({
+export const happyProvider = new HappyProvider({
     iframePath: config.iframePath,
+
+    uuid,
 
     providerBus: new EventBus<EIP1193ProxiedEvents>({
         mode: EventBusChannel.DappPort,

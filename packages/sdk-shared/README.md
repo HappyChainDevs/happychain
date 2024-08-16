@@ -2,9 +2,9 @@
 
 This package provides core low level functionality.
 
-## EIP1193ProviderProxy
+## HappyProvider
 
-The `EIP1193ProviderProxy` is a drop in EIP1193Provider to be used on the frontend which proxies all requests into the iframe to be processed. This can be used to initialize and use common libraries such as
+The `HappyProvider` is a drop in EIP1193Provider to be used on the frontend which proxies all requests into the iframe to be processed. This can be used to initialize and use common libraries such as
 
 -   [viem](https://viem.sh/docs/clients/transports/custom.html)
 -   [ethers](https://docs.ethers.org/v6/api/providers/#BrowserProvider)

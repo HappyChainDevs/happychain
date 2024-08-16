@@ -1,17 +1,56 @@
-import type { EIP1193ProviderProxy, HappyUser } from '@happychain/core'
-import { eip1193Provider, onUserUpdate } from '@happychain/core'
-
+import { uuid } from '@happychain/sdk-shared'
 import { HappyWallet } from './happy-wallet'
 
-export const happyProvider = eip1193Provider
-
-export { onUserUpdate, HappyWallet }
-export type { HappyUser, EIP1193ProviderProxy }
+export { HappyWallet }
 
 export function register() {
     if (document.querySelector('happy-wallet')) {
         // don't register if already exists on page
         return
     }
-    document.body.appendChild(new HappyWallet())
+    const wallet = new HappyWallet(uuid)
+    document.body.appendChild(wallet)
 }
+
+// re-export happychain core
+export {
+    EIP1193ChainDisconnectedError,
+    EIP1193ChainNotRecognizedError,
+    EIP1193DisconnectedError,
+    EIP1193UnauthorizedError,
+    EIP1193UnsupportedMethodError,
+    EIP1193UserRejectedRequestError,
+    EventBus,
+    EventBusChannel,
+    GenericProviderRpcError,
+    HappyProvider,
+    config,
+    happyProvider,
+    logger,
+    onModalUpdate,
+    onUserUpdate,
+} from '@happychain/sdk-shared'
+
+export type {
+    ConnectionProvider,
+    EIP1193ErrorObject,
+    EIP1193EventName,
+    EIP1193ProxiedEvents,
+    EIP1193RequestArg,
+    EIP1193RequestResult,
+    EIP6963AnnounceProviderEvent,
+    EIP6963ProviderDetail,
+    EIP6963ProviderInfo,
+    EventBusOptions,
+    EventHandler,
+    EventKey,
+    EventMap,
+    EventPayload,
+    EventSchema,
+    EventUUID,
+    HappyEvents,
+    HappyUser,
+    IEventBus,
+    IProviderRpcError,
+    Logger,
+} from '@happychain/sdk-shared'

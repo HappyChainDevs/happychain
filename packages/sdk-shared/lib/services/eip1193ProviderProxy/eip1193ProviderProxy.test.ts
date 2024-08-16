@@ -7,9 +7,9 @@ import { config } from '../../config'
 import type { HappyEvents } from '../../interfaces/events'
 import { EventBus, EventBusChannel, type EventBusOptions } from '../eventBus'
 
-import { EIP1193ProviderProxy } from './eip1193ProviderProxy'
 import { GenericProviderRpcError } from './errors'
 import type { EIP1193ProxiedEvents } from './events'
+import { HappyProvider } from './happyProvider'
 
 const emptyRpcBlock = {
     baseFeePerGas: null,
@@ -38,7 +38,7 @@ const emptyRpcBlock = {
     uncles: [],
 } satisfies RpcBlock
 
-describe('EIP1193ProviderProxy', () => {
+describe('HappyProvider', () => {
     let busConfig: EventBusOptions
     beforeEach(() => {
         busConfig = {
@@ -49,12 +49,12 @@ describe('EIP1193ProviderProxy', () => {
     })
 
     it('transmits payload using bus', async () => {
-        const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
-        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy({
+        const provider = new HappyProvider({
             iframePath: config.iframePath,
-            providerBus: eip1193ProviderBusProviderProxy,
+            providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),
@@ -74,7 +74,7 @@ describe('EIP1193ProviderProxy', () => {
         }
 
         // within iframe
-        eip1193ProviderBusIframe.on('request:approve', callback)
+        happyProviderBusIframe.on('request:approve', callback)
 
         // provider request, unanswered so don't await
         provider.request(payload)
@@ -88,12 +88,12 @@ describe('EIP1193ProviderProxy', () => {
     })
 
     it('resolves on success', async () => {
-        const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
-        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy({
+        const provider = new HappyProvider({
             iframePath: config.iframePath,
-            providerBus: eip1193ProviderBusProviderProxy,
+            providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),
@@ -102,8 +102,8 @@ describe('EIP1193ProviderProxy', () => {
         })
 
         // within iframe
-        eip1193ProviderBusIframe.on('request:approve', ({ key }) => {
-            eip1193ProviderBusIframe.emit('response:complete', {
+        happyProviderBusIframe.on('request:approve', ({ key }) => {
+            happyProviderBusIframe.emit('response:complete', {
                 key,
                 error: null,
                 payload: emptyRpcBlock,
@@ -119,12 +119,12 @@ describe('EIP1193ProviderProxy', () => {
     })
 
     it('rejects on error', async () => {
-        const eip1193ProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
-        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy({
+        const provider = new HappyProvider({
             iframePath: config.iframePath,
-            providerBus: eip1193ProviderBusProviderProxy,
+            providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),
@@ -133,8 +133,8 @@ describe('EIP1193ProviderProxy', () => {
         })
 
         // within iframe
-        eip1193ProviderBusIframe.on('request:approve', ({ key }) => {
-            eip1193ProviderBusIframe.emit('response:complete', {
+        happyProviderBusIframe.on('request:approve', ({ key }) => {
+            happyProviderBusIframe.emit('response:complete', {
                 key,
                 error: {
                     code: 4001,
@@ -155,11 +155,11 @@ describe('EIP1193ProviderProxy', () => {
     })
 
     it('subscribes and unsubscribes to native eip1193 events', async () => {
-        const eip1193ProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
-        const provider = new EIP1193ProviderProxy({
+        const provider = new HappyProvider({
             iframePath: config.iframePath,
-            providerBus: eip1193ProviderBusProviderProxy,
+            providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),

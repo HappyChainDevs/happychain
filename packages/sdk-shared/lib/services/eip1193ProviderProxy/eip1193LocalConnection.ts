@@ -4,14 +4,14 @@ import type { EIP1193RequestFn, EIP1474Methods } from 'viem'
 
 import type { HappyUser } from '../../interfaces/happyUser'
 
-import type { EIP1193ConnectionHandler, EIP1193ProviderProxyConfig } from './interface'
+import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
 
 const store = createStore()
 
 export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
     private localConnection: ReturnType<typeof store.findProvider>
 
-    constructor(private config: EIP1193ProviderProxyConfig) {
+    constructor(private config: HappyProviderConfig) {
         super()
         // local connection (injected wallet)
         config.dappBus.on('wallet-connect:request', this.handleProviderConnectionRequest.bind(this))
@@ -33,7 +33,7 @@ export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193C
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
-        this.config.dappBus.emit('wallet-connect:response', { user: null })
+        this.config.dappBus.emit('wallet-connect:response', { user: undefined })
         this.localConnection = undefined
     }
 
@@ -66,7 +66,7 @@ export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193C
             const user = this.createHappyUserFromAddress(rdns, address)
             this.config.dappBus.emit('wallet-connect:response', { user })
         } catch {
-            this.config.dappBus.emit('wallet-connect:response', { user: null })
+            this.config.dappBus.emit('wallet-connect:response', { user: undefined })
         }
     }
 

@@ -1,13 +1,13 @@
 import { useContext } from 'react'
 
-import type { EIP1193ProviderProxy, HappyUser } from '@happychain/js'
+import type { HappyProvider, HappyUser } from '@happychain/js'
 import { happyProvider } from '@happychain/js'
 
 import { HappyContext } from '../components/HappyContext'
 
 export function useHappyChain(): {
-    provider: EIP1193ProviderProxy
-    user: HappyUser | null
+    provider: HappyProvider
+    user?: HappyUser
 } {
     const user = useContext(HappyContext)
 

@@ -1,6 +1,6 @@
 # Packages
 SDK_PKGS := sdk-vanillajs,sdk-react
-OTHER_PKGS := contracts,iframe,common,sdk-core,sdk-firebase-web3auth-strategy
+OTHER_PKGS := contracts,iframe,common,sdk-shared,sdk-firebase-web3auth-strategy
 DEMO_PKGS := demo-vanillajs,demo-react
 CONFIG_PKGS := eslint-config,prettier-config,typescript-config
 
@@ -63,7 +63,7 @@ deploy:
 
 # Run tests
 test:
-	cd packages/sdk-core && make test
+	cd packages/sdk-shared && make test
 	cd packages/sdk-react && make test
 .PHONY: test
 

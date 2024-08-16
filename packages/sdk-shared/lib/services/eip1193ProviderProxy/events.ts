@@ -11,10 +11,12 @@ type DerivedRpcSchema<
 export type EventUUID = ReturnType<typeof crypto.randomUUID>
 export type EIP1193RequestArg = Parameters<EIP1193RequestFn>[0]
 
-export type EIP1193RequestResult<TParams extends EIP1193RequestArg = EIP1193RequestArg> =
-    DerivedRpcSchema<EIP1474Methods, undefined> extends RpcSchema
-        ? Extract<DerivedRpcSchema<EIP1474Methods, undefined>[number], { Method: TParams['method'] }>['ReturnType']
-        : unknown
+export type EIP1193RequestResult<TParams extends EIP1193RequestArg = EIP1193RequestArg> = DerivedRpcSchema<
+    EIP1474Methods,
+    undefined
+> extends RpcSchema
+    ? Extract<DerivedRpcSchema<EIP1474Methods, undefined>[number], { Method: TParams['method'] }>['ReturnType']
+    : unknown
 
 export type EIP1193EventName<T extends string = keyof EIP1193EventMap> = T
 
@@ -27,13 +29,17 @@ export type EIP1193EventName<T extends string = keyof EIP1193EventMap> = T
 export interface EIP1193ProxiedEvents {
     // user approves request
     'request:approve': {
+        // request event unique key
         key: EventUUID
+        // window identifier
+        uuid: ReturnType<typeof crypto.randomUUID>
         error: null
         payload: EIP1193RequestArg
     }
     // user rejects request
     'request:reject': {
         key: EventUUID
+        uuid: ReturnType<typeof crypto.randomUUID>
         error: EIP1193ErrorObject
         payload: null
     }
@@ -42,11 +48,13 @@ export interface EIP1193ProxiedEvents {
     'response:complete':
         | {
               key: EventUUID
+              uuid: ReturnType<typeof crypto.randomUUID>
               error: EIP1193ErrorObject
               payload: null
           }
         | {
               key: EventUUID
+              uuid: ReturnType<typeof crypto.randomUUID>
               error: null
               payload: EIP1193RequestResult
           }

@@ -1,6 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-import type { ConnectionProvider, EIP6963AnnounceProviderEvent, EIP6963ProviderDetail } from '@happychain/core'
+import type {
+    ConnectionProvider,
+    EIP6963AnnounceProviderEvent,
+    EIP6963ProviderDetail,
+    HappyUser,
+} from '@happychain/sdk-shared'
 import { useSetAtom } from 'jotai'
 
 import { dappMessageBus } from '../services/eventBus'
@@ -22,6 +27,26 @@ function isEip6963Event(evt: Event): evt is EIP6963AnnounceProviderEvent {
 
 type ProviderMap = Map<string, EIP6963ProviderDetail>
 
+const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
+    dappMessageBus.emit('wallet-connect:request', eip1193Provider.info.rdns)
+}
+
+const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
+    const past = ((): HappyUser | undefined => {
+        try {
+            const stored = localStorage.getItem('happychain:cached-user')
+            return stored ? JSON.parse(stored) : undefined
+        } catch {
+            return
+        }
+    })()
+
+    if (past?.provider === eip1193Provider.info.rdns) {
+        dappMessageBus.emit('wallet-disconnect:request', undefined)
+        setUserWithProvider(undefined, undefined)
+    }
+}
+
 export function useInjectedProviders(): ConnectionProvider[] {
     const setAuthState = useSetAtom(authStateAtom)
     // user injected extensions
@@ -29,18 +54,10 @@ export function useInjectedProviders(): ConnectionProvider[] {
 
     useEffect(() => {
         return dappMessageBus.on('wallet-connect:response', ({ user }) => {
-            setUserWithProvider(user, null)
+            setUserWithProvider(user, undefined)
         })
     }, [])
     //
-    const enable = useCallback(async (eip1193Provider: EIP6963ProviderDetail) => {
-        dappMessageBus.emit('wallet-connect:request', eip1193Provider.info.rdns)
-    }, [])
-
-    const disable = useCallback(async () => {
-        dappMessageBus.emit('wallet-disconnect:request', null)
-        setUserWithProvider(null, null)
-    }, [])
 
     useEffect(() => {
         const callback = async (evt: Event) => {
@@ -57,7 +74,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
 
         window.addEventListener('eip6963:announceProvider', callback)
         return () => window.removeEventListener('eip6963:announceProvider', callback)
-    }, [enable])
+    }, [])
 
     useEffect(() => {
         window.dispatchEvent(new CustomEvent('eip6963:requestProvider'))
@@ -79,12 +96,12 @@ export function useInjectedProviders(): ConnectionProvider[] {
                     disable: async () => {
                         // will automatically disable loading state when user+provider are set
                         setAuthState(AuthState.Loading)
-                        await disable()
+                        await disable(eip1193Provider)
                     },
                     getProvider: () => eip1193Provider.provider,
                 }
             }),
-        [enable, disable, setAuthState, injectedProviders],
+        [setAuthState, injectedProviders],
     )
 
     return providers
