@@ -1,3 +1,4 @@
+import { uuid } from '@happychain/sdk-shared'
 import { HappyWallet } from './happy-wallet'
 
 export { HappyWallet }
@@ -7,7 +8,8 @@ export function register() {
         // don't register if already exists on page
         return
     }
-    document.body.appendChild(new HappyWallet())
+    const wallet = new HappyWallet(uuid)
+    document.body.appendChild(wallet)
 }
 
 // re-export happychain core

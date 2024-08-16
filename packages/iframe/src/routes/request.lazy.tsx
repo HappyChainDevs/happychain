@@ -13,7 +13,7 @@ export const Route = createLazyFileRoute('/request')({
 
 function Request() {
     const [isLoading, setIsLoading] = useState(false)
-    const { args, key } = Route.useSearch()
+    const { args, key, uuid } = Route.useSearch()
     const req = JSON.parse(atob(args))
 
     function reject() {
@@ -23,6 +23,7 @@ function Request() {
                 message: 'User rejected request',
                 data: 'User rejected request',
             },
+            uuid,
             key,
             payload: null,
         })
@@ -32,6 +33,7 @@ function Request() {
         setIsLoading(true)
         popupBus.emit('request:approve', {
             error: null,
+            uuid,
             key,
             payload: req,
         })

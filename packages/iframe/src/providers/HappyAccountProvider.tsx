@@ -8,6 +8,8 @@ import { useAtomValue } from 'jotai'
 import { happyProviderBus, popupBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
 
+const providedUUID = new URLSearchParams(window.location.search).get('uuid')
+
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
     const provider = useAtomValue(providerAtom)
     const publicClient = useAtomValue(publicClientAtom)
@@ -51,22 +53,26 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // trusted requests may only be sent from same-origin (popup approval screen)
     // and can be sent through the walletClient
     useEffect(() => {
-        const offApprove = popupBus.on('request:approve', async (payload) => {
+        const offApprove = popupBus.on('request:approve', async (data) => {
+            if (data.uuid !== providedUUID) return
+
             try {
-                const result = await walletClient?.request(payload.payload as Parameters<typeof walletClient.request>)
+                const result = await walletClient?.request(data.payload as Parameters<typeof walletClient.request>)
 
                 happyProviderBus.emit('response:complete', {
-                    key: payload.key,
+                    key: data.key,
+                    uuid: data.uuid,
                     error: null,
                     payload: result,
                 })
             } catch (e) {
                 console.error(e)
-                console.error('error executing request', payload)
+                console.error('error executing request', data)
             }
         })
-        const offReject = popupBus.on('request:reject', (payload) => {
-            happyProviderBus.emit('response:complete', payload)
+        const offReject = popupBus.on('request:reject', (data) => {
+            if (data.uuid !== providedUUID) return
+            happyProviderBus.emit('response:complete', data)
         })
         return () => {
             offApprove()
@@ -78,6 +84,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // as they bypass the popup approval screen
     useEffect(() => {
         const offApprove = happyProviderBus.on('request:approve', async (data) => {
+            if (data.uuid !== providedUUID) return
             try {
                 const isPublicMethod = !requiresApproval(data.payload)
 
@@ -94,6 +101,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
                 happyProviderBus.emit('response:complete', {
                     key: data.key,
+                    uuid: data.uuid,
                     error: null,
                     payload: result,
                 })
