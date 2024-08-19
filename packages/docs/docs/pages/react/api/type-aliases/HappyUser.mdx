@@ -1,0 +1,87 @@
+# Type Alias: HappyUser
+
+```ts
+type HappyUser: {
+  address: `0x${string}`;
+  addresses: `0x${string}`[];
+  avatar: string;
+  email: string;
+  ens: string;
+  name: string;
+  provider: string;
+  type: "social" | "injected";
+  uid: string;
+};
+```
+
+## Type declaration
+
+### address
+
+```ts
+address: `0x${string}`;
+```
+
+Currently active address
+
+### addresses
+
+```ts
+addresses: `0x${string}`[];
+```
+
+All owned addresses
+
+### avatar
+
+```ts
+avatar: string;
+```
+
+### email
+
+```ts
+email: string;
+```
+
+Social
+
+### ens
+
+```ts
+ens: string;
+```
+
+Active Address's ENS
+
+### name
+
+```ts
+name: string;
+```
+
+### provider
+
+```ts
+provider: string;
+```
+
+Connection Provider (rabby, metamask, google)
+
+### type
+
+```ts
+type: "social" | "injected";
+```
+
+Connected Wallet Type
+
+### uid
+
+```ts
+uid: string;
+```
+
+## Defined in
+
+packages/sdk-vanillajs/dist/index.es.d.ts:243

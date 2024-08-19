@@ -4,7 +4,7 @@ import type { HappyUser } from "./happyUser"
  * When RDNS is undefined a disconnect occurs, when its a string
  * an EIP-6963 lookup occurs for this wallet to connect on dapp side
  */
-type WalletRDNS = string | undefined
+export type WalletRDNS = string | undefined
 
 export interface HappyEvents {
     // modal states

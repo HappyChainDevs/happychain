@@ -1,0 +1,287 @@
+# Class: GenericProviderRpcError
+
+General Purpose Provider RPC error.
+Can be instantiated from the deserialized ErrorObject
+
+## Extends
+
+* [`Error`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)
+
+## Extended by
+
+* [`EIP1193ChainDisconnectedError`](/react/api/classes/EIP1193ChainDisconnectedError)
+* [`EIP1193ChainNotRecognizedError`](/react/api/classes/EIP1193ChainNotRecognizedError)
+* [`EIP1193DisconnectedError`](/react/api/classes/EIP1193DisconnectedError)
+* [`EIP1193UnauthorizedError`](/react/api/classes/EIP1193UnauthorizedError)
+* [`EIP1193UnsupportedMethodError`](/react/api/classes/EIP1193UnsupportedMethodError)
+* [`EIP1193UserRejectedRequestError`](/react/api/classes/EIP1193UserRejectedRequestError)
+
+## Implements
+
+* [`IProviderRpcError`](/react/api/interfaces/IProviderRpcError)
+
+## Constructors
+
+### new GenericProviderRpcError()
+
+```ts
+new GenericProviderRpcError(errObj: EIP1193ErrorObject): GenericProviderRpcError
+```
+
+#### Parameters
+
+• **errObj**: [`EIP1193ErrorObject`](/react/api/type-aliases/EIP1193ErrorObject)
+
+#### Returns
+
+[`GenericProviderRpcError`](/react/api/classes/GenericProviderRpcError)
+
+#### Overrides
+
+`Error.constructor`
+
+#### Defined in
+
+packages/sdk-vanillajs/dist/index.es.d.ts:199
+
+## Methods
+
+### captureStackTrace()
+
+#### captureStackTrace(targetObject, constructorOpt)
+
+```ts
+static captureStackTrace(targetObject: object, constructorOpt?: Function): void
+```
+
+Create .stack property on a target object
+
+##### Parameters
+
+• **targetObject**: `object`
+
+• **constructorOpt?**: [`Function`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function)
+
+##### Returns
+
+`void`
+
+##### Inherited from
+
+`Error.captureStackTrace`
+
+##### Defined in
+
+node\_modules/.pnpm/@types+node\@18.15.13/node\_modules/@types/node/globals.d.ts:4
+
+#### captureStackTrace(targetObject, constructorOpt)
+
+```ts
+static captureStackTrace(targetObject: object, constructorOpt?: Function): void
+```
+
+Create .stack property on a target object
+
+##### Parameters
+
+• **targetObject**: `object`
+
+• **constructorOpt?**: [`Function`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function)
+
+##### Returns
+
+`void`
+
+##### Inherited from
+
+`Error.captureStackTrace`
+
+##### Defined in
+
+node\_modules/.pnpm/@types+node\@20.12.14/node\_modules/@types/node/globals.d.ts:21
+
+#### captureStackTrace(targetObject, constructorOpt)
+
+```ts
+static captureStackTrace(targetObject: object, constructorOpt?: Function): void
+```
+
+Create .stack property on a target object
+
+##### Parameters
+
+• **targetObject**: `object`
+
+• **constructorOpt?**: [`Function`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function)
+
+##### Returns
+
+`void`
+
+##### Inherited from
+
+`Error.captureStackTrace`
+
+##### Defined in
+
+node\_modules/.pnpm/bun-types\@1.1.17/node\_modules/bun-types/globals.d.ts:1613
+
+## Properties
+
+### cause?
+
+```ts
+optional cause: unknown;
+```
+
+#### Implementation of
+
+[`IProviderRpcError`](/react/api/interfaces/IProviderRpcError).`cause`
+
+#### Inherited from
+
+`Error.cause`
+
+#### Defined in
+
+node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es2022.error.d.ts:24
+
+***
+
+### code
+
+```ts
+code: ProviderRpcErrorCode;
+```
+
+#### Implementation of
+
+[`IProviderRpcError`](/react/api/interfaces/IProviderRpcError).`code`
+
+#### Defined in
+
+packages/sdk-vanillajs/dist/index.es.d.ts:197
+
+***
+
+### data?
+
+```ts
+optional data: unknown;
+```
+
+#### Implementation of
+
+[`IProviderRpcError`](/react/api/interfaces/IProviderRpcError).`data`
+
+#### Defined in
+
+packages/sdk-vanillajs/dist/index.es.d.ts:198
+
+***
+
+### message
+
+```ts
+message: string;
+```
+
+#### Implementation of
+
+[`IProviderRpcError`](/react/api/interfaces/IProviderRpcError).`message`
+
+#### Inherited from
+
+`Error.message`
+
+#### Defined in
+
+node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es5.d.ts:1077
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+#### Implementation of
+
+[`IProviderRpcError`](/react/api/interfaces/IProviderRpcError).`name`
+
+#### Inherited from
+
+`Error.name`
+
+#### Defined in
+
+node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es5.d.ts:1076
+
+***
+
+### stack?
+
+```ts
+optional stack: string;
+```
+
+#### Implementation of
+
+[`IProviderRpcError`](/react/api/interfaces/IProviderRpcError).`stack`
+
+#### Inherited from
+
+`Error.stack`
+
+#### Defined in
+
+node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es5.d.ts:1078
+
+***
+
+### prepareStackTrace()?
+
+```ts
+static optional prepareStackTrace: (err: Error, stackTraces: CallSite[]) => any;
+```
+
+Optional override for formatting stack traces
+
+#### Parameters
+
+• **err**: [`Error`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)
+
+• **stackTraces**: `CallSite`\[]
+
+#### Returns
+
+`any`
+
+#### See
+
+[https://v8.dev/docs/stack-trace-api#customizing-stack-traces](https://v8.dev/docs/stack-trace-api#customizing-stack-traces)
+
+#### Inherited from
+
+`Error.prepareStackTrace`
+
+#### Defined in
+
+node\_modules/.pnpm/@types+node\@18.15.13/node\_modules/@types/node/globals.d.ts:11
+
+***
+
+### stackTraceLimit
+
+```ts
+static stackTraceLimit: number;
+```
+
+#### Inherited from
+
+`Error.stackTraceLimit`
+
+#### Defined in
+
+node\_modules/.pnpm/@types+node\@18.15.13/node\_modules/@types/node/globals.d.ts:13

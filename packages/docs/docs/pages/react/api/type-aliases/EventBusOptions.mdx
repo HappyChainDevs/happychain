@@ -1,0 +1,51 @@
+# Type Alias: EventBusOptions
+
+```ts
+type EventBusOptions: {
+  logger: Logger;
+  onError: (...params: unknown[]) => void;
+  scope: string;
+ } & {
+  mode: IframePort;
+  target: Window;
+ } | {
+  mode: DappPort;
+ } | {
+  mode: Broadcast;
+ } | {
+  mode: Forced;
+  port: MessagePort | BroadcastChannel;
+};
+```
+
+## Type declaration
+
+### logger?
+
+```ts
+optional logger: Logger;
+```
+
+### onError()?
+
+```ts
+optional onError: (...params: unknown[]) => void;
+```
+
+#### Parameters
+
+• ...**params**: `unknown`\[]
+
+#### Returns
+
+`void`
+
+### scope
+
+```ts
+scope: string;
+```
+
+## Defined in
+
+packages/sdk-vanillajs/dist/index.es.d.ts:163

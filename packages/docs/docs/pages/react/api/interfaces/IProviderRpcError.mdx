@@ -1,0 +1,19 @@
+# Interface: IProviderRpcError
+
+Interface from EIP1193
+[https://eips.ethereum.org/EIPS/eip-1193#errors](https://eips.ethereum.org/EIPS/eip-1193#errors)
+
+## Extends
+
+* [`Error`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)
+
+## Properties
+
+| Property  | Type                   | Overrides       | Inherited from | Defined in                                                                                  |
+| --------- | ---------------------- | --------------- | -------------- | ------------------------------------------------------------------------------------------- |
+| `cause?`  | `unknown`              | -               | `Error.cause`  | node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es2022.error.d.ts:24 |
+| `code`    | `ProviderRpcErrorCode` | -               | -              | packages/sdk-vanillajs/dist/index.es.d.ts:316                                               |
+| `data?`   | `unknown`              | -               | -              | packages/sdk-vanillajs/dist/index.es.d.ts:317                                               |
+| `message` | `string`               | `Error.message` | -              | packages/sdk-vanillajs/dist/index.es.d.ts:315                                               |
+| `name`    | `string`               | -               | `Error.name`   | node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es5.d.ts:1076        |
+| `stack?`  | `string`               | -               | `Error.stack`  | node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es5.d.ts:1078        |
