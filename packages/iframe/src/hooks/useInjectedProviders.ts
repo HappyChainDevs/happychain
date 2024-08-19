@@ -28,7 +28,7 @@ function isEip6963Event(evt: Event): evt is EIP6963AnnounceProviderEvent {
 type ProviderMap = Map<string, EIP6963ProviderDetail>
 
 const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
-    dappMessageBus.emit("wallet-connect:request", eip1193Provider.info.rdns)
+    dappMessageBus.emit("injected-wallet:request", eip1193Provider.info.rdns)
 }
 
 const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
@@ -42,7 +42,7 @@ const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
     })()
 
     if (past?.provider === eip1193Provider.info.rdns) {
-        dappMessageBus.emit("wallet-disconnect:request", undefined)
+        dappMessageBus.emit("injected-wallet:request", undefined)
         setUserWithProvider(undefined, undefined)
     }
 }
@@ -53,7 +53,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
     const [injectedProviders, setInjectedProviders] = useState<ProviderMap>(new Map())
 
     useEffect(() => {
-        return dappMessageBus.on("wallet-connect:response", ({ user }) => {
+        return dappMessageBus.on("injected-wallet:response", ({ user }) => {
             setUserWithProvider(user, undefined)
         })
     }, [])

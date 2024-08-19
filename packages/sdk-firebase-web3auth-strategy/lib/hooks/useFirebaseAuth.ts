@@ -83,7 +83,7 @@ function useOnAuthChange() {
                 uid: _user.uid,
                 email: _user.email || "",
                 name: _user.displayName || "",
-                ens: "", // TODO?
+                ens: "",
                 avatar: _user.photoURL || "",
                 // web3 details
                 address: addresses[0],
