@@ -1,0 +1,20 @@
+{
+  "name": "@happychain/docs",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@happychain/js": "workspace:^",
+    "@happychain/react": "workspace:^",
+    "react": "latest",
+    "react-dom": "latest",
+    "typescript": "latest",
+    "vocs": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "ethers": "^6.13.2",
+    "viem": "^2.18.4",
+    "web3": "^4.11.1"
+  }
+}
