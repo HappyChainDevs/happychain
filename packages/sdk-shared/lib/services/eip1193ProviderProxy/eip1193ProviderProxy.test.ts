@@ -50,9 +50,11 @@ describe("HappyProvider", () => {
     it("transmits payload using bus", async () => {
         const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
         const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const uuid = crypto.randomUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
+            uuid,
             providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
@@ -61,7 +63,7 @@ describe("HappyProvider", () => {
             }),
         })
 
-        const callback = mock(({ key: _key, error: _error, payload: _payload }) => {})
+        const callback = mock(({ key: _key, uuid: _uuid, error: _error, payload: _payload }) => {})
 
         const payload = {
             method: "eth_getBlockByNumber",
@@ -89,9 +91,11 @@ describe("HappyProvider", () => {
     it("resolves on success", async () => {
         const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
         const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const uuid = crypto.randomUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
+            uuid,
             providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
@@ -104,6 +108,7 @@ describe("HappyProvider", () => {
         happyProviderBusIframe.on("request:approve", ({ key }) => {
             happyProviderBusIframe.emit("response:complete", {
                 key,
+                uuid,
                 error: null,
                 payload: emptyRpcBlock,
             })
@@ -120,9 +125,11 @@ describe("HappyProvider", () => {
     it("rejects on error", async () => {
         const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
         const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const uuid = crypto.randomUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
+            uuid,
             providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
@@ -135,6 +142,7 @@ describe("HappyProvider", () => {
         happyProviderBusIframe.on("request:approve", ({ key }) => {
             happyProviderBusIframe.emit("response:complete", {
                 key,
+                uuid,
                 error: {
                     code: 4001,
                     message: "User Rejected",
@@ -155,9 +163,11 @@ describe("HappyProvider", () => {
 
     it("subscribes and unsubscribes to native eip1193 events", async () => {
         const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
+        const uuid = crypto.randomUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
+            uuid,
             providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
