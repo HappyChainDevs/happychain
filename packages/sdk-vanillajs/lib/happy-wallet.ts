@@ -1,5 +1,5 @@
 import { config, onModalUpdate, onUserUpdate } from '@happychain/sdk-shared'
-import { css, html, LitElement } from 'lit'
+import { LitElement, LitElemen } from 'lit'
 import { customElement } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 
