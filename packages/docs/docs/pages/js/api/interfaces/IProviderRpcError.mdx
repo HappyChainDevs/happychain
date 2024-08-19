@@ -1,0 +1,19 @@
+# Interface: IProviderRpcError
+
+Interface from EIP1193
+[https://eips.ethereum.org/EIPS/eip-1193#errors](https://eips.ethereum.org/EIPS/eip-1193#errors)
+
+## Extends
+
+* [`Error`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)
+
+## Properties
+
+| Property  | Type                   | Overrides       | Inherited from | Defined in                                                                                                                                                                                                                           |
+| --------- | ---------------------- | --------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cause?`  | `unknown`              | -               | `Error.cause`  | node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es2022.error.d.ts:24                                                                                                                                          |
+| `code`    | `ProviderRpcErrorCode` | -               | -              | [packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts:21](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts#L21) |
+| `data?`   | `unknown`              | -               | -              | [packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts:22](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts#L22) |
+| `message` | `string`               | `Error.message` | -              | [packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts:20](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts#L20) |
+| `name`    | `string`               | -               | `Error.name`   | node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es5.d.ts:1076                                                                                                                                                 |
+| `stack?`  | `string`               | -               | `Error.stack`  | node\_modules/.pnpm/typescript\@5.5.4/node\_modules/typescript/lib/lib.es5.d.ts:1078                                                                                                                                                 |

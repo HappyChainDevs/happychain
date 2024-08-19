@@ -1,0 +1,38 @@
+# Type Alias: EIP1193ErrorObject
+
+```ts
+type EIP1193ErrorObject: {
+  code: ProviderRpcErrorCode;
+  data: unknown;
+  message: string;
+};
+```
+
+Error Object is used to transmit error messages
+across MessageChannel and BroadcastChannels.
+This requires the data to be JSON serializable
+so we can't send the raw Error class
+
+## Type declaration
+
+### code
+
+```ts
+code: ProviderRpcErrorCode;
+```
+
+### data?
+
+```ts
+optional data: unknown;
+```
+
+### message
+
+```ts
+message: string;
+```
+
+## Defined in
+
+[packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts:9](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts#L9)

@@ -1,0 +1,201 @@
+# Interface: IEventBus\<T>
+
+## Type Parameters
+
+• **T** *extends* [`EventSchema`](/js/api/type-aliases/EventSchema)
+
+## Methods
+
+### addListener()
+
+```ts
+addListener<Key>(key: Key, handler: EventHandler<T[Key]>): () => void
+```
+
+#### Type Parameters
+
+• **Key** *extends* `string` | `number` | `symbol`
+
+#### Parameters
+
+• **key**: `Key`
+
+• **handler**: [`EventHandler`](/js/api/type-aliases/EventHandler)\<`T`\[`Key`]>
+
+#### Returns
+
+`Function`
+
+##### Returns
+
+`void`
+
+#### Defined in
+
+[packages/sdk-shared/lib/services/eventBus/eventBus.ts:41](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eventBus/eventBus.ts#L41)
+
+***
+
+### clear()
+
+```ts
+clear(): void
+```
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[packages/sdk-shared/lib/services/eventBus/eventBus.ts:37](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eventBus/eventBus.ts#L37)
+
+***
+
+### emit()
+
+```ts
+emit<Key>(key: Key, payload: T[Key]): void
+```
+
+#### Type Parameters
+
+• **Key** *extends* `string` | `number` | `symbol`
+
+#### Parameters
+
+• **key**: `Key`
+
+• **payload**: `T`\[`Key`]
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[packages/sdk-shared/lib/services/eventBus/eventBus.ts:36](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eventBus/eventBus.ts#L36)
+
+***
+
+### off()
+
+```ts
+off<Key>(key: Key, handler: EventHandler<T[Key]>): void
+```
+
+#### Type Parameters
+
+• **Key** *extends* `string` | `number` | `symbol`
+
+#### Parameters
+
+• **key**: `Key`
+
+• **handler**: [`EventHandler`](/js/api/type-aliases/EventHandler)\<`T`\[`Key`]>
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[packages/sdk-shared/lib/services/eventBus/eventBus.ts:34](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eventBus/eventBus.ts#L34)
+
+***
+
+### on()
+
+```ts
+on<Key>(key: Key, handler: EventHandler<T[Key]>): () => void
+```
+
+#### Type Parameters
+
+• **Key** *extends* `string` | `number` | `symbol`
+
+#### Parameters
+
+• **key**: `Key`
+
+• **handler**: [`EventHandler`](/js/api/type-aliases/EventHandler)\<`T`\[`Key`]>
+
+#### Returns
+
+`Function`
+
+##### Returns
+
+`void`
+
+#### Defined in
+
+[packages/sdk-shared/lib/services/eventBus/eventBus.ts:33](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eventBus/eventBus.ts#L33)
+
+***
+
+### once()
+
+```ts
+once<Key>(key: Key, handler: EventHandler<T[Key]>): void
+```
+
+#### Type Parameters
+
+• **Key** *extends* `string` | `number` | `symbol`
+
+#### Parameters
+
+• **key**: `Key`
+
+• **handler**: [`EventHandler`](/js/api/type-aliases/EventHandler)\<`T`\[`Key`]>
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[packages/sdk-shared/lib/services/eventBus/eventBus.ts:35](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eventBus/eventBus.ts#L35)
+
+***
+
+### removeAllListeners()
+
+```ts
+removeAllListeners(): void
+```
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[packages/sdk-shared/lib/services/eventBus/eventBus.ts:40](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eventBus/eventBus.ts#L40)
+
+***
+
+### removeListener()
+
+```ts
+removeListener<Key>(key: Key, handler: EventHandler<T[Key]>): void
+```
+
+#### Type Parameters
+
+• **Key** *extends* `string` | `number` | `symbol`
+
+#### Parameters
+
+• **key**: `Key`
+
+• **handler**: [`EventHandler`](/js/api/type-aliases/EventHandler)\<`T`\[`Key`]>
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[packages/sdk-shared/lib/services/eventBus/eventBus.ts:42](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eventBus/eventBus.ts#L42)

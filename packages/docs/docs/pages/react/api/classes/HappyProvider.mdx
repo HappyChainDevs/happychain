@@ -1,0 +1,60 @@
+# Class: HappyProvider
+
+HappyProvider is a EIP1193 Ethereum Provider [https://eips.ethereum.org/EIPS/eip-1193](https://eips.ethereum.org/EIPS/eip-1193)
+
+## Example
+
+### Setting up viem client
+
+```ts twoslash
+import { createPublicClient, custom } from 'viem'
+import { happyProvider } from '@happychain/js'
+// ---cut---
+const publicClient = createPublicClient({
+  transport: custom(happyProvider)
+})
+```
+
+## Extends
+
+* `unknown`
+
+## Implements
+
+* `unknown`
+
+## Constructors
+
+### new HappyProvider()
+
+```ts
+new HappyProvider(config: HappyProviderConfig): HappyProvider
+```
+
+#### Parameters
+
+• **config**: `HappyProviderConfig`
+
+#### Returns
+
+[`HappyProvider`](/react/api/classes/HappyProvider)
+
+#### Overrides
+
+`default_2.constructor`
+
+#### Defined in
+
+packages/sdk-vanillajs/dist/index.es.d.ts:228
+
+## Properties
+
+### request
+
+```ts
+request: EIP1193RequestFn<EIP1474Methods>;
+```
+
+#### Defined in
+
+packages/sdk-vanillajs/dist/index.es.d.ts:229

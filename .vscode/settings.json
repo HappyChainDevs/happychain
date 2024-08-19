@@ -1,21 +1,21 @@
 {
-    "editor.codeActionsOnSave": { "source.fixAll": "explicit" },
-    "cSpell.words": [
-        "clsx",
-        "corepack",
-        "daisyui",
-        "endregion",
-        "Firestarter",
-        "happychain",
-        "iframe",
-        "JWKS",
-        "proxied",
-        "proxying",
-        "registrator",
-        "tailwindcss",
-        "tanstack",
-        "viem",
-        "wagmi"
-    ],
-    "typescript.tsdk": "node_modules/typescript/lib"
+	"editor.codeActionsOnSave": { "source.fixAll": "explicit" },
+	"cSpell.words": [
+		"clsx",
+		"corepack",
+		"daisyui",
+		"endregion",
+		"Firestarter",
+		"happychain",
+		"iframe",
+		"JWKS",
+		"proxied",
+		"proxying",
+		"registrator",
+		"tailwindcss",
+		"tanstack",
+		"viem",
+		"wagmi"
+	],
+	"typescript.tsdk": "node_modules/typescript/lib"
 }
