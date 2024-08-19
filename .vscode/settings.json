@@ -1,6 +1,5 @@
 {
     "eslint.workingDirectories": [{ "pattern": "./packages/*/" }],
-    "editor.codeActionsOnSave": { "source.fixAll": "explicit" },
     "eslint.enable": true,
     "cSpell.words": [
         "clsx",
@@ -11,6 +10,8 @@
         "happychain",
         "iframe",
         "JWKS",
+        "proxied",
+        "proxying",
         "registrator",
         "tailwindcss",
         "tanstack",

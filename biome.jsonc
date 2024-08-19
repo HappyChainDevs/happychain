@@ -31,8 +31,14 @@
                 "useSortedClasses": "off"
             },
             "correctness": {
-                "noUnusedVariables": "warn",
-                "useHookAtTopLevel": "error"
+                "noUnusedVariables": {
+                    "level": "error",
+                    "fix": "unsafe"
+                },
+                "useHookAtTopLevel": "error",
+                "noUnreachable": {
+                    "level": "warn"
+                }
             },
             "style": {
                 "noNamespace": "error"

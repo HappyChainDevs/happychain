@@ -18,7 +18,16 @@ type InFlightRequest = {
 
 const POPUP_FEATURES = ['width=400', 'height=800', 'popup=true', 'toolbar=0', 'menubar=0'].join(',')
 
-export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
+/**
+ * SocialWalletHandler handles proxying EIP-1193 requests
+ * to the iframe where it is handled by either the connected
+ * social provider if the user is connected, or a public rpc
+ * if there is no user connected. For requests that require explicit
+ * user approval/confirmation these requests are sent to a popup window
+ * where the user can approve/reject the requests before they are sent
+ * to the iframe to be handled
+ */
+export class SocialWalletHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
     private inFlight = new Map<string, InFlightRequest>()
     private timer: Timer | null = null
 

@@ -14,6 +14,7 @@ export type HappyProviderConfig = Pick<typeof config, 'iframePath'> & {
     providerBus: IEventBus<EIP1193ProxiedEvents>
     dappBus: IEventBus<HappyEvents>
 }
+
 export interface EIP1193ConnectionHandler extends SafeEventEmitter {
     isConnected(): boolean
     request: EIP1193RequestFn<EIP1474Methods>

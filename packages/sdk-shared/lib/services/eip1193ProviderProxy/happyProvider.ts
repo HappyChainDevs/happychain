@@ -1,12 +1,13 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter'
 import type { EIP1193Provider, EIP1193RequestFn, EIP1474Methods } from 'viem'
 
-import { LocalConnectionHandler } from './eip1193LocalConnection'
-import { RemoteConnectionHandler } from './eip1193RemoteConnection'
+import { InjectedWalletHandler } from './eip1193InjectedWalletHandler'
+import { SocialWalletHandler } from './eip1193SocialWalletHandler'
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
 
 export class HappyProvider extends SafeEventEmitter implements EIP1193Provider {
-    private connections: EIP1193ConnectionHandler[]
+    private injectedWalletHandler: EIP1193ConnectionHandler
+    private socialWalletHandler: EIP1193ConnectionHandler
 
     constructor(config: HappyProviderConfig) {
         super()
@@ -14,27 +15,22 @@ export class HappyProvider extends SafeEventEmitter implements EIP1193Provider {
         config.logger?.log('EIP1193Provider Created')
 
         // Injected Wallets
-        const localConnection = new LocalConnectionHandler(config)
-        this.registerConnectionHandlerEvents(localConnection)
+        this.injectedWalletHandler = new InjectedWalletHandler(config)
+        this.registerConnectionHandlerEvents(this.injectedWalletHandler)
 
         // Iframe/Social Auth
-        const remoteConnection = new RemoteConnectionHandler(config)
-        this.registerConnectionHandlerEvents(remoteConnection)
-
-        // initialized in order of priority to check on requests
-        this.connections = [localConnection, remoteConnection]
+        this.socialWalletHandler = new SocialWalletHandler(config)
+        this.registerConnectionHandlerEvents(this.socialWalletHandler)
     }
 
     request: EIP1193RequestFn<EIP1474Methods> = async (args) => {
         type StrictArgsCast = Exclude<typeof args, { method: string; params: unknown }>
 
-        for (const connection of this.connections) {
-            if (connection.isConnected()) {
-                return await connection.request(args as StrictArgsCast)
-            }
+        if (this.injectedWalletHandler.isConnected()) {
+            return await this.injectedWalletHandler.request(args as StrictArgsCast)
         }
 
-        throw new Error('No Connected Providers')
+        return await this.socialWalletHandler.request(args as StrictArgsCast)
     }
 
     /** Simply forward all provider events transparently */

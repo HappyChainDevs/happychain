@@ -8,14 +8,24 @@ import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
 
 const store = createStore()
 
-export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
+/**
+ * InjectedWalletHandler listens to connection requests from the iframe.
+ * When a connection request occurs, it searches EIP6963 compatible
+ * wallets and attempts to find the requested wallet. Assuming its successful
+ * it fills out HappyUser details and returns this to the iframe to be displayed.
+ * If unsuccessful (user rejects, wallet can't be found) the dapp disconnects
+ * and sets user and provider to undefined.
+ *
+ * If connected, it simply proxies all requests directly into the appropriate
+ * provider for the connected wallet
+ */
+export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
     private localConnection: ReturnType<typeof store.findProvider>
 
     constructor(private config: HappyProviderConfig) {
         super()
         // local connection (injected wallet)
-        config.dappBus.on('wallet-connect:request', this.handleProviderConnectionRequest.bind(this))
-        config.dappBus.on('wallet-disconnect:request', this.handleProviderDisconnectionRequest.bind(this))
+        config.dappBus.on('injected-wallet:request', this.handleProviderConnectionRequest.bind(this))
     }
 
     isConnected(): boolean {
@@ -33,11 +43,14 @@ export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193C
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
-        this.config.dappBus.emit('wallet-connect:response', { user: undefined })
+        this.config.dappBus.emit('injected-wallet:response', { user: undefined })
         this.localConnection = undefined
     }
 
-    private async handleProviderConnectionRequest(rdns: string) {
+    private async handleProviderConnectionRequest(rdns?: string) {
+        if (!rdns) {
+            return this.handleProviderDisconnectionRequest()
+        }
         try {
             const providerDetails = store.findProvider({ rdns })
             if (!providerDetails) {
@@ -52,7 +65,7 @@ export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193C
                 }
                 const [address] = accounts
                 const user = this.createHappyUserFromAddress(rdns, address)
-                this.config.dappBus.emit('wallet-connect:response', { user })
+                this.config.dappBus.emit('injected-wallet:response', { user })
             })
             providerDetails.provider.on('chainChanged', (chainId) => this.emit('chainChanged', chainId))
             providerDetails.provider.on('connect', (connectInfo) => this.emit('connect', connectInfo))
@@ -64,9 +77,9 @@ export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193C
             this.localConnection = providerDetails
 
             const user = this.createHappyUserFromAddress(rdns, address)
-            this.config.dappBus.emit('wallet-connect:response', { user })
+            this.config.dappBus.emit('injected-wallet:response', { user })
         } catch {
-            this.config.dappBus.emit('wallet-connect:response', { user: undefined })
+            this.handleProviderDisconnectionRequest()
         }
     }
 
@@ -79,7 +92,7 @@ export class LocalConnectionHandler extends SafeEventEmitter implements EIP1193C
             uid: address,
             email: '',
             name: `${address.slice(0, 6)}...${address.slice(-4)}`,
-            ens: '', // TODO?
+            ens: '',
             avatar: `https://avatar.vercel.sh/${address}?size=400`,
             // web3 details
             address: address,
