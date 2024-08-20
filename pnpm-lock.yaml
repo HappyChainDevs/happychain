@@ -253,15 +253,15 @@ importers:
       '@happychain/sdk-shared':
         specifier: workspace:^
         version: link:../sdk-shared
-      '@toruslabs/tss-frost-lib':
-        specifier: ^0.2.0
-        version: 0.2.0
+      '@toruslabs/tss-dkls-lib':
+        specifier: ^3.0.0
+        version: 3.0.0
       '@web3auth/ethereum-mpc-provider':
         specifier: ^8.12.3
         version: 8.12.3(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@web3auth/mpc-core-kit':
         specifier: ^3.1.0
-        version: 3.1.0(@babel/runtime@7.25.0)(@toruslabs/metadata-helpers@6.0.0(@babel/runtime@7.25.0))(bufferutil@4.0.8)(eslint@9.9.0(jiti@1.21.6))(prettier@3.3.3)(typescript@5.5.4)(utf-8-validate@6.0.4)
+        version: 3.1.0(@babel/runtime@7.25.0)(@toruslabs/metadata-helpers@6.0.0(@babel/runtime@7.25.0))(bufferutil@4.0.8)(encoding@0.1.13)(eslint@9.9.0(jiti@1.21.6))(prettier@3.3.3)(typescript@5.5.4)(utf-8-validate@6.0.4)(zod@3.23.8)
       firebase:
         specifier: ^10.13.0
         version: 10.13.0
@@ -2240,14 +2240,14 @@ packages:
   '@toruslabs/tss-client@3.0.0':
     resolution: {integrity: sha512-qOdESdo6X2hPQF4cEZpwXRFmUNWdveEgYo+54h+FBH6try4xzXZ0GEhuEVlWZxRfACILYC5Ge9dWNgp4Ii9O5g==}
 
+  '@toruslabs/tss-dkls-lib@3.0.0':
+    resolution: {integrity: sha512-Kzo/y/oublwPecXkqtwqtfEEptyOtxLi3zrYCEp8B9x8Ob8HIiMXPtLlggr+ri0h9OezNxNEdTN8oPnpbpurlQ==}
+
   '@toruslabs/tss-frost-client@0.2.0':
     resolution: {integrity: sha512-FxkfEX5m+A5LBklOB3hHVnl1ea5Wd1j/EoldFn+81VS9SjS2KmWkM3yO/H09ihxYjWvdcj5nXnEwBR+YKOb57g==}
 
   '@toruslabs/tss-frost-common@1.0.0':
     resolution: {integrity: sha512-59I2CLKvsWpdeo14mhmzv8occ6rJotevHeoYqtj9+uK8ATS3fZrE7/6niQuyQ+A9G35Bc7zl53Jp5qvvXQGR7w==}
-
-  '@toruslabs/tss-frost-lib@0.2.0':
-    resolution: {integrity: sha512-pvxmGSXOIdjXkVJ4mCPsCQWCAEEtS7Dbc/ihf1opkUcpmdGIKzqr9AUoIWMNL+I0P0B0phijudd16JlAQwU98w==}
 
   '@types/acorn@4.0.6':
     resolution: {integrity: sha512-veQTnWP+1D/xbxVrPC3zHnCZRjSrKfhbMUlEA43iMZLu7EsnTtkJklIuwrCPbOi8YkvDQAiW05VQQFvvz9oieQ==}
@@ -7865,13 +7865,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@tkey/tss@15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@6.0.4)':
+  '@tkey/tss@15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.5.4)(utf-8-validate@6.0.4)(zod@3.23.8)':
     dependencies:
       '@tkey/common-types': 15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@tkey/core': 15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@tkey/service-provider-torus': 15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@toruslabs/customauth': 20.1.0(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
-      '@toruslabs/rss-client': 2.0.0(@babel/runtime@7.25.0)(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@6.0.4)
+      '@toruslabs/rss-client': 2.0.0(@babel/runtime@7.25.0)(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.5.4)(utf-8-validate@6.0.4)(zod@3.23.8)
       '@toruslabs/torus.js': 15.0.2(@babel/runtime@7.25.0)
       '@types/bn.js': 5.1.5
       bn.js: 5.2.1
@@ -8124,7 +8124,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@toruslabs/rss-client@2.0.0(@babel/runtime@7.25.0)(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@6.0.4)':
+  '@toruslabs/rss-client@2.0.0(@babel/runtime@7.25.0)(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.5.4)(utf-8-validate@6.0.4)(zod@3.23.8)':
     dependencies:
       '@babel/runtime': 7.25.0
       '@toruslabs/eccrypto': 5.0.4
@@ -8200,6 +8200,8 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@toruslabs/tss-dkls-lib@3.0.0': {}
+
   '@toruslabs/tss-frost-client@0.2.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)':
     dependencies:
       '@toruslabs/tss-client-util': 0.1.0
@@ -8211,8 +8213,6 @@ snapshots:
       - utf-8-validate
 
   '@toruslabs/tss-frost-common@1.0.0': {}
-
-  '@toruslabs/tss-frost-lib@0.2.0': {}
 
   '@types/acorn@4.0.6':
     dependencies:
@@ -8632,14 +8632,14 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@web3auth/mpc-core-kit@3.1.0(@babel/runtime@7.25.0)(@toruslabs/metadata-helpers@6.0.0(@babel/runtime@7.25.0))(bufferutil@4.0.8)(eslint@9.9.0(jiti@1.21.6))(prettier@3.3.3)(typescript@5.5.4)(utf-8-validate@6.0.4)':
+  '@web3auth/mpc-core-kit@3.1.0(@babel/runtime@7.25.0)(@toruslabs/metadata-helpers@6.0.0(@babel/runtime@7.25.0))(bufferutil@4.0.8)(encoding@0.1.13)(eslint@9.9.0(jiti@1.21.6))(prettier@3.3.3)(typescript@5.5.4)(utf-8-validate@6.0.4)(zod@3.23.8)':
     dependencies:
       '@babel/runtime': 7.25.0
       '@tkey/common-types': 15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@tkey/core': 15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@tkey/share-serialization': 15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@tkey/storage-layer-torus': 15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
-      '@tkey/tss': 15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@6.0.4)
+      '@tkey/tss': 15.0.2(@babel/runtime@7.25.0)(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.5.4)(utf-8-validate@6.0.4)(zod@3.23.8)
       '@toruslabs/constants': 14.0.0(@babel/runtime@7.25.0)
       '@toruslabs/customauth': 20.1.0(@babel/runtime@7.25.0)(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       '@toruslabs/elliptic-wrapper': 0.1.0(@babel/runtime@7.25.0)(eslint@9.9.0(jiti@1.21.6))(prettier@3.3.3)(typescript@5.5.4)

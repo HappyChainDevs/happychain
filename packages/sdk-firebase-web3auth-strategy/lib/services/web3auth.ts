@@ -1,4 +1,4 @@
-import { tssLib } from '@toruslabs/tss-frost-lib'
+import { tssLib } from '@toruslabs/tss-dkls-lib'
 import { EthereumSigningProvider } from '@web3auth/ethereum-mpc-provider'
 import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from '@web3auth/mpc-core-kit'
 import type { EIP1193Provider } from 'viem'

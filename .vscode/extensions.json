@@ -1,3 +1,9 @@
 {
-    "recommendations": ["biomejs.biome", "streetsidesoftware.code-spell-checker", "bierner.lit-html"]
+    "recommendations": [
+        "biomejs.biome",
+        "streetsidesoftware.code-spell-checker",
+        "bierner.lit-html",
+        "YoavBls.pretty-ts-errors",
+        "unifiedjs.vscode-mdx"
+    ]
 }
