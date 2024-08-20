@@ -3,9 +3,7 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
-    "files": [
-        "dist"
-    ],
+    "files": ["dist"],
     "main": "./dist/index.umd.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.d.ts",
@@ -22,15 +20,12 @@
         "react-dom": "^18.3.1"
     },
     "devDependencies": {
-        "@happychain/eslint-config": "workspace:^",
-        "@happychain/prettier-config": "workspace:^",
-        "@happychain/typescript-config": "workspace:^",
-        "@types/react": "^18.3.3",
+        "@happychain/configs": "workspace:^",
+        "@types/react": "^18.3.4",
         "@types/react-dom": "^18.3.0",
-        "@vitejs/plugin-react-swc": "^3.5.0",
-        "eslint": "^8.57.0",
+        "@vitejs/plugin-react-swc": "^3.7.0",
         "typescript": "^5.5.4",
-        "vite": "^5.3.4",
-        "vite-plugin-dts": "4.0.0-beta.1"
+        "vite": "^5.4.2",
+        "vite-plugin-dts": "4.0.3"
     }
 }

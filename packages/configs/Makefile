@@ -1,3 +1,6 @@
+build:
+.PHONY: build
+
 check:
 	pnpm biome check ./
 .PHONT: check

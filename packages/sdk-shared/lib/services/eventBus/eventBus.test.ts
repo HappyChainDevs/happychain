@@ -1,5 +1,4 @@
-// eslint-disable-next-line import/no-unresolved
-import { beforeEach, describe, expect, it, type Mock, mock } from 'bun:test'
+import { type Mock, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { setTimeout } from 'node:timers/promises'
 
 import { EventBus, EventBusChannel, type EventBusOptions } from './eventBus'

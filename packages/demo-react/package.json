@@ -5,23 +5,19 @@
     "type": "module",
     "dependencies": {
         "@happychain/react": "workspace:^",
-        "autoprefixer": "^10.4.19",
-        "postcss": "^8.4.40",
+        "autoprefixer": "^10.4.20",
+        "postcss": "^8.4.41",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "tailwindcss": "^3.4.7",
-        "viem": "^2.18.4"
+        "tailwindcss": "^3.4.10",
+        "viem": "^2.19.8"
     },
     "devDependencies": {
-        "@happychain/eslint-config": "workspace:^",
-        "@happychain/prettier-config": "workspace:^",
-        "@happychain/typescript-config": "workspace:^",
-        "@types/react": "^18.3.3",
+        "@happychain/configs": "workspace:^",
+        "@types/react": "^18.3.4",
         "@types/react-dom": "^18.3.0",
-        "@vitejs/plugin-react-swc": "^3.5.0",
-        "eslint": "^8.57.0",
-        "prettier": "^3.3.3",
+        "@vitejs/plugin-react-swc": "^3.7.0",
         "typescript": "^5.5.4",
-        "vite": "^5.3.4"
+        "vite": "^5.4.2"
     }
 }

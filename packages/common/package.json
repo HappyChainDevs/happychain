@@ -4,13 +4,9 @@
     "main": "lib/index.ts",
     "type": "module",
     "devDependencies": {
-        "@happychain/eslint-config": "workspace:^",
-        "@happychain/prettier-config": "workspace:^",
-        "@happychain/typescript-config": "workspace:^",
-        "@types/react": "^18.3.3",
-        "eslint": "^8.57.0",
-        "jotai": "^2.9.2",
-        "prettier": "^3.3.3",
+        "@happychain/configs": "workspace:^",
+        "@types/react": "^18.3.4",
+        "jotai": "^2.9.3",
         "react": "^18.3.1"
     }
 }

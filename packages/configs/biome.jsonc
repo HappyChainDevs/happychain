@@ -1,0 +1,65 @@
+{
+    "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+    "files": {
+        "ignore": [
+            "./**/*/.next",
+            "./**/*/dist",
+            "./**/*/generated.ts",
+            "./**/*/node_modules",
+            "./**/*/routeTree.gen.ts"
+        ]
+    },
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": false,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineEnding": "lf",
+        "lineWidth": 120,
+        "attributePosition": "auto"
+    },
+    "organizeImports": { "enabled": true },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "nursery": {
+                "useSortedClasses": "off"
+            },
+            "correctness": {
+                "noUnusedVariables": "warn",
+                "useHookAtTopLevel": "error"
+            },
+            "style": {
+                "noNamespace": "error"
+            }
+        }
+    },
+    "javascript": {
+        "formatter": {
+            "jsxQuoteStyle": "double",
+            "quoteProperties": "asNeeded",
+            "trailingCommas": "all",
+            "semicolons": "asNeeded",
+            "arrowParentheses": "always",
+            "bracketSpacing": true,
+            "bracketSameLine": false,
+            "quoteStyle": "single",
+            "attributePosition": "auto"
+        }
+    },
+    "overrides": [
+        {
+            "include": ["tsconfig.*.json", "tsconfig.json"],
+            "json": {
+                "parser": {
+                    "allowComments": true,
+                    "allowTrailingCommas": true
+                },
+                "formatter": {
+                    "trailingCommas": "none"
+                }
+            }
+        }
+    ]
+}

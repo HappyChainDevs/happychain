@@ -7,16 +7,12 @@
     "dependencies": {
         "@metamask/safe-event-emitter": "^3.1.1",
         "mipd": "^0.0.7",
-        "viem": "^2.18.4"
+        "viem": "^2.19.8"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^14.12.3",
-        "@happychain/eslint-config": "workspace:^",
-        "@happychain/prettier-config": "workspace:^",
-        "@happychain/typescript-config": "workspace:^",
+        "@happychain/configs": "workspace:^",
         "@types/bun": "^1.1.6",
-        "eslint": "^8.57.0",
-        "happy-dom": "^14.12.3",
-        "prettier": "^3.3.3"
+        "happy-dom": "^14.12.3"
     }
 }

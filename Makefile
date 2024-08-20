@@ -1,9 +1,8 @@
 SHELL := /bin/bash
 # Packages
-SDK_PKGS := sdk-vanillajs,sdk-react
-OTHER_PKGS := contracts,iframe,common,sdk-shared,sdk-firebase-web3auth-strategy
+SUPPORT_PKGS := docs,configs,contracts,common,sdk-shared,sdk-firebase-web3auth-strategy,docs
+SDK_PKGS := sdk-vanillajs,sdk-react,iframe
 DEMO_PKGS := demo-vanillajs,demo-react
-CONFIG_PKGS := eslint-config,prettier-config,typescript-config
 
 # Currently Active Branch
 YOUR_BRANCH = $(git rev-parse --abbrev-ref HEAD)
@@ -47,13 +46,13 @@ sdk-dev:
 .PHONY: sdk-dev
 
 # Builds the sdks, apps, contracts & demos
-build:
-	for name in packages/{$(SDK_PKGS)}; do\
+build:	
+	for name in packages/{$(SUPPORT_PKGS)}; do\
 		echo "Building $${name}";\
 		cd $${name} && make build && cd ../../ || exit 1;\
 	done
 
-	for name in packages/{$(OTHER_PKGS)}; do\
+	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Building $${name}";\
 		cd $${name} && make build && cd ../../ || exit 1;\
 	done
@@ -62,8 +61,6 @@ build:
 		echo "Building $${name}";\
 		cd $${name} && make build && cd ../../ || exit 1;\
 	done
-
-	cd packages/docs && make build
 .PHONY: build
 
 docs:
@@ -82,12 +79,12 @@ test:
 
 # Performs code-quality checks.
 check:
-	for name in packages/{$(SDK_PKGS)}; do\
+	for name in packages/{$(SUPPORT_PKGS)}; do\
 		echo "Checking $${name}";\
 		cd $${name} && make check && cd ../../ || exit 1;\
 	done
 
-	for name in packages/{$(OTHER_PKGS)}; do\
+	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Checking $${name}";\
 		cd $${name} && make check && cd ../../ || exit 1;\
 	done
@@ -96,20 +93,17 @@ check:
 		cd $${name} && make check && cd ../../ || exit 1;\
 	done
 
-	for name in packages/{$(CONFIG_PKGS)}; do\
-		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../ || exit 1;\
-	done
+	pnpm biome check ./
 .PHONY: check
 
 # Performs code formatting for the webapp files and contracts in their respective directories.
 format:
-	for name in packages/{$(SDK_PKGS)}; do\
+	for name in packages/{$(SUPPORT_PKGS)}; do\
 		echo "Formatting $${name}";\
 		cd $${name} && make format && cd ../../ || exit 1;\
 	done
 
-	for name in packages/{$(OTHER_PKGS)}; do\
+	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Formatting $${name}";\
 		cd $${name} && make format && cd ../../ || exit 1;\
 	done
@@ -119,10 +113,7 @@ format:
 		cd $${name} && make format && cd ../../ || exit 1;\
 	done
 
-	for name in packages/{$(CONFIG_PKGS)}; do\
-		echo "Formatting $${name}";\
-		cd $${name} && make format && cd ../../ || exit 1;\
-	done
+	pnpm biome check ./ --write
 .PHONY: format
 
 # runs the full react demo. site available at localhost:5173
