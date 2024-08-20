@@ -1,0 +1,7 @@
+{
+    "extends": "@happychain/typescript-config/tsconfig.vite-lib.json",
+    "compilerOptions": {
+        "experimentalDecorators": true,
+    },
+    "include": ["lib"]
+}

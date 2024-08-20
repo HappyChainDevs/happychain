@@ -10,21 +10,21 @@ npm i @happychain/react
 
 Use the HappyWalletProvider component to inject the wallet into the page
 
-```diff
-+import { HappyWalletProvider } from '@happychain/react'
+```tsx
+import { HappyWalletProvider } from '@happychain/react'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-+        <HappyWalletProvider>
+        <HappyWalletProvider>
             <App />
-+        </HappyWalletProvider>
+        </HappyWalletProvider>
     </React.StrictMode>,
 )
 ```
 
 ## useHappyChain hook
 
-```jsx
+```tsx
 import { useHappyChain } from '@happychain/react'
 
 function App() {
@@ -51,7 +51,7 @@ function App() {
 
 The raw eip1193provider is exposed directly, so you can initialize any compatible web3 library of your choosing. Viem, ethers, wagmi, web3 are all supported.
 
-```jsx
+```tsx
 import { happyProvider } from '@happychain/js'
 ```
 

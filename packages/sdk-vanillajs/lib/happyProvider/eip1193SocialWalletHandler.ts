@@ -1,10 +1,8 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { EIP1193RequestFn, EIP1474Methods } from "viem"
+import type { EIP1193Parameters, EIP1193RequestFn, EIP1474Methods } from "viem"
 
-import { requiresApproval } from "../permissions"
-
-import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "./errors"
-import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from "./events"
+import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "@happychain/sdk-shared"
+import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from "@happychain/sdk-shared"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 type Timer = ReturnType<typeof setInterval>
@@ -14,6 +12,11 @@ type InFlightRequest = {
     resolve: (value: any) => void
     reject: (reason?: unknown) => void
     popup: Window | null
+}
+
+type InFlightCheck = {
+    resolve: (value: boolean) => void
+    reject: (reason?: unknown) => void
 }
 
 const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
@@ -28,7 +31,8 @@ const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "m
  * to the iframe to be handled
  */
 export class SocialWalletHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
-    private inFlight = new Map<string, InFlightRequest>()
+    private inFlightRequests = new Map<string, InFlightRequest>()
+    private inFlightChecks = new Map<string, InFlightCheck>()
     private timer: Timer | null = null
 
     constructor(private config: HappyProviderConfig) {
@@ -38,6 +42,8 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
         // Social Auth (Iframe Proxy)
         config.providerBus.on("response:complete", this.handleCompletedRequest.bind(this))
+
+        config.providerBus.on("permission-check:response", this.handlePermissionCheck.bind(this))
     }
     request: EIP1193RequestFn<EIP1474Methods> = async (args) => {
         // Every request gets proxied through this function.
@@ -46,8 +52,9 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         // otherwise we open the popup and pass the request args through the hash URL.
         const key = crypto.randomUUID()
 
-        return new Promise((resolve, reject) => {
-            const requiresUserApproval = requiresApproval(args)
+        // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
+        return new Promise(async (resolve, reject) => {
+            const requiresUserApproval = await this.requiresApproval(args)
 
             const popup = requiresUserApproval ? this.promptUser(key, args) : this.autoApprove(key, args)
 
@@ -59,19 +66,43 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         return true
     }
 
+    private async handlePermissionCheck(data: EIP1193ProxiedEvents["permission-check:response"]) {
+        const inFlight = this.inFlightChecks.get(data.key)
+        if (!inFlight) return
+        if (typeof data.payload === "boolean") {
+            inFlight.resolve(data.payload)
+        } else {
+            inFlight.reject(data.error)
+        }
+        this.inFlightChecks.delete(data.key)
+    }
+
+    private async requiresApproval(args: EIP1193Parameters) {
+        const key = crypto.randomUUID()
+        return new Promise((resolve, reject) => {
+            this.config.providerBus.emit("permission-check:request", {
+                key,
+                uuid: this.config.uuid,
+                payload: args,
+                error: null,
+            })
+            this.inFlightChecks.set(key, { resolve, reject })
+        })
+    }
+
     private handleProviderNativeEvent(data: EIP1193ProxiedEvents["provider:event"]) {
         this.emit(data.payload.event, data.payload.args)
     }
 
     private handleCompletedRequest(data: EIP1193ProxiedEvents["response:complete"]) {
-        const req = this.inFlight.get(data.key)
+        const req = this.inFlightRequests.get(data.key)
 
         if (!req) {
             return { resolve: null, reject: null }
         }
 
         const { resolve, reject, popup } = req
-        this.inFlight.delete(data.key)
+        this.inFlightRequests.delete(data.key)
         popup?.close()
 
         if (reject && data.error) {
@@ -90,12 +121,12 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     }
 
     private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
-        this.inFlight.set(key, { resolve, reject, popup })
+        this.inFlightRequests.set(key, { resolve, reject, popup })
 
         if (!this.timer && popup) {
             this.timer = setInterval(() => {
                 let withPopups = 0
-                for (const [k, req] of this.inFlight) {
+                for (const [k, req] of this.inFlightRequests) {
                     if (!req.popup) {
                         continue
                     }
@@ -103,7 +134,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
                     if (req.popup.closed) {
                         // manually closed without explicit rejection
                         req.reject(new EIP1193UserRejectedRequestError())
-                        this.inFlight.delete(k)
+                        this.inFlightRequests.delete(k)
                     } else {
                         // still open
                         withPopups++

@@ -23,7 +23,8 @@ export class HappyWallet extends LitElement {
     }
 
     "rpc-url": string | undefined
-    chainId: string | undefined
+
+    "chain-id": string | undefined
 
     constructor(private uuid: ReturnType<typeof crypto.randomUUID>) {
         super()
@@ -51,7 +52,7 @@ export class HappyWallet extends LitElement {
         const searchParams = new URLSearchParams(
             filterUndefinedValues({
                 uuid: this.uuid,
-                "chain:chainId": this.chainId,
+                "chain:chainId": this["chain-id"],
                 "chain:rpcUrls": this["rpc-url"],
             }),
         ).toString()

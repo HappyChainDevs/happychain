@@ -11,14 +11,14 @@ export default defineConfig(({ mode }) => {
             }),
             dts({
                 rollupTypes: true,
-                tsconfigPath: "tsconfig.json",
+                tsconfigPath: "./tsconfig.lib.json",
                 exclude: ["**/*.test.tsx", "**/*.test.ts"],
             }),
         ],
         build: {
             lib: {
                 name: "HappyChain",
-                entry: "lib/main.ts",
+                entry: "lib/index.ts",
                 fileName: (format) => `index.${format}.js`,
             },
             rollupOptions: {

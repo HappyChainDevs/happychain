@@ -1,12 +1,15 @@
 import {
     type EIP1193ErrorObject,
     type EIP1193ProxiedEvents,
-    type EIP1193RequestResult,
     EventBus,
     EventBusChannel,
-    type EventUUID,
     type HappyEvents,
 } from "@happychain/sdk-shared"
+import type {
+    ProviderEventError,
+    ProviderEventPayload,
+} from "@happychain/sdk-shared/lib/services/eip1193Provider/events"
+import type { EIP1193Parameters } from "viem"
 
 /**
  * Event system between the HappyProvider in the dapp
@@ -37,22 +40,8 @@ export const dappMessageBus = new EventBus<HappyEvents>({
  */
 
 export interface BroadcastEvents {
-    "request:approve": {
-        error: null
-        // request key
-        key: EventUUID
-        // window uuid
-        uuid: ReturnType<typeof crypto.randomUUID>
-        payload: EIP1193RequestResult
-    }
-    "request:reject": {
-        error: EIP1193ErrorObject
-        // request key
-        key: EventUUID
-        // window uuid
-        uuid: ReturnType<typeof crypto.randomUUID>
-        payload: null
-    }
+    "request:approve": ProviderEventPayload<EIP1193Parameters>
+    "request:reject": ProviderEventError<EIP1193ErrorObject>
 }
 
 /**

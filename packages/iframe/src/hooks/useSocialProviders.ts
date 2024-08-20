@@ -5,25 +5,37 @@ import { useAtomValue, useSetAtom } from "jotai"
 
 import { AuthState, authStateAtom } from "../state/app"
 
+import { chainsAtom } from "../state/chains"
 import { setUserWithProvider, userAtom } from "./useHappyAccount"
 
 export function useSocialProviders() {
     const setAuthState = useSetAtom(authStateAtom)
     const userValue = useAtomValue(userAtom)
+    const chains = useAtomValue(chainsAtom)
 
     const { providers, onAuthChange } = useFirebaseWeb3AuthStrategy()
 
     useEffect(() => {
-        onAuthChange((user, provider) => {
+        onAuthChange(async (user, provider) => {
             // sync local user+provider state with internal plugin updates
             // not logged in and
             const loggingIn = Boolean(!userValue?.type && user)
             const loggedIn = userValue?.type === "social"
             if (loggingIn || loggedIn) {
+                // pre-add all our supported chains (as defined by sdk-shared)
+                // Social Auth will come with all required chains ready to go
+                // injected wallets, may need to add them manually
+                if (provider) {
+                    await Promise.allSettled(
+                        Object.values(chains).map((chain) => {
+                            provider.request({ method: "wallet_addEthereumChain", params: [chain] })
+                        }),
+                    )
+                }
                 setUserWithProvider(user, provider)
             }
         })
-    }, [onAuthChange, userValue])
+    }, [onAuthChange, userValue, chains])
 
     const providersMemo = useMemo(
         () =>

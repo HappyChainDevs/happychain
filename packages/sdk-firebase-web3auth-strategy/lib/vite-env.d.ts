@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-export interface ImportMetaEnv {
+interface ImportMetaEnv {
     /**
      * Firebase Setup
      */
@@ -26,6 +26,7 @@ export interface ImportMetaEnv {
     readonly VITE_WEB3AUTH_CHAIN_TOKEN_DECIMALS: string
 }
 
-export interface ImportMeta {
+// biome-ignore lint/correctness/noUnusedVariables: it augments the interface
+interface ImportMeta {
     readonly env: ImportMetaEnv
 }
