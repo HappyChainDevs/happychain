@@ -1,4 +1,4 @@
-import type { EIP1193ProxiedEvents, HappyEvents } from '@happychain/sdk-shared'
+import type { EIP1193ProxiedEvents, HappyEvents, HappyUser } from '@happychain/sdk-shared'
 import { config, EventBus, EventBusChannel } from '@happychain/sdk-shared'
 
 import { HappyProvider } from './happyProvider'
@@ -12,6 +12,13 @@ const dappMessageBus = new EventBus<HappyEvents>({
 })
 
 export const { onUserUpdate, onModalUpdate } = registerListeners(dappMessageBus)
+
+let user: HappyUser | undefined
+onUserUpdate((_user?: HappyUser) => {
+    user = _user
+})
+
+export const getCurrentUser = () => user
 
 export const happyProvider = new HappyProvider({
     iframePath: config.iframePath,
