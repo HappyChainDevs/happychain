@@ -11,7 +11,6 @@ lint-fix:
 	pnpm eslint . --report-unused-disable-directives --max-warnings 0 --fix
 .PHONY: lint-fix
 
-
 # Runs code quality checks.
 check:
 	make lint

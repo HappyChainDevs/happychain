@@ -15,7 +15,13 @@ export class HappyWallet extends LitElement {
         'chain-id': { state: false },
     }
 
-    _classes = { open: false, closed: true, connected: false, disconnected: true }
+    _classes = {
+        open: false,
+        closed: true,
+        connected: false,
+        disconnected: true,
+    }
+
     'rpc-url': string | undefined
     chainId: string | undefined
 

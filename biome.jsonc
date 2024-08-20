@@ -27,9 +27,8 @@
         "rules": {
             "recommended": true,
             "nursery": {
-                // not a drop in replacement for prettier-plugin-tailwindcss
-                // doesn't auto correct, and has different sort order
-                // "useSortedClasses": "error",
+                // not yet ready for use https://biomejs.dev/linter/rules/use-sorted-classes/
+                "useSortedClasses": "off"
             },
             "correctness": {
                 "noUnusedVariables": "warn",
@@ -52,5 +51,20 @@
             "quoteStyle": "single",
             "attributePosition": "auto"
         }
-    }
+    },
+    "overrides": [
+        {
+            "include": ["packages/docs/**"],
+            "linter": {
+                "rules": {
+                    "suspicious": {
+                        "noConsoleLog": "off"
+                    },
+                    "correctness": {
+                        "noUnusedVariables": "off"
+                    }
+                }
+            }
+        }
+    ]
 }
