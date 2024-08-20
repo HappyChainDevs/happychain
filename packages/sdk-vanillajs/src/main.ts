@@ -1,7 +1,10 @@
-import './style.css'
 import { chains } from '@happychain/sdk-shared'
+
 import { onUserUpdate, register } from '../lib/index'
+
 import { createAddChainBtn, createSwitchChainBtn, setActiveChain } from './ui'
+
+import './style.css'
 
 register()
 

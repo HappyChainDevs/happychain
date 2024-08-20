@@ -1,5 +1,14 @@
+<<<<<<< HEAD
 import type { HappyUser } from "@happychain/sdk-shared"
 import { requestLabels } from "../../constants/requestLabels"
+||||||| parent of f2638f7 (formatting & dead code elimination)
+import type { HappyUser } from '@happychain/sdk-shared'
+import { requestLabels } from '../../constants/requestLabels'
+=======
+import type { HappyUser } from '@happychain/sdk-shared'
+
+import { requestLabels } from '../../constants/requestLabels'
+>>>>>>> f2638f7 (formatting & dead code elimination)
 
 interface SendTransactionProps {
     method: string

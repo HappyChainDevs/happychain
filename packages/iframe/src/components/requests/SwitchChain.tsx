@@ -1,5 +1,6 @@
 import type { HappyUser } from '@happychain/sdk-shared'
 import { useAtomValue } from 'jotai'
+
 import { requestLabels } from '../../constants/requestLabels'
 import { chainsAtom } from '../../state/chains'
 

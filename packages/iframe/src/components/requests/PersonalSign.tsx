@@ -1,5 +1,14 @@
+<<<<<<< HEAD
 import { hexToString } from "viem"
 import { requestLabels } from "../../constants/requestLabels"
+||||||| parent of f2638f7 (formatting & dead code elimination)
+import { hexToString } from 'viem'
+import { requestLabels } from '../../constants/requestLabels'
+=======
+import { hexToString } from 'viem'
+
+import { requestLabels } from '../../constants/requestLabels'
+>>>>>>> f2638f7 (formatting & dead code elimination)
 
 interface PersonalSignProps {
     method: string

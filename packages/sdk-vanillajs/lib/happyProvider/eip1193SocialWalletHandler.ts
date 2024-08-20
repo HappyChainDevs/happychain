@@ -1,8 +1,8 @@
+import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from "@happychain/sdk-shared"
+import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193Parameters, EIP1193RequestFn, EIP1474Methods } from "viem"
 
-import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "@happychain/sdk-shared"
-import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from "@happychain/sdk-shared"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 type Timer = ReturnType<typeof setInterval>

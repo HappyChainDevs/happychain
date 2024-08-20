@@ -1,4 +1,4 @@
 {
-    "extends": "@happychain/typescript-config/tsconfig.vite-node.json",    
+    "extends": "@happychain/typescript-config/tsconfig.vite-node.json",
     "include": ["vite.config.ts"]
 }
