@@ -85,3 +85,25 @@ function UserAddressComponent() {
     return <div>{user.address}</div>
 }
 ```
+
+
+### Getting the Active User from Outside of React Components
+
+
+User changes, such as when a user logs in or out, can be subscribed to the `onUserUpdate` listener.
+If the `user` is undefined, then they are not currently logged in have or have logged out. 
+If the `user` is [HappyUser](/react/api-reference#happyuser) then it will be populated with all their 
+shared info, such as wallet address and name.
+
+```ts twoslash
+import { onUserUpdate } from '@happychain/react'
+
+// [!include ~/snippets/listeners.ts:onUserUpdate]
+```
+
+Alternatively, the current user Is always exposed via the `getCurrentUser` call.
+```ts twoslash
+import { getCurrentUser } from '@happychain/react'
+
+// [!include ~/snippets/listeners.ts:getCurrentUser]
+```
