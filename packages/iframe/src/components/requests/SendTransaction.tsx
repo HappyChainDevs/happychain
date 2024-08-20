@@ -1,15 +1,11 @@
 import type { HappyUser } from '@happychain/sdk-shared'
+import { requestLabels } from '../../constants/requestLabels'
 
 interface SendTransactionProps {
     method: string
     params: [`0x${string}`, `0x${string}`]
     reject: () => void
-    accept: () => void
-}
-
-const signatureTypes: Record<string, string> = {
-    personal_sign: 'Signature Request',
-    eth_sendTransaction: 'Send Transaction',
+    accept: ({ method, params }: { method: string; params: unknown[] }) => void
 }
 
 const safeGet = (key: string) => {
@@ -28,7 +24,7 @@ export function SendTransaction({ method, params, reject, accept }: SendTransact
             <div className="flex w-full grow flex-col gap-4">
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">{window.location.origin}</div>
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">
-                    {signatureTypes[method] ?? 'Unknown Signature Type'}
+                    {requestLabels[method] ?? 'Unknown Signature Type'}
                 </div>
 
                 <div className="flex grow flex-col gap-4 overflow-x-auto bg-zinc-100 p-4">
@@ -49,7 +45,7 @@ export function SendTransaction({ method, params, reject, accept }: SendTransact
                 <button
                     type="button"
                     className="btn grow border-2 border-green-300 bg-green-300 hover:bg-green-400"
-                    onClick={accept}
+                    onClick={() => accept({ method, params })}
                 >
                     Sign
                 </button>

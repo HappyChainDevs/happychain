@@ -18,11 +18,21 @@
     },
     "dependencies": {
         "@happychain/sdk-shared": "workspace:^",
-        "lit": "^3.1.4"
+        "@metamask/safe-event-emitter": "^3.1.1",
+        "lit": "^3.1.4",
+        "mipd": "^0.0.7",
+        "viem": "^2.18.4"
     },
     "devDependencies": {
+        "@happy-dom/global-registrator": "^14.12.3",
         "@happychain/eslint-config": "workspace:^",
         "@happychain/prettier-config": "workspace:^",
+        "@happychain/typescript-config": "workspace:^",
+        "@types/bun": "^1.1.6",
+        "autoprefixer": "^10.4.19",
+        "happy-dom": "^14.12.3",
+        "postcss": "^8.4.40",
+        "tailwindcss": "^3.4.7",
         "typescript": "^5.2.2",
         "vite": "^5.3.4",
         "vite-plugin-dts": "4.0.0-beta.1",

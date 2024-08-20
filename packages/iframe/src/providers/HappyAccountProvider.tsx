@@ -1,19 +1,23 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useState } from 'react'
 
 import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
-import { type EIP1193EventName, logger } from '@happychain/sdk-shared'
+import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from '@happychain/sdk-shared'
 import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
-import { useAtomValue } from 'jotai'
-
+import { useAtom, useAtomValue } from 'jotai'
 import { happyProviderBus, popupBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
+import { chainsAtom } from '../state/chains'
+import { isAddChainParams } from '../utils/isAddChainParam'
 
-const providedUUID = new URLSearchParams(window.location.search).get('uuid')
+const iframeUUID = new URLSearchParams(window.location.search).get('uuid')
+
+const checkRequestUUID = (uuid: ReturnType<typeof crypto.randomUUID>) => uuid === iframeUUID
 
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
     const provider = useAtomValue(providerAtom)
     const publicClient = useAtomValue(publicClientAtom)
     const walletClient = useAtomValue(walletClientAtom)
+    const [chains, setChains] = useAtom(chainsAtom)
     const [isLoaded, setIsLoaded] = useState(false)
 
     useEffect(() => {
@@ -50,14 +54,59 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
         }
     }, [provider])
 
+    const requiresConfirmation = useCallback(
+        (payload: EIP1193ProxiedEvents['permission-check:request']['payload']) => {
+            const basicCheck = requiresApproval(payload)
+            //  if the basic check shows its a safe method, we can stop here, and report back
+            if (basicCheck === false) {
+                return false
+            }
+
+            // only request to add new chains require confirmation
+            if (payload.method === 'wallet_addEthereumChain') {
+                const params =
+                    typeof payload.params === 'object' && Array.isArray(payload.params) && payload.params?.[0]
+
+                return !isAddChainParams(params) || !chains.some((chain) => chain.chainId === params.chainId)
+            }
+
+            return true
+        },
+        [chains],
+    )
+
+    useEffect(() => {
+        return happyProviderBus.on('permission-check:request', (data) => {
+            const result = requiresConfirmation(data.payload)
+            return happyProviderBus.emit('permission-check:response', {
+                key: data.key,
+                uuid: data.uuid,
+                error: null,
+                payload: result,
+            })
+        })
+    }, [requiresConfirmation])
+
     // trusted requests may only be sent from same-origin (popup approval screen)
     // and can be sent through the walletClient
     useEffect(() => {
         const offApprove = popupBus.on('request:approve', async (data) => {
-            if (data.uuid !== providedUUID) return
+            // wrong window, ignore
+            if (checkRequestUUID(data.uuid)) return
 
             try {
                 const result = await walletClient?.request(data.payload as Parameters<typeof walletClient.request>)
+
+                if (data.payload.method === 'wallet_addEthereumChain') {
+                    const params =
+                        typeof data.payload.params === 'object' &&
+                        Array.isArray(data.payload.params) &&
+                        data.payload.params?.[0]
+
+                    if (isAddChainParams(params)) {
+                        setChains((previous) => [...previous, params])
+                    }
+                }
 
                 happyProviderBus.emit('response:complete', {
                     key: data.key,
@@ -71,22 +120,22 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
             }
         })
         const offReject = popupBus.on('request:reject', (data) => {
-            if (data.uuid !== providedUUID) return
+            if (checkRequestUUID(data.uuid)) return
             happyProviderBus.emit('response:complete', data)
         })
         return () => {
             offApprove()
             offReject()
         }
-    }, [walletClient])
+    }, [walletClient, setChains])
 
     // Untrusted requests can only be called using the public client
     // as they bypass the popup approval screen
     useEffect(() => {
         const offApprove = happyProviderBus.on('request:approve', async (data) => {
-            if (data.uuid !== providedUUID) return
+            if (checkRequestUUID(data.uuid)) return
             try {
-                const isPublicMethod = !requiresApproval(data.payload)
+                const isPublicMethod = !requiresConfirmation(data.payload)
 
                 if (!isPublicMethod) {
                     // emit not allowed error
@@ -113,7 +162,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
         return () => {
             offApprove()
         }
-    }, [publicClient])
+    }, [publicClient, requiresConfirmation])
 
     if (!isLoaded) {
         return null

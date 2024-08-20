@@ -1,7 +1,8 @@
-import { config, onModalUpdate, onUserUpdate } from '@happychain/sdk-shared'
-import { LitElement, LitElemen } from 'lit'
+import { config } from '@happychain/sdk-shared'
+import { LitElement, css, html } from 'lit'
 import { customElement } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
+import { onModalUpdate, onUserUpdate } from './happyProvider/initialize'
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }
@@ -23,7 +24,8 @@ export class HappyWallet extends LitElement {
     }
 
     'rpc-url': string | undefined
-    chainId: string | undefined
+
+    'chain-id': string | undefined
 
     constructor(private uuid: ReturnType<typeof crypto.randomUUID>) {
         super()
@@ -51,7 +53,7 @@ export class HappyWallet extends LitElement {
         const searchParams = new URLSearchParams(
             filterUndefinedValues({
                 uuid: this.uuid,
-                'chain:chainId': this.chainId,
+                'chain:chainId': this['chain-id'],
                 'chain:rpcUrls': this['rpc-url'],
             }),
         ).toString()

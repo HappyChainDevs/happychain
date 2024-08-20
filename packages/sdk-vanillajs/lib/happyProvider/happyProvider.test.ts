@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { setTimeout } from 'node:timers/promises'
 import type { RpcBlock } from 'viem'
 
-import { config } from '../../config'
-import type { HappyEvents } from '../../interfaces/events'
-import { EventBus, EventBusChannel, type EventBusOptions } from '../eventBus'
+import { config } from '@happychain/sdk-shared'
+import type { HappyEvents } from '@happychain/sdk-shared'
+import { EventBus, EventBusChannel, type EventBusOptions } from '@happychain/sdk-shared'
 
-import { GenericProviderRpcError } from './errors'
-import type { EIP1193ProxiedEvents } from './events'
+import { GenericProviderRpcError } from '@happychain/sdk-shared'
+import type { EIP1193ProxiedEvents } from '@happychain/sdk-shared'
 import { HappyProvider } from './happyProvider'
 
 const emptyRpcBlock = {

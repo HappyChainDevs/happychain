@@ -98,7 +98,6 @@ export function useInjectedProviders(): ConnectionProvider[] {
                         setAuthState(AuthState.Loading)
                         await disable(eip1193Provider)
                     },
-                    getProvider: () => eip1193Provider.provider,
                 }
             }),
         [setAuthState, injectedProviders],

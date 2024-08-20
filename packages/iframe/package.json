@@ -5,14 +5,15 @@
     "type": "module",
     "dependencies": {
         "@happychain/common": "workspace:^",
-        "@happychain/sdk-shared": "workspace:^",
         "@happychain/firebase-web3auth-strategy": "workspace:^",
+        "@happychain/sdk-shared": "workspace:^",
         "@tanstack/react-router": "^1.45.11",
         "clsx": "^2.1.1",
         "jotai": "^2.9.1",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "viem": "^2.18.4"
+        "viem": "^2.18.4",
+        "zod": "^3.23.8"
     },
     "devDependencies": {
         "@happychain/eslint-config": "workspace:^",
