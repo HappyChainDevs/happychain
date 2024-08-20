@@ -1,29 +1,8 @@
-<<<<<<< HEAD
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { createStore } from "mipd"
 import type { EIP1193RequestFn, EIP1474Methods } from "viem"
-||||||| parent of f2638f7 (formatting & dead code elimination)
-import SafeEventEmitter from '@metamask/safe-event-emitter'
-import { createStore } from 'mipd'
-import type { EIP1193RequestFn, EIP1474Methods } from 'viem'
-=======
-import type { HappyUser } from '@happychain/sdk-shared'
-import SafeEventEmitter from '@metamask/safe-event-emitter'
-import { createStore } from 'mipd'
-import type { EIP1193RequestFn, EIP1474Methods } from 'viem'
->>>>>>> f2638f7 (formatting & dead code elimination)
-
-<<<<<<< HEAD
-import type { HappyUser } from "@happychain/sdk-shared"
 
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
-||||||| parent of f2638f7 (formatting & dead code elimination)
-import type { HappyUser } from '@happychain/sdk-shared'
-
-import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
-=======
-import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
->>>>>>> f2638f7 (formatting & dead code elimination)
 
 const store = createStore()
 

@@ -1,34 +1,14 @@
 import { type ReactNode, useEffect, useState } from "react"
 
-<<<<<<< HEAD
 import { init as web3AuthInit } from "@happychain/firebase-web3auth-strategy"
 import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared/lib/services/permissions"
 import { useAtom, useAtomValue } from "jotai"
+
 import { happyProviderBus, popupBus } from "../services/eventBus"
 import { providerAtom, publicClientAtom, walletClientAtom } from "../services/provider"
 import { chainsAtom } from "../state/chains"
 import { isAddChainParams } from "../utils/isAddChainParam"
-||||||| parent of f2638f7 (formatting & dead code elimination)
-import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
-import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from '@happychain/sdk-shared'
-import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
-import { useAtom, useAtomValue } from 'jotai'
-import { happyProviderBus, popupBus } from '../services/eventBus'
-import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
-import { chainsAtom } from '../state/chains'
-import { isAddChainParams } from '../utils/isAddChainParam'
-=======
-import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
-import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from '@happychain/sdk-shared'
-import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
-import { useAtom, useAtomValue } from 'jotai'
-
-import { happyProviderBus, popupBus } from '../services/eventBus'
-import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
-import { chainsAtom } from '../state/chains'
-import { isAddChainParams } from '../utils/isAddChainParam'
->>>>>>> f2638f7 (formatting & dead code elimination)
 
 const iframeUUID = new URLSearchParams(window.location.search).get("uuid")
 
@@ -113,7 +93,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const offApprove = popupBus.on("request:approve", async (data) => {
             // wrong window, ignore
-            if (checkRequestUUID(data.uuid)) return
+            if (!checkRequestUUID(data.uuid)) return
 
             try {
                 const result = await walletClient?.request(data.payload as Parameters<typeof walletClient.request>)
@@ -141,7 +121,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
             }
         })
         const offReject = popupBus.on("request:reject", (data) => {
-            if (checkRequestUUID(data.uuid)) return
+            if (!checkRequestUUID(data.uuid)) return
             happyProviderBus.emit("response:complete", data)
         })
         return () => {
@@ -154,7 +134,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // as they bypass the popup approval screen
     useEffect(() => {
         const offApprove = happyProviderBus.on("request:approve", async (data) => {
-            if (checkRequestUUID(data.uuid)) return
+            if (!checkRequestUUID(data.uuid)) return
             try {
                 const isPublicMethod = !requiresConfirmation(data.payload)
 
