@@ -1,6 +1,6 @@
 import { config } from '@happychain/sdk-shared'
 import { css, html, LitElement } from 'lit'
-import { customElement } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 
 import { onModalUpdate, onUserUpdate } from './happyProvider/initialize'
@@ -11,21 +11,18 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
 
 @customElement('happy-wallet')
 export class HappyWallet extends LitElement {
-    static properties = {
-        _classes: { state: true },
-        'rpc-url': { state: false },
-        'chain-id': { state: false },
-    }
-
-    _classes = {
+    @state()
+    classes = {
         open: false,
         closed: true,
         connected: false,
         disconnected: true,
     }
 
+    @property({ type: String })
     'rpc-url': string | undefined
 
+    @property({ type: String })
     'chain-id': string | undefined
 
     constructor(private uuid: ReturnType<typeof crypto.randomUUID>) {
@@ -36,14 +33,14 @@ export class HappyWallet extends LitElement {
         super.connectedCallback()
 
         onUserUpdate((user) => {
-            this._classes.connected = Boolean(user)
-            this._classes.disconnected = !user
+            this.classes.connected = Boolean(user)
+            this.classes.disconnected = !user
             this.requestUpdate()
         })
 
         onModalUpdate((isOpen) => {
-            this._classes.open = isOpen
-            this._classes.closed = !isOpen
+            this.classes.open = isOpen
+            this.classes.closed = !isOpen
             this.requestUpdate()
         })
     }
@@ -63,7 +60,7 @@ export class HappyWallet extends LitElement {
             <iframe
                 title="happy-iframe"
                 src="${url.href}?${searchParams}"
-                class=${classMap(this._classes)}
+                class=${classMap(this.classes)}
                 style="border: none;"
             />
         `

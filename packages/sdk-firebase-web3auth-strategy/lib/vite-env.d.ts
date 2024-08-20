@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-export interface ImportMetaEnv {
+interface ImportMetaEnv {
     /**
      * Firebase Setup
      */
