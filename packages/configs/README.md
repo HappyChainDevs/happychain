@@ -1,34 +1,74 @@
-# Typescript Configs
+# Configs
 
-Typescript configs to be shared between packages
+HappyChain MonoRepo Shared Configs
 
-1. first add to the packages package.json
+## Install
+
+Add to your packages `package.json`
 
 ```json
 "devDependencies": {
-    "@happychain/typescript-config": "workspace:^",
+    "@happychain/configs": "workspace:^",
 }
 ```
 
-2. Install
-
-```sh
+```bashsh
 pnpm install
 ```
 
-3. add or update `tsconfig.json` with your preferred config `tsconfig.*.json`
+## Biome Configs
+In your package create a `biome.jsonc`
+```jsonc
+{
+	// pull from relative node_modules as biome 
+	// doesn't currently resolve from packages automatically
+    "$schema": "./node_modules/@happychain/configs/node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["node_modules/@happychain/configs/biome.jsonc"]
+}
+```
 
-```json
-// tsconfig.json
+To customize, simple extend or overwrite
+```jsonc
+{
+
+    "$schema": "./node_modules/@happychain/configs/node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["node_modules/@happychain/configs/biome.jsonc"],
+	"files": {
+		"ignore": [ "./out" ]
+	},
+	"overrides": [{
+		// the path which this rule applies to
+		"include": ["docs/snippets"],
+
+		// rules specific to this path
+		"linter": {
+			"rules": {
+				"suspicious": { "noConsoleLog": "off" },
+			}
+		}
+	}]
+}
+```
+
+## Typescript Configs
+
+Add or update `tsconfig.json` with your preferred config `tsconfig.*.json`
+
+```jsonc
 {
 	// tsconfig.vite-lib.json, tsconfig.vite-node.json, tsconfig.next.json
-	"extends": "@happychain/typescript-config/tsconfig.bun.json",
-	"compilerOptions": {
-		"baseUrl": "./lib",
-		"paths": {
-			"lib/*": ["./*"]
-		}
-	},
+	"extends": "@happychain/configs/tsconfig.bun.json",
 	"include": ["lib"]
 }
 ```
+
+To customize, simple update with the overrides
+```jsonc
+{
+	"extends": "@happychain/configs/tsconfig.bun.json",
+	"compilerOptions": {
+		"baseUrl": "./lib",
+		"paths": { "lib/*": ["./*"] }
+	},
+	"include": ["lib"]
+}
