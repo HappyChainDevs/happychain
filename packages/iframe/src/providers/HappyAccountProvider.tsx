@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react"
+import { type ReactNode, useCallback, useEffect, useState } from "react"
 
 import { init as web3AuthInit } from "@happychain/firebase-web3auth-strategy"
 import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from "@happychain/sdk-shared"

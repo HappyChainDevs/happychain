@@ -28,7 +28,7 @@ export function register(opts?: WalletRegisterOptions) {
 
 export type { HappyProvider } from './happyProvider/happyProvider'
 
-export { onModalUpdate, onUserUpdate, happyProvider } from './happyProvider/initialize'
+export { onModalUpdate, onUserUpdate, getCurrentUser, happyProvider } from './happyProvider/initialize'
 
 // re-export happychain core
 export { config } from '@happychain/sdk-shared'
