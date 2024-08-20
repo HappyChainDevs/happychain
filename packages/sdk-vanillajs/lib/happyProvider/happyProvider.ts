@@ -1,9 +1,9 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193Provider, EIP1193RequestFn, EIP1474Methods } from "viem"
 
-import { InjectedWalletHandler } from "./eip1193InjectedWalletHandler"
-import { SocialWalletHandler } from "./eip1193SocialWalletHandler"
+import { InjectedWalletHandler } from "./injectedWalletHandler"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
+import { SocialWalletHandler } from "./socialWalletHandler"
 
 export class HappyProvider extends SafeEventEmitter implements EIP1193Provider {
     private injectedWalletHandler: EIP1193ConnectionHandler
