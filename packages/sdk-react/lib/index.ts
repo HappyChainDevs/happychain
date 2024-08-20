@@ -5,21 +5,7 @@ export { HappyWalletProvider } from "./components/HappyWalletProvider"
 export { useHappyChain } from "./hooks/useHappyChain"
 
 // re-export happychain core
-<<<<<<< HEAD
-export {
-    happyProvider,
-    onModalUpdate,
-    onUserUpdate,
-} from "@happychain/js"
-||||||| parent of f2638f7 (formatting & dead code elimination)
-export {
-    happyProvider,
-    onModalUpdate,
-    onUserUpdate,
-} from '@happychain/js'
-=======
-export { happyProvider, onModalUpdate, onUserUpdate } from '@happychain/js'
->>>>>>> f2638f7 (formatting & dead code elimination)
+export { happyProvider, onModalUpdate, onUserUpdate } from "@happychain/js"
 
 export type {
     // RPC errors

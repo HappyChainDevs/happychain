@@ -3,22 +3,10 @@ import { useEffect, useMemo } from "react"
 import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
 import { useAtomValue, useSetAtom } from "jotai"
 
-<<<<<<< HEAD
 import { AuthState, authStateAtom } from "../state/app"
-
 import { chainsAtom } from "../state/chains"
+
 import { setUserWithProvider, userAtom } from "./useHappyAccount"
-||||||| parent of f2638f7 (formatting & dead code elimination)
-import { AuthState, authStateAtom } from '../state/app'
-
-import { chainsAtom } from '../state/chains'
-import { setUserWithProvider, userAtom } from './useHappyAccount'
-=======
-import { AuthState, authStateAtom } from '../state/app'
-import { chainsAtom } from '../state/chains'
-
-import { setUserWithProvider, userAtom } from './useHappyAccount'
->>>>>>> f2638f7 (formatting & dead code elimination)
 
 export function useSocialProviders() {
     const setAuthState = useSetAtom(authStateAtom)
