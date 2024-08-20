@@ -93,7 +93,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const offApprove = popupBus.on('request:approve', async (data) => {
             // wrong window, ignore
-            if (checkRequestUUID(data.uuid)) return
+            if (!checkRequestUUID(data.uuid)) return
 
             try {
                 const result = await walletClient?.request(data.payload as Parameters<typeof walletClient.request>)
@@ -121,7 +121,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
             }
         })
         const offReject = popupBus.on('request:reject', (data) => {
-            if (checkRequestUUID(data.uuid)) return
+            if (!checkRequestUUID(data.uuid)) return
             happyProviderBus.emit('response:complete', data)
         })
         return () => {
@@ -134,7 +134,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // as they bypass the popup approval screen
     useEffect(() => {
         const offApprove = happyProviderBus.on('request:approve', async (data) => {
-            if (checkRequestUUID(data.uuid)) return
+            if (!checkRequestUUID(data.uuid)) return
             try {
                 const isPublicMethod = !requiresConfirmation(data.payload)
 
