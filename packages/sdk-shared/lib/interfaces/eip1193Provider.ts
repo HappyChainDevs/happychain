@@ -23,5 +23,4 @@ export interface ConnectionProvider {
     type: string
     enable: () => Promise<void>
     disable: () => Promise<void>
-    getProvider: () => EIP1193Provider
 }

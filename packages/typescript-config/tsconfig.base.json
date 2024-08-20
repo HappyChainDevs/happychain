@@ -1,0 +1,20 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "display": "Default",
+    "compilerOptions": {
+      "noEmit": true,
+      "target": "ESNext",
+      "module": "ESNext",
+      "skipLibCheck": true,
+      "moduleResolution": "bundler",
+      "allowImportingTsExtensions": true,
+      
+      // Best practices & Linting
+      "strict": true,
+      "verbatimModuleSyntax": true,
+      "noPropertyAccessFromIndexSignature": false,
+      "noUnusedLocals": true,
+      "noFallthroughCasesInSwitch": true,
+      "noUnusedParameters": true,
+    }
+  }

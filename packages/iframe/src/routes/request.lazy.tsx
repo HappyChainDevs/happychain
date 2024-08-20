@@ -3,8 +3,10 @@ import { useState } from "react"
 import { createLazyFileRoute } from "@tanstack/react-router"
 
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
+import { AddChain } from "../components/requests/AddChain"
 import { PersonalSign } from "../components/requests/PersonalSign"
 import { SendTransaction } from "../components/requests/SendTransaction"
+import { SwitchChain } from "../components/requests/SwitchChain"
 import { popupBus } from "../services/eventBus"
 
 export const Route = createLazyFileRoute("/request")({
@@ -29,13 +31,13 @@ function Request() {
         })
     }
 
-    function accept() {
+    function accept(payload: { method: string; params: unknown[] }) {
         setIsLoading(true)
         popupBus.emit("request:approve", {
             error: null,
             uuid,
             key,
-            payload: req,
+            payload: payload,
         })
     }
 
@@ -49,6 +51,14 @@ function Request() {
 
     if (req.method === "eth_sendTransaction") {
         return <SendTransaction method={req.method} params={req.params} reject={reject} accept={accept} />
+    }
+
+    if (req.method === "wallet_switchEthereumChain") {
+        return <SwitchChain method={req.method} params={req.params} reject={reject} accept={accept} />
+    }
+
+    if (req.method === "wallet_addEthereumChain") {
+        return <AddChain method={req.method} params={req.params} reject={reject} accept={accept} />
     }
 
     return (

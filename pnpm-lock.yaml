@@ -198,6 +198,9 @@ importers:
       viem:
         specifier: ^2.19.8
         version: 2.19.8(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@6.0.4)(zod@3.23.8)
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@happychain/configs':
         specifier: workspace:^
@@ -355,13 +358,40 @@ importers:
       '@happychain/sdk-shared':
         specifier: workspace:^
         version: link:../sdk-shared
+      '@metamask/safe-event-emitter':
+        specifier: ^3.1.1
+        version: 3.1.1
       lit:
         specifier: ^3.2.0
         version: 3.2.0
+      mipd:
+        specifier: ^0.0.7
+        version: 0.0.7(typescript@5.5.4)
+      viem:
+        specifier: ^2.18.4
+        version: 2.19.8(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@6.0.4)(zod@3.23.8)
     devDependencies:
+      '@happy-dom/global-registrator':
+        specifier: ^14.12.3
+        version: 14.12.3
       '@happychain/configs':
         specifier: workspace:^
         version: link:../configs
+      '@types/bun':
+        specifier: ^1.1.6
+        version: 1.1.6
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.4.20(postcss@8.4.41)
+      happy-dom:
+        specifier: ^14.12.3
+        version: 14.12.3
+      postcss:
+        specifier: ^8.4.40
+        version: 8.4.41
+      tailwindcss:
+        specifier: ^3.4.7
+        version: 3.4.10
       typescript:
         specifier: ^5.5.4
         version: 5.5.4

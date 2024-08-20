@@ -1,14 +1,11 @@
 import { hexToString } from "viem"
+import { requestLabels } from "../../constants/requestLabels"
 
 interface PersonalSignProps {
     method: string
     params: [`0x${string}`, `0x${string}`]
     reject: () => void
-    accept: () => void
-}
-
-const signatureTypes: Record<string, string> = {
-    personal_sign: "Signature Request",
+    accept: ({ method, params }: { method: string; params: unknown[] }) => void
 }
 
 export function PersonalSign({ method, params, reject, accept }: PersonalSignProps) {
@@ -17,7 +14,7 @@ export function PersonalSign({ method, params, reject, accept }: PersonalSignPro
             <div className="flex w-full grow flex-col gap-4">
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">{window.location.origin}</div>
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">
-                    {signatureTypes[method] ?? "Unknown Signature Type"}
+                    {requestLabels[method] ?? "Unknown Signature Type"}
                 </div>
 
                 <div className="flex grow flex-col gap-4 bg-zinc-100 p-4">
@@ -32,7 +29,7 @@ export function PersonalSign({ method, params, reject, accept }: PersonalSignPro
                 <button
                     type="button"
                     className="btn grow border-2 border-green-300 bg-green-300 hover:bg-green-400"
-                    onClick={accept}
+                    onClick={() => accept({ method, params })}
                 >
                     Sign
                 </button>
