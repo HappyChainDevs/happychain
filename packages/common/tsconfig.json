@@ -1,4 +1,4 @@
 {
-    "extends": "@happychain/typescript-config/tsconfig.bun.json",
+    "extends": "@happychain/configs/tsconfig.bun.json",
     "include": ["lib"]
 }

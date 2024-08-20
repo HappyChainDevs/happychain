@@ -1,70 +1,10 @@
 {
-    "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
-    "files": {
-        "ignore": [
-            "./**/*/.next",
-            "./**/*/dist",
-            "./**/*/generated.ts",
-            "./**/*/node_modules",
-            "./**/*/routeTree.gen.ts",
-            "./**/*/tsconfig.*.json",
-            "./**/*/tsconfig.json",
-            "./packages/contracts/**"
-        ]
-    },
-    "formatter": {
-        "enabled": true,
-        "formatWithErrors": false,
-        "indentStyle": "space",
-        "indentWidth": 4,
-        "lineEnding": "lf",
-        "lineWidth": 120,
-        "attributePosition": "auto"
-    },
-    "organizeImports": { "enabled": true },
-    "linter": {
-        "enabled": true,
-        "rules": {
-            "recommended": true,
-            "nursery": {
-                // not yet ready for use https://biomejs.dev/linter/rules/use-sorted-classes/
-                "useSortedClasses": "off"
-            },
-            "correctness": {
-                "noUnusedVariables": "warn",
-                "useHookAtTopLevel": "error"
-            },
-            "style": {
-                "noNamespace": "error"
-            }
-        }
-    },
-    "javascript": {
-        "formatter": {
-            "jsxQuoteStyle": "double",
-            "quoteProperties": "asNeeded",
-            "trailingCommas": "all",
-            "semicolons": "asNeeded",
-            "arrowParentheses": "always",
-            "bracketSpacing": true,
-            "bracketSameLine": false,
-            "quoteStyle": "single",
-            "attributePosition": "auto"
-        }
-    },
-    "overrides": [
-        {
-            "include": ["packages/docs/**"],
-            "linter": {
-                "rules": {
-                    "suspicious": {
-                        "noConsoleLog": "off"
-                    },
-                    "correctness": {
-                        "noUnusedVariables": "off"
-                    }
-                }
-            }
-        }
-    ]
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"extends": ["./packages/configs/biome.jsonc"],
+	"files": {
+		"ignore": [
+			// packages will manage their own configs
+			"./packages"
+		]
+	}
 }

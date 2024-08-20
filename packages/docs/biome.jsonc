@@ -1,0 +1,19 @@
+{
+    "$schema": "./node_modules/@happychain/configs/node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["node_modules/@happychain/configs/biome.jsonc"],
+    "overrides": [
+        {
+            "include": ["docs/snippets"],
+            "linter": {
+                "rules": {
+                    "suspicious": {
+                        "noConsoleLog": "off"
+                    },
+                    "correctness": {
+                        "noUnusedVariables": "off"
+                    }
+                }
+            }
+        }
+    ]
+}
