@@ -4,8 +4,8 @@ import { useFirebaseWeb3AuthStrategy } from '@happychain/firebase-web3auth-strat
 import { useAtomValue, useSetAtom } from 'jotai'
 
 import { AuthState, authStateAtom } from '../state/app'
-
 import { chainsAtom } from '../state/chains'
+
 import { setUserWithProvider, userAtom } from './useHappyAccount'
 
 export function useSocialProviders() {

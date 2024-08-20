@@ -1,6 +1,8 @@
-import type { HappyUser } from '@happychain/sdk-shared'
 import { useState } from 'react'
+
+import type { HappyUser } from '@happychain/sdk-shared'
 import type { AddEthereumChainParameter } from 'viem'
+
 import { requestLabels } from '../../constants/requestLabels'
 
 interface SendTransactionProps {
@@ -37,7 +39,7 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
                     </div>
                     <label className="grid">
                         Chain ID
-                        <input className="px-4 py-2 rounded" disabled value={Number(chain.chainId)} />
+                        <input className="rounded px-4 py-2" disabled value={Number(chain.chainId)} />
                     </label>
                     <label className="grid">
                         Network Name
@@ -45,7 +47,7 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
                             onChange={(e) => {
                                 setChain((old) => ({ ...old, chainName: e.target.value }))
                             }}
-                            className="px-4 py-2 rounded"
+                            className="rounded px-4 py-2"
                             value={chain.chainName}
                         />
                     </label>
@@ -55,7 +57,7 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
                             onChange={(e) => {
                                 setChain((old) => ({ ...old, rpcUrls: [e.target.value] }))
                             }}
-                            className="px-4 py-2 rounded"
+                            className="rounded px-4 py-2"
                             value={chain.rpcUrls[0] ?? ''}
                         />
                     </label>
@@ -72,7 +74,7 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
                                     },
                                 }))
                             }}
-                            className="px-4 py-2 rounded"
+                            className="rounded px-4 py-2"
                             value={chain.nativeCurrency?.symbol ?? ''}
                         />
                     </label>
@@ -85,7 +87,7 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
                                     blockExplorerUrls: e.target.value ? [e.target.value] : undefined,
                                 }))
                             }}
-                            className="px-4 py-2 rounded"
+                            className="rounded px-4 py-2"
                             value={chain.blockExplorerUrls?.[0] ?? ''}
                         />
                     </label>

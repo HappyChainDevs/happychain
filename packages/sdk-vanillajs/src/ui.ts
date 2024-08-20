@@ -1,7 +1,7 @@
 import { chains } from '@happychain/sdk-shared'
 import type { AddEthereumChainParameter } from 'viem'
 
-import { findViemChain, publicClient, walletClient } from './viem'
+import { findViemChain, walletClient } from './viem'
 
 const btnStyles =
     'bg-slate-700 p-4 rounded shadow-lg transition hover:shadow-xl hover:bg-slate-600 hover:scale-[103%] active:scale-[98%] active:shadow-sm'.split(
@@ -44,16 +44,13 @@ export function createSwitchChainBtn(chain: AddEthereumChainParameter) {
 }
 
 export async function setActiveChain() {
-    console.log('setting active chain')
     const chainNameText = document.querySelector('#chain-name')
     if (!chainNameText) {
         console.warn('failed to find chain name DOM node')
         return
     }
-    console.log('before')
+
     const chainId = await walletClient.getChainId().then((n) => `0x${n.toString(16)}`)
-    console.log('after')
-    console.log({ chainId })
     const active = Object.values(chains).find((a) => a.chainId === chainId)
     chainNameText.innerHTML = active?.chainName ?? 'unknown'
 }

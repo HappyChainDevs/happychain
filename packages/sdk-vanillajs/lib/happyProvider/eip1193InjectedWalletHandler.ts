@@ -1,8 +1,7 @@
+import type { HappyUser } from '@happychain/sdk-shared'
 import SafeEventEmitter from '@metamask/safe-event-emitter'
 import { createStore } from 'mipd'
 import type { EIP1193RequestFn, EIP1474Methods } from 'viem'
-
-import type { HappyUser } from '@happychain/sdk-shared'
 
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
 

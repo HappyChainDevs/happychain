@@ -5,11 +5,7 @@ export { HappyWalletProvider } from './components/HappyWalletProvider'
 export { useHappyChain } from './hooks/useHappyChain'
 
 // re-export happychain core
-export {
-    happyProvider,
-    onModalUpdate,
-    onUserUpdate,
-} from '@happychain/js'
+export { happyProvider, onModalUpdate, onUserUpdate } from '@happychain/js'
 
 export type {
     // RPC errors

@@ -1,7 +1,6 @@
+import type { config, EIP1193ProxiedEvents, HappyEvents, IEventBus, Logger } from '@happychain/sdk-shared'
 import type SafeEventEmitter from '@metamask/safe-event-emitter'
 import type { EIP1193RequestFn, EIP1474Methods } from 'viem'
-
-import type { EIP1193ProxiedEvents, HappyEvents, IEventBus, Logger, config } from '@happychain/sdk-shared'
 
 export type HappyProviderConfig = Pick<typeof config, 'iframePath'> & {
     logger?: Logger

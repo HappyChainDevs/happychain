@@ -4,6 +4,7 @@ import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
 import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from '@happychain/sdk-shared'
 import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
 import { useAtom, useAtomValue } from 'jotai'
+
 import { happyProviderBus, popupBus } from '../services/eventBus'
 import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
 import { chainsAtom } from '../state/chains'

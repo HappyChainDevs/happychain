@@ -1,14 +1,11 @@
 // eslint-disable-next-line import/no-unresolved
 import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { setTimeout } from 'node:timers/promises'
+
+import type { EIP1193ProxiedEvents, EventBusOptions, HappyEvents } from '@happychain/sdk-shared'
+import { config, EventBus, EventBusChannel, GenericProviderRpcError } from '@happychain/sdk-shared'
 import type { RpcBlock } from 'viem'
 
-import { config } from '@happychain/sdk-shared'
-import type { HappyEvents } from '@happychain/sdk-shared'
-import { EventBus, EventBusChannel, type EventBusOptions } from '@happychain/sdk-shared'
-
-import { GenericProviderRpcError } from '@happychain/sdk-shared'
-import type { EIP1193ProxiedEvents } from '@happychain/sdk-shared'
 import { HappyProvider } from './happyProvider'
 
 const emptyRpcBlock = {

@@ -29,6 +29,8 @@ module.exports = {
             'error',
             {
                 groups: [
+                    // protocol imports.
+                    ['^(node|bun):'],
                     // Side effect imports.
                     ['^\\u0000'],
                     // React & Next packages related packages come first.

@@ -1,7 +1,16 @@
 import { config } from '@happychain/sdk-shared'
+<<<<<<< HEAD
 import { LitElement, css, html } from 'lit'
 import { customElement } from 'lit/decorators.js'
+||||||| parent of 4d7a3f3 (formatting & dead code elimination)
+import { LitElement, css, html } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+=======
+import { css, html, LitElement } from 'lit'
+import { customElement, property, state } from 'lit/decorators.js'
+>>>>>>> 4d7a3f3 (formatting & dead code elimination)
 import { classMap } from 'lit/directives/class-map.js'
+
 import { onModalUpdate, onUserUpdate } from './happyProvider/initialize'
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {

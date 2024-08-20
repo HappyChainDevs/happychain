@@ -1,4 +1,5 @@
 import type { HappyUser } from '@happychain/sdk-shared'
+
 import { requestLabels } from '../../constants/requestLabels'
 
 interface SendTransactionProps {

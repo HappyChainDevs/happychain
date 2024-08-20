@@ -1,4 +1,5 @@
 import { hexToString } from 'viem'
+
 import { requestLabels } from '../../constants/requestLabels'
 
 interface PersonalSignProps {
