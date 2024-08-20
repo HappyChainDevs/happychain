@@ -35,11 +35,22 @@ export type {
     EIP1193RequestResult,
     EIP1193EventName,
     EIP1193ProxiedEvents,
+<<<<<<< HEAD
 } from "./services/eip1193Provider/events"
 export type {
     EIP1193ErrorObject,
     IProviderRpcError,
 } from "./services/eip1193Provider/errors"
+||||||| parent of f2638f7 (formatting & dead code elimination)
+} from './services/eip1193Provider/events'
+export type {
+    EIP1193ErrorObject,
+    IProviderRpcError,
+} from './services/eip1193Provider/errors'
+=======
+} from './services/eip1193Provider/events'
+export type { EIP1193ErrorObject, IProviderRpcError } from './services/eip1193Provider/errors'
+>>>>>>> f2638f7 (formatting & dead code elimination)
 export type {
     EIP6963ProviderInfo,
     EIP6963ProviderDetail,

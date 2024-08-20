@@ -1,7 +1,23 @@
+<<<<<<< HEAD
 import { beforeEach, describe, expect, it, mock } from "bun:test"
 import { setTimeout } from "node:timers/promises"
 import type { RpcBlock } from "viem"
+||||||| parent of f2638f7 (formatting & dead code elimination)
+// eslint-disable-next-line import/no-unresolved
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { setTimeout } from 'node:timers/promises'
+import type { RpcBlock } from 'viem'
+=======
+// eslint-disable-next-line import/no-unresolved
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { setTimeout } from 'node:timers/promises'
 
+import type { EIP1193ProxiedEvents, EventBusOptions, HappyEvents } from '@happychain/sdk-shared'
+import { config, EventBus, EventBusChannel, GenericProviderRpcError } from '@happychain/sdk-shared'
+import type { RpcBlock } from 'viem'
+>>>>>>> f2638f7 (formatting & dead code elimination)
+
+<<<<<<< HEAD
 import { config } from "@happychain/sdk-shared"
 import type { HappyEvents } from "@happychain/sdk-shared"
 import { EventBus, EventBusChannel, type EventBusOptions } from "@happychain/sdk-shared"
@@ -9,6 +25,17 @@ import { EventBus, EventBusChannel, type EventBusOptions } from "@happychain/sdk
 import { GenericProviderRpcError } from "@happychain/sdk-shared"
 import type { EIP1193ProxiedEvents } from "@happychain/sdk-shared"
 import { HappyProvider } from "./happyProvider"
+||||||| parent of f2638f7 (formatting & dead code elimination)
+import { config } from '@happychain/sdk-shared'
+import type { HappyEvents } from '@happychain/sdk-shared'
+import { EventBus, EventBusChannel, type EventBusOptions } from '@happychain/sdk-shared'
+
+import { GenericProviderRpcError } from '@happychain/sdk-shared'
+import type { EIP1193ProxiedEvents } from '@happychain/sdk-shared'
+import { HappyProvider } from './happyProvider'
+=======
+import { HappyProvider } from './happyProvider'
+>>>>>>> f2638f7 (formatting & dead code elimination)
 
 const emptyRpcBlock = {
     baseFeePerGas: null,

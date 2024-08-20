@@ -1,5 +1,6 @@
 import { type AddEthereumChainParameter, createPublicClient, createWalletClient, custom, defineChain } from 'viem'
 import * as viemChainObj from 'viem/chains'
+
 import { happyProvider } from '../lib'
 
 export const publicClient = createPublicClient({ transport: custom(happyProvider) })

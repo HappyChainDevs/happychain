@@ -1,5 +1,4 @@
 import { uuid } from './happyProvider/initialize'
-
 import { HappyWallet } from './happy-wallet'
 
 export type WalletRegisterOptions = {
@@ -29,11 +28,7 @@ export function register(opts?: WalletRegisterOptions) {
 
 export type { HappyProvider } from './happyProvider/happyProvider'
 
-export {
-    onModalUpdate,
-    onUserUpdate,
-    happyProvider,
-} from './happyProvider/initialize'
+export { onModalUpdate, onUserUpdate, happyProvider } from './happyProvider/initialize'
 
 // re-export happychain core
 export { config } from '@happychain/sdk-shared'
@@ -47,26 +42,6 @@ export type {
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
     GenericProviderRpcError,
-    //
-    // ConnectionProvider,
-    // EIP1193ErrorObject,
-    // EIP1193EventName,
-    // EIP1193ProxiedEvents,
-    // EIP1193RequestArg,
-    // EIP1193RequestResult,
-    // EIP6963AnnounceProviderEvent,
-    // EIP6963ProviderDetail,
-    // EIP6963ProviderInfo,
-    // EventBusOptions,
-    // EventHandler,
-    // EventKey,
-    // EventMap,
-    // EventPayload,
-    // EventSchema,
-    // EventUUID,
-    HappyEvents,
+    // User
     HappyUser,
-    // IEventBus,
-    // IProviderRpcError,
-    // Logger,
 } from '@happychain/sdk-shared'

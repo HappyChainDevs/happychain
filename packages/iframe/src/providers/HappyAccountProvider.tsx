@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react"
 
+<<<<<<< HEAD
 import { init as web3AuthInit } from "@happychain/firebase-web3auth-strategy"
 import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared/lib/services/permissions"
@@ -8,6 +9,26 @@ import { happyProviderBus, popupBus } from "../services/eventBus"
 import { providerAtom, publicClientAtom, walletClientAtom } from "../services/provider"
 import { chainsAtom } from "../state/chains"
 import { isAddChainParams } from "../utils/isAddChainParam"
+||||||| parent of f2638f7 (formatting & dead code elimination)
+import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
+import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from '@happychain/sdk-shared'
+import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
+import { useAtom, useAtomValue } from 'jotai'
+import { happyProviderBus, popupBus } from '../services/eventBus'
+import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
+import { chainsAtom } from '../state/chains'
+import { isAddChainParams } from '../utils/isAddChainParam'
+=======
+import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
+import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from '@happychain/sdk-shared'
+import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
+import { useAtom, useAtomValue } from 'jotai'
+
+import { happyProviderBus, popupBus } from '../services/eventBus'
+import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
+import { chainsAtom } from '../state/chains'
+import { isAddChainParams } from '../utils/isAddChainParam'
+>>>>>>> f2638f7 (formatting & dead code elimination)
 
 const iframeUUID = new URLSearchParams(window.location.search).get("uuid")
 

@@ -1,5 +1,6 @@
 import type { EIP1193ProxiedEvents, HappyEvents } from '@happychain/sdk-shared'
-import { EventBus, EventBusChannel, config } from '@happychain/sdk-shared'
+import { config, EventBus, EventBusChannel } from '@happychain/sdk-shared'
+
 import { HappyProvider } from './happyProvider'
 import { registerListeners } from './listeners'
 
