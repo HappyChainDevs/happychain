@@ -74,7 +74,7 @@ deploy:
 
 # Run tests
 test:
-	cd packages/sdk-shared && make test
+	cd packages/sdk-vanillajs && make test
 .PHONY: test
 
 # Performs code-quality checks.
