@@ -1,7 +1,12 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react"
 
 import { init as web3AuthInit } from "@happychain/firebase-web3auth-strategy"
-import { type EIP1193EventName, type EIP1193ProxiedEvents, logger } from "@happychain/sdk-shared"
+import {
+    type EIP1193EventName,
+    type EIP1193ProxiedEvents,
+    getEIP1193ErrorObjectFromUnknown,
+    logger,
+} from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared/lib/services/permissions"
 import { useAtom, useAtomValue } from "jotai"
 
@@ -116,8 +121,12 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
                     payload: result,
                 })
             } catch (e) {
-                console.error(e)
-                console.error("error executing request", data)
+                happyProviderBus.emit("response:complete", {
+                    key: data.key,
+                    uuid: data.uuid,
+                    error: getEIP1193ErrorObjectFromUnknown(e),
+                    payload: null,
+                })
             }
         })
         const offReject = popupBus.on("request:reject", (data) => {
@@ -156,8 +165,12 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
                     payload: result,
                 })
             } catch (e) {
-                console.error(e)
-                console.error("error executing request", data)
+                happyProviderBus.emit("response:complete", {
+                    key: data.key,
+                    uuid: data.uuid,
+                    error: getEIP1193ErrorObjectFromUnknown(e),
+                    payload: null,
+                })
             }
         })
         return () => {

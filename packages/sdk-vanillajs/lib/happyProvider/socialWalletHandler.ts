@@ -109,7 +109,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
             reject(
                 new GenericProviderRpcError({
                     code: data.error.code,
-                    message: "",
+                    message: data.error.message,
                     data: data.error.data,
                 }),
             )
