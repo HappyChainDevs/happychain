@@ -1,4 +1,18 @@
-import type { ProviderRpcErrorCode } from "viem"
+import type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
+
+import {
+    ChainDisconnectedError,
+    ProviderDisconnectedError,
+    SwitchChainError,
+    UnauthorizedProviderError,
+    UnsupportedProviderMethodError,
+    UserRejectedRequestError,
+} from "viem"
+
+/**
+ * We will use -1 to signify unknown error typews
+ */
+type ProviderRpcErrorCode = ViemProviderRpcErrorCode | -1
 
 /**
  * Error Object is used to transmit error messages
@@ -26,13 +40,19 @@ export interface IProviderRpcError extends Error {
  * General Purpose Provider RPC error.
  * Can be instantiated from the deserialized ErrorObject
  */
-export class GenericProviderRpcError extends Error implements IProviderRpcError {
+export class GenericProviderRpcError extends Error {
     code: ProviderRpcErrorCode
     data?: unknown
     constructor(errObj: EIP1193ErrorObject) {
         super(errObj.message)
         this.code = errObj.code
         this.data = errObj.data
+
+        // as the iframe error is thrown from within the iframe
+        // the stack trace is not particularly helpful here.
+        // and just exposes the workings of the internal
+        // events system.
+        this.stack = undefined
     }
 }
 
@@ -40,57 +60,107 @@ export class GenericProviderRpcError extends Error implements IProviderRpcError 
  * EIP1193 Specific Errors
  */
 export class EIP1193UserRejectedRequestError extends GenericProviderRpcError {
-    constructor() {
+    constructor(errObj?: EIP1193ErrorObject) {
         super({
             code: 4001,
-            data: "User Rejected Request",
-            message: "User Rejected Request",
+            message: errObj?.message || "User Rejected Request",
+            data: errObj?.data || "User Rejected Request",
         })
     }
 }
 
 export class EIP1193UnauthorizedError extends GenericProviderRpcError {
-    constructor() {
+    constructor(errObj?: EIP1193ErrorObject) {
         super({
             code: 4100,
-            data: "Unauthorized",
-            message: "Unauthorized",
+            message: errObj?.message || "Unauthorized",
+            data: errObj?.data || "Unauthorized",
         })
     }
 }
 export class EIP1193UnsupportedMethodError extends GenericProviderRpcError {
-    constructor() {
+    constructor(errObj?: EIP1193ErrorObject) {
         super({
             code: 4200,
-            data: "Unsupported Method",
-            message: "Unsupported Method",
+            message: errObj?.message || "Unsupported Method",
+            data: errObj?.data || "Unsupported Method",
         })
     }
 }
 export class EIP1193DisconnectedError extends GenericProviderRpcError {
-    constructor() {
+    constructor(errObj?: EIP1193ErrorObject) {
         super({
             code: 4900,
-            data: "Disconnected",
-            message: "Disconnected",
+            message: errObj?.message || "Disconnected",
+            data: errObj?.data || "Disconnected",
         })
     }
 }
 export class EIP1193ChainDisconnectedError extends GenericProviderRpcError {
-    constructor() {
+    constructor(errObj?: EIP1193ErrorObject) {
         super({
             code: 4901,
-            data: "Chain Disconnected",
-            message: "Chain Disconnected",
+            message: errObj?.message || "Chain Disconnected",
+            data: errObj?.data || "Chain Disconnected",
         })
     }
 }
 export class EIP1193ChainNotRecognizedError extends GenericProviderRpcError {
-    constructor() {
+    constructor(errObj?: EIP1193ErrorObject) {
         super({
             code: 4902,
-            data: "Chain Not Recognized",
-            message: "Chain Not Recognized",
+            message: errObj?.message || "Chain Not Recognized",
+            data: errObj?.data || "Chain Not Recognized",
         })
+    }
+}
+
+export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorObject {
+    if (!error || typeof error !== "object") {
+        return { code: -1, message: "An unknown RPC error occurred." }
+    }
+    if (error instanceof UserRejectedRequestError) {
+        return { code: 4001, message: "The user rejected the request.", data: error.details }
+    }
+    if (error instanceof UnauthorizedProviderError) {
+        return {
+            code: 4100,
+            message: "The requested method and/or account has not been authorized by the user.",
+            data: error.details,
+        }
+    }
+    if (error instanceof UnsupportedProviderMethodError) {
+        return { code: 4200, message: "The Provider does not support the requested method.", data: error.details }
+    }
+    if (error instanceof ProviderDisconnectedError) {
+        return { code: 4900, message: "The Provider is disconnected from all chains.", data: error.details }
+    }
+    if (error instanceof ChainDisconnectedError) {
+        return { code: 4901, message: "The Provider is not connected to the requested chain.", data: error.details }
+    }
+    if (error instanceof SwitchChainError) {
+        return { code: 4902, message: "An error occurred when attempting to switch chain.", data: error.details }
+    }
+
+    const data = "details" in error ? error.details : "shortMessage" in error ? error.shortMessage : ""
+    return { code: -1, message: "An unknown RPC error occurred.", data }
+}
+
+export function convertErrorObjectToEIP1193ErrorInstance(error: EIP1193ErrorObject) {
+    switch (error.code) {
+        case 4001:
+            return new EIP1193UserRejectedRequestError(error as EIP1193ErrorObject)
+        case 4100:
+            return new EIP1193UnauthorizedError(error as EIP1193ErrorObject)
+        case 4200:
+            return new EIP1193UnsupportedMethodError(error as EIP1193ErrorObject)
+        case 4900:
+            return new EIP1193DisconnectedError(error as EIP1193ErrorObject)
+        case 4901:
+            return new EIP1193ChainDisconnectedError(error as EIP1193ErrorObject)
+        case 4902:
+            return new EIP1193ChainNotRecognizedError(error as EIP1193ErrorObject)
+        default:
+            return new GenericProviderRpcError(error)
     }
 }

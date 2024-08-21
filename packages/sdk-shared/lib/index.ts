@@ -14,6 +14,7 @@ export {
     EIP1193DisconnectedError,
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
+    getEIP1193ErrorObjectFromUnknown,
 } from "./services/eip1193Provider/errors"
 
 /** Types */

@@ -26,6 +26,7 @@ export function createAddChainBtn(chain: AddEthereumChainParameter) {
 
     return addBtn
 }
+1
 
 export function createSwitchChainBtn(chain: AddEthereumChainParameter) {
     const btn = document.createElement('button')
