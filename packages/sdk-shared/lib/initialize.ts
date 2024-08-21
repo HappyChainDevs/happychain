@@ -1,8 +1,8 @@
-import { config } from './config'
 import type { HappyEvents } from './interfaces/events'
 import type { HappyUser } from './interfaces/happyUser'
 import { type EIP1193ProxiedEvents, HappyProvider } from './services/eip1193ProviderProxy'
 import { EventBus, EventBusChannel } from './services/eventBus'
+import { config } from './config'
 
 export const uuid = crypto.randomUUID()
 

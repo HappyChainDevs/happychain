@@ -1,6 +1,6 @@
 import { config, onModalUpdate, onUserUpdate } from '@happychain/sdk-shared'
-import { LitElement, css, html } from 'lit'
-import { customElement, property, state } from 'lit/decorators.js'
+import { css, html, LitElement } from 'lit'
+import { customElement } from 'lit/decorators.js'
 import { classMap } from 'lit/directives/class-map.js'
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
@@ -9,18 +9,20 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
 
 @customElement('happy-wallet')
 export class HappyWallet extends LitElement {
-    @state()
-    classes = {
+    static properties = {
+        _classes: { state: true },
+        'rpc-url': { state: false },
+        'chain-id': { state: false },
+    }
+
+    _classes = {
         open: false,
         closed: true,
         connected: false,
         disconnected: true,
     }
 
-    @property({ type: String })
     'rpc-url': string | undefined
-
-    @property({ type: String })
     chainId: string | undefined
 
     constructor(private uuid: ReturnType<typeof crypto.randomUUID>) {
@@ -31,14 +33,14 @@ export class HappyWallet extends LitElement {
         super.connectedCallback()
 
         onUserUpdate((user) => {
-            this.classes.connected = Boolean(user)
-            this.classes.disconnected = !user
+            this._classes.connected = Boolean(user)
+            this._classes.disconnected = !user
             this.requestUpdate()
         })
 
         onModalUpdate((isOpen) => {
-            this.classes.open = isOpen
-            this.classes.closed = !isOpen
+            this._classes.open = isOpen
+            this._classes.closed = !isOpen
             this.requestUpdate()
         })
     }
@@ -58,7 +60,7 @@ export class HappyWallet extends LitElement {
             <iframe
                 title="happy-iframe"
                 src="${url.href}?${searchParams}"
-                class=${classMap(this.classes)}
+                class=${classMap(this._classes)}
                 style="border: none;"
             />
         `

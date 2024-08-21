@@ -3,9 +3,8 @@ dev:
 .PHONY: dev
 
 build:
-	pnpm vite build
+	pnpm tsc -b && pnpm vite build
 .PHONY: build
-
 
 build.watch:
 	pnpm vite build --watch
@@ -14,5 +13,3 @@ build.watch:
 preview:
 	pnpm vite preview
 .PHONY: preview
-
-include ../../makefiles/formatting.mk
