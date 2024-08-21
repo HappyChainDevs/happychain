@@ -11,7 +11,7 @@
         "vocs": "latest"
     },
     "devDependencies": {
-        "@happychain/configs": "workspace:^",
+        "@happychain/typescript-config": "workspace:^",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
         "ethers": "^6.13.2",

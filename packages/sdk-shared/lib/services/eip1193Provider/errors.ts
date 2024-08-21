@@ -1,5 +1,4 @@
 import type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
-
 import {
     ChainDisconnectedError,
     ProviderDisconnectedError,
