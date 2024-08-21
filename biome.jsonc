@@ -1,11 +1,11 @@
 {
-	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-	"extends": ["./packages/configs/biome.jsonc"],
-	"files": {
-		"ignore": [
-			// packages will manage their own configs
-			"./.pnpm-store",
-			"./packages"
-		]
-	}
+    "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["./packages/configs/biome.jsonc"],
+    "files": {
+        "ignore": [
+            // packages will manage their own configs
+            "./.pnpm-store",
+            "./packages"
+        ]
+    }
 }
