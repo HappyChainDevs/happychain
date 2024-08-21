@@ -1,8 +1,0 @@
-{
-    "name": "@happychain/typescript-config",
-    "version": "0.0.0",
-    "private": true,
-    "devDependencies": {
-        "@happychain/prettier-config": "workspace:^"
-    }
-}

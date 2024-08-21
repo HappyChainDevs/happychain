@@ -127,22 +127,11 @@ demo-vanilla:
 	make -j 2 iframe-dev demo-vanilla-dev
 .PHONY: demo-vanilla
 
-# quick check using biome
-# Not a perfect 1:1 of eslint/prettier, but very close and much faster
-check-fast:
-	pnpm biome check ./
-.PHONT: check-fast
-
 # quickly format change files between <your branch> and master
+# using default global settings
 format-fast-diff:
 	pnpm biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH))) --write
 .PHONY: format-fast-diff
-
-# quick format using biome
-# Not a perfect 1:1 of eslint/prettier, but very close and much faster
-format-fast:
-	bunx @biomejs/biome check ./ --write
-.PHONT: format-fast
 
 # ==================================================================================================
 # IMPLEMENTATION DETAILS
