@@ -1,6 +1,6 @@
 import { atom } from 'jotai'
 import type { CustomTransport, EIP1193Provider, HttpTransport, ParseAccount, WalletClient } from 'viem'
-import { createPublicClient, createWalletClient, custom, http } from 'viem'
+import { http, createPublicClient, createWalletClient, custom } from 'viem'
 
 import { userAtom } from '../hooks/useHappyAccount'
 
