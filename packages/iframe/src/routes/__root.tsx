@@ -1,7 +1,7 @@
 // import { useIsHydrated } from "@happychain/common";
 import { lazy } from 'react'
 
-import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { createRootRoute, Outlet } from '@tanstack/react-router'
 // import { JotaiDebug } from "../components/JotaiDebug";
 
 const inProduction = import.meta.env.MODE === 'production'
