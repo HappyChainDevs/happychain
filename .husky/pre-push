@@ -1,1 +1,1 @@
-make format
+make -s format

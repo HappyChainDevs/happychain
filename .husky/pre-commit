@@ -1,1 +1,1 @@
-make format-fast-diff
+make -s format-fast-diff
