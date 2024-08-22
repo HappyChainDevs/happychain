@@ -12,9 +12,18 @@
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
+        "@types/bun": "^1.1.6",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
+        "@zamiell/typedoc-plugin-not-exported": "^0.3.0",
         "ethers": "^6.13.2",
+        "remark-link-rewrite": "^1.0.7",
+        "typedoc": "^0.26.6",
+        "typedoc-plugin-extras": "^3.1.0",
+        "typedoc-plugin-markdown": "^4.2.5",
+        "typedoc-plugin-mdn-links": "^3.2.9",
+        "typedoc-plugin-remark": "^1.0.3",
+        "typedoc-plugin-zod": "^1.2.1",
         "viem": "^2.18.4",
         "web3": "^4.11.1"
     }
