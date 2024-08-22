@@ -9,6 +9,9 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }
 }
 
+/**
+ * {@link !HTMLElement}
+ */
 @customElement("happy-wallet")
 export class HappyWallet extends LitElement {
     @state()
@@ -102,6 +105,7 @@ export class HappyWallet extends LitElement {
         }
     `
 }
+
 declare global {
     interface HTMLElementTagNameMap {
         "happy-wallet": HappyWallet

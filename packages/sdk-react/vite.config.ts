@@ -13,11 +13,10 @@ export default defineConfig({
             fileName: (format) => `index.${format}.js`,
         },
         rollupOptions: {
-            external: ["react", "@happychain/js", "react-dom"],
+            external: ["react", "react-dom"],
             output: {
                 globals: {
                     react: "React",
-                    "@happychain/js": "HappyChain",
                     "react-dom": "ReactDOM",
                 },
             },
@@ -25,12 +24,6 @@ export default defineConfig({
         copyPublicDir: false,
         sourcemap: true,
         emptyOutDir: true,
-    },
-
-    resolve: {
-        alias: {
-            // '@happychain/js': resolve('../sdk-vanillajs/lib/main.ts'),
-        },
     },
 
     plugins: [

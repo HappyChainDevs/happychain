@@ -6,6 +6,7 @@ export { permissionsLists, requiresApproval } from "./services/permissions"
 export * as chains from "./chains"
 
 export { EventBus, EventBusChannel } from "./services/eventBus"
+
 export {
     GenericProviderRpcError,
     EIP1193UserRejectedRequestError,
@@ -18,6 +19,7 @@ export {
 } from "./services/eip1193Provider/errors"
 
 /** Types */
+export type { UserUpdateCallback, ModalUpdateCallback } from "./initialize"
 export type { HappyEvents } from "./interfaces/events"
 export type { HappyUser } from "./interfaces/happyUser"
 export type { Logger } from "./services/logger"
