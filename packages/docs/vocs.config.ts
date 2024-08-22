@@ -1,6 +1,7 @@
 import { defineConfig } from "vocs"
 
 export default defineConfig({
+    rootDir: "docs",
     title: "HappyChain SDK",
     socials: [
         {
@@ -22,7 +23,7 @@ export default defineConfig({
                 },
                 {
                     text: "API Reference",
-                    link: "/js/api-reference",
+                    link: "/js/api",
                 },
             ],
         },
@@ -35,7 +36,7 @@ export default defineConfig({
                 },
                 {
                     text: "API Reference",
-                    link: "/react/api-reference",
+                    link: "/react/api",
                 },
             ],
         },

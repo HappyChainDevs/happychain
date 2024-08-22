@@ -47,3 +47,10 @@ packages/frontend/src/generated.ts
 *.njsproj
 *.sln
 *.sw?
+
+# Vocs bunild artifacts
+*.config.ts.timestamp-*
+
+# Typedoc generated api reference.
+# Ignored to discourage manual editing
+packages/docs/docs/pages/*/api

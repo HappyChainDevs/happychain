@@ -13,7 +13,7 @@ console.log("HappyChain User: ", user)
 
 // [!region getCurrentUserExample]
 const doSomethingWithUser = (user?: HappyUser) => {
-    console.log("User is:", user)
+    console.log("HappyChain User: ", user)
 }
 
 doSomethingWithUser(getCurrentUser())
