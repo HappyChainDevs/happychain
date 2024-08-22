@@ -83,7 +83,7 @@ export default {
         [
             'remark-link-rewrite',
             // remove .mdx from generated typedoc links
-            { replacer: url => url.replace(/\.mdx$/, '') },
+            { replacer: (url) => url.replace(/\.mdx$/, '') },
         ],
     ],
 }
