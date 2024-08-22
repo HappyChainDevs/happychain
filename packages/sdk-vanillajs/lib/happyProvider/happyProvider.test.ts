@@ -126,8 +126,8 @@ describe("HappyProvider", () => {
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
-            uuid,
             providerBus: happyProviderBusProviderProxy,
+            uuid,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),

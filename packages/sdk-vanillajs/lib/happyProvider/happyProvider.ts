@@ -5,6 +5,20 @@ import { InjectedWalletHandler } from "./injectedWalletHandler"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 import { SocialWalletHandler } from "./socialWalletHandler"
 
+/**
+ * HappyProvider is a EIP1193 Ethereum Provider {@link https://eips.ethereum.org/EIPS/eip-1193}
+ *
+ * @example
+ * ### Setting up viem client
+ * ```ts twoslash
+ * import { createPublicClient, custom } from 'viem'
+ * import { happyProvider } from '@happychain/js'
+ * // ---cut---
+ * const publicClient = createPublicClient({
+ *   transport: custom(happyProvider)
+ * })
+ * ```
+ */
 export class HappyProvider extends SafeEventEmitter implements EIP1193Provider {
     private injectedWalletHandler: EIP1193ConnectionHandler
     private socialWalletHandler: EIP1193ConnectionHandler
