@@ -1,14 +1,17 @@
-/** Components */
+/** React Components */
 export { HappyWalletProvider } from "./components/HappyWalletProvider"
 
-/** Hooks */
+/** React Hooks */
 export { useHappyChain } from "./hooks/useHappyChain"
 
-// re-export happychain core
+// re-export from happychain core
 export { happyProvider, onModalUpdate, onUserUpdate, getCurrentUser } from "@happychain/js"
 
 export type {
-    // RPC errors
+    // Happy Types
+    HappyProvider,
+    HappyUser,
+    // RPC Errors
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
     EIP1193DisconnectedError,
@@ -16,7 +19,4 @@ export type {
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
     GenericProviderRpcError,
-    //
-    HappyProvider,
-    HappyUser,
 } from "@happychain/js"

@@ -1,4 +1,4 @@
-import { getCurrentUser, onUserUpdate } from "@happychain/js"
+import { type HappyUser, getCurrentUser, onUserUpdate } from "@happychain/js"
 
 // [!region onUserUpdate]
 onUserUpdate((user) => {
@@ -10,3 +10,12 @@ onUserUpdate((user) => {
 const user = getCurrentUser()
 console.log("HappyChain User: ", user)
 // [!endregion getCurrentUser]
+
+// [!region getCurrentUserExample]
+const doSomethingWithUser = (user?: HappyUser) => {
+    console.log("User is:", user)
+}
+
+doSomethingWithUser(getCurrentUser())
+onUserUpdate(doSomethingWithUser)
+// [!endregion getCurrentUserExample]

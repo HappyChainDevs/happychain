@@ -99,3 +99,11 @@ import { getCurrentUser } from '@happychain/js'
 
 // [!include ~/snippets/listeners.ts:getCurrentUser]
 ```
+
+`onUserUpdate` only fires whenever the user changes, so if you want to have something depend on the current user, you should write your code as follows:
+
+```ts twoslash
+import { type HappyUser, getCurrentUser, onUserUpdate } from `@happychain/js`
+
+// [!include ~/snippets/listeners.ts:getCurrentUserExample]
+```
