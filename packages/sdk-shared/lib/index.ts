@@ -1,7 +1,7 @@
-export { config } from './config'
-export { logger } from './services/logger'
-export { onUserUpdate, onModalUpdate, happyProvider, uuid } from './initialize'
-export { EventBus, EventBusChannel } from './services/eventBus'
+export { config } from "./config"
+export { logger } from "./services/logger"
+export { onUserUpdate, onModalUpdate, happyProvider, uuid } from "./initialize"
+export { EventBus, EventBusChannel } from "./services/eventBus"
 export {
     HappyProvider,
     GenericProviderRpcError,
@@ -11,12 +11,12 @@ export {
     EIP1193DisconnectedError,
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
-} from './services/eip1193ProviderProxy'
+} from "./services/eip1193ProviderProxy"
 
 /** Types */
-export type { HappyEvents } from './interfaces/events'
-export type { HappyUser } from './interfaces/happyUser'
-export type { Logger } from './services/logger'
+export type { HappyEvents } from "./interfaces/events"
+export type { HappyUser } from "./interfaces/happyUser"
+export type { Logger } from "./services/logger"
 export type {
     EventPayload,
     EventKey,
@@ -25,7 +25,7 @@ export type {
     EventMap,
     IEventBus,
     EventBusOptions,
-} from './services/eventBus'
+} from "./services/eventBus"
 export type {
     EIP1193ErrorObject,
     IProviderRpcError,
@@ -34,10 +34,10 @@ export type {
     EIP1193RequestResult,
     EIP1193EventName,
     EIP1193ProxiedEvents,
-} from './services/eip1193ProviderProxy'
+} from "./services/eip1193ProviderProxy"
 export type {
     EIP6963ProviderInfo,
     EIP6963ProviderDetail,
     EIP6963AnnounceProviderEvent,
     ConnectionProvider,
-} from './interfaces/eip1193Provider'
+} from "./interfaces/eip1193Provider"

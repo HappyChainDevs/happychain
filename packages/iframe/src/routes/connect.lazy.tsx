@@ -1,17 +1,17 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from "react"
 
-import { createLazyFileRoute } from '@tanstack/react-router'
-import { useAtomValue } from 'jotai'
+import { createLazyFileRoute } from "@tanstack/react-router"
+import { useAtomValue } from "jotai"
 
-import { ConnectButton } from '../components/ConnectButton'
-import { DotLinearMotionBlurLoader } from '../components/loaders/DotLinearMotionBlurLoader'
-import { useHappyAccount } from '../hooks/useHappyAccount'
-import { useInjectedProviders } from '../hooks/useInjectedProviders'
-import { useSocialProviders } from '../hooks/useSocialProviders'
-import { dappMessageBus } from '../services/eventBus'
-import { AuthState, authStateAtom } from '../state/app'
+import { ConnectButton } from "../components/ConnectButton"
+import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
+import { useHappyAccount } from "../hooks/useHappyAccount"
+import { useInjectedProviders } from "../hooks/useInjectedProviders"
+import { useSocialProviders } from "../hooks/useSocialProviders"
+import { dappMessageBus } from "../services/eventBus"
+import { AuthState, authStateAtom } from "../state/app"
 
-export const Route = createLazyFileRoute('/connect')({
+export const Route = createLazyFileRoute("/connect")({
     component: Connect,
 })
 
@@ -33,13 +33,13 @@ function Connect() {
     }
 
     function open() {
-        dappMessageBus.emit('modal-toggle', true)
+        dappMessageBus.emit("modal-toggle", true)
         setIsOpen(true)
     }
 
     function close() {
         setIsOpen(false)
-        dappMessageBus.emit('modal-toggle', false)
+        dappMessageBus.emit("modal-toggle", false)
     }
 
     if (authState === AuthState.Loading) {

@@ -1,14 +1,14 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import React from "react"
+import ReactDOM from "react-dom/client"
 
-import { HappyWalletProvider } from '@happychain/react'
+import { HappyWalletProvider } from "@happychain/react"
 
-import App from './App.tsx'
+import App from "./App.tsx"
 
-import './index.css'
+import "./index.css"
 
 // biome-ignore lint/style/noNonNullAssertion: vite boilerplate
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <HappyWalletProvider>
             <App />

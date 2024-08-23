@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { initializeApp } from "firebase/app"
+import { getAuth } from "firebase/auth"
 
 // See: https://firebase.google.com/docs/web/learn-more#config-object
 

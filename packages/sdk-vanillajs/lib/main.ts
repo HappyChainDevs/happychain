@@ -1,11 +1,11 @@
-import { uuid } from '@happychain/sdk-shared'
+import { uuid } from "@happychain/sdk-shared"
 
-import { HappyWallet } from './happy-wallet'
+import { HappyWallet } from "./happy-wallet"
 
 export { HappyWallet }
 
 export function register() {
-    if (document.querySelector('happy-wallet')) {
+    if (document.querySelector("happy-wallet")) {
         // don't register if already exists on page
         return
     }
@@ -30,7 +30,7 @@ export {
     logger,
     onModalUpdate,
     onUserUpdate,
-} from '@happychain/sdk-shared'
+} from "@happychain/sdk-shared"
 
 export type {
     ConnectionProvider,
@@ -54,4 +54,4 @@ export type {
     IEventBus,
     IProviderRpcError,
     Logger,
-} from '@happychain/sdk-shared'
+} from "@happychain/sdk-shared"

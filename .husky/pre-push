@@ -1,1 +1,6 @@
-make --silent format
+# 'check' here instead of 'format', so that if
+# there are formatting issues, it stops the push.
+# if we 'format', then it formats everything successfully 
+# but doesn't commit the changes before pushing up.
+# CI fails, and you have uncommitted changes locally :(
+make --silent check

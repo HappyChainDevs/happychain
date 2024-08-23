@@ -1,9 +1,9 @@
-import { type PropsWithChildren, useEffect, useState } from 'react'
+import { type PropsWithChildren, useEffect, useState } from "react"
 
-import type { HappyUser } from '@happychain/js'
-import { onUserUpdate, register } from '@happychain/js'
+import type { HappyUser } from "@happychain/js"
+import { onUserUpdate, register } from "@happychain/js"
 
-import { HappyContext } from './HappyContext'
+import { HappyContext } from "./HappyContext"
 
 let initialUser: HappyUser | undefined
 

@@ -1,15 +1,15 @@
-import daisyui from 'daisyui'
-import type { Config } from 'tailwindcss'
+import daisyui from "daisyui"
+import type { Config } from "tailwindcss"
 
 export default {
-    content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+    content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
     theme: {
         extend: {},
     },
     plugins: [daisyui],
-    darkMode: ['class', '[data-theme="night"]'],
+    darkMode: ["class", '[data-theme="night"]'],
     daisyui: {
         logs: false,
-        themes: ['winter', 'night'],
+        themes: ["winter", "night"],
     },
 } satisfies Config

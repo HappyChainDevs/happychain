@@ -1,18 +1,18 @@
-import { config, onModalUpdate, onUserUpdate } from '@happychain/sdk-shared'
-import { LitElement, css, html } from 'lit'
-import { customElement } from 'lit/decorators.js'
-import { classMap } from 'lit/directives/class-map.js'
+import { config, onModalUpdate, onUserUpdate } from "@happychain/sdk-shared"
+import { LitElement, css, html } from "lit"
+import { customElement } from "lit/decorators.js"
+import { classMap } from "lit/directives/class-map.js"
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }
 }
 
-@customElement('happy-wallet')
+@customElement("happy-wallet")
 export class HappyWallet extends LitElement {
     static properties = {
         _classes: { state: true },
-        'rpc-url': { state: false },
-        'chain-id': { state: false },
+        "rpc-url": { state: false },
+        "chain-id": { state: false },
     }
 
     _classes = {
@@ -22,7 +22,7 @@ export class HappyWallet extends LitElement {
         disconnected: true,
     }
 
-    'rpc-url': string | undefined
+    "rpc-url": string | undefined
     chainId: string | undefined
 
     constructor(private uuid: ReturnType<typeof crypto.randomUUID>) {
@@ -46,13 +46,13 @@ export class HappyWallet extends LitElement {
     }
 
     render() {
-        const url = new URL('connect', config.iframePath)
+        const url = new URL("connect", config.iframePath)
 
         const searchParams = new URLSearchParams(
             filterUndefinedValues({
                 uuid: this.uuid,
-                'chain:chainId': this.chainId,
-                'chain:rpcUrls': this['rpc-url'],
+                "chain:chainId": this.chainId,
+                "chain:rpcUrls": this["rpc-url"],
             }),
         ).toString()
 
@@ -104,6 +104,6 @@ export class HappyWallet extends LitElement {
 }
 declare global {
     interface HTMLElementTagNameMap {
-        'happy-wallet': HappyWallet
+        "happy-wallet": HappyWallet
     }
 }

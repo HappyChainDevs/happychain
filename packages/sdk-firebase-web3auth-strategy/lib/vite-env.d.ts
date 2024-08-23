@@ -15,8 +15,8 @@ interface ImportMetaEnv {
      * Web3Auth Setup
      */
     readonly VITE_WEB3AUTH_CLIENT_ID: string
-    readonly VITE_WEB3AUTH_NETWORK: 'sapphire_mainnet' | 'sapphire_devnet'
-    readonly VITE_WEB3AUTH_CHAIN_NAMESPACE: 'eip155' | 'solana' | 'casper' | 'xrpl' | 'other'
+    readonly VITE_WEB3AUTH_NETWORK: "sapphire_mainnet" | "sapphire_devnet"
+    readonly VITE_WEB3AUTH_CHAIN_NAMESPACE: "eip155" | "solana" | "casper" | "xrpl" | "other"
     readonly VITE_WEB3AUTH_CHAIN_ID: string
     readonly VITE_WEB3AUTH_CHAIN_RPC: string
     readonly VITE_WEB3AUTH_CHAIN_DISPLAYNAME: string

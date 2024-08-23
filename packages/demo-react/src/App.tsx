@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from "react"
 
-import { useHappyChain } from '@happychain/react'
-import { createPublicClient, createWalletClient, custom } from 'viem'
+import { useHappyChain } from "@happychain/react"
+import { createPublicClient, createWalletClient, custom } from "viem"
 
 function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
@@ -17,10 +17,10 @@ function App() {
 
     async function signMessage(message: string) {
         if (!user || !walletClient) {
-            alert('no user connected')
+            alert("no user connected")
             return
         }
-        setSignatureResult('')
+        setSignatureResult("")
 
         const signature = await walletClient.signMessage({ message })
 
@@ -42,7 +42,7 @@ function App() {
 
     useEffect(() => {
         if (!user) {
-            setSignatureResult('')
+            setSignatureResult("")
             setBlockResult(null)
         }
     }, [user])
@@ -58,7 +58,7 @@ function App() {
 
             <button
                 type="button"
-                onClick={() => signMessage('Hello, World!')}
+                onClick={() => signMessage("Hello, World!")}
                 className="rounded-lg bg-sky-300 p-2 shadow-xl"
             >
                 Sign Message
@@ -74,7 +74,7 @@ function App() {
             </button>
             <div className="w-96 overflow-auto bg-gray-200 p-4">
                 <p className="text-lg font-bold">Results:</p>
-                <pre>{JSON.stringify(blockResult, (_, v) => (typeof v === 'bigint' ? v.toString() : v), 2)}</pre>
+                <pre>{JSON.stringify(blockResult, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2)}</pre>
             </div>
         </main>
     )

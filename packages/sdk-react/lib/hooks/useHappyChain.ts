@@ -1,9 +1,9 @@
-import { useContext } from 'react'
+import { useContext } from "react"
 
-import type { HappyProvider, HappyUser } from '@happychain/js'
-import { happyProvider } from '@happychain/js'
+import type { HappyProvider, HappyUser } from "@happychain/js"
+import { happyProvider } from "@happychain/js"
 
-import { HappyContext } from '../components/HappyContext'
+import { HappyContext } from "../components/HappyContext"
 
 export function useHappyChain(): {
     provider: HappyProvider

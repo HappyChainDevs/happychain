@@ -1,40 +1,40 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from "react"
 
 import type {
     ConnectionProvider,
     EIP6963AnnounceProviderEvent,
     EIP6963ProviderDetail,
     HappyUser,
-} from '@happychain/sdk-shared'
-import { useSetAtom } from 'jotai'
+} from "@happychain/sdk-shared"
+import { useSetAtom } from "jotai"
 
-import { dappMessageBus } from '../services/eventBus'
-import { storage } from '../services/storage'
-import { AuthState, authStateAtom } from '../state/app'
+import { dappMessageBus } from "../services/eventBus"
+import { storage } from "../services/storage"
+import { AuthState, authStateAtom } from "../state/app"
 
-import { setUserWithProvider } from './useHappyAccount'
+import { setUserWithProvider } from "./useHappyAccount"
 
 function isEip6963Event(evt: Event): evt is EIP6963AnnounceProviderEvent {
     return Boolean(
-        typeof evt === 'object' &&
-            'detail' in evt &&
-            typeof evt.detail === 'object' &&
+        typeof evt === "object" &&
+            "detail" in evt &&
+            typeof evt.detail === "object" &&
             evt.detail &&
-            'info' in evt.detail &&
-            'provider' in evt.detail,
+            "info" in evt.detail &&
+            "provider" in evt.detail,
     )
 }
 
 type ProviderMap = Map<string, EIP6963ProviderDetail>
 
 const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
-    dappMessageBus.emit('wallet-connect:request', eip1193Provider.info.rdns)
+    dappMessageBus.emit("wallet-connect:request", eip1193Provider.info.rdns)
 }
 
 const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
     const past = ((): HappyUser | undefined => {
         try {
-            const stored = localStorage.getItem('happychain:cached-user')
+            const stored = localStorage.getItem("happychain:cached-user")
             return stored ? JSON.parse(stored) : undefined
         } catch {
             return
@@ -42,7 +42,7 @@ const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
     })()
 
     if (past?.provider === eip1193Provider.info.rdns) {
-        dappMessageBus.emit('wallet-disconnect:request', undefined)
+        dappMessageBus.emit("wallet-disconnect:request", undefined)
         setUserWithProvider(undefined, undefined)
     }
 }
@@ -53,7 +53,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
     const [injectedProviders, setInjectedProviders] = useState<ProviderMap>(new Map())
 
     useEffect(() => {
-        return dappMessageBus.on('wallet-connect:response', ({ user }) => {
+        return dappMessageBus.on("wallet-connect:response", ({ user }) => {
             setUserWithProvider(user, undefined)
         })
     }, [])
@@ -66,25 +66,25 @@ export function useInjectedProviders(): ConnectionProvider[] {
             setInjectedProviders((map) => new Map(map.set(evt.detail.info.uuid, evt.detail)))
 
             // autoconnect
-            const user = storage.get('cached-user')
+            const user = storage.get("cached-user")
             if (user?.provider === evt.detail.info.rdns) {
                 enable(evt.detail)
             }
         }
 
-        window.addEventListener('eip6963:announceProvider', callback)
-        return () => window.removeEventListener('eip6963:announceProvider', callback)
+        window.addEventListener("eip6963:announceProvider", callback)
+        return () => window.removeEventListener("eip6963:announceProvider", callback)
     }, [])
 
     useEffect(() => {
-        window.dispatchEvent(new CustomEvent('eip6963:requestProvider'))
+        window.dispatchEvent(new CustomEvent("eip6963:requestProvider"))
     }, [])
 
     const providers = useMemo(
         () =>
             Array.from(injectedProviders.values()).map((eip1193Provider) => {
                 return {
-                    type: 'injected',
+                    type: "injected",
                     id: `injected:${eip1193Provider.info.rdns}`,
                     name: eip1193Provider.info.name,
                     icon: eip1193Provider.info.icon,

@@ -1,11 +1,11 @@
-import { type Mock, beforeEach, describe, expect, it, mock } from 'bun:test'
-import { setTimeout } from 'node:timers/promises'
+import { type Mock, beforeEach, describe, expect, it, mock } from "bun:test"
+import { setTimeout } from "node:timers/promises"
 
-import { EventBus, EventBusChannel, type EventBusOptions } from './eventBus'
+import { EventBus, EventBusChannel, type EventBusOptions } from "./eventBus"
 
-describe('event bus', () => {
-    describe('message channel events', () => {
-        let broadcastConfig: Omit<EventBusOptions, 'mode'>
+describe("event bus", () => {
+    describe("message channel events", () => {
+        let broadcastConfig: Omit<EventBusOptions, "mode">
 
         let emitterBusConfig: EventBusOptions
         let listenerBusConfig: EventBusOptions
@@ -36,21 +36,21 @@ describe('event bus', () => {
             mockCallback = mock((_a: typeof args) => {})
         })
 
-        it('connects and communicates as expected', async () => {
+        it("connects and communicates as expected", async () => {
             const emitterBus = new EventBus(emitterBusConfig)
             const listenerBus = new EventBus(listenerBusConfig)
 
-            listenerBus.on('callback', mockCallback)
+            listenerBus.on("callback", mockCallback)
 
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
 
             await setTimeout(0)
             expect(mockCallback).toHaveBeenCalledTimes(3)
         })
     })
-    describe('broadcast events', () => {
+    describe("broadcast events", () => {
         let broadcastConfig: EventBusOptions
 
         let args: unknown
@@ -65,14 +65,14 @@ describe('event bus', () => {
             args = { data: true, version: 1 }
             mockCallback = mock((_a: typeof args) => {})
         })
-        it('[on] emits and listens multiple times', async () => {
+        it("[on] emits and listens multiple times", async () => {
             const emitterBus = new EventBus(broadcastConfig)
             const listenerBus = new EventBus(broadcastConfig)
 
-            listenerBus.on('callback', mockCallback)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
+            listenerBus.on("callback", mockCallback)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
 
             await setTimeout(0)
 
@@ -80,13 +80,13 @@ describe('event bus', () => {
             expect(mockCallback.mock.calls[0][0]).toStrictEqual(args)
         })
 
-        it('[once] emits and listens once', async () => {
+        it("[once] emits and listens once", async () => {
             const emitterBus = new EventBus(broadcastConfig)
             const listenerBus = new EventBus(broadcastConfig)
-            listenerBus.once('callback', mockCallback)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
+            listenerBus.once("callback", mockCallback)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
 
             await setTimeout(0)
 
@@ -94,15 +94,15 @@ describe('event bus', () => {
             expect(mockCallback.mock.calls[0][0]).toStrictEqual(args)
         })
 
-        it('[on/off] returns unsubscribe method from on', async () => {
+        it("[on/off] returns unsubscribe method from on", async () => {
             const emitterBus = new EventBus(broadcastConfig)
             const listenerBus = new EventBus(broadcastConfig)
-            const off = listenerBus.on('callback', mockCallback)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
+            const off = listenerBus.on("callback", mockCallback)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
             await setTimeout(0)
             off()
-            emitterBus.emit('callback', args)
+            emitterBus.emit("callback", args)
 
             await setTimeout(0)
 
@@ -110,15 +110,15 @@ describe('event bus', () => {
             expect(mockCallback.mock.calls[0][0]).toStrictEqual(args)
         })
 
-        it('[off] stops listening to events', async () => {
+        it("[off] stops listening to events", async () => {
             const emitterBus = new EventBus(broadcastConfig)
             const listenerBus = new EventBus(broadcastConfig)
-            listenerBus.on('callback', mockCallback)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
+            listenerBus.on("callback", mockCallback)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
             await setTimeout(0)
-            listenerBus.off('callback', mockCallback)
-            emitterBus.emit('callback', args)
+            listenerBus.off("callback", mockCallback)
+            emitterBus.emit("callback", args)
 
             await setTimeout(0)
 
@@ -126,20 +126,20 @@ describe('event bus', () => {
             expect(mockCallback.mock.calls[0][0]).toStrictEqual(args)
         })
 
-        it('[clear] empties all callbacks', async () => {
+        it("[clear] empties all callbacks", async () => {
             const emitterBus = new EventBus(broadcastConfig)
             const listenerBus = new EventBus(broadcastConfig)
             const args2 = { data: true, version: 2 }
             const mockCallback2 = mock((_a: typeof args2) => {})
 
-            listenerBus.on('callback', mockCallback)
-            listenerBus.on('callback-2', mockCallback2)
+            listenerBus.on("callback", mockCallback)
+            listenerBus.on("callback-2", mockCallback2)
 
             listenerBus.clear()
 
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback-2', args2)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback-2", args2)
 
             await setTimeout(0)
 
@@ -147,17 +147,17 @@ describe('event bus', () => {
             expect(mockCallback2).toHaveBeenCalledTimes(0)
         })
 
-        it('subscribes to multiple events', async () => {
+        it("subscribes to multiple events", async () => {
             const emitterBus = new EventBus(broadcastConfig)
             const listenerBus = new EventBus(broadcastConfig)
             const args2 = { data: true, version: 2 }
             const mockCallback2 = mock((_a: typeof args2) => {})
 
-            listenerBus.on('callback', mockCallback)
-            listenerBus.on('callback-2', mockCallback2)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback', args)
-            emitterBus.emit('callback-2', args2)
+            listenerBus.on("callback", mockCallback)
+            listenerBus.on("callback-2", mockCallback2)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback", args)
+            emitterBus.emit("callback-2", args2)
 
             await setTimeout(0)
 

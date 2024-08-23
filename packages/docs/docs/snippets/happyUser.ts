@@ -6,6 +6,6 @@ interface HappyUser {
     ens: string
     name: string
     provider: string
-    type: 'social' | 'injected'
+    type: "social" | "injected"
     uid: string
 }

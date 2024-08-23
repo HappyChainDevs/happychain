@@ -1,10 +1,10 @@
 // import { useIsHydrated } from "@happychain/common";
-import { lazy } from 'react'
+import { lazy } from "react"
 
-import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { Outlet, createRootRoute } from "@tanstack/react-router"
 // import { JotaiDebug } from "../components/JotaiDebug";
 
-const inProduction = import.meta.env.MODE === 'production'
+const inProduction = import.meta.env.MODE === "production"
 const inIframe = window.parent !== window.self
 
 const TanStackRouterDevtools =
@@ -12,7 +12,7 @@ const TanStackRouterDevtools =
         ? () => null // Render nothing in production or embedded in iframe
         : lazy(() =>
               // Lazy load in development
-              import('@tanstack/router-devtools').then((res) => ({
+              import("@tanstack/router-devtools").then((res) => ({
                   default: res.TanStackRouterDevtools,
                   // For Embedded Mode
                   // default: res.TanStackRouterDevtoolsPanel

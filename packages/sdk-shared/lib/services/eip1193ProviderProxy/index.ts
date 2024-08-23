@@ -1,4 +1,4 @@
-export { HappyProvider } from './happyProvider'
+export { HappyProvider } from "./happyProvider"
 
 export {
     GenericProviderRpcError,
@@ -8,9 +8,9 @@ export {
     EIP1193DisconnectedError,
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
-} from './errors'
+} from "./errors"
 
-export type { EIP1193ErrorObject, IProviderRpcError } from './errors'
+export type { EIP1193ErrorObject, IProviderRpcError } from "./errors"
 
 export type {
     EventUUID,
@@ -18,4 +18,4 @@ export type {
     EIP1193RequestResult,
     EIP1193EventName,
     EIP1193ProxiedEvents,
-} from './events'
+} from "./events"

@@ -1,8 +1,8 @@
-import { tssLib } from '@toruslabs/tss-dkls-lib'
-import { EthereumSigningProvider } from '@web3auth/ethereum-mpc-provider'
-import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from '@web3auth/mpc-core-kit'
-import type { EIP1193Provider } from 'viem'
-import { config } from './config'
+import { tssLib } from "@toruslabs/tss-dkls-lib"
+import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider"
+import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from "@web3auth/mpc-core-kit"
+import type { EIP1193Provider } from "viem"
+import { config } from "./config"
 
 /***
  * Setup
@@ -36,7 +36,7 @@ const ethereumSigningProvider = new EthereumSigningProvider({
 ethereumSigningProvider.setupProvider(makeEthereumSigner(web3Auth))
 export const web3AuthEvmProvider = ethereumSigningProvider as EIP1193Provider
 
-let lastToken = ''
+let lastToken = ""
 export async function web3AuthConnect(jwt: JWTLoginParams): Promise<`0x${string}`[]> {
     if (jwt.idToken !== lastToken) {
         lastToken = jwt.idToken
@@ -48,15 +48,15 @@ export async function web3AuthConnect(jwt: JWTLoginParams): Promise<`0x${string}
     }
 
     const addresses = await ethereumSigningProvider.request({
-        method: 'eth_accounts',
+        method: "eth_accounts",
     })
 
     if (
         !addresses ||
         !Array.isArray(addresses) ||
-        !addresses.every((a) => typeof a === 'string' && a.startsWith('0x'))
+        !addresses.every((a) => typeof a === "string" && a.startsWith("0x"))
     ) {
-        throw new Error('[web3Auth] Failed to retrieve addresses')
+        throw new Error("[web3Auth] Failed to retrieve addresses")
     }
 
     return addresses as `0x${string}`[]

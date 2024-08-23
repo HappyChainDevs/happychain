@@ -5,7 +5,7 @@ export function createStorage<TSchema extends { [k: string]: unknown }>(prefix: 
         get<Key extends keyof TSchema>(key: Key): TSchema[Key] | undefined {
             // Return type will depend on the key
             const data = localStorage.getItem(`${prefix}:${key as string}`)
-            if (data === 'undefined') {
+            if (data === "undefined") {
                 return undefined
             }
 

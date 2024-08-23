@@ -1,4 +1,4 @@
-import { hexToString } from 'viem'
+import { hexToString } from "viem"
 
 interface PersonalSignProps {
     method: string
@@ -8,7 +8,7 @@ interface PersonalSignProps {
 }
 
 const signatureTypes: Record<string, string> = {
-    personal_sign: 'Signature Request',
+    personal_sign: "Signature Request",
 }
 
 export function PersonalSign({ method, params, reject, accept }: PersonalSignProps) {
@@ -17,7 +17,7 @@ export function PersonalSign({ method, params, reject, accept }: PersonalSignPro
             <div className="flex w-full grow flex-col gap-4">
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">{window.location.origin}</div>
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">
-                    {signatureTypes[method] ?? 'Unknown Signature Type'}
+                    {signatureTypes[method] ?? "Unknown Signature Type"}
                 </div>
 
                 <div className="flex grow flex-col gap-4 bg-zinc-100 p-4">
