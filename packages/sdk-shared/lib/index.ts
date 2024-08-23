@@ -19,7 +19,6 @@ export {
 } from "./services/eip1193Provider/errors"
 
 /** Types */
-export type { UserUpdateCallback, ModalUpdateCallback } from "./initialize"
 export type { HappyEvents } from "./interfaces/events"
 export type { HappyUser } from "./interfaces/happyUser"
 export type { Logger } from "./services/logger"

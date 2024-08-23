@@ -5,11 +5,17 @@ export default {
     ...base,
     // https://typedoc.org/options/input/
     name: "@happychain/js",
-    entryPoints: ["../sdk-vanillajs/lib/main.ts"],
+    entryPoints: ["../sdk-vanillajs/lib/index.ts"],
 
     // https://typedoc.org/options/output
     out: "docs/pages/js/api",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
     publicPath: "/js/api/",
+
+    compilerOptions: {
+        // Required for LitElement reactive properties
+        experimentalDecorators: true,
+        useDefineForClassFields: false,
+    },
 }

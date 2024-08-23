@@ -33,6 +33,8 @@ export { onModalUpdate, onUserUpdate, getCurrentUser, happyProvider } from "./ha
 // re-export happychain core
 export { config } from "@happychain/sdk-shared"
 
+export type { UserUpdateCallback, ModalUpdateCallback } from "./happyProvider/listeners"
+
 export type {
     // Errors
     EIP1193ChainDisconnectedError,

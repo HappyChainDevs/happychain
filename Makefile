@@ -127,6 +127,7 @@ sdk-vanillajs.build:
 
 sdk.test:
 	cd packages/sdk-shared && make test
+	cd packages/sdk-vanillajs && make test
 .PHONY: sdk.test
 
 support.check:

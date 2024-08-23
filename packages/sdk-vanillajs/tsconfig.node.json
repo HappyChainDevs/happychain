@@ -1,7 +1,8 @@
 {
     "extends": "@happychain/configs/tsconfig.vite-node.json",
     "compilerOptions": {
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "useDefineForClassFields": false
     },
     "include": ["vite.config.ts", "test", "lib", "src"]
 }

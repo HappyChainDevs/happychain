@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
+      - uses: oven-sh/setup-bun@v2
       - uses: actions/setup-node@v4
         with:
           node-version: '22.6'
@@ -24,5 +25,6 @@ jobs:
         run: mkdir -p packages/contracts/out && echo "{}" > packages/contracts/out/deployment.json
       - run: make install-frozen
       - run: make setup
-      - run: make build
       - run: make check
+      - run: make test
+      - run: make build

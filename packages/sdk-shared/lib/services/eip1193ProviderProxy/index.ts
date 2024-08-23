@@ -1,5 +1,3 @@
-export { HappyProvider } from "./happyProvider"
-
 export {
     GenericProviderRpcError,
     EIP1193UserRejectedRequestError,

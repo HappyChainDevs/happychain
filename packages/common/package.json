@@ -8,5 +8,8 @@
         "@types/react": "^18.3.4",
         "jotai": "^2.9.3",
         "react": "^18.3.1"
+    },
+    "dependencies": {
+        "latest": "^0.2.0"
     }
 }

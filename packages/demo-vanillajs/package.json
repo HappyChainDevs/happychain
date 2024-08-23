@@ -5,7 +5,8 @@
     "type": "module",
     "dependencies": {
         "@happychain/js": "workspace:^",
-        "ethers": "^6.13.2"
+        "ethers": "^6.13.2",
+        "latest": "^0.2.0"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
