@@ -1,14 +1,20 @@
 SHELL := /bin/bash
-# Packages
+
+############
+# Packages #
+############
+
+# build & format all support packages with no internal dependencies
 SUPPORT_PKGS := configs,contracts,common,sdk-shared,sdk-firebase-web3auth-strategy
-SDK_PKGS := sdk-vanillajs,sdk-react,iframe
-DEMO_PKGS := demo-vanillajs,demo-react,docs
+# build & format sdk packages which are built using the above
+SDK_PKGS := sdk-vanillajs,sdk-react
+# build & format consuming 'apps'
+APP_PKGS := iframe,demo-vanillajs,demo-react,docs
 
 # Currently Active Branch
 YOUR_BRANCH = $(git rev-parse --abbrev-ref HEAD)
 # Lead branch
 DEFAULT_BRANCH = master
-
 
 # ==================================================================================================
 # BASICS COMMANDS
@@ -25,124 +31,180 @@ anvil:
 	cd packages/contracts && make anvil
 .PHONY: anvil
 
-iframe-dev:
-	cd packages/iframe && make dev
-.PHONY: iframe-dev
-
-demo-react-dev:
-	cd packages/demo-react && make dev
-.PHONY: demo-react-dev
-
-demo-vanilla-dev:
-	cd packages/demo-vanillajs && make dev
-.PHONY: demo-vanilla-dev
-
-sdk-react-dev:
-	cd packages/sdk-react && make dev
-.PHONY: sdk-react
-
-sdk-dev:
-	make -j 2 iframe-dev sdk-react-dev
-.PHONY: sdk-dev
-
-# Builds the sdks, apps, contracts & demos
-build:	
-	for name in packages/{$(SUPPORT_PKGS)}; do\
-		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../ || exit 1;\
-	done
-
-	for name in packages/{$(SDK_PKGS)}; do\
-		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../ || exit 1;\
-	done
-
-	for name in packages/{$(DEMO_PKGS)}; do\
-		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../ || exit 1;\
-	done
-.PHONY: build
-
-# build latest docs and start server http://localhost:4173
-docs:
-	cd packages/docs && make build && make preview
-.PHONY: docs
-
-# build docs for production
-docs.build:
-	cd packages/docs && make dev
-.PHONY: docs.build
-
-# start docs in watch mode
-docs.watch:
-	cd packages/docs && make dev
-.PHONY: docs.watch
-
 # Deploys to the contracts to the local node (requires anvil to be running).
 deploy:
 	cd packages/contracts && make deploy
 .PHONY: deploy
 
-# Run tests
-test:
-	cd packages/sdk-vanillajs && make test
-.PHONY: test
+# Creates production builds of all packages
+build:
+	make support.build
+	make sdk.build
+	make apps.build
+.PHONY: build
+
+# build latest docs and starts dev server http://localhost:4173
+docs:
+	cd packages/docs && make build && make preview
+.PHONY: docs
 
 # Performs code-quality checks.
 check:
-	for name in packages/{$(SUPPORT_PKGS)}; do\
-		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../ || exit 1;\
-	done
-
-	for name in packages/{$(SDK_PKGS)}; do\
-		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../ || exit 1;\
-	done
-	for name in packages/{$(DEMO_PKGS)}; do\
-		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../ || exit 1;\
-	done
-
+	make support.check
+	make sdk.check
+	make apps.check
 	pnpm biome check ./
 .PHONY: check
 
-# Performs code formatting for the webapp files and contracts in their respective directories.
+# Fixes code-quality issues
 format:
+	make support.format
+	make sdk.format
+	make apps.format
+	pnpm biome check ./ --write
+.PHONY: format
+
+# Run tests
+test:
+	make sdk.test
+.PHONY: test
+
+# ==================================================================================================
+# Demos
+
+demo-react:
+	make sdk-vanillajs.build
+	make -j 2 iframe.dev demo-react.dev
+.PHONY: demo-react
+
+demo-vanillajs:
+	make -j 2 iframe.dev demo-vanillajs.dev
+.PHONY: demo-vanillajs
+
+# ==================================================================================================
+# DEVELOPMENT
+
+# start docs in watch mode (can crash, see packages/docs/Makefile for more info)
+docs.watch:
+	cd packages/docs && make dev
+.PHONY: docs.watch
+
+# Start all SDKs in dev mode
+sdk-dev:
+	make -j 3 iframe.dev sdk-react.dev sdk-vanillajs.dev
+.PHONY: sdk-dev
+
+iframe.dev:
+	cd packages/iframe && make dev
+.PHONY: iframe.dev
+
+demo-react.dev:
+	cd packages/demo-react && make dev
+.PHONY: demo-react.dev
+
+demo-vanillajs.dev:
+	cd packages/demo-vanillajs && make dev
+.PHONY: demo-vanillajs.dev
+
+sdk-react.dev:
+	cd packages/sdk-react && make dev
+.PHONY: sdk-react.dev
+
+sdk-vanillajs.dev:
+	cd packages/sdk-vanillajs && make dev
+.PHONY: sdk-vanillajs.dev
+
+sdk-react.build:
+	cd packages/sdk-react && make build
+.PHONY: sdk-react.build
+
+sdk-vanillajs.build:
+	cd packages/sdk-vanillajs && make build
+.PHONY: sdk-vanillajs.build
+
+# ==================================================================================================
+# CORRECTNESS
+
+sdk.test:
+	cd packages/sdk-shared && make test
+.PHONY: sdk.test
+
+support.check:
+	for name in packages/{$(SUPPORT_PKGS)}; do\
+		echo "Checking $${name}";\
+		cd $${name} && make check && cd ../../ || exit 1;\
+	done
+.PHONE: support.check
+
+sdk.check:
+	for name in packages/{$(SDK_PKGS)}; do\
+		echo "Checking $${name}";\
+		cd $${name} && make check && cd ../../ || exit 1;\
+	done
+.PHONY: sdk.check
+
+apps.check:
+	for name in packages/{$(APP_PKGS)}; do\
+		echo "Checking $${name}";\
+		cd $${name} && make check && cd ../../ || exit 1;\
+	done
+.PHONY: apps.check
+
+support.format:
 	for name in packages/{$(SUPPORT_PKGS)}; do\
 		echo "Formatting $${name}";\
 		cd $${name} && make format && cd ../../ || exit 1;\
 	done
+.PHONE: support.format
 
+sdk.format:
 	for name in packages/{$(SDK_PKGS)}; do\
 		echo "Formatting $${name}";\
 		cd $${name} && make format && cd ../../ || exit 1;\
 	done
+.PHONY: sdk.format
 
-	for name in packages/{$(DEMO_PKGS)}; do\
+apps.format:
+	for name in packages/{$(APP_PKGS)}; do\
 		echo "Formatting $${name}";\
 		cd $${name} && make format && cd ../../ || exit 1;\
 	done
-
-	pnpm biome check ./ --write
-.PHONY: format
-
-# runs the full react demo. site available at localhost:5173
-demo-react:
-	cd packages/sdk-react && make build
-	make -j 2 iframe-dev demo-react-dev
-.PHONY: demo-react
-
-demo-vanilla:
-	cd packages/sdk-vanillajs && make build
-	make -j 2 iframe-dev demo-vanilla-dev
-.PHONY: demo-vanilla
+.PHONY: apps.format
 
 # quickly format change files between <your branch> and master
 # using default global settings
 format-fast-diff:
 	pnpm biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)))
 .PHONY: format-fast-diff
+
+# ==================================================================================================
+# PRODUCTION BUILDS
+
+support.build:
+	for name in packages/{$(SUPPORT_PKGS)}; do\
+		echo "Building $${name}";\
+		cd $${name} && make build && cd ../../ || exit 1;\
+	done
+.PHONE: support.build
+
+sdk.build:
+	for name in packages/{$(SDK_PKGS)}; do\
+		echo "Building $${name}";\
+		cd $${name} && make build && cd ../../ || exit 1;\
+	done
+.PHONY: sdk.build
+
+apps.build:
+	for name in packages/{$(APP_PKGS)}; do\
+		echo "Building $${name}";\
+		cd $${name} && make build && cd ../../ || exit 1;\
+	done
+.PHONY: apps.build
+
+# build only the docs (this included in apps.build already)
+docs.build:
+	cd packages/docs && make dev
+.PHONY: docs.build
 
 # ==================================================================================================
 # IMPLEMENTATION DETAILS
@@ -199,6 +261,13 @@ remove-modules:
 	rm -rf node_modules packages/*/node_modules
 .PHONY: remove-modules
 
+clean:
+	make remove-modules
+	rm -rf packages/docs/docs/pages/{js,react}/api
+	rm -rf packages/docs/docs/dist
+	rm -rf packages/{sdk-react,sdk-vanillajs,iframe,demo-vanillajs,demo-react}/dist
+.PHONY: clean
+
 # In case you accidentally pollute the node_modules directories
 # (e.g. by running npm instead of pnpm)
 reset-modules:
@@ -207,6 +276,7 @@ reset-modules:
 .PHONY: reset-modules
 
 # ==================================================================================================
+# Extras
 
 # install this to run github workflows locally
 # https://nektosact.com/
