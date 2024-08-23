@@ -1,7 +1,7 @@
-import { type AddEthereumChainParameter, createPublicClient, createWalletClient, custom, defineChain } from 'viem'
-import * as viemChainObj from 'viem/chains'
+import { type AddEthereumChainParameter, createPublicClient, createWalletClient, custom, defineChain } from "viem"
+import * as viemChainObj from "viem/chains"
 
-import { happyProvider } from '../lib'
+import { happyProvider } from "../lib"
 
 export const publicClient = createPublicClient({ transport: custom(happyProvider) })
 
@@ -17,15 +17,15 @@ export const findViemChain = (chain: AddEthereumChainParameter) => {
 }
 
 function convertToViemChain(chain: AddEthereumChainParameter) {
-    const httpRpcs = chain.rpcUrls.filter((a) => a.startsWith('http'))
-    const wsRpcs = chain.rpcUrls.filter((a) => a.startsWith('ws'))
+    const httpRpcs = chain.rpcUrls.filter((a) => a.startsWith("http"))
+    const wsRpcs = chain.rpcUrls.filter((a) => a.startsWith("ws"))
     return defineChain({
         id: Number(chain.chainId),
         name: chain.chainName,
         nativeCurrency: {
             decimals: chain.nativeCurrency?.decimals ?? 18,
-            name: chain.nativeCurrency?.name ?? 'Ether',
-            symbol: chain.nativeCurrency?.symbol ?? 'ETH',
+            name: chain.nativeCurrency?.name ?? "Ether",
+            symbol: chain.nativeCurrency?.symbol ?? "ETH",
         },
         rpcUrls: {
             default: {

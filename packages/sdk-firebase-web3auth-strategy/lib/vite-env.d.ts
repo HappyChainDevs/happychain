@@ -26,7 +26,6 @@ interface ImportMetaEnv {
     readonly VITE_WEB3AUTH_CHAIN_TOKEN_DECIMALS: string
 }
 
-// biome-ignore lint/correctness/noUnusedVariables: it augments the interface
 interface ImportMeta {
     readonly env: ImportMetaEnv
 }

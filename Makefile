@@ -1,8 +1,8 @@
 SHELL := /bin/bash
 # Packages
-SUPPORT_PKGS := docs,configs,contracts,common,sdk-shared,sdk-firebase-web3auth-strategy,docs
+SUPPORT_PKGS := configs,contracts,common,sdk-shared,sdk-firebase-web3auth-strategy
 SDK_PKGS := sdk-vanillajs,sdk-react,iframe
-DEMO_PKGS := demo-vanillajs,demo-react
+DEMO_PKGS := demo-vanillajs,demo-react,docs
 
 # Currently Active Branch
 YOUR_BRANCH = $(git rev-parse --abbrev-ref HEAD)

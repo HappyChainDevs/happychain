@@ -1,8 +1,8 @@
-import type { HappyUser } from '@happychain/sdk-shared'
-import { useAtomValue } from 'jotai'
+import type { HappyUser } from "@happychain/sdk-shared"
+import { useAtomValue } from "jotai"
 
-import { requestLabels } from '../../constants/requestLabels'
-import { chainsAtom } from '../../state/chains'
+import { requestLabels } from "../../constants/requestLabels"
+import { chainsAtom } from "../../state/chains"
 
 interface SendTransactionProps {
     method: string
@@ -13,13 +13,13 @@ interface SendTransactionProps {
 
 const safeGet = (key: string) => {
     try {
-        return JSON.parse(localStorage.getItem(key) || 'null')
+        return JSON.parse(localStorage.getItem(key) || "null")
     } catch {
         return null
     }
 }
 
-const user = safeGet('happychain:cached-user') as HappyUser
+const user = safeGet("happychain:cached-user") as HappyUser
 
 export function SwitchChain({ method, params, reject, accept }: SendTransactionProps) {
     const chains = useAtomValue(chainsAtom)
@@ -31,7 +31,7 @@ export function SwitchChain({ method, params, reject, accept }: SendTransactionP
                 <div className="flex w-full grow flex-col gap-4">
                     <div className="w-full rounded-lg bg-base-200 p-4 font-bold">{window.location.origin}</div>
                     <div className="w-full rounded-lg bg-base-200 p-4 font-bold">
-                        {requestLabels[method] ?? 'Unknown Signature Type'}
+                        {requestLabels[method] ?? "Unknown Signature Type"}
                     </div>
 
                     <div className="flex grow flex-col gap-4 overflow-x-auto bg-zinc-100 p-4">
@@ -58,7 +58,7 @@ export function SwitchChain({ method, params, reject, accept }: SendTransactionP
             <div className="flex w-full grow flex-col gap-4">
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">{window.location.origin}</div>
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">
-                    {requestLabels[method] ?? 'Unknown Signature Type'}
+                    {requestLabels[method] ?? "Unknown Signature Type"}
                 </div>
 
                 <div className="flex grow flex-col gap-4 overflow-x-auto bg-zinc-100 p-4">
