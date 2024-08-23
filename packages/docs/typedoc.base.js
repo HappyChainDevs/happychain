@@ -1,20 +1,20 @@
 /** @type {import('typedoc').TypeDocOptions} */
 export default {
     // https://typedoc.org/options/configuration/
-    tsconfig: './tsconfig.typedoc.json',
+    tsconfig: "./tsconfig.typedoc.json",
     plugin: [
         // https://www.npmjs.com/package/@zamiell/typedoc-plugin-not-exported
-        '@zamiell/typedoc-plugin-not-exported',
+        "@zamiell/typedoc-plugin-not-exported",
         // https://www.npmjs.com/package/typedoc-plugin-extras
-        'typedoc-plugin-extras',
+        "typedoc-plugin-extras",
         // https://typedoc-plugin-markdown.org/
-        'typedoc-plugin-markdown',
+        "typedoc-plugin-markdown",
         // https://www.npmjs.com/package/typedoc-plugin-mdn-links
-        'typedoc-plugin-mdn-links',
+        "typedoc-plugin-mdn-links",
         // https://www.npmjs.com/package/typedoc-plugin-remark
-        'typedoc-plugin-remark',
+        "typedoc-plugin-remark",
         // https://www.npmjs.com/package/typedoc-plugin-mdn-links
-        'typedoc-plugin-zod',
+        "typedoc-plugin-zod",
     ],
 
     // https://typedoc.org/options/input/
@@ -22,49 +22,49 @@ export default {
     excludeProtected: true,
     excludeInternal: true,
     includeVersion: true,
-    readme: 'none',
+    readme: "none",
 
     // https://typedoc.org/options/output/
-    cname: 'docs.happychaindevs.com',
-    titleLink: 'https://docs.happychaindevs.org',
-    customFooterHtml: 'Copyright <strong>HappyChain</strong> 2024',
+    cname: "docs.happychaindevs.com",
+    titleLink: "https://docs.happychaindevs.org",
+    customFooterHtml: "Copyright <strong>HappyChain</strong> 2024",
     hideGenerator: true,
     hideParameterTypesInTitle: true,
     searchInComments: true,
     searchInDocuments: true,
-    highlightLanguages: ['html', 'javascript', 'json', 'jsonc', 'json5', 'jsx', 'tsx', 'typescript'],
+    highlightLanguages: ["html", "javascript", "json", "jsonc", "json5", "jsx", "tsx", "typescript"],
     visibilityFilters: {
         protected: false,
         private: false,
         inherited: true,
         external: false,
-        '@alpha': false,
-        '@beta': false,
+        "@alpha": false,
+        "@beta": false,
     },
 
     // https://typedoc.org/options/comments
     // ...
 
     // https://typedoc.org/options/organization
-    groupOrder: ['Functions', 'Variables', 'Errors', '*'],
-    categoryOrder: ['Core', 'Errors', '*'],
+    groupOrder: ["Functions", "Variables", "Errors", "*"],
+    categoryOrder: ["Core", "Errors", "*"],
 
     // https://typedoc.org/options/validation/
     // ...
 
     // https://typedoc-plugin-markdown.org/docs/options/file-options
     mergeReadme: true,
-    entryFileName: 'index',
-    fileExtension: '.mdx',
+    entryFileName: "index",
+    fileExtension: ".mdx",
 
     // https://typedoc-plugin-markdown.org/docs/options/display-options
-    indexFormat: 'list',
-    parametersFormat: 'list',
-    interfacePropertiesFormat: 'table',
-    classPropertiesFormat: 'list',
-    enumMembersFormat: 'list',
-    typeDeclarationFormat: 'list',
-    propertyMembersFormat: 'list',
+    indexFormat: "list",
+    parametersFormat: "list",
+    interfacePropertiesFormat: "table",
+    classPropertiesFormat: "list",
+    enumMembersFormat: "list",
+    typeDeclarationFormat: "list",
+    propertyMembersFormat: "list",
     hidePageHeader: true,
     hideBreadcrumbs: true,
     useCodeBlocks: true,
@@ -81,9 +81,9 @@ export default {
     // https://typedoc-plugin-markdown.org/plugins/remark/quick-start
     remarkPlugins: [
         [
-            'remark-link-rewrite',
+            "remark-link-rewrite",
             // remove .mdx from generated typedoc links
-            { replacer: (url) => url.replace(/\.mdx$/, '') },
+            { replacer: (url) => url.replace(/\.mdx$/, "") },
         ],
     ],
 }

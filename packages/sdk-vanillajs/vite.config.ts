@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
         },
         resolve: {
             alias: {
-                '@happychain/sdk-shared': '../sdk-shared/lib/index.ts',
+                "@happychain/sdk-shared": "../sdk-shared/lib/index.ts",
             },
         },
     }

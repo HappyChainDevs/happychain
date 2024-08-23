@@ -41,6 +41,9 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@happychain/configs':
+        specifier: workspace:^
+        version: link:../configs
       '@openzeppelin/contracts':
         specifier: ^5.0.2
         version: 5.0.2
@@ -336,6 +339,9 @@ importers:
       '@happychain/configs':
         specifier: workspace:^
         version: link:../configs
+      '@types/bun':
+        specifier: ^1.1.6
+        version: 1.1.6
       '@types/react':
         specifier: ^18.3.4
         version: 18.3.4
