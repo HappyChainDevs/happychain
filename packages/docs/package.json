@@ -5,7 +5,6 @@
     "dependencies": {
         "@happychain/js": "workspace:^",
         "@happychain/react": "workspace:^",
-        "latest": "^0.2.0",
         "react": "latest",
         "react-dom": "latest",
         "typescript": "latest",
