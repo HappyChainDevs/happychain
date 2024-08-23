@@ -1,15 +1,15 @@
-import type { EventBus, HappyEvents, HappyUser } from '@happychain/sdk-shared'
+import type { EventBus, HappyEvents, HappyUser } from "@happychain/sdk-shared"
 
 export function registerListeners(messageBus: EventBus<HappyEvents>) {
     const onUserUpdateCallbacks = new Set<(user?: HappyUser) => void>()
     const onModalUpdateCallbacks = new Set<(isOpen: boolean) => void>()
 
-    messageBus.on('auth-changed', (user) => {
+    messageBus.on("auth-changed", (user) => {
         for (const call of onUserUpdateCallbacks) {
             call(user)
         }
     })
-    messageBus.on('modal-toggle', (isOpen) => {
+    messageBus.on("modal-toggle", (isOpen) => {
         for (const call of onModalUpdateCallbacks) {
             call(isOpen)
         }

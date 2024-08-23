@@ -8,7 +8,6 @@ interface ImportMetaEnv {
     readonly VITE_DEFAULT_RPC_URL: string
 }
 
-// biome-ignore lint/correctness/noUnusedVariables: it augments the interface
 interface ImportMeta {
     readonly env: ImportMetaEnv
 }

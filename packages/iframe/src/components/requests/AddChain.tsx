@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState } from "react"
 
-import type { HappyUser } from '@happychain/sdk-shared'
-import type { AddEthereumChainParameter } from 'viem'
+import type { HappyUser } from "@happychain/sdk-shared"
+import type { AddEthereumChainParameter } from "viem"
 
-import { requestLabels } from '../../constants/requestLabels'
+import { requestLabels } from "../../constants/requestLabels"
 
 interface SendTransactionProps {
     method: string
@@ -14,13 +14,13 @@ interface SendTransactionProps {
 
 const safeGet = (key: string) => {
     try {
-        return JSON.parse(localStorage.getItem(key) || 'null')
+        return JSON.parse(localStorage.getItem(key) || "null")
     } catch {
         return null
     }
 }
 
-const user = safeGet('happychain:cached-user') as HappyUser
+const user = safeGet("happychain:cached-user") as HappyUser
 
 export function AddChain({ method, params, reject, accept }: SendTransactionProps) {
     const [chain, setChain] = useState(params[0])
@@ -30,7 +30,7 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
             <div className="flex w-full grow flex-col gap-4">
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">{window.location.origin}</div>
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">
-                    {requestLabels[method] ?? 'Unknown Signature Type'}
+                    {requestLabels[method] ?? "Unknown Signature Type"}
                 </div>
 
                 <div className="flex grow flex-col gap-4 overflow-x-auto bg-zinc-100 p-4">
@@ -58,7 +58,7 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
                                 setChain((old) => ({ ...old, rpcUrls: [e.target.value] }))
                             }}
                             className="rounded px-4 py-2"
-                            value={chain.rpcUrls[0] ?? ''}
+                            value={chain.rpcUrls[0] ?? ""}
                         />
                     </label>
                     <label className="grid">
@@ -68,14 +68,14 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
                                 setChain((old) => ({
                                     ...old,
                                     nativeCurrency: {
-                                        name: e.target.value ?? '',
+                                        name: e.target.value ?? "",
                                         symbol: e.target.value,
                                         decimals: 18,
                                     },
                                 }))
                             }}
                             className="rounded px-4 py-2"
-                            value={chain.nativeCurrency?.symbol ?? ''}
+                            value={chain.nativeCurrency?.symbol ?? ""}
                         />
                     </label>
                     <label className="grid">
@@ -88,7 +88,7 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
                                 }))
                             }}
                             className="rounded px-4 py-2"
-                            value={chain.blockExplorerUrls?.[0] ?? ''}
+                            value={chain.blockExplorerUrls?.[0] ?? ""}
                         />
                     </label>
                 </div>

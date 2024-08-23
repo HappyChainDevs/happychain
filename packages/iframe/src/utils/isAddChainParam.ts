@@ -1,5 +1,5 @@
-import type { AddEthereumChainParameter } from 'viem'
-import { z } from 'zod'
+import type { AddEthereumChainParameter } from "viem"
+import { z } from "zod"
 
 export function isAddChainParams(param: unknown): param is AddEthereumChainParameter {
     const schema = z.object({

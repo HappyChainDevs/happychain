@@ -1,5 +1,5 @@
-import { uuid } from './happyProvider/initialize'
-import { HappyWallet } from './happy-wallet'
+import { HappyWallet } from "./happy-wallet"
+import { uuid } from "./happyProvider/initialize"
 
 export type WalletRegisterOptions = {
     rpcUrl?: string
@@ -9,29 +9,29 @@ export type WalletRegisterOptions = {
  * Register the initialized wallet
  */
 export function register(opts?: WalletRegisterOptions) {
-    if (document.querySelector('happy-wallet')) {
+    if (document.querySelector("happy-wallet")) {
         // don't register if already exists on page
         return
     }
     const wallet = new HappyWallet(uuid)
 
     if (opts?.rpcUrl) {
-        wallet.setAttribute('rpc-url', opts.rpcUrl)
+        wallet.setAttribute("rpc-url", opts.rpcUrl)
     }
 
     if (opts?.chainId) {
-        wallet.setAttribute('chain-id', opts.chainId)
+        wallet.setAttribute("chain-id", opts.chainId)
     }
 
     document.body.appendChild(wallet)
 }
 
-export type { HappyProvider } from './happyProvider/happyProvider'
+export type { HappyProvider } from "./happyProvider/happyProvider"
 
-export { onModalUpdate, onUserUpdate, getCurrentUser, happyProvider } from './happyProvider/initialize'
+export { onModalUpdate, onUserUpdate, getCurrentUser, happyProvider } from "./happyProvider/initialize"
 
 // re-export happychain core
-export { config } from '@happychain/sdk-shared'
+export { config } from "@happychain/sdk-shared"
 
 export type {
     // Errors
@@ -44,4 +44,4 @@ export type {
     GenericProviderRpcError,
     // User
     HappyUser,
-} from '@happychain/sdk-shared'
+} from "@happychain/sdk-shared"

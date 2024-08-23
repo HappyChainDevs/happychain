@@ -1,15 +1,15 @@
-import { chains } from '@happychain/sdk-shared'
+import { chains } from "@happychain/sdk-shared"
 
-import { onUserUpdate, register } from '../lib/index'
+import { onUserUpdate, register } from "../lib/index"
 
-import { createAddChainBtn, createSwitchChainBtn, setActiveChain } from './ui'
+import { createAddChainBtn, createSwitchChainBtn, setActiveChain } from "./ui"
 
-import './style.css'
+import "./style.css"
 
 register()
 
-const addChainList = document.querySelector('#add-chains')
-const switchChainList = document.querySelector('#switch-chains')
+const addChainList = document.querySelector("#add-chains")
+const switchChainList = document.querySelector("#switch-chains")
 
 for (const [, chain] of Object.entries(chains)) {
     const addBtn = createAddChainBtn(chain)
@@ -19,7 +19,7 @@ for (const [, chain] of Object.entries(chains)) {
     switchChainList?.append(switchBtn)
 }
 
-document.querySelector('#refresh-chain')?.addEventListener('click', () => {
+document.querySelector("#refresh-chain")?.addEventListener("click", () => {
     setActiveChain()
 })
 

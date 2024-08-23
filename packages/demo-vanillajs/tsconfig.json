@@ -1,4 +1,8 @@
 {
     "extends": "@happychain/configs/tsconfig.vite-lib.json",
-    "include": ["src"]
+    "compilerOptions": {
+        "allowJs": true,
+        "types": ["./vite-env.d.ts"]
+    },
+    "include": ["main.js"]
 }
