@@ -1,4 +1,5 @@
 {
+    "typescript.tsdk": "node_modules/typescript/lib",
     "editor.codeActionsOnSave": { "source.fixAll": "explicit" },
     "cSpell.words": [
         "Firestarter",
@@ -16,6 +17,5 @@
         "tanstack",
         "viem",
         "wagmi"
-    ],
-    "typescript.tsdk": "node_modules/typescript/lib"
+    ]
 }
