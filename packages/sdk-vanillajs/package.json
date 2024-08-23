@@ -17,7 +17,6 @@
     "dependencies": {
         "@happychain/sdk-shared": "workspace:^",
         "@metamask/safe-event-emitter": "^3.1.1",
-        "latest": "^0.2.0",
         "lit": "^3.2.0",
         "mipd": "^0.0.7",
         "viem": "^2.20.0"

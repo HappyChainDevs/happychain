@@ -9,8 +9,7 @@
         "@toruslabs/tss-dkls-lib": "^3.0.0",
         "@web3auth/ethereum-mpc-provider": "^8.12.4",
         "@web3auth/mpc-core-kit": "^3.1.1",
-        "firebase": "^10.13.0",
-        "latest": "^0.2.0"
+        "firebase": "^10.13.0"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
