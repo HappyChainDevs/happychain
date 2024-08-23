@@ -1,19 +1,20 @@
-import type { EIP1193ProxiedEvents, HappyEvents, HappyUser } from '@happychain/sdk-shared'
-import { config, EventBus, EventBusChannel } from '@happychain/sdk-shared'
+import type { EIP1193ProxiedEvents, HappyEvents, HappyUser } from "@happychain/sdk-shared"
+import { EventBus, EventBusChannel, config } from "@happychain/sdk-shared"
 
-import { HappyProvider } from './happyProvider'
-import { registerListeners } from './listeners'
+import { HappyProvider } from "./happyProvider"
+import { registerListeners } from "./listeners"
 
 export const uuid = crypto.randomUUID()
 
 const dappMessageBus = new EventBus<HappyEvents>({
     mode: EventBusChannel.DappPort,
-    scope: 'happy-chain-dapp-bus',
+    scope: "happy-chain-dapp-bus",
 })
 
 export const { onUserUpdate, onModalUpdate } = registerListeners(dappMessageBus)
 
 let user: HappyUser | undefined
+
 onUserUpdate((_user?: HappyUser) => {
     user = _user
 })
@@ -27,7 +28,7 @@ export const happyProvider = new HappyProvider({
 
     providerBus: new EventBus<EIP1193ProxiedEvents>({
         mode: EventBusChannel.DappPort,
-        scope: 'happy-chain-eip1193-provider',
+        scope: "happy-chain-eip1193-provider",
     }),
 
     dappBus: dappMessageBus,
