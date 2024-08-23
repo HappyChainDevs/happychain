@@ -12,8 +12,12 @@ Can be instantiated from the deserialized ErrorObject
 ### new EIP1193UnauthorizedError()
 
 ```ts
-new EIP1193UnauthorizedError(): EIP1193UnauthorizedError
+new EIP1193UnauthorizedError(errObj?: EIP1193ErrorObject): EIP1193UnauthorizedError
 ```
+
+#### Parameters
+
+• **errObj?**: `EIP1193ErrorObject`
 
 #### Returns
 
@@ -25,7 +29,7 @@ new EIP1193UnauthorizedError(): EIP1193UnauthorizedError
 
 #### Defined in
 
-packages/sdk-vanillajs/dist/index.es.d.ts:102
+[packages/sdk-shared/lib/services/eip1193Provider/errors.ts:72](https://github.com/HappyChainDevs/happychain/blob/2284efc6e7d6f65c0d05b82bd5dde85924c824dc/packages/sdk-shared/lib/services/eip1193Provider/errors.ts#L72)
 
 ## Methods
 
@@ -55,7 +59,33 @@ Create .stack property on a target object
 
 ##### Defined in
 
-node\_modules/.pnpm/@types+node\@18.15.13/node\_modules/@types/node/globals.d.ts:4
+node\_modules/.pnpm/@types+node\@22.5.0/node\_modules/@types/node/globals.d.ts:67
+
+#### captureStackTrace(targetObject, constructorOpt)
+
+```ts
+static captureStackTrace(targetObject: object, constructorOpt?: Function): void
+```
+
+Create .stack property on a target object
+
+##### Parameters
+
+• **targetObject**: `object`
+
+• **constructorOpt?**: [`Function`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function)
+
+##### Returns
+
+`void`
+
+##### Inherited from
+
+[`GenericProviderRpcError`](/react/api/classes/GenericProviderRpcError).[`captureStackTrace`](/react/api/classes/GenericProviderRpcError.mdx#capturestacktrace)
+
+##### Defined in
+
+node\_modules/.pnpm/bun-types\@1.1.25/node\_modules/bun-types/globals.d.ts:1630
 
 #### captureStackTrace(targetObject, constructorOpt)
 
@@ -82,32 +112,6 @@ Create .stack property on a target object
 ##### Defined in
 
 node\_modules/.pnpm/@types+node\@20.12.14/node\_modules/@types/node/globals.d.ts:21
-
-#### captureStackTrace(targetObject, constructorOpt)
-
-```ts
-static captureStackTrace(targetObject: object, constructorOpt?: Function): void
-```
-
-Create .stack property on a target object
-
-##### Parameters
-
-• **targetObject**: `object`
-
-• **constructorOpt?**: [`Function`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function)
-
-##### Returns
-
-`void`
-
-##### Inherited from
-
-[`GenericProviderRpcError`](/react/api/classes/GenericProviderRpcError).[`captureStackTrace`](/react/api/classes/GenericProviderRpcError.mdx#capturestacktrace)
-
-##### Defined in
-
-node\_modules/.pnpm/bun-types\@1.1.17/node\_modules/bun-types/globals.d.ts:1613
 
 ## Properties
 
@@ -139,7 +143,7 @@ code: ProviderRpcErrorCode;
 
 #### Defined in
 
-packages/sdk-vanillajs/dist/index.es.d.ts:197
+[packages/sdk-shared/lib/services/eip1193Provider/errors.ts:43](https://github.com/HappyChainDevs/happychain/blob/2284efc6e7d6f65c0d05b82bd5dde85924c824dc/packages/sdk-shared/lib/services/eip1193Provider/errors.ts#L43)
 
 ***
 
@@ -155,7 +159,7 @@ optional data: unknown;
 
 #### Defined in
 
-packages/sdk-vanillajs/dist/index.es.d.ts:198
+[packages/sdk-shared/lib/services/eip1193Provider/errors.ts:44](https://github.com/HappyChainDevs/happychain/blob/2284efc6e7d6f65c0d05b82bd5dde85924c824dc/packages/sdk-shared/lib/services/eip1193Provider/errors.ts#L44)
 
 ***
 
@@ -235,7 +239,7 @@ Optional override for formatting stack traces
 
 #### Defined in
 
-node\_modules/.pnpm/@types+node\@18.15.13/node\_modules/@types/node/globals.d.ts:11
+node\_modules/.pnpm/@types+node\@22.5.0/node\_modules/@types/node/globals.d.ts:74
 
 ***
 
@@ -251,4 +255,4 @@ static stackTraceLimit: number;
 
 #### Defined in
 
-node\_modules/.pnpm/@types+node\@18.15.13/node\_modules/@types/node/globals.d.ts:13
+node\_modules/.pnpm/@types+node\@22.5.0/node\_modules/@types/node/globals.d.ts:76

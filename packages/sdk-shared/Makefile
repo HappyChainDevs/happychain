@@ -1,5 +1,5 @@
 test:
-	bun test
+	bun test .
 .PHONY: test
 
 # Empty Stub

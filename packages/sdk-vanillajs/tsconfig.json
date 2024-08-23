@@ -1,7 +1,9 @@
 {
-    "compilerOptions": {
-        "experimentalDecorators": true
-    },
     "files": [],
+    "compilerOptions": {
+        // Required for LitElement reactive properties
+        "experimentalDecorators": true,
+        "useDefineForClassFields": false
+    },
     "references": [{ "path": "./tsconfig.lib.json" }, { "path": "./tsconfig.node.json" }]
 }

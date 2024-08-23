@@ -1,6 +1,6 @@
 # Class: EIP1193UserRejectedRequestError
 
-EIP1193 User Rejected Error
+EIP1193 Specific Errors
 
 ## Extends
 
@@ -11,8 +11,12 @@ EIP1193 User Rejected Error
 ### new EIP1193UserRejectedRequestError()
 
 ```ts
-new EIP1193UserRejectedRequestError(): EIP1193UserRejectedRequestError
+new EIP1193UserRejectedRequestError(errObj?: EIP1193ErrorObject): EIP1193UserRejectedRequestError
 ```
+
+#### Parameters
+
+• **errObj?**: `EIP1193ErrorObject`
 
 #### Returns
 
@@ -24,7 +28,7 @@ new EIP1193UserRejectedRequestError(): EIP1193UserRejectedRequestError
 
 #### Defined in
 
-[packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts:43](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts#L43)
+[packages/sdk-shared/lib/services/eip1193Provider/errors.ts:62](https://github.com/HappyChainDevs/happychain/blob/2284efc6e7d6f65c0d05b82bd5dde85924c824dc/packages/sdk-shared/lib/services/eip1193Provider/errors.ts#L62)
 
 ## Methods
 
@@ -54,7 +58,33 @@ Create .stack property on a target object
 
 ##### Defined in
 
-node\_modules/.pnpm/@types+node\@18.15.13/node\_modules/@types/node/globals.d.ts:4
+node\_modules/.pnpm/@types+node\@22.5.0/node\_modules/@types/node/globals.d.ts:67
+
+#### captureStackTrace(targetObject, constructorOpt)
+
+```ts
+static captureStackTrace(targetObject: object, constructorOpt?: Function): void
+```
+
+Create .stack property on a target object
+
+##### Parameters
+
+• **targetObject**: `object`
+
+• **constructorOpt?**: [`Function`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function)
+
+##### Returns
+
+`void`
+
+##### Inherited from
+
+[`GenericProviderRpcError`](/js/api/classes/GenericProviderRpcError).[`captureStackTrace`](/js/api/classes/GenericProviderRpcError.mdx#capturestacktrace)
+
+##### Defined in
+
+node\_modules/.pnpm/bun-types\@1.1.25/node\_modules/bun-types/globals.d.ts:1630
 
 #### captureStackTrace(targetObject, constructorOpt)
 
@@ -81,32 +111,6 @@ Create .stack property on a target object
 ##### Defined in
 
 node\_modules/.pnpm/@types+node\@20.12.14/node\_modules/@types/node/globals.d.ts:21
-
-#### captureStackTrace(targetObject, constructorOpt)
-
-```ts
-static captureStackTrace(targetObject: object, constructorOpt?: Function): void
-```
-
-Create .stack property on a target object
-
-##### Parameters
-
-• **targetObject**: `object`
-
-• **constructorOpt?**: [`Function`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function)
-
-##### Returns
-
-`void`
-
-##### Inherited from
-
-[`GenericProviderRpcError`](/js/api/classes/GenericProviderRpcError).[`captureStackTrace`](/js/api/classes/GenericProviderRpcError.mdx#capturestacktrace)
-
-##### Defined in
-
-node\_modules/.pnpm/bun-types\@1.1.17/node\_modules/bun-types/globals.d.ts:1613
 
 ## Properties
 
@@ -138,7 +142,7 @@ code: ProviderRpcErrorCode;
 
 #### Defined in
 
-[packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts:30](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts#L30)
+[packages/sdk-shared/lib/services/eip1193Provider/errors.ts:43](https://github.com/HappyChainDevs/happychain/blob/2284efc6e7d6f65c0d05b82bd5dde85924c824dc/packages/sdk-shared/lib/services/eip1193Provider/errors.ts#L43)
 
 ***
 
@@ -154,7 +158,7 @@ optional data: unknown;
 
 #### Defined in
 
-[packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts:31](https://github.com/HappyChainDevs/happychain/blob/cf58ffaf96112a54bbefeea34e6c68ce7f561403/packages/sdk-shared/lib/services/eip1193ProviderProxy/errors.ts#L31)
+[packages/sdk-shared/lib/services/eip1193Provider/errors.ts:44](https://github.com/HappyChainDevs/happychain/blob/2284efc6e7d6f65c0d05b82bd5dde85924c824dc/packages/sdk-shared/lib/services/eip1193Provider/errors.ts#L44)
 
 ***
 
@@ -234,7 +238,7 @@ Optional override for formatting stack traces
 
 #### Defined in
 
-node\_modules/.pnpm/@types+node\@18.15.13/node\_modules/@types/node/globals.d.ts:11
+node\_modules/.pnpm/@types+node\@22.5.0/node\_modules/@types/node/globals.d.ts:74
 
 ***
 
@@ -250,4 +254,4 @@ static stackTraceLimit: number;
 
 #### Defined in
 
-node\_modules/.pnpm/@types+node\@18.15.13/node\_modules/@types/node/globals.d.ts:13
+node\_modules/.pnpm/@types+node\@22.5.0/node\_modules/@types/node/globals.d.ts:76

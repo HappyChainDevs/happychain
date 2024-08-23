@@ -55,7 +55,6 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
         return new Promise(async (resolve, reject) => {
             const requiresUserApproval = await this.requiresApproval(args)
-
             const popup = requiresUserApproval ? this.promptUser(key, args) : this.autoApprove(key, args)
 
             this.queueRequest(key, { resolve, reject, popup })

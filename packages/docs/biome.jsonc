@@ -3,6 +3,19 @@
     "extends": ["node_modules/@happychain/configs/biome.jsonc"],
     "overrides": [
         {
+            "include": ["./**/*/tsconfig.*.json", "./**/*/tsconfig.json"],
+            "json": {
+                "parser": {
+                    "allowComments": true,
+                    "allowTrailingCommas": true
+                },
+                "formatter": {
+                    "trailingCommas": "none"
+                }
+            }
+        },
+
+        {
             "include": ["docs/snippets"],
             "linter": {
                 "rules": {

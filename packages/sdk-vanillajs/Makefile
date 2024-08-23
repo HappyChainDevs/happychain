@@ -3,5 +3,5 @@ include ../../makefiles/formatting.mk
 
 # Using vitest+jsdon for better react testing support
 test:
-	bun test
+	bun test .
 .PHONY: test

@@ -1,9 +1,4 @@
 {
     "extends": "@happychain/configs/tsconfig.vite-lib.json",
-    "compilerOptions": {
-        "composite": true,
-        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.lib.tsbuildinfo",
-        "moduleDetection": "force"
-    },
     "include": ["**/*.ts", "**/*.tsx"]
 }

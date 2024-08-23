@@ -71,6 +71,16 @@ describe("HappyProvider", () => {
             params: ["latest", false]
         }
 
+        // auto approve permissions (no popup)
+        happyProviderBusIframe.on("permission-check:request", ({ key, uuid }) => {
+            happyProviderBusIframe.emit("permission-check:response", {
+                key,
+                uuid,
+                error: null,
+                payload: false,
+            })
+        })
+
         // within iframe
         happyProviderBusIframe.on("request:approve", callback)
 
@@ -99,6 +109,16 @@ describe("HappyProvider", () => {
                 scope: crypto.randomUUID(),
                 port: new BroadcastChannel("dapp-channel"),
             }),
+        })
+
+        // auto approve permissions (no popup)
+        happyProviderBusIframe.on("permission-check:request", ({ key, uuid }) => {
+            happyProviderBusIframe.emit("permission-check:response", {
+                key,
+                uuid,
+                error: null,
+                payload: false,
+            })
         })
 
         // within iframe
@@ -133,6 +153,16 @@ describe("HappyProvider", () => {
                 scope: crypto.randomUUID(),
                 port: new BroadcastChannel("dapp-channel"),
             }),
+        })
+
+        // auto approve permissions (no popup)
+        happyProviderBusIframe.on("permission-check:request", ({ key, uuid }) => {
+            happyProviderBusIframe.emit("permission-check:response", {
+                key,
+                uuid,
+                error: null,
+                payload: false,
+            })
         })
 
         // within iframe
