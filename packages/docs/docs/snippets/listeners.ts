@@ -1,4 +1,4 @@
-import { onUserUpdate } from '@happychain/js'
+import { onUserUpdate } from "@happychain/js"
 
 // [!region onUserUpdate]
 onUserUpdate((user) => {

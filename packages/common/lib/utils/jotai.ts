@@ -1,4 +1,4 @@
-import { atomWithReducer } from 'jotai/utils'
+import { atomWithReducer } from "jotai/utils"
 
 /**
  * https://jotai.org/docs/recipes/atom-with-compare

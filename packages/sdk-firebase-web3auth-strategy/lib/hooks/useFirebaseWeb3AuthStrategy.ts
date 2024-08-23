@@ -1,13 +1,13 @@
-import { useMemo } from 'react'
+import { useMemo } from "react"
 
-import type { ConnectionProvider, HappyUser } from '@happychain/sdk-shared'
-import type { EIP1193Provider } from 'viem'
+import type { ConnectionProvider, HappyUser } from "@happychain/sdk-shared"
+import type { EIP1193Provider } from "viem"
 
-import { googleLogo } from '../logos'
-import { firebaseAuth } from '../services/firebase'
-import { web3AuthEvmProvider } from '../services/web3auth'
+import { googleLogo } from "../logos"
+import { firebaseAuth } from "../services/firebase"
+import { web3AuthEvmProvider } from "../services/web3auth"
 
-import { useFirebaseAuth } from './useFirebaseAuth'
+import { useFirebaseAuth } from "./useFirebaseAuth"
 
 export function useFirebaseWeb3AuthStrategy(): {
     providers: ConnectionProvider[]
@@ -18,11 +18,11 @@ export function useFirebaseWeb3AuthStrategy(): {
     const providers = useMemo(
         () => [
             {
-                type: 'social',
-                id: 'social:firebase',
-                name: 'Google',
+                type: "social",
+                id: "social:firebase",
+                name: "Google",
                 icon: googleLogo,
-                enable: () => signIn('google'),
+                enable: () => signIn("google"),
                 disable: () => signOut(),
                 getProvider: () => web3AuthEvmProvider,
             },

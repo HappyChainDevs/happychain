@@ -1,8 +1,8 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from "tailwindcss"
 
 export default {
-    prefix: 'hc-',
-    content: ['./lib/**/*.{js,ts,jsx,tsx}'],
+    prefix: "hc-",
+    content: ["./lib/**/*.{js,ts,jsx,tsx}"],
     theme: {
         extend: {},
     },

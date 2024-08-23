@@ -1,41 +1,41 @@
-import { defineConfig } from 'vocs'
+import { defineConfig } from "vocs"
 
 export default defineConfig({
-    title: 'HappyChain SDK',
+    title: "HappyChain SDK",
     socials: [
         {
-            link: 'https://x.com/HappyChainDevs',
-            icon: 'x',
+            link: "https://x.com/HappyChainDevs",
+            icon: "x",
         },
         {
-            link: 'https://github.com/HappyChainDevs',
-            icon: 'github',
+            link: "https://github.com/HappyChainDevs",
+            icon: "github",
         },
     ],
     sidebar: [
         {
-            text: 'JavaScript',
+            text: "JavaScript",
             items: [
                 {
-                    text: 'Getting Started',
-                    link: '/js/getting-started',
+                    text: "Getting Started",
+                    link: "/js/getting-started",
                 },
                 {
-                    text: 'API Reference',
-                    link: '/js/api-reference',
+                    text: "API Reference",
+                    link: "/js/api-reference",
                 },
             ],
         },
         {
-            text: 'React',
+            text: "React",
             items: [
                 {
-                    text: 'Getting Started',
-                    link: '/react/getting-started',
+                    text: "Getting Started",
+                    link: "/react/getting-started",
                 },
                 {
-                    text: 'API Reference',
-                    link: '/react/api-reference',
+                    text: "API Reference",
+                    link: "/react/api-reference",
                 },
             ],
         },

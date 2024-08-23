@@ -1,11 +1,11 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from "react"
 
-import { useFirebaseWeb3AuthStrategy } from '@happychain/firebase-web3auth-strategy'
-import { useAtomValue, useSetAtom } from 'jotai'
+import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
+import { useAtomValue, useSetAtom } from "jotai"
 
-import { AuthState, authStateAtom } from '../state/app'
+import { AuthState, authStateAtom } from "../state/app"
 
-import { setUserWithProvider, userAtom } from './useHappyAccount'
+import { setUserWithProvider, userAtom } from "./useHappyAccount"
 
 export function useSocialProviders() {
     const setAuthState = useSetAtom(authStateAtom)
@@ -18,7 +18,7 @@ export function useSocialProviders() {
             // sync local user+provider state with internal plugin updates
             // not logged in and
             const loggingIn = Boolean(!userValue?.type && user)
-            const loggedIn = userValue?.type === 'social'
+            const loggedIn = userValue?.type === "social"
             if (loggingIn || loggedIn) {
                 setUserWithProvider(user, provider)
             }

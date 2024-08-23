@@ -14,7 +14,7 @@ export interface HappyUser {
     /** Connection Provider (rabby, metamask, google) */
     provider: string
     /** Connected Wallet Type */
-    type: 'social' | 'injected'
+    type: "social" | "injected"
 
     /**
      * On-Chain

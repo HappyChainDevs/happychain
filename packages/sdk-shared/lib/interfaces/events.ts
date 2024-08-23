@@ -1,14 +1,14 @@
-import type { HappyUser } from './happyUser'
+import type { HappyUser } from "./happyUser"
 
 export interface HappyEvents {
     // modal states
-    'modal-toggle': boolean
+    "modal-toggle": boolean
 
     // user auth
-    'auth-changed': HappyUser | undefined
+    "auth-changed": HappyUser | undefined
 
-    'wallet-connect:request': string
-    'wallet-connect:response': { user?: HappyUser }
+    "wallet-connect:request": string
+    "wallet-connect:response": { user?: HappyUser }
 
-    'wallet-disconnect:request': undefined
+    "wallet-disconnect:request": undefined
 }

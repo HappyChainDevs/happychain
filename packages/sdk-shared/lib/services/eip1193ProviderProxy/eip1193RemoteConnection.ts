@@ -1,11 +1,11 @@
-import SafeEventEmitter from '@metamask/safe-event-emitter'
-import type { EIP1193RequestFn, EIP1474Methods } from 'viem'
+import SafeEventEmitter from "@metamask/safe-event-emitter"
+import type { EIP1193RequestFn, EIP1474Methods } from "viem"
 
-import { requiresApproval } from '../permissions'
+import { requiresApproval } from "../permissions"
 
-import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from './errors'
-import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from './events'
-import type { EIP1193ConnectionHandler, HappyProviderConfig } from './interface'
+import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "./errors"
+import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from "./events"
+import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -16,7 +16,7 @@ type InFlightRequest = {
     popup: Window | null
 }
 
-const POPUP_FEATURES = ['width=400', 'height=800', 'popup=true', 'toolbar=0', 'menubar=0'].join(',')
+const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
 
 export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
     private inFlight = new Map<string, InFlightRequest>()
@@ -25,10 +25,10 @@ export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193
     constructor(private config: HappyProviderConfig) {
         super()
 
-        config.providerBus.on('provider:event', this.handleProviderNativeEvent.bind(this))
+        config.providerBus.on("provider:event", this.handleProviderNativeEvent.bind(this))
 
         // Social Auth (Iframe Proxy)
-        config.providerBus.on('response:complete', this.handleCompletedRequest.bind(this))
+        config.providerBus.on("response:complete", this.handleCompletedRequest.bind(this))
     }
     request: EIP1193RequestFn<EIP1474Methods> = async (args) => {
         // Every request gets proxied through this function.
@@ -50,11 +50,11 @@ export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193
         return true
     }
 
-    private handleProviderNativeEvent(data: EIP1193ProxiedEvents['provider:event']) {
+    private handleProviderNativeEvent(data: EIP1193ProxiedEvents["provider:event"]) {
         this.emit(data.payload.event, data.payload.args)
     }
 
-    private handleCompletedRequest(data: EIP1193ProxiedEvents['response:complete']) {
+    private handleCompletedRequest(data: EIP1193ProxiedEvents["response:complete"]) {
         const req = this.inFlight.get(data.key)
 
         if (!req) {
@@ -69,7 +69,7 @@ export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193
             reject(
                 new GenericProviderRpcError({
                     code: data.error.code,
-                    message: '',
+                    message: "",
                     data: data.error.data,
                 }),
             )
@@ -109,7 +109,7 @@ export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193
     }
 
     private autoApprove(key: EventUUID, args: EIP1193RequestArg) {
-        this.config.providerBus.emit('request:approve', {
+        this.config.providerBus.emit("request:approve", {
             key,
             uuid: this.config.uuid,
             error: null,
@@ -119,12 +119,12 @@ export class RemoteConnectionHandler extends SafeEventEmitter implements EIP1193
     }
 
     private promptUser(key: EventUUID, args: EIP1193RequestArg) {
-        const url = new URL('request', this.config.iframePath)
+        const url = new URL("request", this.config.iframePath)
         const searchParams = new URLSearchParams({
             key: key,
             args: btoa(JSON.stringify(args)),
             uuid: this.config.uuid,
         }).toString()
-        return window.open(`${url}?${searchParams}`, '_blank', POPUP_FEATURES)
+        return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
     }
 }

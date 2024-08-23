@@ -1,14 +1,14 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from "react"
 
-import { init as web3AuthInit } from '@happychain/firebase-web3auth-strategy'
-import { type EIP1193EventName, logger } from '@happychain/sdk-shared'
-import { requiresApproval } from '@happychain/sdk-shared/lib/services/permissions'
-import { useAtomValue } from 'jotai'
+import { init as web3AuthInit } from "@happychain/firebase-web3auth-strategy"
+import { type EIP1193EventName, logger } from "@happychain/sdk-shared"
+import { requiresApproval } from "@happychain/sdk-shared/lib/services/permissions"
+import { useAtomValue } from "jotai"
 
-import { happyProviderBus, popupBus } from '../services/eventBus'
-import { providerAtom, publicClientAtom, walletClientAtom } from '../services/provider'
+import { happyProviderBus, popupBus } from "../services/eventBus"
+import { providerAtom, publicClientAtom, walletClientAtom } from "../services/provider"
 
-const providedUUID = new URLSearchParams(window.location.search).get('uuid')
+const providedUUID = new URLSearchParams(window.location.search).get("uuid")
 
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
     const provider = useAtomValue(providerAtom)
@@ -20,46 +20,46 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
         const init = async () => {
             await web3AuthInit()
             setIsLoaded(true)
-            logger.log('Web3Auth is initialized')
+            logger.log("Web3Auth is initialized")
         }
         init()
     }, [])
 
     useEffect(() => {
         const proxyEvent = (name: EIP1193EventName) => (event: unknown) => {
-            happyProviderBus.emit('provider:event', {
+            happyProviderBus.emit("provider:event", {
                 payload: { event: name, args: event },
             })
         }
 
-        const connectCallback = proxyEvent('connect')
-        const disconnectCallback = proxyEvent('disconnect')
-        const chainChangedCallback = proxyEvent('chainChanged')
-        const accountsChangedCallback = proxyEvent('accountsChanged')
+        const connectCallback = proxyEvent("connect")
+        const disconnectCallback = proxyEvent("disconnect")
+        const chainChangedCallback = proxyEvent("chainChanged")
+        const accountsChangedCallback = proxyEvent("accountsChanged")
 
-        provider?.on('connect', connectCallback)
-        provider?.on('disconnect', disconnectCallback)
-        provider?.on('chainChanged', chainChangedCallback)
-        provider?.on('accountsChanged', accountsChangedCallback)
+        provider?.on("connect", connectCallback)
+        provider?.on("disconnect", disconnectCallback)
+        provider?.on("chainChanged", chainChangedCallback)
+        provider?.on("accountsChanged", accountsChangedCallback)
 
         return () => {
-            provider?.removeListener('connect', connectCallback)
-            provider?.removeListener('disconnect', disconnectCallback)
-            provider?.removeListener('chainChanged', chainChangedCallback)
-            provider?.removeListener('accountsChanged', accountsChangedCallback)
+            provider?.removeListener("connect", connectCallback)
+            provider?.removeListener("disconnect", disconnectCallback)
+            provider?.removeListener("chainChanged", chainChangedCallback)
+            provider?.removeListener("accountsChanged", accountsChangedCallback)
         }
     }, [provider])
 
     // trusted requests may only be sent from same-origin (popup approval screen)
     // and can be sent through the walletClient
     useEffect(() => {
-        const offApprove = popupBus.on('request:approve', async (data) => {
+        const offApprove = popupBus.on("request:approve", async (data) => {
             if (data.uuid !== providedUUID) return
 
             try {
                 const result = await walletClient?.request(data.payload as Parameters<typeof walletClient.request>)
 
-                happyProviderBus.emit('response:complete', {
+                happyProviderBus.emit("response:complete", {
                     key: data.key,
                     uuid: data.uuid,
                     error: null,
@@ -67,12 +67,12 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
                 })
             } catch (e) {
                 console.error(e)
-                console.error('error executing request', data)
+                console.error("error executing request", data)
             }
         })
-        const offReject = popupBus.on('request:reject', (data) => {
+        const offReject = popupBus.on("request:reject", (data) => {
             if (data.uuid !== providedUUID) return
-            happyProviderBus.emit('response:complete', data)
+            happyProviderBus.emit("response:complete", data)
         })
         return () => {
             offApprove()
@@ -83,14 +83,14 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // Untrusted requests can only be called using the public client
     // as they bypass the popup approval screen
     useEffect(() => {
-        const offApprove = happyProviderBus.on('request:approve', async (data) => {
+        const offApprove = happyProviderBus.on("request:approve", async (data) => {
             if (data.uuid !== providedUUID) return
             try {
                 const isPublicMethod = !requiresApproval(data.payload)
 
                 if (!isPublicMethod) {
                     // emit not allowed error
-                    console.warn('can not execute untrusted request', data)
+                    console.warn("can not execute untrusted request", data)
                     return
                 }
 
@@ -99,7 +99,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
                 const result = await publicClient.request(data.payload as Parameters<typeof publicClient.request>)
 
-                happyProviderBus.emit('response:complete', {
+                happyProviderBus.emit("response:complete", {
                     key: data.key,
                     uuid: data.uuid,
                     error: null,
@@ -107,7 +107,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
                 })
             } catch (e) {
                 console.error(e)
-                console.error('error executing request', data)
+                console.error("error executing request", data)
             }
         })
         return () => {

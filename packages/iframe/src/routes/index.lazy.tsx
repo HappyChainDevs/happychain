@@ -1,8 +1,8 @@
-import { createLazyFileRoute } from '@tanstack/react-router'
+import { createLazyFileRoute } from "@tanstack/react-router"
 
-import { useHappyAccount } from '../hooks/useHappyAccount'
+import { useHappyAccount } from "../hooks/useHappyAccount"
 
-export const Route = createLazyFileRoute('/')({
+export const Route = createLazyFileRoute("/")({
     component: Index,
 })
 

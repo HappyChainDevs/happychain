@@ -1,6 +1,6 @@
-import type { EIP1193EventMap, EIP1193RequestFn, EIP1474Methods, RpcSchema, RpcSchemaOverride } from 'viem'
+import type { EIP1193EventMap, EIP1193RequestFn, EIP1474Methods, RpcSchema, RpcSchemaOverride } from "viem"
 
-import type { EIP1193ErrorObject } from './errors'
+import type { EIP1193ErrorObject } from "./errors"
 
 // pulled from Viem internals
 type DerivedRpcSchema<
@@ -15,7 +15,7 @@ export type EIP1193RequestResult<TParams extends EIP1193RequestArg = EIP1193Requ
     EIP1474Methods,
     undefined
 > extends RpcSchema
-    ? Extract<DerivedRpcSchema<EIP1474Methods, undefined>[number], { Method: TParams['method'] }>['ReturnType']
+    ? Extract<DerivedRpcSchema<EIP1474Methods, undefined>[number], { Method: TParams["method"] }>["ReturnType"]
     : unknown
 
 export type EIP1193EventName<T extends string = keyof EIP1193EventMap> = T
@@ -28,7 +28,7 @@ export type EIP1193EventName<T extends string = keyof EIP1193EventMap> = T
  */
 export interface EIP1193ProxiedEvents {
     // user approves request
-    'request:approve': {
+    "request:approve": {
         // request event unique key
         key: EventUUID
         // window identifier
@@ -37,7 +37,7 @@ export interface EIP1193ProxiedEvents {
         payload: EIP1193RequestArg
     }
     // user rejects request
-    'request:reject': {
+    "request:reject": {
         key: EventUUID
         uuid: ReturnType<typeof crypto.randomUUID>
         error: EIP1193ErrorObject
@@ -45,7 +45,7 @@ export interface EIP1193ProxiedEvents {
     }
 
     // request completed (success or fail)
-    'response:complete':
+    "response:complete":
         | {
               key: EventUUID
               uuid: ReturnType<typeof crypto.randomUUID>
@@ -60,7 +60,7 @@ export interface EIP1193ProxiedEvents {
           }
 
     // eip1193 events proxy
-    'provider:event': {
+    "provider:event": {
         payload: { event: EIP1193EventName; args: unknown }
     }
 }

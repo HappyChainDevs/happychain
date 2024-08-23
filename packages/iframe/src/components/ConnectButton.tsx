@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState } from "react"
 
-import type { ConnectionProvider } from '@happychain/sdk-shared'
-import clsx from 'clsx'
+import type { ConnectionProvider } from "@happychain/sdk-shared"
+import clsx from "clsx"
 
-import { useInjectedProviders } from '../hooks/useInjectedProviders'
-import { useSocialProviders } from '../hooks/useSocialProviders'
-import { dappMessageBus } from '../services/eventBus'
+import { useInjectedProviders } from "../hooks/useInjectedProviders"
+import { useSocialProviders } from "../hooks/useSocialProviders"
+import { dappMessageBus } from "../services/eventBus"
 
 export function ConnectButton() {
     const [isOpen, setIsOpen] = useState(false)
@@ -14,7 +14,7 @@ export function ConnectButton() {
     const socialProviders = useSocialProviders()
 
     function open() {
-        dappMessageBus.emit('modal-toggle', true)
+        dappMessageBus.emit("modal-toggle", true)
 
         setIsOpen(true)
     }
@@ -24,7 +24,7 @@ export function ConnectButton() {
         // delay to match fadeout transition/animation
         const animationTimeInMs = 300
         setTimeout(() => {
-            dappMessageBus.emit('modal-toggle', false)
+            dappMessageBus.emit("modal-toggle", false)
         }, animationTimeInMs)
     }
 
@@ -44,9 +44,9 @@ export function ConnectButton() {
                     className={clsx(
                         // using opacity here so fade in/out can be animated
                         // the button itself is conditionally rendered, so once connected this is all unmounted
-                        !isOpen && 'pointer-events-none opacity-0',
-                        isOpen && 'opacity-100',
-                        'fixed bottom-0 left-0 right-0 top-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition duration-300',
+                        !isOpen && "pointer-events-none opacity-0",
+                        isOpen && "opacity-100",
+                        "fixed bottom-0 left-0 right-0 top-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition duration-300",
                     )}
                     onClick={close}
                 >

@@ -1,8 +1,8 @@
 /** Components */
-export { HappyWalletProvider } from './components/HappyWalletProvider'
+export { HappyWalletProvider } from "./components/HappyWalletProvider"
 
 /** Hooks */
-export { useHappyChain } from './hooks/useHappyChain'
+export { useHappyChain } from "./hooks/useHappyChain"
 
 // re-export happychain core
 export {
@@ -23,7 +23,7 @@ export {
     onModalUpdate,
     onUserUpdate,
     register,
-} from '@happychain/js'
+} from "@happychain/js"
 
 export type {
     ConnectionProvider,
@@ -47,4 +47,4 @@ export type {
     IEventBus,
     IProviderRpcError,
     Logger,
-} from '@happychain/js'
+} from "@happychain/js"

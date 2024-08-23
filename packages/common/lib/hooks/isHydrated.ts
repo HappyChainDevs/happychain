@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react"
 
 /**
  * Returns true if the component has already been hydrated (it is not the first render), false

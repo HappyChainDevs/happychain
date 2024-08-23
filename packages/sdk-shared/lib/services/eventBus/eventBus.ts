@@ -1,4 +1,4 @@
-import type { Logger } from '../logger'
+import type { Logger } from "../logger"
 
 /**
  * Port1 (iframe) & Port2 (dapp) communicate exclusively with each other
@@ -10,14 +10,14 @@ import type { Logger } from '../logger'
  */
 export enum EventBusChannel {
     // cross domain point A to point B messages
-    IframePort = 'messagechannel:port1', // iframe port
-    DappPort = 'messagechannel:port2', // dapp window port
+    IframePort = "messagechannel:port1", // iframe port
+    DappPort = "messagechannel:port2", // dapp window port
 
     // same-domain broadcasts
-    Broadcast = 'broadcastchannel',
+    Broadcast = "broadcastchannel",
 
     // For testing. The port is supplied directly during construction.
-    Forced = 'forced',
+    Forced = "forced",
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -69,11 +69,11 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
                 const mc = new MessageChannel()
                 this.registerPortListener(mc.port1)
                 const message = `happychain:${config.scope}:init`
-                config.target.postMessage(message, '*', [mc.port2])
+                config.target.postMessage(message, "*", [mc.port2])
                 break
             }
             case EventBusChannel.DappPort: {
-                addEventListener('message', (e: MessageEvent) => {
+                addEventListener("message", (e: MessageEvent) => {
                     const message = `happychain:${config.scope}:init`
                     if (e.data === message) {
                         this.registerPortListener(e.ports[0])
@@ -82,7 +82,7 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
                 break
             }
             default:
-                throw new Error('Unable to register event bus')
+                throw new Error("Unable to register event bus")
         }
 
         // bind aliases
@@ -119,16 +119,16 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
         )
     }
 
-    public removeListener: IEventBus<TDefinition>['off']
-    public off: IEventBus<TDefinition>['off'] = (key, handler) => {
+    public removeListener: IEventBus<TDefinition>["off"]
+    public off: IEventBus<TDefinition>["off"] = (key, handler) => {
         this.handlerMap.get(key)?.delete(handler)
         if (this.handlerMap.get(key)?.size === 0) {
             this.handlerMap.delete(key)
         }
     }
 
-    public addListener: IEventBus<TDefinition>['on']
-    public on: IEventBus<TDefinition>['on'] = (key, handler) => {
+    public addListener: IEventBus<TDefinition>["on"]
+    public on: IEventBus<TDefinition>["on"] = (key, handler) => {
         const prev = this.handlerMap.get(key) ?? new Set()
         this.handlerMap.set(key, prev.add(handler))
 
@@ -136,7 +136,7 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
         return () => this.off(key, handler)
     }
 
-    public emit: IEventBus<TDefinition>['emit'] = (key, payload) => {
+    public emit: IEventBus<TDefinition>["emit"] = (key, payload) => {
         if (!this.port) {
             this.config.logger?.warn(
                 `[EventBus] Port not initialized ${this.config.mode}=>${this.config.scope}`,
@@ -152,7 +152,7 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
         return Boolean(this.port) // if port exists, assume successful
     }
 
-    public once: IEventBus<TDefinition>['once'] = (key, handler) => {
+    public once: IEventBus<TDefinition>["once"] = (key, handler) => {
         const handleOnce: typeof handler = (payload) => {
             handler(payload)
             this.off(key, handleOnce)
@@ -162,8 +162,8 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
     }
 
     // alias
-    public removeAllListeners: IEventBus<TDefinition>['clear']
-    public clear: IEventBus<TDefinition>['clear'] = () => {
+    public removeAllListeners: IEventBus<TDefinition>["clear"]
+    public clear: IEventBus<TDefinition>["clear"] = () => {
         for (const [key, handlers] of this.handlerMap) {
             for (const handler of handlers) {
                 this.off(key, handler)

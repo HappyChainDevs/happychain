@@ -1,43 +1,43 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test'
-import { setTimeout } from 'node:timers/promises'
-import type { RpcBlock } from 'viem'
+import { beforeEach, describe, expect, it, mock } from "bun:test"
+import { setTimeout } from "node:timers/promises"
+import type { RpcBlock } from "viem"
 
-import { config } from '../../config'
-import type { HappyEvents } from '../../interfaces/events'
-import { EventBus, EventBusChannel, type EventBusOptions } from '../eventBus'
+import { config } from "../../config"
+import type { HappyEvents } from "../../interfaces/events"
+import { EventBus, EventBusChannel, type EventBusOptions } from "../eventBus"
 
-import { GenericProviderRpcError } from './errors'
-import type { EIP1193ProxiedEvents } from './events'
-import { HappyProvider } from './happyProvider'
+import { GenericProviderRpcError } from "./errors"
+import type { EIP1193ProxiedEvents } from "./events"
+import { HappyProvider } from "./happyProvider"
 
 const emptyRpcBlock = {
     baseFeePerGas: null,
-    blobGasUsed: '0x',
-    difficulty: '0x',
-    excessBlobGas: '0x',
-    extraData: '0x',
-    gasLimit: '0x',
-    gasUsed: '0x',
+    blobGasUsed: "0x",
+    difficulty: "0x",
+    excessBlobGas: "0x",
+    extraData: "0x",
+    gasLimit: "0x",
+    gasUsed: "0x",
     hash: null,
     logsBloom: null,
-    miner: '0x',
-    mixHash: '0x',
+    miner: "0x",
+    mixHash: "0x",
     nonce: null,
     number: null,
-    parentHash: '0x',
-    receiptsRoot: '0x',
+    parentHash: "0x",
+    receiptsRoot: "0x",
     sealFields: [],
-    sha3Uncles: '0x',
-    size: '0x',
-    stateRoot: '0x',
-    timestamp: '0x',
-    totalDifficulty: '0x',
+    sha3Uncles: "0x",
+    size: "0x",
+    stateRoot: "0x",
+    timestamp: "0x",
+    totalDifficulty: "0x",
     transactions: [],
-    transactionsRoot: '0x',
+    transactionsRoot: "0x",
     uncles: [],
 } satisfies RpcBlock
 
-describe('HappyProvider', () => {
+describe("HappyProvider", () => {
     let busConfig: EventBusOptions
     beforeEach(() => {
         busConfig = {
@@ -47,7 +47,7 @@ describe('HappyProvider', () => {
         } satisfies EventBusOptions
     })
 
-    it('transmits payload using bus', async () => {
+    it("transmits payload using bus", async () => {
         const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
         const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
@@ -57,23 +57,23 @@ describe('HappyProvider', () => {
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),
-                port: new BroadcastChannel('dapp-channel'),
+                port: new BroadcastChannel("dapp-channel"),
             }),
         })
 
         const callback = mock(({ key: _key, error: _error, payload: _payload }) => {})
 
         const payload = {
-            method: 'eth_getBlockByNumber',
-            params: ['latest', false],
+            method: "eth_getBlockByNumber",
+            params: ["latest", false],
         } as {
             // make viem happy
-            method: 'eth_getBlockByNumber'
-            params: ['latest', false]
+            method: "eth_getBlockByNumber"
+            params: ["latest", false]
         }
 
         // within iframe
-        happyProviderBusIframe.on('request:approve', callback)
+        happyProviderBusIframe.on("request:approve", callback)
 
         // provider request, unanswered so don't await
         provider.request(payload)
@@ -86,7 +86,7 @@ describe('HappyProvider', () => {
         expect(callback.mock.calls[0][0].payload).toEqual(payload)
     })
 
-    it('resolves on success', async () => {
+    it("resolves on success", async () => {
         const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
         const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
@@ -96,13 +96,13 @@ describe('HappyProvider', () => {
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),
-                port: new BroadcastChannel('dapp-channel'),
+                port: new BroadcastChannel("dapp-channel"),
             }),
         })
 
         // within iframe
-        happyProviderBusIframe.on('request:approve', ({ key }) => {
-            happyProviderBusIframe.emit('response:complete', {
+        happyProviderBusIframe.on("request:approve", ({ key }) => {
+            happyProviderBusIframe.emit("response:complete", {
                 key,
                 error: null,
                 payload: emptyRpcBlock,
@@ -110,14 +110,14 @@ describe('HappyProvider', () => {
         })
 
         const resultBlock = provider.request({
-            method: 'eth_getBlockByNumber',
-            params: ['latest', false],
+            method: "eth_getBlockByNumber",
+            params: ["latest", false],
         })
         // provider request
         expect(resultBlock).resolves.toStrictEqual(emptyRpcBlock)
     })
 
-    it('rejects on error', async () => {
+    it("rejects on error", async () => {
         const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(busConfig)
         const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
@@ -127,18 +127,18 @@ describe('HappyProvider', () => {
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),
-                port: new BroadcastChannel('dapp-channel'),
+                port: new BroadcastChannel("dapp-channel"),
             }),
         })
 
         // within iframe
-        happyProviderBusIframe.on('request:approve', ({ key }) => {
-            happyProviderBusIframe.emit('response:complete', {
+        happyProviderBusIframe.on("request:approve", ({ key }) => {
+            happyProviderBusIframe.emit("response:complete", {
                 key,
                 error: {
                     code: 4001,
-                    message: 'User Rejected',
-                    data: 'User Rejected ',
+                    message: "User Rejected",
+                    data: "User Rejected ",
                 },
                 payload: null,
             })
@@ -147,13 +147,13 @@ describe('HappyProvider', () => {
         // provider request
         expect(
             provider.request({
-                method: 'eth_getBlockByNumber',
-                params: ['latest', false],
+                method: "eth_getBlockByNumber",
+                params: ["latest", false],
             }),
         ).rejects.toThrowError(GenericProviderRpcError)
     })
 
-    it('subscribes and unsubscribes to native eip1193 events', async () => {
+    it("subscribes and unsubscribes to native eip1193 events", async () => {
         const happyProviderBusProviderProxy = new EventBus<EIP1193ProxiedEvents>(busConfig)
 
         const provider = new HappyProvider({
@@ -162,22 +162,22 @@ describe('HappyProvider', () => {
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),
-                port: new BroadcastChannel('dapp-channel'),
+                port: new BroadcastChannel("dapp-channel"),
             }),
         })
 
         const callback = mock(() => {})
-        provider.on('connect', callback)
+        provider.on("connect", callback)
 
-        provider.emit('connect')
+        provider.emit("connect")
 
         expect(callback).toHaveBeenCalledTimes(1)
 
-        provider.removeListener('connect', callback)
+        provider.removeListener("connect", callback)
 
-        provider.emit('connect')
-        provider.emit('connect')
-        provider.emit('connect')
+        provider.emit("connect")
+        provider.emit("connect")
+        provider.emit("connect")
 
         expect(callback).toHaveBeenCalledTimes(1)
     })

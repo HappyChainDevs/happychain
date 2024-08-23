@@ -1,4 +1,4 @@
-export { EventBus, EventBusChannel } from './eventBus'
+export { EventBus, EventBusChannel } from "./eventBus"
 
 export type {
     EventPayload,
@@ -8,4 +8,4 @@ export type {
     EventMap,
     IEventBus,
     EventBusOptions,
-} from './eventBus'
+} from "./eventBus"

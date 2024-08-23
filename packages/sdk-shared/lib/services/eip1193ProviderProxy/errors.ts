@@ -1,4 +1,4 @@
-import type { ProviderRpcErrorCode } from 'viem'
+import type { ProviderRpcErrorCode } from "viem"
 
 /**
  * Error Object is used to transmit error messages
@@ -43,8 +43,8 @@ export class EIP1193UserRejectedRequestError extends GenericProviderRpcError {
     constructor() {
         super({
             code: 4001,
-            data: 'User Rejected Request',
-            message: 'User Rejected Request',
+            data: "User Rejected Request",
+            message: "User Rejected Request",
         })
     }
 }
@@ -53,8 +53,8 @@ export class EIP1193UnauthorizedError extends GenericProviderRpcError {
     constructor() {
         super({
             code: 4100,
-            data: 'Unauthorized',
-            message: 'Unauthorized',
+            data: "Unauthorized",
+            message: "Unauthorized",
         })
     }
 }
@@ -62,8 +62,8 @@ export class EIP1193UnsupportedMethodError extends GenericProviderRpcError {
     constructor() {
         super({
             code: 4200,
-            data: 'Unsupported Method',
-            message: 'Unsupported Method',
+            data: "Unsupported Method",
+            message: "Unsupported Method",
         })
     }
 }
@@ -71,8 +71,8 @@ export class EIP1193DisconnectedError extends GenericProviderRpcError {
     constructor() {
         super({
             code: 4900,
-            data: 'Disconnected',
-            message: 'Disconnected',
+            data: "Disconnected",
+            message: "Disconnected",
         })
     }
 }
@@ -80,8 +80,8 @@ export class EIP1193ChainDisconnectedError extends GenericProviderRpcError {
     constructor() {
         super({
             code: 4901,
-            data: 'Chain Disconnected',
-            message: 'Chain Disconnected',
+            data: "Chain Disconnected",
+            message: "Chain Disconnected",
         })
     }
 }
@@ -89,8 +89,8 @@ export class EIP1193ChainNotRecognizedError extends GenericProviderRpcError {
     constructor() {
         super({
             code: 4902,
-            data: 'Chain Not Recognized',
-            message: 'Chain Not Recognized',
+            data: "Chain Not Recognized",
+            message: "Chain Not Recognized",
         })
     }
 }

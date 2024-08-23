@@ -1,4 +1,4 @@
-import type { EIP1193Provider } from 'viem'
+import type { EIP1193Provider } from "viem"
 
 export interface EIP6963ProviderInfo {
     uuid: string
@@ -13,7 +13,7 @@ export interface EIP6963ProviderDetail {
 }
 
 export interface EIP6963AnnounceProviderEvent extends CustomEvent<EIP6963ProviderDetail> {
-    type: 'eip6963:announceProvider'
+    type: "eip6963:announceProvider"
 }
 
 export interface ConnectionProvider {

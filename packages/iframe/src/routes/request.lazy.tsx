@@ -1,13 +1,13 @@
-import { useState } from 'react'
+import { useState } from "react"
 
-import { createLazyFileRoute } from '@tanstack/react-router'
+import { createLazyFileRoute } from "@tanstack/react-router"
 
-import { DotLinearWaveLoader } from '../components/loaders/DotLinearWaveLoader'
-import { PersonalSign } from '../components/requests/PersonalSign'
-import { SendTransaction } from '../components/requests/SendTransaction'
-import { popupBus } from '../services/eventBus'
+import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
+import { PersonalSign } from "../components/requests/PersonalSign"
+import { SendTransaction } from "../components/requests/SendTransaction"
+import { popupBus } from "../services/eventBus"
 
-export const Route = createLazyFileRoute('/request')({
+export const Route = createLazyFileRoute("/request")({
     component: Request,
 })
 
@@ -17,11 +17,11 @@ function Request() {
     const req = JSON.parse(atob(args))
 
     function reject() {
-        popupBus.emit('request:reject', {
+        popupBus.emit("request:reject", {
             error: {
                 code: 4001,
-                message: 'User rejected request',
-                data: 'User rejected request',
+                message: "User rejected request",
+                data: "User rejected request",
             },
             uuid,
             key,
@@ -31,7 +31,7 @@ function Request() {
 
     function accept() {
         setIsLoading(true)
-        popupBus.emit('request:approve', {
+        popupBus.emit("request:approve", {
             error: null,
             uuid,
             key,
@@ -43,11 +43,11 @@ function Request() {
         return <DotLinearWaveLoader />
     }
 
-    if (req.method === 'personal_sign') {
+    if (req.method === "personal_sign") {
         return <PersonalSign method={req.method} params={req.params} reject={reject} accept={accept} />
     }
 
-    if (req.method === 'eth_sendTransaction') {
+    if (req.method === "eth_sendTransaction") {
         return <SendTransaction method={req.method} params={req.params} reject={reject} accept={accept} />
     }
 

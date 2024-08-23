@@ -1,4 +1,4 @@
-import type { HappyUser } from '@happychain/sdk-shared'
+import type { HappyUser } from "@happychain/sdk-shared"
 
 interface SendTransactionProps {
     method: string
@@ -8,19 +8,19 @@ interface SendTransactionProps {
 }
 
 const signatureTypes: Record<string, string> = {
-    personal_sign: 'Signature Request',
-    eth_sendTransaction: 'Send Transaction',
+    personal_sign: "Signature Request",
+    eth_sendTransaction: "Send Transaction",
 }
 
 const safeGet = (key: string) => {
     try {
-        return JSON.parse(localStorage.getItem(key) || 'null')
+        return JSON.parse(localStorage.getItem(key) || "null")
     } catch {
         return null
     }
 }
 
-const user = safeGet('happychain:cached-user') as HappyUser
+const user = safeGet("happychain:cached-user") as HappyUser
 
 export function SendTransaction({ method, params, reject, accept }: SendTransactionProps) {
     return (
@@ -28,7 +28,7 @@ export function SendTransaction({ method, params, reject, accept }: SendTransact
             <div className="flex w-full grow flex-col gap-4">
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">{window.location.origin}</div>
                 <div className="w-full rounded-lg bg-base-200 p-4 font-bold">
-                    {signatureTypes[method] ?? 'Unknown Signature Type'}
+                    {signatureTypes[method] ?? "Unknown Signature Type"}
                 </div>
 
                 <div className="flex grow flex-col gap-4 overflow-x-auto bg-zinc-100 p-4">

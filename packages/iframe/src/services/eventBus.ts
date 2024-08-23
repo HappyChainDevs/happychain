@@ -6,7 +6,7 @@ import {
     EventBusChannel,
     type EventUUID,
     type HappyEvents,
-} from '@happychain/sdk-shared'
+} from "@happychain/sdk-shared"
 
 /**
  * Event system between the HappyProvider in the dapp
@@ -17,7 +17,7 @@ import {
 export const happyProviderBus = new EventBus<EIP1193ProxiedEvents>({
     target: window.parent,
     mode: EventBusChannel.IframePort,
-    scope: 'happy-chain-eip1193-provider',
+    scope: "happy-chain-eip1193-provider",
 })
 
 /**
@@ -28,7 +28,7 @@ export const happyProviderBus = new EventBus<EIP1193ProxiedEvents>({
 export const dappMessageBus = new EventBus<HappyEvents>({
     target: window.parent,
     mode: EventBusChannel.IframePort,
-    scope: 'happy-chain-dapp-bus',
+    scope: "happy-chain-dapp-bus",
 })
 
 /**
@@ -37,7 +37,7 @@ export const dappMessageBus = new EventBus<HappyEvents>({
  */
 
 export interface BroadcastEvents {
-    'request:approve': {
+    "request:approve": {
         error: null
         // request key
         key: EventUUID
@@ -45,7 +45,7 @@ export interface BroadcastEvents {
         uuid: ReturnType<typeof crypto.randomUUID>
         payload: EIP1193RequestResult
     }
-    'request:reject': {
+    "request:reject": {
         error: EIP1193ErrorObject
         // request key
         key: EventUUID
@@ -62,5 +62,5 @@ export interface BroadcastEvents {
  */
 export const popupBus = new EventBus<BroadcastEvents>({
     mode: EventBusChannel.Broadcast,
-    scope: 'server:popup',
+    scope: "server:popup",
 })

@@ -1,23 +1,23 @@
-import { resolve } from 'node:path'
-import react from '@vitejs/plugin-react-swc'
-import { defineConfig } from 'vite'
-import dts from 'vite-plugin-dts'
+import { resolve } from "node:path"
+import react from "@vitejs/plugin-react-swc"
+import { defineConfig } from "vite"
+import dts from "vite-plugin-dts"
 
 // https://vitejs.dev/config/
 export default defineConfig({
     build: {
         lib: {
-            entry: resolve(__dirname, './lib/index.ts'),
-            name: 'happychain',
+            entry: resolve(__dirname, "./lib/index.ts"),
+            name: "happychain",
             fileName: (format) => `index.${format}.js`,
         },
         rollupOptions: {
-            external: ['react', '@happychain/js', 'react-dom'],
+            external: ["react", "@happychain/js", "react-dom"],
             output: {
                 globals: {
-                    react: 'React',
-                    '@happychain/js': 'HappyChain',
-                    'react-dom': 'ReactDOM',
+                    react: "React",
+                    "@happychain/js": "HappyChain",
+                    "react-dom": "ReactDOM",
                 },
             },
         },
@@ -36,8 +36,8 @@ export default defineConfig({
         dts({
             // nicer output, but takes time
             rollupTypes: true,
-            tsconfigPath: 'tsconfig.app.json',
-            exclude: ['**/*.test.tsx', '**/*.test.ts'],
+            tsconfigPath: "tsconfig.app.json",
+            exclude: ["**/*.test.tsx", "**/*.test.ts"],
         }),
         react(),
     ],
