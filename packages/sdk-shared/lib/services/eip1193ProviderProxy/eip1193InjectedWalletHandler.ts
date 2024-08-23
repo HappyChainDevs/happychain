@@ -25,7 +25,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     constructor(private config: HappyProviderConfig) {
         super()
         // local connection (injected wallet)
-        config.dappBus.on("injected-wallet:request", this.handleProviderConnectionRequest.bind(this))
+        config.dappBus.on("injected-wallet:requestConnect", this.handleProviderConnectionRequest.bind(this))
     }
 
     isConnected(): boolean {
@@ -43,7 +43,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
-        this.config.dappBus.emit("injected-wallet:response", { user: undefined })
+        this.config.dappBus.emit("injected-wallet:connect", { user: undefined })
         this.localConnection = undefined
     }
 
@@ -65,7 +65,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
                 }
                 const [address] = accounts
                 const user = this.createHappyUserFromAddress(rdns, address)
-                this.config.dappBus.emit("injected-wallet:response", { user })
+                this.config.dappBus.emit("injected-wallet:connect", { user })
             })
             providerDetails.provider.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
             providerDetails.provider.on("connect", (connectInfo) => this.emit("connect", connectInfo))
@@ -77,7 +77,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
             this.localConnection = providerDetails
 
             const user = this.createHappyUserFromAddress(rdns, address)
-            this.config.dappBus.emit("injected-wallet:response", { user })
+            this.config.dappBus.emit("injected-wallet:connect", { user })
         } catch {
             this.handleProviderDisconnectionRequest()
         }
