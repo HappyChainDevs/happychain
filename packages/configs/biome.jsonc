@@ -50,6 +50,9 @@
     },
     "overrides": [
         {
+            // extended tsconfigs can be JSONC however they can't use the
+            // proper .jsonc extension and therfore are invalid json
+            // this fixes that
             "include": ["tsconfig.*.json", "tsconfig.json"],
             "json": {
                 "parser": {
@@ -58,6 +61,18 @@
                 },
                 "formatter": {
                     "trailingCommas": "none"
+                }
+            }
+        },
+
+        {
+            // import.meta interface augmentation
+            "include": ["vite-env.d.ts"],
+            "linter": {
+                "rules": {
+                    "correctness": {
+                        "noUnusedVariables": "off"
+                    }
                 }
             }
         }
