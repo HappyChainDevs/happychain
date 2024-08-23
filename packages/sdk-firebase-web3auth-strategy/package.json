@@ -4,9 +4,7 @@
     "private": true,
     "type": "module",
     "main": "lib/index.ts",
-    "files": [
-        "lib"
-    ],
+    "files": ["lib"],
     "dependencies": {
         "@toruslabs/tss-dkls-lib": "^3.0.0",
         "@web3auth/ethereum-mpc-provider": "^8.12.3",
