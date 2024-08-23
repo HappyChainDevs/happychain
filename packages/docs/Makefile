@@ -11,7 +11,7 @@ dev:
 
 # precompile API reference docs, then build full vocs output
 build:
-	make -j 2 typedoc-js typedoc-react
+	make typedoc
 	make vocs
 .PHONY: build
 
@@ -33,6 +33,10 @@ vocs.watch:
 # generate all markdown API reference
 typedoc:
 	make -j 2 typedoc-js typedoc-react
+.PHONY: typedoc
+
+typedoc.clean:
+	rm -rf docs/pages/{js,react}/api
 .PHONY: typedoc
 
 # generate JS markdown API reference
