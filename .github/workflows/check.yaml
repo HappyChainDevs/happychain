@@ -23,8 +23,8 @@ jobs:
           version: nightly
       - name: Fake contract deployment
         run: mkdir -p packages/contracts/out && echo "{}" > packages/contracts/out/deployment.json
-      - run: make install-frozen
-      - run: make setup
-      - run: make check
-      - run: make test
-      - run: make build
+      - run: make --silent install-frozen
+      - run: make --silent setup
+      - run: make --silent check
+      - run: make --silent test
+      - run: make --silent build
