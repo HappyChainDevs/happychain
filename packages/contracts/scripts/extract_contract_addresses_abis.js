@@ -1,5 +1,5 @@
-const fs = require('fs')
-const { exec } = require("child_process")
+const fs = require("node:fs")
+const { exec } = require("node:child_process")
 
 // Usage: takes two arguments `deployment_log_file` and `abi_output_file`
 
@@ -17,25 +17,27 @@ const abi_output_file = process.argv[3]
 const output = {}
 let abis = {}
 
-const lineReader = require('readline').createInterface({
-  input: fs.createReadStream(deployment_log_file)
-});
-
-lineReader.on('line', line => {
-  const [label, _, address] = line.trim().split(" ")
-  output[label] = address
-  exec(`forge inspect ${label} abi`, (error, stdout, stderr) => {
-    if (error) throw error
-    abis[label] = JSON.parse(stdout)
-  })
+const lineReader = require("node:readline").createInterface({
+    input: fs.createReadStream(deployment_log_file),
 })
 
-lineReader.on('close', () => {
-  console.log(JSON.stringify(output, null, 4))
+lineReader.on("line", (line) => {
+    const [label, _, address] = line.trim().split(" ")
+    output[label] = address
+    exec(`forge inspect ${label} abi`, (error, stdout, _stderr) => {
+        if (error) throw error
+        abis[label] = JSON.parse(stdout)
+    })
 })
 
-process.on('beforeExit', () => {
-  if (!abis) return
-  fs.writeFile(abi_output_file, JSON.stringify(abis), err => { if (err) throw err })
-  abis = undefined
+lineReader.on("close", () => {
+    console.log(JSON.stringify(output, null, 4))
+})
+
+process.on("beforeExit", () => {
+    if (!abis) return
+    fs.writeFile(abi_output_file, JSON.stringify(abis), (err) => {
+        if (err) throw err
+    })
+    abis = undefined
 })
