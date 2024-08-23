@@ -1,1 +1,1 @@
-make -s format
+make --silent format
