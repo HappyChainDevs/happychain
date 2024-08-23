@@ -130,7 +130,7 @@ demo-vanilla:
 # quickly format change files between <your branch> and master
 # using default global settings
 format-fast-diff:
-	pnpm biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH))) --write
+	pnpm biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)))
 .PHONY: format-fast-diff
 
 # ==================================================================================================
