@@ -5,8 +5,9 @@ export type WalletRegisterOptions = {
     rpcUrl?: string
     chainId?: string
 }
+
 /**
- * Register the initialized wallet
+ * Registers the required components and initializes the SDK
  */
 export function register(opts?: WalletRegisterOptions) {
     if (document.querySelector("happy-wallet")) {
@@ -30,10 +31,7 @@ export type { HappyProvider } from "./happyProvider/happyProvider"
 
 export { onModalUpdate, onUserUpdate, getCurrentUser, happyProvider } from "./happyProvider/initialize"
 
-// re-export happychain core
-export { config } from "@happychain/sdk-shared"
-
-export type { UserUpdateCallback, ModalUpdateCallback } from "./happyProvider/listeners"
+export type { UserUpdateCallback, ModalUpdateCallback, ListenerUnsubscribeFn } from "./happyProvider/listeners"
 
 export type {
     // Errors

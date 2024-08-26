@@ -4,19 +4,71 @@ layout: doc
 
 import { HomePage } from 'vocs/components'
 
-<HomePage.Root>
-  <HomePage.Logo />
-  <HomePage.Tagline>{''}</HomePage.Tagline>
+# HappyChain SDK
 
-  <HomePage.InstallPackage name="@happychain/react" type="install" />
-  <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-    <HomePage.Description>React Hooks and Components</HomePage.Description>
-    <HomePage.Button href="/react/quick-start" variant="accent">Learn More</HomePage.Button>
-  </div>
+## VanillaJS
 
-  <HomePage.InstallPackage name="@happychain/js" type="install" />
-  <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-    <HomePage.Description>Vanilla JS and Typescript</HomePage.Description>
-    <HomePage.Button href="/react/quick-start" variant="accent">Learn More</HomePage.Button>
-  </div>
-</HomePage.Root>
+<div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+  <HomePage.Description>Vanilla JS and Typescript</HomePage.Description>
+  <HomePage.Button href="/js/quick-start" variant="accent">Get Started</HomePage.Button>
+</div>
+
+:::code-group
+
+```bash [npm]
+npm install @happychain/js
+```
+
+```bash [pnpm]
+pnpm add @happychain/js
+```
+
+```bash [yarn]
+yarn add @happychain/js
+```
+
+```bash [bun]
+bun add @happychain/js
+```
+
+:::
+
+- [register](/js/api/functions/register)
+- [onUserUpdate](/js/api/functions/onUserUpdate)
+- [getCurrentUser](/js/api/functions/getCurrentUser)
+- [happyProvider](/js/api/variables/happyProvider)
+
+<HomePage.Button href="/js/api" variant="accent">Full API Reference</HomePage.Button>
+
+## React
+
+<div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+  <HomePage.Description>React Hooks and Components</HomePage.Description>
+  <HomePage.Button href="/react/quick-start" variant="accent">Get Started</HomePage.Button>
+</div>
+
+:::code-group
+
+```bash [npm]
+npm install @happychain/react
+```
+
+```bash [pnpm]
+pnpm add @happychain/react
+```
+
+```bash [yarn]
+yarn add @happychain/react
+```
+
+```bash [bun]
+bun add @happychain/react
+```
+
+:::
+
+- [HappyWalletProvider](/react/api/functions/HappyWalletProvider)
+- [useHappyChain](/react/api/functions/useHappyChain)
+- [happyProvider](/react/api/variables/happyProvider)
+
+<HomePage.Button href="/js/api" variant="accent">Full API Reference</HomePage.Button>
