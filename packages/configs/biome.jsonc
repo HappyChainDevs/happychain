@@ -6,7 +6,8 @@
             "./**/*/dist",
             "./**/*/generated.ts",
             "./**/*/node_modules",
-            "./**/*/routeTree.gen.ts"
+            "./**/*/routeTree.gen.ts",
+            "*.config.ts.timestamp-*.mjs"
         ]
     },
     "formatter": {
