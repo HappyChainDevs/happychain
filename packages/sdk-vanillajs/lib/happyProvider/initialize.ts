@@ -4,6 +4,11 @@ import { EventBus, EventBusChannel, config } from "@happychain/sdk-shared"
 import { HappyProvider } from "./happyProvider"
 import { registerListeners } from "./listeners"
 
+/**
+ * Unique Window UUID
+ *
+ * @internal
+ */
 export const uuid = crypto.randomUUID()
 
 const dappMessageBus = new EventBus<HappyEvents>({
@@ -19,8 +24,25 @@ onUserUpdate((_user?: HappyUser) => {
     user = _user
 })
 
+/**
+ * Current Active HappyUser
+ *
+ * {@link HappyUser}
+ * @returns currently connected HappyUser, or undefined
+ *
+ * @example
+ * ```ts twoslash
+ * import { getCurrentUser } from '@happychain/js'
+ * // --- cut ---
+ * const user = getCurrentUser()
+ * ```
+ */
 export const getCurrentUser = () => user
 
+/**
+ * `happyProvider` is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider}
+ * and is an initialized instance of {@link HappyProvider}
+ */
 export const happyProvider = new HappyProvider({
     iframePath: config.iframePath,
 
