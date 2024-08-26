@@ -1,8 +1,7 @@
 SHELL := /bin/bash
 
-############
-# Packages #
-############
+# ==================================================================================================
+# Packages
 
 # build & format all support packages with no internal dependencies
 SUPPORT_PKGS := configs,contracts,common,sdk-shared,sdk-firebase-web3auth-strategy

@@ -17,8 +17,8 @@ export function registerListeners(messageBus: EventBus<HappyEvents>) {
             call(isOpen)
         }
     })
+
     /**
-     *
      * @example
      * ```ts twoslash
      * import { onUserUpdate } from '@happychain/js'

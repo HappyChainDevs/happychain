@@ -1,7 +1,7 @@
 include ../../makefiles/formatting.mk
 
 # Vocs seems unstable, and changes to several files like this
-# can crash it easily. Leaving this here, as its convinient
+# can crash it easily. Leaving this here, as it is convenient
 # but if you plan on working on documentation for awhile
 # you are better off running in three seperate terminals
 # so you can restart vocs when needed
