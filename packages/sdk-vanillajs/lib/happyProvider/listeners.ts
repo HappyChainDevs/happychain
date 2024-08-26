@@ -27,7 +27,7 @@ export function registerListeners(messageBus: EventBus<HappyEvents>) {
      *```
      *
      * @param UserUpdateCallback
-     * @returns
+     * @returns unsubscribe function
      */
     const onUserUpdate = (callback: UserUpdateCallback) => {
         onUserUpdateCallbacks.add(callback)
