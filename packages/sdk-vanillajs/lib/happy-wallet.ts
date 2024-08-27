@@ -26,7 +26,7 @@ export class HappyWallet extends LitElement {
     }
 
     constructor(
-        private uuid: ReturnType<typeof crypto.randomUUID>,
+        private windowId: ReturnType<typeof crypto.randomUUID>,
         /** Stringified {@link AddEthereumChainParameter} */
         private chain: string,
         /** Stringified rpc url array string[] */
@@ -63,7 +63,7 @@ export class HappyWallet extends LitElement {
 
         const searchParams = new URLSearchParams(
             filterUndefinedValues({
-                uuid: this.uuid,
+                windowId: this.windowId,
                 chain: this.chain,
                 "rpc-urls": this.rpcUrl,
             }),
