@@ -7,6 +7,7 @@
     "vue": "^3.4.37"
   },
   "devDependencies": {
+    "@happychain/configs": "workspace:^",
     "@vitejs/plugin-vue": "^5.1.2",
     "typescript": "^5.5.3",
     "vite": "^5.4.1",
