@@ -1,6 +1,6 @@
 import type { AddEthereumChainParameter } from "viem"
 
-export const ethereumSepolia: AddEthereumChainParameter = {
+export const ethereumSepolia = {
     chainName: "Sepolia",
     rpcUrls: [
         "https://rpc.sepolia.org",
@@ -20,4 +20,4 @@ export const ethereumSepolia: AddEthereumChainParameter = {
     nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
     chainId: "0xaa36a7",
     blockExplorerUrls: ["https://sepolia.etherscan.io", "https://sepolia.otterscan.io"],
-}
+} as const satisfies Readonly<AddEthereumChainParameter>

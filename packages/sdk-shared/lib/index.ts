@@ -4,6 +4,7 @@ export { logger } from "./services/logger"
 export { permissionsLists, requiresApproval } from "./services/permissions"
 
 export * as chains from "./chains"
+export { getChainFromSearchParams, defaultChain } from "./chains/utils"
 
 export { EventBus, EventBusChannel } from "./services/eventBus"
 

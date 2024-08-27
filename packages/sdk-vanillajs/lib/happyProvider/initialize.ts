@@ -9,7 +9,7 @@ import { registerListeners } from "./listeners"
  *
  * @internal
  */
-export const uuid = crypto.randomUUID()
+export const windowId = crypto.randomUUID()
 
 const dappMessageBus = new EventBus<HappyEvents>({
     mode: EventBusChannel.DappPort,
@@ -46,7 +46,7 @@ export const getCurrentUser = () => user
 export const happyProvider = new HappyProvider({
     iframePath: config.iframePath,
 
-    uuid,
+    windowId: windowId,
 
     providerBus: new EventBus<EIP1193ProxiedEvents>({
         mode: EventBusChannel.DappPort,

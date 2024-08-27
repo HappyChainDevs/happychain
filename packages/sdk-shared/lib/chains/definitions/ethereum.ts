@@ -1,12 +1,10 @@
 import type { AddEthereumChainParameter } from "viem"
 
-export const ethereum: AddEthereumChainParameter = {
+export const ethereum = {
     chainName: "Ethereum",
     rpcUrls: [
-        "https://mainnet.infura.io/v3/${INFURA_API_KEY}",
-        "wss://mainnet.infura.io/ws/v3/${INFURA_API_KEY}",
-        "https://api.mycryptoapi.com/eth",
         "https://cloudflare-eth.com",
+        "https://api.mycryptoapi.com/eth",
         "https://ethereum-rpc.publicnode.com",
         "wss://ethereum-rpc.publicnode.com",
         "https://mainnet.gateway.tenderly.co",
@@ -24,4 +22,4 @@ export const ethereum: AddEthereumChainParameter = {
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     chainId: "0x1",
     blockExplorerUrls: ["https://etherscan.io", "https://eth.blockscout.com", "https://ethereum.dex.guru"],
-}
+} as const satisfies Readonly<AddEthereumChainParameter>

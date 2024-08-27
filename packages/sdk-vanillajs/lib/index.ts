@@ -1,31 +1,4 @@
-import { HappyWallet } from "./happy-wallet"
-import { uuid } from "./happyProvider/initialize"
-
-export type WalletRegisterOptions = {
-    rpcUrl?: string
-    chainId?: string
-}
-
-/**
- * Registers the required components and initializes the SDK
- */
-export function register(opts?: WalletRegisterOptions) {
-    if (document.querySelector("happy-wallet")) {
-        // don't register if already exists on page
-        return
-    }
-    const wallet = new HappyWallet(uuid)
-
-    if (opts?.rpcUrl) {
-        wallet.setAttribute("rpc-url", opts.rpcUrl)
-    }
-
-    if (opts?.chainId) {
-        wallet.setAttribute("chain-id", opts.chainId)
-    }
-
-    document.body.appendChild(wallet)
-}
+export { register } from "./register"
 
 export type { HappyProvider } from "./happyProvider/happyProvider"
 
