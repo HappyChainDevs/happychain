@@ -11,7 +11,7 @@ const configSchema = z.object({
     // network settings
     // loosely based on https://eips.ethereum.org/EIPS/eip-3085
     chainId: z.string().trim(),
-    blockExplorerUrls: z.string().trim().url().array(),
+    blockExplorerUrls: z.string().trim().url().array().optional(),
     chainName: z.string().trim(),
     iconUrls: z.string().trim().url().array().optional(),
     nativeCurrency: z.object({

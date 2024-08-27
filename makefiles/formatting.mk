@@ -1,7 +1,8 @@
 check:
-	pnpm biome check ./
+	@echo "Checking..."
+	@./node_modules/@happychain/configs/node_modules/.bin/biome check ./
 .PHONT: check
 
 format:
-	pnpm biome check ./ --write
+	@./node_modules/@happychain/configs/node_modules/.bin/biome check ./ --write
 .PHONT: format

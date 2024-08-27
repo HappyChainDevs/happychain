@@ -24,7 +24,7 @@ const ethereumSigningProvider = new EthereumSigningProvider({
             chainId: config.chainId,
             rpcTarget: config.rpcUrls[0],
             displayName: config.chainName,
-            blockExplorerUrl: config.blockExplorerUrls[0],
+            blockExplorerUrl: config.blockExplorerUrls?.[0],
             ticker: config.nativeCurrency.symbol,
             tickerName: config.nativeCurrency.name,
             decimals: config.nativeCurrency.decimals,

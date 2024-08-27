@@ -27,5 +27,5 @@ export interface HappyEvents {
      * Alternatively sent by the dapp as a response to other dapp side events such as
      * when the injected wallet disconnect or changes account and the iframe needs to be updated
      */
-    "injected-wallet:connect": { user?: HappyUser }
+    "injected-wallet:connect": { rdns: string; address: `0x${string}` } | { rdns?: undefined; address?: undefined }
 }

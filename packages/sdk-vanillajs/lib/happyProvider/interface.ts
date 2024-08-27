@@ -2,6 +2,7 @@ import type { EIP1193ProxiedEvents, HappyEvents, IEventBus, Logger, config } fro
 import type SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193RequestFn, EIP1474Methods } from "viem"
 
+/** @internal */
 export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
     logger?: Logger
     windowId: ReturnType<typeof crypto.randomUUID>
