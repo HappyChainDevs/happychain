@@ -37,7 +37,6 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
     constructor(private config: HappyProviderConfig) {
         super()
-        console.log({ config })
         config.providerBus.on("provider:event", this.handleProviderNativeEvent.bind(this))
 
         // Social Auth (Iframe Proxy)
@@ -158,16 +157,13 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     }
 
     private promptUser(key: EventUUID, args: EIP1193RequestArg) {
-        console.log({ conf: this.config })
         const url = new URL("request", this.config.iframePath)
         const opts = {
             windowId: this.config.windowId,
             key: key,
             args: btoa(JSON.stringify(args)),
         }
-        console.log({ opts }, this.config.windowId, opts.windowId)
         const searchParams = new URLSearchParams(opts).toString()
-        console.log(`${url}?${searchParams}`)
         return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
     }
 }

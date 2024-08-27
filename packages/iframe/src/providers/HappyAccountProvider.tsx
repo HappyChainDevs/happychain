@@ -10,7 +10,6 @@ import {
 import { requiresApproval } from "@happychain/sdk-shared/lib/services/permissions"
 import { useAtom, useAtomValue } from "jotai"
 
-import type { AddEthereumChainParameter } from "viem"
 import { happyProviderBus, popupBus } from "../services/eventBus"
 import { providerAtom, publicClientAtom, walletClientAtom } from "../services/provider"
 import { chainsAtom } from "../state/chains"
