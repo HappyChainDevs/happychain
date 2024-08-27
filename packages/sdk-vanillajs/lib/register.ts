@@ -75,7 +75,7 @@ type MergedOptions<T extends WalletRegisterOptions<string>> = {
  * Basic Example
  * ```ts twoslash
  * import { register } from '@happychain/js'
- * // --- cut ---
+ * // ---cut---
  * register()
  * ```
  *
@@ -83,7 +83,7 @@ type MergedOptions<T extends WalletRegisterOptions<string>> = {
  * Connect to a custom RPC
  * ```ts twoslash
  * import { register } from '@happychain/js'
- * // --- cut ---
+ * // ---cut---
  * register({ rpcUrl: 'https://....' })
  * ```
  *
@@ -92,7 +92,7 @@ type MergedOptions<T extends WalletRegisterOptions<string>> = {
  * Connect to a pre-defined chain
  * ```ts twoslash
  * import { register } from '@happychain/js'
- * // --- cut ---
+ * // ---cut---
  * register({ chain: 'testnet' })
  * ```
  *
@@ -101,7 +101,7 @@ type MergedOptions<T extends WalletRegisterOptions<string>> = {
  * Connect to a custom chain
  * ```ts twoslash
  * import { register } from '@happychain/js'
- * // --- cut ---
+ * // ---cut---
  * register({
  *   chain: 'custom',
  *   chainConfigs: {

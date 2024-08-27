@@ -13,10 +13,11 @@ export default defineConfig({
             fileName: (format) => `index.${format}.js`,
         },
         rollupOptions: {
-            external: ["react", "react-dom"],
+            external: ["react", "@happychain/js", "react-dom"],
             output: {
                 globals: {
                     react: "React",
+                    "@happychain/js": "HappyChain",
                     "react-dom": "ReactDOM",
                 },
             },

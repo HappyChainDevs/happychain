@@ -14,6 +14,25 @@ import { AuthState, authStateAtom } from "../state/app"
 
 import { setUserWithProvider } from "./useHappyAccount"
 
+const IsInIframe = window.parent !== window
+
+function createHappyUserFromWallet(rdns: string, address: `0x${string}`): HappyUser {
+    return {
+        // connection type
+        type: "injected",
+        provider: rdns,
+        // social details
+        uid: address,
+        email: "",
+        name: `${address.slice(0, 6)}...${address.slice(-4)}`,
+        ens: "",
+        avatar: `https://avatar.vercel.sh/${address}?size=400`,
+        // web3 details
+        address: address,
+        addresses: [address],
+    }
+}
+
 function isEip6963Event(evt: Event): evt is EIP6963AnnounceProviderEvent {
     return Boolean(
         typeof evt === "object" &&
@@ -28,7 +47,13 @@ function isEip6963Event(evt: Event): evt is EIP6963AnnounceProviderEvent {
 type ProviderMap = Map<string, EIP6963ProviderDetail>
 
 const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
-    dappMessageBus.emit("injected-wallet:requestConnect", eip1193Provider.info.rdns)
+    if (IsInIframe) {
+        dappMessageBus.emit("injected-wallet:requestConnect", eip1193Provider.info.rdns)
+    } else {
+        const [address] = await eip1193Provider.provider.request({ method: "eth_requestAccounts" })
+        const user = createHappyUserFromWallet(eip1193Provider.info.rdns, address)
+        setUserWithProvider(user, eip1193Provider.provider)
+    }
 }
 
 const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
@@ -53,7 +78,8 @@ export function useInjectedProviders(): ConnectionProvider[] {
     const [injectedProviders, setInjectedProviders] = useState<ProviderMap>(new Map())
 
     useEffect(() => {
-        return dappMessageBus.on("injected-wallet:connect", ({ user }) => {
+        return dappMessageBus.on("injected-wallet:connect", ({ rdns, address }) => {
+            const user = rdns ? createHappyUserFromWallet(rdns, address) : undefined
             setUserWithProvider(user, undefined)
         })
     }, [])

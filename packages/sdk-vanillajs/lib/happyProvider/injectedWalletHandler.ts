@@ -2,7 +2,6 @@ import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { createStore } from "mipd"
 import type { EIP1193RequestFn, EIP1474Methods } from "viem"
 
-import type { HappyUser } from "@happychain/sdk-shared"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 const store = createStore()
@@ -42,7 +41,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
-        this.config.dappBus.emit("injected-wallet:connect", { user: undefined })
+        this.config.dappBus.emit("injected-wallet:connect", { rdns: undefined, address: undefined })
         this.localConnection = undefined
     }
 
@@ -63,8 +62,8 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
                     return
                 }
                 const [address] = accounts
-                const user = this.createHappyUserFromAddress(rdns, address)
-                this.config.dappBus.emit("injected-wallet:connect", { user })
+
+                this.config.dappBus.emit("injected-wallet:connect", { rdns, address })
             })
             providerDetails.provider.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
             providerDetails.provider.on("connect", (connectInfo) => this.emit("connect", connectInfo))
@@ -75,27 +74,9 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
             this.localConnection = providerDetails
 
-            const user = this.createHappyUserFromAddress(rdns, address)
-            this.config.dappBus.emit("injected-wallet:connect", { user })
+            this.config.dappBus.emit("injected-wallet:connect", { rdns, address })
         } catch {
             this.handleProviderDisconnectionRequest()
-        }
-    }
-
-    private createHappyUserFromAddress(rdns: string, address: `0x${string}`): HappyUser {
-        return {
-            // connection type
-            type: "injected",
-            provider: rdns,
-            // social details
-            uid: address,
-            email: "",
-            name: `${address.slice(0, 6)}...${address.slice(-4)}`,
-            ens: "",
-            avatar: `https://avatar.vercel.sh/${address}?size=400`,
-            // web3 details
-            address: address,
-            addresses: [address],
         }
     }
 }

@@ -1,32 +1,25 @@
-import { type PropsWithChildren, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
+import type { JSX } from 'react/jsx-runtime'
 
 import type { HappyUser } from "@happychain/js"
-import { onUserUpdate, register } from "@happychain/js"
+import { getCurrentUser, onUserUpdate, register } from "@happychain/js"
 
 import { HappyContext } from "./HappyContext"
 
-let initialUser: HappyUser | undefined
-
-// start tracking user updates even before react loads
-const initListener = onUserUpdate((user) => {
-    initialUser = user
-})
-
 // auto registration of happy wallet
-register()
 
-export function HappyWalletProvider({ children }: PropsWithChildren) {
-    const [user, setUser] = useState<HappyUser | undefined>(initialUser)
+type HappyWalletProviderProps = React.PropsWithChildren & {
+    init?: Parameters<typeof register>[0]
+}
+
+export function HappyWalletProvider({ init, children }: HappyWalletProviderProps): JSX.Element {
+    const [user, setUser] = useState<HappyUser | undefined>(getCurrentUser())
+
+    // register iframe component
+    useEffect(() => register(init), [init])
 
     // subscription to user changes
-    useEffect(() => {
-        const effectListener = onUserUpdate((user) => setUser(user))
-
-        return () => {
-            initListener()
-            effectListener()
-        }
-    }, [])
+    useEffect(() => onUserUpdate((user) => setUser(user)), [])
 
     return <HappyContext.Provider value={user}>{children}</HappyContext.Provider>
 }

@@ -10,7 +10,7 @@ import "./index.css"
 // biome-ignore lint/style/noNonNullAssertion: vite boilerplate
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <HappyWalletProvider>
+        <HappyWalletProvider init={{ chain: "testnet" }}>
             <App />
         </HappyWalletProvider>
     </React.StrictMode>,
