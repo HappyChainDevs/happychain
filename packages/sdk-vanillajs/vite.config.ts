@@ -28,10 +28,5 @@ export default defineConfig(({ mode }) => {
             sourcemap: true,
             emptyOutDir: true,
         },
-        resolve: {
-            alias: {
-                "@happychain/sdk-shared": "../sdk-shared/lib/index.ts",
-            },
-        },
     }
 })

@@ -81,7 +81,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         return new Promise((resolve, reject) => {
             this.config.providerBus.emit("permission-check:request", {
                 key,
-                uuid: this.config.uuid,
+                uuid: this.config.windowId,
                 payload: args,
                 error: null,
             })
@@ -150,7 +150,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     private autoApprove(key: EventUUID, args: EIP1193RequestArg) {
         this.config.providerBus.emit("request:approve", {
             key,
-            uuid: this.config.uuid,
+            uuid: this.config.windowId,
             error: null,
             payload: args,
         })
@@ -162,7 +162,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         const searchParams = new URLSearchParams({
             key: key,
             args: btoa(JSON.stringify(args)),
-            uuid: this.config.uuid,
+            uuid: this.config.windowId,
         }).toString()
         return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
     }

@@ -1,6 +1,6 @@
 import type { AddEthereumChainParameter } from "viem"
 
-export const op: AddEthereumChainParameter = {
+export const op = {
     chainName: "OP Mainnet",
     rpcUrls: [
         "https://mainnet.optimism.io",
@@ -18,4 +18,4 @@ export const op: AddEthereumChainParameter = {
         "https://optimism.blockscout.com",
         "https://optimism.dex.guru",
     ],
-}
+} as const satisfies Readonly<AddEthereumChainParameter>

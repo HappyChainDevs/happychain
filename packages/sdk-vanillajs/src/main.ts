@@ -1,4 +1,4 @@
-import { chains } from "@happychain/sdk-shared"
+import { chains, defaultChain } from "@happychain/sdk-shared"
 
 import { onUserUpdate, register } from "../lib/index"
 
@@ -6,7 +6,9 @@ import { createAddChainBtn, createSwitchChainBtn, setActiveChain } from "./ui"
 
 import "./style.css"
 
-register()
+register({
+    chain: "testnet",
+})
 
 const addChainList = document.querySelector("#add-chains")
 const switchChainList = document.querySelector("#switch-chains")

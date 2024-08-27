@@ -1,6 +1,6 @@
 import { config } from "@happychain/sdk-shared"
 import { LitElement, css, html } from "lit"
-import { customElement, property, state } from "lit/decorators.js"
+import { customElement } from "lit/decorators.js"
 import { classMap } from "lit/directives/class-map.js"
 
 import { onModalUpdate, onUserUpdate } from "./happyProvider/initialize"
@@ -14,22 +14,32 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
  */
 @customElement("happy-wallet")
 export class HappyWallet extends LitElement {
-    @state()
-    classes = {
-        open: false,
-        closed: true,
-        connected: false,
-        disconnected: true,
+    static properties = {
+        classes: { state: true },
     }
 
-    @property({ type: String })
-    "rpc-url": string | undefined
+    private classes: {
+        open: boolean
+        closed: boolean
+        connected: boolean
+        disconnected: boolean
+    }
 
-    @property({ type: String })
-    "chain-id": string | undefined
-
-    constructor(private uuid: ReturnType<typeof crypto.randomUUID>) {
+    constructor(
+        private uuid: ReturnType<typeof crypto.randomUUID>,
+        /** Stringified {@link AddEthereumChainParameter} */
+        private chain: string,
+        /** Stringified rpc url array string[] */
+        private rpcUrl: string | undefined,
+    ) {
         super()
+
+        this.classes = {
+            open: false,
+            closed: true,
+            connected: false,
+            disconnected: true,
+        }
     }
 
     connectedCallback(): void {
@@ -54,8 +64,8 @@ export class HappyWallet extends LitElement {
         const searchParams = new URLSearchParams(
             filterUndefinedValues({
                 uuid: this.uuid,
-                "chain:chainId": this["chain-id"],
-                "chain:rpcUrls": this["rpc-url"],
+                chain: this.chain,
+                "rpc-urls": this.rpcUrl,
             }),
         ).toString()
 

@@ -4,7 +4,7 @@ import type { EIP1193RequestFn, EIP1474Methods } from "viem"
 
 export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
     logger?: Logger
-    uuid: ReturnType<typeof crypto.randomUUID>
+    windowId: ReturnType<typeof crypto.randomUUID>
     providerBus: IEventBus<EIP1193ProxiedEvents>
     dappBus: IEventBus<HappyEvents>
 }
