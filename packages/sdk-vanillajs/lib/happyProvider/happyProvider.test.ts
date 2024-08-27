@@ -72,10 +72,10 @@ describe("HappyProvider", () => {
         }
 
         // auto approve permissions (no popup)
-        happyProviderBusIframe.on("permission-check:request", ({ key, uuid }) => {
+        happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
             happyProviderBusIframe.emit("permission-check:response", {
                 key,
-                uuid,
+                windowId: uuid,
                 error: null,
                 payload: false,
             })
@@ -112,10 +112,10 @@ describe("HappyProvider", () => {
         })
 
         // auto approve permissions (no popup)
-        happyProviderBusIframe.on("permission-check:request", ({ key, uuid }) => {
+        happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
             happyProviderBusIframe.emit("permission-check:response", {
                 key,
-                uuid,
+                windowId: uuid,
                 error: null,
                 payload: false,
             })
@@ -125,7 +125,7 @@ describe("HappyProvider", () => {
         happyProviderBusIframe.on("request:approve", ({ key }) => {
             happyProviderBusIframe.emit("response:complete", {
                 key,
-                uuid,
+                windowId: uuid,
                 error: null,
                 payload: emptyRpcBlock,
             })
@@ -156,10 +156,10 @@ describe("HappyProvider", () => {
         })
 
         // auto approve permissions (no popup)
-        happyProviderBusIframe.on("permission-check:request", ({ key, uuid }) => {
+        happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
             happyProviderBusIframe.emit("permission-check:response", {
                 key,
-                uuid,
+                windowId: uuid,
                 error: null,
                 payload: false,
             })
@@ -169,7 +169,7 @@ describe("HappyProvider", () => {
         happyProviderBusIframe.on("request:approve", ({ key }) => {
             happyProviderBusIframe.emit("response:complete", {
                 key,
-                uuid,
+                windowId: uuid,
                 error: {
                     code: 4001,
                     message: "User Rejected",
