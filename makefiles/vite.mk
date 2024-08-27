@@ -14,6 +14,6 @@ preview: dist
 	@./node_modules/.bin/vite preview
 .PHONY: preview
 
-dist: $(shell find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" -o -name "*.html" \) -not -path "./dist/*")
+dist: $(shell find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" -o -name "*.html" -o -name "*.vue" \) -not -path "./dist/*")
 	@./node_modules/.bin/tsc -b
 	@./node_modules/.bin/vite build
