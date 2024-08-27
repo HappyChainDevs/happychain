@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import type { JSX } from 'react/jsx-runtime'
+import type { JSX } from "react/jsx-runtime"
 
 import type { HappyUser } from "@happychain/js"
 import { getCurrentUser, onUserUpdate, register } from "@happychain/js"
