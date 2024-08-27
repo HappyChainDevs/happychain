@@ -71,7 +71,7 @@ test-fork:
 # Code Quality
 
 check: lint format-check
-	pnpm biome check ./
+	@./node_modules/@happychain/configs/node_modules/.bin/biome check ./ 
 .PHONY: check
 
 format-check:
@@ -83,7 +83,7 @@ lint:
 .PHONY: lint
 
 format:
-	pnpm biome check ./ --write
+	@./node_modules/@happychain/configs/node_modules/.bin/biome check ./ --write
 	forge fmt src/*.sol src/test/*.sol src/deploy/*.sol
 .PHONY: format
 

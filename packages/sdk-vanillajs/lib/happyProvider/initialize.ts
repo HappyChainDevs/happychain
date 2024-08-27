@@ -33,7 +33,7 @@ onUserUpdate((_user?: HappyUser) => {
  * @example
  * ```ts twoslash
  * import { getCurrentUser } from '@happychain/js'
- * // --- cut ---
+ * // ---cut---
  * const user = getCurrentUser()
  * ```
  */

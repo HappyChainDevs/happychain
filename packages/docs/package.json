@@ -5,26 +5,27 @@
     "dependencies": {
         "@happychain/js": "workspace:^",
         "@happychain/react": "workspace:^",
-        "react": "latest",
-        "react-dom": "latest",
-        "typescript": "latest",
-        "vocs": "latest"
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "typescript": "^5.5.4",
+        "vocs": "1.0.0-alpha.55"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
-        "@types/bun": "^1.1.6",
+        "@types/bun": "^1.1.8",
         "@types/react": "^18.3.4",
         "@types/react-dom": "^18.3.0",
         "@zamiell/typedoc-plugin-not-exported": "^0.3.0",
+        "concurrently": "^8.2.2",
         "ethers": "^6.13.2",
         "remark-link-rewrite": "^1.0.7",
         "typedoc": "^0.26.6",
         "typedoc-plugin-extras": "^3.1.0",
-        "typedoc-plugin-markdown": "^4.2.5",
-        "typedoc-plugin-mdn-links": "^3.2.9",
+        "typedoc-plugin-markdown": "^4.2.6",
+        "typedoc-plugin-mdn-links": "^3.2.10",
         "typedoc-plugin-remark": "^1.0.3",
         "typedoc-plugin-zod": "^1.2.1",
-        "viem": "^2.20.0",
+        "viem": "^2.20.1",
         "web3": "^4.12.1"
     }
 }

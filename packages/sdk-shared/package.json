@@ -7,12 +7,12 @@
     "dependencies": {
         "@metamask/safe-event-emitter": "^3.1.1",
         "mipd": "^0.0.7",
-        "viem": "^2.20.0"
+        "viem": "^2.20.1"
     },
     "devDependencies": {
-        "@happy-dom/global-registrator": "^14.12.3",
+        "@happy-dom/global-registrator": "^15.0.0",
         "@happychain/configs": "workspace:^",
-        "@types/bun": "^1.1.6",
-        "happy-dom": "^14.12.3"
+        "@types/bun": "^1.1.8",
+        "happy-dom": "^15.0.0"
     }
 }

@@ -1,4 +1,15 @@
+## make entire file 'silent'
+MAKEFLAGS += --silent
+
 SHELL := /bin/bash
+
+help: ## Show this help
+	@echo ""
+	@echo "Specify a command. The choices are:"
+	@echo ""
+	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[0;36m%-12s\033[m %s\n", $$1, $$2}'
+	@echo ""
+.PHONY: help
 
 # ==================================================================================================
 # Packages
@@ -19,52 +30,48 @@ DEFAULT_BRANCH = master
 # BASICS COMMANDS
 #   To get the project running locally.
 
-# To be run when first setting up the repository.
-setup: install-frozen
+
+setup: install-frozen ## To be run when first setting up the repository.
 	make enable-hooks
 	cd packages/contracts && make setup
 .PHONY: setup
 
-# Runs anvil (local EVM node).
-anvil:
+anvil: ## Runs anvil (local EVM node).
 	cd packages/contracts && make anvil
 .PHONY: anvil
 
 # Deploys to the contracts to the local node (requires anvil to be running).
-deploy:
+deploy: ## Deploys Contracts
 	cd packages/contracts && make deploy
 .PHONY: deploy
 
 # Creates production builds of all packages
-build:
+build: node_modules ## Run production builds
 	make support.build
 	make sdk.build
 	make apps.build
 .PHONY: build
 
 # build latest docs and starts dev server http://localhost:4173
-docs:
+docs: node_modules ## Builds latest docs and starts preview server
 	cd packages/docs && make build && make preview
 .PHONY: docs
 
-# Performs code-quality checks.
-check:
+check: node_modules ## Performs code-quality checks.
 	make support.check
 	make sdk.check
 	make apps.check
-	pnpm biome check ./
+	@./packages/configs/node_modules/.bin/biome check ./
 .PHONY: check
 
-# Fixes code-quality issues
-format:
+format: ## Fixes code-quality issues
 	make support.format
 	make sdk.format
 	make apps.format
-	pnpm biome check ./ --write
+	@./packages/configs/node_modules/.bin/biome check ./ --write
 .PHONY: format
 
-# Run tests
-test:
+test: ## Run tests
 	make sdk.test
 .PHONY: test
 
@@ -72,7 +79,9 @@ test:
 # Demos
 
 demo-react:
+	@echo "Building VanillaJS SDK"
 	make sdk-vanillajs.build
+	@echo "Starting "
 	make -j 2 iframe.dev demo-react.dev
 .PHONY: demo-react
 
@@ -174,7 +183,7 @@ apps.format:
 # quickly format change files between <your branch> and master
 # using default global settings
 format-fast-diff:
-	pnpm biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)))
+	@./packages/configs/node_modules/.bin/biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)))
 .PHONY: format-fast-diff
 
 # ==================================================================================================
@@ -185,7 +194,7 @@ support.build:
 		echo "Building $${name}";\
 		cd $${name} && make build && cd ../../ || exit 1;\
 	done
-.PHONE: support.build
+.PHONY: support.build
 
 sdk.build:
 	for name in packages/{$(SDK_PKGS)}; do\
@@ -235,6 +244,9 @@ install:
 	@echo "If the lockfileVersion changed, please update 'packageManager' in package.json!"
 .PHONY: install
 
+node_modules: package.json packages/*/package.json
+	@pnpm install -r
+
 # Shows packages for which new versions are available (compared to the installed version).
 # This will also show new version that do not match the version specifiers!
 outdated:
@@ -264,8 +276,8 @@ remove-modules:
 clean:
 	make remove-modules
 	rm -rf packages/docs/docs/pages/{js,react}/api
-	rm -rf packages/docs/docs/dist
-	rm -rf packages/{sdk-react,sdk-vanillajs,iframe,demo-vanillajs,demo-react}/dist
+	rm -rf packages/{sdk-react,sdk-vanillajs,iframe,demo-vanillajs,demo-react,docs/docs}/dist
+	rm -rf packages/docs/vocs.config.ts.timestamp-*
 .PHONY: clean
 
 # In case you accidentally pollute the node_modules directories
@@ -286,7 +298,7 @@ debug-github-workflow:
 
 # Enable Git Hooks
 enable-hooks:
-	pnpm husky
+	@./node_modules/.bin/husky
 .PHONY: enable-hooks
 
 # Disable Git Hooks
