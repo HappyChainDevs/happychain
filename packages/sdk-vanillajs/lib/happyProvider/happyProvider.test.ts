@@ -51,7 +51,7 @@ describe("HappyProvider", () => {
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
-            uuid,
+            windowId: uuid,
             providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
@@ -102,7 +102,7 @@ describe("HappyProvider", () => {
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
-            uuid,
+            windowId: uuid,
             providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
@@ -147,7 +147,7 @@ describe("HappyProvider", () => {
         const provider = new HappyProvider({
             iframePath: config.iframePath,
             providerBus: happyProviderBusProviderProxy,
-            uuid,
+            windowId: uuid,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
                 scope: crypto.randomUUID(),
@@ -194,7 +194,7 @@ describe("HappyProvider", () => {
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
-            uuid,
+            windowId: uuid,
             providerBus: happyProviderBusProviderProxy,
             dappBus: new EventBus<HappyEvents>({
                 mode: EventBusChannel.Forced,
