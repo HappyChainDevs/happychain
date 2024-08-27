@@ -10,14 +10,15 @@ import {
 import { requiresApproval } from "@happychain/sdk-shared/lib/services/permissions"
 import { useAtom, useAtomValue } from "jotai"
 
+import type { AddEthereumChainParameter } from "viem"
 import { happyProviderBus, popupBus } from "../services/eventBus"
 import { providerAtom, publicClientAtom, walletClientAtom } from "../services/provider"
 import { chainsAtom } from "../state/chains"
 import { isAddChainParams } from "../utils/isAddChainParam"
 
-const iframeUUID = new URLSearchParams(window.location.search).get("uuid")
+const iframeUUID = new URLSearchParams(window.location.search).get("windowId")
 
-const checkRequestUUID = (uuid: ReturnType<typeof crypto.randomUUID>) => uuid === iframeUUID
+const checkRequestUUID = (windowId: ReturnType<typeof crypto.randomUUID>) => windowId === iframeUUID
 
 export function HappyAccountProvider({ children }: { children: ReactNode }) {
     const provider = useAtomValue(providerAtom)
@@ -86,7 +87,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
             const result = requiresConfirmation(data.payload)
             return happyProviderBus.emit("permission-check:response", {
                 key: data.key,
-                uuid: data.uuid,
+                windowId: data.windowId,
                 error: null,
                 payload: result,
             })
@@ -98,13 +99,13 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const offApprove = popupBus.on("request:approve", async (data) => {
             // wrong window, ignore
-            if (!checkRequestUUID(data.uuid)) return
+            if (!checkRequestUUID(data.windowId)) return
 
             try {
                 const result = await walletClient?.request(data.payload as Parameters<typeof walletClient.request>)
 
                 if (data.payload.method === "wallet_addEthereumChain") {
-                    const params =
+                    const params: unknown =
                         typeof data.payload.params === "object" &&
                         Array.isArray(data.payload.params) &&
                         data.payload.params?.[0]
@@ -116,21 +117,21 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
                 happyProviderBus.emit("response:complete", {
                     key: data.key,
-                    uuid: data.uuid,
+                    windowId: data.windowId,
                     error: null,
                     payload: result,
                 })
             } catch (e) {
                 happyProviderBus.emit("response:complete", {
                     key: data.key,
-                    uuid: data.uuid,
+                    windowId: data.windowId,
                     error: getEIP1193ErrorObjectFromUnknown(e),
                     payload: null,
                 })
             }
         })
         const offReject = popupBus.on("request:reject", (data) => {
-            if (!checkRequestUUID(data.uuid)) return
+            if (!checkRequestUUID(data.windowId)) return
             happyProviderBus.emit("response:complete", data)
         })
         return () => {
@@ -143,7 +144,7 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
     // as they bypass the popup approval screen
     useEffect(() => {
         const offApprove = happyProviderBus.on("request:approve", async (data) => {
-            if (!checkRequestUUID(data.uuid)) return
+            if (!checkRequestUUID(data.windowId)) return
             try {
                 const isPublicMethod = !requiresConfirmation(data.payload)
 
@@ -160,14 +161,14 @@ export function HappyAccountProvider({ children }: { children: ReactNode }) {
 
                 happyProviderBus.emit("response:complete", {
                     key: data.key,
-                    uuid: data.uuid,
+                    windowId: data.windowId,
                     error: null,
                     payload: result,
                 })
             } catch (e) {
                 happyProviderBus.emit("response:complete", {
                     key: data.key,
-                    uuid: data.uuid,
+                    windowId: data.windowId,
                     error: getEIP1193ErrorObjectFromUnknown(e),
                     payload: null,
                 })

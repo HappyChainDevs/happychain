@@ -31,7 +31,7 @@ export type ProviderEventPayload<T = unknown> = {
     // request event unique key
     key: EventUUID
     // window identifier
-    uuid: ReturnType<typeof crypto.randomUUID>
+    windowId: ReturnType<typeof crypto.randomUUID>
     error: null
     payload: T
 }
@@ -40,7 +40,7 @@ export type ProviderEventError<T = unknown> = {
     // request event unique key
     key: EventUUID
     // window identifier
-    uuid: ReturnType<typeof crypto.randomUUID>
+    windowId: ReturnType<typeof crypto.randomUUID>
     error: T
     payload: null
 }

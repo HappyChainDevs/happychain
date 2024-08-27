@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router"
 type RequestArgs = {
     args: string
     key: EventUUID
-    uuid: ReturnType<typeof crypto.randomUUID>
+    windowId: ReturnType<typeof crypto.randomUUID>
 }
 
 export const Route = createFileRoute("/request")({
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/request")({
         return {
             args: search.args || "",
             key: search.key || "",
-            uuid: search.uuid || "",
+            windowId: search.windowId || "",
         } as RequestArgs
     },
 })
