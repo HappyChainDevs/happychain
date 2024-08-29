@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import type { ConnectionProvider } from "@happychain/sdk-shared"
 import clsx from "clsx"
@@ -13,25 +13,36 @@ export function ConnectButton() {
     const web3Providers = useInjectedProviders()
     const socialProviders = useSocialProviders()
 
-    function open() {
+    const open = useCallback(() => {
         dappMessageBus.emit("modal-toggle", true)
-
         setIsOpen(true)
-    }
+    }, [])
 
-    function close() {
+    const close = useCallback(() => {
         setIsOpen(false)
         // delay to match fadeout transition/animation
         const animationTimeInMs = 300
         setTimeout(() => {
             dappMessageBus.emit("modal-toggle", false)
         }, animationTimeInMs)
-    }
+    }, [])
 
-    async function connect(provider: ConnectionProvider) {
-        await provider.enable()
-        close()
-    }
+    const connect = useCallback(
+        async (provider: ConnectionProvider) => {
+            await provider.enable()
+            close()
+        },
+        [close],
+    )
+
+    useEffect(() => {
+        return dappMessageBus.on("request-display", (screen) => {
+            console.log({ screen })
+            if (screen === "login-modal") {
+                open()
+            }
+        })
+    }, [open])
 
     return (
         <>

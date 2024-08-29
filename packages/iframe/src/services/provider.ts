@@ -1,9 +1,8 @@
 import { getChainFromSearchParams } from "@happychain/sdk-shared"
-import { atom } from "jotai"
+import { type Atom, atom } from "jotai"
 import type { CustomTransport, EIP1193Provider, HttpTransport, ParseAccount, PublicClient, WalletClient } from "viem"
 import { http, createPublicClient, createWalletClient, custom } from "viem"
-
-import { userAtom } from "../hooks/useHappyAccount"
+import { userAtom } from "../state/user"
 
 const chain = getChainFromSearchParams()
 
@@ -20,13 +19,13 @@ export const transportAtom = atom<CustomTransport | undefined>((get) => {
 })
 transportAtom.debugLabel = "transportAtom"
 
-export const publicClientAtom = atom((get) => {
+export const publicClientAtom: Atom<PublicClient<CustomTransport | HttpTransport>> = atom((get) => {
     const transport = get(transportAtom) ?? fallbackHttpTransport
-    return createPublicClient({ transport }) satisfies PublicClient<CustomTransport | HttpTransport>
+    return createPublicClient({ transport })
 })
 publicClientAtom.debugLabel = "publicClientAtom"
 
-export const walletClientAtom = atom<AccountWalletClient | undefined>((get) => {
+export const walletClientAtom: Atom<AccountWalletClient | undefined> = atom<AccountWalletClient | undefined>((get) => {
     const user = get(userAtom)
     const provider = get(providerAtom)
     const transport = get(transportAtom)
@@ -34,7 +33,7 @@ export const walletClientAtom = atom<AccountWalletClient | undefined>((get) => {
         return
     }
 
-    return createWalletClient({ account: user.address, transport }) satisfies AccountWalletClient
+    return createWalletClient({ account: user.address, transport })
 })
 walletClientAtom.debugLabel = "walletClientAtom"
 
