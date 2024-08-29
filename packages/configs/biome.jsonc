@@ -75,6 +75,21 @@
                     }
                 }
             }
+        },
+        {
+            "include": ["*.vue"],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "useConst": "off",
+                        "useImportType": "off"
+                    },
+                    "correctness": {
+                        "noUnusedVariables": "off",
+                        "useHookAtTopLevel": "off"
+                    }
+                }
+            }
         }
     ]
 }

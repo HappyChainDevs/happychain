@@ -27,3 +27,9 @@ export type HappyUser = {
     /** All owned addresses */
     addresses: `0x${string}`[]
 }
+
+export enum AuthState {
+    Unauthenticated = "unauthenticated",
+    Loading = "loading",
+    Authenticated = "authenticated",
+}

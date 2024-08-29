@@ -1,4 +1,4 @@
-import type { EventBus, HappyEvents, HappyUser } from "@happychain/sdk-shared"
+import type { AuthState, EventBus, HappyEvents, HappyUser } from "@happychain/sdk-shared"
 
 /**
  * Callback which is called on page load, and again on every user update
@@ -9,6 +9,9 @@ export type UserUpdateCallback = (user?: HappyUser) => void
 
 /** @internal */
 export type ModalUpdateCallback = (isOpen: boolean) => void
+
+/** @internal */
+export type AuthStateUpdateCallback = (state: AuthState) => void
 
 /**
  * Cleanup function which can be used to unsubscribe
@@ -25,14 +28,22 @@ export type ModalUpdateCallback = (isOpen: boolean) => void
 export type ListenerUnsubscribeFn = () => void
 
 export function registerListeners(messageBus: EventBus<HappyEvents>) {
-    const onUserUpdateCallbacks = new Set<(user?: HappyUser) => void>()
-    const onModalUpdateCallbacks = new Set<(isOpen: boolean) => void>()
+    const onUserUpdateCallbacks = new Set<UserUpdateCallback>()
+    const onModalUpdateCallbacks = new Set<ModalUpdateCallback>()
+    const onAuthStateUpdateCallbacks = new Set<AuthStateUpdateCallback>()
 
     messageBus.on("auth-changed", (user) => {
         for (const call of onUserUpdateCallbacks) {
             call(user)
         }
     })
+
+    messageBus.on("auth-state", (state) => {
+        for (const call of onAuthStateUpdateCallbacks) {
+            call(state)
+        }
+    })
+
     messageBus.on("modal-toggle", (isOpen) => {
         for (const call of onModalUpdateCallbacks) {
             call(isOpen)
@@ -74,8 +85,23 @@ export function registerListeners(messageBus: EventBus<HappyEvents>) {
         }
     }
 
+    /**
+     * Called when the iframe requests a resize
+     *
+     * @internal
+     * @param ModalUpdateCallback
+     * @returns Unsubscribe function
+     */
+    const onAuthStateUpdate = (callback: AuthStateUpdateCallback): ListenerUnsubscribeFn => {
+        onAuthStateUpdateCallbacks.add(callback)
+        return () => {
+            onAuthStateUpdateCallbacks.delete(callback)
+        }
+    }
+
     return {
         onUserUpdate,
         onModalUpdate,
+        onAuthStateUpdate,
     }
 }

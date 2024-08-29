@@ -1,4 +1,4 @@
-import type { HappyUser } from "./happyUser"
+import type { AuthState, HappyUser } from "./happyUser"
 
 /**
  * When RDNS is undefined a disconnect occurs, when its a string
@@ -10,8 +10,13 @@ export interface HappyEvents {
     // modal states
     "modal-toggle": boolean
 
+    "request-display": "login-modal"
+
     // user auth
     "auth-changed": HappyUser | undefined
+
+    // unauthenticated,authenticated,loading
+    "auth-state": AuthState
 
     /**
      * Sent by the iframe to request a connection or disconnection with an injected wallet.
