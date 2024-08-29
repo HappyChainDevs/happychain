@@ -1,9 +1,9 @@
-import { config } from "@happychain/sdk-shared"
+import { AuthState, config } from "@happychain/sdk-shared"
 import { LitElement, css, html } from "lit"
 import { customElement } from "lit/decorators.js"
 import { classMap } from "lit/directives/class-map.js"
 
-import { onModalUpdate, onUserUpdate } from "./happyProvider/initialize"
+import { onAuthStateUpdate, onModalUpdate } from "./happyProvider/initialize"
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }
@@ -18,11 +18,9 @@ export class HappyWallet extends LitElement {
         classes: { state: true },
     }
 
-    private classes: {
-        open: boolean
-        closed: boolean
-        connected: boolean
-        disconnected: boolean
+    private classes = {
+        open: false,
+        connected: false,
     }
 
     constructor(
@@ -33,27 +31,18 @@ export class HappyWallet extends LitElement {
         private rpcUrl: string | undefined,
     ) {
         super()
-
-        this.classes = {
-            open: false,
-            closed: true,
-            connected: false,
-            disconnected: true,
-        }
     }
 
     connectedCallback(): void {
         super.connectedCallback()
 
-        onUserUpdate((user) => {
-            this.classes.connected = Boolean(user)
-            this.classes.disconnected = !user
+        onAuthStateUpdate((state) => {
+            this.classes.connected = state === AuthState.Authenticated
             this.requestUpdate()
         })
 
         onModalUpdate((isOpen) => {
             this.classes.open = isOpen
-            this.classes.closed = !isOpen
             this.requestUpdate()
         })
     }
@@ -69,11 +58,18 @@ export class HappyWallet extends LitElement {
             }),
         ).toString()
 
+        const cssClasses = classMap({
+            open: this.classes.open,
+            closed: !this.classes.open,
+            connected: this.classes.connected,
+            disconnected: !this.classes.connected,
+        })
+
         return html`
             <iframe
                 title="happy-iframe"
                 src="${url.href}?${searchParams}"
-                class=${classMap(this.classes)}
+                class=${cssClasses}
                 style="border: none;"
             />
         `

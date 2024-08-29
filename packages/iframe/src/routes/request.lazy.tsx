@@ -4,9 +4,11 @@ import { createLazyFileRoute } from "@tanstack/react-router"
 
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { AddChain } from "../components/requests/AddChain"
+import { EthRequestPermissions } from "../components/requests/EthRequestPermissions"
 import { PersonalSign } from "../components/requests/PersonalSign"
 import { SendTransaction } from "../components/requests/SendTransaction"
 import { SwitchChain } from "../components/requests/SwitchChain"
+import { WalletRequestPermissions } from "../components/requests/WalletRequestPermissions"
 import { popupBus } from "../services/eventBus"
 
 export const Route = createLazyFileRoute("/request")({
@@ -59,6 +61,14 @@ function Request() {
 
     if (req.method === "wallet_addEthereumChain") {
         return <AddChain method={req.method} params={req.params} reject={reject} accept={accept} />
+    }
+
+    if (req.method === "wallet_requestPermissions") {
+        return <WalletRequestPermissions method={req.method} params={req.params} reject={reject} accept={accept} />
+    }
+
+    if (req.method === "eth_requestAccounts") {
+        return <EthRequestPermissions method={req.method} params={req.params} reject={reject} accept={accept} />
     }
 
     return (

@@ -8,9 +8,10 @@ import type {
 } from "@happychain/sdk-shared"
 import { useSetAtom } from "jotai"
 
+import { AuthState } from "@happychain/sdk-shared"
 import { dappMessageBus } from "../services/eventBus"
 import { storage } from "../services/storage"
-import { AuthState, authStateAtom } from "../state/app"
+import { authStateAtom } from "../state/app"
 
 import { setUserWithProvider } from "./useHappyAccount"
 
@@ -52,6 +53,7 @@ const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
     } else {
         const [address] = await eip1193Provider.provider.request({ method: "eth_requestAccounts" })
         const user = createHappyUserFromWallet(eip1193Provider.info.rdns, address)
+        console.log("[setUserWithProvider] useInjectedProvider.enable")
         setUserWithProvider(user, eip1193Provider.provider)
     }
 }
@@ -68,6 +70,7 @@ const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
 
     if (past?.provider === eip1193Provider.info.rdns) {
         dappMessageBus.emit("injected-wallet:requestConnect", undefined)
+        console.log("[setUserWithProvider] useInjectedProvider.disable")
         setUserWithProvider(undefined, undefined)
     }
 }
@@ -80,6 +83,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
     useEffect(() => {
         return dappMessageBus.on("injected-wallet:connect", ({ rdns, address }) => {
             const user = rdns ? createHappyUserFromWallet(rdns, address) : undefined
+            console.log("[setUserWithProvider] useInjectedProvider.injected-connect")
             setUserWithProvider(user, undefined)
         })
     }, [])

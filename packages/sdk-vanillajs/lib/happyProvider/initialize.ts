@@ -16,7 +16,7 @@ const dappMessageBus = new EventBus<HappyEvents>({
     scope: "happy-chain-dapp-bus",
 })
 
-export const { onUserUpdate, onModalUpdate } = registerListeners(dappMessageBus)
+export const { onUserUpdate, onModalUpdate, onAuthStateUpdate } = registerListeners(dappMessageBus)
 
 let user: HappyUser | undefined
 
