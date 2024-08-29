@@ -5,7 +5,7 @@ export { permissionsLists, requiresApproval } from "./services/permissions"
 
 export * as chains from "./chains"
 export { getChainFromSearchParams, defaultChain } from "./chains/utils"
-
+export { AuthState } from "./interfaces/happyUser"
 export { EventBus, EventBusChannel } from "./services/eventBus"
 
 export {
@@ -22,6 +22,7 @@ export {
 /** Types */
 export type { HappyEvents } from "./interfaces/events"
 export type { HappyUser } from "./interfaces/happyUser"
+
 export type { Logger } from "./services/logger"
 export type {
     EventPayload,

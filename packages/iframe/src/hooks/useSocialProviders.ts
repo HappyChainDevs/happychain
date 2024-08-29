@@ -3,10 +3,13 @@ import { useEffect, useMemo } from "react"
 import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
 import { useAtomValue, useSetAtom } from "jotai"
 
-import { AuthState, authStateAtom } from "../state/app"
+import { AuthState } from "@happychain/sdk-shared"
+import { authStateAtom } from "../state/app"
 import { chainsAtom } from "../state/chains"
 
-import { setUserWithProvider, userAtom } from "./useHappyAccount"
+import { clearPermissions, setPermission } from "../state/permissions"
+import { userAtom } from "../state/user"
+import { setUserWithProvider } from "./useHappyAccount"
 
 export function useSocialProviders() {
     const setAuthState = useSetAtom(authStateAtom)
@@ -32,6 +35,7 @@ export function useSocialProviders() {
                         }),
                     )
                 }
+                console.error("[setUserWithProvider] useSocialProviders")
                 setUserWithProvider(user, provider)
             }
         })
@@ -45,11 +49,13 @@ export function useSocialProviders() {
                     // will automatically disable loading state when user+provider are set
                     setAuthState(AuthState.Loading)
                     await provider.enable()
+                    setPermission({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
                 },
                 disable: async () => {
                     // will automatically disable loading state when user+provider are set
                     setAuthState(AuthState.Loading)
                     await provider.disable()
+                    clearPermissions()
                 },
             })),
         [providers, setAuthState],

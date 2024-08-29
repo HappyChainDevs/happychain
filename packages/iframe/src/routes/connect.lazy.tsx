@@ -3,13 +3,15 @@ import { useMemo, useState } from "react"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 
+import { AuthState } from "@happychain/sdk-shared"
 import { ConnectButton } from "../components/ConnectButton"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useHappyAccount } from "../hooks/useHappyAccount"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
 import { dappMessageBus } from "../services/eventBus"
-import { AuthState, authStateAtom } from "../state/app"
+import { authStateAtom } from "../state/app"
+import { hasPermission } from "../state/permissions"
 
 export const Route = createLazyFileRoute("/connect")({
     component: Connect,
@@ -68,6 +70,16 @@ function Connect() {
                                 <p>{user?.email || user?.name}</p>
                             </div>
                             <div className="flex h-full w-full grow flex-col items-end justify-end rounded bg-slate-200 p-4">
+                                <div className="text-xs font-bold">Connected To: {new URL(document.referrer).host}</div>
+                                <div className="text-xs font-bold">
+                                    Has Access Permissions:{" "}
+                                    {hasPermission({
+                                        method: "wallet_requestPermissions",
+                                        params: [{ eth_accounts: {} }],
+                                    })
+                                        ? "true"
+                                        : "false"}
+                                </div>
                                 <button type="button" onClick={disconnect} className="btn btn-warning">
                                     Logout
                                 </button>

@@ -1,4 +1,6 @@
+import { waitForCondition } from "../../utils/waitForCondition"
 import type { Logger } from "../logger"
+import { logger } from "../logger"
 
 /**
  * Port1 (iframe) & Port2 (dapp) communicate exclusively with each other
@@ -56,8 +58,11 @@ export type EventBusOptions = {
 export class EventBus<TDefinition extends EventSchema = EventSchema> implements IEventBus<TDefinition> {
     private handlerMap: EventMap = new Map()
     private port: MessagePort | BroadcastChannel | null = null
+    private buffer = new Set()
 
     constructor(private config: EventBusOptions) {
+        config.logger ??= logger
+
         switch (config.mode) {
             case EventBusChannel.Forced:
                 this.registerPortListener(config.port)
@@ -68,6 +73,7 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
             case EventBusChannel.IframePort: {
                 const mc = new MessageChannel()
                 this.registerPortListener(mc.port1)
+                console.log("IFRAME Bus Port Initialized")
                 const message = `happychain:${config.scope}:init`
                 config.target.postMessage(message, "*", [mc.port2])
                 break
@@ -136,19 +142,57 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
         return () => this.off(key, handler)
     }
 
-    public emit: IEventBus<TDefinition>["emit"] = (key, payload) => {
+    private async waitForPort() {
+        const start = Date.now()
+        const MAX_POLL_TIME = 30_000
+        const POLL_INTERVAL = 50
+        return new Promise((resolve, reject) => {
+            const pollForPort = () => {
+                if (this.port) {
+                    return resolve(true)
+                }
+
+                if (Date.now() - start > MAX_POLL_TIME) {
+                    return reject()
+                }
+                setTimeout(pollForPort, POLL_INTERVAL)
+            }
+
+            pollForPort()
+        })
+    }
+
+    public emit: IEventBus<TDefinition>["emit"] = async (key, payload) => {
+        console.log({ key, payload, port: !!this.port })
         if (!this.port) {
             this.config.logger?.warn(
                 `[EventBus] Port not initialized ${this.config.mode}=>${this.config.scope}`,
                 location.origin,
             )
+            // if port isn't initialized, poll and continue
+            // to retry until connection is made
+            try {
+                await waitForCondition(() => Boolean(this.port), 30_000, 50)
+
+                // biome-ignore lint/style/noNonNullAssertion: the above waitForCondition enforces that its not null
+                this.port!.postMessage({
+                    scope: this.config.scope,
+                    type: key,
+                    payload,
+                })
+                return true
+            } catch {
+                this.config.logger?.error("Failed to submit request", key, payload)
+                return false
+            }
         }
 
-        this.port?.postMessage({
+        this.port.postMessage({
             scope: this.config.scope,
             type: key,
             payload,
         })
+
         return Boolean(this.port) // if port exists, assume successful
     }
 

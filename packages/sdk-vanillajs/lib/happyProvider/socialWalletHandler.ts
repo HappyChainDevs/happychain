@@ -1,8 +1,15 @@
-import type { EIP1193ProxiedEvents, EIP1193RequestArg, EventUUID } from "@happychain/sdk-shared"
+import {
+    AuthState,
+    type EIP1193ProxiedEvents,
+    type EIP1193RequestArg,
+    type EventUUID,
+    type HappyUser,
+} from "@happychain/sdk-shared"
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193Parameters, EIP1193RequestFn, EIP1474Methods } from "viem"
 
+import { waitForCondition } from "@happychain/sdk-shared/lib/utils/waitForCondition"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 type Timer = ReturnType<typeof setInterval>
@@ -35,8 +42,20 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     private inFlightChecks = new Map<string, InFlightCheck>()
     private timer: Timer | null = null
 
+    private user: HappyUser | undefined
+    private authState: AuthState = AuthState.Loading
+
     constructor(private config: HappyProviderConfig) {
         super()
+        // sync local user state
+        config.dappBus.on("auth-changed", (_user) => {
+            this.user = _user
+        })
+
+        config.dappBus.on("auth-state", (_authState) => {
+            this.authState = _authState
+        })
+
         config.providerBus.on("provider:event", this.handleProviderNativeEvent.bind(this))
 
         // Social Auth (Iframe Proxy)
@@ -45,18 +64,74 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         config.providerBus.on("permission-check:response", this.handlePermissionCheck.bind(this))
     }
     request: EIP1193RequestFn<EIP1474Methods> = async (args) => {
+        if (this.authState === AuthState.Loading) {
+            // wait till either authenticated or unauthenticated
+            await waitForCondition(() => this.authState !== AuthState.Loading)
+        }
         // Every request gets proxied through this function.
         // If it is eth_call or a non-tx non-signature request, we can auto-approve
         // by posting the request args using request:approve,
         // otherwise we open the popup and pass the request args through the hash URL.
         const key = crypto.randomUUID()
+        console.log("request", key, args)
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
         return new Promise(async (resolve, reject) => {
             const requiresUserApproval = await this.requiresApproval(args)
-            const popup = requiresUserApproval ? this.promptUser(key, args) : this.autoApprove(key, args)
 
-            this.queueRequest(key, { resolve, reject, popup })
+            if (!requiresUserApproval) {
+                console.log("AUTO APPROVING")
+                const popup = this.autoApprove(key, args)
+                this.queueRequest(key, { resolve, reject, popup })
+                return
+            }
+
+            if (!this.user && this.authState === AuthState.Unauthenticated) {
+                console.log("LOGGING IN USER FROM ZERO")
+                this.config.dappBus.emit("request-display", "login-modal")
+                const unsub = this.config.dappBus.on("auth-changed", (user) => {
+                    if (user) {
+                        if (["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)) {
+                            // these don't require secondary confirmations
+
+                            const popup = this.autoApprove(key, args)
+                            this.queueRequest(key, { resolve, reject, popup })
+                            unsub()
+                            return
+                        }
+
+                        console.log("USER UPDATE WORKED")
+                        // process request when user is logged in successfully
+                        const popup = this.promptUser(key, args)
+                        this.queueRequest(key, { resolve, reject, popup })
+                        unsub()
+                    }
+                })
+            } else if (!this.user && this.authState === AuthState.Authenticated) {
+                console.log("user is logged in but not connected")
+                if (["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)) {
+                    console.log("forwarding prompt as-is")
+                    // forward the request
+                    const popup = this.promptUser(key, args)
+                    this.queueRequest(key, { resolve, reject, popup })
+                } else {
+                    console.log("intercepting prompt and requesting permissions")
+                    // request wallet permissions on the dapps behalf, then run dapps request
+                    const permissions = await this.request({
+                        method: "wallet_requestPermissions",
+                        params: [{ eth_accounts: {} }],
+                    })
+                    console.log({ permissions })
+                    // if (permissions.some((p) => p.parentCapability === "eth_accounts")) {
+                    //     await waitForCondition(() => Boolean(this.user))
+                    // }
+                }
+            } else {
+                console.log("LOGGING IN")
+                console.log("requesting confirmation from user")
+                const popup = this.promptUser(key, args)
+                this.queueRequest(key, { resolve, reject, popup })
+            }
         })
     }
     isConnected(): boolean {
@@ -65,6 +140,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     }
 
     private async handlePermissionCheck(data: EIP1193ProxiedEvents["permission-check:response"]) {
+        console.log({ data })
         const inFlight = this.inFlightChecks.get(data.key)
         if (!inFlight) return
         if (typeof data.payload === "boolean") {
@@ -78,12 +154,14 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     private async requiresApproval(args: EIP1193Parameters) {
         const key = crypto.randomUUID()
         return new Promise((resolve, reject) => {
-            this.config.providerBus.emit("permission-check:request", {
+            const req = this.config.providerBus.emit("permission-check:request", {
                 key,
                 windowId: this.config.windowId,
                 payload: args,
                 error: null,
             })
+
+            console.log({ req })
             this.inFlightChecks.set(key, { resolve, reject })
         })
     }
@@ -94,7 +172,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
     private handleCompletedRequest(data: EIP1193ProxiedEvents["response:complete"]) {
         const req = this.inFlightRequests.get(data.key)
-
+        console.log({ req, data })
         if (!req) {
             return { resolve: null, reject: null }
         }
@@ -120,7 +198,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
     private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
         this.inFlightRequests.set(key, { resolve, reject, popup })
-
+        console.log({ timer: this.timer, popup })
         if (!this.timer && popup) {
             this.timer = setInterval(() => {
                 let withPopups = 0
@@ -130,6 +208,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
                     }
 
                     if (req.popup.closed) {
+                        console.log("REJECTING!")
                         // manually closed without explicit rejection
                         req.reject(new EIP1193UserRejectedRequestError())
                         this.inFlightRequests.delete(k)
@@ -141,8 +220,9 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
                 if (this.timer && !withPopups) {
                     clearInterval(this.timer)
+                    this.timer = null
                 }
-            }, 500) // every half second, check if popup has been manually closed
+            }, 100) // every half second, check if popup has been manually closed
         }
     }
 
@@ -152,6 +232,14 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
             windowId: this.config.windowId,
             error: null,
             payload: args,
+        })
+        console.log({
+            args: {
+                key,
+                windowId: this.config.windowId,
+                error: null,
+                payload: args,
+            },
         })
         return null
     }

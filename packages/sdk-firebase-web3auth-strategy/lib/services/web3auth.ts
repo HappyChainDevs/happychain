@@ -44,7 +44,13 @@ export async function web3AuthConnect(jwt: JWTLoginParams): Promise<`0x${string}
     }
 
     if (web3Auth.status === COREKIT_STATUS.LOGGED_IN) {
-        await web3Auth.commitChanges() // Needed for new accounts
+        try {
+            await web3Auth.commitChanges() // Needed for new accounts
+        } catch {
+            // simple retry
+            await new Promise((resolve, _reject) => setTimeout(resolve, 3_000))
+            await web3Auth.commitChanges()
+        }
     }
 
     const addresses = await ethereumSigningProvider.request({
