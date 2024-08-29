@@ -1,5 +1,10 @@
-import { createApp } from 'vue'
-import './style.css'
-import App from './App.vue'
+import { createApp } from "vue"
+import { VueQueryPlugin, queryClient } from "./query"
+import { WagmiPlugin, config } from "./wagmi"
+import "./style.css"
+import App from "./App.vue"
 
-createApp(App).mount('#app')
+createApp(App) //
+    .use(WagmiPlugin, { config })
+    .use(VueQueryPlugin, { queryClient })
+    .mount("#app")
