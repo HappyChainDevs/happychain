@@ -57,6 +57,9 @@ function useOnAuthChange(auth: Auth) {
         return onAuthStateChanged(firebaseAuth, async (_user) => {
             if (!userAuth?.uid && !_user?.uid) {
                 // wasn't logged in and still not. nothing to do
+
+                setUserAuth(undefined)
+                setInternalAuthState("unauthenticated")
                 return
             }
             console.warn({ _user: _user?.uid, prev: userAuth?.uid })
