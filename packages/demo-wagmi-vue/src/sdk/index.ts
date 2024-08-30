@@ -1,8 +1,8 @@
 /**
- * Mock standin for
+ * Mock stand-in for potential vue sdk
  */
 
-// TODO: fix the imports obviously
-// export * from "../../../sdk-vanillajs/lib/index"
 export * from "@happychain/js"
 export { useHappyChain } from "./hooks/useHappyChain"
+export { HappyChainPlugin } from "./plugin"
+export type { HappyChainOptions } from "./plugin"
