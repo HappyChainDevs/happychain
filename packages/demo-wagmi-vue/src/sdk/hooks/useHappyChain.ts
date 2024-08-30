@@ -7,7 +7,6 @@ onUserUpdate((_user) => {
     user.value = _user
 })
 
-// TODO: move to vue.js SDK
 export function useHappyChain() {
     return {
         user,
