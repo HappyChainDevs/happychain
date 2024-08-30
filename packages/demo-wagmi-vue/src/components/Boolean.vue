@@ -3,5 +3,5 @@ defineProps<{ bool: boolean }>()
 </script>
 
 <template>
-    <span :class="bool ? 'text-green-500' : 'text-red-500'">{{ bool }}</span>
+    <div :class="bool ? 'text-green-500' : 'text-red-500'">{{ bool }}</div>
 </template>

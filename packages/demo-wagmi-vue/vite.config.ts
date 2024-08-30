@@ -6,8 +6,6 @@ import { defineConfig } from "vite"
 export default defineConfig({
     plugins: [vue()],
     resolve: {
-        alias: {
-            "@happychain/js": resolve(__dirname, "../sdk-vanillajs/lib/index.ts"),
-        },
+        alias: { "@happychain/js": resolve(__dirname, "../sdk-vanillajs/lib/index.ts") },
     },
 })
