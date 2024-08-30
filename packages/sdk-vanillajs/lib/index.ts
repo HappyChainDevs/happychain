@@ -1,4 +1,5 @@
 export { register } from "./register"
+export type { WalletRegisterOptions, DefaultChains } from "./register"
 
 export type { HappyProvider } from "./happyProvider/happyProvider"
 
@@ -23,6 +24,13 @@ export type {
 export async function connect() {
     return await happyProvider.request({
         method: "wallet_requestPermissions",
+        params: [{ eth_accounts: {} }],
+    })
+}
+
+export async function disconnect() {
+    return await happyProvider.request({
+        method: "wallet_revokePermissions",
         params: [{ eth_accounts: {} }],
     })
 }

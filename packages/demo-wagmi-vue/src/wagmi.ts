@@ -1,6 +1,6 @@
 import { createConfig, custom } from "@wagmi/vue"
 import { sepolia } from "@wagmi/vue/chains"
-import { happyProvider } from "./sdk/index"
+import { happyProvider } from "./sdk"
 export { WagmiPlugin } from "@wagmi/vue"
 
 import { injected } from "@wagmi/vue/connectors"

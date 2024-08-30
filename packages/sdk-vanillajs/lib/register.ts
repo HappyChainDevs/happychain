@@ -19,7 +19,7 @@ const defaultOptions = {
     },
 } satisfies WalletRegisterOptions<"devnet" | "testnet" | "sepolia" | typeof defaultChain.chainId>
 
-type DefaultChains = keyof typeof defaultOptions.chainConfigs
+export type DefaultChains = keyof typeof defaultOptions.chainConfigs
 
 type ChainParameters = AddEthereumChainParameter | Readonly<AddEthereumChainParameter>
 type ChainConfig<SelectedChain extends string> = Record<SelectedChain, ChainParameters>
