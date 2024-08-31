@@ -36,15 +36,11 @@ export function useProcessUnconfirmedRequests() {
                     (authenticated && "eth_requestAccounts" === data.payload.method) ||
                     "eth_accounts" === data.payload.method
                 ) {
-                    // if calling by the public wallet, that means user should already be connected
-                    // TODO: verification check here
-                    // don't add or update permissions, just report back
                     happyProviderBus.emit("response:complete", {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
-                        // biome-ignore lint/suspicious/noExplicitAny: hacky testing, DO NOT LEAVE
-                        payload: hasPermission(data.payload as any) ? getDefaultStore().get(userAtom)?.addresses : [],
+                        payload: hasPermission({ eth_accounts: {} }) ? getDefaultStore().get(userAtom)?.addresses : [],
                     })
                     // web3auth crashes on this request
                     return
@@ -52,15 +48,11 @@ export function useProcessUnconfirmedRequests() {
 
                 // not allowed if not logged in (should log in, then be called on wallet client)
                 if (authenticated && "wallet_requestPermissions" === data.payload.method) {
-                    // if calling by the public wallet, that means user should already be connected
-                    // TODO: verification check here
-                    // don't add or update permissions, just report back
                     happyProviderBus.emit("response:complete", {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
-                        // biome-ignore lint/suspicious/noExplicitAny: hacky testing, DO NOT LEAVE
-                        payload: hasPermission(data.payload.params as any)
+                        payload: hasPermission(...data.payload.params)
                             ? getPermissions(data.payload)
                             : new Array<WalletPermission>(),
                     })
@@ -69,16 +61,12 @@ export function useProcessUnconfirmedRequests() {
 
                 // not allowed if not logged in (should log in, then be called on wallet client)
                 if (authenticated && "wallet_revokePermissions" === data.payload.method) {
-                    // if calling by the public wallet, that means user should already be connected
-                    // TODO: verification check here
-                    // don't add or update permissions, just report back
                     revokePermission(data.payload as Parameters<typeof revokePermission>[0])
                     happyProviderBus.emit("response:complete", {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
-                        // biome-ignore lint/suspicious/noExplicitAny: hacky testing, DO NOT LEAVE
-                        payload: getPermissions(data.payload as Parameters<typeof getPermissions>[0]) as any,
+                        payload: getPermissions(data.payload as Parameters<typeof getPermissions>[0]),
                     })
                     return
                 }
