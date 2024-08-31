@@ -28,7 +28,7 @@ const chain = getChainFromSearchParams()
 const parsedConfig = configSchema.safeParse({
     // web3 auth settings - set on deployment
     web3AuthNetwork: import.meta.env.VITE_WEB3AUTH_NETWORK,
-    web3AuthChainNamespace: import.meta.env.VITE_WEB3AUTH_CHAIN_NAMESPACE,
+    web3AuthChainNamespace: "eip155",
 
     // network settings
     // loosely based on https://eips.ethereum.org/EIPS/eip-3085

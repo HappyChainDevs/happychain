@@ -1,12 +1,11 @@
-export { config } from "./config"
-export { logger } from "./services/logger"
-
-export { permissionsLists, requiresApproval } from "./services/permissions"
-
 export * as chains from "./chains"
-export { getChainFromSearchParams, defaultChain } from "./chains/utils"
 export { AuthState } from "./interfaces/happyUser"
 export { EventBus, EventBusChannel } from "./services/eventBus"
+export { config } from "./config"
+export { getChainFromSearchParams, defaultChain } from "./chains/utils"
+export { logger } from "./services/logger"
+export { permissionsLists, requiresApproval } from "./services/permissions"
+export { waitForCondition } from "./utils/waitForCondition"
 
 export {
     GenericProviderRpcError,
@@ -35,7 +34,7 @@ export type {
 } from "./services/eventBus"
 export type {
     EventUUID,
-    EIP1193RequestArg,
+    EIP1193RequestParameters as EIP1193RequestArg,
     EIP1193RequestResult,
     EIP1193EventName,
     EIP1193ProxiedEvents,

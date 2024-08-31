@@ -57,14 +57,13 @@ function useOnAuthChange(auth: Auth) {
         return onAuthStateChanged(firebaseAuth, async (_user) => {
             if (!userAuth?.uid && !_user?.uid) {
                 // wasn't logged in and still not. nothing to do
-
+                // set to undefined, incase it was in a loading state
                 setUserAuth(undefined)
                 setInternalAuthState("unauthenticated")
                 return
             }
-            console.warn({ _user: _user?.uid, prev: userAuth?.uid })
+
             if (!_user?.uid) {
-                console.warn("disconnecting, but why", window.location.href)
                 await web3AuthDisconnect()
 
                 setUserAuth(undefined)
@@ -117,12 +116,10 @@ function useOnAuthChange(auth: Auth) {
             }
 
             if (internalAuthState === "authenticated" && userAuth) {
-                console.log("AUTHENTICATED", userAuth)
                 return callback(userAuth, web3AuthEvmProvider)
             }
 
             if (internalAuthState === "unauthenticated" && !userAuth) {
-                console.log("UNAUTHENTICATED", userAuth)
                 return callback(userAuth, web3AuthEvmProvider)
             }
         },

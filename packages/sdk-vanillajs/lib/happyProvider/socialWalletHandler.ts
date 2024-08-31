@@ -7,8 +7,9 @@ import {
 } from "@happychain/sdk-shared"
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { EIP1193Parameters, EIP1193RequestFn, EIP1474Methods } from "viem"
+import type { EIP1193RequestFn, EIP1474Methods } from "viem"
 
+import type { EIP1193RequestParameters } from "@happychain/sdk-shared/lib/services/eip1193Provider/events"
 import { waitForCondition } from "@happychain/sdk-shared/lib/utils/waitForCondition"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
@@ -43,7 +44,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     private timer: Timer | null = null
 
     private user: HappyUser | undefined
-    private authState: AuthState = AuthState.Loading
+    private authState: AuthState = AuthState.Connecting
 
     constructor(private config: HappyProviderConfig) {
         super()
@@ -63,84 +64,88 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
         config.providerBus.on("permission-check:response", this.handlePermissionCheck.bind(this))
     }
-    request: EIP1193RequestFn<EIP1474Methods> = async (args) => {
-        if (this.authState === AuthState.Loading) {
+
+    request: EIP1193RequestFn<EIP1474Methods> = async (_args) => {
+        const args = _args as EIP1193RequestParameters
+
+        // this shouldn't be needed here. the requiresApproval check should
+        // wait if its needed...?
+        if (this.authState === AuthState.Connecting) {
             // wait till either authenticated or unauthenticated
-            await waitForCondition(() => this.authState !== AuthState.Loading)
+            await waitForCondition(() => this.authState !== AuthState.Connecting)
         }
         // Every request gets proxied through this function.
         // If it is eth_call or a non-tx non-signature request, we can auto-approve
         // by posting the request args using request:approve,
         // otherwise we open the popup and pass the request args through the hash URL.
         const key = crypto.randomUUID()
-        console.log("request", key, args)
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
         return new Promise(async (resolve, reject) => {
             const requiresUserApproval = await this.requiresApproval(args)
 
             if (!requiresUserApproval) {
-                console.log("AUTO APPROVING")
                 const popup = this.autoApprove(key, args)
                 this.queueRequest(key, { resolve, reject, popup })
                 return
             }
 
-            if (!this.user && this.authState === AuthState.Unauthenticated) {
-                console.log("LOGGING IN USER FROM ZERO")
+            /**
+             * If the user is not connected (and not logged in)
+             * Display the login screen. If/when the login is successful,
+             * run the initial protected request. If the original request
+             * was explicit permissions request, then it was granted automatically
+             * as part of the login flow, so we can auto-approve here and the response
+             * will be what is returned to the originating caller
+             */
+            if (!this.user && this.authState === AuthState.Disconnected) {
                 this.config.dappBus.emit("request-display", "login-modal")
-                const unsub = this.config.dappBus.on("auth-changed", (user) => {
+
+                const unsubscribe = this.config.dappBus.on("auth-changed", (user) => {
                     if (user) {
-                        if (["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)) {
-                            // these don't require secondary confirmations
+                        // auto-approve only works for these methods, since this is a direct response
+                        // the the user login flow, and upon user login, these permissions get granted automatically
+                        const popup = ["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
+                            ? this.autoApprove(key, args)
+                            : this.promptUser(key, args)
 
-                            const popup = this.autoApprove(key, args)
-                            this.queueRequest(key, { resolve, reject, popup })
-                            unsub()
-                            return
-                        }
-
-                        console.log("USER UPDATE WORKED")
                         // process request when user is logged in successfully
-                        const popup = this.promptUser(key, args)
                         this.queueRequest(key, { resolve, reject, popup })
-                        unsub()
+                        unsubscribe()
                     }
                 })
-            } else if (!this.user && this.authState === AuthState.Authenticated) {
-                console.log("user is logged in but not connected")
-                if (["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)) {
-                    console.log("forwarding prompt as-is")
-                    // forward the request
-                    const popup = this.promptUser(key, args)
-                    this.queueRequest(key, { resolve, reject, popup })
-                } else {
-                    console.log("intercepting prompt and requesting permissions")
-                    // request wallet permissions on the dapps behalf, then run dapps request
-                    const permissions = await this.request({
-                        method: "wallet_requestPermissions",
-                        params: [{ eth_accounts: {} }],
-                    })
-                    console.log({ permissions })
-                    // if (permissions.some((p) => p.parentCapability === "eth_accounts")) {
-                    //     await waitForCondition(() => Boolean(this.user))
-                    // }
-                }
-            } else {
-                console.log("LOGGING IN")
-                console.log("requesting confirmation from user")
-                const popup = this.promptUser(key, args)
-                this.queueRequest(key, { resolve, reject, popup })
+                return
             }
+
+            /**
+             * If the user is Logged In, but not connected to the dapp,
+             * and is making a protected request _other than_ explicitly requesting
+             * a connection, then intercept with a connection request, and only proceed
+             * if the permissions are granted
+             */
+            if (
+                !this.user &&
+                this.authState === AuthState.Connected &&
+                !["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
+            ) {
+                // request wallet permissions on the dapps behalf, then run dapps request
+                await this.request({
+                    method: "wallet_requestPermissions",
+                    params: [{ eth_accounts: {} }],
+                })
+            }
+
+            const popup = this.promptUser(key, args)
+            this.queueRequest(key, { resolve, reject, popup })
         })
     }
+
     isConnected(): boolean {
         // this is the fallback handler, always marked as 'connected' for public RPC's etc
         return true
     }
 
     private async handlePermissionCheck(data: EIP1193ProxiedEvents["permission-check:response"]) {
-        console.log({ data })
         const inFlight = this.inFlightChecks.get(data.key)
         if (!inFlight) return
         if (typeof data.payload === "boolean") {
@@ -151,17 +156,16 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         this.inFlightChecks.delete(data.key)
     }
 
-    private async requiresApproval(args: EIP1193Parameters) {
+    private async requiresApproval(args: EIP1193RequestParameters) {
         const key = crypto.randomUUID()
         return new Promise((resolve, reject) => {
-            const req = this.config.providerBus.emit("permission-check:request", {
+            this.config.providerBus.emit("permission-check:request", {
                 key,
                 windowId: this.config.windowId,
                 payload: args,
                 error: null,
             })
 
-            console.log({ req })
             this.inFlightChecks.set(key, { resolve, reject })
         })
     }
@@ -172,7 +176,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
     private handleCompletedRequest(data: EIP1193ProxiedEvents["response:complete"]) {
         const req = this.inFlightRequests.get(data.key)
-        console.log({ req, data })
+
         if (!req) {
             return { resolve: null, reject: null }
         }
@@ -198,7 +202,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
     private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
         this.inFlightRequests.set(key, { resolve, reject, popup })
-        console.log({ timer: this.timer, popup })
+
         if (!this.timer && popup) {
             this.timer = setInterval(() => {
                 let withPopups = 0
@@ -208,7 +212,6 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
                     }
 
                     if (req.popup.closed) {
-                        console.log("REJECTING!")
                         // manually closed without explicit rejection
                         req.reject(new EIP1193UserRejectedRequestError())
                         this.inFlightRequests.delete(k)
@@ -233,14 +236,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
             error: null,
             payload: args,
         })
-        console.log({
-            args: {
-                key,
-                windowId: this.config.windowId,
-                error: null,
-                payload: args,
-            },
-        })
+
         return null
     }
 
