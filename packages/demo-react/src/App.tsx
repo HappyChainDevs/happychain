@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { useHappyChain } from "@happychain/react"
+import { happyProvider, useHappyChain } from "@happychain/react"
 import { createPublicClient, createWalletClient, custom } from "viem"
 
 function App() {
@@ -50,6 +50,19 @@ function App() {
     return (
         <main className='flex min-h-dvh w-full flex-col items-center gap-4 bg-[url("/francesco-ungaro-Wn8JoB8FP70-unsplash.jpg")] bg-[100vw_auto] p-4'>
             <h1 className="p-16 text-4xl font-bold text-white">HappyChain + TS + React + Viem</h1>
+
+            <button
+                type="button"
+                onClick={() => {
+                    happyProvider.request({
+                        method: user ? "wallet_revokePermissions" : "wallet_requestPermissions",
+                        params: [{ eth_accounts: {} }],
+                    })
+                }}
+                className="rounded-lg bg-sky-300 p-2 shadow-xl"
+            >
+                {user ? "Disconnect" : "Connect"}
+            </button>
 
             <div className="w-96 overflow-auto bg-gray-200 p-4">
                 <p className="text-lg font-bold">User Details</p>
