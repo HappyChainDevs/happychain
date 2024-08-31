@@ -1,10 +1,11 @@
 export function createStorage<TSchema extends { [k: string]: unknown }>(prefix = "") {
     type Key = keyof TSchema
+    const makeKey = (key: Key) => (prefix ? `${prefix}:${key as string}` : (key as string))
 
     return {
         get<Key extends keyof TSchema>(key: Key): TSchema[Key] | undefined {
             // Return type will depend on the key
-            const data = localStorage.getItem(`${prefix}:${key as string}`)
+            const data = localStorage.getItem(makeKey(key))
             if (data === "undefined") {
                 return undefined
             }
@@ -17,11 +18,11 @@ export function createStorage<TSchema extends { [k: string]: unknown }>(prefix =
         },
 
         set<T extends Key>(key: T, value: TSchema[T]) {
-            localStorage.setItem(`${prefix}:${key as string}`, JSON.stringify(value))
+            localStorage.setItem(makeKey(key), JSON.stringify(value))
         },
 
         remove(key: Key) {
-            localStorage.removeItem(`${prefix}:${key as string}`)
+            localStorage.removeItem(makeKey(key))
         },
 
         clear() {
