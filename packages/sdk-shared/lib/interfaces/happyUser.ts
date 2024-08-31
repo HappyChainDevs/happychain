@@ -29,7 +29,7 @@ export type HappyUser = {
 }
 
 export enum AuthState {
-    Unauthenticated = "unauthenticated",
-    Loading = "loading",
-    Authenticated = "authenticated",
+    Disconnected = "unauthenticated",
+    Connecting = "loading",
+    Connected = "authenticated",
 }

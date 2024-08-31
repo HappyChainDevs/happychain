@@ -1,27 +1,18 @@
-import type { HappyUser } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 
 import { requestLabels } from "../../constants/requestLabels"
+import { StorageKey, storage } from "../../services/storage"
 import { chainsAtom } from "../../state/chains"
+import type { RequestConfirmationProps } from "./props"
 
-interface SendTransactionProps {
-    method: string
-    params: [{ chainId: `0x${string}` }]
-    reject: () => void
-    accept: ({ method, params }: { method: string; params: unknown[] }) => void
-}
+const user = storage.get(StorageKey.HappyUser)
 
-const safeGet = (key: string) => {
-    try {
-        return JSON.parse(localStorage.getItem(key) || "null")
-    } catch {
-        return null
-    }
-}
-
-const user = safeGet("happychain:cached-user") as HappyUser
-
-export function SwitchChain({ method, params, reject, accept }: SendTransactionProps) {
+export function WalletSwitchEthereumChain({
+    method,
+    params,
+    reject,
+    accept,
+}: RequestConfirmationProps<"wallet_switchEthereumChain">) {
     const chains = useAtomValue(chainsAtom)
 
     const chain = chains.find((chain) => chain.chainId === params[0].chainId)
@@ -72,9 +63,9 @@ export function SwitchChain({ method, params, reject, accept }: SendTransactionP
             </div>
 
             <div>
-                {user.email}
+                {user?.email}
                 <br />
-                {user.address.slice(0, 8)} ... {user.address.slice(-8)}
+                {user?.address.slice(0, 8)} ... {user?.address.slice(-8)}
             </div>
 
             <div className="flex w-full gap-4">

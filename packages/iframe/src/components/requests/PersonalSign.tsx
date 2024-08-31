@@ -1,14 +1,8 @@
 import { hexToString } from "viem"
 import { requestLabels } from "../../constants/requestLabels"
+import type { RequestConfirmationProps } from "./props"
 
-interface PersonalSignProps {
-    method: string
-    params: [`0x${string}`, `0x${string}`]
-    reject: () => void
-    accept: ({ method, params }: { method: string; params: unknown[] }) => void
-}
-
-export function PersonalSign({ method, params, reject, accept }: PersonalSignProps) {
+export function PersonalSign({ method, params, reject, accept }: RequestConfirmationProps<"personal_sign">) {
     return (
         <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
             <div className="flex w-full grow flex-col gap-4">
@@ -29,7 +23,7 @@ export function PersonalSign({ method, params, reject, accept }: PersonalSignPro
                 <button
                     type="button"
                     className="btn grow border-2 border-green-300 bg-green-300 hover:bg-green-400"
-                    onClick={() => accept({ method, params })}
+                    onClick={() => accept({ method: "personal_sign", params })}
                 >
                     Sign
                 </button>

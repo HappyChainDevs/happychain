@@ -37,7 +37,7 @@ export class HappyWallet extends LitElement {
         super.connectedCallback()
 
         onAuthStateUpdate((state) => {
-            this.classes.connected = state === AuthState.Authenticated
+            this.classes.connected = state === AuthState.Connected
             this.requestUpdate()
         })
 

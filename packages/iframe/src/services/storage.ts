@@ -1,7 +1,15 @@
 import { createStorage } from "@happychain/common"
 import type { HappyUser } from "@happychain/sdk-shared"
 
-// cache user within iframe to manage auto-reconnect
-type StorageSchema = { "cached-user": HappyUser | undefined }
+export enum StorageKey {
+    HappyUser = "happychain:cached-user",
+    Chains = "supported:chains",
+    UserPermissions = "user_permissions_per_domain",
+}
 
-export const storage = createStorage<StorageSchema>("happychain")
+// cache user within iframe to manage auto-reconnect
+type StorageSchema = {
+    [StorageKey.HappyUser]: HappyUser | undefined
+}
+
+export const storage = createStorage<StorageSchema>()

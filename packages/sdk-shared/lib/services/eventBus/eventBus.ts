@@ -58,7 +58,6 @@ export type EventBusOptions = {
 export class EventBus<TDefinition extends EventSchema = EventSchema> implements IEventBus<TDefinition> {
     private handlerMap: EventMap = new Map()
     private port: MessagePort | BroadcastChannel | null = null
-    private buffer = new Set()
 
     constructor(private config: EventBusOptions) {
         config.logger ??= logger
@@ -73,7 +72,6 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
             case EventBusChannel.IframePort: {
                 const mc = new MessageChannel()
                 this.registerPortListener(mc.port1)
-                console.log("IFRAME Bus Port Initialized")
                 const message = `happychain:${config.scope}:init`
                 config.target.postMessage(message, "*", [mc.port2])
                 break
@@ -142,28 +140,7 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
         return () => this.off(key, handler)
     }
 
-    private async waitForPort() {
-        const start = Date.now()
-        const MAX_POLL_TIME = 30_000
-        const POLL_INTERVAL = 50
-        return new Promise((resolve, reject) => {
-            const pollForPort = () => {
-                if (this.port) {
-                    return resolve(true)
-                }
-
-                if (Date.now() - start > MAX_POLL_TIME) {
-                    return reject()
-                }
-                setTimeout(pollForPort, POLL_INTERVAL)
-            }
-
-            pollForPort()
-        })
-    }
-
     public emit: IEventBus<TDefinition>["emit"] = async (key, payload) => {
-        console.log({ key, payload, port: !!this.port })
         if (!this.port) {
             this.config.logger?.warn(
                 `[EventBus] Port not initialized ${this.config.mode}=>${this.config.scope}`,

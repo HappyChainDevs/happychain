@@ -2,13 +2,15 @@ import { useState } from "react"
 
 import { createLazyFileRoute } from "@tanstack/react-router"
 
+import type { EIP1193ProxiedEvents } from "@happychain/sdk-shared"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
-import { AddChain } from "../components/requests/AddChain"
-import { EthRequestPermissions } from "../components/requests/EthRequestPermissions"
+import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
+import { EthSendTransaction } from "../components/requests/EthSendTransaction"
 import { PersonalSign } from "../components/requests/PersonalSign"
-import { SendTransaction } from "../components/requests/SendTransaction"
-import { SwitchChain } from "../components/requests/SwitchChain"
+import { WalletAddEthereumChain } from "../components/requests/WalletAddEthereumChain"
 import { WalletRequestPermissions } from "../components/requests/WalletRequestPermissions"
+import { WalletSwitchEthereumChain } from "../components/requests/WalletSwitchEthereumChain"
+import type { requestLabels } from "../constants/requestLabels"
 import { popupBus } from "../services/eventBus"
 
 export const Route = createLazyFileRoute("/request")({
@@ -33,7 +35,7 @@ function Request() {
         })
     }
 
-    function accept(payload: { method: string; params: unknown[] }) {
+    function accept(payload: EIP1193ProxiedEvents["request:approve"]["payload"]) {
         setIsLoading(true)
         popupBus.emit("request:approve", {
             error: null,
@@ -47,34 +49,24 @@ function Request() {
         return <DotLinearWaveLoader />
     }
 
-    if (req.method === "personal_sign") {
-        return <PersonalSign method={req.method} params={req.params} reject={reject} accept={accept} />
+    switch (req.method as keyof typeof requestLabels) {
+        case "personal_sign":
+            return <PersonalSign method={req.method} params={req.params} reject={reject} accept={accept} />
+        case "eth_sendTransaction":
+            return <EthSendTransaction method={req.method} params={req.params} reject={reject} accept={accept} />
+        case "wallet_switchEthereumChain":
+            return <WalletSwitchEthereumChain method={req.method} params={req.params} reject={reject} accept={accept} />
+        case "wallet_addEthereumChain":
+            return <WalletAddEthereumChain method={req.method} params={req.params} reject={reject} accept={accept} />
+        case "wallet_requestPermissions":
+            return <WalletRequestPermissions method={req.method} params={req.params} reject={reject} accept={accept} />
+        case "eth_requestAccounts":
+            return <EthRequestAccounts method={req.method} params={req.params} reject={reject} accept={accept} />
+        default:
+            return (
+                <main>
+                    UNKNOWN REQUEST:<pre>{JSON.stringify(req)}</pre>
+                </main>
+            )
     }
-
-    if (req.method === "eth_sendTransaction") {
-        return <SendTransaction method={req.method} params={req.params} reject={reject} accept={accept} />
-    }
-
-    if (req.method === "wallet_switchEthereumChain") {
-        return <SwitchChain method={req.method} params={req.params} reject={reject} accept={accept} />
-    }
-
-    if (req.method === "wallet_addEthereumChain") {
-        return <AddChain method={req.method} params={req.params} reject={reject} accept={accept} />
-    }
-
-    if (req.method === "wallet_requestPermissions") {
-        return <WalletRequestPermissions method={req.method} params={req.params} reject={reject} accept={accept} />
-    }
-
-    if (req.method === "eth_requestAccounts") {
-        return <EthRequestPermissions method={req.method} params={req.params} reject={reject} accept={accept} />
-    }
-
-    return (
-        <main>
-            UNKNOWN REQUEST:
-            <pre>{JSON.stringify(req)}</pre>
-        </main>
-    )
 }

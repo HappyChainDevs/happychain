@@ -37,7 +37,6 @@ export function ConnectButton() {
 
     useEffect(() => {
         return dappMessageBus.on("request-display", (screen) => {
-            console.log({ screen })
             if (screen === "login-modal") {
                 open()
             }

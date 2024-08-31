@@ -5,5 +5,5 @@
             "@happychain/react": ["../sdk-react/lib/index"]
         }
     },
-    "include": ["src"]
+    "include": ["src", "../sdk-react/lib"]
 }

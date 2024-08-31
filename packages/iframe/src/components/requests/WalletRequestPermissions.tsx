@@ -1,11 +1,12 @@
 import { requestLabels } from "../../constants/requestLabels"
-interface SendTransactionProps {
-    method: string
-    params: [{ chainId: `0x${string}` }]
-    reject: () => void
-    accept: ({ method, params }: { method: string; params: unknown[] }) => void
-}
-export function WalletRequestPermissions({ method, params, reject, accept }: SendTransactionProps) {
+import type { RequestConfirmationProps } from "./props"
+
+export function WalletRequestPermissions({
+    method,
+    params,
+    reject,
+    accept,
+}: RequestConfirmationProps<"wallet_requestPermissions">) {
     return (
         <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
             <div className="flex w-full grow flex-col gap-4">
