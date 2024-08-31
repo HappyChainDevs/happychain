@@ -1,13 +1,13 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
-
-import { useHappyAccount } from "../hooks/useHappyAccount"
+import { useAtomValue } from "jotai"
+import { userAtom } from "../state/user"
 
 export const Route = createLazyFileRoute("/")({
     component: Index,
 })
 
 function Index() {
-    const { user } = useHappyAccount()
+    const user = useAtomValue(userAtom)
 
     return (
         <>

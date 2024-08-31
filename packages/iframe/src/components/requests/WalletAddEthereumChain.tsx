@@ -1,28 +1,16 @@
 import { useState } from "react"
-
-import type { HappyUser } from "@happychain/sdk-shared"
-import type { AddEthereumChainParameter } from "viem"
-
 import { requestLabels } from "../../constants/requestLabels"
+import { StorageKey, storage } from "../../services/storage"
+import type { RequestConfirmationProps } from "./props"
 
-interface SendTransactionProps {
-    method: string
-    params: [AddEthereumChainParameter]
-    reject: () => void
-    accept: ({ method, params }: { method: string; params: unknown[] }) => void
-}
+const user = storage.get(StorageKey.HappyUser)
 
-const safeGet = (key: string) => {
-    try {
-        return JSON.parse(localStorage.getItem(key) || "null")
-    } catch {
-        return null
-    }
-}
-
-const user = safeGet("happychain:cached-user") as HappyUser
-
-export function AddChain({ method, params, reject, accept }: SendTransactionProps) {
+export function WalletAddEthereumChain({
+    method,
+    params,
+    reject,
+    accept,
+}: RequestConfirmationProps<"wallet_addEthereumChain">) {
     const [chain, setChain] = useState(params[0])
 
     return (
@@ -95,9 +83,9 @@ export function AddChain({ method, params, reject, accept }: SendTransactionProp
             </div>
 
             <div>
-                {user.email}
+                {user?.email}
                 <br />
-                {user.address.slice(0, 8)} ... {user.address.slice(-8)}
+                {user?.address.slice(0, 8)} ... {user?.address.slice(-8)}
             </div>
 
             <div className="flex w-full gap-4">

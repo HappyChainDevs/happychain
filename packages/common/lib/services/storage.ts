@@ -1,4 +1,4 @@
-export function createStorage<TSchema extends { [k: string]: unknown }>(prefix: string) {
+export function createStorage<TSchema extends { [k: string]: unknown }>(prefix = "") {
     type Key = keyof TSchema
 
     return {

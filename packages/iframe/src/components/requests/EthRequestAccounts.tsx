@@ -1,25 +1,15 @@
-import type { HappyUser } from "@happychain/sdk-shared"
-
 import { requestLabels } from "../../constants/requestLabels"
+import { StorageKey, storage } from "../../services/storage"
+import type { RequestConfirmationProps } from "./props"
 
-interface SendTransactionProps {
-    method: string
-    params: [`0x${string}`, `0x${string}`]
-    reject: () => void
-    accept: ({ method, params }: { method: string; params: unknown[] }) => void
-}
+const user = storage.get(StorageKey.HappyUser)
 
-const safeGet = (key: string) => {
-    try {
-        return JSON.parse(localStorage.getItem(key) || "null")
-    } catch {
-        return null
-    }
-}
-
-const user = safeGet("happychain:cached-user") as HappyUser
-
-export function SendTransaction({ method, params, reject, accept }: SendTransactionProps) {
+export function EthRequestAccounts({
+    method,
+    params,
+    reject,
+    accept,
+}: RequestConfirmationProps<"eth_requestAccounts">) {
     return (
         <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
             <div className="flex w-full grow flex-col gap-4">
@@ -30,16 +20,16 @@ export function SendTransaction({ method, params, reject, accept }: SendTransact
 
                 <div className="flex grow flex-col gap-4 overflow-x-auto bg-zinc-100 p-4">
                     <div className="border-b border-zinc-300 pb-2 text-center text-sm font-bold text-blue-600">
-                        Raw Transaction
+                        Allow this app to view your address?
                     </div>
                     <pre className="grow">{JSON.stringify(params, null, 2)}</pre>
                 </div>
             </div>
 
             <div>
-                {user.email}
+                {user?.email ?? "MISSING EMAIL"}
                 <br />
-                {user.address.slice(0, 8)} ... {user.address.slice(-8)}
+                {user?.address.slice(0, 8)} ... {user?.address.slice(-8)}
             </div>
 
             <div className="flex w-full gap-4">
