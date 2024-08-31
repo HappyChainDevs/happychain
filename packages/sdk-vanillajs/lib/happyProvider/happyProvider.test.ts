@@ -195,8 +195,6 @@ describe("HappyProvider", () => {
     })
 
     it("subscribes and unsubscribes to native eip1193 events", async () => {
-        const dappBusIframe = new EventBus<HappyEvents>(dappBusConfig)
-
         const provider = new HappyProvider({
             iframePath: config.iframePath,
             windowId: crypto.randomUUID(),
