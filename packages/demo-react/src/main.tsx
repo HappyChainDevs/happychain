@@ -1,11 +1,14 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
 
-import { HappyWalletProvider } from "@happychain/react"
+import { HappyWalletProvider, happyProvider } from "@happychain/react"
 
 import App from "./App.tsx"
 
 import "./index.css"
+
+// biome-ignore lint/suspicious/noExplicitAny: demo purposes only
+;(window as any).happyProvider = happyProvider
 
 // biome-ignore lint/style/noNonNullAssertion: vite boilerplate
 ReactDOM.createRoot(document.getElementById("root")!).render(
