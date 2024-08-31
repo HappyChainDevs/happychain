@@ -1,171 +1,52 @@
-import { atomWithStorage, createJSONStorage } from "jotai/utils"
-import { getDefaultStore } from "jotai/vanilla"
-import { dappMessageBus, happyProviderBus } from "../services/eventBus"
-import { providerAtom } from "../services/provider"
-import { userAtom } from "./user"
+import { atomWithStorage } from "jotai/utils"
 
-type PermissionMap = Map<string, Map<string, unknown>>
+import { StorageKey } from "../services/storage"
+import { createMapStorage } from "../utils/createMapJSONStorage"
 
-const mapStorage = createJSONStorage<PermissionMap>(
-    // getStringStorage
-    () => localStorage, // or sessionStorage, asyncStorage or alike
-    // options (optional)
-    {
-        replacer: (_key, value) => {
-            try {
-                if (value instanceof Map) {
-                    return {
-                        dataType: "Map",
-                        value: Array.from(value.entries()), // or with spread: value: [...value]
-                    }
-                }
-            } catch {
-                console.error("error in replacer")
-            }
+/**
+ * Wallet Permission System Handling
+ * https://eips.ethereum.org/EIPS/eip-2255
+ * https://github.com/MetaMask/metamask-improvement-proposals/blob/main/MIPs/mip-2.md
+ */
 
-            return value
-        }, // optional reviver option for JSON.parse
-        reviver: (_key, value) => {
-            try {
-                if (typeof value === "object" && value !== null && "dataType" in value && "value" in value) {
-                    if (value.dataType === "Map" && Array.isArray(value.value)) {
-                        return new Map(value.value)
-                    }
-                    if (value.dataType === "Map") {
-                        console.warn("EMPTY MAP?", value)
-                        return new Map()
-                    }
-                }
-            } catch {
-                console.error("error in reviver")
-            }
+/**
+ * Map<dappOrigin, Map<PermissionName, WalletPermission>>
+ * permissionName is 'eth_accounts' | string
+ * permissionDetails is a WalletPermission
+ *
+ * This is scoped to the current user, and is cleared when
+ * the user logs out
+ *
+ * In a multi-account scenario, these permissions will need to be scoped
+ * per _address_
+ */
+export type DappPermissionMap = Map<string, WalletPermission>
+type GlobalPermissionMap = Map<string, DappPermissionMap>
 
-            return value
-        }, // optional replacer option for JSON.stringify
-    },
+type WalletPermissionCaveat = {
+    type: string
+    value: unknown
+}
+
+export type WalletPermissionRequest = {
+    [methodName: string]: WalletPermissionCaveatRequest
+}
+
+type WalletPermissionCaveatRequest = {
+    [caveatName: string]: unknown
+}
+
+export type WalletPermission = {
+    invoker: `http://${string}` | `https://${string}`
+    date: number
+    id: ReturnType<typeof crypto.randomUUID>
+    parentCapability: "eth_accounts" | string
+    caveats: WalletPermissionCaveat[]
+}
+
+export const permissionsAtom = atomWithStorage<GlobalPermissionMap>(
+    StorageKey.UserPermissions,
+    new Map(),
+    createMapStorage(),
+    { getOnInit: true },
 )
-
-// [url, [permissionsMap]]
-const permissionsAtom = atomWithStorage<PermissionMap>("user_permissions_per_domain", new Map(), mapStorage, {
-    getOnInit: true,
-})
-
-const store = getDefaultStore()
-
-function hasPermission({ method, params }: { method: string; params: { [key: string]: unknown }[] }) {
-    const referrer = store.get(permissionsAtom).get(document.referrer)
-    if (!referrer) {
-        return false
-    }
-    if (["eth_requestAccounts", "eth_accounts"].includes(method)) {
-        return referrer.has("eth_accounts")
-    }
-    if (method === "wallet_requestPermissions") {
-        if (!params.length) {
-            // empty params object... revoke permissions?
-            return false
-        }
-        return params.every((param) => {
-            const [[name]] = Object.entries(param)
-            return referrer.has(name)
-        })
-    }
-
-    return false
-}
-function setPermission({ method, params }: { method: string; params: { [key: string]: unknown }[] }) {
-    console.log("SETTING PERMISSIONS")
-    try {
-        const referrer = store.get(permissionsAtom)?.get(document.referrer) ?? new Map()
-
-        if (method === "eth_requestAccounts") {
-            // store permissions for future
-            referrer.set("eth_accounts", {})
-
-            // allow dapp to access user
-            dappMessageBus.emit("auth-changed", store.get(userAtom))
-        }
-
-        if (method === "wallet_requestPermissions") {
-            for (const param of params) {
-                const [[name]] = Object.entries(param)
-                referrer.set(name, {})
-                if (name === "eth_accounts") {
-                    // allow dapp to access user
-                    dappMessageBus.emit("auth-changed", store.get(userAtom))
-                }
-            }
-        }
-        store.set(permissionsAtom, (prev) => prev.set(document.referrer, referrer))
-    } catch (e) {
-        console.log({ e })
-    }
-}
-
-function getPermissions({ method, params }: { method: string; params: { [key: string]: unknown }[] }) {
-    const referrer = store.get(permissionsAtom).get(document.referrer)
-
-    if (!referrer) {
-        return []
-    }
-
-    if (method === "wallet_requestPermissions") {
-        const perms: unknown[] = []
-        for (const param of params) {
-            const [[name]] = Object.entries(param)
-            if (referrer.has(name)) {
-                perms.push({ parentCapability: name })
-            }
-            return perms
-        }
-        return perms
-    }
-
-    return []
-}
-
-function revokePermission({ method, params }: { method: string; params: { [key: string]: unknown }[] }) {
-    console.warn("REVOKING PERMISSIONS", method, params)
-    const referrer = store.get(permissionsAtom).get(document.referrer)
-    console.log({ referrer })
-    if (!referrer) {
-        return
-    }
-
-    if (method === "wallet_revokePermissions") {
-        console.log("deleting...")
-        for (const param of params) {
-            console.log({ param })
-            const [[name]] = Object.entries(param)
-            console.log({ name })
-            referrer.delete(name)
-            if (name === "eth_accounts") {
-                // allow dapp to access user
-                console.log("clearing user...")
-                dappMessageBus.emit("auth-changed", undefined)
-                happyProviderBus.emit("provider:event", { payload: { event: "accountsChanged", args: [] } })
-            }
-        }
-    }
-
-    store.set(permissionsAtom, (prev) => {
-        if (referrer.size) {
-            prev.set(document.referrer, referrer)
-            return prev
-        }
-
-        prev.delete(document.referrer)
-        return prev
-    })
-}
-
-function clearPermissions() {
-    store.set(permissionsAtom, (prev) => {
-        prev.delete(document.referrer)
-        dappMessageBus.emit("auth-changed", undefined)
-        happyProviderBus.emit("provider:event", { payload: { event: "accountsChanged", args: [] } })
-        return prev
-    })
-}
-
-export { hasPermission, getPermissions, revokePermission, setPermission, clearPermissions }

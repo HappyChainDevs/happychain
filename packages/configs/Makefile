@@ -1,10 +1,12 @@
+PATH := ./node_modules/.bin/:$(PATH)
+
 build:
 .PHONY: build
 
 check:
-	@./node_modules/.bin/biome check ./ 
+	biome check ./ 
 .PHONT: check
 
 format:
-	@./node_modules/.bin/biome check ./ --write
+	biome check ./ --write
 .PHONT: format

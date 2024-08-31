@@ -1,15 +1,4 @@
-import {
-    type EIP1193ErrorObject,
-    type EIP1193ProxiedEvents,
-    EventBus,
-    EventBusChannel,
-    type HappyEvents,
-} from "@happychain/sdk-shared"
-import type {
-    ProviderEventError,
-    ProviderEventPayload,
-} from "@happychain/sdk-shared/lib/services/eip1193Provider/events"
-import type { EIP1193Parameters } from "viem"
+import { type EIP1193ProxiedEvents, EventBus, EventBusChannel, type HappyEvents } from "@happychain/sdk-shared"
 
 /**
  * Event system between the HappyProvider in the dapp
@@ -38,11 +27,7 @@ export const dappMessageBus = new EventBus<HappyEvents>({
  * Broadcasts events on same domain
  * Main use case is iframe<->popup communication
  */
-
-export interface BroadcastEvents {
-    "request:approve": ProviderEventPayload<EIP1193Parameters>
-    "request:reject": ProviderEventError<EIP1193ErrorObject>
-}
+export type BroadcastEvents = Pick<EIP1193ProxiedEvents, "request:approve" | "request:reject">
 
 /**
  * Same domain Messages between iframe & popup

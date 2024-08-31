@@ -1,11 +1,4 @@
-import type {
-    EIP1193EventMap,
-    EIP1193Parameters,
-    EIP1193RequestFn,
-    EIP1474Methods,
-    RpcSchema,
-    RpcSchemaOverride,
-} from "viem"
+import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods, RpcSchema, RpcSchemaOverride } from "viem"
 
 import type { EIP1193ErrorObject } from "./errors"
 
@@ -16,14 +9,13 @@ type DerivedRpcSchema<
 > = rpcSchemaOverride extends RpcSchemaOverride ? [rpcSchemaOverride & { Method: string }] : rpcSchema
 
 export type EventUUID = ReturnType<typeof crypto.randomUUID>
-export type EIP1193RequestArg = Parameters<EIP1193RequestFn>[0]
 
-export type EIP1193RequestResult<TParams extends EIP1193RequestArg = EIP1193RequestArg> = DerivedRpcSchema<
-    EIP1474Methods,
-    undefined
-> extends RpcSchema
-    ? Extract<DerivedRpcSchema<EIP1474Methods, undefined>[number], { Method: TParams["method"] }>["ReturnType"]
-    : unknown
+export type EIP1193RequestParameters = EIP1193Parameters<EIP1474Methods>
+
+export type EIP1193RequestResult<TParams extends EIP1193RequestParameters = EIP1193RequestParameters> =
+    DerivedRpcSchema<EIP1474Methods, undefined> extends RpcSchema
+        ? Extract<DerivedRpcSchema<EIP1474Methods, undefined>[number], { Method: TParams["method"] }>["ReturnType"]
+        : unknown
 
 export type EIP1193EventName<T extends string = keyof EIP1193EventMap> = T
 
@@ -53,7 +45,7 @@ export type ProviderEventError<T = unknown> = {
  */
 export interface EIP1193ProxiedEvents {
     // user approves request
-    "request:approve": ProviderEventPayload<EIP1193RequestArg>
+    "request:approve": ProviderEventPayload<EIP1193RequestParameters>
     // user rejects request
     "request:reject": ProviderEventError<EIP1193ErrorObject>
 
@@ -66,6 +58,6 @@ export interface EIP1193ProxiedEvents {
     }
 
     // dapp<->iframe permission checks
-    "permission-check:request": ProviderEventPayload<EIP1193Parameters>
+    "permission-check:request": ProviderEventPayload<EIP1193RequestParameters>
     "permission-check:response": ProviderEventPayload<boolean> | ProviderEventError<unknown>
 }

@@ -1,5 +1,7 @@
-## make entire file 'silent'
-MAKEFLAGS += --silent
+## make entire file 'silent' (unless make VERBOSE=1)
+ifndef VERBOSE
+	MAKEFLAGS += --silent
+endif
 
 SHELL := /bin/bash
 

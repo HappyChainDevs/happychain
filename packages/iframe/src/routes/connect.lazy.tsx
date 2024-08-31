@@ -6,12 +6,13 @@ import { useAtomValue } from "jotai"
 import { AuthState } from "@happychain/sdk-shared"
 import { ConnectButton } from "../components/ConnectButton"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
-import { useHappyAccount } from "../hooks/useHappyAccount"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
 import { dappMessageBus } from "../services/eventBus"
-import { authStateAtom } from "../state/app"
-import { hasPermission } from "../state/permissions"
+import { authStateAtom } from "../state/authState"
+
+import { hasPermission } from "../services/permissions/hasPermission"
+import { userAtom } from "../state/user"
 
 export const Route = createLazyFileRoute("/connect")({
     component: Connect,
@@ -19,7 +20,7 @@ export const Route = createLazyFileRoute("/connect")({
 
 function Connect() {
     const authState = useAtomValue(authStateAtom)
-    const { user } = useHappyAccount()
+    const user = useAtomValue(userAtom)
     const web3Providers = useInjectedProviders()
     const socialProviders = useSocialProviders()
 
@@ -44,7 +45,7 @@ function Connect() {
         dappMessageBus.emit("modal-toggle", false)
     }
 
-    if (authState === AuthState.Loading) {
+    if (authState === AuthState.Connecting) {
         return (
             <main className="min-h-dvh w-screen">
                 <div className="fixed right-4 top-4 flex h-12 w-20 items-center justify-center">
@@ -72,13 +73,7 @@ function Connect() {
                             <div className="flex h-full w-full grow flex-col items-end justify-end rounded bg-slate-200 p-4">
                                 <div className="text-xs font-bold">Connected To: {new URL(document.referrer).host}</div>
                                 <div className="text-xs font-bold">
-                                    Has Access Permissions:{" "}
-                                    {hasPermission({
-                                        method: "wallet_requestPermissions",
-                                        params: [{ eth_accounts: {} }],
-                                    })
-                                        ? "true"
-                                        : "false"}
+                                    Has Access Permissions: {hasPermission({ eth_accounts: {} }) ? "true" : "false"}
                                 </div>
                                 <button type="button" onClick={disconnect} className="btn btn-warning">
                                     Logout

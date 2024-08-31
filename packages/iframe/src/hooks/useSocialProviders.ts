@@ -1,15 +1,15 @@
+import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useMemo } from "react"
 
 import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
-import { useAtomValue, useSetAtom } from "jotai"
-
 import { AuthState } from "@happychain/sdk-shared"
-import { authStateAtom } from "../state/app"
-import { chainsAtom } from "../state/chains"
 
-import { clearPermissions, setPermission } from "../state/permissions"
+import { setUserWithProvider } from "../actions/setUserWithProvider"
+import { clearPermissions } from "../services/permissions/clearPermissions"
+import { setPermission } from "../services/permissions/setPermission"
+import { authStateAtom } from "../state/authState"
+import { chainsAtom } from "../state/chains"
 import { userAtom } from "../state/user"
-import { setUserWithProvider } from "./useHappyAccount"
 
 export function useSocialProviders() {
     const setAuthState = useSetAtom(authStateAtom)
@@ -35,7 +35,6 @@ export function useSocialProviders() {
                         }),
                     )
                 }
-                console.error("[setUserWithProvider] useSocialProviders")
                 setUserWithProvider(user, provider)
             }
         })
@@ -47,13 +46,13 @@ export function useSocialProviders() {
                 ...provider,
                 enable: async () => {
                     // will automatically disable loading state when user+provider are set
-                    setAuthState(AuthState.Loading)
+                    setAuthState(AuthState.Connecting)
                     await provider.enable()
                     setPermission({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
                 },
                 disable: async () => {
                     // will automatically disable loading state when user+provider are set
-                    setAuthState(AuthState.Loading)
+                    setAuthState(AuthState.Connecting)
                     await provider.disable()
                     clearPermissions()
                 },

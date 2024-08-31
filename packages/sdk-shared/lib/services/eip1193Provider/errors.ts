@@ -114,35 +114,55 @@ export class EIP1193ChainNotRecognizedError extends GenericProviderRpcError {
     }
 }
 
-export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorObject {
-    if (!error || typeof error !== "object") {
-        return { code: -1, message: "An unknown RPC error occurred." }
+export function getEIP1193ErrorObjectFromCode(code: number, data?: string): EIP1193ErrorObject {
+    switch (code) {
+        case 4001:
+            return { code, message: "The user rejected the request.", data }
+        case 4100:
+            return { code, message: "The requested method and/or account has not been authorized by the user.", data }
+        case 4200:
+            return { code, message: "The Provider does not support the requested method.", data }
+        case 4900:
+            return { code, message: "The Provider is disconnected from all chains.", data }
+        case 4901:
+            return { code, message: "The Provider is not connected to the requested chain.", data }
+        case 4902:
+            return { code, message: "An error occurred when attempting to switch chain.", data }
+        default:
+            return { code: -1, message: "An unknown RPC error occurred.", data }
     }
+}
+
+export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorObject {
     if (error instanceof UserRejectedRequestError) {
-        return { code: 4001, message: "The user rejected the request.", data: error.details }
+        return getEIP1193ErrorObjectFromCode(4001, error.details)
     }
     if (error instanceof UnauthorizedProviderError) {
-        return {
-            code: 4100,
-            message: "The requested method and/or account has not been authorized by the user.",
-            data: error.details,
-        }
+        return getEIP1193ErrorObjectFromCode(4100, error.details)
     }
     if (error instanceof UnsupportedProviderMethodError) {
-        return { code: 4200, message: "The Provider does not support the requested method.", data: error.details }
+        return getEIP1193ErrorObjectFromCode(4200, error.details)
     }
     if (error instanceof ProviderDisconnectedError) {
-        return { code: 4900, message: "The Provider is disconnected from all chains.", data: error.details }
+        return getEIP1193ErrorObjectFromCode(4900, error.details)
     }
     if (error instanceof ChainDisconnectedError) {
-        return { code: 4901, message: "The Provider is not connected to the requested chain.", data: error.details }
+        return getEIP1193ErrorObjectFromCode(4901, error.details)
     }
     if (error instanceof SwitchChainError) {
-        return { code: 4902, message: "An error occurred when attempting to switch chain.", data: error.details }
+        return getEIP1193ErrorObjectFromCode(4902, error.details)
     }
 
-    const data = "details" in error ? error.details : "shortMessage" in error ? error.shortMessage : ""
-    return { code: -1, message: "An unknown RPC error occurred.", data }
+    const data =
+        !error || typeof error !== "object"
+            ? ""
+            : "details" in error && typeof error.details === "string"
+              ? error.details
+              : "shortMessage" in error && typeof error.shortMessage === "string"
+                ? error.shortMessage
+                : ""
+
+    return getEIP1193ErrorObjectFromCode(-1, data)
 }
 
 export function convertErrorObjectToEIP1193ErrorInstance(error: EIP1193ErrorObject) {
