@@ -1,5 +1,5 @@
 // register web-component & import useful functions
-import { happyProvider, onUserUpdate, register } from "@happychain/js"
+import { connect, disconnect, getCurrentUser, happyProvider, onUserUpdate, register } from "@happychain/js"
 import { BrowserProvider } from "ethers"
 
 import "./style.css"
@@ -15,6 +15,7 @@ const ethersProvider = new BrowserProvider(happyProvider)
 // buttons
 const elSignMessageButton = document.querySelector("#sign-message-btn")
 const elGetBlockButton = document.querySelector("#get-block-btn")
+const elConnectButton = document.querySelector("#connect-btn")
 
 // data dump elements
 const elUserDump = document.querySelector("#user-dump")
@@ -27,12 +28,22 @@ onUserUpdate((user) => {
         elUserDump.innerHTML = ""
         elSignatureDump.innerHTML = ""
         elBlockDump.innerHTML = ""
+        elConnectButton.innerText = "Connect"
         return
     }
 
+    elConnectButton.innerText = "Disconnect"
     // update user
     const userString = JSON.stringify(user, null, 2)
     elUserDump.innerHTML = userString
+})
+
+elConnectButton.addEventListener("click", async () => {
+    if (getCurrentUser()) {
+        disconnect()
+    } else {
+        connect()
+    }
 })
 
 elSignMessageButton.addEventListener("click", async () => {
