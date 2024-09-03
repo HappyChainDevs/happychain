@@ -10,7 +10,7 @@ const chain = getChainFromSearchParams()
 export const providerAtom = atom<EIP1193Provider | undefined>()
 providerAtom.debugLabel = "providerAtom"
 
-const DEFAULT_HTTP_TRANSPORT = http(chain.rpcUrls[0], {
+const fallbackHttpTransport = http(chain.rpcUrls[0], {
     batch: true,
 })
 
@@ -21,7 +21,7 @@ export const transportAtom = atom<CustomTransport | undefined>((get) => {
 transportAtom.debugLabel = "transportAtom"
 
 export const publicClientAtom = atom((get) => {
-    const transport = get(transportAtom) ?? DEFAULT_HTTP_TRANSPORT
+    const transport = get(transportAtom) ?? fallbackHttpTransport
     return createPublicClient({ transport }) satisfies PublicClient<CustomTransport | HttpTransport>
 })
 publicClientAtom.debugLabel = "publicClientAtom"

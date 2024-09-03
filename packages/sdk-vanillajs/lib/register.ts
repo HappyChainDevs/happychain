@@ -8,7 +8,7 @@ import { windowId } from "./happyProvider/initialize"
  * Default options, custom options will be merged in afterwards
  * merge strategy: { ...DEFAULT_OPTIONS, ...userOptions }
  */
-const DEFAULT_OPTIONS = {
+const defaultOptions = {
     chain: defaultChain.chainId,
     chainConfigs: {
         devnet: devnet,
@@ -19,7 +19,7 @@ const DEFAULT_OPTIONS = {
     },
 } satisfies WalletRegisterOptions<"devnet" | "testnet" | "sepolia" | typeof defaultChain.chainId>
 
-type DefaultChains = keyof typeof DEFAULT_OPTIONS.chainConfigs
+type DefaultChains = keyof typeof defaultOptions.chainConfigs
 
 type ChainParameters = AddEthereumChainParameter | Readonly<AddEthereumChainParameter>
 type ChainConfig<SelectedChain extends string> = Record<SelectedChain, ChainParameters>
@@ -123,7 +123,7 @@ export function register<TChain extends string = DefaultChains>(opts: WalletRegi
     }
 
     // merge with defaults
-    const options = { ...DEFAULT_OPTIONS, ...opts } as MergedOptions<typeof opts>
+    const options = { ...defaultOptions, ...opts } as MergedOptions<typeof opts>
 
     if (!options.chainConfigs || !options.chain || !Object.keys(options.chainConfigs).includes(options.chain)) {
         throw new Error(
