@@ -21,7 +21,7 @@ export function useProcessUnconfirmedRequests() {
     // Untrusted requests can only be called using the public client
     // as they bypass the popup approval screen
     useEffect(() => {
-        const offApprove = happyProviderBus.on("request:approve", async (data) => {
+        return happyProviderBus.on("request:approve", async (data) => {
             if (!confirmWindowId(data.windowId)) return
             try {
                 const isPublicMethod = !requiresConfirmation(data.payload)
@@ -96,8 +96,5 @@ export function useProcessUnconfirmedRequests() {
                 })
             }
         })
-        return () => {
-            offApprove()
-        }
     }, [publicClient, requiresConfirmation])
 }

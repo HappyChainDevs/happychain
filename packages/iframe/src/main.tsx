@@ -7,6 +7,8 @@ import { HappyAccountProvider } from "./providers/HappyAccountProvider"
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen"
 
+import "./listeners"
+
 import "./index.css"
 
 // Create a new router instance
