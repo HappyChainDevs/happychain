@@ -5,7 +5,7 @@ export type { HappyProvider } from "./happyProvider/happyProvider"
 
 import { happyProvider } from "./happyProvider/initialize"
 export { onModalUpdate, onUserUpdate, getCurrentUser, happyProvider } from "./happyProvider/initialize"
-
+export type { HappyProviderConfig } from "./happyProvider/interface"
 export type { UserUpdateCallback, ModalUpdateCallback, ListenerUnsubscribeFn } from "./happyProvider/listeners"
 
 export type {

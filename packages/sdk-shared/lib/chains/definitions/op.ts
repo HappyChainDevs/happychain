@@ -18,4 +18,4 @@ export const op = {
         "https://optimism.blockscout.com",
         "https://optimism.dex.guru",
     ],
-} as const satisfies Readonly<AddEthereumChainParameter>
+} satisfies Readonly<AddEthereumChainParameter>
