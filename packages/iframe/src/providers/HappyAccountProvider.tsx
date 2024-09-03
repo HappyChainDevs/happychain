@@ -52,5 +52,6 @@ export function HappyAccountProvider({ children }: PropsWithChildren) {
     if (!isWeb3Initialized) {
         return null
     }
+
     return children
 }
