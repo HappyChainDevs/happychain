@@ -1,4 +1,6 @@
 SHELL := /bin/bash
+PATH := ./node_modules/@happychain/configs/node_modules/.bin:$(PATH)
+
 # include .env file and export its env vars
 # (-include to ignore error if it does not exist)
 -include .env
@@ -71,7 +73,7 @@ test-fork:
 # Code Quality
 
 check: lint format-check
-	@./node_modules/@happychain/configs/node_modules/.bin/biome check ./ 
+	biome check ./ 
 .PHONY: check
 
 format-check:
@@ -83,7 +85,7 @@ lint:
 .PHONY: lint
 
 format:
-	@./node_modules/@happychain/configs/node_modules/.bin/biome check ./ --write
+	biome check ./ --write
 	forge fmt src/*.sol src/test/*.sol src/deploy/*.sol
 .PHONY: format
 
