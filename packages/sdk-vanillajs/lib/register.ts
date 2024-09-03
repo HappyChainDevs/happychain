@@ -1,5 +1,5 @@
-import { chains, defaultChain } from "@happychain/sdk-shared"
-import type { AddEthereumChainParameter } from "@happychain/sdk-shared"
+import { chains } from "@happychain/sdk-shared"
+import type { AddEthereumChainParameter } from "viem"
 import { HappyWallet } from "./happy-wallet"
 import { windowId } from "./happyProvider/initialize"
 
@@ -8,63 +8,18 @@ import { windowId } from "./happyProvider/initialize"
  * merge strategy: { ...DEFAULT_OPTIONS, ...userOptions }
  */
 const defaultOptions = {
-    chain: defaultChain.chainId,
-    chainConfigs: {
-        devnet: chains.devnet,
-        testnet: chains.happyChainSepolia,
-        sepolia: chains.ethereumSepolia,
-
-        [defaultChain.chainId]: defaultChain,
-    },
-} satisfies WalletRegisterOptions<"devnet" | "testnet" | "sepolia" | typeof defaultChain.chainId>
-
-export type DefaultChains = keyof typeof defaultOptions.chainConfigs & string
+    chain: chains.defaultChain,
+} satisfies WalletRegisterOptions
 
 type ChainParameters = AddEthereumChainParameter | Readonly<AddEthereumChainParameter>
-type ChainConfig<SelectedChain extends string> = Record<SelectedChain, ChainParameters>
-
-/**
- * Default Settings (with optional custom RPC)
- *
- */
-type CustomRpcOptions = {
-    rpcUrl?: string[] | string
-    chainConfigs?: never
-    chain?: never
-}
 
 /**
  * Use a built in chain option, and/or a custom RPC
  */
-type SelectChainOptions<SelectedChain extends string> = {
+
+export type WalletRegisterOptions = {
     rpcUrl?: string[] | string
-    chainConfigs?: ChainConfig<SelectedChain> & ChainConfig<string>
-    chain: "devnet" | "testnet" | "sepolia"
-}
-
-/**
- * Supply a custom set of chains
- */
-type CustomChainOptions<
-    SelectedChain extends string,
-    ChainConfigs extends ChainConfig<SelectedChain> = ChainConfig<SelectedChain> & ChainConfig<string>,
-> = {
-    rpcUrl?: never
-    chainConfigs: ChainConfigs
-    chain: keyof ChainConfigs & SelectedChain
-}
-
-export type WalletRegisterOptions<
-    SelectedChain extends string,
-    ChainConfigs extends ChainConfig<SelectedChain> = ChainConfig<SelectedChain> & ChainConfig<string>,
-> = CustomChainOptions<SelectedChain, ChainConfigs> | SelectChainOptions<SelectedChain> | CustomRpcOptions
-
-type ChainType<T extends WalletRegisterOptions<string>> = T extends WalletRegisterOptions<string, infer K> ? K : never
-
-type MergedOptions<T extends WalletRegisterOptions<string>> = {
-    rpcUrl?: string[] | string
-    chainConfigs: ChainType<T>
-    chain: keyof ChainType<T>
+    chain?: ChainParameters
 }
 
 /**
@@ -91,8 +46,9 @@ type MergedOptions<T extends WalletRegisterOptions<string>> = {
  * Connect to a pre-defined chain
  * ```ts twoslash
  * import { register } from '@happychain/js'
+ * import { testnet } from '@happychain/js/chains'
  * // ---cut---
- * register({ chain: 'testnet' })
+ * register({ chain: testnet })
  * ```
  *
  *
@@ -102,39 +58,32 @@ type MergedOptions<T extends WalletRegisterOptions<string>> = {
  * import { register } from '@happychain/js'
  * // ---cut---
  * register({
- *   chain: 'custom',
- *   chainConfigs: {
- *     custom: {
- *       chainName: "DevNet (localhost)",
- *       rpcUrls: ["http://127.0.0.1:8545", "ws://127.0.0.1:8545"],
- *       nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
- *       chainId: "0x7a69",
- *     }
+ *   chain: {
+ *     chainName: "DevNet (localhost)",
+ *     rpcUrls: ["http://127.0.0.1:8545", "ws://127.0.0.1:8545"],
+ *     nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
+ *     chainId: "0x7a69",
  *   }
  * })
  * ```
  *
  */
-export function register<TChain extends string = DefaultChains>(opts: WalletRegisterOptions<TChain> = {}) {
+export function register(opts: WalletRegisterOptions = {}) {
     // don't register if already exists on page
     if (document.querySelector("happy-wallet")) {
         return
     }
 
     // merge with defaults
-    const options = { ...defaultOptions, ...opts } as MergedOptions<typeof opts>
+    const options = { ...defaultOptions, ...opts } satisfies WalletRegisterOptions
 
-    if (!options.chainConfigs || !options.chain || !Object.keys(options.chainConfigs).includes(options.chain)) {
-        throw new Error(
-            `Misconfigured chain. Attempting to connect to ${options.chain}, but only [${Object.keys(options.chainConfigs).join(",")}] are available`,
-        )
+    if (!options.chain) {
+        throw new Error("Missing chain")
     }
-
-    const chain = options.chainConfigs && options.chain && options.chainConfigs[options.chain]
 
     const wallet = new HappyWallet(
         windowId,
-        JSON.stringify(chain),
+        JSON.stringify(options.chain),
         Array.isArray(options.rpcUrl) ? options.rpcUrl.join(",") : options.rpcUrl,
     )
 

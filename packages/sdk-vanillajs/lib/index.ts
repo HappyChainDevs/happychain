@@ -1,12 +1,20 @@
 export { register } from "./register"
-export type { WalletRegisterOptions, DefaultChains } from "./register"
+export type { WalletRegisterOptions } from "./register"
 
 export type { HappyProvider } from "./happyProvider/happyProvider"
 
-import { happyProvider } from "./happyProvider/initialize"
-export { onModalUpdate, onUserUpdate, getCurrentUser, happyProvider } from "./happyProvider/initialize"
-export type { HappyProviderConfig } from "./happyProvider/interface"
+export {
+    onModalUpdate,
+    onUserUpdate,
+    getCurrentUser,
+    happyProvider,
+    connect,
+    disconnect,
+} from "./happyProvider/initialize"
+
 export type { UserUpdateCallback, ModalUpdateCallback, ListenerUnsubscribeFn } from "./happyProvider/listeners"
+
+export * as chains from "./chains"
 
 export type {
     // Errors
@@ -20,17 +28,3 @@ export type {
     // User
     HappyUser,
 } from "@happychain/sdk-shared"
-
-export async function connect() {
-    return await happyProvider.request({
-        method: "wallet_requestPermissions",
-        params: [{ eth_accounts: {} }],
-    })
-}
-
-export async function disconnect() {
-    return await happyProvider.request({
-        method: "wallet_revokePermissions",
-        params: [{ eth_accounts: {} }],
-    })
-}
