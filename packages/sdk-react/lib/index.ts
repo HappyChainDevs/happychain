@@ -1,11 +1,7 @@
-/** React Components */
-export { HappyWalletProvider } from "./components/HappyWalletProvider"
-
-/** React Hooks */
-export { useHappyChain } from "./hooks/useHappyChain"
+export { HappyWalletProvider, useHappyChain } from "./components/HappyWalletProvider"
 
 // re-export from happychain core
-export { happyProvider, onModalUpdate, onUserUpdate, getCurrentUser } from "@happychain/js"
+export { happyProvider, onModalUpdate, onUserUpdate, getCurrentUser, connect, disconnect } from "@happychain/js"
 
 export type {
     // Happy Types

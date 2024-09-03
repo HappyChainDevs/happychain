@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 
 import type { HappyUser } from "@happychain/js"
-import { getCurrentUser, onUserUpdate, register } from "@happychain/js"
-
-import { HappyContext } from "./HappyContext"
-
-// auto registration of happy wallet
+import { connect, disconnect, getCurrentUser, happyProvider, onUserUpdate, register } from "@happychain/js"
 
 type HappyWalletProviderProps = React.PropsWithChildren & {
     init?: Parameters<typeof register>[0]
 }
+
+type THappyContext = {
+    user: HappyUser | undefined
+    initialized: boolean
+}
+
+export const HappyContext = createContext<THappyContext>({ user: undefined, initialized: false })
 
 export function HappyWalletProvider({ init, children }: HappyWalletProviderProps): React.JSX.Element {
     const [user, setUser] = useState<HappyUser | undefined>(getCurrentUser())
@@ -20,5 +23,22 @@ export function HappyWalletProvider({ init, children }: HappyWalletProviderProps
     // subscription to user changes
     useEffect(() => onUserUpdate((user) => setUser(user)), [])
 
-    return <HappyContext.Provider value={user}>{children}</HappyContext.Provider>
+    return <HappyContext.Provider value={{ user, initialized: true }}>{children}</HappyContext.Provider>
+}
+
+export function useHappyChain() {
+    const { user, initialized } = useContext(HappyContext)
+
+    useEffect(() => {
+        if (!initialized) {
+            console.warn("useHappyChain() is not initialized. Did you miss adding <HappyWalletProvider />?")
+        }
+    }, [initialized])
+
+    return {
+        provider: happyProvider,
+        connect,
+        disconnect,
+        user,
+    }
 }
