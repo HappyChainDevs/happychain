@@ -8,6 +8,9 @@ import "./style.css"
 // on the global HappyChain object
 // const  { happyProvider, onUserUpdate, register } = window.HappyChain
 
+// expose on window for demo purposes
+window.happyProvider = happyProvider
+
 register()
 
 const ethersProvider = new BrowserProvider(happyProvider)

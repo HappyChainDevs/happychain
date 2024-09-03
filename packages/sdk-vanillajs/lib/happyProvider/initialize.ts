@@ -1,6 +1,5 @@
 import type { EIP1193ProxiedEvents, HappyEvents, HappyUser } from "@happychain/sdk-shared"
 import { EventBus, EventBusChannel, config, createUUID } from "@happychain/sdk-shared"
-import type { EIP1193Provider } from "viem"
 import { HappyProvider } from "./happyProvider"
 import { registerListeners } from "./listeners"
 
@@ -54,4 +53,18 @@ export const happyProvider = new HappyProvider({
     }),
 
     dappBus: dappMessageBus,
-}) as HappyProvider & EIP1193Provider
+})
+
+export async function connect() {
+    return await happyProvider.request({
+        method: "wallet_requestPermissions",
+        params: [{ eth_accounts: {} }],
+    })
+}
+
+export async function disconnect() {
+    return await happyProvider.request({
+        method: "wallet_revokePermissions",
+        params: [{ eth_accounts: {} }],
+    })
+}
