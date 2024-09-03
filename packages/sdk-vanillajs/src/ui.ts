@@ -1,5 +1,5 @@
-import { chains } from "@happychain/sdk-shared"
-import type { AddEthereumChainParameter } from "@happychain/sdk-shared"
+import type { AddEthereumChainParameter } from "viem"
+import { chains } from "../lib/index"
 
 import { findViemChain, publicClient, walletClient } from "./viem"
 

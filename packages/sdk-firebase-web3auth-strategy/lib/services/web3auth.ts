@@ -14,11 +14,13 @@ export const web3Auth = new Web3AuthMPCCoreKit({
     web3AuthNetwork: config.web3AuthNetwork,
     manualSync: true, // This is the recommended approach
     tssLib: tssLib,
+    enableLogging: false,
     storage: window.localStorage,
 })
 
 const ethereumSigningProvider = new EthereumSigningProvider({
     config: {
+        skipLookupNetwork: true,
         chainConfig: {
             chainNamespace: config.web3AuthChainNamespace,
             chainId: config.chainId,
