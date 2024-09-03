@@ -10,7 +10,9 @@ export default defineConfig(({ mode }) => {
                 presets: [presets.lit],
             }),
             dts({
+                insertTypesEntry: true,
                 rollupTypes: true,
+                bundledPackages: ["viem", "abitype", "@metamask/safe-event-emitter"],
                 tsconfigPath: "./tsconfig.lib.json",
                 exclude: ["**/*.test.tsx", "**/*.test.ts"],
             }),
