@@ -2,11 +2,12 @@
     "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
     "files": {
         "ignore": [
-            "./**/*/.next",
-            "./**/*/dist",
-            "./**/*/generated.ts",
-            "./**/*/node_modules",
-            "./**/*/routeTree.gen.ts",
+            ".pnpm-store",
+            ".next",
+            "dist",
+            "generated.ts",
+            "node_modules",
+            "routeTree.gen.ts",
             "*.config.ts.timestamp-*.mjs"
         ]
     },
