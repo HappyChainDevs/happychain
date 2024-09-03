@@ -1,8 +1,6 @@
 import { chains } from "@happychain/sdk-shared"
 import type { AddEthereumChainParameter } from "viem"
 
-import * as viemChains from "viem/chains"
-
 import { findViemChain, publicClient, walletClient } from "./viem"
 
 const btnStyles =
@@ -54,14 +52,10 @@ export async function setActiveChain() {
     }
 
     const chainId = await publicClient.getChainId().then((n) => `0x${n.toString(16)}`)
-    const chainIdNumber = Number(chainId)
 
     const chainName =
         // built in chains
-        Object.values(chains).find((a) => a.chainId === chainId)?.chainName ??
-        // viem supported chains
-        Object.values(viemChains).find((a) => a.id === chainIdNumber)?.name ??
-        "unknown"
+        Object.values(chains).find((a) => a.chainId === chainId)?.chainName ?? "unknown"
 
     chainNameText.innerHTML = chainName
 }
