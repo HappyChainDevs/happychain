@@ -6,4 +6,4 @@ export const happyChainSepolia = {
     nativeCurrency: { name: "HappyChain", symbol: "HAPPY", decimals: 18 },
     chainId: "0xd8",
     blockExplorerUrls: ["https://happy-testnet-sepolia.explorer.caldera.xyz"],
-} as const satisfies Readonly<AddEthereumChainParameter>
+} satisfies Readonly<AddEthereumChainParameter>

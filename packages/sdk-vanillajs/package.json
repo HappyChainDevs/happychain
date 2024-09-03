@@ -15,7 +15,6 @@
         }
     },
     "dependencies": {
-        "@happychain/sdk-shared": "workspace:^",
         "@metamask/safe-event-emitter": "^3.1.1",
         "lit": "^3.2.0",
         "mipd": "^0.0.7",
@@ -24,6 +23,7 @@
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
         "@happychain/configs": "workspace:^",
+        "@happychain/sdk-shared": "workspace:^",
         "@types/bun": "^1.1.8",
         "autoprefixer": "^10.4.20",
         "happy-dom": "^15.0.0",

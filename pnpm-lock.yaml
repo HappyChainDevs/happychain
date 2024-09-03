@@ -379,6 +379,12 @@ importers:
       '@happychain/configs':
         specifier: workspace:^
         version: link:../configs
+      '@happychain/sdk-shared':
+        specifier: workspace:^
+        version: link:../sdk-shared
+      '@metamask/safe-event-emitter':
+        specifier: ^3.1.1
+        version: 3.1.1
       '@types/bun':
         specifier: ^1.1.8
         version: 1.1.8
@@ -437,9 +443,6 @@ importers:
 
   packages/sdk-vanillajs:
     dependencies:
-      '@happychain/sdk-shared':
-        specifier: workspace:^
-        version: link:../sdk-shared
       '@metamask/safe-event-emitter':
         specifier: ^3.1.1
         version: 3.1.1
@@ -459,6 +462,9 @@ importers:
       '@happychain/configs':
         specifier: workspace:^
         version: link:../configs
+      '@happychain/sdk-shared':
+        specifier: workspace:^
+        version: link:../sdk-shared
       '@types/bun':
         specifier: ^1.1.8
         version: 1.1.8

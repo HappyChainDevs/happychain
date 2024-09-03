@@ -12,8 +12,11 @@ export default defineConfig(({ mode }) => {
             dts({
                 insertTypesEntry: true,
                 rollupTypes: true,
-                bundledPackages: ["viem", "abitype", "@metamask/safe-event-emitter"],
+                bundledPackages: ["viem", "abitype", "@metamask/safe-event-emitter", "@happychain/sdk-shared"],
                 tsconfigPath: "./tsconfig.lib.json",
+                compilerOptions: {
+                    rootDir: "../",
+                },
                 exclude: ["**/*.test.tsx", "**/*.test.ts"],
             }),
         ],

@@ -45,3 +45,26 @@ export type {
     EIP1193RequestResult,
     EIP1193EventName,
 } from "./interfaces/eip1193Provider"
+
+/**
+ * Here we re-export some viem types, so consuming packages always get the same type from the same source
+ * i.e. happychain/js will use some of these and pull from viem
+ * but the happychain/react will use some of these also, and get some internal types from happychain/js and some from viem
+ * resulting in a compiled result such as
+ *
+ * import { AddEthereumChainParameter } from 'viem'
+ * import { AddEthereumChainParameter_2 } from 'viem'
+ *
+ * with both types being incompatible with each other
+ */
+import type {
+    RpcSchema,
+    AddEthereumChainParameter as ViemAddEthereumChainParameter,
+    EIP1193Provider as ViemEIP1193Provider,
+    EIP1193RequestFn as ViemEIP1193RequestFn,
+    EIP1474Methods as ViemEIP1474Methods,
+} from "viem"
+export type AddEthereumChainParameter = ViemAddEthereumChainParameter
+export type EIP1193Provider = ViemEIP1193Provider
+export type EIP1193RequestFn<rpcSchema extends RpcSchema | undefined = undefined> = ViemEIP1193RequestFn<rpcSchema>
+export type EIP1474Methods = ViemEIP1474Methods

@@ -6,4 +6,4 @@ export const opSepolia = {
     nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
     chainId: "0xaa37dc",
     blockExplorerUrls: ["https://optimism-sepolia.blockscout.com"],
-} as const satisfies Readonly<AddEthereumChainParameter>
+} satisfies Readonly<AddEthereumChainParameter>
