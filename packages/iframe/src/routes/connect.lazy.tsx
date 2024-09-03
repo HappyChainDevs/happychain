@@ -1,9 +1,7 @@
-import { useMemo, useState } from "react"
-
+import { AuthState } from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
-
-import { AuthState } from "@happychain/sdk-shared"
+import { useMemo, useState } from "react"
 import { ConnectButton } from "../components/ConnectButton"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
@@ -71,7 +69,10 @@ function Connect() {
                                 <p>{user?.email || user?.name}</p>
                             </div>
                             <div className="flex h-full w-full grow flex-col items-end justify-end rounded bg-slate-200 p-4">
-                                <div className="text-xs font-bold">Connected To: {new URL(document.referrer).host}</div>
+                                <div className="text-xs font-bold">
+                                    Connected To:{" "}
+                                    {document.referrer ? new URL(document.referrer).host : window.location.origin}
+                                </div>
                                 <div className="text-xs font-bold">
                                     Has Access Permissions: {hasPermission({ eth_accounts: {} }) ? "true" : "false"}
                                 </div>
