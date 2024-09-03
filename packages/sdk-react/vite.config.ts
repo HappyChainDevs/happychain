@@ -13,11 +13,10 @@ export default defineConfig({
             fileName: (format) => `index.${format}.js`,
         },
         rollupOptions: {
-            external: ["react", "@happychain/js", "react-dom"],
+            external: ["react", "react-dom"],
             output: {
                 globals: {
                     react: "React",
-                    "@happychain/js": "HappyChain",
                     "react-dom": "ReactDOM",
                 },
             },
@@ -30,10 +29,28 @@ export default defineConfig({
     plugins: [
         dts({
             // nicer output, but takes time
+            insertTypesEntry: true,
             rollupTypes: true,
+            aliasesExclude: ["react"],
+            compilerOptions: {
+                rootDir: "../",
+            },
+            bundledPackages: [
+                "@happychain/js",
+                "viem",
+                "abitype",
+                "@metamask/safe-event-emitter",
+                "@happychain/sdk-shared",
+            ],
             tsconfigPath: "tsconfig.app.json",
             exclude: ["**/*.test.tsx", "**/*.test.ts"],
         }),
         react(),
     ],
+
+    resolve: {
+        alias: {
+            "@happychain/js": resolve(__dirname, "../sdk-vanillajs/lib/index.ts"),
+        },
+    },
 })

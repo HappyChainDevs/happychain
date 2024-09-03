@@ -22,4 +22,4 @@ export const ethereum = {
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     chainId: "0x1",
     blockExplorerUrls: ["https://etherscan.io", "https://eth.blockscout.com", "https://ethereum.dex.guru"],
-} as const satisfies Readonly<AddEthereumChainParameter>
+} satisfies Readonly<AddEthereumChainParameter>

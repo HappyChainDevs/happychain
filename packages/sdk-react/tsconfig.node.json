@@ -2,12 +2,12 @@
     "extends": "@happychain/configs/tsconfig.vite-node.json",
     "compilerOptions": {
         "jsx": "react-jsx",
-        "baseUrl": "./",
         "paths": {
             "lib/*": ["./lib/*"],
             "src/*": ["./src/*"],
-            "test/*": ["./test/*"]
+            "test/*": ["./test/*"],
+            "@happychain/js": ["../sdk-vanillajs/lib/index"]
         }
     },
-    "include": ["vite.config.ts", "lib", "test", "src"]
+    "include": ["vite.config.ts", "lib", "test", "src", "../sdk-vanillajs/lib"]
 }
