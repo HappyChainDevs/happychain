@@ -1,6 +1,5 @@
-import { defaultChain } from "@happychain/sdk-shared"
-import { devnet, ethereumSepolia, happyChainSepolia } from "@happychain/sdk-shared/lib/chains"
-import type { AddEthereumChainParameter } from "viem"
+import { chains, defaultChain } from "@happychain/sdk-shared"
+import type { AddEthereumChainParameter } from "@happychain/sdk-shared"
 import { HappyWallet } from "./happy-wallet"
 import { windowId } from "./happyProvider/initialize"
 
@@ -11,15 +10,15 @@ import { windowId } from "./happyProvider/initialize"
 const defaultOptions = {
     chain: defaultChain.chainId,
     chainConfigs: {
-        devnet: devnet,
-        testnet: happyChainSepolia,
-        sepolia: ethereumSepolia,
+        devnet: chains.devnet,
+        testnet: chains.happyChainSepolia,
+        sepolia: chains.ethereumSepolia,
 
         [defaultChain.chainId]: defaultChain,
     },
 } satisfies WalletRegisterOptions<"devnet" | "testnet" | "sepolia" | typeof defaultChain.chainId>
 
-export type DefaultChains = keyof typeof defaultOptions.chainConfigs
+export type DefaultChains = keyof typeof defaultOptions.chainConfigs & string
 
 type ChainParameters = AddEthereumChainParameter | Readonly<AddEthereumChainParameter>
 type ChainConfig<SelectedChain extends string> = Record<SelectedChain, ChainParameters>

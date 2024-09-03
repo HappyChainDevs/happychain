@@ -3,7 +3,9 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
-    "files": ["dist"],
+    "files": [
+        "dist"
+    ],
     "main": "./dist/index.umd.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.d.ts",
@@ -19,6 +21,8 @@
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
+        "@happychain/sdk-shared": "workspace:^",
+        "@metamask/safe-event-emitter": "^3.1.1",
         "@types/bun": "^1.1.8",
         "@types/node": "^22.5.0",
         "@types/react": "^18.3.4",
