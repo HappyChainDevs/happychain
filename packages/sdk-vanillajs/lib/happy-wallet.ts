@@ -96,7 +96,7 @@ export class HappyWallet extends LitElement {
             height: 100vh;
         }
 
-        iframe.closed.connected {
+        iframe.connected.closed {
             height: 5rem;
             width: 13rem;
             border-radius: 0.5rem;
