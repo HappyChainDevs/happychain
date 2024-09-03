@@ -1,3 +1,5 @@
+PATH := ./node_modules/.bin:$(PATH)
+
 include ../../makefiles/formatting.mk
 
 # Vocs seems unstable, and changes to several files like this
@@ -6,7 +8,7 @@ include ../../makefiles/formatting.mk
 # you are better off running in three seperate terminals
 # so you can restart vocs when needed
 dev:
-	@./node_modules/.bin/concurrently \
+	concurrently \
 		'make typedoc-js.watch'\
 		'make typedoc-react.watch'\
 		'make vocs.watch'
@@ -20,22 +22,22 @@ build:
 
 # Preview production build (run build first)
 preview:
-	@./node_modules/.bin/vocs preview
+	vocs preview
 .PHONY: preview
 
 # build vocs docs from supplied markdown
 vocs:
-	@./node_modules/.bin/vocs build
+	vocs build
 .PHONY: vocs
 
 # build and watch for changes using dev server
 vocs.watch:
-	@./node_modules/.bin/vocs dev
+	vocs dev
 .PHONY: vocs.watch
 
 # generate all markdown API reference
 typedoc:
-	@./node_modules/.bin/concurrently \
+	concurrently \
 		'make typedoc-js'\
 		'make typedoc-react'
 .PHONY: typedoc
@@ -46,24 +48,24 @@ typedoc.clean:
 
 # generate JS markdown API reference
 typedoc-js:
-	@./node_modules/.bin/typedoc --options ./typedoc.vanilla.js
+	typedoc --options ./typedoc.vanilla.js
 .PHONY: typedoc-js
 
 # generate JS markdown API reference in watch mode
 typedoc-js.watch:
-	@./node_modules/.bin/typedoc\
+	typedoc\
 		--watch\
 		--options ./typedoc.vanilla.js
 .PHONY: typedoc-js.watch
 
 # generate React markdown API reference
 typedoc-react:
-	@./node_modules/.bin/typedoc --options ./typedoc.react.js
+	typedoc --options ./typedoc.react.js
 .PHONY: typedoc-react
 
 # generate React markdown API reference in watch mode
 typedoc-react.watch:
-	@./node_modules/.bin/typedoc\
+	typedoc\
 		--watch\
 		--options ./typedoc.react.js
 .PHONY: typedoc-react.watch

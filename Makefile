@@ -61,14 +61,14 @@ check: node_modules ## Performs code-quality checks.
 	make support.check
 	make sdk.check
 	make apps.check
-	@./packages/configs/node_modules/.bin/biome check ./
+	./packages/configs/node_modules/.bin/biome check ./
 .PHONY: check
 
 format: ## Fixes code-quality issues
 	make support.format
 	make sdk.format
 	make apps.format
-	@./packages/configs/node_modules/.bin/biome check ./ --write
+	./packages/configs/node_modules/.bin/biome check ./ --write
 .PHONY: format
 
 test: ## Run tests
@@ -183,7 +183,7 @@ apps.format:
 # quickly format change files between <your branch> and master
 # using default global settings
 check-fast-diff:
-	@./packages/configs/node_modules/.bin/biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)))
+	./packages/configs/node_modules/.bin/biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)))
 .PHONY: check-fast-diff
 
 # ==================================================================================================

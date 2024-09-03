@@ -1,8 +1,12 @@
+# Use the path to the biome version installed in configs directory
+# This ensures all packages are using the same biome version, 
+# along with the same biome config
+PATH := ./node_modules/@happychain/configs/node_modules/.bin/:$(PATH)
+
 check:
-	@echo "Checking..."
-	@./node_modules/@happychain/configs/node_modules/.bin/biome check ./
+	biome check ./
 .PHONT: check
 
 format:
-	@./node_modules/@happychain/configs/node_modules/.bin/biome check ./ --write
+	biome check ./ --write
 .PHONT: format
