@@ -2,7 +2,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useMemo } from "react"
 
 import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
-import { AuthState } from "@happychain/sdk-shared"
+import { AuthState, type ConnectionProvider } from "@happychain/sdk-shared"
 
 import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { clearPermissions } from "../services/permissions/clearPermissions"
@@ -42,21 +42,24 @@ export function useSocialProviders() {
 
     const providersMemo = useMemo(
         () =>
-            providers.map((provider) => ({
-                ...provider,
-                enable: async () => {
-                    // will automatically disable loading state when user+provider are set
-                    setAuthState(AuthState.Connecting)
-                    await provider.enable()
-                    setPermission({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
-                },
-                disable: async () => {
-                    // will automatically disable loading state when user+provider are set
-                    setAuthState(AuthState.Connecting)
-                    await provider.disable()
-                    clearPermissions()
-                },
-            })),
+            providers.map(
+                (provider) =>
+                    ({
+                        ...provider,
+                        enable: async () => {
+                            // will automatically disable loading state when user+provider are set
+                            setAuthState(AuthState.Connecting)
+                            await provider.enable()
+                            setPermission({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
+                        },
+                        disable: async () => {
+                            // will automatically disable loading state when user+provider are set
+                            setAuthState(AuthState.Connecting)
+                            await provider.disable()
+                            clearPermissions()
+                        },
+                    }) satisfies ConnectionProvider,
+            ),
         [providers, setAuthState],
     )
 
