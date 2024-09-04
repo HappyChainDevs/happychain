@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test"
 
 import type { EIP1193ProxiedEvents, EventBusOptions, HappyEvents } from "@happychain/sdk-shared"
-import { AuthState, EventBus, EventBusChannel, GenericProviderRpcError, config } from "@happychain/sdk-shared"
+import {
+    AuthState,
+    EventBus,
+    EventBusChannel,
+    GenericProviderRpcError,
+    config,
+    createUUID,
+} from "@happychain/sdk-shared"
 import type { RpcBlock } from "viem"
 
 import { HappyProvider } from "./happyProvider"
@@ -39,13 +46,13 @@ describe("HappyProvider", () => {
     let dappBusConfig: EventBusOptions
     beforeEach(() => {
         providerBusConfig = {
-            scope: crypto.randomUUID(),
+            scope: createUUID(),
             logger: { log: mock(), warn: mock(), error: mock() },
             mode: EventBusChannel.Broadcast,
         } satisfies EventBusOptions
 
         dappBusConfig = {
-            scope: crypto.randomUUID(),
+            scope: createUUID(),
             logger: { log: mock(), warn: mock(), error: mock() },
             mode: EventBusChannel.Broadcast,
         } satisfies EventBusOptions
@@ -54,7 +61,7 @@ describe("HappyProvider", () => {
     it("transmits payload using bus", async () => {
         const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(providerBusConfig)
         const dappBusIframe = new EventBus<HappyEvents>(dappBusConfig)
-        const uuid = crypto.randomUUID()
+        const uuid = createUUID()
 
         const provider = new SocialWalletHandler({
             iframePath: config.iframePath,
@@ -108,7 +115,7 @@ describe("HappyProvider", () => {
     it("resolves on success", async () => {
         const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(providerBusConfig)
         const dappBusIframe = new EventBus<HappyEvents>(dappBusConfig)
-        const uuid = crypto.randomUUID()
+        const uuid = createUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
@@ -150,7 +157,7 @@ describe("HappyProvider", () => {
     it("rejects on error", async () => {
         const happyProviderBusIframe = new EventBus<EIP1193ProxiedEvents>(providerBusConfig)
         const dappBusIframe = new EventBus<HappyEvents>(dappBusConfig)
-        const uuid = crypto.randomUUID()
+        const uuid = createUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
@@ -197,7 +204,7 @@ describe("HappyProvider", () => {
     it("subscribes and unsubscribes to native eip1193 events", async () => {
         const provider = new HappyProvider({
             iframePath: config.iframePath,
-            windowId: crypto.randomUUID(),
+            windowId: createUUID(),
             providerBus: new EventBus<EIP1193ProxiedEvents>(providerBusConfig),
             dappBus: new EventBus<HappyEvents>(dappBusConfig),
         })

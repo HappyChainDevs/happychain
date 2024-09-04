@@ -1,16 +1,30 @@
-import type { EIP1193ProxiedEvents, HappyEvents, IEventBus, Logger, config } from "@happychain/sdk-shared"
+import type {
+    EIP1193ProxiedEvents,
+    EIP1193RequestMethods,
+    EIP1193RequestParameters,
+    EIP1193RequestResult,
+    HappyEvents,
+    IEventBus,
+    Logger,
+    config,
+} from "@happychain/sdk-shared"
+import type { UUID } from "@happychain/sdk-shared"
 import type SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { EIP1193RequestFn, EIP1474Methods } from "viem"
 
 /** @internal */
 export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
     logger?: Logger
-    windowId: ReturnType<typeof crypto.randomUUID>
+    windowId: UUID
     providerBus: IEventBus<EIP1193ProxiedEvents>
     dappBus: IEventBus<HappyEvents>
 }
 
 export interface EIP1193ConnectionHandler extends SafeEventEmitter {
     isConnected(): boolean
-    request: EIP1193RequestFn<EIP1474Methods>
+    // request: EIP1193RequestHandlerFunction
+    // request: (args: EIP1193RequestParameters) => Promise<EIP1193RequestResult>
+
+    request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
+        args: EIP1193RequestParameters<TString>,
+    ): Promise<EIP1193RequestResult<TString>>
 }

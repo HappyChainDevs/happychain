@@ -58,10 +58,9 @@ function useOnAuthChange(auth: Auth) {
             if (!_user?.uid) {
                 if (userAuth?.uid) {
                     await web3AuthDisconnect()
+                    setUserAuth(undefined)
+                    setInternalAuthState("unauthenticated")
                 }
-
-                setUserAuth(undefined)
-                setInternalAuthState("unauthenticated")
                 return
             }
             try {

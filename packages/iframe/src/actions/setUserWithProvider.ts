@@ -2,6 +2,7 @@ import type { HappyUser } from "@happychain/sdk-shared"
 import { AuthState } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
 import type { EIP1193Provider } from "viem"
+import { clearPermissions } from "../services/permissions/clearPermissions"
 import { authStateAtom } from "../state/authState"
 import { providerAtom } from "../state/provider"
 import { userAtom } from "../state/user"
@@ -14,4 +15,9 @@ export function setUserWithProvider(user: HappyUser | undefined, provider: EIP11
 
     // user auth state
     store.set(authStateAtom, () => (user ? AuthState.Connected : AuthState.Disconnected))
+
+    // clear all permissions on logout
+    if (!user) {
+        clearPermissions()
+    }
 }

@@ -1,6 +1,7 @@
 import { type Mock, beforeEach, describe, expect, it, mock } from "bun:test"
 import { setTimeout } from "node:timers/promises"
 
+import { createUUID } from "../../utils/uuid"
 import { EventBus, EventBusChannel, type EventBusOptions } from "./eventBus"
 
 describe("event bus", () => {
@@ -14,7 +15,7 @@ describe("event bus", () => {
         let mockCallback: Mock<(a: unknown) => void>
         beforeEach(() => {
             broadcastConfig = {
-                scope: crypto.randomUUID(),
+                scope: createUUID(),
                 logger: { log: mock(), warn: mock(), error: mock() },
             }
 
@@ -57,7 +58,7 @@ describe("event bus", () => {
         let mockCallback: Mock<(a: unknown) => void>
         beforeEach(() => {
             broadcastConfig = {
-                scope: crypto.randomUUID(),
+                scope: createUUID(),
                 logger: { log: mock(), warn: mock(), error: mock() },
                 mode: EventBusChannel.Broadcast,
             } satisfies EventBusOptions
