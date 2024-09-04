@@ -7,7 +7,7 @@ function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { provider, user } = useHappyChain()
+    const { provider, user, connect, disconnect } = useHappyChain()
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
     const walletClient = useMemo(
@@ -54,10 +54,7 @@ function App() {
             <button
                 type="button"
                 onClick={() => {
-                    happyProvider.request({
-                        method: user ? "wallet_revokePermissions" : "wallet_requestPermissions",
-                        params: [{ eth_accounts: {} }],
-                    })
+                    user ? connect() : disconnect()
                 }}
                 className="rounded-lg bg-sky-300 p-2 shadow-xl"
             >
