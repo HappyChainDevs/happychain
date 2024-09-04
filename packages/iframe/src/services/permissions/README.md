@@ -11,4 +11,6 @@ These permissions are scoped to the current authenticated _user_ per dapp, and i
 the user logs out or disconnected from the dapp
 
 In a multi-account/multi-address scenario, these permissions will need to be scoped
-per _address_
+per _address_ not per user.
+
+Currently multi-account is not supported.
