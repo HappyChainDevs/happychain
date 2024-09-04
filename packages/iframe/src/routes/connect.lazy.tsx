@@ -13,7 +13,8 @@ import { hasPermission } from "../services/permissions/hasPermission"
 import { userAtom } from "../state/user"
 import { tokenList } from "../utils/lists"
 import { publicClientAtom } from "../state/publicClient"
-import { defineChain, formatEther } from "viem"
+import { formatEther } from "viem"
+import { happySepChain } from "../utils/chainConfig"
 
 export const Route = createLazyFileRoute("/connect")({
     component: Connect,
@@ -42,26 +43,6 @@ function Connect() {
 
     async function getBalance () {
         if (user) {
-            const happySepChain = defineChain({ // since there is no definition in the package (s00n)
-                id: 216, 
-                name: "HappyChain",
-                nativeCurrency: { name: "Happy", symbol: "HAPPY", decimals: 18 },
-                rpcUrls: {
-                    default: {
-                        http: ["https://happy-testnet-sepolia.rpc.caldera.xyz/http"]
-                    }
-                },
-                blockExplorers: { // dummy
-                    default: {
-                      name: 'Etherscan',
-                      url: 'https://etherscan.io',
-                      apiUrl: 'https://api.etherscan.io/api',
-                    },
-                  },
-                testnet: true
-            })
-
-            // mainnet
             publicClient.chain = happySepChain
             return await publicClient.getBalance({ 
                 address: user?.address,
