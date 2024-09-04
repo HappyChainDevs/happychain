@@ -194,7 +194,10 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
         this.inFlightRequests.set(key, { resolve, reject, popup })
 
+        const intervalMs = 100
+
         if (!this.timer && popup) {
+            // every interval, check if popup has been manually closed
             this.timer = setInterval(() => {
                 let withPopups = 0
                 for (const [k, req] of this.inFlightRequests) {
@@ -216,7 +219,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
                     clearInterval(this.timer)
                     this.timer = null
                 }
-            }, 100) // every half second, check if popup has been manually closed
+            }, intervalMs)
         }
     }
 
