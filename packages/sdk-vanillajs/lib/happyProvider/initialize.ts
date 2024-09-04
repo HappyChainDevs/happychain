@@ -1,6 +1,5 @@
 import type { EIP1193ProxiedEvents, HappyEvents, HappyUser } from "@happychain/sdk-shared"
-import { EventBus, EventBusChannel, config } from "@happychain/sdk-shared"
-
+import { EventBus, EventBusChannel, config, createUUID } from "@happychain/sdk-shared"
 import { HappyProvider } from "./happyProvider"
 import { registerListeners } from "./listeners"
 
@@ -9,7 +8,7 @@ import { registerListeners } from "./listeners"
  *
  * @internal
  */
-export const windowId = crypto.randomUUID()
+export const windowId = createUUID()
 
 const dappMessageBus = new EventBus<HappyEvents>({
     mode: EventBusChannel.DappPort,

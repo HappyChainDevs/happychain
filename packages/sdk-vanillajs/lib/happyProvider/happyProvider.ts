@@ -1,6 +1,6 @@
+import { AuthState, waitForCondition } from "@happychain/sdk-shared"
+import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { EIP1193Provider, EIP1193RequestFn, EIP1474Methods } from "viem"
-
 import { InjectedWalletHandler } from "./injectedWalletHandler"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 import { SocialWalletHandler } from "./socialWalletHandler"
@@ -19,14 +19,20 @@ import { SocialWalletHandler } from "./socialWalletHandler"
  * })
  * ```
  */
-export class HappyProvider extends SafeEventEmitter implements EIP1193Provider {
+export class HappyProvider extends SafeEventEmitter {
     private injectedWalletHandler: EIP1193ConnectionHandler
     private socialWalletHandler: EIP1193ConnectionHandler
+
+    private authState: AuthState = AuthState.Connecting
 
     constructor(config: HappyProviderConfig) {
         super()
 
         config.logger?.log("EIP1193Provider Created")
+
+        config.dappBus.on("auth-state", (_authState) => {
+            this.authState = _authState
+        })
 
         // Injected Wallets
         this.injectedWalletHandler = new InjectedWalletHandler(config)
@@ -37,14 +43,19 @@ export class HappyProvider extends SafeEventEmitter implements EIP1193Provider {
         this.registerConnectionHandlerEvents(this.socialWalletHandler)
     }
 
-    request: EIP1193RequestFn<EIP1474Methods> = async (args) => {
-        type StrictArgsCast = Exclude<typeof args, { method: string; params: unknown }>
-
-        if (this.injectedWalletHandler.isConnected()) {
-            return await this.injectedWalletHandler.request(args as StrictArgsCast)
+    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
+        args: EIP1193RequestParameters<TString>,
+    ): Promise<EIP1193RequestResult<TString>> {
+        if (this.authState === AuthState.Connecting) {
+            // wait till either authenticated or unauthenticated
+            await waitForCondition(() => this.authState !== AuthState.Connecting)
         }
 
-        return await this.socialWalletHandler.request(args as StrictArgsCast)
+        if (this.injectedWalletHandler.isConnected()) {
+            return await this.injectedWalletHandler.request(args)
+        }
+
+        return await this.socialWalletHandler.request(args)
     }
 
     /** Simply forward all provider events transparently */

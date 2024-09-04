@@ -1,4 +1,4 @@
-import { getChainFromSearchParams } from "@happychain/sdk-shared"
+import { convertToViemChain, getChainFromSearchParams } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, HttpTransport, PublicClient } from "viem"
 import { http, createPublicClient } from "viem"
@@ -12,6 +12,6 @@ const DEFAULT_HTTP_TRANSPORT = http(chain.rpcUrls[0], {
 
 export const publicClientAtom: Atom<PublicClient<CustomTransport | HttpTransport>> = atom((get) => {
     const transport = get(transportAtom) ?? DEFAULT_HTTP_TRANSPORT
-    return createPublicClient({ transport })
+    return createPublicClient({ transport, chain: convertToViemChain(chain) })
 })
 publicClientAtom.debugLabel = "publicClientAtom"

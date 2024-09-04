@@ -1,3 +1,4 @@
+import { createUUID } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
 import { type DappPermissionMap, type WalletPermission, permissionsAtom } from "../../state/permissions"
 import { getDappOrigin } from "../../utils/getDappOrigin"
@@ -23,7 +24,7 @@ export function clearDappPermissions() {
 export function createWalletPermission(name: "eth_accounts" | string): WalletPermission {
     return {
         caveats: [],
-        id: crypto.randomUUID(),
+        id: createUUID(),
         date: Date.now(),
         invoker: dappOrigin,
         parentCapability: name,

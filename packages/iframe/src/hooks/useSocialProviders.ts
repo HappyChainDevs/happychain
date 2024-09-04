@@ -5,7 +5,6 @@ import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strat
 import { AuthState, type ConnectionProvider } from "@happychain/sdk-shared"
 
 import { setUserWithProvider } from "../actions/setUserWithProvider"
-import { clearPermissions } from "../services/permissions/clearPermissions"
 import { setPermission } from "../services/permissions/setPermission"
 import { authStateAtom } from "../state/authState"
 import { chainsAtom } from "../state/chains"
@@ -56,7 +55,6 @@ export function useSocialProviders() {
                             // will automatically disable loading state when user+provider are set
                             setAuthState(AuthState.Connecting)
                             await provider.disable()
-                            clearPermissions()
                         },
                     }) satisfies ConnectionProvider,
             ),

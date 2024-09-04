@@ -1,12 +1,13 @@
+export { isPermissionsRequest } from "./interfaces/events"
+export { createUUID } from "./utils/uuid"
 export * as chains from "./chains"
 export { AuthState } from "./interfaces/happyUser"
 export { EventBus, EventBusChannel } from "./services/eventBus"
 export { config } from "./config"
-export { getChainFromSearchParams, defaultChain } from "./chains/utils"
+export { getChainFromSearchParams, defaultChain, convertToViemChain } from "./chains/utils"
 export { logger } from "./services/logger"
 export { permissionsLists, requiresApproval } from "./services/permissions"
 export { waitForCondition } from "./utils/waitForCondition"
-
 export {
     GenericProviderRpcError,
     EIP1193UserRejectedRequestError,
@@ -19,10 +20,12 @@ export {
 } from "./services/eip1193Provider/errors"
 
 /** Types */
+export type { UUID } from "./utils/uuid"
 export type { HappyEvents } from "./interfaces/events"
 export type { HappyUser } from "./interfaces/happyUser"
-
 export type { Logger } from "./services/logger"
+export type { EIP1193ProxiedEvents } from "./services/eip1193Provider/events"
+export type { EIP1193ErrorObject, IProviderRpcError } from "./services/eip1193Provider/errors"
 export type {
     EventPayload,
     EventKey,
@@ -33,16 +36,12 @@ export type {
     EventBusOptions,
 } from "./services/eventBus"
 export type {
-    EventUUID,
-    EIP1193RequestParameters as EIP1193RequestArg,
-    EIP1193RequestResult,
-    EIP1193EventName,
-    EIP1193ProxiedEvents,
-} from "./services/eip1193Provider/events"
-export type { EIP1193ErrorObject, IProviderRpcError } from "./services/eip1193Provider/errors"
-export type {
     EIP6963ProviderInfo,
     EIP6963ProviderDetail,
     EIP6963AnnounceProviderEvent,
     ConnectionProvider,
+    EIP1193RequestMethods,
+    EIP1193RequestParameters,
+    EIP1193RequestResult,
+    EIP1193EventName,
 } from "./interfaces/eip1193Provider"

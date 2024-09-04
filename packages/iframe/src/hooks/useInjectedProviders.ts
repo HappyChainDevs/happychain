@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react"
 
 import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { dappMessageBus } from "../services/eventBus"
+import { revokePermission } from "../services/permissions/revokePermission"
+import { setPermission } from "../services/permissions/setPermission"
 import { StorageKey, storage } from "../services/storage"
 import { authStateAtom } from "../state/authState"
 import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"
@@ -58,10 +60,6 @@ function useRequestEIP6963Providers() {
     const [providers, setInjectedProviders] = useState<ProviderMap>(new Map())
 
     useEffect(() => {
-        window.dispatchEvent(new CustomEvent("eip6963:requestProvider"))
-    }, [])
-
-    useEffect(() => {
         const callback = async (evt: Event) => {
             if (!isEip6963Event(evt)) return
 
@@ -75,7 +73,46 @@ function useRequestEIP6963Providers() {
         }
 
         window.addEventListener("eip6963:announceProvider", callback)
+        window.dispatchEvent(new CustomEvent("eip6963:requestProvider"))
         return () => window.removeEventListener("eip6963:announceProvider", callback)
+    }, [])
+
+    useEffect(() => {
+        return dappMessageBus.on("injected-wallet:mirror-permissions", ({ request, response }) => {
+            console.log({ iframe: { request, response } })
+            switch (request.method) {
+                case "eth_accounts":
+                case "eth_requestAccounts": {
+                    // if response has addresses, add eth_accounts permission
+                    // otherwise revoke it
+                    if (!Array.isArray(response) || !response.length) {
+                        revokePermission({ eth_accounts: {} })
+                        return
+                    }
+
+                    setPermission({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
+                    return
+                }
+                case "wallet_requestPermissions":
+                    if ("eth_accounts" in request.params[0]) {
+                        // we don't support every arbitrary variation, but enable
+                        // account permissions at minimum
+                        // over sharing here isn't such a big deal, as
+                        // the source of information would be the wallet itself
+                        // so without permissions, we simple won't have the data available
+                        setPermission({ ...request, params: [{ eth_accounts: {} }] })
+                    }
+                    // if response is successful, enable here also
+                    return
+
+                case "wallet_revokePermissions":
+                    // if response is successful, revoke here also
+                    if (request.params) {
+                        revokePermission(...request.params)
+                    }
+                    return
+            }
+        })
     }, [])
 
     return { providers }
@@ -83,8 +120,10 @@ function useRequestEIP6963Providers() {
 
 const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
     if (IsInIframe) {
+        // in iframe
         dappMessageBus.emit("injected-wallet:requestConnect", eip1193Provider.info.rdns)
     } else {
+        // on page directly
         const [address] = await eip1193Provider.provider.request({ method: "eth_requestAccounts" })
         const user = createHappyUserFromWallet(eip1193Provider.info.rdns, address)
         setUserWithProvider(user, eip1193Provider.provider)
