@@ -25,15 +25,15 @@ export function useProcessUnconfirmedRequests() {
             if (!confirmWindowId(data.windowId)) return
             try {
                 const isPublicMethod = !requiresConfirmation(data.payload)
-                let authenticated = getDefaultStore().get(authStateAtom) === AuthState.Connected
+                let connected = getDefaultStore().get(authStateAtom) === AuthState.Connected
 
                 if (getDefaultStore().get(authStateAtom) === AuthState.Connecting) {
                     await waitForCondition(() => getDefaultStore().get(authStateAtom) !== AuthState.Connecting)
-                    authenticated = getDefaultStore().get(authStateAtom) === AuthState.Connected
+                    connected = getDefaultStore().get(authStateAtom) === AuthState.Connected
                 }
 
                 if (
-                    (authenticated && "eth_requestAccounts" === data.payload.method) ||
+                    (connected && "eth_requestAccounts" === data.payload.method) ||
                     "eth_accounts" === data.payload.method
                 ) {
                     happyProviderBus.emit("response:complete", {
@@ -47,7 +47,7 @@ export function useProcessUnconfirmedRequests() {
                 }
 
                 // not allowed if not logged in (should log in, then be called on wallet client)
-                if (authenticated && "wallet_requestPermissions" === data.payload.method) {
+                if (connected && "wallet_requestPermissions" === data.payload.method) {
                     happyProviderBus.emit("response:complete", {
                         key: data.key,
                         windowId: data.windowId,
@@ -60,7 +60,7 @@ export function useProcessUnconfirmedRequests() {
                 }
 
                 // not allowed if not logged in (should log in, then be called on wallet client)
-                if (authenticated && "wallet_revokePermissions" === data.payload.method) {
+                if (connected && "wallet_revokePermissions" === data.payload.method) {
                     revokePermission(data.payload as Parameters<typeof revokePermission>[0])
                     happyProviderBus.emit("response:complete", {
                         key: data.key,
