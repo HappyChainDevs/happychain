@@ -48,9 +48,22 @@ export function usePermissionsCheck() {
     )
 
     /**
-     * Receives permission checks from the dapp,
+     * Receives permission checks from the dapp for all requests,
      * processes the request using the above criteria,
      * returns the response to the dapp.
+     *
+     * The dapp uses this to determine a confirmation screen is required or not
+     *
+     * if the confirmation screen is required, then the request won't be forwarded
+     * until it has passed the confirmation screen
+     *
+     * if the confirmation screen is deemed not required, it is sent directly
+     * to the iframe to be processed.
+     *
+     * Note: if no confirmation screen was used, the iframe will re-process
+     * this within the context of the iframe
+     * to determine if it should actually be executed, and if it fails,
+     * the request will be rejected
      */
     useEffect(() => {
         return happyProviderBus.on("permission-check:request", (data) => {
