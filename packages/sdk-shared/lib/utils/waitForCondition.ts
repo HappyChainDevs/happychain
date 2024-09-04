@@ -5,7 +5,7 @@ export function waitForCondition(
 ) {
     const start = Date.now()
     return new Promise((resolve, reject) => {
-        const pollForPort = () => {
+        const pollForCondition = () => {
             if (callback()) {
                 return resolve(true)
             }
@@ -13,9 +13,9 @@ export function waitForCondition(
             if (Date.now() - start > maxPollTimeMs) {
                 return reject()
             }
-            setTimeout(pollForPort, pollIntervalMs)
+            setTimeout(pollForCondition, pollIntervalMs)
         }
 
-        pollForPort()
+        pollForCondition()
     })
 }
