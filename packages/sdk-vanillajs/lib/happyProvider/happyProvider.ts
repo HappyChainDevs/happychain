@@ -1,7 +1,6 @@
 import { AuthState, waitForCondition } from "@happychain/sdk-shared"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { EIP1193Provider } from "viem"
 import { InjectedWalletHandler } from "./injectedWalletHandler"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 import { SocialWalletHandler } from "./socialWalletHandler"
