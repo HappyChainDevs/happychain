@@ -2,6 +2,7 @@ import { AuthState, getEIP1193ErrorObjectFromUnknown, waitForCondition } from "@
 import { getDefaultStore, useAtomValue } from "jotai"
 import { useEffect } from "react"
 
+import { UnauthorizedProviderError } from "viem"
 import { usePermissionsCheck } from "../hooks/usePermissionsCheck"
 import { happyProviderBus } from "../services/eventBus"
 import { getPermissions } from "../services/permissions/getPermissions"
@@ -32,6 +33,15 @@ export function useProcessUnconfirmedRequests() {
                     connected = getDefaultStore().get(authStateAtom) === AuthState.Connected
                 }
 
+                /**
+                 * web3Auth doesn't support these permission based requests
+                 * so we need to handle these manually ourselves
+                 * - eth_requestAccounts
+                 * - eth_accounts* web3Auth does support this, but always returned the users address, regardless of set permissions
+                 * - wallet_requestPermissions
+                 * - wallet_getPermissions
+                 * - wallet_revokePermissions
+                 */
                 if (
                     (connected && "eth_requestAccounts" === data.payload.method) ||
                     "eth_accounts" === data.payload.method
@@ -42,7 +52,6 @@ export function useProcessUnconfirmedRequests() {
                         error: null,
                         payload: hasPermission({ eth_accounts: {} }) ? getDefaultStore().get(userAtom)?.addresses : [],
                     })
-                    // web3auth crashes on this request
                     return
                 }
 
@@ -72,8 +81,7 @@ export function useProcessUnconfirmedRequests() {
                 }
 
                 if (!isPublicMethod) {
-                    // emit not allowed error
-                    return
+                    throw new UnauthorizedProviderError(new Error("Not allowed"))
                 }
 
                 // injected providers are allowed to bypass the popup screen
