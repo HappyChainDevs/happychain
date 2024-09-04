@@ -6,18 +6,18 @@ import { getDappPermissions, setDappPermissions } from "./utils"
  * - wallet_revokePermissions
  */
 export function revokePermission({ method, params }: { method: string; params: { [key: string]: unknown }[] }) {
-    const referrer = getDappPermissions()
-    if (!referrer.size) return []
+    const dappPermissions = getDappPermissions()
+    if (!dappPermissions.size) return []
 
     if (method === "wallet_revokePermissions") {
         for (const param of params) {
             const [[name]] = Object.entries(param)
-            referrer.delete(name)
+            dappPermissions.delete(name)
             if (name === "eth_accounts") {
                 emitUserUpdate(undefined)
             }
         }
     }
 
-    setDappPermissions(referrer)
+    setDappPermissions(dappPermissions)
 }

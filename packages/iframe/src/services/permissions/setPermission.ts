@@ -21,11 +21,11 @@ type Params = EthRequestAccounts | WalletRequestPermissions
  * @return WalletPermissions
  */
 export function setPermission({ method, params }: Params) {
-    const referrer = getDappPermissions()
+    const dappPermissions = getDappPermissions()
 
     if (method === "eth_requestAccounts") {
         // store permissions for future
-        referrer.set("eth_accounts", createWalletPermission("eth_accounts"))
+        dappPermissions.set("eth_accounts", createWalletPermission("eth_accounts"))
         emitUserUpdate(store.get(userAtom))
     }
 
@@ -37,7 +37,7 @@ export function setPermission({ method, params }: Params) {
                 throw new Error("WalletPermissionCaveats Not Yet Supported")
             }
 
-            referrer.set(name, createWalletPermission(name))
+            dappPermissions.set(name, createWalletPermission(name))
 
             if (name === "eth_accounts") {
                 // allow dapp to access user
@@ -46,5 +46,5 @@ export function setPermission({ method, params }: Params) {
         }
     }
 
-    setDappPermissions(referrer)
+    setDappPermissions(dappPermissions)
 }

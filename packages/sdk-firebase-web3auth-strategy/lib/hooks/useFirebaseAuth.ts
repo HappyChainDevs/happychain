@@ -55,16 +55,10 @@ function useOnAuthChange(auth: Auth) {
     const { signOut } = useSignOut(auth)
     useEffect(() => {
         return onAuthStateChanged(firebaseAuth, async (_user) => {
-            if (!userAuth?.uid && !_user?.uid) {
-                // wasn't logged in and still not. nothing to do
-                // set to undefined, incase it was in a loading state
-                setUserAuth(undefined)
-                setInternalAuthState("unauthenticated")
-                return
-            }
-
             if (!_user?.uid) {
-                await web3AuthDisconnect()
+                if (userAuth?.uid) {
+                    await web3AuthDisconnect()
+                }
 
                 setUserAuth(undefined)
                 setInternalAuthState("unauthenticated")
