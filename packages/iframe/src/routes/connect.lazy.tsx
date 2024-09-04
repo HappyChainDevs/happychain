@@ -1,7 +1,7 @@
 import { AuthState } from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ConnectButton } from "../components/ConnectButton"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
@@ -11,6 +11,7 @@ import { authStateAtom } from "../state/authState"
 
 import { hasPermission } from "../services/permissions/hasPermission"
 import { userAtom } from "../state/user"
+import { tokenList } from "../utils/lists"
 
 export const Route = createLazyFileRoute("/connect")({
     component: Connect,
@@ -63,22 +64,59 @@ function Connect() {
                 <div className="absolute right-0 top-0">
                     {isOpen && (
                         // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-                        <div className="flex h-72 w-72 flex-col gap-4 rounded-lg bg-base-200 p-4" onClick={close}>
-                            <div className="flex items-center justify-center gap-2">
-                                <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
-                                <p>{user?.email || user?.name}</p>
+                        <div className="flex h-[600px] w-[500px] flex-col gap-4 rounded-xl border-[1px] border-black  bg-base-200 p-4 items-center justify-start" onClick={close}>
+                            <span className="text-black text-[20px]">🤠 HappyChain</span>
+
+                            <div className="flex flex-row w-full items-center justify-between gap-2 bg-slate-200 p-2">
+                                <div className="flex flex-row space-x-4">
+                                    <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-12 rounded-full" />
+                                    <div className="flex flex-col items-start justify-between">
+                                        <p>{user?.email || user?.name}</p>
+                                        <div className="flex flex-row items-center justify-center space-x-1">
+                                            <p>{user?.name}</p>
+                                            <button className="w-4 h-4 rounded-xl opacity-50" onClick={(e) => {
+                                                e.preventDefault();
+                                                navigator.clipboard.writeText(user?.address)
+                                            }}>
+                                                <img src={"/wallet-interface/clipboard-text.svg"}></img>
+                                            </button>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                                <img className="w-6 h-6 rounded-xl" src={"/wallet-interface/power.svg"} onClick={disconnect}></img>
                             </div>
-                            <div className="flex h-full w-full grow flex-col items-end justify-end rounded bg-slate-200 p-4">
-                                <div className="text-xs font-bold">
-                                    Connected To:{" "}
-                                    {document.referrer ? new URL(document.referrer).host : window.location.origin}
+                            <div className="flex h-full w-full grow flex-col items-start justify-start rounded bg-slate-200 p-2">
+                                <div className="flex flex-row w-full items-center justify-between">
+                                    <p className="text-[18px]">$HAPPY</p>
+                                    <div className="flex flex-col items-center">
+                                        <p className="text-[25px]">4337</p>
+                                        <p className="text-[12px]">$5000 USD</p>
+                                    </div>
                                 </div>
-                                <div className="text-xs font-bold">
-                                    Has Access Permissions: {hasPermission({ eth_accounts: {} }) ? "true" : "false"}
+                                <div className="flex flex-row w-full items-center justify-between px-2 py-4">
+                                    <button className="h-10 w-24 bg-slate-400 rounded-xl">Send</button>
+                                    <button className="h-10 w-24 bg-slate-400 rounded-xl disabled:opacity-80" disabled>Buy / Sell</button>
+                                    <button className="h-10 w-24 bg-slate-400 rounded-xl disabled:opacity-80" disabled>Topup</button>
                                 </div>
-                                <button type="button" onClick={disconnect} className="btn btn-warning">
-                                    Logout
-                                </button>
+                                <div className="flex w-full h-full items-start justify-center flex-col px-2">
+                                    <div className="flex flex-row items-start justify-center space-x-2">
+                                        <button className="h-10 w-24 bg-slate-300 rounded-t-xl">Tokens</button>
+                                        <button className="h-10 w-24 bg-slate-300 rounded-t-xl disabled:opacity-80" disabled>Games</button>
+                                    </div>
+                                    <div className="flex flex-col w-full h-[80%] p-2 bg-slate-300 rounded-b-xl rounded-tr-xl">
+                                        {tokenList.map((token) => (
+                                            <div className="flex flex-row items-center justify-between px-2 h-12">
+                                                <span>{`${token.name} (${token.symbol})`}</span>
+                                                <span>{`${token.balance}`}</span>
+                                            </div>
+                                            
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex w-full items-center justify-center text-sm font-bold">
+                                    {`${hasPermission({ eth_accounts: {} }) ? "\u2705" : "\u274C"} ${document.referrer ? new URL(document.referrer).host : window.location.origin}`}
+                                </div>
                             </div>
                         </div>
                     )}
