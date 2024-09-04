@@ -14,22 +14,20 @@
             "require": "./dist/index.umd.js"
         }
     },
-    "dependencies": {
-        "@metamask/safe-event-emitter": "^3.1.1",
-        "lit": "^3.2.0",
-        "mipd": "^0.0.7",
-        "viem": "^2.20.1"
-    },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
         "@happychain/configs": "workspace:^",
         "@happychain/sdk-shared": "workspace:^",
+        "@metamask/safe-event-emitter": "^3.1.1",
         "@types/bun": "^1.1.8",
         "autoprefixer": "^10.4.20",
         "happy-dom": "^15.0.0",
+        "lit": "^3.2.0",
+        "mipd": "^0.0.7",
         "postcss": "^8.4.41",
         "tailwindcss": "^3.4.10",
         "typescript": "^5.5.4",
+        "viem": "^2.20.1",
         "vite": "^5.4.2",
         "vite-plugin-dts": "4.0.3",
         "vite-plugin-web-components-hmr": "^0.1.3"
