@@ -371,14 +371,13 @@ importers:
         version: 18.3.0
 
   packages/sdk-react:
-    dependencies:
-      '@happychain/js':
-        specifier: workspace:^
-        version: link:../sdk-vanillajs
     devDependencies:
       '@happychain/configs':
         specifier: workspace:^
         version: link:../configs
+      '@happychain/js':
+        specifier: workspace:^
+        version: link:../sdk-vanillajs
       '@happychain/sdk-shared':
         specifier: workspace:^
         version: link:../sdk-shared
@@ -442,19 +441,6 @@ importers:
         version: 15.0.0
 
   packages/sdk-vanillajs:
-    dependencies:
-      '@metamask/safe-event-emitter':
-        specifier: ^3.1.1
-        version: 3.1.1
-      lit:
-        specifier: ^3.2.0
-        version: 3.2.0
-      mipd:
-        specifier: ^0.0.7
-        version: 0.0.7(typescript@5.5.4)
-      viem:
-        specifier: ^2.20.1
-        version: 2.20.1(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8)
     devDependencies:
       '@happy-dom/global-registrator':
         specifier: ^15.0.0
@@ -465,6 +451,9 @@ importers:
       '@happychain/sdk-shared':
         specifier: workspace:^
         version: link:../sdk-shared
+      '@metamask/safe-event-emitter':
+        specifier: ^3.1.1
+        version: 3.1.1
       '@types/bun':
         specifier: ^1.1.8
         version: 1.1.8
@@ -474,6 +463,12 @@ importers:
       happy-dom:
         specifier: ^15.0.0
         version: 15.0.0
+      lit:
+        specifier: ^3.2.0
+        version: 3.2.0
+      mipd:
+        specifier: ^0.0.7
+        version: 0.0.7(typescript@5.5.4)
       postcss:
         specifier: ^8.4.41
         version: 8.4.41
@@ -483,6 +478,9 @@ importers:
       typescript:
         specifier: ^5.5.4
         version: 5.5.4
+      viem:
+        specifier: ^2.20.1
+        version: 2.20.1(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8)
       vite:
         specifier: ^5.4.2
         version: 5.4.2(@types/node@22.5.0)(terser@5.31.6)
@@ -5957,6 +5955,7 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
