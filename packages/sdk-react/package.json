@@ -14,10 +14,8 @@
             "require": "./dist/index.umd.js"
         }
     },
-    "dependencies": {
-        "@happychain/js": "workspace:^"
-    },
     "devDependencies": {
+        "@happychain/js": "workspace:^",
         "@happychain/configs": "workspace:^",
         "@happychain/sdk-shared": "workspace:^",
         "@metamask/safe-event-emitter": "^3.1.1",
@@ -31,5 +29,9 @@
         "typescript": "^5.5.4",
         "vite": "^5.4.2",
         "vite-plugin-dts": "4.0.3"
+    },
+    "peerDependencies": {
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
     }
 }
