@@ -1,18 +1,14 @@
+import { connect, disconnect, happyProvider } from "@happychain/js"
 import { useContext } from "react"
-
-import type { HappyProvider, HappyUser } from "@happychain/js"
-import { happyProvider } from "@happychain/js"
-
 import { HappyContext } from "../components/HappyContext"
 
-export function useHappyChain(): {
-    provider: HappyProvider
-    user?: HappyUser
-} {
+export function useHappyChain() {
     const user = useContext(HappyContext)
 
     return {
         provider: happyProvider,
+        connect,
+        disconnect,
         user,
     }
 }
