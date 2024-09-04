@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { happyProvider, useHappyChain } from "@happychain/react"
+import { useHappyChain } from "@happychain/react"
 import { createPublicClient, createWalletClient, custom } from "viem"
 
 function App() {
