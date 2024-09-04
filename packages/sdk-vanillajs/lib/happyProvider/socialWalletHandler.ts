@@ -1,16 +1,13 @@
-import {
-    AuthState,
-    type EIP1193ProxiedEvents,
-    type EIP1193RequestArg,
-    type EventUUID,
-    type HappyUser,
+import { AuthState, EIP1193UserRejectedRequestError, GenericProviderRpcError, createUUID } from "@happychain/sdk-shared"
+import type {
+    EIP1193ProxiedEvents,
+    EIP1193RequestMethods,
+    EIP1193RequestParameters,
+    EIP1193RequestResult,
+    HappyUser,
+    UUID,
 } from "@happychain/sdk-shared"
-import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { EIP1193RequestFn, EIP1474Methods } from "viem"
-
-import type { EIP1193RequestParameters } from "@happychain/sdk-shared/lib/services/eip1193Provider/events"
-import { waitForCondition } from "@happychain/sdk-shared/lib/utils/waitForCondition"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 type Timer = ReturnType<typeof setInterval>
@@ -65,20 +62,14 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         config.providerBus.on("permission-check:response", this.handlePermissionCheck.bind(this))
     }
 
-    request: EIP1193RequestFn<EIP1474Methods> = async (_args) => {
-        const args = _args as EIP1193RequestParameters
-
-        // this shouldn't be needed here. the requiresApproval check should
-        // wait if its needed...?
-        if (this.authState === AuthState.Connecting) {
-            // wait till either authenticated or unauthenticated
-            await waitForCondition(() => this.authState !== AuthState.Connecting)
-        }
+    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
+        args: EIP1193RequestParameters<TString>,
+    ): Promise<EIP1193RequestResult<TString>> {
         // Every request gets proxied through this function.
         // If it is eth_call or a non-tx non-signature request, we can auto-approve
         // by posting the request args using request:approve,
         // otherwise we open the popup and pass the request args through the hash URL.
-        const key = crypto.randomUUID()
+        const key = createUUID()
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
         return new Promise(async (resolve, reject) => {
@@ -157,7 +148,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     }
 
     private async requiresApproval(args: EIP1193RequestParameters) {
-        const key = crypto.randomUUID()
+        const key = createUUID()
         return new Promise((resolve, reject) => {
             this.config.providerBus.emit("permission-check:request", {
                 key,
@@ -229,7 +220,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         }
     }
 
-    private autoApprove(key: EventUUID, args: EIP1193RequestArg) {
+    private autoApprove(key: UUID, args: EIP1193RequestParameters) {
         this.config.providerBus.emit("request:approve", {
             key,
             windowId: this.config.windowId,
@@ -240,7 +231,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         return null
     }
 
-    private promptUser(key: EventUUID, args: EIP1193RequestArg) {
+    private promptUser(key: UUID, args: EIP1193RequestParameters) {
         const url = new URL("request", this.config.iframePath)
         const opts = {
             windowId: this.config.windowId,

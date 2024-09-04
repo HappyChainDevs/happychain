@@ -1,10 +1,10 @@
-import type { EventUUID } from "@happychain/sdk-shared"
+import type { UUID } from "@happychain/sdk-shared"
 import { createFileRoute } from "@tanstack/react-router"
 
 type RequestArgs = {
     args: string
-    key: EventUUID
-    windowId: ReturnType<typeof crypto.randomUUID>
+    key: UUID
+    windowId: UUID
 }
 
 export const Route = createFileRoute("/request")({

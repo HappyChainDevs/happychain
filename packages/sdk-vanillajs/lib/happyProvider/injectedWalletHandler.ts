@@ -1,7 +1,8 @@
+import type { HappyEvents } from "@happychain/sdk-shared"
+import { isPermissionsRequest } from "@happychain/sdk-shared"
+import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { createStore } from "mipd"
-import type { EIP1193RequestFn, EIP1474Methods } from "viem"
-
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 const store = createStore()
@@ -30,17 +31,29 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
         return Boolean(this.localConnection)
     }
 
-    request: EIP1193RequestFn<EIP1474Methods> = async (args) => {
+    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
+        args: EIP1193RequestParameters<TString>,
+    ): Promise<EIP1193RequestResult<TString>> {
         if (!this.localConnection) {
             throw new Error("Can not make request through local connection")
         }
-        return await this.localConnection.provider.request(
-            args as Exclude<typeof args, { method: string; params: unknown }>,
-        )
+
+        const response: EIP1193RequestResult<TString> = await this.localConnection.provider.request(args)
+
+        if (isPermissionsRequest(args)) {
+            this.proxyPermissions({ request: args, response })
+        }
+
+        return response
+    }
+
+    private proxyPermissions(params: HappyEvents["injected-wallet:mirror-permissions"]) {
+        this.config.dappBus.emit("injected-wallet:mirror-permissions", params)
     }
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
+        this.request({ method: "eth_requestAccounts" }).then((aaaa) => aaaa)
         this.config.dappBus.emit("injected-wallet:connect", { rdns: undefined, address: undefined })
         this.localConnection = undefined
     }

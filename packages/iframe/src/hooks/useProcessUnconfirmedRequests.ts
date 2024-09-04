@@ -61,7 +61,7 @@ export function useProcessUnconfirmedRequests() {
 
                 // not allowed if not logged in (should log in, then be called on wallet client)
                 if (connected && "wallet_revokePermissions" === data.payload.method) {
-                    revokePermission(data.payload as Parameters<typeof revokePermission>[0])
+                    revokePermission(...data.payload.params)
                     happyProviderBus.emit("response:complete", {
                         key: data.key,
                         windowId: data.windowId,
