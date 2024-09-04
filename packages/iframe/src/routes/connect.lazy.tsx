@@ -12,14 +12,20 @@ import { authStateAtom } from "../state/authState"
 import { hasPermission } from "../services/permissions/hasPermission"
 import { userAtom } from "../state/user"
 import { tokenList } from "../utils/lists"
+import { publicClientAtom } from "../state/publicClient"
+import { defineChain, formatEther } from "viem"
 
 export const Route = createLazyFileRoute("/connect")({
     component: Connect,
 })
 
 function Connect() {
+    const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)
+
     const authState = useAtomValue(authStateAtom)
     const user = useAtomValue(userAtom)
+    const publicClient = useAtomValue(publicClientAtom)
+
     const web3Providers = useInjectedProviders()
     const socialProviders = useSocialProviders()
 
@@ -33,6 +39,50 @@ function Connect() {
     async function disconnect() {
         await activeProvider?.disable()
     }
+
+    async function getBalance () {
+        if (user) {
+            const happySepChain = defineChain({ // since there is no definition in the package (s00n)
+                id: 216, 
+                name: "HappyChain",
+                nativeCurrency: { name: "Happy", symbol: "HAPPY", decimals: 18 },
+                rpcUrls: {
+                    default: {
+                        http: ["https://happy-testnet-sepolia.rpc.caldera.xyz/http"]
+                    }
+                },
+                blockExplorers: { // dummy
+                    default: {
+                      name: 'Etherscan',
+                      url: 'https://etherscan.io',
+                      apiUrl: 'https://api.etherscan.io/api',
+                    },
+                  },
+                testnet: true
+            })
+
+            // mainnet
+            publicClient.chain = happySepChain
+            return await publicClient.getBalance({ 
+                address: user?.address,
+            })
+        }
+
+        return undefined
+    }
+
+    // useEffect to call getBalance when the component mounts
+    useEffect(() => {
+        // should there be a constant listener for this?
+        const fetchBalance = async () => {
+            const balance = await getBalance();
+            setHappyBalance(balance);
+        };
+
+        if (user) {
+            fetchBalance();
+        }
+    }, [user, publicClient]);
 
     function open() {
         dappMessageBus.emit("modal-toggle", true)
@@ -90,8 +140,7 @@ function Connect() {
                                 <div className="flex flex-row w-full items-center justify-between">
                                     <p className="text-[18px]">$HAPPY</p>
                                     <div className="flex flex-col items-center">
-                                        <p className="text-[25px]">4337</p>
-                                        <p className="text-[12px]">$5000 USD</p>
+                                        <p className="text-[25px]">{happyBalance ? formatEther(happyBalance) : "--"}</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-row w-full items-center justify-between px-2 py-4">
