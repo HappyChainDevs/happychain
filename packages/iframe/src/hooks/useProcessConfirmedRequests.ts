@@ -28,6 +28,15 @@ export function useProcessConfirmedRequests() {
             if (!confirmWindowId(data.windowId)) return
 
             try {
+                /**
+                 * web3Auth doesn't support these permission based requests
+                 * so we need to handle these manually ourselves
+                 * - eth_requestAccounts
+                 * - eth_accounts* web3Auth does support this, but always returned the users address, regardless of set permissions
+                 * - wallet_requestPermissions
+                 * - wallet_getPermissions
+                 * - wallet_revokePermissions
+                 */
                 if ("eth_requestAccounts" === data.payload.method) {
                     setPermission(data.payload)
                     happyProviderBus.emit("response:complete", {
@@ -36,7 +45,6 @@ export function useProcessConfirmedRequests() {
                         error: null,
                         payload: happyUser?.addresses,
                     })
-                    // web3auth crashes on this request
                     return
                 }
 
