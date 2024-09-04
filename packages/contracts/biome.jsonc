@@ -2,6 +2,6 @@
     "$schema": "./node_modules/@happychain/configs/node_modules/@biomejs/biome/configuration_schema.json",
     "extends": ["node_modules/@happychain/configs/biome.jsonc"],
     "files": {
-        "ignore": ["./cache", "./lib", "./out", "./deployments"]
+        "ignore": ["./cache", "./lib", "./out", "./deployments", "./broadcast", "./evil"]
     }
 }
