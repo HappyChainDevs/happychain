@@ -14,7 +14,7 @@ import { injected } from "@wagmi/vue/connectors"
  * to disconnect
  * await window.happyProvider.request({ method: 'wallet_revokePermissions', params: [{eth_accounts: {}}] })
  */
-// biome-ignore lint/suspicious/noExplicitAny: demo purposes only
+// biome-ignore lint/suspicious/noExplicitAny: demo purposes only. not needed under regular usage
 ;(window as any).happyProvider = happyProvider
 
 // TODO:
