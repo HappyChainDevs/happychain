@@ -19,32 +19,6 @@ const store = getDefaultStore()
 dappMessageBus.emit("auth-state", store.get(authStateAtom))
 
 /**
- * Runs once at startup
- *
- * This handles the case where the user was already logged in previously
- * but on page refresh firebase/web3auth/login-provider isn't yet initialized.
- * We don't pass the user to the dapp until everything is ready
- *
- * @notice PROBABLY DONT NEED THIS?
- *
- * @listens authStateAtom
- *
- * @emits auth-changed (optional)
- * @emits provider-event (optional)
- */
-// if (store.get(authStateAtom) === AuthState.Connecting) {
-//     const unsub = store.sub(authStateAtom, () => {
-//         const user = store.get(userAtom)
-//         const permitted = hasPermission({ eth_accounts: {} })
-//         // we sync all user changes to the dapp on auth-state changes
-//         if (!user || permitted) {
-//             emitUserUpdate(user)
-//         }
-//         unsub()
-//     })
-// }
-
-/**
  * emits the current auth state to dApp
  * - if the auth state is connected and dApp has permissions,
  *   the user will also be emitted
@@ -59,6 +33,7 @@ dappMessageBus.emit("auth-state", store.get(authStateAtom))
 store.sub(authStateAtom, () => {
     const authState = store.get(authStateAtom)
     dappMessageBus.emit("auth-state", authState)
+
     if (AuthState.Connecting === authState) {
         // no user updates in this state
         return

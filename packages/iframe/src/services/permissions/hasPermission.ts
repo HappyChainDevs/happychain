@@ -16,8 +16,8 @@ import { getDappPermissions } from "./utils"
  * ```
  */
 export function hasPermission(...permissions: WalletPermissionRequest[]): boolean {
-    const referrer = getDappPermissions()
-    if (!referrer.size || !permissions.length) return false
+    const dappPermissions = getDappPermissions()
+    if (!dappPermissions.size || !permissions.length) return false
 
     return permissions.every((param) => {
         const [[name, value]] = Object.entries(param)
@@ -26,6 +26,6 @@ export function hasPermission(...permissions: WalletPermissionRequest[]): boolea
             throw new Error("WalletPermissionCaveats Not Yet Supported")
         }
 
-        return referrer.has(name)
+        return dappPermissions.has(name)
     })
 }

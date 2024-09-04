@@ -49,8 +49,8 @@ export function usePermissionsCheck() {
 
     /**
      * Receives permission checks from the dapp,
-     * processes the request,using the above criteria
-     * returns the response to the dapp
+     * processes the request using the above criteria,
+     * returns the response to the dapp.
      */
     useEffect(() => {
         return happyProviderBus.on("permission-check:request", (data) => {

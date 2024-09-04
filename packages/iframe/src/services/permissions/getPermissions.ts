@@ -11,18 +11,18 @@ type Params = WalletGetPermissions | WalletRequestPermissions | { method: string
  * - wallet_requestPermissions
  */
 export function getPermissions({ method, params }: Params): WalletPermission[] {
-    const referrer = getDappPermissions()
-    if (!referrer.size) return []
+    const dappPermissions = getDappPermissions()
+    if (!dappPermissions.size) return []
 
     if (method === "wallet_getPermissions") {
-        return Array.from(referrer.values())
+        return Array.from(dappPermissions.values())
     }
 
     if (method === "wallet_requestPermissions" && Array.isArray(params)) {
         const perms: WalletPermission[] = []
         for (const param of params) {
             const [[name]] = Object.entries(param)
-            const permission = referrer.get(name)
+            const permission = dappPermissions.get(name)
             if (permission) {
                 perms.push(permission)
             }
