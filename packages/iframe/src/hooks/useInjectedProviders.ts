@@ -79,7 +79,6 @@ function useRequestEIP6963Providers() {
 
     useEffect(() => {
         return dappMessageBus.on("injected-wallet:mirror-permissions", ({ request, response }) => {
-            console.log({ iframe: { request, response } })
             switch (request.method) {
                 case "eth_accounts":
                 case "eth_requestAccounts": {

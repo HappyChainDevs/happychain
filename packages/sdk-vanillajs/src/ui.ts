@@ -1,5 +1,5 @@
 import type { AddEthereumChainParameter } from "viem"
-import { chains } from "../lib/index"
+import { chains } from "./chains"
 
 import { findViemChain, publicClient, walletClient } from "./viem"
 
@@ -55,7 +55,7 @@ export async function setActiveChain() {
 
     const chainName =
         // built in chains
-        Object.values(chains).find((a) => a.chainId === chainId)?.chainName ?? "unknown"
+        chains.find((a) => a.chainId === chainId)?.chainName ?? "unknown"
 
     chainNameText.innerHTML = chainName
 }

@@ -1,4 +1,4 @@
-import { getEIP1193ErrorObjectFromUnknown } from "@happychain/sdk-shared"
+import { chains, getEIP1193ErrorObjectFromUnknown } from "@happychain/sdk-shared"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 
@@ -70,6 +70,20 @@ export function useProcessConfirmedRequests() {
 
                     if (isAddChainParams(params)) {
                         setChains((previous) => [...previous, params])
+                    }
+                }
+
+                if (data.payload.method === "wallet_switchEthereumChain") {
+                    if ("URLSearchParams" in window) {
+                        const searchParams = new URLSearchParams(window.location.search)
+                        const chainId = data.payload.params[0].chainId
+                        const chain = Object.values(chains).find((chain) => chain.chainId === chainId)
+                        searchParams.set("chain", JSON.stringify(chain))
+                        history.replaceState(
+                            history.state,
+                            "",
+                            `${location.origin}${location.pathname}?${searchParams.toString()}`,
+                        )
                     }
                 }
 

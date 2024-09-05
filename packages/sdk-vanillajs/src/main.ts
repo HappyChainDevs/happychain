@@ -1,9 +1,10 @@
-import { chains, onUserUpdate, register } from "../lib/index"
+import { onUserUpdate, register } from "../lib/index"
+import { chains, defaultChain } from "./chains"
 import { createAddChainBtn, createSwitchChainBtn, setActiveChain } from "./ui"
 
 import "./style.css"
 
-register({ chain: chains.defaultChain })
+register({ chain: defaultChain })
 
 const addChainList = document.querySelector("#add-chains")
 const switchChainList = document.querySelector("#switch-chains")
