@@ -146,7 +146,7 @@ support.check:
 		echo "Checking $${name}";\
 		cd $${name} && make check && cd ../../ || exit 1;\
 	done
-.PHONE: support.check
+.PHONY: support.check
 
 sdk.check:
 	for name in packages/{$(SDK_PKGS)}; do\
@@ -167,7 +167,7 @@ support.format:
 		echo "Formatting $${name}";\
 		cd $${name} && make format && cd ../../ || exit 1;\
 	done
-.PHONE: support.format
+.PHONY: support.format
 
 sdk.format:
 	for name in packages/{$(SDK_PKGS)}; do\
