@@ -14,7 +14,7 @@ export type HappyUser = {
     /** Connection Provider (rabby, metamask, google) */
     provider: string
     /** Connected Wallet Type */
-    type: "social" | "injected"
+    type: WalletType.Social | WalletType.Injected
 
     /**
      * On-Chain
@@ -26,6 +26,11 @@ export type HappyUser = {
     address: `0x${string}`
     /** All owned addresses */
     addresses: `0x${string}`[]
+}
+
+export enum WalletType {
+    Social = "social",
+    Injected = "injected"
 }
 
 export enum AuthState {

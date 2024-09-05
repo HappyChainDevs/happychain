@@ -1,4 +1,5 @@
 import type { HappyUser } from "@happychain/sdk-shared";
+import { WalletType } from "@happychain/sdk-shared/lib/interfaces/happyUser";
 
 interface UserProps {
   user: HappyUser;
@@ -6,14 +7,14 @@ interface UserProps {
 
 const UserInfo = ({ user }: UserProps) => {
   return (
-    <div className="flex flex-row space-x-4">
+    <div className="flex flex-row items-center space-x-4">
       <img
         src={user.avatar}
         alt={`${user.name}'s avatar`}
         className="h-12 rounded-full"
       />
       <div className="flex flex-col items-start justify-between">
-        <p>{user?.email || user?.name}</p>
+        {user.type === WalletType.Social && <p>{user?.email || user?.name}</p>}
         <div className="flex flex-row items-center justify-center space-x-1">
           <p>{user?.name}</p>
           <button
