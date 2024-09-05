@@ -1,4 +1,3 @@
-import React from "react"
 import { hasPermission } from "../../services/permissions/hasPermission"
 
 const AppStatus = () => {
