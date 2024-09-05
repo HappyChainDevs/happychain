@@ -26,4 +26,5 @@ export const tokenList: Token[] = [
 export const appList: AppGame[] = [
   { name: "0xFable", imageUrl: "" },
   { name: "HappyPunch", imageUrl: "" },
+  { name: "Emojimon", imageUrl: "" },
 ];
