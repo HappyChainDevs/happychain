@@ -16,7 +16,6 @@ import UserInfo from "../components/interface/UserInfo"
 import WalletTabs from "../components/interface/WalletTabs"
 import { publicClientAtom } from "../state/publicClient"
 import { userAtom } from "../state/user"
-import { happySepChain } from "../utils/chainConfig"
 
 export const Route = createLazyFileRoute("/connect")({
     component: Connect,
@@ -45,7 +44,6 @@ function Connect() {
 
     const getBalance = useCallback(async () => {
         if (user) {
-            publicClient.chain = happySepChain
             return await publicClient.getBalance({
                 address: user?.address,
             })
@@ -94,23 +92,14 @@ function Connect() {
                     {isOpen && (
                         // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
                         <div
-                            className="flex h-[600px] w-[500px] flex-col rounded-xl border-[1px] border-black  bg-base-200 items-center justify-start"
+                            className="flex h-[600px] w-[500px] flex-col rounded-xl border border-black  bg-base-200 items-center justify-start"
                             onClick={close}
                         >
-                            <span className="text-black text-[20px] py-2">🤠 HappyChain</span>
+                            <span className="text-black text-xl py-2">🤠 HappyChain</span>
 
                             <div className="flex flex-row w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
                                 <UserInfo user={user} />
-                                <button
-                                    className="w-6 h-6 rounded-xl"
-                                    onClick={disconnect}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" || e.key === " ") {
-                                            disconnect()
-                                        }
-                                    }}
-                                    type="button"
-                                >
+                                <button className="w-6 h-6 rounded-xl" onClick={disconnect} type="button">
                                     <img
                                         className="w-6 h-6 rounded-xl"
                                         src={"/wallet-interface/power.svg"}
