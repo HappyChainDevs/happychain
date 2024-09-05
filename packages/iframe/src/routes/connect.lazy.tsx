@@ -90,7 +90,7 @@ function Connect() {
                             onClick={open}
                         >
                             <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
-                            <p>{user?.email || user?.name}</p>
+                            <p>{user?.ens || user?.email || user?.name}</p>
                         </div>
                     )}
                 </div>

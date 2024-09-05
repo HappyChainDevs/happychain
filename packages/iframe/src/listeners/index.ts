@@ -1,9 +1,10 @@
 import { AuthState } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/vanilla"
+import { http, createPublicClient } from "viem"
+import { mainnet } from "viem/chains"
 import { dappMessageBus } from "../services/eventBus"
 import { hasPermission } from "../services/permissions/hasPermission"
 import { authStateAtom } from "../state/authState"
-// import { publicClientAtom } from "../state/publicClient"
 import { userAtom } from "../state/user"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 
@@ -76,17 +77,16 @@ store.sub(userAtom, () => {
  *
  * @listens userAtom
  */
-// store.sub(userAtom, async () => {
-//     const user = store.get(userAtom)
-//     // don't update if ens already has been found
-//     if (!user || user.ens) return
+const mainnetClient = createPublicClient({ chain: mainnet, transport: http() })
+store.sub(userAtom, async () => {
+    const user = store.get(userAtom)
+    // don't update if ens already has been found
+    if (!user || user.ens) return
 
-//     const ensName = await store.get(publicClientAtom).getEnsName({
-//         address: user.address,
-//     })
+    const ensName = await mainnetClient.getEnsName({ address: user.address })
 
-//     if (ensName) {
-//         user.ens = ensName
-//         store.set(userAtom, user)
-//     }
-// })
+    if (ensName) {
+        user.ens = ensName
+        store.set(userAtom, user)
+    }
+})
