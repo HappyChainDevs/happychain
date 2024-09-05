@@ -1,7 +1,17 @@
-import { AuthState, getEIP1193ErrorObjectFromUnknown, waitForCondition } from "@happychain/sdk-shared"
+import {
+    AuthState,
+    type EIP1193ProxiedEvents,
+    getChainFromSearchParams,
+    getEIP1193ErrorObjectFromUnknown,
+    waitForCondition,
+} from "@happychain/sdk-shared"
 import { getDefaultStore, useAtomValue } from "jotai"
-import { useEffect } from "react"
+import { useCallback, useEffect } from "react"
 
+import type {
+    EIP1193RequestParameters,
+    ProviderEventPayload,
+} from "@happychain/sdk-shared/lib/interfaces/eip1193Provider"
 import { UnauthorizedProviderError } from "viem"
 import { usePermissionsCheck } from "../hooks/usePermissionsCheck"
 import { happyProviderBus } from "../services/eventBus"
@@ -19,11 +29,46 @@ export function useProcessUnconfirmedRequests() {
 
     const { checkIfRequestRequiresConfirmation: requiresConfirmation } = usePermissionsCheck()
 
+    const respondWith = useCallback(
+        (
+            data: ProviderEventPayload<EIP1193RequestParameters>,
+            payload: EIP1193ProxiedEvents["response:complete"]["payload"],
+        ) => {
+            happyProviderBus.emit("response:complete", {
+                key: data.key,
+                windowId: data.windowId,
+                error: null,
+                payload: payload,
+            })
+        },
+        [],
+    )
+
+    const errorWith = useCallback(
+        (
+            data: ProviderEventPayload<EIP1193RequestParameters>,
+            error: EIP1193ProxiedEvents["response:complete"]["error"],
+        ) => {
+            happyProviderBus.emit("response:complete", {
+                key: data.key,
+                windowId: data.windowId,
+                error: error,
+                payload: null,
+            })
+        },
+        [],
+    )
+
     // Untrusted requests can only be called using the public client
     // as they bypass the popup approval screen
     useEffect(() => {
         return happyProviderBus.on("request:approve", async (data) => {
             if (!confirmWindowId(data.windowId)) return
+
+            if ("eth_chainId" === data.payload.method) {
+                return respondWith(data, getChainFromSearchParams().chainId)
+            }
+
             try {
                 const isPublicMethod = !requiresConfirmation(data.payload)
                 let connected = getDefaultStore().get(authStateAtom) === AuthState.Connected
@@ -46,38 +91,29 @@ export function useProcessUnconfirmedRequests() {
                     (connected && "eth_requestAccounts" === data.payload.method) ||
                     "eth_accounts" === data.payload.method
                 ) {
-                    happyProviderBus.emit("response:complete", {
-                        key: data.key,
-                        windowId: data.windowId,
-                        error: null,
-                        payload: hasPermission({ eth_accounts: {} }) ? getDefaultStore().get(userAtom)?.addresses : [],
-                    })
-                    return
+                    const payload = hasPermission({ eth_accounts: {} })
+                        ? getDefaultStore().get(userAtom)?.addresses
+                        : []
+
+                    return respondWith(data, payload)
                 }
 
                 // not allowed if not logged in (should log in, then be called on wallet client)
                 if (connected && "wallet_requestPermissions" === data.payload.method) {
-                    happyProviderBus.emit("response:complete", {
-                        key: data.key,
-                        windowId: data.windowId,
-                        error: null,
-                        payload: hasPermission(...data.payload.params)
-                            ? getPermissions(data.payload)
-                            : new Array<WalletPermission>(),
-                    })
-                    return
+                    const payload = hasPermission(...data.payload.params)
+                        ? getPermissions(data.payload)
+                        : new Array<WalletPermission>()
+
+                    return respondWith(data, payload)
                 }
 
                 // not allowed if not logged in (should log in, then be called on wallet client)
                 if (connected && "wallet_revokePermissions" === data.payload.method) {
                     revokePermission(...data.payload.params)
-                    happyProviderBus.emit("response:complete", {
-                        key: data.key,
-                        windowId: data.windowId,
-                        error: null,
-                        payload: getPermissions(data.payload as Parameters<typeof getPermissions>[0]),
-                    })
-                    return
+
+                    const payload = getPermissions(data.payload as Parameters<typeof getPermissions>[0])
+
+                    return respondWith(data, payload)
                 }
 
                 if (!isPublicMethod) {
@@ -87,22 +123,11 @@ export function useProcessUnconfirmedRequests() {
                 // injected providers are allowed to bypass the popup screen
                 // as they have their own in-built popup security model
 
-                const result = await publicClient.request(data.payload as Parameters<typeof publicClient.request>)
-
-                happyProviderBus.emit("response:complete", {
-                    key: data.key,
-                    windowId: data.windowId,
-                    error: null,
-                    payload: result,
-                })
+                const payload = await publicClient.request(data.payload as Parameters<typeof publicClient.request>)
+                return respondWith(data, payload)
             } catch (e) {
-                happyProviderBus.emit("response:complete", {
-                    key: data.key,
-                    windowId: data.windowId,
-                    error: getEIP1193ErrorObjectFromUnknown(e),
-                    payload: null,
-                })
+                return errorWith(data, getEIP1193ErrorObjectFromUnknown(e))
             }
         })
-    }, [publicClient, requiresConfirmation])
+    }, [publicClient, requiresConfirmation, respondWith, errorWith])
 }

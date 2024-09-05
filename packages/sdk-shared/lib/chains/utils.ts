@@ -6,10 +6,8 @@ export const defaultChain = happyChainSepolia
 /***
  * Utilities
  */
-const u = new URLSearchParams(window.location.search)
-
 function getChain() {
-    const urlChainString = u.get("chain")
+    const urlChainString = new URLSearchParams(window.location.search).get("chain")
 
     if (!urlChainString) {
         return defaultChain
@@ -22,7 +20,7 @@ function getChain() {
 }
 
 export function getChainFromSearchParams(): AddEthereumChainParameter {
-    const rpcUrls = u.get("rpc-urls")?.split(",")
+    const rpcUrls = new URLSearchParams(window.location.search).get("rpc-urls")?.split(",")
 
     const chain = getChain()
 
