@@ -30,7 +30,7 @@ export type HappyUser = {
 
 export enum WalletType {
     Social = "social",
-    Injected = "injected"
+    Injected = "injected",
 }
 
 export enum AuthState {
