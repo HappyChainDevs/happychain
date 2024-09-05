@@ -14,7 +14,7 @@ export type HappyUser = {
     /** Connection Provider (rabby, metamask, google) */
     provider: string
     /** Connected Wallet Type */
-    type: WalletType.Social | WalletType.Injected
+    type: WalletType
 
     /**
      * On-Chain

@@ -61,10 +61,7 @@ export function ConnectButton() {
                     onClick={close}
                 >
                     {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-                    <div
-                        className="flex-coll flex gap-4 rounded-md bg-zinc-100 p-8"
-                        onClick={(e) => e.stopPropagation()}
-                    >
+                    <div className="flex gap-4 rounded-md bg-zinc-100 p-8" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center">
                             <div className="flex flex-col items-center gap-4">
                                 <img alt="HappyChain Logo" src="/happychain.png" className="mx-auto h-24 w-24" />
