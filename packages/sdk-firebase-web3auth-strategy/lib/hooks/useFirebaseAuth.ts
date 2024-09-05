@@ -8,9 +8,9 @@ import { useAtom, useSetAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import type { EIP1193Provider } from "viem"
 
+import { WalletType } from "@happychain/sdk-shared/lib/interfaces/happyUser"
 import { firebaseAuth } from "../services/firebase"
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEvmProvider } from "../services/web3auth"
-import { WalletType } from "@happychain/sdk-shared/lib/interfaces/happyUser"
 
 export type SignInProvider = "google"
 
