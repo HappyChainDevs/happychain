@@ -10,6 +10,7 @@ import type { EIP1193Provider } from "viem"
 
 import { firebaseAuth } from "../services/firebase"
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEvmProvider } from "../services/web3auth"
+import { WalletType } from "@happychain/sdk-shared/lib/interfaces/happyUser"
 
 export type SignInProvider = "google"
 
@@ -79,7 +80,7 @@ function useOnAuthChange(auth: Auth) {
 
                 const nextUser: HappyUser = {
                     // connection type
-                    type: "social",
+                    type: WalletType.Social,
                     provider: "firebase",
                     // social details
                     uid: _user.uid,

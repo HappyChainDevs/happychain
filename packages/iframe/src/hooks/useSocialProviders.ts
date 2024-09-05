@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react"
 import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
 import { AuthState, type ConnectionProvider } from "@happychain/sdk-shared"
 
+import { WalletType } from "@happychain/sdk-shared/lib/interfaces/happyUser"
 import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { setPermission } from "../services/permissions/setPermission"
 import { authStateAtom } from "../state/authState"
@@ -22,7 +23,7 @@ export function useSocialProviders() {
             // sync local user+provider state with internal plugin updates
             // not logged in and
             const loggingIn = Boolean(!userValue?.type && user)
-            const loggedIn = userValue?.type === "social"
+            const loggedIn = userValue?.type === WalletType.Social
             if (loggingIn || loggedIn) {
                 // pre-add all our supported chains (as defined by sdk-shared)
                 // Social Auth will come with all required chains ready to go
