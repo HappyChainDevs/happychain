@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo } from "react"
-
 import { googleLogo } from "@happychain/common"
-import type { ConnectionProvider, HappyUser } from "@happychain/sdk-shared"
+import { type ConnectionProvider, type HappyUser, WalletType } from "@happychain/sdk-shared"
 import { useLoginWithOAuth, useLogout, usePrivy, useWallets } from "@privy-io/react-auth"
+import { useCallback, useEffect, useMemo } from "react"
 import type { EIP1193Provider } from "viem"
 
 const authChangeCallbacks = new Set<(user: HappyUser | undefined, provider: EIP1193Provider | undefined) => void>()
@@ -21,7 +20,7 @@ export function usePrivyStrategy() {
             ready && user?.id
                 ? ({
                       // connection type
-                      type: "social",
+                      type: WalletType.Social,
                       provider: "privy",
                       // social details
                       uid: user?.id,
