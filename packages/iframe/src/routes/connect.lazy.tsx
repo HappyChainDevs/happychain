@@ -93,14 +93,14 @@ function Connect() {
                 <div className="absolute right-0 top-0">
                     {isOpen && (
                         // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-                        <div className="flex h-[600px] w-[500px] flex-col gap-4 rounded-xl border-[1px] border-black  bg-base-200 p-4 items-center justify-start" onClick={close}>
-                            <span className="text-black text-[20px]">🤠 HappyChain</span>
+                        <div className="flex h-[600px] w-[500px] flex-col rounded-xl border-[1px] border-black  bg-base-200 items-center justify-start" onClick={close}>
+                            <span className="text-black text-[20px] py-2">🤠 HappyChain</span>
 
-                            <div className="flex flex-row w-full items-center justify-between gap-2 bg-slate-200 p-2">
+                            <div className="flex flex-row w-full items-center justify-between gap-2 bg-slate-200 p-2 border-[1px] border-black">
                                 <UserInfo user={user} />
-                                <img className="w-6 h-6 rounded-xl" src={"/wallet-interface/power.svg"} onClick={disconnect}></img>
+                                <img className="w-6 h-6 rounded-xl" src={"/wallet-interface/power.svg"} onClick={disconnect} />
                             </div>
-                            <div className="flex h-full w-full grow flex-col items-start justify-start rounded bg-slate-200 p-2">
+                            <div className="flex h-full w-full grow flex-col items-start justify-start rounded-b-xl bg-slate-200 p-2">
                                 <HappyBalance balance={happyBalance} />
                                 <ActionButtons />
                                 <WalletTabs />

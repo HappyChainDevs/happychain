@@ -1,7 +1,6 @@
 export interface Token {
   name: string;
   symbol: string;
-  imageUrl: string;
   balance: string;
 }
 
@@ -10,19 +9,16 @@ export interface AppGame {
   imageUrl: string;
 }
 
+// placeholder lists
 export const tokenList: Token[] = [
   {
-    name: "Ethereum",
-    symbol: "ETH",
-    imageUrl:
-      "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
+    name: "TestFoo",
+    symbol: "FOO",
     balance: "20.56",
   },
   {
-    name: "USD Coin",
-    symbol: "USDC",
-    imageUrl:
-      "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png",
+    name: "TestBar",
+    symbol: "BAR",
     balance: "2000",
   },
 ];
