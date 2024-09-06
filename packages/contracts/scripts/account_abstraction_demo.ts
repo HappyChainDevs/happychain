@@ -1,5 +1,5 @@
-import {config} from "dotenv";
-config();
+import { config } from "dotenv"
+config()
 
 import {
     http,
@@ -25,17 +25,6 @@ const rpcURL = process.env.RPC_URL_LOCAL
 if (!privateKey || !bundlerRpc || !rpcURL) {
     throw new Error("Please provide PRIVATE_KEY_LOCAL, BUNDLER_URL_LOCAL and RPC_URL_LOCAL in .env file")
 }
-
-// Define a type that matches the structure of deployments.json
-type Deployments = {
-    ECDSAValidator: string
-    Kernel: string
-    KernelFactory: string
-    FactoryStaker: string
-}
-
-import deploymentsJson from "../out/deployment.json" assert { type: 'json' };
-const deployments: Deployments = deploymentsJson;
 
 const chain = defineChain({
     id: 1_337,
@@ -91,10 +80,10 @@ async function getKernelAccount(): Promise<SmartAccount> {
         },
         owners: [account],
         version: "0.3.1",
-        ecdsaValidatorAddress: deployments.ECDSAValidator ? deployments.ECDSAValidator as Hex : "0x2cA67e9cF717c3A210574AA1fcDB38C0bE7b6b63",
-        accountLogicAddress: deployments.Kernel ? deployments.Kernel as Hex : "0x15A1C1a83810984D0d9c26386171878ADa04D034",
-        factoryAddress: deployments.KernelFactory ? deployments.KernelFactory as Hex : "0x560cbC094b16fe929Cf889Ffa59B42e7BB0b86Fa",
-        metaFactoryAddress: deployments.FactoryStaker ? deployments.FactoryStaker as Hex : "0xF2F43D2eA39c24EeC8Ff985B192935C50e976E4c",
+        ecdsaValidatorAddress: "0x2cA67e9cF717c3A210574AA1fcDB38C0bE7b6b63",
+        accountLogicAddress: "0x15A1C1a83810984D0d9c26386171878ADa04D034",
+        factoryAddress: "0x560cbC094b16fe929Cf889Ffa59B42e7BB0b86Fa",
+        metaFactoryAddress: "0xF2F43D2eA39c24EeC8Ff985B192935C50e976E4c",
     })
 }
 
