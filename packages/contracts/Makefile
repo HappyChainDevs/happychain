@@ -1,5 +1,4 @@
-SHELL := /bin/bash
-PATH := ./node_modules/.bin:./node_modules/@happychain/configs/node_modules/.bin:$(PATH)
+include ../../makefiles/lib.mk
 
 # include .env file and export its env vars
 # (-include to ignore error if it does not exist)

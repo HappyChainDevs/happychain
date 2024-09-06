@@ -1,5 +1,4 @@
-PATH := ./node_modules/.bin:$(PATH)
-
+include ../../makefiles/lib.mk
 include ../../makefiles/formatting.mk
 
 # Vocs seems unstable, and changes to several files like this can crash it easily. Leaving this

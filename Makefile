@@ -3,15 +3,13 @@ ifndef VERBOSE
 	MAKEFLAGS += --silent
 endif
 
-# cf. makefiles/formatting.mk
-SHELL := /bin/bash
-PATH := ./node_modules/.bin:./packages/configs/node_modules/.bin:$(PATH)
+include makefiles/lib.mk
 
 help: ## Show this help
 	@echo ""
 	@echo "Specify a command. The choices are:"
 	@echo ""
-	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[0;36m%-12s\033[m %s\n", $$1, $$2}'
+	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[0;36m%-12s\033[m %s\n", $$1, $$2}'
 	@echo ""
 .PHONY: help
 
