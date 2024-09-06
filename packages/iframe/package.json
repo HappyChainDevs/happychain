@@ -7,6 +7,7 @@
         "@happychain/common": "workspace:^",
         "@happychain/firebase-web3auth-strategy": "workspace:^",
         "@happychain/sdk-shared": "workspace:^",
+        "@phosphor-icons/react": "^2.1.7",
         "@tanstack/react-router": "^1.51.0",
         "clsx": "^2.1.1",
         "jotai": "^2.9.3",
