@@ -1,5 +1,6 @@
 import { type AddEthereumChainParameter, defineChain } from "viem"
-import { happyChainSepolia } from "./definitions/happyChainSepolia"
+
+import { happyChainSepolia, happyChainSepoliaViemChain } from "./definitions/happyChainSepolia"
 
 export const defaultChain = happyChainSepolia
 
@@ -35,8 +36,13 @@ export function getChainFromSearchParams(): AddEthereumChainParameter {
 }
 
 export function convertToViemChain(chain: AddEthereumChainParameter) {
+    if (chain.chainId === happyChainSepolia.chainId) {
+        return happyChainSepoliaViemChain
+    }
+
     const httpRpcs = chain.rpcUrls.filter((a) => a.startsWith("http"))
     const wsRpcs = chain.rpcUrls.filter((a) => a.startsWith("ws"))
+
     return defineChain({
         id: Number(chain.chainId),
         name: chain.chainName,
