@@ -274,11 +274,15 @@ remove-modules:
 	rm -rf node_modules packages/*/node_modules
 .PHONY: remove-modules
 
-clean: remove-modules
+clean: ## Removes build artifacts
 	rm -rf packages/docs/docs/pages/{js,react}/api
 	rm -rf packages/{sdk-react,sdk-vanillajs,iframe,demo-vanillajs,demo-react,docs/docs}/dist
 	rm -rf packages/docs/vocs.config.ts.timestamp-*
+	cd packages/contracts && make clean
 .PHONY: clean
+
+nuke: remove-modules clean ## Removes build artifacts and dependencies
+.PHONY: nuke
 
 # In case you accidentally pollute the node_modules directories
 # (e.g. by running npm instead of pnpm)
