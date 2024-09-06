@@ -1,5 +1,5 @@
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
-import react from "@vitejs/plugin-react-swc"
+import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { nodePolyfills } from "vite-plugin-node-polyfills"
 
@@ -10,11 +10,7 @@ export default defineConfig({
         nodePolyfills({ globals: { Buffer: true } }), // required for web3Auth
         TanStackRouterVite(),
         react({
-            // Crashes :(
-            // plugins: [
-            // 	["@swc-jotai/debug-label", {}],
-            // 	["@swc-jotai/react-refresh", {}],
-            // ],
+            babel: { presets: ["jotai/babel/preset"] },
         }),
     ],
     resolve: {

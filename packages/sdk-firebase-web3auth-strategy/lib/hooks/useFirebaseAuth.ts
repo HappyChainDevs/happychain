@@ -16,6 +16,7 @@ export type SignInProvider = "google"
 const cachedFirebaseAuthStateAtom = atomWithStorage("firebase-auth", "unauthenticated", undefined, { getOnInit: true })
 
 const firebaseAuthUserAtom = atomWithCompare<HappyUser | undefined>(undefined, (a, b) => a?.uid === b?.uid)
+firebaseAuthUserAtom.debugLabel = "firebaseAuthUserAtom"
 
 async function signInWithGoogle(auth: Auth) {
     const googleProvider = new GoogleAuthProvider()
