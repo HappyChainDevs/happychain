@@ -9,6 +9,10 @@ dev: node_modules
 build: node_modules dist
 .PHONY: build
 
+clean:
+	rm -rf dist
+.PHONY: clean
+
 build.watch: node_modules
 	vite build --watch;
 .PHONY: build.watch
