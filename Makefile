@@ -24,9 +24,9 @@ SDK_PKGS := sdk-vanillajs,sdk-react
 APP_PKGS := iframe,demo-vanillajs,demo-react,demo-wagmi-vue,docs
 
 # Currently Active Branch
-YOUR_BRANCH = $(git rev-parse --abbrev-ref HEAD)
+YOUR_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 # Lead branch
-DEFAULT_BRANCH = master
+DEFAULT_BRANCH := master
 
 # ==================================================================================================
 # BASICS COMMANDS
@@ -179,10 +179,12 @@ apps.format:
 	done
 .PHONY: apps.format
 
-# Quickly format change files between <your branch> and master
-# using default global settings
+# Quickly format change files between <your branch> and master using the default settings.
+# Note that when the diff is empty, this will fallback to checking the 4 eligible top-level files
+# (which is fine).
 check-fast-diff:
-	biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)));
+	biome check \
+		$$(git diff --name-only $(YOUR_BRANCH) $$(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)));
 .PHONY: check-fast-diff
 
 # ==================================================================================================
