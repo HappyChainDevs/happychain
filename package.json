@@ -4,7 +4,7 @@
     "license": "BSD-3-Clause-Clear",
     "version": "1.0.0",
     "private": true,
-    "packageManager": "pnpm@9.4.0",
+    "packageManager": "pnpm@9.9.0",
     "devDependencies": {
         "husky": "^9.1.5",
         "typescript": "^5.5.4"
