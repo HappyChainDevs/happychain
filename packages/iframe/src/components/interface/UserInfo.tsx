@@ -1,4 +1,5 @@
 import { type HappyUser, WalletType } from "@happychain/sdk-shared"
+import { Clipboard } from "@phosphor-icons/react"
 
 interface UserProps {
     user: HappyUser
@@ -20,7 +21,7 @@ const UserInfo = ({ user }: UserProps) => {
                         }}
                         type="button"
                     >
-                        <img src={"/wallet-interface/clipboard-text.svg"} alt="copy" />
+                       <Clipboard size={15} />
                     </button>
                 </div>
             </div>
