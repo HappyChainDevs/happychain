@@ -81,7 +81,7 @@ format-check:
 .PHONY: format-check
 
 lint:
-	pnpm solhint --config ./.solhint.json "src/*.sol" "src/test/*.sol" "src/deploy/*.sol"
+	solhint --config ./.solhint.json "src/*.sol" "src/test/*.sol" "src/deploy/*.sol";
 .PHONY: lint
 
 format:

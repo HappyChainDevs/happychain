@@ -290,7 +290,7 @@ debug-github-workflow:
 
 # Enable Git Hooks
 enable-hooks:
-	husky
+	husky;
 .PHONY: enable-hooks
 
 # Disable Git Hooks
