@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useAccount } from '@wagmi/vue'
-import Container from './Container.vue';
-import SelectArrow from './SelectArrow.vue';
+import { useAccount } from "@wagmi/vue"
+import Container from "./Container.vue"
+import SelectArrow from "./SelectArrow.vue"
 
 // SDK
-import { useHappyChain } from '../sdk'
+import { useHappyChain } from "../sdk"
 const { user } = useHappyChain()
 
 // wagmi

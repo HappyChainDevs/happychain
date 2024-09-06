@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import ConnectionButtons from './components/ConnectionButtons.vue'
-import Container from './components/Container.vue'
-import UserStatus from './components/UserStatus.vue'
-import WagmiStatus from './components/WagmiStatus.vue'
+import ConnectionButtons from "./components/ConnectionButtons.vue"
+import Container from "./components/Container.vue"
+import UserStatus from "./components/UserStatus.vue"
+import WagmiStatus from "./components/WagmiStatus.vue"
 </script>
 
 <template>

@@ -1,23 +1,23 @@
 {
-  "name": "demo-wagmi-vue",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "dependencies": {
-    "@happychain/js": "workspace:^",
-    "@tanstack/vue-query": "^5.52.2",
-    "@wagmi/vue": "^0.0.39",
-    "viem": "2.x",
-    "vue": "^3.4.37"
-  },
-  "devDependencies": {
-    "@happychain/configs": "workspace:^",
-    "@vitejs/plugin-vue": "^5.1.2",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.41",
-    "tailwindcss": "^3.4.10",
-    "typescript": "^5.5.3",
-    "vite": "^5.4.1",
-    "vue-tsc": "^2.0.29"
-  }
+    "name": "demo-wagmi-vue",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "dependencies": {
+        "@happychain/js": "workspace:^",
+        "@tanstack/vue-query": "^5.52.2",
+        "@wagmi/vue": "^0.0.39",
+        "viem": "2.x",
+        "vue": "^3.4.37"
+    },
+    "devDependencies": {
+        "@happychain/configs": "workspace:^",
+        "@vitejs/plugin-vue": "^5.1.2",
+        "autoprefixer": "^10.4.20",
+        "postcss": "^8.4.41",
+        "tailwindcss": "^3.4.10",
+        "typescript": "^5.5.3",
+        "vite": "^5.4.1",
+        "vue-tsc": "^2.0.29"
+    }
 }

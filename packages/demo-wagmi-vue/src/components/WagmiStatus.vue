@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useAccount, useConnections } from '@wagmi/vue'
-import BooleanDisplay from './Boolean.vue';
-import Container from './Container.vue';
+import { useAccount, useConnections } from "@wagmi/vue"
+import BooleanDisplay from "./Boolean.vue"
+import Container from "./Container.vue"
 
-const {  isConnected, isDisconnected, isReconnecting, isConnecting } = useAccount()
+const { isConnected, isDisconnected, isReconnecting, isConnecting } = useAccount()
 const connections = useConnections()
 </script>
 
