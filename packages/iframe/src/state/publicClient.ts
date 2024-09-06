@@ -16,4 +16,3 @@ export const publicClientAtom: Atom<PublicClient<CustomTransport | HttpTransport
     // biome-ignore lint/suspicious/noExplicitAny: viem uses any as well
     return (chain.opStack ? publicClient : publicClient.extend(publicActionsL2())) as any
 })
-publicClientAtom.debugLabel = "publicClientAtom"

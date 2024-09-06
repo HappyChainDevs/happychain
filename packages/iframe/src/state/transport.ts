@@ -8,4 +8,3 @@ export const transportAtom = atom<CustomTransport | undefined>((get) => {
     const provider = get(providerAtom)
     return provider && custom(provider)
 })
-transportAtom.debugLabel = "transportAtom"

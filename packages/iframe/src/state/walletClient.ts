@@ -18,4 +18,3 @@ export const walletClientAtom: Atom<AccountWalletClient | undefined> = atom<Acco
 
     return createWalletClient({ account: user.address, transport })
 })
-walletClientAtom.debugLabel = "walletClientAtom"
