@@ -9,6 +9,7 @@ import { useSocialProviders } from "../hooks/useSocialProviders"
 import { dappMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
 
+import { Power } from "@phosphor-icons/react"
 import ActionButtons from "../components/interface/ActionButtons"
 import AppStatus from "../components/interface/AppStatus"
 import HappyBalance from "../components/interface/HappyBalance"
@@ -16,7 +17,6 @@ import UserInfo from "../components/interface/UserInfo"
 import WalletTabs from "../components/interface/WalletTabs"
 import { publicClientAtom } from "../state/publicClient"
 import { userAtom } from "../state/user"
-import { Power } from "@phosphor-icons/react"
 
 export const Route = createLazyFileRoute("/embed")({
     component: Embed,

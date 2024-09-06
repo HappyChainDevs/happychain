@@ -48,7 +48,7 @@ export class HappyWallet extends LitElement {
     }
 
     render() {
-        const url = new URL("connect", config.iframePath)
+        const url = new URL("embed", config.iframePath)
 
         const searchParams = new URLSearchParams(
             filterUndefinedValues({
