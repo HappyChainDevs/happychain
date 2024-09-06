@@ -1,7 +1,7 @@
 export { isPermissionsRequest } from "./interfaces/events"
 export { createUUID } from "./utils/uuid"
 export * as chains from "./chains"
-export { AuthState } from "./interfaces/happyUser"
+export { AuthState, WalletType } from "./interfaces/happyUser"
 export { EventBus, EventBusChannel } from "./services/eventBus"
 export { config } from "./config"
 export { getChainFromSearchParams, defaultChain, convertToViemChain } from "./chains/utils"
