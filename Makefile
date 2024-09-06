@@ -40,17 +40,14 @@ anvil: ## Runs anvil (local EVM node)
 	cd packages/contracts && make anvil
 .PHONY: anvil
 
-# Deploys to the contracts to the local node (requires anvil to be running).
-deploy: ## Deploys contracts
+deploy: ## Deploys contracts to Anvil
 	cd packages/contracts && make deploy
 .PHONY: deploy
 
-# Creates production builds of all packages
-build: support.build sdk.build apps.build node_modules ## Run production builds
+build: support.build sdk.build apps.build node_modules ## Creates production builds
 .PHONY: build
 
-# build latest docs and starts dev server http://localhost:4173
-docs: node_modules ## Builds latest docs and starts preview server
+docs: node_modules ## Builds latest docs and starts dev server http://localhost:4173
 	cd packages/docs && make build && make preview
 .PHONY: docs
 
@@ -66,13 +63,20 @@ format: support.format sdk.format apps.format ## Formats code and tries to fix c
 test: sdk.test ## Run tests
 .PHONY: test
 
+clean: ## Removes build artifacts
+	rm -rf packages/docs/docs/pages/{js,react}/api
+	rm -rf packages/{sdk-react,sdk-vanillajs,iframe,demo-vanillajs,demo-react,docs/docs}/dist
+	rm -rf packages/docs/vocs.config.ts.timestamp-*
+	cd packages/contracts && make clean
+.PHONY: clean
+
+nuke: remove-modules clean ## Removes build artifacts and dependencies
+.PHONY: nuke
+
 # ==================================================================================================
 # DEMOS
 
 demo-react:
-	@echo "Building VanillaJS SDK"
-	make sdk-vanillajs.build
-	@echo "Starting demo-react"
 	make -j 2 iframe.dev demo-react.dev
 .PHONY: demo-react
 
@@ -179,7 +183,7 @@ apps.format:
 	done
 .PHONY: apps.format
 
-# quickly format change files between <your branch> and master
+# Quickly format change files between <your branch> and master
 # using default global settings
 check-fast-diff:
 	biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)));
@@ -209,27 +213,19 @@ apps.build:
 	done
 .PHONY: apps.build
 
-# build only the docs (this included in apps.build already)
+# Build only the docs (this included in apps.build already)
 docs.build:
 	cd packages/docs && make dev
 .PHONY: docs.build
 
 # ==================================================================================================
-# IMPLEMENTATION DETAILS
-
-# NOTE: we don't have any submodules currently, they are best avoided.
-init-modules:
-	git submodule update --init --recursive
-.PHONY: init-modules
+# DEPENDENCY MANAGEMENT
+#   Update dependencies, check for outdated dependencies, etc.
 
 # Install packages as specified in the pnpm-lockfile.yaml.
 install-frozen:
 	pnpm install --frozen-lockfile
 .PHONY: install-deps
-
-# ==================================================================================================
-# DEPENDENCY MANAGEMENT
-#   Update dependencies, check for outdated dependencies, etc.
 
 # NOTES:
 #  Below "version specifier" refers to the version strings (e.g. "^1.2.3") in package.json.
@@ -271,22 +267,6 @@ update-latest:
 remove-modules:
 	rm -rf node_modules packages/*/node_modules
 .PHONY: remove-modules
-
-clean: ## Removes build artifacts
-	rm -rf packages/docs/docs/pages/{js,react}/api
-	rm -rf packages/{sdk-react,sdk-vanillajs,iframe,demo-vanillajs,demo-react,docs/docs}/dist
-	rm -rf packages/docs/vocs.config.ts.timestamp-*
-	cd packages/contracts && make clean
-.PHONY: clean
-
-nuke: remove-modules clean ## Removes build artifacts and dependencies
-.PHONY: nuke
-
-# In case you accidentally pollute the node_modules directories
-# (e.g. by running npm instead of pnpm)
-reset-modules: remove-modules
-	pnpm install --frozen-lockfile
-.PHONY: reset-modules
 
 # ==================================================================================================
 # Extras
