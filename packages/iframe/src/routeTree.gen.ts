@@ -17,15 +17,15 @@ import { Route as RequestImport } from './routes/request'
 
 // Create Virtual Routes
 
-const ConnectLazyImport = createFileRoute('/connect')()
+const EmbedLazyImport = createFileRoute('/embed')()
 const IndexLazyImport = createFileRoute('/')()
 
 // Create/Update Routes
 
-const ConnectLazyRoute = ConnectLazyImport.update({
-  path: '/connect',
+const EmbedLazyRoute = EmbedLazyImport.update({
+  path: '/embed',
   getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/connect.lazy').then((d) => d.Route))
+} as any).lazy(() => import('./routes/embed.lazy').then((d) => d.Route))
 
 const RequestRoute = RequestImport.update({
   path: '/request',
@@ -55,11 +55,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RequestImport
       parentRoute: typeof rootRoute
     }
-    '/connect': {
-      id: '/connect'
-      path: '/connect'
-      fullPath: '/connect'
-      preLoaderRoute: typeof ConnectLazyImport
+    '/embed': {
+      id: '/embed'
+      path: '/embed'
+      fullPath: '/embed'
+      preLoaderRoute: typeof EmbedLazyImport
       parentRoute: typeof rootRoute
     }
   }
@@ -70,7 +70,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   IndexLazyRoute,
   RequestRoute,
-  ConnectLazyRoute,
+  EmbedLazyRoute,
 })
 
 /* prettier-ignore-end */
@@ -83,7 +83,7 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/request",
-        "/connect"
+        "/embed"
       ]
     },
     "/": {
@@ -92,8 +92,8 @@ export const routeTree = rootRoute.addChildren({
     "/request": {
       "filePath": "request.tsx"
     },
-    "/connect": {
-      "filePath": "connect.lazy.tsx"
+    "/embed": {
+      "filePath": "embed.lazy.tsx"
     }
   }
 }

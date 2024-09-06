@@ -16,12 +16,13 @@ import UserInfo from "../components/interface/UserInfo"
 import WalletTabs from "../components/interface/WalletTabs"
 import { publicClientAtom } from "../state/publicClient"
 import { userAtom } from "../state/user"
+import { Power } from "@phosphor-icons/react"
 
-export const Route = createLazyFileRoute("/connect")({
-    component: Connect,
+export const Route = createLazyFileRoute("/embed")({
+    component: Embed,
 })
 
-function Connect() {
+function Embed() {
     const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)
 
     const authState = useAtomValue(authStateAtom)
@@ -100,11 +101,7 @@ function Connect() {
                             <div className="flex flex-row w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
                                 <UserInfo user={user} />
                                 <button className="w-6 h-6 rounded-xl" onClick={disconnect} type="button">
-                                    <img
-                                        className="w-6 h-6 rounded-xl"
-                                        src={"/wallet-interface/power.svg"}
-                                        alt="Disconnect"
-                                    />
+                                    <Power size={22} />
                                 </button>
                             </div>
                             <div className="flex h-full w-full grow flex-col items-start justify-start rounded-b-xl bg-slate-200 p-2">
