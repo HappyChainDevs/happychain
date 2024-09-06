@@ -221,26 +221,9 @@ deploy-deterministic-deployer:
 
 # Target to deploy Account Abstraction (AA) contracts
 deploy-aa:
-	@echo "Deploying Account Abstraction (AA) Contracts..."
-	forge script ./src/deploy/account_abstraction/DeployAA.s.sol \
+	@echo "Deploying EntryPoints (AA) and Kernel Contracts..."
+	forge script ./src/deploy/DeployAA.s.sol \
 		--rpc-url $(RPC_$(CONFIG)) \
 		--private-key $(PRIVATE_KEY_$(CONFIG)) \
 		--broadcast
 .PHONY: deploy-aa
-
-# Target to deploy Kernel contracts
-deploy-kernel:
-	@echo "Deploying Kernel Contracts..."
-	forge script ./src/deploy/kernel/DeployKernelFactory.s.sol \
-		--rpc-url $(RPC_$(CONFIG)) \
-		--private-key $(PRIVATE_KEY_$(CONFIG)) \
-		--broadcast
-.PHONY: deploy-kernel
-
-# Combined target to deploy all contracts in sequence
-deploy-all:
-	@echo "Deploying All Contracts in Sequence..."
-	$(MAKE) deploy-deterministic-deployer
-	$(MAKE) deploy-aa
-	$(MAKE) deploy-kernel
-.PHONY: deploy-all
