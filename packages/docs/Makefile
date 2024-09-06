@@ -2,11 +2,12 @@ PATH := ./node_modules/.bin:$(PATH)
 
 include ../../makefiles/formatting.mk
 
-# Vocs seems unstable, and changes to several files like this
-# can crash it easily. Leaving this here, as it is convenient
-# but if you plan on working on documentation for awhile
-# you are better off running in three seperate terminals
-# so you can restart vocs when needed
+# Vocs seems unstable, and changes to several files like this can crash it easily. Leaving this
+# here, as it is convenient but if you plan on working on documentation for awhile you are better
+# off running in three seperate terminals so you can restart vocs when needed.
+#
+# Also using concurrently rather than `make -j 3` for the same reason: concurrently restarts
+# the three processes as a group if one crashes.
 dev:
 	concurrently \
 		'make typedoc-js.watch'\
@@ -15,9 +16,7 @@ dev:
 .PHONY: dev
 
 # precompile API reference docs, then build full vocs output
-build:
-	make typedoc
-	make vocs
+build: typedoc vocs
 .PHONY: build
 
 # Preview production build (run build first)
