@@ -1,6 +1,6 @@
 import { EventBus, EventBusMode, type PopupMsgsFromIframe } from "@happychain/sdk-shared"
 import type { NoEvents, PopupMsgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
-import type { MsgsFromApp, MsgsFromIframe } from "@happychain/sdk-shared/lib/interfaces/events.ts"
+import type { MsgsFromApp, MsgsFromIframe } from "@happychain/sdk-shared"
 
 /**
  * Iframe side of the app <> iframe provider bus.

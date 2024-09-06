@@ -22,7 +22,6 @@ export function EthRequestAccounts({
                     <div className="border-b border-zinc-300 pb-2 text-center text-sm font-bold text-blue-600">
                         Allow this app to view your address?
                     </div>
-                    <pre className="grow">{JSON.stringify(params, null, 2)}</pre>
                 </div>
             </div>
 
