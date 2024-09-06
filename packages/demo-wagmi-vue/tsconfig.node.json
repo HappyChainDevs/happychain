@@ -1,9 +1,4 @@
 {
     "extends": "@happychain/configs/tsconfig.vite-node.json",
-    "compilerOptions": {
-        "paths": {
-            "@happychain/js": ["../sdk-vanillajs/lib/index"]
-        }
-    },
-    "include": ["vite.config.ts", "../sdk-vanillajs/lib"]
+    "include": ["vite.config.ts"]
 }
