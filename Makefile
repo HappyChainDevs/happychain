@@ -63,11 +63,7 @@ format: support.format sdk.format apps.format ## Formats code and tries to fix c
 test: sdk.test ## Run tests
 .PHONY: test
 
-clean: ## Removes build artifacts
-	rm -rf packages/docs/docs/pages/{js,react}/api
-	rm -rf packages/{sdk-react,sdk-vanillajs,iframe,demo-vanillajs,demo-react,docs/docs}/dist
-	rm -rf packages/docs/vocs.config.ts.timestamp-*
-	cd packages/contracts && make clean
+clean: support.clean sdk.clean apps.clean ## Removes build artifacts
 .PHONY: clean
 
 nuke: remove-modules clean ## Removes build artifacts and dependencies
@@ -217,6 +213,30 @@ apps.build:
 docs.build:
 	cd packages/docs && make dev
 .PHONY: docs.build
+
+# ==================================================================================================
+# CLEANING
+
+support.clean:
+	for name in packages/{$(SUPPORT_PKGS)}; do\
+		echo "Cleaning $${name}";\
+		cd $${name} && make clean && cd ../../ || exit 1;\
+	done
+.PHONY: support.clean
+
+sdk.clean:
+	for name in packages/{$(SDK_PKGS)}; do\
+		echo "Cleaning $${name}";\
+		cd $${name} && make clean && cd ../../ || exit 1;\
+	done
+.PHONY: sdk.clean
+
+apps.clean:
+	for name in packages/{$(APP_PKGS)}; do\
+		echo "Cleaning $${name}";\
+		cd $${name} && make clean && cd ../../ || exit 1;\
+	done
+.PHONY: apps.clean
 
 # ==================================================================================================
 # DEPENDENCY MANAGEMENT

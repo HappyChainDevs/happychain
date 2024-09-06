@@ -18,6 +18,11 @@ dev:
 build: typedoc vocs
 .PHONY: build
 
+clean:
+	rm -rf docs/pages/{js,react}/api
+	rm -rf vocs.config.ts.timestamp-*
+.PHONY: clean
+
 # Preview production build (run build first)
 preview:
 	vocs preview;
