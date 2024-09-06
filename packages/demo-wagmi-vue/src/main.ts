@@ -5,7 +5,7 @@ import { WagmiPlugin, config } from "./wagmi"
 import "./style.css"
 import App from "./App.vue"
 
-import { HappyChainPlugin } from "./sdk"
+import { HappyChainPlugin, chains } from "./sdk"
 
 createApp(App) //
     .use(HappyChainPlugin, { chain: chains.defaultChain })

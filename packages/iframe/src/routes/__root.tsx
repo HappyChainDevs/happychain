@@ -1,8 +1,7 @@
-// import { useIsHydrated } from "@happychain/common";
-import { lazy } from "react"
-
+import { useIsHydrated } from "@happychain/common"
 import { Outlet, createRootRoute } from "@tanstack/react-router"
-// import { JotaiDebug } from "../components/JotaiDebug";
+import { lazy } from "react"
+import { JotaiDebug } from "../components/JotaiDebug"
 
 const inProduction = import.meta.env.MODE === "production"
 const inIframe = window.parent !== window.self
@@ -24,11 +23,11 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
-    // const isHydrated = useIsHydrated();
+    const isHydrated = useIsHydrated()
     return (
         <>
             <Outlet />
-            {/* <JotaiDebug isHydrated={isHydrated} /> */}
+            <JotaiDebug isHydrated={isHydrated} />
             <TanStackRouterDevtools />
         </>
     )
