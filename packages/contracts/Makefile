@@ -29,6 +29,8 @@ setup:
 	if [ ! -f .env ]; then cp .env.example .env; fi
 	rm -rf lib
 	mkdir -p lib/{openzeppelin,oz-upgradeable}
+	ln $(LN_FLAGS) ../node_modules/solady lib/solady
+	ln $(LN_FLAGS) ../node_modules/kernel lib/kernel
 	ln $(LN_FLAGS) ../node_modules/forge-std lib/forge-std
 	ln $(LN_FLAGS) ../../node_modules/@openzeppelin/contracts lib/openzeppelin/src
 	ln $(LN_FLAGS) ../../node_modules/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src

@@ -3,3 +3,4 @@ ds-test/=node_modules/ds-test/src/
 openzeppelin/=lib/openzeppelin/src/
 oz-upgradeable/=lib/oz-upgradeable/src/
 kernel/=lib/kernel/src/
+solady/=lib/solady/src/
