@@ -137,6 +137,9 @@ importers:
 
   packages/demo-wagmi-vue:
     dependencies:
+      '@happychain/js':
+        specifier: workspace:^
+        version: link:../sdk-vanillajs
       '@tanstack/vue-query':
         specifier: ^5.52.2
         version: 5.52.2(vue@3.4.38(typescript@5.5.4))
