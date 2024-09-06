@@ -130,8 +130,8 @@ deploy:
 # cf. https://docs.openzeppelin.com/upgrades-plugins/1.x/api-core
 validate-upgrade:
 	forge clean && forge build # doesn't work with incremental builds
-	pnpm openzeppelin-upgrades-core validate --contract HappyERC20Upgradeable
-	pnpm openzeppelin-upgrades-core validate --contract HappyERC20Upgraded
+	openzeppelin-upgrades-core validate --contract HappyERC20Upgradeable;
+	openzeppelin-upgrades-core validate --contract HappyERC20Upgraded;
 .PHONY: validate-upgrade
 
 # Defines run-deploy-script to use environment variable keys or Foundry accounts depending on the
@@ -179,15 +179,15 @@ define post-deploy
 	$(eval __RUN_FILE := broadcast/$(1)/$(__CHAIN_ID)/$(__DRY_RUN_PREFIX)run-latest.json)
 
 	@# Save list of deployed contract names to out/contracts.txt.
-	@pnpm jq '.transactions[] | select(.transactionType == "CREATE") | .contractName' $(__RUN_FILE) \
+	@node-jq '.transactions[] | select(.transactionType == "CREATE") | .contractName' $(__RUN_FILE) \
 		| uniq \
-		> out/contracts.txt
+		> out/contracts.txt;
 
 	@# Extract ABIs from the deployed contracts and save to out/abis.json.
 	@cat out/contracts.txt \
 		| xargs -L1 -I'{}' forge inspect {} abi \
-		| pnpm jq --slurp --slurpfile contracts out/contracts.txt '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
-		> out/abis.json
+		| node-jq --slurp --slurpfile contracts out/contracts.txt '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
+		> out/abis.json;
 	@rm out/contracts.txt
 
 	@# If we wanted to generate typesafe typescript bindings.
