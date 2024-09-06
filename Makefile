@@ -130,6 +130,18 @@ sdk-vanillajs.build:
 .PHONY: sdk-vanillajs.build
 
 # ==================================================================================================
+# FORALL
+
+define forall
+	$(eval PKGS := $(strip $(1)))
+	$(eval TARGET := $(2))
+	for name in packages/{$(PKGS)}; do\
+		echo "Running make $(TARGET) in $${name}";\
+		make $(2) --directory=$${name} || exit 1;\
+	done
+endef
+
+# ==================================================================================================
 # CORRECTNESS
 
 sdk.test:
@@ -138,45 +150,27 @@ sdk.test:
 .PHONY: sdk.test
 
 support.check:
-	for name in packages/{$(SUPPORT_PKGS)}; do\
-		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../ || exit 1;\
-	done
+	$(call forall , $(SUPPORT_PKGS) , check)
 .PHONY: support.check
 
 sdk.check:
-	for name in packages/{$(SDK_PKGS)}; do\
-		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../ || exit 1;\
-	done
+	$(call forall , $(SDK_PKGS) , check)
 .PHONY: sdk.check
 
 apps.check:
-	for name in packages/{$(APP_PKGS)}; do\
-		echo "Checking $${name}";\
-		cd $${name} && make check && cd ../../ || exit 1;\
-	done
+	$(call forall , $(APP_PKGS) , check)
 .PHONY: apps.check
 
 support.format:
-	for name in packages/{$(SUPPORT_PKGS)}; do\
-		echo "Formatting $${name}";\
-		cd $${name} && make format && cd ../../ || exit 1;\
-	done
+	$(call forall , $(SUPPORT_PKGS) , format)
 .PHONY: support.format
 
 sdk.format:
-	for name in packages/{$(SDK_PKGS)}; do\
-		echo "Formatting $${name}";\
-		cd $${name} && make format && cd ../../ || exit 1;\
-	done
+	$(call forall , $(SDK_PKGS) , format)
 .PHONY: sdk.format
 
 apps.format:
-	for name in packages/{$(APP_PKGS)}; do\
-		echo "Formatting $${name}";\
-		cd $${name} && make format && cd ../../ || exit 1;\
-	done
+	$(call forall , $(APP_PKGS) , format)
 .PHONY: apps.format
 
 # Quickly format change files between <your branch> and master using the default settings.
@@ -191,24 +185,15 @@ check-fast-diff:
 # PRODUCTION BUILDS
 
 support.build:
-	for name in packages/{$(SUPPORT_PKGS)}; do\
-		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../ || exit 1;\
-	done
+	$(call forall , $(SUPPORT_PKGS) , build)
 .PHONY: support.build
 
 sdk.build:
-	for name in packages/{$(SDK_PKGS)}; do\
-		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../ || exit 1;\
-	done
+	$(call forall , $(SDK_PKGS) , build)
 .PHONY: sdk.build
 
 apps.build:
-	for name in packages/{$(APP_PKGS)}; do\
-		echo "Building $${name}";\
-		cd $${name} && make build && cd ../../ || exit 1;\
-	done
+	$(call forall , $(APP_PKGS) , build)
 .PHONY: apps.build
 
 # Build only the docs (this included in apps.build already)
@@ -220,24 +205,15 @@ docs.build:
 # CLEANING
 
 support.clean:
-	for name in packages/{$(SUPPORT_PKGS)}; do\
-		echo "Cleaning $${name}";\
-		cd $${name} && make clean && cd ../../ || exit 1;\
-	done
+	$(call forall , $(SUPPORT_PKGS) , clean)
 .PHONY: support.clean
 
 sdk.clean:
-	for name in packages/{$(SDK_PKGS)}; do\
-		echo "Cleaning $${name}";\
-		cd $${name} && make clean && cd ../../ || exit 1;\
-	done
+	$(call forall , $(SDK_PKGS) , clean)
 .PHONY: sdk.clean
 
 apps.clean:
-	for name in packages/{$(APP_PKGS)}; do\
-		echo "Cleaning $${name}";\
-		cd $${name} && make clean && cd ../../ || exit 1;\
-	done
+	$(call forall , $(APP_PKGS) , clean)
 .PHONY: apps.clean
 
 # ==================================================================================================
