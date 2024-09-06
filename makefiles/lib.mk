@@ -17,9 +17,6 @@ SHELL := /bin/bash
 # Enables running pnpm-installed binaries without going through pnpm.
 $(call ADD_PATH , ./node_modules/.bin)
 
-# Enables running biome (must add @happychain/configs as a devDependency).
-$(call ADD_PATH , ./node_modules/@happychain/configs/node_modules/.bin)
-
 # Enables running workspace-level pnpm-installed binaries easily and without going through pnpm.
 # The condition makes sure this is not added in the top-level Makefile itself.
 ifeq (,$(wildcard pnpm-lock.yaml))
