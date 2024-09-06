@@ -1,5 +1,4 @@
 import { convertToViemChain, getChainFromSearchParams } from "@happychain/sdk-shared"
-import { happyChainSepolia } from "@happychain/sdk-shared/lib/chains"
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, HttpTransport, PublicClient } from "viem"
 import { http, createPublicClient } from "viem"
