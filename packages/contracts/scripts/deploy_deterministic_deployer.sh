@@ -10,7 +10,7 @@ docker container run --rm -d --name deployment-proxy-geth -p 1234:8545 -e GETH_V
 # Wait for geth to become responsive
 until curl --silent --fail $JSON_RPC -X 'POST' -H 'Content-Type: application/json' --data "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\": \"net_version\", \"params\": []}"; do sleep 1; done
 
-# Extract the variables we need from json output
+# Variables
 MY_ADDRESS="0x913dA4198E6bE1D5f5E4a40D0667f70C0B5430Eb"
 ONE_TIME_SIGNER_ADDRESS="0x3fab184622dc19b6109349b94811493bf2a45362"
 GAS_PRICE=100000000000
@@ -18,24 +18,30 @@ GAS_LIMIT=100000
 TRANSACTION="0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222"
 DEPLOYER_ADDRESS="0x4e59b44847b379578588920ca78fbf26c0b4956c"
 GAS_COST="0x$(printf '%x' $((GAS_PRICE * GAS_LIMIT)))"
-
-# Send gas money to signer
-curl $JSON_RPC -X 'POST' -H 'Content-Type: application/json' --data "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\": \"eth_sendTransaction\", \"params\": [{\"from\":\"$MY_ADDRESS\",\"to\":\"$ONE_TIME_SIGNER_ADDRESS\",\"value\":\"$GAS_COST\"}]}"
-
-# Deploy the deployer contract
-curl $JSON_RPC -X 'POST' -H 'Content-Type: application/json' --data "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\": \"eth_sendRawTransaction\", \"params\": [\"$TRANSACTION\"]}"
-
-# Verify that the contract is deployed at the expected address
-DEPLOYER_BYTECODE=$(curl --silent $JSON_RPC -X POST -H 'Content-Type: application/json' --data "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\": \"eth_getCode\", \"params\": [\"$DEPLOYER_ADDRESS\", \"latest\"]}" | jq --raw-output '.result')
-
 EXPECTED_BYTECODE="0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf3"
 
-if [ "$DEPLOYER_BYTECODE" != "$EXPECTED_BYTECODE" ]; then
-  echo "Deployer contract bytecode does not match expected bytecode. Deployment failed."
-  docker container stop deployment-proxy-geth
-  exit 1
+# Check if the deployer contract already exists
+DEPLOYER_BYTECODE=$(curl --silent $JSON_RPC -X POST -H 'Content-Type: application/json' --data "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\": \"eth_getCode\", \"params\": [\"$DEPLOYER_ADDRESS\", \"latest\"]}" | jq --raw-output '.result')
+
+if [ "$DEPLOYER_BYTECODE" = "$EXPECTED_BYTECODE" ]; then
+  echo "Deployer contract already exists with correct bytecode. Skipping deployment."
 else
-  echo "Deployer contract deployed successfully with correct bytecode."
+  # Send gas money to signer
+  curl $JSON_RPC -X 'POST' -H 'Content-Type: application/json' --data "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\": \"eth_sendTransaction\", \"params\": [{\"from\":\"$MY_ADDRESS\",\"to\":\"$ONE_TIME_SIGNER_ADDRESS\",\"value\":\"$GAS_COST\"}]}"
+
+  # Deploy the deployer contract
+  curl $JSON_RPC -X 'POST' -H 'Content-Type: application/json' --data "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\": \"eth_sendRawTransaction\", \"params\": [\"$TRANSACTION\"]}"
+
+  # Verify that the contract is deployed at the expected address
+  DEPLOYER_BYTECODE=$(curl --silent $JSON_RPC -X POST -H 'Content-Type: application/json' --data "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\": \"eth_getCode\", \"params\": [\"$DEPLOYER_ADDRESS\", \"latest\"]}" | jq --raw-output '.result')
+
+  if [ "$DEPLOYER_BYTECODE" != "$EXPECTED_BYTECODE" ]; then
+    echo "Deployer contract bytecode does not match expected bytecode. Deployment failed."
+    docker container stop deployment-proxy-geth
+    exit 1
+  else
+    echo "Deployer contract deployed successfully with correct bytecode."
+  fi
 fi
 
 # Proceed with further steps
