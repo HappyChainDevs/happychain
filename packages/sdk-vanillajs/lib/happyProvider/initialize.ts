@@ -1,5 +1,6 @@
 import type { EIP1193ProxiedEvents, HappyEvents, HappyUser } from "@happychain/sdk-shared"
 import { EventBus, EventBusChannel, config, createUUID } from "@happychain/sdk-shared"
+import type { EIP1193Provider } from "viem"
 import { HappyProvider } from "./happyProvider"
 import { registerListeners } from "./listeners"
 
@@ -53,7 +54,7 @@ export const happyProvider = new HappyProvider({
     }),
 
     dappBus: dappMessageBus,
-})
+}) as HappyProvider & EIP1193Provider
 
 export async function connect() {
     return await happyProvider.request({
