@@ -1,4 +1,4 @@
-## make entire file 'silent' (unless make VERBOSE=1)
+# Make entire file 'silent' (unless make VERBOSE=1)
 ifndef VERBOSE
 	MAKEFLAGS += --silent
 endif
@@ -34,17 +34,16 @@ DEFAULT_BRANCH = master
 # BASICS COMMANDS
 #   To get the project running locally.
 
-
 setup: install-frozen enable-hooks ## To be run when first setting up the repository.
 	cd packages/contracts && make setup
 .PHONY: setup
 
-anvil: ## Runs anvil (local EVM node).
+anvil: ## Runs anvil (local EVM node)
 	cd packages/contracts && make anvil
 .PHONY: anvil
 
 # Deploys to the contracts to the local node (requires anvil to be running).
-deploy: ## Deploys Contracts
+deploy: ## Deploys contracts
 	cd packages/contracts && make deploy
 .PHONY: deploy
 
@@ -57,12 +56,12 @@ docs: node_modules ## Builds latest docs and starts preview server
 	cd packages/docs && make build && make preview
 .PHONY: docs
 
-check: node_modules support.check sdk.check apps.check ## Performs code-quality checks.
+check: node_modules support.check sdk.check apps.check ## Runs code quality & formatting checks
 	@# cf. makefiles/formatting.mk
 	biome check ./;
 .PHONY: check
 
-format: support.format sdk.format apps.format ## Fixes code-quality issues
+format: support.format sdk.format apps.format ## Formats code and tries to fix code quality issues
 	biome check ./ --write;
 .PHONY: format
 
@@ -70,12 +69,12 @@ test: sdk.test ## Run tests
 .PHONY: test
 
 # ==================================================================================================
-# Demos
+# DEMOS
 
 demo-react:
 	@echo "Building VanillaJS SDK"
 	make sdk-vanillajs.build
-	@echo "Starting "
+	@echo "Starting demo-react"
 	make -j 2 iframe.dev demo-react.dev
 .PHONY: demo-react
 
