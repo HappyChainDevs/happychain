@@ -1,4 +1,4 @@
-PATH := ./node_modules/.bin/:$(PATH)
+PATH := ./node_modules/.bin:$(PATH)
 
 build:
 .PHONY: build

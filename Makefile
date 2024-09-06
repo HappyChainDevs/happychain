@@ -3,8 +3,9 @@ ifndef VERBOSE
 	MAKEFLAGS += --silent
 endif
 
+# cf. makefiles/formatting.mk
 SHELL := /bin/bash
-PATH := ./node_modules/.bin/:./packages/configs/node_modules/.bin/:$(PATH)
+PATH := ./node_modules/.bin:./packages/configs/node_modules/.bin:$(PATH)
 
 help: ## Show this help
 	@echo ""
@@ -34,8 +35,7 @@ DEFAULT_BRANCH = master
 #   To get the project running locally.
 
 
-setup: install-frozen ## To be run when first setting up the repository.
-	make enable-hooks
+setup: install-frozen enable-hooks ## To be run when first setting up the repository.
 	cd packages/contracts && make setup
 .PHONY: setup
 
@@ -49,10 +49,7 @@ deploy: ## Deploys Contracts
 .PHONY: deploy
 
 # Creates production builds of all packages
-build: node_modules ## Run production builds
-	make support.build
-	make sdk.build
-	make apps.build
+build: support.build sdk.build apps.build node_modules ## Run production builds
 .PHONY: build
 
 # build latest docs and starts dev server http://localhost:4173
@@ -60,22 +57,16 @@ docs: node_modules ## Builds latest docs and starts preview server
 	cd packages/docs && make build && make preview
 .PHONY: docs
 
-check: node_modules ## Performs code-quality checks.
-	make support.check
-	make sdk.check
-	make apps.check
-	biome check ./
+check: node_modules support.check sdk.check apps.check ## Performs code-quality checks.
+	@# cf. makefiles/formatting.mk
+	biome check ./;
 .PHONY: check
 
-format: ## Fixes code-quality issues
-	make support.format
-	make sdk.format
-	make apps.format
-	biome check ./ --write
+format: support.format sdk.format apps.format ## Fixes code-quality issues
+	biome check ./ --write;
 .PHONY: format
 
-test: ## Run tests
-	make sdk.test
+test: sdk.test ## Run tests
 .PHONY: test
 
 # ==================================================================================================
@@ -186,7 +177,7 @@ apps.format:
 # quickly format change files between <your branch> and master
 # using default global settings
 check-fast-diff:
-	biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)))
+	biome check $(git diff --name-only $(YOUR_BRANCH) $(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)));
 .PHONY: check-fast-diff
 
 # ==================================================================================================
@@ -276,8 +267,7 @@ remove-modules:
 	rm -rf node_modules packages/*/node_modules
 .PHONY: remove-modules
 
-clean:
-	make remove-modules
+clean: remove-modules
 	rm -rf packages/docs/docs/pages/{js,react}/api
 	rm -rf packages/{sdk-react,sdk-vanillajs,iframe,demo-vanillajs,demo-react,docs/docs}/dist
 	rm -rf packages/docs/vocs.config.ts.timestamp-*
@@ -285,8 +275,7 @@ clean:
 
 # In case you accidentally pollute the node_modules directories
 # (e.g. by running npm instead of pnpm)
-reset-modules:
-	make remove-modules
+reset-modules: remove-modules
 	pnpm install --frozen-lockfile
 .PHONY: reset-modules
 
