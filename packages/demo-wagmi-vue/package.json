@@ -12,6 +12,7 @@
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
+        "@types/bun": "^1.1.8",
         "@vitejs/plugin-vue": "^5.1.2",
         "autoprefixer": "^10.4.20",
         "postcss": "^8.4.41",
