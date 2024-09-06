@@ -210,3 +210,9 @@ save-deployment:
 .PHONY: save-deployment
 
 ####################################################################################################
+
+# Deployment of deterministic deployer
+
+deploy-deterministic-deployer:
+	@bash ./scripts/deploy_deterministic_deployer.sh
+.PHONY: deploy-deterministic-deployer
