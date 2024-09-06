@@ -1,6 +1,6 @@
 {
-    "$schema": "./node_modules/@happychain/configs/node_modules/@biomejs/biome/configuration_schema.json",
-    "extends": ["node_modules/@happychain/configs/biome.jsonc"],
+    "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["../../packages/configs/biome.jsonc"],
     "overrides": [
         {
             "include": ["./**/*/tsconfig.*.json", "./**/*/tsconfig.json"],

@@ -6,6 +6,7 @@
     "private": true,
     "packageManager": "pnpm@9.9.0",
     "devDependencies": {
+        "@biomejs/biome": "^1.8.3",
         "husky": "^9.1.5",
         "typescript": "^5.5.4"
     }
