@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Connector } from '@wagmi/vue'
-import { useAccount, useConnect, useDisconnect } from '@wagmi/vue'
-import Button from './Button.vue';
-import Container from './Container.vue';
+import type { Connector } from "@wagmi/vue"
+import { useAccount, useConnect, useDisconnect } from "@wagmi/vue"
+import Button from "./Button.vue"
+import Container from "./Container.vue"
 
 const { isConnected, isDisconnected } = useAccount()
 const { connect, connectors } = useConnect()
