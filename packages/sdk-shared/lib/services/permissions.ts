@@ -2,7 +2,13 @@ import type { EIP1193Parameters } from "viem"
 
 // https://eips.ethereum.org/EIPS/eip-1474
 
-// can proceed silently, no confirmation required
+/**
+ * This is the list of methods that will never
+ * require a user confirmation.
+ * most such as eth_chainId are fully public RPC calls.
+ * some such as eth_accounts will return different results based on the users permissions
+ * some such as wallet_revokePermissions don't make sense if a user isn't connected, but are still safe to call
+ */
 const safeList = new Set([
     "eth_accounts",
     "eth_blobBaseFee",
@@ -58,41 +64,70 @@ const safeList = new Set([
     "web3_sha3",
 ])
 
-// require user interaction (not specifically confirmations/approvals)
+/**
+ * This is a list of methods that require user interactions.
+ * Unlike the unsafeList below, these do not manage permissions or transactions,
+ * but instead will have options related to wallet functionality.
+ */
 const interactiveList = new Set([
     "wallet_watchAsset", // https://eips.ethereum.org/EIPS/eip-747 // probably safe
     "wallet_scanQRCode", // https://github.com/ethereum/EIPs/issues/945
     "wallet_registerOnboarding", // metamask onboarding, maybe we can do something with this too?
 ])
 
-// require confirmation prompt screens
+/**
+ * This is the list of protected methods.
+ * Each of these will require a Confirmation Screen.
+ * In most cases, this screen will be displayed every time the request occurs,
+ * such as eth_sendTransaction, or personal_sign, however for
+ * methods such as wallet_requestPermissions, the confirmation is only shown if the user
+ * has not previously granted the requested permissions (or has revoked them).
+ * subsequent requests would not need the confirmation screen displayed
+ */
 const unsafeList = new Set([
-    "eth_requestAccounts", // implement per-domain access list here?
-    "eth_signTransaction",
+    // permissions
+    "eth_requestAccounts",
     "wallet_requestPermissions", // https://eips.ethereum.org/EIPS/eip-2255
 
-    "personal_sign", // https://eips.ethereum.org/EIPS/eip-191
+    // wallet settings
     "wallet_addEthereumChain", // https://eips.ethereum.org/EIPS/eip-3085
-    "wallet_switchEthereumChain", // https://eips.ethereum.org/EIPS/eip-3326 - https://ethereum-magicians.org/t/eip-3326-wallet-switchethereumchain/5471
+    "wallet_switchEthereumChain", // https://eips.ethereum.org/EIPS/eip-3326
+    "wallet_updateEthereumChain", // https://eips.ethereum.org/EIPS/eip-2015
 
-    // metamask signing methods
-    "eth_sendRawTransaction",
-    "eth_sendTransaction",
+    // signing methods
+    "eth_signTransaction",
+    "personal_sign", // https://eips.ethereum.org/EIPS/eip-191
     "eth_sign",
     "eth_signTypedData",
     "eth_signTypedData_v1",
     "eth_signTypedData_v3",
     "eth_signTypedData_v4",
+    // send transactions
+    "eth_sendRawTransaction",
+    "eth_sendTransaction",
+    // cryptography
     "eth_decrypt",
     "eth_getEncryptionPublicKey",
 ])
 
+/**
+ * Currently unused. store teh categorized rpc-calls
+ */
 export const permissionsLists = new Map([
     ["unsafe", unsafeList], // requires approvals
     ["interactive", interactiveList], //
     ["safe", safeList], // does not require approvals
 ])
 
+/**
+ *
+ * Returns if the request needs a user confirmation. This does not take into account
+ * current site of the app (user connected, applied permissions, etc) but only does
+ * an initial check if the method is in the safe list, or not.
+ *
+ * @param req eip1193 request { method: string, params?: unknown[] }
+ * @returns if the request is protected
+ */
 export function requiresApproval(req: EIP1193Parameters) {
     return !safeList.has(req.method)
 }
