@@ -21,7 +21,7 @@ const UserInfo = ({ user }: UserProps) => {
                         }}
                         type="button"
                     >
-                       <Clipboard size={15} />
+                        <Clipboard size={15} />
                     </button>
                 </div>
             </div>
