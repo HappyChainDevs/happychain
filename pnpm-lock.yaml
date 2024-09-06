@@ -53,6 +53,12 @@ importers:
       '@openzeppelin/contracts-upgradeable':
         specifier: ^5.0.2
         version: 5.0.2(@openzeppelin/contracts@5.0.2)
+      kernel:
+        specifier: github:zerodevapp/kernel#v3.1
+        version: https://codeload.github.com/zerodevapp/kernel/tar.gz/03f7f5cf5871cda0070e4223f196f5b577f6cde2
+      solady:
+        specifier: 0.0.237
+        version: 0.0.237
     devDependencies:
       '@openzeppelin/upgrades-core':
         specifier: ^1.36.0
@@ -6106,6 +6112,10 @@ packages:
     resolution: {integrity: sha512-3vKuW0jV8J3XNTzvfyicFR5qvxrSAGl7KIhvgOu5cmWwM7tZRj3fMbj/pfIf4be7aznbc+prBWGjywox/g2Y6Q==}
     engines: {node: '>=10.0.0'}
 
+  kernel@https://codeload.github.com/zerodevapp/kernel/tar.gz/03f7f5cf5871cda0070e4223f196f5b577f6cde2:
+    resolution: {tarball: https://codeload.github.com/zerodevapp/kernel/tar.gz/03f7f5cf5871cda0070e4223f196f5b577f6cde2}
+    version: 3.0.0
+
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
@@ -7774,6 +7784,9 @@ packages:
   socket.io-parser@4.2.4:
     resolution: {integrity: sha512-/GbIKmo8ioc+NIWIhwdecY0ge+qVBSMdgxGygevmdHj24bsfgtCmcUUcQ5ZzcylGFHsN3k4HB4Cgkl96KVnuew==}
     engines: {node: '>=10.0.0'}
+
+  solady@0.0.237:
+    resolution: {integrity: sha512-l3vSNR+Z30Fr/UF/zKKCYxvsS+utfDF1RI8BAhtgkzCyKInqXeGEza33TMutyaJ0vbOha4T96MmE/be3mFv8Tg==}
 
   solhint@5.0.3:
     resolution: {integrity: sha512-OLCH6qm/mZTCpplTXzXTJGId1zrtNuDYP5c2e6snIv/hdRVxPfBBz/bAlL91bY/Accavkayp2Zp2BaDSrLVXTQ==}
@@ -16215,6 +16228,8 @@ snapshots:
       node-gyp-build: 4.8.1
       readable-stream: 3.6.2
 
+  kernel@https://codeload.github.com/zerodevapp/kernel/tar.gz/03f7f5cf5871cda0070e4223f196f5b577f6cde2: {}
+
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
@@ -18488,6 +18503,8 @@ snapshots:
       debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
+
+  solady@0.0.237: {}
 
   solhint@5.0.3(typescript@5.5.4):
     dependencies:
