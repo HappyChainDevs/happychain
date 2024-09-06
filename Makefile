@@ -243,7 +243,7 @@ install:
 	@echo "If the lockfileVersion changed, please update 'packageManager' in package.json!"
 .PHONY: install
 
-node_modules: package.json packages/*/package.json
+node_modules: package.json $(wildcard packages/*/package.json)
 	@pnpm install -r
 
 # Shows packages for which new versions are available (compared to the installed version).
