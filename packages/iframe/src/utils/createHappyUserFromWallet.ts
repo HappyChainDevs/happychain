@@ -1,5 +1,4 @@
-import type { HappyUser } from "@happychain/sdk-shared"
-import { WalletType } from "@happychain/sdk-shared/lib/interfaces/happyUser"
+import { type HappyUser, WalletType } from "@happychain/sdk-shared"
 
 export function createHappyUserFromWallet(rdns: string, address: `0x${string}`): HappyUser {
     return {
