@@ -13,6 +13,7 @@ export const publicClientAtom: Atom<PublicClient<CustomTransport | HttpTransport
         return createPublicClient({ transport, chain: convertToViemChain(chain) }).extend(publicActionsL2())
     }
 
-    return createPublicClient({ transport, chain: convertToViemChain(chain) })
+    // biome-ignore lint/suspicious/noExplicitAny: viem uses any as well https://github.com/wevm/viem/blob/main/src/clients/createPublicClient.ts#L89
+    return createPublicClient({ transport, chain: convertToViemChain(chain) }) as any
 })
 publicClientAtom.debugLabel = "publicClientAtom"
