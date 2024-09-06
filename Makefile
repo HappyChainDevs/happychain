@@ -23,7 +23,7 @@ SUPPORT_PKGS := configs,contracts,common,sdk-shared,sdk-firebase-web3auth-strate
 # build & format sdk packages which are built using the above
 SDK_PKGS := sdk-vanillajs,sdk-react
 # build & format consuming 'apps'
-APP_PKGS := iframe,demo-vanillajs,demo-react,docs
+APP_PKGS := iframe,demo-vanillajs,demo-react,demo-wagmi-vue,docs
 
 # Currently Active Branch
 YOUR_BRANCH = $(git rev-parse --abbrev-ref HEAD)
@@ -83,6 +83,10 @@ demo-vanillajs:
 	make -j 2 iframe.dev demo-vanillajs.dev
 .PHONY: demo-vanillajs
 
+demo-wagmi-vue:
+	make -j 2 iframe.dev demo-wagmi-vue.dev
+.PHONY: demo-wagmi-vue
+
 # ==================================================================================================
 # DEVELOPMENT
 
@@ -111,6 +115,10 @@ demo-vanillajs.dev:
 sdk-react.dev:
 	cd packages/sdk-react && make dev
 .PHONY: sdk-react.dev
+
+demo-wagmi-vue.dev:
+	cd packages/demo-wagmi-vue && make dev
+.PHONY: demo-wagmi-vue.dev
 
 sdk-vanillajs.dev:
 	cd packages/sdk-vanillajs && make dev

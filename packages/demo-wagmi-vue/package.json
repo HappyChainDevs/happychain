@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
+    "@happychain/js": "workspace:^",
     "@tanstack/vue-query": "^5.52.2",
     "@wagmi/vue": "^0.0.39",
     "viem": "2.x",
