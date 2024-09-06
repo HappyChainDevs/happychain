@@ -1,5 +1,2 @@
-# Emtpty Stub
-build:
-.PHONY: build
-
+include ../../makefiles/lib.mk
 include ../../makefiles/formatting.mk

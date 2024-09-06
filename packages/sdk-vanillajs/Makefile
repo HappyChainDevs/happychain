@@ -1,3 +1,4 @@
+include ../../makefiles/lib.mk
 include ../../makefiles/vite.mk
 include ../../makefiles/formatting.mk
 
