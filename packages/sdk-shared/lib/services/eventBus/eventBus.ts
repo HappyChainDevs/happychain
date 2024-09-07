@@ -33,22 +33,21 @@ export type EventKey = string | number | symbol
 export type EventSchema<T extends EventSchema<T>> = { [Key in keyof T]: T[Key] }
 
 /**
- * Types for event handlers taking in a specific payload type.
+ * Types for event handlers taking in a specific payload type corresponding to a key.
  */
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export type EventHandler<T = any> = (payload: T) => void
+export type EventHandler<S extends EventSchema<S>, K extends keyof S = keyof S> = (payload: S[K]) => void
 
 export interface IEventBus<T extends EventSchema<T>> {
-    on<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): () => void
-    off<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): void
-    once<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): void
+    on<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): () => void
+    off<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): void
+    once<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): void
     emit<Key extends keyof T>(key: Key, payload: T[Key]): void
     clear(): void
 
     // event emitter compatibility methods
     removeAllListeners(): void
-    addListener<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): () => void
-    removeListener<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): void
+    addListener<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): () => void
+    removeListener<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): void
 }
 
 export type EventBusOptions = {
@@ -62,8 +61,8 @@ export type EventBusOptions = {
     | { mode: EventBusChannel.Forced; port: MessagePort | BroadcastChannel }
 )
 
-export class EventBus<TDefinition extends EventSchema<TDefinition>> implements IEventBus<TDefinition> {
-    private handlerMap: Map<EventKey, Set<EventHandler>> = new Map()
+export class EventBus<S extends EventSchema<S>> implements IEventBus<S> {
+    private handlerMap: Map<keyof S, Set<EventHandler<S>>> = new Map()
     private port: MessagePort | BroadcastChannel | null = null
 
     constructor(private config: EventBusOptions) {
@@ -125,24 +124,24 @@ export class EventBus<TDefinition extends EventSchema<TDefinition>> implements I
         )
     }
 
-    public off: IEventBus<TDefinition>["off"] = (key, handler) => {
-        this.handlerMap.get(key)?.delete(handler)
+    public off: IEventBus<S>["off"] = (key, handler) => {
+        this.handlerMap.get(key)?.delete(handler as EventHandler<S>)
         if (this.handlerMap.get(key)?.size === 0) {
             this.handlerMap.delete(key)
         }
     }
     public removeListener = this.off.bind(this)
 
-    public on: IEventBus<TDefinition>["on"] = (key, handler) => {
+    public on: IEventBus<S>["on"] = (key, handler) => {
         const prev = this.handlerMap.get(key) ?? new Set()
-        this.handlerMap.set(key, prev.add(handler))
+        this.handlerMap.set(key, prev.add(handler as EventHandler<S>))
 
         // unsubscribe function
         return () => this.off(key, handler)
     }
     public addListener = this.on.bind(this)
 
-    public emit: IEventBus<TDefinition>["emit"] = async (key, payload) => {
+    public emit: IEventBus<S>["emit"] = async (key, payload) => {
         if (!this.port) {
             this.config.logger?.warn(
                 `[EventBus] Port not initialized ${this.config.mode}=>${this.config.scope}`,
@@ -175,7 +174,7 @@ export class EventBus<TDefinition extends EventSchema<TDefinition>> implements I
         return Boolean(this.port) // if port exists, assume successful
     }
 
-    public once: IEventBus<TDefinition>["once"] = (key, handler) => {
+    public once: IEventBus<S>["once"] = (key, handler) => {
         const handleOnce: typeof handler = (payload) => {
             handler(payload)
             this.off(key, handleOnce)
@@ -184,10 +183,10 @@ export class EventBus<TDefinition extends EventSchema<TDefinition>> implements I
         this.on(key, handleOnce)
     }
 
-    public clear: IEventBus<TDefinition>["clear"] = () => {
+    public clear: IEventBus<S>["clear"] = () => {
         this.handlerMap.forEach((handlers, key) => {
             for (const handler of handlers) {
-                this.off(key as keyof TDefinition, handler)
+                this.off(key, handler)
             }
         })
     }
