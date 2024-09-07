@@ -30,8 +30,7 @@ export type EventKey = string | number | symbol
 /**
  * Maps all allowed event keys to their respective payload types.
  */
-// biome-ignore lint/suspicious/noExplicitAny:
-export type EventSchema = Record<EventKey, any>
+export type EventSchema<T extends EventSchema<T>> = { [Key in keyof T]: T[Key] }
 
 /**
  * Types for event handlers taking in a specific payload type.
@@ -39,7 +38,7 @@ export type EventSchema = Record<EventKey, any>
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type EventHandler<T = any> = (payload: T) => void
 
-export interface IEventBus<T extends EventSchema> {
+export interface IEventBus<T extends EventSchema<T>> {
     on<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): () => void
     off<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): void
     once<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): void
@@ -63,7 +62,7 @@ export type EventBusOptions = {
     | { mode: EventBusChannel.Forced; port: MessagePort | BroadcastChannel }
 )
 
-export class EventBus<TDefinition extends EventSchema> implements IEventBus<TDefinition> {
+export class EventBus<TDefinition extends EventSchema<TDefinition>> implements IEventBus<TDefinition> {
     private handlerMap: Map<EventKey, Set<EventHandler>> = new Map()
     private port: MessagePort | BroadcastChannel | null = null
 
@@ -195,7 +194,7 @@ export class EventBus<TDefinition extends EventSchema> implements IEventBus<TDef
     public clear: IEventBus<TDefinition>["clear"] = () => {
         this.handlerMap.forEach((handlers, key) => {
             for (const handler of handlers) {
-                this.off(key, handler)
+                this.off(key as keyof TDefinition, handler)
             }
         })
     }

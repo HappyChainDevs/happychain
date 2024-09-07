@@ -5,8 +5,11 @@ import type {
     ProviderEventError,
     ProviderEventPayload,
 } from "../../interfaces/eip1193Provider"
+import type { EventSchema } from "../eventBus"
 
 import type { EIP1193ErrorObject } from "./errors"
+
+import type { AssertAssignableTo } from "@happychain/common"
 
 /**
  * Naming Convention:
@@ -14,7 +17,7 @@ import type { EIP1193ErrorObject } from "./errors"
  *
  * 'provider:' => this is the response the the eip1193 request
  */
-export interface EIP1193ProxiedEvents {
+export type EIP1193ProxiedEvents = {
     // user approves request
     "request:approve": ProviderEventPayload<EIP1193RequestParameters>
     // user rejects request
@@ -32,3 +35,5 @@ export interface EIP1193ProxiedEvents {
     "permission-check:request": ProviderEventPayload<EIP1193RequestParameters>
     "permission-check:response": ProviderEventPayload<boolean> | ProviderEventError<unknown>
 }
+
+type _assertion = AssertAssignableTo<EIP1193ProxiedEvents, EventSchema<EIP1193ProxiedEvents>>
