@@ -1,4 +1,4 @@
-import type { HappyEvents } from "@happychain/sdk-shared"
+import type { EventsFromApp } from "@happychain/sdk-shared"
 import { isPermissionsRequest } from "@happychain/sdk-shared"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
@@ -47,7 +47,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
         return response
     }
 
-    private proxyPermissions(params: HappyEvents["injected-wallet:mirror-permissions"]) {
+    private proxyPermissions(params: EventsFromApp["injected-wallet:mirror-permissions"]) {
         void this.config.appBus.emit("injected-wallet:mirror-permissions", params)
     }
 
@@ -66,14 +66,13 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
         try {
             const providerDetails = store.findProvider({ rdns })
             if (!providerDetails) {
-                throw new Error("Failed to find provider")
+                return this.handleProviderDisconnectionRequest()
             }
 
             providerDetails.provider.on("accountsChanged", (accounts) => {
                 this.emit("accountsChanged", accounts)
                 if (!accounts.length) {
-                    this.handleProviderDisconnectionRequest()
-                    return
+                    return this.handleProviderDisconnectionRequest()
                 }
                 const [address] = accounts
 

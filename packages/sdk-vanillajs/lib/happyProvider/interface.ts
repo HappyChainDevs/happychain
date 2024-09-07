@@ -3,7 +3,8 @@ import type {
     EIP1193RequestParameters,
     EIP1193RequestResult,
     EventBus,
-    HappyEvents,
+    EventsFromApp,
+    EventsFromIframe,
     Logger,
     ProviderBusEventsFromApp,
     ProviderBusEventsFromIframe,
@@ -17,7 +18,7 @@ export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
     logger?: Logger
     windowId: UUID
     providerBus: EventBus<ProviderBusEventsFromIframe, ProviderBusEventsFromApp>
-    appBus: EventBus<HappyEvents>
+    appBus: EventBus<EventsFromIframe, EventsFromApp>
 }
 
 export interface EIP1193ConnectionHandler extends SafeEventEmitter {

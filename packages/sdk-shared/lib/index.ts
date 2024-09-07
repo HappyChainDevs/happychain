@@ -22,7 +22,7 @@ export {
 /** Types */
 export type { ChainParameters } from "./chains/utils"
 export type { UUID } from "./utils/uuid"
-export type { HappyEvents } from "./interfaces/events"
+export type { EventsFromIframe, EventsFromApp } from "./interfaces/events"
 export type { HappyUser } from "./interfaces/happyUser"
 export type { Logger } from "./services/logger"
 export type {

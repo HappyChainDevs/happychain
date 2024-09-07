@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, mock } from "bun:test"
 
 import type {
     EventBusOptions,
-    HappyEvents,
+    EventsFromApp,
+    EventsFromIframe,
     ProviderBusEventsFromApp,
     ProviderBusEventsFromIframe,
 } from "@happychain/sdk-shared"
@@ -47,6 +48,14 @@ function newAppProviderBus(options: EventBusOptions) {
     return new EventBus<ProviderBusEventsFromIframe, ProviderBusEventsFromApp>(options)
 }
 
+function newIframeMessageBus(options: EventBusOptions) {
+    return new EventBus<EventsFromApp, EventsFromIframe>(options)
+}
+
+function newAppMessageBus(options: EventBusOptions) {
+    return new EventBus<EventsFromIframe, EventsFromApp>(options)
+}
+
 describe("HappyProvider", () => {
     let providerBusConfig: EventBusOptions
     let appBusConfig: EventBusOptions
@@ -66,14 +75,14 @@ describe("HappyProvider", () => {
 
     it("transmits payload using bus", async () => {
         const happyProviderBusIframe = newIframeProviderBus(providerBusConfig)
-        const appBusIframe = new EventBus<HappyEvents>(appBusConfig)
+        const appBusIframe = newIframeMessageBus(appBusConfig)
         const uuid = createUUID()
 
         const provider = new SocialWalletHandler({
             iframePath: config.iframePath,
             windowId: uuid,
             providerBus: newAppProviderBus(providerBusConfig),
-            appBus: new EventBus<HappyEvents>(appBusConfig),
+            appBus: newAppMessageBus(appBusConfig),
         })
 
         const callback = mock(({ key, windowId, error: _error, payload: _payload }) => {
@@ -120,14 +129,14 @@ describe("HappyProvider", () => {
 
     it("resolves on success", async () => {
         const happyProviderBusIframe = newIframeProviderBus(providerBusConfig)
-        const appBusIframe = new EventBus<HappyEvents>(appBusConfig)
+        const appBusIframe = newIframeMessageBus(appBusConfig)
         const uuid = createUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
             windowId: uuid,
             providerBus: new EventBus(providerBusConfig),
-            appBus: new EventBus<HappyEvents>(appBusConfig),
+            appBus: newAppMessageBus(appBusConfig),
         })
 
         void appBusIframe.emit("auth-state", AuthState.Disconnected)
@@ -162,14 +171,14 @@ describe("HappyProvider", () => {
 
     it("rejects on error", async () => {
         const happyProviderBusIframe = newIframeProviderBus(providerBusConfig)
-        const appBusIframe = new EventBus<HappyEvents>(appBusConfig)
+        const appBusIframe = newIframeMessageBus(appBusConfig)
         const uuid = createUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
             windowId: uuid,
             providerBus: newAppProviderBus(providerBusConfig),
-            appBus: new EventBus<HappyEvents>(appBusConfig),
+            appBus: newAppMessageBus(appBusConfig),
         })
 
         void appBusIframe.emit("auth-state", AuthState.Disconnected)
@@ -212,7 +221,7 @@ describe("HappyProvider", () => {
             iframePath: config.iframePath,
             windowId: createUUID(),
             providerBus: newAppProviderBus(providerBusConfig),
-            appBus: new EventBus<HappyEvents>(appBusConfig),
+            appBus: newAppMessageBus(appBusConfig),
         })
 
         const callback = mock(() => {})

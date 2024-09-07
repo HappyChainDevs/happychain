@@ -1,6 +1,7 @@
 import type {
     EIP1193Provider,
-    HappyEvents,
+    EventsFromApp,
+    EventsFromIframe,
     HappyUser,
     ProviderBusEventsFromApp,
     ProviderBusEventsFromIframe,
@@ -17,7 +18,7 @@ import { registerListeners } from "./listeners"
  */
 export const windowId = createUUID()
 
-const dappMessageBus = new EventBus<HappyEvents>({
+const dappMessageBus = new EventBus<EventsFromIframe, EventsFromApp>({
     mode: EventBusMode.AppPort,
     scope: "happy-chain-dapp-bus",
 })

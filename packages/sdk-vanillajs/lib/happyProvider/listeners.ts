@@ -1,4 +1,4 @@
-import type { AuthState, EventBus, HappyEvents, HappyUser } from "@happychain/sdk-shared"
+import type { AuthState, EventBus, EventsFromApp, EventsFromIframe, HappyUser } from "@happychain/sdk-shared"
 
 /**
  * Callback which is called on page load, and again on every user update
@@ -30,7 +30,7 @@ export type IframeInitCallback = (isInit: boolean) => void
  */
 export type ListenerUnsubscribeFn = () => void
 
-export function registerListeners(messageBus: EventBus<HappyEvents>) {
+export function registerListeners(messageBus: EventBus<EventsFromIframe, EventsFromApp>) {
     const onUserUpdateCallbacks = new Set<UserUpdateCallback>()
     const onModalUpdateCallbacks = new Set<ModalUpdateCallback>()
     const onIframeInitCallbacks = new Set<IframeInitCallback>()
