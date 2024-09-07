@@ -94,8 +94,7 @@ describe("HappyProvider", () => {
             params: ["latest", false]
         }
 
-        dappBusIframe.emit("auth-state", AuthState.Disconnected)
-
+        void dappBusIframe.emit("auth-state", AuthState.Disconnected)
         // auto approve permissions (no popup)
         happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
             happyProviderBusIframe.emit("permission-check:response", {
@@ -130,7 +129,7 @@ describe("HappyProvider", () => {
             dappBus: new EventBus<HappyEvents>(dappBusConfig),
         })
 
-        dappBusIframe.emit("auth-state", AuthState.Disconnected)
+        void dappBusIframe.emit("auth-state", AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
@@ -172,7 +171,7 @@ describe("HappyProvider", () => {
             dappBus: new EventBus<HappyEvents>(dappBusConfig),
         })
 
-        dappBusIframe.emit("auth-state", AuthState.Disconnected)
+        void dappBusIframe.emit("auth-state", AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {

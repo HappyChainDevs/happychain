@@ -39,7 +39,7 @@ export function useProcessConfirmedRequests() {
                  */
                 if ("eth_requestAccounts" === data.payload.method) {
                     setPermission(data.payload)
-                    happyProviderBus.emit("response:complete", {
+                    void happyProviderBus.emit("response:complete", {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
@@ -51,7 +51,7 @@ export function useProcessConfirmedRequests() {
                 if ("wallet_requestPermissions" === data.payload.method) {
                     setPermission(data.payload)
 
-                    happyProviderBus.emit("response:complete", {
+                    void happyProviderBus.emit("response:complete", {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
@@ -87,14 +87,14 @@ export function useProcessConfirmedRequests() {
                     }
                 }
 
-                happyProviderBus.emit("response:complete", {
+                void happyProviderBus.emit("response:complete", {
                     key: data.key,
                     windowId: data.windowId,
                     error: null,
                     payload: result || {},
                 })
             } catch (e) {
-                happyProviderBus.emit("response:complete", {
+                void happyProviderBus.emit("response:complete", {
                     key: data.key,
                     windowId: data.windowId,
                     error: getEIP1193ErrorObjectFromUnknown(e),
@@ -112,7 +112,7 @@ export function useProcessConfirmedRequests() {
     useEffect(() => {
         return popupBus.on("request:reject", (data) => {
             if (!confirmWindowId(data.windowId)) return
-            happyProviderBus.emit("response:complete", data)
+            void happyProviderBus.emit("response:complete", data)
         })
     }, [])
 }
