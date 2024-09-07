@@ -69,8 +69,7 @@ export const happyProvider = new HappyProvider({
         mode: EventBusMode.AppPort,
         scope: "happy-chain-eip1193-provider",
     }),
-
-    dappBus: dappMessageBus,
+    appBus: dappMessageBus,
 }) as HappyProvider & EIP1193Provider
 
 export async function connect() {
