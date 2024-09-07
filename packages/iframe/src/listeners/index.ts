@@ -2,7 +2,7 @@ import { AuthState } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/vanilla"
 import { http, createPublicClient } from "viem"
 import { mainnet } from "viem/chains"
-import { dappMessageBus } from "../services/eventBus"
+import { appMessageBus } from "../services/eventBus"
 import { hasPermission } from "../services/permissions/hasPermission"
 import { authStateAtom } from "../state/authState"
 import { userAtom } from "../state/user"
@@ -17,7 +17,7 @@ const store = getDefaultStore()
  *
  * @emits auth-state
  */
-dappMessageBus.emit("auth-state", store.get(authStateAtom))
+appMessageBus.emit("auth-state", store.get(authStateAtom))
 
 /**
  * emits the current auth state to dApp
@@ -33,7 +33,7 @@ dappMessageBus.emit("auth-state", store.get(authStateAtom))
  */
 store.sub(authStateAtom, () => {
     const authState = store.get(authStateAtom)
-    dappMessageBus.emit("auth-state", authState)
+    appMessageBus.emit("auth-state", authState)
 
     if (AuthState.Connecting === authState) {
         // no user updates in this state

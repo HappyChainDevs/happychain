@@ -1,10 +1,13 @@
 import { type EIP1193ProxiedEvents, EventBus, EventBusMode, type HappyEvents } from "@happychain/sdk-shared"
 
 /**
- * Event system between the HappyProvider in the dapp
- * and the iframe provider/executor
+ * Iframe side of the app <> iframe provider bus.
  *
- * This is port1 so its created and initialized first, then waits for port2 to connect
+ * The app will forward request to the iframe here , and the iframe will send responses back.
+ * Some of the requests (those requiring approval) will instead come from the popup bus, but the
+ * responses are send throug this bus.
+ *
+ * This side is created first (MessageChannel port1) and will wait for the app side to connect.
  */
 export const happyProviderBus = new EventBus<EIP1193ProxiedEvents>({
     target: window.parent,
@@ -13,28 +16,29 @@ export const happyProviderBus = new EventBus<EIP1193ProxiedEvents>({
 })
 
 /**
- * General purpose message system
- * auth updates, user actions etc
- * between iframe & dapp
+ * Iframe side of the app <> iframe general purpose message bus.
+ *
+ * This will be used to receive UI requests from the app, send auth updates, etc.
  */
-export const dappMessageBus = new EventBus<HappyEvents>({
+export const appMessageBus = new EventBus<HappyEvents>({
     target: window.parent,
     mode: EventBusMode.IframePort,
     scope: "happy-chain-dapp-bus",
 })
 
 /**
- * Broadcasts events on same domain
- * Main use case is iframe<->popup communication
+ * Events allowed on the popup bus. These are sent from the popup to the iframe.
  */
-export type BroadcastEvents = Pick<EIP1193ProxiedEvents, "request:approve" | "request:reject">
+export type PopupEvents = Pick<EIP1193ProxiedEvents, "request:approve" | "request:reject">
 
 /**
- * Same domain Messages between iframe & popup
+ * Iframe side of the app <> popup bus.
+ * Will be used by the popup to send user approvals/rejections to the iframe.
  *
- * primarily user approvals/rejections
+ * Note that within a single browsers, there could be multiple iframes and multiple popups,
+ * hence the messages will identify the originating context (windowId).
  */
-export const popupBus = new EventBus<BroadcastEvents>({
+export const popupBus = new EventBus<PopupEvents>({
     mode: EventBusMode.Broadcast,
     scope: "server:popup",
 })

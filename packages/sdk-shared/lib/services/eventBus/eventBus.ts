@@ -6,11 +6,11 @@ import { logger } from "../logger"
  * Defines different modes in which the event bus can operate.
  */
 export enum EventBusMode {
-    /** Opened on an iframe, to communicate with the dapp. */
+    /** Opened on an iframe, to communicate with the app. */
     IframePort = "messagechannel:port1",
 
-    /** Opened on the dapp, to communicate with the iframe. */
-    DappPort = "messagechannel:port2",
+    /** Opened on the app, to communicate with the iframe. */
+    AppPort = "messagechannel:port2",
 
     /** Enables broadcast messages to all browsing contexts within the same URL domain. */
     Broadcast = "broadcastchannel",
@@ -47,7 +47,7 @@ export type EventBusOptions = {
     onError?: (...params: unknown[]) => void
 } & (
     | { mode: EventBusMode.IframePort; target: Window }
-    | { mode: EventBusMode.DappPort }
+    | { mode: EventBusMode.AppPort }
     | { mode: EventBusMode.Broadcast }
     | { mode: EventBusMode.Forced; port: MessagePort | BroadcastChannel }
 )
@@ -56,7 +56,8 @@ export type EventBusOptions = {
  * An event bus that enables sending/receiving messages to/from other browsing contexts (windows,
  * iframes, etc).
  *
- * Refer to {@link EventBusMode} for the different modes in which the event bus can operate.
+ * This must be intantiated on both sides with the correct mode (both {@link
+ * EventBusMode.Broadcast}, or {@link EventBusMode.IframePort}) and {@link EventBusMode.AppPort}.
  */
 export class EventBus<S extends EventSchema<S>> {
     private handlerMap: Map<keyof S, Set<EventHandler<S>>> = new Map()
@@ -79,7 +80,7 @@ export class EventBus<S extends EventSchema<S>> {
                 config.target.postMessage(message, "*", [mc.port2])
                 break
             }
-            case EventBusMode.DappPort: {
+            case EventBusMode.AppPort: {
                 addEventListener("message", (e: MessageEvent) => {
                     const message = `happychain:${config.scope}:init`
                     if (e.data === message) {

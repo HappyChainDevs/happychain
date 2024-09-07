@@ -4,7 +4,7 @@ import { useSetAtom } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 
 import { setUserWithProvider } from "../actions/setUserWithProvider"
-import { dappMessageBus } from "../services/eventBus"
+import { appMessageBus } from "../services/eventBus"
 import { revokePermission } from "../services/permissions/revokePermission"
 import { setPermission } from "../services/permissions/setPermission"
 import { StorageKey, storage } from "../services/storage"
@@ -24,7 +24,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
 
     // front end dapp connected via injected wallet
     useEffect(() => {
-        return dappMessageBus.on("injected-wallet:connect", ({ rdns, address }) => {
+        return appMessageBus.on("injected-wallet:connect", ({ rdns, address }) => {
             const user = rdns ? createHappyUserFromWallet(rdns, address) : undefined
             setUserWithProvider(user, undefined)
         })
@@ -78,7 +78,7 @@ function useRequestEIP6963Providers() {
     }, [])
 
     useEffect(() => {
-        return dappMessageBus.on("injected-wallet:mirror-permissions", ({ request, response }) => {
+        return appMessageBus.on("injected-wallet:mirror-permissions", ({ request, response }) => {
             switch (request.method) {
                 case "eth_accounts":
                 case "eth_requestAccounts": {
@@ -120,7 +120,7 @@ function useRequestEIP6963Providers() {
 const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
     if (IsInIframe) {
         // in iframe
-        dappMessageBus.emit("injected-wallet:requestConnect", eip1193Provider.info.rdns)
+        appMessageBus.emit("injected-wallet:requestConnect", eip1193Provider.info.rdns)
     } else {
         // on page directly
         const [address] = await eip1193Provider.provider.request({ method: "eth_requestAccounts" })
@@ -133,7 +133,7 @@ const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
     const past = storage.get(StorageKey.HappyUser)
 
     if (past?.provider === eip1193Provider.info.rdns) {
-        dappMessageBus.emit("injected-wallet:requestConnect", undefined)
+        appMessageBus.emit("injected-wallet:requestConnect", undefined)
         setUserWithProvider(undefined, undefined)
     }
 }

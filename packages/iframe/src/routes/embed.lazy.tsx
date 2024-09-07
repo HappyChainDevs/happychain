@@ -6,7 +6,7 @@ import { ConnectButton } from "../components/ConnectButton"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
-import { dappMessageBus } from "../services/eventBus"
+import { appMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
 
 import { Power } from "@phosphor-icons/react"
@@ -63,13 +63,13 @@ function Embed() {
     }, [user, getBalance])
 
     function open() {
-        dappMessageBus.emit("modal-toggle", true)
+        appMessageBus.emit("modal-toggle", true)
         setIsOpen(true)
     }
 
     function close() {
         setIsOpen(false)
-        dappMessageBus.emit("modal-toggle", false)
+        appMessageBus.emit("modal-toggle", false)
     }
 
     if (authState === AuthState.Connecting) {

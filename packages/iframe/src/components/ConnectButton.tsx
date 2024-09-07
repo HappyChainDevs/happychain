@@ -5,7 +5,7 @@ import clsx from "clsx"
 
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
-import { dappMessageBus } from "../services/eventBus"
+import { appMessageBus } from "../services/eventBus"
 
 export function ConnectButton() {
     const [isOpen, setIsOpen] = useState(false)
@@ -14,7 +14,7 @@ export function ConnectButton() {
     const socialProviders = useSocialProviders()
 
     const open = useCallback(() => {
-        dappMessageBus.emit("modal-toggle", true)
+        appMessageBus.emit("modal-toggle", true)
         setIsOpen(true)
     }, [])
 
@@ -23,7 +23,7 @@ export function ConnectButton() {
         // delay to match fadeout transition/animation
         const animationTimeInMs = 300
         setTimeout(() => {
-            dappMessageBus.emit("modal-toggle", false)
+            appMessageBus.emit("modal-toggle", false)
         }, animationTimeInMs)
     }, [])
 
@@ -36,7 +36,7 @@ export function ConnectButton() {
     )
 
     useEffect(() => {
-        return dappMessageBus.on("request-display", (screen) => {
+        return appMessageBus.on("request-display", (screen) => {
             if (screen === "login-modal") {
                 open()
             }
