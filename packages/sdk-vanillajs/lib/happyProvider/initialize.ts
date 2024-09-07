@@ -12,7 +12,7 @@ import { registerListeners } from "./listeners"
 export const windowId = createUUID()
 
 const dappMessageBus = new EventBus<HappyEvents>({
-    mode: EventBusMode.DappPort,
+    mode: EventBusMode.AppPort,
     scope: "happy-chain-dapp-bus",
 })
 
@@ -60,7 +60,7 @@ export const happyProvider = new HappyProvider({
     windowId: windowId,
 
     providerBus: new EventBus<EIP1193ProxiedEvents>({
-        mode: EventBusMode.DappPort,
+        mode: EventBusMode.AppPort,
         scope: "happy-chain-eip1193-provider",
     }),
 

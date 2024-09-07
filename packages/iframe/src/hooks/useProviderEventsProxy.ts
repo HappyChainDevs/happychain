@@ -7,7 +7,7 @@ import { providerAtom } from "../state/provider"
 /**
  * Subscribes to the current internal provider and
  * forwards all requested events to be
- * emitted by the happyProvider on the dapp-side
+ * emitted by the happyProvider on the app-side
  */
 export function useProviderEventsProxy(events: EIP1193EventName[]) {
     const provider = useAtomValue(providerAtom)
