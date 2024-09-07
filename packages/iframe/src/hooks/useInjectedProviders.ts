@@ -68,7 +68,7 @@ function useRequestEIP6963Providers() {
             // autoconnect
             const user = storage.get(StorageKey.HappyUser)
             if (user?.provider === evt.detail.info.rdns) {
-                enable(evt.detail)
+                void enable(evt.detail)
             }
         }
 
@@ -119,10 +119,9 @@ function useRequestEIP6963Providers() {
 
 const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
     if (IsInIframe) {
-        // in iframe
-        appMessageBus.emit("injected-wallet:requestConnect", eip1193Provider.info.rdns)
+        void appMessageBus.emit("injected-wallet:requestConnect", eip1193Provider.info.rdns)
     } else {
-        // on page directly
+        // stand-alone page
         const [address] = await eip1193Provider.provider.request({ method: "eth_requestAccounts" })
         const user = createHappyUserFromWallet(eip1193Provider.info.rdns, address)
         setUserWithProvider(user, eip1193Provider.provider)
@@ -133,7 +132,7 @@ const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
     const past = storage.get(StorageKey.HappyUser)
 
     if (past?.provider === eip1193Provider.info.rdns) {
-        appMessageBus.emit("injected-wallet:requestConnect", undefined)
+        void appMessageBus.emit("injected-wallet:requestConnect", undefined)
         setUserWithProvider(undefined, undefined)
     }
 }

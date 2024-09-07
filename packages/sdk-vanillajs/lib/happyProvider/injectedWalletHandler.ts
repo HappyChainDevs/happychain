@@ -48,13 +48,13 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     }
 
     private proxyPermissions(params: HappyEvents["injected-wallet:mirror-permissions"]) {
-        this.config.dappBus.emit("injected-wallet:mirror-permissions", params)
+        void this.config.dappBus.emit("injected-wallet:mirror-permissions", params)
     }
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
         this.request({ method: "eth_requestAccounts" }).then((aaaa) => aaaa)
-        this.config.dappBus.emit("injected-wallet:connect", { rdns: undefined, address: undefined })
+        void this.config.dappBus.emit("injected-wallet:connect", { rdns: undefined, address: undefined })
         this.localConnection = undefined
     }
 
@@ -87,9 +87,9 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
             this.localConnection = providerDetails
 
-            this.config.dappBus.emit("injected-wallet:connect", { rdns, address })
+            void this.config.dappBus.emit("injected-wallet:connect", { rdns, address })
         } catch {
-            this.handleProviderDisconnectionRequest()
+            void this.handleProviderDisconnectionRequest()
         }
     }
 }
