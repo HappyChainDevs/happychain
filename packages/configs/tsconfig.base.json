@@ -13,8 +13,10 @@
         "strict": true,
         "verbatimModuleSyntax": true,
         "noPropertyAccessFromIndexSignature": false,
-        "noUnusedLocals": true,
         "noFallthroughCasesInSwitch": true,
-        "noUnusedParameters": true
+
+        // Check with biome, which allows an underscore prefix to indicate an unused variable.
+        "noUnusedLocals": false,
+        "noUnusedParameters": false
     }
 }
