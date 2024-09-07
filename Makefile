@@ -232,10 +232,6 @@ demos.build:
 	$(call forall , $(APP_PKGS) , build)
 .PHONY: apps.build
 
-docs.build:
-	cd packages/docs && make build
-.PHONY: docs.build
-
 ts.build:
 	$(call forall , $(TS_PKGS) , build)
 .PHONY: ts.build
@@ -243,6 +239,19 @@ ts.build:
 contracts.build:
 	cd packages/contracts && make build
 .PHONY: contracts.build
+
+# ==================================================================================================
+# DOCS
+
+# Fully self-contained target to build docs, to be used by docs page host.
+docs.contained: setup sdk.build
+	cd packages/docs && make build
+.PHONY: docs.contained
+
+# Serve already-built docs
+docs.preview:
+	cd packages/docs && make preview
+.PHONY: docs.preview
 
 # ==================================================================================================
 # CLEANING
