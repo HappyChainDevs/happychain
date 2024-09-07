@@ -49,7 +49,7 @@ function newAppProviderBus(options: EventBusOptions) {
 
 describe("HappyProvider", () => {
     let providerBusConfig: EventBusOptions
-    let dappBusConfig: EventBusOptions
+    let appBusConfig: EventBusOptions
     beforeEach(() => {
         providerBusConfig = {
             scope: createUUID(),
@@ -57,7 +57,7 @@ describe("HappyProvider", () => {
             mode: EventBusMode.Broadcast,
         } satisfies EventBusOptions
 
-        dappBusConfig = {
+        appBusConfig = {
             scope: createUUID(),
             logger: { log: mock(), warn: mock(), error: mock() },
             mode: EventBusMode.Broadcast,
@@ -66,14 +66,14 @@ describe("HappyProvider", () => {
 
     it("transmits payload using bus", async () => {
         const happyProviderBusIframe = newIframeProviderBus(providerBusConfig)
-        const dappBusIframe = new EventBus<HappyEvents>(dappBusConfig)
+        const appBusIframe = new EventBus<HappyEvents>(appBusConfig)
         const uuid = createUUID()
 
         const provider = new SocialWalletHandler({
             iframePath: config.iframePath,
             windowId: uuid,
             providerBus: newAppProviderBus(providerBusConfig),
-            dappBus: new EventBus<HappyEvents>(dappBusConfig),
+            appBus: new EventBus<HappyEvents>(appBusConfig),
         })
 
         const callback = mock(({ key, windowId, error: _error, payload: _payload }) => {
@@ -94,7 +94,8 @@ describe("HappyProvider", () => {
             params: ["latest", false]
         }
 
-        void dappBusIframe.emit("auth-state", AuthState.Disconnected)
+        void appBusIframe.emit("auth-state", AuthState.Disconnected)
+
         // auto approve permissions (no popup)
         happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
             happyProviderBusIframe.emit("permission-check:response", {
@@ -119,17 +120,17 @@ describe("HappyProvider", () => {
 
     it("resolves on success", async () => {
         const happyProviderBusIframe = newIframeProviderBus(providerBusConfig)
-        const dappBusIframe = new EventBus<HappyEvents>(dappBusConfig)
+        const appBusIframe = new EventBus<HappyEvents>(appBusConfig)
         const uuid = createUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
             windowId: uuid,
             providerBus: new EventBus(providerBusConfig),
-            dappBus: new EventBus<HappyEvents>(dappBusConfig),
+            appBus: new EventBus<HappyEvents>(appBusConfig),
         })
 
-        void dappBusIframe.emit("auth-state", AuthState.Disconnected)
+        void appBusIframe.emit("auth-state", AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
@@ -161,17 +162,17 @@ describe("HappyProvider", () => {
 
     it("rejects on error", async () => {
         const happyProviderBusIframe = newIframeProviderBus(providerBusConfig)
-        const dappBusIframe = new EventBus<HappyEvents>(dappBusConfig)
+        const appBusIframe = new EventBus<HappyEvents>(appBusConfig)
         const uuid = createUUID()
 
         const provider = new HappyProvider({
             iframePath: config.iframePath,
             windowId: uuid,
             providerBus: newAppProviderBus(providerBusConfig),
-            dappBus: new EventBus<HappyEvents>(dappBusConfig),
+            appBus: new EventBus<HappyEvents>(appBusConfig),
         })
 
-        void dappBusIframe.emit("auth-state", AuthState.Disconnected)
+        void appBusIframe.emit("auth-state", AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
@@ -211,7 +212,7 @@ describe("HappyProvider", () => {
             iframePath: config.iframePath,
             windowId: createUUID(),
             providerBus: newAppProviderBus(providerBusConfig),
-            dappBus: new EventBus<HappyEvents>(dappBusConfig),
+            appBus: new EventBus<HappyEvents>(appBusConfig),
         })
 
         const callback = mock(() => {})

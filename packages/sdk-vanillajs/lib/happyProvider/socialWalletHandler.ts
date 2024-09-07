@@ -51,11 +51,11 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     constructor(private config: HappyProviderConfig) {
         super()
         // sync local user state
-        config.dappBus.on("auth-changed", (_user) => {
+        config.appBus.on("auth-changed", (_user) => {
             this.user = _user
         })
 
-        config.dappBus.on("auth-state", (_authState) => {
+        config.appBus.on("auth-state", (_authState) => {
             this.authState = _authState
         })
 
@@ -95,9 +95,9 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
              * will be what is returned to the originating caller
              */
             if (!this.user && this.authState === AuthState.Disconnected) {
-                this.config.dappBus.emit("request-display", "login-modal")
+                this.config.appBus.emit("request-display", "login-modal")
 
-                const unsubscribe = this.config.dappBus.on("auth-changed", (user) => {
+                const unsubscribe = this.config.appBus.on("auth-changed", (user) => {
                     if (user) {
                         // auto-approve only works for these methods, since this is a direct response
                         // the the user login flow, and upon user login, these permissions get granted automatically

@@ -24,7 +24,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     constructor(private config: HappyProviderConfig) {
         super()
         // local connection (injected wallet)
-        config.dappBus.on("injected-wallet:requestConnect", this.handleProviderConnectionRequest.bind(this))
+        config.appBus.on("injected-wallet:requestConnect", this.handleProviderConnectionRequest.bind(this))
     }
 
     isConnected(): boolean {
@@ -48,13 +48,13 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     }
 
     private proxyPermissions(params: HappyEvents["injected-wallet:mirror-permissions"]) {
-        void this.config.dappBus.emit("injected-wallet:mirror-permissions", params)
+        void this.config.appBus.emit("injected-wallet:mirror-permissions", params)
     }
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
         this.request({ method: "eth_requestAccounts" }).then((aaaa) => aaaa)
-        void this.config.dappBus.emit("injected-wallet:connect", { rdns: undefined, address: undefined })
+        void this.config.appBus.emit("injected-wallet:connect", { rdns: undefined, address: undefined })
         this.localConnection = undefined
     }
 
@@ -76,7 +76,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
                 }
                 const [address] = accounts
 
-                this.config.dappBus.emit("injected-wallet:connect", { rdns, address })
+                this.config.appBus.emit("injected-wallet:connect", { rdns, address })
             })
             providerDetails.provider.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
             providerDetails.provider.on("connect", (connectInfo) => this.emit("connect", connectInfo))
@@ -87,7 +87,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
             this.localConnection = providerDetails
 
-            void this.config.dappBus.emit("injected-wallet:connect", { rdns, address })
+            void this.config.appBus.emit("injected-wallet:connect", { rdns, address })
         } catch {
             void this.handleProviderDisconnectionRequest()
         }
