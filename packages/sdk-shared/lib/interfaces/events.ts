@@ -1,3 +1,5 @@
+import type { AssertAssignableTo } from "@happychain/common"
+import type { EventSchema } from "../services/eventBus"
 import type { UUID } from "../utils/uuid"
 import type { EIP1193RequestParameters } from "./eip1193Provider"
 import type { AuthState, HappyUser } from "./happyUser"
@@ -30,45 +32,56 @@ const methods = [
     "wallet_requestPermissions",
     "wallet_revokePermissions",
 ] as const
+
 function arrayIncludes<T>(array: readonly T[], element: T): boolean {
     return array.includes(element)
 }
+
 export function isPermissionsRequest(args: { method: string; params?: unknown }): args is EIP119PermissionsRequest {
     return arrayIncludes(methods, args.method)
 }
-export interface HappyEvents {
-    // called once after iframe has loaded and initialized
-    "iframe-init": boolean
 
-    // modal states
-    "modal-toggle": boolean
-
+/**
+ * Events sent from the app to the iframe on the general message bus.
+ */
+export type EventsFromApp = {
+    /** Instructs the iframe to display the connection modal. */
     "request-display": "login-modal"
 
-    // user auth
-    "auth-changed": HappyUser | undefined
-
-    // unauthenticated,authenticated,loading
-    "auth-state": AuthState
-
-    /**
-     * Sent by the iframe to request a connection or disconnection with an injected wallet.
-     * Received by the dapp, which attempts to connect with the wallet whose rdns matches.
-     */
-    "injected-wallet:requestConnect": WalletRDNS
-
-    /**
-     * Sent by the dapp in response to `injected-wallet:requestConnect` with the user details obtained from
-     * connecting to the requested injected wallet. If the connection attempt failed, the user will
-     * be undefined.
-     *
-     * Alternatively sent by the dapp as a response to other dapp side events such as
-     * when the injected wallet disconnect or changes account and the iframe needs to be updated
-     */
+    /** Informs the iframe that the user has connected/disconnected to/from an injected wallet. */
     "injected-wallet:connect": { rdns: string; address: `0x${string}` } | { rdns?: undefined; address?: undefined }
 
+    /**
+     * Instructs the iframe to mirror a permission that has been granted to the user by the
+     * injected wallet.
+     *
+     * This is required because we depend on permissions to establish that the user is connected
+     * to the wallet.
+     */
     "injected-wallet:mirror-permissions": {
         request: EIP119PermissionsRequest
         response: unknown
     }
 }
+type _assert1 = AssertAssignableTo<EventsFromApp, EventSchema<EventsFromApp>>
+
+/**
+ * Events sent from the iframe to the app on the general message bus.
+ */
+export type EventsFromIframe = {
+    /** Informs the SDK that the iframe has loaded and initialized. */
+    "iframe-init": boolean
+
+    /** Instructs the SDK to resize the resize the iframe to toggle the wallet modal. */
+    "modal-toggle": boolean
+
+    /** Informs the app that the user information has changed (including connect & disconnect). */
+    "auth-changed": HappyUser | undefined
+
+    /** Informs the SDK of the current social authentication state of the user. */
+    "auth-state": AuthState
+
+    /** Instructs the SDK to connect/disconnect to/from an injected wallet with given RDNS. */
+    "injected-wallet:requestConnect": WalletRDNS
+}
+type _assert2 = AssertAssignableTo<EventsFromIframe, EventSchema<EventsFromIframe>>

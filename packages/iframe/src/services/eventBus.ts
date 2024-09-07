@@ -1,5 +1,6 @@
-import { EventBus, EventBusMode, type HappyEvents, type ProviderBusEventsFromIframe } from "@happychain/sdk-shared"
+import { EventBus, EventBusMode, type ProviderBusEventsFromIframe } from "@happychain/sdk-shared"
 import type { NoEvents, PopupBusEvents, ProviderBusEventsFromApp } from "@happychain/sdk-shared"
+import type { EventsFromApp, EventsFromIframe } from "@happychain/sdk-shared/lib/interfaces/events.ts"
 
 /**
  * Iframe side of the app <> iframe provider bus.
@@ -21,7 +22,7 @@ export const happyProviderBus = new EventBus<ProviderBusEventsFromApp, ProviderB
  *
  * This will be used to receive UI requests from the app, send auth updates, etc.
  */
-export const appMessageBus = new EventBus<HappyEvents, HappyEvents>({
+export const appMessageBus = new EventBus<EventsFromApp, EventsFromIframe>({
     target: window.parent,
     mode: EventBusMode.IframePort,
     scope: "happy-chain-dapp-bus",
