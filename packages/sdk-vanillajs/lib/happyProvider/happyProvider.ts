@@ -34,11 +34,9 @@ export class HappyProvider extends SafeEventEmitter {
             this.authState = _authState
         })
 
-        // Injected Wallets
         this.injectedWalletHandler = new InjectedWalletHandler(config)
         this.registerConnectionHandlerEvents(this.injectedWalletHandler)
 
-        // Iframe/Social Auth
         this.socialWalletHandler = new SocialWalletHandler(config)
         this.registerConnectionHandlerEvents(this.socialWalletHandler)
     }
