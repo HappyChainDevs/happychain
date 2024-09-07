@@ -117,7 +117,6 @@ export class EventBus<S extends EventSchema<S>> {
             this.handlerMap.delete(key)
         }
     }
-    public removeListener = this.off.bind(this)
 
     public on<Key extends keyof S>(key: Key, handler: EventHandler<S, Key>): () => void {
         const prev = this.handlerMap.get(key) ?? new Set()
@@ -126,7 +125,6 @@ export class EventBus<S extends EventSchema<S>> {
         // unsubscribe function
         return () => this.off(key, handler)
     }
-    public addListener = this.on.bind(this)
 
     public async emit<Key extends keyof S>(key: Key, payload: S[Key]) {
         if (!this.port) {
@@ -177,5 +175,4 @@ export class EventBus<S extends EventSchema<S>> {
             }
         })
     }
-    public removeAllListeners = this.clear.bind(this)
 }
