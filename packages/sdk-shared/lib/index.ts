@@ -31,7 +31,6 @@ export type {
     EventKey,
     EventHandler,
     EventSchema,
-    IEventBus,
     EventBusOptions,
 } from "./services/eventBus"
 export type {
