@@ -53,6 +53,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
+        // TODO what is this requests for? + weird then handler
         this.request({ method: "eth_requestAccounts" }).then((aaaa) => aaaa)
         void this.config.appBus.emit("injected-wallet:connect", { rdns: undefined, address: undefined })
         this.localConnection = undefined
@@ -89,6 +90,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
             void this.config.appBus.emit("injected-wallet:connect", { rdns, address })
         } catch {
+            // TODO only reached if the eth_requestAccounts fails, is this what we want?
             void this.handleProviderDisconnectionRequest()
         }
     }
