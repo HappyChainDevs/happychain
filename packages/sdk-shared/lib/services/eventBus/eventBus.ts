@@ -95,11 +95,6 @@ export class EventBus<TDefinition extends EventSchema<TDefinition>> implements I
             default:
                 throw new Error("Unable to register event bus")
         }
-
-        // bind aliases
-        this.removeAllListeners = this.clear.bind(this)
-        this.addListener = this.on.bind(this)
-        this.removeListener = this.off.bind(this)
     }
 
     private registerPortListener(_port: MessagePort | BroadcastChannel) {
@@ -130,15 +125,14 @@ export class EventBus<TDefinition extends EventSchema<TDefinition>> implements I
         )
     }
 
-    public removeListener: IEventBus<TDefinition>["off"]
     public off: IEventBus<TDefinition>["off"] = (key, handler) => {
         this.handlerMap.get(key)?.delete(handler)
         if (this.handlerMap.get(key)?.size === 0) {
             this.handlerMap.delete(key)
         }
     }
+    public removeListener = this.off.bind(this)
 
-    public addListener: IEventBus<TDefinition>["on"]
     public on: IEventBus<TDefinition>["on"] = (key, handler) => {
         const prev = this.handlerMap.get(key) ?? new Set()
         this.handlerMap.set(key, prev.add(handler))
@@ -146,6 +140,7 @@ export class EventBus<TDefinition extends EventSchema<TDefinition>> implements I
         // unsubscribe function
         return () => this.off(key, handler)
     }
+    public addListener = this.on.bind(this)
 
     public emit: IEventBus<TDefinition>["emit"] = async (key, payload) => {
         if (!this.port) {
@@ -189,8 +184,6 @@ export class EventBus<TDefinition extends EventSchema<TDefinition>> implements I
         this.on(key, handleOnce)
     }
 
-    // alias
-    public removeAllListeners: IEventBus<TDefinition>["clear"]
     public clear: IEventBus<TDefinition>["clear"] = () => {
         this.handlerMap.forEach((handlers, key) => {
             for (const handler of handlers) {
@@ -198,4 +191,5 @@ export class EventBus<TDefinition extends EventSchema<TDefinition>> implements I
             }
         })
     }
+    public removeAllListeners = this.clear.bind(this)
 }
