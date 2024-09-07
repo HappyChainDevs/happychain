@@ -37,19 +37,6 @@ export type EventSchema<T extends EventSchema<T>> = { [Key in keyof T]: T[Key] }
  */
 export type EventHandler<S extends EventSchema<S>, K extends keyof S = keyof S> = (payload: S[K]) => void
 
-export interface IEventBus<T extends EventSchema<T>> {
-    on<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): () => void
-    off<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): void
-    once<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): void
-    emit<Key extends keyof T>(key: Key, payload: T[Key]): void
-    clear(): void
-
-    // event emitter compatibility methods
-    removeAllListeners(): void
-    addListener<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): () => void
-    removeListener<Key extends keyof T>(key: Key, handler: EventHandler<T, Key>): void
-}
-
 export type EventBusOptions = {
     scope: string
     logger?: Logger
@@ -61,7 +48,7 @@ export type EventBusOptions = {
     | { mode: EventBusChannel.Forced; port: MessagePort | BroadcastChannel }
 )
 
-export class EventBus<S extends EventSchema<S>> implements IEventBus<S> {
+export class EventBus<S extends EventSchema<S>> {
     private handlerMap: Map<keyof S, Set<EventHandler<S>>> = new Map()
     private port: MessagePort | BroadcastChannel | null = null
 
@@ -124,7 +111,7 @@ export class EventBus<S extends EventSchema<S>> implements IEventBus<S> {
         )
     }
 
-    public off: IEventBus<S>["off"] = (key, handler) => {
+    public off<Key extends keyof S>(key: Key, handler: EventHandler<S, Key>) {
         this.handlerMap.get(key)?.delete(handler as EventHandler<S>)
         if (this.handlerMap.get(key)?.size === 0) {
             this.handlerMap.delete(key)
@@ -132,7 +119,7 @@ export class EventBus<S extends EventSchema<S>> implements IEventBus<S> {
     }
     public removeListener = this.off.bind(this)
 
-    public on: IEventBus<S>["on"] = (key, handler) => {
+    public on<Key extends keyof S>(key: Key, handler: EventHandler<S, Key>): () => void {
         const prev = this.handlerMap.get(key) ?? new Set()
         this.handlerMap.set(key, prev.add(handler as EventHandler<S>))
 
@@ -141,7 +128,7 @@ export class EventBus<S extends EventSchema<S>> implements IEventBus<S> {
     }
     public addListener = this.on.bind(this)
 
-    public emit: IEventBus<S>["emit"] = async (key, payload) => {
+    public async emit<Key extends keyof S>(key: Key, payload: S[Key]) {
         if (!this.port) {
             this.config.logger?.warn(
                 `[EventBus] Port not initialized ${this.config.mode}=>${this.config.scope}`,
@@ -174,7 +161,7 @@ export class EventBus<S extends EventSchema<S>> implements IEventBus<S> {
         return Boolean(this.port) // if port exists, assume successful
     }
 
-    public once: IEventBus<S>["once"] = (key, handler) => {
+    public once<Key extends keyof S>(key: Key, handler: EventHandler<S, Key>) {
         const handleOnce: typeof handler = (payload) => {
             handler(payload)
             this.off(key, handleOnce)
@@ -183,7 +170,7 @@ export class EventBus<S extends EventSchema<S>> implements IEventBus<S> {
         this.on(key, handleOnce)
     }
 
-    public clear: IEventBus<S>["clear"] = () => {
+    public clear() {
         this.handlerMap.forEach((handlers, key) => {
             for (const handler of handlers) {
                 this.off(key, handler)
