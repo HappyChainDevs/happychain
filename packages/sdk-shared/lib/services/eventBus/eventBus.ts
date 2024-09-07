@@ -58,9 +58,12 @@ export type EventBusOptions = {
  *
  * This must be intantiated on both sides with the correct mode (both {@link
  * EventBusMode.Broadcast}, or {@link EventBusMode.IframePort}) and {@link EventBusMode.AppPort}.
+ *
+ * @typeParam SL - Schema for the listening side of the bus.
+ * @typeParam SE - Schema for the emitting side of the bus.
  */
-export class EventBus<S extends EventSchema<S>> {
-    private handlerMap: Map<keyof S, Set<EventHandler<S>>> = new Map()
+export class EventBus<SL extends EventSchema<SL>, SE extends EventSchema<SE> = SL> {
+    private handlerMap: Map<keyof SL, Set<EventHandler<SL>>> = new Map()
     private port: MessagePort | BroadcastChannel | null = null
 
     constructor(private config: EventBusOptions) {
@@ -123,24 +126,24 @@ export class EventBus<S extends EventSchema<S>> {
     }
 
     /** Remove event handler. */
-    public off<Key extends keyof S>(key: Key, handler: EventHandler<S, Key>) {
-        this.handlerMap.get(key)?.delete(handler as EventHandler<S>)
+    public off<Key extends keyof SL>(key: Key, handler: EventHandler<SL, Key>) {
+        this.handlerMap.get(key)?.delete(handler as EventHandler<SL>)
         if (this.handlerMap.get(key)?.size === 0) {
             this.handlerMap.delete(key)
         }
     }
 
     /** Register Event handler. */
-    public on<Key extends keyof S>(key: Key, handler: EventHandler<S, Key>): () => void {
+    public on<Key extends keyof SL>(key: Key, handler: EventHandler<SL, Key>): () => void {
         const prev = this.handlerMap.get(key) ?? new Set()
-        this.handlerMap.set(key, prev.add(handler as EventHandler<S>))
+        this.handlerMap.set(key, prev.add(handler as EventHandler<SL>))
 
         // unsubscribe function
         return () => this.off(key, handler)
     }
 
     /** Emit event. */
-    public async emit<Key extends keyof S>(key: Key, payload: S[Key]) {
+    public async emit<Key extends keyof SE>(key: Key, payload: SE[Key]) {
         if (!this.port) {
             this.config.logger?.warn(
                 `[EventBus] Port not initialized ${this.config.mode}=>${this.config.scope}`,
@@ -174,7 +177,7 @@ export class EventBus<S extends EventSchema<S>> {
     }
 
     /** Register event handler that will be removed after the first invocation. */
-    public once<Key extends keyof S>(key: Key, handler: EventHandler<S, Key>) {
+    public once<Key extends keyof SL>(key: Key, handler: EventHandler<SL, Key>) {
         const handleOnce: typeof handler = (payload) => {
             handler(payload)
             this.off(key, handleOnce)

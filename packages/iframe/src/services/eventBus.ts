@@ -1,4 +1,5 @@
-import { type EIP1193ProxiedEvents, EventBus, EventBusMode, type HappyEvents } from "@happychain/sdk-shared"
+import { EventBus, EventBusMode, type HappyEvents, type ProviderBusEventsFromIframe } from "@happychain/sdk-shared"
+import type { NoEvents, PopupBusEvents, ProviderBusEventsFromApp } from "@happychain/sdk-shared"
 
 /**
  * Iframe side of the app <> iframe provider bus.
@@ -9,7 +10,7 @@ import { type EIP1193ProxiedEvents, EventBus, EventBusMode, type HappyEvents } f
  *
  * This side is created first (MessageChannel port1) and will wait for the app side to connect.
  */
-export const happyProviderBus = new EventBus<EIP1193ProxiedEvents>({
+export const happyProviderBus = new EventBus<ProviderBusEventsFromApp, ProviderBusEventsFromIframe>({
     target: window.parent,
     mode: EventBusMode.IframePort,
     scope: "happy-chain-eip1193-provider",
@@ -20,16 +21,11 @@ export const happyProviderBus = new EventBus<EIP1193ProxiedEvents>({
  *
  * This will be used to receive UI requests from the app, send auth updates, etc.
  */
-export const appMessageBus = new EventBus<HappyEvents>({
+export const appMessageBus = new EventBus<HappyEvents, HappyEvents>({
     target: window.parent,
     mode: EventBusMode.IframePort,
     scope: "happy-chain-dapp-bus",
 })
-
-/**
- * Events allowed on the popup bus. These are sent from the popup to the iframe.
- */
-export type PopupEvents = Pick<EIP1193ProxiedEvents, "request:approve" | "request:reject">
 
 /**
  * Iframe side of the app <> popup bus.
@@ -38,7 +34,7 @@ export type PopupEvents = Pick<EIP1193ProxiedEvents, "request:approve" | "reques
  * Note that within a single browsers, there could be multiple iframes and multiple popups,
  * hence the messages will identify the originating context (windowId).
  */
-export const popupBus = new EventBus<PopupEvents>({
+export const popupBus = new EventBus<PopupBusEvents, NoEvents>({
     mode: EventBusMode.Broadcast,
     scope: "server:popup",
 })

@@ -25,7 +25,12 @@ export type { UUID } from "./utils/uuid"
 export type { HappyEvents } from "./interfaces/events"
 export type { HappyUser } from "./interfaces/happyUser"
 export type { Logger } from "./services/logger"
-export type { EIP1193ProxiedEvents } from "./services/eip1193Provider/events"
+export type {
+    ProviderBusEventsFromApp,
+    ProviderBusEventsFromIframe,
+    PopupBusEvents,
+    NoEvents,
+} from "./services/eip1193Provider/events"
 export type { EIP1193ErrorObject, IProviderRpcError } from "./services/eip1193Provider/errors"
 export type {
     EventKey,

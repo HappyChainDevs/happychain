@@ -1,4 +1,10 @@
-import type { EIP1193Provider, EIP1193ProxiedEvents, HappyEvents, HappyUser } from "@happychain/sdk-shared"
+import type {
+    EIP1193Provider,
+    HappyEvents,
+    HappyUser,
+    ProviderBusEventsFromApp,
+    ProviderBusEventsFromIframe,
+} from "@happychain/sdk-shared"
 import { EventBus, EventBusMode, config, createUUID } from "@happychain/sdk-shared"
 
 import { HappyProvider } from "./happyProvider"
@@ -59,7 +65,7 @@ export const happyProvider = new HappyProvider({
 
     windowId: windowId,
 
-    providerBus: new EventBus<EIP1193ProxiedEvents>({
+    providerBus: new EventBus<ProviderBusEventsFromIframe, ProviderBusEventsFromApp>({
         mode: EventBusMode.AppPort,
         scope: "happy-chain-eip1193-provider",
     }),

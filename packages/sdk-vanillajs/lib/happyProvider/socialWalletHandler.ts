@@ -1,6 +1,11 @@
-import { AuthState, EIP1193UserRejectedRequestError, GenericProviderRpcError, createUUID } from "@happychain/sdk-shared"
+import {
+    AuthState,
+    EIP1193UserRejectedRequestError,
+    GenericProviderRpcError,
+    type ProviderBusEventsFromIframe,
+    createUUID,
+} from "@happychain/sdk-shared"
 import type {
-    EIP1193ProxiedEvents,
     EIP1193RequestMethods,
     EIP1193RequestParameters,
     EIP1193RequestResult,
@@ -136,7 +141,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         return true
     }
 
-    private async handlePermissionCheck(data: EIP1193ProxiedEvents["permission-check:response"]) {
+    private async handlePermissionCheck(data: ProviderBusEventsFromIframe["permission-check:response"]) {
         const inFlight = this.inFlightChecks.get(data.key)
         if (!inFlight) return
         if (typeof data.payload === "boolean") {
@@ -161,11 +166,11 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         })
     }
 
-    private handleProviderNativeEvent(data: EIP1193ProxiedEvents["provider:event"]) {
+    private handleProviderNativeEvent(data: ProviderBusEventsFromIframe["provider:event"]) {
         this.emit(data.payload.event, data.payload.args)
     }
 
-    private handleCompletedRequest(data: EIP1193ProxiedEvents["response:complete"]) {
+    private handleCompletedRequest(data: ProviderBusEventsFromIframe["response:complete"]) {
         const req = this.inFlightRequests.get(data.key)
 
         if (!req) {
