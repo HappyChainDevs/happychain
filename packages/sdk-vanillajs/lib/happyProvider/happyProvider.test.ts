@@ -1,14 +1,7 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test"
 
 import type { EIP1193ProxiedEvents, EventBusOptions, HappyEvents } from "@happychain/sdk-shared"
-import {
-    AuthState,
-    EventBus,
-    EventBusChannel,
-    GenericProviderRpcError,
-    config,
-    createUUID,
-} from "@happychain/sdk-shared"
+import { AuthState, EventBus, EventBusMode, GenericProviderRpcError, config, createUUID } from "@happychain/sdk-shared"
 import type { RpcBlock } from "viem"
 
 import { HappyProvider } from "./happyProvider"
@@ -48,13 +41,13 @@ describe("HappyProvider", () => {
         providerBusConfig = {
             scope: createUUID(),
             logger: { log: mock(), warn: mock(), error: mock() },
-            mode: EventBusChannel.Broadcast,
+            mode: EventBusMode.Broadcast,
         } satisfies EventBusOptions
 
         dappBusConfig = {
             scope: createUUID(),
             logger: { log: mock(), warn: mock(), error: mock() },
-            mode: EventBusChannel.Broadcast,
+            mode: EventBusMode.Broadcast,
         } satisfies EventBusOptions
     })
 
