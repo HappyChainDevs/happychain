@@ -20,8 +20,8 @@ import { SocialWalletHandler } from "./socialWalletHandler"
  * ```
  */
 export class HappyProvider extends SafeEventEmitter {
-    private injectedWalletHandler: EIP1193ConnectionHandler
-    private socialWalletHandler: EIP1193ConnectionHandler
+    private readonly injectedWalletHandler: EIP1193ConnectionHandler
+    private readonly socialWalletHandler: EIP1193ConnectionHandler
 
     private authState: AuthState = AuthState.Connecting
 
