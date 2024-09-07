@@ -1,6 +1,6 @@
-import type { EIP1193ProxiedEvents, HappyEvents, HappyUser } from "@happychain/sdk-shared"
-import { EventBus, EventBusChannel, config, createUUID, waitForCondition } from "@happychain/sdk-shared"
-import type { EIP1193Provider } from "viem"
+import type { EIP1193Provider, EIP1193ProxiedEvents, HappyEvents, HappyUser } from "@happychain/sdk-shared"
+import { EventBus, EventBusMode, config, createUUID } from "@happychain/sdk-shared"
+
 import { HappyProvider } from "./happyProvider"
 import { registerListeners } from "./listeners"
 
@@ -12,7 +12,7 @@ import { registerListeners } from "./listeners"
 export const windowId = createUUID()
 
 const dappMessageBus = new EventBus<HappyEvents>({
-    mode: EventBusChannel.DappPort,
+    mode: EventBusMode.DappPort,
     scope: "happy-chain-dapp-bus",
 })
 
@@ -60,7 +60,7 @@ export const happyProvider = new HappyProvider({
     windowId: windowId,
 
     providerBus: new EventBus<EIP1193ProxiedEvents>({
-        mode: EventBusChannel.DappPort,
+        mode: EventBusMode.DappPort,
         scope: "happy-chain-eip1193-provider",
     }),
 

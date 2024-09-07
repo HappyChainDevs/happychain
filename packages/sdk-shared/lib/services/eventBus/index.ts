@@ -1,4 +1,4 @@
-export { EventBus, EventBusChannel } from "./eventBus"
+export { EventBus, EventBusMode } from "./eventBus"
 
 export type {
     EventKey,

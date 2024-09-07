@@ -3,7 +3,7 @@ import { setTimeout } from "node:timers/promises"
 import type { AssertAssignableTo } from "@happychain/common"
 
 import { createUUID } from "../../utils/uuid"
-import { EventBus, EventBusChannel, type EventBusOptions, type EventSchema } from "./eventBus"
+import { EventBus, EventBusMode, type EventBusOptions, type EventSchema } from "./eventBus"
 
 type TestBusSchema = {
     "callback:": { data: boolean; version: number }
@@ -30,13 +30,13 @@ describe("event bus", () => {
             const mc = new MessageChannel()
             emitterBusConfig = {
                 ...broadcastConfig,
-                mode: EventBusChannel.Forced,
+                mode: EventBusMode.Forced,
                 port: mc.port1,
             }
 
             listenerBusConfig = {
                 ...broadcastConfig,
-                mode: EventBusChannel.Forced,
+                mode: EventBusMode.Forced,
                 port: mc.port2,
             }
 
@@ -67,7 +67,7 @@ describe("event bus", () => {
             broadcastConfig = {
                 scope: createUUID(),
                 logger: { log: mock(), warn: mock(), error: mock() },
-                mode: EventBusChannel.Broadcast,
+                mode: EventBusMode.Broadcast,
             } satisfies EventBusOptions
 
             args = { data: true, version: 1 }

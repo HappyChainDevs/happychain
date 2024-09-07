@@ -5,7 +5,7 @@ import { logger } from "../logger"
 /**
  * Defines different modes in which the event bus can operate.
  */
-export enum EventBusChannel {
+export enum EventBusMode {
     /** Opened on an iframe, to communicate with the dapp. */
     IframePort = "messagechannel:port1",
 
@@ -46,17 +46,17 @@ export type EventBusOptions = {
     logger?: Logger
     onError?: (...params: unknown[]) => void
 } & (
-    | { mode: EventBusChannel.IframePort; target: Window }
-    | { mode: EventBusChannel.DappPort }
-    | { mode: EventBusChannel.Broadcast }
-    | { mode: EventBusChannel.Forced; port: MessagePort | BroadcastChannel }
+    | { mode: EventBusMode.IframePort; target: Window }
+    | { mode: EventBusMode.DappPort }
+    | { mode: EventBusMode.Broadcast }
+    | { mode: EventBusMode.Forced; port: MessagePort | BroadcastChannel }
 )
 
 /**
  * An event bus that enables sending/receiving messages to/from other browsing contexts (windows,
  * iframes, etc).
  *
- * Refer to {@link EventBusChannel} for the different modes in which the event bus can operate.
+ * Refer to {@link EventBusMode} for the different modes in which the event bus can operate.
  */
 export class EventBus<S extends EventSchema<S>> {
     private handlerMap: Map<keyof S, Set<EventHandler<S>>> = new Map()
@@ -66,20 +66,20 @@ export class EventBus<S extends EventSchema<S>> {
         config.logger ??= logger
 
         switch (config.mode) {
-            case EventBusChannel.Forced:
+            case EventBusMode.Forced:
                 this.registerPortListener(config.port)
                 break
-            case EventBusChannel.Broadcast:
+            case EventBusMode.Broadcast:
                 this.registerPortListener(new BroadcastChannel(config.scope))
                 break
-            case EventBusChannel.IframePort: {
+            case EventBusMode.IframePort: {
                 const mc = new MessageChannel()
                 this.registerPortListener(mc.port1)
                 const message = `happychain:${config.scope}:init`
                 config.target.postMessage(message, "*", [mc.port2])
                 break
             }
-            case EventBusChannel.DappPort: {
+            case EventBusMode.DappPort: {
                 addEventListener("message", (e: MessageEvent) => {
                     const message = `happychain:${config.scope}:init`
                     if (e.data === message) {

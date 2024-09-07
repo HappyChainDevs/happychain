@@ -1,4 +1,4 @@
-import { type EIP1193ProxiedEvents, EventBus, EventBusChannel, type HappyEvents } from "@happychain/sdk-shared"
+import { type EIP1193ProxiedEvents, EventBus, EventBusMode, type HappyEvents } from "@happychain/sdk-shared"
 
 /**
  * Event system between the HappyProvider in the dapp
@@ -8,7 +8,7 @@ import { type EIP1193ProxiedEvents, EventBus, EventBusChannel, type HappyEvents 
  */
 export const happyProviderBus = new EventBus<EIP1193ProxiedEvents>({
     target: window.parent,
-    mode: EventBusChannel.IframePort,
+    mode: EventBusMode.IframePort,
     scope: "happy-chain-eip1193-provider",
 })
 
@@ -19,7 +19,7 @@ export const happyProviderBus = new EventBus<EIP1193ProxiedEvents>({
  */
 export const dappMessageBus = new EventBus<HappyEvents>({
     target: window.parent,
-    mode: EventBusChannel.IframePort,
+    mode: EventBusMode.IframePort,
     scope: "happy-chain-dapp-bus",
 })
 
@@ -35,6 +35,6 @@ export type BroadcastEvents = Pick<EIP1193ProxiedEvents, "request:approve" | "re
  * primarily user approvals/rejections
  */
 export const popupBus = new EventBus<BroadcastEvents>({
-    mode: EventBusChannel.Broadcast,
+    mode: EventBusMode.Broadcast,
     scope: "server:popup",
 })

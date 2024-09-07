@@ -9,7 +9,7 @@ import {
 } from "viem"
 
 /**
- * We will use -1 to signify unknown error typews
+ * We will use -1 to signify unknown error types.
  */
 type ProviderRpcErrorCode = ViemProviderRpcErrorCode | -1
 
