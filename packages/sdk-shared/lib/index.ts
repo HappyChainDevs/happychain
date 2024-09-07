@@ -28,11 +28,9 @@ export type { Logger } from "./services/logger"
 export type { EIP1193ProxiedEvents } from "./services/eip1193Provider/events"
 export type { EIP1193ErrorObject, IProviderRpcError } from "./services/eip1193Provider/errors"
 export type {
-    EventPayload,
     EventKey,
     EventHandler,
     EventSchema,
-    EventMap,
     IEventBus,
     EventBusOptions,
 } from "./services/eventBus"

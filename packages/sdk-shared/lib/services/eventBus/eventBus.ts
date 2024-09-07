@@ -22,14 +22,22 @@ export enum EventBusChannel {
     Forced = "forced",
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export type EventPayload<T = any> = T
+/**
+ * Event types are identified by a key, which must be a string, number or symbol.
+ */
 export type EventKey = string | number | symbol
 
-export type EventHandler<T extends EventPayload = EventPayload> = (payload: T) => void
+/**
+ * Maps all allowed event keys to their respective payload types.
+ */
+// biome-ignore lint/suspicious/noExplicitAny:
+export type EventSchema = Record<EventKey, any>
 
-export type EventSchema = Record<EventKey, EventPayload>
-export type EventMap = Map<EventKey, Set<EventHandler>>
+/**
+ * Types for event handlers taking in a specific payload type.
+ */
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export type EventHandler<T = any> = (payload: T) => void
 
 export interface IEventBus<T extends EventSchema> {
     on<Key extends keyof T>(key: Key, handler: EventHandler<T[Key]>): () => void
@@ -55,8 +63,8 @@ export type EventBusOptions = {
     | { mode: EventBusChannel.Forced; port: MessagePort | BroadcastChannel }
 )
 
-export class EventBus<TDefinition extends EventSchema = EventSchema> implements IEventBus<TDefinition> {
-    private handlerMap: EventMap = new Map()
+export class EventBus<TDefinition extends EventSchema> implements IEventBus<TDefinition> {
+    private handlerMap: Map<EventKey, Set<EventHandler>> = new Map()
     private port: MessagePort | BroadcastChannel | null = null
 
     constructor(private config: EventBusOptions) {
@@ -185,10 +193,10 @@ export class EventBus<TDefinition extends EventSchema = EventSchema> implements 
     // alias
     public removeAllListeners: IEventBus<TDefinition>["clear"]
     public clear: IEventBus<TDefinition>["clear"] = () => {
-        for (const [key, handlers] of this.handlerMap) {
+        this.handlerMap.forEach((handlers, key) => {
             for (const handler of handlers) {
                 this.off(key, handler)
             }
-        }
+        })
     }
 }
