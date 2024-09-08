@@ -1,4 +1,5 @@
-export { isPermissionsRequest, Messages } from "./interfaces/events"
+export { Messages } from "./interfaces/events"
+export { isPermissionsRequest } from "./interfaces/eip1193"
 export { createUUID } from "./utils/uuid"
 export * as chains from "./chains"
 export { AuthState, WalletType } from "./interfaces/happyUser"
@@ -17,7 +18,7 @@ export {
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
     getEIP1193ErrorObjectFromUnknown,
-} from "./services/eip1193Provider/errors"
+} from "./interfaces/errors.ts"
 
 /** Types */
 export type { ChainParameters } from "./chains/utils"
@@ -30,8 +31,8 @@ export type {
     ProviderBusEventsFromIframe,
     PopupBusEvents,
     NoEvents,
-} from "./services/eip1193Provider/events"
-export type { EIP1193ErrorObject, IProviderRpcError } from "./services/eip1193Provider/errors"
+} from "./interfaces/events"
+export type { EIP1193ErrorObject, IProviderRpcError } from "./interfaces/errors.ts"
 export type {
     EventKey,
     EventHandler,
@@ -39,15 +40,13 @@ export type {
     EventBusOptions,
 } from "./services/eventBus"
 export type {
-    EIP6963ProviderInfo,
-    EIP6963ProviderDetail,
-    EIP6963AnnounceProviderEvent,
-    ConnectionProvider,
     EIP1193RequestMethods,
     EIP1193RequestParameters,
     EIP1193RequestResult,
     EIP1193EventName,
-} from "./interfaces/eip1193Provider"
+} from "./interfaces/eip1193"
+export type { ConnectionProvider } from "./interfaces/connectionProvider"
+export type { EIP6963ProviderInfo, EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from "./interfaces/eip6963.ts"
 
 /**
  * Here we re-export some viem types, so consuming packages always get the same type from the same source
