@@ -41,7 +41,6 @@ packages/frontend/src/generated.ts
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
