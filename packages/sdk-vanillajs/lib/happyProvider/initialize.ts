@@ -1,5 +1,4 @@
 import type {
-    EIP1193Provider,
     HappyUser,
     MsgsFromApp,
     MsgsFromIframe,
@@ -7,6 +6,7 @@ import type {
     ProviderMsgsFromApp,
 } from "@happychain/sdk-shared"
 import { EventBus, EventBusMode, config, createUUID } from "@happychain/sdk-shared"
+import type { EIP1193Provider } from "viem"
 
 import { HappyProvider } from "./happyProvider"
 import { registerListeners } from "./listeners"
