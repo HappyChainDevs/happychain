@@ -1,4 +1,11 @@
-import type { AuthState, EventBus, EventsFromApp, EventsFromIframe, HappyUser } from "@happychain/sdk-shared"
+import {
+    type AuthState,
+    type EventBus,
+    type EventsFromApp,
+    type EventsFromIframe,
+    type HappyUser,
+    Messages,
+} from "@happychain/sdk-shared"
 
 /**
  * Callback which is called on page load, and again on every user update
@@ -36,19 +43,19 @@ export function registerListeners(messageBus: EventBus<EventsFromIframe, EventsF
     const onIframeInitCallbacks = new Set<IframeInitCallback>()
     const onAuthStateUpdateCallbacks = new Set<AuthStateUpdateCallback>()
 
-    messageBus.on("auth-changed", (user) => {
+    messageBus.on(Messages.AuthChanged, (user) => {
         for (const call of onUserUpdateCallbacks) {
             call(user)
         }
     })
 
-    messageBus.on("auth-state", (state) => {
+    messageBus.on(Messages.AuthState, (state) => {
         for (const call of onAuthStateUpdateCallbacks) {
             call(state)
         }
     })
 
-    messageBus.on("modal-toggle", (isOpen) => {
+    messageBus.on(Messages.ModalToggle, (isOpen) => {
         for (const call of onModalUpdateCallbacks) {
             call(isOpen)
         }

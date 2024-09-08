@@ -1,4 +1,4 @@
-export { isPermissionsRequest } from "./interfaces/events"
+export { isPermissionsRequest, Messages } from "./interfaces/events"
 export { createUUID } from "./utils/uuid"
 export * as chains from "./chains"
 export { AuthState, WalletType } from "./interfaces/happyUser"

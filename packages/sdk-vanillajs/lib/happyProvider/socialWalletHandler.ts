@@ -1,16 +1,15 @@
 import {
     AuthState,
+    type EIP1193RequestMethods,
+    type EIP1193RequestParameters,
+    type EIP1193RequestResult,
     EIP1193UserRejectedRequestError,
     GenericProviderRpcError,
+    type HappyUser,
+    Messages,
     type ProviderBusEventsFromIframe,
+    type UUID,
     createUUID,
-} from "@happychain/sdk-shared"
-import type {
-    EIP1193RequestMethods,
-    EIP1193RequestParameters,
-    EIP1193RequestResult,
-    HappyUser,
-    UUID,
 } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
@@ -51,11 +50,11 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     constructor(private config: HappyProviderConfig) {
         super()
         // sync local user state
-        config.appBus.on("auth-changed", (_user) => {
+        config.appBus.on(Messages.AuthChanged, (_user) => {
             this.user = _user
         })
 
-        config.appBus.on("auth-state", (_authState) => {
+        config.appBus.on(Messages.AuthState, (_authState) => {
             this.authState = _authState
         })
 
@@ -95,9 +94,9 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
              * will be what is returned to the originating caller
              */
             if (!this.user && this.authState === AuthState.Disconnected) {
-                this.config.appBus.emit("request-display", "login-modal")
+                this.config.appBus.emit(Messages.RequestDisplay, "login-modal")
 
-                const unsubscribe = this.config.appBus.on("auth-changed", (user) => {
+                const unsubscribe = this.config.appBus.on(Messages.AuthChanged, (user) => {
                     if (user) {
                         // auto-approve only works for these methods, since this is a direct response
                         // the the user login flow, and upon user login, these permissions get granted automatically

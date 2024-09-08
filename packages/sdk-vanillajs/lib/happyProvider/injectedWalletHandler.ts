@@ -1,6 +1,11 @@
-import type { EventsFromApp } from "@happychain/sdk-shared"
-import { isPermissionsRequest } from "@happychain/sdk-shared"
-import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
+import {
+    type EIP1193RequestMethods,
+    type EIP1193RequestParameters,
+    type EIP1193RequestResult,
+    type EventsFromApp,
+    Messages,
+    isPermissionsRequest,
+} from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { createStore } from "mipd"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
@@ -24,7 +29,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     constructor(private config: HappyProviderConfig) {
         super()
         // local connection (injected wallet)
-        config.appBus.on("injected-wallet:requestConnect", this.handleProviderConnectionRequest.bind(this))
+        config.appBus.on(Messages.InjectedWalletRequestConnect, this.handleProviderConnectionRequest.bind(this))
     }
 
     isConnected(): boolean {
@@ -48,14 +53,14 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     }
 
     private proxyPermissions(params: EventsFromApp["injected-wallet:mirror-permissions"]) {
-        void this.config.appBus.emit("injected-wallet:mirror-permissions", params)
+        void this.config.appBus.emit(Messages.MirrorPermissions, params)
     }
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
         // TODO what is this requests for? + weird then handler
         this.request({ method: "eth_requestAccounts" }).then((aaaa) => aaaa)
-        void this.config.appBus.emit("injected-wallet:connect", { rdns: undefined, address: undefined })
+        void this.config.appBus.emit(Messages.InjectedWalletConnect, { rdns: undefined, address: undefined })
         this.localConnection = undefined
     }
 
@@ -76,7 +81,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
                 }
                 const [address] = accounts
 
-                this.config.appBus.emit("injected-wallet:connect", { rdns, address })
+                this.config.appBus.emit(Messages.InjectedWalletConnect, { rdns, address })
             })
             providerDetails.provider.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
             providerDetails.provider.on("connect", (connectInfo) => this.emit("connect", connectInfo))
@@ -87,7 +92,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
             this.localConnection = providerDetails
 
-            void this.config.appBus.emit("injected-wallet:connect", { rdns, address })
+            void this.config.appBus.emit(Messages.InjectedWalletConnect, { rdns, address })
         } catch {
             // TODO only reached if the eth_requestAccounts fails, is this what we want?
             void this.handleProviderDisconnectionRequest()
