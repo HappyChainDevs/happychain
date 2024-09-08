@@ -18,7 +18,7 @@ export {
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
     getEIP1193ErrorObjectFromUnknown,
-} from "./interfaces/errors.ts"
+} from "./interfaces/errors"
 
 /** Types */
 export type { ChainParameters } from "./chains/utils"
@@ -32,7 +32,7 @@ export type {
     PopupBusEvents,
     NoEvents,
 } from "./interfaces/events"
-export type { EIP1193ErrorObject, IProviderRpcError } from "./interfaces/errors.ts"
+export type { EIP1193ErrorObject, IProviderRpcError } from "./interfaces/errors"
 export type {
     EventKey,
     EventHandler,
@@ -46,7 +46,8 @@ export type {
     EIP1193EventName,
 } from "./interfaces/eip1193"
 export type { ConnectionProvider } from "./interfaces/connectionProvider"
-export type { EIP6963ProviderInfo, EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from "./interfaces/eip6963.ts"
+export type { EIP6963ProviderInfo, EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from "./interfaces/eip6963"
+export type { ProviderEventPayload, ProviderEventError } from "./interfaces/payloads"
 
 /**
  * Here we re-export some viem types, so consuming packages always get the same type from the same source

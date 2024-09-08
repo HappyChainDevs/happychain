@@ -1,3 +1,4 @@
+import type { EIP1193RequestParameters, ProviderEventPayload } from "@happychain/sdk-shared"
 import {
     AuthState,
     type EIP1193ProxiedEvents,
@@ -7,13 +8,7 @@ import {
 } from "@happychain/sdk-shared"
 import { getDefaultStore, useAtomValue } from "jotai"
 import { useCallback, useEffect } from "react"
-
-import type {
-    EIP1193RequestParameters,
-    ProviderEventPayload,
-} from "@happychain/sdk-shared/lib/interfaces/eip1193Provider"
 import { UnauthorizedProviderError } from "viem"
-import { usePermissionsCheck } from "../hooks/usePermissionsCheck"
 import { happyProviderBus } from "../services/eventBus"
 import { getPermissions } from "../services/permissions/getPermissions"
 import { hasPermission } from "../services/permissions/hasPermission"
@@ -23,6 +18,7 @@ import type { WalletPermission } from "../state/permissions"
 import { publicClientAtom } from "../state/publicClient"
 import { userAtom } from "../state/user"
 import { confirmWindowId } from "../utils/confirmWindowId"
+import { usePermissionsCheck } from "./usePermissionsCheck"
 
 export function useProcessUnconfirmedRequests() {
     const publicClient = useAtomValue(publicClientAtom)
