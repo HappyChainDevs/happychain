@@ -11,25 +11,24 @@ import { emitUserUpdate } from "../utils/emitUserUpdate"
 const store = getDefaultStore()
 
 /**
- * Runs once at startup
+ * Runs once at startup to transmit the current auth state to the app (likely {@link
+ * AuthState.Disconnected}, or {@link AuthState.Connecting}).
  *
- * transmits current auth state to dapp (likely disconnected, or connecting)
- *
- * @emits auth-state
+ * @emits {@link Msgs.AuthStateChanged}
  */
 void appMessageBus.emit(Msgs.AuthStateChanged, store.get(authStateAtom))
 
 /**
- * emits the current auth state to dApp
- * - if the auth state is connected and dApp has permissions,
- *   the user will also be emitted
- * - if the auth state is disconnected then the user will be cleared
+ * Emits the current auth state to the app when it changes.
+ *
+ * - If the auth state is {@link AuthState.Connected} and app has permissions, the user will also be emitted.
+ * - If the auth state is {@link AuthState.Disconnected} then the user will be cleared.
  *
  * @listens authStateAtom
  *
- * @emits auth-state
- * @emits auth-changed (optional)
- * @emits provider-event (optional)
+ * @emits {@link Msgs.AuthStateChanged}
+ * @emits {@link Msgs.UserChanged} (optional)
+ * @emits {@link Msgs.ProviderEvent} (optional)
  */
 store.sub(authStateAtom, () => {
     const authState = store.get(authStateAtom)
@@ -50,12 +49,12 @@ store.sub(authStateAtom, () => {
 })
 
 /**
- * transmit user updates to the front end (if permitted)
+ * Emits user updates to the app (if permitted).
  *
  * @listens userAtom
  *
- * @emits auth-changed (optional)
- * @emits provider-event (optional)
+ * @emits {@link Msgs.AuthStateChanged} (optional)
+ * @emits {@link Msgs.ProviderEvent} (optional)
  */
 store.sub(userAtom, () => {
     const user = store.get(userAtom)
@@ -69,11 +68,11 @@ store.sub(userAtom, () => {
 })
 
 /**
- * async load ENS name if available when user updates
+ * Asynchronously updates the ENS username when the user updates.
+ * The ENS username is looked up on Ethereum mainnet.
  *
- * This works, but is missing ensResolver.
- * could force lookup on ETH mainnet regardless of connected chain
- * https://github.com/HappyChainDevs/happychain/issues/40
+ * Note that users are always created froms scratch so there is no need to clear the ENS username
+ * anywhere.
  *
  * @listens userAtom
  */
