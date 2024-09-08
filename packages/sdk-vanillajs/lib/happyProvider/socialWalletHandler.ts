@@ -94,7 +94,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
              * will be what is returned to the originating caller
              */
             if (!this.user && this.authState === AuthState.Disconnected) {
-                this.config.appBus.emit(Messages.RequestDisplay, "login-modal")
+                void this.config.appBus.emit(Messages.RequestDisplay, "login-modal")
 
                 const unsubscribe = this.config.appBus.on(Messages.AuthChanged, (user) => {
                     if (user) {
@@ -228,7 +228,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     }
 
     private autoApprove(key: UUID, args: EIP1193RequestParameters) {
-        this.config.providerBus.emit(Messages.RequestApprove, {
+        void this.config.providerBus.emit(Messages.RequestApprove, {
             key,
             windowId: this.config.windowId,
             error: null,

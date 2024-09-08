@@ -14,7 +14,7 @@ export function useProviderEventsProxy(events: EIP1193EventName[]) {
 
     useEffect(() => {
         const proxyEvent = (name: EIP1193EventName) => (event: unknown) => {
-            happyProviderBus.emit(Messages.ProviderEvent, {
+            void happyProviderBus.emit(Messages.ProviderEvent, {
                 payload: { event: name, args: event },
             })
         }
