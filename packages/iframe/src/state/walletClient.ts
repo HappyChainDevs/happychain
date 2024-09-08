@@ -1,9 +1,9 @@
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, ParseAccount, WalletClient } from "viem"
 import { createWalletClient } from "viem"
-import { userAtom } from "../state/user"
 import { providerAtom } from "./provider"
 import { transportAtom } from "./transport"
+import { userAtom } from "./user"
 
 // utils
 export type AccountWalletClient = WalletClient<CustomTransport, undefined, ParseAccount<`0x${string}`>>
