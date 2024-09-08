@@ -16,17 +16,38 @@ help: ## Show this help
 # ==================================================================================================
 # Packages
 
-# build & format all support packages with no internal dependencies
-SUPPORT_PKGS := configs,contracts,common,sdk-shared,sdk-firebase-web3auth-strategy
-# build & format sdk packages which are built using the above
-SDK_PKGS := sdk-vanillajs,sdk-react
-# build & format consuming 'apps'
-APP_PKGS := iframe,demo-vanillajs,demo-react,demo-wagmi-vue,docs
+# packages shared between SDK & iframe
+SHARED_PKGS := sdk-shared,common
+
+# packages only used in the SDK
+SDK_ONLY_PKGS := sdk-vanillajs,sdk-react
+
+# packages only used in the iframe
+IFRAME_ONLY_PKGS := iframe,sdk-firebase-web3auth-strategy
+
+# packages needed to build the sdk
+SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
+
+# packages needed to build the iframe
+IFRAME_PKGS := $(SHARED_PKGS),$(IFRAME_ONLY_PKGS)
+
+# demo packages (not including dependencies)
+DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue
+
+# all typescript packages
+TS_PKGS := $(SDK_ONLY_PKGS),$(IFRAME_ONLY_PKGS),$(DEMOS_PKGS),docs
+
+# ==================================================================================================
+# GIT & CMDS
 
 # Currently Active Branch
 YOUR_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+
 # Lead branch
 DEFAULT_BRANCH := master
+
+# Concurrently or mprocs to run commands in parallel
+MULTIRUN ?= concurrently
 
 # ==================================================================================================
 # BASICS COMMANDS
@@ -44,90 +65,78 @@ deploy: ## Deploys contracts to Anvil
 	cd packages/contracts && make deploy
 .PHONY: deploy
 
-build: support.build sdk.build apps.build node_modules ## Creates production builds
+build: node_modules ts.build  ## Creates production builds
 .PHONY: build
 
-docs: node_modules ## Builds latest docs and starts dev server http://localhost:4173
-	cd packages/docs && make build && make preview
+docs: node_modules docs.build ## Builds latest docs and starts dev server http://localhost:4173
+	cd packages/docs && make preview
 .PHONY: docs
 
-check: node_modules support.check sdk.check apps.check ## Runs code quality & formatting checks
+check: node_modules ts.check contracts.check ## Runs code quality & formatting checks
 	@# cf. makefiles/formatting.mk
 	biome check ./;
 .PHONY: check
 
-format: support.format sdk.format apps.format ## Formats code and tries to fix code quality issues
+format: ts.format contracts.format ## Formats code and tries to fix code quality issues
 	biome check ./ --write;
 .PHONY: format
 
 test: sdk.test ## Run tests
 .PHONY: test
 
-clean: support.clean sdk.clean apps.clean ## Removes build artifacts
+clean: ts.clean contracts.clean ## Removes build artifacts
 .PHONY: clean
 
 nuke: remove-modules clean ## Removes build artifacts and dependencies
 .PHONY: nuke
 
 # ==================================================================================================
-# DEMOS
-
-demo-react:
-	make -j 2 iframe.dev demo-react.dev
-.PHONY: demo-react
-
-demo-vanillajs:
-	make -j 2 iframe.dev demo-vanillajs.dev
-.PHONY: demo-vanillajs
-
-demo-wagmi-vue:
-	make -j 2 iframe.dev demo-wagmi-vue.dev
-.PHONY: demo-wagmi-vue
-
-# ==================================================================================================
 # DEVELOPMENT
+
+define sdk-dev-commands
+	"cd packages/sdk-vanillajs && make build.watch" \
+	"cd packages/sdk-react && make build.watch"
+endef
+
+iframe-dev-command := "cd packages/iframe && make dev"
+
+define account-dev-commands
+	$(sdk-dev-commands) \
+	$(iframe-dev-command)
+endef
+
+sdk.dev:
+	$(MULTIRUN) --names "js,react" $(sdk-dev-commands)
+.PHONY: sdk-dev
+
+iframe.dev:
+	$(iframe-dev-command)
+.PHONY: iframe.dev
+
+account.dev:
+	echo $(iframe-dev-command)
+	$(MULTIRUN) --names "js,react,iframe" $(account-dev-commands)
+.PHONY: account.dev
+
+demo-js.dev:
+	$(MULTIRUN) --names "js,react,iframe,demo-js" $(account-dev-commands) \
+		"cd packages/demo-vanillajs && make dev"
+.PHONY: demo-vanillajs.dev
+
+demo-react.dev:
+	$(MULTIRUN) --names "js,react,iframe,demo-react" $(account-dev-commands) \
+		"cd packages/demo-react && make dev"
+.PHONY: demo-react.dev
+
+demo-vue.dev:
+	$(MULTIRUN) --names "js,react,iframe,demo-vue" $(account-dev-commands) \
+		"cd packages/demo-wagmi-vue && make dev"
+.PHONY: demo-wagmi-vue.dev
 
 # start docs in watch mode (can crash, see packages/docs/Makefile for more info)
 docs.watch:
 	cd packages/docs && make dev
 .PHONY: docs.watch
-
-# Start all SDKs in dev mode
-sdk-dev:
-	make -j 3 iframe.dev sdk-react.dev sdk-vanillajs.dev
-.PHONY: sdk-dev
-
-iframe.dev:
-	cd packages/iframe && make dev
-.PHONY: iframe.dev
-
-demo-react.dev:
-	cd packages/demo-react && make dev
-.PHONY: demo-react.dev
-
-demo-vanillajs.dev:
-	cd packages/demo-vanillajs && make dev
-.PHONY: demo-vanillajs.dev
-
-sdk-react.dev:
-	cd packages/sdk-react && make dev
-.PHONY: sdk-react.dev
-
-demo-wagmi-vue.dev:
-	cd packages/demo-wagmi-vue && make dev
-.PHONY: demo-wagmi-vue.dev
-
-sdk-vanillajs.dev:
-	cd packages/sdk-vanillajs && make dev
-.PHONY: sdk-vanillajs.dev
-
-sdk-react.build:
-	cd packages/sdk-react && make build
-.PHONY: sdk-react.build
-
-sdk-vanillajs.build:
-	cd packages/sdk-vanillajs && make build
-.PHONY: sdk-vanillajs.build
 
 # ==================================================================================================
 # FORALL
@@ -149,29 +158,56 @@ sdk.test:
 	cd packages/sdk-vanillajs && make test
 .PHONY: sdk.test
 
-support.check:
-	$(call forall , $(SUPPORT_PKGS) , check)
-.PHONY: support.check
-
 sdk.check:
 	$(call forall , $(SDK_PKGS) , check)
 .PHONY: sdk.check
 
-apps.check:
-	$(call forall , $(APP_PKGS) , check)
+iframe.check:
+	$(call forall , $(IFRAME_PKGS) , check)
+.PHONY: iframe.check
+
+demos.check:
+	$(call forall , $(DEMOS_PKGS) , check)
 .PHONY: apps.check
 
-support.format:
-	$(call forall , $(SUPPORT_PKGS) , format)
-.PHONY: support.format
+docs.check:
+	echo "Running make check in packages/docs"
+	cd packages/docs && make check
+.PHONY: docs.check
+
+ts.check:
+	echo $(TS_PKGS)
+	$(call forall , $(TS_PKGS) , check)
+.PHONY: ts.check
+
+contracts.check:
+	echo "Running make check in packages/contracts"
+	cd packages/contracts && make check
+.PHONY: contracts.check
 
 sdk.format:
 	$(call forall , $(SDK_PKGS) , format)
 .PHONY: sdk.format
 
-apps.format:
-	$(call forall , $(APP_PKGS) , format)
+iframe.format:
+	$(call forall , $(IFRAME_PKGS) , format)
+.PHONY: iframe.format
+
+demos.format:
+	$(call forall , $(DEMOS_PKGS) , format)
 .PHONY: apps.format
+
+docs.format:
+	cd packages/docs && make format
+.PHONY: docs.format
+
+ts.format:
+	$(call forall , $(TS_PKGS) , format)
+.PHONY: ts.format
+
+contracts.format:
+	cd packages/contracts && make format
+.PHONY: contracts.format
 
 # Quickly format change files between <your branch> and master using the default settings.
 # Note that when the diff is empty, this will fallback to checking the 4 eligible top-level files
@@ -184,37 +220,56 @@ check-fast-diff:
 # ==================================================================================================
 # PRODUCTION BUILDS
 
-support.build:
-	$(call forall , $(SUPPORT_PKGS) , build)
-.PHONY: support.build
-
 sdk.build:
 	$(call forall , $(SDK_PKGS) , build)
 .PHONY: sdk.build
 
-apps.build:
+iframe.build:
+	$(call forall , $(IFRAME_PKGS) , build)
+.PHONY: iframe.build
+
+demos.build:
 	$(call forall , $(APP_PKGS) , build)
 .PHONY: apps.build
 
-# Build only the docs (this included in apps.build already)
 docs.build:
-	cd packages/docs && make dev
+	cd packages/docs && make build
 .PHONY: docs.build
+
+ts.build:
+	$(call forall , $(TS_PKGS) , build)
+.PHONY: ts.build
+
+contracts.build:
+	cd packages/contracts && make build
+.PHONY: contracts.build
 
 # ==================================================================================================
 # CLEANING
-
-support.clean:
-	$(call forall , $(SUPPORT_PKGS) , clean)
-.PHONY: support.clean
 
 sdk.clean:
 	$(call forall , $(SDK_PKGS) , clean)
 .PHONY: sdk.clean
 
-apps.clean:
-	$(call forall , $(APP_PKGS) , clean)
+iframe.clean:
+	$(call forall , $(IFRAME_PKGS) , clean)
+.PHONY: iframe.clean
+
+demos.clean:
+	$(call forall , $(DEMOS_PKGS) , clean)
 .PHONY: apps.clean
+
+docs.clean:
+	cd packages/docs && make clean
+.PHONY: docs.clean
+
+ts.clean:
+	$(call forall , $(TS_PKGS) , clean)
+.PHONY: ts.clean
+
+contracts.clean:
+	cd packages/contracts && make clean
+.PHONY: contracts.clean
 
 # ==================================================================================================
 # DEPENDENCY MANAGEMENT

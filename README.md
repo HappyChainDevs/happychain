@@ -42,19 +42,29 @@ Some packages have their own `make setup` — when that is the case, it does **n
 dependencies (so that not time is wasted doing this after installing everything once at the top
 level).
 
-## Running The Demos
+## Development & Running Demos
 
-After `make setup` and `make build, you can run the demos with the following commands:
+- `make {sdk,iframe,demos,ts,docs,contracts}.{build,clean,check,format}`
+  - This runs the specified command (after the dot) in a subset of packages.
+  - `sdk`: all packages needed to build the sdk
+  - `iframe`: all packages needed to build the iframe
+  - `demos`: all demo packages (no dependencies)
+  - `ts`: all typescript packages
 
-- `make demo-vanillajs`
-- `make demo-react`
-- `make demo-wagmi-vue`
+- make {sdk,iframe,account,demo-js,demo-react,demo-vue}.dev
+  - This builds, rebuilds on changes, and runs development servers (where applicable) for
+    a subset of packages.
+  - If you have [`mprocs`] isntalled, you can specify `MULTIRUN=mprocs` to run with mprocs instead.
+  - `sdk`: all packages needed to build the sdk
+  - `iframe`: all packages needed to build the iframe
+  - `account`: all package needed for the Happy Account (sdk + iframe)
+  - `demo-js`: everything needed for the vanilla JS demo (account + demo-vanillajs)
+  - `demo-react`: everything needed for the React demo (account + demo-react)
+  - `demo-vue`: everything needed for the Vue demo (account + demo-wagmi-vue)
+  - The `demo-*` targets will let you access the demo on your browser
+    (look for the URL in the terminal)
 
-Alternatively, run `make iframe.dev` in a terminal, then:
-
-- `make demo-vanillajs.dev`
-- `make demo-react.dev`
-- `make demo-wagmi-vue.dev`
+[`mprocs`]: https://github.com/pvolok/mprocs
 
 ## More Commands
 

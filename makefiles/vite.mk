@@ -1,8 +1,9 @@
 
 PATH := ./node_modules/.bin:$(PATH)
 
+# Like build.watch but also serves the page on localhost if applicable
 dev: node_modules
-	vite;
+	([[ -r index.html ]] && vite) || make build.watch
 .PHONY: dev
 
 # Define 'dist' target in package makefile with a list of dependencies
