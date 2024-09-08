@@ -33,9 +33,9 @@ type Deployments = {
     FactoryStaker: string
 }
 
-import deploymentsJson from "../out/deployment.json";
-import {execSync} from "node:child_process";
-const deployments: Deployments = deploymentsJson;
+import { execSync } from "node:child_process"
+import deploymentsJson from "../out/deployment.json"
+const deployments: Deployments = deploymentsJson
 
 const chain = defineChain({
     id: 1_337,
@@ -91,10 +91,18 @@ async function getKernelAccount(): Promise<SmartAccount> {
         },
         owners: [account],
         version: "0.3.1",
-        ecdsaValidatorAddress: deployments.ECDSAValidator ? deployments.ECDSAValidator as Hex : "0x2cA67e9cF717c3A210574AA1fcDB38C0bE7b6b63",
-        accountLogicAddress: deployments.Kernel ? deployments.Kernel as Hex : "0x15A1C1a83810984D0d9c26386171878ADa04D034",
-        factoryAddress: deployments.KernelFactory ? deployments.KernelFactory as Hex : "0x560cbC094b16fe929Cf889Ffa59B42e7BB0b86Fa",
-        metaFactoryAddress: deployments.FactoryStaker ? deployments.FactoryStaker as Hex : "0xF2F43D2eA39c24EeC8Ff985B192935C50e976E4c",
+        ecdsaValidatorAddress: deployments.ECDSAValidator
+            ? (deployments.ECDSAValidator as Hex)
+            : "0x2cA67e9cF717c3A210574AA1fcDB38C0bE7b6b63",
+        accountLogicAddress: deployments.Kernel
+            ? (deployments.Kernel as Hex)
+            : "0x15A1C1a83810984D0d9c26386171878ADa04D034",
+        factoryAddress: deployments.KernelFactory
+            ? (deployments.KernelFactory as Hex)
+            : "0x560cbC094b16fe929Cf889Ffa59B42e7BB0b86Fa",
+        metaFactoryAddress: deployments.FactoryStaker
+            ? (deployments.FactoryStaker as Hex)
+            : "0xF2F43D2eA39c24EeC8Ff985B192935C50e976E4c",
     })
 }
 
