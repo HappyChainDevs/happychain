@@ -1,16 +1,14 @@
 import type { AssertAssignableTo } from "@happychain/common"
 import type { EventSchema } from "../services/eventBus"
-import type { UUID } from "../utils/uuid"
-import type { EIP1193RequestParameters } from "./eip1193Provider"
+import type {
+    EIP1193EventName,
+    EIP1193PermissionsRequest,
+    EIP1193RequestParameters,
+    EIP1193RequestResult,
+} from "./eip1193.ts"
+import type { EIP1193ErrorObject } from "./errors.ts"
 import type { AuthState, HappyUser } from "./happyUser"
-
-export type MessageChannelEventPayload<T = unknown> = {
-    // request event unique key
-    key: UUID
-    // window identifier
-    windowId: UUID
-    payload: T
-}
+import type { ProviderEventError, ProviderEventPayload } from "./payloads.ts"
 
 /**
  * When RDNS is undefined a disconnect occurs, when its a string
@@ -18,25 +16,14 @@ export type MessageChannelEventPayload<T = unknown> = {
  */
 export type WalletRDNS = string | undefined
 
-type EIP1193RequestParametersWithPermissions =
-    | { method: "eth_accounts" }
-    | { method: "eth_requestAccounts" }
-    | { method: "wallet_requestPermissions" }
-    | { method: "wallet_revokePermissions" }
-
-type EIP119PermissionsRequest = Extract<EIP1193RequestParameters, EIP1193RequestParametersWithPermissions>
-
-const methods = ["eth_accounts", "eth_requestAccounts", "wallet_requestPermissions", "wallet_revokePermissions"]
-
-export function isPermissionsRequest(args: { method: string; params?: unknown }): args is EIP119PermissionsRequest {
-    return methods.includes(args.method)
-}
+// =================================================================================================
+// === EVENT LIST ==================================================================================
 
 /**
  * Names of types of messages that can be sent on the general message bus.
  */
 export enum Messages {
-    // === EventsFromApp ===
+    // --- EventsFromApp ---------------------------------------------------------------------------
 
     /** Instructs the iframe to display the connection modal. */
     RequestDisplay = "request-display",
@@ -53,7 +40,7 @@ export enum Messages {
      */
     MirrorPermissions = "injected-wallet:mirror-permissions",
 
-    // === EventsFromIframe ===
+    // --- EventsFromIframe ------------------------------------------------------------------------
 
     /** Informs the SDK that the iframe has loaded and initialized. */
     IframeInit = "iframe-init",
@@ -71,6 +58,9 @@ export enum Messages {
     InjectedWalletRequestConnect = "injected-wallet:requestConnect",
 }
 
+// =================================================================================================
+// === MESSAGE BUS EVENTS FROM APP =================================================================
+
 /**
  * Events sent from the app to the iframe on the general message bus.
  */
@@ -80,11 +70,14 @@ export type EventsFromApp = {
         | { rdns: string; address: `0x${string}` }
         | { rdns?: undefined; address?: undefined }
     [Messages.MirrorPermissions]: {
-        request: EIP119PermissionsRequest
+        request: EIP1193PermissionsRequest
         response: unknown
     }
 }
 type _assert1 = AssertAssignableTo<EventsFromApp, EventSchema<EventsFromApp>>
+
+// =================================================================================================
+// === MESSAGE BUS EVENTS FROM IFRAME ==============================================================
 
 /**
  * Events sent from the iframe to the app on the general message bus.
@@ -97,3 +90,73 @@ export type EventsFromIframe = {
     [Messages.InjectedWalletRequestConnect]: WalletRDNS
 }
 type _assert2 = AssertAssignableTo<EventsFromIframe, EventSchema<EventsFromIframe>>
+
+// =================================================================================================
+// === PROVIDER BUS EVENTS FROM APP ================================================================
+
+/**
+ * Schema for messages that can be sent from the app to the iframe.
+ */
+export type ProviderBusEventsFromApp = {
+    /** Sends a request that does not require user approval. */
+    "request:approve": ProviderEventPayload<EIP1193RequestParameters>
+
+    /** Sent to check if a request requires user approval. */
+    "permission-check:request": ProviderEventPayload<EIP1193RequestParameters>
+}
+type _assert3 = AssertAssignableTo<ProviderBusEventsFromApp, EventSchema<ProviderBusEventsFromApp>>
+
+// =================================================================================================
+// === PROVIDER BUS EVENTS FROM IFRAME =============================================================
+
+/**
+ * Schema for messages that can be sent from the iframe to the app.
+ */
+export type ProviderBusEventsFromIframe = {
+    /**
+     * Response to a request sent by the app. The request was received by the provider bus
+     * ("request:approve") if it didn't require approval, or from the popup bus ("request:approve")
+     * if it did.
+     */
+    "response:complete": ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
+
+    /**
+     * Answers a previous "permission-check:request" from the app, telling the app whether a request
+     * requires approval.
+     */
+    "permission-check:response": ProviderEventPayload<boolean> | ProviderEventError<unknown>
+
+    // eip1193 events proxy
+    "provider:event": {
+        payload: { event: EIP1193EventName; args: unknown }
+    }
+}
+type _assert4 = AssertAssignableTo<ProviderBusEventsFromIframe, EventSchema<ProviderBusEventsFromIframe>>
+
+// =================================================================================================
+// === POPUP BUS EVENTS ============================================================================
+
+/**
+ * Schema for messages that can be sent from the popup to the iframe.
+ *
+ * This does not require being in the shared package (only used in the iframe package), but it's
+ * simpler if all event definitions live in the same place.
+ */
+export type PopupBusEvents = {
+    /** Informs the iframe that the user has approved a request in the popup. */
+    "request:approve": ProviderEventPayload<EIP1193RequestParameters>
+
+    /** Informs the iframe that the user has rejected a request in the popup. */
+    "request:reject": ProviderEventError<EIP1193ErrorObject>
+}
+type _assert5 = AssertAssignableTo<PopupBusEvents, EventSchema<PopupBusEvents>>
+
+// =================================================================================================
+// === EMPTY EVENTS SCHEMA =========================================================================
+
+/**
+ * Empty event schema.
+ */
+// biome-ignore lint/complexity/noBannedTypes: <explanation>
+export type NoEvents = {}
+type _assert6 = AssertAssignableTo<NoEvents, EventSchema<NoEvents>>
