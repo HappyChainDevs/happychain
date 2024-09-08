@@ -18,12 +18,17 @@ import { registerListeners } from "./listeners"
  */
 export const windowId = createUUID()
 
-const dappMessageBus = new EventBus<MsgsFromIframe, MsgsFromApp>({
+/**
+ * App side of the app <> iframe general purpose message bus.
+ *
+ * This will be used to send UI requests to the firame, receive auth updates, etc.
+ */
+const iframeMessageBus = new EventBus<MsgsFromIframe, MsgsFromApp>({
     mode: EventBusMode.AppPort,
     scope: "happy-chain-dapp-bus",
 })
 
-export const { onUserUpdate, onModalUpdate, onAuthStateUpdate, onIframeInit } = registerListeners(dappMessageBus)
+export const { onUserUpdate, onModalUpdate, onAuthStateUpdate, onIframeInit } = registerListeners(iframeMessageBus)
 
 let iframeReady = false
 
@@ -70,7 +75,7 @@ export const happyProvider = new HappyProvider({
         mode: EventBusMode.AppPort,
         scope: "happy-chain-eip1193-provider",
     }),
-    appBus: dappMessageBus,
+    msgBus: iframeMessageBus,
 }) as HappyProvider & EIP1193Provider
 
 export async function connect() {

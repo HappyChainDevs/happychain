@@ -18,7 +18,7 @@ export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
     logger?: Logger
     windowId: UUID
     providerBus: EventBus<PopupMsgsFromIframe, ProviderMsgsFromApp>
-    appBus: EventBus<MsgsFromIframe, MsgsFromApp>
+    msgBus: EventBus<MsgsFromIframe, MsgsFromApp>
 }
 
 export interface EIP1193ConnectionHandler extends SafeEventEmitter {

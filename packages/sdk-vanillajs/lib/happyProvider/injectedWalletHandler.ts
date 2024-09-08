@@ -29,7 +29,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     constructor(private config: HappyProviderConfig) {
         super()
         // local connection (injected wallet)
-        config.appBus.on(Msgs.InjectedWalletRequestConnect, this.handleProviderConnectionRequest.bind(this))
+        config.msgBus.on(Msgs.InjectedWalletRequestConnect, this.handleProviderConnectionRequest.bind(this))
     }
 
     isConnected(): boolean {
@@ -53,14 +53,14 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     }
 
     private proxyPermissions(params: MsgsFromApp[Msgs.MirrorPermissions]) {
-        void this.config.appBus.emit(Msgs.MirrorPermissions, params)
+        void this.config.msgBus.emit(Msgs.MirrorPermissions, params)
     }
 
     /** Injected Wallet Handlers */
     private async handleProviderDisconnectionRequest() {
         // TODO what is this requests for? + weird then handler
         this.request({ method: "eth_requestAccounts" }).then((aaaa) => aaaa)
-        void this.config.appBus.emit(Msgs.InjectedWalletConnected, { rdns: undefined, address: undefined })
+        void this.config.msgBus.emit(Msgs.InjectedWalletConnected, { rdns: undefined, address: undefined })
         this.localConnection = undefined
     }
 
@@ -81,7 +81,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
                 }
                 const [address] = accounts
 
-                this.config.appBus.emit(Msgs.InjectedWalletConnected, { rdns, address })
+                this.config.msgBus.emit(Msgs.InjectedWalletConnected, { rdns, address })
             })
             providerDetails.provider.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
             providerDetails.provider.on("connect", (connectInfo) => this.emit("connect", connectInfo))
@@ -92,7 +92,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
             this.localConnection = providerDetails
 
-            void this.config.appBus.emit(Msgs.InjectedWalletConnected, { rdns, address })
+            void this.config.msgBus.emit(Msgs.InjectedWalletConnected, { rdns, address })
         } catch {
             // TODO only reached if the eth_requestAccounts fails, is this what we want?
             void this.handleProviderDisconnectionRequest()
