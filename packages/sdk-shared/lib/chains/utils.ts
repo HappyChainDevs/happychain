@@ -4,6 +4,8 @@ import { happyChainSepolia, happyChainSepoliaViemChain } from "./definitions/hap
 
 export const defaultChain = happyChainSepolia
 
+export type ChainParameters = Readonly<AddEthereumChainParameter & { opStack?: boolean }>
+
 /***
  * Utilities
  */
@@ -20,7 +22,7 @@ function getChain() {
     }
 }
 
-export function getChainFromSearchParams(): AddEthereumChainParameter {
+export function getChainFromSearchParams(): ChainParameters {
     const rpcUrls = new URLSearchParams(window.location.search).get("rpc-urls")?.split(",")
 
     const chain = getChain()
@@ -35,7 +37,7 @@ export function getChainFromSearchParams(): AddEthereumChainParameter {
     return chain
 }
 
-export function convertToViemChain(chain: AddEthereumChainParameter) {
+export function convertToViemChain(chain: ChainParameters) {
     if (chain.chainId === happyChainSepolia.chainId) {
         return happyChainSepoliaViemChain
     }

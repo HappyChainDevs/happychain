@@ -20,6 +20,7 @@ export {
 } from "./services/eip1193Provider/errors"
 
 /** Types */
+export type { ChainParameters } from "./chains/utils"
 export type { UUID } from "./utils/uuid"
 export type { HappyEvents } from "./interfaces/events"
 export type { HappyUser } from "./interfaces/happyUser"

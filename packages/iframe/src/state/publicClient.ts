@@ -9,11 +9,11 @@ import { transportAtom } from "./transport"
 export const publicClientAtom: Atom<PublicClient<CustomTransport | HttpTransport>> = atom((get) => {
     const chain = getChainFromSearchParams()
     const transport = get(transportAtom) ?? http(chain.rpcUrls[0], { batch: true })
-    if (chain.chainId === happyChainSepolia.chainId) {
-        return createPublicClient({ transport, chain: convertToViemChain(chain) }).extend(publicActionsL2())
-    }
 
-    // biome-ignore lint/suspicious/noExplicitAny: viem uses any as well https://github.com/wevm/viem/blob/main/src/clients/createPublicClient.ts#L89
-    return createPublicClient({ transport, chain: convertToViemChain(chain) }) as any
+    const publicClient = createPublicClient({ transport, chain: convertToViemChain(chain) })
+
+    // https://github.com/wevm/viem/blob/main/src/clients/createPublicClient.ts#L89
+    // biome-ignore lint/suspicious/noExplicitAny: viem uses any as well
+    return (chain.opStack ? publicClient : publicClient.extend(publicActionsL2())) as any
 })
 publicClientAtom.debugLabel = "publicClientAtom"
