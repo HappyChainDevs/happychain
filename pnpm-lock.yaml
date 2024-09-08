@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      concurrently:
+        specifier: ^8.2.2
+        version: 8.2.2
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.8.3
@@ -216,9 +220,6 @@ importers:
       '@zamiell/typedoc-plugin-not-exported':
         specifier: ^0.3.0
         version: 0.3.0(typedoc@0.26.6(typescript@5.5.4))
-      concurrently:
-        specifier: ^8.2.2
-        version: 8.2.2
       ethers:
         specifier: ^6.13.2
         version: 6.13.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)
@@ -5960,7 +5961,6 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
-    bundledDependencies: []
 
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
