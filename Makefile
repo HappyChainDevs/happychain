@@ -98,11 +98,11 @@ define sdk-dev-commands
 	"cd packages/sdk-react && make build.watch"
 endef
 
-iframe-dev-command := "cd packages/iframe && make dev"
+iframe-dev-command := cd packages/iframe && make dev
 
 define account-dev-commands
 	$(sdk-dev-commands) \
-	$(iframe-dev-command)
+	"$(iframe-dev-command)"
 endef
 
 sdk.dev:
