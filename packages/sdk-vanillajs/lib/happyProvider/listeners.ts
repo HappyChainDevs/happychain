@@ -8,7 +8,7 @@ import {
 } from "@happychain/sdk-shared"
 
 /**
- * Callback which is called on page load, and again on every user update
+ * Callback which is called on page load, and again on every user update.
  *
  * @param {HappyUser | undefined} user
  */
@@ -24,8 +24,7 @@ export type AuthStateUpdateCallback = (state: AuthState) => void
 export type IframeInitCallback = (isInit: boolean) => void
 
 /**
- * Cleanup function which can be used to unsubscribe
- * from the event which it was returned from
+ * Cleanup function which can be used to unsubscribe from the event which it was returned from.
  *
  * @example
  * ```ts
@@ -78,8 +77,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * // [!include ~/snippets/listeners.ts:onUserUpdate]
      *```
      *
-     * @param UserUpdateCallback
-     * @returns Unsubscribe function
+     * @param callback
      */
     const onUserUpdate = (callback: UserUpdateCallback): ListenerUnsubscribeFn => {
         onUserUpdateCallbacks.add(callback)
@@ -92,7 +90,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * Called when the iframe requests a resize
      *
      * @internal
-     * @param ModalUpdateCallback
+     * @param callback
      * @returns Unsubscribe function
      */
     const onModalUpdate = (callback: ModalUpdateCallback): ListenerUnsubscribeFn => {
@@ -106,7 +104,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * Called when the iframe requests a resize
      *
      * @internal
-     * @param ModalUpdateCallback
+     * @param callback
      * @returns Unsubscribe function
      */
     const onAuthStateUpdate = (callback: AuthStateUpdateCallback): ListenerUnsubscribeFn => {
