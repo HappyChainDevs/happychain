@@ -3,13 +3,12 @@ import { setTimeout } from "node:timers/promises"
 import type { AssertAssignableTo } from "@happychain/common"
 
 import { createUUID } from "../../utils/uuid"
-import { EventBus, EventBusMode, type EventBusOptions, type EventSchema } from "./eventBus"
+import { EventBus, EventBusMode, type EventBusOptions } from "./eventBus"
 
 type TestBusSchema = {
     "callback:": { data: boolean; version: number }
     "callback-2": { data: boolean; version: number }
 }
-type _assertion = AssertAssignableTo<TestBusSchema, EventSchema<TestBusSchema>>
 
 describe("event bus", () => {
     describe("message channel events", () => {
