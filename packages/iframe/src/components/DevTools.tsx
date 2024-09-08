@@ -1,12 +1,8 @@
-// import { useIsHydrated } from "@happychain/common"
 import type { PropsWithChildren } from "react"
 import { lazy } from "react"
 
-// import "jotai-devtools/styles.css"
+// Global devtools flags
 
-/**
- * Global devtools flags
- */
 const inProduction = import.meta.env.MODE === "production"
 const inIframe = window.parent !== window
 const useDevTools = !inIframe && !inProduction
@@ -37,12 +33,9 @@ const LazyLoadJotaiDevTools = !useDevTools
       )
 
 /**
- * Render the UI Jotai devtools in development mode after hydration.
+ * Render the UI Jotai devtools in development mode.
  * Also enables visualizing atoms in the browser's React & Redux devtools.
- *
- * This has to be function so that we avoid calling the hooks during server side rendering.
  */
-
 export function DevTools({ children }: PropsWithChildren) {
     if (!useDevTools) return children
 

@@ -7,4 +7,3 @@ export const userAtom = atomWithCompareAndStorage<HappyUser | undefined>(
     undefined,
     (a, b) => a?.uid === b?.uid,
 )
-userAtom.debugLabel = "userAtom"
