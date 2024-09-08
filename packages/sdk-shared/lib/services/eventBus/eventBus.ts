@@ -92,8 +92,6 @@ export class EventBus<SL extends EventSchema<SL>, SE extends EventSchema<SE> = S
                 })
                 break
             }
-            default:
-                throw new Error("Unable to register event bus")
         }
     }
 
