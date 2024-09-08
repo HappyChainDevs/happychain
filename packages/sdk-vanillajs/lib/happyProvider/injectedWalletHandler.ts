@@ -64,7 +64,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
         this.localConnection = undefined
     }
 
-    private async handleProviderConnectionRequest(rdns?: string) {
+    private async handleProviderConnectionRequest({ rdns }: { rdns?: string }) {
         if (!rdns) {
             return this.handleProviderDisconnectionRequest()
         }

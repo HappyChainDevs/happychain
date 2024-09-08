@@ -118,7 +118,7 @@ function useRequestEIP6963Providers() {
 
 const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
     if (IsInIframe) {
-        void appMessageBus.emit(Messages.InjectedWalletRequestConnect, eip1193Provider.info.rdns)
+        void appMessageBus.emit(Messages.InjectedWalletRequestConnect, { rdns: eip1193Provider.info.rdns })
     } else {
         // stand-alone page
         const [address] = await eip1193Provider.provider.request({ method: "eth_requestAccounts" })
@@ -131,7 +131,7 @@ const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
     const past = storage.get(StorageKey.HappyUser)
 
     if (past?.provider === eip1193Provider.info.rdns) {
-        void appMessageBus.emit(Messages.InjectedWalletRequestConnect, undefined)
+        void appMessageBus.emit(Messages.InjectedWalletRequestConnect, { rdns: undefined })
         setUserWithProvider(undefined, undefined)
     }
 }

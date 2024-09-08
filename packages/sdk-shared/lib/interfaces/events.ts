@@ -10,12 +10,6 @@ import type { EIP1193ErrorObject } from "./errors.ts"
 import type { AuthState, HappyUser } from "./happyUser"
 import type { ProviderEventError, ProviderEventPayload } from "./payloads.ts"
 
-/**
- * When RDNS is undefined a disconnect occurs, when its a string
- * an EIP-6963 lookup occurs for this wallet to connect on dapp side
- */
-export type WalletRDNS = string | undefined
-
 // =================================================================================================
 // === EVENT LIST ==================================================================================
 
@@ -54,7 +48,10 @@ export enum Messages {
     /** Informs the SDK of the current social authentication state of the user. */
     AuthState = "auth-state",
 
-    /** Instructs the SDK to connect/disconnect to/from an injected wallet with given RDNS. */
+    /**
+     * Instructs the SDK to connect to an injected wallet with the given RDNS, or to disconnect from
+     * the current wallet if the RDNS is undefined.
+     */
     InjectedWalletRequestConnect = "injected-wallet:requestConnect",
 
     // --- ProviderBusEventsFromApp ----------------------------------------------------------------
@@ -123,7 +120,7 @@ export type EventsFromIframe = {
     [Messages.ModalToggle]: boolean
     [Messages.AuthChanged]: HappyUser | undefined
     [Messages.AuthState]: AuthState
-    [Messages.InjectedWalletRequestConnect]: WalletRDNS
+    [Messages.InjectedWalletRequestConnect]: { rdns?: string }
 }
 type _assert2 = AssertAssignableTo<EventsFromIframe, EventSchema<EventsFromIframe>>
 
