@@ -26,19 +26,10 @@ type EIP1193RequestParametersWithPermissions =
 
 type EIP119PermissionsRequest = Extract<EIP1193RequestParameters, EIP1193RequestParametersWithPermissions>
 
-const methods = [
-    "eth_accounts",
-    "eth_requestAccounts",
-    "wallet_requestPermissions",
-    "wallet_revokePermissions",
-] as const
-
-function arrayIncludes<T>(array: readonly T[], element: T): boolean {
-    return array.includes(element)
-}
+const methods = ["eth_accounts", "eth_requestAccounts", "wallet_requestPermissions", "wallet_revokePermissions"]
 
 export function isPermissionsRequest(args: { method: string; params?: unknown }): args is EIP119PermissionsRequest {
-    return arrayIncludes(methods, args.method)
+    return methods.includes(args.method)
 }
 
 /**
