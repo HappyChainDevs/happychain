@@ -2,7 +2,7 @@ import { useState } from "react"
 
 import { createLazyFileRoute } from "@tanstack/react-router"
 
-import type { EIP1193ProxiedEvents } from "@happychain/sdk-shared"
+import { Messages, type PopupBusEvents } from "@happychain/sdk-shared"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
@@ -11,7 +11,7 @@ import { WalletAddEthereumChain } from "../components/requests/WalletAddEthereum
 import { WalletRequestPermissions } from "../components/requests/WalletRequestPermissions"
 import { WalletSwitchEthereumChain } from "../components/requests/WalletSwitchEthereumChain"
 import type { requestLabels } from "../constants/requestLabels"
-import { popupBus } from "../services/eventBus"
+import { popupEmitBus } from "../services/eventBus"
 
 export const Route = createLazyFileRoute("/request")({
     component: Request,
@@ -23,7 +23,7 @@ function Request() {
     const req = JSON.parse(atob(args))
 
     function reject() {
-        popupBus.emit("request:reject", {
+        popupEmitBus.emit(Messages.PopupReject, {
             error: {
                 code: 4001,
                 message: "User rejected request",
@@ -35,9 +35,9 @@ function Request() {
         })
     }
 
-    function accept(payload: EIP1193ProxiedEvents["request:approve"]["payload"]) {
+    function accept(payload: PopupBusEvents[Messages.PopupApprove]["payload"]) {
         setIsLoading(true)
-        popupBus.emit("request:approve", {
+        popupEmitBus.emit(Messages.PopupApprove, {
             error: null,
             windowId,
             key,

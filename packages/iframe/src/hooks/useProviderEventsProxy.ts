@@ -1,4 +1,4 @@
-import type { EIP1193EventName } from "@happychain/sdk-shared"
+import { type EIP1193EventName, Messages } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { happyProviderBus } from "../services/eventBus"
@@ -14,7 +14,7 @@ export function useProviderEventsProxy(events: EIP1193EventName[]) {
 
     useEffect(() => {
         const proxyEvent = (name: EIP1193EventName) => (event: unknown) => {
-            happyProviderBus.emit("provider:event", {
+            happyProviderBus.emit(Messages.ProviderEvent, {
                 payload: { event: name, args: event },
             })
         }

@@ -1,8 +1,8 @@
-import type { EIP1193ProxiedEvents } from "@happychain/sdk-shared"
+import type { Messages, PopupBusEvents } from "@happychain/sdk-shared"
 import type { requestLabels } from "../../constants/requestLabels"
 
 type Request<TMethod extends keyof typeof requestLabels> = Extract<
-    EIP1193ProxiedEvents["request:approve"]["payload"],
+    PopupBusEvents[Messages.PopupApprove]["payload"],
     { method: TMethod }
 >
 

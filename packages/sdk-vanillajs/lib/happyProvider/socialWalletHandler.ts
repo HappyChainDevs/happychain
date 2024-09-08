@@ -58,12 +58,12 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
             this.authState = _authState
         })
 
-        config.providerBus.on("provider:event", this.handleProviderNativeEvent.bind(this))
+        config.providerBus.on(Messages.ProviderEvent, this.handleProviderNativeEvent.bind(this))
 
         // Social Auth (Iframe Proxy)
-        config.providerBus.on("response:complete", this.handleCompletedRequest.bind(this))
+        config.providerBus.on(Messages.ResponseComplete, this.handleCompletedRequest.bind(this))
 
-        config.providerBus.on("permission-check:response", this.handlePermissionCheck.bind(this))
+        config.providerBus.on(Messages.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
 
     public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
@@ -140,7 +140,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         return true
     }
 
-    private async handlePermissionCheck(data: ProviderBusEventsFromIframe["permission-check:response"]) {
+    private async handlePermissionCheck(data: ProviderBusEventsFromIframe[Messages.PermissionCheckResponse]) {
         const inFlight = this.inFlightChecks.get(data.key)
         if (!inFlight) return
         if (typeof data.payload === "boolean") {
@@ -154,7 +154,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     private async requiresApproval(args: EIP1193RequestParameters) {
         const key = createUUID()
         return new Promise((resolve, reject) => {
-            this.config.providerBus.emit("permission-check:request", {
+            this.config.providerBus.emit(Messages.PermissionCheckRequest, {
                 key,
                 windowId: this.config.windowId,
                 payload: args,
@@ -165,11 +165,11 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         })
     }
 
-    private handleProviderNativeEvent(data: ProviderBusEventsFromIframe["provider:event"]) {
+    private handleProviderNativeEvent(data: ProviderBusEventsFromIframe[Messages.ProviderEvent]) {
         this.emit(data.payload.event, data.payload.args)
     }
 
-    private handleCompletedRequest(data: ProviderBusEventsFromIframe["response:complete"]) {
+    private handleCompletedRequest(data: ProviderBusEventsFromIframe[Messages.ResponseComplete]) {
         const req = this.inFlightRequests.get(data.key)
 
         if (!req) {
@@ -228,7 +228,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     }
 
     private autoApprove(key: UUID, args: EIP1193RequestParameters) {
-        this.config.providerBus.emit("request:approve", {
+        this.config.providerBus.emit(Messages.RequestApprove, {
             key,
             windowId: this.config.windowId,
             error: null,

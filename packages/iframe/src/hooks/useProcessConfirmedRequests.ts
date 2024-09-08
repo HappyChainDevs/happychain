@@ -1,8 +1,8 @@
-import { chains, getEIP1193ErrorObjectFromUnknown } from "@happychain/sdk-shared"
+import { Messages, chains, getEIP1193ErrorObjectFromUnknown } from "@happychain/sdk-shared"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 
-import { happyProviderBus, popupBus } from "../services/eventBus"
+import { happyProviderBus, popupListenBus } from "../services/eventBus"
 import { getPermissions } from "../services/permissions/getPermissions"
 import { setPermission } from "../services/permissions/setPermission"
 import { chainsAtom } from "../state/chains"
@@ -23,7 +23,7 @@ export function useProcessConfirmedRequests() {
     // trusted requests may only be sent from same-origin (popup approval screen)
     // and can be sent through the walletClient
     useEffect(() => {
-        return popupBus.on("request:approve", async (data) => {
+        return popupListenBus.on(Messages.RequestApprove, async (data) => {
             // wrong window, ignore
             if (!confirmWindowId(data.windowId)) return
 
@@ -39,7 +39,7 @@ export function useProcessConfirmedRequests() {
                  */
                 if ("eth_requestAccounts" === data.payload.method) {
                     setPermission(data.payload)
-                    void happyProviderBus.emit("response:complete", {
+                    void happyProviderBus.emit(Messages.ResponseComplete, {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
@@ -51,7 +51,7 @@ export function useProcessConfirmedRequests() {
                 if ("wallet_requestPermissions" === data.payload.method) {
                     setPermission(data.payload)
 
-                    void happyProviderBus.emit("response:complete", {
+                    void happyProviderBus.emit(Messages.ResponseComplete, {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
@@ -87,14 +87,14 @@ export function useProcessConfirmedRequests() {
                     }
                 }
 
-                void happyProviderBus.emit("response:complete", {
+                void happyProviderBus.emit(Messages.ResponseComplete, {
                     key: data.key,
                     windowId: data.windowId,
                     error: null,
                     payload: result || {},
                 })
             } catch (e) {
-                void happyProviderBus.emit("response:complete", {
+                void happyProviderBus.emit(Messages.ResponseComplete, {
                     key: data.key,
                     windowId: data.windowId,
                     error: getEIP1193ErrorObjectFromUnknown(e),
@@ -110,9 +110,9 @@ export function useProcessConfirmedRequests() {
      * promise will be rejected
      */
     useEffect(() => {
-        return popupBus.on("request:reject", (data) => {
+        return popupListenBus.on(Messages.PopupReject, (data) => {
             if (!confirmWindowId(data.windowId)) return
-            void happyProviderBus.emit("response:complete", data)
+            void happyProviderBus.emit(Messages.ResponseComplete, data)
         })
     }, [])
 }
