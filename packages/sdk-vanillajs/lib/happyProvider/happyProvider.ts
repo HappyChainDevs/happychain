@@ -1,4 +1,4 @@
-import { AuthState, waitForCondition } from "@happychain/sdk-shared"
+import { AuthState, Messages, waitForCondition } from "@happychain/sdk-shared"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { InjectedWalletHandler } from "./injectedWalletHandler"
@@ -30,7 +30,7 @@ export class HappyProvider extends SafeEventEmitter {
 
         config.logger?.log("EIP1193Provider Created")
 
-        config.appBus.on("auth-state", (_authState) => {
+        config.appBus.on(Messages.AuthState, (_authState) => {
             this.authState = _authState
         })
 

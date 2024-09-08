@@ -1,13 +1,18 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test"
-
-import type {
-    EventBusOptions,
-    EventsFromApp,
-    EventsFromIframe,
-    ProviderBusEventsFromApp,
-    ProviderBusEventsFromIframe,
+import {
+    AuthState,
+    EventBus,
+    EventBusMode,
+    type EventBusOptions,
+    type EventsFromApp,
+    type EventsFromIframe,
+    GenericProviderRpcError,
+    Messages,
+    type ProviderBusEventsFromApp,
+    type ProviderBusEventsFromIframe,
+    config,
+    createUUID,
 } from "@happychain/sdk-shared"
-import { AuthState, EventBus, EventBusMode, GenericProviderRpcError, config, createUUID } from "@happychain/sdk-shared"
 import type { RpcBlock } from "viem"
 
 import { HappyProvider } from "./happyProvider"
@@ -103,7 +108,7 @@ describe("HappyProvider", () => {
             params: ["latest", false]
         }
 
-        void appBusIframe.emit("auth-state", AuthState.Disconnected)
+        void appBusIframe.emit(Messages.AuthState, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
@@ -139,7 +144,7 @@ describe("HappyProvider", () => {
             appBus: newAppMessageBus(appBusConfig),
         })
 
-        void appBusIframe.emit("auth-state", AuthState.Disconnected)
+        void appBusIframe.emit(Messages.AuthState, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
@@ -181,7 +186,7 @@ describe("HappyProvider", () => {
             appBus: newAppMessageBus(appBusConfig),
         })
 
-        void appBusIframe.emit("auth-state", AuthState.Disconnected)
+        void appBusIframe.emit(Messages.AuthState, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {

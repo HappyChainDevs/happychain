@@ -1,5 +1,4 @@
-import type { ConnectionProvider, EIP6963ProviderDetail } from "@happychain/sdk-shared"
-import { AuthState } from "@happychain/sdk-shared"
+import { AuthState, type ConnectionProvider, type EIP6963ProviderDetail, Messages } from "@happychain/sdk-shared"
 import { useSetAtom } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 
@@ -24,7 +23,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
 
     // front end dapp connected via injected wallet
     useEffect(() => {
-        return appMessageBus.on("injected-wallet:connect", ({ rdns, address }) => {
+        return appMessageBus.on(Messages.InjectedWalletConnect, ({ rdns, address }) => {
             const user = rdns ? createHappyUserFromWallet(rdns, address) : undefined
             setUserWithProvider(user, undefined)
         })
@@ -78,7 +77,7 @@ function useRequestEIP6963Providers() {
     }, [])
 
     useEffect(() => {
-        return appMessageBus.on("injected-wallet:mirror-permissions", ({ request, response }) => {
+        return appMessageBus.on(Messages.MirrorPermissions, ({ request, response }) => {
             switch (request.method) {
                 case "eth_accounts":
                 case "eth_requestAccounts": {
@@ -119,7 +118,7 @@ function useRequestEIP6963Providers() {
 
 const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
     if (IsInIframe) {
-        void appMessageBus.emit("injected-wallet:requestConnect", eip1193Provider.info.rdns)
+        void appMessageBus.emit(Messages.InjectedWalletRequestConnect, eip1193Provider.info.rdns)
     } else {
         // stand-alone page
         const [address] = await eip1193Provider.provider.request({ method: "eth_requestAccounts" })
@@ -132,7 +131,7 @@ const disable = async (eip1193Provider: EIP6963ProviderDetail) => {
     const past = storage.get(StorageKey.HappyUser)
 
     if (past?.provider === eip1193Provider.info.rdns) {
-        void appMessageBus.emit("injected-wallet:requestConnect", undefined)
+        void appMessageBus.emit(Messages.InjectedWalletRequestConnect, undefined)
         setUserWithProvider(undefined, undefined)
     }
 }

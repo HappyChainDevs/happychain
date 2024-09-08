@@ -42,14 +42,16 @@ export function isPermissionsRequest(args: { method: string; params?: unknown })
 }
 
 /**
- * Events sent from the app to the iframe on the general message bus.
+ * Names of types of messages that can be sent on the general message bus.
  */
-export type EventsFromApp = {
+export enum Messages {
+    // === EventsFromApp ===
+
     /** Instructs the iframe to display the connection modal. */
-    "request-display": "login-modal"
+    RequestDisplay = "request-display",
 
     /** Informs the iframe that the user has connected/disconnected to/from an injected wallet. */
-    "injected-wallet:connect": { rdns: string; address: `0x${string}` } | { rdns?: undefined; address?: undefined }
+    InjectedWalletConnect = "injected-wallet:connect",
 
     /**
      * Instructs the iframe to mirror a permission that has been granted to the user by the
@@ -58,7 +60,35 @@ export type EventsFromApp = {
      * This is required because we depend on permissions to establish that the user is connected
      * to the wallet.
      */
-    "injected-wallet:mirror-permissions": {
+    MirrorPermissions = "injected-wallet:mirror-permissions",
+
+    // === EventsFromIframe ===
+
+    /** Informs the SDK that the iframe has loaded and initialized. */
+    IframeInit = "iframe-init",
+
+    /** Instructs the SDK to resize the resize the iframe to toggle the wallet modal. */
+    ModalToggle = "modal-toggle",
+
+    /** Informs the app that the user information has changed (including connect & disconnect). */
+    AuthChanged = "auth-changed",
+
+    /** Informs the SDK of the current social authentication state of the user. */
+    AuthState = "auth-state",
+
+    /** Instructs the SDK to connect/disconnect to/from an injected wallet with given RDNS. */
+    InjectedWalletRequestConnect = "injected-wallet:requestConnect",
+}
+
+/**
+ * Events sent from the app to the iframe on the general message bus.
+ */
+export type EventsFromApp = {
+    [Messages.RequestDisplay]: "login-modal"
+    [Messages.InjectedWalletConnect]:
+        | { rdns: string; address: `0x${string}` }
+        | { rdns?: undefined; address?: undefined }
+    [Messages.MirrorPermissions]: {
         request: EIP119PermissionsRequest
         response: unknown
     }
@@ -69,19 +99,10 @@ type _assert1 = AssertAssignableTo<EventsFromApp, EventSchema<EventsFromApp>>
  * Events sent from the iframe to the app on the general message bus.
  */
 export type EventsFromIframe = {
-    /** Informs the SDK that the iframe has loaded and initialized. */
-    "iframe-init": boolean
-
-    /** Instructs the SDK to resize the resize the iframe to toggle the wallet modal. */
-    "modal-toggle": boolean
-
-    /** Informs the app that the user information has changed (including connect & disconnect). */
-    "auth-changed": HappyUser | undefined
-
-    /** Informs the SDK of the current social authentication state of the user. */
-    "auth-state": AuthState
-
-    /** Instructs the SDK to connect/disconnect to/from an injected wallet with given RDNS. */
-    "injected-wallet:requestConnect": WalletRDNS
+    [Messages.IframeInit]: boolean
+    [Messages.ModalToggle]: boolean
+    [Messages.AuthChanged]: HappyUser | undefined
+    [Messages.AuthState]: AuthState
+    [Messages.InjectedWalletRequestConnect]: WalletRDNS
 }
 type _assert2 = AssertAssignableTo<EventsFromIframe, EventSchema<EventsFromIframe>>
