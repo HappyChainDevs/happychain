@@ -23,7 +23,7 @@ export function useProcessConfirmedRequests() {
     // trusted requests may only be sent from same-origin (popup approval screen)
     // and can be sent through the walletClient
     useEffect(() => {
-        return popupListenBus.on(Messages.RequestApprove, async (data) => {
+        return popupListenBus.on(Messages.PopupApprove, async (data) => {
             // wrong window, ignore
             if (!confirmWindowId(data.windowId)) return
 
@@ -39,7 +39,7 @@ export function useProcessConfirmedRequests() {
                  */
                 if ("eth_requestAccounts" === data.payload.method) {
                     setPermission(data.payload)
-                    void happyProviderBus.emit(Messages.ResponseComplete, {
+                    void happyProviderBus.emit(Messages.RequestResponse, {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
@@ -51,7 +51,7 @@ export function useProcessConfirmedRequests() {
                 if ("wallet_requestPermissions" === data.payload.method) {
                     setPermission(data.payload)
 
-                    void happyProviderBus.emit(Messages.ResponseComplete, {
+                    void happyProviderBus.emit(Messages.RequestResponse, {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
@@ -87,14 +87,14 @@ export function useProcessConfirmedRequests() {
                     }
                 }
 
-                void happyProviderBus.emit(Messages.ResponseComplete, {
+                void happyProviderBus.emit(Messages.RequestResponse, {
                     key: data.key,
                     windowId: data.windowId,
                     error: null,
                     payload: result || {},
                 })
             } catch (e) {
-                void happyProviderBus.emit(Messages.ResponseComplete, {
+                void happyProviderBus.emit(Messages.RequestResponse, {
                     key: data.key,
                     windowId: data.windowId,
                     error: getEIP1193ErrorObjectFromUnknown(e),
@@ -112,7 +112,7 @@ export function useProcessConfirmedRequests() {
     useEffect(() => {
         return popupListenBus.on(Messages.PopupReject, (data) => {
             if (!confirmWindowId(data.windowId)) return
-            void happyProviderBus.emit(Messages.ResponseComplete, data)
+            void happyProviderBus.emit(Messages.RequestResponse, data)
         })
     }, [])
 }

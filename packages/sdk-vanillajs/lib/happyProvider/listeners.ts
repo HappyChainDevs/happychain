@@ -43,13 +43,13 @@ export function registerListeners(messageBus: EventBus<EventsFromIframe, EventsF
     const onIframeInitCallbacks = new Set<IframeInitCallback>()
     const onAuthStateUpdateCallbacks = new Set<AuthStateUpdateCallback>()
 
-    messageBus.on(Messages.AuthChanged, (user) => {
+    messageBus.on(Messages.UserChanged, (user) => {
         for (const call of onUserUpdateCallbacks) {
             call(user)
         }
     })
 
-    messageBus.on(Messages.AuthState, (state) => {
+    messageBus.on(Messages.AuthStateChanged, (state) => {
         for (const call of onAuthStateUpdateCallbacks) {
             call(state)
         }

@@ -91,7 +91,7 @@ describe("HappyProvider", () => {
         })
 
         const callback = mock(({ key, windowId, error: _error, payload: _payload }) => {
-            happyProviderBusIframe.emit(Messages.ResponseComplete, {
+            happyProviderBusIframe.emit(Messages.RequestResponse, {
                 key,
                 windowId,
                 error: null,
@@ -108,7 +108,7 @@ describe("HappyProvider", () => {
             params: ["latest", false]
         }
 
-        void appBusIframe.emit(Messages.AuthState, AuthState.Disconnected)
+        void appBusIframe.emit(Messages.AuthStateChanged, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on(Messages.PermissionCheckRequest, ({ key, windowId: uuid }) => {
@@ -121,7 +121,7 @@ describe("HappyProvider", () => {
         })
 
         // within iframe
-        happyProviderBusIframe.on(Messages.RequestApprove, callback)
+        happyProviderBusIframe.on(Messages.RequestPermissionless, callback)
 
         // provider request, unanswered so don't await
         expect(provider.request(payload)).resolves.toStrictEqual(emptyRpcBlock)
@@ -144,7 +144,7 @@ describe("HappyProvider", () => {
             appBus: newAppMessageBus(appBusConfig),
         })
 
-        void appBusIframe.emit(Messages.AuthState, AuthState.Disconnected)
+        void appBusIframe.emit(Messages.AuthStateChanged, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on(Messages.PermissionCheckRequest, ({ key, windowId: uuid }) => {
@@ -157,8 +157,8 @@ describe("HappyProvider", () => {
         })
 
         // within iframe
-        happyProviderBusIframe.on(Messages.RequestApprove, ({ key }) => {
-            happyProviderBusIframe.emit(Messages.ResponseComplete, {
+        happyProviderBusIframe.on(Messages.RequestPermissionless, ({ key }) => {
+            happyProviderBusIframe.emit(Messages.RequestResponse, {
                 key,
                 windowId: uuid,
                 error: null,
@@ -186,7 +186,7 @@ describe("HappyProvider", () => {
             appBus: newAppMessageBus(appBusConfig),
         })
 
-        void appBusIframe.emit(Messages.AuthState, AuthState.Disconnected)
+        void appBusIframe.emit(Messages.AuthStateChanged, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on(Messages.PermissionCheckRequest, ({ key, windowId: uuid }) => {
@@ -199,8 +199,8 @@ describe("HappyProvider", () => {
         })
 
         // within iframe
-        happyProviderBusIframe.on(Messages.RequestApprove, ({ key }) => {
-            happyProviderBusIframe.emit(Messages.ResponseComplete, {
+        happyProviderBusIframe.on(Messages.RequestPermissionless, ({ key }) => {
+            happyProviderBusIframe.emit(Messages.RequestResponse, {
                 key,
                 windowId: uuid,
                 error: {

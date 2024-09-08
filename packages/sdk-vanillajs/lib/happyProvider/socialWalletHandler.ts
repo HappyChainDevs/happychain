@@ -50,18 +50,18 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     constructor(private config: HappyProviderConfig) {
         super()
         // sync local user state
-        config.appBus.on(Messages.AuthChanged, (_user) => {
+        config.appBus.on(Messages.UserChanged, (_user) => {
             this.user = _user
         })
 
-        config.appBus.on(Messages.AuthState, (_authState) => {
+        config.appBus.on(Messages.AuthStateChanged, (_authState) => {
             this.authState = _authState
         })
 
         config.providerBus.on(Messages.ProviderEvent, this.handleProviderNativeEvent.bind(this))
 
         // Social Auth (Iframe Proxy)
-        config.providerBus.on(Messages.ResponseComplete, this.handleCompletedRequest.bind(this))
+        config.providerBus.on(Messages.RequestResponse, this.handleCompletedRequest.bind(this))
 
         config.providerBus.on(Messages.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
@@ -96,7 +96,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
             if (!this.user && this.authState === AuthState.Disconnected) {
                 void this.config.appBus.emit(Messages.RequestDisplay, "login-modal")
 
-                const unsubscribe = this.config.appBus.on(Messages.AuthChanged, (user) => {
+                const unsubscribe = this.config.appBus.on(Messages.UserChanged, (user) => {
                     if (user) {
                         // auto-approve only works for these methods, since this is a direct response
                         // the the user login flow, and upon user login, these permissions get granted automatically
@@ -169,7 +169,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         this.emit(data.payload.event, data.payload.args)
     }
 
-    private handleCompletedRequest(data: ProviderBusEventsFromIframe[Messages.ResponseComplete]) {
+    private handleCompletedRequest(data: ProviderBusEventsFromIframe[Messages.RequestResponse]) {
         const req = this.inFlightRequests.get(data.key)
 
         if (!req) {
@@ -228,7 +228,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     }
 
     private autoApprove(key: UUID, args: EIP1193RequestParameters) {
-        void this.config.providerBus.emit(Messages.RequestApprove, {
+        void this.config.providerBus.emit(Messages.RequestPermissionless, {
             key,
             windowId: this.config.windowId,
             error: null,

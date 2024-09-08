@@ -23,7 +23,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
 
     // front end dapp connected via injected wallet
     useEffect(() => {
-        return appMessageBus.on(Messages.InjectedWalletConnect, ({ rdns, address }) => {
+        return appMessageBus.on(Messages.InjectedWalletConnected, ({ rdns, address }) => {
             const user = rdns ? createHappyUserFromWallet(rdns, address) : undefined
             setUserWithProvider(user, undefined)
         })

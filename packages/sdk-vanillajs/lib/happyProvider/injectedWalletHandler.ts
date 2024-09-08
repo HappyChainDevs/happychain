@@ -60,7 +60,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     private async handleProviderDisconnectionRequest() {
         // TODO what is this requests for? + weird then handler
         this.request({ method: "eth_requestAccounts" }).then((aaaa) => aaaa)
-        void this.config.appBus.emit(Messages.InjectedWalletConnect, { rdns: undefined, address: undefined })
+        void this.config.appBus.emit(Messages.InjectedWalletConnected, { rdns: undefined, address: undefined })
         this.localConnection = undefined
     }
 
@@ -81,7 +81,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
                 }
                 const [address] = accounts
 
-                this.config.appBus.emit(Messages.InjectedWalletConnect, { rdns, address })
+                this.config.appBus.emit(Messages.InjectedWalletConnected, { rdns, address })
             })
             providerDetails.provider.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
             providerDetails.provider.on("connect", (connectInfo) => this.emit("connect", connectInfo))
@@ -92,7 +92,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
             this.localConnection = providerDetails
 
-            void this.config.appBus.emit(Messages.InjectedWalletConnect, { rdns, address })
+            void this.config.appBus.emit(Messages.InjectedWalletConnected, { rdns, address })
         } catch {
             // TODO only reached if the eth_requestAccounts fails, is this what we want?
             void this.handleProviderDisconnectionRequest()
