@@ -22,8 +22,12 @@ export enum Messages {
     /** Instructs the iframe to display the connection modal. */
     RequestDisplay = "request-display",
 
-    /** Informs the iframe that the user has connected/disconnected to/from an injected wallet. */
-    InjectedWalletConnect = "injected-wallet:connect",
+    /**
+     * Informs the iframe that the user has connected/disconnected to/from an injected wallet.
+     * This is emitted in response to {@link Messages.InjectedWalletRequestConnect} and whenever
+     * the user changes their account in the injected wallet.
+     */
+    InjectedWalletConnected = "injected-wallet:connected",
 
     /**
      * Instructs the iframe to mirror a permission that has been granted to the user by the
@@ -43,21 +47,24 @@ export enum Messages {
     ModalToggle = "modal-toggle",
 
     /** Informs the app that the user information has changed (including connect & disconnect). */
-    AuthChanged = "auth-changed",
+    UserChanged = "user-changed",
 
     /** Informs the SDK of the current social authentication state of the user. */
-    AuthState = "auth-state",
+    AuthStateChanged = "auth-state-changed",
 
     /**
      * Instructs the SDK to connect to an injected wallet with the given RDNS, or to disconnect from
      * the current wallet if the RDNS is undefined.
+     *
+     * The SDK is to answer with {@link Messages.InjectedWalletConnected} if the connection goes
+     * through.
      */
     InjectedWalletRequestConnect = "injected-wallet:requestConnect",
 
     // --- ProviderBusEventsFromApp ----------------------------------------------------------------
 
     /** Sends a request that does not require user approval. */
-    RequestApprove = "request:approve",
+    RequestPermissionless = "request:permissionless",
 
     /** Sent to check if a request requires user approval. */
     PermissionCheckRequest = "permission-check:request",
@@ -65,11 +72,11 @@ export enum Messages {
     // --- ProviderBusEventsFromIframe -------------------------------------------------------------
 
     /**
-     * Response to a request sent by the app. The request was received by the provider bus
-     * ("request:approve") if it didn't require approval, or from the popup bus ("request:approve")
-     * if it did.
+     * Response to a request sent by the app. The request was received by the provider bus if it
+     * didn't require approval ({@link Messages.RequestPermissionless}), or from the popup bus
+     * ({@link Messages.PopupApprove}) if it did.
      */
-    ResponseComplete = "response:complete",
+    RequestResponse = "request:response",
 
     /**
      * Answers a previous "permission-check:request" from the app, telling the app whether a request
@@ -85,10 +92,10 @@ export enum Messages {
     // --- PopupBusEvents --------------------------------------------------------------------------
 
     /** Informs the iframe that the user has approved a request in the popup. */
-    PopupApprove = "request:approve",
+    PopupApprove = "popup:approve",
 
     /** Informs the iframe that the user has rejected a request in the popup. */
-    PopupReject = "request:reject",
+    PopupReject = "popup:reject",
 }
 
 // =================================================================================================
@@ -99,7 +106,7 @@ export enum Messages {
  */
 export type EventsFromApp = {
     [Messages.RequestDisplay]: "login-modal"
-    [Messages.InjectedWalletConnect]:
+    [Messages.InjectedWalletConnected]:
         | { rdns: string; address: `0x${string}` }
         | { rdns?: undefined; address?: undefined }
     [Messages.MirrorPermissions]: {
@@ -118,8 +125,8 @@ type _assert1 = AssertAssignableTo<EventsFromApp, EventSchema<EventsFromApp>>
 export type EventsFromIframe = {
     [Messages.IframeInit]: boolean
     [Messages.ModalToggle]: boolean
-    [Messages.AuthChanged]: HappyUser | undefined
-    [Messages.AuthState]: AuthState
+    [Messages.UserChanged]: HappyUser | undefined
+    [Messages.AuthStateChanged]: AuthState
     [Messages.InjectedWalletRequestConnect]: { rdns?: string }
 }
 type _assert2 = AssertAssignableTo<EventsFromIframe, EventSchema<EventsFromIframe>>
@@ -131,7 +138,7 @@ type _assert2 = AssertAssignableTo<EventsFromIframe, EventSchema<EventsFromIfram
  * Schema for messages that can be sent from the app to the iframe.
  */
 export type ProviderBusEventsFromApp = {
-    [Messages.RequestApprove]: ProviderEventPayload<EIP1193RequestParameters>
+    [Messages.RequestPermissionless]: ProviderEventPayload<EIP1193RequestParameters>
     [Messages.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>
 }
 type _assert3 = AssertAssignableTo<ProviderBusEventsFromApp, EventSchema<ProviderBusEventsFromApp>>
@@ -143,7 +150,7 @@ type _assert3 = AssertAssignableTo<ProviderBusEventsFromApp, EventSchema<Provide
  * Schema for messages that can be sent from the iframe to the app.
  */
 export type ProviderBusEventsFromIframe = {
-    [Messages.ResponseComplete]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
+    [Messages.RequestResponse]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
     [Messages.PermissionCheckResponse]: ProviderEventPayload<boolean> | ProviderEventError
     [Messages.ProviderEvent]: {
         payload: { event: EIP1193EventName; args: unknown }

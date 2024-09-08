@@ -3,7 +3,7 @@ import { appMessageBus, happyProviderBus } from "../services/eventBus"
 
 export function emitUserUpdate(user?: HappyUser) {
     // emit full user update for dApp
-    appMessageBus.emit(Messages.AuthChanged, user)
+    appMessageBus.emit(Messages.UserChanged, user)
 
     // emit EIP1193 accountsChanged update
     happyProviderBus.emit(Messages.ProviderEvent, {
