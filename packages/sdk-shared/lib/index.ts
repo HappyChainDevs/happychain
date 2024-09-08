@@ -1,4 +1,4 @@
-export { Messages } from "./interfaces/events"
+export { Msgs } from "./interfaces/events"
 export { isPermissionsRequest } from "./interfaces/eip1193"
 export { createUUID } from "./utils/uuid"
 export * as chains from "./chains"
@@ -23,13 +23,13 @@ export {
 /** Types */
 export type { ChainParameters } from "./chains/utils"
 export type { UUID } from "./utils/uuid"
-export type { EventsFromIframe, EventsFromApp } from "./interfaces/events"
+export type { MsgsFromIframe, MsgsFromApp } from "./interfaces/events"
 export type { HappyUser } from "./interfaces/happyUser"
 export type { Logger } from "./services/logger"
 export type {
-    ProviderBusEventsFromApp,
-    ProviderBusEventsFromIframe,
-    PopupBusEvents,
+    ProviderMsgsFromApp,
+    PopupMsgsFromIframe,
+    PopupMsgs,
     NoEvents,
 } from "./interfaces/events"
 export type { EIP1193ErrorObject, IProviderRpcError } from "./interfaces/errors"

@@ -6,8 +6,8 @@ import {
     EIP1193UserRejectedRequestError,
     GenericProviderRpcError,
     type HappyUser,
-    Messages,
-    type ProviderBusEventsFromIframe,
+    Msgs,
+    type PopupMsgsFromIframe,
     type UUID,
     createUUID,
 } from "@happychain/sdk-shared"
@@ -50,20 +50,20 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     constructor(private config: HappyProviderConfig) {
         super()
         // sync local user state
-        config.appBus.on(Messages.UserChanged, (_user) => {
+        config.appBus.on(Msgs.UserChanged, (_user) => {
             this.user = _user
         })
 
-        config.appBus.on(Messages.AuthStateChanged, (_authState) => {
+        config.appBus.on(Msgs.AuthStateChanged, (_authState) => {
             this.authState = _authState
         })
 
-        config.providerBus.on(Messages.ProviderEvent, this.handleProviderNativeEvent.bind(this))
+        config.providerBus.on(Msgs.ProviderEvent, this.handleProviderNativeEvent.bind(this))
 
         // Social Auth (Iframe Proxy)
-        config.providerBus.on(Messages.RequestResponse, this.handleCompletedRequest.bind(this))
+        config.providerBus.on(Msgs.RequestResponse, this.handleCompletedRequest.bind(this))
 
-        config.providerBus.on(Messages.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
+        config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
 
     public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
@@ -94,9 +94,9 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
              * will be what is returned to the originating caller
              */
             if (!this.user && this.authState === AuthState.Disconnected) {
-                void this.config.appBus.emit(Messages.RequestDisplay, "login-modal")
+                void this.config.appBus.emit(Msgs.RequestDisplay, "login-modal")
 
-                const unsubscribe = this.config.appBus.on(Messages.UserChanged, (user) => {
+                const unsubscribe = this.config.appBus.on(Msgs.UserChanged, (user) => {
                     if (user) {
                         // auto-approve only works for these methods, since this is a direct response
                         // the the user login flow, and upon user login, these permissions get granted automatically
@@ -140,7 +140,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         return true
     }
 
-    private async handlePermissionCheck(data: ProviderBusEventsFromIframe[Messages.PermissionCheckResponse]) {
+    private async handlePermissionCheck(data: PopupMsgsFromIframe[Msgs.PermissionCheckResponse]) {
         const inFlight = this.inFlightChecks.get(data.key)
         if (!inFlight) return
         if (typeof data.payload === "boolean") {
@@ -154,7 +154,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     private async requiresApproval(args: EIP1193RequestParameters) {
         const key = createUUID()
         return new Promise((resolve, reject) => {
-            this.config.providerBus.emit(Messages.PermissionCheckRequest, {
+            this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
                 key,
                 windowId: this.config.windowId,
                 payload: args,
@@ -165,11 +165,11 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         })
     }
 
-    private handleProviderNativeEvent(data: ProviderBusEventsFromIframe[Messages.ProviderEvent]) {
+    private handleProviderNativeEvent(data: PopupMsgsFromIframe[Msgs.ProviderEvent]) {
         this.emit(data.payload.event, data.payload.args)
     }
 
-    private handleCompletedRequest(data: ProviderBusEventsFromIframe[Messages.RequestResponse]) {
+    private handleCompletedRequest(data: PopupMsgsFromIframe[Msgs.RequestResponse]) {
         const req = this.inFlightRequests.get(data.key)
 
         if (!req) {
@@ -228,7 +228,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     }
 
     private autoApprove(key: UUID, args: EIP1193RequestParameters) {
-        void this.config.providerBus.emit(Messages.RequestPermissionless, {
+        void this.config.providerBus.emit(Msgs.RequestPermissionless, {
             key,
             windowId: this.config.windowId,
             error: null,

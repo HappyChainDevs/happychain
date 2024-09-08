@@ -1,10 +1,10 @@
 import {
     type AuthState,
     type EventBus,
-    type EventsFromApp,
-    type EventsFromIframe,
     type HappyUser,
-    Messages,
+    Msgs,
+    type MsgsFromApp,
+    type MsgsFromIframe,
 } from "@happychain/sdk-shared"
 
 /**
@@ -37,25 +37,25 @@ export type IframeInitCallback = (isInit: boolean) => void
  */
 export type ListenerUnsubscribeFn = () => void
 
-export function registerListeners(messageBus: EventBus<EventsFromIframe, EventsFromApp>) {
+export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromApp>) {
     const onUserUpdateCallbacks = new Set<UserUpdateCallback>()
     const onModalUpdateCallbacks = new Set<ModalUpdateCallback>()
     const onIframeInitCallbacks = new Set<IframeInitCallback>()
     const onAuthStateUpdateCallbacks = new Set<AuthStateUpdateCallback>()
 
-    messageBus.on(Messages.UserChanged, (user) => {
+    messageBus.on(Msgs.UserChanged, (user) => {
         for (const call of onUserUpdateCallbacks) {
             call(user)
         }
     })
 
-    messageBus.on(Messages.AuthStateChanged, (state) => {
+    messageBus.on(Msgs.AuthStateChanged, (state) => {
         for (const call of onAuthStateUpdateCallbacks) {
             call(state)
         }
     })
 
-    messageBus.on(Messages.ModalToggle, (isOpen) => {
+    messageBus.on(Msgs.ModalToggle, (isOpen) => {
         for (const call of onModalUpdateCallbacks) {
             call(isOpen)
         }

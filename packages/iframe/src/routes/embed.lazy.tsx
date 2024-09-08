@@ -1,4 +1,4 @@
-import { AuthState, Messages } from "@happychain/sdk-shared"
+import { AuthState, Msgs } from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -63,13 +63,13 @@ function Embed() {
     }, [user, getBalance])
 
     function open() {
-        void appMessageBus.emit(Messages.ModalToggle, true)
+        void appMessageBus.emit(Msgs.ModalToggle, true)
         setIsOpen(true)
     }
 
     function close() {
         setIsOpen(false)
-        void appMessageBus.emit(Messages.ModalToggle, false)
+        void appMessageBus.emit(Msgs.ModalToggle, false)
     }
 
     if (authState === AuthState.Connecting) {

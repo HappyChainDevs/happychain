@@ -3,11 +3,11 @@ import type {
     EIP1193RequestParameters,
     EIP1193RequestResult,
     EventBus,
-    EventsFromApp,
-    EventsFromIframe,
     Logger,
-    ProviderBusEventsFromApp,
-    ProviderBusEventsFromIframe,
+    MsgsFromApp,
+    MsgsFromIframe,
+    PopupMsgsFromIframe,
+    ProviderMsgsFromApp,
     config,
 } from "@happychain/sdk-shared"
 import type { UUID } from "@happychain/sdk-shared"
@@ -17,8 +17,8 @@ import type SafeEventEmitter from "@metamask/safe-event-emitter"
 export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
     logger?: Logger
     windowId: UUID
-    providerBus: EventBus<ProviderBusEventsFromIframe, ProviderBusEventsFromApp>
-    appBus: EventBus<EventsFromIframe, EventsFromApp>
+    providerBus: EventBus<PopupMsgsFromIframe, ProviderMsgsFromApp>
+    appBus: EventBus<MsgsFromIframe, MsgsFromApp>
 }
 
 export interface EIP1193ConnectionHandler extends SafeEventEmitter {

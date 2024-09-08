@@ -1,4 +1,4 @@
-import { Messages, type ProviderBusEventsFromApp, requiresApproval } from "@happychain/sdk-shared"
+import { Msgs, type ProviderMsgsFromApp, requiresApproval } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect } from "react"
 
@@ -16,7 +16,7 @@ export function usePermissionsCheck() {
      * on the current internal state of the app
      */
     const checkIfRequestRequiresConfirmation = useCallback(
-        (payload: ProviderBusEventsFromApp[Messages.PermissionCheckRequest]["payload"]) => {
+        (payload: ProviderMsgsFromApp[Msgs.PermissionCheckRequest]["payload"]) => {
             const basicCheck = requiresApproval(payload)
             //  if the basic check shows its a safe method, we can stop here, and report back
             if (!basicCheck) {
@@ -66,9 +66,9 @@ export function usePermissionsCheck() {
      * the request will be rejected
      */
     useEffect(() => {
-        return happyProviderBus.on(Messages.PermissionCheckRequest, (data) => {
+        return happyProviderBus.on(Msgs.PermissionCheckRequest, (data) => {
             const result = checkIfRequestRequiresConfirmation(data.payload)
-            return happyProviderBus.emit(Messages.PermissionCheckResponse, {
+            return happyProviderBus.emit(Msgs.PermissionCheckResponse, {
                 key: data.key,
                 windowId: data.windowId,
                 error: null,
