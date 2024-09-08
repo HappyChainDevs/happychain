@@ -150,7 +150,7 @@ importers:
         specifier: ^0.0.39
         version: 0.0.39(@tanstack/query-core@5.52.2)(@tanstack/vue-query@5.52.2(vue@3.4.38(typescript@5.5.4)))(@types/react@18.3.4)(bufferutil@4.0.8)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-native@0.75.2(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.3.4)(bufferutil@4.0.8)(encoding@0.1.13)(react@18.3.1)(typescript@5.5.4)(utf-8-validate@5.0.10))(react@18.3.1)(rollup@4.21.1)(typescript@5.5.4)(utf-8-validate@5.0.10)(viem@2.20.1(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8))(vue@3.4.38(typescript@5.5.4))(zod@3.23.8)
       viem:
-        specifier: 2.x
+        specifier: ^2.20.1
         version: 2.20.1(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8)
       vue:
         specifier: ^3.4.37
@@ -363,7 +363,7 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
       viem:
-        specifier: ^2.18.4
+        specifier: ^2.20.1
         version: 2.20.1(bufferutil@4.0.8)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.23.8)
       zod:
         specifier: ^3.23.8
@@ -11805,7 +11805,7 @@ snapshots:
 
   '@scure/bip32@1.4.0':
     dependencies:
-      '@noble/curves': 1.4.0
+      '@noble/curves': 1.4.2
       '@noble/hashes': 1.4.0
       '@scure/base': 1.1.7
 
@@ -19430,7 +19430,7 @@ snapshots:
 
   webauthn-p256@0.0.5:
     dependencies:
-      '@noble/curves': 1.4.0
+      '@noble/curves': 1.4.2
       '@noble/hashes': 1.4.0
 
   webextension-polyfill@0.10.0: {}
