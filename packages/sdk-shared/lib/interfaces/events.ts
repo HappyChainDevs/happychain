@@ -1,5 +1,3 @@
-import type { AssertAssignableTo } from "@happychain/common"
-import type { EventSchema } from "../services/eventBus"
 import type {
     EIP1193EventName,
     EIP1193PermissionsRequest,
@@ -112,7 +110,6 @@ export type MsgsFromApp = {
         response: unknown
     }
 }
-type _assert1 = AssertAssignableTo<MsgsFromApp, EventSchema<MsgsFromApp>>
 
 // =================================================================================================
 // === MESSAGE BUS EVENTS FROM IFRAME ==============================================================
@@ -127,7 +124,6 @@ export type MsgsFromIframe = {
     [Msgs.AuthStateChanged]: AuthState
     [Msgs.InjectedWalletRequestConnect]: { rdns?: string }
 }
-type _assert2 = AssertAssignableTo<MsgsFromIframe, EventSchema<MsgsFromIframe>>
 
 // =================================================================================================
 // === PROVIDER BUS EVENTS FROM APP ================================================================
@@ -139,7 +135,6 @@ export type ProviderMsgsFromApp = {
     [Msgs.RequestPermissionless]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>
 }
-type _assert3 = AssertAssignableTo<ProviderMsgsFromApp, EventSchema<ProviderMsgsFromApp>>
 
 // =================================================================================================
 // === PROVIDER BUS EVENTS FROM IFRAME =============================================================
@@ -154,7 +149,6 @@ export type PopupMsgsFromIframe = {
         payload: { event: EIP1193EventName; args: unknown }
     }
 }
-type _assert4 = AssertAssignableTo<PopupMsgsFromIframe, EventSchema<PopupMsgsFromIframe>>
 
 // =================================================================================================
 // === POPUP BUS EVENTS ============================================================================
@@ -169,7 +163,6 @@ export type PopupMsgs = {
     [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.PopupReject]: ProviderEventError<EIP1193ErrorObject>
 }
-type _assert5 = AssertAssignableTo<PopupMsgs, EventSchema<PopupMsgs>>
 
 // =================================================================================================
 // === EMPTY EVENTS SCHEMA =========================================================================
@@ -179,4 +172,3 @@ type _assert5 = AssertAssignableTo<PopupMsgs, EventSchema<PopupMsgs>>
  */
 // biome-ignore lint/complexity/noBannedTypes: <explanation>
 export type NoEvents = {}
-type _assert6 = AssertAssignableTo<NoEvents, EventSchema<NoEvents>>

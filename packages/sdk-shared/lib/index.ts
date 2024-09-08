@@ -36,7 +36,6 @@ export type { EIP1193ErrorObject, IProviderRpcError } from "./interfaces/errors"
 export type {
     EventKey,
     EventHandler,
-    EventSchema,
     EventBusOptions,
 } from "./services/eventBus"
 export type {

@@ -28,14 +28,9 @@ export enum EventBusMode {
 export type EventKey = string | number | symbol
 
 /**
- * Maps all allowed event keys to their respective payload types.
- */
-export type EventSchema<T extends EventSchema<T>> = { [Key in keyof T]: T[Key] }
-
-/**
  * Types for event handlers taking in a specific payload type corresponding to a key.
  */
-export type EventHandler<S extends EventSchema<S>, K extends keyof S = keyof S> = (payload: S[K]) => void
+export type EventHandler<S, K extends keyof S = keyof S> = (payload: S[K]) => void
 
 /**
  * Defines name, logger, error handler, and mode for the event bus.
@@ -62,7 +57,7 @@ export type EventBusOptions = {
  * @typeParam SL - Schema for the listening side of the bus.
  * @typeParam SE - Schema for the emitting side of the bus.
  */
-export class EventBus<SL extends EventSchema<SL>, SE extends EventSchema<SE> = SL> {
+export class EventBus<SL, SE = SL> {
     private handlerMap: Map<keyof SL, Set<EventHandler<SL>>> = new Map()
     private port: MessagePort | BroadcastChannel | null = null
 
