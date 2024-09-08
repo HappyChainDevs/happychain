@@ -30,14 +30,34 @@ export type EIP1193EventName = keyof EIP1193EventMap
 
 // === PERMISSIONS METHODS =========================================================================
 
-const eip1193PermissionsMethods = [
+type EIP1193PermissionsMethod =
+    | "eth_accounts"
+    | "eth_requestAccounts"
+    | "wallet_requestPermissions"
+    | "wallet_revokePermissions"
+
+/**
+ * `T = "a" | "b"` ==> `TupleUnion<T> = ["a", "b"] | ["b", "a"]`
+ */
+// biome-ignore format: readability
+type TupleUnion<T, K = T> = [T] extends [never]
+  ? []
+  : K extends T
+    ? [T, ...TupleUnion<Exclude<T, K>>]
+    : never
+
+type EIP1193PermissionsMethodArray = TupleUnion<EIP1193PermissionsMethod>
+
+const eip1193PermissionsMethods: string[] = [
     "eth_accounts",
     "eth_requestAccounts",
     "wallet_requestPermissions",
     "wallet_revokePermissions",
-] // TODO as const should be here, but does not work with Vite
+] satisfies EIP1193PermissionsMethodArray
 
-type EIP1193PermissionsMethod = (typeof eip1193PermissionsMethods)[number]
+// Note: it would be cleaner to use `as const` on the array then use it to define
+// `EIP1193PermissionsMethod`. Unfortunately this breaks Microsoft's API extractor and therefore
+// vite-plugin-dts.
 
 /**
  * Union type of all EIP1193 request types that request permissions.
@@ -48,5 +68,5 @@ export type EIP1193PermissionsRequest = Extract<EIP1193RequestParameters, { meth
  * Checks if the EIP-1193 request is one that requests permissions.
  */
 export function isPermissionsRequest(args: { method: string; params?: unknown }): args is EIP1193PermissionsRequest {
-    return eip1193PermissionsMethods.includes(args.method as EIP1193PermissionsMethod)
+    return eip1193PermissionsMethods.includes(args.method)
 }
