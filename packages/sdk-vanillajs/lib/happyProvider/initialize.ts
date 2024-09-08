@@ -1,10 +1,10 @@
 import type {
     EIP1193Provider,
-    EventsFromApp,
-    EventsFromIframe,
     HappyUser,
-    ProviderBusEventsFromApp,
-    ProviderBusEventsFromIframe,
+    MsgsFromApp,
+    MsgsFromIframe,
+    PopupMsgsFromIframe,
+    ProviderMsgsFromApp,
 } from "@happychain/sdk-shared"
 import { EventBus, EventBusMode, config, createUUID } from "@happychain/sdk-shared"
 
@@ -18,7 +18,7 @@ import { registerListeners } from "./listeners"
  */
 export const windowId = createUUID()
 
-const dappMessageBus = new EventBus<EventsFromIframe, EventsFromApp>({
+const dappMessageBus = new EventBus<MsgsFromIframe, MsgsFromApp>({
     mode: EventBusMode.AppPort,
     scope: "happy-chain-dapp-bus",
 })
@@ -66,7 +66,7 @@ export const happyProvider = new HappyProvider({
 
     windowId: windowId,
 
-    providerBus: new EventBus<ProviderBusEventsFromIframe, ProviderBusEventsFromApp>({
+    providerBus: new EventBus<PopupMsgsFromIframe, ProviderMsgsFromApp>({
         mode: EventBusMode.AppPort,
         scope: "happy-chain-eip1193-provider",
     }),

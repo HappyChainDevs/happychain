@@ -1,8 +1,8 @@
-import type { Messages, PopupBusEvents } from "@happychain/sdk-shared"
+import type { Msgs, PopupMsgs } from "@happychain/sdk-shared"
 import type { requestLabels } from "../../constants/requestLabels"
 
 type Request<TMethod extends keyof typeof requestLabels> = Extract<
-    PopupBusEvents[Messages.PopupApprove]["payload"],
+    PopupMsgs[Msgs.PopupApprove]["payload"],
     { method: TMethod }
 >
 

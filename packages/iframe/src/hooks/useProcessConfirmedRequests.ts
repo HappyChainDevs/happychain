@@ -1,4 +1,4 @@
-import { Messages, chains, getEIP1193ErrorObjectFromUnknown } from "@happychain/sdk-shared"
+import { Msgs, chains, getEIP1193ErrorObjectFromUnknown } from "@happychain/sdk-shared"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 
@@ -23,7 +23,7 @@ export function useProcessConfirmedRequests() {
     // trusted requests may only be sent from same-origin (popup approval screen)
     // and can be sent through the walletClient
     useEffect(() => {
-        return popupListenBus.on(Messages.PopupApprove, async (data) => {
+        return popupListenBus.on(Msgs.PopupApprove, async (data) => {
             // wrong window, ignore
             if (!confirmWindowId(data.windowId)) return
 
@@ -39,7 +39,7 @@ export function useProcessConfirmedRequests() {
                  */
                 if ("eth_requestAccounts" === data.payload.method) {
                     setPermission(data.payload)
-                    void happyProviderBus.emit(Messages.RequestResponse, {
+                    void happyProviderBus.emit(Msgs.RequestResponse, {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
@@ -51,7 +51,7 @@ export function useProcessConfirmedRequests() {
                 if ("wallet_requestPermissions" === data.payload.method) {
                     setPermission(data.payload)
 
-                    void happyProviderBus.emit(Messages.RequestResponse, {
+                    void happyProviderBus.emit(Msgs.RequestResponse, {
                         key: data.key,
                         windowId: data.windowId,
                         error: null,
@@ -87,14 +87,14 @@ export function useProcessConfirmedRequests() {
                     }
                 }
 
-                void happyProviderBus.emit(Messages.RequestResponse, {
+                void happyProviderBus.emit(Msgs.RequestResponse, {
                     key: data.key,
                     windowId: data.windowId,
                     error: null,
                     payload: result || {},
                 })
             } catch (e) {
-                void happyProviderBus.emit(Messages.RequestResponse, {
+                void happyProviderBus.emit(Msgs.RequestResponse, {
                     key: data.key,
                     windowId: data.windowId,
                     error: getEIP1193ErrorObjectFromUnknown(e),
@@ -110,9 +110,9 @@ export function useProcessConfirmedRequests() {
      * promise will be rejected
      */
     useEffect(() => {
-        return popupListenBus.on(Messages.PopupReject, (data) => {
+        return popupListenBus.on(Msgs.PopupReject, (data) => {
             if (!confirmWindowId(data.windowId)) return
-            void happyProviderBus.emit(Messages.RequestResponse, data)
+            void happyProviderBus.emit(Msgs.RequestResponse, data)
         })
     }, [])
 }

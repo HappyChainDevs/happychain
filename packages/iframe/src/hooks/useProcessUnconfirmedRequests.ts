@@ -1,8 +1,8 @@
 import type { EIP1193RequestParameters, ProviderEventPayload } from "@happychain/sdk-shared"
 import {
     AuthState,
-    Messages,
-    type ProviderBusEventsFromIframe,
+    Msgs,
+    type PopupMsgsFromIframe,
     getChainFromSearchParams,
     getEIP1193ErrorObjectFromUnknown,
     waitForCondition,
@@ -29,9 +29,9 @@ export function useProcessUnconfirmedRequests() {
     const respondWith = useCallback(
         (
             data: ProviderEventPayload<EIP1193RequestParameters>,
-            payload: ProviderBusEventsFromIframe[Messages.RequestResponse]["payload"],
+            payload: PopupMsgsFromIframe[Msgs.RequestResponse]["payload"],
         ) => {
-            happyProviderBus.emit(Messages.RequestResponse, {
+            happyProviderBus.emit(Msgs.RequestResponse, {
                 key: data.key,
                 windowId: data.windowId,
                 error: null,
@@ -44,9 +44,9 @@ export function useProcessUnconfirmedRequests() {
     const errorWith = useCallback(
         (
             data: ProviderEventPayload<EIP1193RequestParameters>,
-            error: ProviderBusEventsFromIframe[Messages.RequestResponse]["error"],
+            error: PopupMsgsFromIframe[Msgs.RequestResponse]["error"],
         ) => {
-            happyProviderBus.emit(Messages.RequestResponse, {
+            happyProviderBus.emit(Msgs.RequestResponse, {
                 key: data.key,
                 windowId: data.windowId,
                 error: error,
@@ -59,7 +59,7 @@ export function useProcessUnconfirmedRequests() {
     // Untrusted requests can only be called using the public client
     // as they bypass the popup approval screen
     useEffect(() => {
-        return happyProviderBus.on(Messages.RequestPermissionless, async (data) => {
+        return happyProviderBus.on(Msgs.RequestPermissionless, async (data) => {
             if (!confirmWindowId(data.windowId)) return
 
             if ("eth_chainId" === data.payload.method) {

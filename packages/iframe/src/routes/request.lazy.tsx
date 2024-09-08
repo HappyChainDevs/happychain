@@ -2,7 +2,7 @@ import { useState } from "react"
 
 import { createLazyFileRoute } from "@tanstack/react-router"
 
-import { Messages, type PopupBusEvents } from "@happychain/sdk-shared"
+import { Msgs, type PopupMsgs } from "@happychain/sdk-shared"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
@@ -23,7 +23,7 @@ function Request() {
     const req = JSON.parse(atob(args))
 
     function reject() {
-        void popupEmitBus.emit(Messages.PopupReject, {
+        void popupEmitBus.emit(Msgs.PopupReject, {
             error: {
                 code: 4001,
                 message: "User rejected request",
@@ -35,9 +35,9 @@ function Request() {
         })
     }
 
-    function accept(payload: PopupBusEvents[Messages.PopupApprove]["payload"]) {
+    function accept(payload: PopupMsgs[Msgs.PopupApprove]["payload"]) {
         setIsLoading(true)
-        void popupEmitBus.emit(Messages.PopupApprove, {
+        void popupEmitBus.emit(Msgs.PopupApprove, {
             error: null,
             windowId,
             key,
