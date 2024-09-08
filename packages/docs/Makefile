@@ -9,6 +9,8 @@ include ../../makefiles/formatting.mk
 # the three processes as a group if one crashes.
 dev:
 	concurrently \
+		--restart-tries -1 \
+		--names "doc-js,doc-react,vocs" \
 		'make typedoc-js.watch'\
 		'make typedoc-react.watch'\
 		'make vocs.watch';
@@ -19,6 +21,7 @@ build: typedoc vocs
 .PHONY: build
 
 clean:
+	rm -rf docs/dist
 	rm -rf docs/pages/{js,react}/api
 	rm -rf vocs.config.ts.timestamp-*
 .PHONY: clean
