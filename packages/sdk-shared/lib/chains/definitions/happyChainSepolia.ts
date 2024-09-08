@@ -1,5 +1,6 @@
-import { type AddEthereumChainParameter, defineChain } from "viem"
+import { defineChain } from "viem"
 import { chainConfig } from "viem/op-stack"
+import type { ChainParameters } from "../utils.ts"
 
 export const happyChainSepolia = {
     chainName: "HappyChain Sepolia",
@@ -7,7 +8,8 @@ export const happyChainSepolia = {
     nativeCurrency: { name: "HappyChain", symbol: "HAPPY", decimals: 18 },
     chainId: "0xd8",
     blockExplorerUrls: ["https://happy-testnet-sepolia.explorer.caldera.xyz"],
-} satisfies Readonly<AddEthereumChainParameter>
+    opStack: true,
+} satisfies ChainParameters
 
 /**
  * Contract Info can be found here:
@@ -115,11 +117,10 @@ export const happyChainSepoliaViemChain = defineChain({
                 address: contracts.L2OutputOracleProxy,
             },
         },
-        // No Deployed Multicall3 Yet
-        // multicall3: {
-        //     address: "0xca11bde05977b3631167028862be2a173976ca11",
-        //     blockCreated: 4286263,
-        // },
+        multicall3: {
+            address: "0xca11bde05977b3631167028862be2a173976ca11",
+            blockCreated: 4286263,
+        },
         portal: {
             [sourceId]: {
                 address: contracts.OptimismPortalProxy,

@@ -1,4 +1,4 @@
-import type { AddEthereumChainParameter } from "viem"
+import type { ChainParameters } from "../utils.ts"
 
 export const ethereum = {
     chainName: "Ethereum",
@@ -22,4 +22,4 @@ export const ethereum = {
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
     chainId: "0x1",
     blockExplorerUrls: ["https://etherscan.io", "https://eth.blockscout.com", "https://ethereum.dex.guru"],
-} satisfies Readonly<AddEthereumChainParameter>
+} satisfies ChainParameters

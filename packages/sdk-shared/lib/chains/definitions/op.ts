@@ -1,4 +1,4 @@
-import type { AddEthereumChainParameter } from "viem"
+import type { ChainParameters } from "../utils.ts"
 
 export const op = {
     chainName: "OP Mainnet",
@@ -18,4 +18,5 @@ export const op = {
         "https://optimism.blockscout.com",
         "https://optimism.dex.guru",
     ],
-} satisfies Readonly<AddEthereumChainParameter>
+    opStack: true,
+} satisfies ChainParameters

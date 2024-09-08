@@ -1,4 +1,4 @@
-import type { AddEthereumChainParameter } from "viem"
+import type { ChainParameters } from "../utils.ts"
 
 export const ethereumSepolia = {
     chainName: "Sepolia",
@@ -20,4 +20,4 @@ export const ethereumSepolia = {
     nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
     chainId: "0xaa36a7",
     blockExplorerUrls: ["https://sepolia.etherscan.io", "https://sepolia.otterscan.io"],
-} satisfies Readonly<AddEthereumChainParameter>
+} satisfies ChainParameters

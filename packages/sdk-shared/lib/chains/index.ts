@@ -13,3 +13,5 @@ export { happyChainSepolia, devnet }
 
 // default to be used on both iframe and sdk setups
 export const defaultChain = happyChainSepolia
+
+export type { ChainParameters } from "./utils"
