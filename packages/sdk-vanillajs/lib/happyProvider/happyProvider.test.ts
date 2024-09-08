@@ -87,7 +87,7 @@ describe("HappyProvider", () => {
             iframePath: config.iframePath,
             windowId: uuid,
             providerBus: newAppProviderBus(providerBusConfig),
-            appBus: newAppMessageBus(appBusConfig),
+            msgBus: newAppMessageBus(appBusConfig),
         })
 
         const callback = mock(({ key, windowId, error: _error, payload: _payload }) => {
@@ -141,7 +141,7 @@ describe("HappyProvider", () => {
             iframePath: config.iframePath,
             windowId: uuid,
             providerBus: new EventBus(providerBusConfig),
-            appBus: newAppMessageBus(appBusConfig),
+            msgBus: newAppMessageBus(appBusConfig),
         })
 
         void appBusIframe.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
@@ -183,7 +183,7 @@ describe("HappyProvider", () => {
             iframePath: config.iframePath,
             windowId: uuid,
             providerBus: newAppProviderBus(providerBusConfig),
-            appBus: newAppMessageBus(appBusConfig),
+            msgBus: newAppMessageBus(appBusConfig),
         })
 
         void appBusIframe.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
@@ -226,7 +226,7 @@ describe("HappyProvider", () => {
             iframePath: config.iframePath,
             windowId: createUUID(),
             providerBus: newAppProviderBus(providerBusConfig),
-            appBus: newAppMessageBus(appBusConfig),
+            msgBus: newAppMessageBus(appBusConfig),
         })
 
         const callback = mock(() => {})

@@ -30,7 +30,7 @@ export class HappyProvider extends SafeEventEmitter {
 
         config.logger?.log("EIP1193Provider Created")
 
-        config.appBus.on(Msgs.AuthStateChanged, (_authState) => {
+        config.msgBus.on(Msgs.AuthStateChanged, (_authState) => {
             this.authState = _authState
         })
 
