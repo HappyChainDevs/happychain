@@ -1,4 +1,5 @@
-TARGET ?= local
+# Set TARGET to "LOCAL" by default. Other valid values: "TEST" or "HAPPY_TEST".
+TARGET ?= LOCAL
 
 ALTO_REPO=https://github.com/pimlicolabs/alto.git --branch @pimlico/alto@0.0.4
 ALTO_DIR=alto
@@ -19,14 +20,20 @@ endif
 	@make select_config
 .PHONY: build_bundler
 
+# Target to select the appropriate config based on the TARGET
+select_config:
+	@echo "Selecting configuration for $(TARGET)..."
+	@cp $(CONFIG) $(ALTO_DIR)/config.json
+.PHONY: select_config
+
 # Target to run the Alto bundler with the appropriate configuration
 run_bundler:
 	@echo "Running Alto bundler with $(TARGET) config..."
 	cd $(ALTO_DIR) && ./alto run --config "config.json"
 .PHONY: run_bundler
 
-# Target to select the appropriate config based on the TARGET
-select_config:
-	@echo "Selecting configuration for $(TARGET)..."
-	@cp $(CONFIG) $(ALTO_DIR)/config.json
-.PHONY: select_config
+# Clean up the Alto directory (optional)
+clean:
+	@echo "Cleaning up the Alto directory..."
+	rm -rf $(ALTO_DIR)
+.PHONY: clean
