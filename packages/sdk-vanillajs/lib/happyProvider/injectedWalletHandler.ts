@@ -52,7 +52,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
         return response
     }
 
-    private proxyPermissions(params: EventsFromApp["injected-wallet:mirror-permissions"]) {
+    private proxyPermissions(params: EventsFromApp[Messages.MirrorPermissions]) {
         void this.config.appBus.emit(Messages.MirrorPermissions, params)
     }
 

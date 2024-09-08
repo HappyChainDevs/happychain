@@ -56,6 +56,42 @@ export enum Messages {
 
     /** Instructs the SDK to connect/disconnect to/from an injected wallet with given RDNS. */
     InjectedWalletRequestConnect = "injected-wallet:requestConnect",
+
+    // --- ProviderBusEventsFromApp ----------------------------------------------------------------
+
+    /** Sends a request that does not require user approval. */
+    RequestApprove = "request:approve",
+
+    /** Sent to check if a request requires user approval. */
+    PermissionCheckRequest = "permission-check:request",
+
+    // --- ProviderBusEventsFromIframe -------------------------------------------------------------
+
+    /**
+     * Response to a request sent by the app. The request was received by the provider bus
+     * ("request:approve") if it didn't require approval, or from the popup bus ("request:approve")
+     * if it did.
+     */
+    ResponseComplete = "response:complete",
+
+    /**
+     * Answers a previous "permission-check:request" from the app, telling the app whether a request
+     * requires approval.
+     */
+    PermissionCheckResponse = "permission-check:response",
+
+    /**
+     * Sends an EIP-1193 event to the app.
+     */
+    ProviderEvent = "provider:event",
+
+    // --- PopupBusEvents --------------------------------------------------------------------------
+
+    /** Informs the iframe that the user has approved a request in the popup. */
+    PopupApprove = "request:approve",
+
+    /** Informs the iframe that the user has rejected a request in the popup. */
+    PopupReject = "request:reject",
 }
 
 // =================================================================================================
@@ -98,11 +134,8 @@ type _assert2 = AssertAssignableTo<EventsFromIframe, EventSchema<EventsFromIfram
  * Schema for messages that can be sent from the app to the iframe.
  */
 export type ProviderBusEventsFromApp = {
-    /** Sends a request that does not require user approval. */
-    "request:approve": ProviderEventPayload<EIP1193RequestParameters>
-
-    /** Sent to check if a request requires user approval. */
-    "permission-check:request": ProviderEventPayload<EIP1193RequestParameters>
+    [Messages.RequestApprove]: ProviderEventPayload<EIP1193RequestParameters>
+    [Messages.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>
 }
 type _assert3 = AssertAssignableTo<ProviderBusEventsFromApp, EventSchema<ProviderBusEventsFromApp>>
 
@@ -113,21 +146,9 @@ type _assert3 = AssertAssignableTo<ProviderBusEventsFromApp, EventSchema<Provide
  * Schema for messages that can be sent from the iframe to the app.
  */
 export type ProviderBusEventsFromIframe = {
-    /**
-     * Response to a request sent by the app. The request was received by the provider bus
-     * ("request:approve") if it didn't require approval, or from the popup bus ("request:approve")
-     * if it did.
-     */
-    "response:complete": ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
-
-    /**
-     * Answers a previous "permission-check:request" from the app, telling the app whether a request
-     * requires approval.
-     */
-    "permission-check:response": ProviderEventPayload<boolean> | ProviderEventError<unknown>
-
-    // eip1193 events proxy
-    "provider:event": {
+    [Messages.ResponseComplete]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
+    [Messages.PermissionCheckResponse]: ProviderEventPayload<boolean> | ProviderEventError
+    [Messages.ProviderEvent]: {
         payload: { event: EIP1193EventName; args: unknown }
     }
 }
@@ -143,11 +164,8 @@ type _assert4 = AssertAssignableTo<ProviderBusEventsFromIframe, EventSchema<Prov
  * simpler if all event definitions live in the same place.
  */
 export type PopupBusEvents = {
-    /** Informs the iframe that the user has approved a request in the popup. */
-    "request:approve": ProviderEventPayload<EIP1193RequestParameters>
-
-    /** Informs the iframe that the user has rejected a request in the popup. */
-    "request:reject": ProviderEventError<EIP1193ErrorObject>
+    [Messages.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
+    [Messages.PopupReject]: ProviderEventError<EIP1193ErrorObject>
 }
 type _assert5 = AssertAssignableTo<PopupBusEvents, EventSchema<PopupBusEvents>>
 

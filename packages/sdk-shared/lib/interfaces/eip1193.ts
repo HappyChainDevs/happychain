@@ -35,7 +35,7 @@ const eip1193PermissionsMethods = [
     "eth_requestAccounts",
     "wallet_requestPermissions",
     "wallet_revokePermissions",
-] as const
+] // TODO as const should be here, but does not work with Vite
 
 type EIP1193PermissionsMethod = (typeof eip1193PermissionsMethods)[number]
 

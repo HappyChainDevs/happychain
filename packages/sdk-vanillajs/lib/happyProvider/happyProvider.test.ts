@@ -91,7 +91,7 @@ describe("HappyProvider", () => {
         })
 
         const callback = mock(({ key, windowId, error: _error, payload: _payload }) => {
-            happyProviderBusIframe.emit("response:complete", {
+            happyProviderBusIframe.emit(Messages.ResponseComplete, {
                 key,
                 windowId,
                 error: null,
@@ -111,8 +111,8 @@ describe("HappyProvider", () => {
         void appBusIframe.emit(Messages.AuthState, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
-        happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
-            happyProviderBusIframe.emit("permission-check:response", {
+        happyProviderBusIframe.on(Messages.PermissionCheckRequest, ({ key, windowId: uuid }) => {
+            happyProviderBusIframe.emit(Messages.PermissionCheckResponse, {
                 key,
                 windowId: uuid,
                 error: null,
@@ -121,7 +121,7 @@ describe("HappyProvider", () => {
         })
 
         // within iframe
-        happyProviderBusIframe.on("request:approve", callback)
+        happyProviderBusIframe.on(Messages.RequestApprove, callback)
 
         // provider request, unanswered so don't await
         expect(provider.request(payload)).resolves.toStrictEqual(emptyRpcBlock)
@@ -147,8 +147,8 @@ describe("HappyProvider", () => {
         void appBusIframe.emit(Messages.AuthState, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
-        happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
-            happyProviderBusIframe.emit("permission-check:response", {
+        happyProviderBusIframe.on(Messages.PermissionCheckRequest, ({ key, windowId: uuid }) => {
+            happyProviderBusIframe.emit(Messages.PermissionCheckResponse, {
                 key,
                 windowId: uuid,
                 error: null,
@@ -157,8 +157,8 @@ describe("HappyProvider", () => {
         })
 
         // within iframe
-        happyProviderBusIframe.on("request:approve", ({ key }) => {
-            happyProviderBusIframe.emit("response:complete", {
+        happyProviderBusIframe.on(Messages.RequestApprove, ({ key }) => {
+            happyProviderBusIframe.emit(Messages.ResponseComplete, {
                 key,
                 windowId: uuid,
                 error: null,
@@ -189,8 +189,8 @@ describe("HappyProvider", () => {
         void appBusIframe.emit(Messages.AuthState, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
-        happyProviderBusIframe.on("permission-check:request", ({ key, windowId: uuid }) => {
-            happyProviderBusIframe.emit("permission-check:response", {
+        happyProviderBusIframe.on(Messages.PermissionCheckRequest, ({ key, windowId: uuid }) => {
+            happyProviderBusIframe.emit(Messages.PermissionCheckResponse, {
                 key,
                 windowId: uuid,
                 error: null,
@@ -199,8 +199,8 @@ describe("HappyProvider", () => {
         })
 
         // within iframe
-        happyProviderBusIframe.on("request:approve", ({ key }) => {
-            happyProviderBusIframe.emit("response:complete", {
+        happyProviderBusIframe.on(Messages.RequestApprove, ({ key }) => {
+            happyProviderBusIframe.emit(Messages.ResponseComplete, {
                 key,
                 windowId: uuid,
                 error: {

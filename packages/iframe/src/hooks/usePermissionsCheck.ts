@@ -1,4 +1,4 @@
-import { type EIP1193ProxiedEvents, requiresApproval } from "@happychain/sdk-shared"
+import { Messages, type ProviderBusEventsFromApp, requiresApproval } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect } from "react"
 
@@ -16,7 +16,7 @@ export function usePermissionsCheck() {
      * on the current internal state of the app
      */
     const checkIfRequestRequiresConfirmation = useCallback(
-        (payload: EIP1193ProxiedEvents["permission-check:request"]["payload"]) => {
+        (payload: ProviderBusEventsFromApp[Messages.PermissionCheckRequest]["payload"]) => {
             const basicCheck = requiresApproval(payload)
             //  if the basic check shows its a safe method, we can stop here, and report back
             if (basicCheck === false) {
@@ -66,9 +66,9 @@ export function usePermissionsCheck() {
      * the request will be rejected
      */
     useEffect(() => {
-        return happyProviderBus.on("permission-check:request", (data) => {
+        return happyProviderBus.on(Messages.PermissionCheckRequest, (data) => {
             const result = checkIfRequestRequiresConfirmation(data.payload)
-            return happyProviderBus.emit("permission-check:response", {
+            return happyProviderBus.emit(Messages.PermissionCheckResponse, {
                 key: data.key,
                 windowId: data.windowId,
                 error: null,

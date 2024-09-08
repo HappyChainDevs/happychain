@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react"
-
-import type { ConnectionProvider } from "@happychain/sdk-shared"
+import { type ConnectionProvider, Messages } from "@happychain/sdk-shared"
 import clsx from "clsx"
+import { useCallback, useEffect, useState } from "react"
 
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
@@ -14,7 +13,7 @@ export function ConnectButton() {
     const socialProviders = useSocialProviders()
 
     const open = useCallback(() => {
-        appMessageBus.emit("modal-toggle", true)
+        appMessageBus.emit(Messages.ModalToggle, true)
         setIsOpen(true)
     }, [])
 
@@ -23,7 +22,7 @@ export function ConnectButton() {
         // delay to match fadeout transition/animation
         const animationTimeInMs = 300
         setTimeout(() => {
-            appMessageBus.emit("modal-toggle", false)
+            appMessageBus.emit(Messages.ModalToggle, false)
         }, animationTimeInMs)
     }, [])
 
@@ -36,7 +35,7 @@ export function ConnectButton() {
     )
 
     useEffect(() => {
-        return appMessageBus.on("request-display", (screen) => {
+        return appMessageBus.on(Messages.RequestDisplay, (screen) => {
             if (screen === "login-modal") {
                 open()
             }
