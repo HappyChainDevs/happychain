@@ -14,17 +14,18 @@ export {
 
 export type { UserUpdateCallback, ModalUpdateCallback, ListenerUnsubscribeFn } from "./happyProvider/listeners"
 
+/**
+ * Repository of supported chains.
+ */
 export * as chains from "./chains"
 
 export type {
-    // Errors
+    HappyUser,
+    GenericProviderRpcError,
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
     EIP1193DisconnectedError,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
-    GenericProviderRpcError,
-    // User
-    HappyUser,
 } from "@happychain/sdk-shared"
