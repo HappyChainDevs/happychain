@@ -7,7 +7,7 @@
         "@happychain/js": "workspace:^",
         "@tanstack/vue-query": "^5.52.2",
         "@wagmi/vue": "^0.0.39",
-        "viem": "2.x",
+        "viem": "^2.20.1",
         "vue": "^3.4.37"
     },
     "devDependencies": {
