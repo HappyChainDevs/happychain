@@ -17,7 +17,7 @@ const store = getDefaultStore()
  *
  * @emits auth-state
  */
-appMessageBus.emit(Messages.AuthState, store.get(authStateAtom))
+void appMessageBus.emit(Messages.AuthState, store.get(authStateAtom))
 
 /**
  * emits the current auth state to dApp
@@ -33,7 +33,7 @@ appMessageBus.emit(Messages.AuthState, store.get(authStateAtom))
  */
 store.sub(authStateAtom, () => {
     const authState = store.get(authStateAtom)
-    appMessageBus.emit(Messages.AuthState, authState)
+    void appMessageBus.emit(Messages.AuthState, authState)
 
     if (AuthState.Connecting === authState) {
         // no user updates in this state

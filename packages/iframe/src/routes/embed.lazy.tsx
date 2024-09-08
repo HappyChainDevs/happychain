@@ -63,13 +63,13 @@ function Embed() {
     }, [user, getBalance])
 
     function open() {
-        appMessageBus.emit(Messages.ModalToggle, true)
+        void appMessageBus.emit(Messages.ModalToggle, true)
         setIsOpen(true)
     }
 
     function close() {
         setIsOpen(false)
-        appMessageBus.emit(Messages.ModalToggle, false)
+        void appMessageBus.emit(Messages.ModalToggle, false)
     }
 
     if (authState === AuthState.Connecting) {

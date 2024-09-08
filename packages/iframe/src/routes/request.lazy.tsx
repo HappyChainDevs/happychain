@@ -23,7 +23,7 @@ function Request() {
     const req = JSON.parse(atob(args))
 
     function reject() {
-        popupEmitBus.emit(Messages.PopupReject, {
+        void popupEmitBus.emit(Messages.PopupReject, {
             error: {
                 code: 4001,
                 message: "User rejected request",
@@ -37,7 +37,7 @@ function Request() {
 
     function accept(payload: PopupBusEvents[Messages.PopupApprove]["payload"]) {
         setIsLoading(true)
-        popupEmitBus.emit(Messages.PopupApprove, {
+        void popupEmitBus.emit(Messages.PopupApprove, {
             error: null,
             windowId,
             key,
