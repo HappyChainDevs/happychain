@@ -1,13 +1,10 @@
 export { HappyWalletProvider, useHappyChain } from "./components/HappyWalletProvider"
 
-// re-export from happychain core
 export { happyProvider, onModalUpdate, onUserUpdate, getCurrentUser, chains, connect, disconnect } from "@happychain/js"
 
 export type {
-    // Happy Types
     HappyProvider,
     HappyUser,
-    // RPC Errors
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
     EIP1193DisconnectedError,
