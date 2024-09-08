@@ -19,7 +19,7 @@ export function usePermissionsCheck() {
         (payload: ProviderBusEventsFromApp[Messages.PermissionCheckRequest]["payload"]) => {
             const basicCheck = requiresApproval(payload)
             //  if the basic check shows its a safe method, we can stop here, and report back
-            if (basicCheck === false) {
+            if (!basicCheck) {
                 return false
             }
 
