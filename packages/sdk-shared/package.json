@@ -12,6 +12,7 @@
         "@happy-dom/global-registrator": "^15.0.0",
         "@happychain/configs": "workspace:^",
         "@types/bun": "^1.1.8",
-        "happy-dom": "^15.0.0"
+        "happy-dom": "^15.0.0",
+        "vite-plugin-node-polyfills": "^0.22.0"
     }
 }
