@@ -105,6 +105,8 @@ anvil:
 
 VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
 CHECK_UPGRADE := make validate-upgrade
+VIA_IR_FLAG := $(if $(findstring DeployAA,$(DEPLOY_SCRIPT)),--via-ir,)
+OPTIMIZER_RUNS_FLAG := $(if $(findstring DeployAA,$(DEPLOY_SCRIPT)),--optimizer-runs 200,)
 
 ifeq ($(DEPLOY),deploy)
 	BROADCAST_FLAG := --broadcast
@@ -124,7 +126,7 @@ endif
 # You can also specify MODE=dry to not submit the tx, or MODE=resume to resume the last deployment.
 deploy:
 	$(CHECK_UPGRADE)
-	$(call run-deploy-script,src/deploy/$(DEPLOY_SCRIPT))
+	$(call run-deploy-script,src/deploy/$(DEPLOY_SCRIPT)) $(VIA_IR_FLAG) $(OPTIMIZER_RUNS_FLAG)
 	$(call post-deploy,$(DEPLOY_SCRIPT))
 .PHONY: deploy
 
