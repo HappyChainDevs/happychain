@@ -1,21 +1,13 @@
-import {
-    http,
-    type Hex,
-    createClient,
-    createPublicClient,
-    createWalletClient,
-    defineChain,
-    formatEther,
-    parseEther,
-} from "viem"
+import { http, type Hex, createPublicClient, createWalletClient, formatEther, parseEther } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
+import { localhost } from "viem/chains"
 
 import { type SmartAccountClient, createSmartAccountClient } from "permissionless"
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { createPimlicoClient } from "permissionless/clients/pimlico"
 
-const privateKey = process.env.PRIVATE_KEY_LOCAL
+const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
 const bundlerRpc = process.env.BUNDLER_URL_LOCAL
 const rpcURL = process.env.RPC_URL_LOCAL
 
@@ -30,48 +22,24 @@ type Deployments = {
     FactoryStaker: string
 }
 
-import { execSync } from "node:child_process"
 import deploymentsJson from "../out/deployment.json"
 const deployments: Deployments = deploymentsJson
 
-const chain = defineChain({
-    id: 1_337,
-    name: "Anvil",
-    nativeCurrency: {
-        decimals: 18,
-        name: "Ether",
-        symbol: "ETH",
-    },
-    rpcUrls: {
-        default: {
-            http: ["http://127.0.0.1:8545"],
-            webSocket: ["ws://127.0.0.1:8545"],
-        },
-    },
-})
-
-const normalizedPrivateKey: Hex = privateKey.startsWith("0x") ? (privateKey as Hex) : (`0x${privateKey}` as Hex)
-const account = privateKeyToAccount(normalizedPrivateKey)
+const account = privateKeyToAccount(privateKey)
 
 const walletClient = createWalletClient({
     account,
-    chain,
-    transport: http(rpcURL),
-})
-
-const client = createClient({
-    account,
-    chain,
+    chain: localhost,
     transport: http(rpcURL),
 })
 
 const publicClient = createPublicClient({
-    chain,
+    chain: localhost,
     transport: http(rpcURL),
 })
 
 const pimlicoClient = createPimlicoClient({
-    chain,
+    chain: localhost,
     transport: http(bundlerRpc),
     entryPoint: {
         address: entryPoint07Address,
@@ -80,8 +48,8 @@ const pimlicoClient = createPimlicoClient({
 })
 
 async function getKernelAccount(): Promise<SmartAccount> {
-    return await toEcdsaKernelSmartAccount({
-        client,
+    return toEcdsaKernelSmartAccount({
+        client: walletClient,
         entryPoint: {
             address: entryPoint07Address,
             version: "0.7",
@@ -106,7 +74,7 @@ async function getKernelAccount(): Promise<SmartAccount> {
 function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
     return createSmartAccountClient({
         account: kernelAccount,
-        chain: chain,
+        chain: localhost,
         bundlerTransport: http(bundlerRpc, {
             timeout: 30_000, // Custom timeout, increased to avoid timeout error when bundling
         }),
@@ -120,18 +88,14 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
 
 async function prefund_smart_account(kernelAccount: SmartAccount): Promise<string> {
     const accountAddress = await kernelAccount.getAddress()
-    console.log("Funding kernel account address = ", accountAddress)
 
     try {
         const txHash = await walletClient.sendTransaction({
             account: account,
             to: accountAddress,
-            chain,
-            kzg: undefined,
+            chain: localhost,
             value: parseEther("0.1"),
         })
-
-        console.log(`Prefund transaction hash: ${txHash}`)
 
         const receipt = await publicClient.waitForTransactionReceipt({
             hash: txHash,
@@ -140,15 +104,15 @@ async function prefund_smart_account(kernelAccount: SmartAccount): Promise<strin
 
         return receipt.status
     } catch (error) {
-        console.error("Error receiving transaction receipt:", error)
+        console.error(error)
+        process.exit(1)
     }
 
     return "success"
 }
 
 export function getRandomAccount(): Hex {
-    const privateKey = generatePrivateKey()
-    return privateKeyToAddress(privateKey).toString() as Hex
+    return privateKeyToAddress(generatePrivateKey()).toString() as Hex
 }
 
 async function main() {
@@ -157,13 +121,10 @@ async function main() {
     const receiverAddress = getRandomAccount()
     const AMOUNT = "0.001"
 
-    console.log("Receiver address = ", receiverAddress)
-
     const res = await prefund_smart_account(kernelAccount)
-    if (res === "success") {
-        console.log("Transaction was successful")
-    } else {
-        console.error("Transaction failed")
+    if (res !== "success") {
+        console.log("Smart Account prefund failed")
+        process.exit(1)
     }
 
     const kernelClient = getKernelClient(kernelAccount)
@@ -172,25 +133,21 @@ async function main() {
         const txHash = await kernelClient.sendTransaction({
             account: kernelAccount,
             to: receiverAddress,
-            chain,
-            kzg: undefined,
+            chain: localhost,
             value: parseEther(AMOUNT),
         })
-
-        console.log(`Transaction hash: ${txHash}`)
 
         const receipt = await publicClient.waitForTransactionReceipt({
             hash: txHash,
             confirmations: 1,
         })
 
-        if (receipt.status === "success") {
-            console.log("Transaction was successful")
-        } else {
-            console.log("Transaction failed")
+        if (receipt.status !== "success") {
+            console.log("KernelClient transaction failed")
+            process.exit(1)
         }
     } catch (error) {
-        console.error("Error receiving transaction receipt:", error)
+        console.error(error)
     }
 
     const balance = await publicClient.getBalance({
@@ -209,10 +166,9 @@ async function main() {
 
 main()
     .then(() => {
-        console.log("Demo Successful.")
-        process.exit(0) // Explicitly exit with success code
+        process.exit(0)
     })
     .catch((error) => {
         console.error(error)
-        process.exit(1) // Exit with failure code
+        process.exit(1)
     })
