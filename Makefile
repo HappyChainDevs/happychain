@@ -229,7 +229,7 @@ iframe.build:
 .PHONY: iframe.build
 
 demos.build:
-	$(call forall , $(APP_PKGS) , build)
+	$(call forall , $(DEMOS_PKGS) , build)
 .PHONY: apps.build
 
 ts.build:
