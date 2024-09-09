@@ -8,8 +8,8 @@ import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { createPimlicoClient } from "permissionless/clients/pimlico"
 
 const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
-const bundlerRpc = process.env.BUNDLER_URL_LOCAL
-const rpcURL = process.env.RPC_URL_LOCAL
+const bundlerRpc = process.env.BUNDLER_LOCAL
+const rpcURL = process.env.RPC_LOCAL
 
 if (!privateKey || !bundlerRpc || !rpcURL) {
     throw new Error("Please provide PRIVATE_KEY_LOCAL, BUNDLER_URL_LOCAL and RPC_URL_LOCAL in .env file")
@@ -107,8 +107,6 @@ async function prefund_smart_account(kernelAccount: SmartAccount): Promise<strin
         console.error(error)
         process.exit(1)
     }
-
-    return "success"
 }
 
 export function getRandomAccount(): Hex {
