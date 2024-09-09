@@ -1,5 +1,5 @@
 import { type HappyUser, WalletType } from "@happychain/sdk-shared"
-import { Clipboard } from "@phosphor-icons/react"
+import AddressInfo from "./AddressInfo"
 
 interface UserProps {
     user: HappyUser
@@ -11,19 +11,7 @@ const UserInfo = ({ user }: UserProps) => {
             <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-12 rounded-full" />
             <div className="flex flex-col items-start justify-between">
                 {user.type === WalletType.Social && <p>{user?.email || user?.name}</p>}
-                <div className="flex flex-row items-center justify-center space-x-1">
-                    <p>{user?.name}</p>
-                    <button
-                        className="w-4 h-4 rounded-xl opacity-50"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            navigator.clipboard.writeText(user?.address)
-                        }}
-                        type="button"
-                    >
-                        <Clipboard size={15} />
-                    </button>
-                </div>
+                <AddressInfo address={user.address} />
             </div>
         </div>
     )
