@@ -162,7 +162,7 @@ define run-deploy-script-account
 		--account $(ACCOUNT_$(CONFIG)) \
 		--password-file $(PASSFILE_$(CONFIG))`)
 	@# Command intentionally output.
-	DEPLOY_SENDER=$(DEPLOY_SENDER)  forge script $(1) \
+	forge script $(1) \
 		--fork-url $(RPC_$(CONFIG)) \
 		--account $(ACCOUNT_$(CONFIG)) \
 		--password-file $(PASSFILE_$(CONFIG)) \
@@ -213,30 +213,20 @@ save-deployment:
 
 ####################################################################################################
 
-# Target to deploy the deterministic deployer
-deploy-deterministic-deployer:
-	@echo "Deploying Deterministic Deployer..."
-	sh ./scripts/deploy_deterministic_deployer.sh
-.PHONY: deploy-deterministic-deployer
-
 # Short aliases for deployment scripts
 deploy-l1:
-	@echo "Deploying L1 contracts..."
 	$(MAKE) deploy DEPLOY_SCRIPT=DeployL1.s.sol
 .PHONY: deploy-l1
 
 deploy-l1up:
-	@echo "Deploying L1 Upgradeable contracts..."
 	$(MAKE) deploy DEPLOY_SCRIPT=DeployL1Upgradeable.s.sol
 .PHONY: deploy-l1up
 
 deploy-aa:
-	@echo "Deploying Account Abstraction contracts..."
 	$(MAKE) deploy DEPLOY_SCRIPT=DeployAA.s.sol
 .PHONY: deploy-aa
 
 # Target to run the Account Abstraction demo script
 run_aa_demo:
-	@echo "Running Account Abstraction demo script..."
 	pnpm tsx ./scripts/account_abstraction_demo.ts
 .PHONY: run_aa_demo

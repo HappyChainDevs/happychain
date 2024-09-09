@@ -1,6 +1,3 @@
-import { config } from "dotenv"
-config()
-
 import {
     http,
     type Hex,
