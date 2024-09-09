@@ -1,12 +1,7 @@
 {
+    "extends": "@happychain/configs/tsconfig.base.json",
     "compilerOptions": {
-        "target": "es2022",
-        "module": "commonjs",
-        "declaration": true,
-        "resolveJsonModule": true,
-        "outDir": "./lib",
-        "strict": true,
-        "esModuleInterop": true
+        "resolveJsonModule": true
     },
     "include": ["./**/*.ts"]
 }

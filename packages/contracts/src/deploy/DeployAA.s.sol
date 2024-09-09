@@ -24,20 +24,20 @@ contract DeployAAContracts is BaseDeployScript {
 
     function deploy() internal override {
         if (EXPECTED_ENTRYPOINT_V7.code.length == 0) {
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_SIMULATIONS_CODE);
+            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
             if (!success) {
                 revert EntryPointDeploymentFailed();
             }
         }
-        deployed("EntryPointV7", "EntryPointV7", EXPECTED_ENTRYPOINT_V7);
+        deployed("EntryPointSimulations", "EntryPointSimulations", EXPECTED_ENTRYPOINT_SIMULATIONS);
 
         if (EXPECTED_ENTRYPOINT_SIMULATIONS.code.length == 0) {
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
+            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_SIMULATIONS_CODE);
             if (!success) {
                 revert EntryPointSimulationsDeploymentFailed();
             }
         }
-        deployed("EntryPointSimulations", "EntryPointSimulations", EXPECTED_ENTRYPOINT_SIMULATIONS);
+        deployed("EntryPointV7", "EntryPointV7", EXPECTED_ENTRYPOINT_V7);
 
         validator = new ECDSAValidator{salt: 0}();
         deployed("ECDSAValidator", "ECDSAValidator", address(validator));
