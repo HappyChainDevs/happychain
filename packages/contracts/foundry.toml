@@ -21,7 +21,9 @@ extra_output = ["storageLayout"]
 # Needed to write from the deploy scripts.
 fs_permissions = [
     { access = "write", path = "./out/deployment.json" },
-    { access = "write", path = "./out/abiMap.json" }
+    { access = "write", path = "./out/abiMap.json" },
+    { access = "read", path = "./src/deploy/EntryPointSimulationsCode.txt"},
+    { access = "read", path = "./src/deploy/EntryPointV7Code.txt"}
 ]
 
 # Formatter Options
