@@ -14,7 +14,7 @@ import ActionButtons from "../components/interface/ActionButtons"
 import AppStatus from "../components/interface/AppStatus"
 import HappyBalance from "../components/interface/HappyBalance"
 import UserInfo from "../components/interface/UserInfo"
-import WalletTabs from "../components/interface/WalletTabs"
+import WalletContentInfo from "../components/interface/WalletContentInfo"
 import { publicClientAtom } from "../state/publicClient"
 import { userAtom } from "../state/user"
 
@@ -107,7 +107,7 @@ function Embed() {
                             <div className="flex h-full w-full grow flex-col items-start justify-start rounded-b-xl bg-slate-200 p-2">
                                 <HappyBalance balance={happyBalance} />
                                 <ActionButtons />
-                                <WalletTabs />
+                                <WalletContentInfo />
                                 <AppStatus />
                             </div>
                         </div>

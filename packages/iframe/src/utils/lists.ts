@@ -10,6 +10,7 @@ export interface AppGame {
 }
 
 // placeholder lists
+
 export const tokenList: Token[] = [
     {
         name: "TestFoo",
@@ -28,3 +29,5 @@ export const appList: AppGame[] = [
     { name: "HappyPunch", imageUrl: "" },
     { name: "Emojimon", imageUrl: "" },
 ]
+
+export const historyList: string[] = []
