@@ -1,10 +1,21 @@
+import type { Dispatch, SetStateAction } from "react"
+import type { ContentType } from "./WalletContentInfo"
+
 interface TabProps {
-    title: string
+    title: ContentType
+    setView: Dispatch<SetStateAction<ContentType>>
 }
 
-const Tab = ({ title }: TabProps) => {
+const Tab = ({ title, setView }: TabProps) => {
     return (
-        <button className="h-10 w-24 bg-slate-300 rounded-t-xl" type="button">
+        <button
+            className="h-10 w-24 bg-slate-300 rounded-t-xl"
+            type="button"
+            onClick={(e) => {
+                e.stopPropagation()
+                setView(title)
+            }}
+        >
             {title}
         </button>
     )
