@@ -37,6 +37,9 @@ export function isPermissionsRequest(args: { method: string; params?: unknown })
     return arrayIncludes(methods, args.method)
 }
 export interface HappyEvents {
+    // called once after iframe has loaded and initialized
+    "iframe-init": boolean
+
     // modal states
     "modal-toggle": boolean
 

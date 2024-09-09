@@ -1,4 +1,4 @@
-import { AuthState, config } from "@happychain/sdk-shared"
+import { AuthState, type UUID, config } from "@happychain/sdk-shared"
 import { LitElement, css, html } from "lit"
 import { customElement } from "lit/decorators.js"
 import { classMap } from "lit/directives/class-map.js"
@@ -15,16 +15,16 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
 @customElement("happy-wallet")
 export class HappyWallet extends LitElement {
     static properties = {
-        classes: { state: true },
+        "#classes": { state: true },
     }
 
-    private classes = {
+    #classes = {
         open: false,
         connected: false,
     }
 
     constructor(
-        private windowId: ReturnType<typeof crypto.randomUUID>,
+        private windowId: UUID,
         /** Stringified {@link AddEthereumChainParameter} */
         private chain: string,
         /** Stringified rpc url array string[] */
@@ -37,14 +37,18 @@ export class HappyWallet extends LitElement {
         super.connectedCallback()
 
         onAuthStateUpdate((state) => {
-            this.classes.connected = state === AuthState.Connected
+            this.#classes.connected = state === AuthState.Connected
             this.requestUpdate()
         })
 
         onModalUpdate((isOpen) => {
-            this.classes.open = isOpen
+            this.#classes.open = isOpen
             this.requestUpdate()
         })
+    }
+
+    #onError() {
+        console.error("HappyChain SDK failed to initialize")
     }
 
     render() {
@@ -59,15 +63,16 @@ export class HappyWallet extends LitElement {
         ).toString()
 
         const cssClasses = classMap({
-            open: this.classes.open,
-            closed: !this.classes.open,
-            connected: this.classes.connected,
-            disconnected: !this.classes.connected,
+            open: this.#classes.open,
+            closed: !this.#classes.open,
+            connected: this.#classes.connected,
+            disconnected: !this.#classes.connected,
         })
 
         return html`
             <iframe
                 title="happy-iframe"
+                @error="${this.#onError}"
                 src="${url.href}?${searchParams}"
                 class=${cssClasses}
                 style="border: none;"
