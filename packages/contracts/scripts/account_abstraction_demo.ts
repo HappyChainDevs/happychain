@@ -58,16 +58,16 @@ async function getKernelAccount(): Promise<SmartAccount> {
         version: "0.3.1",
         ecdsaValidatorAddress: deployments.ECDSAValidator
             ? (deployments.ECDSAValidator as Hex)
-            : "0x2cA67e9cF717c3A210574AA1fcDB38C0bE7b6b63",
+            : "0xE02886AC084a81b114DC4bc9b6c655A1D8c297be",
         accountLogicAddress: deployments.Kernel
             ? (deployments.Kernel as Hex)
-            : "0x15A1C1a83810984D0d9c26386171878ADa04D034",
+            : "0x59Fc1E09E3Ea0dAE02DBe628AcAa84aA9B937737",
         factoryAddress: deployments.KernelFactory
             ? (deployments.KernelFactory as Hex)
-            : "0x560cbC094b16fe929Cf889Ffa59B42e7BB0b86Fa",
+            : "0x80D747087e1d2285CcE1a308fcc445C12A751dc6",
         metaFactoryAddress: deployments.FactoryStaker
             ? (deployments.FactoryStaker as Hex)
-            : "0xF2F43D2eA39c24EeC8Ff985B192935C50e976E4c",
+            : "0x58eEa36eDd475f353D7743d21a56769931d8AD0D",
     })
 }
 
