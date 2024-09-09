@@ -81,7 +81,7 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 	biome check ./ --write;
 .PHONY: format
 
-test: sdk.test ## Run tests
+test: sdk.test iframe.test ## Run tests
 .PHONY: test
 
 clean: ts.clean contracts.clean ## Removes build artifacts
@@ -153,13 +153,16 @@ endef
 # CORRECTNESS
 
 sdk.test:
-	cd packages/sdk-shared && make test
-	cd packages/sdk-vanillajs && make test
+	$(call forall , $(SDK_PKGS) , test)
 .PHONY: sdk.test
 
 sdk.check:
 	$(call forall , $(SDK_PKGS) , check)
 .PHONY: sdk.check
+
+iframe.test:
+	$(call forall , $(IFRAME_PKGS) , test)
+.PHONY: iframe.test
 
 iframe.check:
 	$(call forall , $(IFRAME_PKGS) , check)

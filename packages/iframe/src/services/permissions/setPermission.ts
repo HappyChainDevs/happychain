@@ -32,7 +32,6 @@ export function setPermission({ method, params }: Params) {
     if (method === "wallet_requestPermissions") {
         for (const param of params) {
             const [[name, value]] = Object.entries(param)
-
             if (value && typeof value === "object" && Object.keys(value).length) {
                 throw new Error("WalletPermissionCaveats Not Yet Supported")
             }

@@ -25,6 +25,9 @@ endif
 
 # Empty Stubs — these can be overriden in any including Makefile.
 
+test:
+.PHONY: test
+
 build:
 .PHONY: build
 
