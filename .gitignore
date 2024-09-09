@@ -53,3 +53,6 @@ packages/frontend/src/generated.ts
 # Typedoc generated api reference.
 # Ignored to discourage manual editing
 packages/docs/docs/pages/*/api
+
+# Cloned Repositories
+packages/bundler/alto
