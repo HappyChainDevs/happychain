@@ -13,6 +13,9 @@ export type ModalUpdateCallback = (isOpen: boolean) => void
 /** @internal */
 export type AuthStateUpdateCallback = (state: AuthState) => void
 
+/** @internal */
+export type IframeInitCallback = (isInit: boolean) => void
+
 /**
  * Cleanup function which can be used to unsubscribe
  * from the event which it was returned from
@@ -30,6 +33,7 @@ export type ListenerUnsubscribeFn = () => void
 export function registerListeners(messageBus: EventBus<HappyEvents>) {
     const onUserUpdateCallbacks = new Set<UserUpdateCallback>()
     const onModalUpdateCallbacks = new Set<ModalUpdateCallback>()
+    const onIframeInitCallbacks = new Set<IframeInitCallback>()
     const onAuthStateUpdateCallbacks = new Set<AuthStateUpdateCallback>()
 
     messageBus.on("auth-changed", (user) => {
@@ -47,6 +51,12 @@ export function registerListeners(messageBus: EventBus<HappyEvents>) {
     messageBus.on("modal-toggle", (isOpen) => {
         for (const call of onModalUpdateCallbacks) {
             call(isOpen)
+        }
+    })
+
+    messageBus.on("iframe-init", (isInit) => {
+        for (const call of onIframeInitCallbacks) {
+            call(isInit)
         }
     })
 
@@ -99,9 +109,24 @@ export function registerListeners(messageBus: EventBus<HappyEvents>) {
         }
     }
 
+    /**
+     * Called when the iframe finishes initializing and web3 connection is confirmed
+     *
+     * @internal
+     * @param IframeInitCallback
+     * @returns Unsubscribe function
+     */
+    const onIframeInit = (callback: IframeInitCallback): ListenerUnsubscribeFn => {
+        onIframeInitCallbacks.add(callback)
+        return () => {
+            onIframeInitCallbacks.delete(callback)
+        }
+    }
+
     return {
         onUserUpdate,
         onModalUpdate,
         onAuthStateUpdate,
+        onIframeInit,
     }
 }

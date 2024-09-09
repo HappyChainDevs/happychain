@@ -5,6 +5,7 @@ import { type PropsWithChildren, useEffect, useState } from "react"
 import { useProcessConfirmedRequests } from "../hooks/useProcessConfirmedRequests"
 import { useProcessUnconfirmedRequests } from "../hooks/useProcessUnconfirmedRequests"
 import { useProviderEventsProxy } from "../hooks/useProviderEventsProxy"
+import { dappMessageBus } from "../services/eventBus"
 
 function useInitializeWeb3() {
     const [isWeb3Initialized, setIsWeb3Initialized] = useState(false)
@@ -48,6 +49,12 @@ export function HappyAccountProvider({ children }: PropsWithChildren) {
      * to bypass the user confirmation screen
      */
     useProcessUnconfirmedRequests()
+
+    useEffect(() => {
+        if (isWeb3Initialized) {
+            dappMessageBus.emit("iframe-init", true)
+        }
+    }, [isWeb3Initialized])
 
     if (!isWeb3Initialized) {
         return null

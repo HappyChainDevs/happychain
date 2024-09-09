@@ -1,5 +1,5 @@
 import type { EIP1193ProxiedEvents, HappyEvents, HappyUser } from "@happychain/sdk-shared"
-import { EventBus, EventBusChannel, config, createUUID } from "@happychain/sdk-shared"
+import { EventBus, EventBusChannel, config, createUUID, waitForCondition } from "@happychain/sdk-shared"
 import type { EIP1193Provider } from "viem"
 import { HappyProvider } from "./happyProvider"
 import { registerListeners } from "./listeners"
@@ -16,7 +16,13 @@ const dappMessageBus = new EventBus<HappyEvents>({
     scope: "happy-chain-dapp-bus",
 })
 
-export const { onUserUpdate, onModalUpdate, onAuthStateUpdate } = registerListeners(dappMessageBus)
+export const { onUserUpdate, onModalUpdate, onAuthStateUpdate, onIframeInit } = registerListeners(dappMessageBus)
+
+let iframeReady = false
+
+onIframeInit((ready: boolean) => {
+    iframeReady = ready
+})
 
 let user: HappyUser | undefined
 
@@ -37,7 +43,12 @@ onUserUpdate((_user?: HappyUser) => {
  * const user = getCurrentUser()
  * ```
  */
-export const getCurrentUser = () => user
+export const getCurrentUser = () => {
+    if (!iframeReady) {
+        console.warn("getCurrentUser was called before happychain-sdk was ready. result will be empty")
+    }
+    return user
+}
 
 /**
  * `happyProvider` is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider}
