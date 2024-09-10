@@ -5,7 +5,8 @@ pragma solidity ^0.8.20;
  * SigningPaymaster Contract
  *
  * This contract is based on the VerifyingPaymaster contract from the eth-infinitism repository.
- * Original contract: https://github.com/eth-infinitism/account-abstraction/blob/v0.7.0/contracts/samples/VerifyingPaymaster.sol
+ * Original contract:
+ *  https://github.com/eth-infinitism/account-abstraction/blob/v0.7.0/contracts/samples/VerifyingPaymaster.sol
  *
  * Modifications from the original VerifyingPaymaster:
  *
