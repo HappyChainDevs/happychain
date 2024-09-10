@@ -22,6 +22,10 @@ export const Route = createLazyFileRoute("/embed")({
     component: Embed,
 })
 
+function open() {
+    void appMessageBus.emit(Msgs.ModalToggle, true)
+}
+
 function Embed() {
     const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)
 
@@ -32,8 +36,6 @@ function Embed() {
     const web3Providers = useInjectedProviders()
     const socialProviders = useSocialProviders()
 
-    const [isOpen, setIsOpen] = useState(false)
-
     const activeProvider = useMemo(
         () => socialProviders.concat(web3Providers).find((a) => user && a.id === `${user.type}:${user.provider}`),
         [user, socialProviders, web3Providers],
@@ -41,6 +43,7 @@ function Embed() {
 
     async function disconnect() {
         await activeProvider?.disable()
+        appMessageBus.emit(Msgs.ModalToggle, false)
     }
 
     const getBalance = useCallback(async () => {
@@ -62,22 +65,10 @@ function Embed() {
         }
     }, [user, getBalance])
 
-    function open() {
-        void appMessageBus.emit(Msgs.ModalToggle, true)
-        setIsOpen(true)
-    }
-
-    function close() {
-        setIsOpen(false)
-        void appMessageBus.emit(Msgs.ModalToggle, false)
-    }
-
     if (authState === AuthState.Connecting) {
         return (
-            <main className="min-h-dvh w-screen">
-                <div className="fixed right-4 top-4 flex h-12 w-20 items-center justify-center">
+            <main className="h-screen w-screen flex items-center justify-center">
                     <DotLinearMotionBlurLoader />
-                </div>
             </main>
         )
     }
@@ -88,41 +79,30 @@ function Embed() {
 
     return (
         <>
-            <main className="fixed right-4 top-4 flex min-h-dvh w-screen items-stretch gap-4">
-                <div className="absolute right-0 top-0">
-                    {isOpen && (
-                        // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-                        <div
-                            className="flex h-[600px] w-[500px] flex-col rounded-xl border border-black  bg-base-200 items-center justify-start"
-                            onClick={close}
-                        >
-                            <span className="text-black text-xl py-2">🤠 HappyChain</span>
+            <main className="flex h-screen w-screen items-stretch rounded-xl overflow-hidden">
+                <div
+                    className="w-full h-full transition flex-col  border border-black bg-base-200 items-center justify-start flex"
+                    
+                >
+                    <div className="flex items-center justify-center gap-2 p-1 lg:hidden w-full h-full" onClick={open}>
+                         <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
+                         <p className="">{user?.ens || user?.email || user?.name}</p>
+                    </div>
 
-                            <div className="flex flex-row w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
-                                <UserInfo user={user} />
-                                <button className="w-6 h-6 rounded-xl" onClick={disconnect} type="button">
-                                    <Power size={22} />
-                                </button>
-                            </div>
-                            <div className="flex h-full w-full grow flex-col items-start justify-start rounded-b-xl bg-slate-200 p-2">
-                                <HappyBalance balance={happyBalance} />
-                                <ActionButtons />
-                                <WalletContentInfo />
-                                <AppStatus />
-                            </div>
-                        </div>
-                    )}
+                    <span className="text-black text-xl py-2 hidden lg:flex justify-center">🤠 HappyChain</span>
 
-                    {!isOpen && (
-                        // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-                        <div
-                            className="flex w-44 items-center justify-center gap-2 rounded-lg bg-base-200 p-2"
-                            onClick={open}
-                        >
-                            <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
-                            <p>{user?.ens || user?.email || user?.name}</p>
-                        </div>
-                    )}
+                    <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
+                        <UserInfo user={user} />
+                        <button className="w-6 h-6 rounded-xl" onClick={disconnect} type="button">
+                            <Power size={22} />
+                        </button>
+                    </div>
+                    <div className="hidden lg:flex h-full w-full grow flex-col items-start justify-start bg-slate-200 p-2">
+                        <HappyBalance balance={happyBalance} />
+                        <ActionButtons />
+                        <WalletContentInfo />
+                        <AppStatus />
+                    </div>
                 </div>
             </main>
         </>
