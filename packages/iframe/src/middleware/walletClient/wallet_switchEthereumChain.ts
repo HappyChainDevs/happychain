@@ -5,8 +5,7 @@ import { useCallback, useMemo } from "react"
 import { chainsAtom } from "../../state/chains"
 
 /**
- *
- * @returns
+ * {@link https://eips.ethereum.org/EIPS/eip-3326}
  */
 export function useWalletSwitchEthereumChainMiddleware() {
     const _chains = useAtomValue(chainsAtom)

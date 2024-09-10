@@ -2,6 +2,9 @@ import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPaylo
 import { useCallback } from "react"
 import { getPermissions } from "../../services/permissions/getPermissions"
 
+/**
+ * {@link  https://eips.ethereum.org/EIPS/eip-2255}
+ */
 export function useWalletGetPermissionsMiddleware() {
     return useCallback(
         async (

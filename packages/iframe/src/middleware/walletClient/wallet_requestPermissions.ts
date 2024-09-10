@@ -3,6 +3,9 @@ import { useCallback } from "react"
 import { getPermissions } from "../../services/permissions/getPermissions"
 import { setPermission } from "../../services/permissions/setPermission"
 
+/**
+ * {@link  https://eips.ethereum.org/EIPS/eip-2255}
+ */
 export function useWalletRequestPermissionsMiddleware() {
     return useCallback(
         async (

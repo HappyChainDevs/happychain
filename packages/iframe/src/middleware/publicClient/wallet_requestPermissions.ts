@@ -7,6 +7,9 @@ import { getPermissions } from "../../services/permissions/getPermissions"
 import { hasPermission } from "../../services/permissions/hasPermission"
 import { authStateAtom } from "../../state/authState"
 
+/**
+ * {@link  https://eips.ethereum.org/EIPS/eip-2255}
+ */
 export function useWalletRequestPermissionsMiddleware() {
     const authState = useAtomValue(authStateAtom)
 

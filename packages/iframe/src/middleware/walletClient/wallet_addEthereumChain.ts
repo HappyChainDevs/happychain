@@ -4,6 +4,9 @@ import { useCallback } from "react"
 import { chainsAtom } from "../../state/chains"
 import { isAddChainParams } from "../../utils/isAddChainParam"
 
+/**
+ * {@link https://eips.ethereum.org/EIPS/eip-3085}
+ */
 export function useWalletAddEthereumChainMiddleware() {
     const setChains = useSetAtom(chainsAtom)
 
@@ -21,7 +24,7 @@ export function useWalletAddEthereumChainMiddleware() {
                 Array.isArray(request.payload.params) &&
                 request.payload.params?.[0]
 
-            if (isAddChainParams(params)) {
+            if (params && isAddChainParams(params)) {
                 setChains((previous) => [...previous, params])
             }
 
