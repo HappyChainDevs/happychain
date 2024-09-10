@@ -18,7 +18,7 @@ export function useWalletAddEthereumChainMiddleware() {
 
             const resp = await next()
 
-            // only add chain after previous is successful
+            // only add chain if the request is successful
             const params: unknown =
                 typeof request.payload.params === "object" &&
                 Array.isArray(request.payload.params) &&

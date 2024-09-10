@@ -22,7 +22,6 @@ export function useEthRequestAccountsMiddleware() {
 
             setPermission(request.payload)
 
-            // end of the line
             return happyUser.addresses ?? [happyUser.address]
         },
         [happyUser],

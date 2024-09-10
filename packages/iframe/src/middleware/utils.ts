@@ -6,7 +6,7 @@ import type { MiddlewareExecutor, MiddlewareType } from "./types"
 
 export function runMiddlewares(
     executeRequest: () => Promise<EIP1193RequestResult>,
-    _request: ProviderEventPayload<EIP1193RequestParameters>,
+    request: ProviderEventPayload<EIP1193RequestParameters>,
     middlewares: MiddlewareType[],
 ): Promise<EIP1193RequestResult> {
     async function executeMiddleware(
@@ -27,7 +27,7 @@ export function runMiddlewares(
     }
 
     // Start the execution chain
-    return executeMiddleware(0, _request)
+    return executeMiddleware(0, request)
 }
 
 export function useClientMiddlewareExecutor<T extends Client | undefined, P extends EIP1193RequestParameters>(
