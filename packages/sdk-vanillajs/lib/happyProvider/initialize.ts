@@ -73,6 +73,8 @@ export const happyProvider = new HappyProvider({
         scope: "happy-chain-eip1193-provider",
     }),
     msgBus: iframeMessageBus,
+    // Cast to EIP1193 provider for compatibility with Viem/Wagmi.
+    // In practice the 'request' functions are compatible, but the types don't line up for now.
 }) as HappyProvider & EIP1193Provider
 
 /**

@@ -3,11 +3,10 @@ import type { EIP1193Parameters } from "viem"
 // https://eips.ethereum.org/EIPS/eip-1474
 
 /**
- * This is the list of methods that will never
- * require a user confirmation.
- * most such as eth_chainId are fully public RPC calls.
- * some such as eth_accounts will return different results based on the users permissions
- * some such as wallet_revokePermissions don't make sense if a user isn't connected, but are still safe to call
+ * This is the list of methods that will never require a user confirmation.
+ * Most such as eth_chainId are fully public RPC calls.
+ * Some such as eth_accounts will return different results based on the users permissions.
+ * Some such as wallet_revokePermissions don't make sense if a user isn't connected, but are still safe to call.
  */
 const safeList = new Set([
     "eth_accounts",
