@@ -13,22 +13,23 @@ pragma solidity ^0.8.20;
  * This version always approves transactions without any validation.
  * The signature, timestamp, or gas-related checks are removed.
  */
-import {BasePaymaster, IEntryPoint} from "account-abstraction/contracts/core/BasePaymaster.sol";
+import {IEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {BasePaymaster} from "account-abstraction/contracts/core/BasePaymaster.sol";
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {UserOperationLib} from "account-abstraction/contracts/core/UserOperationLib.sol";
+
+import "account-abstraction/contracts/core/Helpers.sol";
 
 contract SigningPaymaster is BasePaymaster {
     using UserOperationLib for PackedUserOperation;
 
-    address public immutable verifyingSigner;
-
     constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {}
 
     function _validatePaymasterUserOp(
-        PackedUserOperation calldata userOp,
+        PackedUserOperation calldata, /*userOp*/
         bytes32, /*userOpHash*/
-        uint256 requiredPreFund
-    ) internal view override returns (bytes memory context, uint256 validationData) {
+        uint256 /*requiredPreFund*/
+    ) internal pure override returns (bytes memory context, uint256 validationData) {
         return ("", _packValidationData(false, 0, 0));
     }
 }

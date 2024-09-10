@@ -1,11 +1,14 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.0; // solhint-disable-line
 
 import {BaseDeployScript} from "./BaseDeployScript.sol";
 import {ENTRYPOINT_V7_CODE} from "./initcode/EntryPointV7Code.sol";
 import {ENTRYPOINT_SIMULATIONS_CODE} from "./initcode/EntryPoinSimulationsCode.sol";
 
-import {Kernel} from "kernel/Kernel.sol";
+import {SigningPaymaster} from "../SigningPaymaster.sol";
+
+import {Kernel, IEntryPoint as KernelIEntryPoint} from "kernel/Kernel.sol";
+import {IEntryPoint as AAIEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {KernelFactory} from "kernel/factory/KernelFactory.sol";
 import {FactoryStaker} from "kernel/factory/FactoryStaker.sol";
 import {ECDSAValidator} from "kernel/validator/ECDSAValidator.sol";
@@ -28,6 +31,8 @@ contract DeployAAContracts is BaseDeployScript {
     Kernel public kernel;
     KernelFactory public factory;
     FactoryStaker public staker;
+    SigningPaymaster public paymaster;
+    AAIEntryPoint public entryPoint;
 
     function deploy() internal override {
         if (EXPECTED_ENTRYPOINT_V7.code.length == 0) {
@@ -49,17 +54,28 @@ contract DeployAAContracts is BaseDeployScript {
         deployed("EntryPointV7", "IEntryPoint", EXPECTED_ENTRYPOINT_V7);
 
         validator = new ECDSAValidator{salt: 0}();
-        deployed("ECDSAValidator", address(validator));
+        deployed("ECDSAValidator", "ECDSAValidator", address(validator));
 
-        kernel = new Kernel{salt: 0}(IEntryPoint(EXPECTED_ENTRYPOINT_V7));
-        deployed("Kernel", address(kernel));
+        kernel = new Kernel{salt: 0}(KernelIEntryPoint(EXPECTED_ENTRYPOINT_V7));
+        deployed("Kernel", "Kernel", address(kernel));
 
         factory = new KernelFactory{salt: 0}(address(kernel));
-        deployed("KernelFactory", address(factory));
+        deployed("KernelFactory", "KernelFactory", address(factory));
 
         staker = new FactoryStaker{salt: 0}(msg.sender);
-        deployed("FactoryStaker", address(staker));
+        deployed("FactoryStaker", "FactoryStaker", address(staker));
 
         staker.approveFactory(factory, true);
+
+        paymaster = new SigningPaymaster{salt: 0}(AAIEntryPoint(EXPECTED_ENTRYPOINT_V7));
+        deployed("SigningPaymaster", "SigningPaymaster", address(paymaster));
+
+        depositToPaymaster(EXPECTED_ENTRYPOINT_V7, address(paymaster), 0.1 ether);
     }
+
+    function depositToPaymaster(address entryPointAddress, address paymasterAddress, uint256 amount) internal {
+        AAIEntryPoint(entryPointAddress).depositTo{value: amount}(paymasterAddress);
+    }
+
+    receive() external payable {}
 }
