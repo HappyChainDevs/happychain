@@ -8,6 +8,9 @@ import {
     UserRejectedRequestError,
 } from "viem"
 
+/**
+ * Standard EIP 1193 Error Codes
+ */
 export enum EIP1193ErrorCodes {
     UserRejectedRequest = 4001,
     Unauthorized = 4100,
@@ -65,8 +68,10 @@ export class GenericProviderRpcError extends Error {
     }
 }
 
+// === EIP1193 Specific Errors =========================================================================
+
 /**
- * EIP1193 Specific Errors
+ * Error: 4001 User Rejected Request
  */
 export class EIP1193UserRejectedRequestError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
@@ -78,6 +83,9 @@ export class EIP1193UserRejectedRequestError extends GenericProviderRpcError {
     }
 }
 
+/**
+ * Error: 4100 Unauthorized
+ */
 export class EIP1193UnauthorizedError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
@@ -87,6 +95,10 @@ export class EIP1193UnauthorizedError extends GenericProviderRpcError {
         })
     }
 }
+
+/**
+ * Error: 4200 Unsupported Method
+ */
 export class EIP1193UnsupportedMethodError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
@@ -96,6 +108,10 @@ export class EIP1193UnsupportedMethodError extends GenericProviderRpcError {
         })
     }
 }
+
+/**
+ * Error: 4900 Provider Disconnected
+ */
 export class EIP1193DisconnectedError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
@@ -105,6 +121,10 @@ export class EIP1193DisconnectedError extends GenericProviderRpcError {
         })
     }
 }
+
+/**
+ * Error: 4901 Chain Disconnected
+ */
 export class EIP1193ChainDisconnectedError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
@@ -114,6 +134,10 @@ export class EIP1193ChainDisconnectedError extends GenericProviderRpcError {
         })
     }
 }
+
+/**
+ * Error: 4902 Chain Not Recognized
+ */
 export class EIP1193ChainNotRecognizedError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
@@ -124,6 +148,13 @@ export class EIP1193ChainNotRecognizedError extends GenericProviderRpcError {
     }
 }
 
+/**
+ * given (at minimum) the error code, this creates an error object with a standard description
+ *
+ * @param code number (eip 1193 error code)
+ * @param data optional data to enhance debugging
+ * @returns serializable error object
+ */
 export function getEIP1193ErrorObjectFromCode(code: number, data?: string): EIP1193ErrorObject {
     switch (code) {
         case EIP1193ErrorCodes.UserRejectedRequest:
@@ -143,6 +174,13 @@ export function getEIP1193ErrorObjectFromCode(code: number, data?: string): EIP1
     }
 }
 
+/**
+ * Converts an unknown error - such as from `try {} catch(e) {}` - into our serializable
+ * error object ready to be transmitted between app<->iframe
+ *
+ * @param error unknown
+ * @returns EIP1193ErrorObject
+ */
 export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorObject {
     if (error instanceof UserRejectedRequestError) {
         return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest, error.details)
@@ -175,6 +213,12 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
     return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.Unknown, data)
 }
 
+/**
+ * Given a serializable eip 1193 error object, this returns an initialized Error of the matching type
+ *
+ * @param error serializable error object
+ * @returns EIP1193 Error
+ */
 export function convertErrorObjectToEIP1193ErrorInstance(error: EIP1193ErrorObject) {
     switch (error.code) {
         case EIP1193ErrorCodes.UserRejectedRequest:

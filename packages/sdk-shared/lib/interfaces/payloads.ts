@@ -1,6 +1,6 @@
 import type { UUID } from "../utils/uuid.ts"
 
-export type MessageChannelEventPayload<T = unknown> = {
+type MessageChannelEventPayload<T = unknown> = {
     // request event unique key
     key: UUID
     // window identifier

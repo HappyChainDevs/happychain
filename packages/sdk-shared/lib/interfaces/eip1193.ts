@@ -1,5 +1,5 @@
 import type { TupleUnion } from "@happychain/common"
-import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
+import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods, PublicRpcSchema, WalletRpcSchema } from "viem"
 
 // === EIP1193 METHODS =============================================================================
 
@@ -7,6 +7,16 @@ import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
  * Union type of all EIP1193 request methods names.
  */
 export type EIP1193RequestMethods = EIP1474Methods[number]["Method"]
+
+/**
+ * Public Client EIP1193 request methods names.
+ */
+export type EIP1193RequestPublicClientMethods = PublicRpcSchema[number]["Method"]
+
+/**
+ * Wallet Client EIP1193 request methods names.
+ */
+export type EIP1193RequestWalletClientMethods = WalletRpcSchema[number]["Method"]
 
 /**
  * Union type of all EIP1193 request types.
