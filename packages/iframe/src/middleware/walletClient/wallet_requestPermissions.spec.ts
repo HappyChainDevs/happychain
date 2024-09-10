@@ -1,8 +1,5 @@
 import { createUUID } from "@happychain/sdk-shared"
-import type {
-    EIP1193RequestParameters,
-    ProviderEventPayload,
-} from "@happychain/sdk-shared/lib/interfaces/eip1193Provider"
+import type { EIP1193RequestParameters, ProviderEventPayload } from "@happychain/sdk-shared"
 import { renderHook } from "@testing-library/react"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
