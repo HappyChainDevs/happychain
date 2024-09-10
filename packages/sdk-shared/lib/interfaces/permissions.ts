@@ -59,7 +59,7 @@ const safeList = new Set([
     "net_peerCount",
     "net_version",
     "wallet_getPermissions", // https://eips.ethereum.org/EIPS/eip-2255
-    "wallet_revokePermissions", // essentially disconnect... rabby does not implement this
+    "wallet_revokePermissions", // https://github.com/MetaMask/metamask-improvement-proposals/blob/main/MIPs/mip-2.md
     "web3_clientVersion",
     "web3_sha3",
 ])
@@ -86,7 +86,7 @@ const interactiveList = new Set([
  */
 const unsafeList = new Set([
     // permissions
-    "eth_requestAccounts",
+    "eth_requestAccounts", // https://eips.ethereum.org/EIPS/eip-1102
     "wallet_requestPermissions", // https://eips.ethereum.org/EIPS/eip-2255
 
     // wallet settings

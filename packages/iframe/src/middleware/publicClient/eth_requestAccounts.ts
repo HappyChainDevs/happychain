@@ -7,6 +7,9 @@ import { hasPermission } from "../../services/permissions/hasPermission"
 import { authStateAtom } from "../../state/authState"
 import { userAtom } from "../../state/user"
 
+/**
+ * {@link  https://eips.ethereum.org/EIPS/eip-1102}
+ */
 export function useEthRequestAccountsMiddleware() {
     const authState = useAtomValue(authStateAtom)
     const user = useAtomValue(userAtom)

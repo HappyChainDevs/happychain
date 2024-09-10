@@ -7,6 +7,9 @@ import { getPermissions } from "../../services/permissions/getPermissions"
 import { revokePermission } from "../../services/permissions/revokePermission"
 import { authStateAtom } from "../../state/authState"
 
+/**
+ * {@link https://github.com/MetaMask/metamask-improvement-proposals/blob/main/MIPs/mip-2.md}
+ */
 export function useWalletRevokePermissionsMiddleware() {
     const authState = useAtomValue(authStateAtom)
 

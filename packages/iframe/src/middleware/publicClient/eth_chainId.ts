@@ -2,6 +2,9 @@ import { getChainFromSearchParams } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
 import { useCallback } from "react"
 
+/**
+ * Returns the chain ID of the current network.
+ */
 export function useEthChainIdMiddleware() {
     return useCallback(
         async (
