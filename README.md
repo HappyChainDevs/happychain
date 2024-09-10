@@ -51,10 +51,10 @@ level).
   - `demos`: all demo packages (no dependencies)
   - `ts`: all typescript packages
 
-- make {sdk,iframe,account,demo-js,demo-react,demo-vue}.dev
+- make {sdk,iframe,account,demo-js,demo-react,demo-vue,docs}.dev
   - This builds, rebuilds on changes, and runs development servers (where applicable) for
     a subset of packages.
-  - If you have [`mprocs`] isntalled, you can specify `MULTIRUN=mprocs` to run with mprocs instead.
+  - If you have [`mprocs`] installed, you can specify `MULTIRUN=mprocs` to run with mprocs instead.
   - `sdk`: all packages needed to build the sdk
   - `iframe`: all packages needed to build the iframe
   - `account`: all package needed for the Happy Account (sdk + iframe)

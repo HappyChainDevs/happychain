@@ -6,11 +6,12 @@ import { HomePage } from 'vocs/components'
 
 # HappyChain SDK
 
-## VanillaJS
+## JavaScript & TypeScript
 
 <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-  <HomePage.Description>Vanilla JS and Typescript</HomePage.Description>
-  <HomePage.Button href="/js/quick-start" variant="accent">Get Started</HomePage.Button>
+  <HomePage.Description>
+    Integrate the Happy Wallet without a web framework or with an unsupported framework.
+  </HomePage.Description>
 </div>
 
 :::code-group
@@ -33,18 +34,15 @@ bun add @happychain/js
 
 :::
 
-- [register](/js/api/functions/register)
-- [onUserUpdate](/js/api/functions/onUserUpdate)
-- [getCurrentUser](/js/api/functions/getCurrentUser)
-- [happyProvider](/js/api/variables/happyProvider)
-
-<HomePage.Button href="/js/api" variant="accent">Full API Reference</HomePage.Button>
+<HomePage.Buttons>
+    <HomePage.Button href="/js/getting-started" variant="accent">Get Started</HomePage.Button>
+    <HomePage.Button href="/js/api" variant="accent">Full API Reference</HomePage.Button>
+</HomePage.Buttons>
 
 ## React
 
 <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-  <HomePage.Description>React Hooks and Components</HomePage.Description>
-  <HomePage.Button href="/react/quick-start" variant="accent">Get Started</HomePage.Button>
+  <HomePage.Description>Integrate the Happy Wallet with React</HomePage.Description>
 </div>
 
 :::code-group
@@ -67,8 +65,9 @@ bun add @happychain/react
 
 :::
 
-- [HappyWalletProvider](/react/api/functions/HappyWalletProvider)
-- [useHappyChain](/react/api/functions/useHappyChain)
-- [happyProvider](/react/api/variables/happyProvider)
+<HomePage.Buttons>
+<HomePage.Button href="/react/getting-started" variant="accent">Get Started</HomePage.Button>
+    <HomePage.Button href="/react/api" variant="accent">Full API Reference</HomePage.Button>
+</HomePage.Buttons>
 
-<HomePage.Button href="/js/api" variant="accent">Full API Reference</HomePage.Button>
+

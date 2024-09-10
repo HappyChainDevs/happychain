@@ -15,7 +15,7 @@ export default defineConfig({
     ],
     sidebar: [
         {
-            text: "JavaScript",
+            text: "JavaScript & TypeScript",
             items: [
                 {
                     text: "Getting Started",

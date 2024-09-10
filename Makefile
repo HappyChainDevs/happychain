@@ -68,7 +68,7 @@ deploy: ## Deploys contracts to Anvil
 build: node_modules ts.build  ## Creates production builds
 .PHONY: build
 
-docs: node_modules docs.build ## Builds latest docs and starts dev server http://localhost:4173
+docs: node_modules docs.contained ## Builds latest docs and starts dev server http://localhost:4173
 	cd packages/docs && make preview
 .PHONY: docs
 
@@ -134,7 +134,7 @@ demo-vue.dev:
 .PHONY: demo-wagmi-vue.dev
 
 # start docs in watch mode (can crash, see packages/docs/Makefile for more info)
-docs.watch:
+docs.dev:
 	cd packages/docs && make dev
 .PHONY: docs.watch
 
