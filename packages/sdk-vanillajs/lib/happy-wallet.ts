@@ -16,7 +16,7 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
 export class HappyWallet extends LitElement {
     static properties = {
         classes: { state: true },
-        authState: { state: true }
+        authState: { state: true },
     }
 
     private authState = AuthState.Connecting
@@ -48,7 +48,7 @@ export class HappyWallet extends LitElement {
             this.requestUpdate()
         })
 
-        document.addEventListener('click', () => {
+        document.addEventListener("click", () => {
             if (this.classes.open) {
                 this.classes.open = false
                 this.requestUpdate()
@@ -81,7 +81,7 @@ export class HappyWallet extends LitElement {
             connected: connected,
             disconnected: disconnected,
             connecting: connecting,
-            loginModal: !connected && this.classes.open
+            loginModal: !connected && this.classes.open,
         })
 
         return html`
