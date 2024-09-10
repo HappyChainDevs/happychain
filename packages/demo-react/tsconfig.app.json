@@ -2,8 +2,9 @@
     "extends": "@happychain/configs/tsconfig.vite-lib.json",
     "compilerOptions": {
         "paths": {
-            "@happychain/react": ["../sdk-react/lib/index"]
+            "@happychain/react": ["../sdk-react/lib/index"],
+            "@happychain/js": ["../sdk-vanillajs/lib/index"]
         }
     },
-    "include": ["src", "../sdk-react/lib"]
+    "include": ["src", "../sdk-react/lib", "../sdk-vanillajs/lib"]
 }

@@ -8,6 +8,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "@happychain/react": resolve(__dirname, "../sdk-react/lib/index.ts"),
+            "@happychain/reacjst": resolve(__dirname, "../sdk-vanillajs/lib/index.ts"),
         },
     },
 })

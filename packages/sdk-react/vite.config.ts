@@ -29,7 +29,7 @@ export default defineConfig({
     plugins: [
         dts({
             // nicer output, but takes time
-            insertTypesEntry: true,
+            insertTypesEntry: false,
             // rollup types doesn't support 'as const'
             // https://github.com/microsoft/rushstack/issues/3875
             rollupTypes: false,
@@ -37,13 +37,7 @@ export default defineConfig({
             compilerOptions: {
                 rootDir: "../",
             },
-            bundledPackages: [
-                "@happychain/js",
-                "viem",
-                "abitype",
-                "@metamask/safe-event-emitter",
-                "@happychain/sdk-shared",
-            ],
+            bundledPackages: ["viem", "abitype", "@metamask/safe-event-emitter", "@happychain/sdk-shared"],
             tsconfigPath: "tsconfig.app.json",
             exclude: ["**/*.test.tsx", "**/*.test.ts"],
         }),

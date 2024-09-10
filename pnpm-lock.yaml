@@ -94,6 +94,9 @@ importers:
       '@happychain/configs':
         specifier: workspace:^
         version: link:../configs
+      '@types/bun':
+        specifier: ^1.1.8
+        version: 1.1.8
       '@types/react':
         specifier: ^18.3.4
         version: 18.3.4
@@ -6084,7 +6087,6 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
-    bundledDependencies: []
 
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}

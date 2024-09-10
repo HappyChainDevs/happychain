@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
                 presets: [presets.lit],
             }),
             dts({
-                insertTypesEntry: true,
+                insertTypesEntry: false,
                 // rollup types doesn't support 'as const'
                 // https://github.com/microsoft/rushstack/issues/3875
                 rollupTypes: false,

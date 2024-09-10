@@ -53,7 +53,10 @@ const eip1193PermissionsMethodsSet = new Set<string>(eip1193PermissionsMethods)
 /**
  * Union type of all EIP1193 request types that request permissions.
  */
-export type EIP1193PermissionsRequest = Extract<EIP1193RequestParameters, { method: typeof eip1193PermissionsMethods }>
+export type EIP1193PermissionsRequest = Extract<
+    EIP1193RequestParameters,
+    { method: (typeof eip1193PermissionsMethods)[number] }
+>
 
 /**
  * Checks if the EIP-1193 request is one that requests permissions.
