@@ -1,3 +1,4 @@
+import type { TupleUnion } from "@happychain/common"
 import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
 
 // === EIP1193 METHODS =============================================================================
@@ -35,16 +36,6 @@ type EIP1193PermissionsMethod =
     | "eth_requestAccounts"
     | "wallet_requestPermissions"
     | "wallet_revokePermissions"
-
-/**
- * `T = "a" | "b"` ==> `TupleUnion<T> = ["a", "b"] | ["b", "a"]`
- */
-// biome-ignore format: readability
-type TupleUnion<T, K = T> = [T] extends [never]
-  ? []
-  : K extends T
-    ? [T, ...TupleUnion<Exclude<T, K>>]
-    : never
 
 type EIP1193PermissionsMethodArray = TupleUnion<EIP1193PermissionsMethod>
 
