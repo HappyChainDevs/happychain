@@ -16,7 +16,7 @@ account controlled by private key, either derived from a social account (Google,
     - [Foundry](https://github.com/foundry-rs/foundry)
     - Node.js & [pnpm](https://pnpm.io/) (`npm install -g pnpm`)
         - Tested with Node v22.8.0 and pnpm 9.7.0, but should work with other versions as well
-        - The appropriate pnpm version is listed under the "packageManager key in [`package.json`](./package.json)
+        - The appropriate pnpm version is listed under the "packageManager" key in [`package.json`](./package.json)
         - We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
     - [bun](https://bun.sh/) to run tests
 2. **Run `make setup`**
