@@ -34,3 +34,14 @@ run:
 clean:
 	cd alto && pnpm clean
 .PHONY: clean
+
+####################################################################################################
+# Code Quality
+
+check:
+	biome check ./;
+.PHONY: check
+
+format:
+	biome check ./ --write;
+.PHONY: format
