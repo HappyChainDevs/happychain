@@ -6,6 +6,7 @@ import { useEthRequestAccountsMiddleware } from "./walletClient/eth_requestAccou
 import { useWalletAddEthereumChainMiddleware } from "./walletClient/wallet_addEthereumChain"
 import { useWalletRequestPermissionsMiddleware } from "./walletClient/wallet_requestPermissions"
 import { useWalletSwitchEthereumChainMiddleware } from "./walletClient/wallet_switchEthereumChain"
+import { useWalletWatchAssetMiddleware } from "./walletClient/wallet_watchAsset/wallet_watchAsset"
 
 export function useWalletClientMiddleware() {
     // wallet client middlewares
@@ -13,6 +14,7 @@ export function useWalletClientMiddleware() {
     const walletAddEthereumChainMiddleware = useWalletAddEthereumChainMiddleware()
     const walletRequestPermissionMiddleware = useWalletRequestPermissionsMiddleware()
     const walletSwitchEthereumChainMiddleware = useWalletSwitchEthereumChainMiddleware()
+    const walletWatchAssetMiddleware = useWalletWatchAssetMiddleware()
 
     const execute = useCallback(
         async (client: Client | undefined, data: ProviderEventPayload<EIP1193RequestParameters>) => {
@@ -32,6 +34,8 @@ export function useWalletClientMiddleware() {
         // chain management
         walletAddEthereumChainMiddleware,
         walletSwitchEthereumChainMiddleware,
+        // asset management
+        walletWatchAssetMiddleware,
     ])
 
     return runMiddleware

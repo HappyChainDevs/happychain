@@ -26,7 +26,33 @@ export function createAddChainBtn(chain: AddEthereumChainParameter) {
 
     return addBtn
 }
-1
+
+export function createAddWatchAssetBtn() {
+    const addBtn = document.createElement("button")
+    addBtn.classList.add(...btnStyles)
+
+    addBtn.innerText = "Add Test Token (Foo)"
+
+    addBtn.addEventListener("click", async () => {
+        if (!walletClient) {
+            alert("functionality unavailable until connected")
+            return
+        }
+
+        // replace with the contract address of
+        // certain tokens that we deploy to the testnet
+        await walletClient.watchAsset({
+            type: "ERC20",
+            options: {
+                address: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                decimals: 18,
+                symbol: "Foo",
+            },
+        })
+    })
+
+    return addBtn
+}
 
 export function createSwitchChainBtn(chain: AddEthereumChainParameter) {
     const btn = document.createElement("button")

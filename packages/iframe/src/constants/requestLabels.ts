@@ -5,4 +5,5 @@ export const requestLabels = {
     wallet_addEthereumChain: "Add Network",
     wallet_requestPermissions: "Permission Request",
     wallet_switchEthereumChain: "Switch Network",
+    wallet_watchAsset: "Watch Asset",
 } as const
