@@ -51,7 +51,7 @@ export type EventBusOptions = {
  * An event bus that enables sending/receiving messages to/from other browsing contexts (windows,
  * iframes, etc).
  *
- * This must be intantiated on both sides with the correct mode (both {@link
+ * This must be instantiated on both sides with the correct mode (both {@link
  * EventBusMode.Broadcast}, or {@link EventBusMode.IframePort}) and {@link EventBusMode.AppPort}.
  *
  * @typeParam SL - Schema for the listening side of the bus.

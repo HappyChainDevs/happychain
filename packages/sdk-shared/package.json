@@ -5,6 +5,7 @@
     "type": "module",
     "main": "lib/index.ts",
     "dependencies": {
+        "@happychain/common": "workspace:^",
         "viem": "^2.20.1"
     },
     "devDependencies": {
