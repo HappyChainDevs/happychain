@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.0; // solhint-disable-line
 
 bytes constant ENTRYPOINT_SIMULATIONS_CODE =

@@ -1,35 +1,38 @@
 import { http, type Hex, createPublicClient, createWalletClient, formatEther, parseEther } from "viem"
-import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
+import type { GetPaymasterDataParameters, GetPaymasterStubDataParameters, SmartAccount } from "viem/account-abstraction"
+import { entryPoint07Address } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
 import { localhost } from "viem/chains"
 
 import { type SmartAccountClient, createSmartAccountClient } from "permissionless"
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
+import { createPimlicoClient } from "permissionless/clients/pimlico"
 
-import deploymentsJson from "../out/deployment.json"
+import abisJson from "../deployments/LOCAL/abis.json"
+import deploymentsJson from "../deployments/LOCAL/deployment.json"
 
 const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
 const bundlerRpc = process.env.BUNDLER_LOCAL
 const rpcURL = process.env.RPC_LOCAL
 
 if (!privateKey || !bundlerRpc || !rpcURL) {
-    throw new Error("Missing environment variables")
+    throw new Error("Please provide PRIVATE_KEY_LOCAL, BUNDLER_URL_LOCAL and RPC_URL_LOCAL in .env file")
 }
 
 type Deployments = {
-    ECDSAValidator: Hex
-    KernelFactory: Hex
-    FactoryStaker: Hex
-    Kernel: Hex
+    ECDSAValidator: string
+    Kernel: string
+    KernelFactory: string
+    FactoryStaker: string
+    SigningPaymaster: string
 }
-const deployments = deploymentsJson as Deployments
 
-const fallbackDeployments = {
-    ECDSAValidator: "0xE02886AC084a81b114DC4bc9b6c655A1D8c297be",
-    Kernel: "0x59Fc1E09E3Ea0dAE02DBe628AcAa84aA9B937737",
-    KernelFactory: "0x80D747087e1d2285CcE1a308fcc445C12A751dc6",
-    FactoryStaker: "0x58eEa36eDd475f353D7743d21a56769931d8AD0D",
+type Abis = {
+    SigningPaymaster: unknown[]
 }
+
+const deployments: Deployments = deploymentsJson
+const abis: Abis = abisJson
 
 const account = privateKeyToAccount(privateKey)
 
@@ -44,6 +47,15 @@ const publicClient = createPublicClient({
     transport: http(rpcURL),
 })
 
+const pimlicoClient = createPimlicoClient({
+    chain: localhost,
+    transport: http(bundlerRpc),
+    entryPoint: {
+        address: entryPoint07Address,
+        version: "0.7",
+    },
+})
+
 async function getKernelAccount(): Promise<SmartAccount> {
     return toEcdsaKernelSmartAccount({
         client: walletClient,
@@ -53,66 +65,79 @@ async function getKernelAccount(): Promise<SmartAccount> {
         },
         owners: [account],
         version: "0.3.1",
-        ecdsaValidatorAddress: deployments.ECDSAValidator ?? fallbackDeployments.ECDSAValidator,
-        accountLogicAddress: deployments.Kernel ?? fallbackDeployments.Kernel,
-        factoryAddress: deployments.KernelFactory ?? fallbackDeployments.KernelFactory,
-        metaFactoryAddress: deployments.FactoryStaker ?? fallbackDeployments.FactoryStaker,
+        ecdsaValidatorAddress: deployments.ECDSAValidator
+            ? (deployments.ECDSAValidator as Hex)
+            : "0x9133Cc1CEa0E85bC0D1a797EBe31C599967C7bEC",
+        accountLogicAddress: deployments.Kernel
+            ? (deployments.Kernel as Hex)
+            : "0xB98772a89eC8B26E499D3A4571780aEcC34303Dc",
+        factoryAddress: deployments.KernelFactory
+            ? (deployments.KernelFactory as Hex)
+            : "0x4FF5f18D402C82e900A6403a2C7b4dCF5F7B49BE",
+        metaFactoryAddress: deployments.FactoryStaker
+            ? (deployments.FactoryStaker as Hex)
+            : "0x26d9BA57a14364e8e55C8d85Bd135aB1650d0Adc",
     })
 }
 
 function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
+    const paymasterAddress = deployments.SigningPaymaster
+        ? (deployments.SigningPaymaster as Hex)
+        : "0x3F0897061c51CaA4c494ae0c37202f75bFB277e7"
+
     return createSmartAccountClient({
         account: kernelAccount,
         chain: localhost,
         bundlerTransport: http(bundlerRpc, {
             timeout: 30_000,
         }),
+        paymaster: {
+            async getPaymasterData(parameters: GetPaymasterDataParameters) {
+                const gasEstimates = (await pimlicoClient.estimateUserOperationGas({
+                    ...parameters,
+                    paymaster: paymasterAddress,
+                })) as {
+                    preVerificationGas: bigint
+                    verificationGasLimit: bigint
+                    callGasLimit: bigint
+                    paymasterVerificationGasLimit?: bigint
+                    paymasterPostOpGasLimit?: bigint
+                }
+
+                return {
+                    paymaster: paymasterAddress,
+                    paymasterData: "0x",
+                    paymasterPostOpGasLimit: gasEstimates.paymasterPostOpGasLimit ?? 0n,
+                    paymasterVerificationGasLimit: gasEstimates.paymasterVerificationGasLimit ?? 0n,
+                }
+            },
+
+            async getPaymasterStubData(_parameters: GetPaymasterStubDataParameters) {
+                return {
+                    paymaster: paymasterAddress,
+                    paymasterData: "0x",
+                    paymasterVerificationGasLimit: 50_000n,
+                    paymasterPostOpGasLimit: 20_000n,
+                }
+            },
+        },
         userOperation: {
             estimateFeesPerGas: async () => {
-                return await publicClient.estimateFeesPerGas()
+                return (await pimlicoClient.getUserOperationGasPrice()).fast
             },
         },
     })
 }
 
-async function prefund_smart_account(kernelAccount: SmartAccount): Promise<string> {
-    const accountAddress = await kernelAccount.getAddress()
-
-    try {
-        const txHash = await walletClient.sendTransaction({
-            account: account,
-            to: accountAddress,
-            chain: localhost,
-            value: parseEther("0.1"),
-        })
-
-        const receipt = await publicClient.waitForTransactionReceipt({
-            hash: txHash,
-            confirmations: 1,
-        })
-
-        return receipt.status
-    } catch (error) {
-        console.error(error)
-        process.exit(1)
-    }
-}
-
-export function getRandomAccount() {
+export function getRandomAccount(): Hex {
     return privateKeyToAddress(generatePrivateKey()).toString() as Hex
 }
 
 async function main() {
-    const kernelAccount = await getKernelAccount()
+    const kernelAccount: SmartAccount = await getKernelAccount()
 
     const receiverAddress = getRandomAccount()
     const AMOUNT = "0.001"
-
-    const res = await prefund_smart_account(kernelAccount)
-    if (res !== "success") {
-        console.log("Smart Account prefund failed")
-        process.exit(1)
-    }
 
     const kernelClient = getKernelClient(kernelAccount)
 
@@ -145,9 +170,9 @@ async function main() {
     const balanceAsEther = formatEther(balance)
 
     if (balanceAsEther === AMOUNT) {
-        console.log("Balance is correct:", balanceAsEther, "ETH")
+        console.log("Balance is correct", balanceAsEther, "ETH")
     } else {
-        console.error("Balance is not correct:", balanceAsEther, "ETH")
+        console.error("Balance is not correct", balanceAsEther, "ETH")
     }
 }
 
