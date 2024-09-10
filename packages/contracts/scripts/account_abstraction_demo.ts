@@ -12,18 +12,18 @@ const bundlerRpc = process.env.BUNDLER_LOCAL
 const rpcURL = process.env.RPC_LOCAL
 
 if (!privateKey || !bundlerRpc || !rpcURL) {
-    throw new Error("Please provide PRIVATE_KEY_LOCAL, BUNDLER_URL_LOCAL and RPC_URL_LOCAL in .env file")
+    throw new Error("Missing environment variables")
 }
 
 type Deployments = {
-    ECDSAValidator: string
-    Kernel: string
-    KernelFactory: string
-    FactoryStaker: string
+    ECDSAValidator: Hex
+    KernelFactory: Hex
+    FactoryStaker: Hex
+    Kernel: Hex
 }
 
 import deploymentsJson from "../out/deployment.json"
-const deployments: Deployments = deploymentsJson
+const deployments = deploymentsJson as Deployments
 
 const account = privateKeyToAccount(privateKey)
 
@@ -56,18 +56,10 @@ async function getKernelAccount(): Promise<SmartAccount> {
         },
         owners: [account],
         version: "0.3.1",
-        ecdsaValidatorAddress: deployments.ECDSAValidator
-            ? (deployments.ECDSAValidator as Hex)
-            : "0xE02886AC084a81b114DC4bc9b6c655A1D8c297be",
-        accountLogicAddress: deployments.Kernel
-            ? (deployments.Kernel as Hex)
-            : "0x59Fc1E09E3Ea0dAE02DBe628AcAa84aA9B937737",
-        factoryAddress: deployments.KernelFactory
-            ? (deployments.KernelFactory as Hex)
-            : "0x80D747087e1d2285CcE1a308fcc445C12A751dc6",
-        metaFactoryAddress: deployments.FactoryStaker
-            ? (deployments.FactoryStaker as Hex)
-            : "0x58eEa36eDd475f353D7743d21a56769931d8AD0D",
+        ecdsaValidatorAddress: deployments.ECDSAValidator ?? "0xE02886AC084a81b114DC4bc9b6c655A1D8c297be",
+        accountLogicAddress: deployments.Kernel ?? "0x59Fc1E09E3Ea0dAE02DBe628AcAa84aA9B937737",
+        factoryAddress: deployments.KernelFactory ?? "0x80D747087e1d2285CcE1a308fcc445C12A751dc6",
+        metaFactoryAddress: deployments.FactoryStaker ?? "0x58eEa36eDd475f353D7743d21a56769931d8AD0D",
     })
 }
 
@@ -114,7 +106,7 @@ export function getRandomAccount(): Hex {
 }
 
 async function main() {
-    const kernelAccount: SmartAccount = await getKernelAccount()
+    const kernelAccount = await getKernelAccount()
 
     const receiverAddress = getRandomAccount()
     const AMOUNT = "0.001"

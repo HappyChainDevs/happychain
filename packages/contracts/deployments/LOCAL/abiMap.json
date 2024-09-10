@@ -1,8 +1,8 @@
 {
-  "ECDSAValidator": "ECDSAValidator",
-  "EntryPointSimulations": "EntryPointSimulations",
-  "EntryPointV7": "EntryPointV7",
-  "FactoryStaker": "FactoryStaker",
-  "Kernel": "Kernel",
-  "KernelFactory": "KernelFactory"
+    "ECDSAValidator": "ECDSAValidator",
+    "EntryPointSimulations": "EntryPointSimulations",
+    "EntryPointV7": "EntryPointV7",
+    "FactoryStaker": "FactoryStaker",
+    "Kernel": "Kernel",
+    "KernelFactory": "KernelFactory"
 }

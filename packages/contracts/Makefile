@@ -231,5 +231,5 @@ deploy-aa:
 ####################################################################################################
 
 run_aa_demo:
-	pnpm tsx ./scripts/account_abstraction_demo.ts
+	tsx ./scripts/account_abstraction_demo.ts;
 .PHONY: run_aa_demo
