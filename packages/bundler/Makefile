@@ -39,9 +39,9 @@ clean:
 # Code Quality
 
 check:
-	biome check ./;
+	biome check ./ --ignore alto;
 .PHONY: check
 
 format:
-	biome check ./ --write;
+	biome check ./ --write --ignore alto;
 .PHONY: format

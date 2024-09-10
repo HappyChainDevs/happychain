@@ -24,11 +24,12 @@ type Deployments = {
     Kernel: string
     KernelFactory: string
     FactoryStaker: string
+    ERC20Mock: string
     SigningPaymaster: string
 }
 
 type Abis = {
-    SigningPaymaster: unknown[]
+    ERC20Mock: unknown[]
 }
 
 const deployments: Deployments = deploymentsJson
@@ -83,7 +84,7 @@ async function getKernelAccount(): Promise<SmartAccount> {
 function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
     const paymasterAddress = deployments.SigningPaymaster
         ? (deployments.SigningPaymaster as Hex)
-        : "0x3F0897061c51CaA4c494ae0c37202f75bFB277e7"
+        : "0x1E92435c8B86b1d9DC4b1A340c2C42b29a5A1B00"
 
     return createSmartAccountClient({
         account: kernelAccount,
@@ -135,18 +136,22 @@ export function getRandomAccount(): Hex {
 
 async function main() {
     const kernelAccount: SmartAccount = await getKernelAccount()
-
-    const receiverAddress = getRandomAccount()
-    const AMOUNT = "0.001"
-
     const kernelClient = getKernelClient(kernelAccount)
 
+    const tokenAddress = deployments.ERC20Mock
+        ? (deployments.ERC20Mock as Hex)
+        : "0xa55F9759439db37ccFeBcb7064B5f574db53aB0b"
+    const receiverAddress = getRandomAccount()
+    const AMOUNT = "1000"
+
     try {
-        const txHash = await kernelClient.sendTransaction({
-            account: kernelAccount,
-            to: receiverAddress,
+        const txHash = await kernelClient.writeContract({
+            address: tokenAddress,
+            abi: abis.ERC20Mock,
+            functionName: "mint",
             chain: localhost,
-            value: parseEther(AMOUNT),
+            args: [receiverAddress, AMOUNT],
+            account: kernelAccount,
         })
 
         const receipt = await publicClient.waitForTransactionReceipt({
@@ -162,18 +167,14 @@ async function main() {
         console.error(error)
     }
 
-    const balance = await publicClient.getBalance({
-        address: receiverAddress,
-        blockTag: "latest",
-    })
+    const balance = (await publicClient.readContract({
+        address: tokenAddress,
+        abi: abis.ERC20Mock,
+        functionName: "balanceOf",
+        args: [receiverAddress],
+    })) as string
 
-    const balanceAsEther = formatEther(balance)
-
-    if (balanceAsEther === AMOUNT) {
-        console.log("Balance is correct", balanceAsEther, "ETH")
-    } else {
-        console.error("Balance is not correct", balanceAsEther, "ETH")
-    }
+    console.log("Balance is ", balance, "wei")
 }
 
 main()
