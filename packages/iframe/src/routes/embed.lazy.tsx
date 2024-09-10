@@ -68,7 +68,7 @@ function Embed() {
     if (authState === AuthState.Connecting) {
         return (
             <main className="h-screen w-screen flex items-center justify-center">
-                    <DotLinearMotionBlurLoader />
+                <DotLinearMotionBlurLoader />
             </main>
         )
     }
@@ -80,13 +80,11 @@ function Embed() {
     return (
         <>
             <main className="flex h-screen w-screen items-stretch rounded-xl overflow-hidden">
-                <div
-                    className="w-full h-full transition flex-col  border border-black bg-base-200 items-center justify-start flex"
-                    
-                >
+                <div className="w-full h-full transition flex-col  border border-black bg-base-200 items-center justify-start flex">
+                    {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
                     <div className="flex items-center justify-center gap-2 p-1 lg:hidden w-full h-full" onClick={open}>
-                         <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
-                         <p className="">{user?.ens || user?.email || user?.name}</p>
+                        <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
+                        <p className="">{user?.ens || user?.email || user?.name}</p>
                     </div>
 
                     <span className="text-black text-xl py-2 hidden lg:flex justify-center">🤠 HappyChain</span>
