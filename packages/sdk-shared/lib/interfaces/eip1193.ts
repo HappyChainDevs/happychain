@@ -48,6 +48,8 @@ const eip1193PermissionsMethods = [
     "wallet_revokePermissions",
 ] as const
 
+const eip1193PermissionsMethodsSet = new Set<string>(eip1193PermissionsMethods)
+
 /**
  * Union type of all EIP1193 request types that request permissions.
  */
@@ -57,5 +59,5 @@ export type EIP1193PermissionsRequest = Extract<EIP1193RequestParameters, { meth
  * Checks if the EIP-1193 request is one that requests permissions.
  */
 export function isPermissionsRequest(args: { method: string; params?: unknown }): args is EIP1193PermissionsRequest {
-    return eip1193PermissionsMethods.some((method) => method === args.method)
+    return eip1193PermissionsMethodsSet.has(args.method)
 }
