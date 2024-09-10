@@ -30,7 +30,9 @@ export default defineConfig({
         dts({
             // nicer output, but takes time
             insertTypesEntry: true,
-            rollupTypes: true,
+            // rollup types doesn't support 'as const'
+            // https://github.com/microsoft/rushstack/issues/3875
+            rollupTypes: false,
             aliasesExclude: ["react"],
             compilerOptions: {
                 rootDir: "../",

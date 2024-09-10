@@ -11,7 +11,9 @@ export default defineConfig(({ mode }) => {
             }),
             dts({
                 insertTypesEntry: true,
-                rollupTypes: true,
+                // rollup types doesn't support 'as const'
+                // https://github.com/microsoft/rushstack/issues/3875
+                rollupTypes: false,
                 bundledPackages: ["viem", "abitype", "@metamask/safe-event-emitter", "@happychain/sdk-shared"],
                 tsconfigPath: "./tsconfig.lib.json",
                 compilerOptions: {
