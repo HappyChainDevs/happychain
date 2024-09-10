@@ -43,10 +43,7 @@ onUserUpdate((_user?: HappyUser) => {
 })
 
 /**
- * Current Active HappyUser
- *
- * {@link HappyUser}
- * @returns currently connected HappyUser, or undefined
+ * @returns The user currently connected to the app, if any.
  *
  * @example
  * ```ts twoslash
@@ -63,8 +60,8 @@ export const getCurrentUser = () => {
 }
 
 /**
- * `happyProvider` is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider}
- * and is an initialized instance of {@link HappyProvider}
+ * This is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider}
+ * and is an initialized instance of {@link HappyProvider}.
  */
 export const happyProvider = new HappyProvider({
     iframePath: config.iframePath,
@@ -78,14 +75,20 @@ export const happyProvider = new HappyProvider({
     msgBus: iframeMessageBus,
 }) as HappyProvider & EIP1193Provider
 
-export async function connect() {
+/**
+ * Connect the app to the Happy Account (will prompt user for permission).
+ */
+export const connect = async () => {
     return await happyProvider.request({
         method: "wallet_requestPermissions",
         params: [{ eth_accounts: {} }],
     })
 }
 
-export async function disconnect() {
+/**
+ * Disconnect the app from the Happy Account.
+ */
+export const disconnect = async () => {
     return await happyProvider.request({
         method: "wallet_revokePermissions",
         params: [{ eth_accounts: {} }],
