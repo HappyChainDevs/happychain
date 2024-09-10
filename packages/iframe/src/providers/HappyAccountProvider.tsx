@@ -1,11 +1,11 @@
 import { init as web3AuthInit } from "@happychain/firebase-web3auth-strategy"
-import { logger } from "@happychain/sdk-shared"
+import { Msgs, logger } from "@happychain/sdk-shared"
 import { type PropsWithChildren, useEffect, useState } from "react"
 
 import { useProcessConfirmedRequests } from "../hooks/useProcessConfirmedRequests"
 import { useProcessUnconfirmedRequests } from "../hooks/useProcessUnconfirmedRequests"
 import { useProviderEventsProxy } from "../hooks/useProviderEventsProxy"
-import { dappMessageBus } from "../services/eventBus"
+import { appMessageBus } from "../services/eventBus"
 
 function useInitializeWeb3() {
     const [isWeb3Initialized, setIsWeb3Initialized] = useState(false)
@@ -16,7 +16,7 @@ function useInitializeWeb3() {
             setIsWeb3Initialized(true)
             logger.log("Web3Auth is initialized")
         }
-        init()
+        void init()
     }, [])
 
     return { isWeb3Initialized }
@@ -52,7 +52,7 @@ export function HappyAccountProvider({ children }: PropsWithChildren) {
 
     useEffect(() => {
         if (isWeb3Initialized) {
-            dappMessageBus.emit("iframe-init", true)
+            void appMessageBus.emit(Msgs.IframeInit, true)
         }
     }, [isWeb3Initialized])
 

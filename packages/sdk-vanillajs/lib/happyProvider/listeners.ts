@@ -60,7 +60,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
         }
     })
 
-    messageBus.on("iframe-init", (isInit) => {
+    messageBus.on(Msgs.IframeInit, (isInit) => {
         for (const call of onIframeInitCallbacks) {
             call(isInit)
         }
