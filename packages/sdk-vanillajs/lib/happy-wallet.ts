@@ -15,12 +15,14 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
 @customElement("happy-wallet")
 export class HappyWallet extends LitElement {
     static properties = {
-        "#classes": { state: true },
+        classes: { state: true },
+        authState: { state: true }
     }
 
-    #classes = {
+    private authState = AuthState.Connecting
+
+    private classes = {
         open: false,
-        connected: false,
     }
 
     constructor(
@@ -37,13 +39,20 @@ export class HappyWallet extends LitElement {
         super.connectedCallback()
 
         onAuthStateUpdate((state) => {
-            this.#classes.connected = state === AuthState.Connected
+            this.authState = state
             this.requestUpdate()
         })
 
         onModalUpdate((isOpen) => {
-            this.#classes.open = isOpen
+            this.classes.open = isOpen
             this.requestUpdate()
+        })
+
+        document.addEventListener('click', () => {
+            if (this.classes.open) {
+                this.classes.open = false
+                this.requestUpdate()
+            }
         })
     }
 
@@ -62,11 +71,17 @@ export class HappyWallet extends LitElement {
             }),
         ).toString()
 
+        const connected = this.authState === AuthState.Connected
+        const connecting = this.authState === AuthState.Connecting
+        const disconnected = this.authState === AuthState.Disconnected
+
         const cssClasses = classMap({
-            open: this.#classes.open,
-            closed: !this.#classes.open,
-            connected: this.#classes.connected,
-            disconnected: !this.#classes.connected,
+            open: this.classes.open,
+            closed: !this.classes.open || connecting,
+            connected: connected,
+            disconnected: disconnected,
+            connecting: connecting,
+            loginModal: !connected && this.classes.open
         })
 
         return html`
@@ -81,38 +96,48 @@ export class HappyWallet extends LitElement {
     }
 
     static styles = css`
+        :host { all: initial !important }
+
         iframe {
             position: fixed;
             top: 0;
             right: 0;
+            margin: 1rem;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        iframe.loginModal {
+            padding: 0;
+            margin:0;
+            right: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            transition: 0s;
         }
 
         iframe.disconnected.closed {
-            height: 5rem;
-            width: 7rem;
-            border-radius: 0.25rem;
-            overflow: hidden;
+            transition: 0s;
         }
 
-        iframe.disconnected.open {
-            bottom: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+        iframe.connecting {
+            margin: 1rem;
+            height: 4rem;
+            width: 12rem;
+            right: 0;
+            transition: 0s;
         }
 
-        iframe.connected.closed {
-            height: 5rem;
-            width: 13rem;
-            border-radius: 0.5rem;
-            overflow: hidden;
+        /* Common closed width/height */
+        iframe.closed {
+            height: 4rem;
+            width: 12rem;
         }
 
         iframe.connected.open {
-            height: 20rem;
-            width: 20rem;
-            border-radius: 0.5rem;
-            overflow: hidden;
+            height: 32rem;
+            width: 24rem;
         }
     `
 }

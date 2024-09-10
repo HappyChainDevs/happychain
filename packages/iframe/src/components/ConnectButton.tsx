@@ -1,61 +1,43 @@
 import { type ConnectionProvider, Msgs } from "@happychain/sdk-shared"
 import clsx from "clsx"
-import { useCallback, useEffect, useState } from "react"
 
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
 import { appMessageBus } from "../services/eventBus"
 
-export function ConnectButton() {
-    const [isOpen, setIsOpen] = useState(false)
+function open() {
+    void appMessageBus.emit(Msgs.ModalToggle, true)
+}
 
+function close() {
+    void appMessageBus.emit(Msgs.ModalToggle, false)
+}
+
+async function connect(provider: ConnectionProvider) {
+    await provider.enable()
+    close()
+}
+
+appMessageBus.on(Msgs.RequestDisplay, (screen) => {
+    if (screen === "login-modal") {
+        open()
+    }
+})
+
+export function ConnectButton() {
     const web3Providers = useInjectedProviders()
     const socialProviders = useSocialProviders()
 
-    const open = useCallback(() => {
-        appMessageBus.emit(Msgs.ModalToggle, true)
-        setIsOpen(true)
-    }, [])
-
-    const close = useCallback(() => {
-        setIsOpen(false)
-        // delay to match fadeout transition/animation
-        const animationTimeInMs = 300
-        setTimeout(() => {
-            appMessageBus.emit(Msgs.ModalToggle, false)
-        }, animationTimeInMs)
-    }, [])
-
-    const connect = useCallback(
-        async (provider: ConnectionProvider) => {
-            await provider.enable()
-            close()
-        },
-        [close],
-    )
-
-    useEffect(() => {
-        return appMessageBus.on(Msgs.RequestDisplay, (screen) => {
-            if (screen === "login-modal") {
-                open()
-            }
-        })
-    }, [open])
-
     return (
         <>
-            <main className="min-h-dvh w-screen">
-                <button type="button" onClick={open} className="btn btn-primary fixed right-4 top-4 h-12 w-20">
+            <main className="h-screen w-screen rounded-xl overflow-hidden">
+                <button type="button" onClick={open} className="btn btn-primary w-full h-full lg:hidden">
                     Login
                 </button>
                 {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
                 <div
                     className={clsx(
-                        // using opacity here so fade in/out can be animated
-                        // the button itself is conditionally rendered, so once connected this is all unmounted
-                        !isOpen && "pointer-events-none opacity-0",
-                        isOpen && "opacity-100",
-                        "fixed bottom-0 left-0 right-0 top-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition duration-300",
+                        "fixed bottom-0 left-0 right-0 top-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition duration-0 lg:duration-300 opacity-0 pointer-events-none lg:pointer-events-auto lg:opacity-100",
                     )}
                     onClick={close}
                 >
