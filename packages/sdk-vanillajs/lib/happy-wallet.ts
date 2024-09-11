@@ -110,8 +110,8 @@ export class HappyWallet extends LitElement {
         }
 
         iframe.connected.open {
-            height: 500px;
-            width: 500px;
+            height: 20rem;
+            width: 20rem;
             border-radius: 0.5rem;
             overflow: hidden;
         }
