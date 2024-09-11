@@ -8,8 +8,9 @@ import { type PublicClient, UnauthorizedProviderError } from "viem"
 import { usePermissionsCheck } from "../hooks/usePermissionsCheck"
 import { useEthAccountsMiddleware } from "./publicClient/eth_accounts"
 import { useEthChainIdMiddleware } from "./publicClient/eth_chainId"
-import { useEthRequestAccountsMiddleware } from "./publicClient/eth_requestAccounts"
+import { useEthRequestAccountsMiddleware } from "./publicClient/eth_requestAccounts/eth_requestAccounts"
 import { useWalletGetPermissionsMiddleware } from "./publicClient/wallet_getPermissions"
+import { useWalletRequestPermissionsMiddleware } from "./publicClient/wallet_requestPermissions/wallet_requestPermissions"
 import { useWalletRevokePermissionsMiddleware } from "./publicClient/wallet_revokePermissions"
 import { useClientMiddlewareExecutor } from "./utils"
 
@@ -21,6 +22,7 @@ export function usePublicClientMiddleware() {
     const ethAccounts = useEthAccountsMiddleware()
     const ethRequestAccounts = useEthRequestAccountsMiddleware()
     const walletGetPermissions = useWalletGetPermissionsMiddleware()
+    const walletRequestPermissions = useWalletRequestPermissionsMiddleware()
     const walletRevokePermissions = useWalletRevokePermissionsMiddleware()
 
     const execute = useCallback(
@@ -31,6 +33,7 @@ export function usePublicClientMiddleware() {
             if (requiresConfirmation(data.payload)) {
                 throw new UnauthorizedProviderError(new Error("Not allowed"))
             }
+
             return await client.request(data.payload)
         },
         [requiresConfirmation],
@@ -43,6 +46,7 @@ export function usePublicClientMiddleware() {
         ethAccounts,
         ethRequestAccounts,
         walletGetPermissions,
+        walletRequestPermissions,
         walletRevokePermissions,
     ]) as ReturnType<typeof useClientMiddlewareExecutor> // ?? needed to help inferred types be resolved...
 }

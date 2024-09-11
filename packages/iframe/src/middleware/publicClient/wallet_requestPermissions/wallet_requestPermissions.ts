@@ -1,18 +1,18 @@
 import { AuthState } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
-import { useAtomValue } from "jotai"
+import { getDefaultStore, useAtomValue } from "jotai"
 import { useCallback } from "react"
 import { UnauthorizedProviderError } from "viem"
-import { getPermissions } from "../../services/permissions/getPermissions"
-import { hasPermission } from "../../services/permissions/hasPermission"
-import { authStateAtom } from "../../state/authState"
+import { getPermissions } from "../../../services/permissions/getPermissions"
+import { hasPermission } from "../../../services/permissions/hasPermission"
+import { authStateAtom } from "../../../state/authState"
+
+const store = getDefaultStore()
 
 /**
  * {@link  https://eips.ethereum.org/EIPS/eip-2255}
  */
 export function useWalletRequestPermissionsMiddleware() {
-    const authState = useAtomValue(authStateAtom)
-
     return useCallback(
         async (
             request: ProviderEventPayload<EIP1193RequestParameters>,
@@ -22,12 +22,12 @@ export function useWalletRequestPermissionsMiddleware() {
                 return await next()
             }
 
-            if (authState !== AuthState.Connected) {
+            if (store.get(authStateAtom) !== AuthState.Connected) {
                 throw new UnauthorizedProviderError(new Error("Not allowed"))
             }
 
             return hasPermission(...request.payload.params) ? getPermissions(request.payload) : []
         },
-        [authState],
+        [],
     )
 }

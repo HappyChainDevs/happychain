@@ -2,9 +2,9 @@ import type { EIP1193RequestParameters, ProviderEventPayload } from "@happychain
 import { useCallback } from "react"
 import type { Client } from "viem"
 import { useClientMiddlewareExecutor } from "./utils"
-import { useEthRequestAccountsMiddleware } from "./walletClient/eth_requestAccounts"
+import { useEthRequestAccountsMiddleware } from "./walletClient/eth_requestAccounts/eth_requestAccounts"
 import { useWalletAddEthereumChainMiddleware } from "./walletClient/wallet_addEthereumChain"
-import { useWalletRequestPermissionsMiddleware } from "./walletClient/wallet_requestPermissions"
+import { useWalletRequestPermissionsMiddleware } from "./walletClient/wallet_requestPermissions/wallet_requestPermissions"
 import { useWalletSwitchEthereumChainMiddleware } from "./walletClient/wallet_switchEthereumChain"
 
 export function useWalletClientMiddleware() {

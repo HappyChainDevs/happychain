@@ -1,19 +1,18 @@
 import { AuthState } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
-import { useAtomValue } from "jotai"
+import { getDefaultStore } from "jotai"
 import { useCallback } from "react"
 import { UnauthorizedProviderError } from "viem"
-import { hasPermission } from "../../services/permissions/hasPermission"
-import { authStateAtom } from "../../state/authState"
-import { userAtom } from "../../state/user"
+import { hasPermission } from "../../../services/permissions/hasPermission"
+import { authStateAtom } from "../../../state/authState"
+import { userAtom } from "../../../state/user"
+
+const store = getDefaultStore()
 
 /**
  * {@link  https://eips.ethereum.org/EIPS/eip-1102}
  */
 export function useEthRequestAccountsMiddleware() {
-    const authState = useAtomValue(authStateAtom)
-    const user = useAtomValue(userAtom)
-
     return useCallback(
         async (
             request: ProviderEventPayload<EIP1193RequestParameters>,
@@ -23,12 +22,12 @@ export function useEthRequestAccountsMiddleware() {
                 return await next()
             }
 
-            if (authState !== AuthState.Connected) {
+            if (store.get(authStateAtom) !== AuthState.Connected) {
                 throw new UnauthorizedProviderError(new Error("Not allowed"))
             }
 
-            return hasPermission({ eth_accounts: {} }) ? user?.addresses : []
+            return hasPermission({ eth_accounts: {} }) ? store.get(userAtom)?.addresses : []
         },
-        [authState, user],
+        [],
     )
 }

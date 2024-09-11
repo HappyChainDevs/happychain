@@ -7,7 +7,7 @@ import type { MsgsFromApp, MsgsFromIframe } from "@happychain/sdk-shared"
  *
  * The app will forward request to the iframe here , and the iframe will send responses back.
  * Some of the requests (those requiring approval) will instead come from the popup bus, but the
- * responses are send throug this bus.
+ * responses are send through this bus.
  *
  * This side is created first (MessageChannel port1) and will wait for the app side to connect.
  */
