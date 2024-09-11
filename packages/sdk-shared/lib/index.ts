@@ -27,6 +27,7 @@ export { logger } from "./services/logger"
 
 export { createUUID } from "./utils/uuid"
 export { waitForCondition } from "./utils/waitForCondition"
+export {shortenAddress} from "./utils/shortenAddress"
 
 // === TYPES =======================================================================================
 
