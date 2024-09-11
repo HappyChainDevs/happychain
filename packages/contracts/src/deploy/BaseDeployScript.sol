@@ -57,6 +57,14 @@ abstract contract BaseDeployScript is Script {
     }
 
     /**
+     * @dev Same as {@link deployed(string,string,address)} with the contract alias set to the
+     * contract name.
+     */
+    function deployed(string memory contractName, address deployedAddress) internal {
+        deployed(contractName, contractName, deployedAddress);
+    }
+
+    /**
      * @dev Writes the deployment and abi map JSON to out/deployment.json.
      * Automatically called by `run()`.
      */

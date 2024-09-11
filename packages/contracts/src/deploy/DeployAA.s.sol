@@ -49,16 +49,16 @@ contract DeployAAContracts is BaseDeployScript {
         deployed("EntryPointV7", "IEntryPoint", EXPECTED_ENTRYPOINT_V7);
 
         validator = new ECDSAValidator{salt: 0}();
-        deployed("ECDSAValidator", "ECDSAValidator", address(validator));
+        deployed("ECDSAValidator", address(validator));
 
         kernel = new Kernel{salt: 0}(IEntryPoint(EXPECTED_ENTRYPOINT_V7));
-        deployed("Kernel", "Kernel", address(kernel));
+        deployed("Kernel", address(kernel));
 
         factory = new KernelFactory{salt: 0}(address(kernel));
-        deployed("KernelFactory", "KernelFactory", address(factory));
+        deployed("KernelFactory", address(factory));
 
         staker = new FactoryStaker{salt: 0}(msg.sender);
-        deployed("FactoryStaker", "FactoryStaker", address(staker));
+        deployed("FactoryStaker", address(staker));
 
         staker.approveFactory(factory, true);
     }
