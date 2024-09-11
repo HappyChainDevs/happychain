@@ -127,7 +127,7 @@ endif
 deploy:
 	$(CHECK_UPGRADE)
 	$(call run-deploy-script,src/deploy/$(DEPLOY_SCRIPT)) $(VIA_IR_FLAG) $(OPTIMIZER_RUNS_FLAG)
-	$(call post-deploy,$(DEPLOY_SCRIPT))
+	$(call post-deploy)
 .PHONY: deploy
 
 # Performs checks related to contract upgradeability.
@@ -174,29 +174,27 @@ endef
 
 define post-deploy
 	@# Print address logs from the deploy script.
-	@cat out/deployment.json && echo "\n"
-
-	$(eval __CHAIN_ID := `cast chain-id --rpc-url $(RPC_$(CONFIG))`)
-	$(eval __DRY_RUN_PREFIX := $(if $(findstring dry,$(DEPLOY)),dry-run/,))
-
-	@# Forge script deployment outputs file.
-	$(eval __RUN_FILE := broadcast/$(1)/$(__CHAIN_ID)/$(__DRY_RUN_PREFIX)run-latest.json)
-
-	@# Save list of deployed contract names to out/contracts.txt.
-	@node-jq '.transactions[] | select(.transactionType == "CREATE") | .contractName' $(__RUN_FILE) \
-		| uniq \
-		> out/contracts.txt;
+	@cat out/deployment.json && printf "\n"
 
 	@# Extract ABIs from the deployed contracts and save to out/abis.json.
-	@cat out/contracts.txt \
+	@export CONTRACTS=$$(pnpm node-jq '[.[]] | unique' out/abiMap.json) && \
+	node-jq '[.[]] | unique[]' out/abiMap.json \
 		| xargs -L1 -I'{}' forge inspect {} abi \
-		| node-jq --slurp --slurpfile contracts out/contracts.txt '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
+		| node-jq --slurp --argjson contracts "$$CONTRACTS" '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
 		> out/abis.json;
-	@rm out/contracts.txt
-
-	@# If we wanted to generate typesafe typescript bindings.
-    @# @cd ../frontend && pnpm wagmi generate
 endef
+
+# Explanation of the jq command;
+#    CONTRACTS == [ "Contract1", "Contract2", ... ]
+#    The command up to xargs sequencially emit the ABI (JSON objects) of each contract.
+#	 The jq command in the '--slurp' line starts by creating [CONTRACTS, ArrayOfABIs]
+#    It then transposes it: [ ["Contract1", ABI1], ["Contract2", ABI2], ... ]
+#    Finally, it maps it to [{ "Contract1": ABI1 } , { "Contract2": ABI2 } , ... ]
+#    then joins alls of them in a single JSON dictionary.
+
+post-deploy:
+	$(call post-deploy)
+.PHONY: post-deploy
 
 ####################################################################################################
 # Save Deployment Information

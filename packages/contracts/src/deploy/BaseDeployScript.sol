@@ -44,13 +44,15 @@ abstract contract BaseDeployScript is Script {
      * @param contractAlias The alias of the contract, which will be keys in the emitted JSON files.
      * We use this because multiple copies of the same contract can be deployed.
      * @param contractName The name of the contract, to which the contract alias will be mapped in
-     * the ABI map.
+     * the ABI map. Pass an empty string to signify no ABI mapping is desired.
      * @param deployedAddress The address of the deployed contract.
      */
     function deployed(string memory contractAlias, string memory contractName, address deployedAddress) internal {
         if (output) {
             deploymentJson = vm.serializeAddress(deploymentJsonKey, contractAlias, deployedAddress);
-            abiMapJson = vm.serializeString(abiMapJsonKey, contractAlias, contractName);
+            if (bytes(contractName).length > 0) {
+                abiMapJson = vm.serializeString(abiMapJsonKey, contractAlias, contractName);
+            }
         }
     }
 
