@@ -56,3 +56,6 @@ packages/docs/docs/pages/*/api
 
 # Cloned Repositories
 packages/bundler/alto
+
+# Local deployments
+packages/contracts/deployments/LOCAL/

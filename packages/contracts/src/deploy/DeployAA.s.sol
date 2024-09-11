@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0; // solhint-disable-line
 
 import {BaseDeployScript} from "./BaseDeployScript.sol";
-import "./BytecodeStorage.sol";
+import {ENTRYPOINT_V7_CODE} from "./initcode/EntryPointV7Code.sol";
+import {ENTRYPOINT_SIMULATIONS_CODE} from "./initcode/EntryPoinSimulationsCode.sol";
 
 import {Kernel, IEntryPoint} from "kernel/Kernel.sol";
 import {KernelFactory} from "kernel/factory/KernelFactory.sol";
