@@ -114,7 +114,6 @@ iframe.dev:
 .PHONY: iframe.dev
 
 account.dev:
-	echo $(iframe-dev-command)
 	$(MULTIRUN) --names "js,react,iframe" $(account-dev-commands)
 .PHONY: account.dev
 
