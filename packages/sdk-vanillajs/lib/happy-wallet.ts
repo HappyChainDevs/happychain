@@ -76,6 +76,7 @@ export class HappyWallet extends LitElement {
                 src="${url.href}?${searchParams}"
                 class=${cssClasses}
                 style="border: none;"
+                allow="clipboard-read; clipboard-write"
             />
         `
     }
@@ -109,8 +110,8 @@ export class HappyWallet extends LitElement {
         }
 
         iframe.connected.open {
-            height: 20rem;
-            width: 20rem;
+            height: 500px;
+            width: 500px;
             border-radius: 0.5rem;
             overflow: hidden;
         }
