@@ -7,6 +7,8 @@ import { type SmartAccountClient, createSmartAccountClient } from "permissionles
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { createPimlicoClient } from "permissionless/clients/pimlico"
 
+import deploymentsJson from "../out/deployment.json"
+
 const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
 const bundlerRpc = process.env.BUNDLER_LOCAL
 const rpcURL = process.env.RPC_LOCAL
@@ -21,9 +23,14 @@ type Deployments = {
     FactoryStaker: Hex
     Kernel: Hex
 }
-
-import deploymentsJson from "../out/deployment.json"
 const deployments = deploymentsJson as Deployments
+
+const fallbackDeployments = {
+    ECDSAValidator: "0xE02886AC084a81b114DC4bc9b6c655A1D8c297be",
+    Kernel: "0x59Fc1E09E3Ea0dAE02DBe628AcAa84aA9B937737",
+    KernelFactory: "0x80D747087e1d2285CcE1a308fcc445C12A751dc6",
+    FactoryStaker: "0x58eEa36eDd475f353D7743d21a56769931d8AD0D",
+}
 
 const account = privateKeyToAccount(privateKey)
 
@@ -56,10 +63,10 @@ async function getKernelAccount(): Promise<SmartAccount> {
         },
         owners: [account],
         version: "0.3.1",
-        ecdsaValidatorAddress: deployments.ECDSAValidator ?? "0xE02886AC084a81b114DC4bc9b6c655A1D8c297be",
-        accountLogicAddress: deployments.Kernel ?? "0x59Fc1E09E3Ea0dAE02DBe628AcAa84aA9B937737",
-        factoryAddress: deployments.KernelFactory ?? "0x80D747087e1d2285CcE1a308fcc445C12A751dc6",
-        metaFactoryAddress: deployments.FactoryStaker ?? "0x58eEa36eDd475f353D7743d21a56769931d8AD0D",
+        ecdsaValidatorAddress: deployments.ECDSAValidator ?? fallbackDeployments.ECDSAValidator,
+        accountLogicAddress: deployments.Kernel ?? fallbackDeployments.Kernel,
+        factoryAddress: deployments.KernelFactory ?? fallbackDeployments.KernelFactory,
+        metaFactoryAddress: deployments.FactoryStaker ?? fallbackDeployments.FactoryStaker,
     })
 }
 
@@ -68,7 +75,7 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
         account: kernelAccount,
         chain: localhost,
         bundlerTransport: http(bundlerRpc, {
-            timeout: 30_000, // Custom timeout, increased to avoid timeout error when bundling
+            timeout: 30_000,
         }),
         userOperation: {
             estimateFeesPerGas: async () => {
