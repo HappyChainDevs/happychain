@@ -1,3 +1,6 @@
+include ../../makefiles/lib.mk
+include ../../makefiles/formatting.mk
+
 # Set TARGET to "anvil" by default. Other valid values: "sepolia" or "happySepolia".
 TARGET ?= anvil
 
