@@ -5,7 +5,6 @@ import { localhost } from "viem/chains"
 
 import { type SmartAccountClient, createSmartAccountClient } from "permissionless"
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
-import { createPimlicoClient } from "permissionless/clients/pimlico"
 
 import deploymentsJson from "../out/deployment.json"
 
@@ -45,15 +44,6 @@ const publicClient = createPublicClient({
     transport: http(rpcURL),
 })
 
-const pimlicoClient = createPimlicoClient({
-    chain: localhost,
-    transport: http(bundlerRpc),
-    entryPoint: {
-        address: entryPoint07Address,
-        version: "0.7",
-    },
-})
-
 async function getKernelAccount(): Promise<SmartAccount> {
     return toEcdsaKernelSmartAccount({
         client: walletClient,
@@ -79,7 +69,10 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
         }),
         userOperation: {
             estimateFeesPerGas: async () => {
-                return (await pimlicoClient.getUserOperationGasPrice()).fast
+                return {
+                    maxFeePerGas: await publicClient.getGasPrice(),
+                    maxPriorityFeePerGas: 0n, // The chain isn't full in the demo, so this can be 0
+                }
             },
         },
     })
@@ -108,7 +101,7 @@ async function prefund_smart_account(kernelAccount: SmartAccount): Promise<strin
     }
 }
 
-export function getRandomAccount(): Hex {
+export function getRandomAccount() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Hex
 }
 
@@ -155,9 +148,9 @@ async function main() {
     const balanceAsEther = formatEther(balance)
 
     if (balanceAsEther === AMOUNT) {
-        console.log("Balance is correct", balanceAsEther, "ETH")
+        console.log("Balance is correct:", balanceAsEther, "ETH")
     } else {
-        console.error("Balance is not correct", balanceAsEther, "ETH")
+        console.error("Balance is not correct:", balanceAsEther, "ETH")
     }
 }
 
