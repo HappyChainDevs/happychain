@@ -71,6 +71,10 @@ test-fork:
 	forge test --gas-report --fork-url $(RPC_$(CONFIG))
 .PHONY: test-fork
 
+aa_demo:
+	tsx ./scripts/account_abstraction_demo.ts;
+.PHONY: aa_demo
+
 ####################################################################################################
 # Code Quality
 
@@ -79,16 +83,16 @@ check: lint format-check
 .PHONY: check
 
 format-check:
-	forge fmt --check src/*.sol src/test/*.sol src/deploy/*.sol
+	forge fmt --check src/*.sol src/test/*.sol src/deploy/*.sol src/deploy/initcode/*.sol
 .PHONY: format-check
 
 lint:
-	solhint --config ./.solhint.json "src/*.sol" "src/test/*.sol" "src/deploy/*.sol";
+	solhint --config ./.solhint.json "src/*.sol" "src/test/*.sol" "src/deploy/*.sol" "src/deploy/initcode/*.sol";
 .PHONY: lint
 
 format:
 	biome check ./ --write;
-	forge fmt src/*.sol src/test/*.sol src/deploy/*.sol
+	forge fmt src/*.sol src/test/*.sol src/deploy/*.sol src/deploy/initcode/*.sol
 .PHONY: format
 
 ####################################################################################################
@@ -126,7 +130,7 @@ endif
 # You can also specify MODE=dry to not submit the tx, or MODE=resume to resume the last deployment.
 deploy:
 	$(CHECK_UPGRADE)
-	$(call run-deploy-script,src/deploy/$(DEPLOY_SCRIPT)) $(VIA_IR_FLAG) $(OPTIMIZER_RUNS_FLAG)
+	$(call run-deploy-script,src/deploy/$(DEPLOY_SCRIPT))
 	$(call post-deploy)
 .PHONY: deploy
 
@@ -152,6 +156,7 @@ define run-deploy-script-key
 	forge script $(1) \
 		--fork-url $(RPC_$(CONFIG)) \
 		--private-key $(PRIVATE_KEY_$(CONFIG)) \
+		$(VIA_IR_FLAG) $(OPTIMIZER_RUNS_FLAG) \
 		$(BROADCAST_FLAG) \
 		$(VERIFY_FLAG)
 endef
@@ -168,6 +173,7 @@ define run-deploy-script-account
 		--account $(ACCOUNT_$(CONFIG)) \
 		--password-file $(PASSFILE_$(CONFIG)) \
 		--sender $(DEPLOY_SENDER) \
+		$(VIA_IR_FLAG) $(OPTIMIZER_RUNS_FLAG) \
 		$(BROADCAST_FLAG) \
 		$(VERIFY_FLAG)
 endef
@@ -211,7 +217,6 @@ save-deployment:
 .PHONY: save-deployment
 
 ####################################################################################################
-
 # Deploy Scripts
 
 deploy-l1:
@@ -227,7 +232,3 @@ deploy-aa:
 .PHONY: deploy-aa
 
 ####################################################################################################
-
-run_aa_demo:
-	tsx ./scripts/account_abstraction_demo.ts;
-.PHONY: run_aa_demo
