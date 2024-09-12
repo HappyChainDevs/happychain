@@ -1,5 +1,5 @@
-import { getPermissions } from "../../../services/permissions/getPermissions"
-import { setPermission } from "../../../services/permissions/setPermission"
+import { getPermissions, setPermission } from "../../../services/permissions"
+
 import type { MiddlewareFunction } from "../../types"
 
 /**

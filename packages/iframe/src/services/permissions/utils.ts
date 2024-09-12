@@ -1,33 +1,45 @@
-import { createUUID } from "@happychain/sdk-shared"
+import { type HappyUser, createUUID } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
-import { type DappPermissionMap, type WalletPermission, permissionsAtom } from "../../state/permissions"
-import { userAtom } from "../../state/user"
+import {
+    type DappPermissionMap,
+    type GlobalPermissionMap,
+    type WalletPermission,
+    permissionsAtom,
+} from "../../state/permissions"
+
 import { getDappOrigin, getIframeOrigin } from "../../utils/getDappOrigin"
+
+const store = getDefaultStore()
 
 const iframeOrigin = getIframeOrigin()
 const dappOrigin = getDappOrigin()
-const store = getDefaultStore()
+const sameOrigin = dappOrigin === iframeOrigin
+
+export function getPermissionsForDapp(
+    dappOrigin: string,
+    user: HappyUser | undefined,
+    permissions: GlobalPermissionMap,
+) {
+    const fallback = user && sameOrigin ? createIframePermissions() : new Map()
+    return permissions.get(dappOrigin) ?? fallback
+}
 
 // === Vanilla-JS Accessors =======================================================================================
 // This will not be reactive from within react context, please use hooks!
 // these util functions are using getDefaultStore() as there are situations
 // where these need to be set outside of react context
 
-export function getDappPermissions(): DappPermissionMap {
-    const hasUser = store.get(userAtom)
-    const sameOrigin = dappOrigin === iframeOrigin
-    const fallback = hasUser && sameOrigin ? createIframePermissions() : new Map()
-    return store.get(permissionsAtom).get(dappOrigin) ?? fallback
-}
-
 export function setDappPermissions(permissions: DappPermissionMap) {
-    return store.set(permissionsAtom, (prev) => prev.set(dappOrigin, permissions))
+    return store.set(permissionsAtom, (prev) => {
+        prev.set(dappOrigin, permissions)
+        return new Map(prev)
+    })
 }
 
 export function clearDappPermissions() {
     return store.set(permissionsAtom, (prev) => {
         prev.delete(dappOrigin)
-        return prev
+        return new Map(prev)
     })
 }
 

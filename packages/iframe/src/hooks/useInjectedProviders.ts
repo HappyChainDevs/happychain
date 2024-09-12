@@ -1,11 +1,9 @@
 import { AuthState, type ConnectionProvider, type EIP6963ProviderDetail, Msgs } from "@happychain/sdk-shared"
 import { useSetAtom } from "jotai"
 import { useEffect, useMemo, useState } from "react"
-
 import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { appMessageBus } from "../services/eventBus"
-import { revokePermission } from "../services/permissions/revokePermission"
-import { setPermission } from "../services/permissions/setPermission"
+import { revokePermission, setPermission } from "../services/permissions"
 import { StorageKey, storage } from "../services/storage"
 import { authStateAtom } from "../state/authState"
 import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"

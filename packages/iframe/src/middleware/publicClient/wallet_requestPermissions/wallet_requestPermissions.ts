@@ -1,8 +1,7 @@
 import { AuthState } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
 import { UnauthorizedProviderError } from "viem"
-import { getPermissions } from "../../../services/permissions/getPermissions"
-import { hasPermission } from "../../../services/permissions/hasPermission"
+import { getPermissions, hasPermission } from "../../../services/permissions"
 import { getAuthState } from "../../../state/authState"
 
 /**
