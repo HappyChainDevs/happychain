@@ -83,16 +83,16 @@ check: lint format-check
 .PHONY: check
 
 format-check:
-	forge fmt --check src/*.sol src/test/*.sol src/deploy/*.sol src/deploy/initcode/*.sol
+	forge fmt --check src
 .PHONY: format-check
 
 lint:
-	solhint --config ./.solhint.json "src/*.sol" "src/test/*.sol" "src/deploy/*.sol" "src/deploy/initcode/*.sol";
+	solhint --config ./.solhint.json "src/**/*.sol";
 .PHONY: lint
 
 format:
 	biome check ./ --write;
-	forge fmt src/*.sol src/test/*.sol src/deploy/*.sol src/deploy/initcode/*.sol
+	forge fmt src
 .PHONY: format
 
 ####################################################################################################
@@ -156,7 +156,8 @@ define run-deploy-script-key
 	forge script $(1) \
 		--fork-url $(RPC_$(CONFIG)) \
 		--private-key $(PRIVATE_KEY_$(CONFIG)) \
-		$(VIA_IR_FLAG) $(OPTIMIZER_RUNS_FLAG) \
+		$(VIA_IR_FLAG) \
+		$(OPTIMIZER_RUNS_FLAG) \
 		$(BROADCAST_FLAG) \
 		$(VERIFY_FLAG)
 endef
@@ -173,7 +174,8 @@ define run-deploy-script-account
 		--account $(ACCOUNT_$(CONFIG)) \
 		--password-file $(PASSFILE_$(CONFIG)) \
 		--sender $(DEPLOY_SENDER) \
-		$(VIA_IR_FLAG) $(OPTIMIZER_RUNS_FLAG) \
+		$(VIA_IR_FLAG) \
+		$(OPTIMIZER_RUNS_FLAG) \
 		$(BROADCAST_FLAG) \
 		$(VERIFY_FLAG)
 endef
