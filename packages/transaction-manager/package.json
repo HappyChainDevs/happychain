@@ -1,0 +1,19 @@
+{
+  "name": "@happychain/transaction-manager",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "viem": "^2.20.1"
+  },
+  "devDependencies": {
+    "@happychain/configs": "workspace:^",
+    "typescript": "^5.5.4"
+  }
+}

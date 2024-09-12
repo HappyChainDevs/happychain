@@ -1,0 +1,13 @@
+{
+  "name": "@happychain/randomness-service",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@happychain/transaction-manager": "workspace:^"
+  },
+  "devDependencies": {
+    "@happychain/configs": "workspace:^",
+    "typescript": "^5.5.4"
+  }
+}
