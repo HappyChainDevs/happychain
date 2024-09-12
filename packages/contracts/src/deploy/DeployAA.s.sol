@@ -5,7 +5,7 @@ import {BaseDeployScript} from "./BaseDeployScript.sol";
 import {ENTRYPOINT_V7_CODE} from "./initcode/EntryPointV7Code.sol";
 import {ENTRYPOINT_SIMULATIONS_CODE} from "./initcode/EntryPoinSimulationsCode.sol";
 
-import {Kernel, IEntryPoint} from "kernel/Kernel.sol";
+import {Kernel} from "kernel/Kernel.sol";
 import {KernelFactory} from "kernel/factory/KernelFactory.sol";
 import {FactoryStaker} from "kernel/factory/FactoryStaker.sol";
 import {ECDSAValidator} from "kernel/validator/ECDSAValidator.sol";

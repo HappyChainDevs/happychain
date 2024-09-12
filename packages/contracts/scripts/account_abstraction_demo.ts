@@ -69,10 +69,7 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
         }),
         userOperation: {
             estimateFeesPerGas: async () => {
-                return {
-                    maxFeePerGas: await publicClient.getGasPrice(),
-                    maxPriorityFeePerGas: 0n, // The chain isn't full in the demo, so this can be 0
-                }
+                return await publicClient.estimateFeesPerGas()
             },
         },
     })
