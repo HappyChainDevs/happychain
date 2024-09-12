@@ -11,7 +11,6 @@
         "@tanstack/react-router": "^1.51.0",
         "clsx": "^2.1.1",
         "jotai": "^2.9.3",
-        "mipd": "^0.0.7",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "viem": "^2.20.1",
