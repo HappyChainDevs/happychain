@@ -40,6 +40,8 @@ const fallbackDeployments = {
     Kernel: "0x59Fc1E09E3Ea0dAE02DBe628AcAa84aA9B937737",
     KernelFactory: "0x80D747087e1d2285CcE1a308fcc445C12A751dc6",
     FactoryStaker: "0x58eEa36eDd475f353D7743d21a56769931d8AD0D",
+    ERC20Mock: "0x",
+    SigningPaymaster: "0x",
 }
 
 const account = privateKeyToAccount(privateKey)
@@ -121,7 +123,7 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
         },
         userOperation: {
             estimateFeesPerGas: async () => {
-                return (await pimlicoClient.getUserOperationGasPrice()).fast
+                return await publicClient.estimateFeesPerGas()
             },
         },
     })
