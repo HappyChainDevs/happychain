@@ -1,29 +1,18 @@
-import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
-import { useAtomValue } from "jotai"
-import { useCallback } from "react"
 import { setPermission } from "../../../services/permissions/setPermission"
-import { userAtom } from "../../../state/user"
+import { getUser } from "../../../state/user"
+import type { MiddlewareFunction } from "../../types"
 
-export function useEthRequestAccountsMiddleware() {
-    const happyUser = useAtomValue(userAtom)
+export const ethRequestAccountsMiddleware: MiddlewareFunction = async (request, next) => {
+    if ("eth_requestAccounts" !== request.payload.method) {
+        return await next()
+    }
+    const user = getUser()
 
-    return useCallback(
-        async (
-            request: ProviderEventPayload<EIP1193RequestParameters>,
-            next: () => Promise<EIP1193RequestResult>,
-        ): Promise<EIP1193RequestResult> => {
-            if ("eth_requestAccounts" !== request.payload.method) {
-                return await next()
-            }
+    if (!user) {
+        return []
+    }
 
-            if (!happyUser) {
-                return []
-            }
+    setPermission(request.payload)
 
-            setPermission(request.payload)
-
-            return happyUser.addresses ?? [happyUser.address]
-        },
-        [happyUser],
-    )
+    return user.addresses ?? [user.address]
 }

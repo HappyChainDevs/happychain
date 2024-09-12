@@ -1,3 +1,4 @@
+import { accessorsFromAtom } from "@happychain/common/lib/utils/jotai"
 import { chains as _chains } from "@happychain/sdk-shared"
 import { atomWithStorage } from "jotai/utils"
 import type { AddEthereumChainParameter } from "viem"
@@ -7,3 +8,5 @@ export const chainsAtom = atomWithStorage<(AddEthereumChainParameter | Readonly<
     StorageKey.Chains,
     Object.values(_chains),
 )
+
+export const { getValue: getChains, setValue: setChains } = accessorsFromAtom(chainsAtom)

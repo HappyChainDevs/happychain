@@ -1,3 +1,4 @@
+import { accessorsFromAtom } from "@happychain/common/lib/utils/jotai"
 import { convertToViemChain, getChainFromSearchParams } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, HttpTransport, PublicClient } from "viem"
@@ -15,3 +16,5 @@ export const publicClientAtom: Atom<PublicClient<CustomTransport | HttpTransport
     // biome-ignore lint/suspicious/noExplicitAny: viem uses any as well
     return (chain.opStack ? publicClient : publicClient.extend(publicActionsL2())) as any
 })
+
+export const { getValue: getPublicClient } = accessorsFromAtom(publicClientAtom)

@@ -37,7 +37,7 @@ export function getChainFromSearchParams(): ChainParameters {
     return chain
 }
 
-export function convertToViemChain(chain: ChainParameters) {
+export function convertToViemChain(chain: ChainParameters): ReturnType<typeof defineChain> {
     if (chain.chainId === happyChainSepolia.chainId) {
         return happyChainSepoliaViemChain
     }

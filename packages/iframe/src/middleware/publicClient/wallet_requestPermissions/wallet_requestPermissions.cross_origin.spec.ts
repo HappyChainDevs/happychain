@@ -10,7 +10,7 @@ import { getPermissions } from "../../../services/permissions/getPermissions"
 import { authStateAtom } from "../../../state/authState"
 import { userAtom } from "../../../state/user"
 import { createHappyUserFromWallet } from "../../../utils/createHappyUserFromWallet"
-import { useWalletRequestPermissionsMiddleware } from "./wallet_requestPermissions"
+import { walletRequestPermissionsMiddleware } from "./wallet_requestPermissions"
 
 function makePayload(payload: EIP1193RequestParameters) {
     return {
@@ -28,7 +28,6 @@ vi.mock("../../../utils/getDappOrigin", async () => ({
 
 describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
     describe("disconnected user", () => {
-        let walletRequestPermissionsMiddleware: ReturnType<typeof useWalletRequestPermissionsMiddleware>
         let next: () => Promise<void>
 
         beforeEach(() => {
@@ -36,9 +35,6 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
             clearPermissions()
             getDefaultStore().set(userAtom, undefined)
             getDefaultStore().set(authStateAtom, AuthState.Disconnected)
-
-            const { result } = renderHook(() => useWalletRequestPermissionsMiddleware())
-            walletRequestPermissionsMiddleware = result.current
 
             next = vi.fn()
         })
@@ -55,7 +51,6 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
 
     describe("connected user", () => {
         let user: HappyUser
-        let walletRequestPermissionsMiddleware: ReturnType<typeof useWalletRequestPermissionsMiddleware>
         let next: () => Promise<void>
 
         beforeEach(() => {
@@ -64,9 +59,6 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
             user = createHappyUserFromWallet("io.testing", "0x123456789")
             getDefaultStore().set(userAtom, user)
             getDefaultStore().set(authStateAtom, AuthState.Connected)
-
-            const { result } = renderHook(() => useWalletRequestPermissionsMiddleware())
-            walletRequestPermissionsMiddleware = result.current
 
             next = vi.fn()
         })

@@ -1,42 +1,77 @@
-import type { EIP1193RequestParameters, ProviderEventPayload } from "@happychain/sdk-shared"
-import { useCallback } from "react"
-import type { Client } from "viem"
-import { useClientMiddlewareExecutor } from "./utils"
-import { useEthRequestAccountsMiddleware } from "./walletClient/eth_requestAccounts/eth_requestAccounts"
-import { useWalletAddEthereumChainMiddleware } from "./walletClient/wallet_addEthereumChain"
-import { useWalletRequestPermissionsMiddleware } from "./walletClient/wallet_requestPermissions/wallet_requestPermissions"
-import { useWalletSwitchEthereumChainMiddleware } from "./walletClient/wallet_switchEthereumChain"
-import { useWalletWatchAssetMiddleware } from "./walletClient/wallet_watchAsset/wallet_watchAsset"
+import type { PopupMsgs } from "@happychain/sdk-shared"
+import { Msgs, getEIP1193ErrorObjectFromUnknown } from "@happychain/sdk-shared"
+import { EIP1193ErrorCodes, getEIP1193ErrorObjectFromCode } from "@happychain/sdk-shared"
+import { type Client, ProviderDisconnectedError } from "viem"
+import { happyProviderBus } from "../services/eventBus"
+import { getWalletClient } from "../state/walletClient"
+import { confirmWindowId } from "../utils/confirmWindowId"
+import { runMiddlewares } from "./runMiddlewares"
+import type { MiddlewareFunction } from "./types"
+import { ethRequestAccountsMiddleware } from "./walletClient/eth_requestAccounts/eth_requestAccounts"
+import { walletAddEthereumChainMiddleware } from "./walletClient/wallet_addEthereumChain"
+import { walletRequestPermissionsMiddleware } from "./walletClient/wallet_requestPermissions/wallet_requestPermissions"
+import { walletSwitchEthereumChainMiddleware } from "./walletClient/wallet_switchEthereumChain"
+import { walletWatchAssetMiddleware } from "./walletClient/wallet_watchAsset/wallet_watchAsset"
 
-export function useWalletClientMiddleware() {
-    // wallet client middlewares
-    const ethRequestAccountsMiddleware = useEthRequestAccountsMiddleware()
-    const walletAddEthereumChainMiddleware = useWalletAddEthereumChainMiddleware()
-    const walletRequestPermissionMiddleware = useWalletRequestPermissionsMiddleware()
-    const walletSwitchEthereumChainMiddleware = useWalletSwitchEthereumChainMiddleware()
-    const walletWatchAssetMiddleware = useWalletWatchAssetMiddleware()
+type ApproveCallback = (data: PopupMsgs[Msgs.PopupApprove]) => Promise<void>
+type RejectCallback = (data: PopupMsgs[Msgs.PopupReject]) => Promise<void>
 
-    const execute = useCallback(
-        async (client: Client | undefined, data: ProviderEventPayload<EIP1193RequestParameters>) => {
-            if (!client) {
-                throw new Error("Wallet client not found")
-            }
+/**
+ * Processes requests approved by the user in the pop-up,
+ * running them through a series of middleware.
+ */
+export const WalletClientApproveHandler: ApproveCallback = async (data) => {
+    // wrong window, ignore
+    if (!confirmWindowId(data.windowId)) return
 
-            return await client.request(data.payload)
-        },
-        [],
-    )
+    try {
+        const client: Client | undefined = getWalletClient()
 
-    const runMiddleware = useClientMiddlewareExecutor(execute, [
-        // accounts & permissions
-        ethRequestAccountsMiddleware,
-        walletRequestPermissionMiddleware,
-        // chain management
-        walletAddEthereumChainMiddleware,
-        walletSwitchEthereumChainMiddleware,
-        // asset management
-        walletWatchAssetMiddleware,
-    ])
+        const middlewares = [
+            ethRequestAccountsMiddleware,
+            walletRequestPermissionsMiddleware,
+            walletAddEthereumChainMiddleware,
+            walletSwitchEthereumChainMiddleware,
+            walletWatchAssetMiddleware,
+            <MiddlewareFunction>(async (data) => {
+                if (!client) throw new ProviderDisconnectedError(new Error("Wallet client not found"))
+                return await client.request(data.payload)
+            }),
+        ]
 
-    return runMiddleware
+        const payload = await runMiddlewares(data, middlewares)
+
+        void happyProviderBus.emit(Msgs.RequestResponse, {
+            key: data.key,
+            windowId: data.windowId,
+            error: null,
+            payload: payload || {},
+        })
+    } catch (e) {
+        void happyProviderBus.emit(Msgs.RequestResponse, {
+            key: data.key,
+            windowId: data.windowId,
+            error: getEIP1193ErrorObjectFromUnknown(e),
+            payload: null,
+        })
+    }
+}
+
+/**
+ * Processes requests rejected by the user in the pop-up, forwarding the rejection to the app.
+ */
+export const WalletClientRejectHandler: RejectCallback = async (data) => {
+    if (!confirmWindowId(data.windowId)) return
+    void happyProviderBus.emit(Msgs.RequestResponse, data)
+
+    if (data.error) {
+        happyProviderBus.emit(Msgs.RequestResponse, data)
+    } else {
+        happyProviderBus.emit(Msgs.RequestResponse, {
+            key: data.key,
+            windowId: data.windowId,
+            error: getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest),
+            payload: null,
+        })
+    }
 }

@@ -1,3 +1,4 @@
+import { accessorsFromAtom } from "@happychain/common/lib/utils/jotai"
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, ParseAccount, WalletClient } from "viem"
 import { createWalletClient } from "viem"
@@ -18,3 +19,5 @@ export const walletClientAtom: Atom<AccountWalletClient | undefined> = atom<Acco
 
     return createWalletClient({ account: user.address, transport })
 })
+
+export const { getValue: getWalletClient } = accessorsFromAtom(walletClientAtom)

@@ -1,7 +1,7 @@
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
 import type { Client } from "viem"
 
-export type MiddlewareType = (
+export type MiddlewareFunction = (
     request: ProviderEventPayload<EIP1193RequestParameters>,
     next: () => Promise<EIP1193RequestResult>,
 ) => Promise<EIP1193RequestResult>
