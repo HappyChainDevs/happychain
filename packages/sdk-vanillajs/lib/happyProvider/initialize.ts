@@ -103,7 +103,7 @@ export const unsubscribe = announceProvider({
         icon: 'data:image/svg+xml,<svg width="32px" height="32px" viewBox="0 0 32 32"/>',
         name: "HappyWallet",
         rdns: "com.example",
-        uuid: "00000000-0000-0000-0000-000000000000",
+        uuid: createUUID(),
     },
     provider: happyProvider,
 })
