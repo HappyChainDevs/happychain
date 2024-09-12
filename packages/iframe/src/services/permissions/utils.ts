@@ -8,6 +8,8 @@ const iframeOrigin = getIframeOrigin()
 const dappOrigin = getDappOrigin()
 const store = getDefaultStore()
 
+// === Vanilla-JS Accessors =======================================================================================
+// This will not be reactive from within react context, please use hooks!
 // these util functions are using getDefaultStore() as there are situations
 // where these need to be set outside of react context
 
@@ -28,6 +30,8 @@ export function clearDappPermissions() {
         return prev
     })
 }
+
+// === Utils =======================================================================================
 
 export function createWalletPermission(name: "eth_accounts" | string): WalletPermission {
     return {

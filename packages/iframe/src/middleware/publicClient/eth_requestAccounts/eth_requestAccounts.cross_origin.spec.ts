@@ -1,6 +1,5 @@
 import { AuthState, createUUID } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happychain/sdk-shared"
-import { renderHook } from "@testing-library/react"
 import { getDefaultStore } from "jotai"
 import { UnauthorizedProviderError } from "viem"
 import { beforeEach, describe, expect, test } from "vitest"
@@ -11,7 +10,7 @@ import { setPermission } from "../../../services/permissions/setPermission"
 import { authStateAtom } from "../../../state/authState"
 import { userAtom } from "../../../state/user"
 import { createHappyUserFromWallet } from "../../../utils/createHappyUserFromWallet"
-import { useEthRequestAccountsMiddleware } from "./eth_requestAccounts"
+import { ethRequestAccountsMiddleware } from "./eth_requestAccounts"
 
 function makePayload(payload: EIP1193RequestParameters) {
     return {
@@ -29,7 +28,6 @@ vi.mock("../../../utils/getDappOrigin", async () => ({
 
 describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
     describe("disconnected user", () => {
-        let ethRequestAccountsMiddleware: ReturnType<typeof useEthRequestAccountsMiddleware>
         let next: () => Promise<void>
 
         beforeEach(() => {
@@ -37,9 +35,6 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
             clearPermissions()
             getDefaultStore().set(userAtom, undefined)
             getDefaultStore().set(authStateAtom, AuthState.Disconnected)
-
-            const { result } = renderHook(() => useEthRequestAccountsMiddleware())
-            ethRequestAccountsMiddleware = result.current
 
             next = vi.fn()
         })
@@ -56,7 +51,6 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
 
     describe("connected user", () => {
         let user: HappyUser
-        let ethRequestAccountsMiddleware: ReturnType<typeof useEthRequestAccountsMiddleware>
         let next: () => Promise<void>
 
         beforeEach(() => {
@@ -65,9 +59,6 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
             user = createHappyUserFromWallet("io.testing", "0x123456789")
             getDefaultStore().set(userAtom, user)
             getDefaultStore().set(authStateAtom, AuthState.Connected)
-
-            const { result } = renderHook(() => useEthRequestAccountsMiddleware())
-            ethRequestAccountsMiddleware = result.current
 
             next = vi.fn()
         })

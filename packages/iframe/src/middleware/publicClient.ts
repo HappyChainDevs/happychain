@@ -1,52 +1,53 @@
-import type {
-    EIP1193RequestParameters,
-    EIP1193RequestPublicClientMethods,
-    ProviderEventPayload,
-} from "@happychain/sdk-shared"
-import { useCallback } from "react"
-import { type PublicClient, UnauthorizedProviderError } from "viem"
-import { usePermissionsCheck } from "../hooks/usePermissionsCheck"
-import { useEthAccountsMiddleware } from "./publicClient/eth_accounts"
-import { useEthChainIdMiddleware } from "./publicClient/eth_chainId"
-import { useEthRequestAccountsMiddleware } from "./publicClient/eth_requestAccounts/eth_requestAccounts"
-import { useWalletGetPermissionsMiddleware } from "./publicClient/wallet_getPermissions"
-import { useWalletRequestPermissionsMiddleware } from "./publicClient/wallet_requestPermissions/wallet_requestPermissions"
-import { useWalletRevokePermissionsMiddleware } from "./publicClient/wallet_revokePermissions"
-import { useClientMiddlewareExecutor } from "./utils"
+import { Msgs, type ProviderMsgsFromApp, getEIP1193ErrorObjectFromUnknown } from "@happychain/sdk-shared"
+import { type Client, UnauthorizedProviderError } from "viem"
+import { happyProviderBus } from "../services/eventBus"
+import { getPublicClient } from "../state/publicClient"
+import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
+import { confirmWindowId } from "../utils/confirmWindowId"
+import { ethAccountsMiddleware } from "./publicClient/eth_accounts"
+import { ethChainIdMiddleware } from "./publicClient/eth_chainId"
+import { ethRequestAccountsMiddleware } from "./publicClient/eth_requestAccounts/eth_requestAccounts"
+import { walletGetPermissionsMiddleware } from "./publicClient/wallet_getPermissions"
+import { walletRequestPermissionsMiddleware } from "./publicClient/wallet_requestPermissions/wallet_requestPermissions"
+import { walletRevokePermissionsMiddleware } from "./publicClient/wallet_revokePermissions"
+import { runMiddlewares } from "./runMiddlewares"
+import type { MiddlewareFunction } from "./types"
 
-export function usePublicClientMiddleware() {
-    const { checkIfRequestRequiresConfirmation: requiresConfirmation } = usePermissionsCheck()
+export const PublicClientApproveHandler: (data: ProviderMsgsFromApp[Msgs.RequestPermissionless]) => Promise<void> =
+    async (data) => {
+        if (!confirmWindowId(data.windowId)) return
 
-    // middlewares
-    const ethChainId = useEthChainIdMiddleware()
-    const ethAccounts = useEthAccountsMiddleware()
-    const ethRequestAccounts = useEthRequestAccountsMiddleware()
-    const walletGetPermissions = useWalletGetPermissionsMiddleware()
-    const walletRequestPermissions = useWalletRequestPermissionsMiddleware()
-    const walletRevokePermissions = useWalletRevokePermissionsMiddleware()
+        try {
+            const client: Client = getPublicClient()
 
-    const execute = useCallback(
-        async (
-            client: PublicClient,
-            data: ProviderEventPayload<EIP1193RequestParameters<EIP1193RequestPublicClientMethods>>,
-        ) => {
-            if (requiresConfirmation(data.payload)) {
-                throw new UnauthorizedProviderError(new Error("Not allowed"))
-            }
+            const middlewares = [
+                ethChainIdMiddleware,
+                ethAccountsMiddleware,
+                ethRequestAccountsMiddleware,
+                walletGetPermissionsMiddleware,
+                walletRequestPermissionsMiddleware,
+                walletRevokePermissionsMiddleware,
+                <MiddlewareFunction>(async (data) => {
+                    if (checkIfRequestRequiresConfirmation(data.payload))
+                        throw new UnauthorizedProviderError(new Error("Not allowed"))
+                    return await client.request(data.payload)
+                }),
+            ]
 
-            return await client.request(data.payload)
-        },
-        [requiresConfirmation],
-    )
+            const payload = await runMiddlewares(data, middlewares)
 
-    return useClientMiddlewareExecutor(execute, [
-        // rpc optimizations
-        ethChainId,
-        // permissions system
-        ethAccounts,
-        ethRequestAccounts,
-        walletGetPermissions,
-        walletRequestPermissions,
-        walletRevokePermissions,
-    ]) as ReturnType<typeof useClientMiddlewareExecutor> // ?? needed to help inferred types be resolved...
-}
+            happyProviderBus.emit(Msgs.RequestResponse, {
+                key: data.key,
+                windowId: data.windowId,
+                error: null,
+                payload: payload,
+            })
+        } catch (e) {
+            happyProviderBus.emit(Msgs.RequestResponse, {
+                key: data.key,
+                windowId: data.windowId,
+                error: getEIP1193ErrorObjectFromUnknown(e),
+                payload: null,
+            })
+        }
+    }

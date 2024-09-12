@@ -1,9 +1,9 @@
 import type { WalletPermission, WalletPermissionRequest } from "../../state/permissions"
 import { getDappPermissions } from "./utils"
 
-type WalletGetPermissions = { method: "wallet_getPermissions"; params: unknown }
+type WalletGetPermissions = { method: "wallet_getPermissions"; params?: unknown }
 type WalletRequestPermissions = { method: "wallet_requestPermissions"; params: WalletPermissionRequest[] }
-type Params = WalletGetPermissions | WalletRequestPermissions | { method: string; params?: unknown }
+type Params = WalletGetPermissions | WalletRequestPermissions
 
 /**
  * Response to JSON-RPC requests

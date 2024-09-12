@@ -1,4 +1,5 @@
 import { atomWithReducer } from "jotai/utils"
+import { type Atom, type WritableAtom, getDefaultStore } from "jotai/vanilla"
 
 /**
  * https://jotai.org/docs/recipes/atom-with-compare
@@ -42,4 +43,40 @@ export function atomWithCompareAndStorage<Value>(
         }
         return next
     })
+}
+
+type AtomValue<TAtom> = TAtom extends Atom<infer U> ? U : never
+
+function atomIsWriteable<TValue, TAtom extends Atom<TValue>>(
+    atom: unknown,
+): atom is WritableAtom<AtomValue<TAtom>, AtomValue<TAtom>[], void> {
+    return Boolean(atom && typeof atom === "object" && "read" in atom && "write" in atom)
+}
+
+function isCallback<T>(value: T | unknown): value is T {
+    return typeof value === "function"
+}
+
+/**
+ * Creates vanillaJS setters and getters for the provided atom
+ *
+ * @param atom
+ * @returns 'react like' hook factory for vanilla-js
+ */
+export function accessorsFromAtom<TValue, TAtom extends Atom<TValue>>(atom: TAtom) {
+    const store = getDefaultStore()
+    return {
+        getValue: (): AtomValue<TAtom> => store.get(atom) as AtomValue<TAtom>,
+        setValue: (next: AtomValue<TAtom> | ((n: AtomValue<TAtom>) => AtomValue<TAtom>)): void => {
+            if (!atomIsWriteable<TValue, TAtom>(atom)) {
+                throw new Error("Atom is not writeable")
+            }
+
+            if (isCallback<(n: AtomValue<TAtom>) => AtomValue<TAtom>>(next)) {
+                store.set(atom, next(store.get(atom)))
+            } else {
+                store.set(atom, next)
+            }
+        },
+    }
 }

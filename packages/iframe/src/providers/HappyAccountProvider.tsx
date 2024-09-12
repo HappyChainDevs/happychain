@@ -2,8 +2,6 @@ import { init as web3AuthInit } from "@happychain/firebase-web3auth-strategy"
 import { Msgs, logger } from "@happychain/sdk-shared"
 import { type PropsWithChildren, useEffect, useState } from "react"
 
-import { useProcessConfirmedRequests } from "../hooks/useProcessConfirmedRequests"
-import { useProcessUnconfirmedRequests } from "../hooks/useProcessUnconfirmedRequests"
 import { useProviderEventsProxy } from "../hooks/useProviderEventsProxy"
 import { appMessageBus } from "../services/eventBus"
 
@@ -37,18 +35,6 @@ export function HappyAccountProvider({ children }: PropsWithChildren) {
         // as user data is exposed or withheld based on the permissions system
         // 'accountsChanged'
     ])
-
-    /**
-     * Processes requests that have been explicitly
-     * approved (or rejected) by the user
-     */
-    useProcessConfirmedRequests()
-
-    /**
-     * Processes requests that have been allowed
-     * to bypass the user confirmation screen
-     */
-    useProcessUnconfirmedRequests()
 
     useEffect(() => {
         if (isWeb3Initialized) {

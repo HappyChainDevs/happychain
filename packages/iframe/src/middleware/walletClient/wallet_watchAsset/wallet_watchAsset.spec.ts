@@ -1,13 +1,13 @@
-import { createUUID } from "@happychain/sdk-shared"
-import type { EIP1193RequestParameters, ProviderEventPayload } from "@happychain/sdk-shared"
-import { renderHook } from "@testing-library/react"
+import { AuthState, createUUID } from "@happychain/sdk-shared"
+import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
 import { getWatchedAssets } from "../../../services/watchedAssets/utils"
+import { authStateAtom } from "../../../state/authState"
 import { userAtom } from "../../../state/user"
 import { createHappyUserFromWallet } from "../../../utils/createHappyUserFromWallet"
-import { useWalletWatchAssetMiddleware } from "./wallet_watchAsset"
+import { walletWatchAssetMiddleware } from "./wallet_watchAsset"
 
 function makePayload(payload: EIP1193RequestParameters) {
     return {
@@ -19,14 +19,18 @@ function makePayload(payload: EIP1193RequestParameters) {
 }
 
 describe("walletClient wallet_watchAsset", () => {
-    test("adds token", async () => {
-        const next = vi.fn()
+    let user: HappyUser
+    let next: () => Promise<void>
 
-        const user = createHappyUserFromWallet("io.testing", "0x123456789")
+    beforeEach(() => {
+        user = createHappyUserFromWallet("io.testing", "0x123456789")
         getDefaultStore().set(userAtom, user)
+        getDefaultStore().set(authStateAtom, AuthState.Connected)
 
-        const { result } = renderHook(() => useWalletWatchAssetMiddleware())
+        next = vi.fn()
+    })
 
+    test("adds token", async () => {
         // Initially, no assets should be watched
         expect(Object.keys(getWatchedAssets()).length).toBe(0)
 
@@ -43,7 +47,7 @@ describe("walletClient wallet_watchAsset", () => {
         })
 
         // Execute middleware
-        const response = await result.current(request, next)
+        const response = await walletWatchAssetMiddleware(request, next)
 
         // Successful response from middleware
         expect(response).toBe(true)

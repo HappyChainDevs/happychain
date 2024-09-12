@@ -1,6 +1,5 @@
 import { AuthState, createUUID } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happychain/sdk-shared"
-import { renderHook } from "@testing-library/react"
 import { getDefaultStore } from "jotai"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
@@ -9,7 +8,7 @@ import { getPermissions } from "../../../services/permissions/getPermissions"
 import { authStateAtom } from "../../../state/authState"
 import { userAtom } from "../../../state/user"
 import { createHappyUserFromWallet } from "../../../utils/createHappyUserFromWallet"
-import { useWalletRequestPermissionsMiddleware } from "./wallet_requestPermissions"
+import { walletRequestPermissionsMiddleware } from "./wallet_requestPermissions"
 
 function makePayload(payload: EIP1193RequestParameters) {
     return {
@@ -27,25 +26,25 @@ vi.mock("../../../utils/getDappOrigin", async () => ({
 
 describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     let user: HappyUser
+    let next: () => Promise<void>
+
     beforeEach(() => {
         clearPermissions()
 
         user = createHappyUserFromWallet("io.testing", "0x123456789")
         getDefaultStore().set(userAtom, user)
         getDefaultStore().set(authStateAtom, AuthState.Connected)
+
+        next = vi.fn()
     })
 
     test("adds eth_account permissions", async () => {
-        const next = vi.fn()
-
-        const { result } = renderHook(() => useWalletRequestPermissionsMiddleware())
-
         expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
 
         const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
 
         // execute middleware
-        const response = await result.current(request, next)
+        const response = await walletRequestPermissionsMiddleware(request, next)
 
         expect(getPermissions({ method: "wallet_getPermissions" })).toStrictEqual(response)
         expect(response).toStrictEqual([
@@ -60,10 +59,6 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     })
 
     test("throws error on caveat use", async () => {
-        const next = vi.fn()
-
-        const { result } = renderHook(() => useWalletRequestPermissionsMiddleware())
-
         expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
 
         const request = makePayload({
@@ -72,23 +67,21 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
         })
 
         // execute middleware
-        expect(result.current(request, next)).rejects.toThrow("WalletPermissionCaveats Not Yet Supported")
+        expect(walletRequestPermissionsMiddleware(request, next)).rejects.toThrow(
+            "WalletPermissionCaveats Not Yet Supported",
+        )
     })
 
     test("only adds permissions once", async () => {
-        const next = vi.fn()
-
-        const { result } = renderHook(() => useWalletRequestPermissionsMiddleware())
-
         expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
 
         const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
 
         // execute middleware
-        await result.current(request, next)
-        await result.current(request, next)
-        await result.current(request, next)
-        await result.current(request, next)
+        await walletRequestPermissionsMiddleware(request, next)
+        await walletRequestPermissionsMiddleware(request, next)
+        await walletRequestPermissionsMiddleware(request, next)
+        await walletRequestPermissionsMiddleware(request, next)
 
         expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
     })

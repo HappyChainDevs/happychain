@@ -27,7 +27,7 @@ export { logger } from "./services/logger"
 
 export { createUUID } from "./utils/uuid"
 export { waitForCondition } from "./utils/waitForCondition"
-export {shortenAddress} from "./utils/shortenAddress"
+export { shortenAddress } from "./utils/shortenAddress"
 
 // === TYPES =======================================================================================
 
@@ -37,8 +37,6 @@ export type { HappyUser } from "./interfaces/happyUser"
 export type {
     EIP1193EventName,
     EIP1193RequestMethods,
-    EIP1193RequestPublicClientMethods,
-    EIP1193RequestWalletClientMethods,
     EIP1193RequestParameters,
     EIP1193RequestResult,
 } from "./interfaces/eip1193"
