@@ -18,9 +18,9 @@ import {BasePaymaster} from "account-abstraction/contracts/core/BasePaymaster.so
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {UserOperationLib} from "account-abstraction/contracts/core/UserOperationLib.sol";
 
-import "account-abstraction/contracts/core/Helpers.sol";
+import {_packValidationData} from "account-abstraction/contracts/core/Helpers.sol";
 
-contract SigningPaymaster is BasePaymaster {
+contract HappyPaymaster is BasePaymaster {
     using UserOperationLib for PackedUserOperation;
 
     constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {}
