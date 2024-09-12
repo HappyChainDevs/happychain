@@ -1,6 +1,6 @@
 import type { Msgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared"
-import { hasPermission } from "../services/permissions/hasPermission"
+import { hasPermission } from "../services/permissions"
 import { getChains } from "../state/chains"
 import { getUser } from "../state/user"
 

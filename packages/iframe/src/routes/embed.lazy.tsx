@@ -10,6 +10,7 @@ import { appMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
 
 import { Power } from "@phosphor-icons/react"
+import clsx from "clsx"
 import ActionButtons from "../components/interface/ActionButtons"
 import AppStatus from "../components/interface/AppStatus"
 import HappyBalance from "../components/interface/HappyBalance"
@@ -79,10 +80,19 @@ function Embed() {
 
     return (
         <>
-            <main className="flex h-screen w-screen items-stretch rounded-xl overflow-hidden">
-                <div className="w-full h-full transition flex-col  border border-black bg-base-200 items-center justify-start flex">
+            <main
+                className={clsx(
+                    "flex h-screen w-screen items-stretch",
+                    "overflow-hidden",
+                    "rounded-xl border border-black bg-base-200",
+                )}
+            >
+                <div className={clsx("w-full h-full flex-col items-center justify-start flex")}>
                     {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-                    <div className="flex items-center justify-center gap-2 p-1 lg:hidden w-full h-full" onClick={open}>
+                    <div
+                        className="flex items-center justify-center gap-2 p-1 lg:hidden w-full h-full cursor-pointer"
+                        onClick={open}
+                    >
                         <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
                         <p className="">{user?.ens || user?.email || user?.name}</p>
                     </div>

@@ -105,7 +105,8 @@ export class HappyWallet extends LitElement {
             right: 0;
             margin: 1rem;
             overflow: hidden;
-            transition: 0.3s;
+            transition: 0.15s;
+            transition-timing-function: ease-out;
         }
 
         iframe.loginModal {

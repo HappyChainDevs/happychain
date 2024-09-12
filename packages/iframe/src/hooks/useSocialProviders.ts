@@ -1,11 +1,9 @@
-import { useAtomValue, useSetAtom } from "jotai"
-import { useEffect, useMemo } from "react"
-
 import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
 import { AuthState, type ConnectionProvider, WalletType } from "@happychain/sdk-shared"
-
+import { useAtomValue, useSetAtom } from "jotai"
+import { useEffect, useMemo } from "react"
 import { setUserWithProvider } from "../actions/setUserWithProvider"
-import { setPermission } from "../services/permissions/setPermission"
+import { setPermission } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
 import { chainsAtom } from "../state/chains"
 import { userAtom } from "../state/user"

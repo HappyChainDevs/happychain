@@ -3,7 +3,7 @@ import { getDefaultStore } from "jotai/vanilla"
 import { http, createPublicClient } from "viem"
 import { mainnet } from "viem/chains"
 import { appMessageBus } from "../services/eventBus"
-import { hasPermission } from "../services/permissions/hasPermission"
+import { hasPermission } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
 import { userAtom } from "../state/user"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
@@ -11,8 +11,8 @@ import { emitUserUpdate } from "../utils/emitUserUpdate"
 const store = getDefaultStore()
 
 /**
- * Runs once at startup to transmit the current auth state to the app (likely {@link
- * AuthState.Disconnected}, or {@link AuthState.Connecting}).
+ * Runs once at startup to transmit the current auth state to the app (likely
+ * {@link AuthState.Disconnected}, or {@link AuthState.Connecting}).
  *
  * @emits {@link Msgs.AuthStateChanged}
  */

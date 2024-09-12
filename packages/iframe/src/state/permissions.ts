@@ -1,5 +1,6 @@
 import { atomWithStorage } from "jotai/utils"
 
+import { accessorsFromAtom } from "@happychain/common/lib/utils/jotai"
 import { StorageKey } from "../services/storage"
 import { createMapStorage } from "../utils/createMapJSONStorage"
 
@@ -21,7 +22,7 @@ import { createMapStorage } from "../utils/createMapJSONStorage"
  * per _address_
  */
 export type DappPermissionMap = Map<string, WalletPermission>
-type GlobalPermissionMap = Map<string, DappPermissionMap>
+export type GlobalPermissionMap = Map<string, DappPermissionMap>
 
 type WalletPermissionCaveat = {
     type: string
@@ -50,3 +51,4 @@ export const permissionsAtom = atomWithStorage<GlobalPermissionMap>(
     createMapStorage(),
     { getOnInit: true },
 )
+export const { getValue: getPermissions, setValue: setPermissions } = accessorsFromAtom(permissionsAtom)

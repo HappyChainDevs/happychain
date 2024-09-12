@@ -1,4 +1,4 @@
-import { setPermission } from "../../../services/permissions/setPermission"
+import { setPermission } from "../../../services/permissions"
 import { getUser } from "../../../state/user"
 import type { MiddlewareFunction } from "../../types"
 

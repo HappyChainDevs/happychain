@@ -1,6 +1,8 @@
 import { atomWithReducer } from "jotai/utils"
 import { type Atom, type WritableAtom, getDefaultStore } from "jotai/vanilla"
 
+const store = getDefaultStore()
+
 /**
  * https://jotai.org/docs/recipes/atom-with-compare
  *
@@ -64,7 +66,6 @@ function isCallback<T>(value: T | unknown): value is T {
  * @returns 'react like' hook factory for vanilla-js
  */
 export function accessorsFromAtom<TValue, TAtom extends Atom<TValue>>(atom: TAtom) {
-    const store = getDefaultStore()
     return {
         getValue: (): AtomValue<TAtom> => store.get(atom) as AtomValue<TAtom>,
         setValue: (next: AtomValue<TAtom> | ((n: AtomValue<TAtom>) => AtomValue<TAtom>)): void => {

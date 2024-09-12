@@ -5,7 +5,7 @@ export function getIframeOrigin(): URLString {
 }
 
 export function getDappOrigin(): URLString {
-    const origin = document.referrer
+    const origin = document.referrer ? new URL(document.referrer).origin : null
     if (!origin) {
         console.warn("Unable to determine dApp Origin")
         return getIframeOrigin()
