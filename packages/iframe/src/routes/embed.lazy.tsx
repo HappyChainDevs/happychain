@@ -1,7 +1,7 @@
 import { AuthState, Msgs } from "@happychain/sdk-shared"
-import { createLazyFileRoute } from "@tanstack/react-router"
+import { Link, Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { ConnectButton } from "../components/ConnectButton"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
@@ -9,33 +9,46 @@ import { useSocialProviders } from "../hooks/useSocialProviders"
 import { appMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
 
+import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
 import { Power } from "@phosphor-icons/react"
 import clsx from "clsx"
-import ActionButtons from "../components/interface/ActionButtons"
-import AppStatus from "../components/interface/AppStatus"
-import HappyBalance from "../components/interface/HappyBalance"
+import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
-import WalletContentInfo from "../components/interface/WalletContentInfo"
-import { publicClientAtom } from "../state/publicClient"
 import { userAtom } from "../state/user"
 
 export const Route = createLazyFileRoute("/embed")({
     component: Embed,
 })
 
-function open() {
+function signalOpen() {
     void appMessageBus.emit(Msgs.ModalToggle, true)
 }
 
 function Embed() {
-    const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)
-
     const authState = useAtomValue(authStateAtom)
     const user = useAtomValue(userAtom)
-    const publicClient = useAtomValue(publicClientAtom)
+
+    const navigate = useNavigate()
+
+    const location = useLocation()
 
     const web3Providers = useInjectedProviders()
     const socialProviders = useSocialProviders()
+
+    useEffect(() => {
+        return appMessageBus.on(Msgs.RequestDisplay, (screen) => {
+            switch (screen) {
+                case ModalStates.Login:
+                    navigate({ to: "/embed" })
+                    signalOpen()
+                    break
+                case ModalStates.Send:
+                    navigate({ to: "/embed/send" })
+                    signalOpen()
+                    break
+            }
+        })
+    }, [navigate])
 
     const activeProvider = useMemo(
         () => socialProviders.concat(web3Providers).find((a) => user && a.id === `${user.type}:${user.provider}`),
@@ -46,25 +59,6 @@ function Embed() {
         await activeProvider?.disable()
         appMessageBus.emit(Msgs.ModalToggle, false)
     }
-
-    const getBalance = useCallback(async () => {
-        if (user) {
-            return await publicClient.getBalance({
-                address: user?.address,
-            })
-        }
-    }, [user, publicClient])
-
-    useEffect(() => {
-        const fetchBalance = async () => {
-            const balance = await getBalance()
-            setHappyBalance(balance)
-        }
-
-        if (user) {
-            fetchBalance()
-        }
-    }, [user, getBalance])
 
     if (authState === AuthState.Connecting) {
         return (
@@ -90,26 +84,26 @@ function Embed() {
                 <div className={clsx("w-full h-full flex-col items-center justify-start flex")}>
                     {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
                     <div
-                        className="flex items-center justify-center gap-2 p-1 lg:hidden w-full h-full cursor-pointer"
-                        onClick={open}
+                        className="flex items-center justify-center gap-2 p-1 lg:hidden w-full h-full"
+                        onClick={signalOpen}
                     >
                         <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
                         <p className="">{user?.ens || user?.email || user?.name}</p>
                     </div>
 
-                    <span className="text-black text-xl py-2 hidden lg:flex justify-center">🤠 HappyChain</span>
+                    <GlobalHeader />
 
                     <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
                         <UserInfo user={user} />
-                        <button className="w-6 h-6 rounded-xl" onClick={disconnect} type="button">
-                            <Power size={22} />
-                        </button>
+                        {location.pathname === "/embed" && (
+                            <button className="w-6 h-6 rounded-xl" onClick={disconnect} type="button">
+                                <Power size={22} />
+                            </button>
+                        )}
                     </div>
-                    <div className="hidden lg:flex h-full w-full grow flex-col items-start justify-start bg-slate-200 p-2">
-                        <HappyBalance balance={happyBalance} />
-                        <ActionButtons />
-                        <WalletContentInfo />
-                        <AppStatus />
+
+                    <div className="hidden lg:flex w-full grow">
+                        <Outlet />
                     </div>
                 </div>
             </main>

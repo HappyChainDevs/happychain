@@ -9,7 +9,7 @@ const HappyBalance = ({ balance }: HappyBalanceProps) => {
         <div className="flex flex-row w-full items-center justify-between">
             <p className="text-lg">$HAPPY</p>
             <div className="flex flex-col items-center">
-                <p className="text-2xl">{balance ? formatEther(balance) : "--"}</p>
+                <p className="text-2xl">{balance ? formatEther(balance) : "0"}</p>
             </div>
         </div>
     )
