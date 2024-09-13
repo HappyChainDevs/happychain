@@ -4,7 +4,9 @@
     "version": "0.0.0",
     "type": "module",
     "dependencies": {
-        "@happychain/transaction-manager": "workspace:^"
+        "@happychain/transaction-manager": "workspace:^",
+        "viem": "^2.20.1",
+        "@happychain/common": "workspace:^"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
