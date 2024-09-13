@@ -17,15 +17,17 @@ const SendTransactionSummary = () => {
             {/* done UX */}
             <div className="flex flex-row w-full space-x-4 items-center justify-center">
                 <button
-                    className={`flex items-center justify-center w-[50%] h-full`}
+                    className="flex items-center justify-center w-[50%] h-full"
                     //   disabled={!validValue || !value}
                     // onClick={handleSendSuccess}
+                    type="button"
                 >
                     Confirm
                 </button>
                 <button
-                    className={`flex items-center justify-center w-[50%] h-full hover:text-green-200`}
+                    className="flex items-center justify-center w-[50%] h-full hover:text-green-200"
                     // onClick={() => setViewState(ViewState.PRIMARY)}
+                    type="button"
                 >
                     Reject
                 </button>

@@ -105,7 +105,7 @@ export enum Msgs {
 
 export enum ModalStates {
     LOGIN = "login-modal",
-    SEND = "send-modal"
+    SEND = "send-modal",
 }
 
 export type MsgsFromApp = {

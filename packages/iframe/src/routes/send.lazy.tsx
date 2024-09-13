@@ -52,9 +52,6 @@ function Send() {
     const user = useAtomValue(userAtom)
 
     const [value, setValue] = useState<string | undefined>(undefined)
-    const [validValue, setValidValue] = useState<boolean>(true)
-
-    const location = useLocation()
 
     /**
      * Handles the change event for the input field.
