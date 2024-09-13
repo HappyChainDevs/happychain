@@ -19,9 +19,13 @@ import {SIG_VALIDATION_SUCCESS, SIG_VALIDATION_FAILED, min} from "account-abstra
 contract HappyPaymaster is BasePaymaster {
     using UserOperationLib for PackedUserOperation;
 
+    error ExcessiveMaxFeePerGas(uint256 maxFeePerGas, uint256 allowedMaxFeePerGas);
+
     uint256 public constant MAX_GAS_BUDGET = 1_000_000;
     uint256 public constant REFILL_PERIOD = 24 * 60 * 60;
     uint256 public constant REFILL_RATE = MAX_GAS_BUDGET / REFILL_PERIOD;
+
+    uint256 public constant MAX_ALLOWED_FEE_PER_GAS = 100 gwei; //@norswap, this is just placeholder for now
 
     mapping(address => uint256) public userGasBudget;
     mapping(address => uint256) public lastUpdated;
@@ -33,11 +37,20 @@ contract HappyPaymaster is BasePaymaster {
         bytes32, /*userOpHash*/
         uint256 /*requiredPreFund*/
     ) internal override returns (bytes memory context, uint256 validationData) {
+        _validateMaxFeePerGas(userOp);
+
         address user = userOp.getSender();
-        uint256 currentGas = userOp.requiredGas();
+        uint256 currentGas = _requiredGas(userOp);
 
         _updateUserGasBudget(user);
 
+        // @norswap, return 1 (says signature validation failed, which isn't exactly the case)
+        // This is read as AA34 by the EntryPoint contract
+        // if (pmAggregator != address(0)) {
+        //            revert FailedOp(opIndex, "AA34 signature error");
+        //        }
+        // So, should I revert instead of returning 1 to signify failure?
+        // ig, it doesn't matter in intermediate stage, but
         if (userGasBudget[user] < currentGas) {
             return ("", SIG_VALIDATION_FAILED);
         }
@@ -67,5 +80,37 @@ contract HappyPaymaster is BasePaymaster {
 
         userGasBudget[user] = min(userGasBudget[user] + gasToRefill, MAX_GAS_BUDGET);
         lastUpdated[user] = currentTime;
+    }
+
+    /**
+     * @dev Calculates the total gas required for a user operation by summing up the various gas limits
+     * involved in the operation, including verification gas, call gas, pre-verification gas, and any
+     * additional gas limits related to paymaster verification and post-operation handling.
+     * @param userOp The packed user operation containing all relevant data for gas calculation.
+     * @return totalGasRequired The total amount of gas required for the user operation.
+     */
+    function _requiredGas(PackedUserOperation calldata userOp) internal pure returns (uint256) {
+        uint256 verificationGasLimit = userOp.unpackVerificationGasLimit();
+        uint256 callGasLimit = userOp.unpackCallGasLimit();
+        uint256 paymasterVerificationGasLimit = userOp.unpackPaymasterVerificationGasLimit();
+        uint256 postOpGasLimit = userOp.unpackPostOpGasLimit();
+
+        uint256 totalGasRequired = userOp.preVerificationGas + verificationGasLimit + callGasLimit
+            + paymasterVerificationGasLimit + postOpGasLimit;
+
+        return totalGasRequired;
+    }
+
+    /**
+     * @dev Validates that the maximum fee per gas specified in the user operation does not exceed
+     * a predefined maximum allowable limit. This check helps to prevent potential griefing attacks
+     * or malicious transactions that set excessively high gas fees.
+     * @param userOp The packed user operation containing gas fee parameters.
+     */
+    function _validateMaxFeePerGas(PackedUserOperation calldata userOp) internal pure {
+        uint256 maxFeePerGas = userOp.unpackMaxFeePerGas();
+        if (maxFeePerGas > MAX_ALLOWED_FEE_PER_GAS) {
+            revert ExcessiveMaxFeePerGas(maxFeePerGas, MAX_ALLOWED_FEE_PER_GAS);
+        }
     }
 }
