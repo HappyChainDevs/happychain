@@ -36,6 +36,9 @@ importers:
       react:
         specifier: ^18.3.1
         version: 18.3.1
+      viem:
+        specifier: ^2.20.1
+        version: 2.21.7(bufferutil@4.0.8)(typescript@5.6.2)(utf-8-validate@5.0.10)(zod@3.23.8)
       vite-plugin-node-polyfills:
         specifier: ^0.22.0
         version: 0.22.0(rollup@4.21.1)(vite@5.4.2(@types/node@22.5.5)(terser@5.33.0))
@@ -612,10 +615,19 @@ importers:
 
   packages/transaction-manager:
     dependencies:
+      '@happychain/contracts':
+        specifier: workspace:^
+        version: link:../contracts
+      eventemitter3:
+        specifier: ^5.0.1
+        version: 5.0.1
       viem:
         specifier: ^2.20.1
         version: 2.21.7(bufferutil@4.0.8)(typescript@5.6.2)(utf-8-validate@5.0.10)(zod@3.23.8)
     devDependencies:
+      '@happychain/common':
+        specifier: workspace:^
+        version: link:../common
       '@happychain/configs':
         specifier: workspace:^
         version: link:../configs
@@ -3441,9 +3453,6 @@ packages:
   '@safe-global/safe-gateway-typescript-sdk@3.22.2':
     resolution: {integrity: sha512-Y0yAxRaB98LFp2Dm+ACZqBSdAmI3FlpH/LjxOZ94g/ouuDJecSq0iR26XZ5QDuEL8Rf+L4jBJaoDC08CD0KkJw==}
     engines: {node: '>=16'}
-
-  '@scure/base@1.1.7':
-    resolution: {integrity: sha512-PPNYBslrLNNUQ/Yad37MHYsNQtK67EhWb6WtSvNLLPo7SdVZgkUjD6Dg+5On7zNwmskf8OX7I7Nx5oN+MIWE0g==}
 
   '@scure/base@1.1.8':
     resolution: {integrity: sha512-6CyAclxj3Nb0XT7GHK6K4zK6k2xJm6E4Ft0Ohjt4WgegiFUHEtFb2CGzmPmGBwoIhrLsqNLYfLr04Y1GePrzZg==}
@@ -13670,8 +13679,6 @@ snapshots:
 
   '@safe-global/safe-gateway-typescript-sdk@3.22.2': {}
 
-  '@scure/base@1.1.7': {}
-
   '@scure/base@1.1.8': {}
 
   '@scure/bip32@1.1.5':
@@ -13684,7 +13691,7 @@ snapshots:
     dependencies:
       '@noble/curves': 1.4.2
       '@noble/hashes': 1.4.0
-      '@scure/base': 1.1.7
+      '@scure/base': 1.1.8
 
   '@scure/bip39@1.1.1':
     dependencies:
@@ -22519,7 +22526,7 @@ snapshots:
   webauthn-p256@0.0.5:
     dependencies:
       '@noble/curves': 1.4.2
-      '@noble/hashes': 1.4.0
+      '@noble/hashes': 1.5.0
 
   webextension-polyfill@0.10.0: {}
 
