@@ -377,9 +377,15 @@ importers:
 
   packages/randomness-service:
     dependencies:
+      '@happychain/common':
+        specifier: workspace:^
+        version: link:../common
       '@happychain/transaction-manager':
         specifier: workspace:^
         version: link:../transaction-manager
+      viem:
+        specifier: ^2.20.1
+        version: 2.21.7(bufferutil@4.0.8)(typescript@5.6.2)(utf-8-validate@5.0.10)(zod@3.23.8)
     devDependencies:
       '@happychain/configs':
         specifier: workspace:^
