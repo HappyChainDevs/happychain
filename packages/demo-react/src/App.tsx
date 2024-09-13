@@ -7,7 +7,7 @@ function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { provider, user, connect, disconnect } = useHappyChain()
+    const { provider, user, connect, disconnect, sendScreen } = useHappyChain()
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
     const walletClient = useMemo(
@@ -38,6 +38,10 @@ function App() {
     async function getBlock() {
         const block = await publicClient.getBlock()
         setBlockResult(block)
+    }
+
+    async function sendStub() {
+        sendScreen()
     }
 
     useEffect(() => {
@@ -86,6 +90,10 @@ function App() {
                 <p className="text-lg font-bold">Results:</p>
                 <pre>{JSON.stringify(blockResult, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2)}</pre>
             </div>
+
+            <button type="button" onClick={sendStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Send TX
+            </button>
         </main>
     )
 }

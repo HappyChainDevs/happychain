@@ -102,8 +102,14 @@ export enum Msgs {
 /**
  * Events sent from the app to the iframe on the general message bus.
  */
+
+export enum ModalStates {
+    LOGIN = "login-modal",
+    SEND = "send-modal"
+}
+
 export type MsgsFromApp = {
-    [Msgs.RequestDisplay]: "login-modal"
+    [Msgs.RequestDisplay]: ModalStates
     [Msgs.InjectedWalletConnected]: { rdns: string; address: `0x${string}` } | { rdns?: undefined; address?: undefined }
     [Msgs.MirrorPermissions]: {
         request: EIP1193PermissionsRequest

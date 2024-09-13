@@ -17,10 +17,16 @@ import { Route as RequestImport } from './routes/request'
 
 // Create Virtual Routes
 
+const SendLazyImport = createFileRoute('/send')()
 const EmbedLazyImport = createFileRoute('/embed')()
 const IndexLazyImport = createFileRoute('/')()
 
 // Create/Update Routes
+
+const SendLazyRoute = SendLazyImport.update({
+  path: '/send',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() => import('./routes/send.lazy').then((d) => d.Route))
 
 const EmbedLazyRoute = EmbedLazyImport.update({
   path: '/embed',
@@ -62,6 +68,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedLazyImport
       parentRoute: typeof rootRoute
     }
+    '/send': {
+      id: '/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof SendLazyImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -71,6 +84,7 @@ export const routeTree = rootRoute.addChildren({
   IndexLazyRoute,
   RequestRoute,
   EmbedLazyRoute,
+  SendLazyRoute,
 })
 
 /* prettier-ignore-end */
@@ -83,7 +97,8 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/request",
-        "/embed"
+        "/embed",
+        "/send"
       ]
     },
     "/": {
@@ -94,6 +109,9 @@ export const routeTree = rootRoute.addChildren({
     },
     "/embed": {
       "filePath": "embed.lazy.tsx"
+    },
+    "/send": {
+      "filePath": "send.lazy.tsx"
     }
   }
 }

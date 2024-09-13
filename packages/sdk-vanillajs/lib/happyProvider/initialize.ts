@@ -8,6 +8,7 @@ import type {
 import { EventBus, EventBusMode, config, createUUID } from "@happychain/sdk-shared"
 import type { EIP1193Provider } from "viem"
 
+import { ModalStates, Msgs } from "@happychain/sdk-shared/lib/interfaces/events"
 import { HappyProvider } from "./happyProvider"
 import { registerListeners } from "./listeners"
 
@@ -21,7 +22,7 @@ export const windowId = createUUID()
 /**
  * App side of the app <> iframe general purpose message bus.
  *
- * This will be used to send UI requests to the firame, receive auth updates, etc.
+ * This will be used to send UI requests to the iframe, receive auth updates, etc.
  */
 const iframeMessageBus = new EventBus<MsgsFromIframe, MsgsFromApp>({
     mode: EventBusMode.AppPort,
@@ -95,4 +96,8 @@ export const disconnect = async () => {
         method: "wallet_revokePermissions",
         params: [{ eth_accounts: {} }],
     })
+}
+
+export const sendScreen = () => {
+    iframeMessageBus.emit(Msgs.RequestDisplay, ModalStates.SEND)
 }

@@ -1,6 +1,7 @@
 import { type ConnectionProvider, Msgs } from "@happychain/sdk-shared"
 import clsx from "clsx"
 
+import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
 import { appMessageBus } from "../services/eventBus"
@@ -19,7 +20,7 @@ async function connect(provider: ConnectionProvider) {
 }
 
 appMessageBus.on(Msgs.RequestDisplay, (screen) => {
-    if (screen === "login-modal") {
+    if (screen === ModalStates.LOGIN) {
         open()
     }
 })

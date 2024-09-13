@@ -1,5 +1,5 @@
 import { AuthState, Msgs } from "@happychain/sdk-shared"
-import { createLazyFileRoute } from "@tanstack/react-router"
+import { createLazyFileRoute, useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { ConnectButton } from "../components/ConnectButton"
@@ -9,6 +9,7 @@ import { useSocialProviders } from "../hooks/useSocialProviders"
 import { appMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
 
+import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
 import { Power } from "@phosphor-icons/react"
 import ActionButtons from "../components/interface/ActionButtons"
 import AppStatus from "../components/interface/AppStatus"
@@ -25,6 +26,12 @@ export const Route = createLazyFileRoute("/embed")({
 function open() {
     void appMessageBus.emit(Msgs.ModalToggle, true)
 }
+
+appMessageBus.on(Msgs.RequestDisplay, (screen) => {
+    if (screen === ModalStates.SEND) {
+        open()
+    }
+})
 
 function Embed() {
     const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)

@@ -11,6 +11,7 @@ import {
     type UUID,
     createUUID,
 } from "@happychain/sdk-shared"
+import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
@@ -94,7 +95,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
              * will be what is returned to the originating caller
              */
             if (!this.user && this.authState === AuthState.Disconnected) {
-                void this.config.msgBus.emit(Msgs.RequestDisplay, "login-modal")
+                void this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.LOGIN)
 
                 const unsubscribe = this.config.msgBus.on(Msgs.UserChanged, (user) => {
                     if (user) {

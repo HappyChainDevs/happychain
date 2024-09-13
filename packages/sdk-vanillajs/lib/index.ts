@@ -10,6 +10,7 @@ export {
     happyProvider,
     connect,
     disconnect,
+    sendScreen,
 } from "./happyProvider/initialize"
 
 export type { UserUpdateCallback, ModalUpdateCallback, ListenerUnsubscribeFn } from "./happyProvider/listeners"
