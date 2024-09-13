@@ -8,6 +8,7 @@
         "@types/react": "^18.3.4",
         "jotai": "^2.9.3",
         "react": "^18.3.1",
-        "vite-plugin-node-polyfills": "^0.22.0"
+        "vite-plugin-node-polyfills": "^0.22.0",
+        "viem": "^2.20.1"
     }
 }

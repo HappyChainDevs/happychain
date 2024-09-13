@@ -5,3 +5,7 @@ export { useIsHydrated } from "./hooks/isHydrated"
 export { atomWithCompare, atomWithCompareAndStorage } from "./utils/jotai"
 
 export type { AssertAssignableTo, AssertCompatible, TupleUnion } from "./utils/types"
+
+export { bigIntMax } from "./utils/bigint"
+
+export { happyChainTestnetChain } from "./viem/chains"
