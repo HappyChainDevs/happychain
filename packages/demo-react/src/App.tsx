@@ -58,7 +58,7 @@ function App() {
             <button
                 type="button"
                 onClick={() => {
-                    user ? connect() : disconnect()
+                    user ? disconnect() : connect()
                 }}
                 className="rounded-lg bg-sky-300 p-2 shadow-xl"
             >

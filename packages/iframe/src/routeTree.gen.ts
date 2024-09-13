@@ -17,16 +17,12 @@ import { Route as RequestImport } from './routes/request'
 
 // Create Virtual Routes
 
-const SendLazyImport = createFileRoute('/send')()
 const EmbedLazyImport = createFileRoute('/embed')()
 const IndexLazyImport = createFileRoute('/')()
+const EmbedIndexLazyImport = createFileRoute('/embed/')()
+const EmbedSendLazyImport = createFileRoute('/embed/send')()
 
 // Create/Update Routes
-
-const SendLazyRoute = SendLazyImport.update({
-  path: '/send',
-  getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/send.lazy').then((d) => d.Route))
 
 const EmbedLazyRoute = EmbedLazyImport.update({
   path: '/embed',
@@ -42,6 +38,16 @@ const IndexLazyRoute = IndexLazyImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
+
+const EmbedIndexLazyRoute = EmbedIndexLazyImport.update({
+  path: '/',
+  getParentRoute: () => EmbedLazyRoute,
+} as any).lazy(() => import('./routes/embed/index.lazy').then((d) => d.Route))
+
+const EmbedSendLazyRoute = EmbedSendLazyImport.update({
+  path: '/send',
+  getParentRoute: () => EmbedLazyRoute,
+} as any).lazy(() => import('./routes/embed/send.lazy').then((d) => d.Route))
 
 // Populate the FileRoutesByPath interface
 
@@ -68,12 +74,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedLazyImport
       parentRoute: typeof rootRoute
     }
-    '/send': {
-      id: '/send'
+    '/embed/send': {
+      id: '/embed/send'
       path: '/send'
-      fullPath: '/send'
-      preLoaderRoute: typeof SendLazyImport
-      parentRoute: typeof rootRoute
+      fullPath: '/embed/send'
+      preLoaderRoute: typeof EmbedSendLazyImport
+      parentRoute: typeof EmbedLazyImport
+    }
+    '/embed/': {
+      id: '/embed/'
+      path: '/'
+      fullPath: '/embed/'
+      preLoaderRoute: typeof EmbedIndexLazyImport
+      parentRoute: typeof EmbedLazyImport
     }
   }
 }
@@ -83,8 +96,10 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   IndexLazyRoute,
   RequestRoute,
-  EmbedLazyRoute,
-  SendLazyRoute,
+  EmbedLazyRoute: EmbedLazyRoute.addChildren({
+    EmbedSendLazyRoute,
+    EmbedIndexLazyRoute,
+  }),
 })
 
 /* prettier-ignore-end */
@@ -97,8 +112,7 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/request",
-        "/embed",
-        "/send"
+        "/embed"
       ]
     },
     "/": {
@@ -108,10 +122,19 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "request.tsx"
     },
     "/embed": {
-      "filePath": "embed.lazy.tsx"
+      "filePath": "embed.lazy.tsx",
+      "children": [
+        "/embed/send",
+        "/embed/"
+      ]
     },
-    "/send": {
-      "filePath": "send.lazy.tsx"
+    "/embed/send": {
+      "filePath": "embed/send.lazy.tsx",
+      "parent": "/embed"
+    },
+    "/embed/": {
+      "filePath": "embed/index.lazy.tsx",
+      "parent": "/embed"
     }
   }
 }

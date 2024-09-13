@@ -6,7 +6,7 @@ const ActionButtons = () => {
             <Link
                 type="button"
                 className="flex items-center justify-center h-10 w-24 bg-cyan-600 text-black rounded-xl text-center"
-                to="/send"
+                to="/embed/send"
             >
                 Send
             </Link>

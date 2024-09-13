@@ -2,7 +2,7 @@ import React from "react"
 
 const SendTransactionSummary = () => {
     return (
-        <div className="flex flex-col items-start justify-between w-[94%] h-full rounded-lg space-y-4 border-[1px] border-slate-700 m-8 p-4">
+        <div className="flex flex-col items-start justify-between rounded-lg space-y-4 border-[1px] border-slate-700 m-8 p-4">
             <div className="flex flex-col space-y-4 items-start justify-start">
                 <span className="text-slate-700 text-[17px]">Transaction Summary</span>
                 <span className="text-slate-700 text-[14px]">Estimated gas: 20.56 $HAPPY</span>
