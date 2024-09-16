@@ -4,5 +4,5 @@
         "experimentalDecorators": true,
         "useDefineForClassFields": false
     },
-    "include": ["vite.config.ts", "test", "lib", "src"]
+    "include": ["vite.config.ts"]
 }
