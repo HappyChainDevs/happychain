@@ -1,0 +1,29 @@
+/**
+ * These styles must be applied to _both_ internal shadow root, and top document root in 
+ * order to be rendered properly. This is required for custom fonts & the new @property syntax
+ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+@property --happychain-gradient-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@property --happychain-gradient-angle-offset {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@property --happychain-gradient-percent {
+    syntax: "<percentage>";
+    initial-value: 5%;
+    inherits: false;
+}
+
+@property --happychain-gradient-shine {
+    syntax: "<color>";
+    initial-value: white;
+    inherits: false;
+}

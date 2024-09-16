@@ -20,7 +20,7 @@ help: ## Show this help
 SHARED_PKGS := sdk-shared,common
 
 # packages only used in the SDK
-SDK_ONLY_PKGS := sdk-vanillajs,sdk-react
+SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components
 
 # packages only used in the iframe
 IFRAME_ONLY_PKGS := iframe,sdk-firebase-web3auth-strategy

@@ -6,14 +6,15 @@
     "main": "lib/index.ts",
     "files": ["lib"],
     "dependencies": {
-        "@toruslabs/tss-dkls-lib": "^3.0.0",
+        "@toruslabs/tss-dkls-lib": "^4.0.0",
         "@web3auth/ethereum-mpc-provider": "^8.12.4",
-        "@web3auth/mpc-core-kit": "^3.1.1",
-        "firebase": "^10.13.0"
+        "@web3auth/mpc-core-kit": "^3.1.2",
+        "firebase": "^10.13.1"
     },
     "devDependencies": {
+        "eslint": "^8.56.0",
         "@happychain/configs": "workspace:^",
-        "@types/react": "^18.3.4",
+        "@types/react": "^18.3.6",
         "@types/react-dom": "^18.3.0"
     },
     "peerDependencies": {
@@ -22,7 +23,7 @@
         "jotai": "^2.9.1",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "viem": "^2.20.1",
+        "viem": "^2.21.7",
         "zod": "^3.23.8"
     }
 }

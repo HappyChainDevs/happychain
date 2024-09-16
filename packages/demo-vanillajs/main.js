@@ -1,7 +1,7 @@
 // register web-component & import useful functions
 import { connect, disconnect, getCurrentUser, happyProvider, onUserUpdate, register } from "@happychain/js"
+import { defineBadgeComponent } from "@happychain/ui/define"
 import { BrowserProvider } from "ethers"
-
 import "./style.css"
 
 // If included via a script tag through a CDN, then exports will be made available
@@ -12,6 +12,8 @@ import "./style.css"
 window.happyProvider = happyProvider
 
 register()
+
+defineBadgeComponent("connect-button", false)
 
 const ethersProvider = new BrowserProvider(happyProvider)
 

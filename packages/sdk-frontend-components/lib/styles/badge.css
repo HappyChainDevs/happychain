@@ -1,0 +1,182 @@
+/*
+ * button @proprty animations inspired by https://ryanmulligan.dev/blog/css-property-new-style/
+*/
+@import './property.css';
+
+:host { all: unset !important; }
+
+:host,
+:root {
+    --happychain-bg: rgb(56 189 248);
+    --happychain-bg-subtle: #1a1818;
+    --happychain-fg: rgb(8 51 68);
+    --happychain-highlight: rgba(241, 253, 79, 0.65);
+    /* rgb(46 16 101); */
+    --happychain-highlight-subtle: #rgb(109 40 217);
+}
+
+.happychain-icon {
+    height: 2.5rem;
+}
+
+.happychain-badge {
+    --animation: gradient-angle linear infinite;
+    --duration: 3s;
+    --speed: 0.85;
+    --shadow-size: 2px;
+
+    isolation: isolate;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    outline-offset: 4px;
+    padding: .25rem 1.25rem;
+    font-family: "Outfit", sans-serif;
+    font-weight: 400;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    border: 1px solid transparent;
+    transition: 1s;
+    border-radius: 15px;
+    color: var(--happychain-fg);
+    background: linear-gradient(var(--happychain-bg), var(--happychain-bg)) padding-box;
+    box-shadow: inset 0 0 0 1px var(--happychain-bg-subtle);
+    position: relative;
+
+    & span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    &.error {
+        background: rgb(248 113 113)
+    }
+
+    &::before,
+    &::after,
+    span::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset-inline-start: 50%;
+        inset-block-start: 50%;
+        translate: -50% -50%;
+        z-index: -1;
+    }
+
+    &:active {
+        translate: 0 -1px;
+        transform: scale(93%);
+    }
+}
+
+.happychain-badge.animated {
+    background: linear-gradient(var(--happychain-bg), var(--happychain-bg)) padding-box,
+        conic-gradient(from calc(var(--happychain-gradient-angle) - var(--happychain-gradient-angle-offset)),
+            transparent,
+            var(--happychain-highlight) var(--happychain-gradient-percent),
+            var(--happychain-gradient-shine) calc(var(--happychain-gradient-percent) * 2),
+            var(--happychain-highlight) calc(var(--happychain-gradient-percent) * 3),
+            transparent calc(var(--happychain-gradient-percent) * 4)) border-box;
+}
+
+/* Dots pattern */
+.happychain-badge.animated::before {
+    --size: calc(100% - var(--shadow-size) * 2);
+    --position: 4px;
+    --space: calc(7px);
+    width: var(--size);
+    height: var(--size);
+    background: radial-gradient(circle at var(--position) var(--position),
+            rgb(8 47 73) calc(var(--position) / 5),
+            transparent 0) padding-box;
+    background-size: var(--space) var(--space);
+    background-repeat: space;
+    mask-image: conic-gradient(from calc(var(--happychain-gradient-angle) + 45deg),
+            black,
+            transparent 10% 90%,
+            black);
+    border-radius: inherit;
+    opacity: 0.4;
+    z-index: -1;
+}
+
+/* Inner shimmer */
+.happychain-badge.animated::after {
+    --animation: shimmer linear infinite;
+    width: 100%;
+    aspect-ratio: 1;
+    background: linear-gradient(-50deg,
+            transparent,
+            var(--happychain-highlight),
+            transparent);
+    mask-image: radial-gradient(circle at bottom, transparent 40%, black);
+    opacity: 0.6;
+}
+
+.happychain-badge span {
+    z-index: 1;
+
+    &::before {
+        --size: calc(100% + 1rem);
+        width: var(--size);
+        height: var(--size);
+        box-shadow: inset 0 -1ex 2rem 4px var(--happychain-highlight);
+        opacity: 0;
+    }
+}
+
+/* Animate */
+.happychain-badge.animated {
+    --transition: 800ms cubic-bezier(0.25, 1, 0.5, 1);
+    transition: var(--transition);
+    transition-property: --happychain-gradient-angle-offset, --happychain-gradient-percent,
+        --happychain-gradient-shine;
+
+    &,
+    &::before,
+    &::after {
+        animation: var(--animation) var(--duration),
+            var(--animation) calc(var(--duration) / var(--speed)) reverse paused;
+        animation-composition: add;
+    }
+
+    span::before {
+        transition: opacity var(--transition);
+        animation: calc(var(--duration) * 1.5) breathe linear infinite;
+    }
+}
+
+.happychain-badge:is(:hover, :focus-visible) {
+    --happychain-gradient-percent: 20%;
+    --happychain-gradient-angle-offset: 95deg;
+    --happychain-gradient-shine: var(--happychain-highlight-subtle);
+
+    &,
+    &::before,
+    &::after {
+        animation-play-state: running;
+    }
+
+    span::before {
+        opacity: 1;
+    }
+}
+
+@keyframes gradient-angle {
+    to { --happychain-gradient-angle: 360deg; }
+}
+
+@keyframes shimmer {
+    to { rotate: 360deg; }
+}
+
+@keyframes breathe {
+    from,
+    to { scale: 1; }
+    50% { scale: 1.2; }
+}

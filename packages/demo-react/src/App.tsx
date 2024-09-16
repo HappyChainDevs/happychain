@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react"
-
 import { useHappyChain } from "@happychain/react"
+
+import { useEffect, useMemo, useState } from "react"
 import { createPublicClient, createWalletClient, custom } from "viem"
+import { ConnectButton } from "./BadgeComponent"
 
 function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
@@ -60,6 +61,10 @@ function App() {
             >
                 {user ? "Disconnect" : "Connect"}
             </button>
+
+            <ConnectButton />
+
+            <ConnectButton disableStyles={true} />
 
             <div className="w-96 overflow-auto bg-gray-200 p-4">
                 <p className="text-lg font-bold">User Details</p>
