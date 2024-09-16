@@ -5,5 +5,5 @@
             "@happychain/js": ["../sdk-vanillajs/lib/index"]
         }
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "../sdk-vanillajs/lib"]
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "../sdk-vanillajs/lib", "../sdk-shared/lib"]
 }

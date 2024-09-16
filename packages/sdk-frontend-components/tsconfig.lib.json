@@ -1,0 +1,17 @@
+{
+    "extends": "@happychain/configs/tsconfig.vite-lib.json",
+    "compilerOptions": {
+        "paths": {
+            "react": ["./node_modules/preact/compat/"],
+            "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"],
+            "react-dom": ["./node_modules/preact/compat/"],
+            "react-dom/*": ["./node_modules/preact/compat/*"]
+        },
+        "jsx": "react-jsx"
+        // "jsxFactory": "createElement",
+        // "jsxFragmentFactory": "Fragment"
+        // "jsxImportSource": "react-jsx"
+        // "jsxImportSource": "preact"
+    },
+    "include": ["lib"]
+}

@@ -1,0 +1,21 @@
+/* Text Transitions */
+.slide-enter {
+    transform: translateY(-150%)
+}
+
+.slide-exit {
+    transform: translateY(0)
+}
+
+.slide-enter-active {
+    transform: translateY(0)
+}
+
+.slide-exit-active {
+    transform: translateY(150%)
+}
+
+.slide-enter-active,
+.slide-exit-active {
+    transition: transform 300ms;
+}

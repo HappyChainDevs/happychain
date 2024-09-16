@@ -6,7 +6,7 @@
     "main": "lib/index.ts",
     "dependencies": {
         "@happychain/common": "workspace:^",
-        "viem": "^2.20.1"
+        "viem": "^2.21.7"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",

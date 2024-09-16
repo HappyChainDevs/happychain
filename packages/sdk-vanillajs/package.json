@@ -26,8 +26,8 @@
         "mipd": "^0.0.7",
         "postcss": "^8.4.41",
         "tailwindcss": "^3.4.10",
-        "typescript": "^5.5.4",
-        "viem": "^2.20.1",
+        "typescript": "^5.6.2",
+        "viem": "^2.21.7",
         "vite": "^5.4.2",
         "vite-plugin-dts": "4.0.3",
         "vite-plugin-web-components-hmr": "^0.1.3"

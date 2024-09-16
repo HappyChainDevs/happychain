@@ -4,20 +4,21 @@
     "version": "0.0.0",
     "type": "module",
     "dependencies": {
+        "@happychain/ui": "workspace:^",
         "@happychain/react": "workspace:^",
         "autoprefixer": "^10.4.20",
         "postcss": "^8.4.41",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "tailwindcss": "^3.4.10",
-        "viem": "^2.20.1"
+        "viem": "^2.21.7"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
         "@types/react": "^18.3.4",
         "@types/react-dom": "^18.3.0",
         "@vitejs/plugin-react-swc": "^3.7.0",
-        "typescript": "^5.5.4",
+        "typescript": "^5.6.2",
         "vite": "^5.4.2"
     }
 }

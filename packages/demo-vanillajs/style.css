@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom Connect Badge Styling */
+connect-button {
+    @apply fixed left-0 top-0;
+
+    .happychain-badge {
+        @apply flex items-center justify-center;
+        & > span {
+            @apply text-lg rounded m-4 font-bold flex items-center justify-center w-48 h-16 bg-gradient-to-r;
+        }
+
+        &.initializing { & > span { @apply from-blue-400 to-purple-600; } }
+        &.connecting { & > span { @apply from-purple-500 to-green-500; } }
+        &.connected { & > span { @apply from-blue-500 to-green-500; } }
+        &.disconnected { & > span { @apply from-green-400 to-blue-500; } }
+        &.error { & > span { @apply from-orange-400 to-red-500; } }
+
+    }
+
+    .happychain-icon {
+        @apply w-12 h-12;
+    }
+
+
+    /* badge animations */
+    .slide-enter { transform: scale(0); }
+    .slide-enter-active,
+    .slide-exit { transform: scale(1); }
+    .slide-exit-active { transform: scale(0); }
+    .slide-enter-active,
+    .slide-exit-active { transition: transform 1000ms; }
+}
+

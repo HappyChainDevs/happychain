@@ -7,7 +7,7 @@
         "@happychain/react": "workspace:^",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "typescript": "^5.5.4",
+        "typescript": "^5.6.2",
         "vocs": "1.0.0-alpha.55"
     },
     "devDependencies": {
@@ -18,13 +18,13 @@
         "@zamiell/typedoc-plugin-not-exported": "^0.3.0",
         "ethers": "^6.13.2",
         "remark-link-rewrite": "^1.0.7",
-        "typedoc": "^0.26.6",
+        "typedoc": "^0.26.7",
         "typedoc-plugin-extras": "^3.1.0",
         "typedoc-plugin-markdown": "^4.2.6",
         "typedoc-plugin-mdn-links": "^3.2.10",
         "typedoc-plugin-remark": "^1.0.3",
         "typedoc-plugin-zod": "^1.2.1",
-        "viem": "^2.20.1",
+        "viem": "^2.21.7",
         "web3": "^4.12.1"
     }
 }
