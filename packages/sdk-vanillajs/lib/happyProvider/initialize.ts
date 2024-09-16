@@ -10,6 +10,7 @@ import type { EIP1193Provider } from "viem"
 
 import { announceProvider } from "mipd"
 import { HappyProvider } from "./happyProvider"
+import { icon64x64 } from "./icons"
 import { registerListeners } from "./listeners"
 
 /**
@@ -100,7 +101,7 @@ export const disconnect = async () => {
 
 export const unsubscribe = announceProvider({
     info: {
-        icon: 'data:image/svg+xml,<svg width="32px" height="32px" viewBox="0 0 32 32"/>',
+        icon: icon64x64,
         name: "HappyWallet",
         rdns: "tech.happy",
         uuid: createUUID(),
