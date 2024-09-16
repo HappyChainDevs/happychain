@@ -7,17 +7,16 @@ contract SequencerRandomOracle is Ownable {
     uint256 public constant SEQUENCER_TIMEOUT = 10;
     uint256 public constant PRECOMMIT_DELAY = 10;
 
-    struct Commitment {
-        bytes32 commitmentHash;
-        bool revealed;
-        bytes32 revealedValue;
+    struct RandomValue {
+        uint256 commitmentHash;
+        uint256 revealedValue;
     }
 
-    mapping(uint256 => Commitment) private commitments;
+    mapping(uint256 => RandomValue) private randomValues;
     uint256 public lastRevealedTimestamp;
 
-    event CommitmentPosted(uint256 indexed timestamp, bytes32 commitmentHash);
-    event ValueRevealed(uint256 indexed timestamp, bytes32 revealedValue);
+    event CommitmentPosted(uint256 indexed timestamp, uint256 commitmentHash);
+    event ValueRevealed(uint256 indexed timestamp, uint256 revealedValue);
 
     error CommitmentTooLate();
     error CommitmentAlreadyExists();
@@ -30,23 +29,28 @@ contract SequencerRandomOracle is Ownable {
 
     constructor() Ownable(msg.sender) {}
 
-    function postCommitment(uint256 timestamp, bytes32 commitmentHash) external onlyOwner {
-        if (block.timestamp > timestamp - PRECOMMIT_DELAY) revert CommitmentTooLate();
-        if (commitments[timestamp].commitmentHash != bytes32(0)) revert CommitmentAlreadyExists();
+    function postCommitment(uint256 timestamp, uint256 commitmentHash) external onlyOwner {
+        if (block.timestamp > timestamp - PRECOMMIT_DELAY) {
+            revert CommitmentTooLate();
+        }
 
-        commitments[timestamp] = Commitment(commitmentHash, false, bytes32(0));
+        if (randomValues[timestamp].commitmentHash != 0) {
+            revert CommitmentAlreadyExists();
+        }
+
+        randomValues[timestamp] = RandomValue(commitmentHash, 0);
 
         emit CommitmentPosted(timestamp, commitmentHash);
     }
 
-    function revealValue(uint256 timestamp, bytes32 revealedValue) external onlyOwner {
-        Commitment storage commitment = commitments[timestamp];
+    function revealValue(uint256 timestamp, uint256 revealedValue) external onlyOwner {
+        RandomValue storage randomValue = randomValues[timestamp];
 
-        if (commitment.commitmentHash == bytes32(0)) {
+        if (randomValue.commitmentHash == 0) {
             revert NoCommitmentFound();
         }
 
-        if (commitment.revealed) {
+        if (randomValue.revealedValue != 0) {
             revert ValueAlreadyRevealed();
         }
 
@@ -58,47 +62,41 @@ contract SequencerRandomOracle is Ownable {
             revert RevealTimeoutExceeded();
         }
 
-        if (commitment.commitmentHash != keccak256(abi.encodePacked(revealedValue))) {
+        if (randomValue.commitmentHash != uint256(keccak256(abi.encodePacked(revealedValue)))) {
             revert InvalidReveal();
         }
 
-        commitment.revealed = true;
-        commitment.revealedValue = revealedValue;
-
+        randomValue.revealedValue = revealedValue;
         lastRevealedTimestamp = timestamp;
 
         emit ValueRevealed(timestamp, revealedValue);
     }
 
-    function unsafeGetSequencerValue(uint256 timestamp) external view returns (bytes32) {
-        Commitment storage commitment = commitments[timestamp];
+    function unsafeGetSequencerValue(uint256 timestamp) external view returns (uint256) {
+        RandomValue storage randomValue = randomValues[timestamp];
 
-        if (!commitment.revealed) {
-            return bytes32(0);
-        }
-
-        return commitment.revealedValue;
+        return randomValue.revealedValue;
     }
 
-    function getSequencerValue(uint256 timestamp) external view returns (bytes32) {
-        Commitment storage commitment = commitments[timestamp];
+    function getSequencerValue(uint256 timestamp) external view returns (uint256) {
+        RandomValue storage randomValue = randomValues[timestamp];
 
-        if (!commitment.revealed) {
+        if (randomValue.revealedValue == 0) {
             revert SequencerValueNotAvailable();
         }
 
-        return commitment.revealedValue;
+        return randomValue.revealedValue;
     }
 
     function willSequencerValueBeAvailable(uint256 timestamp) external view returns (bool) {
-        Commitment storage commitment = commitments[timestamp];
+        RandomValue storage randomValue = randomValues[timestamp];
 
-        if (commitment.commitmentHash == bytes32(0) && block.timestamp > timestamp + SEQUENCER_TIMEOUT) {
-            return false;
+        if (randomValue.commitmentHash == 0) {
+            return (timestamp >= block.timestamp - PRECOMMIT_DELAY);
         }
 
-        if (commitment.commitmentHash != bytes32(0) && block.timestamp > timestamp - PRECOMMIT_DELAY) {
-            return false;
+        if (randomValue.revealedValue == 0) {
+            return block.timestamp > timestamp + SEQUENCER_TIMEOUT;
         }
 
         return true;
