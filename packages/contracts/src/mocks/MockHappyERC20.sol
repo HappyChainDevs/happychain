@@ -2,15 +2,13 @@
 pragma solidity ^0.8.20;
 
 import {MockERC20} from "forge-std/mocks/MockERC20.sol";
-
 import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
-import {Context} from "openzeppelin/utils/Context.sol";
 
 /**
  * @notice This is a mock contract for the $HAPPY token, derived from MockERC20 for testing purposes.
  * It SHOULD NOT be used in production.
  */
-contract MockHappyToken is MockERC20, Context {
+contract MockHappyToken is MockERC20 {
     // Adds safeXXX functions that revert instead of returning false.
     using SafeERC20 for MockERC20;
 
@@ -32,6 +30,6 @@ contract MockHappyToken is MockERC20, Context {
      * @param amount The amount of tokens to burn.
      */
     function burn(uint256 amount) public {
-        _burn(_msgSender(), amount);
+        _burn(msg.sender, amount);
     }
 }
