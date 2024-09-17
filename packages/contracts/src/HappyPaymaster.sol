@@ -41,8 +41,6 @@ contract HappyPaymaster is BasePaymaster {
         bytes32, /*userOpHash*/
         uint256 /*requiredPreFund*/
     ) internal override returns (bytes memory context, uint256 validationData) {
-        _validateMaxFeePerGas(userOp);
-
         address user = userOp.getSender();
         uint256 currentGas = _requiredGas(userOp);
 
@@ -97,18 +95,5 @@ contract HappyPaymaster is BasePaymaster {
             + userOp.unpackPostOpGasLimit();
 
         return requiredGas;
-    }
-
-    /**
-     * @dev Validates that the maximum fee per gas specified in the user operation does not exceed
-     * a predefined maximum allowable limit. This check helps to prevent potential griefing attacks
-     * or malicious transactions that set excessively high gas fees.
-     * @param userOp The packed user operation containing gas fee parameters.
-     */
-    function _validateMaxFeePerGas(PackedUserOperation calldata userOp) internal pure {
-        uint256 maxFeePerGas = userOp.unpackMaxFeePerGas();
-        if (maxFeePerGas > MAX_ALLOWED_FEE_PER_GAS) {
-            revert ExcessiveMaxFeePerGas(maxFeePerGas, MAX_ALLOWED_FEE_PER_GAS);
-        }
     }
 }
