@@ -4,16 +4,12 @@ pragma solidity ^0.8.20;
 import {Ownable} from "openzeppelin/access/Ownable.sol";
 
 contract SequencerRandomOracle is Ownable {
-    uint256 public constant SEQUENCER_TIMEOUT = 10;
     uint256 public constant PRECOMMIT_DELAY = 10;
+    uint256 public constant BLOCK_TIME = 2;
 
-    struct RandomValue {
-        uint256 commitmentHash;
-        uint256 revealedValue;
-    }
-
-    mapping(uint256 => RandomValue) private randomValues;
-    uint256 public lastRevealedTimestamp;
+    mapping(uint256 => uint256) private commitments;
+    uint256 public currentRevealedValue;
+    uint256 public currentRevealTimestamp;
 
     event CommitmentPosted(uint256 indexed timestamp, uint256 commitmentHash);
     event ValueRevealed(uint256 indexed timestamp, uint256 revealedValue);
@@ -21,9 +17,7 @@ contract SequencerRandomOracle is Ownable {
     error CommitmentTooLate();
     error CommitmentAlreadyExists();
     error NoCommitmentFound();
-    error ValueAlreadyRevealed();
     error NonLinearReveal();
-    error RevealTimeoutExceeded();
     error InvalidReveal();
     error SequencerValueNotAvailable();
 
@@ -34,71 +28,50 @@ contract SequencerRandomOracle is Ownable {
             revert CommitmentTooLate();
         }
 
-        if (randomValues[timestamp].commitmentHash != 0) {
+        if (commitments[timestamp] != 0) {
             revert CommitmentAlreadyExists();
         }
 
-        randomValues[timestamp] = RandomValue(commitmentHash, 0);
+        commitments[timestamp] = commitmentHash;
 
         emit CommitmentPosted(timestamp, commitmentHash);
     }
 
     function revealValue(uint256 timestamp, uint256 revealedValue) external onlyOwner {
-        RandomValue storage randomValue = randomValues[timestamp];
+        uint256 storedCommitment = commitments[timestamp];
 
-        if (randomValue.commitmentHash == 0) {
+        if (storedCommitment == 0) {
             revert NoCommitmentFound();
         }
 
-        if (randomValue.revealedValue != 0) {
-            revert ValueAlreadyRevealed();
-        }
-
-        if (timestamp <= lastRevealedTimestamp) {
+        if (timestamp != currentRevealTimestamp + BLOCK_TIME) {
             revert NonLinearReveal();
         }
 
-        if (block.timestamp > timestamp + SEQUENCER_TIMEOUT) {
-            revert RevealTimeoutExceeded();
-        }
-
-        if (randomValue.commitmentHash != uint256(keccak256(abi.encodePacked(revealedValue)))) {
+        if (storedCommitment != uint256(keccak256(abi.encodePacked(revealedValue)))) {
             revert InvalidReveal();
         }
 
-        randomValue.revealedValue = revealedValue;
-        lastRevealedTimestamp = timestamp;
+        currentRevealedValue = revealedValue;
+        currentRevealTimestamp = timestamp;
 
+        delete commitments[timestamp];
         emit ValueRevealed(timestamp, revealedValue);
     }
 
     function unsafeGetSequencerValue(uint256 timestamp) external view returns (uint256) {
-        RandomValue storage randomValue = randomValues[timestamp];
+        if (currentRevealTimestamp != timestamp) {
+            return 0;
+        }
 
-        return randomValue.revealedValue;
+        return currentRevealedValue;
     }
 
     function getSequencerValue(uint256 timestamp) external view returns (uint256) {
-        RandomValue storage randomValue = randomValues[timestamp];
-
-        if (randomValue.revealedValue == 0) {
+        if (currentRevealTimestamp != timestamp) {
             revert SequencerValueNotAvailable();
         }
 
-        return randomValue.revealedValue;
-    }
-
-    function willSequencerValueBeAvailable(uint256 timestamp) external view returns (bool) {
-        RandomValue storage randomValue = randomValues[timestamp];
-
-        if (randomValue.commitmentHash == 0) {
-            return (timestamp >= block.timestamp - PRECOMMIT_DELAY);
-        }
-
-        if (randomValue.revealedValue == 0) {
-            return block.timestamp > timestamp + SEQUENCER_TIMEOUT;
-        }
-
-        return true;
+        return currentRevealedValue;
     }
 }
