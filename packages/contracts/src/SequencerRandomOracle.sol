@@ -17,7 +17,7 @@ contract SequencerRandomOracle is Ownable {
     error CommitmentTooLate();
     error CommitmentAlreadyExists();
     error NoCommitmentFound();
-    error NonLinearReveal();
+    error RevealMustBeOnExactBlock();
     error InvalidReveal();
     error SequencerValueNotAvailable();
 
@@ -44,8 +44,8 @@ contract SequencerRandomOracle is Ownable {
             revert NoCommitmentFound();
         }
 
-        if (timestamp != currentRevealTimestamp + BLOCK_TIME) {
-            revert NonLinearReveal();
+        if (block.timestamp != timestamp) {
+            revert RevealMustBeOnExactBlock();
         }
 
         if (storedCommitment != uint256(keccak256(abi.encodePacked(revealedValue)))) {
@@ -56,6 +56,7 @@ contract SequencerRandomOracle is Ownable {
         currentRevealTimestamp = timestamp;
 
         delete commitments[timestamp];
+
         emit ValueRevealed(timestamp, revealedValue);
     }
 
