@@ -27,8 +27,12 @@ contract HappyPaymaster is BasePaymaster {
 
     uint256 public constant MAX_ALLOWED_FEE_PER_GAS = 100 gwei; //@norswap, this is just placeholder for now
 
-    mapping(address => uint256) public userGasBudget;
-    mapping(address => uint256) public lastUpdated;
+    struct UserInfo {
+        uint64 lastUpdated;
+        uint32 userGasBudget;
+    }
+
+    mapping(address => UserInfo) public userInfo;
 
     constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {}
 
@@ -44,18 +48,11 @@ contract HappyPaymaster is BasePaymaster {
 
         _updateUserGasBudget(user);
 
-        // @norswap, return 1 (says signature validation failed, which isn't exactly the case)
-        // This is read as AA34 by the EntryPoint contract
-        // if (pmAggregator != address(0)) {
-        //            revert FailedOp(opIndex, "AA34 signature error");
-        //        }
-        // So, should I revert instead of returning 1 to signify failure?
-        // ig, it doesn't matter in intermediate stage, but
-        if (userGasBudget[user] < currentGas) {
+        if (userInfo[user].userGasBudget < currentGas) {
             return ("", SIG_VALIDATION_FAILED);
         }
 
-        userGasBudget[user] -= currentGas;
+        userInfo[user].userGasBudget -= uint32(currentGas);
 
         return ("", SIG_VALIDATION_SUCCESS);
     }
@@ -66,20 +63,21 @@ contract HappyPaymaster is BasePaymaster {
      * @param user The address of the user whose gas budget is being updated.
      */
     function _updateUserGasBudget(address user) internal {
-        uint256 lastUpdatedTime = lastUpdated[user];
-        uint256 currentTime = block.timestamp;
+        uint64 lastUpdatedTime = userInfo[user].lastUpdated;
+        uint64 currentTime = uint64(block.timestamp);
 
         if (lastUpdatedTime == 0) {
-            userGasBudget[user] = MAX_GAS_BUDGET;
-            lastUpdated[user] = currentTime;
+            userInfo[user].userGasBudget = uint32(MAX_GAS_BUDGET);
+            userInfo[user].lastUpdated = currentTime;
             return;
         }
 
         uint256 timeElapsed = currentTime - lastUpdatedTime;
         uint256 gasToRefill = timeElapsed * REFILL_RATE;
 
-        userGasBudget[user] = min(userGasBudget[user] + gasToRefill, MAX_GAS_BUDGET);
-        lastUpdated[user] = currentTime;
+        // Update the user's gas budget, ensuring it does not exceed the maximum allowed
+        userInfo[user].userGasBudget = uint32(min(userInfo[user].userGasBudget + gasToRefill, MAX_GAS_BUDGET));
+        userInfo[user].lastUpdated = currentTime;
     }
 
     /**
