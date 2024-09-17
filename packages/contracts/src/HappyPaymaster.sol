@@ -33,14 +33,24 @@ contract HappyPaymaster is BasePaymaster {
     }
 
     mapping(address => UserInfo) public userInfo;
+    mapping(address => bool) public allowedBundlers;
 
-    constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {}
+    constructor(IEntryPoint _entryPoint, address[] memory initialAllowedBundlers) BasePaymaster(_entryPoint) {
+        for (uint256 i = 0; i < initialAllowedBundlers.length; i++) {
+            allowedBundlers[initialAllowedBundlers[i]] = true;
+        }
+    }
 
     function _validatePaymasterUserOp(
         PackedUserOperation calldata userOp,
         bytes32, /*userOpHash*/
         uint256 /*requiredPreFund*/
     ) internal override returns (bytes memory context, uint256 validationData) {
+        // solhint-disable-next-line avoid-tx-origin
+        if (!allowedBundlers[tx.origin]) {
+            return ("", SIG_VALIDATION_FAILED);
+        }
+
         address user = userOp.getSender();
         uint256 currentGas = _requiredGas(userOp);
 
