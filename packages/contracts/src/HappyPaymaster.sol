@@ -54,13 +54,23 @@ contract HappyPaymaster is BasePaymaster {
         address user = userOp.getSender();
         uint256 currentGas = _requiredGas(userOp);
 
-        _updateUserGasBudget(user);
+        UserInfo memory info = userInfo[user];
 
-        if (userInfo[user].userGasBudget < currentGas) {
+        uint32 updatedGasBudget = _updateUserGasBudget(info);
+
+        // For PR review(temp): Since we check for userbudget every time, we don't really need to update the user's gas
+        // budget or even the lastUpdatedTime, since it'll all be recalculated on the next txn by the user in some time
+        // And since the mathemetical operations remain the same (except for the values, like 60min instead of 30min)
+        // So, gas used remains same?
+        // So we only update the userInfo struct when we actually go through with this txn and update userBudget
+        if (updatedGasBudget < currentGas) {
             revert InsufficientGasBudget();
         }
 
-        userInfo[user].userGasBudget -= uint32(currentGas);
+        info.userGasBudget = updatedGasBudget - uint32(currentGas);
+        info.lastUpdated = uint64(block.timestamp);
+
+        userInfo[user] = info;
 
         return ("", SIG_VALIDATION_SUCCESS);
     }
@@ -68,25 +78,21 @@ contract HappyPaymaster is BasePaymaster {
     /**
      * @dev Updates the user's gas budget based on the time elapsed since the last update.
      * This function refills the user's gas budget gradually up to the maximum gas budget.
-     * @param user The address of the user whose gas budget is being updated.
+     * @param info The user information structure containing the user's gas budget and last updated time.
+     * @return The updated gas budget for the user.
      */
-    function _updateUserGasBudget(address user) internal {
-        UserInfo memory info = userInfo[user];
+    function _updateUserGasBudget(UserInfo memory info) internal view returns (uint32) {
         uint64 currentTime = uint64(block.timestamp);
 
         if (info.lastUpdated == 0) {
-            info.userGasBudget = uint32(MAX_GAS_BUDGET);
-            info.lastUpdated = currentTime;
+            return uint32(MAX_GAS_BUDGET);
         } else {
             uint256 timeElapsed = currentTime - info.lastUpdated;
             uint256 gasToRefill = timeElapsed * REFILL_RATE;
 
             uint256 newGasBudget = info.userGasBudget + gasToRefill;
-            info.userGasBudget = uint32(newGasBudget > MAX_GAS_BUDGET ? MAX_GAS_BUDGET : newGasBudget);
-            info.lastUpdated = currentTime;
+            return uint32(newGasBudget > MAX_GAS_BUDGET ? MAX_GAS_BUDGET : newGasBudget);
         }
-
-        userInfo[user] = info;
     }
 
     /**
