@@ -3,18 +3,18 @@ pragma solidity ^0.8.20;
 
 import {MockERC20} from "forge-std/mocks/MockERC20.sol";
 
-import {ERC20Permit} from "openzeppelin/token/ERC20/extensions/ERC20Permit.sol";
-import {ERC20Burnable} from "openzeppelin/token/ERC20/extensions/ERC20Burnable.sol";
 import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
+import {Context} from "openzeppelin/utils/Context.sol";
 
 /**
  * @notice This is a mock contract for the $HAPPY token, derived from MockERC20 for testing purposes.
  * It SHOULD NOT be used in production.
  */
-contract MockHappyToken is MockERC20, ERC20Permit, ERC20Burnable {
-    using SafeERC20 for ERC20;
+contract MockHappyToken is MockERC20, Context {
+    // Adds safeXXX functions that revert instead of returning false.
+    using SafeERC20 for MockERC20;
 
-    constructor() ERC20Permit("HappyChain") {
+    constructor() {
         initialize("HappyChain", "HAPPY", 18);
     }
 
@@ -25,5 +25,36 @@ contract MockHappyToken is MockERC20, ERC20Permit, ERC20Burnable {
      */
     function mint(address _account, uint256 _amount) public {
         _mint(_account, _amount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from the caller.
+     * @param amount The amount of tokens to burn.
+     */
+    function burn(uint256 amount) public {
+        _burn(_msgSender(), amount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from `account`, deducting from the caller's allowance.
+     * @param account The account to burn tokens from.
+     * @param amount  The amount of tokens to burn.
+     * Requirements:
+     * - The caller must have allowance for `account`'s tokens of at least `amount`.
+     */
+    function burnFrom(address account, uint256 amount) public {
+        uint256 currentAllowance = _allowance[account][_msgSender()];
+        require(currentAllowance >= amount, "ERC20: burn amount exceeds allowance");
+        _approve(account, _msgSender(), currentAllowance - amount);
+        _burn(account, amount);
+    }
+
+    /**
+     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
+     * Emits an {Approval} event.
+     */
+    function _approve(address owner, address spender, uint256 amount) internal virtual {
+        _allowance[owner][spender] = amount;
+        emit Approval(owner, spender, amount);
     }
 }
