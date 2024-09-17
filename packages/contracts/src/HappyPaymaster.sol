@@ -5,7 +5,7 @@ import {IEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.
 import {BasePaymaster} from "account-abstraction/contracts/core/BasePaymaster.sol";
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {UserOperationLib} from "account-abstraction/contracts/core/UserOperationLib.sol";
-import {SIG_VALIDATION_SUCCESS, SIG_VALIDATION_FAILED, min} from "account-abstraction/contracts/core/Helpers.sol";
+import {SIG_VALIDATION_SUCCESS, SIG_VALIDATION_FAILED} from "account-abstraction/contracts/core/Helpers.sol";
 
 /**
  * @notice A simple paymaster contract that approves all incoming user operations while managing
@@ -63,21 +63,22 @@ contract HappyPaymaster is BasePaymaster {
      * @param user The address of the user whose gas budget is being updated.
      */
     function _updateUserGasBudget(address user) internal {
-        uint64 lastUpdatedTime = userInfo[user].lastUpdated;
+        UserInfo memory info = userInfo[user];
         uint64 currentTime = uint64(block.timestamp);
 
-        if (lastUpdatedTime == 0) {
-            userInfo[user].userGasBudget = uint32(MAX_GAS_BUDGET);
-            userInfo[user].lastUpdated = currentTime;
-            return;
+        if (info.lastUpdated == 0) {
+            info.userGasBudget = uint32(MAX_GAS_BUDGET);
+            info.lastUpdated = currentTime;
+        } else {
+            uint256 timeElapsed = currentTime - info.lastUpdated;
+            uint256 gasToRefill = timeElapsed * REFILL_RATE;
+
+            uint256 newGasBudget = info.userGasBudget + gasToRefill;
+            info.userGasBudget = uint32(newGasBudget > MAX_GAS_BUDGET ? MAX_GAS_BUDGET : newGasBudget);
+            info.lastUpdated = currentTime;
         }
 
-        uint256 timeElapsed = currentTime - lastUpdatedTime;
-        uint256 gasToRefill = timeElapsed * REFILL_RATE;
-
-        // Update the user's gas budget, ensuring it does not exceed the maximum allowed
-        userInfo[user].userGasBudget = uint32(min(userInfo[user].userGasBudget + gasToRefill, MAX_GAS_BUDGET));
-        userInfo[user].lastUpdated = currentTime;
+        userInfo[user] = info;
     }
 
     /**
@@ -88,15 +89,14 @@ contract HappyPaymaster is BasePaymaster {
      * @return totalGasRequired The total amount of gas required for the user operation.
      */
     function _requiredGas(PackedUserOperation calldata userOp) internal pure returns (uint256) {
-        uint256 verificationGasLimit = userOp.unpackVerificationGasLimit();
-        uint256 callGasLimit = userOp.unpackCallGasLimit();
-        uint256 paymasterVerificationGasLimit = userOp.unpackPaymasterVerificationGasLimit();
-        uint256 postOpGasLimit = userOp.unpackPostOpGasLimit();
+        // forgefmt: disable-next-item
+        uint256 requiredGas = userOp.preVerificationGas
+            + userOp.unpackVerificationGasLimit()
+            + userOp.unpackCallGasLimit()
+            + userOp.unpackPaymasterVerificationGasLimit()
+            + userOp.unpackPostOpGasLimit();
 
-        uint256 totalGasRequired = userOp.preVerificationGas + verificationGasLimit + callGasLimit
-            + paymasterVerificationGasLimit + postOpGasLimit;
-
-        return totalGasRequired;
+        return requiredGas;
     }
 
     /**
