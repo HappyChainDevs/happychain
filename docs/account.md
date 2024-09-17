@@ -33,11 +33,15 @@ Our SDK currently has two entrypoints:
 - `@happychain/react` for applications built with React
 - `@happychain/js` for any other web application (can be made to work with any framework)
 
+<!-- TODO provide links to the NPM packages once deployed to the registry -->
+
 Note that the React SDK also re-exports everything exposed by the vanilla JS SDK.
 
 A Vue SDK will be published very soon.
 
-<!-- TODO provide links to the NPM packages once deployed to the registry -->
+Beyond enabling the creation and interactions with the HappyAccount, the SDK also provides a
+embedded wallet UI similar to that of injected wallets (Metamask & co), allowing them to track
+their tokens, view transaction history, make transfers, and more.
 
 ## Overview
 
