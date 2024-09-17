@@ -18,6 +18,7 @@ import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
 import {IEntryPointSimulations} from "kernel/interfaces/IEntryPointSimulations.sol";
 
 contract DeployAAContracts is BaseDeployScript {
+    bytes32 public constant DEPLOYMENT_SALT = 0;
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address public constant EXPECTED_ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
     address public constant EXPECTED_ENTRYPOINT_SIMULATIONS = 0x74Cb5e4eE81b86e70f9045036a1C5477de69eE87;
@@ -53,21 +54,21 @@ contract DeployAAContracts is BaseDeployScript {
         }
         deployed("EntryPointV7", "IEntryPoint", EXPECTED_ENTRYPOINT_V7);
 
-        validator = new ECDSAValidator{salt: 0}();
+        validator = new ECDSAValidator{salt: DEPLOYMENT_SALT}();
         deployed("ECDSAValidator", address(validator));
 
-        kernel = new Kernel{salt: 0}(IEntryPoint(EXPECTED_ENTRYPOINT_V7));
+        kernel = new Kernel{salt: DEPLOYMENT_SALT}(IEntryPoint(EXPECTED_ENTRYPOINT_V7));
         deployed("Kernel", address(kernel));
 
-        factory = new KernelFactory{salt: 0}(address(kernel));
+        factory = new KernelFactory{salt: DEPLOYMENT_SALT}(address(kernel));
         deployed("KernelFactory", address(factory));
 
-        staker = new FactoryStaker{salt: 0}(msg.sender);
+        staker = new FactoryStaker{salt: DEPLOYMENT_SALT}(msg.sender);
         deployed("FactoryStaker", address(staker));
 
         staker.approveFactory(factory, true);
 
-        paymaster = new HappyPaymaster{salt: 0}(AAIEntryPoint(EXPECTED_ENTRYPOINT_V7));
+        paymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(AAIEntryPoint(EXPECTED_ENTRYPOINT_V7));
         deployed("HappyPaymaster", address(paymaster));
     }
 }

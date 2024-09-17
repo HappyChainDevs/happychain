@@ -72,6 +72,7 @@ test-fork:
 	forge test --gas-report --fork-url $(RPC_$(CONFIG))
 .PHONY: test-fork
 
+# Please, ensure that all Account Abstraction (AA) contracts are deployed before running the demo.
 aa_demo:
 	tsx ./scripts/account_abstraction_demo.ts;
 .PHONY: aa_demo

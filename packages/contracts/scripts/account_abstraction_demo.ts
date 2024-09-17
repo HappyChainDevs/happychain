@@ -1,4 +1,5 @@
-import { http, type Hex, createPublicClient, createWalletClient } from "viem"
+import { type Abi, type Address, type Hex, formatEther } from "viem"
+import { http, createPublicClient, createWalletClient, numberToHex, parseEther } from "viem"
 import type { GetPaymasterDataParameters, GetPaymasterStubDataParameters, SmartAccount } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
@@ -8,8 +9,15 @@ import { type SmartAccountClient, createSmartAccountClient } from "permissionles
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { createPimlicoClient } from "permissionless/clients/pimlico"
 
-import abisJson from "../deployments/LOCAL/abis.json"
-import deploymentsJson from "../deployments/LOCAL/deployment.json"
+import abisJson from "../out/abis.json" assert { type: "json" }
+import deploymentsJson from "../out/deployment.json" assert { type: "json" }
+
+type ContractAlias = keyof typeof deploymentsJson
+type Deployments = { [key in ContractAlias]: Address }
+type Abis = { [key in keyof typeof abisJson]: Abi }
+
+const deployments = deploymentsJson as Deployments
+const abis = {} as Abis
 
 const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
 const bundlerRpc = process.env.BUNDLER_LOCAL
@@ -17,31 +25,6 @@ const rpcURL = process.env.RPC_LOCAL
 
 if (!privateKey || !bundlerRpc || !rpcURL) {
     throw new Error("Missing environment variables")
-}
-
-type Deployments = {
-    ECDSAValidator: Hex
-    Kernel: Hex
-    KernelFactory: Hex
-    FactoryStaker: Hex
-    ERC20Mock: Hex
-    SigningPaymaster: Hex
-}
-
-type Abis = {
-    ERC20Mock: unknown[]
-}
-
-const deployments = deploymentsJson as Deployments
-const abis = abisJson as Abis
-
-const fallbackDeployments = {
-    ECDSAValidator: "0xE02886AC084a81b114DC4bc9b6c655A1D8c297be",
-    Kernel: "0x59Fc1E09E3Ea0dAE02DBe628AcAa84aA9B937737",
-    KernelFactory: "0x80D747087e1d2285CcE1a308fcc445C12A751dc6",
-    FactoryStaker: "0x58eEa36eDd475f353D7743d21a56769931d8AD0D",
-    ERC20Mock: "0x",
-    SigningPaymaster: "0x",
 }
 
 const account = privateKeyToAccount(privateKey)
@@ -66,6 +49,10 @@ const pimlicoClient = createPimlicoClient({
     },
 })
 
+function toHexDigits(number: bigint, size: number): string {
+    return numberToHex(number, { size }).slice(2)
+}
+
 async function getKernelAccount(): Promise<SmartAccount> {
     return toEcdsaKernelSmartAccount({
         client: walletClient,
@@ -75,15 +62,15 @@ async function getKernelAccount(): Promise<SmartAccount> {
         },
         owners: [account],
         version: "0.3.1",
-        ecdsaValidatorAddress: deployments.ECDSAValidator ?? fallbackDeployments.ECDSAValidator,
-        accountLogicAddress: deployments.Kernel ?? fallbackDeployments.Kernel,
-        factoryAddress: deployments.KernelFactory ?? fallbackDeployments.KernelFactory,
-        metaFactoryAddress: deployments.FactoryStaker ?? fallbackDeployments.FactoryStaker,
+        ecdsaValidatorAddress: deployments.ECDSAValidator,
+        accountLogicAddress: deployments.Kernel,
+        factoryAddress: deployments.KernelFactory,
+        metaFactoryAddress: deployments.FactoryStaker,
     })
 }
 
 function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
-    const paymasterAddress = deployments.SigningPaymaster ?? "0x1E92435c8B86b1d9DC4b1A340c2C42b29a5A1B00"
+    const paymasterAddress = deployments.HappyPaymaster
 
     return createSmartAccountClient({
         account: kernelAccount,
@@ -104,20 +91,26 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
                     paymasterPostOpGasLimit?: bigint
                 }
 
+                const verificationGasHex = toHexDigits(gasEstimates.paymasterVerificationGasLimit ?? 0n, 16)
+                const postOpGasHex = toHexDigits(gasEstimates.paymasterPostOpGasLimit ?? 0n, 16)
+
+                const paymasterData: Hex = `0x${verificationGasHex}${postOpGasHex}`
+
                 return {
                     paymaster: paymasterAddress,
-                    paymasterData: "0x",
+                    paymasterData,
                     paymasterPostOpGasLimit: gasEstimates.paymasterPostOpGasLimit ?? 0n,
                     paymasterVerificationGasLimit: gasEstimates.paymasterVerificationGasLimit ?? 0n,
                 }
             },
 
+            // Using stub values from the docs for paymaster-related fields in unsigned user operations for gas estimation.
             async getPaymasterStubData(_parameters: GetPaymasterStubDataParameters) {
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x",
-                    paymasterVerificationGasLimit: 50_000n,
-                    paymasterPostOpGasLimit: 20_000n,
+                    paymasterVerificationGasLimit: 50_000n, // Same value as found in the docs, not a random number
+                    paymasterPostOpGasLimit: 20_000n, // Same value as found in the docs, serves as a placeholder
                 }
             },
         },
@@ -129,26 +122,52 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
     })
 }
 
+async function deposit_paymaster(): Promise<string> {
+    try {
+        const txHash = await walletClient.writeContract({
+            address: entryPoint07Address,
+            abi: abis.IEntryPoint,
+            functionName: "depositTo",
+            args: [deployments.HappyPaymaster],
+            value: parseEther("10"),
+        })
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+            hash: txHash,
+            confirmations: 1,
+        })
+
+        return receipt.status
+    } catch (error) {
+        console.error(error)
+        process.exit(1)
+    }
+}
+
 export function getRandomAccount() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Hex
 }
+
+const AMOUNT = "0.001"
 
 async function main() {
     const kernelAccount: SmartAccount = await getKernelAccount()
     const kernelClient = getKernelClient(kernelAccount)
 
-    const tokenAddress = deployments.ERC20Mock ?? "0xa55F9759439db37ccFeBcb7064B5f574db53aB0b"
     const receiverAddress = getRandomAccount()
-    const AMOUNT = "1000"
+
+    const res = await deposit_paymaster()
+    if (res !== "success") {
+        console.error("Deposit failed")
+        process.exit(1)
+    }
 
     try {
-        const txHash = await kernelClient.writeContract({
-            address: tokenAddress,
-            abi: abis.ERC20Mock,
-            functionName: "mint",
-            chain: localhost,
-            args: [receiverAddress, AMOUNT],
+        const txHash = await kernelClient.sendTransaction({
             account: kernelAccount,
+            to: receiverAddress,
+            chain: localhost,
+            value: parseEther(AMOUNT),
         })
 
         const receipt = await publicClient.waitForTransactionReceipt({
@@ -164,14 +183,18 @@ async function main() {
         console.error(error)
     }
 
-    const balance = (await publicClient.readContract({
-        address: tokenAddress,
-        abi: abis.ERC20Mock,
-        functionName: "balanceOf",
-        args: [receiverAddress],
-    })) as string
+    const balance = await publicClient.getBalance({
+        address: receiverAddress,
+        blockTag: "latest",
+    })
 
-    console.log("Balance is: ", balance, "wei")
+    const balanceAsEther = formatEther(balance)
+
+    if (balanceAsEther === AMOUNT) {
+        console.log("Balance is correct:", balanceAsEther, "ETH")
+    } else {
+        console.error("Balance is not correct:", balanceAsEther, "ETH")
+    }
 }
 
 main()
