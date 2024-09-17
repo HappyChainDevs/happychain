@@ -34,27 +34,4 @@ contract MockHappyToken is MockERC20, Context {
     function burn(uint256 amount) public {
         _burn(_msgSender(), amount);
     }
-
-    /**
-     * @dev Destroys `amount` tokens from `account`, deducting from the caller's allowance.
-     * @param account The account to burn tokens from.
-     * @param amount  The amount of tokens to burn.
-     * Requirements:
-     * - The caller must have allowance for `account`'s tokens of at least `amount`.
-     */
-    function burnFrom(address account, uint256 amount) public {
-        uint256 currentAllowance = _allowance[account][_msgSender()];
-        require(currentAllowance >= amount, "ERC20: burn amount exceeds allowance");
-        _approve(account, _msgSender(), currentAllowance - amount);
-        _burn(account, amount);
-    }
-
-    /**
-     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
-     * Emits an {Approval} event.
-     */
-    function _approve(address owner, address spender, uint256 amount) internal virtual {
-        _allowance[owner][spender] = amount;
-        emit Approval(owner, spender, amount);
-    }
 }
