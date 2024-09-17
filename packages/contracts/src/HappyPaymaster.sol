@@ -19,7 +19,7 @@ import {SIG_VALIDATION_SUCCESS, SIG_VALIDATION_FAILED} from "account-abstraction
 contract HappyPaymaster is BasePaymaster {
     using UserOperationLib for PackedUserOperation;
 
-    error ExcessiveMaxFeePerGas(uint256 maxFeePerGas, uint256 allowedMaxFeePerGas);
+    error InsufficientGasBudget();
 
     uint256 public constant MAX_GAS_BUDGET = 1_000_000;
     uint256 public constant REFILL_PERIOD = 24 * 60 * 60;
@@ -57,7 +57,7 @@ contract HappyPaymaster is BasePaymaster {
         _updateUserGasBudget(user);
 
         if (userInfo[user].userGasBudget < currentGas) {
-            return ("", SIG_VALIDATION_FAILED);
+            revert InsufficientGasBudget();
         }
 
         userInfo[user].userGasBudget -= uint32(currentGas);
