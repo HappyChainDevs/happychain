@@ -9,15 +9,21 @@ import { type SmartAccountClient, createSmartAccountClient } from "permissionles
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { createPimlicoClient } from "permissionless/clients/pimlico"
 
-import abisJson from "../out/abis.json" assert { type: "json" }
-import deploymentsJson from "../out/deployment.json" assert { type: "json" }
+import { default as abiMapJson } from "../out/abiMap.json" assert { type: "json" }
+import { default as abisJson } from "../out/abis.json" assert { type: "json" }
+import { default as deploymentsJson } from "../out/deployment.json" assert { type: "json" }
 
 type ContractAlias = keyof typeof deploymentsJson
 type Deployments = { [key in ContractAlias]: Address }
-type Abis = { [key in keyof typeof abisJson]: Abi }
+type Abis = { [key in ContractAlias]: Abi }
 
 const deployments = deploymentsJson as Deployments
 const abis = {} as Abis
+
+type ContractName = keyof typeof abisJson
+for (const [alias, contractName] of Object.entries(abiMapJson)) {
+    abis[alias as ContractAlias] = abisJson[contractName as ContractName] as Abi
+}
 
 const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
 const bundlerRpc = process.env.BUNDLER_LOCAL
@@ -109,8 +115,8 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x",
-                    paymasterVerificationGasLimit: 50_000n, // Same value as found in the docs, not a random number
-                    paymasterPostOpGasLimit: 20_000n, // Same value as found in the docs, serves as a placeholder
+                    paymasterVerificationGasLimit: 80_000n, // Increased value to account for possible higher gas usage
+                    paymasterPostOpGasLimit: 0n, // Set to 0 since the postOp function is never called
                 }
             },
         },
@@ -126,7 +132,7 @@ async function deposit_paymaster(): Promise<string> {
     try {
         const txHash = await walletClient.writeContract({
             address: entryPoint07Address,
-            abi: abis.IEntryPoint,
+            abi: abis.EntryPointV7,
             functionName: "depositTo",
             args: [deployments.HappyPaymaster],
             value: parseEther("10"),
@@ -148,7 +154,7 @@ export function getRandomAccount() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Hex
 }
 
-const AMOUNT = "0.001"
+const AMOUNT = "0" // Without prefunding account, paymaster doesn't pay for native transfers
 
 async function main() {
     const kernelAccount: SmartAccount = await getKernelAccount()
