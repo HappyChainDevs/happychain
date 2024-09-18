@@ -13,6 +13,8 @@ import {FactoryStaker} from "kernel/factory/FactoryStaker.sol";
 import {ECDSAValidator} from "kernel/validator/ECDSAValidator.sol";
 import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
 
+import {console} from "forge-std/console.sol";
+
 // To ensure ABI generation.
 import {EntryPoint} from "account-abstraction/contracts/core/EntryPoint.sol"; /* solhint-disable-line */
 import {EntryPointSimulations} from "account-abstraction/contracts/core/EntryPointSimulations.sol"; /* solhint-disable-line */
@@ -65,7 +67,16 @@ contract DeployAAContracts is BaseDeployScript {
 
         staker.approveFactory(factory, true);
 
-        paymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(EXPECTED_ENTRYPOINT_V7);
+        string memory key = "ALLOWED_BUNDLERS";
+        string memory delimiter = ",";
+        address[] memory allowedBundlers = vm.envAddress(key, delimiter);
+
+        console.logAddress(allowedBundlers[0]);
+        console.logAddress(allowedBundlers[1]);
+        console.logAddress(allowedBundlers[2]);
+        console.logAddress(allowedBundlers[3]);
+
+        paymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(EXPECTED_ENTRYPOINT_V7, allowedBundlers);
         deployed("HappyPaymaster", address(paymaster));
     }
 }
