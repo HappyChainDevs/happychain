@@ -86,16 +86,10 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
         }),
         paymaster: {
             async getPaymasterData(parameters: GetPaymasterDataParameters) {
-                const gasEstimates = (await pimlicoClient.estimateUserOperationGas({
+                const gasEstimates = await pimlicoClient.estimateUserOperationGas({
                     ...parameters,
                     paymaster: paymasterAddress,
-                })) as {
-                    preVerificationGas: bigint
-                    verificationGasLimit: bigint
-                    callGasLimit: bigint
-                    paymasterVerificationGasLimit?: bigint
-                    paymasterPostOpGasLimit?: bigint
-                }
+                })
 
                 const verificationGasHex = toHexDigits(gasEstimates.paymasterVerificationGasLimit ?? 0n, 16)
                 const postOpGasHex = toHexDigits(gasEstimates.paymasterPostOpGasLimit ?? 0n, 16)

@@ -6,7 +6,6 @@ import {ENTRYPOINT_V7_CODE} from "./initcode/EntryPointV7Code.sol";
 import {ENTRYPOINT_SIMULATIONS_CODE} from "./initcode/EntryPoinSimulationsCode.sol";
 
 import {HappyPaymaster} from "../HappyPaymaster.sol";
-import {IEntryPoint as AAIEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 import {Kernel} from "kernel/Kernel.sol";
 import {KernelFactory} from "kernel/factory/KernelFactory.sol";
@@ -68,7 +67,7 @@ contract DeployAAContracts is BaseDeployScript {
 
         staker.approveFactory(factory, true);
 
-        paymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(AAIEntryPoint(EXPECTED_ENTRYPOINT_V7));
+        paymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(EXPECTED_ENTRYPOINT_V7);
         deployed("HappyPaymaster", address(paymaster));
     }
 }

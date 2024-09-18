@@ -1,18 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-/**
- * SigningPaymaster Contract
- *
- * This contract is based on the VerifyingPaymaster contract from the eth-infinitism repository.
- * Original contract:
- *  https://github.com/eth-infinitism/account-abstraction/blob/v0.7.0/contracts/samples/VerifyingPaymaster.sol
- *
- * Modifications from the original VerifyingPaymaster:
- *
- * This version always approves transactions without any validation.
- * The signature, timestamp, or gas-related checks are removed.
- */
 import {IEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {BasePaymaster} from "account-abstraction/contracts/core/BasePaymaster.sol";
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
@@ -23,7 +11,7 @@ import {_packValidationData} from "account-abstraction/contracts/core/Helpers.so
 contract HappyPaymaster is BasePaymaster {
     using UserOperationLib for PackedUserOperation;
 
-    constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {}
+    constructor(address _entryPoint) BasePaymaster(IEntryPoint(_entryPoint)) {}
 
     function _validatePaymasterUserOp(
         PackedUserOperation calldata, /*userOp*/
