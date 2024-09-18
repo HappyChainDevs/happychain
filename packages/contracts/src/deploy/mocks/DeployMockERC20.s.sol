@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {MockHappyToken} from "../../mocks/MockHappyERC20.sol";
+import {MockERC20Token} from "../../mocks/MockERC20ERC20.sol";
 import {BaseDeployScript} from "../BaseDeployScript.sol";
 
 /**
@@ -10,10 +10,10 @@ import {BaseDeployScript} from "../BaseDeployScript.sol";
 contract DeployMockERC20 is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = 0;
 
-    MockHappyToken public mockHappyToken;
+    MockERC20Token public mockERC20;
 
     function deploy() internal override {
-        mockHappyToken = new MockHappyToken{salt: DEPLOYMENT_SALT}();
-        deployed("MockHappyToken", address(mockHappyToken));
+        mockERC20 = new MockERC20Token{salt: DEPLOYMENT_SALT}();
+        deployed("MockERC20", address(mockERC20));
     }
 }
