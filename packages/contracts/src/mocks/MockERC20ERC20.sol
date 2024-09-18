@@ -2,16 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {MockERC20} from "forge-std/mocks/MockERC20.sol";
-import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @notice This is a mock contract for the $HAPPY token, derived from MockERC20 for testing purposes.
  * It SHOULD NOT be used in production.
  */
-contract MockHappyToken is MockERC20 {
-    // Adds safeXXX functions that revert instead of returning false.
-    using SafeERC20 for MockERC20;
-
+contract MockERC20Token is MockERC20 {
     constructor() {
         initialize("HappyChain", "HAPPY", 18);
     }
