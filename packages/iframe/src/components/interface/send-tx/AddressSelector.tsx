@@ -1,17 +1,20 @@
 import type React from "react"
 import { useEffect, useState } from "react"
-import { isAddress } from "viem"
+import { type Address, isAddress } from "viem"
 
 interface AddressSelectorProps {
-    targetAddress: string | undefined
-    setTargetAddress: React.Dispatch<React.SetStateAction<string | undefined>>
+    targetAddress: Address | undefined
+    setTargetAddress: React.Dispatch<React.SetStateAction<Address | undefined>>
 }
 
 const AddressSelector = ({ targetAddress, setTargetAddress }: AddressSelectorProps) => {
-    const [isValidAddr, setIsValidAddr] = useState<boolean>(true)
+    const [isValidAddr, setIsValidAddr] = useState(true)
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setTargetAddress(event.target.value)
+        const value = event.target.value
+
+        // doesn't accept non Address inputs
+        ;/^0x[a-fA-F0-9]{40}$/.test(value) ? setTargetAddress(value as Address) : setTargetAddress(undefined)
     }
 
     useEffect(() => {
