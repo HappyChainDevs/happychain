@@ -11,10 +11,11 @@ import {Kernel} from "kernel/Kernel.sol";
 import {KernelFactory} from "kernel/factory/KernelFactory.sol";
 import {FactoryStaker} from "kernel/factory/FactoryStaker.sol";
 import {ECDSAValidator} from "kernel/validator/ECDSAValidator.sol";
+import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
 
 // To ensure ABI generation.
-import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
-import {IEntryPointSimulations} from "kernel/interfaces/IEntryPointSimulations.sol";
+import {EntryPoint} from "account-abstraction/contracts/core/EntryPoint.sol"; /* solhint-disable-line */
+import {EntryPointSimulations} from "account-abstraction/contracts/core/EntryPointSimulations.sol"; /* solhint-disable-line */
 
 contract DeployAAContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = 0;
@@ -24,9 +25,6 @@ contract DeployAAContracts is BaseDeployScript {
 
     error EntryPointDeploymentFailed();
     error EntryPointSimulationsDeploymentFailed();
-
-    IEntryPoint public entrypoint = IEntryPoint(EXPECTED_ENTRYPOINT_V7);
-    IEntryPointSimulations public simulations = IEntryPointSimulations(EXPECTED_ENTRYPOINT_SIMULATIONS);
 
     ECDSAValidator public validator;
     Kernel public kernel;
@@ -42,7 +40,7 @@ contract DeployAAContracts is BaseDeployScript {
                 revert EntryPointDeploymentFailed();
             }
         }
-        deployed("EntryPointSimulations", "IEntryPointSimulations", EXPECTED_ENTRYPOINT_SIMULATIONS);
+        deployed("EntryPointSimulations", EXPECTED_ENTRYPOINT_SIMULATIONS);
 
         if (EXPECTED_ENTRYPOINT_SIMULATIONS.code.length == 0) {
             // solhint-disable-next-line
@@ -51,7 +49,7 @@ contract DeployAAContracts is BaseDeployScript {
                 revert EntryPointSimulationsDeploymentFailed();
             }
         }
-        deployed("EntryPointV7", "IEntryPoint", EXPECTED_ENTRYPOINT_V7);
+        deployed("EntryPointV7", "EntryPoint", EXPECTED_ENTRYPOINT_V7);
 
         validator = new ECDSAValidator{salt: DEPLOYMENT_SALT}();
         deployed("ECDSAValidator", address(validator));
