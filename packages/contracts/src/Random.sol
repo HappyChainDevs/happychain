@@ -3,15 +3,15 @@ pragma solidity ^0.8.20;
 
 import {Ownable} from "openzeppelin/access/Ownable.sol";
 
-contract SequencerRandomOracle is Ownable {
+contract Random is Ownable {
     uint256 public constant PRECOMMIT_DELAY = 10;
     uint256 public constant BLOCK_TIME = 2;
 
-    mapping(uint256 => uint256) private commitments;
-    uint256 public currentRevealedValue;
-    uint256 public currentRevealTimestamp;
+    uint256 private currentRevealedValue;
+    uint256 private currentRevealTimestamp;
+    mapping(uint256 timestamp => uint256) private commitments;
 
-    event CommitmentPosted(uint256 indexed timestamp, uint256 commitmentHash);
+    event CommitmentPosted(uint256 indexed timestamp, uint256 commitment);
     event ValueRevealed(uint256 indexed timestamp, uint256 revealedValue);
 
     error CommitmentTooLate();
@@ -19,7 +19,7 @@ contract SequencerRandomOracle is Ownable {
     error NoCommitmentFound();
     error RevealMustBeOnExactBlock();
     error InvalidReveal();
-    error SequencerValueNotAvailable();
+    error RevealedValueNotAvailable();
 
     constructor() Ownable(msg.sender) {}
 
@@ -33,7 +33,6 @@ contract SequencerRandomOracle is Ownable {
         }
 
         commitments[timestamp] = commitmentHash;
-
         emit CommitmentPosted(timestamp, commitmentHash);
     }
 
@@ -54,13 +53,11 @@ contract SequencerRandomOracle is Ownable {
 
         currentRevealedValue = revealedValue;
         currentRevealTimestamp = timestamp;
-
         delete commitments[timestamp];
-
         emit ValueRevealed(timestamp, revealedValue);
     }
 
-    function unsafeGetSequencerValue(uint256 timestamp) external view returns (uint256) {
+    function unsafeGetRevealedValue(uint256 timestamp) external view returns (uint256) {
         if (currentRevealTimestamp != timestamp) {
             return 0;
         }
@@ -68,9 +65,9 @@ contract SequencerRandomOracle is Ownable {
         return currentRevealedValue;
     }
 
-    function getSequencerValue(uint256 timestamp) external view returns (uint256) {
+    function getRevealedValue(uint256 timestamp) external view returns (uint256) {
         if (currentRevealTimestamp != timestamp) {
-            revert SequencerValueNotAvailable();
+            revert RevealedValueNotAvailable();
         }
 
         return currentRevealedValue;
