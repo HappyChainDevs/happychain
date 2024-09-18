@@ -8,8 +8,8 @@ import {MockERC20} from "forge-std/mocks/MockERC20.sol";
  * It SHOULD NOT be used in production.
  */
 contract MockERC20Token is MockERC20 {
-    constructor() {
-        initialize("MockERC20", "MCK", 18);
+    constructor(string memory name, string memory symbol, uint8 decimals) {
+        initialize(name, symbol, decimals);
     }
 
     /**
