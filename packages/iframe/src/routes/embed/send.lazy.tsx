@@ -3,7 +3,7 @@ import { happyChainSepolia } from "@happychain/sdk-shared/lib/chains"
 import { createLazyFileRoute, useLocation } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
-import { type Address, formatEther, isAddress } from "viem"
+import { type Address, isAddress, parseEther } from "viem"
 import AddressSelector from "../../components/interface/send-tx/AddressSelector"
 import SendBalanceTracker from "../../components/interface/send-tx/SendBalanceTracker"
 import SendTransactionSummary from "../../components/interface/send-tx/SendTransactionSummary"
@@ -24,7 +24,7 @@ function Send() {
     const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)
 
     // address to send $HAPPY to
-    const [targetAddress, setTargetAddress] = useState<string | undefined>(undefined)
+    const [targetAddress, setTargetAddress] = useState<Address | undefined>(undefined)
     // amount to send
     const [sendValue, setSendValue] = useState<string | undefined>(undefined)
     // amount confirmed
@@ -32,18 +32,18 @@ function Send() {
 
     const trySend = useCallback(async () => {
         try {
-            if (user && happyBalance && sendValue && targetAddress && walletClient) {
+            if (user && sendValue && targetAddress && walletClient) {
                 const _txPromise = await walletClient.sendTransaction({
                     account: user.address,
                     to: targetAddress as Address,
-                    value: BigInt(sendValue), // wrong value - becomes very very small
+                    value: parseEther(sendValue),
                     chain: convertToViemChain(happyChainSepolia),
                 })
             }
         } catch (error) {
             console.warn(error)
         }
-    }, [user, happyBalance, targetAddress, sendValue, walletClient])
+    }, [user, targetAddress, sendValue, walletClient])
 
     const getBalance = useCallback(async () => {
         if (user) {
