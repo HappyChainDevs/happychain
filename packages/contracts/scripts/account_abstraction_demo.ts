@@ -13,14 +13,14 @@ import { default as abiMapJson } from "../out/abiMap.json" assert { type: "json"
 import { default as abisJson } from "../out/abis.json" assert { type: "json" }
 import { default as deploymentsJson } from "../out/deployment.json" assert { type: "json" }
 
+type ContractName = keyof typeof abisJson
 type ContractAlias = keyof typeof deploymentsJson
-type Deployments = { [key in ContractAlias]: Address }
 type Abis = { [key in ContractAlias]: Abi }
+type Deployments = { [key in ContractAlias]: Address }
 
 const deployments = deploymentsJson as Deployments
 const abis = {} as Abis
 
-type ContractName = keyof typeof abisJson
 for (const [alias, contractName] of Object.entries(abiMapJson)) {
     abis[alias as ContractAlias] = abisJson[contractName as ContractName] as Abi
 }
@@ -122,6 +122,26 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
     })
 }
 
+async function fund_smart_account(accountAddress: Address): Promise<string> {
+    try {
+        const txHash = await walletClient.sendTransaction({
+            account: account,
+            to: accountAddress,
+            chain: localhost,
+            value: parseEther(AMOUNT),
+        })
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+            hash: txHash,
+            confirmations: 1,
+        })
+        return receipt.status
+    } catch (error) {
+        console.error(error)
+        process.exit(1)
+    }
+}
+
 async function deposit_paymaster(): Promise<string> {
     try {
         const txHash = await walletClient.writeContract({
@@ -148,16 +168,23 @@ export function getRandomAccount() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Hex
 }
 
-const AMOUNT = "0" // Without prefunding account, paymaster doesn't pay for native transfers
+const AMOUNT = "0.01"
 
 async function main() {
     const kernelAccount: SmartAccount = await getKernelAccount()
     const kernelClient = getKernelClient(kernelAccount)
 
+    const kernelAddress = await kernelAccount.getAddress()
     const receiverAddress = getRandomAccount()
 
-    const res = await deposit_paymaster()
-    if (res !== "success") {
+    const prefundRes = await fund_smart_account(kernelAddress)
+    if (prefundRes !== "success") {
+        console.error("Funding failed")
+        process.exit(1)
+    }
+
+    const depositRes = await deposit_paymaster()
+    if (depositRes !== "success") {
         console.error("Deposit failed")
         process.exit(1)
     }
