@@ -17,13 +17,13 @@ contract DeployMockERC20 is BaseDeployScript {
     MockERC20Token public mockTokenC;
 
     function deploy() internal override {
-        mockTokenA = new MockERC20Token{salt: DEPLOYMENT_SALT_1}("MockTokenA", "MTA", 18);
+        mockTokenA = new MockERC20Token{salt: DEPLOYMENT_SALT_1}("MockERC20A", "MTA", 18);
         deployed("MockERC20A", "MockERC20Token", address(mockTokenA));
 
-        mockTokenB = new MockERC20Token{salt: DEPLOYMENT_SALT_2}("MockTokenB", "MTB", 18);
+        mockTokenB = new MockERC20Token{salt: DEPLOYMENT_SALT_2}("MockERC20B", "MTB", 18);
         deployed("MockERC20B", "MockERC20Token", address(mockTokenB));
 
-        mockTokenC = new MockERC20Token{salt: DEPLOYMENT_SALT_3}("MockTokenC", "MTC", 18);
+        mockTokenC = new MockERC20Token{salt: DEPLOYMENT_SALT_3}("MockERC20C", "MTC", 18);
         deployed("MockERC20C", "MockERC20Token", address(mockTokenC));
     }
 }
