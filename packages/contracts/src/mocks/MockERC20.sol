@@ -9,7 +9,7 @@ import {MockERC20} from "forge-std/mocks/MockERC20.sol";
  */
 contract MockERC20Token is MockERC20 {
     constructor() {
-        initialize("HappyChain", "HAPPY", 18);
+        initialize("MockERC20", "MCK", 18);
     }
 
     /**

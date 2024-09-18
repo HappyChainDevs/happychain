@@ -235,4 +235,8 @@ deploy-aa:
 	make deploy DEPLOY_SCRIPT=DeployAA.s.sol
 .PHONY: deploy-aa
 
+deploy-mockERC20:
+	make deploy DEPLOY_SCRIPT=mocks/DeployMockERC20.s.sol
+.PHONY: deploy-mockERC20
+
 ####################################################################################################
