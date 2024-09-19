@@ -7,8 +7,6 @@ import {PackedUserOperation} from "account-abstraction/contracts/interfaces/Pack
 import {UserOperationLib} from "account-abstraction/contracts/core/UserOperationLib.sol";
 import {SIG_VALIDATION_SUCCESS, SIG_VALIDATION_FAILED} from "account-abstraction/contracts/core/Helpers.sol";
 
-import {console} from "forge-std/console.sol";
-
 /**
  * @notice A simple paymaster contract that approves all incoming user operations while managing
  * user-specific gas budgets. Each user has a maximum gas budget of 1,000,000 gas units, which
@@ -54,36 +52,30 @@ contract HappyPaymaster is BasePaymaster {
         bytes32, /*userOpHash*/
         uint256 /*requiredPreFund*/
     ) internal override returns (bytes memory context, uint256 validationData) {
-        console.log("msg.sender = ");
-        console.logAddress(msg.sender);
         bool failed = false;
 
         // solhint-disable-next-line avoid-tx-origin
         if (!allowedBundlers[tx.origin]) {
-            console.log("Bundler not allowed");
-            console.logAddress(tx.origin);
             failed = true;
         }
 
         address user = userOp.getSender();
-        uint256 currentGas = _requiredGas(userOp);
+        uint256 requestedGas = _requiredGas(userOp);
         UserInfo memory info = userInfo[user];
         uint32 updatedGasBudget = _updateUserGasBudget(info);
 
-        if (updatedGasBudget < currentGas) {
-            console.log("Insufficient gas budget");
-            console.log("Current gas = ");
-            console.logUint(currentGas);
-            console.log("Updated gas budget = ");
-            console.logUint(updatedGasBudget);
+        if (updatedGasBudget < requestedGas) {
             failed = true;
+            // for gas estimation
+            info.userGasBudget = info.userGasBudget;
+            info.lastUpdated = info.lastUpdated;
+            userInfo[user] = info;
         } else {
-            info.userGasBudget = updatedGasBudget - uint32(currentGas);
+            info.userGasBudget = updatedGasBudget - uint32(requestedGas);
             info.lastUpdated = uint64(block.timestamp);
             userInfo[user] = info;
         }
 
-        console.logBool(failed);
         return ("", failed ? SIG_VALIDATION_FAILED : SIG_VALIDATION_SUCCESS);
     }
 
