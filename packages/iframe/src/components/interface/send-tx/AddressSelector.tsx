@@ -18,9 +18,7 @@ const AddressSelector = ({ targetAddress, setTargetAddress }: AddressSelectorPro
 
     useEffect(() => {
         // also checks if the address checksum (capitalization) is valid
-        targetAddress
-            ? setIsValidAddr(!!targetAddress && isAddress(targetAddress, { strict: true }))
-            : setIsValidAddr(true)
+        setIsValidAddr(!targetAddress || isAddress(targetAddress, { strict: true }))
     }, [targetAddress])
 
     return (
