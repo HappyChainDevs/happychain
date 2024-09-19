@@ -8,7 +8,7 @@ include ../../makefiles/lib.mk
 CONFIG ?= LOCAL
 
 # Set the list of allowed bundlers based on the current deployment configuration (LOCAL, TEST, etc.)
-ALLOWED_BUNDLERS = $(ALLOWED_BUNDLERS_$(CONFIG))
+export ALLOWED_BUNDLERS = $(ALLOWED_BUNDLERS_$(CONFIG))
 
 # Deployment mode:
 # - "deploy" — deploy contracts normally
@@ -235,7 +235,7 @@ deploy-l1up:
 .PHONY: deploy-l1up
 
 deploy-aa:
-	make deploy DEPLOY_SCRIPT=DeployAA.s.sol ALLOWED_BUNDLERS=$(ALLOWED_BUNDLERS)
+	make deploy DEPLOY_SCRIPT=DeployAA.s.sol
 .PHONY: deploy-aa
 
 deploy-mocks:
