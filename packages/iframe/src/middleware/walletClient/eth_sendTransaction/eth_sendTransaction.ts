@@ -19,7 +19,7 @@ export function useEthSendTransactionMiddleware() {
 
             // add tx to recorded history
 
-            return true
+            return await next()
         },
         [],
     )

@@ -1,12 +1,12 @@
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { happyChainSepolia } from "@happychain/sdk-shared/lib/chains"
-import { createLazyFileRoute, useLocation } from "@tanstack/react-router"
+import { createLazyFileRoute } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { type Address, isAddress, parseEther } from "viem"
 import AddressSelector from "../../components/interface/send-tx/AddressSelector"
 import SendBalanceTracker from "../../components/interface/send-tx/SendBalanceTracker"
-import SendTransactionSummary from "../../components/interface/send-tx/SendTransactionSummary"
+import StepButtonRow from "../../components/interface/send-tx/StepButtonRow"
 import { publicClientAtom } from "../../state/publicClient"
 import { userAtom } from "../../state/user"
 import { walletClientAtom } from "../../state/walletClient"
@@ -27,10 +27,8 @@ function Send() {
     const [targetAddress, setTargetAddress] = useState<Address | undefined>(undefined)
     // amount to send
     const [sendValue, setSendValue] = useState<string | undefined>(undefined)
-    // amount confirmed
-    const [amountConfirmed, setAmountConfirmed] = useState<boolean>(false)
 
-    const trySend = useCallback(async () => {
+    const _trySend = useCallback(async () => {
         try {
             if (user && sendValue && targetAddress && walletClient) {
                 const _txPromise = await walletClient.sendTransaction({
@@ -65,25 +63,17 @@ function Send() {
     }, [user, getBalance])
 
     return (
-        <div className="flex flex-col w-full h-full">
-            <AddressSelector targetAddress={targetAddress} setTargetAddress={setTargetAddress} />
-            {/* appears when target address has been confirmed */}
-            {targetAddress !== undefined && isAddress(targetAddress) && (
-                <SendBalanceTracker
-                    balance={happyBalance}
-                    sendValue={sendValue}
-                    setSendValue={setSendValue}
-                    setAmountConfirmed={setAmountConfirmed}
-                />
-            )}
-            {/* appears when amount has been confirmed */}
-            {sendValue && amountConfirmed && (
-                <SendTransactionSummary
-                    targetAddress={targetAddress as Address}
-                    sendValue={sendValue as string}
-                    sendFn={trySend}
-                />
-            )}
+        <div className="flex flex-col w-full h-full items-center justify-between">
+            <div className="flex flex-col w-full h-full items-center justify-start">
+                <AddressSelector targetAddress={targetAddress} setTargetAddress={setTargetAddress} />
+
+                {/* appears when target address has been confirmed */}
+                {targetAddress !== undefined && isAddress(targetAddress) && (
+                    <SendBalanceTracker balance={happyBalance} sendValue={sendValue} setSendValue={setSendValue} />
+                )}
+            </div>
+
+            <StepButtonRow sendValue={sendValue} targetAddress={targetAddress} />
         </div>
     )
 }

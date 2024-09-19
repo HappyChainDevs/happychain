@@ -6,10 +6,9 @@ interface SendBalanceTrackerProps {
     balance: bigint | undefined
     sendValue: string | undefined
     setSendValue: React.Dispatch<React.SetStateAction<string | undefined>>
-    setAmountConfirmed: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const SendBalanceTracker = ({ balance, sendValue, setSendValue, setAmountConfirmed }: SendBalanceTrackerProps) => {
+const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTrackerProps) => {
     const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,11 +24,7 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue, setAmountConfirm
         if (/^\d*\.?\d*$/.test(inputValue) || inputValue === "") {
             setSendValue(inputValue)
             // Check if the input value exceeds the balance
-            inputValue && balance
-                ? parseEther(inputValue) > balance
-                    ? setIsExceedingBalance(true)
-                    : setIsExceedingBalance(false)
-                : setIsExceedingBalance(false)
+            setIsExceedingBalance(inputValue && balance ? parseEther(inputValue) > balance : false)
         }
     }
 
@@ -72,17 +67,6 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue, setAmountConfirm
                     </button>
                 </div>
             </div>
-
-            <button
-                className="flex text-center text-[14px] text-white border border-blue-600 p-2 rounded-lg bg-blue-600 disabled:opacity-50"
-                type="button"
-                disabled={isExceedingBalance || !sendValue}
-                onClick={() => {
-                    setAmountConfirmed(true)
-                }}
-            >
-                Confirm
-            </button>
 
             {isExceedingBalance && (
                 <div className="flex w-full items-center justify-center text-red-500">Not enough $HAPPY</div>

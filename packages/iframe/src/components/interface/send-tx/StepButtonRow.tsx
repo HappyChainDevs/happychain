@@ -1,0 +1,51 @@
+import { getChainFromSearchParams } from "@happychain/sdk-shared"
+import { useNavigate } from "@tanstack/react-router"
+import React, { useCallback } from "react"
+import { type Address, parseEther } from "viem"
+import { useSendTransaction } from "wagmi"
+import { config } from "../../../wagmi/config"
+
+interface StepButtonRowInterface {
+    sendValue: string | undefined
+    targetAddress: Address | undefined
+}
+
+const StepButtonRow = ({ sendValue, targetAddress }: StepButtonRowInterface) => {
+    const navigate = useNavigate()
+    const { data: _hash, sendTransaction } = useSendTransaction()
+
+    const cancelButtonOptions = useCallback(() => {
+        navigate({ to: "/embed" })
+    }, [navigate])
+
+    const continueButtonOptions = useCallback(() => {
+        // if (sendValue && targetAddress) {
+        //     // middleware request handler
+        //     // wagmi sendTransaction
+        //     console.log("sending")
+        //     sendTransaction({ to: targetAddress, value: parseEther(sendValue) })
+        // }
+    }, [])
+
+    return (
+        <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">
+            <button
+                className="flex items-center justify-center rounded-lg w-[50%] h-10 bg-blue-500 text-center text-white disabled:opacity-50"
+                type="button"
+                onClick={cancelButtonOptions}
+            >
+                Cancel
+            </button>
+            <button
+                className="flex items-center justify-center rounded-lg w-[50%] h-10 bg-blue-500 text-center text-white disabled:opacity-50"
+                type="button"
+                onClick={continueButtonOptions}
+                disabled={!targetAddress || !sendValue}
+            >
+                Continue
+            </button>
+        </div>
+    )
+}
+
+export default StepButtonRow

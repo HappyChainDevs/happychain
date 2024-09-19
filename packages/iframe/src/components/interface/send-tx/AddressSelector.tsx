@@ -1,3 +1,4 @@
+import { validateAddressInput } from "@happychain/common"
 import type React from "react"
 import { useEffect, useState } from "react"
 import { type Address, isAddress } from "viem"
@@ -14,7 +15,7 @@ const AddressSelector = ({ targetAddress, setTargetAddress }: AddressSelectorPro
         const value = event.target.value
 
         // doesn't accept non Address inputs
-        ;/^0x[a-fA-F0-9]{40}$/.test(value) ? setTargetAddress(value as Address) : setTargetAddress(undefined)
+        validateAddressInput(value) ? setTargetAddress(value as Address) : setTargetAddress(undefined)
     }
 
     useEffect(() => {
@@ -25,10 +26,10 @@ const AddressSelector = ({ targetAddress, setTargetAddress }: AddressSelectorPro
     }, [targetAddress])
 
     return (
-        <div className="flex flex-col items-start justify-start w-full h-20 px-4 py-2">
+        <div className="flex flex-col items-start justify-start w-full min-h-[50px] px-4 py-2">
             <p>To:</p>
             <input
-                className={`h-[50px] min-h-[50px] bg-slate-300 opacity-50 text-[20px] px-2 w-full text-slate-600 box-border placeholder:text-[20px] placeholder:text-slate-600 ${
+                className={`bg-slate-300 opacity-50 text-[20px] px-2 w-full text-slate-600 box-border placeholder:text-[20px] placeholder:text-slate-600 ${
                     !isValidAddr ? "border-red-500" : ""
                 }`}
                 placeholder="Enter EVM address"
