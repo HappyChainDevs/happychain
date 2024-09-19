@@ -2,18 +2,20 @@ import { useNavigate } from "@tanstack/react-router"
 import React, { useCallback } from "react"
 import type { Address } from "viem"
 
-interface StepButtonRowInterface {
+interface OptionButtonsInterface {
     sendValue: string | undefined
-    targetAddress: Address | undefined
+    targetAddress: Address | string | undefined
 }
 
-const StepButtonRow = ({ sendValue, targetAddress }: StepButtonRowInterface) => {
+const OptionButtons = ({ sendValue, targetAddress }: OptionButtonsInterface) => {
     const navigate = useNavigate()
 
+    // navigates back to home page
     const cancelButtonOptions = useCallback(() => {
         navigate({ to: "/embed" })
     }, [navigate])
 
+    // triggers `eth_sendTransaction` popup only if address and send amounts are valid
     const continueButtonOptions = useCallback(() => {
         // send tx
     }, [])
@@ -39,4 +41,4 @@ const StepButtonRow = ({ sendValue, targetAddress }: StepButtonRowInterface) => 
     )
 }
 
-export default StepButtonRow
+export default OptionButtons

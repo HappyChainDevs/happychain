@@ -9,5 +9,5 @@ export const validateNumericInput = (input: string) => {
  * Validates if the input is a valid Ethereum address.
  */
 export const validateAddressInput = (input: string) => {
-    return /^0x[a-fA-F0-9]{40}$/.test(input)
+    return /^0x[a-fA-F0-9]{0,40}$/.test(input)
 }

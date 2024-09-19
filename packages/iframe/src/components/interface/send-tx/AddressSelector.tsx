@@ -4,8 +4,8 @@ import { useEffect, useState } from "react"
 import { type Address, isAddress } from "viem"
 
 interface AddressSelectorProps {
-    targetAddress: Address | undefined
-    setTargetAddress: React.Dispatch<React.SetStateAction<Address | undefined>>
+    targetAddress: Address | string | undefined
+    setTargetAddress: React.Dispatch<React.SetStateAction<Address | string | undefined>>
 }
 
 const AddressSelector = ({ targetAddress, setTargetAddress }: AddressSelectorProps) => {
@@ -13,9 +13,7 @@ const AddressSelector = ({ targetAddress, setTargetAddress }: AddressSelectorPro
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value
-
-        // doesn't accept non Address inputs
-        validateAddressInput(value) ? setTargetAddress(value as Address) : setTargetAddress(undefined)
+        setTargetAddress(value)
     }
 
     useEffect(() => {

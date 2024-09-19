@@ -5,11 +5,10 @@ import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { type Address, isAddress, parseEther } from "viem"
 import AddressSelector from "../../components/interface/send-tx/AddressSelector"
+import OptionButtons from "../../components/interface/send-tx/OptionButtons"
 import SendBalanceTracker from "../../components/interface/send-tx/SendBalanceTracker"
-import StepButtonRow from "../../components/interface/send-tx/StepButtonRow"
 import { publicClientAtom } from "../../state/publicClient"
 import { userAtom } from "../../state/user"
-import { walletClientAtom } from "../../state/walletClient"
 
 export const Route = createLazyFileRoute("/embed/send")({
     component: Send,
@@ -18,30 +17,14 @@ export const Route = createLazyFileRoute("/embed/send")({
 function Send() {
     const user = useAtomValue(userAtom)
     const publicClient = useAtomValue(publicClientAtom)
-    const walletClient = useAtomValue(walletClientAtom)
 
     // user's happy balance, will be moved to a wagmi script that handles this
     const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)
 
     // address to send $HAPPY to
-    const [targetAddress, setTargetAddress] = useState<Address | undefined>(undefined)
+    const [targetAddress, setTargetAddress] = useState<Address | string | undefined>(undefined)
     // amount to send
     const [sendValue, setSendValue] = useState<string | undefined>(undefined)
-
-    const _trySend = useCallback(async () => {
-        try {
-            if (user && sendValue && targetAddress && walletClient) {
-                const _txPromise = await walletClient.sendTransaction({
-                    account: user.address,
-                    to: targetAddress as Address,
-                    value: parseEther(sendValue),
-                    chain: convertToViemChain(happyChainSepolia),
-                })
-            }
-        } catch (error) {
-            console.warn(error)
-        }
-    }, [user, targetAddress, sendValue, walletClient])
 
     const getBalance = useCallback(async () => {
         if (user) {
@@ -73,7 +56,7 @@ function Send() {
                 )}
             </div>
 
-            <StepButtonRow sendValue={sendValue} targetAddress={targetAddress} />
+            <OptionButtons sendValue={sendValue} targetAddress={targetAddress} />
         </div>
     )
 }
