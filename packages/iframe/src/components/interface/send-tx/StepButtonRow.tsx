@@ -1,9 +1,6 @@
-import { getChainFromSearchParams } from "@happychain/sdk-shared"
 import { useNavigate } from "@tanstack/react-router"
 import React, { useCallback } from "react"
-import { type Address, parseEther } from "viem"
-import { useSendTransaction } from "wagmi"
-import { config } from "../../../wagmi/config"
+import type { Address } from "viem"
 
 interface StepButtonRowInterface {
     sendValue: string | undefined
@@ -12,19 +9,13 @@ interface StepButtonRowInterface {
 
 const StepButtonRow = ({ sendValue, targetAddress }: StepButtonRowInterface) => {
     const navigate = useNavigate()
-    const { data: _hash, sendTransaction } = useSendTransaction()
 
     const cancelButtonOptions = useCallback(() => {
         navigate({ to: "/embed" })
     }, [navigate])
 
     const continueButtonOptions = useCallback(() => {
-        // if (sendValue && targetAddress) {
-        //     // middleware request handler
-        //     // wagmi sendTransaction
-        //     console.log("sending")
-        //     sendTransaction({ to: targetAddress, value: parseEther(sendValue) })
-        // }
+        // send tx
     }, [])
 
     return (
