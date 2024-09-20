@@ -1,5 +1,5 @@
 import { AuthState, Msgs } from "@happychain/sdk-shared"
-import { Link, Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
+import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo } from "react"
 import { ConnectButton } from "../components/ConnectButton"
