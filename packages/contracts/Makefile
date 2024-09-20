@@ -195,6 +195,27 @@ define post-deploy
 		| xargs -L1 -I'{}' forge inspect {} abi \
 		| node-jq --slurp --argjson contracts "$$CONTRACTS" '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
 		> out/abis.json;
+
+	@# Generate "as const" TypeScript ABI definitions for type usage.
+	@# To use you will want to symlink this file from the deployments dir to the consuming package,
+	@# and .gitignore it.
+
+	cat scripts/abi_types_fragment_begin.ts.txt > out/abis.ts
+	printf "\n\n" >> out/abis.ts
+
+	printf "const contractToAbi = (" >> out/abis.ts
+	cat out/abis.json >> out/abis.ts
+	printf ") as const\n\n" >> out/abis.ts
+
+	printf "const aliasToContract = (" >> out/abis.ts
+	cat out/abiMap.json >> out/abis.ts
+	printf ") as const\n\n" >> out/abis.ts
+
+	printf "export const deployment = (" >> out/abis.ts
+	cat out/deployment.json >> out/abis.ts
+	printf ") as const\n\n" >> out/abis.ts
+
+	cat scripts/abi_types_fragment_end.ts.txt >> out/abis.ts
 endef
 
 # Explanation of the jq command;
@@ -213,12 +234,14 @@ post-deploy:
 # Save Deployment Information
 
 # Saves all information pertaining to a deployment to deployments/$NAME.
+# The suggested $NAME format is "CHAIN/NAME", e.g. "happy-sepolia/aa".
 # Will save the latest deployment from $DEPLOY_SCRIPT.
 save-deployment:
 	@mkdir -p deployments/$(DEPLOYMENT_NAME)
-	@cp -f out/deployment.json out/abiMap.json out/abis.json deployments/$(DEPLOYMENT_NAME)
+	@cp -f out/deployment.json out/abiMap.json out/abis.json out/abis.ts deployments/$(DEPLOYMENT_NAME)
 	$(eval __CHAIN_ID := `cast chain-id --rpc-url $(RPC_$(CONFIG))`)
 	$(eval __RUN_FILE := broadcast/$(DEPLOY_SCRIPT)/$(__CHAIN_ID)/run-latest.json)
+	mkdir -p deployments/$(DEPLOYMENT_NAME)
 	@cp $(__RUN_FILE) deployments/$(DEPLOYMENT_NAME)/transactions.json
 	@echo "Saved deployment to deployments/$(DEPLOYMENT_NAME)"
 .PHONY: save-deployment
