@@ -304,12 +304,18 @@ importers:
       '@tanstack/react-router':
         specifier: ^1.51.0
         version: 1.51.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/lodash':
+        specifier: ^4.17.7
+        version: 4.17.7
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
       jotai:
         specifier: ^2.9.3
         version: 2.9.3(@types/react@18.3.4)(react@18.3.1)
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       react:
         specifier: ^18.3.1
         version: 18.3.1

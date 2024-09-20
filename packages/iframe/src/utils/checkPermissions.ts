@@ -8,7 +8,7 @@ export function checkIfRequestRequiresConfirmation(
     payload: ProviderMsgsFromApp[Msgs.PermissionCheckRequest]["payload"],
 ) {
     const basicCheck = requiresApproval(payload)
-    //  if the basic check shows its a safe method, we can stop here,
+    // if the basic check shows its a safe method, we can stop here,
     // and report back that no confirmation is needed
     if (!basicCheck) {
         return false
