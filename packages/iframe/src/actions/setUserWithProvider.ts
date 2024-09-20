@@ -17,6 +17,8 @@ export function setUserWithProvider(user: HappyUser | undefined, provider: EIP11
     store.set(authStateAtom, () => (user ? AuthState.Connected : AuthState.Disconnected))
 
     // clear all permissions on logout
+    // TODO we actually don't want this, but it's very handy right now
+    //      let's remove this once we can manage permissions in-UI
     if (!user) {
         clearPermissions()
     }
