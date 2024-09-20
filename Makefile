@@ -17,7 +17,7 @@ help: ## Show this help
 # Packages
 
 # packages shared between SDK & iframe
-SHARED_PKGS := sdk-shared,common
+SHARED_PKGS := common,sdk-shared
 
 # packages only used in the SDK
 SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components
@@ -37,8 +37,11 @@ ACCOUNT_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS),$(IFRAME_ONLY_PKGS)
 # demo packages (not including dependencies)
 DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue
 
+# backend packages
+BACKEND_PKGS := transaction-manager,randomness-service
+
 # all typescript packages, including docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),docs
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS},docs
 
 # ==================================================================================================
 # CMDS

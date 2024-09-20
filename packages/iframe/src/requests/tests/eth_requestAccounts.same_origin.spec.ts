@@ -1,4 +1,5 @@
-import { AuthState, createUUID } from "@happychain/sdk-shared"
+import { createUUID } from "@happychain/common"
+import { AuthState } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
 import { UnauthorizedProviderError } from "viem"

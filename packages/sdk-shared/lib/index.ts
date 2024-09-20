@@ -25,7 +25,6 @@ export { permissionsLists, requiresApproval } from "./interfaces/permissions"
 export { EventBus, EventBusMode } from "./services/eventBus"
 export { logger } from "./services/logger"
 
-export { createUUID } from "./utils/uuid"
 export { waitForCondition } from "./utils/waitForCondition"
 export { shortenAddress } from "./utils/shortenAddress"
 
@@ -58,5 +57,3 @@ export type {
     EventKey,
 } from "./services/eventBus"
 export type { Logger } from "./services/logger"
-
-export type { UUID } from "./utils/uuid"

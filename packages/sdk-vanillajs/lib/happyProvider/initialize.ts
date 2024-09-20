@@ -1,3 +1,4 @@
+import { createUUID } from "@happychain/common"
 import type {
     HappyUser,
     MsgsFromApp,
@@ -5,7 +6,7 @@ import type {
     PopupMsgsFromIframe,
     ProviderMsgsFromApp,
 } from "@happychain/sdk-shared"
-import { EventBus, EventBusMode, config, createUUID } from "@happychain/sdk-shared"
+import { EventBus, EventBusMode, config } from "@happychain/sdk-shared"
 import type { EIP1193Provider } from "viem"
 
 import { ModalStates, Msgs } from "@happychain/sdk-shared/lib/interfaces/events"

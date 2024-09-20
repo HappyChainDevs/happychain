@@ -1,4 +1,5 @@
-import { AuthState, type UUID, config } from "@happychain/sdk-shared"
+import type { UUID } from "@happychain/common"
+import { AuthState, config } from "@happychain/sdk-shared"
 import { LitElement, css, html } from "lit"
 import { customElement } from "lit/decorators.js"
 import { classMap } from "lit/directives/class-map.js"

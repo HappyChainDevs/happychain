@@ -1,3 +1,4 @@
+import type { UUID } from "@happychain/common"
 import type {
     EIP1193RequestMethods,
     EIP1193RequestParameters,
@@ -10,7 +11,6 @@ import type {
     ProviderMsgsFromApp,
     config,
 } from "@happychain/sdk-shared"
-import type { UUID } from "@happychain/sdk-shared"
 import type SafeEventEmitter from "@metamask/safe-event-emitter"
 
 /** @internal */
