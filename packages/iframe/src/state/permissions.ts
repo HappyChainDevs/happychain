@@ -30,6 +30,7 @@ type WalletPermissionCaveat = {
 }
 
 export type WalletPermissionRequest = {
+    // Note: only a single method name is allowed.
     [methodName: string]: WalletPermissionCaveatRequest
 }
 

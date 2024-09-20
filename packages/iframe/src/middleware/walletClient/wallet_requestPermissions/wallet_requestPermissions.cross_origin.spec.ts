@@ -3,7 +3,7 @@ import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "
 import { getDefaultStore } from "jotai"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
-import { clearPermissions, getPermissions } from "../../../services/permissions"
+import { clearPermissions, getAllPermissions } from "../../../services/permissions"
 import { authStateAtom } from "../../../state/authState"
 import { userAtom } from "../../../state/user"
 import { createHappyUserFromWallet } from "../../../utils/createHappyUserFromWallet"
@@ -38,14 +38,14 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
     })
 
     test("adds eth_account permissions", async () => {
-        expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(0)
+        expect(getAllPermissions().length).toBe(0)
 
         const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
 
         // execute middleware
         const response = await walletRequestPermissionsMiddleware(request, next)
 
-        expect(getPermissions({ method: "wallet_getPermissions" })).toStrictEqual(response)
+        expect(getAllPermissions()).toStrictEqual(response)
         expect(response).toStrictEqual([
             {
                 caveats: [],
@@ -58,7 +58,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
     })
 
     test("throws error on caveat use", async () => {
-        expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(0)
+        expect(getAllPermissions().length).toBe(0)
 
         const request = makePayload({
             method: "wallet_requestPermissions",
@@ -72,7 +72,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
     })
 
     test("only adds permissions once", async () => {
-        expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(0)
+        expect(getAllPermissions().length).toBe(0)
 
         const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
 
@@ -82,6 +82,6 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
         await walletRequestPermissionsMiddleware(request, next)
         await walletRequestPermissionsMiddleware(request, next)
 
-        expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
+        expect(getAllPermissions().length).toBe(1)
     })
 })

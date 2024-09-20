@@ -4,7 +4,7 @@ import { getDefaultStore } from "jotai"
 import { UnauthorizedProviderError } from "viem"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
-import { clearPermissions, getPermissions } from "../../../services/permissions"
+import { clearPermissions, getAllPermissions } from "../../../services/permissions"
 import { authStateAtom } from "../../../state/authState"
 import { userAtom } from "../../../state/user"
 import { createHappyUserFromWallet } from "../../../utils/createHappyUserFromWallet"
@@ -36,7 +36,7 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
         })
 
         test("skips eth_requestAccounts permissions when no user", async () => {
-            expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(0)
+            expect(getAllPermissions().length).toBe(0)
 
             const request = makePayload({ method: "eth_requestAccounts" })
 
@@ -60,18 +60,18 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
         })
 
         test("returns connected user address when requested", async () => {
-            expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
+            expect(getAllPermissions().length).toBe(1)
 
             const request = makePayload({ method: "eth_requestAccounts" })
 
             // execute middleware
             const response = await ethRequestAccountsMiddleware(request, next)
             expect(response).toStrictEqual(user.addresses)
-            expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
+            expect(getAllPermissions().length).toBe(1)
         })
 
         test("does not add permissions", async () => {
-            expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
+            expect(getAllPermissions().length).toBe(1)
 
             const request = makePayload({ method: "eth_requestAccounts" })
 
@@ -81,7 +81,7 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
             await ethRequestAccountsMiddleware(request, next)
             await ethRequestAccountsMiddleware(request, next)
 
-            expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
+            expect(getAllPermissions().length).toBe(1)
         })
     })
 })

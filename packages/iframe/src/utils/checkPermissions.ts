@@ -1,6 +1,6 @@
 import type { Msgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared"
-import { hasPermission } from "../services/permissions"
+import { hasPermissions } from "../services/permissions"
 import { getChains } from "../state/chains"
 import { getUser } from "../state/user"
 
@@ -30,9 +30,9 @@ export function checkIfRequestRequiresConfirmation(
         // users don't need to confirm if they are requesting to add permissions that have already been authorized
         // just current permissions are returned as a result instead
         case "wallet_requestPermissions":
-            return !hasPermission(...payload.params)
+            return !hasPermissions(payload.params)
         case "eth_requestAccounts":
-            return !hasPermission({ eth_accounts: {} })
+            return !hasPermissions("eth_accounts")
     }
 
     return true

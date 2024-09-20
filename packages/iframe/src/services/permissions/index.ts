@@ -6,9 +6,12 @@ import {
 } from "../../state/permissions"
 import { getUser } from "../../state/user"
 import { getDappOrigin } from "../../utils/getDappOrigin"
-import type { GetPermissionActionParams, SetPermissionActionParams } from "./actions"
 import { getPermissionAction, hasPermissionAction, revokePermissionAction, setPermissionAction } from "./actions"
 import { clearDappPermissions, getPermissionsForDapp } from "./utils"
+
+// NOTE: If you need to modify or query the user's permissions from React, use the hooks in
+// `src/hooks/usePermissions.ts` instead of these functions — they will update whenever the
+// permissions change.
 
 const dappOrigin = getDappOrigin()
 
@@ -16,61 +19,76 @@ function getDappPermissions(): DappPermissionMap {
     return getPermissionsForDapp(dappOrigin, getUser(), getAtomPermissions())
 }
 
-/**
- * Action for JSON-RPC request
- * - wallet_requestPermissions
- *
- * @notice
- * Caveats are not yet supported
- *
- * @return WalletPermissions
- */
-export function setPermission({ method, params }: SetPermissionActionParams) {
-    const dappPermissions = getDappPermissions()
-    return setPermissionAction({ method, params } as SetPermissionActionParams, getUser(), dappPermissions)
+function getPermissionArray(
+    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
+): WalletPermissionRequest[] {
+    // biome-ignore format: readability
+    return typeof permissions === "string"
+        ? [{ [permissions]: {} }]
+        : Array.isArray(permissions)
+            ? permissions
+            : [permissions]
 }
 
 /**
- * Response to JSON-RPC requests
- * - wallet_revokePermissions
- */
-export function revokePermission(...params: { [key: string]: unknown }[]) {
-    return revokePermissionAction(params, getDappPermissions())
-}
-
-/**
- * Check if user has authorized permissions.
- * Being variadic, multiple permissions can be requested,
- * and the response will be all or nothing
+ * Grants the given permission(s) for the user and returns the list of granted permissions.
  *
- * @notice
- * Caveats are not yet supported
+ * @notice Caveats are not yet supported
+ */
+export function grantPermissions(
+    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
+    dappPermissions: DappPermissionMap = getDappPermissions(),
+): WalletPermission[] {
+    const _permissions = getPermissionArray(permissions)
+    return setPermissionAction(_permissions, getUser(), dappPermissions)
+}
+
+/**
+ * Revokes the given permission(s) of the user.
+ */
+export function revokePermissions(
+    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
+    dappPermissions: DappPermissionMap = getDappPermissions(),
+) {
+    const _permissions = getPermissionArray(permissions)
+    return revokePermissionAction(_permissions, dappPermissions)
+}
+
+/**
+ * Check if user has (all of) the given permission(s).
  *
- * @example
- * check if the dapp can access current user address
- * ```ts
- * hasPermission({ eth_accounts: {} })
- * ```
+ * @notice Caveats are not yet supported
  */
-export function hasPermission(...permissions: WalletPermissionRequest[]): boolean {
-    return hasPermissionAction(permissions, getDappPermissions())
+export function hasPermissions(
+    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
+    dappPermissions: DappPermissionMap = getDappPermissions(),
+): boolean {
+    const _permissions = getPermissionArray(permissions)
+    return hasPermissionAction(_permissions, dappPermissions)
 }
 
 /**
- * Response to JSON-RPC requests
- * - wallet_getPermissions
- * - wallet_requestPermissions
+ * Return all of the user's permissions.
  */
-export function getPermissions({ method, params }: GetPermissionActionParams): WalletPermission[] {
-    const dappPermissions = getDappPermissions()
-    return getPermissionAction({ method, params } as GetPermissionActionParams, dappPermissions)
+export function getAllPermissions(dappPermissions: DappPermissionMap = getDappPermissions()): WalletPermission[] {
+    return Array.from(dappPermissions.values())
 }
 
 /**
- * Util Shortcut to clear all state for current dapp/user.
- * Does not map to a specific RPC call
+ * Returns the given permission(s). This only considers the keys of the permission object,
+ * and returns an aray that contains the permission only if it is granted, along with its caveats.
+ */
+export function getPermissions(
+    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
+    dappPermissions: DappPermissionMap = getDappPermissions(),
+): WalletPermission[] {
+    const _permissions = getPermissionArray(permissions)
+    return getPermissionAction(_permissions, dappPermissions)
+}
+
+/**
+ * Clears all permissions for the current user.
  */
 export function clearPermissions() {
-    // delete all permissions
     clearDappPermissions()
 }

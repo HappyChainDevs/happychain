@@ -1,4 +1,4 @@
-import { setPermission } from "../../../services/permissions"
+import { grantPermissions } from "../../../services/permissions"
 import { getUser } from "../../../state/user"
 import type { MiddlewareFunction } from "../../types"
 
@@ -12,7 +12,7 @@ export const ethRequestAccountsMiddleware: MiddlewareFunction = async (request, 
         return []
     }
 
-    setPermission(request.payload)
+    grantPermissions("eth_accounts")
 
     return user.addresses ?? [user.address]
 }

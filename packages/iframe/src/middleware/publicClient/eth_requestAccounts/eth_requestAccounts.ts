@@ -1,7 +1,7 @@
 import { AuthState } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
 import { UnauthorizedProviderError } from "viem"
-import { hasPermission } from "../../../services/permissions"
+import { hasPermissions } from "../../../services/permissions"
 import { getAuthState } from "../../../state/authState"
 import { getUser } from "../../../state/user"
 
@@ -20,5 +20,5 @@ export async function ethRequestAccountsMiddleware(
         throw new UnauthorizedProviderError(new Error("Not allowed"))
     }
 
-    return hasPermission({ eth_accounts: {} }) ? getUser()?.addresses : []
+    return hasPermissions("eth_accounts") ? getUser()?.addresses : []
 }
