@@ -1,3 +1,4 @@
+import { validateNumericInput } from "@happychain/common"
 import type React from "react"
 import { useCallback, useState } from "react"
 import { formatEther, parseEther } from "viem"
@@ -20,8 +21,7 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTra
             inputValue = `0.${inputValue.substring(1)}`
         }
 
-        // validate numeric input
-        if (/^\d*\.?\d*$/.test(inputValue) || inputValue === "") {
+        if (validateNumericInput(inputValue) || inputValue === "") {
             setSendValue(inputValue)
             // Check if the input value exceeds the balance
             setIsExceedingBalance(inputValue && balance ? parseEther(inputValue) > balance : false)

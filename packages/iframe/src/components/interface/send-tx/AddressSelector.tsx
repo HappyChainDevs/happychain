@@ -1,4 +1,3 @@
-import { validateAddressInput } from "@happychain/common"
 import type React from "react"
 import { useEffect, useState } from "react"
 import { type Address, isAddress } from "viem"
