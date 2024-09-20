@@ -1,5 +1,5 @@
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
-import { getPermissions } from "../../services/permissions"
+import { getAllPermissions } from "../../services/permissions"
 
 /**
  * {@link  https://eips.ethereum.org/EIPS/eip-2255}
@@ -12,5 +12,5 @@ export async function walletGetPermissionsMiddleware(
         return await next()
     }
 
-    return getPermissions(request.payload)
+    return getAllPermissions()
 }

@@ -3,7 +3,7 @@ import { useSetAtom } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { appMessageBus } from "../services/eventBus"
-import { revokePermission, setPermission } from "../services/permissions"
+import { grantPermissions, revokePermissions } from "../services/permissions"
 import { StorageKey, storage } from "../services/storage"
 import { authStateAtom } from "../state/authState"
 import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"
@@ -75,37 +75,30 @@ function useRequestEIP6963Providers() {
     }, [])
 
     useEffect(() => {
+        // Whenever the app makes a permissions request to the injected wallet, it will also
+        // forward the request and response to the iframe so that we can mirror the permission.
         return appMessageBus.on(Msgs.MirrorPermissions, ({ request, response }) => {
+            const hasResponse = Array.isArray(response) && response.length
             switch (request.method) {
                 case "eth_accounts":
-                case "eth_requestAccounts": {
-                    // if response has addresses, add eth_accounts permission
-                    // otherwise revoke it
-                    if (!Array.isArray(response) || !response.length) {
-                        revokePermission({ eth_accounts: {} })
-                        return
-                    }
-
-                    setPermission({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
+                case "eth_requestAccounts":
+                    // Revoke the eth_accounts permission if the response is empty.
+                    // biome-ignore format: readability
+                    hasResponse
+                      ? grantPermissions("eth_accounts")
+                      : revokePermissions("eth_accounts")
                     return
-                }
+
                 case "wallet_requestPermissions":
-                    if ("eth_accounts" in request.params[0]) {
-                        // we don't support every arbitrary variation, but enable
-                        // account permissions at minimum
-                        // over sharing here isn't such a big deal, as
-                        // the source of information would be the wallet itself
-                        // so without permissions, we simple won't have the data available
-                        setPermission({ ...request, params: [{ eth_accounts: {} }] })
-                    }
-                    // if response is successful, enable here also
+                    // We only handle the eth_accounts permission for now, but there is no harm in
+                    // setting the permissions that the user has authorized, since we either will be
+                    // more permissive (e.g. allow methods only on the basis of eth_accounts and
+                    // user approval) or do not support the capability the permission relates to.
+                    hasResponse && grantPermissions(request.params)
                     return
 
                 case "wallet_revokePermissions":
-                    // if response is successful, revoke here also
-                    if (request.params) {
-                        revokePermission(...request.params)
-                    }
+                    request.params && revokePermissions(request.params)
                     return
             }
         })

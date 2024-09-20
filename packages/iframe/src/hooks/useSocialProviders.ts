@@ -3,7 +3,7 @@ import { AuthState, type ConnectionProvider, WalletType } from "@happychain/sdk-
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useMemo } from "react"
 import { setUserWithProvider } from "../actions/setUserWithProvider"
-import { setPermission } from "../services/permissions"
+import { grantPermissions } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
 import { chainsAtom } from "../state/chains"
 import { userAtom } from "../state/user"
@@ -47,7 +47,7 @@ export function useSocialProviders() {
                             // will automatically disable loading state when user+provider are set
                             setAuthState(AuthState.Connecting)
                             await provider.enable()
-                            setPermission({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
+                            grantPermissions("eth_accounts")
                         },
                         disable: async () => {
                             // will automatically disable loading state when user+provider are set

@@ -4,7 +4,7 @@ import { getDefaultStore } from "jotai"
 import { UnauthorizedProviderError } from "viem"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
-import { clearPermissions, getPermissions } from "../../../services/permissions"
+import { clearPermissions, getAllPermissions } from "../../../services/permissions"
 import { authStateAtom } from "../../../state/authState"
 import { userAtom } from "../../../state/user"
 import { createHappyUserFromWallet } from "../../../utils/createHappyUserFromWallet"
@@ -38,7 +38,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
         })
 
         test("skips wallet_requestPermissions permissions when no user", async () => {
-            expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(0)
+            expect(getAllPermissions().length).toBe(0)
 
             const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
 
@@ -62,7 +62,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
         })
 
         test("does not add permissions", async () => {
-            expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
+            expect(getAllPermissions().length).toBe(1)
 
             const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
 
@@ -72,7 +72,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
             await walletRequestPermissionsMiddleware(request, next)
             await walletRequestPermissionsMiddleware(request, next)
 
-            expect(getPermissions({ method: "wallet_getPermissions" }).length).toBe(1)
+            expect(getAllPermissions().length).toBe(1)
         })
     })
 })

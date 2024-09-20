@@ -1,5 +1,5 @@
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
-import { hasPermission } from "../../services/permissions"
+import { hasPermissions } from "../../services/permissions"
 import { getUser } from "../../state/user"
 
 export async function ethAccountsMiddleware(
@@ -10,5 +10,5 @@ export async function ethAccountsMiddleware(
         return await next()
     }
 
-    return hasPermission({ eth_accounts: {} }) ? getUser()?.addresses : []
+    return hasPermissions("eth_accounts") ? getUser()?.addresses : []
 }

@@ -3,7 +3,7 @@ import { getDefaultStore } from "jotai/vanilla"
 import { http, createPublicClient } from "viem"
 import { mainnet } from "viem/chains"
 import { appMessageBus } from "../services/eventBus"
-import { hasPermission } from "../services/permissions"
+import { hasPermissions } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
 import { userAtom } from "../state/user"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
@@ -39,7 +39,7 @@ store.sub(authStateAtom, () => {
         return
     }
 
-    const permitted = hasPermission({ eth_accounts: {} })
+    const permitted = hasPermissions("eth_account")
     const user = store.get(userAtom)
     // we sync all logout events to the front end
     // and all login updates if the dapp has permissions
@@ -58,7 +58,7 @@ store.sub(authStateAtom, () => {
  */
 store.sub(userAtom, () => {
     const user = store.get(userAtom)
-    const permitted = hasPermission({ eth_accounts: {} })
+    const permitted = hasPermissions("eth_accounts")
 
     // we sync all logout events to the front end
     // and all login updates if the dapp has permissions

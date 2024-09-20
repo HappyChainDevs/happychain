@@ -40,9 +40,13 @@ type EIP1193PermissionsMethod =
 type EIP1193PermissionsMethodArray = TupleUnion<EIP1193PermissionsMethod>
 
 const eip1193PermissionsMethods: string[] = [
+    // https://ethereum.org/en/developers/docs/apis/json-rpc/
     "eth_accounts",
+    // https://eips.ethereum.org/EIPS/eip-1102
     "eth_requestAccounts",
+    // https://eips.ethereum.org/EIPS/eip-2255
     "wallet_requestPermissions",
+    // https://docs.metamask.io/wallet/reference/wallet_revokepermissions/
     "wallet_revokePermissions",
 ] satisfies EIP1193PermissionsMethodArray
 
