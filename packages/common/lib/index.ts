@@ -9,3 +9,5 @@ export type { AssertAssignableTo, AssertCompatible, TupleUnion } from "./utils/t
 export { bigIntMax } from "./utils/bigint"
 
 export { happyChainTestnetChain } from "./viem/chains"
+
+export { validateNumericInput } from "./utils/regexChecks"

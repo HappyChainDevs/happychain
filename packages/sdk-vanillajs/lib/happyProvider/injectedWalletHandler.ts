@@ -92,7 +92,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
             void this.config.msgBus.emit(Msgs.InjectedWalletConnected, { rdns, address })
         } catch {
-            // Reache if eth_requestAccounts fails, meaning the user declined to give permission.
+            // Reached if eth_requestAccounts fails, meaning the user declined to give permission.
             // We just clear the existing provider in that case.
             void this.handleProviderDisconnectionRequest()
         }
