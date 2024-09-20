@@ -3,11 +3,11 @@ import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "
 import { getDefaultStore } from "jotai"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
-import { clearPermissions, getAllPermissions } from "../../../services/permissions"
-import { authStateAtom } from "../../../state/authState"
-import { userAtom } from "../../../state/user"
-import { createHappyUserFromWallet } from "../../../utils/createHappyUserFromWallet"
-import { walletRequestPermissionsMiddleware } from "./wallet_requestPermissions"
+import { clearPermissions, getAllPermissions } from "../../services/permissions.ts"
+import { authStateAtom } from "../../state/authState.ts"
+import { userAtom } from "../../state/user.ts"
+import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet.ts"
+import { dispatchHandlers } from "../approved.ts"
 
 function makePayload(payload: EIP1193RequestParameters) {
     return {
@@ -18,33 +18,25 @@ function makePayload(payload: EIP1193RequestParameters) {
     } as ProviderEventPayload<EIP1193RequestParameters>
 }
 
-vi.mock("../../../utils/getDappOrigin", async () => ({
+vi.mock("../../utils/getDappOrigin", async () => ({
     getDappOrigin: () => "http://localhost:5173",
     getIframeOrigin: () => "http://localhost:5160",
 }))
 
 describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
     let user: HappyUser
-    let next: () => Promise<void>
 
     beforeEach(() => {
         clearPermissions()
-
         user = createHappyUserFromWallet("io.testing", "0x123456789")
         getDefaultStore().set(userAtom, user)
         getDefaultStore().set(authStateAtom, AuthState.Connected)
-
-        next = vi.fn()
     })
 
     test("adds eth_account permissions", async () => {
         expect(getAllPermissions().length).toBe(0)
-
         const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
-
-        // execute middleware
-        const response = await walletRequestPermissionsMiddleware(request, next)
-
+        const response = await dispatchHandlers(request)
         expect(getAllPermissions()).toStrictEqual(response)
         expect(response).toStrictEqual([
             {
@@ -59,29 +51,20 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
 
     test("throws error on caveat use", async () => {
         expect(getAllPermissions().length).toBe(0)
-
         const request = makePayload({
             method: "wallet_requestPermissions",
             params: [{ eth_accounts: { requiredMethods: ["signTypedData_v3"] } }],
         })
-
-        // execute middleware
-        expect(walletRequestPermissionsMiddleware(request, next)).rejects.toThrow(
-            "WalletPermissionCaveats Not Yet Supported",
-        )
+        expect(dispatchHandlers(request)).rejects.toThrow("WalletPermissionCaveats Not Yet Supported")
     })
 
     test("only adds permissions once", async () => {
         expect(getAllPermissions().length).toBe(0)
-
         const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
-
-        // execute middleware
-        await walletRequestPermissionsMiddleware(request, next)
-        await walletRequestPermissionsMiddleware(request, next)
-        await walletRequestPermissionsMiddleware(request, next)
-        await walletRequestPermissionsMiddleware(request, next)
-
+        await dispatchHandlers(request)
+        await dispatchHandlers(request)
+        await dispatchHandlers(request)
+        await dispatchHandlers(request)
         expect(getAllPermissions().length).toBe(1)
     })
 })

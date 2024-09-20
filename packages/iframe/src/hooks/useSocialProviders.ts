@@ -22,9 +22,7 @@ export function useSocialProviders() {
             const loggingIn = Boolean(!userValue?.type && user)
             const loggedIn = userValue?.type === WalletType.Social
             if (loggingIn || loggedIn) {
-                // pre-add all our supported chains (as defined by sdk-shared)
-                // Social Auth will come with all required chains ready to go
-                // injected wallets, may need to add them manually
+                // Pre-add all our supported chains (as defined by sdk-shared).
                 if (provider) {
                     await Promise.allSettled(
                         Object.values(chains).map((chain) => {
