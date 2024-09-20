@@ -1,5 +1,5 @@
 import { waitForCondition } from "../utils/waitForCondition"
-import type { Logger } from "./logger"
+import { type Logger, silentLogger } from "./logger"
 import { logger } from "./logger"
 
 /**
@@ -62,7 +62,7 @@ export class EventBus<SL, SE = SL> {
     private port: MessagePort | BroadcastChannel | null = null
 
     constructor(private config: EventBusOptions) {
-        config.logger ??= logger
+        config.logger ??= silentLogger
 
         switch (config.mode) {
             case EventBusMode.Forced:

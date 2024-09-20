@@ -50,7 +50,6 @@ export function Badge({ disableStyles = false }: { disableStyles?: boolean | str
     )
 
     const provider = providerInfo()
-    console.log({ disableStyles })
     return (
         <div>
             {<Styles disableStyles={disableStyles} />}
