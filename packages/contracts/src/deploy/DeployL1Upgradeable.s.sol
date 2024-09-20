@@ -26,6 +26,6 @@ contract DeployL1Upgradeable is BaseDeployScript {
         );
         // We don't need the ABI for the implementation, we just want the address.
         deployed("HappyERC20Implem", "", address(happyERC20Implem));
-        deployed("HappyERC20Proxy", "HappyERC20Upgradeable", address(happyERC20Proxy));
+        deployed("HappyERC20", "HappyERC20Upgradeable", address(happyERC20Proxy));
     }
 }
