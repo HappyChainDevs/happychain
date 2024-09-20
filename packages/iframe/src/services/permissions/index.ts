@@ -2,32 +2,18 @@ import type { HappyUser } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/index"
 import {
     type AppPermissions,
+    type PermissionRequest,
     type PermissionsMap,
     type WalletPermission,
     permissionsAtom,
-} from "../../state/permissions"
+} from "../../state/permissions.ts"
 import { getUser } from "../../state/user"
 import { emitUserUpdate } from "../../utils/emitUserUpdate.ts"
 import { getDappOrigin, getIframeOrigin } from "../../utils/getDappOrigin"
 
 // === NOTICE ======================================================================================
 
-// If you need to modify or query the user's permissions from React, use or create a hook in
-// `src/hooks/usePermissions.ts` instead of these functions — they will update whenever the
-// permissions change.
-
 // Refer to src/state/permissions.ts for more information on how types are stored / typed.
-
-// === TYPES =======================================================================================
-
-/**
- * A request for permission on a specific EIP-1193 request.
- * Note that despite the type definition, only a single permission can be requested.
- * The request can have multiple associated caveats (we ignore these).
- */
-export type PermissionRequest = {
-    [requestName: string]: { [caveatName: string]: unknown }
-}
 
 // === CONSTANTS ===================================================================================
 
