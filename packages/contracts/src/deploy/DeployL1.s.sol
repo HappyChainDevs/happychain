@@ -12,6 +12,6 @@ contract DeployL1 is BaseDeployScript {
 
     function deploy() internal override {
         happyERC20 = new HappyERC20();
-        deployed("HappyERC20", "HappyERC20", address(happyERC20));
+        deployed("HappyERC20", address(happyERC20));
     }
 }
