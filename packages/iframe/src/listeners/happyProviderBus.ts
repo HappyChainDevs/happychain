@@ -1,5 +1,5 @@
 import { Msgs } from "@happychain/sdk-shared"
-import { PublicClientApproveHandler } from "../middleware/publicClient"
+import { handlePermissionlessRequest } from "../requests"
 import { happyProviderBus } from "../services/eventBus"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
@@ -7,7 +7,7 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
  * Process direct-from-app RPC requests using the public client
  * and publicClient middleware stack
  */
-happyProviderBus.on(Msgs.RequestPermissionless, PublicClientApproveHandler)
+happyProviderBus.on(Msgs.RequestPermissionless, handlePermissionlessRequest)
 
 /**
  * Receives permission checks from the dapp for all requests,

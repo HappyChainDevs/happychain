@@ -4,11 +4,11 @@ import { getDefaultStore } from "jotai"
 import { UnauthorizedProviderError } from "viem"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
-import { clearPermissions, getAllPermissions } from "../../../services/permissions"
-import { authStateAtom } from "../../../state/authState"
-import { userAtom } from "../../../state/user"
-import { createHappyUserFromWallet } from "../../../utils/createHappyUserFromWallet"
-import { walletRequestPermissionsMiddleware } from "./wallet_requestPermissions"
+import { clearPermissions, getAllPermissions } from "../../services/permissions.ts"
+import { authStateAtom } from "../../state/authState.ts"
+import { userAtom } from "../../state/user.ts"
+import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet.ts"
+import { dispatchHandlers } from "../permissionless.ts"
 
 function makePayload(payload: EIP1193RequestParameters) {
     return {
@@ -19,60 +19,45 @@ function makePayload(payload: EIP1193RequestParameters) {
     } as ProviderEventPayload<EIP1193RequestParameters>
 }
 
-vi.mock("../../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => "http://localhost:5173",
+vi.mock("../../utils/getDappOrigin", async () => ({
+    getDappOrigin: () => "http://localhost:5160",
     getIframeOrigin: () => "http://localhost:5160",
 }))
 
-describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
+describe("#publicClient #wallet_requestPermissions #same_origin", () => {
     describe("disconnected user", () => {
-        let next: () => Promise<void>
-
         beforeEach(() => {
-            // clear permissions, logout
             clearPermissions()
+            // logout
             getDefaultStore().set(userAtom, undefined)
             getDefaultStore().set(authStateAtom, AuthState.Disconnected)
-
-            next = vi.fn()
         })
 
         test("skips wallet_requestPermissions permissions when no user", async () => {
             expect(getAllPermissions().length).toBe(0)
-
             const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
-
-            // execute middleware
-            expect(walletRequestPermissionsMiddleware(request, next)).rejects.toThrow(UnauthorizedProviderError)
+            expect(dispatchHandlers(request)).rejects.toThrow(UnauthorizedProviderError)
         })
     })
 
     describe("connected user", () => {
         let user: HappyUser
-        let next: () => Promise<void>
 
         beforeEach(() => {
             clearPermissions()
-
             user = createHappyUserFromWallet("io.testing", "0x123456789")
             getDefaultStore().set(userAtom, user)
             getDefaultStore().set(authStateAtom, AuthState.Connected)
-
-            next = vi.fn()
         })
 
         test("does not add permissions", async () => {
-            expect(getAllPermissions().length).toBe(0)
-
+            expect(getAllPermissions().length).toBe(1)
             const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
-
-            // execute middleware
-            await walletRequestPermissionsMiddleware(request, next)
-            await walletRequestPermissionsMiddleware(request, next)
-            await walletRequestPermissionsMiddleware(request, next)
-            await walletRequestPermissionsMiddleware(request, next)
-
-            expect(getAllPermissions().length).toBe(0)
+            await dispatchHandlers(request)
+            await dispatchHandlers(request)
+            await dispatchHandlers(request)
+            await dispatchHandlers(request)
+            expect(getAllPermissions().length).toBe(1)
         })
     })
 })

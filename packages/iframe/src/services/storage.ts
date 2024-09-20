@@ -3,8 +3,8 @@ import type { HappyUser } from "@happychain/sdk-shared"
 
 export enum StorageKey {
     HappyUser = "happychain:cached-user",
-    Chains = "supported:chains",
-    UserPermissions = "user_permissions_per_domain",
+    Chains = "happychain:supported_chains",
+    UserPermissions = "happychain:user_permissions",
 }
 
 // cache user within iframe to manage auto-reconnect
