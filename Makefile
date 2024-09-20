@@ -38,13 +38,7 @@ DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue
 TS_PKGS := $(SDK_ONLY_PKGS),$(IFRAME_ONLY_PKGS),$(DEMOS_PKGS),docs
 
 # ==================================================================================================
-# GIT & CMDS
-
-# Currently Active Branch
-YOUR_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-
-# Lead branch
-DEFAULT_BRANCH := master
+# CMDS
 
 # Concurrently or mprocs to run commands in parallel
 MULTIRUN ?= concurrently
@@ -210,14 +204,6 @@ ts.format:
 contracts.format:
 	cd packages/contracts && make format
 .PHONY: contracts.format
-
-# Quickly format change files between <your branch> and master using the default settings.
-# Note that when the diff is empty, this will fallback to checking the 4 eligible top-level files
-# (which is fine).
-check-fast-diff:
-	biome check \
-		$$(git diff --name-only $(YOUR_BRANCH) $$(git merge-base $(YOUR_BRANCH) $(DEFAULT_BRANCH)));
-.PHONY: check-fast-diff
 
 # ==================================================================================================
 # PRODUCTION BUILDS
