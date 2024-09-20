@@ -1,3 +1,0 @@
-# format any changed files between 
-# your branch and the default branch
-make --silent check-fast-diff
