@@ -30,7 +30,8 @@
             },
             "correctness": {
                 "noUnusedVariables": "warn",
-                "useHookAtTopLevel": "error"
+                "useHookAtTopLevel": "error",
+                "noUnusedImports": "warn"
             },
             "style": {
                 "noNamespace": "error"
