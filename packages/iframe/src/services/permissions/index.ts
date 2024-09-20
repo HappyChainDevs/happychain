@@ -33,8 +33,7 @@ export function getDappPermissions(
         return new Map()
     }
 
-    const appAndUser = { user: user?.address, app: dappOrigin }
-    const permissionLookupResult = permissions.get(appAndUser)
+    const permissionLookupResult = permissions.get(`${user.address}|${dappOrigin}`)
 
     if (!permissionLookupResult) {
         // Permissions don't exist, create them.
@@ -54,7 +53,7 @@ export function getDappPermissions(
             basePermissions = new Map()
         }
 
-        permissions.set(appAndUser, basePermissions)
+        permissions.set(`${user.address}|${dappOrigin}`, basePermissions)
         return basePermissions
     }
 
@@ -68,7 +67,7 @@ function setDappPermissions(permissions: AppPermissions): void {
         return
     }
     store.set(permissionsAtom, (prev) => {
-        prev.set({ user: user?.address, app: dappOrigin }, permissions)
+        prev.set(`${user.address}|${dappOrigin}`, permissions)
         return new Map(prev)
     })
 }
@@ -195,7 +194,7 @@ export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
     store.set(permissionsAtom, (prev) => {
-        prev.delete({ user: user?.address, app: dappOrigin })
+        prev.delete(`${user.address}|${dappOrigin}`)
         return new Map(prev)
     })
 }
