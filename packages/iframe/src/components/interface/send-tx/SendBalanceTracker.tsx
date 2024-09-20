@@ -13,7 +13,7 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTra
     const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        let inputValue = event.target.value
+        let inputValue = event.target.value.trim()
 
         // If the input starts with '0' and the second character is a number, add a period
         // user input: "01", formatted to "0.1"
