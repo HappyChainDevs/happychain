@@ -1,4 +1,5 @@
 import type { HTTPString } from "@happychain/common"
+import type { UUID } from "@happychain/sdk-shared"
 import { atom } from "jotai"
 
 import { atomFamily, atomWithStorage } from "jotai/utils"
@@ -40,6 +41,8 @@ export type AppPermissions = Map<string, WalletPermission>
 
 /**
  * Permission object for a specific permission.
+ *
+ * This type is copied from Viem (eip1193.ts)
  */
 export type WalletPermission = {
     // The app to which the permission is granted.
@@ -47,6 +50,10 @@ export type WalletPermission = {
     // This is the EIP-1193 request that this permission is mapped to.
     parentCapability: "eth_accounts" | string // TODO only string or make specific
     caveats: WalletPermissionCaveat[]
+
+    // Not in the EIP, but Viem wants these.
+    date: number
+    id: UUID
 }
 
 /**
