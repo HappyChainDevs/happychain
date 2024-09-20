@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai"
 import { useCallback, useMemo } from "react"
-import { getDappPermissions, hasPermissions } from "../services/permissions"
-import { type WalletPermissionRequest, permissionsAtom } from "../state/permissions"
+import { type PermissionRequest, getDappPermissions, hasPermissions } from "../services/permissions"
+import { permissionsAtom } from "../state/permissions"
 import { userAtom } from "../state/user"
 
 function useDappPermissions() {
@@ -15,7 +15,7 @@ function useDappPermissions() {
 export function useHasPermission() {
     const dappPermissions = useDappPermissions()
     return useCallback(
-        (...permissions: WalletPermissionRequest[]) => hasPermissions(permissions, dappPermissions),
+        (...permissions: PermissionRequest[]) => hasPermissions(permissions, dappPermissions),
         [dappPermissions],
     )
 }

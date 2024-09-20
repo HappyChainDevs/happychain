@@ -1,11 +1,9 @@
-import { type HappyUser, createUUID } from "@happychain/sdk-shared"
+import type { HappyUser } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/index"
 import {
-    type DappPermissionMap,
-    type GlobalPermissionMap,
+    type AppPermissions,
+    type PermissionsMap,
     type WalletPermission,
-    type WalletPermissionRequest,
-    getPermissions as getAtomPermissions,
     permissionsAtom,
 } from "../../state/permissions"
 import { getUser } from "../../state/user"
@@ -18,6 +16,19 @@ import { getDappOrigin, getIframeOrigin } from "../../utils/getDappOrigin"
 // `src/hooks/usePermissions.ts` instead of these functions — they will update whenever the
 // permissions change.
 
+// Refer to src/state/permissions.ts for more information on how types are stored / typed.
+
+// === TYPES =======================================================================================
+
+/**
+ * A request for permission on a specific EIP-1193 request.
+ * Note that despite the type definition, only a single permission can be requested.
+ * The request can have multiple associated caveats (we ignore these).
+ */
+export type PermissionRequest = {
+    [requestName: string]: { [caveatName: string]: unknown }
+}
+
 // === CONSTANTS ===================================================================================
 
 const store = getDefaultStore()
@@ -29,20 +40,24 @@ const sameOrigin = dappOrigin === iframeOrigin
 
 export function getDappPermissions(
     user: HappyUser | undefined = getUser(),
-    permissions: GlobalPermissionMap = getAtomPermissions(),
-): DappPermissionMap {
-    const permissionLookupResult = permissions.get(dappOrigin)
+    permissions: PermissionsMap = store.get(permissionsAtom),
+): AppPermissions {
+    if (!user) {
+        console.warn("No user found, returning empty permissions.")
+        return new Map()
+    }
+
+    const appAndUser = { user: user?.address, app: dappOrigin }
+    const permissionLookupResult = permissions.get(appAndUser)
 
     if (!permissionLookupResult) {
         // Permissions don't exist, create them.
-        let basePermissions: DappPermissionMap
+        let basePermissions: AppPermissions
 
         if (user && sameOrigin) {
             // The iframe is always granted the `eth_accounts` permission.
             const eth_accounts: WalletPermission = {
                 invoker: iframeOrigin,
-                date: Date.now(),
-                id: createUUID(),
                 parentCapability: "eth_accounts",
                 caveats: [],
             }
@@ -51,23 +66,26 @@ export function getDappPermissions(
             basePermissions = new Map()
         }
 
-        permissions.set(dappOrigin, basePermissions)
+        permissions.set(appAndUser, basePermissions)
         return basePermissions
     }
 
     return permissionLookupResult
 }
 
-function setDappPermissions(permissions: DappPermissionMap): void {
+function setDappPermissions(permissions: AppPermissions): void {
+    const user = getUser()
+    if (!user) {
+        console.warn("No user found, not setting permissions.")
+        return
+    }
     store.set(permissionsAtom, (prev) => {
-        prev.set(dappOrigin, permissions)
+        prev.set({ user: user?.address, app: dappOrigin }, permissions)
         return new Map(prev)
     })
 }
 
-function getPermissionArray(
-    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
-): WalletPermissionRequest[] {
+function getPermissionArray(permissions: string | PermissionRequest | PermissionRequest[]): PermissionRequest[] {
     // biome-ignore format: readability
     return typeof permissions === "string"
         ? [{ [permissions]: {} }]
@@ -84,8 +102,8 @@ function getPermissionArray(
  * @notice Caveats are not yet supported
  */
 export function grantPermissions(
-    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
-    dappPermissions: DappPermissionMap = getDappPermissions(),
+    permissions: string | PermissionRequest | PermissionRequest[],
+    dappPermissions: AppPermissions = getDappPermissions(),
 ): WalletPermission[] {
     const grantedPermissions = []
 
@@ -98,8 +116,6 @@ export function grantPermissions(
 
         const grantedPermission = {
             caveats: [],
-            id: createUUID(),
-            date: Date.now(),
             invoker: dappOrigin,
             parentCapability: name,
         }
@@ -121,8 +137,8 @@ export function grantPermissions(
  * Revokes the given permission(s) of the user.
  */
 export function revokePermissions(
-    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
-    dappPermissions: DappPermissionMap = getDappPermissions(),
+    permissions: string | PermissionRequest | PermissionRequest[],
+    dappPermissions: AppPermissions = getDappPermissions(),
 ): void {
     for (const permission of getPermissionArray(permissions)) {
         const [[name]] = Object.entries(permission)
@@ -143,8 +159,8 @@ export function revokePermissions(
  * @notice Caveats are not yet supported
  */
 export function hasPermissions(
-    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
-    dappPermissions: DappPermissionMap = getDappPermissions(),
+    permissions: string | PermissionRequest | PermissionRequest[],
+    dappPermissions: AppPermissions = getDappPermissions(),
 ): boolean {
     return getPermissionArray(permissions).every((param) => {
         const [[name, value]] = Object.entries(param)
@@ -160,7 +176,7 @@ export function hasPermissions(
 /**
  * Return all of the user's permissions.
  */
-export function getAllPermissions(dappPermissions: DappPermissionMap = getDappPermissions()): WalletPermission[] {
+export function getAllPermissions(dappPermissions: AppPermissions = getDappPermissions()): WalletPermission[] {
     return Array.from(dappPermissions.values())
 }
 
@@ -171,8 +187,8 @@ export function getAllPermissions(dappPermissions: DappPermissionMap = getDappPe
  * and returns an aray that contains the permission only if it is granted, along with its caveats.
  */
 export function getPermissions(
-    permissions: string | WalletPermissionRequest | WalletPermissionRequest[],
-    dappPermissions: DappPermissionMap = getDappPermissions(),
+    permissions: string | PermissionRequest | PermissionRequest[],
+    dappPermissions: AppPermissions = getDappPermissions(),
 ): WalletPermission[] {
     return getPermissionArray(permissions)
         .flatMap((param) => Object.keys(param))
@@ -183,11 +199,13 @@ export function getPermissions(
 // === CLEAR PERMISSIONS ===========================================================================
 
 /**
- * Clears all permissions for the current dapp.
+ * Clears all permissions for the current user + app pair.
  */
 export function clearPermissions(): void {
+    const user = getUser()
+    if (!user) return
     store.set(permissionsAtom, (prev) => {
-        prev.delete(dappOrigin)
+        prev.delete({ user: user?.address, app: dappOrigin })
         return new Map(prev)
     })
 }

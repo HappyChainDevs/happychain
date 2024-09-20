@@ -1,14 +1,14 @@
-export type URLString = `http://${string}` | `https://${string}`
+import type { HTTPString } from "@happychain/common"
 
-export function getIframeOrigin(): URLString {
-    return location.origin as URLString
+export function getIframeOrigin(): HTTPString {
+    return location.origin as HTTPString
 }
 
-export function getDappOrigin(): URLString {
+export function getDappOrigin(): HTTPString {
     const origin = document.referrer ? new URL(document.referrer).origin : null
     if (!origin) {
         console.warn("Unable to determine dApp Origin")
         return getIframeOrigin()
     }
-    return origin as URLString
+    return origin as HTTPString
 }
