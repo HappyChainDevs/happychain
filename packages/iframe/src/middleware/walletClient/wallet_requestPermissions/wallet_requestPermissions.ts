@@ -1,4 +1,4 @@
-import { getPermissions, grantPermissions } from "../../../services/permissions"
+import { grantPermissions } from "../../../services/permissions"
 
 import type { MiddlewareFunction } from "../../types"
 
@@ -10,5 +10,5 @@ export const walletRequestPermissionsMiddleware: MiddlewareFunction = async (req
         return await next()
     }
 
-    return grantPermissions(request.payload.params)
+    return grantPermissions(request.payload.params[0])
 }

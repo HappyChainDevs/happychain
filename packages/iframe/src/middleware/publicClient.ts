@@ -36,14 +36,14 @@ export const PublicClientApproveHandler: (data: ProviderMsgsFromApp[Msgs.Request
 
             const payload = await runMiddlewares(data, middlewares)
 
-            happyProviderBus.emit(Msgs.RequestResponse, {
+            void happyProviderBus.emit(Msgs.RequestResponse, {
                 key: data.key,
                 windowId: data.windowId,
                 error: null,
                 payload: payload,
             })
         } catch (e) {
-            happyProviderBus.emit(Msgs.RequestResponse, {
+            void happyProviderBus.emit(Msgs.RequestResponse, {
                 key: data.key,
                 windowId: data.windowId,
                 error: getEIP1193ErrorObjectFromUnknown(e),

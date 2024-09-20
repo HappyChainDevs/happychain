@@ -1,7 +1,7 @@
 import { AuthState } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderEventPayload } from "@happychain/sdk-shared"
 import { UnauthorizedProviderError } from "viem"
-import { getPermissions, revokePermissions } from "../../services/permissions"
+import { revokePermissions } from "../../services/permissions"
 import { getAuthState } from "../../state/authState"
 
 /**
@@ -19,7 +19,7 @@ export async function walletRevokePermissionsMiddleware(
         throw new UnauthorizedProviderError(new Error("Not allowed"))
     }
 
-    revokePermissions(request.payload.params)
+    revokePermissions(request.payload.params[0])
 
     return []
 }
