@@ -261,6 +261,10 @@ deploy-aa:
 	make deploy DEPLOY_SCRIPT=DeployAA.s.sol
 .PHONY: deploy-aa
 
+deploy-random:
+	make deploy DEPLOY_SCRIPT=DeployRandom.s.sol
+.PHONY: deploy-random
+
 deploy-mocks:
 	make deploy DEPLOY_SCRIPT=mocks/DeployMocks.s.sol
 .PHONY: deploy-mocks
