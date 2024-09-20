@@ -44,12 +44,13 @@ level).
 
 ## Development & Running Demos
 
-- `make {sdk,iframe,demos,ts,docs,contracts}.{build,clean,check,format}`
+- `make {sdk,iframe,account,demos,ts,docs,contracts}.{build,clean,check,format}`
   - This runs the specified command (after the dot) in a subset of packages.
   - `sdk`: all packages needed to build the sdk
   - `iframe`: all packages needed to build the iframe
+  - `account`: sdk + iframe
   - `demos`: all demo packages (no dependencies)
-  - `ts`: all typescript packages
+  - `ts`: all typescript packages (including docs)
 
 - make {sdk,iframe,account,demo-js,demo-react,demo-vue,docs}.dev
   - This builds, rebuilds on changes, and runs development servers (where applicable) for
