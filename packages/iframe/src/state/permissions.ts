@@ -1,5 +1,4 @@
-import type { HTTPString } from "@happychain/common"
-import type { UUID } from "@happychain/sdk-shared"
+import type { HTTPString, UUID } from "@happychain/common"
 import { type Atom, atom } from "jotai"
 
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"

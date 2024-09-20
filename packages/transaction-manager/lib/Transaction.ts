@@ -1,33 +1,47 @@
+import { type UUID, createUUID } from "@happychain/common"
+import { Entity, PrimaryKey, Property } from "@mikro-orm/core"
 import type { Address, ContractFunctionArgs } from "viem"
 
+@Entity()
 export class Transaction {
+    @PrimaryKey()
+    readonly intentId: UUID
+
+    @Property()
     readonly chainId: number
+
+    @Property()
     readonly address: Address
+
+    @Property()
     readonly functionName: string
+
+    @Property()
     readonly args: ContractFunctionArgs | undefined
-    readonly alias: string
 
-    constructor(
-        _chainId: number,
-        _address: Address,
-        _functionName: string,
-        _alias: string,
-        _args: ContractFunctionArgs | undefined,
-    ) {
-        this.chainId = _chainId
-        this.address = _address
-        this.functionName = _functionName
-        this.alias = _alias
-        this.args = _args
-    }
+    @Property()
+    readonly contractName: string
 
-    static createWithAlias(
-        chainId: number,
-        address: Address,
-        functionName: string,
-        alias: string,
-        args?: ContractFunctionArgs,
-    ): Transaction {
-        return new Transaction(chainId, address, functionName, alias, args)
+    constructor({
+        intentId,
+        chainId,
+        address,
+        functionName,
+        alias,
+        args,
+    }: {
+        intentId?: UUID | undefined
+        chainId: number
+        address: Address
+        functionName: string
+        alias: string
+        args: ContractFunctionArgs | undefined
+    }) {
+        this.intentId = intentId ?? createUUID()
+        this.chainId = chainId
+        this.address = address
+        this.functionName = functionName
+        this.contractName = alias
+        this.args = args
     }
 }

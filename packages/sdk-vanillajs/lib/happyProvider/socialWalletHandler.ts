@@ -1,3 +1,4 @@
+import { type UUID, createUUID } from "@happychain/common"
 import {
     AuthState,
     type EIP1193RequestMethods,
@@ -8,8 +9,6 @@ import {
     type HappyUser,
     Msgs,
     type PopupMsgsFromIframe,
-    type UUID,
-    createUUID,
 } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
 import SafeEventEmitter from "@metamask/safe-event-emitter"

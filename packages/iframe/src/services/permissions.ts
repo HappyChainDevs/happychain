@@ -1,4 +1,5 @@
-import { type HappyUser, createUUID } from "@happychain/sdk-shared"
+import { createUUID } from "@happychain/common"
+import type { HappyUser } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/index"
 import {
     type AppPermissions,

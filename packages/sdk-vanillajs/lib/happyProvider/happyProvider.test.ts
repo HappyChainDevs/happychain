@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test"
+import { createUUID } from "@happychain/common"
 import {
     AuthState,
     EventBus,
@@ -11,7 +12,6 @@ import {
     type PopupMsgsFromIframe,
     type ProviderMsgsFromApp,
     config,
-    createUUID,
 } from "@happychain/sdk-shared"
 import type { RpcBlock } from "viem"
 

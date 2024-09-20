@@ -1,4 +1,4 @@
-import type { UUID } from "../utils/uuid.ts"
+import type { UUID } from "@happychain/common"
 
 type MessageChannelEventPayload<T = unknown> = {
     // request event unique key

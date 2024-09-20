@@ -1,7 +1,7 @@
 import { type Mock, beforeEach, describe, expect, it, mock } from "bun:test"
 import { setTimeout } from "node:timers/promises"
 
-import { createUUID } from "../utils/uuid"
+import { createUUID } from "@happychain/common"
 import { EventBus, EventBusMode, type EventBusOptions } from "./eventBus"
 
 type TestBusSchema = {

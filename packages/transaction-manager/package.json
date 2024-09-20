@@ -6,16 +6,24 @@
     "main": "dist/index.js",
     "module": "dist/index.js",
     "types": "dist/index.d.ts",
+    "mikro-orm": {
+        "configPaths": ["./dist/mikro-orm.config.js"]
+    },
     "devDependencies": {
-        "@happychain/configs": "workspace:^",
-        "@happychain/common": "workspace:^",
+        "@mikro-orm/cli": "^6.3.10",
+        "ts-node": "^10.9.2",
         "typescript": "^5.5.4"
     },
     "peerDependencies": {
         "viem": "^2.20.1"
     },
     "dependencies": {
+        "@happychain/common": "workspace:^",
+        "@happychain/configs": "workspace:^",
         "@happychain/contracts": "workspace:^",
+        "@mikro-orm/better-sqlite": "^6.3.10",
+        "@mikro-orm/core": "^6.3.10",
+        "@mikro-orm/migrations": "^6.3.10",
         "eventemitter3": "^5.0.1"
     }
 }

@@ -13,6 +13,7 @@ import { Topics, eventBus } from "../EventBus.js"
 import { GasPriceOracle } from "../GasPriceOracle.js"
 import { NonceManager } from "../NonceManager.js"
 import type { Transaction } from "../Transaction.js"
+import { dbDriver } from "../db.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "../eip1559.js"
 import type { ViemWalletClient } from "./viemClients.js"
 
@@ -109,17 +110,19 @@ export class TransactionManager {
         await this.nonceManager.start()
     }
 
-    private onNewBlock() {
+    private async onNewBlock() {
         const { maxFeePerGas, maxPriorityFeePerGas } = this.gasPriceOracle.suggestGasForNextBlock()
         const transactionsBatch = this.collectors.flatMap((c) => c())
+
+        const entityManager = dbDriver.em.fork()
 
         for (const t of transactionsBatch) {
             const nonce = this.nonceManager.requestNonce()
 
-            const abi = this.abiManager.get(t.alias)
+            const abi = this.abiManager.get(t.contractName)
 
             if (!abi) {
-                throw new Error(`ABI not found for alias ${t.alias}`)
+                throw new Error(`ABI not found for contract ${t.contractName}`)
             }
 
             this.viemWallet.writeContract({
@@ -131,6 +134,9 @@ export class TransactionManager {
                 maxFeePerGas: maxFeePerGas,
                 maxPriorityFeePerGas: maxPriorityFeePerGas,
             })
+
+            entityManager.persist(t)
         }
+        await entityManager.flush()
     }
 }

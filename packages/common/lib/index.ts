@@ -1,13 +1,15 @@
-export { createStorage } from "./services/storage"
+export { createStorage } from "./services/storage.js"
 
-export { useIsHydrated } from "./hooks/isHydrated"
+export { useIsHydrated } from "./hooks/isHydrated.js"
 
-export { atomWithCompare, atomWithCompareAndStorage } from "./utils/jotai"
+export { atomWithCompare, atomWithCompareAndStorage } from "./utils/jotai.js"
 
-export type { HTTPString, AssertAssignableTo, AssertCompatible, TupleUnion } from "./utils/types"
+export type { HTTPString, AssertAssignableTo, AssertCompatible, TupleUnion } from "./utils/types.js"
 
-export { bigIntMax } from "./utils/bigint"
+export { bigIntMax } from "./utils/bigint.js"
 
-export { happyChainTestnetChain } from "./viem/chains"
+export { validateNumericInput } from "./utils/regexChecks.js"
 
-export { validateNumericInput } from "./utils/regexChecks"
+export { happyChainTestnetChain } from "./viem/chains.js"
+
+export { createUUID, type UUID } from "./utils/uuid.js"

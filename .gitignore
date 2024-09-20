@@ -59,3 +59,6 @@ packages/bundler/alto
 
 # Local deployments
 packages/contracts/deployments/LOCAL/
+
+# SQLite files
+*.sqlite
