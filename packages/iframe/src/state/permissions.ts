@@ -23,10 +23,7 @@ import { userAtom } from "./user.ts"
 // References:
 // https://eips.ethereum.org/EIPS/eip-2255
 
-export type UserAndApp = {
-    user: Address
-    app: HTTPString
-}
+export type UserAndApp = `${Address}|${HTTPString}`
 
 /**
  * Maps an user + app pair to a {@link AppPermissions}, which is the set of permissions
