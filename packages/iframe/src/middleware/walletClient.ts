@@ -65,9 +65,9 @@ export const WalletClientRejectHandler: RejectCallback = async (data) => {
     void happyProviderBus.emit(Msgs.RequestResponse, data)
 
     if (data.error) {
-        happyProviderBus.emit(Msgs.RequestResponse, data)
+        void happyProviderBus.emit(Msgs.RequestResponse, data)
     } else {
-        happyProviderBus.emit(Msgs.RequestResponse, {
+        void happyProviderBus.emit(Msgs.RequestResponse, {
             key: data.key,
             windowId: data.windowId,
             error: getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest),

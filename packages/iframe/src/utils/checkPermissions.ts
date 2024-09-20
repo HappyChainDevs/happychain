@@ -30,7 +30,7 @@ export function checkIfRequestRequiresConfirmation(
         // users don't need to confirm if they are requesting to add permissions that have already been authorized
         // just current permissions are returned as a result instead
         case "wallet_requestPermissions":
-            return !hasPermissions(payload.params)
+            return !hasPermissions(payload.params[0])
         case "eth_requestAccounts":
             return !hasPermissions("eth_accounts")
     }

@@ -94,11 +94,11 @@ function useRequestEIP6963Providers() {
                     // setting the permissions that the user has authorized, since we either will be
                     // more permissive (e.g. allow methods only on the basis of eth_accounts and
                     // user approval) or do not support the capability the permission relates to.
-                    hasResponse && grantPermissions(request.params)
+                    hasResponse && grantPermissions(request.params[0])
                     return
 
                 case "wallet_revokePermissions":
-                    request.params && revokePermissions(request.params)
+                    request.params && revokePermissions(request.params[0])
                     return
             }
         })

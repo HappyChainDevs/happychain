@@ -2,8 +2,8 @@ import { type HappyUser, createUUID } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/index"
 import {
     type AppPermissions,
-    type PermissionRequest,
     type PermissionsMap,
+    type PermissionsSpec,
     type WalletPermission,
     permissionsAtom,
 } from "../state/permissions.ts"
@@ -72,13 +72,8 @@ function setDappPermissions(permissions: AppPermissions): void {
     })
 }
 
-function getPermissionArray(permissions: string | PermissionRequest | PermissionRequest[]): PermissionRequest[] {
-    // biome-ignore format: readability
-    return typeof permissions === "string"
-        ? [{ [permissions]: {} }]
-        : Array.isArray(permissions)
-            ? permissions
-            : [permissions]
+function getPermissionArray(permissions: PermissionsSpec): [string, unknown][] {
+    return typeof permissions === "string" ? [[permissions, {}]] : Object.entries(permissions)
 }
 
 // === GRANT PERMISSIONS ===========================================================================
@@ -89,14 +84,12 @@ function getPermissionArray(permissions: string | PermissionRequest | Permission
  * @notice Caveats are not yet supported
  */
 export function grantPermissions(
-    permissions: string | PermissionRequest | PermissionRequest[],
+    permissions: PermissionsSpec,
     dappPermissions: AppPermissions = getDappPermissions(),
 ): WalletPermission[] {
     const grantedPermissions = []
 
-    for (const permission of getPermissionArray(permissions)) {
-        const [[name, value]] = Object.entries(permission)
-
+    for (const [name, value] of getPermissionArray(permissions)) {
         if (value && typeof value === "object" && Object.keys(value).length) {
             throw new Error("WalletPermissionCaveats Not Yet Supported")
         }
@@ -126,11 +119,10 @@ export function grantPermissions(
  * Revokes the given permission(s) of the user.
  */
 export function revokePermissions(
-    permissions: string | PermissionRequest | PermissionRequest[],
+    permissions: PermissionsSpec,
     dappPermissions: AppPermissions = getDappPermissions(),
 ): void {
-    for (const permission of getPermissionArray(permissions)) {
-        const [[name]] = Object.entries(permission)
+    for (const [name] of getPermissionArray(permissions)) {
         dappPermissions.delete(name)
         if (name === "eth_accounts") {
             emitUserUpdate(undefined)
@@ -148,16 +140,13 @@ export function revokePermissions(
  * @notice Caveats are not yet supported
  */
 export function hasPermissions(
-    permissions: string | PermissionRequest | PermissionRequest[],
+    permissions: PermissionsSpec,
     dappPermissions: AppPermissions = getDappPermissions(),
 ): boolean {
-    return getPermissionArray(permissions).every((param) => {
-        const [[name, value]] = Object.entries(param)
-
+    return getPermissionArray(permissions).every(([name, value]) => {
         if (value && typeof value === "object" && Object.keys(value).length) {
             throw new Error("WalletPermissionCaveats Not Yet Supported")
         }
-
         return dappPermissions.has(name)
     })
 }
@@ -176,12 +165,11 @@ export function getAllPermissions(dappPermissions: AppPermissions = getDappPermi
  * and returns an aray that contains the permission only if it is granted, along with its caveats.
  */
 export function getPermissions(
-    permissions: string | PermissionRequest | PermissionRequest[],
+    permissions: PermissionsSpec,
     dappPermissions: AppPermissions = getDappPermissions(),
 ): WalletPermission[] {
     return getPermissionArray(permissions)
-        .flatMap((param) => Object.keys(param))
-        .map((name) => dappPermissions.get(name))
+        .map(([name]) => dappPermissions.get(name))
         .filter((permission) => !!permission)
 }
 

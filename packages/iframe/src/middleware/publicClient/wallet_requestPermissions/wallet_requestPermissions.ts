@@ -19,5 +19,5 @@ export async function walletRequestPermissionsMiddleware(
         throw new UnauthorizedProviderError(new Error("Not allowed"))
     }
 
-    return hasPermissions(request.payload.params) ? getPermissions(request.payload.params) : []
+    return hasPermissions(request.payload.params[0]) ? getPermissions(request.payload.params[0]) : []
 }

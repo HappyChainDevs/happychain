@@ -47,9 +47,8 @@ export type WalletPermission = {
     // This is the EIP-1193 request that this permission is mapped to.
     parentCapability: "eth_accounts" | string // TODO only string or make specific
     caveats: WalletPermissionCaveat[]
-
-    // Not in the EIP, but Viem wants these.
     date: number
+    // Not in the EIP, but Viem wants this.
     id: UUID
 }
 
@@ -63,19 +62,17 @@ type WalletPermissionCaveat = {
 }
 
 /**
- * A request for permission on a specific EIP-1193 request.
- * Note that despite the type definition, only a single permission can be requested.
- * The request can have multiple associated caveats (we ignore these).
+ * A request for permissions on a specific EIP-1193 request.
  */
 export type PermissionRequest = {
     [requestName: string]: { [caveatName: string]: unknown }
 }
 
 /**
- * A permissions specifier, which can be either a single EIP-1193 request name, a {@link
- * PermissionRequest}, or an array of the latter.
+ * A permissions specifier, which can be either a single EIP-1193 request name, or a {@link
+ * PermissionRequest}.
  */
-export type PermissionsSpec = string | PermissionRequest | PermissionRequest[]
+export type PermissionsSpec = string | PermissionRequest
 
 export const permissionsAtom = atomWithStorage<PermissionsMap>(
     StorageKey.UserPermissions,
