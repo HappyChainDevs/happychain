@@ -31,11 +31,14 @@ SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
 # packages needed to build the iframe
 IFRAME_PKGS := $(SHARED_PKGS),$(IFRAME_ONLY_PKGS)
 
+# packages needed to build the sdk and iframe
+ACCOUNT_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS),$(IFRAME_ONLY_PKGS)
+
 # demo packages (not including dependencies)
 DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue
 
-# all typescript packages
-TS_PKGS := $(SDK_ONLY_PKGS),$(IFRAME_ONLY_PKGS),$(DEMOS_PKGS),docs
+# all typescript packages, including docs
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),docs
 
 # ==================================================================================================
 # CMDS
@@ -99,6 +102,11 @@ define account-dev-commands
 	"$(iframe-dev-command)"
 endef
 
+define demo-dev-commands
+	$(account-dev-commands) \
+	"cd packages/sdk-frontend-components && make build.watch"
+endef
+
 sdk.dev:
 	$(MULTIRUN) --names "js,react" $(sdk-dev-commands)
 .PHONY: sdk-dev
@@ -112,17 +120,17 @@ account.dev:
 .PHONY: account.dev
 
 demo-js.dev:
-	$(MULTIRUN) --names "js,react,iframe,demo-js" $(account-dev-commands) \
+	$(MULTIRUN) --names "js,react,iframe,ui,demo-js" $(demo-dev-commands) \
 		"cd packages/demo-vanillajs && make dev"
 .PHONY: demo-vanillajs.dev
 
 demo-react.dev:
-	$(MULTIRUN) --names "js,react,iframe,demo-react" $(account-dev-commands) \
+	$(MULTIRUN) --names "js,react,iframe,ui,demo-react" $(demo-dev-commands) \
 		"cd packages/demo-react && make dev"
 .PHONY: demo-react.dev
 
 demo-vue.dev:
-	$(MULTIRUN) --names "js,react,iframe,demo-vue" $(account-dev-commands) \
+	$(MULTIRUN) --names "js,react,iframe,ui,demo-vue" $(demo-dev-commands) \
 		"cd packages/demo-wagmi-vue && make dev"
 .PHONY: demo-wagmi-vue.dev
 
@@ -162,6 +170,10 @@ iframe.check:
 	$(call forall , $(IFRAME_PKGS) , check)
 .PHONY: iframe.check
 
+account.check:
+	$(call forall , $(ACCOUNT_PKGS) , check)
+.PHONY: account.check
+
 demos.check:
 	$(call forall , $(DEMOS_PKGS) , check)
 .PHONY: apps.check
@@ -189,6 +201,10 @@ iframe.format:
 	$(call forall , $(IFRAME_PKGS) , format)
 .PHONY: iframe.format
 
+account.format:
+	$(call forall , $(ACCOUNT_PKGS) , format)
+.PHONY: account.format
+
 demos.format:
 	$(call forall , $(DEMOS_PKGS) , format)
 .PHONY: apps.format
@@ -215,6 +231,11 @@ sdk.build:
 iframe.build:
 	$(call forall , $(IFRAME_PKGS) , build)
 .PHONY: iframe.build
+
+account.build:
+	make sdk.build
+	make iframe.build
+.PHONY: account.build
 
 demos.build:
 	$(call forall , $(DEMOS_PKGS) , build)
@@ -251,6 +272,10 @@ sdk.clean:
 iframe.clean:
 	$(call forall , $(IFRAME_PKGS) , clean)
 .PHONY: iframe.clean
+
+account.clean:
+	$(call forall , $(ACCOUNT_PKGS) , clean)
+.PHONY: account.clean
 
 demos.clean:
 	$(call forall , $(DEMOS_PKGS) , clean)
