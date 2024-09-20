@@ -1,55 +1,63 @@
-import { atomWithStorage } from "jotai/utils"
+import type { HTTPString } from "@happychain/common"
 
-import { accessorsFromAtom } from "@happychain/common/lib/utils/jotai"
+import { atomWithStorage } from "jotai/utils"
+import type { Address } from "viem"
 import { StorageKey } from "../services/storage"
 import { createMapStorage } from "../utils/createMapJSONStorage"
 
-/**
- * Wallet Permission System Handling
- * https://eips.ethereum.org/EIPS/eip-2255
- * https://github.com/MetaMask/metamask-improvement-proposals/blob/main/MIPs/mip-2.md
- */
+// In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
+// These permissions are scoped per app and per account.
+//
+// The system is not widely adopted and mostly wallet only handles the `eth_accounts` permission,
+// which defines whether an app can get the user's account(s) and subsequently make other requests
+// (some of which will require confirmations, like `eth_sendTransaction`, some of which won't like
+// `eth_call`).
+//
+// Like other wallets, we only handle the `eth_accounts` permission, but we support processing
+// all incoming permission requests.
+//
+// References:
+// https://eips.ethereum.org/EIPS/eip-2255
+
+export type UserAndApp = {
+    user: Address
+    app: HTTPString
+}
 
 /**
- * Map<dappOrigin, Map<PermissionName, WalletPermission>>
- * permissionName is 'eth_accounts' | string
- * permissionDetails is a WalletPermission
- *
- * This is scoped to the current user, and is cleared when
- * the user logs out
- *
- * In a multi-account scenario, these permissions will need to be scoped
- * per _address_
+ * Maps an user + app pair to a {@link AppPermissions}, which is the set of permissions
+ * for that user on that app.
  */
-export type DappPermissionMap = Map<string, WalletPermission>
-export type GlobalPermissionMap = Map<string, DappPermissionMap>
+export type PermissionsMap = Map<UserAndApp, AppPermissions>
 
+/**
+ * Maps EIP-2255 EIP-1193 requests (like `eth_accounts`) to a permission object.
+ */
+export type AppPermissions = Map<string, WalletPermission>
+
+/**
+ * Permission object for a specific permission.
+ */
+export type WalletPermission = {
+    // The app to which the permission is granted.
+    invoker: HTTPString
+    // This is the EIP-1193 request that this permission is mapped to.
+    parentCapability: "eth_accounts" | string // TODO only string or make specific
+    caveats: WalletPermissionCaveat[]
+}
+
+/**
+ * A caveat is a specific specific restrictions applied to the permitted request.
+ * We do not support any caveats at the moment.
+ */
 type WalletPermissionCaveat = {
     type: string
     value: unknown
 }
 
-export type WalletPermissionRequest = {
-    // Note: only a single method name is allowed.
-    [methodName: string]: WalletPermissionCaveatRequest
-}
-
-type WalletPermissionCaveatRequest = {
-    [caveatName: string]: unknown
-}
-
-export type WalletPermission = {
-    invoker: `http://${string}` | `https://${string}`
-    date: number
-    id: ReturnType<typeof crypto.randomUUID>
-    parentCapability: "eth_accounts" | string
-    caveats: WalletPermissionCaveat[]
-}
-
-export const permissionsAtom = atomWithStorage<GlobalPermissionMap>(
+export const permissionsAtom = atomWithStorage<PermissionsMap>(
     StorageKey.UserPermissions,
     new Map(),
     createMapStorage(),
     { getOnInit: true },
 )
-export const { getValue: getPermissions, setValue: setPermissions } = accessorsFromAtom(permissionsAtom)

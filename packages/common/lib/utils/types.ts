@@ -1,3 +1,9 @@
+// === COMMON TYPES ================================================================================
+
+export type HTTPString = `http://${string}` | `https://${string}`
+
+// === TYPE ASSERTIONS =============================================================================
+
 /**
  * Asserts that `_B` is assignable to `_B`.
  *
@@ -19,6 +25,8 @@ export type AssertAssignableTo<_A extends _B, _B> = never
  * ```
  */
 export type AssertCompatible<A extends B, B extends C, C = A> = never
+
+// === TYPE FUNCTIONS ==============================================================================
 
 /**
  * Returns the array type that matches all possible permutations of the input disjunction type `T`.
