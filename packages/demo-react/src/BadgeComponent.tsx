@@ -1,4 +1,4 @@
-import { type BadgeProps, defineBadgeComponent } from "@happychain/ui/define"
+import { type BadgeProps, defineBadgeComponent } from "@happychain/ui"
 
 defineBadgeComponent("connect-button")
 
