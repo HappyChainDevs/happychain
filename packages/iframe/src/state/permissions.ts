@@ -1,9 +1,12 @@
 import type { HTTPString } from "@happychain/common"
+import { atom } from "jotai"
 
-import { atomWithStorage } from "jotai/utils"
+import { atomFamily, atomWithStorage } from "jotai/utils"
 import type { Address } from "viem"
+import { getDappPermissions, hasPermissions } from "../services/permissions"
 import { StorageKey } from "../services/storage"
 import { createMapStorage } from "../utils/createMapJSONStorage"
+import { userAtom } from "./user.ts"
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
 // These permissions are scoped per app and per account.
@@ -55,9 +58,40 @@ type WalletPermissionCaveat = {
     value: unknown
 }
 
+/**
+ * A request for permission on a specific EIP-1193 request.
+ * Note that despite the type definition, only a single permission can be requested.
+ * The request can have multiple associated caveats (we ignore these).
+ */
+export type PermissionRequest = {
+    [requestName: string]: { [caveatName: string]: unknown }
+}
+
+/**
+ * A permissions specifier, which can be either a single EIP-1193 request name, a {@link
+ * PermissionRequest}, or an array of the latter.
+ */
+export type PermissionsSpec = string | PermissionRequest | PermissionRequest[]
+
 export const permissionsAtom = atomWithStorage<PermissionsMap>(
     StorageKey.UserPermissions,
     new Map(),
     createMapStorage(),
     { getOnInit: true },
 )
+
+/**
+ * A function that returns a new atom that subscribes to a check on the specified permissions.
+ *
+ * The atom is cached, but not automatically garbage-collected. If this is called with a changing
+ * set of permissions, it is necessary to call `atomForPermissionsCheck.remove(oldPermissions)`
+ * when changing the permissions!
+ */
+export const atomForPermissionsCheck = atomFamily((permissions: PermissionsSpec) => {
+    return atom((get) => {
+        const user = get(userAtom)
+        if (!user) return false
+        const permissionsMap = getDappPermissions(user, get(permissionsAtom))
+        return hasPermissions(permissions, permissionsMap)
+    })
+})
