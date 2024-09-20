@@ -1,4 +1,5 @@
 import { validateNumericInput } from "@happychain/common"
+import * as _ from "lodash"
 import type React from "react"
 import { useCallback, useState } from "react"
 import { formatEther, parseEther } from "viem"
@@ -12,11 +13,10 @@ interface SendBalanceTrackerProps {
 const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTrackerProps) => {
     const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
 
-    const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleTokenBalanceChange = _.debounce((event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
 
         // If the input starts with '0' and the second character is a number, add a period
-        // user input: "01", formatted to "0.1"
         if (inputValue.startsWith("0") && inputValue.length > 1 && !inputValue.includes(".")) {
             inputValue = `0.${inputValue.substring(1)}`
         }
@@ -26,7 +26,7 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTra
             // Check if the input value exceeds the balance
             setIsExceedingBalance(inputValue && balance ? parseEther(inputValue) > balance : false)
         }
-    }
+    }, 500)
 
     const handleMaxButtonClick = useCallback(() => {
         if (balance) {
