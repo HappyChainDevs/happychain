@@ -6,10 +6,10 @@ import {
     type PermissionsMap,
     type WalletPermission,
     permissionsAtom,
-} from "../../state/permissions.ts"
-import { getUser } from "../../state/user"
-import { emitUserUpdate } from "../../utils/emitUserUpdate.ts"
-import { getDappOrigin, getIframeOrigin } from "../../utils/getDappOrigin"
+} from "../state/permissions.ts"
+import { getUser } from "../state/user"
+import { emitUserUpdate } from "../utils/emitUserUpdate.ts"
+import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin"
 
 // === NOTICE ======================================================================================
 
