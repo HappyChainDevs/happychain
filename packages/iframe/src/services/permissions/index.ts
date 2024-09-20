@@ -1,4 +1,4 @@
-import type { HappyUser } from "@happychain/sdk-shared"
+import { type HappyUser, createUUID } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/index"
 import {
     type AppPermissions,
@@ -46,6 +46,8 @@ export function getDappPermissions(
                 invoker: iframeOrigin,
                 parentCapability: "eth_accounts",
                 caveats: [],
+                date: Date.now(),
+                id: createUUID(),
             }
             basePermissions = new Map([["eth_accounts", eth_accounts]])
         } else {
@@ -104,6 +106,8 @@ export function grantPermissions(
             caveats: [],
             invoker: dappOrigin,
             parentCapability: name,
+            date: Date.now(),
+            id: createUUID(),
         }
         grantedPermissions.push(grantedPermission)
         dappPermissions.set(name, grantedPermission)
