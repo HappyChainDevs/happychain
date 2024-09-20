@@ -1,2 +1,2 @@
 export { Badge } from "./badge"
-export { defineBadgeComponent } from "./define"
+export { type BadgeProps, defineBadgeComponent } from "./define"
