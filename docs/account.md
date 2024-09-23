@@ -115,7 +115,7 @@ quorum on these shares to reconstruct the key or sign a transaction.
 
 On creation, the Happy Account uses a 2-out-of-2 share split between a social share and a local
 share. The social share is held by the HappyChain team, and it only uses it if you successfully
-authenticate with you social account. The local share is held on your browser's local storage.
+authenticate with your social account. The local share is held on your browser's local storage.
 
 > We will switch to storing the local share into device's secure enclave for devices that have them
 > as soon as this becomes possible from the browser.
