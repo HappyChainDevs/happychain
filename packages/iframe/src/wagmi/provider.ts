@@ -60,7 +60,6 @@ export class IframeProvider {
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
         return new Promise(async (resolve, reject) => {
-            
             const requiresUserApproval = checkIfRequestRequiresConfirmation(args)
 
             if (!requiresUserApproval) {
