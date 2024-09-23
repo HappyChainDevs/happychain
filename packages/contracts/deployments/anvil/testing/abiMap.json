@@ -1,0 +1,10 @@
+{
+  "ECDSAValidator": "ECDSAValidator",
+  "EntryPointSimulations": "EntryPointSimulations",
+  "EntryPointV7": "EntryPoint",
+  "FactoryStaker": "FactoryStaker",
+  "HappyPaymaster": "HappyPaymaster",
+  "Kernel": "Kernel",
+  "KernelFactory": "KernelFactory",
+  "SessionKeyValidator": "SessionKeyValidator"
+}

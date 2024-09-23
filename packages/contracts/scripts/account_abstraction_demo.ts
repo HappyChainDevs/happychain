@@ -1,5 +1,5 @@
-import { type Abi, type Address, type Hex, formatEther } from "viem"
-import { http, createPublicClient, createWalletClient, numberToHex, parseEther } from "viem"
+import type { Address, Hex } from "viem"
+import { http, createPublicClient, createWalletClient, formatEther, numberToHex, parseEther } from "viem"
 import type { GetPaymasterDataParameters, GetPaymasterStubDataParameters, SmartAccount } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
@@ -7,23 +7,11 @@ import { localhost } from "viem/chains"
 
 import { type SmartAccountClient, createSmartAccountClient } from "permissionless"
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
+import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
 import { createPimlicoClient } from "permissionless/clients/pimlico"
 
-import { default as abiMapJson } from "../out/abiMap.json" assert { type: "json" }
-import { default as abisJson } from "../out/abis.json" assert { type: "json" }
-import { default as deploymentsJson } from "../out/deployment.json" assert { type: "json" }
-
-type ContractName = keyof typeof abisJson
-type ContractAlias = keyof typeof deploymentsJson
-type Abis = { [key in ContractAlias]: Abi }
-type Deployments = { [key in ContractAlias]: Address }
-
-const deployments = deploymentsJson as Deployments
-const abis = {} as Abis
-
-for (const [alias, contractName] of Object.entries(abiMapJson)) {
-    abis[alias as ContractAlias] = abisJson[contractName as ContractName] as Abi
-}
+import { abis, deployment } from "../deployments/anvil/testing/abis"
+import { getCustomNonce } from "./getNonce"
 
 const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
 const bundlerRpc = process.env.BUNDLER_LOCAL
@@ -68,17 +56,17 @@ async function getKernelAccount(): Promise<SmartAccount> {
         },
         owners: [account],
         version: "0.3.1",
-        ecdsaValidatorAddress: deployments.ECDSAValidator,
-        accountLogicAddress: deployments.Kernel,
-        factoryAddress: deployments.KernelFactory,
-        metaFactoryAddress: deployments.FactoryStaker,
+        ecdsaValidatorAddress: deployment.ECDSAValidator,
+        accountLogicAddress: deployment.Kernel,
+        factoryAddress: deployment.KernelFactory,
+        metaFactoryAddress: deployment.FactoryStaker,
     })
 }
 
-function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
-    const paymasterAddress = deployments.HappyPaymaster
+function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7579Actions<SmartAccount> {
+    const paymasterAddress = deployment.HappyPaymaster
 
-    return createSmartAccountClient({
+    const kernelClientBase = createSmartAccountClient({
         account: kernelAccount,
         chain: localhost,
         bundlerTransport: http(bundlerRpc, {
@@ -120,115 +108,265 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient {
             },
         },
     })
+
+    const extendedClient = kernelClientBase.extend(erc7579Actions())
+    return extendedClient as typeof kernelClientBase & typeof extendedClient
 }
 
 async function fund_smart_account(accountAddress: Address): Promise<string> {
-    try {
-        const txHash = await walletClient.sendTransaction({
-            account: account,
-            to: accountAddress,
-            chain: localhost,
-            value: parseEther(AMOUNT),
-        })
+    const txHash = await walletClient.sendTransaction({
+        account: account,
+        to: accountAddress,
+        chain: localhost,
+        value: parseEther("0.1"),
+    })
 
-        const receipt = await publicClient.waitForTransactionReceipt({
-            hash: txHash,
-            confirmations: 1,
-        })
-        return receipt.status
-    } catch (error) {
-        console.error(error)
-        process.exit(1)
-    }
+    const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+        confirmations: 1,
+    })
+
+    return receipt.status
 }
 
 async function deposit_paymaster(): Promise<string> {
-    try {
-        const txHash = await walletClient.writeContract({
-            address: entryPoint07Address,
-            abi: abis.EntryPointV7,
-            functionName: "depositTo",
-            args: [deployments.HappyPaymaster],
-            value: parseEther("10"),
-        })
+    const txHash = await walletClient.writeContract({
+        address: entryPoint07Address,
+        abi: abis.EntryPointV7,
+        functionName: "depositTo",
+        args: [deployment.HappyPaymaster],
+        value: parseEther("10"),
+    })
 
-        const receipt = await publicClient.waitForTransactionReceipt({
-            hash: txHash,
-            confirmations: 1,
-        })
+    const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+        confirmations: 1,
+    })
 
-        return receipt.status
-    } catch (error) {
-        console.error(error)
-        process.exit(1)
+    return receipt.status
+}
+
+function getInitData(hookAddress: Address, validatorData: Hex, hookData: Hex, selectorData: Hex): Hex {
+    /**
+     * Reference: https://github.com/zerodevapp/kernel/blob/release/v3.1/src/Kernel.sol#L361-L366
+     * The layout is :-
+     * - 0x00 (00): hook address
+     * - 0x14 (20): validatorData offset from 0x34
+     * - 0x34 (52): hookData offset from 0x34
+     * - 0x54 (84): selectorData offset from 0x34
+     * - [0x14 + validatordataOffset] : validatorDataLength
+     * - [0x34 + validatorDataOffset] : validatorData
+     * - [0x14 + hookDataOffset]      : hookDataLength
+     * - [0x34 + hookDataOffset]      : hookData
+     * - [0x14 + selectorDataOffset]  : selectorDataLength
+     * - [0x34 + selectorDataOffset]  : selectorData
+     */
+
+    const validatorDataLen = validatorData.slice(2).length / 2
+    const hookDataLen = hookData.slice(2).length / 2
+    const selectorDataLen = selectorData.slice(2).length / 2
+
+    const hexValidatorDataLength = toHexDigits(BigInt(validatorDataLen), 32)
+    const hexHookDataLength = toHexDigits(BigInt(hookDataLen), 32)
+    const hexSelectorDataLength = toHexDigits(BigInt(selectorDataLen), 32)
+
+    // validatorDataOffset = HookDataOffset.length + SelectorDataOffset.length + ValidatorDataLength.length
+    const validatorDataOffset = 32 + 32 + 32
+    const hexValidatorDataOffset = toHexDigits(BigInt(validatorDataOffset), 32)
+
+    // hookDataOffset = validatorDataOffset + validatorData.length + hookDataLength.length
+    const hookDataOffset = validatorDataOffset + validatorDataLen
+    const hexHookDataOffset = toHexDigits(BigInt(hookDataOffset), 32)
+
+    // selectorDataOffset = hookDataOffset + hookData.length + selectorDataLength.length
+    const selectorDataOffset = hookDataOffset + 32 + hookDataLen + 32
+    const hexSelectorDataOffset = toHexDigits(BigInt(selectorDataOffset), 32)
+
+    // biome-ignore format: readability
+    return (
+        hookAddress + // starts with "0x"
+        hexValidatorDataOffset +
+        hexHookDataOffset +
+        hexSelectorDataOffset +
+        hexValidatorDataLength +
+        validatorData.slice(2) +
+        hexHookDataLength +
+        hookData.slice(2) +
+        hexSelectorDataLength +
+        selectorData.slice(2)
+    ) as Hex
+}
+
+const NO_HOOKS_ADDRESS = "0x0000000000000000000000000000000000000001"
+const SELECTOR = "0xe9ae5c53"
+const AMOUNT = "0.01"
+
+async function installCustomModule(
+    kernelAccount: SmartAccount,
+    kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
+) {
+    const opHash = await kernelClient.installModule({
+        type: "validator",
+        address: deployment.SessionKeyValidator,
+
+        context: getInitData(NO_HOOKS_ADDRESS, "0x", "0x", SELECTOR),
+        nonce: await kernelAccount.getNonce(),
+    })
+
+    const rec = await kernelClient.waitForUserOperationReceipt({
+        hash: opHash,
+    })
+
+    if (!rec.success) {
+        throw new Error("Module Installation failed")
+    }
+
+    const isInstalled = await isCustomModuleInstalled(kernelClient)
+    if (!isInstalled) {
+        throw new Error("Module is not installed")
     }
 }
 
-export function getRandomAccount() {
+async function uninstallCustomModule(
+    kernelAccount: SmartAccount,
+    kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
+) {
+    const opHash = await kernelClient.uninstallModule({
+        type: "validator",
+        address: deployment.SessionKeyValidator,
+        context: NO_HOOKS_ADDRESS,
+        nonce: await kernelAccount.getNonce(),
+    })
+
+    const rec = await kernelClient.waitForUserOperationReceipt({
+        hash: opHash,
+    })
+
+    if (!rec.success) {
+        throw new Error("Module Uninstallation failed")
+    }
+
+    const isInstalled = await isCustomModuleInstalled(kernelClient)
+    if (isInstalled) {
+        throw new Error("Module is not uninstalled")
+    }
+}
+
+async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccount>): Promise<boolean> {
+    return await actionsClient.isModuleInstalled({
+        type: "validator",
+        address: deployment.SessionKeyValidator,
+        context: "0x",
+    })
+}
+
+function getRandomAccount() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Hex
 }
 
-const AMOUNT = "0.01"
+async function checkBalance(receiver: Address): Promise<string> {
+    const balance = await publicClient.getBalance({
+        address: receiver,
+        blockTag: "latest",
+    })
+
+    return formatEther(balance)
+}
+
+async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+    const receiverAddress = getRandomAccount()
+
+    const txHash = await kernelClient.sendTransaction({
+        account: kernelAccount,
+        to: receiverAddress,
+        chain: localhost,
+        value: parseEther(AMOUNT),
+    })
+
+    const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+        confirmations: 1,
+    })
+
+    if (receipt.status !== "success") {
+        throw new Error("KernelClient transaction failed")
+    }
+
+    const balance = await checkBalance(receiverAddress)
+    if (balance === AMOUNT) {
+        console.log(`Using RootValidator: Balance is correct: ${balance} ETH`)
+    } else {
+        throw new Error(`Using RootValidator: Balance is not correct: ${balance} ETH`)
+    }
+}
+
+async function testCustomValidator(
+    kernelAccount: SmartAccount,
+    kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
+) {
+    const receiverAddress = getRandomAccount()
+    const kernelAddress = await kernelAccount.getAddress()
+
+    await installCustomModule(kernelAccount, kernelClient)
+
+    const customNonce = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.SessionKeyValidator)
+    const userOpHash = await kernelClient.sendUserOperation({
+        calls: [
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+        ],
+        nonce: customNonce,
+    })
+
+    const receipt = await kernelClient.waitForUserOperationReceipt({
+        hash: userOpHash,
+    })
+
+    if (!receipt.success) {
+        throw new Error("Validation using custom validator module failed")
+    }
+
+    const balance = await checkBalance(receiverAddress)
+    if (balance === AMOUNT) {
+        console.log(`Using CustomValidator: Balance is correct: ${balance} ETH`)
+    } else {
+        throw new Error(`Using CustomValidator: Balance is not correct: ${balance} ETH`)
+    }
+
+    await uninstallCustomModule(kernelAccount, kernelClient)
+}
 
 async function main() {
     const kernelAccount: SmartAccount = await getKernelAccount()
     const kernelClient = getKernelClient(kernelAccount)
-
     const kernelAddress = await kernelAccount.getAddress()
-    const receiverAddress = getRandomAccount()
 
     const prefundRes = await fund_smart_account(kernelAddress)
     if (prefundRes !== "success") {
-        console.error("Funding failed")
-        process.exit(1)
+        throw new Error("Funding SmartAccount failed")
     }
 
     const depositRes = await deposit_paymaster()
     if (depositRes !== "success") {
-        console.error("Deposit failed")
-        process.exit(1)
+        throw new Error("Paymaster Deposit failed")
     }
 
     try {
-        const txHash = await kernelClient.sendTransaction({
-            account: kernelAccount,
-            to: receiverAddress,
-            chain: localhost,
-            value: parseEther(AMOUNT),
-        })
-
-        const receipt = await publicClient.waitForTransactionReceipt({
-            hash: txHash,
-            confirmations: 1,
-        })
-
-        if (receipt.status !== "success") {
-            console.log("KernelClient transaction failed")
-            process.exit(1)
-        }
+        await testRootValidator(kernelAccount, kernelClient)
     } catch (error) {
-        console.error(error)
+        console.error("Root Validator: ", error)
     }
 
-    const balance = await publicClient.getBalance({
-        address: receiverAddress,
-        blockTag: "latest",
-    })
-
-    const balanceAsEther = formatEther(balance)
-
-    if (balanceAsEther === AMOUNT) {
-        console.log("Balance is correct:", balanceAsEther, "ETH")
-    } else {
-        console.error("Balance is not correct:", balanceAsEther, "ETH")
+    try {
+        await testCustomValidator(kernelAccount, kernelClient)
+    } catch (error) {
+        console.error("Custom Validator: ", error)
     }
 }
 
-main()
-    .then(() => {
-        process.exit(0)
-    })
-    .catch((error) => {
-        console.error(error)
-        process.exit(1)
-    })
+main().then(() => {
+    process.exit(0)
+})
