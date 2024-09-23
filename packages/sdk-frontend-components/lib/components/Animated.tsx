@@ -1,5 +1,5 @@
-import type { PropsWithChildren } from "react"
-import { useRef } from "react"
+import type { PropsWithChildren } from "preact/compat"
+import { useRef } from "preact/hooks"
 import CSSTransition from "react-transition-group/CSSTransition"
 import SwitchTransition from "react-transition-group/SwitchTransition"
 export function Animated({ state, children }: { state: string } & PropsWithChildren) {

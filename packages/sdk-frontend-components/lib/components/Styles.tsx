@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo } from "preact/hooks"
 import badgeStyles from "../styles/badge.css?inline"
 import transitionStyles from "../styles/transition.css?inline"
 
