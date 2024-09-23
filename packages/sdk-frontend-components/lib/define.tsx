@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react"
+import type { ComponentProps } from "preact/compat"
 import type { Badge } from "./badge"
 
 export type BadgeProps = ComponentProps<typeof Badge>

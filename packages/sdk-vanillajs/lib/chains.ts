@@ -11,7 +11,7 @@ export const devnet = chains.devnet
 export const testnet = chains.happyChainSepolia
 
 /**
- * Default chain that the SDK will connect to — currently this is {@link testnet HappyChain
- * Sepolia}.
+ * Default chain that the SDK will connect to — currently this is
+ * {@link testnet HappyChain Sepolia}.
  */
 export const defaultChain = chains.defaultChain

@@ -12,6 +12,7 @@ export default defineConfig({
             name: "happychain",
             fileName: (format) => `index.${format}.js`,
         },
+
         rollupOptions: {
             external: ["react", "react-dom"],
             output: {
@@ -21,6 +22,7 @@ export default defineConfig({
                 },
             },
         },
+
         copyPublicDir: false,
         sourcemap: true,
         emptyOutDir: true,

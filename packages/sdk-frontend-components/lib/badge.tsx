@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "preact/hooks"
+import type { JSX } from "preact/jsx-runtime"
 import { Animated } from "./components/Animated"
 import { Button } from "./components/Button"
 import { ConnectionError } from "./components/ConnectionError"
@@ -13,7 +14,7 @@ const { fetchAccounts, requestPermissions, revokePermissions, onAccountsChanged,
     rdns: "tech.happy",
 })
 
-export function Badge({ disableStyles = false }: { disableStyles?: boolean | string }) {
+export function Badge({ disableStyles = false }: { disableStyles?: boolean | string }): JSX.Element {
     const [accounts, setAccounts] = useState<`0x${string}`[]>([])
     const [initialized, setInitialized] = useState(false)
     const [errored, setErrored] = useState(false)

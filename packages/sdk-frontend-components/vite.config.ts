@@ -10,7 +10,7 @@ export default defineConfig(() => {
             dts({
                 insertTypesEntry: true,
                 rollupTypes: true,
-                bundledPackages: ["mipd", "react"],
+                bundledPackages: ["mipd", "react", "react-dom", "preact", "preact/compat", "preact/hooks", "react"],
                 tsconfigPath: "./tsconfig.lib.json",
                 compilerOptions: {
                     rootDir: "../",
@@ -20,7 +20,7 @@ export default defineConfig(() => {
         ],
         build: {
             lib: {
-                entry: ["./lib/index.ts", "./lib/define.tsx", "./lib/badge.tsx"],
+                entry: ["./lib/index.ts", "./lib/badge.tsx", "./lib/define.tsx"],
                 fileName: (format, name) => `${name}.${format}.js`,
             },
         },
