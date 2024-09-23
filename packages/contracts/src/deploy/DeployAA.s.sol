@@ -6,6 +6,7 @@ import {ENTRYPOINT_V7_CODE} from "./initcode/EntryPointV7Code.sol";
 import {ENTRYPOINT_SIMULATIONS_CODE} from "./initcode/EntryPoinSimulationsCode.sol";
 
 import {HappyPaymaster} from "../HappyPaymaster.sol";
+import {SessionKeyValidator} from "../SessionKeyValidator.sol";
 
 import {Kernel} from "kernel/Kernel.sol";
 import {KernelFactory} from "kernel/factory/KernelFactory.sol";
@@ -31,6 +32,7 @@ contract DeployAAContracts is BaseDeployScript {
     KernelFactory public factory;
     FactoryStaker public staker;
     HappyPaymaster public paymaster;
+    SessionKeyValidator public sessionKeyValidator;
 
     function deploy() internal override {
         if (EXPECTED_ENTRYPOINT_V7.code.length == 0) {
@@ -71,5 +73,8 @@ contract DeployAAContracts is BaseDeployScript {
 
         paymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(EXPECTED_ENTRYPOINT_V7, allowedBundlers);
         deployed("HappyPaymaster", address(paymaster));
+
+        sessionKeyValidator = new SessionKeyValidator{salt: DEPLOYMENT_SALT}();
+        deployed("SessionKeyValidator", address(sessionKeyValidator));
     }
 }
