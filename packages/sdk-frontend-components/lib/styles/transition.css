@@ -1,18 +1,18 @@
 /* Text Transitions */
 .slide-enter {
-    transform: translateY(-150%)
+    transform: translateY(-150%);
 }
 
 .slide-exit {
-    transform: translateY(0)
+    transform: translateY(0);
 }
 
 .slide-enter-active {
-    transform: translateY(0)
+    transform: translateY(0);
 }
 
 .slide-exit-active {
-    transform: translateY(150%)
+    transform: translateY(150%);
 }
 
 .slide-enter-active,
