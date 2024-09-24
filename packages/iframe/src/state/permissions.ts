@@ -1,12 +1,11 @@
 import type { HTTPString } from "@happychain/common"
 import type { UUID } from "@happychain/sdk-shared"
-import { atom } from "jotai"
+import { type Atom, atom } from "jotai"
 
-import { atomFamily, atomWithStorage } from "jotai/utils"
+import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address } from "viem"
 import { getDappPermissions, hasPermissions } from "../services/permissions"
 import { StorageKey } from "../services/storage"
-import { createMapStorage } from "../utils/createMapJSONStorage"
 import { userAtom } from "./user.ts"
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
@@ -23,18 +22,16 @@ import { userAtom } from "./user.ts"
 // References:
 // https://eips.ethereum.org/EIPS/eip-2255
 
-export type UserAndApp = `${Address}|${HTTPString}`
-
 /**
  * Maps an user + app pair to a {@link AppPermissions}, which is the set of permissions
  * for that user on that app.
  */
-export type PermissionsMap = Map<UserAndApp, AppPermissions>
+export type PermissionsMap = Record<Address, Record<HTTPString, AppPermissions>>
 
 /**
  * Maps EIP-2255 EIP-1193 requests (like `eth_accounts`) to a permission object.
  */
-export type AppPermissions = Map<string, WalletPermission>
+export type AppPermissions = Record<string, WalletPermission>
 
 /**
  * Permission object for a specific permission.
@@ -74,12 +71,9 @@ export type PermissionRequest = {
  */
 export type PermissionsSpec = string | PermissionRequest
 
-export const permissionsAtom = atomWithStorage<PermissionsMap>(
-    StorageKey.UserPermissions,
-    new Map(),
-    createMapStorage(),
-    { getOnInit: true },
-)
+export const permissionsAtom = atomWithStorage<PermissionsMap>(StorageKey.UserPermissions, {}, createJSONStorage(), {
+    getOnInit: true,
+})
 
 /**
  * A function that returns a new atom that subscribes to a check on the specified permissions.
@@ -88,7 +82,7 @@ export const permissionsAtom = atomWithStorage<PermissionsMap>(
  * set of permissions, it is necessary to call `atomForPermissionsCheck.remove(oldPermissions)`
  * when changing the permissions!
  */
-export const atomForPermissionsCheck = atomFamily((permissions: PermissionsSpec) => {
+export const atomForPermissionsCheck: (ps: PermissionsSpec) => Atom<boolean> = atomFamily((permissions) => {
     return atom((get) => {
         const user = get(userAtom)
         if (!user) return false

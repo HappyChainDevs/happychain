@@ -30,10 +30,10 @@ export function getDappPermissions(
 ): AppPermissions {
     if (!user) {
         console.warn("No user found, returning empty permissions.")
-        return new Map()
+        return {}
     }
 
-    const permissionLookupResult = permissions.get(`${user.address}|${dappOrigin}`)
+    const permissionLookupResult = permissions[user.address]?.[dappOrigin]
 
     if (!permissionLookupResult) {
         // Permissions don't exist, create them.
@@ -48,12 +48,16 @@ export function getDappPermissions(
                 date: Date.now(),
                 id: createUUID(),
             }
-            basePermissions = new Map([["eth_accounts", eth_accounts]])
+            basePermissions = { eth_accounts }
         } else {
-            basePermissions = new Map()
+            basePermissions = {}
         }
 
-        permissions.set(`${user.address}|${dappOrigin}`, basePermissions)
+        // It's not required to set the permissionsAtom here because the permissions don't actually
+        // change (so nothing dependent on the atom needs to update). We just write them to avoid
+        // rerunning the above logic on each lookup.
+        permissions[user.address] ??= {}
+        permissions[user.address][dappOrigin] = basePermissions
         return basePermissions
     }
 
@@ -67,8 +71,13 @@ function setDappPermissions(permissions: AppPermissions): void {
         return
     }
     store.set(permissionsAtom, (prev) => {
-        prev.set(`${user.address}|${dappOrigin}`, permissions)
-        return new Map(prev)
+        return {
+            ...prev,
+            [user.address]: {
+                ...prev[user.address],
+                [dappOrigin]: permissions,
+            },
+        }
     })
 }
 
@@ -102,7 +111,7 @@ export function grantPermissions(
             id: createUUID(),
         }
         grantedPermissions.push(grantedPermission)
-        dappPermissions.set(name, grantedPermission)
+        dappPermissions[name] = grantedPermission
 
         if (name === "eth_accounts") {
             emitUserUpdate(getUser())
@@ -123,7 +132,7 @@ export function revokePermissions(
     dappPermissions: AppPermissions = getDappPermissions(),
 ): void {
     for (const [name] of getPermissionArray(permissions)) {
-        dappPermissions.delete(name)
+        delete dappPermissions[name]
         if (name === "eth_accounts") {
             emitUserUpdate(undefined)
         }
@@ -147,7 +156,7 @@ export function hasPermissions(
         if (value && typeof value === "object" && Object.keys(value).length) {
             throw new Error("WalletPermissionCaveats Not Yet Supported")
         }
-        return dappPermissions.has(name)
+        return name in dappPermissions
     })
 }
 
@@ -155,7 +164,7 @@ export function hasPermissions(
  * Return all of the user's permissions.
  */
 export function getAllPermissions(dappPermissions: AppPermissions = getDappPermissions()): WalletPermission[] {
-    return Array.from(dappPermissions.values())
+    return Array.from(Object.values(dappPermissions))
 }
 
 // === QUERY PERMISSIONS (WITH CAVEATS) ============================================================
@@ -169,7 +178,7 @@ export function getPermissions(
     dappPermissions: AppPermissions = getDappPermissions(),
 ): WalletPermission[] {
     return getPermissionArray(permissions)
-        .map(([name]) => dappPermissions.get(name))
+        .map(([name]) => dappPermissions[name])
         .filter((permission) => !!permission)
 }
 
@@ -182,7 +191,7 @@ export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
     store.set(permissionsAtom, (prev) => {
-        prev.delete(`${user.address}|${dappOrigin}`)
-        return new Map(prev)
+        const { [user.address]: _, ...rest } = prev
+        return rest
     })
 }
