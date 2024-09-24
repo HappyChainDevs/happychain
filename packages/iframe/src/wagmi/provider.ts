@@ -1,20 +1,18 @@
 import {
-    AuthState,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
     EIP1193UserRejectedRequestError,
-    EventBus,
-    EventBusMode,
-    Msgs,
-    type MsgsFromIframe,
     type UUID,
     config,
     createUUID,
-    logger,
 } from "@happychain/sdk-shared"
+import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193Provider } from "viem"
 import { PublicClientApproveHandler } from "../middleware/publicClient"
+import { getPermissions } from "../services/permissions"
+import type { GetPermissionActionParams } from "../services/permissions/actions"
+import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
@@ -40,27 +38,31 @@ type InFlightCheck = {
  * Provider is fed into a {@link https://wagmi.sh/core/api/connectors/injected#target | custom Connector}
  * which is configured to represent the HappyChain's iframe provider as below.
  */
-export class IframeProvider {
+export class IframeProvider extends SafeEventEmitter {
     private inFlightRequests = new Map<string, InFlightRequest>()
     private inFlightChecks = new Map<string, InFlightCheck>()
     private timer: Timer | null = null
-
-    private talkToWalletHandler = new EventBus<"..", "..">({
-        mode: EventBusMode.IframePort,
-        scope: "happy-chain-iframe-eip1193-provider",
-        logger: logger,
-        target: window,
-    })
 
     public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
     ): Promise<EIP1193RequestResult<TString>> {
         const key = createUUID()
-        console.log({ args })
+
+        if (args.method === "eth_requestAccounts") {
+            return new Promise(() => {
+                return getUser()?.addresses
+            })
+        }
+
+        if (args.method === "wallet_requestPermissions") {
+            return new Promise(() => {
+                return getPermissions(args as GetPermissionActionParams)
+            })
+        }
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
         return new Promise(async (resolve, reject) => {
-            const requiresUserApproval = checkIfRequestRequiresConfirmation(args)
+            const requiresUserApproval = checkIfRequestRequiresConfirmation(args) // public vs wallet
 
             if (!requiresUserApproval) {
                 // forward request to PublicClientApproveHandler
@@ -72,9 +74,8 @@ export class IframeProvider {
                 }
 
                 await PublicClientApproveHandler(permissionlessReqPayload)
-                // ??? null situation
-                const popup = null
-                this.queueRequest(key, { resolve, reject, popup })
+
+                this.queueRequest(key, { resolve, reject, popup: null })
                 return
             }
 
@@ -82,8 +83,6 @@ export class IframeProvider {
 
             const popup = this.openPopupAndAwaitResponse(key, args)
             this.queueRequest(key, { resolve, reject, popup })
-
-            // once user clicks reject / accept, how do we move further
         })
     }
 
@@ -120,6 +119,7 @@ export class IframeProvider {
     }
 
     private openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters) {
+        // handled my middleware
         const url = new URL("request", config.iframePath)
         const opts = {
             key: key,
@@ -130,4 +130,4 @@ export class IframeProvider {
     }
 }
 
-export const iframeProvider = new IframeProvider() as unknown as EIP1193Provider
+export const iframeProvider = new IframeProvider() as IframeProvider & EIP1193Provider
