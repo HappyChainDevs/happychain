@@ -6,7 +6,7 @@ import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address } from "viem"
 import { getDappPermissions, hasPermissions } from "../services/permissions"
 import { StorageKey } from "../services/storage"
-import { userAtom } from "./user.ts"
+import { userAtom } from "./user"
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
 // These permissions are scoped per app and per account.

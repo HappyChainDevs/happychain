@@ -4,11 +4,11 @@ import { getDefaultStore } from "jotai"
 import { UnauthorizedProviderError } from "viem"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
-import { clearPermissions, getAllPermissions } from "../../services/permissions.ts"
-import { authStateAtom } from "../../state/authState.ts"
-import { userAtom } from "../../state/user.ts"
-import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet.ts"
-import { dispatchHandlers } from "../permissionless.ts"
+import { clearPermissions, getAllPermissions } from "../../services/permissions"
+import { authStateAtom } from "../../state/authState"
+import { userAtom } from "../../state/user"
+import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
+import { dispatchHandlers } from "../permissionless"
 
 function makePayload(payload: EIP1193RequestParameters) {
     return {

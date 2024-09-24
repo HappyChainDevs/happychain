@@ -6,14 +6,14 @@ import {
     getEIP1193ErrorObjectFromUnknown,
 } from "@happychain/sdk-shared"
 import { UnauthorizedProviderError } from "viem"
-import { happyProviderBus } from "../services/eventBus.ts"
-import { getAuthState } from "../state/authState.ts"
+import { happyProviderBus } from "../services/eventBus"
+import { getAuthState } from "../state/authState"
 
-/** ID assigned to the iframe by the parent window. */
-const iframeUUID = new URLSearchParams(window.location.search).get("windowId")
+/** ID passed to the iframe by the parent window. */
+const parentID = new URLSearchParams(window.location.search).get("windowId")
 
 /** Don't process requests coming from windows other than the parent window. */
-export const confirmWindowId = (windowId: ReturnType<typeof crypto.randomUUID>) => windowId === iframeUUID
+export const confirmWindowId = (windowId: ReturnType<typeof crypto.randomUUID>) => windowId === parentID
 
 /**
  * Check if the user is authenticated with the social login provider, otherwise throws an error.

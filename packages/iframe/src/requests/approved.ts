@@ -1,12 +1,12 @@
 import { EIP1193ErrorCodes, type Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happychain/sdk-shared"
 import { type Client, ProviderDisconnectedError } from "viem"
-import { grantPermissions } from "../services/permissions.ts"
-import { addWatchedAsset } from "../services/watchedAssets/utils.ts"
-import { getChainsMap, setChains } from "../state/chains.ts"
-import { getUser } from "../state/user.ts"
-import { getWalletClient } from "../state/walletClient.ts"
-import { isAddChainParams } from "../utils/isAddChainParam.ts"
-import { sendResponse } from "./utils.ts"
+import { grantPermissions } from "../services/permissions"
+import { addWatchedAsset } from "../services/watchedAssets/utils"
+import { getChainsMap, setChains } from "../state/chains"
+import { getUser } from "../state/user"
+import { getWalletClient } from "../state/walletClient"
+import { isAddChainParams } from "../utils/isAddChainParam"
+import { sendResponse } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -49,7 +49,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             if (!chains.has(request.payload.params[0].chainId)) {
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.ChainNotRecognized)
             }
-            const response = sendToWalletClient(request)
+            const response = await sendToWalletClient(request)
             if ("URLSearchParams" in window) {
                 const searchParams = new URLSearchParams(window.location.search)
                 const chain = chains.get(request.payload.params[0].chainId)
@@ -69,7 +69,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         default:
-            return sendToWalletClient(request)
+            return await sendToWalletClient(request)
     }
 }
 
