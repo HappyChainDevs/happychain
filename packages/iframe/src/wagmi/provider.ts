@@ -9,10 +9,8 @@ import {
 } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193Provider } from "viem"
-import { getPermissions } from "../services/permissions"
-import { getUser } from "../state/user"
-import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 import { handlePermissionlessRequest } from "../requests"
+import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
 
