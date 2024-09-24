@@ -1,6 +1,5 @@
 import { waitForCondition } from "../utils/waitForCondition"
 import { type Logger, silentLogger } from "./logger"
-import { logger } from "./logger"
 
 /**
  * Defines different modes in which the event bus can operate.
