@@ -1,6 +1,6 @@
 import { EIP1193ErrorCodes, Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happychain/sdk-shared"
-import { happyProviderBus } from "../services/eventBus.ts"
-import { confirmWindowId } from "./utils.ts"
+import { happyProviderBus } from "../services/eventBus"
+import { confirmWindowId } from "./utils"
 
 /**
  * Processes requests rejected by the user in the pop-up, forwarding the rejection to the app.

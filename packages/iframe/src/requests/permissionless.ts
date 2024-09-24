@@ -1,10 +1,10 @@
 import { type Msgs, type ProviderMsgsFromApp, getChainFromSearchParams } from "@happychain/sdk-shared"
-import { type Client, UnauthorizedProviderError } from "viem"
-import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "../services/permissions.ts"
-import { getPublicClient } from "../state/publicClient.ts"
-import { getUser } from "../state/user.ts"
-import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions.ts"
-import { checkAuthenticated, sendResponse } from "./utils.ts"
+import { type Client, UnauthorizedProviderError, UserRejectedRequestError } from "viem"
+import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "../services/permissions"
+import { getPublicClient } from "../state/publicClient"
+import { getUser } from "../state/user"
+import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
+import { checkAuthenticated, sendResponse } from "./utils"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -19,7 +19,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
     switch (request.payload.method) {
         case "eth_chainId": {
             const chainId = getChainFromSearchParams()?.chainId
-            return chainId ? chainId : await sendToPublicClient(request)
+            return chainId ?? (await sendToPublicClient(request))
         }
 
         case "eth_accounts":
@@ -27,7 +27,10 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_requestAccounts":
             checkAuthenticated()
-            return hasPermissions("eth_accounts") ? getUser()?.addresses : []
+            if (!hasPermissions("eth_accounts")) {
+                throw new UserRejectedRequestError(new Error("Permission not previously granted"))
+            }
+            return getUser()?.addresses
 
         case "wallet_getPermissions":
             return getAllPermissions()

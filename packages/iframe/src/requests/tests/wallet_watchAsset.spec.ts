@@ -2,11 +2,11 @@ import { AuthState, createUUID } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
 import { beforeEach, describe, expect, test } from "vitest"
-import { getWatchedAssets } from "../../services/watchedAssets/utils.ts"
-import { authStateAtom } from "../../state/authState.ts"
-import { userAtom } from "../../state/user.ts"
-import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet.ts"
-import { dispatchHandlers } from "../approved.ts"
+import { getWatchedAssets } from "../../services/watchedAssets/utils"
+import { authStateAtom } from "../../state/authState"
+import { userAtom } from "../../state/user"
+import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
+import { dispatchHandlers } from "../approved"
 
 function makePayload(payload: EIP1193RequestParameters) {
     return {

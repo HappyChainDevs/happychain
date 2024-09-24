@@ -1,14 +1,14 @@
 import { AuthState, createUUID } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
-import { UnauthorizedProviderError } from "viem"
+import { UnauthorizedProviderError, UserRejectedRequestError } from "viem"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
-import { clearPermissions, getAllPermissions, grantPermissions } from "../../services/permissions.ts"
-import { authStateAtom } from "../../state/authState.ts"
-import { userAtom } from "../../state/user.ts"
-import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet.ts"
-import { dispatchHandlers } from "../permissionless.ts"
+import { clearPermissions, getAllPermissions, grantPermissions } from "../../services/permissions"
+import { authStateAtom } from "../../state/authState"
+import { userAtom } from "../../state/user"
+import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
+import { dispatchHandlers } from "../permissionless"
 
 function makePayload(payload: EIP1193RequestParameters) {
     return {
@@ -50,11 +50,11 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
             getDefaultStore().set(authStateAtom, AuthState.Connected)
         })
 
-        test("returns empty array nothing if not previously authorized via walletClient", async () => {
+        test("throws exception if not previously authorized via popup", async () => {
             expect(getAllPermissions().length).toBe(0)
             const request = makePayload({ method: "eth_requestAccounts" })
-            const response = await dispatchHandlers(request)
-            expect(response).toStrictEqual([])
+            const response = dispatchHandlers(request)
+            expect(response).rejects.toThrow(UserRejectedRequestError)
             expect(getAllPermissions().length).toBe(0)
         })
 
@@ -72,10 +72,8 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
             getDefaultStore().set(userAtom, user)
             expect(getAllPermissions().length).toBe(0)
             const request = makePayload({ method: "eth_requestAccounts" })
-            await dispatchHandlers(request)
-            await dispatchHandlers(request)
-            await dispatchHandlers(request)
-            await dispatchHandlers(request)
+            await expect(dispatchHandlers(request)).rejects.toThrow(UserRejectedRequestError)
+            await expect(dispatchHandlers(request)).rejects.toThrow(UserRejectedRequestError)
             expect(getAllPermissions().length).toBe(0)
         })
     })

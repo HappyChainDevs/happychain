@@ -6,9 +6,9 @@ import {
     type PermissionsSpec,
     type WalletPermission,
     permissionsAtom,
-} from "../state/permissions.ts"
+} from "../state/permissions"
 import { getUser } from "../state/user"
-import { emitUserUpdate } from "../utils/emitUserUpdate.ts"
+import { emitUserUpdate } from "../utils/emitUserUpdate"
 import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin"
 
 // === NOTICE ======================================================================================
