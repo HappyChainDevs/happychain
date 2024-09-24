@@ -2,6 +2,7 @@ import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strat
 import { AuthState, type ConnectionProvider, WalletType } from "@happychain/sdk-shared"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useMemo } from "react"
+import { useConnect } from "wagmi"
 import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { grantPermissions } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
@@ -12,6 +13,8 @@ export function useSocialProviders() {
     const setAuthState = useSetAtom(authStateAtom)
     const userValue = useAtomValue(userAtom)
     const chains = useAtomValue(chainsAtom)
+
+    const { connect, connectors } = useConnect()
 
     const { providers, onAuthChange } = useFirebaseWeb3AuthStrategy()
 
@@ -31,9 +34,11 @@ export function useSocialProviders() {
                     )
                 }
                 setUserWithProvider(user, provider)
+                // connect wagmi with HappyChain custom connector
+                connect({ connector: connectors[0] })
             }
         })
-    }, [onAuthChange, userValue, chains])
+    }, [onAuthChange, userValue, chains, connect, connectors])
 
     const providersMemo = useMemo(
         () =>

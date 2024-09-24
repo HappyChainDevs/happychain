@@ -1,5 +1,4 @@
 import { convertToViemChain, getChainFromSearchParams } from "@happychain/sdk-shared"
-import { happyChainSepoliaViemChain } from "@happychain/sdk-shared/lib/chains/definitions/happyChainSepolia"
 import { custom } from "viem"
 import { createConfig } from "wagmi"
 import { happyConnector } from "./connnector"
