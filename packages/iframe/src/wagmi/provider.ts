@@ -9,11 +9,10 @@ import {
 } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193Provider } from "viem"
-import { PublicClientApproveHandler } from "../middleware/publicClient"
 import { getPermissions } from "../services/permissions"
-import type { GetPermissionActionParams } from "../services/permissions/actions"
 import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
+import { handlePermissionlessRequest } from "../requests"
 
 const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
 
@@ -48,24 +47,11 @@ export class IframeProvider extends SafeEventEmitter {
     ): Promise<EIP1193RequestResult<TString>> {
         const key = createUUID()
 
-        if (args.method === "eth_requestAccounts") {
-            return new Promise(() => {
-                return getUser()?.addresses
-            })
-        }
-
-        if (args.method === "wallet_requestPermissions") {
-            return new Promise(() => {
-                return getPermissions(args as GetPermissionActionParams)
-            })
-        }
-
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
         return new Promise(async (resolve, reject) => {
             const requiresUserApproval = checkIfRequestRequiresConfirmation(args) // public vs wallet
 
             if (!requiresUserApproval) {
-                // forward request to PublicClientApproveHandler
                 const permissionlessReqPayload = {
                     key,
                     windowId: createUUID(),
@@ -73,13 +59,11 @@ export class IframeProvider extends SafeEventEmitter {
                     payload: args,
                 }
 
-                await PublicClientApproveHandler(permissionlessReqPayload)
+                void handlePermissionlessRequest(permissionlessReqPayload)
 
                 this.queueRequest(key, { resolve, reject, popup: null })
                 return
             }
-
-            // do we need to check if user is connected / logged in or can we assume that they are?
 
             const popup = this.openPopupAndAwaitResponse(key, args)
             this.queueRequest(key, { resolve, reject, popup })
