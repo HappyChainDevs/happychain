@@ -11,7 +11,10 @@ const connections = useConnections()
     <Container title="Wagmi Status">
         <!-- Connected Providers -->
         <ul>
-            <li v-for="connection in connections">Connected: {{ connection.connector.name }}</li>
+            <li v-for="connection in connections" :key="connection.connector.name">
+                Connected: {{ connection.connector.name }}
+            </li>
+
         </ul>
 
         <!-- General Connection Status -->
