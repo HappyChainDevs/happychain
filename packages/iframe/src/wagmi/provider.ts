@@ -3,6 +3,7 @@ import {
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
     EIP1193UserRejectedRequestError,
+    GenericProviderRpcError,
     type UUID,
     config,
     createUUID,
@@ -36,10 +37,13 @@ type InFlightCheck = {
  * which is configured to represent the HappyChain's iframe provider as below.
  */
 export class IframeProvider extends SafeEventEmitter {
+    public iframeId = createUUID()
+
     private inFlightRequests = new Map<string, InFlightRequest>()
     private inFlightChecks = new Map<string, InFlightCheck>()
     private timer: Timer | null = null
 
+    // no promise resolution
     public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
     ): Promise<EIP1193RequestResult<TString>> {
@@ -47,7 +51,9 @@ export class IframeProvider extends SafeEventEmitter {
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
         return new Promise(async (resolve, reject) => {
-            const requiresUserApproval = checkIfRequestRequiresConfirmation(args) // public vs wallet
+            const requiresUserApproval = checkIfRequestRequiresConfirmation(args)
+
+            console.log({args})
 
             if (!requiresUserApproval) {
                 const permissionlessReqPayload = {
@@ -63,6 +69,7 @@ export class IframeProvider extends SafeEventEmitter {
                 return
             }
 
+            // permissioned requests
             const popup = this.openPopupAndAwaitResponse(key, args)
             this.queueRequest(key, { resolve, reject, popup })
         })
@@ -70,6 +77,7 @@ export class IframeProvider extends SafeEventEmitter {
 
     private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
         this.inFlightRequests.set(key, { resolve, reject, popup })
+        console.log(this.inFlightRequests)
 
         const intervalMs = 100
 
@@ -104,11 +112,38 @@ export class IframeProvider extends SafeEventEmitter {
         // handled my middleware
         const url = new URL("request", config.iframePath)
         const opts = {
+            windowId: this.iframeId,
             key: key,
             args: btoa(JSON.stringify(args)),
         }
         const searchParams = new URLSearchParams(opts).toString()
         return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
+    }
+
+    public handleRequestResolution(data: any) {
+        const req = this.inFlightRequests.get(data.key)
+
+        if (!req) {
+            return { resolve: null, reject: null }
+        }
+
+        const { resolve, reject, popup } = req
+        this.inFlightRequests.delete(data.key)
+        popup?.close()
+
+        if (reject && data.error) {
+            reject(
+                new GenericProviderRpcError({
+                    code: data.error.code,
+                    message: data.error.message,
+                    data: data.error.data,
+                }),
+            )
+        } else if (resolve) {
+            resolve(data.payload)
+        } else {
+            // no key associated, perhaps from another tab context?
+        }
     }
 }
 
