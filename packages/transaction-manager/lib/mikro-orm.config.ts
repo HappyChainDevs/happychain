@@ -1,7 +1,12 @@
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { defineConfig } from "@mikro-orm/better-sqlite"
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 const config = defineConfig({
-    entities: ["./dist/Transaction.js"],
+    entities: [join(__dirname, "./Transaction.js")],
     dbName: process.env.TXM_DB_PATH || "txm.sqlite",
     debug: true,
     migrations: {
