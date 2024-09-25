@@ -1,4 +1,13 @@
 {
-    "files": [],
-    "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
+    "extends": "@happychain/configs/tsconfig.vite-lib.json",
+    "compilerOptions": {
+        "rootDir": "../",
+        "noEmit": false,
+        "emitDeclarationOnly": true,
+        "outDir": "dist",
+        "declarationDir": "dist",
+        "declarationMap": false,
+        "declaration": true
+    },
+    "include": ["lib", "../sdk-vanillajs", "../sdk-shared", "../common"]
 }

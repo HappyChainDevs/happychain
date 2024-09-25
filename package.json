@@ -4,7 +4,7 @@
     "license": "BSD-3-Clause-Clear",
     "version": "1.0.0",
     "private": true,
-    "packageManager": "pnpm@9.9.0",
+    "workspaces": ["packages/*"],
     "devDependencies": {
         "@biomejs/biome": "^1.9.2",
         "husky": "^9.1.5",
@@ -12,6 +12,8 @@
         "@mikro-orm/cli": "^6.3.10"
     },
     "dependencies": {
+        "@microsoft/api-extractor": "^7.47.9",
+        "ajv": "^8.17.1",
         "concurrently": "^8.2.2"
     }
 }

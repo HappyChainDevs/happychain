@@ -1,0 +1,31 @@
+{
+    "name": "adorable-astronaut",
+    "type": "module",
+    "version": "0.0.1",
+    "scripts": {
+        "dev": "astro dev",
+        "start": "astro dev",
+        "build": "astro check && astro build",
+        "preview": "astro preview",
+        "astro": "astro"
+    },
+    "dependencies": {
+        "@astrojs/check": "^0.9.3",
+        "@astrojs/preact": "^3.5.3",
+        "@astrojs/react": "^3.6.2",
+        "@astrojs/tailwind": "^5.1.1",
+        "@astrojs/vue": "^4.5.1",
+        "@happychain/js": "workspace:^",
+        "@happychain/react": "workspace:^",
+        "@happychain/ui": "workspace:^",
+        "@types/react": "^18.3.9",
+        "@types/react-dom": "^18.3.0",
+        "astro": "^4.15.9",
+        "preact": "^10.24.1",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "tailwindcss": "^3.4.13",
+        "typescript": "^5.6.2",
+        "vue": "^3.5.8"
+    }
+}

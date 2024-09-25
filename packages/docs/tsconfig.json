@@ -1,5 +1,9 @@
 {
     "extends": "@happychain/configs/tsconfig.vite-lib.json",
-    "include": ["**/*.ts", "**/*.tsx"],
+    "compilerOptions": {
+        "rootDir": "../",
+        "moduleResolution": "bundler"
+    },
+    "include": ["./**/*.ts", "./**/*.tsx", "../sdk-vanillajs", "../sdk-react", "../sdk-shared"],
     "exclude": ["vocs.config.ts"]
 }

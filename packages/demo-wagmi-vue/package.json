@@ -6,7 +6,7 @@
     "dependencies": {
         "@happychain/js": "workspace:^",
         "@tanstack/vue-query": "^5.52.2",
-        "@wagmi/vue": "^0.0.39",
+        "@wagmi/vue": "^0.0.47",
         "viem": "^2.21.7",
         "vue": "^3.4.37"
     },
@@ -18,7 +18,7 @@
         "postcss": "^8.4.41",
         "tailwindcss": "^3.4.10",
         "typescript": "^5.6.2",
-        "vite": "^5.4.1",
+        "vite": "^5.4.8",
         "vue-tsc": "^2.0.29"
     }
 }

@@ -1,9 +1,12 @@
-import type { ButtonHTMLAttributes } from "preact/compat"
+/** @jsxImportSource preact */
+import { type HTMLProps, forwardRef } from "preact/compat"
 
-export function Button({ className, children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
-    return (
-        <button type="button" className={`${className} happychain-badge`} {...props}>
-            {children}
-        </button>
-    )
-}
+export const Button = forwardRef<HTMLButtonElement, HTMLProps<HTMLButtonElement>>(
+    ({ className, children, ...props }, ref) => {
+        return (
+            <button type="button" className={`${className} happychain-badge`} ref={ref} {...props}>
+                {children}
+            </button>
+        )
+    },
+)

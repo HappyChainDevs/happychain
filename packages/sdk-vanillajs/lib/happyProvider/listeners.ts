@@ -16,6 +16,7 @@ export type UserUpdateCallback = (user?: HappyUser) => void
 
 /** @internal */
 export type ModalUpdateCallback = (isOpen: boolean) => void
+export type OnModalUpdate = (callback: ModalUpdateCallback) => ListenerUnsubscribeFn
 
 /** @internal */
 export type AuthStateUpdateCallback = (state: AuthState) => void
@@ -93,7 +94,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * @param callback
      * @returns Unsubscribe function
      */
-    const onModalUpdate = (callback: ModalUpdateCallback): ListenerUnsubscribeFn => {
+    const onModalUpdate: OnModalUpdate = (callback) => {
         onModalUpdateCallbacks.add(callback)
         return () => {
             onModalUpdateCallbacks.delete(callback)

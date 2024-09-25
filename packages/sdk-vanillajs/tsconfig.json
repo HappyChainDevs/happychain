@@ -1,9 +1,16 @@
 {
-    "files": [],
+    "extends": "@happychain/configs/tsconfig.vite-lib.json",
     "compilerOptions": {
-        // Required for LitElement reactive properties
+        "rootDir": "../",
+        "noEmit": false,
+        "emitDeclarationOnly": true,
+        "outDir": "dist",
+        "declarationDir": "dist",
+        "declarationMap": false,
+        "declaration": true,
         "experimentalDecorators": true,
-        "useDefineForClassFields": false
+        "useDefineForClassFields": false,
+        "moduleResolution": "bundler"
     },
-    "references": [{ "path": "./tsconfig.lib.json" }, { "path": "./tsconfig.node.json" }]
+    "include": ["dist", "lib", "../sdk-shared", "../common"]
 }

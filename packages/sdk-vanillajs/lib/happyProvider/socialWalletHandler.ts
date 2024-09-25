@@ -80,8 +80,8 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
             const requiresUserApproval = await this.requiresApproval(args)
 
             if (!requiresUserApproval) {
-                const popup = this.autoApprove(key, args)
-                this.queueRequest(key, { resolve, reject, popup })
+                this.autoApprove(key, args)
+                this.queueRequest(key, { resolve, reject, popup: null })
                 return
             }
 

@@ -1,5 +1,5 @@
+/** @jsxImportSource preact */
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks"
-import type { JSX } from "preact/jsx-runtime"
 import { Animated } from "./components/Animated"
 import { Button } from "./components/Button"
 import { ConnectionError } from "./components/ConnectionError"
@@ -41,8 +41,8 @@ export function Badge({ disableStyles = false }: { disableStyles?: boolean | str
 
     const connected = accounts.length > 0
 
-    const onClick = useMemo(
-        () => (!initialized || connecting ? noop : connected ? disconnect : connect),
+    const onClick = useCallback(
+        () => (!initialized || connecting ? noop : connected ? disconnect() : connect()),
         [connect, connected, disconnect, initialized, connecting],
     )
     const state = useMemo(
@@ -51,6 +51,7 @@ export function Badge({ disableStyles = false }: { disableStyles?: boolean | str
     )
 
     const provider = providerInfo()
+
     return (
         <div>
             {<Styles disableStyles={disableStyles} />}

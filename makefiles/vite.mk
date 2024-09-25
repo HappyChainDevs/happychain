@@ -31,5 +31,4 @@ dist: $(shell find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -
 	vite build;
 
 node_modules: package.json
-	pnpm install
-	@touch $@
+	bun install

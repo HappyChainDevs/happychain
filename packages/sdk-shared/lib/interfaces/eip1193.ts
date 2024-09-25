@@ -1,4 +1,3 @@
-import type { TupleUnion } from "@happychain/common"
 import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
 
 // === EIP1193 METHODS =============================================================================
@@ -31,16 +30,7 @@ export type EIP1193EventName = keyof EIP1193EventMap
 
 // === PERMISSIONS METHODS =========================================================================
 
-type EIP1193PermissionsMethod =
-    | "eth_accounts"
-    | "eth_requestAccounts"
-    | "wallet_requestPermissions"
-    | "wallet_revokePermissions"
-
-type EIP1193PermissionsMethodArray = TupleUnion<EIP1193PermissionsMethod>
-
-const eip1193PermissionsMethods: string[] = [
-    // https://ethereum.org/en/developers/docs/apis/json-rpc/
+const eip1193PermissionsMethods = [
     "eth_accounts",
     // https://eips.ethereum.org/EIPS/eip-1102
     "eth_requestAccounts",
@@ -48,20 +38,21 @@ const eip1193PermissionsMethods: string[] = [
     "wallet_requestPermissions",
     // https://docs.metamask.io/wallet/reference/wallet_revokepermissions/
     "wallet_revokePermissions",
-] satisfies EIP1193PermissionsMethodArray
+] as const
 
-// Note: it would be cleaner to use `as const` on the array then use it to define
-// `EIP1193PermissionsMethod`. Unfortunately this breaks Microsoft's API extractor and therefore
-// vite-plugin-dts.
+const eip1193PermissionsMethodsSet = new Set<string>(eip1193PermissionsMethods)
 
 /**
  * Union type of all EIP1193 request types that request permissions.
  */
-export type EIP1193PermissionsRequest = Extract<EIP1193RequestParameters, { method: EIP1193PermissionsMethod }>
+export type EIP1193PermissionsRequest = Extract<
+    EIP1193RequestParameters,
+    { method: (typeof eip1193PermissionsMethods)[number] }
+>
 
 /**
  * Checks if the EIP-1193 request is one that requests permissions.
  */
 export function isPermissionsRequest(args: { method: string; params?: unknown }): args is EIP1193PermissionsRequest {
-    return eip1193PermissionsMethods.includes(args.method)
+    return eip1193PermissionsMethodsSet.has(args.method)
 }

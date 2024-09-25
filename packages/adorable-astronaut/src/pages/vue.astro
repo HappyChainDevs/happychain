@@ -1,0 +1,10 @@
+---
+import TestingVue from "../components/vue/TestingVue.vue"
+import Layout from "../layouts/Layout.astro"
+---
+
+<Layout title="Welcome to Astro.">
+	<main>
+		<TestingVue client:only="vue" />
+	</main>
+</Layout>

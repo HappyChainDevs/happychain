@@ -1,0 +1,6 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+    "extends": "../../packages/configs/api-extractor.jsonc",
+    "mainEntryPointFilePath": "<projectFolder>/dist/sdk-react/lib/index.d.ts",
+    "bundledPackages": ["viem", "abitype", "@metamask/safe-event-emitter", "@happychain/*"]
+}

@@ -1,3 +1,7 @@
+if (import.meta.hot) {
+    import.meta.hot.accept()
+}
+
 export { register } from "./register"
 export type { WalletRegisterOptions } from "./register"
 
@@ -27,6 +31,7 @@ export type {
     EIP1193ChainNotRecognizedError,
     EIP1193DisconnectedError,
     EIP1193UnauthorizedError,
+    EIP1193ErrorCodes,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
 } from "@happychain/sdk-shared"

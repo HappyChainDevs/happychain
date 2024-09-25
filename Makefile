@@ -40,8 +40,8 @@ DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue
 # backend packages
 BACKEND_PKGS := transaction-manager,randomness-service
 
-# all typescript packages, including docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS},docs
+# all typescript packages, excluding docs
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
 
 # ==================================================================================================
 # CMDS
@@ -88,6 +88,7 @@ clean: ts.clean contracts.clean ## Removes build artifacts
 .PHONY: clean
 
 nuke: remove-modules clean ## Removes build artifacts and dependencies
+	rm -rf packages/docs/docs/pages/*/api
 .PHONY: nuke
 
 # ==================================================================================================
@@ -256,7 +257,12 @@ contracts.build:
 # DOCS
 
 # Fully self-contained target to build docs, to be used by docs page host.
-docs.contained: setup sdk.build
+docs.contained: setup
+	@# temporary while we still compile common to js, can be removed when import .ts directly with bun
+	cd packages/common && make build;
+	@# setup symlinks for package.json exports
+	cd packages/sdk-vanillajs && make dev;
+	cd packages/sdk-react && make dev;
 	cd packages/docs && make build
 .PHONY: docs.contained
 
@@ -302,7 +308,7 @@ contracts.clean:
 
 # Install packages as specified in the pnpm-lockfile.yaml.
 install-frozen:
-	pnpm install --frozen-lockfile
+	bun install --frozen-lockfile
 .PHONY: install-deps
 
 # NOTES:
@@ -313,17 +319,16 @@ install-frozen:
 # Like npm install: if a version matching version specifier is installed, does nothing, otherwise
 # install the most up-to-date version matching the specifier.
 install:
-	pnpm install -r
-	@echo "If the lockfileVersion changed, please update 'packageManager' in package.json!"
+	bun install
 .PHONY: install
 
 node_modules: package.json $(wildcard packages/*/package.json)
-	@pnpm install -r
+	bun install
 
 # Shows packages for which new versions are available (compared to the installed version).
 # This will also show new version that do not match the version specifiers!
 outdated:
-	pnpm outdated -r
+	bun outdated
 .PHONY: outdated
 
 # Updates all packages to their latest version that match the version specifier.
@@ -331,14 +336,14 @@ outdated:
 # You can also run this if your installed versions are > than the version specifiers and you want
 # to update them.
 update:
-	pnpm update -r
+	bun update
 	@echo "If the lockfileVersion changed, please update 'packageManager' in package.json!"
 .PHONY: update
 
 # Updates all packages to their latest version (even if they do not match the version specifier!).
 # It will also update the version specifiers to point to the new version.
 update-latest:
-	pnpm update -r --latest
+	bun update --latest
 	@echo "If the lockfileVersion changed, please update 'packageManager' in package.json!"
 .PHONY: update-latest
 

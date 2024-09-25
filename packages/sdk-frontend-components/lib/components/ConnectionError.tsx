@@ -1,3 +1,4 @@
+/** @jsxImportSource preact */
 import { Button } from "./Button"
 
 export function ConnectionError() {

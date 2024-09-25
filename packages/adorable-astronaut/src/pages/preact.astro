@@ -1,0 +1,10 @@
+---
+import { TestingPreact } from "../components/preact/TestingPreact"
+import Layout from "../layouts/Layout.astro"
+---
+
+<Layout title="Welcome to Astro.">
+	<main>
+		<TestingPreact client:only="preact" />
+	</main>
+</Layout>

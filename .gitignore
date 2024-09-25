@@ -26,6 +26,7 @@ next-env.d.ts
 tsconfig.tsbuildinfo
 dist
 dist-ssr
+.astro
 
 # Contract outputs
 packages/contracts/cache/

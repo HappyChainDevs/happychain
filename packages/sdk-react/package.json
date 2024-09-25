@@ -3,14 +3,15 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
-    "files": ["dist"],
+    "files": ["dist", "src"],
     "main": "./dist/index.umd.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
-            "types": "./dist/index.d.ts",
+            "bun": "./lib/index.ts",
             "import": "./dist/index.es.js",
+            "types": "./dist/index.d.ts",
             "require": "./dist/index.umd.js"
         }
     },
@@ -23,12 +24,9 @@
         "@types/node": "^22.5.0",
         "@types/react": "^18.3.4",
         "@types/react-dom": "^18.3.0",
-        "@vitejs/plugin-react-swc": "^3.7.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "typescript": "^5.6.2",
-        "vite": "^5.4.2",
-        "vite-plugin-dts": "4.0.3"
+        "typescript": "^5.6.2"
     },
     "peerDependencies": {
         "react": "^18.3.1",

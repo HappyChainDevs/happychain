@@ -16,5 +16,6 @@
         "tanstack",
         "viem",
         "wagmi"
-    ]
+    ],
+    "files.associations": { "api-extractor.json": "jsonc", "tsconfig.*.json": "jsonc", "tsconfig.json": "jsonc" }
 }

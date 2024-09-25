@@ -22,7 +22,7 @@ alto: alto.version
 
 # Build target to set up the repository
 build: alto
-	cd alto && pnpm install && pnpm build
+	cd alto && bun install && bun run build
 .PHONY: build
 
 # Target to run the Alto bundler with the appropriate configuration
@@ -32,7 +32,7 @@ run:
 
 # Clean up the Alto directory (optional)
 clean:
-	cd alto && pnpm clean
+	cd alto && bun run clean
 .PHONY: clean
 
 ####################################################################################################

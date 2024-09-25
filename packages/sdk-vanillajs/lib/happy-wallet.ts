@@ -3,15 +3,26 @@ import { AuthState, config } from "@happychain/sdk-shared"
 import { LitElement, css, html } from "lit"
 import { customElement } from "lit/decorators.js"
 import { classMap } from "lit/directives/class-map.js"
-
 import { onAuthStateUpdate, onModalUpdate } from "./happyProvider/initialize"
+
+if (import.meta.hot) {
+    // in dev mode, we redefine this so hot reloading doesn't
+    // attempt multiple web-component definitions with the same name
+    const originalDefine = window.customElements.define
+    window.customElements.define = (name, clazz, options) => {
+        if (!window.customElements.get(name)) {
+            originalDefine.call(window.customElements, name, clazz, options)
+        } else {
+            console.warn("unable to re-register web components. please refresh to see changes")
+        }
+    }
+}
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }
 }
 
 /**
- * {@link !HTMLElement}
  */
 @customElement("happy-wallet")
 export class HappyWallet extends LitElement {
@@ -61,22 +72,12 @@ export class HappyWallet extends LitElement {
         console.error("HappyChain SDK failed to initialize")
     }
 
-    render() {
-        const url = new URL("embed", config.iframePath)
-
-        const searchParams = new URLSearchParams(
-            filterUndefinedValues({
-                windowId: this.windowId,
-                chain: this.chain,
-                "rpc-urls": this.rpcUrl,
-            }),
-        ).toString()
-
+    private getCssClasses() {
         const connected = this.authState === AuthState.Connected
         const connecting = this.authState === AuthState.Connecting
         const disconnected = this.authState === AuthState.Disconnected
 
-        const cssClasses = classMap({
+        return classMap({
             open: this.classes.open,
             closed: !this.classes.open || connecting,
             connected: connected,
@@ -84,6 +85,27 @@ export class HappyWallet extends LitElement {
             connecting: connecting,
             loginModal: !connected && this.classes.open,
         })
+    }
+
+    private getSearchParams() {
+        return new URLSearchParams(
+            filterUndefinedValues({
+                windowId: this.windowId,
+                chain: this.chain,
+                "rpc-urls": this.rpcUrl,
+            }),
+        ).toString()
+    }
+
+    render() {
+        if (!this.windowId) {
+            console.error("Happychain Iframe can not be initialized")
+            return null
+        }
+
+        const url = new URL("embed", config.iframePath)
+        const cssClasses = this.getCssClasses()
+        const searchParams = this.getSearchParams()
 
         return html`
             <iframe
