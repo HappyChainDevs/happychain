@@ -4,23 +4,13 @@
     "version": "0.0.0",
     "type": "module",
     "files": ["dist"],
-    "module": "./dist/index.es.js",
-    "types": "./dist/index.d.ts",
+    "main": "./lib/index.ts",
+    "module": "./lib/index.ts",
+    "types": "./lib/index.ts",
     "exports": {
         ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.es.js",
-            "require": "./dist/index.cjs.js"
-        },
-        "./badge": {
-            "types": "./dist/badge.d.ts",
-            "import": "./dist/badge.es.js",
-            "require": "./dist/badge.cjs.js"
-        },
-        "./define": {
-            "types": "./dist/define.d.ts",
-            "import": "./dist/define.es.js",
-            "require": "./dist/define.cjs.js"
+            "import": "./lib/index.ts",
+            "types": "./lib/index.ts"
         }
     },
     "devDependencies": {

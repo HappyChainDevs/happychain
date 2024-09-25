@@ -2,12 +2,26 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "display": "Default",
     "compilerOptions": {
-        "noEmit": true,
         "target": "ESNext",
         "module": "ESNext",
         "skipLibCheck": true,
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": true,
+        "composite": true,
+        "isolatedModules": true,
+
+        "noEmit": false,
+        "emitDeclarationOnly": true,
+
+        // Everyone needs ESNext, only the frontend needs DOM and DOM.Iterable.
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+
+        // TODO review various flags
+        "jsx": "react-jsx",
+        "allowJs": true,
+        "resolveJsonModule": true,
+
+        "moduleDetection": "force",
 
         // Best practices & Linting
         "strict": true,

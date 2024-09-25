@@ -1,5 +1,8 @@
 {
     "name": "@happychain/configs",
     "version": "0.0.0",
-    "private": true
+    "private": true,
+    "devDependencies": {
+        "@types/bun": "^1.1.8"
+    }
 }

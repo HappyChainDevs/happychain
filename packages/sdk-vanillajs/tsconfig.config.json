@@ -1,0 +1,10 @@
+{
+    "extends": "@happychain/configs/tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "./dist"
+    },
+    "include": ["vite.config.ts", "bundle.ts", "happydom.ts", "lib"],
+
+    // So we can import ../configs/bundle.ts
+    "references": [{ "path": "../configs/tsconfig.json" }]
+}

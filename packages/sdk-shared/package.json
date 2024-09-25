@@ -1,9 +1,18 @@
 {
     "name": "@happychain/sdk-shared",
-    "version": "1.0.0",
     "private": true,
+    "version": "0.0.0",
     "type": "module",
-    "main": "lib/index.ts",
+    "files": ["dist"],
+    "main": "./lib/index.ts",
+    "module": "./lib/index.ts",
+    "types": "./lib/index.ts",
+    "exports": {
+        ".": {
+            "import": "./lib/index.ts",
+            "types": "./lib/index.ts"
+        }
+    },
     "dependencies": {
         "@happychain/common": "workspace:^",
         "viem": "^2.21.7"

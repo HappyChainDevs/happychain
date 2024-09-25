@@ -1,87 +1,12 @@
-# VanillaJS SDK
+# HappyChain JS SDK
 
-Framework-agnostic Vanilla JS / Typescript SDK.
+This SDK can be used to use HappyChain features in any JavaScript or TypeScript web app.
 
-## Quick Start
+If you are using React, we recommend using the [React SDK](../sdk-react) instead.
 
-Register the webcomponent in your app
+For usage, see the [documentation](https://happychain.pages.dev/js/getting-started).
 
-```js
-import '@happychain/js'
-```
+## Dev Notes
 
-then include somewhere in your html
-
-```html
-<!doctype html>
-<html lang="en">
-    <body>
-        <happy-wallet></happy-wallet>
-    </body>
-</html>
-```
-
-Alternatively, you can call `register` to auto-register the component on the page
-
-```js
-import { register } from '@happychain/js'
-
-register()
-```
-
-## EIP1193Provider
-
-The raw eip1193provider is exposed directly, so you can initialize any compatible web3 library of your choosing. Viem, ethers, wagmi, web3 are all supported.
-
-```jsx
-import { happyProvider } from '@happychain/js'
-
-// viem
-const publicClient = createPublicClient({ transport: custom(provider) })
-let walletClient
-onUserUpdate((user) => {
-    walletClient = user?.address ? createWalletClient({
-        account: user.address,
-        transport: custom(provider)
-    })
-})
-
-// ethers v5
-const ethersV5Provider = new ethers.providers.Web3Provider(provider)
-
-// ethers v6
-const ethersV6Provider = new BrowserProvider(provider)
-```
-
-## User Updates
-
-User changes (logging in, logging out) can be subscribed to using the `onUserUpdate` function. Pass it the callback you wish to execute when user details are updated
-
-```ts
-import { onUserUpdate } from '@happychain/js'
-
-onUserUpdate((user) => {
-    if (!user) {
-        // user is logged out
-        return
-    }
-
-    // user is logged in, see HappyUser interface below
-})
-```
-
-```ts
-interface HappyUser {
-    /**
-     * Social Details
-     */
-    email: string
-    name: string
-    avatar: string
-
-    /**
-     * Currently active wallet address
-     */
-    address: `0x${string}`
-}
-```
+- `viem` is a dev dependency because we only import types from it, however we still end up bundling
+  part of it because of the op-stack chain config import in `sdk-shared`.

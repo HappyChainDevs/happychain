@@ -1,3 +1,6 @@
 # Common
 
-Common hooks, react components, utility functions to be used internally and shared between packages.
+Common utilities and definitions to be shared between packages.
+
+See also [`packages/sdk-shared`](../sdk-shared) for SDK-specific functionality shared between the
+SDK (app side) and the iframe page.

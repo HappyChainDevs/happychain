@@ -57,7 +57,7 @@ Add or update `tsconfig.json` with your preferred config `tsconfig.*.json`
 ```jsonc
 {
 	// tsconfig.vite-lib.json, tsconfig.vite-node.json, tsconfig.next.json
-	"extends": "@happychain/configs/tsconfig.bun.json",
+	"extends": "@happychain/configs/tsconfig.base.json",
 	"include": ["lib"]
 }
 ```
@@ -65,7 +65,7 @@ Add or update `tsconfig.json` with your preferred config `tsconfig.*.json`
 To customize, simple update with the overrides
 ```jsonc
 {
-	"extends": "@happychain/configs/tsconfig.bun.json",
+	"extends": "@happychain/configs/tsconfig.base.json",
 	"compilerOptions": {
 		"baseUrl": "./lib",
 		"paths": { "lib/*": ["./*"] }

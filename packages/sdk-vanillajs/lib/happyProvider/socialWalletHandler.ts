@@ -6,12 +6,12 @@ import {
     EIP1193UserRejectedRequestError,
     GenericProviderRpcError,
     type HappyUser,
+    ModalStates,
     Msgs,
     type PopupMsgsFromIframe,
     type UUID,
     createUUID,
 } from "@happychain/sdk-shared"
-import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 

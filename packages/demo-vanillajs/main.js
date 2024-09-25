@@ -1,6 +1,6 @@
 // register web-component & import useful functions
 import { connect, disconnect, getCurrentUser, happyProvider, onUserUpdate, register } from "@happychain/js"
-import { defineBadgeComponent } from "@happychain/ui/define"
+import { defineBadgeComponent } from "@happychain/ui"
 import { BrowserProvider } from "ethers"
 import "./style.css"
 

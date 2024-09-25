@@ -1,14 +1,35 @@
 {
     "name": "@happychain/common",
-    "version": "1.0.0",
-    "main": "lib/index.ts",
+    "private": true,
+    "version": "0.0.0",
     "type": "module",
+    "files": ["./dist"],
+    "main": "./lib/index.ts",
+    "module": "./lib/index.ts",
+    "types": "./lib/index.ts",
+    "exports": {
+        ".": {
+            "import": "./lib/index.ts",
+            "types": "./lib/index.ts"
+        }
+    },
+    "peerDependencies": {
+        "jotai": "^2.9.3",
+        "react": "^18.3.1"
+    },
+    "peerDependenciesMeta": {
+        "jotai": {
+            "optional": true
+        },
+        "react": {
+            "optional": true
+        }
+    },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
+        "@types/bun": "^1.1.8",
         "@types/react": "^18.3.4",
-        "jotai": "^2.9.3",
-        "react": "^18.3.1",
-        "vite-plugin-node-polyfills": "^0.22.0",
-        "viem": "^2.20.1"
+        "vite": "^5.4.2",
+        "vite-plugin-node-polyfills": "^0.22.0"
     }
 }

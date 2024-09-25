@@ -23,27 +23,35 @@ importers:
         version: 5.6.2
 
   packages/common:
-    devDependencies:
-      '@happychain/configs':
-        specifier: workspace:^
-        version: link:../configs
-      '@types/react':
-        specifier: ^18.3.4
-        version: 18.3.4
+    dependencies:
       jotai:
         specifier: ^2.9.3
         version: 2.9.3(@types/react@18.3.4)(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
-      viem:
-        specifier: ^2.20.1
-        version: 2.21.7(bufferutil@4.0.8)(typescript@5.6.2)(utf-8-validate@5.0.10)(zod@3.23.8)
+    devDependencies:
+      '@happychain/configs':
+        specifier: workspace:^
+        version: link:../configs
+      '@types/bun':
+        specifier: ^1.1.8
+        version: 1.1.8
+      '@types/react':
+        specifier: ^18.3.4
+        version: 18.3.4
+      vite:
+        specifier: ^5.4.2
+        version: 5.4.2(@types/node@22.5.5)(terser@5.33.0)
       vite-plugin-node-polyfills:
         specifier: ^0.22.0
         version: 0.22.0(rollup@4.21.1)(vite@5.4.2(@types/node@22.5.5)(terser@5.33.0))
 
-  packages/configs: {}
+  packages/configs:
+    devDependencies:
+      '@types/bun':
+        specifier: ^1.1.8
+        version: 1.1.8
 
   packages/contracts:
     dependencies:
@@ -575,6 +583,19 @@ importers:
         version: 0.22.0(rollup@4.21.1)(vite@5.4.2(@types/node@22.5.5)(terser@5.33.0))
 
   packages/sdk-vanillajs:
+    dependencies:
+      '@happychain/sdk-shared':
+        specifier: workspace:^
+        version: link:../sdk-shared
+      '@metamask/safe-event-emitter':
+        specifier: ^3.1.1
+        version: 3.1.1
+      lit:
+        specifier: ^3.2.0
+        version: 3.2.0
+      mipd:
+        specifier: ^0.0.7
+        version: 0.0.7(typescript@5.6.2)
     devDependencies:
       '@happy-dom/global-registrator':
         specifier: ^15.0.0
@@ -582,12 +603,6 @@ importers:
       '@happychain/configs':
         specifier: workspace:^
         version: link:../configs
-      '@happychain/sdk-shared':
-        specifier: workspace:^
-        version: link:../sdk-shared
-      '@metamask/safe-event-emitter':
-        specifier: ^3.1.1
-        version: 3.1.1
       '@types/bun':
         specifier: ^1.1.8
         version: 1.1.8
@@ -597,12 +612,6 @@ importers:
       happy-dom:
         specifier: ^15.0.0
         version: 15.0.0
-      lit:
-        specifier: ^3.2.0
-        version: 3.2.0
-      mipd:
-        specifier: ^0.0.7
-        version: 0.0.7(typescript@5.6.2)
       postcss:
         specifier: ^8.4.41
         version: 8.4.41

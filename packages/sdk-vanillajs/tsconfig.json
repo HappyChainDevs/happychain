@@ -1,9 +1,10 @@
 {
-    "files": [],
+    "extends": "@happychain/configs/tsconfig.base.json",
     "compilerOptions": {
-        // Required for LitElement reactive properties
+        "outDir": "./dist",
         "experimentalDecorators": true,
         "useDefineForClassFields": false
     },
-    "references": [{ "path": "./tsconfig.lib.json" }, { "path": "./tsconfig.node.json" }]
+    "include": ["lib"],
+    "references": [{ "path": "tsconfig.config.json" }]
 }

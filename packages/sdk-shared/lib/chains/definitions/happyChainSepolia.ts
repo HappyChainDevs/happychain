@@ -1,4 +1,3 @@
-import { defineChain } from "viem"
 import { chainConfig } from "viem/op-stack"
 import type { ChainParameters } from "../utils.ts"
 
@@ -88,7 +87,16 @@ const contracts = {
 
 export const sourceId = rollup.l1_chain_id
 
-export const happyChainSepoliaViemChain = defineChain({
+/**
+ * Definition of the HappyChain Sepolia chain, in a Viem-type-compliant format.
+ */
+export const happyChainSepoliaViemChain = {
+    // The only thing that Viem's define chain does on the object it receives is define
+    // `formatters`, `serializers` and `fees` as undefined. The chainConfig already has the
+    // formatters and the serializers, so we only need to set the fees.
+    // Ref: https://github.com/wevm/viem/blob/viem%402.21.14/src/utils/chain/defineChain.ts
+    fees: undefined,
+
     ...chainConfig,
     id: Number(happyChainSepolia.chainId),
     name: happyChainSepolia.chainName,
@@ -133,4 +141,4 @@ export const happyChainSepoliaViemChain = defineChain({
         },
     },
     sourceId,
-})
+}

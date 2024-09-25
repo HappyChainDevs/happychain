@@ -1,17 +1,5 @@
 {
     "$schema": "https://json.schemastore.org/tsconfig",
     "display": "Vite App/Lib",
-    "extends": "./tsconfig.base.json",
-    "compilerOptions": {
-        "composite": true,
-        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.lib.tsbuildinfo",
-        "target": "ESNext",
-        "lib": ["ESNext", "DOM", "DOM.Iterable"],
-        "module": "ESNext",
-        "skipLibCheck": true,
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "moduleDetection": "force",
-        "jsx": "react-jsx"
-    }
+    "extends": "./tsconfig.base.json"
 }

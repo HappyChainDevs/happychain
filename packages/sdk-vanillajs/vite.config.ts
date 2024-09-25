@@ -1,3 +1,4 @@
+import { resolve } from "node:path"
 import { defineConfig } from "vite"
 import dts from "vite-plugin-dts"
 import { hmrPlugin, presets } from "vite-plugin-web-components-hmr"
@@ -13,7 +14,7 @@ export default defineConfig(({ mode }) => {
                 insertTypesEntry: true,
                 rollupTypes: true,
                 bundledPackages: ["viem", "abitype", "@metamask/safe-event-emitter", "@happychain/sdk-shared"],
-                tsconfigPath: "./tsconfig.lib.json",
+                tsconfigPath: "./tsconfig.json",
                 compilerOptions: {
                     rootDir: "../",
                 },
@@ -27,6 +28,10 @@ export default defineConfig(({ mode }) => {
                 fileName: (format) => `index.${format}.js`,
             },
             rollupOptions: {
+                input: {
+                    // `vite dev` will complain it can't find the entrypoint if this is missing.
+                    main: resolve(__dirname, "lib/index.ts"),
+                },
                 external: mode === "production" ? "" : /^lit-element/,
             },
             copyPublicDir: false,

@@ -8,6 +8,4 @@ export type { HTTPString, AssertAssignableTo, AssertCompatible, TupleUnion } fro
 
 export { bigIntMax } from "./utils/bigint"
 
-export { happyChainTestnetChain } from "./viem/chains"
-
 export { validateNumericInput } from "./utils/regexChecks"

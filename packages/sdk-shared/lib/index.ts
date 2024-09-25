@@ -19,7 +19,7 @@ export {
     getEIP1193ErrorObjectFromCode,
     getEIP1193ErrorObjectFromUnknown,
 } from "./interfaces/errors"
-export { Msgs } from "./interfaces/events"
+export { Msgs, ModalStates } from "./interfaces/events"
 export { permissionsLists, requiresApproval } from "./interfaces/permissions"
 
 export { EventBus, EventBusMode } from "./services/eventBus"
