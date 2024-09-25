@@ -37,7 +37,6 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
     dispatch: (request: Request) => Promise<T>,
 ): Promise<void> {
     try {
-        console.log({request})
         if (confirmWindowId(request.windowId)) {
             const payload = await dispatch(request)
             void happyProviderBus.emit(Msgs.RequestResponse, {

@@ -53,8 +53,6 @@ export class IframeProvider extends SafeEventEmitter {
         return new Promise(async (resolve, reject) => {
             const requiresUserApproval = checkIfRequestRequiresConfirmation(args)
 
-            console.log({args})
-
             if (!requiresUserApproval) {
                 const permissionlessReqPayload = {
                     key,
@@ -120,6 +118,7 @@ export class IframeProvider extends SafeEventEmitter {
         return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: currently testing, will remove once approach is approved
     public handleRequestResolution(data: any) {
         const req = this.inFlightRequests.get(data.key)
 
