@@ -4,15 +4,21 @@ import { createConfig } from "wagmi"
 import { happyConnector } from "./connnector"
 import { iframeProvider } from "./provider"
 
+// cf. https://wagmi.sh/react/typescript#declaration-merging
+declare module "wagmi" {
+    interface Register {
+        config: typeof config
+    }
+}
+
 const currentChain = convertToViemChain(getChainFromSearchParams())
 
 /**
  * Create Wagmi Config with custom connector to support HappyChain Sepolia.
- * Enables discovery of injected providers via EIP-6963 using the `mipd` library and converting to injected connectors.
  */
 export const config = createConfig({
     chains: [currentChain],
-    multiInjectedProviderDiscovery: false,
+    multiInjectedProviderDiscovery: false, // toggled off to not listen for native injected browsers
     transports: {
         [currentChain.id]: custom(iframeProvider),
     },
