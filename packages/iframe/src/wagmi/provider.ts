@@ -56,7 +56,7 @@ export class IframeProvider extends SafeEventEmitter {
             if (!requiresUserApproval) {
                 const permissionlessReqPayload = {
                     key,
-                    windowId: createUUID(),
+                    windowId: this.iframeId,
                     error: null,
                     payload: args,
                 }
