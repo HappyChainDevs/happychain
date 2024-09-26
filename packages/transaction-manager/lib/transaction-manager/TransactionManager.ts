@@ -112,7 +112,10 @@ export class TransactionManager {
 
     private async onNewBlock() {
         const { maxFeePerGas, maxPriorityFeePerGas } = this.gasPriceOracle.suggestGasForNextBlock()
-        const transactionsBatch = this.collectors.flatMap((c) => c())
+
+        const transactionsBatch = this.collectors
+            .flatMap((c) => c())
+            .sort((a, b) => (a.deadline ?? Number.POSITIVE_INFINITY) - (b.deadline ?? Number.POSITIVE_INFINITY))
 
         const entityManager = dbDriver.em.fork()
 
