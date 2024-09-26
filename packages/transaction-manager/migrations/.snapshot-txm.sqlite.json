@@ -62,6 +62,16 @@
                     "nullable": false,
                     "length": null,
                     "mappedType": "text"
+                },
+                "deadline": {
+                    "name": "deadline",
+                    "type": "integer",
+                    "unsigned": false,
+                    "autoincrement": false,
+                    "primary": false,
+                    "nullable": true,
+                    "length": null,
+                    "mappedType": "integer"
                 }
             },
             "name": "transaction",

@@ -22,6 +22,9 @@ export class Transaction {
     @Property()
     readonly contractName: string
 
+    @Property({ nullable: true, type: "integer" })
+    readonly deadline: number | undefined
+
     constructor({
         intentId,
         chainId,
@@ -29,6 +32,7 @@ export class Transaction {
         functionName,
         alias,
         args,
+        deadline,
     }: {
         intentId?: UUID | undefined
         chainId: number
@@ -36,6 +40,7 @@ export class Transaction {
         functionName: string
         alias: string
         args: ContractFunctionArgs | undefined
+        deadline?: number | undefined
     }) {
         this.intentId = intentId ?? createUUID()
         this.chainId = chainId
@@ -43,5 +48,6 @@ export class Transaction {
         this.functionName = functionName
         this.contractName = alias
         this.args = args
+        this.deadline = deadline
     }
 }

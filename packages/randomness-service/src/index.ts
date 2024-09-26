@@ -55,6 +55,7 @@ client.addTransactionCollector(() => {
             functionName: "store",
             alias: "Storage",
             args: [number],
+            deadline: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 60),
         })
         transactions.push(transaction)
     }
