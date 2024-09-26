@@ -1,9 +1,12 @@
 import {
+  type EIP1193ErrorObject,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
     EIP1193UserRejectedRequestError,
     GenericProviderRpcError,
+    type ProviderEventError,
+    type ProviderEventPayload,
     type UUID,
     config,
     createUUID,
@@ -37,13 +40,11 @@ type InFlightCheck = {
  * which is configured to represent the HappyChain's iframe provider as below.
  */
 export class IframeProvider extends SafeEventEmitter {
-    public iframeId = createUUID()
+    public iframeWindowId = createUUID()
 
     private inFlightRequests = new Map<string, InFlightRequest>()
-    private inFlightChecks = new Map<string, InFlightCheck>()
     private timer: Timer | null = null
 
-    // no promise resolution
     public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
     ): Promise<EIP1193RequestResult<TString>> {
@@ -56,11 +57,14 @@ export class IframeProvider extends SafeEventEmitter {
             if (!requiresUserApproval) {
                 const permissionlessReqPayload = {
                     key,
-                    windowId: this.iframeId,
+                    windowId: this.iframeWindowId,
                     error: null,
                     payload: args,
                 }
 
+                console.log({ permissionlessReqPayload })
+
+                // auto approve
                 void handlePermissionlessRequest(permissionlessReqPayload)
 
                 this.queueRequest(key, { resolve, reject, popup: null })
@@ -75,7 +79,6 @@ export class IframeProvider extends SafeEventEmitter {
 
     private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
         this.inFlightRequests.set(key, { resolve, reject, popup })
-        console.log(this.inFlightRequests)
 
         const intervalMs = 100
 
@@ -110,7 +113,7 @@ export class IframeProvider extends SafeEventEmitter {
         // handled my middleware
         const url = new URL("request", config.iframePath)
         const opts = {
-            windowId: this.iframeId,
+            windowId: this.iframeWindowId,
             key: key,
             args: btoa(JSON.stringify(args)),
         }
@@ -119,7 +122,7 @@ export class IframeProvider extends SafeEventEmitter {
     }
 
     // biome-ignore lint/suspicious/noExplicitAny: currently testing, will remove once approach is approved
-    public handleRequestResolution(data: any) {
+    public handleRequestResolution(data: ProviderEventPayload<EIP1193RequestResult> | ProviderEventError<EIP1193ErrorObject>) {
         const req = this.inFlightRequests.get(data.key)
 
         if (!req) {

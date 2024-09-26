@@ -16,7 +16,9 @@ const parentID = new URLSearchParams(window.location.search).get("windowId")
 /** Don't process requests coming from windows other than the parent window. */
 export const confirmWindowId = (windowId: ReturnType<typeof crypto.randomUUID>) => windowId === parentID
 
-export const confirmIframeId = (windowId: ReturnType<typeof crypto.randomUUID>) => windowId === iframeProvider.iframeId
+/** Check if request has originated from within the iframe itself, from the internal wagmi provider. */
+export const confirmIframeId = (windowId: ReturnType<typeof crypto.randomUUID>) =>
+    windowId === iframeProvider.iframeWindowId
 
 /**
  * Check if the user is authenticated with the social login provider, otherwise throws an error.
@@ -47,10 +49,16 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             })
         } else if (confirmIframeId(request.windowId)) {
             const payload = await dispatch(request)
-            iframeProvider.handleRequestResolution(payload)
+            iframeProvider.handleRequestResolution({
+                key: request.key,
+                windowId: request.windowId,
+                error: null,
+                payload: payload || {},
+            })
             return
         }
     } catch (e) {
+        // how do we want to handle the error case for internal iframe calls, with the same check as above? 
         void happyProviderBus.emit(Msgs.RequestResponse, {
             key: request.key,
             windowId: request.windowId,
