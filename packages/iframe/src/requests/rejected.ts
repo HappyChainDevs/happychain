@@ -23,5 +23,7 @@ export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): 
             error: error,
             payload: null,
         })
+    } else {
+        return
     }
 }
