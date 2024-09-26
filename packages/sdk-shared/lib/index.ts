@@ -24,7 +24,7 @@ export { permissionsLists, requiresApproval } from "./interfaces/permissions"
 
 export { EventBus, EventBusMode } from "./services/eventBus"
 export { logger } from "./services/logger"
-
+export { requestPayloadIsHappyMethod } from "./utils/requestPayloadIsHappyMethod"
 export { waitForCondition } from "./utils/waitForCondition"
 export { shortenAddress } from "./utils/shortenAddress"
 
@@ -38,6 +38,8 @@ export type {
     EIP1193RequestMethods,
     EIP1193RequestParameters,
     EIP1193RequestResult,
+    RPCMethods,
+    HappyMethods,
 } from "./interfaces/eip1193"
 export type { EIP6963ProviderInfo, EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from "./interfaces/eip6963"
 export type { EIP1193ErrorObject, IProviderRpcError } from "./interfaces/errors"

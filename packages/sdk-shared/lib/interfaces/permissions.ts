@@ -9,6 +9,9 @@ import type { EIP1193Parameters } from "viem"
  * Some such as wallet_revokePermissions don't make sense if a user isn't connected, but are still safe to call.
  */
 const safeList = new Set([
+    // happychain methods
+    "happy_user", // => returns the current connected user if permissions are granted and user is connected
+    // standard methods
     "eth_accounts",
     "eth_blobBaseFee",
     "eth_blockNumber",

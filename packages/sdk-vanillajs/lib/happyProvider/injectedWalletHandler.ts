@@ -6,8 +6,10 @@ import {
     type MsgsFromApp,
     isPermissionsRequest,
 } from "@happychain/sdk-shared"
+import { requestPayloadIsHappyMethod } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { createStore } from "mipd"
+import type { ProviderConnectInfo, ProviderMessage, ProviderRpcError } from "viem"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 const store = createStore()
@@ -43,6 +45,10 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
             throw new Error("Can not make request through local connection")
         }
 
+        if (requestPayloadIsHappyMethod(args)) {
+            throw new Error("Injected providers can't yet make happy_ requests")
+        }
+
         const response: EIP1193RequestResult<TString> = await this.localConnection.provider.request(args)
 
         if (isPermissionsRequest(args)) {
@@ -72,7 +78,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
                 return this.handleProviderDisconnectionRequest()
             }
 
-            providerDetails.provider.on("accountsChanged", (accounts) => {
+            providerDetails.provider.on("accountsChanged", (accounts: `0x${string}`[]) => {
                 this.emit("accountsChanged", accounts)
                 if (!accounts.length) {
                     return this.handleProviderDisconnectionRequest()
@@ -81,10 +87,12 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
 
                 this.config.msgBus.emit(Msgs.InjectedWalletConnected, { rdns, address })
             })
-            providerDetails.provider.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
-            providerDetails.provider.on("connect", (connectInfo) => this.emit("connect", connectInfo))
-            providerDetails.provider.on("disconnect", (error) => this.emit("disconnect", error))
-            providerDetails.provider.on("message", (message) => this.emit("message", message))
+            providerDetails.provider.on("chainChanged", (chainId: string) => this.emit("chainChanged", chainId))
+            providerDetails.provider.on("connect", (connectInfo: ProviderConnectInfo) =>
+                this.emit("connect", connectInfo),
+            )
+            providerDetails.provider.on("disconnect", (error: ProviderRpcError) => this.emit("disconnect", error))
+            providerDetails.provider.on("message", (message: ProviderMessage) => this.emit("message", message))
 
             const [address] = await providerDetails.provider.request({ method: "eth_requestAccounts" })
 

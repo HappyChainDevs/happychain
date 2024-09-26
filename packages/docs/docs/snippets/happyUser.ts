@@ -1,4 +1,4 @@
-interface HappyUser {
+type HappyUser = {
     address: `0x${string}`
     addresses: `0x${string}`[]
     avatar: string

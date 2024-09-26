@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "preact/hooks"
+import type { HappyUser } from "@happychain/sdk-shared"
+import { useEffect, useMemo, useState } from "preact/hooks"
 import type { JSX } from "preact/jsx-runtime"
 import { Animated } from "./components/Animated"
 import { Button } from "./components/Button"
@@ -7,15 +8,14 @@ import { ConnectionStatus } from "./components/ConnectionStatus"
 import { Logo } from "./components/Logo"
 import { Styles } from "./components/Styles"
 import { createRequests } from "./helpers/requests"
+import { useConnection } from "./hooks/useConnection"
 
 const noop = undefined
 
-const { fetchAccounts, requestPermissions, revokePermissions, onAccountsChanged, providerInfo } = createRequests({
-    rdns: "tech.happy",
-})
+const { fetchUser, onAccountsChanged, providerInfo } = createRequests({ rdns: "tech.happy" })
 
 export function Badge({ disableStyles = false }: { disableStyles?: boolean | string }): JSX.Element {
-    const [accounts, setAccounts] = useState<`0x${string}`[]>([])
+    const [user, setUser] = useState<HappyUser | undefined>(undefined)
     const [initialized, setInitialized] = useState(false)
     const [errored, setErrored] = useState(false)
 
@@ -24,22 +24,21 @@ export function Badge({ disableStyles = false }: { disableStyles?: boolean | str
     useEffect(() => {
         async function init() {
             try {
-                const _accounts = await fetchAccounts()
-                setAccounts(_accounts)
+                const user = await fetchUser()
+                setUser(user)
                 setInitialized(true)
             } catch (e) {
                 console.error(e)
                 setErrored(true)
             }
         }
+
         init()
+
+        return onAccountsChanged(setUser)
     }, [])
 
-    useEffect(() => {
-        return onAccountsChanged(setAccounts)
-    }, [])
-
-    const connected = accounts.length > 0
+    const connected = Boolean(user?.address)
 
     const onClick = useMemo(
         () => (!initialized || connecting ? noop : connected ? disconnect : connect),
@@ -60,40 +59,16 @@ export function Badge({ disableStyles = false }: { disableStyles?: boolean | str
                 <Button
                     onClick={onClick}
                     disabled={!initialized || connecting}
-                    className={!accounts.length ? `${state} animated` : state}
+                    className={!connected ? `${state} animated` : state}
                 >
                     <span>
                         <Logo info={provider} />
                         <Animated state={state}>
-                            <ConnectionStatus initialized={initialized} connecting={connecting} accounts={accounts} />
+                            <ConnectionStatus initialized={initialized} connecting={connecting} user={user} />
                         </Animated>
                     </span>
                 </Button>
             )}
         </div>
     )
-}
-
-function useConnection() {
-    const [connecting, setConnecting] = useState(false)
-
-    const connect = useCallback(async () => {
-        try {
-            setConnecting(true)
-            await requestPermissions()
-        } finally {
-            setConnecting(false)
-        }
-    }, [])
-
-    const disconnect = useCallback(async () => {
-        try {
-            setConnecting(true)
-            await revokePermissions()
-        } finally {
-            setConnecting(false)
-        }
-    }, [])
-
-    return { connect, disconnect, connecting }
 }

@@ -1,5 +1,5 @@
 import { createUUID } from "@happychain/common"
-import type { HappyUser } from "@happychain/sdk-shared"
+import { type HappyUser, logger } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/index"
 import {
     type AppPermissions,
@@ -30,7 +30,7 @@ export function getDappPermissions(
     permissions: PermissionsMap = store.get(permissionsAtom),
 ): AppPermissions {
     if (!user) {
-        console.warn("No user found, returning empty permissions.")
+        logger.warn("No user found, returning empty permissions.")
         return {}
     }
 

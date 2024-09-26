@@ -1,18 +1,31 @@
 import type { TupleUnion } from "@happychain/common"
 import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
+import type { HappyUser } from "./happyUser"
+
+// === HAPPY METHODS =============================================================================
+export type HappyMethods = [
+    {
+        Method: "happy_user"
+        Parameters?: undefined
+        ReturnType: HappyUser | undefined
+    },
+]
+
+// === RPC METHODS =============================================================================
+export type RPCMethods = [...HappyMethods, ...EIP1474Methods]
 
 // === EIP1193 METHODS =============================================================================
 
 /**
  * Union type of all EIP1193 request methods names.
  */
-export type EIP1193RequestMethods = EIP1474Methods[number]["Method"]
+export type EIP1193RequestMethods = RPCMethods[number]["Method"]
 
 /**
  * Union type of all EIP1193 request types.
  */
 export type EIP1193RequestParameters<TString extends EIP1193RequestMethods = EIP1193RequestMethods> = Extract<
-    EIP1193Parameters<EIP1474Methods>,
+    EIP1193Parameters<RPCMethods>,
     { method: TString }
 >
 
@@ -20,7 +33,7 @@ export type EIP1193RequestParameters<TString extends EIP1193RequestMethods = EIP
  * Union type of all EIP1193 request results.
  */
 export type EIP1193RequestResult<TString extends EIP1193RequestMethods = EIP1193RequestMethods> = Extract<
-    EIP1474Methods[number],
+    RPCMethods[number],
     { Method: TString }
 >["ReturnType"]
 
