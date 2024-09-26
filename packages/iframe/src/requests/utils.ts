@@ -39,26 +39,23 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
     dispatch: (request: Request) => Promise<T>,
 ): Promise<void> {
     try {
-        if (confirmWindowId(request.windowId)) {
+        if (confirmWindowId(request.windowId) || confirmIframeId(request.windowId)) {
             const payload = await dispatch(request)
-            void happyProviderBus.emit(Msgs.RequestResponse, {
+            const response = {
                 key: request.key,
                 windowId: request.windowId,
                 error: null,
                 payload: payload || {},
-            })
-        } else if (confirmIframeId(request.windowId)) {
-            const payload = await dispatch(request)
-            iframeProvider.handleRequestResolution({
-                key: request.key,
-                windowId: request.windowId,
-                error: null,
-                payload: payload || {},
-            })
-            return
+            }
+
+            if (confirmWindowId(request.windowId)) {
+                void happyProviderBus.emit(Msgs.RequestResponse, response)
+            } else {
+                iframeProvider.handleRequestResolution(response)
+            }
         }
     } catch (e) {
-        // how do we want to handle the error case for internal iframe calls, with the same check as above?
+        // how do we want to handle the error case for internal iframe calls? with the same check as above?
         void happyProviderBus.emit(Msgs.RequestResponse, {
             key: request.key,
             windowId: request.windowId,
