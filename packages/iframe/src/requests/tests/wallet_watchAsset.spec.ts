@@ -3,6 +3,7 @@ import { AuthState } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
 import { beforeEach, describe, expect, test } from "vitest"
+import { vi } from "vitest"
 import { getWatchedAssets } from "../../services/watchedAssets/utils"
 import { authStateAtom } from "../../state/authState"
 import { userAtom } from "../../state/user"
@@ -17,6 +18,11 @@ function makePayload(payload: EIP1193RequestParameters) {
         payload,
     } as ProviderEventPayload<EIP1193RequestParameters>
 }
+
+vi.mock("../../utils/getDappOrigin", async () => ({
+    getDappOrigin: () => "http://localhost:5160",
+    getIframeOrigin: () => "http://localhost:5160",
+}))
 
 describe("walletClient wallet_watchAsset", () => {
     let user: HappyUser

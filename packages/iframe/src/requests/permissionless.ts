@@ -1,5 +1,13 @@
-import { type Msgs, type ProviderMsgsFromApp, getChainFromSearchParams } from "@happychain/sdk-shared"
-import { type Client, UnauthorizedProviderError, UserRejectedRequestError } from "viem"
+import {
+    EIP1193UnauthorizedError,
+    EIP1193UnsupportedMethodError,
+    EIP1193UserRejectedRequestError,
+    type Msgs,
+    type ProviderMsgsFromApp,
+    getChainFromSearchParams,
+    requestPayloadIsHappyMethod,
+} from "@happychain/sdk-shared"
+import type { Client } from "viem"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "../services/permissions"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
@@ -25,10 +33,13 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         case "eth_accounts":
             return hasPermissions("eth_accounts") ? getUser()?.addresses : []
 
+        case "happy_user":
+            return hasPermissions("eth_accounts") ? getUser() : undefined
+
         case "eth_requestAccounts":
             checkAuthenticated()
             if (!hasPermissions("eth_accounts")) {
-                throw new UserRejectedRequestError(new Error("Permission not previously granted"))
+                throw new EIP1193UserRejectedRequestError()
             }
             return getUser()?.addresses
 
@@ -49,10 +60,15 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
     }
 }
 
-async function sendToPublicClient(data: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
-    if (checkIfRequestRequiresConfirmation(data.payload)) {
-        throw new UnauthorizedProviderError(new Error("Not allowed"))
+async function sendToPublicClient(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
+    if (checkIfRequestRequiresConfirmation(request.payload)) {
+        throw new EIP1193UnauthorizedError()
     }
     const client: Client = getPublicClient()
-    return await client.request(data.payload)
+
+    if (requestPayloadIsHappyMethod(request.payload)) {
+        throw new EIP1193UnsupportedMethodError()
+    }
+
+    return await client.request(request.payload)
 }

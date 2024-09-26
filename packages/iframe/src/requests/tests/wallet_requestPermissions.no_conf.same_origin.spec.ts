@@ -1,8 +1,7 @@
 import { createUUID } from "@happychain/common"
-import { AuthState } from "@happychain/sdk-shared"
+import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
 import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
-import { UnauthorizedProviderError } from "viem"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "../../services/permissions"
@@ -37,7 +36,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
         test("skips wallet_requestPermissions permissions when no user", async () => {
             expect(getAllPermissions().length).toBe(0)
             const request = makePayload({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
-            expect(dispatchHandlers(request)).rejects.toThrow(UnauthorizedProviderError)
+            expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
 

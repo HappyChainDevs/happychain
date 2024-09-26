@@ -71,7 +71,7 @@ onUserUpdate((user) => {
 ```
 
 ```ts
-interface HappyUser {
+type HappyUser = {
     /**
      * Social Details
      */

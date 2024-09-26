@@ -29,9 +29,15 @@
                 "useSortedClasses": "off"
             },
             "correctness": {
-                "noUnusedVariables": "warn",
+                "noUnusedVariables": {
+                    "level": "warn",
+                    "fix": "unsafe"
+                },
                 "useHookAtTopLevel": "error",
-                "noUnusedImports": "warn"
+                "noUnusedImports": {
+                    "level": "warn",
+                    "fix": "unsafe"
+                }
             },
             "style": {
                 "noNamespace": "error"
@@ -89,6 +95,19 @@
                     "correctness": {
                         "noUnusedVariables": "off",
                         "useHookAtTopLevel": "off"
+                    }
+                }
+            }
+        },
+        {
+            "include": ["**/docs/snippets/*"],
+            "linter": {
+                "rules": {
+                    "suspicious": {
+                        "noConsoleLog": "off"
+                    },
+                    "correctness": {
+                        "noUnusedVariables": "off"
                     }
                 }
             }

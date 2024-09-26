@@ -200,6 +200,9 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
     if (error instanceof SwitchChainError) {
         return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.ChainNotRecognized, error.details)
     }
+    if (error instanceof GenericProviderRpcError) {
+        return getEIP1193ErrorObjectFromCode(error.code, error.message)
+    }
 
     const data =
         !error || typeof error !== "object"

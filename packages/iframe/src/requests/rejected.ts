@@ -5,15 +5,15 @@ import { confirmWindowId } from "./utils"
 /**
  * Processes requests rejected by the user in the pop-up, forwarding the rejection to the app.
  */
-export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): Promise<void> {
-    if (!confirmWindowId(data.windowId)) return
+export async function handleRejectedRequest(request: PopupMsgs[Msgs.PopupReject]): Promise<void> {
+    if (!confirmWindowId(request.windowId)) return
 
-    if (data.error) {
-        void happyProviderBus.emit(Msgs.RequestResponse, data)
+    if (request.error) {
+        void happyProviderBus.emit(Msgs.RequestResponse, request)
     } else {
         void happyProviderBus.emit(Msgs.RequestResponse, {
-            key: data.key,
-            windowId: data.windowId,
+            key: request.key,
+            windowId: request.windowId,
             error: getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest),
             payload: null,
         })

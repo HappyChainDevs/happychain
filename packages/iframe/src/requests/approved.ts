@@ -1,5 +1,13 @@
-import { EIP1193ErrorCodes, type Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happychain/sdk-shared"
-import { type Client, ProviderDisconnectedError } from "viem"
+import {
+    EIP1193DisconnectedError,
+    EIP1193ErrorCodes,
+    EIP1193UnsupportedMethodError,
+    type Msgs,
+    type PopupMsgs,
+    getEIP1193ErrorObjectFromCode,
+    requestPayloadIsHappyMethod,
+} from "@happychain/sdk-shared"
+import type { Client } from "viem"
 import { grantPermissions } from "../services/permissions"
 import { addWatchedAsset } from "../services/watchedAssets/utils"
 import { getChainsMap, setChains } from "../state/chains"
@@ -76,7 +84,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 async function sendToWalletClient(request: PopupMsgs[Msgs.PopupApprove]) {
     const client: Client | undefined = getWalletClient()
     if (!client) {
-        throw new ProviderDisconnectedError(new Error("Wallet client not found"))
+        throw new EIP1193DisconnectedError()
     }
+
+    if (requestPayloadIsHappyMethod(request.payload)) {
+        throw new EIP1193UnsupportedMethodError()
+    }
+
     return await client.request(request.payload)
 }

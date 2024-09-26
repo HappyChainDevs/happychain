@@ -1,12 +1,12 @@
-const short = ([address]: string[]) => `${address.slice(0, 6)}...${address.slice(-4)}`
+import type { HappyUser } from "@happychain/sdk-shared"
 
 export function ConnectionStatus({
     initialized,
     connecting,
-    accounts,
-}: { initialized: boolean; connecting: boolean; accounts: `0x${string}`[] }) {
+    user,
+}: { initialized: boolean; connecting: boolean; user?: HappyUser }) {
     if (!initialized) return <>Loading</>
     if (connecting) return <>Connecting</>
-    if (accounts.length) return <>{short(accounts)}</>
+    if (user) return <>{user.email}</>
     return <>Connect</>
 }

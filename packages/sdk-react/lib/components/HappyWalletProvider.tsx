@@ -1,15 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 
 import type { HappyUser } from "@happychain/js"
-import {
-    connect,
-    disconnect,
-    getCurrentUser,
-    happyProvider,
-    onUserUpdate,
-    register,
-    showSendScreen,
-} from "@happychain/js"
+import { connect, disconnect, happyProvider, onUserUpdate, register, showSendScreen } from "@happychain/js"
 
 type HappyWalletProviderProps = React.PropsWithChildren & {
     init?: Parameters<typeof register>[0]
@@ -23,13 +15,16 @@ type THappyContext = {
 export const HappyContext = createContext<THappyContext>({ user: undefined, initialized: false })
 
 export function HappyWalletProvider({ init, children }: HappyWalletProviderProps): React.JSX.Element {
-    const [user, setUser] = useState<HappyUser | undefined>(getCurrentUser())
+    const [user, setUser] = useState<HappyUser | undefined>()
 
     // register iframe component
     useEffect(() => register(init), [init])
 
     // subscription to user changes
-    useEffect(() => onUserUpdate((user) => setUser(user)), [])
+    useEffect(() => {
+        happyProvider.request({ method: "happy_user" }).then(setUser)
+        onUserUpdate(setUser)
+    }, [])
 
     return <HappyContext.Provider value={{ user, initialized: true }}>{children}</HappyContext.Provider>
 }

@@ -1,11 +1,11 @@
 import {
     AuthState,
     type EIP1193RequestParameters,
+    EIP1193UnauthorizedError,
     Msgs,
     type ProviderEventPayload,
     getEIP1193ErrorObjectFromUnknown,
 } from "@happychain/sdk-shared"
-import { UnauthorizedProviderError } from "viem"
 import { happyProviderBus } from "../services/eventBus"
 import { getAuthState } from "../state/authState"
 
@@ -17,11 +17,11 @@ export const confirmWindowId = (windowId: ReturnType<typeof crypto.randomUUID>) 
 
 /**
  * Check if the user is authenticated with the social login provider, otherwise throws an error.
- * @throws {UnauthorizedProviderError}
+ * @throws {EIP1193UnauthorizedError}
  */
 export function checkAuthenticated() {
     if (getAuthState() !== AuthState.Connected) {
-        throw new UnauthorizedProviderError(new Error("Not allowed"))
+        throw new EIP1193UnauthorizedError()
     }
 }
 
@@ -41,7 +41,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             key: request.key,
             windowId: request.windowId,
             error: null,
-            payload: payload || {},
+            payload: payload || undefined,
         })
     } catch (e) {
         void happyProviderBus.emit(Msgs.RequestResponse, {
