@@ -13,12 +13,10 @@ import { iframeProvider } from "../wagmi/provider"
 /** ID passed to the iframe by the parent window. */
 const parentID = new URLSearchParams(window.location.search).get("windowId")
 
-/** Don't process requests coming from windows other than the parent window. */
-export const confirmWindowId = (windowId: ReturnType<typeof crypto.randomUUID>) => windowId === parentID
-
-/** Check if request has originated from within the iframe itself, from the internal wagmi provider. */
-export const confirmIframeId = (windowId: ReturnType<typeof crypto.randomUUID>) =>
-    windowId === iframeProvider.iframeWindowId
+/** Confirms if the request comes from the parent window or the iframe. */
+export const confirmSourceId = (windowId: ReturnType<typeof crypto.randomUUID>) => {
+    return windowId === parentID || windowId === iframeProvider.iframeWindowId
+}
 
 /**
  * Check if the user is authenticated with the social login provider, otherwise throws an error.
@@ -33,13 +31,24 @@ export function checkAuthenticated() {
 /**
  * Runs the supplied dispatch function on the supplied request, sending the response back to the app
  * in case of success, or processing any thrown error and sending that back to the app.
+ *
+ * The function checks whether the request originated from either the parent window or the internal iframe,
+ * based on the provided `windowId`. If the request comes from the parent window, it emits a response via
+ * the `happyProviderBus`. If the request originates from the internal iframe (from the wagmi provider),
+ * the response is handled by the `iframeProvider`.
+ *
+ * @param request - The request object containing EIP1193 request parameters and the originating `windowId`.
+ * @param dispatch - The function responsible for processing the request and generating a response payload.
+ * @returns {Promise<void>} - The function does not return a value but instead sends the response via
+ *                            the appropriate channel (parent window - message bus, or iframe).
+ * @throws {UnauthorizedProviderError} - If the user is not authenticated when the request is dispatched.
  */
 export async function sendResponse<Request extends ProviderEventPayload<EIP1193RequestParameters>, T>(
     request: Request,
     dispatch: (request: Request) => Promise<T>,
 ): Promise<void> {
     try {
-        if (confirmWindowId(request.windowId) || confirmIframeId(request.windowId)) {
+        if (confirmSourceId(request.windowId)) {
             const payload = await dispatch(request)
             const response = {
                 key: request.key,
@@ -48,19 +57,26 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
                 payload: payload || {},
             }
 
-            if (confirmWindowId(request.windowId)) {
+            if (request.windowId === parentID) {
                 void happyProviderBus.emit(Msgs.RequestResponse, response)
             } else {
                 iframeProvider.handleRequestResolution(response)
             }
         }
     } catch (e) {
-        // how do we want to handle the error case for internal iframe calls? with the same check as above?
-        void happyProviderBus.emit(Msgs.RequestResponse, {
-            key: request.key,
-            windowId: request.windowId,
-            error: getEIP1193ErrorObjectFromUnknown(e),
-            payload: null,
-        })
+        if (confirmSourceId(request.windowId)) {
+            const response = {
+                key: request.key,
+                windowId: request.windowId,
+                error: getEIP1193ErrorObjectFromUnknown(e),
+                payload: null,
+            }
+
+            if (request.windowId === parentID) {
+                void happyProviderBus.emit(Msgs.RequestResponse, response)
+            } else {
+                iframeProvider.handleRequestResolution(response)
+            }
+        }
     }
 }
