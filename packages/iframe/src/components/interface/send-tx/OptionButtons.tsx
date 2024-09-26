@@ -1,6 +1,8 @@
+import { CircleNotch } from "@phosphor-icons/react"
 import { useNavigate } from "@tanstack/react-router"
-import { useCallback } from "react"
-import type { Address } from "viem"
+import { useCallback, useEffect } from "react"
+import { type Address, parseEther } from "viem"
+import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
 
 interface OptionButtonsInterface {
     sendValue: string | undefined
@@ -9,6 +11,15 @@ interface OptionButtonsInterface {
 
 const OptionButtons = ({ sendValue, targetAddress }: OptionButtonsInterface) => {
     const navigate = useNavigate()
+    const { data: hash, isPending, sendTransaction } = useSendTransaction()
+
+    const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash })
+
+    useEffect(() => {
+        // if tx is successful, move back to home page of wallet
+        // @todo: show history tab once in home page
+        if (isConfirmed) navigate({ to: "/embed" })
+    }, [isConfirmed, navigate])
 
     // navigates back to home page
     const cancelButtonOptions = useCallback(() => {
@@ -18,7 +29,12 @@ const OptionButtons = ({ sendValue, targetAddress }: OptionButtonsInterface) => 
     // triggers `eth_sendTransaction` popup only if address and send amounts are valid
     const continueButtonOptions = useCallback(() => {
         // send tx
-    }, [])
+        if (targetAddress && sendValue)
+            sendTransaction({
+                to: targetAddress as Address,
+                value: parseEther(sendValue),
+            })
+    }, [sendTransaction, targetAddress, sendValue])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">
@@ -35,7 +51,13 @@ const OptionButtons = ({ sendValue, targetAddress }: OptionButtonsInterface) => 
                 onClick={continueButtonOptions}
                 disabled={!targetAddress || !sendValue}
             >
-                Continue
+                {!isPending ? (
+                    "Continue"
+                ) : (
+                    <div className="animate-spin">
+                        <CircleNotch />
+                    </div>
+                )}
             </button>
         </div>
     )

@@ -57,8 +57,6 @@ export class IframeProvider extends SafeEventEmitter {
                     payload: args,
                 }
 
-                console.log({ permissionlessReqPayload })
-
                 // auto approve
                 void handlePermissionlessRequest(permissionlessReqPayload)
 
@@ -105,7 +103,6 @@ export class IframeProvider extends SafeEventEmitter {
     }
 
     private openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters) {
-        // handled my middleware
         const url = new URL("request", config.iframePath)
         const opts = {
             windowId: this.iframeWindowId,

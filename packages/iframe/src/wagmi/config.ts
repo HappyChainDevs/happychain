@@ -18,7 +18,7 @@ const currentChain = convertToViemChain(getChainFromSearchParams())
  */
 export const config = createConfig({
     chains: [currentChain],
-    multiInjectedProviderDiscovery: false, // toggled off to not listen for native injected browsers
+    multiInjectedProviderDiscovery: false,
     transports: {
         [currentChain.id]: custom(iframeProvider),
     },
