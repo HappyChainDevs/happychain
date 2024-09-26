@@ -1,5 +1,5 @@
 import {
-  type EIP1193ErrorObject,
+    type EIP1193ErrorObject,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
@@ -25,11 +25,6 @@ type InFlightRequest = {
     resolve: (value: any) => void
     reject: (reason?: unknown) => void
     popup: Window | null
-}
-
-type InFlightCheck = {
-    resolve: (value: boolean) => void
-    reject: (reason?: unknown) => void
 }
 
 /**
@@ -121,8 +116,9 @@ export class IframeProvider extends SafeEventEmitter {
         return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: currently testing, will remove once approach is approved
-    public handleRequestResolution(data: ProviderEventPayload<EIP1193RequestResult> | ProviderEventError<EIP1193ErrorObject>) {
+    public handleRequestResolution(
+        data: ProviderEventPayload<EIP1193RequestResult> | ProviderEventError<EIP1193ErrorObject>,
+    ) {
         const req = this.inFlightRequests.get(data.key)
 
         if (!req) {

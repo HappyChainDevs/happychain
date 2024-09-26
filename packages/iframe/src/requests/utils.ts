@@ -58,7 +58,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             return
         }
     } catch (e) {
-        // how do we want to handle the error case for internal iframe calls, with the same check as above? 
+        // how do we want to handle the error case for internal iframe calls, with the same check as above?
         void happyProviderBus.emit(Msgs.RequestResponse, {
             key: request.key,
             windowId: request.windowId,
