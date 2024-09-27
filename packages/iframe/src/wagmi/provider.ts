@@ -1,3 +1,4 @@
+import { type UUID, createUUID } from "@happychain/common"
 import {
     type EIP1193ErrorObject,
     type EIP1193RequestMethods,
@@ -7,9 +8,7 @@ import {
     GenericProviderRpcError,
     type ProviderEventError,
     type ProviderEventPayload,
-    type UUID,
     config,
-    createUUID,
 } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193Provider } from "viem"
