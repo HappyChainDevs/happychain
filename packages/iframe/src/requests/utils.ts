@@ -48,35 +48,29 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
     dispatch: (request: Request) => Promise<T>,
 ): Promise<void> {
     try {
-        if (confirmSourceId(request.windowId)) {
-            const payload = await dispatch(request)
-            const response = {
-                key: request.key,
-                windowId: request.windowId,
-                error: null,
-                payload: payload || {},
-            }
-
-            if (request.windowId === parentID) {
-                void happyProviderBus.emit(Msgs.RequestResponse, response)
-            } else {
-                iframeProvider.handleRequestResolution(response)
-            }
+        if (!confirmSourceId(request.windowId)) return
+        const payload = await dispatch(request)
+        const response = {
+            key: request.key,
+            windowId: request.windowId,
+            error: null,
+            payload: payload || {},
         }
+
+        request.windowId === parentID
+            ? void happyProviderBus.emit(Msgs.RequestResponse, response)
+            : void iframeProvider.handleRequestResolution(response)
     } catch (e) {
-        if (confirmSourceId(request.windowId)) {
-            const response = {
-                key: request.key,
-                windowId: request.windowId,
-                error: getEIP1193ErrorObjectFromUnknown(e),
-                payload: null,
-            }
-
-            if (request.windowId === parentID) {
-                void happyProviderBus.emit(Msgs.RequestResponse, response)
-            } else {
-                iframeProvider.handleRequestResolution(response)
-            }
+        if (!confirmSourceId(request.windowId)) return
+        const response = {
+            key: request.key,
+            windowId: request.windowId,
+            error: getEIP1193ErrorObjectFromUnknown(e),
+            payload: null,
         }
+
+        request.windowId === parentID
+            ? void happyProviderBus.emit(Msgs.RequestResponse, response)
+            : void iframeProvider.handleRequestResolution(response)
     }
 }
