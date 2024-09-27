@@ -1,14 +1,9 @@
 import { type ConnectionProvider, Msgs } from "@happychain/sdk-shared"
-import clsx from "clsx"
-
 import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
+import clsx from "clsx"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
 import { appMessageBus } from "../services/eventBus"
-
-function open() {
-    void appMessageBus.emit(Msgs.ModalToggle, true)
-}
 
 function close() {
     void appMessageBus.emit(Msgs.ModalToggle, false)
@@ -21,29 +16,32 @@ async function connect(provider: ConnectionProvider) {
 
 appMessageBus.on(Msgs.RequestDisplay, (screen) => {
     if (screen === ModalStates.Login) {
-        open()
+        void appMessageBus.emit(Msgs.ModalToggle, true)
     }
 })
 
-export function ConnectButton() {
+export function ConnectModal() {
     const web3Providers = useInjectedProviders()
     const socialProviders = useSocialProviders()
 
     return (
         <>
-            <main className="h-screen w-screen rounded-xl overflow-hidden">
-                <button type="button" onClick={open} className="btn btn-primary w-full h-full lg:hidden">
-                    Login
-                </button>
-                {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
+            <main className="h-dvh w-screen rounded-xl overflow-hidden">
                 <div
-                    className={clsx(
-                        "fixed bottom-0 left-0 right-0 top-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition duration-0 lg:duration-300 opacity-0 pointer-events-none lg:pointer-events-auto lg:opacity-100",
-                    )}
                     onClick={close}
+                    onKeyDown={close}
+                    className={clsx(
+                        "fixed left-0 right-0 top-0 h-dvh",
+                        "flex items-center justify-center",
+                        "bg-slate-900/50 backdrop-blur-sm",
+                        "transition duration-0 lg:duration-300 opacity-0 lg:opacity-100",
+                    )}
                 >
-                    {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-                    <div className="flex gap-4 rounded-md bg-zinc-100 p-8" onClick={(e) => e.stopPropagation()}>
+                    <div
+                        className="flex gap-4 rounded-md bg-zinc-100 p-8"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                    >
                         <div className="flex items-center justify-center">
                             <div className="flex flex-col items-center gap-4">
                                 <img alt="HappyChain Logo" src="/happychain.png" className="mx-auto h-24 w-24" />

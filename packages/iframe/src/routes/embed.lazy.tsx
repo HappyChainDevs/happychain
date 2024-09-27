@@ -2,7 +2,7 @@ import { AuthState, Msgs } from "@happychain/sdk-shared"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo } from "react"
-import { ConnectButton } from "../components/ConnectButton"
+import { ConnectModal } from "../components/ConnectModal"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
@@ -69,7 +69,7 @@ function Embed() {
     }
 
     if (!user) {
-        return <ConnectButton />
+        return <ConnectModal />
     }
 
     return (
@@ -102,7 +102,7 @@ function Embed() {
                         )}
                     </div>
 
-                    <div className="hidden lg:flex w-full grow">
+                    <div className="hidden lg:flex w-full grow overflow-y-auto">
                         <Outlet />
                     </div>
                 </div>

@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
             }),
             dts({
                 insertTypesEntry: true,
-                rollupTypes: true,
+                rollupTypes: mode === "production",
                 bundledPackages: ["viem", "abitype", "@metamask/safe-event-emitter", "@happychain/sdk-shared"],
                 tsconfigPath: "./tsconfig.lib.json",
                 compilerOptions: {
@@ -26,12 +26,9 @@ export default defineConfig(({ mode }) => {
                 entry: "lib/index.ts",
                 fileName: (format) => `index.${format}.js`,
             },
-            rollupOptions: {
-                external: mode === "production" ? "" : /^lit-element/,
-            },
             copyPublicDir: false,
             sourcemap: true,
-            emptyOutDir: true,
+            emptyOutDir: mode === "production",
         },
     }
 })
