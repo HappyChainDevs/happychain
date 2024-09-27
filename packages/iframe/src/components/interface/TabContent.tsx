@@ -18,7 +18,7 @@ const TabContent = ({ view }: TabContentProps) => {
         switch (view) {
             case ContentType.TOKENS:
                 return (
-                    <div className="flex flex-col w-full h-4/5 p-2 bg-slate-300 rounded-b-xl rounded-tr-xl">
+                    <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 bg-slate-300 rounded-b-xl rounded-tr-xl">
                         {tokenList && tokenList.length > 0
                             ? tokenList.map((token) => (
                                   <div

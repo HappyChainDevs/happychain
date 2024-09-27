@@ -70,7 +70,7 @@ function App() {
 
             <ConnectButton disableStyles={true} />
 
-            <div className="w-96 overflow-auto bg-gray-200 p-4">
+            <div className="max-w-96 w-full overflow-auto bg-gray-200 p-4">
                 <p className="text-lg font-bold">User Details</p>
                 <pre>{JSON.stringify(user, null, 2)}</pre>
             </div>
@@ -83,7 +83,7 @@ function App() {
                 Sign Message
             </button>
 
-            <div className="w-96 overflow-auto bg-gray-200 p-4">
+            <div className="max-w-96 w-full overflow-auto bg-gray-200 p-4">
                 <p className="text-lg font-bold">Results:</p>
                 <pre>{signatureResult}</pre>
             </div>
@@ -91,7 +91,7 @@ function App() {
             <button type="button" onClick={getBlock} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Get Block
             </button>
-            <div className="w-96 overflow-auto bg-gray-200 p-4">
+            <div className="max-w-96 w-full overflow-auto bg-gray-200 p-4">
                 <p className="text-lg font-bold">Results:</p>
                 <pre>{JSON.stringify(blockResult, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2)}</pre>
             </div>

@@ -115,13 +115,14 @@ export class HappyWallet extends LitElement {
             margin:0;
             right: 0;
             top: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             transition: 0s;
         }
 
         iframe.disconnected.closed {
-            transition: 0s;
+            height: 0;
+            width: 0;
         }
 
         iframe.connecting {
@@ -141,6 +142,18 @@ export class HappyWallet extends LitElement {
         iframe.connected.open {
             height: 32rem;
             width: 24rem;
+        }
+
+
+        @media (max-width: 640px) { 
+            iframe {
+                margin: 0rem; 
+
+                &.connected.open {
+                    max-height: 80%;
+                    width: 90%;
+                }
+            }
         }
     `
 }
