@@ -1,7 +1,7 @@
 import { bigIntMax } from "@happychain/common"
-import type { Block } from "viem"
+import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
-import type { TransactionManager } from "./transaction-manager/TransactionManager.js"
+import type { TransactionManager } from "./TransactionManager.js"
 
 export class GasPriceOracle {
     private txmgr: TransactionManager
@@ -12,7 +12,14 @@ export class GasPriceOracle {
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
-    private onNewBlock(block: Block) {
+    async start() {
+        const block = await this.txmgr.viemClient.getBlock({
+            blockTag: "latest",
+        })
+        this.onNewBlock(block)
+    }
+
+    private onNewBlock(block: LatestBlock) {
         const baseFeePerGas = block.baseFeePerGas
         const gasUsed = block.gasUsed
         const gasLimit = block.gasLimit

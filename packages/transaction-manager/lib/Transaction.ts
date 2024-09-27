@@ -1,6 +1,32 @@
 import { type UUID, createUUID } from "@happychain/common"
 import { Entity, PrimaryKey, Property } from "@mikro-orm/core"
-import type { Address, ContractFunctionArgs } from "viem"
+import type { Address, ContractFunctionArgs, Hash } from "viem"
+import type { LatestBlock } from "./BlockMonitor"
+import { JsonBigIntTypeOrm } from "./JsonBigIntTypeOrm.js"
+
+export enum TransactionStatus {
+    Pending = "Pending",
+    Failed = "Failed",
+    Cancelling = "Cancelling",
+    Cancelled = "Cancelled",
+    Success = "Success",
+}
+
+export enum AttemptType {
+    Cancellation = "Cancellation",
+    Original = "Original",
+}
+
+export interface Attempt {
+    type: AttemptType
+    hash: Hash
+    nonce: number
+    maxFeePerGas: bigint
+    maxPriorityFeePerGas: bigint
+    gas: bigint
+}
+
+export const NotFinalizedStatuses = [TransactionStatus.Pending, TransactionStatus.Cancelling]
 
 @Entity()
 export class Transaction {
@@ -22,8 +48,14 @@ export class Transaction {
     @Property()
     readonly contractName: string
 
-    @Property({ nullable: true, type: "integer" })
+    @Property({ type: "integer", nullable: true })
     readonly deadline: number | undefined
+
+    @Property({ type: "string" })
+    status: TransactionStatus
+
+    @Property({ type: JsonBigIntTypeOrm })
+    readonly attempts: Attempt[]
 
     constructor({
         intentId,
@@ -33,14 +65,18 @@ export class Transaction {
         alias,
         args,
         deadline,
+        status,
+        attempts,
     }: {
-        intentId?: UUID | undefined
+        intentId?: UUID
         chainId: number
         address: Address
         functionName: string
         alias: string
-        args: ContractFunctionArgs | undefined
-        deadline?: number | undefined
+        args: ContractFunctionArgs
+        deadline?: number
+        status?: TransactionStatus
+        attempts?: Attempt[]
     }) {
         this.intentId = intentId ?? createUUID()
         this.chainId = chainId
@@ -49,5 +85,33 @@ export class Transaction {
         this.contractName = alias
         this.args = args
         this.deadline = deadline
+        this.status = status ?? TransactionStatus.Pending
+        this.attempts = attempts ?? []
+    }
+
+    addAttempt(attempt: Attempt): void {
+        this.attempts.push(attempt)
+    }
+
+    getInAirAttempts(): Attempt[] {
+        const biggestNonce = this.attempts.reduce((acc, attempt) => Math.max(acc, attempt.nonce), 0)
+
+        return this.attempts.filter((attempt) => attempt.nonce >= biggestNonce)
+    }
+
+    isExpired(block: LatestBlock, blockTime: bigint): boolean {
+        return this.deadline ? block.timestamp + blockTime > BigInt(this.deadline) : false
+    }
+
+    changeStatus(status: TransactionStatus): void {
+        this.status = status
+    }
+
+    get attemptCount(): number {
+        return this.attempts.length
+    }
+
+    get lastAttempt(): Attempt | undefined {
+        return this.attempts[this.attempts.length - 1]
     }
 }

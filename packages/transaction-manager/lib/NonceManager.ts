@@ -1,4 +1,4 @@
-import type { TransactionManager } from "./transaction-manager/TransactionManager"
+import type { TransactionManager } from "./TransactionManager"
 
 export class NonceManager {
     private txmgr: TransactionManager

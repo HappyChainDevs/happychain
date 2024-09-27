@@ -1,6 +1,11 @@
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
-import type { TransactionManager } from "./transaction-manager/TransactionManager.js"
+import type { TransactionManager } from "./TransactionManager.js"
+
+/**
+ * A type alias for {@link Block} with the `blockTag` set to `"latest"`, ensuring type definitions correspond to the latest block.
+ */
+export type LatestBlock = Block<bigint, false, "latest">
 
 export class BlockMonitor {
     private txmgr: TransactionManager
@@ -13,7 +18,7 @@ export class BlockMonitor {
         })
     }
 
-    private onNewBlock(block: Block) {
+    private onNewBlock(block: LatestBlock) {
         eventBus.emit(Topics.NewBlock, block)
     }
 }

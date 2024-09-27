@@ -72,6 +72,26 @@
                     "nullable": true,
                     "length": null,
                     "mappedType": "integer"
+                },
+                "status": {
+                    "name": "status",
+                    "type": "text",
+                    "unsigned": false,
+                    "autoincrement": false,
+                    "primary": false,
+                    "nullable": false,
+                    "length": null,
+                    "mappedType": "text"
+                },
+                "attempts": {
+                    "name": "attempts",
+                    "type": "json",
+                    "unsigned": false,
+                    "autoincrement": false,
+                    "primary": false,
+                    "nullable": false,
+                    "length": null,
+                    "mappedType": "json"
                 }
             },
             "name": "transaction",

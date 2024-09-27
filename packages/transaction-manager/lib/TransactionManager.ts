@@ -1,21 +1,17 @@
-import {
-    type Abi,
-    type Account,
-    type Chain,
-    type Transport,
-    type PublicClient as ViemClient,
-    createPublicClient,
-    createWalletClient,
-} from "viem"
-import { ABIManager } from "../AbiManager.js"
-import { BlockMonitor } from "../BlockMonitor.js"
-import { Topics, eventBus } from "../EventBus.js"
-import { GasPriceOracle } from "../GasPriceOracle.js"
-import { NonceManager } from "../NonceManager.js"
-import type { Transaction } from "../Transaction.js"
-import { dbDriver } from "../db.js"
-import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "../eip1559.js"
-import type { ViemWalletClient } from "./viemClients.js"
+import type { EntityManager } from "@mikro-orm/core"
+import { type Abi, type Account, type Chain, type Transport, createPublicClient, createWalletClient } from "viem"
+import { ABIManager } from "./AbiManager.js"
+import { BlockMonitor } from "./BlockMonitor.js"
+import { GasPriceOracle } from "./GasPriceOracle.js"
+import { NonceManager } from "./NonceManager.js"
+import type { Transaction } from "./Transaction.js"
+import { TransactionCollector } from "./TransactionCollector.js"
+import { TransactionRepository } from "./TransactionRepository.js"
+import { TransactionSubmitter } from "./TransactionSubmitter.js"
+import { TxMonitor } from "./TxMonitor.js"
+import { dbDriver } from "./db.js"
+import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
+import type { ViemPublicClient, ViemWalletClient } from "./viemTypes.js"
 
 export type TransactionManagerConfig = {
     /** The transport protocol used for the client. See {@link Transport} from viem for more details. */
@@ -51,24 +47,44 @@ export type TransactionManagerConfig = {
      * transactions.
      */
     abis: Record<string, Abi>
+
+    /**
+     * Enables debug methods on the RPC node.
+     * This is necessary for retrieving revert reasons for failed transactions
+     * and for increasing precision in managing transactions that fail due to out-of-gas errors
+     * Defaults to false.
+     */
+    rpcAllowDebug?: boolean
+
+    /**
+     * The expected interval (in seconds) for the creation of a new block on the blockchain.
+     * Defaults to 2 seconds.
+     */
+    blockTime?: bigint
 }
 
-export type TransactionCollector = () => Transaction[]
+export type TransactionOriginator = () => Transaction[]
 
 export class TransactionManager {
-    private collectors: TransactionCollector[]
-
+    public readonly collectors: TransactionOriginator[]
     public readonly blockMonitor: BlockMonitor
     public readonly viemWallet: ViemWalletClient
-    public readonly viemClient: ViemClient
+    public readonly viemClient: ViemPublicClient
     public readonly nonceManager: NonceManager
     public readonly gasPriceOracle: GasPriceOracle
     public readonly abiManager: ABIManager
+    public readonly pendingTxReporter: TxMonitor
+    public readonly entityManager: EntityManager
+    public readonly transactionRepository: TransactionRepository
+    public readonly transactionCollector: TransactionCollector
+    public readonly transactionSubmitter: TransactionSubmitter
 
     public readonly id: string
     public readonly eip1559: EIP1559Parameters
     public readonly baseFeeMargin: bigint
     public readonly maxPriorityFeePerGas: bigint
+    public readonly rpcAllowDebug: boolean
+    public readonly blockTime: bigint
 
     constructor(_config: TransactionManagerConfig) {
         this.collectors = []
@@ -76,14 +92,20 @@ export class TransactionManager {
             account: _config.account,
             transport: _config.transport,
             chain: _config.chain,
-        }) as ViemWalletClient
+        })
         this.viemClient = createPublicClient({
             transport: _config.transport,
             chain: _config.chain,
-        }) as ViemClient
+        })
         this.nonceManager = new NonceManager(this)
         this.gasPriceOracle = new GasPriceOracle(this)
         this.blockMonitor = new BlockMonitor(this)
+        this.pendingTxReporter = new TxMonitor(this)
+        this.transactionRepository = new TransactionRepository(this)
+        this.transactionCollector = new TransactionCollector(this)
+        this.transactionSubmitter = new TransactionSubmitter(this)
+        this.entityManager = dbDriver.em.fork()
+
         this.id = _config.id
         this.eip1559 = _config.eip1559 || opStackDefaultEIP1559Parameters
         this.abiManager = new ABIManager(_config.abis)
@@ -91,7 +113,8 @@ export class TransactionManager {
         this.baseFeeMargin = _config.baseFeePercentageMargin || 20n
         this.maxPriorityFeePerGas = _config.maxPriorityFeePerGas || 0n
 
-        eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
+        this.rpcAllowDebug = _config.rpcAllowDebug || false
+        this.blockTime = _config.blockTime || 2n
     }
 
     static async create(config: TransactionManagerConfig): Promise<TransactionManager> {
@@ -102,44 +125,11 @@ export class TransactionManager {
         return transactionManager
     }
 
-    public addTransactionCollector(collector: TransactionCollector): void {
+    public addTransactionCollector(collector: TransactionOriginator): void {
         this.collectors.push(collector)
     }
 
     public async start(): Promise<void> {
-        await this.nonceManager.start()
-    }
-
-    private async onNewBlock() {
-        const { maxFeePerGas, maxPriorityFeePerGas } = this.gasPriceOracle.suggestGasForNextBlock()
-
-        const transactionsBatch = this.collectors
-            .flatMap((c) => c())
-            .sort((a, b) => (a.deadline ?? Number.POSITIVE_INFINITY) - (b.deadline ?? Number.POSITIVE_INFINITY))
-
-        const entityManager = dbDriver.em.fork()
-
-        for (const t of transactionsBatch) {
-            const nonce = this.nonceManager.requestNonce()
-
-            const abi = this.abiManager.get(t.contractName)
-
-            if (!abi) {
-                throw new Error(`ABI not found for contract ${t.contractName}`)
-            }
-
-            this.viemWallet.writeContract({
-                address: t.address,
-                abi: abi,
-                functionName: t.functionName,
-                args: t.args,
-                nonce: nonce,
-                maxFeePerGas: maxFeePerGas,
-                maxPriorityFeePerGas: maxPriorityFeePerGas,
-            })
-
-            entityManager.persist(t)
-        }
-        await entityManager.flush()
+        await Promise.all([this.nonceManager.start(), this.transactionRepository.start(), this.gasPriceOracle.start()])
     }
 }
