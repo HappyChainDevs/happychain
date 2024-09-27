@@ -44,7 +44,7 @@ const client = await TransactionManager.create({
 let number = 0
 
 client.addTransactionCollector(() => {
-    const transactionCount = Math.floor(Math.random() * 20) + 1
+    const transactionCount = 1
     const transactions = []
 
     for (let i = 0; i < transactionCount; i++) {
