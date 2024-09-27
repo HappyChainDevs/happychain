@@ -14,20 +14,20 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTra
     const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const inputValue = event.target.value.trim()
+        let inputValue = event.target.value.trim()
         setSendValue(inputValue)
+
+        // If the input starts with '0' and the second character is a number, add a period
+        if (inputValue.startsWith("0") && inputValue.length > 1 && !inputValue.includes(".")) {
+            inputValue = `0.${inputValue.substring(1)}`
+        }
 
         debounceValidationAndBalance(inputValue)
     }
 
-    // debounce only the validation and balance check
+    // debounce the validation check
     const debounceValidationAndBalance = _.debounce((inputValue: string) => {
-        let formattedValue = inputValue
-
-        // If the input starts with '0' and the second character is a number, add a period
-        if (formattedValue.startsWith("0") && formattedValue.length > 1 && !formattedValue.includes(".")) {
-            formattedValue = `0.${formattedValue.substring(1)}`
-        }
+        const formattedValue = inputValue
 
         // Perform validation and balance checking
         if (validateNumericInput(formattedValue) || formattedValue === "") {
@@ -44,7 +44,7 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTra
     }, [balance, setSendValue])
 
     return (
-        <div className="flex flex-col items-center justify-start h-[120px] w-full border-slate-700 border-t border-b my-3 px-3">
+        <div className="flex flex-col items-center justify-start h-[110px] w-full border-slate-700 border-t border-b my-3 px-3">
             <div className="flex flex-row h-[60px] w-full items-center justify-between">
                 <div className="flex flex-col items-start justify-start">
                     <p className="text-[18px]">$HAPPY</p>
