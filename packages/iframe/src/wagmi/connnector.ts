@@ -8,8 +8,8 @@ export const happyConnector = injected({
     shimDisconnect: false,
     target() {
         return {
-            id: "iframeProvider",
-            name: "HappyChain (Iframe)Provider",
+            id: "wagmiProvider",
+            name: "Wagmi Provider",
             provider: iframeProvider,
         }
     },
