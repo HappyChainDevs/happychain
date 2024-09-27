@@ -1,9 +1,0 @@
-{
-    "extends": "@happychain/configs/tsconfig.vite-lib.json",
-    "compilerOptions": {
-        // Required for LitElement reactive properties
-        "experimentalDecorators": true,
-        "useDefineForClassFields": false
-    },
-    "include": ["../sdk-vanillajs/lib", "../sdk-react/lib", "../sdk-shared/lib"]
-}

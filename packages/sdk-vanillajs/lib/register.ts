@@ -1,4 +1,5 @@
 import { chains } from "@happychain/sdk-shared"
+import define from "preact-custom-element"
 import type { AddEthereumChainParameter } from "viem"
 import { HappyWallet } from "./happy-wallet"
 import { windowId } from "./happyProvider/initialize"
@@ -70,7 +71,7 @@ export type WalletRegisterOptions = {
  */
 export function register(opts: WalletRegisterOptions = {}) {
     // don't register if already exists on page
-    if (document.querySelector("happy-wallet")) {
+    if (customElements.get("happy-wallet") || document.querySelector("happy-wallet")) {
         return
     }
 
@@ -81,11 +82,13 @@ export function register(opts: WalletRegisterOptions = {}) {
         throw new Error("Missing chain")
     }
 
-    const wallet = new HappyWallet(
-        windowId,
-        JSON.stringify(options.chain),
-        Array.isArray(options.rpcUrl) ? options.rpcUrl.join(",") : options.rpcUrl,
-    )
+    define(HappyWallet, "happy-wallet", [], { shadow: true })
+
+    const wallet = document.createElement("happy-wallet")
+    wallet.setAttribute("window-id", windowId)
+    if (options.chain) wallet.setAttribute("chain", JSON.stringify(options.chain))
+    if (options.rpcUrl)
+        wallet.setAttribute("rpc-url", Array.isArray(options.rpcUrl) ? options.rpcUrl.join(",") : options.rpcUrl)
 
     document.body.appendChild(wallet)
 }

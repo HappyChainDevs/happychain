@@ -1,0 +1,63 @@
+:host {
+    all: unset !important;
+}
+
+iframe {
+    top: 0;
+    right: 0;
+    margin: 1rem;
+    position: fixed;
+    overflow: hidden;
+    transition: 0.15s;
+    border-radius: 0.75rem;
+    transition-timing-function: ease-out;
+
+    &.closed {
+        &.disconnected {
+            height: 0;
+            width: 0;
+        }
+
+        &.connected {
+            height: 4rem;
+            width: 12rem;
+        }
+    }
+
+    &.open {
+        &.connected {
+            height: 32rem;
+            width: 24rem;
+        }
+    }
+
+    &.connecting {
+        height: 4rem;
+        margin: 1rem;
+        transition: 0s;
+        width: 12rem;
+    }
+
+    &.modal {
+        border-radius: 0;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        transition: 0s;
+        width: 100%;
+    }
+}
+
+/* Mobile Overrides */
+@media (max-width: 640px) {
+    iframe {
+        /* snug right to the edges */
+        margin: 0rem;
+
+        /* allow some breather to click outside & exit */
+        &.connected.open {
+            max-height: 80vh;
+            width: 90vh;
+        }
+    }
+}

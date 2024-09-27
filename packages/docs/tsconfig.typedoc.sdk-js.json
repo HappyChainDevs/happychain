@@ -1,0 +1,4 @@
+{
+    "extends": ["../sdk-vanillajs/tsconfig.lib.json"],
+    "include": ["../sdk-vanillajs/lib", "../sdk-shared/lib"]
+}

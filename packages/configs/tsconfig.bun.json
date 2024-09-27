@@ -1,4 +1,5 @@
 {
+    // Basic TSConfig for packages which do not need to be compiled directly (sdk-shared, common)
     "$schema": "https://json.schemastore.org/tsconfig",
     "display": "Bun.sh",
     "extends": "./tsconfig.base.json",

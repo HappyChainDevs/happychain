@@ -1,4 +1,5 @@
-import { type UUID, createUUID } from "@happychain/common"
+import { type UUID, createUUID } from "../common-utils"
+
 import {
     AuthState,
     type EIP1193RequestMethods,

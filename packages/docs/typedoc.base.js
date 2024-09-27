@@ -1,7 +1,5 @@
 /** @type {import('typedoc').TypeDocOptions} */
 export default {
-    // https://typedoc.org/options/configuration/
-    tsconfig: "./tsconfig.typedoc.json",
     plugin: [
         // https://www.npmjs.com/package/@zamiell/typedoc-plugin-not-exported
         "@zamiell/typedoc-plugin-not-exported",
