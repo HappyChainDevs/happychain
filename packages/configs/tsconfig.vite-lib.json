@@ -1,4 +1,5 @@
 {
+    // SDK-compiled libraries
     "$schema": "https://json.schemastore.org/tsconfig",
     "display": "Vite App/Lib",
     "extends": "./tsconfig.base.json",

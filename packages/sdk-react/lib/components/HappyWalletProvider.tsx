@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react"
-
 import type { HappyUser } from "@happychain/js"
 import { connect, disconnect, happyProvider, onUserUpdate, register, showSendScreen } from "@happychain/js"
+import { createContext, useContext, useEffect, useState } from "react"
 
 type HappyWalletProviderProps = React.PropsWithChildren & {
     init?: Parameters<typeof register>[0]

@@ -3,6 +3,8 @@ import base from "./typedoc.base.js"
 /** @type {import('typedoc').TypeDocOptions} */
 export default {
     ...base,
+    // https://typedoc.org/options/configuration/
+    tsconfig: "./tsconfig.typedoc.sdk-react.json",
     // https://typedoc.org/options/input/
     name: "@happychain/react",
     entryPoints: ["../sdk-react/lib/index.ts"],

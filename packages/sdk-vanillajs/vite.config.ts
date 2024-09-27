@@ -1,22 +1,20 @@
+import preact from "@preact/preset-vite"
 import { defineConfig } from "vite"
 import dts from "vite-plugin-dts"
-import { hmrPlugin, presets } from "vite-plugin-web-components-hmr"
 
 export default defineConfig(({ mode }) => {
     return {
         plugins: [
-            hmrPlugin({
-                include: ["./lib/**/*.ts"],
-                presets: [presets.lit],
-            }),
+            preact(),
             dts({
                 insertTypesEntry: true,
                 rollupTypes: mode === "production",
-                bundledPackages: ["viem", "abitype", "@metamask/safe-event-emitter", "@happychain/sdk-shared"],
                 tsconfigPath: "./tsconfig.lib.json",
+                bundledPackages: ["preact", "viem", "abitype", "@metamask/safe-event-emitter", "@happychain/*"],
                 compilerOptions: {
                     rootDir: "../",
                 },
+                include: ["lib", "../sdk-shared", "../common"],
                 exclude: ["**/*.test.tsx", "**/*.test.ts"],
             }),
         ],

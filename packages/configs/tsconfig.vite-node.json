@@ -1,4 +1,5 @@
 {
+    // Un-compiled editor support (config files, tests, etc)
     "$schema": "https://json.schemastore.org/tsconfig",
     "display": "Vite Node.JS",
     "compilerOptions": {
