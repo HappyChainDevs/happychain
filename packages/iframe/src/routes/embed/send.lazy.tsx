@@ -3,8 +3,8 @@ import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { type Address, isAddress } from "viem"
 import AddressSelector from "../../components/interface/send-tx/AddressSelector"
-import OptionButtons from "../../components/interface/send-tx/OptionButtons"
 import SendBalanceTracker from "../../components/interface/send-tx/SendBalanceTracker"
+import SendButttons from "../../components/interface/send-tx/SendButtons"
 import { publicClientAtom } from "../../state/publicClient"
 import { userAtom } from "../../state/user"
 
@@ -23,6 +23,8 @@ function Send() {
     const [targetAddress, setTargetAddress] = useState<Address | string | undefined>(undefined)
     // amount to send
     const [sendValue, setSendValue] = useState<string | undefined>(undefined)
+    // is there a tx in progress currently
+    const [inProgress, setInProgress] = useState(false)
 
     const getBalance = useCallback(async () => {
         if (user) {
@@ -44,7 +46,7 @@ function Send() {
     }, [user, getBalance])
 
     return (
-        <div className="flex flex-col w-full h-full items-center justify-between">
+        <div className="relative flex flex-col w-full h-full items-center justify-between">
             <div className="flex flex-col w-full h-full items-center justify-start">
                 <AddressSelector targetAddress={targetAddress} setTargetAddress={setTargetAddress} />
                 {/* appears when target address has been confirmed */}
@@ -53,7 +55,14 @@ function Send() {
                 )}
             </div>
 
-            <OptionButtons sendValue={sendValue} targetAddress={targetAddress} />
+            <SendButttons sendValue={sendValue} targetAddress={targetAddress} setInProgress={setInProgress} />
+
+            {/* Overlay when inProgress is true */}
+            {inProgress && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 pointer-events-none">
+                    <span className="text-white text-xl font-bold">🤠 Transaction in progress 🤠</span>
+                </div>
+            )}
         </div>
     )
 }
