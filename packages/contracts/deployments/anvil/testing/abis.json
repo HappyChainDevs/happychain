@@ -4567,25 +4567,6 @@
   "SessionKeyValidator": [
     {
       "type": "function",
-      "name": "initialized",
-      "inputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool",
-          "internalType": "bool"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "isInitialized",
       "inputs": [
         {
@@ -4632,12 +4613,12 @@
           "internalType": "address"
         },
         {
-          "name": "",
+          "name": "hash",
           "type": "bytes32",
           "internalType": "bytes32"
         },
         {
-          "name": "",
+          "name": "sig",
           "type": "bytes",
           "internalType": "bytes"
         }
@@ -4656,7 +4637,7 @@
       "name": "onInstall",
       "inputs": [
         {
-          "name": "",
+          "name": "_data",
           "type": "bytes",
           "internalType": "bytes"
         }
@@ -4679,19 +4660,19 @@
     },
     {
       "type": "function",
-      "name": "validSig",
+      "name": "sessionKeyValidatorStorage",
       "inputs": [
         {
           "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "outputs": [
         {
-          "name": "",
-          "type": "bool",
-          "internalType": "bool"
+          "name": "sessionKey",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "stateMutability": "view"
@@ -4701,7 +4682,7 @@
       "name": "validateUserOp",
       "inputs": [
         {
-          "name": "",
+          "name": "userOp",
           "type": "tuple",
           "internalType": "struct PackedUserOperation",
           "components": [
@@ -4753,7 +4734,7 @@
           ]
         },
         {
-          "name": "",
+          "name": "userOpHash",
           "type": "bytes32",
           "internalType": "bytes32"
         }

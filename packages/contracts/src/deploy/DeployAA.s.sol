@@ -35,20 +35,20 @@ contract DeployAAContracts is BaseDeployScript {
     SessionKeyValidator public sessionKeyValidator;
 
     function deploy() internal override {
-        if (EXPECTED_ENTRYPOINT_V7.code.length == 0) {
-            // solhint-disable-next-line
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
-            if (!success) {
-                revert EntryPointDeploymentFailed();
-            }
-        }
-        deployed("EntryPointSimulations", EXPECTED_ENTRYPOINT_SIMULATIONS);
-
         if (EXPECTED_ENTRYPOINT_SIMULATIONS.code.length == 0) {
             // solhint-disable-next-line
             (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_SIMULATIONS_CODE);
             if (!success) {
                 revert EntryPointSimulationsDeploymentFailed();
+            }
+        }
+        deployed("EntryPointSimulations", EXPECTED_ENTRYPOINT_SIMULATIONS);
+
+        if (EXPECTED_ENTRYPOINT_V7.code.length == 0) {
+            // solhint-disable-next-line
+            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
+            if (!success) {
+                revert EntryPointDeploymentFailed();
             }
         }
         deployed("EntryPointV7", "EntryPoint", EXPECTED_ENTRYPOINT_V7);
