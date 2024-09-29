@@ -1,7 +1,7 @@
-import type { Address, Hex } from "viem"
+import type {Address, Hex, WalletClient} from "viem"
 import { http, createPublicClient, createWalletClient, formatEther, numberToHex, parseEther } from "viem"
 import type { GetPaymasterDataParameters, GetPaymasterStubDataParameters, SmartAccount } from "viem/account-abstraction"
-import { entryPoint07Address } from "viem/account-abstraction"
+import { entryPoint07Address, getUserOperationHash, formatUserOperationRequest } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
 import { localhost } from "viem/chains"
 
@@ -47,9 +47,9 @@ function toHexDigits(number: bigint, size: number): string {
     return numberToHex(number, { size }).slice(2)
 }
 
-async function getKernelAccount(): Promise<SmartAccount> {
+async function getKernelAccount(client: WalletClient): Promise<SmartAccount> {
     return toEcdsaKernelSmartAccount({
-        client: walletClient,
+        client: client,
         entryPoint: {
             address: entryPoint07Address,
             version: "0.7",
@@ -146,6 +146,14 @@ async function deposit_paymaster(): Promise<string> {
     return receipt.status
 }
 
+const sessionKey = generatePrivateKey()
+const sessionAccount = privateKeyToAccount(sessionKey)
+const sessionWallet = createWalletClient({
+    account: sessionAccount,
+    chain: localhost,
+    transport: http(rpcURL),
+})
+
 function getInitData(hookAddress: Address, validatorData: Hex, hookData: Hex, selectorData: Hex): Hex {
     /**
      * Reference: https://github.com/zerodevapp/kernel/blob/release/v3.1/src/Kernel.sol#L361-L366
@@ -209,7 +217,7 @@ async function installCustomModule(
         type: "validator",
         address: deployment.SessionKeyValidator,
 
-        context: getInitData(NO_HOOKS_ADDRESS, "0x", "0x", SELECTOR),
+        context: getInitData(NO_HOOKS_ADDRESS, sessionAccount.address, "0x", SELECTOR),
         nonce: await kernelAccount.getNonce(),
     })
 
@@ -300,17 +308,37 @@ async function testRootValidator(kernelAccount: SmartAccount, kernelClient: Smar
     }
 }
 
+// function getAccountGasLimits(verificationGasLimit: bigint, callGasLimit: bigint) {
+//     return concat([
+//         pad(toHex(verificationGasLimit), {size: 16 }),
+//         pad(toHex(callGasLimit), { size: 16 })
+//     ])
+// }
+//
+// function getGasLimits(maxPriorityFeePerGas: bigint, maxFeePerGas: bigint) {
+//     return concat([
+//         pad(toHex(maxPriorityFeePerGas), {
+//             size: 16
+//         }),
+//         pad(toHex(maxFeePerGas), { size: 16 })
+//     ])
+// }
+
 async function testCustomValidator(
     kernelAccount: SmartAccount,
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
 ) {
     const receiverAddress = getRandomAccount()
     const kernelAddress = await kernelAccount.getAddress()
+    const sessionSigner = await getKernelAccount(sessionWallet)
 
     await installCustomModule(kernelAccount, kernelClient)
 
     const customNonce = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.SessionKeyValidator)
-    const userOpHash = await kernelClient.sendUserOperation({
+    console.log("customNonce:", customNonce)
+
+    const userOp = await kernelClient.prepareUserOperation({
+        account: kernelAccount,
         calls: [
             {
                 to: receiverAddress,
@@ -320,6 +348,97 @@ async function testCustomValidator(
         ],
         nonce: customNonce,
     })
+    //
+    console.log("\nprepareUserOperation:")
+    console.log("nonce:", userOp.nonce)
+    console.log("calldata:", userOp.callData)
+    // @ts-ignore
+    console.log("paymasterAndData:", userOp.paymaster, userOp.paymasterData)
+    console.log("prepareUserOperation:\n")
+
+
+    // @ts-ignore
+    const paymasterAndData: Hex = `0x${(userOp.paymaster).slice(2)}${(userOp.paymasterData).slice(2)}${(userOp.paymasterData).slice(2)}`
+
+    const customSig = await kernelAccount.signUserOperation({
+        sender: userOp.sender,
+        nonce: userOp.nonce,
+        callData: userOp.callData,
+        callGasLimit: userOp.callGasLimit,
+        verificationGasLimit: userOp.verificationGasLimit,
+        preVerificationGas: userOp.preVerificationGas,
+        maxFeePerGas: userOp.maxFeePerGas,
+        maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+        paymasterAndData: paymasterAndData,
+        chainId: localhost.id,
+        signature: "0x",
+    })
+
+    // console.log("Hashing this UserOp: \n")
+    // console.log("sender: ", userOp.sender)
+    // console.log("nonce: ", userOp.nonce)
+    // // @ts-ignore
+    // console.log("initCode: ", userOp.initCode)
+    // console.log("callData: ", userOp.callData);
+    // console.log("callGasLimit: ", userOp.callGasLimit);
+    // console.log("verificationGasLimit: ", userOp.verificationGasLimit);
+    // console.log("preVerificationGas: ", userOp.preVerificationGas);
+    // console.log("maxFeePerGas: ", userOp.maxFeePerGas);
+    // console.log("maxPriorityFeePerGas: ", userOp.maxPriorityFeePerGas);
+    // console.log("paymasterAndData: ", paymasterAndData);
+
+    const hash = getUserOperationHash({
+        userOperation: {
+            sender: userOp.sender,
+            nonce: userOp.nonce,
+            callData: userOp.callData,
+            callGasLimit: userOp.callGasLimit,
+            verificationGasLimit: userOp.verificationGasLimit,
+            preVerificationGas: userOp.preVerificationGas,
+            maxFeePerGas: userOp.maxFeePerGas,
+            maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+            // @ts-ignore
+            paymasterAndData: paymasterAndData,
+            signature: "0x",
+        },
+        entryPointAddress: entryPoint07Address,
+        entryPointVersion: "0.7",
+        chainId: localhost.id,
+    });
+
+    console.log("hash:", hash)
+    console.log("customSig:", customSig)
+
+    // const userOpHash = await kernelClient.sendUserOperation({
+    //     account: sessionSigner,
+    //     sender: kernelAddress,
+    //     calls: [
+    //         {
+    //             to: receiverAddress,
+    //             value: parseEther(AMOUNT),
+    //             data: "0x",
+    //         },
+    //     ],
+    //     nonce: customNonce,
+    //     signature: customSig
+    // })
+
+    // @ts-ignore
+    const rpcParameters = formatUserOperationRequest({
+        ...userOp,
+        signature: customSig,
+    })
+
+    const userOpHash = await kernelAccount.client.request(
+        {
+            method: 'eth_sendUserOperation',
+            params: [
+                rpcParameters,
+                entryPoint07Address,
+            ],
+        },
+        { retryCount: 0 },
+    )
 
     const receipt = await kernelClient.waitForUserOperationReceipt({
         hash: userOpHash,
@@ -340,7 +459,7 @@ async function testCustomValidator(
 }
 
 async function main() {
-    const kernelAccount: SmartAccount = await getKernelAccount()
+    const kernelAccount: SmartAccount = await getKernelAccount(walletClient)
     const kernelClient = getKernelClient(kernelAccount)
     const kernelAddress = await kernelAccount.getAddress()
 
@@ -354,11 +473,11 @@ async function main() {
         throw new Error("Paymaster Deposit failed")
     }
 
-    try {
-        await testRootValidator(kernelAccount, kernelClient)
-    } catch (error) {
-        console.error("Root Validator: ", error)
-    }
+    // try {
+    //     await testRootValidator(kernelAccount, kernelClient)
+    // } catch (error) {
+    //     console.error("Root Validator: ", error)
+    // }
 
     try {
         await testCustomValidator(kernelAccount, kernelClient)
