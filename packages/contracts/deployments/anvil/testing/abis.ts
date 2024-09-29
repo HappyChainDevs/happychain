@@ -4569,25 +4569,6 @@ const contractToAbi = ({
   "SessionKeyValidator": [
     {
       "type": "function",
-      "name": "initialized",
-      "inputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool",
-          "internalType": "bool"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "isInitialized",
       "inputs": [
         {
@@ -4634,12 +4615,12 @@ const contractToAbi = ({
           "internalType": "address"
         },
         {
-          "name": "",
+          "name": "hash",
           "type": "bytes32",
           "internalType": "bytes32"
         },
         {
-          "name": "",
+          "name": "sig",
           "type": "bytes",
           "internalType": "bytes"
         }
@@ -4658,7 +4639,7 @@ const contractToAbi = ({
       "name": "onInstall",
       "inputs": [
         {
-          "name": "",
+          "name": "_data",
           "type": "bytes",
           "internalType": "bytes"
         }
@@ -4681,19 +4662,19 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "validSig",
+      "name": "sessionKeyValidatorStorage",
       "inputs": [
         {
           "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "outputs": [
         {
-          "name": "",
-          "type": "bool",
-          "internalType": "bool"
+          "name": "sessionKey",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "stateMutability": "view"
@@ -4703,7 +4684,7 @@ const contractToAbi = ({
       "name": "validateUserOp",
       "inputs": [
         {
-          "name": "",
+          "name": "userOp",
           "type": "tuple",
           "internalType": "struct PackedUserOperation",
           "components": [
@@ -4755,7 +4736,7 @@ const contractToAbi = ({
           ]
         },
         {
-          "name": "",
+          "name": "userOpHash",
           "type": "bytes32",
           "internalType": "bytes32"
         }
@@ -4818,14 +4799,14 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "ECDSAValidator": "0xfF3dccf054C9d47a254e151805A8C4c4f39E1A08",
+  "ECDSAValidator": "0xff5e8cbf8B77429FFBe88c6eA6622cB682eF5a21",
   "EntryPointSimulations": "0x74Cb5e4eE81b86e70f9045036a1C5477de69eE87",
   "EntryPointV7": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
   "FactoryStaker": "0x26d9BA57a14364e8e55C8d85Bd135aB1650d0Adc",
   "HappyPaymaster": "0x35197A3bA3572A9Dc5841c734131246ae45A1E2d",
-  "Kernel": "0xF7CcAbBFAEDFBBB26a554d8F7b091F7A4918b997",
-  "KernelFactory": "0xF75BB31188850FAF3F1AC1729AB67e91dC43E4D0",
-  "SessionKeyValidator": "0xB8e499fDeB74559001cd6EC7Bf5796813855dd92"
+  "Kernel": "0x72F442a3679B5C0dA8a96a7a7edE7f1d90822d4C",
+  "KernelFactory": "0xCb82659E2F351fb1D864C3697DB0b2F50418837d",
+  "SessionKeyValidator": "0x632EF6cA7Bf3658dbf465707c216Fb87aa9C9566"
 }) as const
 
 export type ContractName = keyof typeof contractToAbi
