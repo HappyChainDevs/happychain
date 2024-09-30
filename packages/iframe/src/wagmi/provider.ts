@@ -19,9 +19,13 @@ const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "m
 
 type Timer = ReturnType<typeof setInterval>
 
-type InFlightRequest = {
-    // biome-ignore lint/suspicious/noExplicitAny: difficult type, viem _returnType
-    resolve: (value: any) => void
+// custom type for promise resolve methods
+type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods> = (
+    value: EIP1193RequestResult<T>
+) => void
+
+type InFlightRequest<T extends EIP1193RequestMethods = EIP1193RequestMethods> = {
+    resolve: ResolveType<T>
     reject: (reason?: unknown) => void
     popup: Window | null
 }
@@ -45,7 +49,7 @@ export class IframeProvider extends SafeEventEmitter {
         const key = createUUID()
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
-        return new Promise(async (resolve, reject) => {
+        return new Promise<EIP1193RequestResult<TString>>(async (resolve, reject) => {
             const requiresUserApproval = checkIfRequestRequiresConfirmation(args)
 
             if (!requiresUserApproval) {
@@ -56,16 +60,17 @@ export class IframeProvider extends SafeEventEmitter {
                     payload: args,
                 }
 
-                // auto approve
+                // auto-approve
                 void handlePermissionlessRequest(permissionlessReqPayload)
 
-                this.queueRequest(key, { resolve, reject, popup: null })
+                
+                this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup: null })
                 return
             }
 
             // permissioned requests
             const popup = this.openPopupAndAwaitResponse(key, args)
-            this.queueRequest(key, { resolve, reject, popup })
+            this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
         })
     }
 

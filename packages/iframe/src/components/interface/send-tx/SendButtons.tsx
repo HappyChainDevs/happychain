@@ -18,7 +18,6 @@ const SendButtons = ({ sendValue, targetAddress, setInProgress }: SendButtonsInt
 
     useEffect(() => {
         // if tx is successful, move back to home page of wallet
-        // @todo: show history tab once in home page
         if (isConfirmed) {
             setInProgress(false)
             navigate({ to: "/embed" })
@@ -30,7 +29,6 @@ const SendButtons = ({ sendValue, targetAddress, setInProgress }: SendButtonsInt
         navigate({ to: "/embed" })
     }, [navigate])
 
-    // triggers `eth_sendTransaction` popup only if address and send amounts are valid
     const submitSend = useCallback(() => {
         if (targetAddress && sendValue) {
             setInProgress(true)
