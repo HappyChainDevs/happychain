@@ -27,8 +27,6 @@ export abstract class BaseProviderClass extends SafeEventEmitter {
         args: EIP1193RequestParameters<TString>,
     ): Promise<EIP1193RequestResult<TString>>
 
-    protected abstract openPopupAndAwaitResponse?(key: UUID, args: EIP1193RequestParameters): Window | null
-
     protected queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
         this.inFlightRequests.set(key, { resolve, reject, popup })
         this.startPopupCheckTimer()

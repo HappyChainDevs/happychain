@@ -1,9 +1,8 @@
 import type { HTTPString } from "@happychain/common"
 import { AuthState, Msgs, waitForCondition } from "@happychain/sdk-shared"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
-import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { InjectedWalletHandler } from "./injectedWalletHandler"
-import type { EIP1193ConnectionHandler, HappyProviderConfig, HappyProviderPublic } from "./interface"
+import type { HappyProviderConfig } from "./interface"
 import { SocialWalletHandler } from "./socialWalletHandler"
 
 /**
@@ -61,8 +60,12 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
         return await this.socialWalletHandler.request(args)
     }
 
+    isConnected(): boolean {
+        return true
+    }
+
     /** Simply forward all provider events transparently */
-    private registerConnectionHandlerEvents(handler: EIP1193ConnectionHandler) {
+    private registerConnectionHandlerEvents(handler: BaseProviderClass) {
         handler.on("accountsChanged", (accounts) => this.emit("accountsChanged", accounts))
         handler.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
         handler.on("connect", (connectInfo) => this.emit("connect", connectInfo))
