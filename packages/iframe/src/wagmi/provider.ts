@@ -20,9 +20,7 @@ const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "m
 type Timer = ReturnType<typeof setInterval>
 
 // custom type for promise resolve methods
-type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods> = (
-    value: EIP1193RequestResult<T>
-) => void
+type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods> = (value: EIP1193RequestResult<T>) => void
 
 type InFlightRequest<T extends EIP1193RequestMethods = EIP1193RequestMethods> = {
     resolve: ResolveType<T>
@@ -63,7 +61,6 @@ export class IframeProvider extends SafeEventEmitter {
                 // auto-approve
                 void handlePermissionlessRequest(permissionlessReqPayload)
 
-                
                 this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup: null })
                 return
             }
