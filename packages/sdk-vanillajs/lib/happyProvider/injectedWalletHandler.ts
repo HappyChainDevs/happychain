@@ -26,7 +26,7 @@ const store = createStore()
  * If connected, it simply proxies all requests directly into the appropriate
  * provider for the connected wallet
  */
-export abstract class InjectedWalletHandler extends BaseProviderClass {
+export class InjectedWalletHandler extends BaseProviderClass {
     private localConnection: ReturnType<typeof store.findProvider>
 
     constructor(protected config: HappyProviderConfig) {
