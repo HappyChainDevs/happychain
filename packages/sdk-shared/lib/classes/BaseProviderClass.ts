@@ -38,12 +38,12 @@ export abstract class BaseProviderClass extends SafeEventEmitter {
         const intervalMs = 100
         this.timer = setInterval(() => {
             let withPopups = 0
-            for (const [key, req] of this.inFlightRequests) {
+            for (const [k, req] of this.inFlightRequests) {
                 if (!req.popup) continue
 
                 if (req.popup.closed) {
                     req.reject(new EIP1193UserRejectedRequestError())
-                    this.inFlightRequests.delete(key)
+                    this.inFlightRequests.delete(k)
                 } else {
                     withPopups++
                 }
