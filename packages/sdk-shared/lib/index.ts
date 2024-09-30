@@ -59,3 +59,5 @@ export type {
     EventKey,
 } from "./services/eventBus"
 export type { Logger } from "./services/logger"
+
+export { type ResolveType, BaseProviderClass } from "./classes/BaseProviderClass"

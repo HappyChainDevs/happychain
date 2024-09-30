@@ -1,7 +1,6 @@
-import { type UUID, createUUID } from "../common-utils"
-
 import {
     AuthState,
+    BaseProviderClass,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
@@ -9,27 +8,17 @@ import {
     GenericProviderRpcError,
     type HappyUser,
     Msgs,
-    type ProviderMsgsFromIframe,
+    type PopupMsgsFromIframe,
+    type ResolveType,
 } from "@happychain/sdk-shared"
-import { ModalStates } from "@happychain/sdk-shared"
-import SafeEventEmitter from "@metamask/safe-event-emitter"
+import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
+import type { UUID } from "../common-utils"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
-
-type Timer = ReturnType<typeof setInterval>
-
-type InFlightRequest = {
-    // biome-ignore lint/suspicious/noExplicitAny: difficult type, viem _returnType
-    resolve: (value: any) => void
-    reject: (reason?: unknown) => void
-    popup: Window | null
-}
 
 type InFlightCheck = {
     resolve: (value: boolean) => void
     reject: (reason?: unknown) => void
 }
-
-const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
 
 /**
  * SocialWalletHandler handles proxying EIP-1193 requests
@@ -40,15 +29,13 @@ const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "m
  * where the user can approve/reject the requests before they are sent
  * to the iframe to be handled
  */
-export class SocialWalletHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
-    private inFlightRequests = new Map<string, InFlightRequest>()
+export class SocialWalletHandler extends BaseProviderClass implements EIP1193ConnectionHandler {
     private inFlightChecks = new Map<string, InFlightCheck>()
-    private timer: Timer | null = null
 
     private user: HappyUser | undefined
     private authState: AuthState = AuthState.Connecting
 
-    constructor(private config: HappyProviderConfig) {
+    constructor(protected config: HappyProviderConfig) {
         super()
         // sync local user state
         config.msgBus.on(Msgs.UserChanged, (_user) => {
@@ -74,15 +61,15 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         // If it is eth_call or a non-tx non-signature request, we can auto-approve
         // by posting the request args using request:approve,
         // otherwise we open the popup and pass the request args through the hash URL.
-        const key = createUUID()
+        const key = this.generateKey()
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
         return new Promise(async (resolve, reject) => {
-            const requiresUserApproval = await this.requiresApproval(args)
+            const requiresUserApproval = await this.requiresUserApproval(args)
 
             if (!requiresUserApproval) {
                 const popup = this.autoApprove(key, args)
-                this.queueRequest(key, { resolve, reject, popup })
+                this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
                 return
             }
 
@@ -113,7 +100,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
                         // the the user login flow, and upon user login, these permissions get granted automatically
                         const popup = ["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
                             ? this.autoApprove(key, args)
-                            : this.promptUser(key, args)
+                            : this.openPopupAndAwaitResponse(key, args)
 
                         // process request when user is logged in successfully
                         this.queueRequest(key, { resolve, reject, popup })
@@ -142,8 +129,8 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
                 })
             }
 
-            const popup = this.promptUser(key, args)
-            this.queueRequest(key, { resolve, reject, popup })
+            const popup = this.openPopupAndAwaitResponse(key, args)
+            this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
         })
     }
 
@@ -163,8 +150,8 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         this.inFlightChecks.delete(data.key)
     }
 
-    private async requiresApproval(args: EIP1193RequestParameters) {
-        const key = createUUID()
+    protected async requiresUserApproval(args: EIP1193RequestParameters) {
+        const key = this.generateKey()
         return new Promise((resolve, reject) => {
             this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
                 key,
@@ -207,38 +194,6 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         }
     }
 
-    private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
-        this.inFlightRequests.set(key, { resolve, reject, popup })
-
-        const intervalMs = 100
-
-        if (!this.timer && popup) {
-            // every interval, check if popup has been manually closed
-            this.timer = setInterval(() => {
-                let withPopups = 0
-                for (const [k, req] of this.inFlightRequests) {
-                    if (!req.popup) {
-                        continue
-                    }
-
-                    if (req.popup.closed) {
-                        // manually closed without explicit rejection
-                        req.reject(new EIP1193UserRejectedRequestError())
-                        this.inFlightRequests.delete(k)
-                    } else {
-                        // still open
-                        withPopups++
-                    }
-                }
-
-                if (this.timer && !withPopups) {
-                    clearInterval(this.timer)
-                    this.timer = null
-                }
-            }, intervalMs)
-        }
-    }
-
     private autoApprove(key: UUID, args: EIP1193RequestParameters) {
         void this.config.providerBus.emit(Msgs.RequestPermissionless, {
             key,
@@ -250,7 +205,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         return null
     }
 
-    private promptUser(key: UUID, args: EIP1193RequestParameters) {
+    openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters) {
         const url = new URL("request", this.config.iframePath)
         const opts = {
             windowId: this.config.windowId,
@@ -259,6 +214,6 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         }
 
         const searchParams = new URLSearchParams(opts).toString()
-        return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
+        return window.open(`${url}?${searchParams}`, "_blank", this.POPUP_FEATURES)
     }
 }

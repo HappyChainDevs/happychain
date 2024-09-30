@@ -1,4 +1,5 @@
 import {
+    BaseProviderClass,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
@@ -6,11 +7,11 @@ import {
     type MsgsFromApp,
     isPermissionsRequest,
 } from "@happychain/sdk-shared"
+
 import { requestPayloadIsHappyMethod } from "@happychain/sdk-shared"
-import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { createStore } from "mipd"
 import type { ProviderConnectInfo, ProviderMessage, ProviderRpcError } from "viem"
-import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
+import type { HappyProviderConfig } from "./interface"
 
 const store = createStore()
 
@@ -25,10 +26,10 @@ const store = createStore()
  * If connected, it simply proxies all requests directly into the appropriate
  * provider for the connected wallet
  */
-export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
+export abstract class InjectedWalletHandler extends BaseProviderClass {
     private localConnection: ReturnType<typeof store.findProvider>
 
-    constructor(private config: HappyProviderConfig) {
+    constructor(protected config: HappyProviderConfig) {
         super()
         // local connection (injected wallet)
         config.msgBus.on(Msgs.InjectedWalletRequestConnect, this.handleProviderConnectionRequest.bind(this))
