@@ -13,7 +13,7 @@ import {
 } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
 import type { UUID } from "../common-utils"
-import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
+import type { HappyProviderConfig } from "./interface"
 
 type InFlightCheck = {
     resolve: (value: boolean) => void
@@ -29,7 +29,7 @@ type InFlightCheck = {
  * where the user can approve/reject the requests before they are sent
  * to the iframe to be handled
  */
-export class SocialWalletHandler extends BaseProviderClass implements EIP1193ConnectionHandler {
+export class SocialWalletHandler extends BaseProviderClass {
     private inFlightChecks = new Map<string, InFlightCheck>()
 
     private user: HappyUser | undefined
