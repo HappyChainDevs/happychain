@@ -51,7 +51,12 @@ function Send() {
                 <AddressSelector targetAddress={targetAddress} setTargetAddress={setTargetAddress} />
                 {/* appears when target address has been confirmed */}
                 {targetAddress !== undefined && isAddress(targetAddress) && (
-                    <SendInput balance={happyBalance} sendValue={sendValue} setSendValue={setSendValue} inProgress={inProgress} />
+                    <SendInput
+                        balance={happyBalance}
+                        sendValue={sendValue}
+                        setSendValue={setSendValue}
+                        inProgress={inProgress}
+                    />
                 )}
             </div>
 
