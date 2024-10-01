@@ -16,17 +16,27 @@ const SendInput = ({ balance, sendValue, setSendValue, inProgress }: SendInputPr
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
+        inputValue = inputValue.replace(/[^0-9.,]/g, "")
 
-        // Remove any characters that are not numbers or a period
-        inputValue = inputValue.replace(/[^0-9.]/g, "")
+        // If there's a comma, assume it's the decimal separator (European format)
+        if (inputValue.includes(",")) {
+            const parts = inputValue.split(",")
 
-        // ensure only one period exists in the input (no 0..6 or 0.6.9)
-        const parts = inputValue.split(".")
-        if (parts.length > 2) {
-            inputValue = `${parts[0]}.${parts[1]}`
+            // Remove periods (thousand separators) from the integer part
+            const integerPart = parts[0].replace(/\./g, "")
+            // Join the integer part with the fractional part, replacing the comma with a period for JS decimal handling
+            inputValue = `${integerPart}.${parts[1] || ""}`
+        } else {
+            // If no comma, treat any period as the decimal separator (standard format)
+            const parts = inputValue.split(".")
+
+            // Remove thousand separators from the integer part (if any)
+            const integerPart = parts[0].replace(/\./g, "")
+            // Combine the integer part with the fractional part
+            inputValue = parts.length > 1 ? `${integerPart}.${parts[1]}` : integerPart
         }
 
-        // If the input starts with '0' and the second character is a number, add a period
+        // Handle cases where the input starts with '0' and the next character is a number (eg. '05' -> '0.5')
         if (inputValue.startsWith("0") && inputValue.length > 1 && !inputValue.includes(".")) {
             inputValue = `0.${inputValue.substring(1)}`
         }
