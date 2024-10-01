@@ -22,7 +22,7 @@ export function HappyWallet({ windowId, chain, rpcUrl }: { windowId: string; cha
     useEffect(() => {
         const openHandler = () => isOpen && setIsOpen(false)
         document.addEventListener("click", openHandler)
-        return document.removeEventListener("click", openHandler)
+        return () => document.removeEventListener("click", openHandler)
     }, [isOpen])
 
     const url = new URL("embed", config.iframePath)
