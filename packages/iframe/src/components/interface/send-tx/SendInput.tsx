@@ -1,16 +1,17 @@
 import { validateNumericInput } from "@happychain/common"
-import * as _ from "lodash"
+import { debounce } from "lodash"
 import type React from "react"
 import { useCallback, useState } from "react"
 import { formatEther, parseEther } from "viem"
 
-interface SendBalanceTrackerProps {
+interface SendInputProps {
     balance: bigint | undefined
     sendValue: string | undefined
     setSendValue: React.Dispatch<React.SetStateAction<string | undefined>>
+    inProgress: boolean
 }
 
-const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTrackerProps) => {
+const SendInput = ({ balance, sendValue, setSendValue, inProgress }: SendInputProps) => {
     const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,7 +27,7 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTra
     }
 
     // debounce the validation check
-    const debounceValidationAndBalance = _.debounce((inputValue: string) => {
+    const debounceValidationAndBalance = debounce((inputValue: string) => {
         const formattedValue = inputValue
 
         // Perform validation and balance checking
@@ -60,16 +61,17 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTra
                             placeholder={`${balance ? formatEther(balance) : "0"}`}
                             value={sendValue || ""}
                             onChange={handleTokenBalanceChange}
-                            disabled={!balance}
+                            disabled={!balance || inProgress}
                         />
 
                         <p className="text-[14px]">HAPPY</p>
                     </div>
 
                     <button
-                        className="flex text-center text-[14px] text-white border border-blue-600 px-2 rounded-lg bg-blue-600"
+                        className="flex text-center text-[14px] text-white border border-blue-600 px-2 rounded-lg bg-blue-600 disabled:opacity-50"
                         type="button"
                         onClick={handleMaxButtonClick}
+                        disabled={inProgress}
                     >
                         Max
                     </button>
@@ -83,4 +85,4 @@ const SendBalanceTracker = ({ balance, sendValue, setSendValue }: SendBalanceTra
     )
 }
 
-export default SendBalanceTracker
+export default SendInput
