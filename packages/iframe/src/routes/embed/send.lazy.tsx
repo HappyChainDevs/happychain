@@ -5,6 +5,7 @@ import { type Address, isAddress } from "viem"
 import AddressSelector from "../../components/interface/send-tx/AddressSelector"
 import SendButttons from "../../components/interface/send-tx/SendButtons"
 import SendInput from "../../components/interface/send-tx/SendInput"
+import { useContent } from "../../context/ContentContext"
 import { publicClientAtom } from "../../state/publicClient"
 import { userAtom } from "../../state/user"
 
@@ -16,6 +17,8 @@ function Send() {
     const user = useAtomValue(userAtom)
     const publicClient = useAtomValue(publicClientAtom)
 
+    const { sendInFlight, setSendInFlight } = useContent()
+
     // user's happy balance, will be moved to a wagmi script that handles this
     const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)
 
@@ -23,8 +26,6 @@ function Send() {
     const [targetAddress, setTargetAddress] = useState<Address | string | undefined>(undefined)
     // amount to send
     const [sendValue, setSendValue] = useState<string | undefined>(undefined)
-    // is there a tx in progress currently
-    const [inProgress, setInProgress] = useState(false)
 
     const getBalance = useCallback(async () => {
         if (user) {
@@ -55,12 +56,12 @@ function Send() {
                         balance={happyBalance}
                         sendValue={sendValue}
                         setSendValue={setSendValue}
-                        inProgress={inProgress}
+                        inProgress={sendInFlight}
                     />
                 )}
             </div>
 
-            <SendButttons sendValue={sendValue} targetAddress={targetAddress} setInProgress={setInProgress} />
+            <SendButttons sendValue={sendValue} targetAddress={targetAddress} setInProgress={setSendInFlight} />
         </div>
     )
 }

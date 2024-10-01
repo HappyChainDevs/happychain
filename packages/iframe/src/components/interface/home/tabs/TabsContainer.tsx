@@ -1,8 +1,8 @@
-import { ContentType, useContent } from "../../context/ContentContext"
-import Tab from "./home/tabs/Tab"
-import TabContent from "./home/tabs/TabContent"
+import { ContentType, useContent } from "../../../../context/ContentContext"
+import Tab from "./Tab"
+import TabContent from "./TabContent"
 
-const WalletContentInfo = () => {
+const TabsContainer = () => {
     const { view } = useContent()
 
     return (
@@ -19,4 +19,4 @@ const WalletContentInfo = () => {
     )
 }
 
-export default WalletContentInfo
+export default TabsContainer

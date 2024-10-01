@@ -1,0 +1,35 @@
+import { ContentType } from "../../../../context/ContentContext"
+import GamesView from "./views/GamesView"
+import TokenView from "./views/TokenView"
+import ActivityView from "./views/activity/ActivityView"
+
+interface TabContentProps {
+    view: ContentType
+}
+
+const TabContent = ({ view }: TabContentProps) => {
+    const defaultRender = () => {
+        return (
+            <div className="flex flex-col w-full h-4/5 p-2 bg-slate-300 rounded-b-xl rounded-tr-xl">
+                No details available.
+            </div>
+        )
+    }
+
+    const renderContent = () => {
+        switch (view) {
+            case ContentType.TOKENS:
+                return <TokenView />
+            case ContentType.GAMES:
+                return <GamesView />
+            case ContentType.ACTIVITY:
+                return <ActivityView />
+            default:
+                return defaultRender()
+        }
+    }
+
+    return <div className="flex flex-col w-full h-full">{renderContent()}</div>
+}
+
+export default TabContent

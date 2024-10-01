@@ -1,6 +1,6 @@
 import { getDefaultStore } from "jotai"
 import type { Address, WatchAssetParameters } from "viem"
-import { type UserWatchedAssetsRecord, watchedAssetsAtom } from "../../state/watchedAssets"
+import { type UserWatchedAssetsRecord, watchedAssetsAtom } from "../state/watchedAssets"
 
 const store = getDefaultStore()
 

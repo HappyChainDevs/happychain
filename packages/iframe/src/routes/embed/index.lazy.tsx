@@ -1,10 +1,10 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
-import ActionButtons from "../../components/interface/ActionButtons"
-import AppStatus from "../../components/interface/AppStatus"
-import HappyBalance from "../../components/interface/HappyBalance"
 import WalletContentInfo from "../../components/interface/WalletContentInfo"
+import ActionButtons from "../../components/interface/home/ActionButtons"
+import AppStatus from "../../components/interface/home/AppStatus"
+import HappyBalance from "../../components/interface/home/HappyBalance"
 import { publicClientAtom } from "../../state/publicClient"
 import { userAtom } from "../../state/user"
 

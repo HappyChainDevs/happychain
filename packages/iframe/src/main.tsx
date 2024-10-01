@@ -12,6 +12,7 @@ import "./listeners"
 import "./index.css"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider } from "wagmi"
+import { ContentProvider } from "./context/ContentContext"
 import { config } from "./wagmi/config"
 
 // Create a new router instance
@@ -32,7 +33,9 @@ if (rootElement && !rootElement.innerHTML) {
             <HappyAccountProvider>
                 <WagmiProvider config={config}>
                     <QueryClientProvider client={queryClient}>
-                        <RouterProvider router={router} />
+                        <ContentProvider>
+                            <RouterProvider router={router} />
+                        </ContentProvider>
                     </QueryClientProvider>
                 </WagmiProvider>
             </HappyAccountProvider>
