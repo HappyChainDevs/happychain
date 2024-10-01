@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "display": "Types",
+    "compilerOptions": {
+        "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.types.tsbuildinfo",
+        "incremental": true,
+        "noEmit": false,
+        "emitDeclarationOnly": true,
+        "outDir": "${configDir}/dist",
+        "declarationDir": "${configDir}/dist/types",
+        "declaration": true
+    }
+}

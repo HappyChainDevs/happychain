@@ -1,0 +1,21 @@
+{
+    "name": "@happychain/scripts",
+    "module": "index.ts",
+    "type": "module",
+    "bin": {
+        "happyBuild": "./bin/happyBuild.ts"
+    },
+    "devDependencies": {
+        "@arethetypeswrong/cli": "^0.16.4",
+        "@happychain/configs": "workspace:^",
+        "@microsoft/api-extractor": "^7.47.9",
+        "@types/bun": "latest",
+        "@types/byte-size": "^8.1.2",
+        "ajv": "^8.17.1",
+        "byte-size": "^9.0.0",
+        "pkg-size": "^2.4.0"
+    },
+    "peerDependencies": {
+        "typescript": "^5.0.0"
+    }
+}

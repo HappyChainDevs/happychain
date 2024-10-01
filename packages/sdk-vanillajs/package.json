@@ -4,36 +4,30 @@
     "version": "0.0.0",
     "type": "module",
     "files": ["dist"],
-    "main": "./dist/index.umd.js",
+    "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.es.d.ts",
     "exports": {
         ".": {
             "types": "./dist/index.es.d.ts",
-            "import": "./dist/index.es.js",
-            "require": "./dist/index.umd.js"
+            "import": "./dist/index.es.js"
         }
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
         "@happychain/common": "workspace:^",
+        "@happychain/scripts": "workspace:^",
         "@happychain/configs": "workspace:^",
         "@happychain/sdk-shared": "workspace:^",
         "@metamask/safe-event-emitter": "^3.1.1",
-        "@preact/preset-vite": "^2.9.0",
         "@types/bun": "^1.1.8",
         "@types/preact-custom-element": "^4.0.4",
-        "autoprefixer": "^10.4.20",
         "clsx": "^2.1.1",
         "happy-dom": "^15.0.0",
         "mipd": "^0.0.7",
-        "postcss": "^8.4.41",
         "preact": "^10.24.0",
         "preact-custom-element": "^4.3.0",
-        "tailwindcss": "^3.4.10",
         "typescript": "^5.6.2",
-        "viem": "^2.21.7",
-        "vite": "^5.4.2",
-        "vite-plugin-dts": "4.0.3"
+        "viem": "^2.21.7"
     }
 }

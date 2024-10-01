@@ -1,4 +1,4 @@
-import { accessorsFromAtom } from "@happychain/common/lib/utils/jotai"
+import { accessorsFromAtom } from "@happychain/common"
 import { chains as _chains } from "@happychain/sdk-shared"
 import { atom } from "jotai/index"
 import { atomWithStorage } from "jotai/utils"

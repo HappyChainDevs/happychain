@@ -1,4 +1,4 @@
-import { accessorsFromAtom } from "@happychain/common/lib/utils/jotai"
+import { accessorsFromAtom } from "@happychain/common"
 import { convertToViemChain, getChainFromSearchParams } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, HttpTransport, PublicClient } from "viem"

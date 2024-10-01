@@ -1,7 +1,0 @@
-{
-    "extends": "@happychain/configs/tsconfig.vite-lib.json",
-    "compilerOptions": {
-        "jsxImportSource": "preact"
-    },
-    "include": ["lib"]
-}

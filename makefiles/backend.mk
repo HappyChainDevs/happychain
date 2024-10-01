@@ -9,10 +9,10 @@ clean:
 
 dist: $(shell find . -type f \( -name "*.ts" -o -name "*.json" -o -name "*.js" \) -not -path "./dist/*")
 	$(TSC_BIN) --build;
-	@#updates modified_at timestamp
-	@if [ -d $@ ]; then touch $@; fi
+	@# force updates modified_at timestamp;
+	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
 node_modules: package.json
 	bun install
-	@#updates modified_at timestamp
-	@if [ -d $@ ]; then touch $@; fi
+	@# force updates modified_at timestamp;
+	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;

@@ -1,4 +1,4 @@
-import { accessorsFromAtom } from "@happychain/common/lib/utils/jotai"
+import { accessorsFromAtom } from "@happychain/common"
 import { AuthState } from "@happychain/sdk-shared"
 import { atom } from "jotai"
 import { StorageKey, storage } from "../services/storage"
