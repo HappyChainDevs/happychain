@@ -1,4 +1,7 @@
 {
-    "files": [],
-    "references": [{ "path": "./tsconfig.lib.json" }, { "path": "./tsconfig.node.json" }]
+    "extends": ["@happychain/configs/tsconfig.base.json"],
+    "compilerOptions": {
+        "jsxImportSource": "preact"
+    },
+    "include": ["lib"]
 }

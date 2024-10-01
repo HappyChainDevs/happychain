@@ -1,5 +1,5 @@
 import { atomWithCompareAndStorage } from "@happychain/common"
-import { accessorsFromAtom } from "@happychain/common/lib/utils/jotai"
+import { accessorsFromAtom } from "@happychain/common"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { StorageKey } from "../services/storage"
 

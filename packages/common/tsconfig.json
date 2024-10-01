@@ -1,13 +1,4 @@
 {
-    "extends": "@happychain/configs/tsconfig.bun.json",
-    "include": ["lib"],
-    "compilerOptions": {
-        "allowImportingTsExtensions": false,
-        "noEmit": false,
-        "outDir": "./dist",
-        "declaration": true,
-        "declarationMap": true,
-        "sourceMap": true,
-        "resolveJsonModule": true
-    }
+    "extends": ["@happychain/configs/tsconfig.base.json", "@happychain/configs/tsconfig.types.json"],
+    "include": ["lib"]
 }

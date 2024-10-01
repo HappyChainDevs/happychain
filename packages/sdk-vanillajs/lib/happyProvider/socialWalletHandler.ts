@@ -11,7 +11,7 @@ import {
     Msgs,
     type PopupMsgsFromIframe,
 } from "@happychain/sdk-shared"
-import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
+import { ModalStates } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 

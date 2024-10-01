@@ -3,7 +3,16 @@
     "version": "1.0.0",
     "private": true,
     "type": "module",
-    "main": "lib/index.ts",
+    "main": "./lib/index.ts",
+    "module": "./lib/index.ts",
+    "types": "./dist/types/lib/index.d.ts",
+    "exports": {
+        ".": {
+            "bun": "./lib/index.ts",
+            "default": "./lib/index.ts",
+            "types": "./dist/types/lib.index.d.ts"
+        }
+    },
     "dependencies": {
         "@happychain/common": "workspace:^",
         "viem": "^2.21.7"

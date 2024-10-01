@@ -1,5 +1,5 @@
 import { type ConnectionProvider, Msgs } from "@happychain/sdk-shared"
-import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
+import { ModalStates } from "@happychain/sdk-shared"
 import clsx from "clsx"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"

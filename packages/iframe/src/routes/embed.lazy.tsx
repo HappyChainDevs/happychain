@@ -9,7 +9,7 @@ import { useSocialProviders } from "../hooks/useSocialProviders"
 import { appMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
 
-import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
+import { ModalStates } from "@happychain/sdk-shared"
 import { Power } from "@phosphor-icons/react"
 import clsx from "clsx"
 import GlobalHeader from "../components/interface/GlobalHeader"

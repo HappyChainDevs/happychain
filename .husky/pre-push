@@ -4,3 +4,8 @@
 # but doesn't commit the changes before pushing up.
 # CI fails, and you have uncommitted changes locally :(
 make --silent check
+
+# now this makes use of incremental changes, so locally
+# it should be very fast, assuming most services you 
+# haven't touched have previously been built
+make account.build

@@ -6,7 +6,7 @@ import type {
     ProviderMsgsFromApp,
 } from "@happychain/sdk-shared"
 import { EventBus, EventBusMode, config } from "@happychain/sdk-shared"
-import { ModalStates, Msgs } from "@happychain/sdk-shared/lib/interfaces/events"
+import { ModalStates, Msgs } from "@happychain/sdk-shared"
 import { announceProvider } from "mipd"
 import type { EIP1193Provider } from "viem"
 import { createUUID } from "../common-utils"
