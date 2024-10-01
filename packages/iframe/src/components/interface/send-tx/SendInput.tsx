@@ -16,13 +16,13 @@ const SendInput = ({ balance, sendValue, setSendValue, inProgress }: SendInputPr
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
-        setSendValue(inputValue)
 
         // If the input starts with '0' and the second character is a number, add a period
         if (inputValue.startsWith("0") && inputValue.length > 1 && !inputValue.includes(".")) {
             inputValue = `0.${inputValue.substring(1)}`
         }
 
+        setSendValue(inputValue)
         debounceValidationAndBalance(inputValue)
     }
 
