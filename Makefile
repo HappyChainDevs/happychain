@@ -300,30 +300,29 @@ contracts.clean:
 # DEPENDENCY MANAGEMENT
 #   Update dependencies, check for outdated dependencies, etc.
 
-# Install packages as specified in the pnpm-lockfile.yaml.
+# Install packages as specified in the bun.lockb.
 install-frozen:
-	pnpm install --frozen-lockfile
+	bun install --frozen-lockfile
 .PHONY: install-deps
 
 # NOTES:
 #  Below "version specifier" refers to the version strings (e.g. "^1.2.3") in package.json.
-#  You can safely use pnpm commands inside the packages, and things will behave like your expect
-#  (i.e. update only the package, but use the pnpm monorepo architecture).
+#  You can safely use bun commands inside the packages, and things will behave like your expect
+#  (i.e. update only the package, but use the bun monorepo architecture).
 
 # Like npm install: if a version matching version specifier is installed, does nothing, otherwise
 # install the most up-to-date version matching the specifier.
 install:
-	pnpm install -r
-	@echo "If the lockfileVersion changed, please update 'packageManager' in package.json!"
+	bun install
 .PHONY: install
 
 node_modules: package.json $(wildcard packages/*/package.json)
-	@pnpm install -r
+	@bun install
 
 # Shows packages for which new versions are available (compared to the installed version).
 # This will also show new version that do not match the version specifiers!
 outdated:
-	pnpm outdated -r
+	bun outdated
 .PHONY: outdated
 
 # Updates all packages to their latest version that match the version specifier.
@@ -331,14 +330,13 @@ outdated:
 # You can also run this if your installed versions are > than the version specifiers and you want
 # to update them.
 update:
-	pnpm update -r
-	@echo "If the lockfileVersion changed, please update 'packageManager' in package.json!"
+	bun update
 .PHONY: update
 
 # Updates all packages to their latest version (even if they do not match the version specifier!).
 # It will also update the version specifiers to point to the new version.
 update-latest:
-	pnpm update -r --latest
+	bun update --latest
 	@echo "If the lockfileVersion changed, please update 'packageManager' in package.json!"
 .PHONY: update-latest
 

@@ -9,8 +9,10 @@ clean:
 
 dist: $(shell find . -type f \( -name "*.ts" -o -name "*.json" -o -name "*.js" \) -not -path "./dist/*")
 	$(TSC_BIN) --build;
-	@touch $@
+	@#updates modified_at timestamp
+	@if [ -d $@ ]; then touch $@; fi
 
 node_modules: package.json
-	pnpm install
-	@touch $@
+	bun install
+	@#updates modified_at timestamp
+	@if [ -d $@ ]; then touch $@; fi

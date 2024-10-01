@@ -2,9 +2,8 @@
     "name": "@happychain/common",
     "version": "1.0.0",
     "type": "module",
-    "main": "dist/index.js",
-    "module": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "main": "lib/index.ts",
+    "module": "lib/index.ts",
     "devDependencies": {
         "@happychain/configs": "workspace:^",
         "@types/react": "^18.3.4",
