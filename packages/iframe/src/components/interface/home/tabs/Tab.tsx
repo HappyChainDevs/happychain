@@ -1,12 +1,11 @@
-import type { Dispatch, SetStateAction } from "react"
-import type { ContentType } from "./WalletContentInfo"
+import { type ContentType, useContent } from "../../../../context/ContentContext"
 
 interface TabProps {
     title: ContentType
-    setView: Dispatch<SetStateAction<ContentType>>
 }
 
-const Tab = ({ title, setView }: TabProps) => {
+const Tab = ({ title }: TabProps) => {
+    const { setView } = useContent()
     return (
         <button
             className="h-10 w-24 bg-slate-300 rounded-t-xl"

@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
 import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
+import { ContentType, useContent } from "../../../context/ContentContext"
 
 interface SendButtonsInterface {
     sendValue: string | undefined
@@ -12,17 +13,24 @@ interface SendButtonsInterface {
 
 const SendButtons = ({ sendValue, targetAddress, setInProgress }: SendButtonsInterface) => {
     const navigate = useNavigate()
-    const { data: hash, isPending, sendTransaction } = useSendTransaction()
+    const { data: hash, isPending, sendTransaction, error } = useSendTransaction()
 
     const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash })
+
+    const { setView, setSendInFlight } = useContent()
 
     useEffect(() => {
         // if tx is successful, move back to home page of wallet
         if (isConfirmed) {
             setInProgress(false)
+            setSendInFlight(false)
+            setView(ContentType.ACTIVITY) // shows the activity tab in the wallet to reflect the new tx
             navigate({ to: "/embed" })
         }
-    }, [isConfirmed, navigate, setInProgress])
+        if (error) {
+            setSendInFlight(false)
+        }
+    }, [error, isConfirmed, navigate, setInProgress, setSendInFlight, setView])
 
     // navigates back to home page
     const cancelSend = useCallback(() => {
@@ -32,13 +40,14 @@ const SendButtons = ({ sendValue, targetAddress, setInProgress }: SendButtonsInt
     const submitSend = useCallback(() => {
         if (targetAddress && sendValue) {
             setInProgress(true)
+            setSendInFlight(true)
             // send tx
             sendTransaction({
                 to: targetAddress as Address,
                 value: parseEther(sendValue),
             })
         }
-    }, [sendTransaction, sendValue, setInProgress, targetAddress])
+    }, [sendTransaction, sendValue, setSendInFlight, setInProgress, targetAddress])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">

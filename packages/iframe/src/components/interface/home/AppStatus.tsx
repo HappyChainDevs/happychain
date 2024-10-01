@@ -1,5 +1,5 @@
-import { useHasPermissions } from "../../hooks/useHasPermissions"
-import { getDappOrigin } from "../../utils/getDappOrigin"
+import { useHasPermissions } from "../../../hooks/useHasPermissions"
+import { getDappOrigin } from "../../../utils/getDappOrigin"
 
 const AppStatus = () => {
     const hasPermission = useHasPermissions("eth_accounts")

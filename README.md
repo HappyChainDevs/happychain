@@ -1,6 +1,6 @@
 # HappyChain Monorepo
 
-HappyChain is a blockchain focused on fully onchain game.
+HappyChain is a blockchain focused on fully onchain gaming.
 
 Our flagship feature is the Happy Account, a global account for all applications on HappyChain,
 implemented via a wallet that can be permissionlessly embedded into any app.
@@ -36,7 +36,7 @@ You can run `make help` to get a short description of the most common commands.
 - `make nuke` — removes all build artifacts and dependencies
   - you need to rerun `make setup` after this
 
-Most package have a version of `make build`, `make clean`, `make check` and `make format`.
+Most packages have a version of `make build`, `make clean`, `make check` and `make format`.
 
 Some packages have their own `make setup` — when that is the case, it does **not** install the pnpm
 dependencies (so that not time is wasted doing this after installing everything once at the top
@@ -60,7 +60,7 @@ level).
   - If you have [`mprocs`] installed, you can specify `MULTIRUN=mprocs` to run with mprocs instead.
   - `sdk`: all packages needed to build the sdk
   - `iframe`: all packages needed to build the iframe
-  - `account`: all package needed for the Happy Account (sdk + iframe)
+  - `account`: all packages needed for the Happy Account (sdk + iframe)
   - `demo-js`: everything needed for the vanilla JS demo (account + demo-vanillajs)
   - `demo-react`: everything needed for the React demo (account + demo-react)
   - `demo-vue`: everything needed for the Vue demo (account + demo-wagmi-vue)
@@ -71,4 +71,4 @@ level).
 
 ## More Commands
 
-See the [Makefile](/Makefile) for a description of all top-level make commands.
+See the [Makefile](/Makefile) for descriptions of all top-level make commands.
