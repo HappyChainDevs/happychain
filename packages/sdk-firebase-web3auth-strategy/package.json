@@ -12,7 +12,6 @@
         "firebase": "^10.13.1"
     },
     "devDependencies": {
-        "eslint": "^8.56.0",
         "@happychain/configs": "workspace:^",
         "@types/react": "^18.3.6",
         "@types/react-dom": "^18.3.0"

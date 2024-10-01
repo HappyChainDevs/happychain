@@ -11,20 +11,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-      - uses: oven-sh/setup-bun@v2
-      - uses: actions/setup-node@v4
+      - uses: actions/cache@v4
         with:
-          node-version: '22.6'
-          cache: 'pnpm'
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-${{ matrix.bun }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.bun }}-bun-
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.29'
+          cache: 'bun'
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
       - name: Fake contract deployment
         run: mkdir -p packages/contracts/out && echo "{}" > packages/contracts/out/deployment.json
-      - run: make --silent install-frozen
-      - run: make --silent setup
-      - run: make --silent check
-      - run: make --silent build
-      - run: make --silent test
+      - run: make install-frozen
+      - run: make setup
+      - run: make check
+      - run: make test
+      - run: make build

@@ -1,4 +1,13 @@
 {
     "files": [],
+    "compilerOptions": {
+        "paths": {
+            "react": ["./node_modules/preact/compat/"],
+            "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"],
+            "react-dom": ["./node_modules/preact/compat/"],
+            "react-dom/*": ["./node_modules/preact/compat/*"]
+        },
+        "jsxImportSource": "preact"
+    },
     "references": [{ "path": "./tsconfig.lib.json" }, { "path": "./tsconfig.node.json" }]
 }

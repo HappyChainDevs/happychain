@@ -29,7 +29,10 @@ preview: node_modules dist
 dist: $(shell find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" -o -name "*.html" -o -name "*.vue" \) -not -path "./dist/*")
 	$(TSC_BIN) --build;
 	vite build;
+	@#updates modified_at timestamp
+	@if [ -d $@ ]; then touch $@; fi
 
 node_modules: package.json
-	pnpm install
-	@touch $@
+	bun install
+	@#updates modified_at timestamp
+	@if [ -d $@ ]; then touch $@; fi

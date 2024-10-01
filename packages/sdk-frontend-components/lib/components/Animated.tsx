@@ -6,8 +6,11 @@ export function Animated({ state, children }: { state: string } & PropsWithChild
     const animatedTextRef = useRef(null)
 
     return (
+        // @ts-ignore
         <SwitchTransition>
+            {/* @ts-ignore */}
             <CSSTransition key={state} nodeRef={animatedTextRef} timeout={300} classNames="slide">
+                {/* @ts-ignore */}
                 <div ref={animatedTextRef} className="happychain-status">
                     {children}
                 </div>

@@ -12,8 +12,8 @@ Add to your packages `package.json`
 }
 ```
 
-```bashsh
-pnpm install
+```sh
+bun install
 ```
 
 ## Biome Configs

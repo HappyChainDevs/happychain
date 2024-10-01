@@ -14,12 +14,12 @@ ADD_PATH = $(eval PATH := $(if $(findstring :$(PATH_TO_ADD):,:$(PATH):),$(PATH),
 # Unlock more powerful features than plain POSIX sh.
 SHELL := /bin/bash
 
-# Enables running pnpm-installed binaries without going through pnpm.
+# Enables running bun-installed binaries without going through bun.
 $(call ADD_PATH , ./node_modules/.bin)
 
-# Enables running workspace-level pnpm-installed binaries easily and without going through pnpm.
+# Enables running workspace-level bun-installed binaries easily and without going through bun.
 # The condition makes sure this is not added in the top-level Makefile itself.
-ifeq (,$(wildcard pnpm-lock.yaml))
+ifeq (,$(wildcard bun.lockb))
 $(call ADD_PATH , ../../node_modules/.bin)
 endif
 

@@ -93,14 +93,68 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  IndexLazyRoute,
-  RequestRoute,
-  EmbedLazyRoute: EmbedLazyRoute.addChildren({
-    EmbedSendLazyRoute,
-    EmbedIndexLazyRoute,
-  }),
-})
+interface EmbedLazyRouteChildren {
+  EmbedSendLazyRoute: typeof EmbedSendLazyRoute
+  EmbedIndexLazyRoute: typeof EmbedIndexLazyRoute
+}
+
+const EmbedLazyRouteChildren: EmbedLazyRouteChildren = {
+  EmbedSendLazyRoute: EmbedSendLazyRoute,
+  EmbedIndexLazyRoute: EmbedIndexLazyRoute,
+}
+
+const EmbedLazyRouteWithChildren = EmbedLazyRoute._addFileChildren(
+  EmbedLazyRouteChildren,
+)
+
+export interface FileRoutesByFullPath {
+  '/': typeof IndexLazyRoute
+  '/request': typeof RequestRoute
+  '/embed': typeof EmbedLazyRouteWithChildren
+  '/embed/send': typeof EmbedSendLazyRoute
+  '/embed/': typeof EmbedIndexLazyRoute
+}
+
+export interface FileRoutesByTo {
+  '/': typeof IndexLazyRoute
+  '/request': typeof RequestRoute
+  '/embed/send': typeof EmbedSendLazyRoute
+  '/embed': typeof EmbedIndexLazyRoute
+}
+
+export interface FileRoutesById {
+  __root__: typeof rootRoute
+  '/': typeof IndexLazyRoute
+  '/request': typeof RequestRoute
+  '/embed': typeof EmbedLazyRouteWithChildren
+  '/embed/send': typeof EmbedSendLazyRoute
+  '/embed/': typeof EmbedIndexLazyRoute
+}
+
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/request' | '/embed' | '/embed/send' | '/embed/'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/request' | '/embed/send' | '/embed'
+  id: '__root__' | '/' | '/request' | '/embed' | '/embed/send' | '/embed/'
+  fileRoutesById: FileRoutesById
+}
+
+export interface RootRouteChildren {
+  IndexLazyRoute: typeof IndexLazyRoute
+  RequestRoute: typeof RequestRoute
+  EmbedLazyRoute: typeof EmbedLazyRouteWithChildren
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexLazyRoute: IndexLazyRoute,
+  RequestRoute: RequestRoute,
+  EmbedLazyRoute: EmbedLazyRouteWithChildren,
+}
+
+export const routeTree = rootRoute
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* prettier-ignore-end */
 
