@@ -61,7 +61,6 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             ? void happyProviderBus.emit(Msgs.RequestResponse, response)
             : void iframeProvider.handleRequestResolution(response)
     } catch (e) {
-        if (!confirmSourceId(request.windowId)) return
         const response = {
             key: request.key,
             windowId: request.windowId,

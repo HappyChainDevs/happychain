@@ -3,8 +3,8 @@ import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { type Address, isAddress } from "viem"
 import AddressSelector from "../../components/interface/send-tx/AddressSelector"
-import SendBalanceTracker from "../../components/interface/send-tx/SendBalanceTracker"
 import SendButttons from "../../components/interface/send-tx/SendButtons"
+import SendInput from "../../components/interface/send-tx/SendInput"
 import { publicClientAtom } from "../../state/publicClient"
 import { userAtom } from "../../state/user"
 
@@ -51,18 +51,11 @@ function Send() {
                 <AddressSelector targetAddress={targetAddress} setTargetAddress={setTargetAddress} />
                 {/* appears when target address has been confirmed */}
                 {targetAddress !== undefined && isAddress(targetAddress) && (
-                    <SendBalanceTracker balance={happyBalance} sendValue={sendValue} setSendValue={setSendValue} />
+                    <SendInput balance={happyBalance} sendValue={sendValue} setSendValue={setSendValue} inProgress={inProgress} />
                 )}
             </div>
 
             <SendButttons sendValue={sendValue} targetAddress={targetAddress} setInProgress={setInProgress} />
-
-            {/* Overlay when inProgress is true */}
-            {inProgress && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 pointer-events-none">
-                    <span className="text-white text-xl font-bold">🤠 Transaction in progress 🤠</span>
-                </div>
-            )}
         </div>
     )
 }
