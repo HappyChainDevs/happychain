@@ -17,6 +17,15 @@ const SendInput = ({ balance, sendValue, setSendValue, inProgress }: SendInputPr
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
 
+        // Remove any characters that are not numbers or a period
+        inputValue = inputValue.replace(/[^0-9.]/g, "")
+
+        // ensure only one period exists in the input (no 0..6 or 0.6.9)
+        const parts = inputValue.split(".")
+        if (parts.length > 2) {
+            inputValue = `${parts[0]}.${parts[1]}`
+        }
+
         // If the input starts with '0' and the second character is a number, add a period
         if (inputValue.startsWith("0") && inputValue.length > 1 && !inputValue.includes(".")) {
             inputValue = `0.${inputValue.substring(1)}`
