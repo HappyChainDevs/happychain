@@ -93,49 +93,36 @@ nuke: remove-modules clean ## Removes build artifacts and dependencies
 # ==================================================================================================
 # DEVELOPMENT
 
-define sdk-dev-commands
-	"cd packages/sdk-vanillajs && make dev" \
-	"cd packages/sdk-react && make dev"
-endef
-
 iframe-dev-command := cd packages/iframe && make dev
 
-define account-dev-commands
-	$(sdk-dev-commands) \
-	"$(iframe-dev-command)"
-endef
-
-define demo-dev-commands
-	$(account-dev-commands) \
-	"cd packages/sdk-frontend-components && make dev"
-endef
-
 sdk.dev:
-	$(MULTIRUN) --names "js,react" $(sdk-dev-commands)
+	@# intentially building sequentially. 
+	@# get sporadic build errors when in parralel and starting demos
+	cd packages/common && make build
+	cd packages/sdk-shared && make build
+	cd packages/sdk-frontend-components && make dev
+	cd packages/sdk-vanillajs && make dev
+	cd packages/sdk-react && make dev
 .PHONY: sdk-dev
 
 iframe.dev:
 	$(iframe-dev-command)
 .PHONY: iframe.dev
 
-account.dev:
-	$(MULTIRUN) --names "js,react,iframe" $(account-dev-commands)
-.PHONY: account.dev
-
-demo-js.dev:
-	$(MULTIRUN) --names "js,react,iframe,ui,demo-js" $(demo-dev-commands) \
-		"cd packages/demo-vanillajs && make dev"
+demo-js.dev: setup
+	make sdk.dev;
+	$(MULTIRUN) --names "iframe,demo-js" "$(iframe-dev-command)" "cd packages/demo-vanillajs && make dev"
 .PHONY: demo-vanillajs.dev
 
-demo-react.dev:
-	$(MULTIRUN) --names "js,react,iframe,ui,demo-react" $(demo-dev-commands) \
-		"cd packages/demo-react && make dev"
+demo-react.dev: setup
+	make sdk.dev;
+	$(MULTIRUN) --names "iframe,demo-react" "$(iframe-dev-command)" "cd packages/demo-react && make dev"
 .PHONY: demo-react.dev
 
-demo-vue.dev:
-	$(MULTIRUN) --names "js,react,iframe,ui,demo-vue" $(demo-dev-commands) \
-		"cd packages/demo-wagmi-vue && make dev"
-.PHONY: demo-wagmi-vue.dev
+demo-vue.dev: setup
+	make sdk.dev;
+	$(MULTIRUN) --names "iframe,demo-vue" "$(iframe-dev-command)" "cd packages/demo-wagmi-vue && make dev"
+.PHONY: demo-vue.dev
 
 # start docs in watch mode (can crash, see packages/docs/Makefile for more info)
 docs.dev:
@@ -294,6 +281,8 @@ docs.clean:
 
 ts.clean:
 	$(call forall , $(TS_PKGS) , clean)
+	echo "Running make clean in packages/docs"
+	cd packages/docs && make check
 .PHONY: ts.clean
 
 contracts.clean:

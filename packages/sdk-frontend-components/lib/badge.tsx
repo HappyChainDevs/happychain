@@ -1,9 +1,6 @@
+/** @jsxImportSource preact */
 import type { HappyUser } from "@happychain/sdk-shared"
-import { useEffect, useMemo, useState } from "preact/hooks"
-import type { JSX } from "preact/jsx-runtime"
-import { Animated } from "./components/Animated"
-import { Button } from "./components/Button"
-import { ConnectionError } from "./components/ConnectionError"
+import { useEffect, useState } from "preact/hooks"
 import { ConnectionStatus } from "./components/ConnectionStatus"
 import { Logo } from "./components/Logo"
 import { Styles } from "./components/Styles"
@@ -14,7 +11,9 @@ const noop = undefined
 
 const { fetchUser, onAccountsChanged, providerInfo } = createRequests({ rdns: "tech.happy" })
 
-export function Badge({ disableStyles = false }: { disableStyles?: boolean | string }): JSX.Element {
+export type BadgeProps = { disableStyles?: boolean | string }
+
+export function Badge({ disableStyles = false }: BadgeProps) {
     const [user, setUser] = useState<HappyUser | undefined>(undefined)
     const [initialized, setInitialized] = useState(false)
     const [errored, setErrored] = useState(false)
@@ -39,35 +38,31 @@ export function Badge({ disableStyles = false }: { disableStyles?: boolean | str
     }, [])
 
     const connected = Boolean(user?.address)
-
-    const onClick = useMemo(
-        () => (!initialized || connecting ? noop : connected ? disconnect : connect),
-        [connect, connected, disconnect, initialized, connecting],
-    )
-    const state = useMemo(
-        () => (!initialized ? "initializing" : connecting ? "connecting" : connected ? "connected" : "disconnected"),
-        [initialized, connecting, connected],
-    )
-
+    const onClick = !initialized || connecting ? noop : connected ? disconnect : connect
+    const state = !initialized ? "initializing" : connecting ? "connecting" : connected ? "connected" : "disconnected"
     const provider = providerInfo()
+
     return (
         <div>
             {<Styles disableStyles={disableStyles} />}
             {errored || !provider ? (
-                <ConnectionError />
+                <button type={"button"} className={"error happychain-badge"} disabled={true}>
+                    <span>Connection Error</span>
+                </button>
             ) : (
-                <Button
+                <button
+                    type={"button"}
+                    className={`${!connected ? `${state} animated` : state} happychain-badge`}
                     onClick={onClick}
                     disabled={!initialized || connecting}
-                    className={!connected ? `${state} animated` : state}
                 >
                     <span>
                         <Logo info={provider} />
-                        <Animated state={state}>
+                        <div className="happychain-status">
                             <ConnectionStatus initialized={initialized} connecting={connecting} user={user} />
-                        </Animated>
+                        </div>
                     </span>
-                </Button>
+                </button>
             )}
         </div>
     )

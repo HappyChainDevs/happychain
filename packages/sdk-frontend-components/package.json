@@ -5,42 +5,30 @@
     "type": "module",
     "files": ["dist"],
     "module": "./dist/index.es.js",
-    "types": "./dist/index.d.ts",
+    "types": "./dist/index.es.d.ts",
     "exports": {
         ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.es.js",
-            "require": "./dist/index.cjs.js"
+            "types": "./dist/index.es.d.ts",
+            "default": "./dist/index.es.js"
         },
-        "./badge": {
-            "types": "./dist/badge.d.ts",
-            "import": "./dist/badge.es.js",
-            "require": "./dist/badge.cjs.js"
-        },
-        "./define": {
-            "types": "./dist/define.d.ts",
-            "import": "./dist/define.es.js",
-            "require": "./dist/define.cjs.js"
+        "./preact": {
+            "types": "./dist/preact.es.d.ts",
+            "default": "./dist/preact.es.js"
         }
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
+        "@happychain/scripts": "workspace:^",
         "@happychain/sdk-shared": "workspace:^",
-        "@preact/preset-vite": "^2.9.0",
         "@types/preact-custom-element": "^4.0.4",
-        "@types/react-transition-group": "^4.4.11",
-        "@vitejs/plugin-react": "^4.3.1",
-        "babel-preset-preact": "^2.0.0",
         "mipd": "^0.0.7",
-        "preact": "^10.24.0",
+        "preact": "^10.24.1",
         "preact-custom-element": "^4.3.0",
-        "react-transition-group": "^4.4.5",
         "typescript": "^5.6.2",
-        "viem": "^2.21.7",
-        "vite": "^5.4.1",
-        "vite-plugin-dts": "4.0.3"
+        "viem": "^2.21.7"
     },
     "peerDependencies": {
+        "preact": "^10.24.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1"
     }
