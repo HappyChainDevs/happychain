@@ -1,7 +1,6 @@
 {
     "typescript.tsdk": "node_modules/typescript/lib",
     "cSpell.words": [
-        "Firestarter",
         "JWKS",
         "clsx",
         "corepack",
@@ -16,5 +15,10 @@
         "tanstack",
         "viem",
         "wagmi"
-    ]
+    ],
+    "files.associations": {
+        "api-extractor.json": "jsonc",
+        "tsconfig.*.json": "jsonc",
+        "tsconfig.json": "jsonc"
+    }
 }

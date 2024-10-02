@@ -1,4 +1,8 @@
 {
-    "files": [],
-    "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
+    "extends": ["@happychain/configs/tsconfig.base.json"],
+    "compilerOptions": {
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.lib.tsbuildinfo",
+        "incremental": true
+    },
+    "include": ["lib"]
 }

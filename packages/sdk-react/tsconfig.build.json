@@ -1,0 +1,13 @@
+{
+    "extends": ["./tsconfig.json"],
+    "compilerOptions": {
+        // reset root to be 'packages' for api-extractor
+        "noEmit": false,
+        "emitDeclarationOnly": true,
+        "outDir": "dist",
+        "declarationDir": "dist/types",
+        "declaration": true
+    },
+    // need to include all package dependencies for api-extractor to rollup types successfully
+    "include": ["lib"]
+}

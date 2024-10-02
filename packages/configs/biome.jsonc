@@ -62,7 +62,7 @@
             // extended tsconfigs can be JSONC however they can't use the
             // proper .jsonc extension and therfore are invalid json
             // this fixes that
-            "include": ["./**/*/tsconfig.*.json", "./**/*/tsconfig.json"],
+            "include": ["./**/*/tsconfig.*.json", "./**/*/tsconfig.json", "./**/*/api-extractor.json"],
             "json": {
                 "parser": {
                     "allowComments": true,
