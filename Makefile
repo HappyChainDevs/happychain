@@ -57,7 +57,7 @@ MULTIRUN ?= concurrently
 #   To get the project running locally.
 
 setup: install-frozen enable-hooks ## To be run when first setting up the repository.
-	cd packages/contracts && make setup
+	cd packages/contracts && make setup;
 .PHONY: setup
 
 anvil: ## Runs anvil (local EVM node)

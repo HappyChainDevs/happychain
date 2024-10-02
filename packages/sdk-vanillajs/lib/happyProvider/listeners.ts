@@ -14,7 +14,7 @@ import {
  */
 export type UserUpdateCallback = (user?: HappyUser) => void
 
-export type ModalUpdateCallback = (isOpen: boolean) => void
+export type ModalUpdateCallback = (state: { isOpen: boolean; cancelled: boolean }) => void
 
 export type AuthStateUpdateCallback = (state: AuthState) => void
 
@@ -51,9 +51,9 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
         }
     })
 
-    messageBus.on(Msgs.ModalToggle, (isOpen) => {
+    messageBus.on(Msgs.ModalToggle, ({ isOpen, cancelled }) => {
         for (const call of onModalUpdateCallbacks) {
-            call(isOpen)
+            call({ isOpen, cancelled })
         }
     })
 

@@ -5,18 +5,21 @@ import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
 import { appMessageBus } from "../services/eventBus"
 
-function close() {
-    void appMessageBus.emit(Msgs.ModalToggle, false)
+function setModalState({ isOpen, cancelled }: Parameters<typeof appMessageBus.emit<Msgs.ModalToggle>>[1]) {
+    void appMessageBus.emit(Msgs.ModalToggle, {
+        isOpen,
+        cancelled,
+    })
 }
 
 async function connect(provider: ConnectionProvider) {
     await provider.enable()
-    close()
+    setModalState({ isOpen: false, cancelled: false })
 }
 
 appMessageBus.on(Msgs.RequestDisplay, (screen) => {
     if (screen === ModalStates.Login) {
-        void appMessageBus.emit(Msgs.ModalToggle, true)
+        setModalState({ isOpen: true, cancelled: false })
     }
 })
 
@@ -28,8 +31,8 @@ export function ConnectModal() {
         <>
             <main className="h-dvh w-screen rounded-xl overflow-hidden">
                 <div
-                    onClick={close}
-                    onKeyDown={close}
+                    onClick={() => setModalState({ isOpen: false, cancelled: true })}
+                    onKeyDown={() => setModalState({ isOpen: false, cancelled: true })}
                     className={clsx(
                         "fixed left-0 right-0 top-0 h-dvh",
                         "flex items-center justify-center",

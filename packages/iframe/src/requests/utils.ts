@@ -54,7 +54,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             key: request.key,
             windowId: request.windowId,
             error: null,
-            payload: payload || {},
+            payload: payload ?? undefined,
         }
 
         request.windowId === parentID

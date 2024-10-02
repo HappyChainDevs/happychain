@@ -99,6 +99,7 @@
                     },
                     "correctness": {
                         "noUnusedVariables": "off",
+                        "noUnusedImports": "off",
                         "useHookAtTopLevel": "off"
                     }
                 }

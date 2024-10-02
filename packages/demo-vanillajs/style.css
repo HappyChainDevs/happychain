@@ -9,7 +9,11 @@ connect-button {
     .happychain-badge {
         @apply flex items-center justify-center;
         & > span {
-            @apply text-lg rounded m-4 font-bold flex items-center justify-center w-48 h-16 bg-gradient-to-r;
+            @apply text-lg rounded m-4 font-bold flex gap-2 items-center justify-start px-2 h-16 bg-gradient-to-r;
+        }
+
+        .happychain-status {
+            @apply w-36 truncate;
         }
 
         &.initializing {

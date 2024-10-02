@@ -17,7 +17,7 @@ export function HappyWallet({ windowId, chain, rpcUrl }: { windowId: string; cha
     const [authState, setAuthState] = useState(AuthState.Connecting)
     const [isOpen, setIsOpen] = useState(false)
 
-    useEffect(() => onModalUpdate(setIsOpen), [])
+    useEffect(() => onModalUpdate((state) => setIsOpen(state.isOpen)), [])
     useEffect(() => onAuthStateUpdate(setAuthState), [])
     useEffect(() => {
         const openHandler = () => isOpen && setIsOpen(false)

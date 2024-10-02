@@ -124,7 +124,7 @@ export type MsgsFromApp = {
  */
 export type MsgsFromIframe = {
     [Msgs.IframeInit]: boolean
-    [Msgs.ModalToggle]: boolean
+    [Msgs.ModalToggle]: { isOpen: boolean; cancelled: boolean }
     [Msgs.UserChanged]: HappyUser | undefined
     [Msgs.AuthStateChanged]: AuthState
     [Msgs.InjectedWalletRequestConnect]: { rdns?: string }
