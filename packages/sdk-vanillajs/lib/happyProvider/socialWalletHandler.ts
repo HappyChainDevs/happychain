@@ -95,9 +95,18 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
              * will be what is returned to the originating caller
              */
             if (!this.user && this.authState === AuthState.Disconnected) {
-                void this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
+                this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
 
-                const unsubscribe = this.config.msgBus.on(Msgs.UserChanged, (user) => {
+                const unsubscribeClose = this.config.msgBus.on(Msgs.ModalToggle, (state) => {
+                    if (state.cancelled) {
+                        unsubscribeSuccess()
+                        unsubscribeClose()
+                        this.inFlightChecks.delete(key)
+                        reject(new EIP1193UserRejectedRequestError())
+                    }
+                })
+
+                const unsubscribeSuccess = this.config.msgBus.on(Msgs.UserChanged, (user) => {
                     if (user) {
                         // auto-approve only works for these methods, since this is a direct response
                         // the the user login flow, and upon user login, these permissions get granted automatically
@@ -107,7 +116,8 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
                         // process request when user is logged in successfully
                         this.queueRequest(key, { resolve, reject, popup })
-                        unsubscribe()
+                        unsubscribeSuccess()
+                        // unsubscribeClose()
                     }
                 })
                 return
@@ -246,6 +256,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
             key: key,
             args: btoa(JSON.stringify(args)),
         }
+
         const searchParams = new URLSearchParams(opts).toString()
         return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
     }

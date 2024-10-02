@@ -20,7 +20,7 @@ import { sendResponse } from "./utils"
  * Processes requests approved by the user in the pop-up,
  * running them through a series of middleware.
  */
-export function handlerApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): void {
+export function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): void {
     void sendResponse(request, dispatchHandlers)
 }
 

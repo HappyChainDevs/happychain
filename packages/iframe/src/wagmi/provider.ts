@@ -13,6 +13,7 @@ import {
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193Provider } from "viem"
 import { handlePermissionlessRequest } from "../requests"
+import { handleApprovedRequest } from "../requests/approved"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
@@ -46,21 +47,26 @@ export class IframeProvider extends SafeEventEmitter {
     ): Promise<EIP1193RequestResult<TString>> {
         const key = createUUID()
 
-        // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
-        return new Promise<EIP1193RequestResult<TString>>(async (resolve, reject) => {
+        return new Promise<EIP1193RequestResult<TString>>((resolve, reject) => {
+            const reqPayload = {
+                key,
+                windowId: this.iframeWindowId,
+                error: null,
+                payload: args,
+            }
+
             const requiresUserApproval = checkIfRequestRequiresConfirmation(args)
 
             if (!requiresUserApproval) {
-                const permissionlessReqPayload = {
-                    key,
-                    windowId: this.iframeWindowId,
-                    error: null,
-                    payload: args,
-                }
+                // permissionless
+                void handlePermissionlessRequest(reqPayload)
+                this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup: null })
+                return
+            }
 
-                // auto-approve
-                void handlePermissionlessRequest(permissionlessReqPayload)
-
+            if (["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)) {
+                // auto-approve internal iframe permissions without popups
+                void handleApprovedRequest(reqPayload)
                 this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup: null })
                 return
             }
@@ -87,6 +93,7 @@ export class IframeProvider extends SafeEventEmitter {
 
                     if (req.popup.closed) {
                         // manually closed without explicit rejection
+                        console.log("why does this happy")
                         req.reject(new EIP1193UserRejectedRequestError())
                         this.inFlightRequests.delete(k)
                     } else {

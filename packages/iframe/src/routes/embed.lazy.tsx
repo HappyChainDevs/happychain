@@ -21,7 +21,7 @@ export const Route = createLazyFileRoute("/embed")({
 })
 
 function signalOpen() {
-    void appMessageBus.emit(Msgs.ModalToggle, true)
+    void appMessageBus.emit(Msgs.ModalToggle, { isOpen: true, cancelled: false })
 }
 
 function Embed() {
@@ -57,7 +57,7 @@ function Embed() {
 
     async function disconnect() {
         await activeProvider?.disable()
-        appMessageBus.emit(Msgs.ModalToggle, false)
+        appMessageBus.emit(Msgs.ModalToggle, { isOpen: false, cancelled: false })
     }
 
     if (authState === AuthState.Connecting) {
