@@ -1,7 +1,5 @@
-import type { ComponentProps } from "preact/compat"
-import type { Badge } from "./badge"
-
-export type BadgeProps = ComponentProps<typeof Badge>
+/** @jsxImportSource preact */
+export type { BadgeProps } from "./badge"
 
 function setStyles(stylesId: string, css: string) {
     const prev = document.head.querySelector(`#${stylesId}`)

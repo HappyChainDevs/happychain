@@ -1,3 +1,4 @@
+/** @jsxImportSource preact */
 import type { HappyUser } from "@happychain/sdk-shared"
 
 export function ConnectionStatus({

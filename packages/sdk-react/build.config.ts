@@ -1,4 +1,4 @@
-import { defineConfig } from "../scripts/defineConfig.ts"
+import { defineConfig } from "@happychain/scripts"
 
 import "./happydom.ts"
 
@@ -13,7 +13,7 @@ export default defineConfig([
         bunConfig: {
             entrypoints: ["./lib/index.ts"],
             outdir: "./dist",
-            minify: false,
+            minify: true,
             splitting: false,
             external: ["react", "react-dom", "@happychain/js"],
             sourcemap: "linked",

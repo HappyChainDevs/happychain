@@ -5,7 +5,7 @@ dev: node_modules
 	if [ -d ./dist ]; then rm -rf dist; fi;
 	if [ -d dist]; then touch dist; else mkdir -p dist; fi;
 	ln -s ../lib/index.ts ./dist/index.es.js
-	ln -s ../lib/index.ts ./dist/index.d.ts
+	ln -s ../lib/index.ts ./dist/index.es.d.ts
 .PHONY: dev
 
 # Will move this to a common makefile once other packages are ported over

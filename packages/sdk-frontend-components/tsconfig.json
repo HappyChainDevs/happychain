@@ -1,6 +1,9 @@
 {
-    "files": [],
+    "extends": "@happychain/configs/tsconfig.base.json",
     "compilerOptions": {
+        // "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.lib.tsbuildinfo",
+        // "incremental": true,
+        "esModuleInterop": true,
         "paths": {
             "react": ["./node_modules/preact/compat/"],
             "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"],
@@ -9,5 +12,5 @@
         },
         "jsxImportSource": "preact"
     },
-    "references": [{ "path": "./tsconfig.lib.json" }, { "path": "./tsconfig.node.json" }]
+    "include": ["lib"]
 }

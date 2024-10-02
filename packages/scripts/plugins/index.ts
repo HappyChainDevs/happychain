@@ -1,0 +1,1 @@
+export { inlineCssPlugin } from "./inlineCssLoader"

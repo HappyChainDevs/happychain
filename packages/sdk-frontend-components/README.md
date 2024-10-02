@@ -5,7 +5,7 @@
 When defining the component, `defineBadgeComponent` takes two optional parameters. the first is the name of the component you wish to use. i.e. `connect-button` (the default) will register a component usable with `<connect-button></connect-button>`
 
 ```js
-import { defineBadgeComponent } from "@happychain/ui/define"
+import { defineBadgeComponent } from "@happychain/ui"
 
 defineBadgeComponent()
 defineBadgeComponent("connect-button", true) // (defaults)

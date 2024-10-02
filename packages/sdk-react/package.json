@@ -10,7 +10,7 @@
     "exports": {
         ".": {
             "types": "./dist/index.es.d.ts",
-            "import": "./dist/index.es.js"
+            "default": "./dist/index.es.js"
         }
     },
     "devDependencies": {
