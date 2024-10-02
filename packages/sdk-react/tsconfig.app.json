@@ -1,9 +1,0 @@
-{
-    "extends": "@happychain/configs/tsconfig.vite-lib.json",
-    "compilerOptions": {
-        "paths": {
-            "lib/*": ["./lib/*"]
-        }
-    },
-    "include": ["lib"]
-}

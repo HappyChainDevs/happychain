@@ -40,7 +40,7 @@ DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue
 # backend packages
 BACKEND_PKGS := transaction-manager,randomness-service
 
-# all typescript packages, including docs
+# all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
 
 # ==================================================================================================
@@ -94,8 +94,8 @@ nuke: remove-modules clean ## Removes build artifacts and dependencies
 # DEVELOPMENT
 
 define sdk-dev-commands
-	"cd packages/sdk-vanillajs && make build.watch" \
-	"cd packages/sdk-react && make build.watch"
+	"cd packages/sdk-vanillajs && make dev" \
+	"cd packages/sdk-react && make dev"
 endef
 
 iframe-dev-command := cd packages/iframe && make dev
@@ -107,7 +107,7 @@ endef
 
 define demo-dev-commands
 	$(account-dev-commands) \
-	"cd packages/sdk-frontend-components && make build.watch"
+	"cd packages/sdk-frontend-components && make dev"
 endef
 
 sdk.dev:
@@ -227,6 +227,10 @@ contracts.format:
 # ==================================================================================================
 # PRODUCTION BUILDS
 
+shared.build:
+	$(call forall , $(SHARED_PKGS) , build)
+.PHONY: shared.build
+
 sdk.build:
 	$(call forall , $(SDK_PKGS) , build)
 .PHONY: sdk.build
@@ -256,7 +260,7 @@ contracts.build:
 # DOCS
 
 # Fully self-contained target to build docs, to be used by docs page host.
-docs.contained: setup sdk.build
+docs.contained: setup shared.build sdk.dev
 	cd packages/docs && make build
 .PHONY: docs.contained
 

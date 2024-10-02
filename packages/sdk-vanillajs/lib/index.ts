@@ -18,8 +18,10 @@ export type { UserUpdateCallback, ModalUpdateCallback, ListenerUnsubscribeFn } f
 
 /**
  * Repository of supported chains.
+ * re-export as const instead of namespaced module
  */
-export * as chains from "./chains"
+import * as _chains from "./chains"
+export const chains = { ..._chains }
 
 export type {
     HappyUser,

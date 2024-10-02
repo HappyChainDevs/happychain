@@ -167,9 +167,9 @@ async function bunBuild(config?: Config["bunConfig"]) {
 async function tscBuild(config: Config) {
     if (!config.tsConfig) return
 
-    const tsconfig = join(base, config.tsConfig)
+    const tsconfigPath = join(base, config.tsConfig)
 
-    const out = await $`bun tsc --build ${tsconfig}`
+    const out = await $`bun tsc --build ${tsconfigPath}`
 
     if (out.exitCode) {
         console.error(out.text())
