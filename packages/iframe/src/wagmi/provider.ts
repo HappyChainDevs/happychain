@@ -31,7 +31,7 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 export class IframeProvider extends BasePopupProvider {
     public iframeWindowId = this.generateKey()
 
-    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
+    public override async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
     ): Promise<EIP1193RequestResult<TString>> {
         if (!getUser()) {
@@ -84,7 +84,7 @@ export class IframeProvider extends BasePopupProvider {
             args: btoa(JSON.stringify(args)),
         }
         const searchParams = new URLSearchParams(opts).toString()
-        return window.open(`${url}?${searchParams}`, "_blank", this.POPUP_FEATURES)
+        return window.open(`${url}?${searchParams}`, "_blank", IframeProvider.POPUP_FEATURES)
     }
 
     public handleRequestResolution(
@@ -115,7 +115,7 @@ export class IframeProvider extends BasePopupProvider {
         }
     }
 
-    isConnected(): boolean {
+    override isConnected(): boolean {
         return true
     }
 }
