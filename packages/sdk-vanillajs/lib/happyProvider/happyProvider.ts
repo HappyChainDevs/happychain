@@ -1,8 +1,8 @@
 import type { HTTPString } from "@happychain/common"
-import { AuthState, BasePopupProvider, Msgs, waitForCondition } from "@happychain/sdk-shared"
+import { AuthState, type BasePopupProvider, Msgs, waitForCondition } from "@happychain/sdk-shared"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
 import { InjectedWalletHandler } from "./injectedWalletHandler"
-import type { HappyProviderConfig } from "./interface"
+import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 import { SocialWalletHandler } from "./socialWalletHandler"
 
 /**
@@ -19,8 +19,8 @@ import { SocialWalletHandler } from "./socialWalletHandler"
  * })
  * ```
  */
-export class HappyProvider extends BasePopupProvider {
-    private readonly injectedWalletHandler: BasePopupProvider
+export class HappyProvider extends SafeEventEmitter {
+    private readonly injectedWalletHandler: EIP1193ConnectionHandler
     private readonly socialWalletHandler: BasePopupProvider
 
     private authState: AuthState = AuthState.Connecting
@@ -65,7 +65,7 @@ export class HappyProvider extends BasePopupProvider {
     }
 
     /** Simply forward all provider events transparently */
-    private registerConnectionHandlerEvents(handler: BasePopupProvider) {
+    private registerConnectionHandlerEvents(handler: BasePopupProvider | EIP1193ConnectionHandler) {
         handler.on("accountsChanged", (accounts) => this.emit("accountsChanged", accounts))
         handler.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
         handler.on("connect", (connectInfo) => this.emit("connect", connectInfo))

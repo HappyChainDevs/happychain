@@ -51,7 +51,9 @@ export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods>
 export abstract class BasePopupProvider extends SafeEventEmitter {
     protected inFlightRequests = new Map<string, InFlightRequest>()
     protected timer: Timer | null = null
-    protected POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
+    protected static readonly POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(
+        ",",
+    )
 
     /**
      * Abstract method to send requests. This method must be implemented by child classes.
