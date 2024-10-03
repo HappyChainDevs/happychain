@@ -8,7 +8,7 @@ type Timer = ReturnType<typeof setInterval>
 type InFlightRequest<T extends EIP1193RequestMethods = EIP1193RequestMethods> = {
     resolve: (value: EIP1193RequestResult<T>) => void
     reject: (reason?: unknown) => void
-    popup: Window | null
+    popup?: Window
 }
 
 export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods> = (
@@ -37,7 +37,7 @@ export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods>
  * Note that `requestPermissions` is only called when `requiresApproval` returns true. That's
  * because we allow permissionless access to the iframe provider, but suggesting things to the user
  * (usually signing transactions) is subject to the initial wallet connection approval. Some
- * requests `wallet_requestPermissions` can be be either permissionless (if the permission has
+ * requests (`wallet_requestPermissions`) can be be either permissionless (if the permission has
  * already been granted) or require approval (if not), which is why this method needs to return a
  * value to indicate this.
  *
@@ -126,7 +126,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         args: EIP1193RequestParameters,
         windowId: UUID,
         baseUrl: string,
-    ): Window | null {
+    ): Window | undefined {
         const url = new URL("request", baseUrl)
         const opts = {
             windowId: windowId,
@@ -134,6 +134,8 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
             args: btoa(JSON.stringify(args)),
         }
         const searchParams = new URLSearchParams(opts).toString()
-        return window.open(`${url}?${searchParams}`, "_blank", BasePopupProvider.POPUP_FEATURES)
+        const popup = window.open(`${url}?${searchParams}`, "_blank", BasePopupProvider.POPUP_FEATURES)
+
+        return popup ?? undefined
     }
 }

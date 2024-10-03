@@ -68,8 +68,8 @@ export class SocialWalletHandler extends BasePopupProvider {
             const requiresUserApproval = await this.requiresUserApproval(args)
 
             if (!requiresUserApproval) {
-                const popup = this.autoApprove(key, args)
-                this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
+                this.autoApprove(key, args)
+                this.queueRequest(key, { resolve: resolve as ResolveType, reject })
                 return
             }
 
@@ -98,9 +98,19 @@ export class SocialWalletHandler extends BasePopupProvider {
                     if (user) {
                         // auto-approve only works for these methods, since this is a direct response
                         // the the user login flow, and upon user login, these permissions get granted automatically
-                        const popup = ["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
-                            ? this.autoApprove(key, args)
-                            : this.openPopupAndAwaitResponse(key, args, this.config.windowId, this.config.iframePath)
+                        let popup: Window | undefined
+
+                        if (["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)) {
+                            this.autoApprove(key, args) //
+                            popup = undefined // handle auto-approval and explicitly set popup to undefined
+                        } else {
+                            popup = this.openPopupAndAwaitResponse(
+                                key,
+                                args,
+                                this.config.windowId,
+                                this.config.iframePath,
+                            )
+                        }
 
                         // process request when user is logged in successfully
                         this.queueRequest(key, { resolve, reject, popup })
@@ -201,8 +211,6 @@ export class SocialWalletHandler extends BasePopupProvider {
             error: null,
             payload: args,
         })
-
-        return null
     }
 
     openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters) {
