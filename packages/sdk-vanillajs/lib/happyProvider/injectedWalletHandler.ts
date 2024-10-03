@@ -1,22 +1,22 @@
 import {
-    BasePopupProvider,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
     Msgs,
     type MsgsFromApp,
+    SafeEventEmitter,
     isPermissionsRequest,
 } from "@happychain/sdk-shared"
 
 import { requestPayloadIsHappyMethod } from "@happychain/sdk-shared"
 import { createStore } from "mipd"
 import type { ProviderConnectInfo, ProviderMessage, ProviderRpcError } from "viem"
-import type { HappyProviderConfig } from "./interface"
+import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 const store = createStore()
 
 /**
- * InjectedWalletHandler listens to connection requests from the iframe.
+ * `InjectedWalletHandler` listens to connection requests from the iframe.
  * When a connection request occurs, it searches EIP6963 compatible
  * wallets and attempts to find the requested wallet. Assuming its successful
  * it fills out HappyUser details and returns this to the iframe to be displayed.
@@ -26,8 +26,8 @@ const store = createStore()
  * If connected, it simply proxies all requests directly into the appropriate
  * provider for the connected wallet
  */
-export class InjectedWalletHandler extends BasePopupProvider {
-    private localConnection: ReturnType<typeof store.findProvider>
+export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
+    protected localConnection: ReturnType<typeof store.findProvider>
 
     constructor(protected config: HappyProviderConfig) {
         super()

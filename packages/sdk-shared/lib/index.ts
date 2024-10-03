@@ -1,3 +1,5 @@
+import SafeEventEmitter from "@metamask/safe-event-emitter"
+
 // === VALUES ======================================================================================
 
 export { config } from "./config"
@@ -61,3 +63,6 @@ export type {
 export type { Logger } from "./services/logger"
 
 export { type ResolveType, BasePopupProvider } from "./classes/BasePopupProvider"
+
+// Re-export class for use in other package(s)
+export { SafeEventEmitter }

@@ -214,6 +214,6 @@ export class SocialWalletHandler extends BasePopupProvider {
         }
 
         const searchParams = new URLSearchParams(opts).toString()
-        return window.open(`${url}?${searchParams}`, "_blank", this.POPUP_FEATURES)
+        return window.open(`${url}?${searchParams}`, "_blank", SocialWalletHandler.POPUP_FEATURES)
     }
 }
