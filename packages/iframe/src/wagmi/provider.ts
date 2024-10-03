@@ -71,7 +71,7 @@ export class IframeProvider extends BasePopupProvider {
             }
 
             // permissioned requests
-            const popup = this.openPopupAndAwaitResponse(key, args)
+            const popup = this.openPopupAndAwaitResponse(key, args, this.iframeWindowId, config.iframePath)
             this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
         })
     }
