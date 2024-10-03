@@ -4799,14 +4799,14 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "ECDSAValidator": "0xff5e8cbf8B77429FFBe88c6eA6622cB682eF5a21",
+  "ECDSAValidator": "0xF7B2845C4c0cA860D5d60A1332769375d01F7AAD",
   "EntryPointSimulations": "0x74Cb5e4eE81b86e70f9045036a1C5477de69eE87",
   "EntryPointV7": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
   "FactoryStaker": "0x26d9BA57a14364e8e55C8d85Bd135aB1650d0Adc",
   "HappyPaymaster": "0x35197A3bA3572A9Dc5841c734131246ae45A1E2d",
-  "Kernel": "0x72F442a3679B5C0dA8a96a7a7edE7f1d90822d4C",
-  "KernelFactory": "0xCb82659E2F351fb1D864C3697DB0b2F50418837d",
-  "SessionKeyValidator": "0x632EF6cA7Bf3658dbf465707c216Fb87aa9C9566"
+  "Kernel": "0xf29a8B7a7EBefa2175FC34D9956b94E553e5f184",
+  "KernelFactory": "0x0C97547853926e209d9F3c3Fd0b7Bdf126D3BF86",
+  "SessionKeyValidator": "0xDEC267608C796E8EB91bCaC00482a7f85bf53b4b"
 }) as const
 
 export type ContractName = keyof typeof contractToAbi
