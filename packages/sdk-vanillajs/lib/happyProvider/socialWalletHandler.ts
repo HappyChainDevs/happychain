@@ -100,7 +100,7 @@ export class SocialWalletHandler extends BasePopupProvider {
                         // the the user login flow, and upon user login, these permissions get granted automatically
                         const popup = ["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
                             ? this.autoApprove(key, args)
-                            : this.openPopupAndAwaitResponse(key, args)
+                            : this.openPopupAndAwaitResponse(key, args, this.config.windowId, this.config.iframePath)
 
                         // process request when user is logged in successfully
                         this.queueRequest(key, { resolve, reject, popup })
@@ -129,7 +129,7 @@ export class SocialWalletHandler extends BasePopupProvider {
                 })
             }
 
-            const popup = this.openPopupAndAwaitResponse(key, args)
+            const popup = this.openPopupAndAwaitResponse(key, args, this.config.windowId, this.config.iframePath)
             this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
         })
     }

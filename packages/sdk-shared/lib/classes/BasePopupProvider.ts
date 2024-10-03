@@ -117,4 +117,23 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
 
     /** Returns connected status */
     protected abstract isConnected(): boolean
+
+    /**
+     * Opens a popup window for the user request approval process.
+     */
+    protected openPopupAndAwaitResponse(
+        key: UUID,
+        args: EIP1193RequestParameters,
+        windowId: UUID,
+        baseUrl: string,
+    ): Window | null {
+        const url = new URL("request", baseUrl)
+        const opts = {
+            windowId: windowId,
+            key: key,
+            args: btoa(JSON.stringify(args)),
+        }
+        const searchParams = new URLSearchParams(opts).toString()
+        return window.open(`${url}?${searchParams}`, "_blank", BasePopupProvider.POPUP_FEATURES)
+    }
 }
