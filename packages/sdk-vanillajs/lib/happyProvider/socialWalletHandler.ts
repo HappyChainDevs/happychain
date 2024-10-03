@@ -54,7 +54,7 @@ export class SocialWalletHandler extends BasePopupProvider {
         config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
 
-    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
+    public override async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
     ): Promise<EIP1193RequestResult<TString>> {
         // Every request gets proxied through this function.
@@ -134,7 +134,7 @@ export class SocialWalletHandler extends BasePopupProvider {
         })
     }
 
-    isConnected(): boolean {
+    override isConnected(): boolean {
         // this is the fallback handler, always marked as 'connected' for public RPC's etc
         return true
     }

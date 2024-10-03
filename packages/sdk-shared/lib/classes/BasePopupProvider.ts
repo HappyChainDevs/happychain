@@ -114,4 +114,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     protected generateKey(): UUID {
         return createUUID()
     }
+
+    /** Returns connected status */
+    protected abstract isConnected(): boolean
 }
