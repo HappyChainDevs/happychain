@@ -36,17 +36,12 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
 
     /**
      * Abstract method to check if the provider is connected. Must be implemented by child classes.
-     *
-     * @returns {boolean} - Returns true if the provider is connected, otherwise false.
      */
     abstract isConnected(): boolean
 
     /**
      * Abstract method to send requests. This method must be implemented by child classes.
      * It sends an EIP-1193 request and returns a Promise with the result.
-     *
-     * @param {EIP1193RequestParameters<TString>} args - The parameters for the request.
-     * @returns {Promise<EIP1193RequestResult<TString>>} - A promise resolving with the result of the request.
      */
     public abstract request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
@@ -56,10 +51,6 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      * Adds a request to the queue of in-flight requests. The request is associated with a unique key
      * and will be tracked until it is either resolved or rejected. If the request involves a popup,
      * the popup is also tracked for closure.
-     *
-     * @param {string} key - A unique identifier for the request.
-     * @param {InFlightRequest} request - The request object containing resolve and reject callbacks,
-     * and the associated popup (if any).
      */
     protected queueRequest(key: string, { resolve, reject, popup }: InFlightRequest): void {
         this.inFlightRequests.set(key, { resolve, reject, popup })
@@ -103,8 +94,6 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     /**
      * Generates a unique key to associate with in-flight requests. The key is a UUID
      * created using `createUUID` from the `@happychain/common` package.
-     *
-     * @returns {UUID} - A unique identifier (UUID) for the request.
      */
     protected generateKey(): UUID {
         return createUUID()
