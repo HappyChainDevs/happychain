@@ -1,5 +1,5 @@
 import {
-    BaseProviderClass,
+    BasePopupProvider,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
@@ -26,7 +26,7 @@ const store = createStore()
  * If connected, it simply proxies all requests directly into the appropriate
  * provider for the connected wallet
  */
-export class InjectedWalletHandler extends BaseProviderClass {
+export class InjectedWalletHandler extends BasePopupProvider {
     private localConnection: ReturnType<typeof store.findProvider>
 
     constructor(protected config: HappyProviderConfig) {

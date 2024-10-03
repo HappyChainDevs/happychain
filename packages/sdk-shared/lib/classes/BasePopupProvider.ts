@@ -16,7 +16,7 @@ export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods>
 ) => void
 
 /**
- * @abstract BaseProviderClass
+ * @abstract BasePopupProvider
  *
  * This class serves as the base for providers that handle EIP-1193 requests.
  * It extends the {@link https://github.com/MetaMask/safe-event-emitter | SafeEventEmitter} to manage events and maintains a queue for
@@ -29,7 +29,7 @@ export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods>
  * Child classes must implement the `isConnected` and `request` methods to define
  * how the provider connects and handles requests.
  */
-export abstract class BaseProviderClass extends SafeEventEmitter {
+export abstract class BasePopupProvider extends SafeEventEmitter {
     protected inFlightRequests = new Map<string, InFlightRequest>()
     protected timer: Timer | null = null
     protected POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")

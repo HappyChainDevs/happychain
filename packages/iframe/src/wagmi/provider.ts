@@ -1,7 +1,7 @@
 import { createUUID, type UUID } from "@happychain/common"
 import {
     AuthState,
-    BaseProviderClass,
+    BasePopupProvider,
     type EIP1193ErrorObject,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
@@ -28,7 +28,7 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
  * Provider is fed into a {@link https://wagmi.sh/core/api/connectors/injected#target | custom Connector}
  * which is configured to represent the HappyChain's iframe provider as below.
  */
-export class IframeProvider extends BaseProviderClass {
+export class IframeProvider extends BasePopupProvider {
     public iframeWindowId = this.generateKey()
 
     public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(

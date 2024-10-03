@@ -1,6 +1,6 @@
 import {
     AuthState,
-    BaseProviderClass,
+    BasePopupProvider,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
@@ -29,7 +29,7 @@ type InFlightCheck = {
  * where the user can approve/reject the requests before they are sent
  * to the iframe to be handled
  */
-export class SocialWalletHandler extends BaseProviderClass {
+export class SocialWalletHandler extends BasePopupProvider {
     private inFlightChecks = new Map<string, InFlightCheck>()
 
     private user: HappyUser | undefined
