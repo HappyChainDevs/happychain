@@ -60,4 +60,4 @@ export type {
 } from "./services/eventBus"
 export type { Logger } from "./services/logger"
 
-export { type ResolveType, BaseProviderClass } from "./classes/BaseProviderClass"
+export { type ResolveType, BasePopupProvider } from "./classes/BasePopupProvider"
