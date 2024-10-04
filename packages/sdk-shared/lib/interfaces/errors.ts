@@ -24,7 +24,7 @@ export enum EIP1193ErrorCodes {
 /**
  * We will use -1 to signify unknown error types.
  */
-type ProviderRpcErrorCode = ViemProviderRpcErrorCode | -1
+export type ProviderRpcErrorCode = ViemProviderRpcErrorCode | -1
 
 /**
  * Error Object is used to transmit error messages

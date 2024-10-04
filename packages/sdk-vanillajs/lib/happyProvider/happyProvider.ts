@@ -2,7 +2,7 @@ import { AuthState, Msgs, waitForCondition } from "@happychain/sdk-shared"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { InjectedWalletHandler } from "./injectedWalletHandler"
-import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
+import type { EIP1193ConnectionHandler, HappyProviderConfig, HappyProviderPublic } from "./interface"
 import { SocialWalletHandler } from "./socialWalletHandler"
 
 /**
@@ -19,7 +19,7 @@ import { SocialWalletHandler } from "./socialWalletHandler"
  * })
  * ```
  */
-export class HappyProvider extends SafeEventEmitter {
+export class HappyProvider extends SafeEventEmitter implements HappyProviderPublic {
     private readonly injectedWalletHandler: EIP1193ConnectionHandler
     private readonly socialWalletHandler: EIP1193ConnectionHandler
 

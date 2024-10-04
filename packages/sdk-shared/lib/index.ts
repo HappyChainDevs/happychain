@@ -42,7 +42,7 @@ export type {
     HappyMethods,
 } from "./interfaces/eip1193"
 export type { EIP6963ProviderInfo, EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from "./interfaces/eip6963"
-export type { EIP1193ErrorObject, IProviderRpcError } from "./interfaces/errors"
+export type { EIP1193ErrorObject, IProviderRpcError, ProviderRpcErrorCode } from "./interfaces/errors"
 export type {
     MsgsFromApp,
     MsgsFromIframe,

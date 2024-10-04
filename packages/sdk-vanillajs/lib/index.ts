@@ -1,13 +1,14 @@
 export { register } from "./register"
-export type { WalletRegisterOptions } from "./register"
+export type { WalletRegisterOptions, ChainParameters } from "./register"
+export type { AddEthereumChainParameter } from "viem"
 
-export type { HappyProvider } from "./happyProvider/happyProvider"
+export type { HappyProviderPublic as HappyProvider } from "./happyProvider/interface"
 
 export {
     onModalUpdate,
     onUserUpdate,
     getCurrentUser,
-    happyProvider,
+    happyProviderPublic as happyProvider,
     connect,
     disconnect,
     showSendScreen,
@@ -22,7 +23,10 @@ export * as chains from "./chains"
 
 export type {
     HappyUser,
+    WalletType,
     GenericProviderRpcError,
+    ProviderRpcErrorCode,
+    EIP1193ErrorObject,
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
     EIP1193DisconnectedError,
@@ -30,3 +34,5 @@ export type {
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
 } from "@happychain/sdk-shared"
+
+export type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"

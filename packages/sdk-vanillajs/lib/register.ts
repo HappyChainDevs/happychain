@@ -12,7 +12,7 @@ const defaultOptions = {
     chain: chains.defaultChain,
 } satisfies WalletRegisterOptions
 
-type ChainParameters = AddEthereumChainParameter | Readonly<AddEthereumChainParameter>
+export type ChainParameters = AddEthereumChainParameter | Readonly<AddEthereumChainParameter>
 
 /**
  * Use a built in chain option, and/or a custom RPC

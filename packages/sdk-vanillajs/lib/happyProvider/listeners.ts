@@ -14,13 +14,10 @@ import {
  */
 export type UserUpdateCallback = (user?: HappyUser) => void
 
-/** @internal */
 export type ModalUpdateCallback = (isOpen: boolean) => void
 
-/** @internal */
 export type AuthStateUpdateCallback = (state: AuthState) => void
 
-/** @internal */
 export type IframeInitCallback = (isInit: boolean) => void
 
 /**
