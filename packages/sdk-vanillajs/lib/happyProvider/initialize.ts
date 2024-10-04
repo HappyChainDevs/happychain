@@ -8,7 +8,7 @@ import type {
 import { EventBus, EventBusMode, config } from "@happychain/sdk-shared"
 import { ModalStates, Msgs } from "@happychain/sdk-shared"
 import { announceProvider } from "mipd"
-import type { Address, EIP1193Provider } from "viem"
+import type { EIP1193Provider } from "viem"
 import { createUUID } from "../common-utils"
 import { HappyProvider } from "./happyProvider"
 import { icon64x64 } from "./icons"
