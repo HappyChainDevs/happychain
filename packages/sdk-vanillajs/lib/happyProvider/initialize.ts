@@ -8,10 +8,11 @@ import type {
 import { EventBus, EventBusMode, config } from "@happychain/sdk-shared"
 import { ModalStates, Msgs } from "@happychain/sdk-shared"
 import { announceProvider } from "mipd"
-import type { EIP1193Provider } from "viem"
+import type { Address, EIP1193Provider } from "viem"
 import { createUUID } from "../common-utils"
 import { HappyProvider } from "./happyProvider"
 import { icon64x64 } from "./icons"
+import type { HappyProviderPublic } from "./interface"
 import { registerListeners } from "./listeners"
 
 /**
@@ -55,7 +56,7 @@ onUserUpdate((_user?: HappyUser) => {
  * const user = getCurrentUser()
  * ```
  */
-export const getCurrentUser = () => {
+export function getCurrentUser(): HappyUser | undefined {
     if (!iframeReady) {
         console.warn("getCurrentUser was called before happychain-sdk was ready. result will be empty")
     }
@@ -80,11 +81,13 @@ export const happyProvider = new HappyProvider({
     // In practice the 'request' functions are compatible, but the types don't line up for now.
 }) as HappyProvider & EIP1193Provider
 
+export const happyProviderPublic: HappyProviderPublic = happyProvider
+
 /**
  * Connect the app to the Happy Account (will prompt user for permission).
  */
 export const connect = async () => {
-    return await happyProvider.request({
+    await happyProvider.request({
         method: "wallet_requestPermissions",
         params: [{ eth_accounts: {} }],
     })
@@ -94,7 +97,7 @@ export const connect = async () => {
  * Disconnect the app from the Happy Account.
  */
 export const disconnect = async () => {
-    return await happyProvider.request({
+    await happyProvider.request({
         method: "wallet_revokePermissions",
         params: [{ eth_accounts: {} }],
     })
@@ -111,5 +114,5 @@ export const unsubscribe = announceProvider({
 })
 
 export const showSendScreen = () => {
-    iframeMessageBus.emit(Msgs.RequestDisplay, ModalStates.Send)
+    void iframeMessageBus.emit(Msgs.RequestDisplay, ModalStates.Send)
 }
