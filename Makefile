@@ -306,7 +306,7 @@ install-frozen:
 # Like npm install: if a version matching version specifier is installed, does nothing, otherwise
 # install the most up-to-date version matching the specifier.
 install:
-	bun install
+	@bun install
 .PHONY: install
 
 node_modules: package.json $(wildcard packages/*/package.json)
@@ -315,7 +315,7 @@ node_modules: package.json $(wildcard packages/*/package.json)
 # Shows packages for which new versions are available (compared to the installed version).
 # This will also show new version that do not match the version specifiers!
 outdated:
-	bun outdated
+	@bun outdated
 .PHONY: outdated
 
 # Updates all packages to their latest version that match the version specifier.

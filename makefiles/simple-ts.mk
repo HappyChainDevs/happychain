@@ -5,16 +5,16 @@ build: node_modules dist
 .PHONY: build
 
 clean:
-	rm -rf dist
-	rm -rf node_modules/.tmp
+	@rm -rf dist
+	@rm -rf node_modules/.tmp
 .PHONY: clean
 
 dist: $(shell find . -type f \( -name "*.ts" -o -name "*.json" -o -name "*.js" \) -not -path "./dist/*")
-	tsc --build;
+	@tsc --build;
 	@# force updates modified_at timestamp;
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
 node_modules: package.json
-	bun install
+	@bun install
 	@# force updates modified_at timestamp;
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;

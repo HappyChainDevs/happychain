@@ -1,7 +1,7 @@
 check:
-	biome check ./;
+	@biome check ./;
 .PHONT: check
 
 format:
-	biome check ./ --write;
+	@biome check ./ --write;
 .PHONT: format
