@@ -14,6 +14,7 @@ build: node_modules dist
 
 clean:
 	rm -rf dist
+	rm -rf node_modules/.tmp
 .PHONY: clean
 
 # Rebuilds on file change, but does not bundle — site can still be served locally via `vite`
