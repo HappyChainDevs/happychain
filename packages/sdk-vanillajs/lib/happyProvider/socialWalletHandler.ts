@@ -212,16 +212,4 @@ export class SocialWalletHandler extends BasePopupProvider {
             payload: args,
         })
     }
-
-    openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters) {
-        const url = new URL("request", this.config.iframePath)
-        const opts = {
-            windowId: this.config.windowId,
-            key: key,
-            args: btoa(JSON.stringify(args)),
-        }
-
-        const searchParams = new URLSearchParams(opts).toString()
-        return window.open(`${url}?${searchParams}`, "_blank", SocialWalletHandler.POPUP_FEATURES)
-    }
 }
