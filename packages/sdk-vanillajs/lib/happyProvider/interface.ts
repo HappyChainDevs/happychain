@@ -1,3 +1,4 @@
+import type { EventEmitter } from "node:events"
 import type {
     EIP1193RequestMethods,
     EIP1193RequestParameters,
@@ -27,7 +28,7 @@ import type { UUID } from "../common-utils"
  * })
  * ```
  */
-export interface HappyProviderPublic {
+export interface HappyProviderPublic extends EventEmitter {
     /**
      * Makes an EIP-1193 request and returns the response.
      *
