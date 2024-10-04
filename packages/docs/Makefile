@@ -24,6 +24,7 @@ clean:
 	rm -rf docs/dist
 	rm -rf docs/pages/{js,react}/api
 	rm -rf vocs.config.ts.timestamp-*
+	rm -rf node_modules/.tmp
 .PHONY: clean
 
 # Preview production build (run build first)
