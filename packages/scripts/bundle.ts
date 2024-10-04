@@ -4,6 +4,7 @@ import { Extractor, ExtractorConfig } from "@microsoft/api-extractor"
 import { $ } from "bun"
 import byteSize from "byte-size"
 import pkgSize from "pkg-size"
+import type { PkgSizeData } from "pkg-size/dist/interfaces"
 import type { cliArgs } from "./cli-args"
 import type { Config, DefineConfigParameters } from "./defineConfig"
 
@@ -11,6 +12,7 @@ import type { Config, DefineConfigParameters } from "./defineConfig"
 $.nothrow()
 
 const base = process.cwd()
+const pkgName = base.substring(base.lastIndexOf("/") + 1)
 
 const configArgs = {
     mode: process.env.NODE_ENV,
@@ -42,43 +44,64 @@ export async function build({
         const t1 = performance.now()
 
         if (config.tsConfig) {
+            console.log(`${pkgName} — Generating types (tsc)...`)
             await tscBuild(config)
 
             if (config.apiExtractorConfig) {
+                console.log(`${pkgName} — Bundling types (API Extractor)...`)
                 await rollupTypes(config)
             } else {
+                console.log(`${pkgName} — API Extractor config file not specified, generating index type stub...`)
                 await writeTypesEntryStub(config)
             }
+        } else {
+            console.log("$`pwd` — TS config file not specified, skipping types generation")
         }
 
         const t2 = performance.now()
 
+        console.log(`${pkgName} — Bundling...`)
         await bunBuild(config.bunConfig)
 
         const t3 = performance.now()
 
-        const sizeData = await pkgSize(base, {
-            sizes: ["size", "gzip", "brotli"],
-        })
+        // TODO needs to build dependent packages before
 
-        await $`bun attw --pack ${base}`
+        console.log(`${pkgName} — Checking for packaging issues...`)
+        const attwOutput = await $`bun attw --pack ${base} --ignore-rules cjs-resolves-to-esm`.text()
+        if (!attwOutput.includes("No problems found")) console.log(attwOutput)
 
-        console.table([
-            { Step: "Clean", Time: `${Math.ceil(t1 - t0)} ms` },
-            { Step: "Generate Types ", Time: `${Math.ceil(t2 - t1)} ms` },
-            { Step: "Bun.build", Time: `${Math.ceil(t3 - t2)} ms` },
-        ])
-        console.table(
-            sizeData.files.map((file) => ({
-                file: file.path,
-                size: byteSize(file.size, { units: "metric" }).toString(),
-                gzip: byteSize(file.sizeGzip, { units: "metric" }).toString(),
-                brotli: byteSize(file.sizeBrotli, { units: "metric" }).toString(),
-            })),
-        )
+        const t4 = performance.now()
 
-        console.log(`Total Size: ${byteSize(sizeData.tarballSize, { units: "metric" })}`)
-        console.log(`🎉 Finished in ${Math.ceil(t3 - t0)}ms 🎉`)
+        if (config.reportTime)
+            console.table([
+                { Step: "Clean", Time: `${Math.ceil(t1 - t0)} ms` },
+                { Step: "Generate & bundle types ", Time: `${Math.ceil(t2 - t1)} ms` },
+                { Step: "Bundling", Time: `${Math.ceil(t3 - t2)} ms` },
+                { Step: "Packaging check", Time: `${Math.ceil(t4 - t3)} ms` },
+            ])
+
+        let sizeData: PkgSizeData | undefined = undefined
+        if (config.reportSizes) {
+            sizeData = await pkgSize(base, {
+                sizes: ["size", "gzip", "brotli"],
+            })
+            console.table(
+                sizeData.files.map((file) => ({
+                    file: file.path,
+                    size: byteSize(file.size, { units: "metric" }).toString(),
+                    gzip: byteSize(file.sizeGzip, { units: "metric" }).toString(),
+                    brotli: byteSize(file.sizeBrotli, { units: "metric" }).toString(),
+                })),
+            )
+            console.log(`Tarball Size: ${byteSize(sizeData.tarballSize, { units: "metric" })}`)
+        }
+
+        const sizeData2 = sizeData ?? (await pkgSize(base, { sizes: ["size"] }))
+        const bundleFile = sizeData2.files.find((f) => f.path === "dist/index.es.js")
+        const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
+        console.log(`JS Bundle Size: ${bundleFileSize}`)
+        console.log(`🎉 Finished in ${Math.ceil(t4 - t0)}ms 🎉`)
     }
 }
 

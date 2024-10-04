@@ -3,9 +3,13 @@ import type { cliArgs } from "./cli-args"
 
 export interface Config {
     cleanOutDir?: boolean
-    tsConfig?: string | false | null | undefined
-    apiExtractorConfig?: string | false | null | undefined
-    bunConfig?: BuildConfig | false | null | undefined
+    tsConfig?: string | false | nul
+    apiExtractorConfig?: string | false | null
+    bunConfig?: BuildConfig | false | null
+    /** If true, display a table of exported file sizes. */
+    reportSizes?: boolean | null
+    /** If true, display a table of time spent in each build step. */
+    reportTime?: boolean | null
 }
 
 export type ConfigFactoryArgs = {
