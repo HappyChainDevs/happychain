@@ -13,17 +13,17 @@ build: node_modules dist
 .PHONY: build
 
 clean:
-	rm -rf dist
-	rm -rf node_modules/.tmp
+	@rm -rf dist
+	@rm -rf node_modules/.tmp
 .PHONY: clean
 
 # Rebuilds on file change, but does not bundle — site can still be served locally via `vite`
 build.watch: node_modules
-	$(TSC_BIN) --build --watch --preserveWatchOutput;
+	@$(TSC_BIN) --build --watch --preserveWatchOutput;
 .PHONY: build.watch
 
 preview: node_modules dist
-	vite preview;
+	@vite preview;
 .PHONY: preview
 
 # You can add dependencies to this rule in the Makefile in which `vite.mk` is inluded.
@@ -34,6 +34,6 @@ dist: $(shell find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
 node_modules: package.json
-	bun install;
+	@bun install
 	@# force updates modified_at timestamp;
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;

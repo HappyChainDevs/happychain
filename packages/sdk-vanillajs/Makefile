@@ -2,14 +2,14 @@ include ../../makefiles/lib.mk
 include ../../makefiles/formatting.mk
 
 test:
-	bun test .
+	@bun test .
 .PHONY: test
 
 dev: node_modules
-	if [ -d ./dist ]; then rm -rf dist; fi;
-	mkdir -p dist
-	ln -s ../lib/index.ts ./dist/index.es.js
-	ln -s ../lib/index.ts ./dist/index.es.d.ts
+	@if [ -d ./dist ]; then rm -rf dist; fi;
+	@mkdir -p dist
+	@ln -s ../lib/index.ts ./dist/index.es.js
+	@ln -s ../lib/index.ts ./dist/index.es.d.ts
 .PHONY: dev
 
 # Will move this to a common makefile once other packages are ported over
@@ -23,8 +23,8 @@ build: node_modules dist
 .PHONY: build
 
 clean:
-	rm -rf dist
-	rm -rf node_modules/.tmp
+	@rm -rf dist
+	@rm -rf node_modules/.tmp
 .PHONY: clean
 
 dist: $(shell find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" \) -not -path "./dist/*")
