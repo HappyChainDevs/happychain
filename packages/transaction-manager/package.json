@@ -12,7 +12,7 @@
     "devDependencies": {
         "@mikro-orm/cli": "^6.3.10",
         "ts-node": "^10.9.2",
-        "typescript": "^5.5.4"
+        "typescript": "^5.6.2"
     },
     "peerDependencies": {
         "viem": "^2.20.1"
