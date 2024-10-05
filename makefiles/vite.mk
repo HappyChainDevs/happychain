@@ -2,7 +2,7 @@ TSC_BIN ?= tsc
 
 # Like build.watch but also serves the page on localhost if applicable
 dev: node_modules
-	if [[ -r index.html ]]; then \
+	@if [[ -r index.html ]]; then \
 	  concurrently --prefix=none "make build.watch" "vite"; \
 	else \
 		make build.watch; \
@@ -28,7 +28,7 @@ preview: node_modules dist
 
 # You can add dependencies to this rule in the Makefile in which `vite.mk` is inluded.
 dist: $(shell find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" -o -name "*.html" -o -name "*.vue" \) -not -path "./dist/*")
-	$(TSC_BIN) --build;
+	@$(TSC_BIN) --build;
 	@bunx --bun vite build;
 	@# force updates modified_at timestamp;
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
