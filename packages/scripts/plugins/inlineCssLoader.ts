@@ -1,3 +1,9 @@
+/**
+ * To import CSS file, it is necessary to import this plugin, as well as to add a `.d.ts` file
+ * (suggested name: `happy-build.d.ts`) in the source that contains the comment:
+ * /// <reference types="@happychain/scripts/plugins" />
+ */
+
 import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import type { BunPlugin } from "bun"
