@@ -1,8 +1,6 @@
 {
     "extends": "@happychain/configs/tsconfig.base.json",
     "compilerOptions": {
-        // "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.lib.tsbuildinfo",
-        // "incremental": true,
         "esModuleInterop": true,
         "paths": {
             "react": ["./node_modules/preact/compat/"],

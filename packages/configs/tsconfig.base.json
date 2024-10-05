@@ -3,11 +3,12 @@
     "display": "Default",
     "compilerOptions": {
         "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.base.tsbuildinfo",
+        "outDir": "${configDir}/dist",
         "incremental": true,
         "composite": true,
 
         // Enable latest features
-        "lib": ["ESNext", "DOM"],
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
         "target": "ESNext",
         "module": "ESNext",
         "moduleDetection": "force",

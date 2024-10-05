@@ -1,4 +1,5 @@
 {
+    // This tsconfig is extended by tsconfigs that are used for type generation.
     "$schema": "https://json.schemastore.org/tsconfig",
     "display": "Types",
     "compilerOptions": {
@@ -6,7 +7,6 @@
         "incremental": true,
         "noEmit": false,
         "emitDeclarationOnly": true,
-        "outDir": "${configDir}/dist",
         "declarationDir": "${configDir}/dist/types",
         "declaration": true
     }
