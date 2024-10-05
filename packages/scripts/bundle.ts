@@ -165,7 +165,7 @@ export async function build({
     const bundleFile = sizeData2.files.find((f) => f.path === "dist/index.es.js")
     const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
     console.log(`JS Bundle Size: ${bundleFileSize}`)
-    console.log(`\t🎉 Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉`)
+    console.log(`🎉 Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉`)
 }
 
 async function areTheTypesWrong() {
