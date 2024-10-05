@@ -228,7 +228,7 @@ async function cleanOutDir(config: Config) {
 
     if (existsSync(outDir)) {
         spinner.text = `emptying: ${outDir}`
-        await $`rm -rf ${outDir}/*`
+        await $`rm -rf ${outDir}`
     }
 }
 
