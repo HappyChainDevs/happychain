@@ -10,8 +10,8 @@ const ogStart = spinner.start.bind(spinner)
 const ogSuccess = spinner.success.bind(spinner)
 const ogStop = spinner.stop.bind(spinner)
 
-function spinnerOutputFunction(f: (...msgs) => void) {
-    return (...msgs) => {
+function spinnerOutputFunction(f: (...msgs: unknown[]) => void) {
+    return (...msgs: unknown[]) => {
         spinner.clear()
         f(...msgs)
         spinner.start()
@@ -38,14 +38,17 @@ function uninstallSpinnerOutputFunctions() {
 spinner.start = (text?: string) => {
     installSpinnerOutputFunctions()
     ogStart(text)
+    return spinner
 }
 
 spinner.success = (text?: string) => {
     uninstallSpinnerOutputFunctions()
     ogSuccess(text)
+    return spinner
 }
 
 spinner.stop = (text?: string) => {
     uninstallSpinnerOutputFunctions()
     ogStop(text)
+    return spinner
 }
