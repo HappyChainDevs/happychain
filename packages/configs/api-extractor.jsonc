@@ -3,7 +3,9 @@
  */
 {
     "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
-    "mainEntryPointFilePath": "<projectFolder>/....",
+
+    // must be here to respect the schema
+    "mainEntryPointFilePath": "OVERRIDE THIS IN YOUR CONFIG",
 
     "compiler": {
         "tsconfigFilePath": "./tsconfig.build.json",
