@@ -1,4 +1,5 @@
 {
-    "files": [],
-    "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
+    "extends": "@happychain/configs/tsconfig.base.json",
+    // Okay to include config files: they are not reachable from entrypoints, won't be picked up by rollup.
+    "include": ["*.ts", "src"]
 }
