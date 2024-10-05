@@ -174,34 +174,38 @@ async function areTheTypesWrong() {
     const output = await $`bun attw --pack ${base} --ignore-rules cjs-resolves-to-esm`.text()
     if (output.includes("No problems found")) return
 
-    console.log(output)
+    console.log("\u001b[39mhello\u001b[31mhello")
 
-    const stripFormatting = output
+    // Prettify the table to make its display more compact.
+    // Map the existing rows to a new array of row.
+    // The first row is a list of packages being bundled.
+    // Each subsequent row is a bundling target, followed by the results for every package.
+    const rows = output
         .split("\n")
         .filter((a) => a.startsWith("\u001b[90m│"))
-        .map((a) =>
-            a
-                .replaceAll("\u001b[90m", "")
-                .replaceAll("\u001b[39m", "")
-                .replaceAll("\u001b[31m", "")
+        .map((row) =>
+            row
+                .replaceAll("\u001b[90m", "") // grey color marker
+                .replaceAll("\u001b[39m", "") // reset color marker
+                .replaceAll("\u001b[31m", "") // red color marker
                 .replaceAll('"', "")
                 .trim()
                 .split("│")
                 .map((n) => n.trim())
                 .filter(Boolean),
         )
-    const headers = stripFormatting.shift() as string[]
-    console.table(
-        stripFormatting.map(([target, ...rest]) => ({
-            ...rest.reduce(
-                (acc, result, idx) => {
-                    acc[chalk.green.bold(headers[idx])] = result
-                    return acc
-                },
-                { [chalk.blue("target")]: target } as { [key: string]: string },
-            ),
-        })),
-    )
+
+    const headers = rows.shift() as string[]
+    const table: Record<string, string>[] = []
+    for (const row of rows) {
+        const tableRow: Record<string, string> = {}
+        tableRow[chalk.blue("target")] = row.shift()!
+        for (const [i, result] of row.entries()) {
+            tableRow[chalk.green(headers[i])] = result
+        }
+        table.push(tableRow)
+    }
+    console.table(table)
 }
 
 async function cleanOutDir(config: Config) {
