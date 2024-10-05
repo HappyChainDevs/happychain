@@ -23,6 +23,9 @@ ifeq (,$(wildcard bun.lockb))
 $(call ADD_PATH , ../../node_modules/.bin)
 endif
 
+# Name of the package the makefile is executed for (based on the current directory).
+PKG := $(notdir $(shell pwd))
+
 # Empty Stubs — these can be overriden in any including Makefile.
 
 test:
