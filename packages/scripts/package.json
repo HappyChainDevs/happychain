@@ -1,13 +1,13 @@
 {
     "name": "@happychain/scripts",
-    "module": "index.ts",
+    "module": "lib/index.ts",
     "type": "module",
     "bin": {
         "happyBuild": "./bin/happyBuild.ts"
     },
     "exports": {
-        ".": "./index.ts",
-        "./plugins": "./plugins/index.ts"
+        ".": "./lib/index.ts",
+        "./plugins": "./plugins/lib/index.ts"
     },
     "devDependencies": {
         "@arethetypeswrong/cli": "^0.16.4",

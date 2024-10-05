@@ -1,1 +1,1 @@
-/// <reference types="@happychain/scripts/plugins" />
+/// <reference types="../../scripts/lib/plugins" />
