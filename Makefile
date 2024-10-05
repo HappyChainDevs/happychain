@@ -282,7 +282,7 @@ docs.clean:
 ts.clean:
 	$(call forall , $(TS_PKGS) , clean)
 	echo "Running make clean in packages/docs"
-	cd packages/docs && make check
+	cd packages/docs && make clean
 .PHONY: ts.clean
 
 contracts.clean:
