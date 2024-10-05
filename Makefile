@@ -88,6 +88,8 @@ clean: ts.clean contracts.clean ## Removes build artifacts
 .PHONY: clean
 
 nuke: remove-modules clean ## Removes build artifacts and dependencies
+	cd packages/contracts && make nuke
+	cd packages/bundler && make nuke
 .PHONY: nuke
 
 # ==================================================================================================

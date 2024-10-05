@@ -1,5 +1,4 @@
 include ../../makefiles/lib.mk
-include ../../makefiles/formatting.mk
 
 # Set TARGET to "anvil" by default. Other valid values: "sepolia" or "happySepolia".
 TARGET ?= anvil
@@ -34,6 +33,11 @@ run:
 clean:
 	cd alto && bun clean
 .PHONY: clean
+
+# Remove the Alto directory
+nuke: clean
+	rm -rf alto
+.PHONY: nuke
 
 ####################################################################################################
 # Code Quality
