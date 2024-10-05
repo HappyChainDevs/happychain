@@ -114,9 +114,13 @@ export async function build({
     spinner.success(`${pkgName} — Build successful!`)
     console.log("\n")
 
+    // remove types files generated outside of the main output dir
     for (const path of cleanupPaths) {
         await $`rm -rf ${path}`
     }
+
+    // TODO time this
+    await areTheTypesWrong()
 
     const entries = Array.from(buildTimes.keys())
     const buildTable = [
@@ -135,19 +139,8 @@ export async function build({
             // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
             ...entries.reduce((acc, entry) => ({ ...acc, [chalk.green.bold(entry)]: buildTimes.get(entry).build }), {}),
         },
-        {
-            [chalk.blue("Step")]: "Check Exports",
-            ...entries.reduce(
-                // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
-                (acc, entry) => ({ ...acc, [chalk.green.bold(entry)]: buildTimes.get(entry).exports }),
-                {},
-            ),
-        },
     ]
     console.table(buildTable)
-
-    await areTheTypesWrong()
-    // const t4 = performance.now()
 
     let sizeData: PkgSizeData | undefined = undefined
     if (configs[0].reportSizes) {
