@@ -1,4 +1,4 @@
-# This fragment is to be imported for Makefiles that do not need bundling (as handled by the
+# Fragment to be imported for Makefiles that do not need bundling (as handled by the
 # happyBuild script). This includes backend packages and frontend support packages.
 
 build: node_modules dist
