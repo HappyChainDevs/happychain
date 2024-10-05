@@ -13,6 +13,8 @@ import { spinner } from "./spinner"
 // silence TS errors as these will be caught and reported by tsc
 $.nothrow()
 
+spinner.start("Building...")
+
 const base = process.cwd()
 const pkgName = base.substring(base.lastIndexOf("/") + 1)
 
@@ -20,7 +22,7 @@ const configArgs = {
     mode: process.env.NODE_ENV,
 }
 
-spinner.start("Building...")
+const pkg = await import(join(base, "./package.json"))
 
 // global instance run counter
 let run = 0
@@ -157,8 +159,8 @@ export async function build({
     }
 
     const sizeData2 = sizeData ?? (await pkgSize(base, { sizes: ["size"] }))
-    // TODO dynamically lookup the entrypoint name
-    const bundleFile = sizeData2.files.find((f) => f.path === "dist/index.es.js")
+    const moduleFile = pkg.module.replace(/^\.\//, "") // remove leading './' if present
+    const bundleFile = sizeData2.files.find((f) => f.path === moduleFile)
     const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
     spinner.success(
         `${pkgName} — Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉` +
@@ -234,8 +236,6 @@ async function rollupTypes(config: Config) {
 
     const tsconfig = await $`tsc --project ${config.tsConfig} --showConfig`.json()
 
-    const pkg = await import(join(base, "./package.json"))
-
     const apiExtractorJsonPath: string = join(base, config.apiExtractorConfig)
     const extractorConfig = ExtractorConfig.loadFileAndPrepare(apiExtractorJsonPath)
     const extractorResult = Extractor.invoke(extractorConfig, {
@@ -253,7 +253,7 @@ async function rollupTypes(config: Config) {
               ? config.types[config.bunConfig.entrypoints[0]]
               : pkg.types
 
-    // rename output to match pkg.json
+    // rename output to match package.json
     await $`mv ${extractorResult.extractorConfig.untrimmedFilePath} ${join(base, output)}`
 
     // clean out raw tsconfig types if its not the main output dir
