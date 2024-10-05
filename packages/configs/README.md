@@ -56,7 +56,7 @@ Add or update `tsconfig.json` with your preferred config `tsconfig.*.json`
 
 ```jsonc
 {
-	// tsconfig.vite-lib.json, tsconfig.vite-node.json
+	// tsconfig.vite-node.json
 	"extends": "@happychain/configs/tsconfig.base.json",
 	"include": ["lib"]
 }
