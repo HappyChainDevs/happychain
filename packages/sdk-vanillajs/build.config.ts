@@ -1,8 +1,5 @@
 import { type Config, defineConfig, inlineCssPlugin } from "@happychain/scripts"
 
-// import project so that hot reloading/watching works
-import "./lib/index.ts"
-
 export default defineConfig({
     cleanOutDir: true,
     tsConfig: "tsconfig.build.json",
