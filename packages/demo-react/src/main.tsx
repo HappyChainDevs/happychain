@@ -19,7 +19,6 @@ import "./index.css"
 // biome-ignore lint/suspicious/noExplicitAny: demo purposes only. not needed under regular usage
 ;(window as any).happyProvider = happyProvider
 
-// biome-ignore lint/style/noNonNullAssertion: vite boilerplate
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <HappyWalletProvider init={{ chain: chains.testnet }}>

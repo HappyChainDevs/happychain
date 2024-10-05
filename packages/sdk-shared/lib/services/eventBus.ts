@@ -146,7 +146,6 @@ export class EventBus<SL, SE = SL> {
             try {
                 await waitForCondition(() => Boolean(this.port), 30_000, 50)
 
-                // biome-ignore lint/style/noNonNullAssertion: the above waitForCondition enforces that its not null
                 this.port!.postMessage({
                     scope: this.config.scope,
                     type: key,
