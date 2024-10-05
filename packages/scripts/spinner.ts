@@ -2,9 +2,9 @@ import yoctoSpinner from "yocto-spinner"
 
 export const spinner = yoctoSpinner({ text: "" })
 
-const ogLog = console.log
-const ogWarn = console.warn
-const ogError = console.error
+const ogLog = console.log.bind(console)
+const ogWarn = console.warn.bind(console)
+const ogError = console.error.bind(console)
 
 const ogStart = spinner.start.bind(spinner)
 const ogSuccess = spinner.success.bind(spinner)

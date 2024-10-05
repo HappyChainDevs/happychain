@@ -229,8 +229,8 @@ async function rollupTypes(config: Config) {
     const cleanUpPaths = new Set<string>()
 
     // temp path to disable a lot of useless output from api extractor
-    const ogLog = console.log
-    const ogWarn = console.warn
+    const ogLog = console.log.bind(console)
+    const ogWarn = console.warn.bind(console)
     console.log = () => {}
     console.warn = (...msg) => ogWarn(chalk.blue("[@microsoft/api-extractor]"), ...msg)
 
