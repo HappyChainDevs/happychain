@@ -7,7 +7,7 @@ const store = createStore()
 
 type ViemHappyProvider = Prettify<EIP1193Events & { request: EIP1193RequestFn<RPCMethods> }>
 
-type ProviderDetail = EIP6963ProviderDetail<ViemHappyProvider, "tech.happy">
+type ProviderDetail = EIP6963ProviderDetail<ViemHappyProvider, string>
 declare module "mipd" {
     export interface Register {
         provider: ProviderDetail["provider"]
