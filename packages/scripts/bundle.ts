@@ -264,7 +264,7 @@ async function rollupTypes(config: Config) {
             : typeof config.types === "object" && config.bunConfig && config.bunConfig?.entrypoints
               ? config.types[config.bunConfig.entrypoints[0]]
               : pkg.types
-    console.log({ output })
+
     // rename output to match pkg.json
     await $`mv ${extractorResult.extractorConfig.untrimmedFilePath} ${join(base, output)}`
 
