@@ -174,8 +174,6 @@ async function areTheTypesWrong() {
     const output = await $`bun attw --pack ${base} --ignore-rules cjs-resolves-to-esm`.text()
     if (output.includes("No problems found")) return
 
-    console.log("\u001b[39mhello\u001b[31mhello")
-
     // Prettify the table to make its display more compact.
     // Map the existing rows to a new array of row.
     // The first row is a list of packages being bundled.
