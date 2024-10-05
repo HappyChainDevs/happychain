@@ -52,6 +52,15 @@ export function HappyWallet({ windowId, chain, rpcUrl }: { windowId: string; cha
         modal: !connected && isOpen,
     }
 
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Permissions_Policy#allowlists
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy#iframes
+    // Standard: permissions inherited by default for iframe origin.
+    // biome-ignore format: comments
+    const iframePermissions =
+      navigator.userAgent.includes("Firefox")
+          ? "" // avoid warning in Firefox (safe: permissions inherited by default)
+          : "; clipboard-write 'src'" // explicit grant needed at least for Chrome
+
     return (
         <>
             <style>{cssStyles}</style>
@@ -61,7 +70,7 @@ export function HappyWallet({ windowId, chain, rpcUrl }: { windowId: string; cha
                 src={`${url.href}?${searchParams}`}
                 className={clsx(classes)}
                 style={{ border: "none" }}
-                allow="clipboard-read; clipboard-write"
+                allow={iframePermissions}
             />
         </>
     )
