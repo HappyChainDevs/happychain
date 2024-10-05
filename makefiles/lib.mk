@@ -1,3 +1,6 @@
+# Fragment to be imported in all of our package-level Makefiles, defining useful utilities,
+# variables, and empty overridable stub rules (build, test, clean).
+
 # Function that prepends its argument ($(1)) to the PATH environment variable if it does not contain
 # it yet. This is done by looking for `:$(1):` within `:$(PATH):`.
 #
@@ -28,11 +31,11 @@ PKG := $(notdir $(shell pwd))
 
 # Empty Stubs — these can be overriden in any including Makefile.
 
-test:
-.PHONY: test
-
 build:
 .PHONY: build
+
+test:
+.PHONY: test
 
 clean:
 .PHONY: clean
