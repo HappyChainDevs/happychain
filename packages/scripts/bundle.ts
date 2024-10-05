@@ -6,9 +6,9 @@ import byteSize from "byte-size"
 import chalk from "chalk"
 import pkgSize from "pkg-size"
 import type { PkgSizeData } from "pkg-size/dist/interfaces"
-import yoctoSpinner from "yocto-spinner"
 import type { cliArgs } from "./cli-args"
 import type { Config, DefineConfigParameters } from "./defineConfig"
+import { spinner } from "./spinner"
 
 // silence TS errors as these will be caught and reported by tsc
 $.nothrow()
@@ -16,12 +16,11 @@ $.nothrow()
 const base = process.cwd()
 const pkgName = base.substring(base.lastIndexOf("/") + 1)
 
-console.log("\n")
-const spinner = yoctoSpinner({ text: "Building…" }).start()
-
 const configArgs = {
     mode: process.env.NODE_ENV,
 }
+
+spinner.start("Building...")
 
 // global instance run counter
 let run = 0
@@ -108,12 +107,6 @@ export async function build({
         }
     }
 
-    /*******
-     * Logging & Output
-     */
-    spinner.success(`${pkgName} — Build successful!`)
-    console.log("\n")
-
     // remove types files generated outside of the main output dir
     for (const path of cleanupPaths) {
         await $`rm -rf ${path}`
@@ -121,6 +114,10 @@ export async function build({
 
     // TODO time this
     await areTheTypesWrong()
+
+    // LOGGING & OUTPUT
+
+    spinner.success(`${pkgName} — Build successful!\n`)
 
     const entries = Array.from(buildTimes.keys())
     const buildTable = [
