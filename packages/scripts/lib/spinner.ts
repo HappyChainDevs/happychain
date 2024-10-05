@@ -5,6 +5,7 @@ export const spinner = yoctoSpinner({ text: "" })
 const ogLog = console.log.bind(console)
 const ogWarn = console.warn.bind(console)
 const ogError = console.error.bind(console)
+const oTable = console.table.bind(console)
 
 const ogStart = spinner.start.bind(spinner)
 const ogSuccess = spinner.success.bind(spinner)
@@ -25,6 +26,7 @@ function installSpinnerOutputFunctions() {
     console.log = spinnerOutputFunction(ogLog)
     console.warn = spinnerOutputFunction(ogWarn)
     console.error = spinnerOutputFunction(ogError)
+    console.table = spinnerOutputFunction(oTable)
     started = true
 }
 
