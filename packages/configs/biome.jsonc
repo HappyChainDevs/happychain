@@ -40,7 +40,8 @@
                 }
             },
             "style": {
-                "noNamespace": "error"
+                "noNamespace": "error",
+                "noNonNullAssertion": "off"
             }
         }
     },
