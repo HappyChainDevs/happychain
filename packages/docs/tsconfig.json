@@ -1,5 +1,5 @@
 {
-    "extends": "@happychain/configs/tsconfig.vite-lib.json",
+    "extends": "@happychain/configs/tsconfig.base.json",
     "include": ["**/*.ts", "**/*.tsx"],
     "exclude": ["vocs.config.ts"]
 }
