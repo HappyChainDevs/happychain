@@ -20,10 +20,11 @@ build: node_modules dist
 
 clean:
 	rm -rf dist
+	rm -rf node_modules/.tmp
 .PHONY: clean
 
 dist: $(shell find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" \) -not -path "./dist/*")
-	happyBuild --config build.config.ts
+	happyBuild --config build.config.ts;
 	@# force updates modified_at timestamp;
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
