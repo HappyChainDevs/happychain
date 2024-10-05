@@ -57,6 +57,10 @@ clean:
 	rm -rf node_modules/.tmp
 .PHONY: clean
 
+nuke: clean
+	rm -rf lib
+.PHONY: nuke
+
 ####################################################################################################
 # Testing
 
