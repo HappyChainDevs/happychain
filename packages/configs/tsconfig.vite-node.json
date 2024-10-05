@@ -1,16 +1,9 @@
 {
     // Un-compiled editor support (config files, tests, etc)
     "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "@happychain/configs/tsconfig.base.json",
     "display": "Vite Node.JS",
     "compilerOptions": {
-        "composite": true,
-        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-        "skipLibCheck": true,
-        "module": "ESNext",
-        "target": "ESNext",
-        "moduleResolution": "bundler",
-        "allowSyntheticDefaultImports": true,
-        "strict": true,
-        "noEmit": true
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
     }
 }
