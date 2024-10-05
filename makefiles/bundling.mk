@@ -35,7 +35,7 @@ FORCE_UDPATE := $(shell test -f node_modules/.tmp/.dev && echo force_update)
 
 dist: $(DIST_DEPS) $(FORCE_UDPATE)
 	@happyBuild --config build.config.ts
-	@# force updates modified_at timestamp;
+	@# force updates modified_at timestamp
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
 force_update:

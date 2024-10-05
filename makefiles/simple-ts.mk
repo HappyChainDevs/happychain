@@ -16,5 +16,5 @@ dist: $(shell find . -type f \( -name "*.ts" -o -name "*.json" -o -name "*.js" \
 
 node_modules: package.json
 	@bun install
-	@# force updates modified_at timestamp;
+	@# force updates modified_at timestamp
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
