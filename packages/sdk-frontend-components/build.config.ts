@@ -1,4 +1,4 @@
-import { defineConfig, inlineCssPlugin } from "@happychain/scripts"
+import { type Config, defineConfig, inlineCssPlugin } from "@happychain/scripts"
 import pkg from "./package.json"
 
 export default defineConfig([
@@ -33,4 +33,4 @@ export default defineConfig([
             naming: "[dir]/preact.es.[ext]",
         },
     },
-])
+]) as Config[]

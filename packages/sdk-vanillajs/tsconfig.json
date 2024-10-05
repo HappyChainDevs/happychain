@@ -3,5 +3,5 @@
     "compilerOptions": {
         "jsxImportSource": "preact"
     },
-    "include": ["lib"]
+    "include": ["*.ts", "lib"]
 }

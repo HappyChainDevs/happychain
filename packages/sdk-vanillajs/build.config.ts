@@ -1,4 +1,7 @@
-import { defineConfig, inlineCssPlugin } from "@happychain/scripts"
+import { type Config, defineConfig, inlineCssPlugin } from "@happychain/scripts"
+
+// import project so that hot reloading/watching works
+import "./lib/index.ts"
 
 export default defineConfig({
     cleanOutDir: true,
@@ -13,4 +16,4 @@ export default defineConfig({
         plugins: [inlineCssPlugin],
         naming: "[dir]/[name].es.[ext]",
     },
-})
+}) as Config

@@ -41,6 +41,6 @@ export type ConfigFactoryArgs = {
 
 export type DefineConfigParameters = Config | Config[] | ((args: ConfigFactoryArgs) => Config | Config[])
 
-export function defineConfig(config: DefineConfigParameters) {
+export function defineConfig(config: DefineConfigParameters): DefineConfigParameters {
     return config
 }
