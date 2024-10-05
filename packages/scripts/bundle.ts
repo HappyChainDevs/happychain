@@ -115,10 +115,6 @@ export async function build({
     // TODO time this
     await areTheTypesWrong()
 
-    // LOGGING & OUTPUT
-
-    spinner.success(`${pkgName} — Build successful!\n`)
-
     const entries = Array.from(buildTimes.keys())
     const buildTable = [
         {
@@ -137,7 +133,7 @@ export async function build({
             ...entries.reduce((acc, entry) => ({ ...acc, [chalk.green.bold(entry)]: buildTimes.get(entry).build }), {}),
         },
     ]
-    console.table(buildTable)
+    if (configs[0].reportTime) console.table(buildTable)
 
     let sizeData: PkgSizeData | undefined = undefined
     if (configs[0].reportSizes) {
@@ -164,8 +160,10 @@ export async function build({
     // TODO dynamically lookup the entrypoint name
     const bundleFile = sizeData2.files.find((f) => f.path === "dist/index.es.js")
     const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
-    console.log(`JS Bundle Size: ${bundleFileSize}`)
-    console.log(`🎉 Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉`)
+    spinner.success(
+        `${pkgName} — Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉` +
+            ` (JS Bundle Size: ${bundleFileSize})`,
+    )
 }
 
 async function areTheTypesWrong() {
