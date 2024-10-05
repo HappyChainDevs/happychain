@@ -23,13 +23,13 @@ build.watch: node_modules
 .PHONY: build.watch
 
 preview: node_modules dist
-	@vite preview;
+	@bunx --bun vite preview;
 .PHONY: preview
 
 # You can add dependencies to this rule in the Makefile in which `vite.mk` is inluded.
 dist: $(shell find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.json" -o -name "*.js" -o -name "*.html" -o -name "*.vue" \) -not -path "./dist/*")
 	$(TSC_BIN) --build;
-	vite build;
+	@bunx --bun vite build;
 	@# force updates modified_at timestamp;
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
