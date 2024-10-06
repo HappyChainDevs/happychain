@@ -194,7 +194,7 @@ async function areTheTypesWrong(config: Config | undefined) {
 
     let output: string
     if (config) {
-        const exports = config.exports ?? pkg.exports.keys() ?? ["."]
+        const exports = config.exports ?? (pkg.exports?.length > 0 ? Object.keys(pkg.exports) : ["."])
         // biome-ignore format: +
         const attwCommand = "bun attw"
           + " --pack"
