@@ -170,7 +170,6 @@ export async function build({
 }
 
 async function areTheTypesWrong() {
-    // TODO must actually bundle CJS
     spinner.text = `${pkgName} — Checking for packaging issues...`
     const output = await $`bun attw --pack ${base} --ignore-rules cjs-resolves-to-esm`.text()
     if (output.includes("No problems found")) return
