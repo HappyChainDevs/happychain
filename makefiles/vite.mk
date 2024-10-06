@@ -15,6 +15,7 @@ build: node_modules dist
 clean:
 	@rm -rf dist
 	@rm -rf node_modules/.tmp
+	@rm -rf node_modules/.vite # this sometimes gets corrupted ("cannot load vite.config.ts")
 .PHONY: clean
 
 # Rebuilds on file change, but does not bundle — site can still be served locally via `vite`
