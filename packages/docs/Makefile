@@ -44,7 +44,7 @@ vocs.watch:
 
 # generate all markdown API reference
 typedoc:
-	concurrently \
+	concurrently --names "js,react"\
 		'make typedoc-js'\
 		'make typedoc-react';
 .PHONY: typedoc

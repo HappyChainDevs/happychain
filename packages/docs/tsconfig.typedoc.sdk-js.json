@@ -1,4 +1,7 @@
 {
     "extends": ["../sdk-vanillajs/tsconfig.json"],
+    "compilerOptions": {
+        "rootDir": ".."
+    },
     "include": ["../sdk-vanillajs/lib", "../sdk-shared/lib"]
 }
