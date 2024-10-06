@@ -235,25 +235,15 @@ async function cleanOutDir(config: Config) {
 
     const {
         cleanOutDir,
-        bunConfig: { outdir, entrypoints, naming },
+        bunConfig: { outdir, entrypoints },
     } = config
 
     if (!outdir) return
 
-    const namingScheme = typeof naming === "string" ? naming : "[dir]/[name].es.[ext]" // TODO this isn't actually the default
-
-    let hasSymlinks = false
-    for (const entry of entrypoints) {
-        const outPath = namingScheme
-            .replace("[dir]", outdir)
-            .replace("[name]", basename(entry, ".ts"))
-            .replace("[ext]", "js")
-        // we need lstat (not stat) to check for symlinks
-        if (lstatSync(outPath).isSymbolicLink()) {
-            hasSymlinks = true
-            break
-        }
-    }
+    const hasSymlinks = entrypoints.some((entrypoint) => {
+        const outPath = outputForEntrypoint(config, entrypoint, "js")
+        return existsSync(outPath) && lstatSync(outPath).isSymbolicLink()
+    })
 
     if (!hasSymlinks && !cleanOutDir) {
         return
@@ -263,6 +253,17 @@ async function cleanOutDir(config: Config) {
         spinner.text = `emptying: ${outdir}`
         await $`rm -rf ${outdir}`
     }
+}
+
+/**
+ * Returns the output path for a given entrypoint and extension, using {@link BunConfig.naming}.
+ */
+function outputForEntrypoint(config: Config, entrypoint: string, ext: string): string {
+    const bunConfig = config.bunConfig
+    return bunConfig.naming
+        .replace("[dir]", bunConfig.outdir)
+        .replace("[name]", basename(entrypoint).split(".")[0])
+        .replace("[ext]", ext)
 }
 
 async function rollupTypes(config: Config) {
@@ -286,20 +287,30 @@ async function rollupTypes(config: Config) {
         typescriptCompilerFolder: require.resolve("typescript").replace("/lib/typescript.js", ""), // use project's typescript version
         showVerboseMessages: false,
     })
+
     console.warn = ogWarn
     console.log = ogLog
 
-    const output =
-        typeof config.types === "string"
-            ? config.types
-            : typeof config.types === "object" && config.bunConfig && config.bunConfig?.entrypoints
-              ? config.types[config.bunConfig.entrypoints[0]]
-              : pkg.types
+    const bunConfig = config.bunConfig
+    const entrypoint = bunConfig?.entrypoints?.[0]
+    let output = ""
+    if (typeof config.types === "string") {
+        output = config.types
+    } else if (typeof config.types === "object" && entrypoint) {
+        // TODO can we gen multiple files?
+        output = config.types[entrypoint]
+    } else if (pkg.types) {
+        output = pkg.types
+    } else if (pkg.exports?.["."]?.types) {
+        output = pkg.exports["."].types
+    } else if (entrypoint) {
+        output = outputForEntrypoint(config, entrypoint, "d.ts")
+    }
 
     // rename output to match package.json
     await $`mv ${extractorResult.extractorConfig.untrimmedFilePath} ${join(base, output)}`
 
-    // clean out raw tsconfig types if its not the main output dir
+    // clean out individual .d.ts files if its not the main output dir
     if (
         tsconfig.compilerOptions.outDir &&
         tsconfig.compilerOptions.declarationDir &&
