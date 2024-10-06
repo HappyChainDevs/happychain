@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs"
+import { existsSync, lstatSync } from "node:fs"
+import { basename } from "node:path"
 import { join } from "node:path"
 import { Extractor, ExtractorConfig } from "@microsoft/api-extractor"
 import { $ } from "bun"
@@ -211,16 +212,33 @@ async function cleanOutDir(config: Config) {
 
     const {
         cleanOutDir,
-        bunConfig: { outdir: outDir },
+        bunConfig: { outdir, entrypoints, naming },
     } = config
 
-    if (!outDir || !cleanOutDir) {
+    if (!outdir) return
+
+    const namingScheme = typeof naming === "string" ? naming : "[dir]/[name].es.[ext]" // TODO this isn't actually the default
+
+    let hasSymlinks = false
+    for (const entry of entrypoints) {
+        const outPath = namingScheme
+            .replace("[dir]", outdir)
+            .replace("[name]", basename(entry, ".ts"))
+            .replace("[ext]", "js")
+        // we need lstat (not stat) to check for symlinks
+        if (lstatSync(outPath).isSymbolicLink()) {
+            hasSymlinks = true
+            break
+        }
+    }
+
+    if (!hasSymlinks && !cleanOutDir) {
         return
     }
 
-    if (existsSync(outDir)) {
-        spinner.text = `emptying: ${outDir}`
-        await $`rm -rf ${outDir}`
+    if (existsSync(outdir)) {
+        spinner.text = `emptying: ${outdir}`
+        await $`rm -rf ${outdir}`
     }
 }
 
