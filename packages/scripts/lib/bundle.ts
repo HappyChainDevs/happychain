@@ -77,19 +77,7 @@ export async function build({
             if (config.apiExtractorConfig) {
                 // don't regenerate the same config more than once per build...
                 if (!usedApiExtractorConfigs.has(config.apiExtractorConfig)) {
-                    let rollupResults: { cleanUpPaths: Set<string> } | undefined
-                    // This seemingly idempotent `then` is necessary to avoid what looks like a bug
-                    // in Bun: in some cases, the code fails here after having executed code "after"
-                    // the await (in `loadFileAndPrepare`, a non-async function!). This is not from
-                    // a lingering promise either, as adding a try/catch here does catch the error
-                    // (also after code that follows the catch gets executed).
-                    // The error is triggered by the `loadFileAndPrepare` attempting to read files
-                    // that are deleted by the code that follows this!
-                    // This only triggers in the `@happychain/ui` package.
-                    rollupResults = await rollupTypes(config).then(
-                        (r) => r,
-                        (e) => e,
-                    )
+                    const rollupResults = await rollupTypes(config)
                     usedApiExtractorConfigs.add(config.apiExtractorConfig)
                     cleanupPaths.push([])
                     rollupResults?.cleanUpPaths?.forEach((path) => cleanupPaths[i].push(path))
