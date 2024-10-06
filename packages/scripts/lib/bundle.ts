@@ -8,7 +8,7 @@ import chalk from "chalk"
 import pkgSize from "pkg-size"
 import type { PkgSizeData } from "pkg-size/dist/interfaces"
 import type { cliArgs } from "./cli-args"
-import type { Config, DefineConfigParameters } from "./defineConfig"
+import { type Config, type DefineConfigParameters, defaultConfig } from "./defineConfig"
 import { spinner } from "./spinner"
 
 // silence TS errors as these will be caught and reported by tsc
@@ -18,6 +18,7 @@ spinner.start("Building...")
 
 const base = process.cwd()
 const pkgName = base.substring(base.lastIndexOf("/") + 1)
+let pkgConfigName = pkgName
 
 const configArgs = {
     mode: process.env.NODE_ENV,
@@ -28,13 +29,21 @@ const pkg = await import(join(base, "./package.json"))
 // global instance run counter
 let run = 0
 
-function getConfigArray(configs: DefineConfigParameters, options: typeof cliArgs): Config[] {
-    if (typeof configs === "object") {
-        return Array.isArray(configs) ? configs : [configs]
+function applyDefaults(config: Config): Config {
+    return {
+        ...defaultConfig,
+        ...config,
+        // Types are afraid we're missing the entrypoints, but we have a default value for them
+        bunConfig: { ...defaultConfig.bunConfig, ...config.bunConfig },
     }
+}
 
-    const _result = configs({ ...configArgs, ...options, run })
-    return Array.isArray(_result) ? _result : [_result]
+function getConfigArray(configs: DefineConfigParameters, options: typeof cliArgs): Config[] {
+    const _configs: DefineConfigParameters =
+        typeof configs === "function" //
+            ? configs({ ...configArgs, ...options, run })
+            : configs
+    return ((Array.isArray(configs) ? configs : [configs]) as Config[]).map(applyDefaults)
 }
 
 export async function build({
@@ -51,6 +60,9 @@ export async function build({
 
     const start = performance.now()
     for (const config of configs) {
+        if (config.name) {
+            pkgConfigName = `${pkgName}/${config.name}`
+        }
         const t0 = performance.now()
 
         await cleanOutDir(config)
@@ -81,7 +93,7 @@ export async function build({
                 await writeTypesEntryStub(config)
             }
         } else {
-            console.log(`${pkgName} — TS config file not specified, skipping types generation`)
+            console.log(`${pkgConfigName} — TS config file not specified, skipping types generation`)
         }
 
         const t2 = performance.now()
@@ -170,7 +182,7 @@ export async function build({
 }
 
 async function areTheTypesWrong() {
-    spinner.text = `${pkgName} — Checking for packaging issues...`
+    spinner.text = `${pkgConfigName} — Checking for packaging issues...`
     const output = await $`bun attw --pack ${base} --ignore-rules cjs-resolves-to-esm`.text()
     if (output.includes("No problems found")) return
 
@@ -244,7 +256,7 @@ async function cleanOutDir(config: Config) {
 async function rollupTypes(config: Config) {
     if (!config.apiExtractorConfig || !config.tsConfig) return
 
-    spinner.text = `${pkgName} — Bundling types (API Extractor)...`
+    spinner.text = `${pkgConfigName} — Bundling types (API Extractor)...`
     const cleanUpPaths = new Set<string>()
 
     // temp path to disable a lot of useless output from api extractor
@@ -292,7 +304,7 @@ async function writeTypesEntryStub(config: Config) {
     const pkg = await import(join(base, "./package.json"))
 
     if (config.bunConfig?.entrypoints?.length) {
-        spinner.text = `${pkgName} — API Extractor config file not specified, generating index type stub...`
+        spinner.text = `${pkgConfigName} — API Extractor config file not specified, generating index type stub...`
         for (const entry of config.bunConfig.entrypoints) {
             // index.d.ts stub to re-export all from main types entry
             const output =
@@ -312,7 +324,7 @@ async function writeTypesEntryStub(config: Config) {
 
 async function bunBuild(config?: Config["bunConfig"]) {
     if (!config) return
-    spinner.text = `${pkgName} — Bundling JS...`
+    spinner.text = `${pkgConfigName} — Bundling JS...`
     return await Bun.build(config)
 }
 
@@ -320,7 +332,7 @@ async function tscBuild(config: Config) {
     if (!config.tsConfig) return
 
     const tsconfigPath = join(base, config.tsConfig)
-    spinner.text = `${pkgName} — Generating types (tsc)...`
+    spinner.text = `${pkgConfigName} — Generating types (tsc)...`
     const out = await $`bun tsc --build ${tsconfigPath} ${config.cleanOutDir ? "--force" : ""}`
 
     if (out.exitCode) {
