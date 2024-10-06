@@ -4,7 +4,7 @@ import pkg from "./package.json"
 export default defineConfig([
     {
         name: ".",
-        types: { "./lib/index.ts": pkg.exports["."].types },
+        exports: ["."],
         bunConfig: {
             entrypoints: ["./lib/index.ts"],
             plugins: [inlineCssPlugin],
@@ -12,8 +12,8 @@ export default defineConfig([
     },
     {
         name: "preact",
+        exports: ["./preact"],
         apiExtractorConfig: "api-extractor-preact.json",
-        types: { "./lib/badge.tsx": pkg.exports["./preact"].types },
         bunConfig: {
             entrypoints: ["./lib/badge.tsx"],
             external: ["preact"],
