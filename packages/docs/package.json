@@ -24,7 +24,7 @@
         "typedoc-plugin-mdn-links": "^3.2.10",
         "typedoc-plugin-remark": "^1.0.3",
         "typedoc-plugin-zod": "^1.2.1",
-        "viem": "^2.21.7",
+        "viem": "^2.21.18",
         "web3": "^4.12.1"
     }
 }

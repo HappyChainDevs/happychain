@@ -4,14 +4,14 @@
     "version": "0.0.0",
     "type": "module",
     "dependencies": {
-        "@happychain/ui": "workspace:^",
         "@happychain/react": "workspace:^",
+        "@happychain/ui": "workspace:^",
         "autoprefixer": "^10.4.20",
         "postcss": "^8.4.41",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "tailwindcss": "^3.4.10",
-        "viem": "^2.21.7"
+        "viem": "^2.21.18"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",

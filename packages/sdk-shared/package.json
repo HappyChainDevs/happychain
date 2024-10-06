@@ -15,7 +15,7 @@
     },
     "dependencies": {
         "@happychain/common": "workspace:^",
-        "viem": "^2.21.7"
+        "viem": "^2.21.18"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
