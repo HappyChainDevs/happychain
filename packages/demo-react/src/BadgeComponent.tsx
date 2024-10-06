@@ -1,6 +1,6 @@
 import { type BadgeProps, defineBadgeComponent } from "@happychain/ui"
 
-defineBadgeComponent("connect-button")
+void defineBadgeComponent("connect-button")
 
 declare global {
     // biome-ignore lint/style/noNamespace:

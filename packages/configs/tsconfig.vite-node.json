@@ -1,9 +1,0 @@
-{
-    // Un-compiled editor support (config files, tests, etc)
-    "$schema": "https://json.schemastore.org/tsconfig",
-    "extends": "@happychain/configs/tsconfig.base.json",
-    "display": "Vite Node.JS",
-    "compilerOptions": {
-        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
-    }
-}
