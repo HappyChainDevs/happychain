@@ -1,9 +1,8 @@
 import { type Config, defineConfig, inlineCssPlugin } from "@happychain/scripts"
-import pkg from "./package.json"
 
 export default defineConfig([
     {
-        name: ".",
+        name: "index",
         exports: ["."],
         bunConfig: {
             entrypoints: ["./lib/index.ts"],

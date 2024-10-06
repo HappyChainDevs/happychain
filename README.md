@@ -50,7 +50,9 @@ level).
   - `iframe`: all packages needed to build the iframe
   - `account`: sdk + iframe
   - `demos`: all demo packages (no dependencies)
-  - `ts`: all typescript packages (including docs)
+  - `ts`: all typescript packages (excluding docs)
+  - `docs`: the documentation site
+  - `contracts`: the smart contracts
 
 - make {sdk,iframe,account,demo-js,demo-react,demo-vue,docs}.dev
   - This builds, rebuilds on changes, and runs development servers (where applicable) for

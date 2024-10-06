@@ -65,8 +65,6 @@ export async function build({
         await cleanOutDir(config)
         const t1 = performance.now()
 
-        // TODO needs to build dependent packages before
-
         if (config.tsConfig) {
             // don't regenerate the same config more than once per build...
             if (!usedTsConfigs.has(config.tsConfig)) {
@@ -286,13 +284,9 @@ function outputFileForEntrypoint(config: Config, entrypoint: string, ext: string
 
 function typeOutputFileForEntrypoint(config: Config, entrypoint: string): string {
     let outputFile = ""
+    // TODO can we gen multiple files?
     const exportName = config.exports?.[0]
-    if (typeof config.types === "string") {
-        outputFile = config.types
-    } else if (typeof config.types === "object" && entrypoint) {
-        // TODO can we gen multiple files?
-        outputFile = config.types[entrypoint]
-    } else if (exportName && pkg.exports?.[exportName]?.types) {
+    if (exportName && pkg.exports?.[exportName]?.types) {
         outputFile = pkg.exports[exportName].types
     } else if (entrypoint) {
         outputFile = outputFileForEntrypoint(config, entrypoint, "d.ts")
