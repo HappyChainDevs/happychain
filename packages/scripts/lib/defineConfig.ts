@@ -43,11 +43,6 @@ export interface Config {
      */
     tsConfig?: string
     /**
-     * Name of rolled up types output (string, or dictionary mapping entrypoint to output file).
-     * Default: undefined, uses the "types" or "exports/.../types" properties in package.json.
-     */
-    types?: string | { [key: string]: string }
-    /**
      * Path to the api-extractor config file. Default: "api-extractor.json"
      * If undefined, types will not be aggregated.
      * Ignored if {@link tsConfig} is undefined.
