@@ -8,7 +8,7 @@ import chalk from "chalk"
 import pkgSize from "pkg-size"
 import type { PkgSizeData } from "pkg-size/dist/interfaces"
 import type { cliArgs } from "./cli-args"
-import { type Config, type DefineConfigParameters, defaultConfig } from "./defineConfig"
+import { type BunConfig, type Config, type DefineConfigParameters, defaultConfig } from "./defineConfig"
 import { spinner } from "./spinner"
 
 spinner.start("Building...")
@@ -30,7 +30,6 @@ function applyDefaults(config: Config): Config {
     return {
         ...defaultConfig,
         ...config,
-        // Types are afraid we're missing the entrypoints, but we have a default value for them
         bunConfig: { ...defaultConfig.bunConfig, ...config.bunConfig },
     }
 }
@@ -108,9 +107,9 @@ export async function build({
         const t4 = performance.now()
 
         if (config.bunConfig) {
-            const Package = config.bunConfig?.entrypoints.join("', '") as string
+            const Package = config.bunConfig.entrypoints.join("', '") as string
             buildTimes.set(Package, {
-                clean: (config.bunConfig?.outdir && config.cleanOutDir && `${Math.ceil(t1 - t0)} ms`) || "",
+                clean: (config.bunConfig.outdir && config.cleanOutDir && `${Math.ceil(t1 - t0)} ms`) || "",
                 types: (config.tsConfig && `${Math.ceil(t2 - t1)} ms`) || "",
                 build: `${Math.ceil(t3 - t2)} ms`,
                 checkExports: `${Math.ceil(t4 - t3)} ms`,
@@ -244,8 +243,6 @@ async function areTheTypesWrong(config: Config | undefined) {
 const cleanedOutDirs = new Set<string>()
 
 async function cleanOutDir(config: Config) {
-    if (!config.bunConfig) return
-
     const {
         cleanOutDir,
         bunConfig: { outdir, entrypoints },
@@ -326,7 +323,7 @@ async function rollupTypes(config: Config) {
     console.warn = ogWarn
     console.log = ogLog
 
-    const entrypoint = config.bunConfig?.entrypoints?.[0]
+    const entrypoint = config.bunConfig.entrypoints?.[0]
     const outputFile = typeOutputFileForEntrypoint(config, entrypoint)
     await $`mv ${extractorResult.extractorConfig.untrimmedFilePath} ${join(base, outputFile)}`
 
@@ -342,9 +339,7 @@ async function rollupTypes(config: Config) {
 }
 
 async function writeTypesEntryStub(config: Config) {
-    if (!config.bunConfig) return
-
-    if (config.bunConfig?.entrypoints?.length) {
+    if (config.bunConfig.entrypoints?.length) {
         spinner.text = `${pkgConfigName} — API Extractor config file not specified, generating index type stub...`
         for (const entry of config.bunConfig.entrypoints) {
             // index.d.ts stub to re-export all from main types entry
@@ -357,7 +352,7 @@ async function writeTypesEntryStub(config: Config) {
     }
 }
 
-async function bunBuild(config?: Config["bunConfig"]) {
+async function bunBuild(config?: BunConfig) {
     if (!config) return
     spinner.text = `${pkgConfigName} — Bundling JS...`
     return await Bun.build(config)
