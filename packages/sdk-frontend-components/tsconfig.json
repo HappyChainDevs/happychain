@@ -10,5 +10,5 @@
         },
         "jsxImportSource": "preact"
     },
-    "include": ["*.ts", "lib"]
+    "include": ["*.ts", "package.json", "lib"]
 }

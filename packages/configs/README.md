@@ -1,14 +1,17 @@
 # Configs
 
-HappyChain MonoRepo Shared Configs
+Configurations shared accross packages in the HappyChain monorepo.
 
 ## Install
 
 Add to your packages `package.json`
 
-```json
-"devDependencies": {
-    "@happychain/configs": "workspace:^",
+```jsonc
+{
+     // ... other properties
+    "devDependencies": {
+        "@happychain/configs": "workspace:^",
+    }
 }
 ```
 
@@ -17,22 +20,23 @@ bun install
 ```
 
 ## Biome Configs
-In your package create a `biome.jsonc`
+
+In your package create a `biome.jsonc` with the following properties:
+
 ```jsonc
 {
-	// pull from relative node_modules as biome 
-	// doesn't currently resolve from packages automatically
-    "$schema": "./node_modules/@happychain/configs/node_modules/@biomejs/biome/configuration_schema.json",
-    "extends": ["node_modules/@happychain/configs/biome.jsonc"]
+    "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["../../packages/configs/biome.jsonc"]
 }
 ```
 
-To customize, simple extend or overwrite
+To customize, simply extend the config (object properties are merged, other types are overriden):
+
 ```jsonc
 {
-
-    "$schema": "./node_modules/@happychain/configs/node_modules/@biomejs/biome/configuration_schema.json",
-    "extends": ["node_modules/@happychain/configs/biome.jsonc"],
+    "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["../../packages/configs/biome.jsonc"]
+    // will be merged with `files` in the extended config
 	"files": {
 		"ignore": [ "./out" ]
 	},
@@ -52,20 +56,14 @@ To customize, simple extend or overwrite
 
 ## Typescript Configs
 
-Add or update `tsconfig.json` with your preferred config `tsconfig.*.json`
+Add or update `tsconfig.json` with your preferred config `tsconfig.*.json`. You need the `extends`
+and `include` property, then you can extend the config (object properties are merged, other types
+are overriden):
 
 ```jsonc
 {
-	// tsconfig.vite-node.json
 	"extends": "@happychain/configs/tsconfig.base.json",
-	"include": ["lib"]
-}
-```
-
-To customize, simple update with the overrides
-```jsonc
-{
-	"extends": "@happychain/configs/tsconfig.base.json",
+	// will be merged with `compilerOptions` in the extended config
 	"compilerOptions": {
 		"baseUrl": "./lib",
 		"paths": { "lib/*": ["./*"] }
