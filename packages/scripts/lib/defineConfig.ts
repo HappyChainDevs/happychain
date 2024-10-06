@@ -23,11 +23,18 @@ export interface Config {
      */
     name?: string
     /**
+     * List of exports from package.json to include in the outputs.
+     * Default: undefined, will read all exports from package.json, or default to "." otherwise.
+     */
+    exports?: string[]
+    /**
      * Remove the output directory before building. Default: "dist"
      */
     cleanOutDir: boolean
     /**
-     * Clean type files generated outside of the output directory. Default: true
+     * Clean type files generated outside of the output directory.
+     * This happens when the TS config "outDir" does not match the bun config "outDir".
+     * Default: true
      */
     cleanOutsideOutDir: boolean
     /**

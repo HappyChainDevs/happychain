@@ -41,7 +41,11 @@
             },
             "style": {
                 "noNamespace": "error",
-                "noNonNullAssertion": "off"
+                "noNonNullAssertion": "off",
+                "useTemplate": "off"
+            },
+            "complexity": {
+                "noForEach": "off"
             }
         }
     },

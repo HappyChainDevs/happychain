@@ -11,9 +11,6 @@ import type { cliArgs } from "./cli-args"
 import { type Config, type DefineConfigParameters, defaultConfig } from "./defineConfig"
 import { spinner } from "./spinner"
 
-// silence TS errors as these will be caught and reported by tsc
-$.nothrow()
-
 spinner.start("Building...")
 
 const base = process.cwd()
@@ -56,10 +53,10 @@ export async function build({
     const buildTimes = new Map()
     const usedTsConfigs = new Set()
     const usedApiExtractorConfigs = new Set()
-    const cleanupPaths = new Set<string>()
+    const cleanupPaths: string[][] = []
 
     const start = performance.now()
-    for (const config of configs) {
+    for (const [i, config] of configs.entries()) {
         if (config.name) {
             pkgConfigName = `${pkgName}/${config.name}`
         }
@@ -94,12 +91,8 @@ export async function build({
                         (e) => e,
                     )
                     usedApiExtractorConfigs.add(config.apiExtractorConfig)
-
-                    if (config.cleanOutDir) {
-                        for (const path of rollupResults?.cleanUpPaths ?? []) {
-                            cleanupPaths.add(path)
-                        }
-                    }
+                    cleanupPaths.push([])
+                    rollupResults?.cleanUpPaths?.forEach((path) => cleanupPaths[i].push(path))
                 }
             } else {
                 await writeTypesEntryStub(config)
@@ -124,23 +117,32 @@ export async function build({
 
         const t3 = performance.now()
 
+        await areTheTypesWrong(config)
+
+        const t4 = performance.now()
+
         if (config.bunConfig) {
             const Package = config.bunConfig?.entrypoints.join("', '") as string
             buildTimes.set(Package, {
                 clean: (config.bunConfig?.outdir && config.cleanOutDir && `${Math.ceil(t1 - t0)} ms`) || "",
                 types: (config.tsConfig && `${Math.ceil(t2 - t1)} ms`) || "",
                 build: `${Math.ceil(t3 - t2)} ms`,
+                checkExports: `${Math.ceil(t4 - t3)} ms`,
             })
         }
     }
 
-    // remove types files generated outside of the main output dir
-    for (const path of cleanupPaths) {
+    const pathsToClean = new Set(
+        configs
+            .map((c, i) => (c.cleanOutsideOutDir ? cleanupPaths[i] : undefined))
+            .filter(Boolean)
+            .flat() as string[],
+    )
+
+    // TODO this can actually cleans paths inside the output dir (e.g. `dist/types`)
+    for (const path of pathsToClean) {
         await $`rm -rf ${path}`
     }
-
-    // TODO time this
-    await areTheTypesWrong()
 
     const entries = Array.from(buildTimes.keys())
     const buildTable = [
@@ -158,6 +160,14 @@ export async function build({
             [chalk.blue("Step")]: "Build",
             // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
             ...entries.reduce((acc, entry) => ({ ...acc, [chalk.green.bold(entry)]: buildTimes.get(entry).build }), {}),
+        },
+        {
+            [chalk.blue("Step")]: "Check exports",
+            ...entries.reduce(
+                // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
+                (acc, entry) => ({ ...acc, [chalk.green.bold(entry)]: buildTimes.get(entry).checkExports }),
+                {},
+            ),
         },
     ]
     if (configs[0].reportTime) console.table(buildTable)
@@ -193,9 +203,24 @@ export async function build({
     )
 }
 
-async function areTheTypesWrong() {
+async function areTheTypesWrong(config: Config | undefined) {
     spinner.text = `${pkgConfigName} — Checking for packaging issues...`
-    const output = await $`bun attw --pack ${base} --ignore-rules cjs-resolves-to-esm`.text()
+
+    let output: string
+    if (config) {
+        const exports = config.exports ?? pkg.exports.keys() ?? ["."]
+        // biome-ignore format: +
+        const attwCommand = "bun attw"
+          + " --pack"
+          + " --ignore-rules cjs-resolves-to-esm"
+          + ` --entrypoints ${exports.join(" ")}`
+
+        output = await $`${{ raw: attwCommand }}`.nothrow().text()
+    } else {
+        // auto-detect exports
+        output = await $`bun attw --pack --ignore-rules cjs-resolves-to-esm`.nothrow().text()
+    }
+
     if (output.includes("No problems found")) return
 
     // Prettify the table to make its display more compact.
@@ -230,6 +255,8 @@ async function areTheTypesWrong() {
     console.table(table)
 }
 
+const cleanedOutDirs = new Set<string>()
+
 async function cleanOutDir(config: Config) {
     if (!config.bunConfig) return
 
@@ -238,10 +265,13 @@ async function cleanOutDir(config: Config) {
         bunConfig: { outdir, entrypoints },
     } = config
 
-    if (!outdir) return
+    if (!outdir || cleanedOutDirs.has(outdir)) return
+
+    // Must be here, not after: dir might be empty, but will be populated by one of the configs.
+    cleanedOutDirs.add(outdir)
 
     const hasSymlinks = entrypoints.some((entrypoint) => {
-        const outPath = outputForEntrypoint(config, entrypoint, "js")
+        const outPath = outputFileForEntrypoint(config, entrypoint, "js")
         return existsSync(outPath) && lstatSync(outPath).isSymbolicLink()
     })
 
@@ -258,12 +288,35 @@ async function cleanOutDir(config: Config) {
 /**
  * Returns the output path for a given entrypoint and extension, using {@link BunConfig.naming}.
  */
-function outputForEntrypoint(config: Config, entrypoint: string, ext: string): string {
+function outputFileForEntrypoint(config: Config, entrypoint: string, ext: string): string {
     const bunConfig = config.bunConfig
     return bunConfig.naming
         .replace("[dir]", bunConfig.outdir)
         .replace("[name]", basename(entrypoint).split(".")[0])
         .replace("[ext]", ext)
+}
+
+function typeOutputFileForEntrypoint(config: Config, entrypoint: string): string {
+    let outputFile = ""
+    const exportName = config.exports?.[0]
+    if (typeof config.types === "string") {
+        outputFile = config.types
+    } else if (typeof config.types === "object" && entrypoint) {
+        // TODO can we gen multiple files?
+        outputFile = config.types[entrypoint]
+    } else if (exportName && pkg.exports?.[exportName]?.types) {
+        outputFile = pkg.exports[exportName].types
+    } else if (entrypoint) {
+        outputFile = outputFileForEntrypoint(config, entrypoint, "d.ts")
+    } else if (pkg.exports?.["."]?.types) {
+        outputFile = pkg.exports["."].types
+    } else {
+        // biome-ignore format: +
+        throw new Error(
+            "Unable to determine type output file: no entrypoint in build config, "
+            + "no 'types' properties in package.json.")
+    }
+    return outputFile
 }
 
 async function rollupTypes(config: Config) {
@@ -278,7 +331,7 @@ async function rollupTypes(config: Config) {
     console.log = () => {}
     console.warn = (...msg) => ogWarn(chalk.blue("[@microsoft/api-extractor]"), ...msg)
 
-    const tsconfig = await $`tsc --project ${config.tsConfig} --showConfig`.json()
+    const tsconfig = await $`tsc --project ${config.tsConfig} --showConfig`.nothrow().json()
 
     const apiExtractorJsonPath: string = join(base, config.apiExtractorConfig)
     const extractorConfig = ExtractorConfig.loadFileAndPrepare(apiExtractorJsonPath)
@@ -291,24 +344,9 @@ async function rollupTypes(config: Config) {
     console.warn = ogWarn
     console.log = ogLog
 
-    const bunConfig = config.bunConfig
-    const entrypoint = bunConfig?.entrypoints?.[0]
-    let output = ""
-    if (typeof config.types === "string") {
-        output = config.types
-    } else if (typeof config.types === "object" && entrypoint) {
-        // TODO can we gen multiple files?
-        output = config.types[entrypoint]
-    } else if (pkg.types) {
-        output = pkg.types
-    } else if (pkg.exports?.["."]?.types) {
-        output = pkg.exports["."].types
-    } else if (entrypoint) {
-        output = outputForEntrypoint(config, entrypoint, "d.ts")
-    }
-
-    // rename output to match package.json
-    await $`mv ${extractorResult.extractorConfig.untrimmedFilePath} ${join(base, output)}`
+    const entrypoint = config.bunConfig?.entrypoints?.[0]
+    const outputFile = typeOutputFileForEntrypoint(config, entrypoint)
+    await $`mv ${extractorResult.extractorConfig.untrimmedFilePath} ${join(base, outputFile)}`
 
     // clean out individual .d.ts files if its not the main output dir
     if (
@@ -324,21 +362,13 @@ async function rollupTypes(config: Config) {
 async function writeTypesEntryStub(config: Config) {
     if (!config.bunConfig) return
 
-    const pkg = await import(join(base, "./package.json"))
-
     if (config.bunConfig?.entrypoints?.length) {
         spinner.text = `${pkgConfigName} — API Extractor config file not specified, generating index type stub...`
         for (const entry of config.bunConfig.entrypoints) {
             // index.d.ts stub to re-export all from main types entry
-            const output =
-                typeof config.types === "string"
-                    ? config.types
-                    : typeof config.types === "object"
-                      ? config.types[entry]
-                      : pkg.types
-
+            const outputFile = typeOutputFileForEntrypoint(config, entry)
             await Bun.write(
-                join(base, output),
+                join(base, outputFile),
                 `export * from './${join("types", entry).replace(".ts", "")}'\nexport {}`,
             )
         }
@@ -356,7 +386,7 @@ async function tscBuild(config: Config) {
 
     const tsconfigPath = join(base, config.tsConfig)
     spinner.text = `${pkgConfigName} — Generating types (tsc)...`
-    const out = await $`bun tsc --build ${tsconfigPath} ${config.cleanOutDir ? "--force" : ""}`
+    const out = await $`bun tsc --build ${tsconfigPath} ${config.cleanOutDir ? "--force" : ""}`.nothrow()
 
     if (out.exitCode) {
         console.error(out.text())
