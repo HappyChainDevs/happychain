@@ -43,6 +43,9 @@ BACKEND_PKGS := transaction-manager,randomness-service
 # all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
 
+# all packages (have a package.json)
+ALL_PKGS := $(TS_PKGS),docs,contracts,configs
+
 # ==================================================================================================
 # CMDS
 
@@ -136,10 +139,19 @@ docs.dev:
 
 define forall
 	$(eval PKGS := $(strip $(1)))
+	$(eval CMD := $(2))
+	for name in packages/{$(PKGS)}; do\
+		echo "Running $(CMD) in $${name}";\
+		cd $${name} && $(CMD) && cd ../.. || (cd ../.. && exit 1);\
+	done
+endef
+
+define forall_make
+	$(eval PKGS := $(strip $(1)))
 	$(eval TARGET := $(2))
 	for name in packages/{$(PKGS)}; do\
 		echo "Running make $(TARGET) in $${name}";\
-		make $(2) --directory=$${name} || exit 1;\
+		make $(TARGET) --directory=$${name} || exit 1;\
 	done
 endef
 
@@ -147,27 +159,27 @@ endef
 # CORRECTNESS
 
 sdk.test:
-	$(call forall , $(SDK_PKGS) , test)
+	$(call forall_make , $(SDK_PKGS) , test)
 .PHONY: sdk.test
 
 sdk.check:
-	$(call forall , $(SDK_PKGS) , check)
+	$(call forall_make , $(SDK_PKGS) , check)
 .PHONY: sdk.check
 
 iframe.test:
-	$(call forall , $(IFRAME_PKGS) , test)
+	$(call forall_make , $(IFRAME_PKGS) , test)
 .PHONY: iframe.test
 
 iframe.check:
-	$(call forall , $(IFRAME_PKGS) , check)
+	$(call forall_make , $(IFRAME_PKGS) , check)
 .PHONY: iframe.check
 
 account.check:
-	$(call forall , $(ACCOUNT_PKGS) , check)
+	$(call forall_make , $(ACCOUNT_PKGS) , check)
 .PHONY: account.check
 
 demos.check:
-	$(call forall , $(DEMOS_PKGS) , check)
+	$(call forall_make , $(DEMOS_PKGS) , check)
 .PHONY: apps.check
 
 docs.check:
@@ -177,7 +189,7 @@ docs.check:
 
 ts.check:
 	echo $(TS_PKGS)
-	$(call forall , $(TS_PKGS) , check)
+	$(call forall_make , $(TS_PKGS) , check)
 .PHONY: ts.check
 
 contracts.check:
@@ -186,19 +198,19 @@ contracts.check:
 .PHONY: contracts.check
 
 sdk.format:
-	$(call forall , $(SDK_PKGS) , format)
+	$(call forall_make , $(SDK_PKGS) , format)
 .PHONY: sdk.format
 
 iframe.format:
-	$(call forall , $(IFRAME_PKGS) , format)
+	$(call forall_make , $(IFRAME_PKGS) , format)
 .PHONY: iframe.format
 
 account.format:
-	$(call forall , $(ACCOUNT_PKGS) , format)
+	$(call forall_make , $(ACCOUNT_PKGS) , format)
 .PHONY: account.format
 
 demos.format:
-	$(call forall , $(DEMOS_PKGS) , format)
+	$(call forall_make , $(DEMOS_PKGS) , format)
 .PHONY: apps.format
 
 docs.format:
@@ -206,7 +218,7 @@ docs.format:
 .PHONY: docs.format
 
 ts.format:
-	$(call forall , $(TS_PKGS) , format)
+	$(call forall_make , $(TS_PKGS) , format)
 .PHONY: ts.format
 
 contracts.format:
@@ -217,15 +229,15 @@ contracts.format:
 # PRODUCTION BUILDS
 
 shared.build:
-	$(call forall , $(SHARED_PKGS) , build)
+	$(call forall_make , $(SHARED_PKGS) , build)
 .PHONY: shared.build
 
 sdk.build:
-	$(call forall , $(SDK_PKGS) , build)
+	$(call forall_make , $(SDK_PKGS) , build)
 .PHONY: sdk.build
 
 iframe.build:
-	$(call forall , $(IFRAME_PKGS) , build)
+	$(call forall_make , $(IFRAME_PKGS) , build)
 .PHONY: iframe.build
 
 account.build:
@@ -234,11 +246,11 @@ account.build:
 .PHONY: account.build
 
 demos.build:
-	$(call forall , $(DEMOS_PKGS) , build)
+	$(call forall_make , $(DEMOS_PKGS) , build)
 .PHONY: apps.build
 
 ts.build:
-	$(call forall , $(TS_PKGS) , build)
+	$(call forall_make , $(TS_PKGS) , build)
 .PHONY: ts.build
 
 contracts.build:
@@ -262,19 +274,19 @@ docs.preview:
 # CLEANING
 
 sdk.clean:
-	$(call forall , $(SDK_PKGS) , clean)
+	$(call forall_make , $(SDK_PKGS) , clean)
 .PHONY: sdk.clean
 
 iframe.clean:
-	$(call forall , $(IFRAME_PKGS) , clean)
+	$(call forall_make , $(IFRAME_PKGS) , clean)
 .PHONY: iframe.clean
 
 account.clean:
-	$(call forall , $(ACCOUNT_PKGS) , clean)
+	$(call forall_make , $(ACCOUNT_PKGS) , clean)
 .PHONY: account.clean
 
 demos.clean:
-	$(call forall , $(DEMOS_PKGS) , clean)
+	$(call forall_make , $(DEMOS_PKGS) , clean)
 .PHONY: apps.clean
 
 docs.clean:
@@ -282,7 +294,7 @@ docs.clean:
 .PHONY: docs.clean
 
 ts.clean:
-	$(call forall , $(TS_PKGS) , clean)
+	$(call forall_make , $(TS_PKGS) , clean)
 	echo "Running make clean in packages/docs"
 	cd packages/docs && make clean
 .PHONY: ts.clean
@@ -318,6 +330,7 @@ node_modules: package.json $(wildcard packages/*/package.json)
 # This will also show new version that do not match the version specifiers!
 outdated:
 	@bun outdated
+	$(call forall , $(ALL_PKGS) , bun outdated)
 .PHONY: outdated
 
 # Updates all packages to their latest version that match the version specifier.
