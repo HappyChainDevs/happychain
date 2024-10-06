@@ -4,6 +4,7 @@
     "license": "BSD-3-Clause-Clear",
     "version": "1.0.0",
     "files": ["*.sol"],
+    "type": "module",
     "devDependencies": {
         "@openzeppelin/upgrades-core": "^1.36.0",
         "forge-std": "github:foundry-rs/forge-std#v1.9.1",

@@ -29,7 +29,7 @@ contract SessionKeyValidator is IValidator {
         return SIG_VALIDATION_SUCCESS_UINT;
     }
 
-    function isValidSignatureWithSender(address, bytes32, bytes calldata) external view override returns (bytes4) {
+    function isValidSignatureWithSender(address, bytes32, bytes calldata) external pure override returns (bytes4) {
         return ERC1271_MAGICVALUE;
     }
 }

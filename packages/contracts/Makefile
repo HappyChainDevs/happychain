@@ -26,19 +26,23 @@ LN_FLAGS := $(if $(findstring Darwin,$(shell uname)),-shF,-sfT)
 
 # See README.md for more documentation.
 
+# Location of top-level node_modules relative to the contracts package.
+# We need the top-level on with Bun, because it leaves the package-specific ones empty.
+NODE_MODULES := ../../node_modules
+
 # The reason for this weird setup is that the IntelliJ solidity plugin will not resolve imports
 # if they're not in `lib` and do not have a `src` directory (the `remappings.txt` file is ignored).
 setup:
 	if [ ! -f .env ]; then cp .env.example .env; fi
 	rm -rf lib
 	mkdir -p lib/{openzeppelin,oz-upgradeable}
-	ln $(LN_FLAGS) ../node_modules/ExcessivelySafeCall lib/ExcessivelySafeCall
-	ln $(LN_FLAGS) ../node_modules/solady lib/solady
-	ln $(LN_FLAGS) ../node_modules/kernel lib/kernel
-	ln $(LN_FLAGS) ../node_modules/forge-std lib/forge-std
-	ln $(LN_FLAGS) ../node_modules/account-abstraction lib/account-abstraction
-	ln $(LN_FLAGS) ../../node_modules/@openzeppelin/contracts lib/openzeppelin/src
-	ln $(LN_FLAGS) ../../node_modules/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
+	ln $(LN_FLAGS) ../$(NODE_MODULES)/ExcessivelySafeCall lib/ExcessivelySafeCall
+	ln $(LN_FLAGS) ../$(NODE_MODULES)/solady lib/solady
+	ln $(LN_FLAGS) ../$(NODE_MODULES)/kernel lib/kernel
+	ln $(LN_FLAGS) ../$(NODE_MODULES)/forge-std lib/forge-std
+	ln $(LN_FLAGS) ../$(NODE_MODULES)/account-abstraction lib/account-abstraction
+	ln $(LN_FLAGS) ../../$(NODE_MODULES)/@openzeppelin/contracts lib/openzeppelin/src
+	ln $(LN_FLAGS) ../../$(NODE_MODULES)/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
 .PHONY: setup
 
 ####################################################################################################
@@ -81,9 +85,9 @@ test-fork:
 .PHONY: test-fork
 
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the demo.
-aa_demo:
+aa-demo:
 	tsx ./scripts/account_abstraction_demo.ts;
-.PHONY: aa_demo
+.PHONY: aa-demo
 
 ####################################################################################################
 # Code Quality
@@ -273,5 +277,9 @@ deploy-random:
 deploy-mocks:
 	make deploy DEPLOY_SCRIPT=mocks/DeployMocks.s.sol
 .PHONY: deploy-mocks
+
+save-local-aa-deployment:
+	make save-deployment DEPLOY_SCRIPT=DeployAA.s.sol DEPLOYMENT_NAME=anvil/testing CONFIG=LOCAL
+.PHONY: save-local-aa-deployment
 
 ####################################################################################################

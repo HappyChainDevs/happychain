@@ -6,3 +6,4 @@ account-abstraction/=lib/account-abstraction/
 kernel/=lib/kernel/src/
 solady/=lib/solady/src/
 ExcessivelySafeCall/=lib/ExcessivelySafeCall/src/
+@openzeppelin/contracts=lib/openzeppelin/src
