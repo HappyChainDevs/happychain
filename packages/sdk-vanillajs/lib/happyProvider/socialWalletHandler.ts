@@ -6,14 +6,15 @@ import {
     EIP1193UserRejectedRequestError,
     GenericProviderRpcError,
     type HappyUser,
+    ModalStates,
     Msgs,
     type PopupMsgsFromIframe,
     type ResolveType,
 } from "@happychain/sdk-shared"
-import type { InFlightRequest } from "@happychain/sdk-shared/lib/classes/BasePopupProvider"
-import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
+
 import type { UUID } from "../common-utils"
 import type { HappyProviderConfig } from "./interface"
+import type { InFlightRequest } from "../../../sdk-shared/lib/classes/BasePopupProvider"
 
 type InFlightCheck = {
     resolve: (value: boolean) => void
