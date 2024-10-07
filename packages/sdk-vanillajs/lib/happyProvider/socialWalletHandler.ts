@@ -1,7 +1,6 @@
 import {
     AuthState,
     BasePopupProvider,
-    type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
     EIP1193UserRejectedRequestError,
@@ -11,6 +10,7 @@ import {
     type PopupMsgsFromIframe,
     type ResolveType,
 } from "@happychain/sdk-shared"
+import type { InFlightRequest } from "@happychain/sdk-shared/lib/classes/BasePopupProvider"
 import { ModalStates } from "@happychain/sdk-shared/lib/interfaces/events"
 import type { UUID } from "../common-utils"
 import type { HappyProviderConfig } from "./interface"
@@ -21,17 +21,16 @@ type InFlightCheck = {
 }
 
 /**
- * SocialWalletHandler handles proxying EIP-1193 requests
+ * SocialWalletHandler handles proxying `EIP-1193` requests
  * to the iframe where it is handled by either the connected
- * social provider if the user is connected, or a public rpc
+ * social provider if the user is connected, or a public RPC
  * if there is no user connected. For requests that require explicit
- * user approval/confirmation these requests are sent to a popup window
+ * user confirmation these requests are sent to a popup window
  * where the user can approve/reject the requests before they are sent
  * to the iframe to be handled
  */
 export class SocialWalletHandler extends BasePopupProvider {
     private inFlightChecks = new Map<string, InFlightCheck>()
-
     private user: HappyUser | undefined
     private authState: AuthState = AuthState.Connecting
 
@@ -54,24 +53,32 @@ export class SocialWalletHandler extends BasePopupProvider {
         config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
 
-    public override async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
-        args: EIP1193RequestParameters<TString>,
-    ): Promise<EIP1193RequestResult<TString>> {
-        // Every request gets proxied through this function.
-        // If it is eth_call or a non-tx non-signature request, we can auto-approve
-        // by posting the request args using request:approve,
-        // otherwise we open the popup and pass the request args through the hash URL.
-        const key = this.generateKey()
+    protected handlePermissionlessRequest(key: UUID, args: EIP1193RequestParameters): void {
+        this.autoApprove(key, args)
+        return
+    }
 
-        // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
-        return new Promise(async (resolve, reject) => {
-            const requiresUserApproval = await this.requiresUserApproval(args)
+    protected override async requestPermissions(
+        key: UUID,
+        args: EIP1193RequestParameters,
+        { resolve, reject }: InFlightRequest,
+    ): Promise<boolean> {
+        /**
+         * If the user is not connected (and not logged in)
+         * display the login screen. If/when the login is successful,
+         * run the initial protected request. If the original request
+         * was explicit permissions request, then it was granted automatically
+         * as part of the login flow, so we can auto-approve here and the response
+         * will be what is returned to the originating caller
+         */
+        if (!this.user && this.authState === AuthState.Disconnected) {
+            void this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
 
-            if (!requiresUserApproval) {
-                this.autoApprove(key, args)
-                this.queueRequest(key, { resolve: resolve as ResolveType, reject })
-                return
-            }
+            const unsubscribe = this.config.msgBus.on(Msgs.UserChanged, (user) => {
+                if (user) {
+                    // auto-approve only works for these methods, since this is a direct response
+                    // the the user login flow, and upon user login, these permissions get granted automatically
+                    let popup: Window | undefined
 
             /**
              * If the user is not connected (and not logged in)
@@ -117,35 +124,39 @@ export class SocialWalletHandler extends BasePopupProvider {
                         unsubscribeSuccess()
                         unsubscribeClose()
                     }
-                })
-                return
-            }
 
-            /**
-             * If the user is Logged In, but not connected to the dapp,
-             * and is making a protected request _other than_ explicitly requesting
-             * a connection, then intercept with a connection request, and only proceed
-             * if the permissions are granted
-             */
-            if (
-                !this.user &&
-                this.authState === AuthState.Connected &&
-                !["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
-            ) {
-                // request wallet permissions on the dapps behalf, then run dapps request
-                await this.request({
-                    method: "wallet_requestPermissions",
-                    params: [{ eth_accounts: {} }],
-                })
-            }
+                    // process request when user is logged in successfully
+                    this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
+                    unsubscribe()
+                }
+            })
+            return true
+        }
 
-            const popup = this.openPopupAndAwaitResponse(key, args, this.config.windowId, this.config.iframePath)
-            this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
-        })
+        /**
+         * If the user is Logged In, but not connected to the dapp,
+         * and is making a protected request _other than_ explicitly requesting
+         * a connection, then intercept with a connection request, and only proceed
+         * if the permissions are granted
+         */
+        if (
+            args &&
+            !this.user &&
+            this.authState === AuthState.Connected &&
+            !["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
+        ) {
+            // request wallet permissions on the dapps behalf, then run dapps request
+            await this.request({
+                method: "wallet_requestPermissions",
+                params: [{ eth_accounts: {} }],
+            })
+            return true
+        }
+        return true
     }
 
     override isConnected(): boolean {
-        // this is the fallback handler, always marked as 'connected' for public RPC's etc
+        // this is the fallback handler, always marked as 'connected' for public RPCs etc
         return true
     }
 

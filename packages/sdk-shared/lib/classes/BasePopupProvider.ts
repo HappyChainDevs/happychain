@@ -1,11 +1,12 @@
 import { type UUID, createUUID } from "@happychain/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
+import { config } from "../config"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import { EIP1193UserRejectedRequestError } from "../interfaces/errors"
 
 type Timer = ReturnType<typeof setInterval>
 
-type InFlightRequest<T extends EIP1193RequestMethods = EIP1193RequestMethods> = {
+export type InFlightRequest<T extends EIP1193RequestMethods = EIP1193RequestMethods> = {
     resolve: (value: EIP1193RequestResult<T>) => void
     reject: (reason?: unknown) => void
     popup?: Window
@@ -21,7 +22,7 @@ export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods>
  * requests to the iframe, and one such provider living in the iframe which is for requests
  * initiated from within the iframe.
  *
- * Requests are made via the `request` method, which calls the `requiresApproval` method to
+ * Requests are made via the `request` method, which calls the `requiresUserApproval` method to
  * determine whether an approval popup is needed. If so, a popup is created. The user approval or
  * rejection is relayed by the popup to the iframe, which relays it to the provider in a way that
  * triggers the `handleCompletedRequest` method. If no approval method is needed, the
@@ -34,7 +35,7 @@ export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods>
  * specifying whether the original request is be treated as permissionless or requires a further
  * approval.
  *
- * Note that `requestPermissions` is only called when `requiresApproval` returns true. That's
+ * Note that `requestPermissions` is only called when `requiresUserApproval` returns true. That's
  * because we allow permissionless access to the iframe provider, but suggesting things to the user
  * (usually signing transactions) is subject to the initial wallet connection approval. Some
  * requests (`wallet_requestPermissions`) can be be either permissionless (if the permission has
@@ -54,14 +55,64 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     protected static readonly POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(
         ",",
     )
+    public windowId = createUUID()
+    protected iframePath = config.iframePath
+
+    /**
+     * Method to request permissions within the SocialWalletProvider (not required for the IframeProvider).
+     * It should return `true` if the request should be treated as permissionless
+     * after permissions are granted, and `false` if user approval is still required.
+     */
+    protected abstract requestPermissions(
+        key?: UUID,
+        args?: EIP1193RequestParameters,
+        { resolve, reject }?: InFlightRequest,
+    ): Promise<boolean>
 
     /**
      * Abstract method to send requests. This method must be implemented by child classes.
      * It sends an EIP-1193 request and returns a Promise with the result.
      */
-    public abstract request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
+    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
-    ): Promise<EIP1193RequestResult<TString>>
+    ): Promise<EIP1193RequestResult<TString>> {
+        const key = this.generateKey()
+
+        // biome-ignore lint/suspicious/noAsyncPromiseExecutor: resolved later
+        return new Promise(async (resolve, reject) => {
+            const userApproval = await this.requiresUserApproval(args)
+
+            if (!userApproval) {
+                this.handlePermissionlessRequest(key, args, { resolve: resolve as ResolveType, reject })
+                return
+            }
+
+            const permissions = await this.requestPermissions(key, args, {
+                resolve: resolve as ResolveType,
+                reject,
+            })
+
+            if (permissions) {
+                // If approval is still required after permissions, open a popup for the user
+                const popup = this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, this.iframePath)
+                this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
+            }
+        })
+    }
+
+    /**
+     * Method to determine if a request requires user approval.
+     */
+    protected abstract requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean | unknown>
+
+    /**
+     * Method to handle permissionless requests.
+     */
+    protected abstract handlePermissionlessRequest(
+        key: string,
+        args: EIP1193RequestParameters,
+        { resolve, reject }: InFlightRequest,
+    ): void
 
     /**
      * Adds a request to the queue of in-flight requests. The request is associated with a unique key
@@ -77,20 +128,17 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      * Starts a timer that periodically checks the status of popups related to in-flight requests.
      * If a popup is detected as closed, the corresponding request is rejected, and the request is removed
      * from the queue. The timer stops automatically when there are no more popups to track.
-     *
-     * @private
      */
     private startPopupCheckTimer(): void {
         if (this.timer) return
 
-        const intervalMs = 100 // Check every 100ms
+        const intervalMs = 100
 
         this.timer = setInterval(() => {
-            let withPopups = 0 // Count of active popups
+            let withPopups = 0
             for (const [k, req] of this.inFlightRequests) {
-                if (!req.popup) continue // Skip requests without popups
+                if (!req.popup) continue
 
-                // If the popup has been closed, reject the request
                 if (req.popup.closed) {
                     req.reject(new EIP1193UserRejectedRequestError())
                     this.inFlightRequests.delete(k)
@@ -98,8 +146,6 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
                     withPopups++
                 }
             }
-
-            // Stop the timer if no popups are being tracked
             if (this.timer && !withPopups) {
                 clearInterval(this.timer)
                 this.timer = null
