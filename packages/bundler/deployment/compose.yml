@@ -1,0 +1,19 @@
+name: happy-bundler
+
+services:
+  bundler:
+    image: ghcr.io/happychaindevs/happy-bundler:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - bundler_network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+
+networks:
+  bundler_network:
+    driver: bridge
