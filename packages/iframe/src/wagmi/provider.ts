@@ -3,7 +3,6 @@ import {
     AuthState,
     BasePopupProvider,
     type EIP1193ErrorObject,
-    type EIP1193RequestMethods,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
     GenericProviderRpcError,
@@ -29,51 +28,39 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
  * which is configured to represent the HappyChain's iframe provider as below.
  */
 export class IframeProvider extends BasePopupProvider {
-    public iframeWindowId = this.generateKey()
+    constructor() {
+        super()
 
-    public override async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
-        args: EIP1193RequestParameters<TString>,
-    ): Promise<EIP1193RequestResult<TString>> {
-        if (!getUser()) {
-            // Necessary because wagmi will attempt to reconnect on page load. This currently could
-            // work fine (with a permission not found warning), but is brittle, better to explicitly
-            // reject here. We explicitly connect to wagmi via `useConnect` once the user becomes
-            // available.
-            throw new ResourceUnavailableRpcError(new Error("user not initialized yet"))
+        this.windowId = this.generateKey()
+        this.iframePath = config.iframePath
+    }
+
+    protected async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
+        return checkIfRequestRequiresConfirmation(args)
+    }
+
+    protected handlePermissionlessRequest(
+        key: UUID,
+        args: EIP1193RequestParameters,
+        { resolve, reject }: InFlightRequest,
+    ): void {
+        console.log()
+        const permissionlessReqPayload = {
+            key,
+            windowId: this.windowId,
+            error: null,
+            payload: args,
         }
 
-        const key = createUUID()
+        // auto-approve
+        void handlePermissionlessRequest(permissionlessReqPayload)
 
-        await waitForCondition(() => getAuthState() !== AuthState.Connecting)
+        this.queueRequest(key, { resolve: resolve as ResolveType, reject })
+        return
+    }
 
-        return new Promise<EIP1193RequestResult<TString>>((resolve, reject) => {
-            const reqPayload = {
-                key,
-                windowId: iframeID,
-                error: null,
-                payload: args,
-            }
-
-            const requiresUserApproval = checkIfRequestRequiresConfirmation(args)
-
-            if (!requiresUserApproval) {
-                // permissionless
-                void handlePermissionlessRequest(reqPayload)
-                this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup: null })
-                return
-            }
-
-            if (["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)) {
-                // auto-approve internal iframe permissions without popups
-                void handleApprovedRequest(reqPayload)
-                this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup: null })
-                return
-            }
-
-            // permissioned requests
-            const popup = this.openPopupAndAwaitResponse(key, args, this.iframeWindowId, config.iframePath)
-            this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
-        })
+    protected override async requestPermissions(): Promise<boolean> {
+        return false
     }
 
     openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters) {
