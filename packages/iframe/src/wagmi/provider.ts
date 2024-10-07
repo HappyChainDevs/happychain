@@ -28,13 +28,6 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
  * which is configured to represent the HappyChain's iframe provider as below.
  */
 export class IframeProvider extends BasePopupProvider {
-    constructor() {
-        super()
-
-        this.windowId = this.generateKey()
-        this.iframePath = config.iframePath
-    }
-
     protected async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
         return checkIfRequestRequiresConfirmation(args)
     }
@@ -44,7 +37,6 @@ export class IframeProvider extends BasePopupProvider {
         args: EIP1193RequestParameters,
         { resolve, reject }: InFlightRequest,
     ): void {
-        console.log()
         const permissionlessReqPayload = {
             key,
             windowId: this.windowId,
