@@ -1,0 +1,52 @@
+name: Deploy ERC-4337 bundler
+
+on:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  ORGANIZATION: happychaindevs
+  IMAGE_NAME: happy-bundler
+  DEPLOYMENT_DIR: /home/ubuntu/happy-bundler
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Log in to the container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: $
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          cd packages/bundler
+          make build.docker
+      - name: Push Docker image
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:latest
+          docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:${{github.sha}}
+          docker push ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:${{github.sha}}
+
+     - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        source: packages/bundler/deployment/docker-compose.yml
+        target: ${{ env.DEPLOYMENT_DIR }}
+
+      - name: Deploy bundler
+        run: |
+          cd ${{ env.DEPLOYMENT_DIR }}
+          docker compose up -d --pull always
