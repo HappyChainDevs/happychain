@@ -1,18 +1,13 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
-
-import { RouterProvider, createRouter } from "@tanstack/react-router"
-
-import { HappyAccountProvider } from "./providers/HappyAccountProvider"
-// Import the generated route tree
-import { routeTree } from "./routeTree.gen"
-
-import "./listeners"
-
-import "./index.css"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider } from "wagmi"
+import { HappyAccountProvider } from "./providers/HappyAccountProvider"
+import { routeTree } from "./routeTree.gen"
 import { config } from "./wagmi/config"
+import "./listeners"
+import "./index.css"
 
 // Create a new router instance
 const router = createRouter({ routeTree })
