@@ -1,0 +1,27 @@
+{
+    "name": "@happychain/vite-plugin-shared-worker",
+    "type": "module",
+    "exports": {
+        ".": {
+            "default": "./dist/index.js",
+            "types": "./dist/types/src/index.d.ts"
+        },
+        "./runtime": {
+            "default": "./dist/runtime/index.js",
+            "types": "./dist/types/src/runtime/index.d.ts"
+        }
+    },
+    "devDependencies": {
+        "@happychain/configs": "workspace:^",
+        "@types/bun": "latest",
+        "@types/node": "^22.7.4",
+        "mlly": "^1.7.1",
+        "vite": "^5.4.8"
+    },
+    "peerDependencies": {
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@okikio/sharedworker": "^1.0.7"
+    }
+}

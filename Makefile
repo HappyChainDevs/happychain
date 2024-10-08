@@ -16,8 +16,8 @@ help: ## Show this help
 # ==================================================================================================
 # Packages
 
-# packages shared between SDK & iframe (order matters)
-SHARED_PKGS := common,sdk-shared
+# support packages to be built before and sdks, or demos. this includes util libraries, and build systems (order matters)
+SHARED_PKGS := common,sdk-shared,vite-plugin-shared-worker
 
 # packages only used in the SDK
 SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components
