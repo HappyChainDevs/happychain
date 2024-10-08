@@ -92,7 +92,6 @@ function Embed() {
                     </div>
 
                     <GlobalHeader />
-
                     <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
                         <UserInfo user={user} />
                         {location.pathname === "/embed" && (
@@ -101,7 +100,6 @@ function Embed() {
                             </button>
                         )}
                     </div>
-
                     <div className="hidden lg:flex w-full grow overflow-y-auto">
                         <Outlet />
                     </div>

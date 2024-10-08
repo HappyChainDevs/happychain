@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/buffer.polyfill.ts","./src/funcs.ts","./src/main.tsx","./src/testing.shared-worker.ts","./src/vite-env.d.ts","./src/worker.shared-worker.ts","./src/worker.ts","./src/workerkid.ts"],"version":"5.6.2"}

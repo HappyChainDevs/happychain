@@ -3,11 +3,9 @@
     "version": "0.0.0",
     "private": true,
     "type": "module",
-    "main": "dist/lib/index.js",
-    "module": "dist/lib/index.js",
-    "types": "dist/lib/index.d.ts",
+    "main": "./lib/index.ts",
     "mikro-orm": {
-        "configPaths": ["./dist/mikro-orm.config.js"]
+        "configPaths": ["./src/mikro-orm.config.ts"]
     },
     "devDependencies": {
         "@mikro-orm/cli": "^6.3.10",
@@ -24,6 +22,7 @@
         "@mikro-orm/better-sqlite": "^6.3.10",
         "@mikro-orm/core": "^6.3.10",
         "@mikro-orm/migrations": "^6.3.10",
+        "@types/node": "^22.7.4",
         "eventemitter3": "^5.0.1"
     }
 }

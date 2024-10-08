@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 const config = defineConfig({
-    entities: [join(__dirname, "./Transaction.js")],
+    entities: [join(__dirname, "./Transaction.{js,ts}")],
     dbName: process.env.TXM_DB_PATH || "txm.sqlite",
     debug: true,
     migrations: {

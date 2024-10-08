@@ -41,7 +41,7 @@ DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue
 BACKEND_PKGS := transaction-manager,randomness-service
 
 # all typescript packages, excluding docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS)
 
 # all packages (have a package.json)
 ALL_PKGS := $(TS_PKGS),docs,contracts,configs
