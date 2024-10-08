@@ -1,131 +1,110 @@
-import { useCallback, useEffect } from "react"
-
-import { atomWithCompare, useIsHydrated } from "@happychain/common"
+import { atomWithCompare } from "@happychain/common"
 import { type HappyUser, WalletType } from "@happychain/sdk-shared"
 import type { JWTLoginParams } from "@web3auth/mpc-core-kit"
-import { type Auth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth"
-import { useAtom, useSetAtom } from "jotai"
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth"
+import { getDefaultStore, useAtomValue } from "jotai"
 import { atomWithStorage } from "jotai/utils"
+import { useCallback } from "react"
 import type { EIP1193Provider } from "viem"
-
 import { firebaseAuth } from "../services/firebase"
-import { web3AuthConnect, web3AuthDisconnect, web3AuthEvmProvider } from "../services/web3auth"
+import { web3AuthConnect, web3AuthDisconnect, web3EIP1193Provider } from "../services/web3auth"
 
 export type SignInProvider = "google"
 
+const store = getDefaultStore()
 const cachedFirebaseAuthStateAtom = atomWithStorage("firebase-auth", "unauthenticated", undefined, { getOnInit: true })
-
 const firebaseAuthUserAtom = atomWithCompare<HappyUser | undefined>(undefined, (a, b) => a?.uid === b?.uid)
 
-async function signInWithGoogle(auth: Auth) {
-    const googleProvider = new GoogleAuthProvider()
-    return await signInWithPopup(auth, googleProvider).then((a) => a.user)
+async function signIn(provider: SignInProvider) {
+    store.set(cachedFirebaseAuthStateAtom, "loading")
+    switch (provider) {
+        case "google":
+            await signInWithPopup(firebaseAuth, new GoogleAuthProvider()).then((a) => a.user)
+            return
+        default:
+            store.set(cachedFirebaseAuthStateAtom, "unauthenticated")
+            throw new Error(`Unknown provider: ${provider}`)
+    }
 }
 
-function useSignIn(auth: Auth) {
-    const setAuthState = useSetAtom(cachedFirebaseAuthStateAtom)
-    const signIn = useCallback(
-        async (provider: SignInProvider) => {
-            setAuthState("loading")
-            switch (provider) {
-                case "google":
-                    await signInWithGoogle(auth)
-                    return
-                default:
-                    setAuthState("unauthenticated")
-                    throw new Error(`Unknown provider: ${provider}`)
-            }
-        },
-        [auth, setAuthState],
-    )
-
-    return { signIn }
+async function signOut() {
+    await firebaseAuth.signOut()
 }
 
-function useSignOut(auth: Auth) {
-    const signOut = useCallback(async () => {
-        await auth.signOut()
-    }, [auth])
-    return { signOut }
-}
+onAuthStateChanged(firebaseAuth, async (_user) => {
+    const userAuth = store.get(firebaseAuthUserAtom)
 
-function useOnAuthChange(auth: Auth) {
-    const [internalAuthState, setInternalAuthState] = useAtom(cachedFirebaseAuthStateAtom)
-    const [userAuth, setUserAuth] = useAtom(firebaseAuthUserAtom)
-    const { signOut } = useSignOut(auth)
-    useEffect(() => {
-        return onAuthStateChanged(firebaseAuth, async (_user) => {
-            if (!_user?.uid) {
-                if (userAuth?.uid) {
-                    await web3AuthDisconnect()
-                    setUserAuth(undefined)
-                }
-                setInternalAuthState("unauthenticated")
-                return
-            }
-            try {
-                const token = await _user.getIdTokenResult(true)
+    if (!_user?.uid && !firebaseAuth?.currentUser) {
+        if (userAuth?.uid) {
+            await web3AuthDisconnect()
+            store.set(firebaseAuthUserAtom, undefined)
+        }
+        store.set(cachedFirebaseAuthStateAtom, "unauthenticated")
+        return
+    }
 
-                if (!token.claims.sub) {
-                    throw new Error("No verified ID")
-                }
-                const idTokenLoginParams = {
-                    verifier: "supabase-1", // actually firebase tho
-                    verifierId: token.claims.sub,
-                    idToken: token.token,
-                } satisfies JWTLoginParams
+    if (!_user || _user?.uid === userAuth?.uid) {
+        return
+    }
 
-                const addresses = await web3AuthConnect(idTokenLoginParams)
+    try {
+        const token = await _user.getIdTokenResult(true)
 
-                const nextUser: HappyUser = {
-                    // connection type
-                    type: WalletType.Social,
-                    provider: "firebase",
-                    // social details
-                    uid: _user.uid,
-                    email: _user.email || "",
-                    name: _user.displayName || "",
-                    ens: "",
-                    avatar: _user.photoURL || "",
-                    // web3 details
-                    address: addresses[0],
-                    addresses,
-                }
+        if (!token.claims.sub) {
+            throw new Error("No verified ID")
+        }
+        const idTokenLoginParams = {
+            verifier: "supabase-1", // actually firebase tho
+            verifierId: token.claims.sub,
+            idToken: token.token,
+        } satisfies JWTLoginParams
 
-                setUserAuth(nextUser)
-                setInternalAuthState("authenticated")
-            } catch {
-                // if there is an issue, then lets just logout and clear everything
-                signOut()
-            }
-        })
-    }, [userAuth, setUserAuth, setInternalAuthState, signOut])
+        const addresses = await web3AuthConnect(idTokenLoginParams)
 
-    const isHydrated = useIsHydrated()
+        const nextUser: HappyUser = {
+            // connection type
+            type: WalletType.Social,
+            provider: "firebase",
+            // social details
+            uid: _user.uid,
+            email: _user.email || "",
+            name: _user.displayName || "",
+            ens: "",
+            avatar: _user.photoURL || "",
+            // web3 details
+            address: addresses[0],
+            addresses,
+        }
+
+        store.set(firebaseAuthUserAtom, nextUser)
+        store.set(cachedFirebaseAuthStateAtom, "authenticated")
+    } catch (e) {
+        // if there is an issue, then lets just logout and clear everything
+        console.error({ e })
+        signOut()
+    }
+})
+
+function useOnAuthChange() {
+    const userAuth = useAtomValue(firebaseAuthUserAtom)
+    // call callback everytime userAuth changes
     const onAuthChange = useCallback(
         (callback: (user: HappyUser | undefined, provider: EIP1193Provider) => void) => {
-            if (!isHydrated) {
-                return
-            }
+            const logInEvent = store.get(cachedFirebaseAuthStateAtom) === "authenticated" && userAuth
+            const logOutEvent = store.get(cachedFirebaseAuthStateAtom) === "unauthenticated" && !userAuth
 
-            if (internalAuthState === "authenticated" && userAuth) {
-                return callback(userAuth, web3AuthEvmProvider)
-            }
-
-            if (internalAuthState === "unauthenticated" && !userAuth) {
-                return callback(userAuth, web3AuthEvmProvider)
+            if (logInEvent || logOutEvent) {
+                return callback(userAuth, web3EIP1193Provider)
             }
         },
-        [isHydrated, userAuth, internalAuthState],
+        [userAuth],
     )
 
     return { onAuthChange }
 }
 
-export function useFirebaseAuth(auth: Auth) {
-    const { signIn } = useSignIn(auth)
-    const { signOut } = useSignOut(auth)
-    const { onAuthChange } = useOnAuthChange(auth)
+export function useFirebaseAuth() {
+    const { onAuthChange } = useOnAuthChange()
 
     return { signIn, signOut, onAuthChange }
 }

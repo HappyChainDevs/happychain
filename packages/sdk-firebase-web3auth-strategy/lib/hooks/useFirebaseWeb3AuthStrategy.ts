@@ -1,18 +1,14 @@
-import { useMemo } from "react"
-
 import type { ConnectionProvider, HappyUser } from "@happychain/sdk-shared"
+import { useMemo } from "react"
 import type { EIP1193Provider } from "viem"
-
 import { googleLogo } from "../logos"
-import { firebaseAuth } from "../services/firebase"
-
 import { useFirebaseAuth } from "./useFirebaseAuth"
 
 export function useFirebaseWeb3AuthStrategy(): {
     providers: ConnectionProvider[]
     onAuthChange: (callback: (user: HappyUser | undefined, provider: EIP1193Provider) => void) => void
 } {
-    const { signIn, signOut, onAuthChange } = useFirebaseAuth(firebaseAuth)
+    const { signIn, signOut, onAuthChange } = useFirebaseAuth()
 
     const providers = useMemo(
         () => [
