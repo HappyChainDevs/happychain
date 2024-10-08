@@ -1,4 +1,4 @@
-import { type Config, defineConfig } from "@happychain/scripts"
+import { defineConfig } from "@happychain/scripts"
 
 export default defineConfig([
     {
@@ -19,4 +19,4 @@ export default defineConfig([
             sourcemap: "none",
         },
     },
-]) as Config
+])

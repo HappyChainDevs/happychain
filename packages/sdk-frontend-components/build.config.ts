@@ -1,4 +1,4 @@
-import { type Config, defineConfig, inlineCssPlugin } from "@happychain/scripts"
+import { defineConfig, inlineCssPlugin } from "@happychain/scripts"
 
 export default defineConfig([
     {
@@ -19,4 +19,4 @@ export default defineConfig([
             plugins: [inlineCssPlugin],
         },
     },
-]) as Config[]
+])

@@ -22,10 +22,13 @@ function applyDefaults(config: Config): Config {
         const exportNames = Object.keys(pkg.exports ?? {})
         newConfig.exports = exportNames.length > 0 ? exportNames : ["."]
     }
+
     if (config.apiExtractorConfig === undefined && existsSync("api-extractor.json")) {
         newConfig.apiExtractorConfig = "api-extractor.json"
     }
+
     detectNaming(newConfig)
+
     return newConfig
 }
 
@@ -37,10 +40,18 @@ function applyDefaults(config: Config): Config {
  */
 function detectNaming(config: Config) {
     // cf. docstring on applicability
-    if (!config.exports || config.bunConfig.naming || config.bunConfig.splitting) return
-    if (!(config.bunConfig.entrypoints.length === 1 && config.exports.length === 1)) return
+    const defaultName = defaultConfig.bunConfig.naming
 
-    config.bunConfig.naming = getEntrypointPath(config.exports[0])
+    // explicitly named different from default
+    if (config.bunConfig.naming !== defaultConfig.bunConfig.naming) {
+        return
+    }
+
+    if (!config.exports || !(config.bunConfig.entrypoints.length === 1 && config.exports.length === 1)) {
+        return defaultName
+    }
+
+    config.bunConfig.naming = getEntrypointPath(config.exports[0]) //
         .replace(config.bunConfig.outdir, "[dir]")
         .replace(".js", ".[ext]")
 }

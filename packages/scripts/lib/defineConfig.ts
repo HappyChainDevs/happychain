@@ -73,9 +73,9 @@ export const defaultConfig = {
     tsConfig: "tsconfig.build.json",
     cleanOutDir: true,
     cleanOutsideOutDir: true,
-    reportSizes: false,
-    reportTime: false,
-    checkExports: true,
+    checkExports: !!process.env.CI,
+    reportSizes: !!process.env.CI,
+    reportTime: !!process.env.CI,
     bunConfig: {
         entrypoints: ["./lib/index.ts"],
         outdir: "./dist",
