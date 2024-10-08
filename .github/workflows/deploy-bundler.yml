@@ -8,7 +8,7 @@ env:
   REGISTRY: ghcr.io
   ORGANIZATION: happychaindevs
   IMAGE_NAME: happy-bundler
-  DEPLOYMENT_DIR: /home/ubuntu/happy-bundler
+  DEPLOYMENT_DIR: ./happy-bundler
 
 jobs:
   build:
