@@ -37,12 +37,16 @@ function applyDefaults(config: Config): Config {
  */
 function detectNaming(config: Config) {
     // cf. docstring on applicability
-    if (!config.exports || config.bunConfig.naming || config.bunConfig.splitting) return
+    if (config.bunConfig.naming !== defaultConfig.bunConfig.naming) return
+    if (!config.exports) return
+    if (config.bunConfig.splitting) return
     if (!(config.bunConfig.entrypoints.length === 1 && config.exports.length === 1)) return
 
-    config.bunConfig.naming = getEntrypointPath(config.exports[0])
-        .replace(config.bunConfig.outdir, "[dir]")
+    const entryPointName = getEntrypointPath(config.exports[0]) //
+        ?.replace(config.bunConfig.outdir, "[dir]")
         .replace(".js", ".[ext]")
+
+    config.bunConfig.naming = entryPointName || defaultConfig.bunConfig.naming
 }
 
 /**
