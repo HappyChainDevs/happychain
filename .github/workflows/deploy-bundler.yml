@@ -50,7 +50,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "packages/bundler/deployment/docker-compose.yml"
+          source: "packages/bundler/deployment/compose.yml"
           target: ${{ env.DEPLOYMENT_DIR }}
           rm: true
 
