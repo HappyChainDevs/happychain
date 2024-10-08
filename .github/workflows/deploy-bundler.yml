@@ -52,6 +52,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           source: "packages/bundler/deployment/compose.yml"
           target: ${{ env.DEPLOYMENT_DIR }}
+          strip_components: 1
           rm: true
 
       - name: Deploy bundler
