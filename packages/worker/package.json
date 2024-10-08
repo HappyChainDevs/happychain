@@ -12,7 +12,7 @@
             "types": "./dist/index.d.ts"
         },
         "./runtime": {
-            "default": "./dist/runtime.js",
+            "default": "./dist/runtime.es.js",
             "types": "./dist/runtime.d.ts"
         }
     },
