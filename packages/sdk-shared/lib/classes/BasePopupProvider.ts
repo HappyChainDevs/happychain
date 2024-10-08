@@ -3,6 +3,7 @@ import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { config } from "../config"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import { EIP1193UserRejectedRequestError } from "../interfaces/errors"
+import type { HappyProviderPublic } from "../interfaces/happyProviderPublic"
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -49,7 +50,7 @@ export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods>
  * to enable emitting events on instances of this class without having to handle the errors that
  * can possibly be thrown by the handlers (these are thrown in a setTimeout instead).
  */
-export abstract class BasePopupProvider extends SafeEventEmitter {
+export abstract class BasePopupProvider extends SafeEventEmitter implements HappyProviderPublic {
     protected inFlightRequests = new Map<string, InFlightRequest>()
     protected timer: Timer | null = null
     protected static readonly POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(
