@@ -117,7 +117,7 @@ iframe.dev:
 demo-js.dev: setup
 	make sdk.dev;
 	$(MULTIRUN) --names "iframe,demo-js" "$(iframe-dev-command)" "cd packages/demo-vanillajs && make dev"
-.PHONY: demo-vanillajs.dev
+.PHONY: demo-js.dev
 
 demo-react.dev: setup
 	make sdk.dev;

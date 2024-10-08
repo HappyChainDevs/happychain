@@ -27,13 +27,6 @@ const elUserDump = document.querySelector("#user-dump")
 const elSignatureDump = document.querySelector("#signature-dump")
 const elBlockDump = document.querySelector("#block-dump")
 
-// display initial user on page load
-happyProvider.request({ method: "happy_user" }).then((user) => {
-    if (!user) return
-    const userString = JSON.stringify(user, null, 2)
-    elUserDump.innerHTML = userString
-})
-
 onUserUpdate((user) => {
     if (!user) {
         // if theres no user, clear all dumps

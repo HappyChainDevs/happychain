@@ -7,6 +7,13 @@ import { Styles } from "./components/Styles"
 import { createRequests } from "./helpers/requests"
 import { useConnection } from "./hooks/useConnection"
 
+if (import.meta.hot) {
+    // web components don't handle HMR well
+    import.meta.hot.accept(() => {
+        location.reload()
+    })
+}
+
 const noop = undefined
 
 const { fetchUser, onAccountsChanged, providerInfo } = createRequests({ rdns: "tech.happy" })

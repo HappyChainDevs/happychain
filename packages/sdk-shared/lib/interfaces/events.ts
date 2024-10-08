@@ -1,3 +1,4 @@
+import type { HTTPString } from "@happychain/common"
 import type {
     EIP1193EventName,
     EIP1193PermissionsRequest,
@@ -35,6 +36,8 @@ export enum Msgs {
      * to the wallet.
      */
     MirrorPermissions = "injected-wallet:mirror-permissions",
+    /** iframe requests to know the dapps origin */
+    OriginResponse = "origin-response",
 
     // --- EventsFromIframe ------------------------------------------------------------------------
 
@@ -49,6 +52,9 @@ export enum Msgs {
 
     /** Informs the SDK of the current social authentication state of the user. */
     AuthStateChanged = "auth-state-changed",
+
+    /** iframe requests to know the dapps origin */
+    OriginRequest = "origin-request",
 
     /**
      * Instructs the SDK to connect to an injected wallet with the given RDNS, or to disconnect from
@@ -110,6 +116,7 @@ export enum ModalStates {
 export type MsgsFromApp = {
     [Msgs.RequestDisplay]: ModalStates
     [Msgs.InjectedWalletConnected]: { rdns: string; address: `0x${string}` } | { rdns?: undefined; address?: undefined }
+    [Msgs.OriginResponse]: HTTPString
     [Msgs.MirrorPermissions]: {
         request: EIP1193PermissionsRequest
         response: unknown
@@ -128,6 +135,7 @@ export type MsgsFromIframe = {
     [Msgs.UserChanged]: HappyUser | undefined
     [Msgs.AuthStateChanged]: AuthState
     [Msgs.InjectedWalletRequestConnect]: { rdns?: string }
+    [Msgs.OriginRequest]: undefined
 }
 
 // =================================================================================================

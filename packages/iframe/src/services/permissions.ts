@@ -19,31 +19,29 @@ import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin"
 // === CONSTANTS ===================================================================================
 
 const store = getDefaultStore()
-const dappOrigin = getDappOrigin()
-const iframeOrigin = getIframeOrigin()
-const sameOrigin = dappOrigin === iframeOrigin
 
 // === UTILS =======================================================================================
 
 export function getDappPermissions(
     user: HappyUser | undefined = getUser(),
     permissions: PermissionsMap = store.get(permissionsAtom),
+    requestedOrigin = getDappOrigin(),
 ): AppPermissions {
     if (!user) {
         logger.warn("No user found, returning empty permissions.")
         return {}
     }
 
-    const permissionLookupResult = permissions[user.address]?.[dappOrigin]
+    const permissionLookupResult = permissions[user.address]?.[requestedOrigin]
 
     if (!permissionLookupResult) {
         // Permissions don't exist, create them.
         let basePermissions: AppPermissions
 
-        if (user && sameOrigin) {
+        if (user && requestedOrigin === getIframeOrigin()) {
             // The iframe is always granted the `eth_accounts` permission.
             const eth_accounts: WalletPermission = {
-                invoker: iframeOrigin,
+                invoker: getIframeOrigin(),
                 parentCapability: "eth_accounts",
                 caveats: [],
                 date: Date.now(),
@@ -58,7 +56,7 @@ export function getDappPermissions(
         // change (so nothing dependent on the atom needs to update). We just write them to avoid
         // rerunning the above logic on each lookup.
         permissions[user.address] ??= {}
-        permissions[user.address][dappOrigin] = basePermissions
+        permissions[user.address][requestedOrigin] = basePermissions
         return basePermissions
     }
 
@@ -71,12 +69,17 @@ function setDappPermissions(permissions: AppPermissions): void {
         console.warn("No user found, not setting permissions.")
         return
     }
+
+    // since you can't revoke permissions from the iframe itself,
+    // then if there is no supplied permissions,
+    // we are revoking from the dapp
+    const origin = Object.values(permissions)?.[0]?.invoker ?? getDappOrigin()
     store.set(permissionsAtom, (prev) => {
         return {
             ...prev,
             [user.address]: {
                 ...prev[user.address],
-                [dappOrigin]: permissions,
+                [origin]: permissions,
             },
         }
     })
@@ -96,6 +99,7 @@ function getPermissionArray(permissions: PermissionsSpec): [string, unknown][] {
 export function grantPermissions(
     permissions: PermissionsSpec,
     dappPermissions: AppPermissions = getDappPermissions(),
+    invoker = getDappOrigin(),
 ): WalletPermission[] {
     const grantedPermissions = []
 
@@ -106,7 +110,7 @@ export function grantPermissions(
 
         const grantedPermission = {
             caveats: [],
-            invoker: dappOrigin,
+            invoker,
             parentCapability: name,
             date: Date.now(),
             id: createUUID(),
@@ -114,7 +118,9 @@ export function grantPermissions(
         grantedPermissions.push(grantedPermission)
         dappPermissions[name] = grantedPermission
 
-        if (name === "eth_accounts") {
+        // hasPermissions checks the DAPP side by default, however the above code
+        // could be running in the context of the iframe such as when wagmi connects
+        if (name === "eth_accounts" && hasPermissions("eth_accounts")) {
             emitUserUpdate(getUser())
         }
     }

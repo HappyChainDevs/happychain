@@ -20,7 +20,9 @@ export const config = createConfig({
     chains: [currentChain],
     multiInjectedProviderDiscovery: false,
     transports: {
+        // TODO: this probably breaks when switching chains?
         [currentChain.id]: custom(iframeProvider),
     },
+    // client: ({ chain: _chain }) => ({ request() {} }), // TODO: pass custom client instead of chainId/transport?
     connectors: [happyConnector],
 })

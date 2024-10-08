@@ -94,7 +94,7 @@ function Embed() {
                     <GlobalHeader />
 
                     <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
-                        <UserInfo user={user} />
+                        <UserInfo />
                         {location.pathname === "/embed" && (
                             <button className="w-6 h-6 rounded-xl" onClick={disconnect} type="button">
                                 <Power size={22} />

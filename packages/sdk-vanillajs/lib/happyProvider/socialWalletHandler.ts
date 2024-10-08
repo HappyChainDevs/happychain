@@ -98,9 +98,10 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
                 this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
 
                 const unsubscribeClose = this.config.msgBus.on(Msgs.ModalToggle, (state) => {
+                    if (state.isOpen) return
+                    unsubscribeClose()
                     if (state.cancelled) {
                         unsubscribeSuccess()
-                        unsubscribeClose()
                         this.inFlightChecks.delete(key)
                         reject(new EIP1193UserRejectedRequestError())
                     }
@@ -117,7 +118,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
                         // process request when user is logged in successfully
                         this.queueRequest(key, { resolve, reject, popup })
                         unsubscribeSuccess()
-                        // unsubscribeClose()
+                        unsubscribeClose()
                     }
                 })
                 return

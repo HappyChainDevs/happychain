@@ -8,13 +8,14 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
-import { grantPermissions } from "../services/permissions"
+import { getDappPermissions, grantPermissions } from "../services/permissions"
 import { addWatchedAsset } from "../services/watchedAssets/utils"
 import { getChainsMap, setChains } from "../state/chains"
 import { getUser } from "../state/user"
 import { getWalletClient } from "../state/walletClient"
+import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin"
 import { isAddChainParams } from "../utils/isAddChainParam"
-import { sendResponse } from "./utils"
+import { confirmIframeId, sendResponse } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -26,6 +27,8 @@ export function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): vo
 
 // exported for testing
 export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
+    const reqUrl = confirmIframeId(request.windowId) ? getIframeOrigin() : getDappOrigin()
+
     switch (request.payload.method) {
         case "eth_sendTransaction":
             // TODO: record tx in history
@@ -34,12 +37,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_requestAccounts": {
             const user = getUser()
             if (!user) return []
-            grantPermissions("eth_accounts")
+            grantPermissions("eth_accounts", getDappPermissions(undefined, undefined, reqUrl), reqUrl)
             return user.addresses ?? [user.address]
         }
 
         case "wallet_requestPermissions":
-            return grantPermissions(request.payload.params[0])
+            return grantPermissions(request.payload.params[0], getDappPermissions(undefined, undefined, reqUrl), reqUrl)
 
         case "wallet_addEthereumChain": {
             const response = await sendToWalletClient(request)

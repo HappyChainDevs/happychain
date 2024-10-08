@@ -1,7 +1,7 @@
 import { EIP1193ErrorCodes, Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happychain/sdk-shared"
 import { happyProviderBus } from "../services/eventBus"
 import { iframeProvider } from "../wagmi/provider"
-import { confirmSourceId } from "./utils"
+import { confirmIframeId, confirmSourceId } from "./utils"
 
 /**
  * Processes requests rejected by the user in the pop-up, forwarding the rejection to the app.
@@ -18,7 +18,7 @@ export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): 
         payload: null,
     }
 
-    if (data.windowId === iframeProvider.iframeWindowId) {
+    if (confirmIframeId(data.windowId)) {
         void iframeProvider.handleRequestResolution(response)
     } else {
         void happyProviderBus.emit(Msgs.RequestResponse, response)

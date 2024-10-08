@@ -65,8 +65,7 @@ export function createRequests(...args: Parameters<typeof store.findProvider>) {
 
             async function updateUser(accounts: `0x${string}`[]) {
                 if (accounts.length) {
-                    const user = await _provider.request({ method: "happy_user" })
-                    setUser(user)
+                    _provider.request({ method: "happy_user" }).then(setUser)
                 } else {
                     setUser(undefined)
                 }

@@ -1,5 +1,6 @@
 import { type UUID, createUUID } from "@happychain/common"
 import {
+    AuthState,
     type EIP1193ErrorObject,
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
@@ -9,11 +10,14 @@ import {
     type ProviderEventError,
     type ProviderEventPayload,
     config,
+    waitForCondition,
 } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { EIP1193Provider } from "viem"
 import { handlePermissionlessRequest } from "../requests"
 import { handleApprovedRequest } from "../requests/approved"
+import { iframeID } from "../requests/utils"
+import { getAuthState } from "../state/authState"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
@@ -37,8 +41,6 @@ type InFlightRequest<T extends EIP1193RequestMethods = EIP1193RequestMethods> = 
  * which is configured to represent the HappyChain's iframe provider as below.
  */
 export class IframeProvider extends SafeEventEmitter {
-    public iframeWindowId = createUUID()
-
     private inFlightRequests = new Map<string, InFlightRequest>()
     private timer: Timer | null = null
 
@@ -47,10 +49,12 @@ export class IframeProvider extends SafeEventEmitter {
     ): Promise<EIP1193RequestResult<TString>> {
         const key = createUUID()
 
+        await waitForCondition(() => getAuthState() !== AuthState.Connecting)
+
         return new Promise<EIP1193RequestResult<TString>>((resolve, reject) => {
             const reqPayload = {
                 key,
-                windowId: this.iframeWindowId,
+                windowId: iframeID,
                 error: null,
                 payload: args,
             }
@@ -93,7 +97,6 @@ export class IframeProvider extends SafeEventEmitter {
 
                     if (req.popup.closed) {
                         // manually closed without explicit rejection
-                        console.log("why does this happy")
                         req.reject(new EIP1193UserRejectedRequestError())
                         this.inFlightRequests.delete(k)
                     } else {
@@ -113,7 +116,7 @@ export class IframeProvider extends SafeEventEmitter {
     private openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters) {
         const url = new URL("request", config.iframePath)
         const opts = {
-            windowId: this.iframeWindowId,
+            windowId: iframeID,
             key: key,
             args: btoa(JSON.stringify(args)),
         }
