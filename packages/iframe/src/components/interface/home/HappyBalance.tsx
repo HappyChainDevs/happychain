@@ -1,3 +1,4 @@
+import { CircleNotch } from "@phosphor-icons/react"
 import { formatEther } from "viem"
 
 interface HappyBalanceProps {
@@ -5,9 +6,14 @@ interface HappyBalanceProps {
 }
 
 const HappyBalance = ({ balance }: HappyBalanceProps) => {
-    const truncatedBalance = balance
-        ? (Math.floor(Number.parseFloat(formatEther(balance)) * 1000) / 1000).toString()
-        : "0"
+    const truncatedBalance = balance ? (
+        (Math.floor(Number.parseFloat(formatEther(balance)) * 1000) / 1000).toString()
+    ) : (
+        <div className="animate-spin">
+            <CircleNotch />
+        </div>
+    )
+
     return (
         <div className="flex flex-row w-full items-center justify-between">
             <p className="text-lg">$HAPPY</p>

@@ -1,9 +1,11 @@
 import { CircleNotch } from "@phosphor-icons/react"
+import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
-import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
+import { useBalance, useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
+import { userAtom } from "../../../state/user"
 import { ContentType, trackSendAtom, walletInfoViewAtom } from "../../../state/interfaceState"
 
 interface SendButtonsInterface {
@@ -13,9 +15,13 @@ interface SendButtonsInterface {
 
 const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     const navigate = useNavigate()
-    const { data: hash, isPending, sendTransaction, error } = useSendTransaction()
+    const user = useAtomValue(userAtom)
+    const queryClient = useQueryClient()
 
+    // wagmi hooks
+    const { data: hash, isPending, sendTransaction, error } = useSendTransaction()
     const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash })
+    const { queryKey } = useBalance({ address: user?.address, query: { enabled: isPending } })
 
     const [, setView] = useAtom(walletInfoViewAtom)
     const [, setTrackSend] = useAtom(trackSendAtom)
@@ -32,12 +38,23 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
         }
     }, [error, isConfirmed, setView, navigate, setTrackSend])
 
+    useEffect(() => {
+        const handleQueryInvalidation = async () => {
+            if (error) {
+                // await query invalidation if there is an error
+                await queryClient.invalidateQueries({ queryKey })
+            }
+        }
+
+        handleQueryInvalidation()
+    }, [error, queryClient, queryKey])
+
     // navigates back to home page
     const cancelSend = useCallback(() => {
         navigate({ to: "/embed" })
     }, [navigate])
 
-    const submitSend = useCallback(() => {
+    const submitSend = useCallback(async () => {
         if (targetAddress && sendValue) {
             setTrackSend({ val: false })
             // send tx
@@ -45,8 +62,10 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
                 to: targetAddress as Address,
                 value: parseEther(sendValue),
             })
+
+            await queryClient.invalidateQueries({ queryKey })
         }
-    }, [sendTransaction, sendValue, setTrackSend, targetAddress])
+    }, [sendTransaction, sendValue, targetAddress, queryClient, queryKey])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">
