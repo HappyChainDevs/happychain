@@ -18,7 +18,7 @@ const HappyBalance = ({ balance }: HappyBalanceProps) => {
         <div className="flex flex-row w-full items-center justify-between">
             <p className="text-lg">$HAPPY</p>
             <div className="flex flex-col items-center">
-                <p className="text-2xl">{truncatedBalance}</p>
+                <div className="text-2xl">{truncatedBalance}</div>
             </div>
         </div>
     )
