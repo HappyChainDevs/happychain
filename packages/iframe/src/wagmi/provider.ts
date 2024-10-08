@@ -52,8 +52,8 @@ export class IframeProvider extends BasePopupProvider {
     }
 
     protected override async requestPermissions(): Promise<boolean> {
-        /** 
-         * note: namesake function in `SocialWalletHandler` returns true once 
+        /**
+         * note: namesake function in `SocialWalletHandler` returns true once
          * necessary permissions are granted and request is handled;
          * not required here.
          * */
