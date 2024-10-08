@@ -22,7 +22,7 @@ const UserInfo = () => {
 
     if (account.address !== user.address) {
         console.warn("Could not validate user address")
-        return null
+        return
     }
 
     return (

@@ -15,7 +15,7 @@ import { getUser } from "../state/user"
 import { getWalletClient } from "../state/walletClient"
 import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin"
 import { isAddChainParams } from "../utils/isAddChainParam"
-import { confirmIframeId, sendResponse } from "./utils"
+import { confirmIframeId, confirmSourceId, sendResponse } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -27,7 +27,12 @@ export function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): vo
 
 // exported for testing
 export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
-    const reqUrl = confirmIframeId(request.windowId) ? getIframeOrigin() : getDappOrigin()
+    if (!confirmSourceId(request.windowId)) {
+        console.warn("Unsupported Request Source", request.windowId)
+        return
+    }
+
+    const origin = confirmIframeId(request.windowId) ? getIframeOrigin() : getDappOrigin()
 
     switch (request.payload.method) {
         case "eth_sendTransaction":
@@ -37,12 +42,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_requestAccounts": {
             const user = getUser()
             if (!user) return []
-            grantPermissions("eth_accounts", getDappPermissions(undefined, undefined, reqUrl), reqUrl)
+            grantPermissions("eth_accounts", getDappPermissions({ origin }), origin)
             return user.addresses ?? [user.address]
         }
 
         case "wallet_requestPermissions":
-            return grantPermissions(request.payload.params[0], getDappPermissions(undefined, undefined, reqUrl), reqUrl)
+            return grantPermissions(request.payload.params[0], getDappPermissions({ origin }), origin)
 
         case "wallet_addEthereumChain": {
             const response = await sendToWalletClient(request)

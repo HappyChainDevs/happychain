@@ -29,6 +29,9 @@ export type PermissionsMap = Record<Address, Record<HTTPString, AppPermissions>>
 
 /**
  * Maps EIP-2255 EIP-1193 requests (like `eth_accounts`) to a permission object.
+ * Keyed by the permission name
+ *
+ * i.e. Record<'eth_accounts', WalletPermission>
  */
 export type AppPermissions = Record<string, WalletPermission>
 
@@ -85,7 +88,7 @@ export const atomForPermissionsCheck: (ps: PermissionsSpec) => Atom<boolean> = a
     return atom((get) => {
         const user = get(userAtom)
         if (!user) return false
-        const permissionsMap = getDappPermissions(user, get(permissionsAtom))
+        const permissionsMap = getDappPermissions({ user, permissions: get(permissionsAtom) })
         return hasPermissions(permissions, permissionsMap)
     })
 })

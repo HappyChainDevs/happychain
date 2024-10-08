@@ -1,4 +1,4 @@
-import { createUUID } from "@happychain/common"
+import { type HTTPString, createUUID } from "@happychain/common"
 import { type HappyUser, logger } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/index"
 import {
@@ -22,23 +22,35 @@ const store = getDefaultStore()
 
 // === UTILS =======================================================================================
 
+type GetDappPermissionOptions = {
+    user?: HappyUser | undefined
+    permissions?: PermissionsMap
+    origin?: HTTPString
+}
+
 export function getDappPermissions(
-    user: HappyUser | undefined = getUser(),
-    permissions: PermissionsMap = store.get(permissionsAtom),
-    requestedOrigin = getDappOrigin(),
+    {
+        user = getUser(),
+        permissions = store.get(permissionsAtom),
+        origin = getDappOrigin(),
+    }: GetDappPermissionOptions = {
+        user: getUser(),
+        permissions: store.get(permissionsAtom),
+        origin: getDappOrigin(),
+    },
 ): AppPermissions {
     if (!user) {
         logger.warn("No user found, returning empty permissions.")
         return {}
     }
 
-    const permissionLookupResult = permissions[user.address]?.[requestedOrigin]
+    const permissionLookupResult = permissions[user.address]?.[origin]
 
     if (!permissionLookupResult) {
         // Permissions don't exist, create them.
         let basePermissions: AppPermissions
 
-        if (user && requestedOrigin === getIframeOrigin()) {
+        if (user && origin === getIframeOrigin()) {
             // The iframe is always granted the `eth_accounts` permission.
             const eth_accounts: WalletPermission = {
                 invoker: getIframeOrigin(),
@@ -56,7 +68,7 @@ export function getDappPermissions(
         // change (so nothing dependent on the atom needs to update). We just write them to avoid
         // rerunning the above logic on each lookup.
         permissions[user.address] ??= {}
-        permissions[user.address][requestedOrigin] = basePermissions
+        permissions[user.address][origin] = basePermissions
         return basePermissions
     }
 
@@ -70,16 +82,27 @@ function setDappPermissions(permissions: AppPermissions): void {
         return
     }
 
-    // since you can't revoke permissions from the iframe itself,
-    // then if there is no supplied permissions,
-    // we are revoking from the dapp
-    const origin = Object.values(permissions)?.[0]?.invoker ?? getDappOrigin()
     store.set(permissionsAtom, (prev) => {
+        const values = Object.values(permissions)
+        if (!values.length) {
+            // a call with empty permissions, will clear
+            // all of the connected dapps permissions
+            return { ...prev, [getDappOrigin()]: {} }
+        }
+
+        // if not all permissions supplied are scoped to the
+        // same origin, we will ignore the request as its invalid
+        if (!values.every((a) => a.invoker === values[0].invoker)) {
+            return prev
+        }
+
+        // All the invokers
+        const { invoker } = values[0]
         return {
             ...prev,
             [user.address]: {
                 ...prev[user.address],
-                [origin]: permissions,
+                [invoker]: permissions,
             },
         }
     })
