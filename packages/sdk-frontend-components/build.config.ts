@@ -17,7 +17,6 @@ export default defineConfig([
             entrypoints: ["./lib/badge.tsx"],
             external: ["preact"],
             plugins: [inlineCssPlugin],
-            naming: "[dir]/preact.es.[ext]",
         },
     },
 ]) as Config[]
