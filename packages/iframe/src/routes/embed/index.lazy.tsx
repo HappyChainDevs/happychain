@@ -2,10 +2,10 @@ import { createLazyFileRoute } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useBalance } from "wagmi"
 
+import ActionButtons from "../../components/interface/ActionButtons"
 import AppStatus from "../../components/interface/AppStatus"
 import HappyBalance from "../../components/interface/HappyBalance"
 import WalletContentInfo from "../../components/interface/WalletContentInfo"
-import ActionButtons from "../../components/interface/home/ActionButtons"
 import { userAtom } from "../../state/user"
 
 export const Route = createLazyFileRoute("/embed/")({
