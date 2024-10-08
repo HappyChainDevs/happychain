@@ -12,9 +12,9 @@ import {
     type ResolveType,
 } from "@happychain/sdk-shared"
 
+import type { InFlightRequest } from "@happychain/sdk-shared"
 import type { UUID } from "../common-utils"
 import type { HappyProviderConfig } from "./interface"
-import type { InFlightRequest } from "../../../sdk-shared/lib/classes/BasePopupProvider"
 
 type InFlightCheck = {
     resolve: (value: boolean) => void
