@@ -62,7 +62,7 @@ export type {
 } from "./services/eventBus"
 export type { Logger } from "./services/logger"
 
-export { type ResolveType, BasePopupProvider } from "./classes/BasePopupProvider"
+export { type ResolveType, type InFlightRequest, BasePopupProvider } from "./classes/BasePopupProvider"
 
 // Re-export class for use in other package(s)
 export { SafeEventEmitter }
