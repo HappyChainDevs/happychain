@@ -1,6 +1,7 @@
-import { createUUID } from "@happychain/common"
+import { type UUID, createUUID } from "@happychain/common"
 import { AuthState } from "@happychain/sdk-shared"
-import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happychain/sdk-shared"
+import type { HappyUser } from "@happychain/sdk-shared"
+import { addressFactory, makePayload } from "@happychain/testing"
 import { getDefaultStore } from "jotai"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
@@ -10,32 +11,34 @@ import { userAtom } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../approved"
 
-function makePayload(payload: EIP1193RequestParameters) {
-    return {
-        key: createUUID(),
-        windowId: createUUID(),
-        error: null,
-        payload,
-    } as ProviderEventPayload<EIP1193RequestParameters>
-}
-
 vi.mock("../../utils/getDappOrigin", async () => ({
     getDappOrigin: () => "http://localhost:5160",
     getIframeOrigin: () => "http://localhost:5160",
 }))
 
+const parentID = createUUID()
+const iframeID = createUUID()
+vi.mock("../utils", (importUtils) =>
+    importUtils<typeof import("../utils")>().then((utils) => ({
+        ...utils,
+        confirmSourceId: (sourceId: UUID) => sourceId === parentID || sourceId === iframeID,
+        confirmParentId: (sourceId: UUID) => sourceId === parentID,
+        confirmIframeId: (sourceId: UUID) => sourceId === iframeID,
+    })),
+)
+
 describe("walletClient wallet_watchAsset", () => {
     let user: HappyUser
 
     beforeEach(() => {
-        user = createHappyUserFromWallet("io.testing", "0x123456789")
+        user = createHappyUserFromWallet("io.testing", addressFactory())
         getDefaultStore().set(userAtom, user)
         getDefaultStore().set(authStateAtom, AuthState.Connected)
     })
 
     test("adds token", async () => {
         expect(Object.keys(getWatchedAssets()).length).toBe(0)
-        const request = makePayload({
+        const request = makePayload(iframeID, {
             method: "wallet_watchAsset",
             params: {
                 type: "ERC20",

@@ -1,3 +1,4 @@
+import { onUserUpdate } from "@happychain/js"
 /** @jsxImportSource preact */
 import type { HappyUser } from "@happychain/sdk-shared"
 import { useEffect, useState } from "preact/hooks"
@@ -16,7 +17,7 @@ if (import.meta.hot) {
 
 const noop = undefined
 
-const { fetchUser, onAccountsChanged, providerInfo } = createRequests({ rdns: "tech.happy" })
+const { fetchUser, providerInfo } = createRequests({ rdns: "tech.happy" })
 
 export type BadgeProps = { disableStyles?: boolean | string }
 
@@ -41,7 +42,7 @@ export function Badge({ disableStyles = false }: BadgeProps) {
 
         init()
 
-        return onAccountsChanged(setUser)
+        return onUserUpdate(setUser)
     }, [])
 
     const connected = Boolean(user?.address)

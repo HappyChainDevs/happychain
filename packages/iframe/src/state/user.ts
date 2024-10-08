@@ -15,7 +15,7 @@ export const userAtom = atom(
     (get) => get(storedUserAtom),
     (_get, set, newUser: HappyUser | undefined) => {
         if (newUser?.address) {
-            set(storedUserAtom, validateUser(newUser))
+            set(storedUserAtom, formatUser(newUser))
         } else {
             set(storedUserAtom, undefined)
         }
@@ -24,7 +24,7 @@ export const userAtom = atom(
 
 export const { getValue: getUser, setValue: setUser } = accessorsFromAtom(userAtom)
 
-function validateUser(user: HappyUser): HappyUser {
+function formatUser(user: HappyUser): HappyUser {
     return {
         ...user,
         address: getAddress(user.address),

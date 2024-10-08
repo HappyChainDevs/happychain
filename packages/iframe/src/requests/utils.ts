@@ -1,4 +1,4 @@
-import { createUUID } from "@happychain/common"
+import { type UUID, createUUID } from "@happychain/common"
 import {
     AuthState,
     type EIP1193RequestParameters,
@@ -17,14 +17,14 @@ const parentID = new URLSearchParams(window.location.search).get("windowId")
 export const iframeID = createUUID()
 
 /** Confirms if the request comes from the parent window or the iframe. */
-export const confirmSourceId = (sourceId: ReturnType<typeof crypto.randomUUID>) => {
+export const confirmSourceId = (sourceId: UUID) => {
     return confirmParentId(sourceId) || confirmIframeId(sourceId)
 }
 
-export const confirmParentId = (sourceId: ReturnType<typeof crypto.randomUUID>) => {
+export const confirmParentId = (sourceId: UUID) => {
     return sourceId === parentID
 }
-export const confirmIframeId = (sourceId: ReturnType<typeof crypto.randomUUID>) => {
+export const confirmIframeId = (sourceId: UUID) => {
     return sourceId === iframeID
 }
 

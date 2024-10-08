@@ -58,21 +58,5 @@ export function createRequests(...args: Parameters<typeof store.findProvider>) {
             if (!provider?.provider) return
             await provider.provider.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] })
         },
-
-        onAccountsChanged: (setUser: (_user?: HappyUser | undefined) => void) => {
-            if (!provider?.provider) return
-            const { provider: _provider } = provider
-
-            async function updateUser(accounts: `0x${string}`[]) {
-                if (accounts.length) {
-                    _provider.request({ method: "happy_user" }).then(setUser)
-                } else {
-                    setUser(undefined)
-                }
-            }
-
-            _provider.on("accountsChanged", updateUser)
-            return () => _provider.removeListener("accountsChanged", updateUser)
-        },
     }
 }
