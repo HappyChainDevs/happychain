@@ -74,9 +74,9 @@ export async function build({
     const configs = getConfigArray(_configs, options)
     run++
 
-    const buildTimes = new Map()
-    const usedTsConfigs = new Set()
-    const usedApiExtractorConfigs = new Set()
+    const buildTimes = new Map<string, Record<string, string>>()
+    const usedTsConfigs = new Set<string>()
+    const usedApiExtractorConfigs = new Set<string>()
     const cleanupPaths: string[][] = []
 
     const start = performance.now()
@@ -156,63 +156,85 @@ export async function build({
         await $`rm -rf ${path}`
     }
 
-    const entries = Array.from(buildTimes.keys())
-    const buildTable = [
-        {
-            [chalk.blue("Step")]: "Clean",
-            // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
-            ...entries.reduce((acc, entry) => ({ ...acc, [chalk.green.bold(entry)]: buildTimes.get(entry).clean }), {}),
-        },
-        {
-            [chalk.blue("Step")]: "Types",
-            // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
-            ...entries.reduce((acc, entry) => ({ ...acc, [chalk.green.bold(entry)]: buildTimes.get(entry).types }), {}),
-        },
-        {
-            [chalk.blue("Step")]: "Build",
-            // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
-            ...entries.reduce((acc, entry) => ({ ...acc, [chalk.green.bold(entry)]: buildTimes.get(entry).build }), {}),
-        },
-        {
-            [chalk.blue("Step")]: "Check exports",
-            ...entries.reduce(
-                // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
-                (acc, entry) => ({ ...acc, [chalk.green.bold(entry)]: buildTimes.get(entry).checkExports }),
-                {},
-            ),
-        },
-    ]
-    if (configs[0].reportTime) console.table(buildTable)
+    // we can check any of the configs, as we can presume
+    // all configs will belong to the same package
+    const reportTime = configs.some((c) => c.reportTime)
+    const reportSizes = configs.some((c) => c.reportSizes)
 
-    let sizeData: PkgSizeData | undefined = undefined
-    if (configs[0].reportSizes) {
-        sizeData = await pkgSize(base, {
-            sizes: ["size", "gzip", "brotli"],
-        })
-        console.table(
-            sizeData.files.map((file) => {
-                const size = byteSize(file.size, { units: "metric" })
-                const gzip = byteSize(file.sizeGzip, { units: "metric" })
-                const brotli = byteSize(file.sizeBrotli, { units: "metric" }).toString()
-                return {
-                    [chalk.blue("file")]: chalk.green.bold(file.path),
-                    [chalk.blue("size")]: chalk.yellow(size),
-                    [chalk.blue("gzip")]: chalk.yellow(gzip),
-                    [chalk.blue("brotli")]: chalk.yellow(brotli),
-                }
-            }),
-        )
-        console.log(`\n\tTotal Size: ${chalk.yellow(byteSize(sizeData.tarballSize, { units: "metric" }))}`)
-    }
+    const sizeData = await pkgSize(base, {
+        sizes: ["size", "gzip", "brotli"],
+    })
 
-    const sizeData2 = sizeData ?? (await pkgSize(base, { sizes: ["size"] }))
     const moduleFile = getMainEntry(pkg).replace(/^\.\//, "") // remove leading './' if present
-    const bundleFile = sizeData2.files.find((f) => f.path === moduleFile)
+    const bundleFile = sizeData.files.find((f) => f.path === moduleFile)
     const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
     spinner.success(
         `${pkgName} — Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉` +
             ` (JS Bundle Size: ${bundleFileSize})`,
     )
+
+    if (reportTime) {
+        const report = generateTimeReport(buildTimes)
+        console.table(report)
+    }
+
+    if (reportSizes) {
+        const report = generateSizeReport(sizeData)
+        console.table(report)
+        console.log(
+            `\n${chalk.green(pkg.name)} Total Size: ${chalk.yellow(byteSize(sizeData.tarballSize, { units: "metric" }))}`,
+        )
+    }
+}
+
+function generateSizeReport(sizes: PkgSizeData) {
+    const _file = chalk.blue("file")
+    const _size = chalk.blue("size")
+    const _gzip = chalk.blue("gzip")
+    const _brotli = chalk.blue("brotli")
+    return sizes.files.map((file) => {
+        const size = byteSize(file.size, { units: "metric" })
+        const gzip = byteSize(file.sizeGzip, { units: "metric" })
+        const brotli = byteSize(file.sizeBrotli, { units: "metric" })
+        return {
+            [_file]: chalk.green.bold(file.path),
+            [_size]: chalk.yellow(size),
+            [_gzip]: chalk.yellow(gzip),
+            [_brotli]: chalk.yellow(brotli),
+        }
+    })
+}
+
+function generateTimeReport(buildTimes: Map<string, Record<string, string>>) {
+    const entries = Array.from(buildTimes.keys())
+
+    type Entry = { [key: string]: string | undefined }
+
+    const reducer = (name: string) => (acc: Entry, entry: string) => ({
+        ...acc,
+        [chalk.green.bold(entry)]: buildTimes.get(entry)?.[name],
+    })
+
+    const step = chalk.blue("Step")
+
+    return [
+        {
+            [step]: "Clean",
+            ...entries.reduce(reducer("clean"), {}),
+        },
+        {
+            [step]: "Types",
+            ...entries.reduce(reducer("types"), {}),
+        },
+        {
+            [step]: "Build",
+            ...entries.reduce(reducer("build"), {}),
+        },
+        {
+            [step]: "Check exports",
+            ...entries.reduce(reducer("checkExports"), {}),
+        },
+    ]
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: package.json is untyped
@@ -229,8 +251,7 @@ function getMainEntry(pkg: any) {
 }
 
 async function areTheTypesWrong(config: Config) {
-    if (!config?.checkTypes) return
-    spinner.text = `${pkgConfigName} — Checking for packaging issues...`
+    spinner.setText(`${pkgConfigName} — Checking for packaging issues...`)
 
     let output: string
     if (config) {
@@ -248,6 +269,12 @@ async function areTheTypesWrong(config: Config) {
     }
 
     if (output.includes("No problems found")) return
+
+    if (process.env.CI) {
+        // strip out the intro comments and display the warnings & table
+        console.log(output.split("(ignoring rules: 'cjs-resolves-to-esm')")[1])
+        return
+    }
 
     // Prettify the table to make its display more compact.
     // Map the existing rows to a new array of row.
@@ -305,7 +332,7 @@ async function cleanOutDir(config: Config) {
     }
 
     if (existsSync(fullOutDir)) {
-        spinner.text = `emptying: ${fullOutDir}`
+        spinner.setText(`emptying: ${outdir}`)
         await $`rm -rf ${fullOutDir}`
     }
 }
@@ -343,10 +370,10 @@ function typeOutputFileForEntrypoint(config: Config, entrypoint: string): string
 async function rollupTypes(config: Config) {
     if (!config.apiExtractorConfig || !config.tsConfig) return
 
-    spinner.text = `${pkgConfigName} — Bundling types (API Extractor)...`
+    spinner.setText(`${pkgConfigName} — Bundling types (API Extractor)...`)
     const cleanUpPaths = new Set<string>()
 
-    // temp path to disable a lot of useless output from api extractor
+    // temp fix to disable a lot of useless output from api extractor
     const ogLog = console.log.bind(console)
     const ogWarn = console.warn.bind(console)
     console.log = () => {}
@@ -355,6 +382,14 @@ async function rollupTypes(config: Config) {
     const tsconfig = await $`tsc --project ${config.tsConfig} --showConfig`.nothrow().json()
 
     const apiExtractorJsonPath: string = join(base, config.apiExtractorConfig)
+
+    if (!(await Bun.file(ExtractorConfig.loadFile(apiExtractorJsonPath).mainEntryPointFilePath).exists())) {
+        // Force Rebuild if main entry point (dist/types folder doesn't exist)
+        // this can happen with incremental builds when the types are removed,
+        // build the buildinfo is not updated
+        await tscBuild({ ...config, cleanOutDir: true })
+    }
+
     const extractorConfig = ExtractorConfig.loadFileAndPrepare(apiExtractorJsonPath)
     const extractorResult = Extractor.invoke(extractorConfig, {
         localBuild: true,
@@ -382,7 +417,7 @@ async function rollupTypes(config: Config) {
 
 async function writeTypesEntryStub(config: Config) {
     if (config.bunConfig.entrypoints?.length) {
-        spinner.text = `${pkgConfigName} — API Extractor config file not specified, generating index type stub...`
+        spinner.setText(`${pkgConfigName} — API Extractor config file not specified, generating index type stub...`)
         for (const entry of config.bunConfig.entrypoints) {
             // index.d.ts stub to re-export all from main types entry
             const outputFile = typeOutputFileForEntrypoint(config, entry)
@@ -396,8 +431,8 @@ async function writeTypesEntryStub(config: Config) {
 
 async function bunBuild(config: BunConfig) {
     if (!config) return
-    spinner.text = `${pkgConfigName} — Bundling JS...`
 
+    spinner.setText(`${pkgConfigName} — Bundling JS...`)
     return await Bun.build(config)
 }
 
@@ -405,7 +440,7 @@ async function tscBuild(config: Config) {
     if (!config.tsConfig) return
 
     const tsconfigPath = join(base, config.tsConfig)
-    spinner.text = `${pkgConfigName} — Generating types (tsc)...`
+    spinner.setText(`${pkgConfigName} — Generating types (tsc)...`)
     const out = await $`bun tsc --build ${tsconfigPath} ${config.cleanOutDir ? "--force" : ""}`.nothrow()
 
     if (out.exitCode) {

@@ -74,9 +74,9 @@ export const defaultConfig = {
     apiExtractorConfig: "api-extractor.json",
     cleanOutDir: true,
     cleanOutsideOutDir: true,
-    reportSizes: false,
-    reportTime: false,
     checkTypes: true,
+    reportSizes: !!process.env.CI,
+    reportTime: !!process.env.CI,
     bunConfig: {
         entrypoints: ["./lib/index.ts"],
         outdir: "./dist",

@@ -1,2 +1,6 @@
 export { inlineCssPlugin } from "./plugins/index"
-export { type Config, defineConfig } from "./defineConfig"
+export {
+    type Config,
+    type DefineConfigParameters,
+    defineConfig,
+} from "./defineConfig"
