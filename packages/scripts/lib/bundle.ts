@@ -26,11 +26,36 @@ const pkg = await import(join(base, "./package.json"))
 // global instance run counter
 let run = 0
 
+function applyBunConfigDefaults(config: Config): BunConfig {
+    let detectedNaming = ""
+    if (
+        config.exports &&
+        config.bunConfig.entrypoints.length === 1 &&
+        config.exports?.length === 1 &&
+        !config.bunConfig?.naming &&
+        !config.bunConfig.splitting
+    ) {
+        const exports = pkg.exports[config.exports[0]]
+        // if explicitly defined in package.json, but not in bunConfigDir
+        // we will reconstruct and inject it as the new default
+        const outdir = config.bunConfig.outdir || defaultConfig.bunConfig.outdir
+        detectedNaming = (exports.default || exports.import || exports.require)
+            .replace(outdir, "[dir]")
+            .replace(".js", ".[ext]")
+    }
+
+    if (detectedNaming) {
+        return { ...defaultConfig.bunConfig, ...config.bunConfig, naming: detectedNaming }
+    }
+
+    return { ...defaultConfig.bunConfig, ...config.bunConfig }
+}
+
 function applyDefaults(config: Config): Config {
     return {
         ...defaultConfig,
         ...config,
-        bunConfig: { ...defaultConfig.bunConfig, ...config.bunConfig },
+        bunConfig: applyBunConfigDefaults(config),
     }
 }
 
@@ -39,7 +64,7 @@ function getConfigArray(configs: DefineConfigParameters, options: typeof cliArgs
         typeof configs === "function" //
             ? configs({ ...configArgs, ...options, run })
             : configs
-    return ((Array.isArray(configs) ? configs : [configs]) as Config[]).map(applyDefaults)
+    return ((Array.isArray(_configs) ? _configs : [_configs]) as Config[]).map(applyDefaults)
 }
 
 export async function build({
@@ -59,9 +84,11 @@ export async function build({
         if (config.name) {
             pkgConfigName = `${pkgName}/${config.name}`
         }
+
         const t0 = performance.now()
 
         await cleanOutDir(config)
+
         const t1 = performance.now()
 
         if (config.tsConfig) {
@@ -179,7 +206,7 @@ export async function build({
     }
 
     const sizeData2 = sizeData ?? (await pkgSize(base, { sizes: ["size"] }))
-    const moduleFile = pkg.module.replace(/^\.\//, "") // remove leading './' if present
+    const moduleFile = getMainEntry(pkg).replace(/^\.\//, "") // remove leading './' if present
     const bundleFile = sizeData2.files.find((f) => f.path === moduleFile)
     const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
     spinner.success(
@@ -188,7 +215,21 @@ export async function build({
     )
 }
 
-async function areTheTypesWrong(config: Config | undefined) {
+// biome-ignore lint/suspicious/noExplicitAny: package.json is untyped
+function getMainEntry(pkg: any) {
+    if (pkg.module) return pkg.module
+    if (pkg.main) return pkg.main
+    if (pkg.exports?.["."]) {
+        const entry = pkg.exports["."]
+        if (entry.default) return entry.default
+        if (entry.import) return entry.import
+        if (entry.require) return entry.require
+    }
+    throw new Error(`unable to find package entry ${pkg.name}`)
+}
+
+async function areTheTypesWrong(config: Config) {
+    if (!config?.checkTypes) return
     spinner.text = `${pkgConfigName} — Checking for packaging issues...`
 
     let output: string
@@ -248,10 +289,11 @@ async function cleanOutDir(config: Config) {
         bunConfig: { outdir, entrypoints },
     } = config
 
-    if (!outdir || cleanedOutDirs.has(outdir)) return
+    const fullOutDir = join(base, outdir)
+    if (!outdir || cleanedOutDirs.has(fullOutDir)) return
 
     // Must be here, not after: dir might be empty, but will be populated by one of the configs.
-    cleanedOutDirs.add(outdir)
+    cleanedOutDirs.add(fullOutDir)
 
     const hasSymlinks = entrypoints.some((entrypoint) => {
         const outPath = outputFileForEntrypoint(config, entrypoint, "js")
@@ -262,9 +304,9 @@ async function cleanOutDir(config: Config) {
         return
     }
 
-    if (existsSync(outdir)) {
-        spinner.text = `emptying: ${outdir}`
-        await $`rm -rf ${outdir}`
+    if (existsSync(fullOutDir)) {
+        spinner.text = `emptying: ${fullOutDir}`
+        await $`rm -rf ${fullOutDir}`
     }
 }
 
@@ -352,9 +394,10 @@ async function writeTypesEntryStub(config: Config) {
     }
 }
 
-async function bunBuild(config?: BunConfig) {
+async function bunBuild(config: BunConfig) {
     if (!config) return
     spinner.text = `${pkgConfigName} — Bundling JS...`
+
     return await Bun.build(config)
 }
 

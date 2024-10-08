@@ -60,6 +60,10 @@ export interface Config {
      * If true, display a table of time spent in each build step. Default: false
      */
     reportTime: boolean
+    /**
+     * If true, report any package export types issues using AreTheTypesWrong. Default: true
+     */
+    checkTypes: boolean
 }
 
 /**
@@ -72,6 +76,7 @@ export const defaultConfig = {
     cleanOutsideOutDir: true,
     reportSizes: false,
     reportTime: false,
+    checkTypes: true,
     bunConfig: {
         entrypoints: ["./lib/index.ts"],
         outdir: "./dist",
