@@ -50,7 +50,8 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: packages/bundler/deployment
+          rm: true
+          source: "packages/bundler/deployment/*"
           target: ${{ env.DEPLOYMENT_DIR }}
 
       - name: Deploy bundler
