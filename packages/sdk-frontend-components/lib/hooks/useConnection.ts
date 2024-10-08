@@ -3,6 +3,8 @@ import { createRequests } from "../helpers/requests"
 
 const { requestPermissions, revokePermissions } = createRequests({ rdns: "tech.happy" })
 
+const userRejectionErrorCode = 4001
+
 export function useConnection() {
     const [connecting, setConnecting] = useState(false)
 
@@ -10,6 +12,15 @@ export function useConnection() {
         try {
             setConnecting(true)
             await requestPermissions()
+        } catch (e) {
+            if (e instanceof Error) {
+                // don't need to throw every time they reject
+                if ("code" in e && e.code === userRejectionErrorCode) {
+                    return
+                }
+
+                console.error(e)
+            }
         } finally {
             setConnecting(false)
         }

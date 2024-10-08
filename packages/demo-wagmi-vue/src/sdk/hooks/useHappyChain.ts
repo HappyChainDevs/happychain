@@ -3,11 +3,6 @@ import { type Ref, ref } from "vue"
 
 const user = ref<HappyUser | undefined>(undefined)
 
-happyProvider.request({ method: "happy_user" }).then((_user) => {
-    if (!_user) return
-    user.value = _user
-})
-
 onUserUpdate((_user) => {
     user.value = _user
 })

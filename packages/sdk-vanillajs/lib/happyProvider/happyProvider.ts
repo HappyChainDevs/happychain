@@ -1,3 +1,4 @@
+import type { HTTPString } from "@happychain/common"
 import { AuthState, Msgs, waitForCondition } from "@happychain/sdk-shared"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
@@ -33,6 +34,10 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
         config.msgBus.on(Msgs.AuthStateChanged, (_authState) => {
             this.authState = _authState
         })
+
+        config.msgBus.on(Msgs.OriginRequest, () =>
+            config.msgBus.emit(Msgs.OriginResponse, location.origin as HTTPString),
+        )
 
         this.injectedWalletHandler = new InjectedWalletHandler(config)
         this.registerConnectionHandlerEvents(this.injectedWalletHandler)

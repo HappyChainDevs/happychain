@@ -1,3 +1,4 @@
+import { createUUID } from "@happychain/common"
 import {
     AuthState,
     type EIP1193RequestParameters,
@@ -13,9 +14,18 @@ import { iframeProvider } from "../wagmi/provider"
 /** ID passed to the iframe by the parent window. */
 const parentID = new URLSearchParams(window.location.search).get("windowId")
 
+export const iframeID = createUUID()
+
 /** Confirms if the request comes from the parent window or the iframe. */
-export const confirmSourceId = (windowId: ReturnType<typeof crypto.randomUUID>) => {
-    return windowId === parentID || windowId === iframeProvider.iframeWindowId
+export const confirmSourceId = (sourceId: ReturnType<typeof crypto.randomUUID>) => {
+    return confirmParentId(sourceId) || confirmIframeId(sourceId)
+}
+
+export const confirmParentId = (sourceId: ReturnType<typeof crypto.randomUUID>) => {
+    return sourceId === parentID
+}
+export const confirmIframeId = (sourceId: ReturnType<typeof crypto.randomUUID>) => {
+    return sourceId === iframeID
 }
 
 /**
