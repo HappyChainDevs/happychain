@@ -56,8 +56,9 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements Happ
     protected static readonly POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(
         ",",
     )
-    public windowId = createUUID()
     protected iframePath = config.iframePath
+
+    public windowId = createUUID()
 
     /**
      * Method to request permissions within the SocialWalletProvider (not required for the IframeProvider).
@@ -163,7 +164,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements Happ
     }
 
     /** Returns connected status */
-    protected abstract isConnected(): boolean
+    public abstract isConnected(): boolean
 
     /**
      * Opens a popup window for the user request approval process.
