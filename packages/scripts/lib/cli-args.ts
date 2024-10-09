@@ -7,6 +7,10 @@ export const { values: cliArgs } = parseArgs({
             type: "string",
             default: "build.config.ts",
         },
+        watch: {
+            type: "boolean",
+            default: false,
+        },
     },
     strict: true,
     allowPositionals: true,

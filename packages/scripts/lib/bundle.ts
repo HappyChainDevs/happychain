@@ -8,71 +8,17 @@ import chalk from "chalk"
 import pkgSize from "pkg-size"
 import type { PkgSizeData } from "pkg-size/dist/interfaces"
 import type { cliArgs } from "./cli-args"
-import { type BunConfig, type Config, type DefineConfigParameters, defaultConfig } from "./defineConfig"
+import { type BuildContext, type Config, type DefineConfigParameters, getConfigs } from "./defineConfig"
 import { spinner } from "./spinner"
-
-spinner.start("Building...")
-
-const base = process.cwd()
-const pkgName = base.substring(base.lastIndexOf("/") + 1)
-let pkgConfigName = pkgName
-
-const configArgs = {
-    mode: process.env.NODE_ENV,
-}
-
-const pkg = await import(join(base, "./package.json"))
-
-// global instance run counter
-let run = 0
-
-function applyBunConfigDefaults(config: Config): BunConfig {
-    let detectedNaming = ""
-    if (
-        config.exports &&
-        config.bunConfig.entrypoints.length === 1 &&
-        config.exports?.length === 1 &&
-        !config.bunConfig?.naming &&
-        !config.bunConfig.splitting
-    ) {
-        const exports = pkg.exports[config.exports[0]]
-        // if explicitly defined in package.json, but not in bunConfigDir
-        // we will reconstruct and inject it as the new default
-        const outdir = config.bunConfig.outdir || defaultConfig.bunConfig.outdir
-        detectedNaming = (exports.default || exports.import || exports.require)
-            .replace(outdir, "[dir]")
-            .replace(".js", ".[ext]")
-    }
-
-    if (detectedNaming) {
-        return { ...defaultConfig.bunConfig, ...config.bunConfig, naming: detectedNaming }
-    }
-
-    return { ...defaultConfig.bunConfig, ...config.bunConfig }
-}
-
-function applyDefaults(config: Config): Config {
-    return {
-        ...defaultConfig,
-        ...config,
-        bunConfig: applyBunConfigDefaults(config),
-    }
-}
-
-function getConfigArray(configs: DefineConfigParameters, options: typeof cliArgs): Config[] {
-    const _configs: DefineConfigParameters =
-        typeof configs === "function" //
-            ? configs({ ...configArgs, ...options, run })
-            : configs
-    return ((Array.isArray(_configs) ? _configs : [_configs]) as Config[]).map(applyDefaults)
-}
 
 export async function build({
     configs: _configs,
     options,
-}: { configs: DefineConfigParameters; options: typeof cliArgs }) {
-    const configs = getConfigArray(_configs, options)
-    run++
+    context,
+}: { configs: DefineConfigParameters; options: typeof cliArgs; context: BuildContext }) {
+    spinner.start("Building...")
+
+    const configs = getConfigs(_configs, options, context)
 
     const buildTimes = new Map<string, Record<string, string>>()
     const usedTsConfigs = new Set<string>()
@@ -82,40 +28,42 @@ export async function build({
     const start = performance.now()
     for (const [i, config] of configs.entries()) {
         if (config.name) {
-            pkgConfigName = `${pkgName}/${config.name}`
+            context.name = join(context.pkg.name, config.name)
+        } else if (config.exports) {
+            context.name = join(context.pkg.name, ...config.exports)
         }
 
         const t0 = performance.now()
 
-        await cleanOutDir(config)
+        await cleanOutDir(config, context)
 
         const t1 = performance.now()
 
         if (config.tsConfig) {
             // don't regenerate the same config more than once per build...
             if (!usedTsConfigs.has(config.tsConfig)) {
-                await tscBuild(config)
+                await tscBuild(config, context)
                 usedTsConfigs.add(config.tsConfig)
             }
 
             if (config.apiExtractorConfig) {
                 // don't regenerate the same config more than once per build...
                 if (!usedApiExtractorConfigs.has(config.apiExtractorConfig)) {
-                    const rollupResults = await rollupTypes(config)
+                    const rollupResults = await rollupTypes(config, context)
                     usedApiExtractorConfigs.add(config.apiExtractorConfig)
                     cleanupPaths.push([])
                     rollupResults?.cleanUpPaths?.forEach((path) => cleanupPaths[i].push(path))
                 }
             } else {
-                await writeTypesEntryStub(config)
+                await writeTypesEntryStub(config, context)
             }
         } else {
-            console.log(`${pkgConfigName} — TS config file not specified, skipping types generation`)
+            console.log(`${context.name} — TS config file not specified, skipping types generation`)
         }
 
         const t2 = performance.now()
 
-        const buildResults = await bunBuild(config.bunConfig)
+        const buildResults = await bunBuild(config, context)
         if (!buildResults?.success) {
             if (buildResults?.logs) {
                 for (const log of buildResults.logs) {
@@ -129,7 +77,7 @@ export async function build({
 
         const t3 = performance.now()
 
-        await areTheTypesWrong(config)
+        await areTheTypesWrong(config, context)
 
         const t4 = performance.now()
 
@@ -161,15 +109,15 @@ export async function build({
     const reportTime = configs.some((c) => c.reportTime)
     const reportSizes = configs.some((c) => c.reportSizes)
 
-    const sizeData = await pkgSize(base, {
+    const sizeData = await pkgSize(context.base, {
         sizes: ["size", "gzip", "brotli"],
     })
 
-    const moduleFile = getMainEntry(pkg).replace(/^\.\//, "") // remove leading './' if present
+    const moduleFile = getMainEntry(context.pkg).replace(/^\.\//, "") // remove leading './' if present
     const bundleFile = sizeData.files.find((f) => f.path === moduleFile)
     const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
     spinner.success(
-        `${pkgName} — Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉` +
+        `${context.name} — Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉` +
             ` (JS Bundle Size: ${bundleFileSize})`,
     )
 
@@ -182,7 +130,7 @@ export async function build({
         const report = generateSizeReport(sizeData)
         console.table(report)
         console.log(
-            `\n${chalk.green(pkg.name)} Total Size: ${chalk.yellow(byteSize(sizeData.tarballSize, { units: "metric" }))}`,
+            `\n${chalk.green(context.pkg.name)} Total Size: ${chalk.yellow(byteSize(sizeData.tarballSize, { units: "metric" }))}`,
         )
     }
 }
@@ -250,12 +198,13 @@ function getMainEntry(pkg: any) {
     throw new Error(`unable to find package entry ${pkg.name}`)
 }
 
-async function areTheTypesWrong(config: Config) {
-    spinner.setText(`${pkgConfigName} — Checking for packaging issues...`)
+async function areTheTypesWrong(config: Config, context: BuildContext) {
+    if (!config.checkTypes) return
+    spinner.setText(`${context.name} — Checking for packaging issues...`)
 
     let output: string
     if (config) {
-        const exports = config.exports ?? (pkg.exports?.length > 0 ? Object.keys(pkg.exports) : ["."])
+        const exports = config.exports ?? (context.pkg.exports ? Object.keys(context.pkg.exports) : ["."])
         // biome-ignore format: +
         const attwCommand = "bun attw"
           + " --pack"
@@ -310,13 +259,13 @@ async function areTheTypesWrong(config: Config) {
 
 const cleanedOutDirs = new Set<string>()
 
-async function cleanOutDir(config: Config) {
+async function cleanOutDir(config: Config, context: BuildContext) {
     const {
         cleanOutDir,
         bunConfig: { outdir, entrypoints },
     } = config
 
-    const fullOutDir = join(base, outdir)
+    const fullOutDir = join(context.base, outdir)
     if (!outdir || cleanedOutDirs.has(fullOutDir)) return
 
     // Must be here, not after: dir might be empty, but will be populated by one of the configs.
@@ -348,16 +297,16 @@ function outputFileForEntrypoint(config: Config, entrypoint: string, ext: string
         .replace("[ext]", ext)
 }
 
-function typeOutputFileForEntrypoint(config: Config, entrypoint: string): string {
+function typeOutputFileForEntrypoint(config: Config, entrypoint: string, context: BuildContext): string {
     let outputFile = ""
     // TODO can we gen multiple files?
     const exportName = config.exports?.[0]
-    if (exportName && pkg.exports?.[exportName]?.types) {
-        outputFile = pkg.exports[exportName].types
+    if (exportName && context.pkg.exports?.[exportName]?.types) {
+        outputFile = context.pkg.exports[exportName].types
     } else if (entrypoint) {
         outputFile = outputFileForEntrypoint(config, entrypoint, "d.ts")
-    } else if (pkg.exports?.["."]?.types) {
-        outputFile = pkg.exports["."].types
+    } else if (context.pkg.exports?.["."]?.types) {
+        outputFile = context.pkg.exports["."].types
     } else {
         // biome-ignore format: +
         throw new Error(
@@ -367,10 +316,10 @@ function typeOutputFileForEntrypoint(config: Config, entrypoint: string): string
     return outputFile
 }
 
-async function rollupTypes(config: Config) {
+async function rollupTypes(config: Config, context: BuildContext) {
     if (!config.apiExtractorConfig || !config.tsConfig) return
 
-    spinner.setText(`${pkgConfigName} — Bundling types (API Extractor)...`)
+    spinner.setText(`${context.name} — Bundling types (API Extractor)...`)
     const cleanUpPaths = new Set<string>()
 
     // temp fix to disable a lot of useless output from api extractor
@@ -381,13 +330,13 @@ async function rollupTypes(config: Config) {
 
     const tsconfig = await $`tsc --project ${config.tsConfig} --showConfig`.nothrow().json()
 
-    const apiExtractorJsonPath: string = join(base, config.apiExtractorConfig)
+    const apiExtractorJsonPath: string = join(context.base, config.apiExtractorConfig)
 
     if (!(await Bun.file(ExtractorConfig.loadFile(apiExtractorJsonPath).mainEntryPointFilePath).exists())) {
         // Force Rebuild if main entry point (dist/types folder doesn't exist)
         // this can happen with incremental builds when the types are removed,
         // build the buildinfo is not updated
-        await tscBuild({ ...config, cleanOutDir: true })
+        await tscBuild({ ...config, cleanOutDir: true }, context)
     }
 
     const extractorConfig = ExtractorConfig.loadFileAndPrepare(apiExtractorJsonPath)
@@ -401,8 +350,9 @@ async function rollupTypes(config: Config) {
     console.log = ogLog
 
     const entrypoint = config.bunConfig.entrypoints?.[0]
-    const outputFile = typeOutputFileForEntrypoint(config, entrypoint)
-    await $`mv ${extractorResult.extractorConfig.untrimmedFilePath} ${join(base, outputFile)}`
+    const outputFile = typeOutputFileForEntrypoint(config, entrypoint, context)
+
+    await $`mv ${extractorResult.extractorConfig.untrimmedFilePath} ${join(context.base, outputFile)}`
 
     // clean out individual .d.ts files if its not the main output dir
     if (
@@ -410,37 +360,37 @@ async function rollupTypes(config: Config) {
         tsconfig.compilerOptions.declarationDir &&
         tsconfig.compilerOptions.declarationDir !== tsconfig.compilerOptions.outDir
     ) {
-        cleanUpPaths.add(join(base, tsconfig.compilerOptions.declarationDir))
+        cleanUpPaths.add(join(context.base, tsconfig.compilerOptions.declarationDir))
     }
     return { cleanUpPaths }
 }
 
-async function writeTypesEntryStub(config: Config) {
+async function writeTypesEntryStub(config: Config, context: BuildContext) {
     if (config.bunConfig.entrypoints?.length) {
-        spinner.setText(`${pkgConfigName} — API Extractor config file not specified, generating index type stub...`)
+        spinner.setText(`${context.name} — API Extractor config file not specified, generating index type stub...`)
         for (const entry of config.bunConfig.entrypoints) {
             // index.d.ts stub to re-export all from main types entry
-            const outputFile = typeOutputFileForEntrypoint(config, entry)
+            const outputFile = typeOutputFileForEntrypoint(config, entry, context)
             await Bun.write(
-                join(base, outputFile),
+                join(context.base, outputFile),
                 `export * from './${join("types", entry).replace(".ts", "")}'\nexport {}`,
             )
         }
     }
 }
 
-async function bunBuild(config: BunConfig) {
+async function bunBuild(config: Config, context: BuildContext) {
     if (!config) return
 
-    spinner.setText(`${pkgConfigName} — Bundling JS...`)
-    return await Bun.build(config)
+    spinner.setText(`${context.name} — Bundling JS...`)
+    return await Bun.build(config.bunConfig)
 }
 
-async function tscBuild(config: Config) {
+async function tscBuild(config: Config, context: BuildContext) {
     if (!config.tsConfig) return
 
-    const tsconfigPath = join(base, config.tsConfig)
-    spinner.setText(`${pkgConfigName} — Generating types (tsc)...`)
+    const tsconfigPath = join(context.base, config.tsConfig)
+    spinner.setText(`${context.name} — Generating types (tsc)...`)
     const out = await $`bun tsc --build ${tsconfigPath} ${config.cleanOutDir ? "--force" : ""}`.nothrow()
 
     if (out.exitCode) {

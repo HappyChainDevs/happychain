@@ -1,15 +1,19 @@
 # Fragment to be imported in packages that need to bundle their typescript code.
 
-build: node_modules dist
+build: node_modules dist ## Build and bundle the package
 .PHONY: build
 
-clean:
+build.watch: node_modules  ## Build the package in watch mode
+	@happyBuild --config build.config.ts --watch;
+.PHONY: build.watch
+
+clean: ## Removes build artifacts
 	@rm -rf dist
 	@rm -rf node_modules/.tmp
 .PHONY: clean
 
 # :: rule that can be overriden to add code.
-dev:: node_modules
+dev:: node_modules ## Symlinks source code entries into 'dist'
 	@echo "$(PKG) — removing dist & installing dev symlinks"
 	@make clean
 	@mkdir -p dist
@@ -20,7 +24,7 @@ dev:: node_modules
 .PHONY: dev
 
 node_modules: package.json
-	bun install;
+	@bun install;
 	@# force updates modified_at timestamp;
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
