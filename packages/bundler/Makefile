@@ -28,7 +28,7 @@ build: alto
 .PHONY: build
 
 build.docker: alto
-	cd alto && docker build -t $(IMAGE_NAME) .
+	docker build -t $(IMAGE_NAME) -f deployment/Dockerfile .
 .PHONY: build.docker
 
 # Target to run the Alto bundler with the appropriate configuration
