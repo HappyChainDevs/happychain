@@ -1,10 +1,10 @@
 # Fragment to be imported for Makefiles that do not need bundling (as handled by the
 # happyBuild script). This includes backend packages and frontend support packages.
 
-build: node_modules dist
+build: node_modules dist ## Builds package with TSC
 .PHONY: build
 
-clean:
+clean: ## Removes build artifacts
 	@rm -rf dist
 	@rm -rf node_modules/.tmp
 .PHONY: clean
