@@ -1,7 +1,7 @@
 TSC_BIN ?= tsc
 
 # Like build.watch but also serves the page on localhost if applicable
-dev: node_modules
+dev: node_modules ## Serves or bundles the package in watch mode
 	@if [[ -r index.html ]]; then \
 	  concurrently --prefix=none "make build.watch" "vite"; \
 	else \
@@ -9,10 +9,10 @@ dev: node_modules
 	fi
 .PHONY: dev
 
-build: node_modules dist
+build: node_modules dist ## Builds the vite application
 .PHONY: build
 
-clean:
+clean: ## Removes build artifacts
 	@rm -rf dist
 	@rm -rf node_modules/.tmp
 	@rm -rf node_modules/.vite # this sometimes gets corrupted ("cannot load vite.config.ts")
@@ -23,7 +23,7 @@ build.watch: node_modules
 	@$(TSC_BIN) --build --watch --preserveWatchOutput;
 .PHONY: build.watch
 
-preview: node_modules dist
+preview: node_modules dist ## Serves the production mode package
 	@bunx --bun vite preview;
 .PHONY: preview
 

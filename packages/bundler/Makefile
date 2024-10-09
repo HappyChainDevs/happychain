@@ -31,12 +31,12 @@ run:
 
 # Clean up the Alto directory (optional)
 clean:
-	cd alto && bun clean
+	@if [ -d alto ]; then cd alto && bun clean; fi;
 .PHONY: clean
 
 # Remove the Alto directory
 nuke: clean
-	rm -rf alto
+	@if [ -d alto ]; then rm -rf alto; fi;
 .PHONY: nuke
 
 ####################################################################################################
