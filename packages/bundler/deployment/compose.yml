@@ -2,7 +2,7 @@ name: happy-bundler
 
 services:
   bundler:
-    image: happy-bundler:latest
+    image: ghcr.io/happychaindevs/happy-bundler:latest
     ports:
       - "3000:3000"
     networks:
