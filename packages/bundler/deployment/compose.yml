@@ -2,11 +2,14 @@ name: happy-bundler
 
 services:
   bundler:
-    image: ghcr.io/happychaindevs/happy-bundler:latest
+    image: happy-bundler:latest
     ports:
       - "3000:3000"
     networks:
       - bundler_network
+    environment:
+      - BUNDLER_EXECUTOR_WALLET
+      - BUNDLER_UTILITY_WALLET
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "3000"]
       interval: 4s
