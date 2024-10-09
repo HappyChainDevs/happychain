@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {Script, console} from "forge-std/Script.sol";
+import {console} from "forge-std/Script.sol";
 
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.sol";
@@ -10,7 +10,7 @@ import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.so
 import {UserOpLib} from "./UserOpLib.sol";
 
 /* solhint-disable no-console*/
-contract GasEstimator is Test, Script {
+contract GasEstimator is Test {
     using UserOpLib for PackedUserOperation;
 
     address public constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
@@ -24,15 +24,15 @@ contract GasEstimator is Test, Script {
 
     /// @notice Estimates gas for a single UserOp.
     function testEstimateGasSingleUserOp() public {
-        console.log("\nSingle UserOp:");
         PackedUserOperation memory userOp = _createSimpleUserOp();
         uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
+        console.log("Gas used for single UserOp: %d", gasUsed);
+        gasUsed = _estimatePaymasterGasUsage(userOp);
         console.log("Gas used for single UserOp: %d", gasUsed);
     }
 
     /// @notice Estimates gas when the same UserOp is processed multiple times.
     function testEstimateGasMultipleIdenticalUserOps() public {
-        console.log("\nMultiple Identical UserOps:");
         PackedUserOperation memory userOp = _createSimpleUserOp();
         uint256 repetitions = 5;
         uint256 totalGas = 0;
@@ -48,7 +48,6 @@ contract GasEstimator is Test, Script {
 
     /// @notice Estimates gas when different UserOps are processed in sequence.
     function testEstimateGasMultipleDifferentUserOps() public {
-        console.log("\nMultiple Different UserOps:");
         PackedUserOperation[] memory userOpsArray = _createVariedUserOps();
         uint256 totalGas = 0;
 
@@ -61,9 +60,8 @@ contract GasEstimator is Test, Script {
         console.log("Average gas used for different UserOps: %d", totalGas / userOpsArray.length);
     }
 
-    /// @notice Estimates gas when different UserOps are processed in sequence from the same sender.
+    /// @notice Estimates gas when different UserOps ƒorm the same sender are processed in sequence.
     function testEstimateGasMultipleDifferentUserOpsSameSender() public {
-        console.log("\nDifferent UserOps with same sender:");
         PackedUserOperation[] memory userOpsArray = _createVariedUserOps();
         uint256 totalGas = 0;
 
@@ -79,26 +77,16 @@ contract GasEstimator is Test, Script {
 
     /// @notice Estimates gas for a UserOp with very large calldata (worst-case scenario).
     function testEstimateGasLargeCalldata() public {
-        console.log("\nUserOp with Very Large Calldata\n");
         PackedUserOperation memory userOp = _createUserOpWithLargeCalldata();
         uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
         console.log("Gas used for UserOp with large calldata: %d", gasUsed);
     }
 
     /// @notice Estimates gas when the paymaster's validatePaymasterUserOp function reverts due to overusage.
-    function testEstimateGasPaymasterRevertsOverUsage() public {
-        console.log("\n Paymaster Reverts on Exceeding gas Limits\n");
+    function testEstimateGasPaymasterOverUseGasBudget() public {
         PackedUserOperation memory userOp = _createUserOpOverGasUsage();
-        bytes32 userOpHash = userOp.getEncodedUserOpHash();
-        uint256 gasBefore = gasleft();
-
-        try happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, 1e18) {
-            console.log("Paymaster did not revert as expected");
-        } catch {
-            uint256 gasAfter = gasleft();
-            uint256 gasUsed = gasBefore - gasAfter;
-            console.log("Gas used when paymaster reverts due to overusage: %d", gasUsed);
-        }
+        uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
+        console.log("Gas used when paymaster reverts due to overusage: %d", gasUsed);
     }
 
     // Helper Functions
