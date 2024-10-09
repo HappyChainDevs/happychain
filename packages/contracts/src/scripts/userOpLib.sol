@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
 library UserOpLib {
-    function getEncodedUserOpHash(PackedUserOperation memory userOp) external view returns (bytes32) {
+    function getEncodedUserOpHash(PackedUserOperation memory userOp) internal view returns (bytes32) {
         return keccak256(
             abi.encodePacked(
                 keccak256(
