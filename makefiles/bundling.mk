@@ -4,7 +4,11 @@
 build: node_modules dist ## Build and bundle the package
 .PHONY: build
 
-clean:
+build.watch: node_modules  ## Build the package in watch mode
+	@happyBuild --config build.config.ts --watch;
+.PHONY: build.watch
+
+clean: ## Removes build artifacts
 	@rm -rf dist
 	@rm -rf node_modules/.tmp
 .PHONY: clean

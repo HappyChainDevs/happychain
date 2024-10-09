@@ -1,5 +1,6 @@
 import type { BuildConfig } from "bun"
 import type { cliArgs } from "./cli-args"
+import { pkg } from "./utils/globals"
 
 /**
  * Constrained version of {@link BuildConfig}.
@@ -86,12 +87,54 @@ export const defaultConfig = {
     },
 } as const satisfies Config
 
-export type ConfigFactoryArgs = {
-    mode?: "production" | "development" | string
-} & typeof cliArgs
+export type ConfigFactoryArgs = { mode?: "production" | "development" | string } & typeof cliArgs
 
 export type DefineConfigParameters = Config | Config[] | ((args: ConfigFactoryArgs) => Config | Config[])
 
 export function defineConfig(config: Partial<DefineConfigParameters>): DefineConfigParameters {
     return config as DefineConfigParameters
+}
+
+function applyBunConfigDefaults(config: Config): BunConfig {
+    if (
+        config.exports &&
+        config.bunConfig.entrypoints.length === 1 &&
+        config.exports?.length === 1 &&
+        !config.bunConfig?.naming &&
+        !config.bunConfig.splitting
+    ) {
+        const exports = pkg.exports?.[config.exports[0]]
+        // if explicitly defined in package.json, but not in bunConfigDir
+        // we will reconstruct and inject it as the new default
+        const outdir = config.bunConfig.outdir || defaultConfig.bunConfig.outdir
+
+        return {
+            ...defaultConfig.bunConfig,
+            ...config.bunConfig,
+            naming: (exports?.default || exports?.import || exports?.require || "")
+                .replace(outdir, "[dir]")
+                .replace(".js", ".[ext]"),
+        }
+    }
+
+    return { ...defaultConfig.bunConfig, ...config.bunConfig }
+}
+
+function applyDefaults(config: Config): Config {
+    return {
+        ...defaultConfig,
+        ...config,
+        bunConfig: applyBunConfigDefaults(config),
+    }
+}
+const configArgs = {
+    mode: process.env.NODE_ENV,
+}
+
+export function getConfigs(configs: DefineConfigParameters, options: typeof cliArgs): Config[] {
+    const _configs: DefineConfigParameters =
+        typeof configs === "function" //
+            ? configs({ ...configArgs, ...options })
+            : configs
+    return ((Array.isArray(_configs) ? _configs : [_configs]) as Config[]).map((conf) => applyDefaults(conf))
 }
