@@ -9,8 +9,8 @@ services:
       - bundler_network
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "3000"]
-      interval: 30s
-      timeout: 10s
+      interval: 4s
+      timeout: 1s
       retries: 3
     restart: always
 
