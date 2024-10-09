@@ -69,4 +69,5 @@ jobs:
           script: |
             cd ${{ env.DEPLOYMENT_DIR }}
             echo "$DOCKER_TOKEN" | docker login ghcr.io -u $DOCKER_USERNAME --password-stdin
-            docker compose up -d --pull always
+            docker compose up -d --pull alway
+            docker image prune -af
