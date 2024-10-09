@@ -71,7 +71,7 @@ jobs:
           script: |
             cd ${{ env.DEPLOYMENT_DIR }}
             echo "$DOCKER_TOKEN" | docker login ghcr.io -u $DOCKER_USERNAME --password-stdin
-            docker compose up -d --pull alway
+            docker compose up -d --pull always
             unset BUNDLER_EXECUTOR_WALLET
             unset BUNDLER_UTILITY_WALLET
             docker image prune -af
