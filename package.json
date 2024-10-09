@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "workspaces": ["packages/*"],
     "private": true,
+    "scripts": {
+        "help": "make help"
+    },
     "devDependencies": {
         "@biomejs/biome": "^1.9.3",
         "@mikro-orm/cli": "^6.3.12",

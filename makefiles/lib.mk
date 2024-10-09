@@ -29,6 +29,21 @@ endif
 # Name of the package the makefile is executed for (based on the current directory).
 PKG := $(notdir $(shell pwd))
 
+# Follows all makefile includes to supply help where needed
+# Make sure to include 'lib.mk' as the first include 
+# so that naked `make` runs help!
+help: ## Show this help
+	@echo -e "  \033[0;36m\n$$(bunx figlet $$(bun --print "require('./package.json').name"))\033[0m"
+	@echo ""
+	@echo "  Usage: make <command>"
+	@echo "  Check ./$(firstword $(MAKEFILE_LIST)) for the full list of available commands."
+	@echo ""
+	@echo "  Specify a command. The suggested choices are:"
+	@echo ""
+	@grep -E '^[\.0-9a-zA-Z_-]+:.*?## .*$$' $(wordlist 2,$(words $(MAKEFILE_LIST)), $(MAKEFILE_LIST)) $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = "^[^:]*:"}; {printf $$2 "\n"}' | awk 'BEGIN {FS = ":.*?## "}; {printf "    \033[0;36m%-18s\033[m %s\n", $$1, $$2}'
+.PHONY: help
+
+
 # Empty Stubs — these can be overriden in any including Makefile.
 
 build:

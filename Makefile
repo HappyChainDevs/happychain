@@ -5,13 +5,6 @@ endif
 
 include makefiles/lib.mk
 
-help: ## Show this help
-	@echo ""
-	@echo "Specify a command. The choices are:"
-	@echo ""
-	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[0;36m%-12s\033[m %s\n", $$1, $$2}'
-	@echo ""
-.PHONY: help
 
 # ==================================================================================================
 # Packages
@@ -71,9 +64,6 @@ deploy: ## Deploys contracts to Anvil
 build: node_modules ts.build  ## Creates production builds
 .PHONY: build
 
-docs: node_modules docs.contained ## Builds latest docs and starts dev server http://localhost:4173
-	cd packages/docs && make preview
-.PHONY: docs
 
 check: node_modules ts.check contracts.check ## Runs code quality & formatting checks
 	@# cf. makefiles/formatting.mk
@@ -87,50 +77,48 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 test: sdk.test iframe.test ## Run tests
 .PHONY: test
 
-clean: ts.clean contracts.clean ## Removes build artifacts
-.PHONY: clean
-
 nuke: remove-modules clean ## Removes build artifacts and dependencies
 	cd packages/contracts && make nuke
 	cd packages/bundler && make nuke
 .PHONY: nuke
 
+docs: node_modules docs.contained ## Builds latest docs and starts dev server http://localhost:4173
+	cd packages/docs && make preview
+.PHONY: docs
+
+iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
+	cd packages/iframe && make dev
+.PHONY: iframe.dev
+
+demo-js.dev: setup shared.dev sdk.dev ## Serves the VanillaJS demo application as http://localhost:5173
+	$(MULTIRUN) --names "iframe,demo-js" "cd packages/iframe && make dev" "cd packages/demo-vanillajs && make dev"
+.PHONY: demo-js.dev
+
+demo-react.dev: setup shared.dev sdk.dev ## Serves the React demo application as http://localhost:5173
+	$(MULTIRUN) --names "iframe,demo-react" "cd packages/iframe && make dev" "cd packages/demo-react && make dev"
+.PHONY: demo-react.dev
+
+demo-vue.dev: setup shared.dev sdk.dev ## Serves the VueJS demo application as http://localhost:5173
+	$(MULTIRUN) --names "iframe,demo-vue" "cd packages/iframe && make dev" "cd packages/demo-wagmi-vue && make dev"
+.PHONY: demo-vue.dev
+
 # ==================================================================================================
 # DEVELOPMENT
 
-iframe-dev-command := cd packages/iframe && make dev
-
-sdk.dev:
-	@# intentially building sequentially. 
-	@# get sporadic build errors when in parralel and starting demos
+shared.dev:
 	cd packages/common && make dev
 	cd packages/sdk-shared && make dev
+	cd packages/worker && make dev
+.PHONY: shared.dev
+
+sdk.dev:
 	cd packages/sdk-frontend-components && make dev
 	cd packages/sdk-vanillajs && make dev
 	cd packages/sdk-react && make dev
 .PHONY: sdk-dev
 
-iframe.dev:
-	$(iframe-dev-command)
-.PHONY: iframe.dev
-
-demo-js.dev: setup
-	make sdk.dev;
-	$(MULTIRUN) --names "iframe,demo-js" "$(iframe-dev-command)" "cd packages/demo-vanillajs && make dev"
-.PHONY: demo-js.dev
-
-demo-react.dev: setup
-	make sdk.dev;
-	$(MULTIRUN) --names "iframe,demo-react" "$(iframe-dev-command)" "cd packages/demo-react && make dev"
-.PHONY: demo-react.dev
-
-demo-vue.dev: setup
-	make sdk.dev;
-	$(MULTIRUN) --names "iframe,demo-vue" "$(iframe-dev-command)" "cd packages/demo-wagmi-vue && make dev"
-.PHONY: demo-vue.dev
-
 # start docs in watch mode (can crash, see packages/docs/Makefile for more info)
-docs.dev:
+docs.dev: shared.dev sdk.dev
 	cd packages/docs && make dev
 .PHONY: docs.watch
 
@@ -266,12 +254,15 @@ docs.contained: setup shared.build sdk.dev
 .PHONY: docs.contained
 
 # Serve already-built docs
-docs.preview:
+docs.preview: docs.contained
 	cd packages/docs && make preview
 .PHONY: docs.preview
 
 # ==================================================================================================
 # CLEANING
+
+clean: ts.clean contracts.clean
+.PHONY: clean
 
 sdk.clean:
 	$(call forall_make , $(SDK_PKGS) , clean)
