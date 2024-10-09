@@ -4,7 +4,7 @@ import { join } from "node:path"
 export const base = process.cwd()
 
 /** Package name, the last component of {@link base}. */
-export const pkgName = base.substring(base.lastIndexOf("/") + 1)
+export const defaultPkgName = base.substring(base.lastIndexOf("/") + 1)
 
 // biome-ignore lint/suspicious/noExplicitAny: package.json is untyped
 export type PkgType = any

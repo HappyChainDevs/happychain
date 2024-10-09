@@ -59,6 +59,14 @@ export const spinner = {
             _spinner.success(text)
         }
     },
+    error(text?: string) {
+        if (process.env.CI) {
+            console.error(text)
+        } else {
+            uninstallSpinnerOutputFunctions()
+            _spinner.error(text)
+        }
+    },
     setText(text: string) {
         if (process.env.CI) {
             console.log(text)

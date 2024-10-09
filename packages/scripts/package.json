@@ -17,6 +17,7 @@
         "@arethetypeswrong/cli": "^0.16.4",
         "@happychain/configs": "workspace:^",
         "@microsoft/api-extractor": "^7.47.9",
+        "@parcel/watcher": "^2.4.1",
         "@types/bun": "latest",
         "@types/byte-size": "^8.1.2",
         "ajv": "^8.17.1",

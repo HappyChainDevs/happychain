@@ -8,23 +8,23 @@ import chalk from "chalk"
 import pkgSize from "pkg-size"
 import type { PkgSizeData } from "pkg-size/dist/interfaces"
 import type { cliArgs } from "./cli-args"
-import type { BunConfig, Config, DefineConfigParameters } from "./defineConfig"
+import type { Config, DefineConfigParameters } from "./defineConfig"
 import { getConfigArray, getEntrypointPath } from "./utils/config"
-import { base, pkg, pkgName } from "./utils/globals"
+import { base, pkg, defaultPkgName } from "./utils/globals"
 import { spinner } from "./utils/spinner"
-
-spinner.start("Building...")
 
 /**
  * Display name for the config being built. This will be `${pkgName}/${config.name}` if
  * `config.name` is set, otherwise only the package name.
  */
-let pkgConfigName = pkgName
+let pkgConfigName = defaultPkgName
 
 export async function build({
     configs: _configs,
     options,
 }: { configs: DefineConfigParameters; options: typeof cliArgs }) {
+    spinner.start("Building...")
+
     const configs = getConfigArray(_configs, options)
 
     const buildTimes = new Map<string, Record<string, string>>()
@@ -35,7 +35,9 @@ export async function build({
     const start = performance.now()
     for (const [i, config] of configs.entries()) {
         if (config.name) {
-            pkgConfigName = `${pkgName}/${config.name}`
+            pkgConfigName = join(pkg.name, config.name)
+        } else if (config.exports) {
+            pkgConfigName = join(pkg.name, ...config.exports)
         }
 
         const t0 = performance.now()
@@ -68,7 +70,7 @@ export async function build({
 
         const t2 = performance.now()
 
-        const buildResults = await bunBuild(config.bunConfig)
+        const buildResults = await bunBuild(config)
         if (!buildResults?.success) {
             if (buildResults?.logs) {
                 for (const log of buildResults.logs) {
@@ -123,7 +125,7 @@ export async function build({
     const bundleFile = sizeData2.files.find((f) => f.path === moduleFile)
     const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
     spinner.success(
-        `${pkgName} — Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉` +
+        `${pkgConfigName} — Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉` +
             ` (JS Bundle Size: ${bundleFileSize})`,
     )
 
@@ -197,7 +199,7 @@ async function areTheTypesWrong(config: Config) {
 
     let output: string
     if (config) {
-        const exports = config.exports ?? (pkg.exports?.length > 0 ? Object.keys(pkg.exports) : ["."])
+        const exports = config.exports ?? (pkg.exports ? Object.keys(pkg.exports) : ["."])
         // biome-ignore format: +
         const attwCommand = "bun attw"
           + " --pack"
@@ -344,6 +346,7 @@ async function rollupTypes(config: Config) {
 
     const entrypoint = config.bunConfig.entrypoints?.[0]
     const outputFile = typeOutputFileForEntrypoint(config, entrypoint)
+
     await $`mv ${extractorResult.extractorConfig.untrimmedFilePath} ${join(base, outputFile)}`
 
     // clean out individual .d.ts files if its not the main output dir
@@ -371,10 +374,10 @@ async function writeTypesEntryStub(config: Config) {
     }
 }
 
-async function bunBuild(config: BunConfig) {
+async function bunBuild(config: Config) {
     if (!config) return
     spinner.setText(`${pkgConfigName} — Bundling JS...`)
-    return await Bun.build(config)
+    return await Bun.build(config.bunConfig)
 }
 
 async function tscBuild(config: Config) {
