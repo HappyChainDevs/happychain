@@ -10,52 +10,101 @@ import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.so
 import {UserOpLib} from "./UserOpLib.sol";
 
 contract GasEstimator is Test, Script {
-    address public constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-    address public constant HAPPY_PAYMASTER = 0x27cdcC529A98DCFDa7FF10329a3635D886F80e78;
-    IPaymaster private happyPaymaster;
+    using UserOpLib for PackedUserOperation;
 
-    PackedUserOperation[] public userOps;
+    address public constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
+    address public constant HAPPY_PAYMASTER = 0x9c07bA84B9e12835ee60f6F7A26d90930911DAFA;
+
+    IPaymaster private happyPaymaster;
 
     function setUp() public {
         happyPaymaster = IPaymaster(HAPPY_PAYMASTER);
-        populateUserOps();
-    }
-
-    function populateUserOps() public {
-        PackedUserOperation[] memory tempUserOps = createSampleUserOps();
-        for (uint256 i = 0; i < tempUserOps.length; i++) {
-            userOps.push(tempUserOps[i]);
-        }
     }
 
     function run() public {
         testestimatePaymasterValidateUserOpGas();
     }
 
+    // Test Case 0: Validate a single userOp
     function testestimatePaymasterValidateUserOpGas() public {
-        uint256 totalGas = 0;
+        PackedUserOperation[] memory userOps = createSampleUserOps();
         uint256 numEstimates = userOps.length;
+        uint256 totalGas = 0;
 
-        for (uint256 i = 0; i < numEstimates; i++) {
+            uint256 gasUsed = _estimateSinglePaymasterGas(userOps[i]);
+        console.log("Gas used for UserOp %d: %d", i, gasUsed); // solhint-disable-line no-console
+    }
+
+    // Test Case 1: Same UserOp Executed Twice with Same Sender
+    function testSameUserOpTwice() public {
+        PackedUserOperation memory userOp = createSampleUserOps()[0];
+
+        uint256 gasUsedFirst = _estimateSinglePaymasterGas(userOp);
+        uint256 gasUsedSecond = _estimateSinglePaymasterGas(userOp);
+
+        console.log("Gas used for first UserOp: %d", gasUsedFirst);
+        console.log("Gas used for second UserOp (expected to be lower due to warm storage): %d", gasUsedSecond);
+    }
+
+    // Test Case 2: Different UserOps with Different Senders
+    function testDifferentUserOpsDifferentSenders() public {
+        PackedUserOperation[] memory userOps = createSampleUserOps();
+
+        uint256 totalGas = 0;
+        for (uint256 i = 0; i < userOps.length; i++) {
             uint256 gasUsed = _estimateSinglePaymasterGas(userOps[i]);
             totalGas += gasUsed;
-            console.log("Gas used for UserOp %d: %d", i, gasUsed); // solhint-disable-line no-console
+            console.log("Gas used for UserOp %d (different sender): %d", i, gasUsed);
         }
+        console.log("Total gas used for all UserOps with different senders: %d", totalGas);
+    }
 
-        uint256 averageGas = totalGas / numEstimates;
-        console.log("Average gas used: %d", averageGas); // solhint-disable-line no-console
+    // Test Case 3: Repeated Same UserOp Multiple Times
+    function testRepeatedUserOpSameSender() public {
+        PackedUserOperation memory userOp = createSampleUserOps()[0];
+
+        uint256 repetitions = 3;
+        uint256 totalGas = 0;
+        for (uint256 i = 0; i < repetitions; i++) {
+            uint256 gasUsed = _estimateSinglePaymasterGas(userOp);
+            totalGas += gasUsed;
+            console.log("Gas used for repetition %d of UserOp: %d", i, gasUsed);
+        }
+        console.log("Total gas used for repeated UserOps with the same sender: %d", totalGas);
+    }
+
+    // Test Case 4: Different UserOps with Different tx.origin
+    function testDifferentTxOrigin() public {
+        PackedUserOperation[] memory userOps = createSampleUserOps();
+
+        for (uint256 i = 0; i < userOps.length; i++) {
+            vm.prank(0xF39Fd6e51aad88F6F4ce6aB8827279cffFb92266); // Set a different tx.origin
+            uint256 gasUsed = _estimateSinglePaymasterGas(userOps[i]);
+            console.log("Gas used for UserOp %d with different tx.origin: %d", i, gasUsed);
+        }
+    }
+
+    // Test Case 5: Different UserOps Executed in Isolation
+    function testDifferentUserOpsIsolated() public {
+        PackedUserOperation[] memory userOps = createSampleUserOps();
+
+        for (uint256 i = 0; i < userOps.length; i++) {
+            // Using isolation mode; each UserOp gets executed in a separate isolated context.
+            // Note: You would need to pass the `--isolate` flag when running the test.
+            uint256 gasUsed = _estimateSinglePaymasterGas(userOps[i]);
+            console.log("Gas used for UserOp %d in isolated context: %d", i, gasUsed);
+        }
     }
 
     function _estimateSinglePaymasterGas(PackedUserOperation memory userOp) internal returns (uint256) {
-        bytes32 userOpHash = UserOpLib.getEncodedUserOpHash(userOp);
+        bytes32 userOpHash = userOp.getEncodedUserOpHash();
         uint256 requiredPrefund = 1e18; // Dummy Value
 
+        vm.prank(ENTRYPOINT_V7);//, userOp.sender);
         uint256 gasBefore = gasleft();
-
-        vm.prank(ENTRYPOINT_V7);
         happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, requiredPrefund);
-
         uint256 gasAfter = gasleft();
+
         return gasBefore - gasAfter;
     }
 
@@ -79,7 +128,7 @@ contract GasEstimator is Test, Script {
         });
 
         userOpsArray[1] = PackedUserOperation({
-            sender: address(0x19AC95A5524dB39021bA2f10e4F65574dfed2741),
+            sender: address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742),
             nonce: 1,
             initCode: bytes(
                 hex"c5265d5d0000000000000000000000000c97547853926e209d9f3c3fd0b7bdf126d3bf860000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001243c3b752b01F7B2845C4c0cA860D5d60A1332769375d01F7AAD0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000014f39Fd6e51aad88F6F4ce6aB8827279cffFb922660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" // solhint-disable-line max-line-length
@@ -89,7 +138,7 @@ contract GasEstimator is Test, Script {
             preVerificationGas: 50000,
             gasFees: bytes32(0x00000000000000000000000004a817c800000000000000000000000004a817c8),
             paymasterAndData: bytes(
-                hex"a33009b1552a751929b7e240aaa62b2640782fbc0000000000000000000000000000bbb800000000000000000000000000000001" // solhint-disable-line max-line-length
+                hex"a33009b1552a751929b7e240aaa62b2640782fbc0000000000000000000000000000bbb800000000000000000000000000000002" // solhint-disable-line max-line-length
             ),
             signature: bytes(hex"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef")
         });
