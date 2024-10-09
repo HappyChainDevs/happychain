@@ -6,6 +6,9 @@
     "workspaces": ["packages/*"],
     "private": true,
     "packageManager": "bun@1.1.29",
+    "scripts": {
+        "help": "make help"
+    },
     "devDependencies": {
         "@biomejs/biome": "^1.9.3",
         "@mikro-orm/cli": "^6.3.12",

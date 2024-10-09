@@ -7,7 +7,7 @@ include ../../makefiles/formatting.mk
 #
 # Also using concurrently rather than `make -j 3` for the same reason: concurrently restarts
 # the three processes as a group if one crashes.
-dev:
+dev: ## Serves the docs in watch mode
 	concurrently \
 		--restart-tries -1 \
 		--names "doc-js,doc-react,vocs" \
@@ -17,18 +17,18 @@ dev:
 .PHONY: dev
 
 # precompile API reference docs, then build full vocs output
-build: typedoc vocs
+build: typedoc vocs ## Generates the latest docs from source code
 .PHONY: build
 
-clean:
+clean:  ## Removes build artifacts
 	rm -rf docs/dist
 	rm -rf docs/pages/{js,react}/api
 	rm -rf vocs.config.ts.timestamp-*
 	rm -rf node_modules/.tmp
 .PHONY: clean
 
-# Preview production build (run build first)
-preview:
+# Preview production build
+preview: build ## Builds and previews the latest docs
 	vocs preview;
 .PHONY: preview
 
@@ -43,7 +43,7 @@ vocs.watch:
 .PHONY: vocs.watch
 
 # generate all markdown API reference
-typedoc:
+typedoc: ## Generates the markdown files from package source code
 	concurrently --names "js,react"\
 		'make typedoc-js'\
 		'make typedoc-react';

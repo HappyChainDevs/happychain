@@ -2,10 +2,10 @@ include ../../makefiles/lib.mk
 include ../../makefiles/vite.mk
 include ../../makefiles/formatting.mk
 
-test:
+test: ## Runs tests
 	vitest run
 .PHONY: test
 
-test.watch:
+test.watch: ## Runs tests in watch mode
 	vitest watch
 .PHONY: test.watch
