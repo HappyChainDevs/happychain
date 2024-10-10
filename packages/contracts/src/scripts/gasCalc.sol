@@ -19,7 +19,14 @@ contract GasEstimator is Test {
     IPaymaster private happyPaymaster;
 
     function setUp() public {
-        happyPaymaster = IPaymaster(HAPPY_PAYMASTER);
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(root, "/out/deployment.json");
+        string memory json = vm.readFile(path);
+        address happyPaymasterAddress = vm.parseJsonAddress(json, ".HappyPaymaster");
+
+        // Set the paymaster address in the contract
+        happyPaymaster = IPaymaster(happyPaymasterAddress);
+//        happyPaymaster = IPaymaster(HAPPY_PAYMASTER);
     }
 
     /// @notice Estimates gas for a single UserOp.
