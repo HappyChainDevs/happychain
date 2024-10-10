@@ -4,7 +4,7 @@ services:
   bundler:
     image: ghcr.io/happychaindevs/happy-bundler:latest
     ports:
-      - "3000:3000"
+      - "49531:49531"
     networks:
       - bundler_network
     environment:
