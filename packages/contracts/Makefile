@@ -81,6 +81,12 @@ test-gas:
 	forge test --gas-report
 .PHONY: test-gas
 
+test-aa-gas:
+	make deploy DEPLOY_SCRIPT=DeployAA.s.sol
+	make save-deployment DEPLOY_SCRIPT=DeployAA.s.sol DEPLOYMENT_NAME=anvil/testing CONFIG=LOCAL
+	forge test -vv --gas-report --match-contract GasEstimator --fork-url $(RPC_$(CONFIG))
+.PHONY: test-aa-gas
+
 test-fork:
 	forge test --gas-report --fork-url $(RPC_$(CONFIG))
 .PHONY: test-fork
