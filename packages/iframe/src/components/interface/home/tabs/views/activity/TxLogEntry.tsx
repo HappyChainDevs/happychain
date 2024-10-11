@@ -1,17 +1,15 @@
 import { happyChainSepolia, shortenAddress } from "@happychain/sdk-shared"
 import { CircleNotch } from "@phosphor-icons/react"
-import type { Hash } from "viem"
-import { useExtractReceipts } from "../../../../../../hooks/useExtractReceipts"
+import type { TransactionReceipt } from "viem"
 
 interface TxLogEntryProps {
-    tx: Hash
+    tx: TransactionReceipt
 }
 
 /**
  * Retrieves and presents details based on receipt of tx.
  */
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
-    const receipt = useExtractReceipts(tx)
     return (
         <div className="flex flex-row items-center w-full justify-between p-2">
             <span>
@@ -21,12 +19,12 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:text-purple-500 hover:underline"
                 >
-                    {shortenAddress(tx)}
+                    {shortenAddress(tx.transactionHash)}
                 </a>
             </span>
             <div>
-                {receipt?.status !== undefined ? (
-                    receipt.status === "success" ? (
+                {tx?.status !== undefined ? (
+                    tx.status === "success" ? (
                         <span>✅</span> // Success
                     ) : (
                         <span>❌</span> // Failure
