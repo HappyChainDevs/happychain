@@ -1,7 +1,5 @@
+import { connect as hcConnect, disconnect as hcDisconnect } from "@happychain/js"
 import { useCallback, useState } from "preact/hooks"
-import { createRequests } from "../helpers/requests"
-
-const { requestPermissions, revokePermissions } = createRequests({ rdns: "tech.happy" })
 
 const userRejectionErrorCode = 4001
 
@@ -11,7 +9,7 @@ export function useConnection() {
     const connect = useCallback(async () => {
         try {
             setConnecting(true)
-            await requestPermissions()
+            await hcConnect()
         } catch (e) {
             if (e instanceof Error) {
                 // don't need to throw every time they reject
@@ -29,7 +27,7 @@ export function useConnection() {
     const disconnect = useCallback(async () => {
         try {
             setConnecting(true)
-            await revokePermissions()
+            await hcDisconnect()
         } finally {
             setConnecting(false)
         }

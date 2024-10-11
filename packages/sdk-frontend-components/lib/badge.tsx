@@ -1,12 +1,11 @@
-import { onUserUpdate } from "@happychain/js"
 /** @jsxImportSource preact */
+import { onUserUpdate } from "@happychain/js"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { useEffect, useState } from "preact/hooks"
-import { ConnectionStatus } from "./components/ConnectionStatus"
-import { Logo } from "./components/Logo"
-import { Styles } from "./components/Styles"
-import { createRequests } from "./helpers/requests"
-import { useConnection } from "./hooks/useConnection"
+import { useConnection } from "./useConnection.ts"
+
+import badgeStyles from "./styles/badge.css?inline"
+import propertyStyles from "./styles/property.css?inline"
 
 if (import.meta.hot) {
     // web components don't handle HMR well
@@ -15,63 +14,46 @@ if (import.meta.hot) {
     })
 }
 
-const noop = undefined
-
-const { fetchUser, providerInfo } = createRequests({ rdns: "tech.happy" })
-
 export type BadgeProps = { disableStyles?: boolean | string }
 
 export function Badge({ disableStyles = false }: BadgeProps) {
     const [user, setUser] = useState<HappyUser | undefined>(undefined)
-    const [initialized, setInitialized] = useState(false)
-    const [errored, setErrored] = useState(false)
 
-    const { connect, disconnect, connecting } = useConnection()
+    const { connecting, connect, disconnect } = useConnection()
 
     useEffect(() => {
-        async function init() {
-            try {
-                const user = await fetchUser()
-                setUser(user)
-                setInitialized(true)
-            } catch (e) {
-                console.error(e)
-                setErrored(true)
-            }
-        }
-
-        init()
-
-        return onUserUpdate(setUser)
+        return onUserUpdate((user) => {
+            console.log("user updated")
+            setUser(user)
+        })
     }, [])
 
-    const connected = Boolean(user?.address)
-    const onClick = !initialized || connecting ? noop : connected ? disconnect : connect
-    const state = !initialized ? "initializing" : connecting ? "connecting" : connected ? "connected" : "disconnected"
-    const provider = providerInfo()
+    const connected = !!user?.address
+    const onClick = connecting ? undefined : connected ? disconnect : connect
+    const state = connecting ? "connecting" : connected ? "connected" : "disconnected"
 
     return (
         <div>
-            {<Styles disableStyles={disableStyles} />}
-            {errored || !provider ? (
-                <button type={"button"} className={"error happychain-badge"} disabled={true}>
-                    <span>Connection Error</span>
-                </button>
-            ) : (
-                <button
-                    type={"button"}
-                    className={`${!connected ? `${state} animated` : state} happychain-badge`}
-                    onClick={onClick}
-                    disabled={!initialized || connecting}
-                >
-                    <span>
-                        <Logo info={provider} />
-                        <div className="happychain-status">
-                            <ConnectionStatus initialized={initialized} connecting={connecting} user={user} />
-                        </div>
-                    </span>
-                </button>
-            )}
+            {
+                // biome-ignore format: readability
+                (typeof disableStyles === "boolean" ? (disableStyles) : disableStyles !== "false")
+                  ? undefined
+                  : <style>
+                      {propertyStyles}
+                      {badgeStyles}
+                  </style>
+            }
+            <button
+                type={"button"}
+                className={`${!connected ? `${state} animated` : state} happychain-badge`}
+                onClick={onClick}
+                disabled={connecting}
+            >
+                <span>
+                    <img src="/happychain.png" alt="HappyChain logo" className="happychain-icon" />
+                    <div className="happychain-status">{connecting ? "Connecting" : user ? user.email : "Connect"}</div>
+                </span>
+            </button>
         </div>
     )
 }
