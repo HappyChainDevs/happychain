@@ -15,3 +15,5 @@ export { happyChainTestnetChain } from "./viem/chains.js"
 export { createUUID, type UUID } from "./utils/uuid.js"
 
 export { nowInSeconds } from "./utils/date.js"
+
+export { onlyUnique } from "./utils/streams.js"
