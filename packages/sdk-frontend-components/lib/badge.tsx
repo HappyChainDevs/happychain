@@ -7,13 +7,6 @@ import { useConnection } from "./useConnection.ts"
 import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"
 
-if (import.meta.hot) {
-    // web components don't handle HMR well
-    import.meta.hot.accept(() => {
-        location.reload()
-    })
-}
-
 export type BadgeProps = { disableStyles?: boolean | string }
 
 export function Badge({ disableStyles = false }: BadgeProps) {
