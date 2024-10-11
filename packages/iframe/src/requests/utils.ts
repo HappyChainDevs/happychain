@@ -16,15 +16,15 @@ const parentID = new URLSearchParams(window.location.search).get("windowId")
 
 export const iframeID = createUUID()
 
-/** Confirms if the request comes from the parent window or the iframe. */
-export const confirmSourceId = (sourceId: UUID) => {
-    return confirmParentId(sourceId) || confirmIframeId(sourceId)
+/** Whether the source ID is allowed: either the iframe or its parent (app). */
+export const isAllowedSourceId = (sourceId: UUID) => {
+    return isParentId(sourceId) || isIframeId(sourceId)
 }
 
-export const confirmParentId = (sourceId: UUID) => {
+export const isParentId = (sourceId: UUID) => {
     return sourceId === parentID
 }
-export const confirmIframeId = (sourceId: UUID) => {
+export const isIframeId = (sourceId: UUID) => {
     return sourceId === iframeID
 }
 
@@ -58,7 +58,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
     dispatch: (request: Request) => Promise<T>,
 ): Promise<void> {
     try {
-        if (!confirmSourceId(request.windowId)) return
+        if (!isAllowedSourceId(request.windowId)) return
         const payload = await dispatch(request)
         const response = {
             key: request.key,
