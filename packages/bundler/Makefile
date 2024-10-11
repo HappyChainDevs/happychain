@@ -11,9 +11,6 @@ ALTO_BRANCH := $(shell cat alto.version)
 # Parameterized configuration file path based on TARGET value
 ALTO_CONFIG_FILE=configs/config.$(TARGET).json
 
-# Docker image name
-IMAGE_NAME ?= happy-bundler
-
 # Clone or update Alto repository based on alto.version
 alto: alto.version
 	@if [ -d alto ]; then \
@@ -26,10 +23,6 @@ alto: alto.version
 build: alto
 	cd alto && bunx pnpm install && bunx pnpm run build
 .PHONY: build
-
-build.docker: alto
-	docker build -t $(IMAGE_NAME) -f deployment/Dockerfile .
-.PHONY: build.docker
 
 # Target to run the Alto bundler with the appropriate configuration
 run:
