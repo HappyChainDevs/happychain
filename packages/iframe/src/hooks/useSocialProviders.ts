@@ -10,6 +10,15 @@ import { chainsAtom } from "../state/chains"
 import { userAtom } from "../state/user"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 
+// Whether to grant the eth_accounts permission upon login.
+// Set whenever the user logins on the current dapp explicit, not when he is automatically
+// logged in in the iframe from having previously logged in on a different dapp.
+const needsImplicitConnectionPerm = { current: false }
+
+// NOTE: The above variable needs to exist outside of React because `useSocialProvider` is called in
+// the modal, who disappears upon log in, to be taken over by the use of the same hook in /embed.
+// This is a big hack, the listener should exist outside of React.
+
 export function useSocialProviders() {
     const setAuthState = useSetAtom(authStateAtom)
     const userValue = useAtomValue(userAtom)
@@ -20,6 +29,7 @@ export function useSocialProviders() {
     const { status } = useAccount()
 
     const { providers, onAuthChange } = useFirebaseWeb3AuthStrategy()
+
     useEffect(() => {
         onAuthChange(async (user, provider) => {
             // sync local user+provider state with internal plugin updates
@@ -44,27 +54,34 @@ export function useSocialProviders() {
                     await connectAsync({ connector: connectors[0] })
                 }
 
-                // the user is automatically sent to the front when the user
-                // changes or when the permissions change, however on page-load-reconnect
-                // neither of these change, and we need to manually send here
-                if (loggedIn && hasPermissions("eth_accounts")) {
-                    emitUserUpdate(user)
+                if (loggedIn) {
+                    if (needsImplicitConnectionPerm.current) {
+                        grantPermissions("eth_accounts")
+                        emitUserUpdate(user)
+                    } else if (hasPermissions("eth_accounts")) {
+                        // The user is automatically sent to the app whenever the user changes or
+                        // when the eth_accounts permission is granted. However, if reconnecting on
+                        // page load, neither of these change, and we need to manually send here.
+                        emitUserUpdate(user)
+                    }
                 }
             }
         })
     }, [onAuthChange, userValue, chains, connectAsync, connectors, status])
 
-    const providersMemo = useMemo(
+    // Returns the provider list with patched enable() / disable() functions.
+    return useMemo(
         () =>
             providers.map(
                 (provider) =>
                     ({
                         ...provider,
                         enable: async () => {
-                            // will automatically disable loading state when user+provider are set
+                            // Will automatically disable loading state when user+provider are set.
                             setAuthState(AuthState.Connecting)
+                            // We're logging in on the current dapp, grant connection permission.
+                            needsImplicitConnectionPerm.current = true
                             await provider.enable()
-                            grantPermissions("eth_accounts")
                         },
                         disable: async () => {
                             // will automatically disable loading state when user+provider are set
@@ -76,6 +93,4 @@ export function useSocialProviders() {
             ),
         [providers, setAuthState, disconnectAsync],
     )
-
-    return providersMemo
 }
