@@ -42,6 +42,10 @@ export function Badge({ disableStyles = false }: BadgeProps) {
                 disabled={connecting}
             >
                 <span>
+                    {/*
+                    TODO: This works for our demos because they all have this file at the root.
+                          Later, we need to replace this with a happy.tech URL.
+                    */}
                     <img src="/happychain.png" alt="HappyChain logo" className="happychain-icon" />
                     <div className="happychain-status">{connecting ? "Connecting" : user ? user.email : "Connect"}</div>
                 </span>
