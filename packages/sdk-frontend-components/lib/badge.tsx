@@ -23,7 +23,6 @@ export function Badge({ disableStyles = false }: BadgeProps) {
 
     useEffect(() => {
         return onUserUpdate((user) => {
-            console.log("user updated")
             setUser(user)
         })
     }, [])
