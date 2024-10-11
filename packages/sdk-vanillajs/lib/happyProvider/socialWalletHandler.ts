@@ -95,7 +95,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
              * will be what is returned to the originating caller
              */
             if (!this.user && this.authState === AuthState.Disconnected) {
-                this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
+                void this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
 
                 const unsubscribeClose = this.config.msgBus.on(Msgs.ModalToggle, (state) => {
                     if (state.isOpen) return

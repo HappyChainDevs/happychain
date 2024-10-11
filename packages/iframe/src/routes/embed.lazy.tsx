@@ -39,11 +39,11 @@ function Embed() {
         return appMessageBus.on(Msgs.RequestDisplay, (screen) => {
             switch (screen) {
                 case ModalStates.Login:
-                    navigate({ to: "/embed" })
+                    void navigate({ to: "/embed" })
                     signalOpen()
                     break
                 case ModalStates.Send:
-                    navigate({ to: "/embed/send" })
+                    void navigate({ to: "/embed/send" })
                     signalOpen()
                     break
             }
@@ -57,7 +57,7 @@ function Embed() {
 
     async function disconnect() {
         await activeProvider?.disable()
-        appMessageBus.emit(Msgs.ModalToggle, { isOpen: false, cancelled: false })
+        void appMessageBus.emit(Msgs.ModalToggle, { isOpen: false, cancelled: false })
     }
 
     if (authState === AuthState.Connecting) {
