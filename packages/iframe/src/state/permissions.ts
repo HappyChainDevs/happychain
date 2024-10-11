@@ -28,10 +28,10 @@ import { userAtom } from "./user"
 export type PermissionsMap = Record<Address, Record<HTTPString, AppPermissions>>
 
 /**
- * Maps EIP-2255 EIP-1193 requests (like `eth_accounts`) to a permission object.
- * Keyed by the permission name
- *
- * i.e. Record<'eth_accounts', WalletPermission>
+ * Maps permissions names to permission objects.
+ * EIP-2255 specifies that permissions names must be EIP-1193 request names (e.g. `eth_accounts`).
+ * However, we type this as a string in case we want to extend the permission system to other
+ * names that do not map to a request (or are custom requests).
  */
 export type AppPermissions = Record<string, WalletPermission>
 
