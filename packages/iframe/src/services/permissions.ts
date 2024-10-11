@@ -146,9 +146,7 @@ export function grantPermissions(
         grantedPermissions.push(grantedPermission)
         dappPermissions[name] = grantedPermission
 
-        // hasPermissions checks the DAPP side by default, however the above code
-        // could be running in the context of the iframe such as when wagmi connects
-        if (name === "eth_accounts" && hasPermissions("eth_accounts")) {
+        if (name === "eth_accounts" && origin === getDappOrigin()) {
             emitUserUpdate(getUser())
         }
     }
