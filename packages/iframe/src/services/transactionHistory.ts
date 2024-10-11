@@ -67,6 +67,14 @@ export function removePendingTx(address: Address, hash: Hash) {
     })
 }
 
+/**
+ * Subscribes to changes in the `PendingTxHashesAtom` and attempts to retrieve transaction receipts for
+ * pending transactions of the current user. If a transaction receipt is successfully fetched, it is
+ * added to the user's transaction history and removed from the pending transactions list.
+ * If the receipt is not immediately available, it retries fetching the receipt a specified number
+ * of times with a delay between each attempt.
+ */
+
 export const subscribeToPendingTxAtom = store.sub(PendingTxHashesAtom, () => {
     const user = getUser()
     const publicClient = getPublicClient()
@@ -85,33 +93,37 @@ export const subscribeToPendingTxAtom = store.sub(PendingTxHashesAtom, () => {
     }
 
     const retryLimit = 5
-    const retryDelay = 5000
+    const retryDelay = 5000 //HappyChain blocks resolve in 2 seconds, so this might be overkill
 
-    const fetchTransactionReceiptWithRetry = async (hash: Hash, retryCount = 0) => {
-        try {
-            const receipt = await publicClient.getTransactionReceipt({ hash: hash })
-            if (!receipt) {
-                throw new Error(`Receipt not found for transaction hash: ${hash}`)
-            }
+    const fetchTransactionReceiptWithRetry = (hash: Hash, retryCount = 0) => {
+        publicClient
+            .getTransactionReceipt({ hash })
+            .then((receipt) => {
+                if (!receipt) {
+                    throw new Error(`Receipt not found for transaction hash: ${hash}`)
+                }
 
-            // If receipt is found, add it to the user's transaction history
-            addUserTxHistory(user.address, receipt)
-            // remove the hash from local storage since it's no longer 'pending'
-            removePendingTx(user.address, hash)
-            console.log("Transaction receipt found and saved:", receipt)
-        } catch (error) {
-            console.warn(`Error fetching receipt for hash ${hash}. Attempt ${retryCount + 1}:`, error)
+                // If receipt is found, add it to the user's transaction history
+                addUserTxHistory(user.address, receipt)
+                // Remove the hash from local storage since it's no longer 'pending'
+                removePendingTx(user.address, hash)
+            })
+            .catch((error) => {
+                console.warn(`Error fetching receipt for hash ${hash}. Attempt ${retryCount + 1}:`, error)
 
-            if (retryCount < retryLimit) {
-                // Retry after a delay if retry count hasn't reached the limit
-                setTimeout(() => {
-                    fetchTransactionReceiptWithRetry(hash, retryCount + 1)
-                }, retryDelay)
-            } else {
-                console.warn(`Failed to fetch receipt after ${retryLimit} attempts. Giving up.`)
-            }
-        }
+                if (retryCount < retryLimit) {
+                    // Retry after a delay if retry count hasn't reached the limit
+                    setTimeout(() => {
+                        fetchTransactionReceiptWithRetry(hash, retryCount + 1)
+                    }, retryDelay)
+                } else {
+                    console.warn(`Failed to fetch receipt after ${retryLimit} attempts. Giving up.`)
+                }
+            })
     }
 
-    fetchTransactionReceiptWithRetry(hashList[0])
+    // Iterate over all hashes in the hashList and fetch their receipts
+    hashList.forEach((hash) => {
+        fetchTransactionReceiptWithRetry(hash)
+    })
 })

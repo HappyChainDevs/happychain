@@ -1,5 +1,5 @@
 import { happyChainSepolia, shortenAddress } from "@happychain/sdk-shared"
-import { CircleNotch } from "@phosphor-icons/react"
+import { ArrowUpRight, CircleNotch } from "@phosphor-icons/react"
 import type { TransactionReceipt } from "viem"
 
 interface TxLogEntryProps {
@@ -7,27 +7,35 @@ interface TxLogEntryProps {
 }
 
 /**
- * Retrieves and presents details based on receipt of tx.
+ * Retrieves and presents details based on tx receipt.
  */
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
+    console.log(tx)
     return (
-        <div className="flex flex-row items-center w-full justify-between p-2">
-            <span>
-                <a
-                    href={`${happyChainSepolia.blockExplorerUrls[0]}/tx/${tx}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-purple-500 hover:underline"
-                >
-                    {shortenAddress(tx.transactionHash)}
-                </a>
-            </span>
+        <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
+            <div className="flex flex-row items-center justify-center space-x-1">
+                <ArrowUpRight className="bg-green-600 rounded-sm" />
+                <span>
+                    <a
+                        href={`${happyChainSepolia.blockExplorerUrls[0]}/tx/${tx.transactionHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:text-purple-500 hover:underline"
+                    >
+                        {shortenAddress(tx.transactionHash)}
+                    </a>
+                </span>
+            </div>
             <div>
                 {tx?.status !== undefined ? (
                     tx.status === "success" ? (
-                        <span>✅</span> // Success
+                        <div className="tooltip" data-tip={"Tx Successful"}>
+                            <span>✅</span>
+                        </div>
                     ) : (
-                        <span>❌</span> // Failure
+                        <div className="tooltip" data-tip={"Tx Reverted"}>
+                            <span>❌</span>
+                        </div>
                     )
                 ) : (
                     <div className="animate-spin">
