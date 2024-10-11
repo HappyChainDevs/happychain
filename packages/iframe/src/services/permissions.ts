@@ -28,17 +28,11 @@ type GetDappPermissionOptions = {
     origin?: HTTPString
 }
 
-export function getDappPermissions(
-    {
-        user = getUser(),
-        permissions = store.get(permissionsAtom),
-        origin = getDappOrigin(),
-    }: GetDappPermissionOptions = {
-        user: getUser(),
-        permissions: store.get(permissionsAtom),
-        origin: getDappOrigin(),
-    },
-): AppPermissions {
+export function getDappPermissions({
+    user = getUser(),
+    origin = getDappOrigin(),
+    permissions = store.get(permissionsAtom),
+}: GetDappPermissionOptions = {}): AppPermissions {
     if (!user) {
         logger.warn("No user found, returning empty permissions.")
         return {}
