@@ -52,5 +52,4 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            cd ${{ env.DEPLOYMENT_DIR }}
-            pm2 restart ./alto/src/lib/cli/alto.js -- run --config ./config.happySepolia.json --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }} --name ${{ env.PM2_PROCESS_NAME }}
+            pm2 restart ${{ env.DEPLOYMENT_DIR }}/alto/src/lib/cli/alto.js -- run --config ${{ env.DEPLOYMENT_DIR }}/configs/config.happySepolia.json --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }} --name ${{ env.PM2_PROCESS_NAME }}
