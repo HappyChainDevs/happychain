@@ -1,7 +1,10 @@
 import { getDefaultStore } from "jotai"
 import type { Address, Hash, TransactionReceipt } from "viem"
+import { serialize } from "wagmi"
 import { PendingTxHashesAtom, type PendingTxHistoryRecord } from "../state/pendingTxs"
+import { getPublicClient } from "../state/publicClient"
 import { type TxHistory, txHistoryAtom } from "../state/txHistory"
+import { getUser } from "../state/user"
 
 /** When user sends a transaction, the hash generated is stored
  *  in the pending tx atom. On addition, it is processed by the `hooks/waitForReceipt` function
@@ -18,19 +21,14 @@ export function getTxHistory(): TxHistory {
 }
 
 export function addUserTxHistory(address: Address, newReceipt: TransactionReceipt) {
-    let recordExists = false
+    console.log({ address, newReceipt })
     store.set(txHistoryAtom, (existingRecords) => {
         const userHistory = existingRecords[address] || []
-        recordExists = userHistory.some((log) => log.transactionHash === newReceipt.transactionHash)
-
-        return recordExists
-            ? existingRecords
-            : {
-                  ...existingRecords,
-                  [address]: [newReceipt, ...userHistory],
-              }
+        return {
+            ...existingRecords,
+            [address]: [serialize(newReceipt), ...userHistory],
+        }
     })
-    return !recordExists
 }
 
 export function getPendingTxHashes(): PendingTxHistoryRecord {
@@ -53,10 +51,18 @@ export function addPendingTx(address: Address, newHash: Hash) {
     return !recordExists
 }
 
-export const subscribeToPendingTxHashes = (callback: (newValue: PendingTxHistoryRecord) => void) => {
-    const unsubscribe = store.sub(PendingTxHashesAtom, () => {
-        const newValue = store.get(PendingTxHashesAtom)
-        callback(newValue)
+export const subscribeToPendingTxAtom = store.sub(PendingTxHashesAtom, () => {
+    const user = getUser()
+    const publicClient = getPublicClient()
+    if (!user) {
+        console.warn("No user found, can't access tx history.")
+        return
+    }
+    const hashesByUser = store.get(PendingTxHashesAtom)
+    const hashList = hashesByUser[user?.address]
+
+    // fetch tx receipt
+    publicClient.getTransactionReceipt({ hash: hashList[1] }).then((receipt) => {
+        addUserTxHistory(user.address, receipt)
     })
-    return unsubscribe
-}
+})

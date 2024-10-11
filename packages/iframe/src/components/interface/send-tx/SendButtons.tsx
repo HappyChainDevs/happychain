@@ -24,7 +24,7 @@ const SendButtons = ({ sendValue, targetAddress, setInProgress }: SendButtonsInt
         if (isConfirmed) {
             setInProgress(false)
             setSendInFlight(false)
-            setView(ContentType.ACTIVITY) // shows the activity tab in the wallet to reflect the new tx
+            setView(ContentType.TOKENS)
             navigate({ to: "/embed" })
         }
         if (error) {
