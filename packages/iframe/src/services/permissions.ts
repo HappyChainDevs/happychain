@@ -24,8 +24,15 @@ const store = getDefaultStore()
 
 type GetDappPermissionOptions = {
     user?: HappyUser | undefined
-    permissions?: PermissionsMap
     origin?: HTTPString
+    permissions?: PermissionsMap
+}
+
+export type PermissionAccessOptions = {
+    /** The URL requesting the permission (either an app or the iframe itself. */
+    origin?: HTTPString
+    /** The permissions for {@link origin}. */
+    dappPermissions?: AppPermissions
 }
 
 export function getDappPermissions({
@@ -63,6 +70,7 @@ export function getDappPermissions({
         // rerunning the above logic on each lookup.
         permissions[user.address] ??= {}
         permissions[user.address][origin] = basePermissions
+
         return basePermissions
     }
 
@@ -115,8 +123,11 @@ function getPermissionArray(permissions: PermissionsSpec): [string, unknown][] {
  */
 export function grantPermissions(
     permissions: PermissionsSpec,
-    dappPermissions: AppPermissions = getDappPermissions(),
-    invoker = getDappOrigin(),
+    // biome-ignore format: readability
+    {
+        origin = getDappOrigin(),
+        dappPermissions = getDappPermissions({ origin }),
+    }: PermissionAccessOptions = {},
 ): WalletPermission[] {
     const grantedPermissions = []
 
@@ -127,7 +138,7 @@ export function grantPermissions(
 
         const grantedPermission = {
             caveats: [],
-            invoker,
+            invoker: origin,
             parentCapability: name,
             date: Date.now(),
             id: createUUID(),
