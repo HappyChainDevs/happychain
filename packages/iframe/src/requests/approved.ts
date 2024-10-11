@@ -34,7 +34,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_sendTransaction": {
             const tx = await sendToWalletClient(request)
             const user = getUser()
-            // add tx hash to jotai tx history atom
             if (user) addPendingTx(user.address, tx as Hash)
             return tx
         }

@@ -1,7 +1,7 @@
 import { atomWithStorage } from "jotai/utils"
-import type { Address, TransactionReceipt } from "viem"
+import type { Address } from "viem"
 
-export type TxHistory = Record<Address, TransactionReceipt[]>
+export type TxHistory = Record<Address, string[]>
 
 /**
  * Atom to manage transaction history mapped to user's address, using localStorage.
