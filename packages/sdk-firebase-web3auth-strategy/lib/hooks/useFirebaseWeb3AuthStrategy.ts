@@ -28,8 +28,5 @@ export function useFirebaseWeb3AuthStrategy(): {
         [signIn, signOut],
     )
 
-    return {
-        providers: providers,
-        onAuthChange,
-    }
+    return { providers, onAuthChange }
 }
