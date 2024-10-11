@@ -1,3 +1,4 @@
+import { getUser } from "@happychain/iframe/src/state/user.ts"
 import {
     type AuthState,
     type EventBus,
@@ -78,6 +79,12 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      */
     const onUserUpdate = (callback: UserUpdateCallback): ListenerUnsubscribeFn => {
         onUserUpdateCallbacks.add(callback)
+        const currentUser = getUser()
+        if (currentUser) {
+            void Promise.resolve().then(() => {
+                callback(currentUser)
+            })
+        }
         return () => {
             onUserUpdateCallbacks.delete(callback)
         }
