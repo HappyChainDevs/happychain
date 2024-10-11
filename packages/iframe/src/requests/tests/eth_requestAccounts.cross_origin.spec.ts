@@ -20,9 +20,9 @@ const iframeID = createUUID()
 vi.mock("../utils", (importUtils) =>
     importUtils<typeof import("../utils")>().then((utils) => ({
         ...utils,
-        confirmSourceId: (sourceId: UUID) => sourceId === parentID || sourceId === iframeID,
-        confirmParentId: (sourceId: UUID) => sourceId === parentID,
-        confirmIframeId: (sourceId: UUID) => sourceId === iframeID,
+        isAllowedSourceId: (sourceId: UUID) => sourceId === parentID || sourceId === iframeID,
+        isParentId: (sourceId: UUID) => sourceId === parentID,
+        isIframeId: (sourceId: UUID) => sourceId === iframeID,
     })),
 )
 describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
