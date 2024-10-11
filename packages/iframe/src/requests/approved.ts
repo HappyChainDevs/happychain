@@ -15,7 +15,7 @@ import { getUser } from "../state/user"
 import { getWalletClient } from "../state/walletClient"
 import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin"
 import { isAddChainParams } from "../utils/isAddChainParam"
-import { confirmIframeId, confirmSourceId, sendResponse } from "./utils"
+import { isAllowedSourceId, isIframeId, sendResponse } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -27,12 +27,12 @@ export function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): vo
 
 // exported for testing
 export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
-    if (!confirmSourceId(request.windowId)) {
-        console.warn("Unsupported Request Source", request.windowId)
+    if (!isAllowedSourceId(request.windowId)) {
+        console.warn("Unsupported request source", request.windowId)
         return
     }
 
-    const origin = confirmIframeId(request.windowId) ? getIframeOrigin() : getDappOrigin()
+    const origin = isIframeId(request.windowId) ? getIframeOrigin() : getDappOrigin()
 
     switch (request.payload.method) {
         case "eth_sendTransaction":
