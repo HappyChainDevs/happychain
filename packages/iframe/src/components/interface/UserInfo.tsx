@@ -16,7 +16,7 @@ const UserInfo = () => {
     }
 
     if (!account.address) {
-        console.warn("wagmi is not connected")
+        // TODO this is normal, wagmi gets connected from a hook, need to handle gracefully (skeleton)
         return
     }
 
