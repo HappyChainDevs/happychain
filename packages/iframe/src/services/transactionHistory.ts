@@ -16,12 +16,12 @@ import { getUser } from "../state/user"
 
 const store = getDefaultStore()
 
-export function addUserTxHistory(address: Address, newReceipt: TransactionReceipt) {
-    store.set(txHistoryAtom, (existingRecords) => {
-        const userHistory = existingRecords[address] || []
+export function addHistoryLogEntry(address: Address, entry: TransactionReceipt) {
+    store.set(txHistoryAtom, (existingEntries) => {
+        const userHistory = existingEntries[address] || []
         return {
-            ...existingRecords,
-            [address]: [serialize(newReceipt), ...userHistory],
+            ...existingEntries,
+            [address]: [serialize(entry), ...userHistory],
         }
     })
 }
@@ -31,37 +31,37 @@ export function getPendingTxHashes(): PendingTxHistoryRecord {
 }
 
 export function addPendingTx(address: Address, newHash: Hash) {
-    let recordExists = false
-    store.set(PendingTxHashesAtom, (existingRecords) => {
-        const pendingTxHashes = existingRecords[address] || []
-        recordExists = pendingTxHashes.some((asset) => asset === newHash)
+    let entryExists = false
+    store.set(PendingTxHashesAtom, (existingEntries) => {
+        const pendingTxHashes = existingEntries[address] || []
+        entryExists = pendingTxHashes.some((asset) => asset === newHash)
 
-        return recordExists
-            ? existingRecords
+        return entryExists
+            ? existingEntries
             : {
-                  ...existingRecords,
+                  ...existingEntries,
                   [address]: [newHash, ...pendingTxHashes],
               }
     })
-    return !recordExists
+    return !entryExists
 }
 
 export function removePendingTx(address: Address, hash: Hash) {
-    store.set(PendingTxHashesAtom, (existingRecords) => {
-        const pendingTxHashes = existingRecords[address] || []
+    store.set(PendingTxHashesAtom, (existingEntries) => {
+        const pendingTxHashes = existingEntries[address] || []
 
         // Filter out the hash to be removed
         const updatedHashes = pendingTxHashes.filter((asset) => asset !== hash)
 
         // If the updatedHashes is empty, remove the address entry from the record
         if (updatedHashes.length === 0) {
-            const { [address]: _, ...remainingRecords } = existingRecords
-            return remainingRecords
+            const { [address]: _, ...remainingEntries } = existingEntries
+            return remainingEntries
         }
 
         // Return the updated record
         return {
-            ...existingRecords,
+            ...existingEntries,
             [address]: updatedHashes,
         }
     })
@@ -92,38 +92,17 @@ export const subscribeToPendingTxAtom = store.sub(PendingTxHashesAtom, () => {
         return
     }
 
-    const retryLimit = 5
-    const retryDelay = 5000 //HappyChain blocks resolve in 2 seconds, so this might be overkill
-
-    const fetchTransactionReceiptWithRetry = (hash: Hash, retryCount = 0) => {
-        publicClient
-            .getTransactionReceipt({ hash })
-            .then((receipt) => {
-                if (!receipt) {
-                    throw new Error(`Receipt not found for transaction hash: ${hash}`)
-                }
-
-                // If receipt is found, add it to the user's transaction history
-                addUserTxHistory(user.address, receipt)
-                // Remove the hash from local storage since it's no longer 'pending'
-                removePendingTx(user.address, hash)
-            })
-            .catch((error) => {
-                console.warn(`Error fetching receipt for hash ${hash}. Attempt ${retryCount + 1}:`, error)
-
-                if (retryCount < retryLimit) {
-                    // Retry after a delay if retry count hasn't reached the limit
-                    setTimeout(() => {
-                        fetchTransactionReceiptWithRetry(hash, retryCount + 1)
-                    }, retryDelay)
-                } else {
-                    console.warn(`Failed to fetch receipt after ${retryLimit} attempts. Giving up.`)
-                }
-            })
-    }
-
     // Iterate over all hashes in the hashList and fetch their receipts
     hashList.forEach((hash) => {
-        fetchTransactionReceiptWithRetry(hash)
+        publicClient.waitForTransactionReceipt({ hash }).then((receipt) => {
+            if (!receipt) {
+                throw new Error(`Receipt not found for transaction hash: ${hash}`)
+            }
+
+            // If receipt is found, add it to the user's transaction history
+            addHistoryLogEntry(user.address, receipt)
+            // Remove the hash from local storage since it's no longer 'pending'
+            removePendingTx(user.address, hash)
+        })
     })
 })
