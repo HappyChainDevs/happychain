@@ -9,7 +9,6 @@ export function ProductionWorkerPlugin(): Plugin {
         enforce: "pre",
         transform(code: string, id: string) {
             if (!filter(id)) return
-
             return { code: workerCodeGen(code, id) }
         },
     }

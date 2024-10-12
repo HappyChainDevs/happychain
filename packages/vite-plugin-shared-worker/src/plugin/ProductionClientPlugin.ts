@@ -16,7 +16,6 @@ export function ProductionClientPlugin(): Plugin {
         },
         transform(code: string, id: string) {
             if (!filter(id)) return
-
             return { code: clientCodeGen(code, id) }
         },
     }
