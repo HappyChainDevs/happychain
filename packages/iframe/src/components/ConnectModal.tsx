@@ -15,6 +15,17 @@ function setModalState({ isOpen, cancelled }: Parameters<typeof appMessageBus.em
 async function connect(provider: ConnectionProvider) {
     await provider.enable()
     setModalState({ isOpen: false, cancelled: false })
+    // try {
+    //     await provider.enable()
+    //     setModalState({ isOpen: false, cancelled: false })
+    // } catch (e) {
+    //     setModalState({ isOpen: false, cancelled: true })
+    //     if (e instanceof Error && e.message.includes("auth/popup-closed-by-user")) {
+    //         // TODO: throw new User Rejected Exception
+    //         return
+    //     }
+    //     // throw unknown exception
+    // }
 }
 
 appMessageBus.on(Msgs.RequestDisplay, (screen) => {

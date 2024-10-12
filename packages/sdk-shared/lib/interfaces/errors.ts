@@ -225,6 +225,7 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
 export function convertErrorObjectToEIP1193ErrorInstance(error: EIP1193ErrorObject) {
     switch (error.code) {
         case EIP1193ErrorCodes.UserRejectedRequest:
+            console.log("reject 3")
             return new EIP1193UserRejectedRequestError(error as EIP1193ErrorObject)
         case EIP1193ErrorCodes.Unauthorized:
             return new EIP1193UnauthorizedError(error as EIP1193ErrorObject)

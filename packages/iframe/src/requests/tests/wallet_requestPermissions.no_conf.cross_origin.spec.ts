@@ -11,10 +11,13 @@ import { userAtom } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../permissionless"
 
+const originDapp = "http://localhost:1234"
+const originIframe = "http://localhost:4321"
 vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => "http://localhost:5173",
-    getIframeOrigin: () => "http://localhost:5160",
+    getDappOrigin: () => originDapp,
+    getIframeOrigin: () => originIframe,
 }))
+
 const parentID = createUUID()
 const iframeID = createUUID()
 vi.mock("../utils", (importUtils) =>
@@ -35,7 +38,8 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
         })
 
         test("skips wallet_requestPermissions permissions when no user", async () => {
-            expect(getAllPermissions().length).toBe(0)
+            expect(getAllPermissions({ origin: originDapp }).length).toBe(0)
+            expect(getAllPermissions({ origin: originIframe }).length).toBe(0)
             const request = makePayload(parentID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
@@ -55,7 +59,8 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
         })
 
         test("does not add permissions", async () => {
-            expect(getAllPermissions().length).toBe(0)
+            expect(getAllPermissions({ origin: originDapp }).length).toBe(0)
+            expect(getAllPermissions({ origin: originIframe }).length).toBe(1)
             const request = makePayload(parentID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
@@ -64,7 +69,8 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
             await dispatchHandlers(request)
             await dispatchHandlers(request)
             await dispatchHandlers(request)
-            expect(getAllPermissions().length).toBe(0)
+            expect(getAllPermissions({ origin: originDapp }).length).toBe(0)
+            expect(getAllPermissions({ origin: originIframe }).length).toBe(1)
         })
     })
 })

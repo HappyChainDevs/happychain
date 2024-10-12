@@ -11,10 +11,12 @@ import { userAtom } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../permissionless"
 
+const origin = "http://localhost:4321"
 vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => "http://localhost:5160",
-    getIframeOrigin: () => "http://localhost:5160",
+    getDappOrigin: () => origin,
+    getIframeOrigin: () => origin,
 }))
+
 const parentID = createUUID()
 const iframeID = createUUID()
 vi.mock("../utils", (importUtils) =>
@@ -35,7 +37,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
         })
 
         test("skips wallet_requestPermissions permissions when no user", async () => {
-            expect(getAllPermissions().length).toBe(0)
+            expect(getAllPermissions({ origin }).length).toBe(0)
             const request = makePayload(iframeID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
@@ -55,7 +57,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
         })
 
         test("does not add permissions", async () => {
-            expect(getAllPermissions().length).toBe(1)
+            expect(getAllPermissions({ origin }).length).toBe(1)
             const request = makePayload(iframeID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
@@ -64,7 +66,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
             await dispatchHandlers(request)
             await dispatchHandlers(request)
             await dispatchHandlers(request)
-            expect(getAllPermissions().length).toBe(1)
+            expect(getAllPermissions({ origin }).length).toBe(1)
         })
     })
 })

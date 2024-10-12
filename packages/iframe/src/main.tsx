@@ -23,14 +23,14 @@ declare module "@tanstack/react-router" {
 const rootElement = document.getElementById("root")
 if (rootElement && !rootElement.innerHTML) {
     ReactDOM.createRoot(rootElement).render(
-        <StrictMode>
-            <HappyAccountProvider>
-                <WagmiProvider config={config}>
-                    <QueryClientProvider client={queryClient}>
-                        <RouterProvider router={router} />
-                    </QueryClientProvider>
-                </WagmiProvider>
-            </HappyAccountProvider>
-        </StrictMode>,
+        // <StrictMode>
+        <HappyAccountProvider>
+            <WagmiProvider config={config}>
+                <QueryClientProvider client={queryClient}>
+                    <RouterProvider router={router} />
+                </QueryClientProvider>
+            </WagmiProvider>
+        </HappyAccountProvider>,
+        // </StrictMode>,
     )
 }

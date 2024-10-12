@@ -1,3 +1,6 @@
+import type { EIP1193Provider } from "viem"
+import type { HappyUser } from "./happyUser"
+
 /**
  * Interface for a connectable provider (for injected or social wallets).
  *

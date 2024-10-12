@@ -1,5 +1,5 @@
 import type { HTTPString } from "@happychain/common"
-import { Msgs } from "@happychain/sdk-shared"
+import { logger, Msgs } from "@happychain/sdk-shared"
 import { appMessageBus } from "../services/eventBus"
 
 if (import.meta.hot) {
@@ -26,7 +26,7 @@ appMessageBus.on(Msgs.OriginResponse, (newOrigin) => {
 
 export function getDappOrigin(): HTTPString {
     if (!dappOrigin) {
-        console.warn("Unable to determine dApp Origin")
+        logger.warn("Unable to determine dApp Origin", getIframeOrigin())
         return getIframeOrigin()
     }
     return dappOrigin as HTTPString

@@ -12,7 +12,8 @@ import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } 
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
-import { checkAuthenticated, sendResponse } from "./utils"
+import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin"
+import { checkAuthenticated, confirmIframeId, confirmSourceId, sendResponse } from "./utils"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -24,6 +25,13 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 
 // exported for testing
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
+    if (!confirmSourceId(request.windowId)) {
+        console.warn("Unsupported Request Source", request.windowId)
+        return
+    }
+
+    const origin = confirmIframeId(request.windowId) ? getIframeOrigin() : getDappOrigin()
+
     switch (request.payload.method) {
         case "eth_chainId": {
             const chainId = getChainFromSearchParams()?.chainId
@@ -31,28 +39,31 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         }
 
         case "eth_accounts":
-            return hasPermissions("eth_accounts") ? getUser()?.addresses : []
+            return hasPermissions("eth_accounts", { origin }) ? getUser()?.addresses : []
 
         case "happy_user":
-            return hasPermissions("eth_accounts") ? getUser() : undefined
+            return hasPermissions("eth_accounts", { origin }) ? getUser() : undefined
 
         case "eth_requestAccounts":
             checkAuthenticated()
-            if (!hasPermissions("eth_accounts")) {
+            if (!hasPermissions("eth_accounts", { origin })) {
+                console.log("reject 5")
                 throw new EIP1193UserRejectedRequestError()
             }
             return getUser()?.addresses
 
         case "wallet_getPermissions":
-            return getAllPermissions()
+            return getAllPermissions({ origin })
 
         case "wallet_requestPermissions":
             checkAuthenticated()
-            return hasPermissions(request.payload.params[0]) ? getPermissions(request.payload.params[0]) : []
+            return hasPermissions(request.payload.params[0], { origin })
+                ? getPermissions(request.payload.params[0], { origin })
+                : []
 
         case "wallet_revokePermissions":
             checkAuthenticated()
-            revokePermissions(request.payload.params[0])
+            revokePermissions(request.payload.params[0], { origin })
             return []
 
         default:

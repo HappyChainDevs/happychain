@@ -1,17 +1,19 @@
-import { useCallback, useState } from "preact/hooks"
-import { createRequests } from "../helpers/requests"
-
-const { requestPermissions, revokePermissions } = createRequests({ rdns: "tech.happy" })
+import { connect as ogConnect, disconnect as ogDisconnect, onUserUpdate } from "@happychain/js"
+import { useCallback, useEffect, useState } from "preact/hooks"
 
 const userRejectionErrorCode = 4001
 
 export function useConnection() {
     const [connecting, setConnecting] = useState(false)
 
+    // TODO: remove when initial ogConnect properly resolves
+    // when logging in with metamask
+    // useEffect(() => onUserUpdate((_user) => setConnecting(false)), [])
+
     const connect = useCallback(async () => {
         try {
             setConnecting(true)
-            await requestPermissions()
+            await ogConnect()
         } catch (e) {
             if (e instanceof Error) {
                 // don't need to throw every time they reject
@@ -29,7 +31,7 @@ export function useConnection() {
     const disconnect = useCallback(async () => {
         try {
             setConnecting(true)
-            await revokePermissions()
+            await ogDisconnect()
         } finally {
             setConnecting(false)
         }

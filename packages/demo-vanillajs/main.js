@@ -2,7 +2,6 @@
 import { connect, disconnect, getCurrentUser, happyProvider, onUserUpdate, register } from "@happychain/js"
 import { defineBadgeComponent } from "@happychain/ui"
 import { BrowserProvider } from "ethers"
-import "./style.css"
 
 // If included via a script tag through a CDN, then exports will be made available
 // on the global HappyChain object

@@ -20,7 +20,7 @@ clean:  ## Removes build artifacts
 
 # Rebuilds on file change, but does not bundle — site can still be served locally via `vite`
 build.watch: node_modules
-	@$(TSC_BIN) --build --watch --preserveWatchOutput;
+	$(TSC_BIN) --build --watch --preserveWatchOutput;
 .PHONY: build.watch
 
 preview: node_modules dist ## Serves the production mode package

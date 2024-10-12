@@ -3,13 +3,15 @@ import { getDefaultStore } from "jotai/vanilla"
 import { http, createPublicClient } from "viem"
 import { mainnet } from "viem/chains"
 import { appMessageBus } from "../services/eventBus"
-import { hasPermissions } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
 import { userAtom } from "../state/user"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 
 const store = getDefaultStore()
-
+if (!store.get(userAtom)) {
+    // if we aren't connected, announce immediately
+    emitUserUpdate(store.get(userAtom))
+}
 /**
  * Runs once at startup to transmit the current auth state to the app (likely
  * {@link AuthState.Disconnected}, or {@link AuthState.Connecting}).
@@ -39,13 +41,7 @@ store.sub(authStateAtom, () => {
         return
     }
 
-    const permitted = hasPermissions("eth_account")
-    const user = store.get(userAtom)
-    // we sync all logout events to the front end
-    // and all login updates if the dapp has permissions
-    if (!user || permitted) {
-        emitUserUpdate(user)
-    }
+    emitUserUpdate(store.get(userAtom))
 })
 
 /**
@@ -57,14 +53,12 @@ store.sub(authStateAtom, () => {
  * @emits {@link Msgs.ProviderEvent} (optional)
  */
 store.sub(userAtom, () => {
-    const user = store.get(userAtom)
-    const permitted = hasPermissions("eth_accounts")
-
-    // we sync all logout events to the front end
-    // and all login updates if the dapp has permissions
-    if (!user || permitted) {
-        emitUserUpdate(user)
-    }
+    // emit all user changes to the front end
+    // permissions are handled internal to emitUserUpdate
+    // so this is always safe to call.
+    // when users re-connect, the stored atom won't be updated
+    // so we also need to emit on authState change
+    emitUserUpdate(store.get(userAtom))
 })
 
 /**

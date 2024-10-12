@@ -31,7 +31,6 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     constructor(private config: HappyProviderConfig) {
         super()
         // local connection (injected wallet)
-        config.msgBus.on(Msgs.InjectedWalletRequestConnect, this.handleProviderConnectionRequest.bind(this))
     }
 
     isConnected(): boolean {
@@ -41,6 +40,8 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
     ): Promise<EIP1193RequestResult<TString>> {
+        console.log({ inInjected: true })
+
         if (!this.localConnection) {
             throw new Error("Can not make request through local connection")
         }
@@ -52,6 +53,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
         const response: EIP1193RequestResult<TString> = await this.localConnection.provider.request(args)
 
         if (isPermissionsRequest(args)) {
+            console.log({ args })
             this.proxyPermissions({ request: args, response })
         }
 
@@ -68,7 +70,7 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
         this.localConnection = undefined
     }
 
-    private async handleProviderConnectionRequest({ rdns }: { rdns?: string }) {
+    async handleProviderConnectionRequest({ rdns }: { rdns?: string }) {
         if (!rdns) {
             return this.handleProviderDisconnectionRequest()
         }

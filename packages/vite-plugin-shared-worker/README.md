@@ -11,6 +11,11 @@ We also added generalized error handling and logging.
 
 ### Basic Usage
 ```ts
+// vite.config.ts
+export default defineConfig({
+    plugins: [ SharedWorkerPlugin() ]
+})
+
 // worker.sw.ts
 let pageLoads = 0;
 

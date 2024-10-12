@@ -1,2 +1,1 @@
-declare module "*.css"
-declare module "*.css?inline"
+/// <reference types="@happychain/scripts/plugins" />

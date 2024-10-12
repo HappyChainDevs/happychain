@@ -11,10 +11,8 @@ import { userAtom } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../approved"
 
-vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => "http://localhost:5160",
-    getIframeOrigin: () => "http://localhost:5160",
-}))
+const originA = "http://localhost:1234"
+const originB = "http://localhost:4321"
 
 const parentID = createUUID()
 const iframeID = createUUID()

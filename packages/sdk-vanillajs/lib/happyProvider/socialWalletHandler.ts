@@ -70,6 +70,8 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
     public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
     ): Promise<EIP1193RequestResult<TString>> {
+        console.log({ inSocial: true })
+
         // Every request gets proxied through this function.
         // If it is eth_call or a non-tx non-signature request, we can auto-approve
         // by posting the request args using request:approve,
@@ -95,33 +97,37 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
              * will be what is returned to the originating caller
              */
             if (!this.user && this.authState === AuthState.Disconnected) {
-                this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
+                return reject(
+                    new (class RequiresLogin extends Error {
+                        name = "RequiresLogin"
+                    })(),
+                )
 
-                const unsubscribeClose = this.config.msgBus.on(Msgs.ModalToggle, (state) => {
-                    if (state.isOpen) return
-                    unsubscribeClose()
-                    if (state.cancelled) {
-                        unsubscribeSuccess()
-                        this.inFlightChecks.delete(key)
-                        reject(new EIP1193UserRejectedRequestError())
-                    }
-                })
+                // const unsubscribeClose = this.config.msgBus.on(Msgs.ModalToggle, (state) => {
+                //     if (state.isOpen) return
+                //     unsubscribeClose()
+                //     if (state.cancelled) {
+                //         unsubscribeSuccess()
+                //         this.inFlightChecks.delete(key)
+                //         reject(new EIP1193UserRejectedRequestError())
+                //     }
+                // })
 
-                const unsubscribeSuccess = this.config.msgBus.on(Msgs.UserChanged, (user) => {
-                    if (user) {
-                        // auto-approve only works for these methods, since this is a direct response
-                        // the the user login flow, and upon user login, these permissions get granted automatically
-                        const popup = ["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
-                            ? this.autoApprove(key, args)
-                            : this.promptUser(key, args)
+                // const unsubscribeSuccess = this.config.msgBus.on(Msgs.UserChanged, (user) => {
+                //     if (user) {
+                //         // auto-approve only works for these methods, since this is a direct response
+                //         // the the user login flow, and upon user login, these permissions get granted automatically
+                //         const popup = ["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
+                //             ? this.autoApprove(key, args)
+                //             : this.promptUser(key, args)
 
-                        // process request when user is logged in successfully
-                        this.queueRequest(key, { resolve, reject, popup })
-                        unsubscribeSuccess()
-                        unsubscribeClose()
-                    }
-                })
-                return
+                //         // process request when user is logged in successfully
+                //         this.queueRequest(key, { resolve, reject, popup })
+                //         unsubscribeSuccess()
+                //         unsubscribeClose()
+                //     }
+                // })
+                // return
             }
 
             /**
@@ -135,13 +141,15 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
                 this.authState === AuthState.Connected &&
                 !["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
             ) {
+                return reject(
+                    new (class RequiresLogin extends Error {
+                        name = "RequiresPermissions"
+                    })(),
+                )
                 // request wallet permissions on the dapps behalf, then run dapps request
-                await this.request({
-                    method: "wallet_requestPermissions",
-                    params: [{ eth_accounts: {} }],
-                })
             }
 
+            console.log("requesting through social...")
             const popup = this.promptUser(key, args)
             this.queueRequest(key, { resolve, reject, popup })
         })
@@ -223,6 +231,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
                     if (req.popup.closed) {
                         // manually closed without explicit rejection
+                        console.log("reject 1")
                         req.reject(new EIP1193UserRejectedRequestError())
                         this.inFlightRequests.delete(k)
                     } else {

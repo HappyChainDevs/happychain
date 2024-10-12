@@ -8,6 +8,6 @@ export function ConnectionStatus({
 }: { initialized: boolean; connecting: boolean; user?: HappyUser }) {
     if (!initialized) return <>Loading</>
     if (connecting) return <>Connecting</>
-    if (user) return <>{user.email}</>
+    if (user) return <>{user.email || user.name}</>
     return <>Connect</>
 }

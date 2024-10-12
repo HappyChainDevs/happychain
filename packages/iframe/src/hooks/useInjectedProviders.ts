@@ -1,18 +1,27 @@
-import { AuthState, type ConnectionProvider, type EIP6963ProviderDetail, Msgs } from "@happychain/sdk-shared"
+import {
+    AuthState,
+    type ConnectionProvider,
+    type EIP6963ProviderDetail,
+    Msgs,
+    WalletType,
+} from "@happychain/sdk-shared"
 import { useSetAtom } from "jotai"
+import { createStore } from "mipd"
 import { useEffect, useMemo, useState } from "react"
 import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { appMessageBus } from "../services/eventBus"
 import { grantPermissions, revokePermissions } from "../services/permissions"
 import { StorageKey, storage } from "../services/storage"
 import { authStateAtom } from "../state/authState"
+import { getUser } from "../state/user"
 import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"
+import { getDappOrigin } from "../utils/getDappOrigin"
 import { isEip6963Event } from "../utils/isEip6963Event"
-
 const IsInIframe = window.parent !== window
 
 type ProviderMap = Map<string, EIP6963ProviderDetail>
 
+const store = createStore()
 export function useInjectedProviders(): ConnectionProvider[] {
     const setAuthState = useSetAtom(authStateAtom)
 
@@ -21,9 +30,17 @@ export function useInjectedProviders(): ConnectionProvider[] {
 
     // front end dapp connected via injected wallet
     useEffect(() => {
+        // const user = getUser()
+        // if (user?.type === WalletType.Injected) {
+        //     // don't need to check permissions, as injected wallet has full permissions
+        //     // since we never manage injected wallet secrets
+        //     emitUserUpdate(user)
+        // }
         return appMessageBus.on(Msgs.InjectedWalletConnected, ({ rdns, address }) => {
+            console.log("we are here becuase we are here")
             const user = rdns ? createHappyUserFromWallet(rdns, address) : undefined
             setUserWithProvider(user, undefined)
+            grantPermissions("eth_accounts", { origin: getDappOrigin() })
         })
     }, [])
 
@@ -45,7 +62,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
                         setAuthState(AuthState.Connecting)
                         await disable(eip1193Provider)
                     },
-                } satisfies ConnectionProvider
+                } as ConnectionProvider
             }),
         [setAuthState, injectedProviders],
     )
@@ -57,51 +74,34 @@ function useRequestEIP6963Providers() {
     const [providers, setInjectedProviders] = useState<ProviderMap>(new Map())
 
     useEffect(() => {
-        const callback = async (evt: Event) => {
-            if (!isEip6963Event(evt)) return
+        function init(details: ReturnType<typeof store.getProviders>) {
+            console.log({ details })
+            setInjectedProviders((map) => {
+                for (const detail of details) {
+                    map.set(detail.info.uuid, detail)
+                }
+                return new Map(map)
+            })
 
-            setInjectedProviders((map) => new Map(map.set(evt.detail.info.uuid, evt.detail)))
+            const user = getUser()
+            if (user?.type === WalletType.Injected) {
+                for (const detail of details) {
+                    // auto reconnect
 
-            // autoconnect
-            const user = storage.get(StorageKey.HappyUser)
-            if (user?.provider === evt.detail.info.rdns) {
-                void enable(evt.detail)
+                    if (user.provider === detail.info.rdns) {
+                        void enable(detail)
+                        break
+                    }
+                }
             }
         }
 
-        window.addEventListener("eip6963:announceProvider", callback)
-        window.dispatchEvent(new CustomEvent("eip6963:requestProvider"))
-        return () => window.removeEventListener("eip6963:announceProvider", callback)
-    }, [])
+        // TODO: why did metamask and the like disappear?
+        const details = store.getProviders()
 
-    useEffect(() => {
-        // Whenever the app makes a permissions request to the injected wallet, it will also
-        // forward the request and response to the iframe so that we can mirror the permission.
-        return appMessageBus.on(Msgs.MirrorPermissions, ({ request, response }) => {
-            const hasResponse = Array.isArray(response) && response.length
-            switch (request.method) {
-                case "eth_accounts":
-                case "eth_requestAccounts":
-                    // Revoke the eth_accounts permission if the response is empty.
-                    // biome-ignore format: readability
-                    hasResponse
-                      ? grantPermissions("eth_accounts")
-                      : revokePermissions("eth_accounts")
-                    return
+        init(details)
 
-                case "wallet_requestPermissions":
-                    // We only handle the eth_accounts permission for now, but there is no harm in
-                    // setting the permissions that the user has authorized, since we either will be
-                    // more permissive (e.g. allow methods only on the basis of eth_accounts and
-                    // user approval) or do not support the capability the permission relates to.
-                    hasResponse && grantPermissions(request.params[0])
-                    return
-
-                case "wallet_revokePermissions":
-                    request.params && revokePermissions(request.params[0])
-                    return
-            }
-        })
+        return store.subscribe(init)
     }, [])
 
     return { providers }
@@ -110,6 +110,7 @@ function useRequestEIP6963Providers() {
 const enable = async (eip1193Provider: EIP6963ProviderDetail) => {
     if (IsInIframe) {
         void appMessageBus.emit(Msgs.InjectedWalletRequestConnect, { rdns: eip1193Provider.info.rdns })
+        // const [address] = await iframeInjectedProvider.provider.request({ method: 'eth_requestAccounts' })
     } else {
         // stand-alone page
         const [address] = await eip1193Provider.provider.request({ method: "eth_requestAccounts" })

@@ -97,6 +97,7 @@ export class IframeProvider extends SafeEventEmitter {
 
                     if (req.popup.closed) {
                         // manually closed without explicit rejection
+                        console.log("reject 4")
                         req.reject(new EIP1193UserRejectedRequestError())
                         this.inFlightRequests.delete(k)
                     } else {

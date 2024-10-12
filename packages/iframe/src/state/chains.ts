@@ -7,7 +7,7 @@ import { StorageKey } from "../services/storage"
 
 export const chainsAtom = atomWithStorage<(AddEthereumChainParameter | Readonly<AddEthereumChainParameter>)[]>(
     StorageKey.Chains,
-    Object.values(_chains),
+    Object.values([_chains.devnet, _chains.happyChainSepolia]),
 )
 
 export const { getValue: getChains, setValue: setChains } = accessorsFromAtom(chainsAtom)

@@ -13,7 +13,7 @@ include makefiles/lib.mk
 SHARED_PKGS := common,sdk-shared
 
 # packages only used in the SDK
-SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components,vite-plugin-shared-worker
+SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-ui,vite-plugin-shared-worker
 
 # packages only used in the iframe (order matters)
 IFRAME_ONLY_PKGS := sdk-firebase-web3auth-strategy,iframe
@@ -112,7 +112,7 @@ shared.dev:
 .PHONY: shared.dev
 
 sdk.dev:
-	cd packages/sdk-frontend-components && make dev
+	cd packages/sdk-ui && make dev
 	cd packages/sdk-vanillajs && make dev
 	cd packages/sdk-react && make dev
 .PHONY: sdk-dev

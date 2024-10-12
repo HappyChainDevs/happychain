@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
         nodePolyfills({ globals: { Buffer: true } }), // required for web3Auth
         TanStackRouterVite(),
         react({ babel: { presets: ["jotai/babel/preset"] } }),
-        SharedWorkerPlugin(),
+        SharedWorkerPlugin({ disabled: false }),
     ],
     resolve: {
         alias: {

@@ -4,62 +4,60 @@
 
 /* Custom Connect Badge Styling */
 connect-button {
-    @apply fixed left-0 top-0;
-
-    .happychain-badge {
-        @apply flex items-center justify-center;
-        & > span {
-            @apply text-lg rounded m-4 font-bold flex gap-2 items-center justify-start px-2 h-16 bg-gradient-to-r;
-        }
-
-        .happychain-status {
-            @apply w-36 truncate;
-        }
-
-        &.initializing {
-            & > span {
-                @apply from-blue-400 to-purple-600;
-            }
-        }
-        &.connecting {
-            & > span {
-                @apply from-purple-500 to-green-500;
-            }
-        }
-        &.connected {
-            & > span {
-                @apply from-blue-500 to-green-500;
-            }
-        }
-        &.disconnected {
-            & > span {
-                @apply from-green-400 to-blue-500;
-            }
-        }
-        &.error {
-            & > span {
-                @apply from-orange-400 to-red-500;
-            }
-        }
+  .happychain-badge {
+    @apply flex items-center justify-center;
+    & > span {
+      @apply text-lg rounded m-4 font-bold flex gap-2 items-center justify-start px-2 h-16 bg-gradient-to-r;
     }
 
-    .happychain-icon {
-        @apply w-12 h-12;
+    .happychain-status {
+      @apply w-36 truncate;
     }
 
-    /* badge animations */
-    .slide-enter {
-        transform: scale(0);
+    &.initializing {
+      & > span {
+        @apply from-blue-400 to-purple-600;
+      }
     }
-    .slide-enter-active,
-    .slide-exit {
-        transform: scale(1);
+    &.connecting {
+      & > span {
+        @apply from-purple-500 to-green-500;
+      }
     }
-    .slide-exit-active {
-        transform: scale(0);
+    &.connected {
+      & > span {
+        @apply from-blue-500 to-green-500;
+      }
     }
-    .slide-enter-active,
-    .slide-exit-active {
-        transition: transform 1000ms;
+    &.disconnected {
+      & > span {
+        @apply from-green-400 to-blue-500;
+      }
     }
+    &.error {
+      & > span {
+        @apply from-orange-400 to-red-500;
+      }
+    }
+  }
+
+  .happychain-icon {
+    @apply w-12 h-12;
+  }
+
+  /* badge animations */
+  .slide-enter {
+    transform: scale(0);
+  }
+  .slide-enter-active,
+  .slide-exit {
+    transform: scale(1);
+  }
+  .slide-exit-active {
+    transform: scale(0);
+  }
+  .slide-enter-active,
+  .slide-exit-active {
+    transition: transform 1000ms;
+  }
 }

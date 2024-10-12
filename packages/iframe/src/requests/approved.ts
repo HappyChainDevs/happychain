@@ -8,7 +8,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
-import { getDappPermissions, grantPermissions } from "../services/permissions"
+import { grantPermissions } from "../services/permissions"
 import { addWatchedAsset } from "../services/watchedAssets/utils"
 import { getChainsMap, setChains } from "../state/chains"
 import { getUser } from "../state/user"
@@ -42,12 +42,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_requestAccounts": {
             const user = getUser()
             if (!user) return []
-            grantPermissions("eth_accounts", getDappPermissions({ origin }), origin)
+            grantPermissions("eth_accounts", { origin })
             return user.addresses ?? [user.address]
         }
 
         case "wallet_requestPermissions":
-            return grantPermissions(request.payload.params[0], getDappPermissions({ origin }), origin)
+            return grantPermissions(request.payload.params[0], { origin })
 
         case "wallet_addEthereumChain": {
             const response = await sendToWalletClient(request)

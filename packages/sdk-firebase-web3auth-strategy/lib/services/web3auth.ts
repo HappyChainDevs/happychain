@@ -7,9 +7,14 @@ import { addMessageListener, connect, disconnect, init, request } from "./web3au
  * Web3Auth EIP1193 Provider. this proxies all requests to the shared worker
  * and all events from the shared worker, back to be emitted again here
  */
+let counter = 0
 class Web3ProviderProxy extends SafeEventEmitter {
     async request({ method, params }: { method: string; params?: unknown[] }) {
-        return await request({ method, params })
+        const reqId = `web3-reqId-${counter++}`
+        console.log(reqId, { method, params })
+        const req = await request({ method, params })
+        console.log(reqId, "success")
+        return req
     }
 }
 

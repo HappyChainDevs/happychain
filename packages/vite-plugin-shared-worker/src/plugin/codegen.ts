@@ -31,3 +31,14 @@ const worker = defineSharedWorker(self, [${exports.map((ex) => ex.name).join(", 
 ${code}
 `
 }
+
+export function shimsCodeGen(code: string, _id: string) {
+    return `// ${pkg.name} starts
+import { defineShimWorker } from '${pkg.name}/runtime'
+const worker = defineShimWorker()
+export const addMessageListener = worker.addMessageListener
+// ${pkg.name} ends
+
+${code}
+`
+}

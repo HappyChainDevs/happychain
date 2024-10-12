@@ -51,7 +51,8 @@ function Embed() {
     }, [navigate])
 
     const activeProvider = useMemo(
-        () => socialProviders.concat(web3Providers).find((a) => user && a.id === `${user.type}:${user.provider}`),
+        () =>
+            socialProviders.concat(web3Providers).find((a) => user && a.id.startsWith(`${user.type}:${user.provider}`)),
         [user, socialProviders, web3Providers],
     )
 
@@ -62,7 +63,7 @@ function Embed() {
 
     if (authState === AuthState.Connecting) {
         return (
-            <main className="h-screen w-screen flex items-center justify-center">
+            <main className="fixed top-4 right-4">
                 <DotLinearMotionBlurLoader />
             </main>
         )

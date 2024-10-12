@@ -1,11 +1,11 @@
-import { onUserUpdate } from "@happychain/js"
 /** @jsxImportSource preact */
+import { onUserUpdate } from "@happychain/js"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { useEffect, useState } from "preact/hooks"
 import { ConnectionStatus } from "./components/ConnectionStatus"
 import { Logo } from "./components/Logo"
 import { Styles } from "./components/Styles"
-import { createRequests } from "./helpers/requests"
+import { getProvider } from "./helpers/getProvider"
 import { useConnection } from "./hooks/useConnection"
 
 if (import.meta.hot) {
@@ -17,43 +17,30 @@ if (import.meta.hot) {
 
 const noop = undefined
 
-const { fetchUser, providerInfo } = createRequests({ rdns: "tech.happy" })
-
 export type BadgeProps = { disableStyles?: boolean | string }
+const provider = getProvider({ rdns: "tech.happy" })
 
 export function Badge({ disableStyles = false }: BadgeProps) {
     const [user, setUser] = useState<HappyUser | undefined>(undefined)
     const [initialized, setInitialized] = useState(false)
-    const [errored, setErrored] = useState(false)
 
     const { connect, disconnect, connecting } = useConnection()
 
     useEffect(() => {
-        async function init() {
-            try {
-                const user = await fetchUser()
-                setUser(user)
-                setInitialized(true)
-            } catch (e) {
-                console.error(e)
-                setErrored(true)
-            }
-        }
-
-        init()
-
-        return onUserUpdate(setUser)
+        return onUserUpdate((_user) => {
+            setUser(_user)
+            setInitialized(true)
+        })
     }, [])
 
     const connected = Boolean(user?.address)
     const onClick = !initialized || connecting ? noop : connected ? disconnect : connect
     const state = !initialized ? "initializing" : connecting ? "connecting" : connected ? "connected" : "disconnected"
-    const provider = providerInfo()
 
     return (
         <div>
-            {<Styles disableStyles={disableStyles} />}
-            {errored || !provider ? (
+            <Styles disableStyles={disableStyles} />
+            {!provider ? (
                 <button type={"button"} className={"error happychain-badge"} disabled={true}>
                     <span>Connection Error</span>
                 </button>
@@ -65,7 +52,7 @@ export function Badge({ disableStyles = false }: BadgeProps) {
                     disabled={!initialized || connecting}
                 >
                     <span>
-                        <Logo info={provider} />
+                        <Logo info={provider.info} />
                         <div className="happychain-status">
                             <ConnectionStatus initialized={initialized} connecting={connecting} user={user} />
                         </div>

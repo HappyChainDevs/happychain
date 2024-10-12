@@ -11,10 +11,12 @@ import { userAtom } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../permissionless"
 
+const origin = "http://localhost:4321"
 vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => "http://localhost:5160",
-    getIframeOrigin: () => "http://localhost:5160",
+    getDappOrigin: () => origin,
+    getIframeOrigin: () => origin,
 }))
+
 const parentID = createUUID()
 const iframeID = createUUID()
 vi.mock("../utils", (importUtils) =>
@@ -35,7 +37,7 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
         })
 
         test("skips eth_requestAccounts permissions when no user", async () => {
-            expect(getAllPermissions().length).toBe(0)
+            expect(getAllPermissions({ origin }).length).toBe(0)
             const request = makePayload(iframeID, { method: "eth_requestAccounts" })
             expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
@@ -52,21 +54,21 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
         })
 
         test("returns connected user address when requested", async () => {
-            expect(getAllPermissions().length).toBe(1)
+            expect(getAllPermissions({ origin }).length).toBe(1)
             const request = makePayload(iframeID, { method: "eth_requestAccounts" })
             const response = await dispatchHandlers(request)
             expect(response).toStrictEqual(user.addresses)
-            expect(getAllPermissions().length).toBe(1)
+            expect(getAllPermissions({ origin }).length).toBe(1)
         })
 
         test("does not add permissions", async () => {
-            expect(getAllPermissions().length).toBe(1)
+            expect(getAllPermissions({ origin }).length).toBe(1)
             const request = makePayload(iframeID, { method: "eth_requestAccounts" })
             await dispatchHandlers(request)
             await dispatchHandlers(request)
             await dispatchHandlers(request)
             await dispatchHandlers(request)
-            expect(getAllPermissions().length).toBe(1)
+            expect(getAllPermissions({ origin }).length).toBe(1)
         })
     })
 })

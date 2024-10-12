@@ -3,8 +3,9 @@ import { type Atom, atom } from "jotai"
 
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address } from "viem"
-import { getDappPermissions, hasPermissions } from "../services/permissions"
+import { hasPermissions } from "../services/permissions"
 import { StorageKey } from "../services/storage"
+import { getDappOrigin } from "../utils/getDappOrigin"
 import { userAtom } from "./user"
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
@@ -88,7 +89,10 @@ export const atomForPermissionsCheck: (ps: PermissionsSpec) => Atom<boolean> = a
     return atom((get) => {
         const user = get(userAtom)
         if (!user) return false
-        const permissionsMap = getDappPermissions({ user, permissions: get(permissionsAtom) })
-        return hasPermissions(permissions, permissionsMap)
+        return hasPermissions(permissions, {
+            origin: getDappOrigin(),
+            user,
+            permissions: get(permissionsAtom),
+        })
     })
 })

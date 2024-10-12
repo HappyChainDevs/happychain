@@ -1,10 +1,15 @@
 import type { Plugin } from "vite"
-import { clientCodeGen, workerCodeGen } from "./codegen"
+import { shimsCodeGen } from "./codegen"
 import { filter } from "./utils"
 
-export function DevelopmentPlugin(): Plugin {
+/**
+ * Injects familiar worker interface into the 'worker' file
+ * however runs in the local context without any worker
+ * as if you just imported the file directly.
+ */
+export function WorkerShimPlugin(): Plugin {
     return {
-        name: "@happychain/vite-plugin-sharedworker:development",
+        name: "@happychain/vite-plugin-sharedworker:shim",
         enforce: "pre",
         config(_config, env) {
             if (env.command === "serve") {
@@ -19,9 +24,7 @@ export function DevelopmentPlugin(): Plugin {
         transform(code: string, id: string) {
             if (!filter(id)) return
 
-            const isClient = !id.includes("worker_file")
-
-            return { code: isClient ? clientCodeGen(code, id) : workerCodeGen(code, id) }
+            return { code: shimsCodeGen(code, id) }
         },
     }
 }

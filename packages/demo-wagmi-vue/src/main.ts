@@ -1,8 +1,7 @@
 import { createApp } from "vue"
+import App from "./App.vue"
 import { VueQueryPlugin, queryClient } from "./query"
 import { WagmiPlugin, config } from "./wagmi"
-import "./style.css"
-import App from "./App.vue"
 
 import { HappyChainPlugin, chains } from "./sdk"
 

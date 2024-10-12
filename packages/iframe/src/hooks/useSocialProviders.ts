@@ -1,58 +1,47 @@
-import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
-import { AuthState, type ConnectionProvider, WalletType } from "@happychain/sdk-shared"
+import { FirebaseConnector, configs } from "@happychain/firebase-web3auth-strategy"
+import { AuthState, type ConnectionProvider, type HappyUser, WalletType } from "@happychain/sdk-shared"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useMemo } from "react"
+import type { EIP1193Provider } from "viem"
 import { useAccount, useConnect, useDisconnect } from "wagmi"
 import { setUserWithProvider } from "../actions/setUserWithProvider"
-import { grantPermissions, hasPermissions } from "../services/permissions"
-import { authStateAtom } from "../state/authState"
-import { chainsAtom } from "../state/chains"
-import { userAtom } from "../state/user"
-import { emitUserUpdate } from "../utils/emitUserUpdate"
+import { grantPermissions } from "../services/permissions"
+import { authStateAtom, setAuthState } from "../state/authState"
+import { getChains } from "../state/chains"
+import { getUser, userAtom } from "../state/user"
+import { getDappOrigin } from "../utils/getDappOrigin"
+
+// signs in automatically
+const googleProvider = new FirebaseConnector({
+    ...configs.google,
+    onConnect: onConnect,
+    onReconnect: onReconnect,
+    onDisconnect: onDisconnect,
+})
+
+const providers = [googleProvider]
 
 export function useSocialProviders() {
     const setAuthState = useSetAtom(authStateAtom)
-    const userValue = useAtomValue(userAtom)
-    const chains = useAtomValue(chainsAtom)
 
+    const user = useAtomValue(userAtom)
     const { connectAsync, connectors } = useConnect()
     const { disconnectAsync } = useDisconnect()
     const { status } = useAccount()
 
-    const { providers, onAuthChange } = useFirebaseWeb3AuthStrategy()
+    /**
+     * Connect wagmi on user details changing
+     */
     useEffect(() => {
-        onAuthChange(async (user, provider) => {
-            // sync local user+provider state with internal plugin updates
-            // not logged in and
-
-            const loggingIn = Boolean(!userValue?.type && user)
-            const loggedIn = userValue?.type === WalletType.Social
-            if (loggingIn || loggedIn) {
-                // Pre-add all our supported chains (as defined by sdk-shared).
-                if (provider) {
-                    await Promise.allSettled(
-                        Object.values(chains).map((chain) => {
-                            provider.request({ method: "wallet_addEthereumChain", params: [chain] })
-                        }),
-                    )
-                }
-
-                setUserWithProvider(user, provider)
-
-                // must go after setUserProvider
-                if (status !== "connected") {
-                    await connectAsync({ connector: connectors[0] })
-                }
-
-                // the user is automatically sent to the front when the user
-                // changes or when the permissions change, however on page-load-reconnect
-                // neither of these change, and we need to manually send here
-                if (loggedIn && hasPermissions("eth_accounts")) {
-                    emitUserUpdate(user)
-                }
+        const init = async () => {
+            if (user && status !== "connected") {
+                await connectAsync({ connector: connectors[0] })
+            } else if (!user && status !== "disconnected") {
+                await disconnectAsync()
             }
-        })
-    }, [onAuthChange, userValue, chains, connectAsync, connectors, status])
+        }
+        init()
+    }, [user, connectAsync, connectors, disconnectAsync, status])
 
     const providersMemo = useMemo(
         () =>
@@ -61,21 +50,45 @@ export function useSocialProviders() {
                     ({
                         ...provider,
                         enable: async () => {
-                            // will automatically disable loading state when user+provider are set
-                            setAuthState(AuthState.Connecting)
-                            await provider.enable()
-                            grantPermissions("eth_accounts")
+                            try {
+                                // will automatically disable loading state when user+provider are set
+                                setAuthState(AuthState.Connecting)
+                                await provider.enable()
+                            } catch (e) {
+                                setAuthState(AuthState.Disconnected)
+                                throw e
+                            }
                         },
-                        disable: async () => {
-                            // will automatically disable loading state when user+provider are set
-                            setAuthState(AuthState.Connecting)
-                            await provider.disable()
-                            await disconnectAsync()
-                        },
-                    }) satisfies ConnectionProvider,
+                        disable: provider.disable,
+                    }) as ConnectionProvider,
             ),
-        [providers, setAuthState, disconnectAsync],
+        [setAuthState],
     )
 
     return providersMemo
+}
+
+/**
+ * default onAuthChange actions. all social providers will likely use the same
+ */
+async function onDisconnect(_: undefined, provider: EIP1193Provider) {
+    if (getUser()?.type !== WalletType.Social) return
+    setUserWithProvider(undefined, provider)
+    setAuthState(AuthState.Disconnected)
+}
+async function onReconnect(user: HappyUser, provider: EIP1193Provider) {
+    setUserWithProvider(user, provider)
+    setAuthState(AuthState.Connected)
+}
+async function onConnect(user: HappyUser, provider: EIP1193Provider) {
+    if (user && provider) {
+        await Promise.allSettled(
+            Object.values(getChains()).map((chain) => {
+                provider.request({ method: "wallet_addEthereumChain", params: [chain] })
+            }),
+        )
+    }
+    setUserWithProvider(user, provider)
+    grantPermissions("eth_accounts", { origin: getDappOrigin() })
+    setAuthState(AuthState.Connected)
 }

@@ -25,7 +25,7 @@ const store = getDefaultStore()
 type GetDappPermissionOptions = {
     user?: HappyUser | undefined
     permissions?: PermissionsMap
-    origin?: HTTPString
+    origin: HTTPString
 }
 
 export function getDappPermissions(
@@ -39,10 +39,7 @@ export function getDappPermissions(
         origin: getDappOrigin(),
     },
 ): AppPermissions {
-    if (!user) {
-        logger.warn("No user found, returning empty permissions.")
-        return {}
-    }
+    if (!user) return {}
 
     const permissionLookupResult = permissions[user.address]?.[origin]
 
@@ -78,7 +75,7 @@ export function getDappPermissions(
 function setDappPermissions(permissions: AppPermissions): void {
     const user = getUser()
     if (!user) {
-        console.warn("No user found, not setting permissions.")
+        logger.warn("No user found, not setting permissions.")
         return
     }
 
@@ -106,9 +103,11 @@ function setDappPermissions(permissions: AppPermissions): void {
             },
         }
     })
+
+    emitUserUpdate(user)
 }
 
-function getPermissionArray(permissions: PermissionsSpec): [string, unknown][] {
+function getPermissionEntries(permissions: PermissionsSpec): [string, unknown][] {
     return typeof permissions === "string" ? [[permissions, {}]] : Object.entries(permissions)
 }
 
@@ -121,31 +120,25 @@ function getPermissionArray(permissions: PermissionsSpec): [string, unknown][] {
  */
 export function grantPermissions(
     permissions: PermissionsSpec,
-    dappPermissions: AppPermissions = getDappPermissions(),
-    invoker = getDappOrigin(),
+    { origin }: { origin: HTTPString },
+    dappPermissions: AppPermissions = getDappPermissions({ origin }),
 ): WalletPermission[] {
     const grantedPermissions = []
 
-    for (const [name, value] of getPermissionArray(permissions)) {
+    for (const [name, value] of getPermissionEntries(permissions)) {
         if (value && typeof value === "object" && Object.keys(value).length) {
             throw new Error("WalletPermissionCaveats Not Yet Supported")
         }
 
         const grantedPermission = {
             caveats: [],
-            invoker,
+            invoker: origin,
             parentCapability: name,
             date: Date.now(),
             id: createUUID(),
         }
         grantedPermissions.push(grantedPermission)
         dappPermissions[name] = grantedPermission
-
-        // hasPermissions checks the DAPP side by default, however the above code
-        // could be running in the context of the iframe such as when wagmi connects
-        if (name === "eth_accounts" && hasPermissions("eth_accounts")) {
-            emitUserUpdate(getUser())
-        }
     }
 
     setDappPermissions(dappPermissions)
@@ -159,13 +152,11 @@ export function grantPermissions(
  */
 export function revokePermissions(
     permissions: PermissionsSpec,
-    dappPermissions: AppPermissions = getDappPermissions(),
+    { origin }: { origin: HTTPString },
+    dappPermissions: AppPermissions = getDappPermissions({ origin }),
 ): void {
-    for (const [name] of getPermissionArray(permissions)) {
+    for (const [name] of getPermissionEntries(permissions)) {
         delete dappPermissions[name]
-        if (name === "eth_accounts") {
-            emitUserUpdate(undefined)
-        }
     }
 
     setDappPermissions(dappPermissions)
@@ -179,10 +170,15 @@ export function revokePermissions(
  * @notice Caveats are not yet supported
  */
 export function hasPermissions(
-    permissions: PermissionsSpec,
-    dappPermissions: AppPermissions = getDappPermissions(),
+    _permissions: PermissionsSpec,
+    {
+        origin,
+        user = getUser(),
+        permissions = store.get(permissionsAtom),
+    }: { origin: HTTPString; permissions?: PermissionsMap; user?: HappyUser | undefined },
+    dappPermissions: AppPermissions = getDappPermissions({ origin, user, permissions }),
 ): boolean {
-    return getPermissionArray(permissions).every(([name, value]) => {
+    return getPermissionEntries(_permissions).every(([name, value]) => {
         if (value && typeof value === "object" && Object.keys(value).length) {
             throw new Error("WalletPermissionCaveats Not Yet Supported")
         }
@@ -193,7 +189,10 @@ export function hasPermissions(
 /**
  * Return all of the user's permissions.
  */
-export function getAllPermissions(dappPermissions: AppPermissions = getDappPermissions()): WalletPermission[] {
+export function getAllPermissions(
+    { origin }: { origin: HTTPString },
+    dappPermissions: AppPermissions = getDappPermissions({ origin }),
+): WalletPermission[] {
     return Array.from(Object.values(dappPermissions))
 }
 
@@ -201,13 +200,14 @@ export function getAllPermissions(dappPermissions: AppPermissions = getDappPermi
 
 /**
  * Returns the given permission(s). This only considers the keys of the permission object,
- * and returns an aray that contains the permission only if it is granted, along with its caveats.
+ * and returns an array that contains the permission only if it is granted, along with its caveats.
  */
 export function getPermissions(
     permissions: PermissionsSpec,
-    dappPermissions: AppPermissions = getDappPermissions(),
+    { origin }: { origin: HTTPString },
+    dappPermissions: AppPermissions = getDappPermissions({ origin }),
 ): WalletPermission[] {
-    return getPermissionArray(permissions)
+    return getPermissionEntries(permissions)
         .map(([name]) => dappPermissions[name])
         .filter((permission) => !!permission)
 }

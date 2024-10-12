@@ -3,6 +3,7 @@ import { requiresApproval } from "@happychain/sdk-shared"
 import { hasPermissions } from "../services/permissions"
 import { getChains } from "../state/chains"
 import { getUser } from "../state/user"
+import { getDappOrigin } from "./getDappOrigin"
 
 export function checkIfRequestRequiresConfirmation(
     payload: ProviderMsgsFromApp[Msgs.PermissionCheckRequest]["payload"],
@@ -29,10 +30,11 @@ export function checkIfRequestRequiresConfirmation(
 
         // users don't need to confirm if they are requesting to add permissions that have already been authorized
         // just current permissions are returned as a result instead
+        // TODO: need to pass origin to check from iframe?
         case "wallet_requestPermissions":
-            return !hasPermissions(payload.params[0])
+            return !hasPermissions(payload.params[0], { origin: getDappOrigin() })
         case "eth_requestAccounts":
-            return !hasPermissions("eth_accounts")
+            return !hasPermissions("eth_accounts", { origin: getDappOrigin() })
     }
 
     return true

@@ -27,7 +27,7 @@ if (!cliArgs.watch) {
         "./node_modules",
         "./*.tgz",
     ])
-    console.log({ outDirs })
+
     const debounceBuild = debounceEvent(
         async () => build({ configs, options: cliArgs, context: await makeContext() }),
         250,

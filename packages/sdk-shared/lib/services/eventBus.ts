@@ -144,7 +144,7 @@ export class EventBus<SL, SE = SL> {
             // if port isn't initialized, poll and continue
             // to retry until connection is made
             try {
-                await waitForCondition(() => Boolean(this.port), 30_000, 50)
+                await waitForCondition(() => Boolean(this.port))
 
                 this.port!.postMessage({
                     scope: this.config.scope,

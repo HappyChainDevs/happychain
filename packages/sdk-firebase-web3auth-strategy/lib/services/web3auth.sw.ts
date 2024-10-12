@@ -4,13 +4,13 @@ import { tssLib } from "@toruslabs/tss-dkls-lib"
 import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider"
 import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from "@web3auth/mpc-core-kit"
 import { config } from "./config"
+console.log("Hello World")
 
-// weird ts hacks to make tsc happy. it compiles to JS perfectly without it, but tsc doesn't understand the RPC setup
-// TODO: would be nice to figure out how to make `declare module '*.shared-worker'` to inject these globally...
+// declare const worker: SharedWorkerServer // available within the context of the worker
+// export declare function addMessageListener(a: unknown): void
 declare const worker: SharedWorkerServer // available within the context of the worker
-// export declare function addMessageListener<T>(fn: MessageCallback<T>): void // this should work i believe but doesn't in dev...
-export function addMessageListener(_fn: MessageCallback<unknown>): void {} // this gest stripped out by the build system and replaced with actual implementation
-// shared between contexts, but does not persist.
+export function addMessageListener<T>(_fn: MessageCallback<T>): void {}
+
 // if persisting is desirable, we can use IndexedDB as IAsyncStorage
 const web3AuthWorkerStorage = {
     cache: new Map(),
@@ -59,10 +59,22 @@ let _addresses: `0x${string}`[] = []
 /**
  * Proxy all provider events to iframe provider
  */
-ethereumSigningProvider.on("connect", (data) => worker.broadcast({ action: "connect", data }))
-ethereumSigningProvider.on("disconnect", (data) => worker.broadcast({ action: "disconnect", data }))
-ethereumSigningProvider.on("chainChanged", (data) => worker.broadcast({ action: "chainChanged", data }))
-ethereumSigningProvider.on("accountsChanged", (data) => worker.broadcast({ action: "accountsChanged", data }))
+ethereumSigningProvider.on("connect", async (data) => {
+    console.log({ action: "connect", data })
+    worker.broadcast({ action: "connect", data })
+})
+ethereumSigningProvider.on("disconnect", (data) => {
+    console.log({ action: "disconnect", data })
+    worker.broadcast({ action: "disconnect", data })
+})
+ethereumSigningProvider.on("chainChanged", async (data) => {
+    console.log({ action: "chainChanged", data })
+    worker.broadcast({ action: "chainChanged", data })
+})
+ethereumSigningProvider.on("accountsChanged", (data) => {
+    console.log({ action: "accountsChanged", data })
+    worker.broadcast({ action: "accountsChanged", data })
+})
 
 /**
  * Exported functions
@@ -72,7 +84,7 @@ ethereumSigningProvider.on("accountsChanged", (data) => worker.broadcast({ actio
  * - disconnect
  */
 export async function init() {
-    return await web3Auth.init()
+    await web3Auth.init()
 }
 
 export async function request({ method, params }: { method: string; params?: unknown[] }) {
@@ -80,7 +92,13 @@ export async function request({ method, params }: { method: string; params?: unk
     return await ethereumSigningProvider.request({ method, params })
 }
 
+export function isConnected() {
+    console.log({ _addresses })
+    return _addresses.length > 0
+}
+
 export async function connect(jwt: JWTLoginParams) {
+    console.log("lfg")
     await poll(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
 
     // if we are already logged in, then just return the saved addresses
@@ -88,7 +106,8 @@ export async function connect(jwt: JWTLoginParams) {
         return _addresses
     }
 
-    if (state === "connecting") {
+    // only run if in the context of shared worker
+    if (typeof worker !== "undefined" && state === "connecting") {
         await poll(() => state !== "connecting")
     }
     if (state === "connected") {
@@ -129,7 +148,9 @@ export async function disconnect() {
     }
 
     state = "disconnecting"
-    await web3Auth.logout()
+    try {
+        await web3Auth.logout()
+    } catch {}
     state = "disconnected"
     _addresses = []
 }

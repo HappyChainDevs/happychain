@@ -24,6 +24,7 @@ function Request() {
     const req = JSON.parse(atob(args))
 
     function reject() {
+        console.log("rejected1")
         void popupEmitBus.emit(Msgs.PopupReject, {
             error: {
                 code: 4001,

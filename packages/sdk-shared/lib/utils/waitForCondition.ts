@@ -1,6 +1,6 @@
 export function waitForCondition(
     callback: (...args: unknown[]) => boolean,
-    maxPollTimeMs = 30_000,
+    maxPollTimeMs = 5_000,
     pollIntervalMs = 50,
 ) {
     const start = Date.now()

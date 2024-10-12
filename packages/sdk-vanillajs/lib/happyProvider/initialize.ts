@@ -86,11 +86,20 @@ export const happyProviderPublic: HappyProviderPublic = happyProvider
 /**
  * Connect the app to the Happy Account (will prompt user for permission).
  */
+let connecting = false
 export const connect = async () => {
-    await happyProvider.request({
-        method: "wallet_requestPermissions",
-        params: [{ eth_accounts: {} }],
-    })
+    if (connecting) return
+    connecting = true
+    try {
+        console.log("CONNECTING FROM INIT")
+        const resp = await happyProvider.request({
+            method: "wallet_requestPermissions",
+            params: [{ eth_accounts: {} }],
+        })
+        console.log("ALL CONNECTED", resp)
+    } finally {
+        connecting = false
+    }
 }
 
 /**
