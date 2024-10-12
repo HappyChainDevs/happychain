@@ -1,5 +1,4 @@
 import type {
-    HappyProviderPublic,
     HappyUser,
     MsgsFromApp,
     MsgsFromIframe,
@@ -14,6 +13,7 @@ import { createUUID } from "../common-utils"
 import { HappyProvider } from "./happyProvider"
 import { icon64x64 } from "./icons"
 
+import type { HappyProviderPublic } from "./interface"
 import { registerListeners } from "./listeners"
 
 /**

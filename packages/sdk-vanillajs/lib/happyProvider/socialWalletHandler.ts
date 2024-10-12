@@ -2,9 +2,6 @@ import {
     AuthState,
     BasePopupProvider,
     type EIP1193RequestParameters,
-    type EIP1193RequestResult,
-    EIP1193UserRejectedRequestError,
-    GenericProviderRpcError,
     type HappyUser,
     ModalStates,
     Msgs,
@@ -13,7 +10,7 @@ import {
 } from "@happychain/sdk-shared"
 
 import type { InFlightRequest } from "@happychain/sdk-shared"
-import type { UUID } from "../common-utils"
+import { type UUID, createUUID } from "../common-utils"
 import type { HappyProviderConfig } from "./interface"
 
 type InFlightCheck = {
@@ -22,11 +19,11 @@ type InFlightCheck = {
 }
 
 /**
- * SocialWalletHandler handles proxying `EIP-1193` requests
+ * SocialWalletHandler handles proxying EIP-1193 requests
  * to the iframe where it is handled by either the connected
  * social provider if the user is connected, or a public RPC
  * if there is no user connected. For requests that require explicit
- * user confirmation these requests are sent to a popup window
+ * user approval these requests are sent to a popup window
  * where the user can approve/reject the requests before they are sent
  * to the iframe to be handled
  */
@@ -49,13 +46,18 @@ export class SocialWalletHandler extends BasePopupProvider {
         config.providerBus.on(Msgs.ProviderEvent, this.handleProviderNativeEvent.bind(this))
 
         // Social Auth (Iframe Proxy)
-        config.providerBus.on(Msgs.RequestResponse, this.handleCompletedRequest.bind(this))
+        config.providerBus.on(Msgs.RequestResponse, this.handleRequestResolution.bind(this))
 
         config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
 
-    protected handlePermissionlessRequest(key: UUID, args: EIP1193RequestParameters): void {
+    protected handlePermissionlessRequest(
+        key: UUID,
+        args: EIP1193RequestParameters,
+        { resolve, reject }: InFlightRequest,
+    ): void {
         this.autoApprove(key, args)
+        this.trackRequest(key, { resolve, reject })
         return
     }
 
@@ -63,22 +65,20 @@ export class SocialWalletHandler extends BasePopupProvider {
         key: UUID,
         args: EIP1193RequestParameters,
         { resolve, reject }: InFlightRequest,
-    ): Promise<boolean> {
+    ): Promise<boolean | unknown> {
         /**
          * If the user is not connected (and not logged in)
          * display the login screen. If/when the login is successful,
          * run the initial protected request. If the original request
-         * was explicit permissions request, then it was granted automatically
+         * was an explicit permissions request, then it was granted automatically
          * as part of the login flow, so we can auto-approve here and the response
-         * will be what is returned to the originating caller
+         * will be what is returned to the originating caller.
          */
         if (!this.user && this.authState === AuthState.Disconnected) {
             void this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
 
             const unsubscribe = this.config.msgBus.on(Msgs.UserChanged, (user) => {
                 if (user) {
-                    // auto-approve only works for these methods, since this is a direct response
-                    // the the user login flow, and upon user login, these permissions get granted automatically
                     let popup: Window | undefined
 
             /**
@@ -127,7 +127,7 @@ export class SocialWalletHandler extends BasePopupProvider {
                     }
 
                     // process request when user is logged in successfully
-                    this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
+                    this.trackRequest(key, { resolve: resolve as ResolveType, reject, popup })
                     unsubscribe()
                 }
             })
@@ -153,7 +153,7 @@ export class SocialWalletHandler extends BasePopupProvider {
             })
             return true
         }
-        return true
+        return this.requiresUserApproval(args)
     }
 
     override isConnected(): boolean {
@@ -173,7 +173,7 @@ export class SocialWalletHandler extends BasePopupProvider {
     }
 
     protected async requiresUserApproval(args: EIP1193RequestParameters) {
-        const key = this.generateKey()
+        const key = createUUID()
         return new Promise((resolve, reject) => {
             this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
                 key,
@@ -188,32 +188,6 @@ export class SocialWalletHandler extends BasePopupProvider {
 
     private handleProviderNativeEvent(data: ProviderMsgsFromIframe[Msgs.ProviderEvent]) {
         this.emit(data.payload.event, data.payload.args)
-    }
-
-    private handleCompletedRequest(data: ProviderMsgsFromIframe[Msgs.RequestResponse]) {
-        const req = this.inFlightRequests.get(data.key)
-
-        if (!req) {
-            return { resolve: null, reject: null }
-        }
-
-        const { resolve, reject, popup } = req
-        this.inFlightRequests.delete(data.key)
-        popup?.close()
-
-        if (reject && data.error) {
-            reject(
-                new GenericProviderRpcError({
-                    code: data.error.code,
-                    message: data.error.message,
-                    data: data.error.data,
-                }),
-            )
-        } else if (resolve) {
-            resolve(data.payload)
-        } else {
-            // no key associated, perhaps from another tab context?
-        }
     }
 
     private autoApprove(key: UUID, args: EIP1193RequestParameters) {

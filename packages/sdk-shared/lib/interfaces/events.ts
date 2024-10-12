@@ -155,8 +155,10 @@ export type ProviderMsgsFromApp = {
 /**
  * Schema for messages that can be sent from the iframe to the app.
  */
-export type ProviderMsgsFromIframe = {
-    [Msgs.RequestResponse]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
+export type ProviderEventResponse = ProviderEventPayload<EIP1193RequestResult> | ProviderEventError<EIP1193ErrorObject>
+
+export type PopupMsgsFromIframe = {
+    [Msgs.RequestResponse]: ProviderEventResponse
     [Msgs.PermissionCheckResponse]: ProviderEventPayload<boolean> | ProviderEventError
     [Msgs.ProviderEvent]: {
         payload: { event: EIP1193EventName; args: unknown }

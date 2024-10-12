@@ -27,7 +27,7 @@ const store = createStore()
  * provider for the connected wallet
  */
 export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
-    protected localConnection: ReturnType<typeof store.findProvider>
+    private localConnection: ReturnType<typeof store.findProvider>
 
     constructor(protected config: HappyProviderConfig) {
         super()

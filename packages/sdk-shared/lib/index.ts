@@ -35,7 +35,6 @@ export { shortenAddress } from "./utils/shortenAddress"
 export type { ChainParameters } from "./chains/utils"
 export type { ConnectionProvider } from "./interfaces/connectionProvider"
 export type { HappyUser } from "./interfaces/happyUser"
-export type { HappyProviderPublic } from "./interfaces/happyProviderPublic"
 export type {
     EIP1193EventName,
     EIP1193RequestMethods,
