@@ -8,71 +8,24 @@ import chalk from "chalk"
 import pkgSize from "pkg-size"
 import type { PkgSizeData } from "pkg-size/dist/interfaces"
 import type { cliArgs } from "./cli-args"
-import { type BunConfig, type Config, type DefineConfigParameters, defaultConfig } from "./defineConfig"
-import { spinner } from "./spinner"
+import type { BunConfig, Config, DefineConfigParameters } from "./defineConfig"
+import { getConfigArray, getEntrypointPath } from "./utils/config"
+import { type PkgType, base, pkg, pkgName } from "./utils/globals"
+import { spinner } from "./utils/spinner"
 
 spinner.start("Building...")
 
-const base = process.cwd()
-const pkgName = base.substring(base.lastIndexOf("/") + 1)
+/**
+ * Display name for the config being built. This will be `${pkgName}/${config.name}` if
+ * `config.name` is set, otherwise only the package name.
+ */
 let pkgConfigName = pkgName
-
-const configArgs = {
-    mode: process.env.NODE_ENV,
-}
-
-const pkg = await import(join(base, "./package.json"))
-
-// global instance run counter
-let run = 0
-
-function applyBunConfigDefaults(config: Config): BunConfig {
-    let detectedNaming = ""
-    if (
-        config.exports &&
-        config.bunConfig.entrypoints.length === 1 &&
-        config.exports?.length === 1 &&
-        !config.bunConfig?.naming &&
-        !config.bunConfig.splitting
-    ) {
-        const exports = pkg.exports[config.exports[0]]
-        // if explicitly defined in package.json, but not in bunConfigDir
-        // we will reconstruct and inject it as the new default
-        const outdir = config.bunConfig.outdir || defaultConfig.bunConfig.outdir
-        detectedNaming = (exports.default || exports.import || exports.require)
-            .replace(outdir, "[dir]")
-            .replace(".js", ".[ext]")
-    }
-
-    if (detectedNaming) {
-        return { ...defaultConfig.bunConfig, ...config.bunConfig, naming: detectedNaming }
-    }
-
-    return { ...defaultConfig.bunConfig, ...config.bunConfig }
-}
-
-function applyDefaults(config: Config): Config {
-    return {
-        ...defaultConfig,
-        ...config,
-        bunConfig: applyBunConfigDefaults(config),
-    }
-}
-
-function getConfigArray(configs: DefineConfigParameters, options: typeof cliArgs): Config[] {
-    const _configs: DefineConfigParameters =
-        typeof configs === "function" //
-            ? configs({ ...configArgs, ...options, run })
-            : configs
-    return ((Array.isArray(_configs) ? _configs : [_configs]) as Config[]).map(applyDefaults)
-}
 
 export async function build({
     configs: _configs,
     options,
 }: { configs: DefineConfigParameters; options: typeof cliArgs }) {
     const configs = getConfigArray(_configs, options)
-    run++
 
     const buildTimes = new Map()
     const usedTsConfigs = new Set()
@@ -206,7 +159,7 @@ export async function build({
     }
 
     const sizeData2 = sizeData ?? (await pkgSize(base, { sizes: ["size"] }))
-    const moduleFile = getMainEntry(pkg).replace(/^\.\//, "") // remove leading './' if present
+    const moduleFile = getEntrypointPath(".")?.replace(/^\.\//, "") // remove leading './' if present
     const bundleFile = sizeData2.files.find((f) => f.path === moduleFile)
     const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
     spinner.success(
@@ -215,21 +168,8 @@ export async function build({
     )
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: package.json is untyped
-function getMainEntry(pkg: any) {
-    if (pkg.module) return pkg.module
-    if (pkg.main) return pkg.main
-    if (pkg.exports?.["."]) {
-        const entry = pkg.exports["."]
-        if (entry.default) return entry.default
-        if (entry.import) return entry.import
-        if (entry.require) return entry.require
-    }
-    throw new Error(`unable to find package entry ${pkg.name}`)
-}
-
 async function areTheTypesWrong(config: Config) {
-    if (!config?.checkTypes) return
+    if (!config?.checkExports) return
     spinner.text = `${pkgConfigName} — Checking for packaging issues...`
 
     let output: string

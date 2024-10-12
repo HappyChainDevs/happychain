@@ -43,7 +43,7 @@ export interface Config {
      */
     tsConfig?: string
     /**
-     * Path to the api-extractor config file. Default: "api-extractor.json"
+     * Path to the api-extractor config file. Defaults to "api-extractor.json" if it exists.
      * If undefined, types will not be aggregated.
      * Ignored if {@link tsConfig} is undefined.
      */
@@ -63,7 +63,7 @@ export interface Config {
     /**
      * If true, report any package export types issues using AreTheTypesWrong. Default: true
      */
-    checkTypes: boolean
+    checkExports: boolean
 }
 
 /**
@@ -71,12 +71,11 @@ export interface Config {
  */
 export const defaultConfig = {
     tsConfig: "tsconfig.build.json",
-    apiExtractorConfig: "api-extractor.json",
     cleanOutDir: true,
     cleanOutsideOutDir: true,
     reportSizes: false,
     reportTime: false,
-    checkTypes: true,
+    checkExports: true,
     bunConfig: {
         entrypoints: ["./lib/index.ts"],
         outdir: "./dist",
@@ -89,7 +88,6 @@ export const defaultConfig = {
 
 export type ConfigFactoryArgs = {
     mode?: "production" | "development" | string
-    run: number
 } & typeof cliArgs
 
 export type DefineConfigParameters = Config | Config[] | ((args: ConfigFactoryArgs) => Config | Config[])
