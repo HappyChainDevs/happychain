@@ -1,15 +1,14 @@
-import { atomWithCompareAndStorage } from "@happychain/common"
+import { atomWithCompare } from "@happychain/common"
 import { accessorsFromAtom } from "@happychain/common"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { atom } from "jotai"
 import { getAddress } from "viem"
-import { StorageKey } from "../services/storage"
 
-const storedUserAtom = atomWithCompareAndStorage<HappyUser | undefined>(
-    StorageKey.HappyUser,
-    undefined,
-    (a, b) => a?.uid === b?.uid,
-)
+// NOTE: This used to be an `atomWithCompareAndStorage` but that doesn't seem to yield any benefits
+// and did complexify the login logic. We can think about storing this again in the future after
+// refactoring the login logic, if we see a benefit.
+
+const storedUserAtom = atomWithCompare<HappyUser | undefined>(undefined, (a, b) => a?.uid === b?.uid)
 
 export const userAtom = atom(
     (get) => get(storedUserAtom),

@@ -2,7 +2,6 @@ import { createStorage } from "@happychain/common"
 import type { HappyUser } from "@happychain/sdk-shared"
 
 export enum StorageKey {
-    HappyUser = "happychain:cached-user",
     Chains = "happychain:supported_chains",
     UserPermissions = "happychain:user_permissions",
 }
