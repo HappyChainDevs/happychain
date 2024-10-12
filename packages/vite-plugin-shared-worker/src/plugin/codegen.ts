@@ -5,29 +5,36 @@ export function clientCodeGen(code: string, id: string) {
     const workerName = getWorkerName(id)
     const exports = findExports(code)
 
-    return `// ${pkg.name} starts
-import SharedWorker from "@okikio/sharedworker"
-import { defineClientFactory } from "${pkg.name}/runtime"
-const __worker__ = new SharedWorker(new URL(${JSON.stringify(id)}, import.meta.url), { type: 'module', name: ${JSON.stringify(workerName)} });
-const __factory__ = defineClientFactory(__worker__)
-const client = __factory__.defineClient()
-export const dispatch = client.dispatch
-export const addMessageListener = client.addMessageListener
-// ${pkg.name} ends
+    const stringId = JSON.stringify(id)
+    const options = JSON.stringify({ type: "module", name: workerName })
 
-${exports.map((ex) => `export const ${ex.name} = __factory__.defineFunction(${JSON.stringify(ex.name)})`).join("\n")}
-`
+    // biome-ignore format: tidy
+    return ""
+        + `// ${pkg.name} starts\n`
+        + 'import SharedWorker from "@okikio/sharedworker"\n'
+        + `import { defineClientFactory } from "${pkg.name}/runtime"\n`
+        + `const __worker__ = new SharedWorker(new URL(${stringId}, import.meta.url), ${options});\n`
+        + "const __factory__ = defineClientFactory(__worker__)\n"
+        + "const client = __factory__.defineClient()\n"
+        + "export const dispatch = client.dispatch\n"
+        + "export const addMessageListener = client.addMessageListener\n"
+        + `// ${pkg.name} ends\n`
+        + exports
+            .map((ex) => `export const ${ex.name} = __factory__.defineFunction(${JSON.stringify(ex.name)})`)
+            .join("\n")
 }
 
 export function workerCodeGen(code: string, id: string) {
     const workerName = getWorkerName(id)
     const exports = findExports(code)
 
-    return `// ${pkg.name} starts
-import { defineSharedWorker } from '${pkg.name}/runtime'
-const worker = defineSharedWorker(self, [${exports.map((ex) => ex.name).join(", ")}], ${JSON.stringify(workerName)})
-// ${pkg.name} ends
-
-${code}
-`
+    // biome-ignore format: tidy
+    return ""
+        + `// ${pkg.name} starts\n`
+        + `import { defineSharedWorker } from '${pkg.name}/runtime'\n`
+        + "const worker = defineSharedWorker(self, [\n"
+        +       exports.map((ex) => `    ${ex.name}`).join(",\n")
+        + `], ${JSON.stringify(workerName)})\n`
+        + `// ${pkg.name} ends\n`
+        + code
 }
