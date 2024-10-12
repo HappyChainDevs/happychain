@@ -8,8 +8,8 @@ import {
     Msgs,
     type MsgsFromApp,
     type MsgsFromIframe,
-    type PopupMsgsFromIframe,
     type ProviderMsgsFromApp,
+    type ProviderMsgsFromIframe,
     config,
 } from "@happychain/sdk-shared"
 import type { RpcBlock } from "viem"
@@ -45,11 +45,11 @@ const emptyRpcBlock = {
 } satisfies RpcBlock
 
 function newIframeProviderBus(options: EventBusOptions) {
-    return new EventBus<ProviderMsgsFromApp, PopupMsgsFromIframe>(options)
+    return new EventBus<ProviderMsgsFromApp, ProviderMsgsFromIframe>(options)
 }
 
 function newAppProviderBus(options: EventBusOptions) {
-    return new EventBus<PopupMsgsFromIframe, ProviderMsgsFromApp>(options)
+    return new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>(options)
 }
 
 function newIframeMessageBus(options: EventBusOptions) {

@@ -9,7 +9,7 @@ import {
     GenericProviderRpcError,
     type HappyUser,
     Msgs,
-    type PopupMsgsFromIframe,
+    type ProviderMsgsFromIframe,
 } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
@@ -152,7 +152,7 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         return true
     }
 
-    private async handlePermissionCheck(data: PopupMsgsFromIframe[Msgs.PermissionCheckResponse]) {
+    private async handlePermissionCheck(data: ProviderMsgsFromIframe[Msgs.PermissionCheckResponse]) {
         const inFlight = this.inFlightChecks.get(data.key)
         if (!inFlight) return
         if (typeof data.payload === "boolean") {
@@ -177,11 +177,11 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         })
     }
 
-    private handleProviderNativeEvent(data: PopupMsgsFromIframe[Msgs.ProviderEvent]) {
+    private handleProviderNativeEvent(data: ProviderMsgsFromIframe[Msgs.ProviderEvent]) {
         this.emit(data.payload.event, data.payload.args)
     }
 
-    private handleCompletedRequest(data: PopupMsgsFromIframe[Msgs.RequestResponse]) {
+    private handleCompletedRequest(data: ProviderMsgsFromIframe[Msgs.RequestResponse]) {
         const req = this.inFlightRequests.get(data.key)
 
         if (!req) {

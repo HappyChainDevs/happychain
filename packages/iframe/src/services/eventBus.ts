@@ -1,4 +1,4 @@
-import { EventBus, EventBusMode, type PopupMsgsFromIframe } from "@happychain/sdk-shared"
+import { EventBus, EventBusMode, type ProviderMsgsFromIframe } from "@happychain/sdk-shared"
 import type { NoEvents, PopupMsgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import type { MsgsFromApp, MsgsFromIframe } from "@happychain/sdk-shared"
 
@@ -11,7 +11,7 @@ import type { MsgsFromApp, MsgsFromIframe } from "@happychain/sdk-shared"
  *
  * This side is created first (MessageChannel port1) and will wait for the app side to connect.
  */
-export const happyProviderBus = new EventBus<ProviderMsgsFromApp, PopupMsgsFromIframe>({
+export const happyProviderBus = new EventBus<ProviderMsgsFromApp, ProviderMsgsFromIframe>({
     target: window.parent,
     mode: EventBusMode.IframePort,
     scope: "happy-chain-eip1193-provider",

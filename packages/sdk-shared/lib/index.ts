@@ -48,7 +48,7 @@ export type {
     MsgsFromIframe,
     NoEvents,
     PopupMsgs,
-    PopupMsgsFromIframe,
+    ProviderMsgsFromIframe,
     ProviderMsgsFromApp,
 } from "./interfaces/events"
 export type { ProviderEventPayload, ProviderEventError } from "./interfaces/payloads"

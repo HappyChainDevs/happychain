@@ -7,8 +7,8 @@ import type {
     Logger,
     MsgsFromApp,
     MsgsFromIframe,
-    PopupMsgsFromIframe,
     ProviderMsgsFromApp,
+    ProviderMsgsFromIframe,
     config,
 } from "@happychain/sdk-shared"
 import type SafeEventEmitter from "@metamask/safe-event-emitter"
@@ -50,7 +50,7 @@ export interface HappyProviderPublic extends EventEmitter {
 export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
     logger?: Logger
     windowId: UUID
-    providerBus: EventBus<PopupMsgsFromIframe, ProviderMsgsFromApp>
+    providerBus: EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>
     msgBus: EventBus<MsgsFromIframe, MsgsFromApp>
 }
 
