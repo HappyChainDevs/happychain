@@ -1,7 +1,11 @@
 {
     "name": "@happychain/scripts",
-    "module": "lib/index.ts",
+    "private": true,
+    "version": "0.0.0",
     "type": "module",
+    "files": ["lib"],
+    "main": "lib/index.ts",
+    "module": "lib/index.ts",
     "bin": {
         "happyBuild": "./bin/happyBuild.ts"
     },
