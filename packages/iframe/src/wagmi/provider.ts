@@ -1,51 +1,156 @@
-import type { UUID } from "@happychain/common"
-import { AuthState, BasePopupProvider, type EIP1193RequestParameters, waitForCondition } from "@happychain/sdk-shared"
+import { type UUID, createUUID } from "@happychain/common"
+import {
+    AuthState,
+    type EIP1193ErrorObject,
+    type EIP1193RequestMethods,
+    type EIP1193RequestParameters,
+    type EIP1193RequestResult,
+    EIP1193UserRejectedRequestError,
+    GenericProviderRpcError,
+    type ProviderEventError,
+    type ProviderEventPayload,
+    config,
+    waitForCondition,
+} from "@happychain/sdk-shared"
+import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { type EIP1193Provider, ResourceUnavailableRpcError } from "viem"
 import { handlePermissionlessRequest } from "../requests"
 import { iframeID } from "../requests/utils"
 import { getAuthState } from "../state/authState"
 import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
+import { getIframeOrigin } from "../utils/getDappOrigin.ts"
+
+const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
+
+type Timer = ReturnType<typeof setInterval>
+
+// custom type for promise resolve methods
+type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods> = (value: EIP1193RequestResult<T>) => void
+
+type InFlightRequest<T extends EIP1193RequestMethods = EIP1193RequestMethods> = {
+    resolve: ResolveType<T>
+    reject: (reason?: unknown) => void
+    popup: Window | null
+}
 
 /**
- * EIP-1193 provider for transactions initiated from the iframe, most notably used by wagmi.
+ * Custom Provider for the iframe fed to WagmiProvider's config to route wagmi
+ * hook calls to our middleware functions (where viem handles the calls).
  *
- * The provider routes the call to our logic in the `requests` directory.
+ * Provider is fed into a {@link https://wagmi.sh/core/api/connectors/injected#target | custom Connector}
+ * which is configured to represent the HappyChain's iframe provider as below.
  */
-export class IframeProvider extends BasePopupProvider {
-    constructor() {
-        super(iframeID)
-    }
+export class IframeProvider extends SafeEventEmitter {
+    private inFlightRequests = new Map<string, InFlightRequest>()
+    private timer: Timer | null = null
 
-    protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
+    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
+        args: EIP1193RequestParameters<TString>,
+    ): Promise<EIP1193RequestResult<TString>> {
         if (!getUser()) {
             // Necessary because wagmi will attempt to reconnect on page load. This currently could
-            // work fine (with a "permission not found" warning), but is brittle, better to
-            // explicitly reject here. We explicitly connect to wagmi via `useConnect` once the user
-            // becomes available.
-            //
-            // Wagmi swallows these exceptions, so they won't pollute the console.
+            // work fine (with a permission not found warning), but is brittle, better to explicitly
+            // reject here. We explicitly connect to wagmi via `useConnect` once the user becomes
+            // available.
             throw new ResourceUnavailableRpcError(new Error("user not initialized yet"))
         }
 
-        // We're logging in or out, wait for the auth state to settle.
+        const key = createUUID()
+
         await waitForCondition(() => getAuthState() !== AuthState.Connecting)
 
-        return checkIfRequestRequiresConfirmation(args)
-    }
+        return new Promise<EIP1193RequestResult<TString>>((resolve, reject) => {
+            const reqPayload = {
+                key,
+                windowId: iframeID,
+                error: null,
+                payload: args,
+            }
 
-    protected override handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
-        void handlePermissionlessRequest({
-            key,
-            windowId: iframeID,
-            error: null,
-            payload: args,
+            const requiresUserApproval = checkIfRequestRequiresConfirmation(args, getIframeOrigin())
+
+            if (!requiresUserApproval) {
+                void handlePermissionlessRequest(reqPayload)
+                this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup: null })
+                return
+            }
+
+            // permissioned requests
+            const popup = this.openPopupAndAwaitResponse(key, args)
+            this.queueRequest(key, { resolve: resolve as ResolveType, reject, popup })
         })
     }
 
-    protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
-        // The iframe is auto-connected by default, there is never a need for extra permissions.
-        return true
+    private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
+        this.inFlightRequests.set(key, { resolve, reject, popup })
+
+        const intervalMs = 100
+
+        if (!this.timer && popup) {
+            // every interval, check if popup has been manually closed
+            this.timer = setInterval(() => {
+                let withPopups = 0
+                for (const [k, req] of this.inFlightRequests) {
+                    if (!req.popup) {
+                        continue
+                    }
+
+                    if (req.popup.closed) {
+                        // manually closed without explicit rejection
+                        req.reject(new EIP1193UserRejectedRequestError())
+                        this.inFlightRequests.delete(k)
+                    } else {
+                        // still open
+                        withPopups++
+                    }
+                }
+
+                if (this.timer && !withPopups) {
+                    clearInterval(this.timer)
+                    this.timer = null
+                }
+            }, intervalMs)
+        }
+    }
+
+    private openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters) {
+        const url = new URL("request", config.iframePath)
+        const opts = {
+            windowId: iframeID,
+            key: key,
+            args: btoa(JSON.stringify(args)),
+        }
+        const searchParams = new URLSearchParams(opts).toString()
+        return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
+    }
+
+    public handleRequestResolution(
+        data: ProviderEventPayload<EIP1193RequestResult> | ProviderEventError<EIP1193ErrorObject>,
+    ) {
+        const req = this.inFlightRequests.get(data.key)
+
+        if (!req) {
+            return { resolve: null, reject: null }
+        }
+
+        const { resolve, reject, popup } = req
+        this.inFlightRequests.delete(data.key)
+        popup?.close()
+
+        if (reject && data.error) {
+            reject(
+                new GenericProviderRpcError({
+                    code: data.error.code,
+                    message: data.error.message,
+                    data: data.error.data,
+                }),
+            )
+        } else if (resolve) {
+            resolve(data.payload)
+        } else {
+            // no key associated, perhaps from another tab context?
+        }
     }
 }
 

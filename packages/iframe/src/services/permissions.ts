@@ -184,11 +184,15 @@ export function revokePermissions(
  */
 export function hasPermissions(
     permissions: PermissionsSpec,
-    dappPermissions: AppPermissions = getDappPermissions(),
+    // biome-ignore format: readability
+    {
+        origin = getDappOrigin(),
+        dappPermissions = getDappPermissions({ origin }),
+    }: PermissionAccessOptions = {},
 ): boolean {
     return getPermissionArray(permissions).every(([name, value]) => {
         if (value && typeof value === "object" && Object.keys(value).length) {
-            throw new Error("WalletPermissionCaveats Not Yet Supported")
+            throw new Error("WalletPermissionCaveats not yet supported")
         }
         return name in dappPermissions
     })
