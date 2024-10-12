@@ -2,8 +2,8 @@ import type {
     HappyUser,
     MsgsFromApp,
     MsgsFromIframe,
-    PopupMsgsFromIframe,
     ProviderMsgsFromApp,
+    ProviderMsgsFromIframe,
 } from "@happychain/sdk-shared"
 import { EventBus, EventBusMode, config } from "@happychain/sdk-shared"
 import { ModalStates, Msgs } from "@happychain/sdk-shared"
@@ -72,7 +72,7 @@ export const happyProvider = new HappyProvider({
 
     windowId: windowId,
 
-    providerBus: new EventBus<PopupMsgsFromIframe, ProviderMsgsFromApp>({
+    providerBus: new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>({
         mode: EventBusMode.AppPort,
         scope: "happy-chain-eip1193-provider",
     }),
