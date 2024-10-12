@@ -1,16 +1,17 @@
 import { ArrowLeft } from "@phosphor-icons/react"
 import { useLocation, useNavigate } from "@tanstack/react-router"
+import { useAtom } from "jotai"
 import { useCallback, useState } from "react"
-import { useContent } from "../../context/ContentContext"
+import { trackSendAtom } from "../../state/trackSend"
 
 const GlobalHeader = () => {
     const [showModal, setShowModal] = useState(false)
+    const [sendInFlight, setSendInFlight] = useAtom(trackSendAtom)
 
     const location = useLocation()
-    const { sendInFlight, setSendInFlight } = useContent()
     const navigate = useNavigate()
 
-    const handleBackButtonClick = useCallback(() => {
+    const handleBackArrowClick = useCallback(() => {
         if (sendInFlight) {
             // Show modal if a transaction is in flight
             setShowModal(true)
@@ -29,7 +30,7 @@ const GlobalHeader = () => {
     return (
         <div className="relative flex items-center w-full p-1">
             {location.pathname !== "/embed" && (
-                <button onClick={handleBackButtonClick} type="button">
+                <button onClick={handleBackArrowClick} type="button">
                     <ArrowLeft weight="bold" className="absolute left-2 top-5" />
                 </button>
             )}

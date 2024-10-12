@@ -1,28 +1,29 @@
 import { CircleNotch } from "@phosphor-icons/react"
 import { useNavigate } from "@tanstack/react-router"
+import { useAtom } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
 import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
-import { ContentType, useContent } from "../../../context/ContentContext"
+import { trackSendAtom } from "../../../state/trackSend"
+import { ContentType, walletInfoViewAtom } from "../../../state/walletInfoView"
 
 interface SendButtonsInterface {
     sendValue: string | undefined
     targetAddress: Address | string | undefined
-    setInProgress: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const SendButtons = ({ sendValue, targetAddress, setInProgress }: SendButtonsInterface) => {
+const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     const navigate = useNavigate()
     const { data: hash, isPending, sendTransaction, error } = useSendTransaction()
 
     const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash })
 
-    const { setView, setSendInFlight } = useContent()
+    const [, setView] = useAtom(walletInfoViewAtom)
+    const [, setSendInFlight] = useAtom(trackSendAtom)
 
     useEffect(() => {
         // if tx is successful, move back to home page of wallet
         if (isConfirmed) {
-            setInProgress(false)
             setSendInFlight(false)
             setView(ContentType.TOKENS)
             navigate({ to: "/embed" })
@@ -30,7 +31,7 @@ const SendButtons = ({ sendValue, targetAddress, setInProgress }: SendButtonsInt
         if (error) {
             setSendInFlight(false)
         }
-    }, [error, isConfirmed, navigate, setInProgress, setSendInFlight, setView])
+    }, [error, isConfirmed, setView, navigate, setSendInFlight])
 
     // navigates back to home page
     const cancelSend = useCallback(() => {
@@ -39,7 +40,6 @@ const SendButtons = ({ sendValue, targetAddress, setInProgress }: SendButtonsInt
 
     const submitSend = useCallback(() => {
         if (targetAddress && sendValue) {
-            setInProgress(true)
             setSendInFlight(true)
             // send tx
             sendTransaction({
@@ -47,7 +47,7 @@ const SendButtons = ({ sendValue, targetAddress, setInProgress }: SendButtonsInt
                 value: parseEther(sendValue),
             })
         }
-    }, [sendTransaction, sendValue, setSendInFlight, setInProgress, targetAddress])
+    }, [sendTransaction, sendValue, setSendInFlight, targetAddress])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">

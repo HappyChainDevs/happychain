@@ -1,9 +1,10 @@
-import { ContentType, useContent } from "../../../../context/ContentContext"
+import { useAtom } from "jotai"
+import { ContentType, walletInfoViewAtom } from "../../../../state/walletInfoView"
 import Tab from "./Tab"
 import TabContent from "./TabContent"
 
 const TabsContainer = () => {
-    const { view } = useContent()
+    const [view] = useAtom(walletInfoViewAtom)
 
     return (
         <div className="flex w-full h-full items-start justify-center flex-col px-1">

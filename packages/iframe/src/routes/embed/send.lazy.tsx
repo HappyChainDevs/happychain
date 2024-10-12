@@ -3,9 +3,8 @@ import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useState } from "react"
 import { type Address, isAddress } from "viem"
 import AddressSelector from "../../components/interface/send-tx/AddressSelector"
-import SendButttons from "../../components/interface/send-tx/SendButtons"
+import SendButtons from "../../components/interface/send-tx/SendButtons"
 import SendInput from "../../components/interface/send-tx/SendInput"
-import { useContent } from "../../context/ContentContext"
 import { publicClientAtom } from "../../state/publicClient"
 import { userAtom } from "../../state/user"
 
@@ -16,8 +15,6 @@ export const Route = createLazyFileRoute("/embed/send")({
 function Send() {
     const user = useAtomValue(userAtom)
     const publicClient = useAtomValue(publicClientAtom)
-
-    const { sendInFlight, setSendInFlight } = useContent()
 
     // user's happy balance, will be moved to a wagmi script that handles this
     const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)
@@ -52,16 +49,11 @@ function Send() {
                 <AddressSelector targetAddress={targetAddress} setTargetAddress={setTargetAddress} />
                 {/* appears when target address has been confirmed */}
                 {targetAddress !== undefined && isAddress(targetAddress) && (
-                    <SendInput
-                        balance={happyBalance}
-                        sendValue={sendValue}
-                        setSendValue={setSendValue}
-                        inProgress={sendInFlight}
-                    />
+                    <SendInput balance={happyBalance} sendValue={sendValue} setSendValue={setSendValue} />
                 )}
             </div>
 
-            <SendButttons sendValue={sendValue} targetAddress={targetAddress} setInProgress={setSendInFlight} />
+            <SendButtons sendValue={sendValue} targetAddress={targetAddress} />
         </div>
     )
 }

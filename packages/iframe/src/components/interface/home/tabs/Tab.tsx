@@ -1,11 +1,12 @@
-import { type ContentType, useContent } from "../../../../context/ContentContext"
+import { useAtom } from "jotai"
+import { type ContentType, walletInfoViewAtom } from "../../../../state/walletInfoView"
 
 interface TabProps {
     title: ContentType
 }
 
 const Tab = ({ title }: TabProps) => {
-    const { setView } = useContent()
+    const [, setView] = useAtom(walletInfoViewAtom)
     return (
         <button
             className="h-10 w-24 bg-slate-300 rounded-t-xl"

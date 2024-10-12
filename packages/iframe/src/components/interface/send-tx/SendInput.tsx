@@ -1,18 +1,20 @@
 import { validateNumericInput } from "@happychain/common"
+import { useAtom } from "jotai"
 import { debounce } from "lodash"
 import type React from "react"
 import { useCallback, useState } from "react"
 import { formatEther, parseEther } from "viem"
+import { trackSendAtom } from "../../../state/trackSend"
 
 interface SendInputProps {
     balance: bigint | undefined
     sendValue: string | undefined
     setSendValue: React.Dispatch<React.SetStateAction<string | undefined>>
-    inProgress: boolean
 }
 
-const SendInput = ({ balance, sendValue, setSendValue, inProgress }: SendInputProps) => {
+const SendInput = ({ balance, sendValue, setSendValue }: SendInputProps) => {
     const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
+    const [sendInFlight] = useAtom(trackSendAtom)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
@@ -80,7 +82,7 @@ const SendInput = ({ balance, sendValue, setSendValue, inProgress }: SendInputPr
                             placeholder={`${balance ? formatEther(balance) : "0"}`}
                             value={sendValue || ""}
                             onChange={handleTokenBalanceChange}
-                            disabled={!balance || inProgress}
+                            disabled={!balance || sendInFlight}
                         />
 
                         <p className="text-[14px]">HAPPY</p>
@@ -90,7 +92,7 @@ const SendInput = ({ balance, sendValue, setSendValue, inProgress }: SendInputPr
                         className="flex text-center text-[14px] text-white border border-blue-600 px-2 rounded-lg bg-blue-600 disabled:opacity-50"
                         type="button"
                         onClick={handleMaxButtonClick}
-                        disabled={inProgress}
+                        disabled={sendInFlight}
                     >
                         Max
                     </button>
