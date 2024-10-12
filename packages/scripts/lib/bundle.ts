@@ -397,7 +397,6 @@ async function writeTypesEntryStub(config: Config) {
 async function bunBuild(config: BunConfig) {
     if (!config) return
     spinner.text = `${pkgConfigName} — Bundling JS...`
-
     return await Bun.build(config)
 }
 
