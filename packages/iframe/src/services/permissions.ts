@@ -80,6 +80,7 @@ export function getDappPermissions({
 function setDappPermissions(permissions: AppPermissions): void {
     const user = getUser()
     if (!user) {
+        // This should never happen and requires investigatin if it does!
         console.warn("No user found, not setting permissions.")
         return
     }
