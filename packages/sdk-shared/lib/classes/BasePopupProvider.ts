@@ -111,8 +111,8 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      *
      * The return value is needed because in some cases we cannot know in advance if a request
      * requires user approval. This is the case with permission requests: we can only know if the
-     * permission was already granted after we are connected. In this case {@link
-     * requiresUserApproval} must be conservative and return true, but we can correct things after
+     * permission was already granted after we are connected. In this case
+     * {@link requiresUserApproval} must be conservative and return true, but we can correct things after
      * connection by returning false from this function.
      */
     protected abstract requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean>

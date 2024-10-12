@@ -1,45 +1,39 @@
+import type { HTTPString } from "@happychain/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared"
 import { hasPermissions } from "../services/permissions"
 import { getChains } from "../state/chains"
 import { getUser } from "../state/user"
-
-let allowIframeToConnectTmpHack = true
+import { getDappOrigin } from "./getDappOrigin.ts"
 
 export function checkIfRequestRequiresConfirmation(
     payload: ProviderMsgsFromApp[Msgs.PermissionCheckRequest]["payload"],
+    origin: HTTPString = getDappOrigin(),
 ) {
-    const basicCheck = requiresApproval(payload)
-    // if the basic check shows its a safe method, we can stop here,
-    // and report back that no confirmation is needed
-    if (!basicCheck) {
+    const neverRequiresApproval = !requiresApproval(payload)
+
+    // Never requires approval, no need to look at the permissions.
+    if (neverRequiresApproval) {
         return false
     }
 
-    // if its a restricted method, and the user is
-    // not logged in, then it needs confirmation
-    // always (login screen or request permissions)
+    // If the user isn't logged in, user intervention is always needed to log in.
     if (!getUser()?.address) {
         return true
     }
 
     switch (payload.method) {
-        // users don't need to confirm if they are adding a chain thats already been added
-        // (it won't get added again though)
+        // Users don't need to approve adding a chain that has already been added
+        // (this won't result in duplicate chain).
         case "wallet_addEthereumChain":
             return !getChains().some((chain) => chain.chainId === payload.params[0].chainId)
 
-        // users don't need to confirm if they are requesting to add permissions that have already been authorized
-        // just current permissions are returned as a result instead
+        // Users don't need to approve permissions that have already been granted.
         case "wallet_requestPermissions":
-            return !hasPermissions(payload.params[0])
+            return !hasPermissions(payload.params[0], { origin })
+
         case "eth_requestAccounts":
-            // TODO TEMP HACK while while we fix permission system (this avoids an explicit request when logging in on page reload)
-            if (allowIframeToConnectTmpHack) {
-                allowIframeToConnectTmpHack = false
-                return false
-            }
-            return !hasPermissions("eth_accounts")
+            return !hasPermissions("eth_accounts", { origin })
     }
 
     return true
