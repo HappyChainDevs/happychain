@@ -26,7 +26,7 @@ function installSpinnerOutputFunctions() {
     console.log = spinnerOutputFunction(ogLog)
     console.warn = spinnerOutputFunction(ogWarn)
     console.error = spinnerOutputFunction(ogError)
-    console.table = spinnerOutputFunction(oTable)
+    console.table = spinnerOutputFunction(oTable as (...msgs: unknown[]) => void)
     started = true
 }
 
