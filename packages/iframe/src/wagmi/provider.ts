@@ -13,11 +13,12 @@ import {
     waitForCondition,
 } from "@happychain/sdk-shared"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { EIP1193Provider } from "viem"
+import { type EIP1193Provider, ResourceUnavailableRpcError } from "viem"
 import { handlePermissionlessRequest } from "../requests"
 import { handleApprovedRequest } from "../requests/approved"
 import { iframeID } from "../requests/utils"
 import { getAuthState } from "../state/authState"
+import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
@@ -47,6 +48,14 @@ export class IframeProvider extends SafeEventEmitter {
     public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
         args: EIP1193RequestParameters<TString>,
     ): Promise<EIP1193RequestResult<TString>> {
+        if (!getUser()) {
+            // Necessary because wagmi will attempt to reconnect on page load. This currently could
+            // work fine (with a permission not found warning), but is brittle, better to explicitly
+            // reject here. We explicitly connect to wagmi via `useConnect` once the user becomes
+            // available.
+            throw new ResourceUnavailableRpcError(new Error("user not initialized yet"))
+        }
+
         const key = createUUID()
 
         await waitForCondition(() => getAuthState() !== AuthState.Connecting)
