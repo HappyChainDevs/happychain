@@ -3,20 +3,26 @@ import { accessorsFromAtom } from "@happychain/common"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { atom } from "jotai"
 import { getAddress } from "viem"
+import { StorageKey, storage } from "../services/storage.ts"
 
-// NOTE: This used to be an `atomWithCompareAndStorage` but that doesn't seem to yield any benefits
-// and did complexify the login logic. We can think about storing this again in the future after
-// refactoring the login logic, if we see a benefit.
-
-const storedUserAtom = atomWithCompare<HappyUser | undefined>(undefined, (a, b) => a?.uid === b?.uid)
+// Base atom for the user, wrapped by `userAtom` to provide a custom setter.
+// biome-ignore format: readability
+const baseUserAtom = atomWithCompare<HappyUser | undefined>(
+    undefined,
+    (a, b) => a?.uid === b?.uid,
+)
 
 export const userAtom = atom(
-    (get) => get(storedUserAtom),
+    (get) => get(baseUserAtom),
     (_get, set, newUser: HappyUser | undefined) => {
         if (newUser?.address) {
-            set(storedUserAtom, formatUser(newUser))
+            const formattedUser = formatUser(newUser)
+            set(baseUserAtom, formattedUser)
+            // share the user with the popup
+            storage.set(StorageKey.HappyUser, newUser)
         } else {
-            set(storedUserAtom, undefined)
+            set(baseUserAtom, undefined)
+            storage.remove(StorageKey.HappyUser)
         }
     },
 )
