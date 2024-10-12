@@ -9,9 +9,7 @@ export function DevelopmentPlugin(): Plugin {
         enforce: "pre",
         transform(code: string, id: string) {
             if (!filter(id)) return
-
             const isClient = !id.includes("worker_file")
-
             return { code: isClient ? clientCodeGen(code, id) : workerCodeGen(code, id) }
         },
     }
