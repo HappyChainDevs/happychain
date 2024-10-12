@@ -1,12 +1,11 @@
 import { useFirebaseWeb3AuthStrategy } from "@happychain/firebase-web3auth-strategy"
-import { AuthState, type ConnectionProvider, WalletType } from "@happychain/sdk-shared"
+import { AuthState, type ConnectionProvider } from "@happychain/sdk-shared"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useMemo } from "react"
 import { useAccount, useConnect, useDisconnect } from "wagmi"
 import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { grantPermissions, hasPermissions } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
-import { chainsAtom } from "../state/chains"
 import { userAtom } from "../state/user"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 
@@ -22,52 +21,104 @@ const needsImplicitConnectionPerm = { current: false }
 export function useSocialProviders() {
     const setAuthState = useSetAtom(authStateAtom)
     const userValue = useAtomValue(userAtom)
-    const chains = useAtomValue(chainsAtom)
 
     const { connectAsync, connectors } = useConnect()
     const { disconnectAsync } = useDisconnect()
-    const { status } = useAccount()
+
+    const { status: wagmiStatus } = useAccount()
 
     const { providers, onAuthChange } = useFirebaseWeb3AuthStrategy()
 
     useEffect(() => {
         onAuthChange(async (user, provider) => {
             // sync local user+provider state with internal plugin updates
-            // not logged in and
 
-            const loggingIn = Boolean(!userValue?.type && user)
-            const loggedIn = userValue?.type === WalletType.Social
-            if (loggingIn || loggedIn) {
-                // Pre-add all our supported chains (as defined by sdk-shared).
-                if (provider) {
-                    await Promise.allSettled(
-                        Object.values(chains).map((chain) => {
-                            provider.request({ method: "wallet_addEthereumChain", params: [chain] })
-                        }),
-                    )
-                }
+            // TODO This is an absolute clusterfudge and needs to live outside of React.
+            //      The approach of having a listener inside `useEffect` is hacky and brittle,
+            //      especially since `useSocialProviders` is called both in `ConectModal` and
+            //      `Embed` at the same time — I'm not quite sure why that doesn't cause duplicate
+            //      updates.
 
-                setUserWithProvider(user, provider)
+            // The next four states are complete and mutually exclusive.
 
-                // must go after setUserProvider
-                if (status !== "connected") {
-                    await connectAsync({ connector: connectors[0] })
-                }
+            // User in param, but no in atom, writing user to atom.
+            const loggingIn = Boolean(user && !userValue?.type)
+            // User in param and in atom.
+            const loggedIn = Boolean(user && userValue?.type)
+            // User in atom, but not in param, erasing user from atom.
+            const loggingOut = Boolean(!user && userValue?.type)
+            // No user in param or atom.
+            const loggedOut = !loggingIn && !loggedIn && !loggingOut
 
-                if (loggedIn) {
-                    if (needsImplicitConnectionPerm.current) {
-                        grantPermissions("eth_accounts")
-                        emitUserUpdate(user)
-                    } else if (hasPermissions("eth_accounts")) {
-                        // The user is automatically sent to the app whenever the user changes or
-                        // when the eth_accounts permission is granted. However, if reconnecting on
-                        // page load, neither of these change, and we need to manually send here.
-                        emitUserUpdate(user)
-                    }
+            // === UPDATE SEQUENCING ===
+            //
+            // Note: The last state in each flow can always recur (e.g. hot reload).
+            //
+            // # page load, logged out
+            //   - loggedOut,  wagmi: disconnected
+            //
+            // # login from app w/ no pre-existing connect permission
+            //   - loggingIn, wagmi: disconnected, grant perm: true
+            //   - loggedIn,  wagmi: disconnected, grant perm: true
+            //   - loggedIn,  wagmi: connecting,   grant perm: false
+            //   - loggedIn,  wagmi: connected,    grant perm: false
+            //
+            // # login from app w/ existing connect permission
+            //   To be tested, no possible yet as we clear out the permissions on logout.
+            //   (`clearPermissions` from `setUserWithProvider`)
+            //
+            // # page load, logged in w/ no pre-existing connect permission
+            //   → Same as login from app, but `needsImplicitConnectionPerm` is always false.
+            //   - loggingIn, wagmi: disconnected
+            //   - loggedIn,  wagmi: disconnected
+            //   - loggedIn,  wagmi: connecting
+            //   - loggedIn,  wagmi: connected
+            //
+            // # page load, logged in w/ pre-existing connect permission
+            //   To be tested, no possible yet as there is no way to clear permissions manually
+            //   (only cleared on logout).
+            //
+            // # connecting & disconnecting
+            //   Nothing happens! As expected: connect/disconnect doesn't affect login status, nor
+            //   the internal iframe wagmi provider.
+            //
+            // # logout
+            //   - loggingOut, wagmi: connected
+            //   - loggedOut,  wagmi: connected
+            //   - loggedOut,  wagmi: connected (yes, repeated *)
+            //   - loggedOut,  wagmi: disconnected
+            //   (*) Unfortunately sending the wagmi disconnect request twice, this is benign.
+
+            // Must be called on all auth changes.
+            // Must also be first, as permission & connection logic depends on the user being set.
+            setUserWithProvider(user, provider)
+
+            // We want the next block before any await, to avoid granting multiple times (which at
+            // current is benign, just wasteful) and updating the user as soon as possible.
+
+            if (loggedIn) {
+                // Logged in from the app, implicitly grant `eth_accounts` (connection) permission.
+                if (needsImplicitConnectionPerm.current) {
+                    needsImplicitConnectionPerm.current = false // only grant once
+                    grantPermissions("eth_accounts")
+                    emitUserUpdate(user)
+                } else if (hasPermissions("eth_accounts")) {
+                    // The user is automatically sent to the app whenever the user changes or
+                    // when the `eth_accounts` permission is granted. However, if reconnecting on
+                    // page load, neither of these change, and we need to manually send here.
+                    emitUserUpdate(user)
                 }
             }
+
+            // Connect/disconnect the wagmi provider (for iframe-initiated transactions).
+            // We need the `needsImplicitConnectionPerm` check to avoid reconnecting on logout.
+            if (loggedIn && wagmiStatus === "disconnected") {
+                await connectAsync({ connector: connectors[0] })
+            } else if (loggedOut && wagmiStatus === "connected") {
+                await disconnectAsync()
+            }
         })
-    }, [onAuthChange, userValue, chains, connectAsync, connectors, status])
+    }, [onAuthChange, userValue, connectAsync, disconnectAsync, connectors, wagmiStatus])
 
     // Returns the provider list with patched enable() / disable() functions.
     return useMemo(
@@ -77,7 +128,8 @@ export function useSocialProviders() {
                     ({
                         ...provider,
                         enable: async () => {
-                            // Will automatically disable loading state when user+provider are set.
+                            // Will automatically disable loading state when user+provider are set
+                            // in `setUserWithProvider`.
                             setAuthState(AuthState.Connecting)
                             // We're logging in on the current dapp, grant connection permission.
                             needsImplicitConnectionPerm.current = true
@@ -87,10 +139,9 @@ export function useSocialProviders() {
                             // will automatically disable loading state when user+provider are set
                             setAuthState(AuthState.Connecting)
                             await provider.disable()
-                            await disconnectAsync()
                         },
                     }) satisfies ConnectionProvider,
             ),
-        [providers, setAuthState, disconnectAsync],
+        [providers, setAuthState],
     )
 }
