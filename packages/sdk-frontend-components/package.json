@@ -20,7 +20,6 @@
         "@happychain/configs": "workspace:^",
         "@happychain/scripts": "workspace:^",
         "@happychain/sdk-shared": "workspace:^",
-        "@happychain/js": "workspace:^",
         "@types/preact-custom-element": "^4.0.4",
         "mipd": "^0.0.7",
         "preact": "^10.24.1",
