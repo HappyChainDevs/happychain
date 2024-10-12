@@ -39,13 +39,7 @@ store.sub(authStateAtom, () => {
         return
     }
 
-    const permitted = hasPermissions("eth_account")
-    const user = store.get(userAtom)
-    // we sync all logout events to the front end
-    // and all login updates if the dapp has permissions
-    if (!user || permitted) {
-        emitUserUpdate(user)
-    }
+    emitUserUpdateOnLoginLogoutEvent()
 })
 
 /**
@@ -56,16 +50,19 @@ store.sub(authStateAtom, () => {
  * @emits {@link Msgs.AuthStateChanged} (optional)
  * @emits {@link Msgs.ProviderEvent} (optional)
  */
-store.sub(userAtom, () => {
-    const user = store.get(userAtom)
-    const permitted = hasPermissions("eth_accounts")
+store.sub(userAtom, emitUserUpdateOnLoginLogoutEvent)
 
-    // we sync all logout events to the front end
-    // and all login updates if the dapp has permissions
-    if (!user || permitted) {
+/**
+ * Sync all logout events to the app, and sync login events if the user already has connection
+ * permission for the app.
+ */
+function emitUserUpdateOnLoginLogoutEvent() {
+    const user = store.get(userAtom)
+    // Note that `hasPermissions` needs to be short-circuited, as it is meaningless without a user.
+    if (!user || hasPermissions("eth_account")) {
         emitUserUpdate(user)
     }
-})
+}
 
 /**
  * Asynchronously updates the ENS username when the user updates.
