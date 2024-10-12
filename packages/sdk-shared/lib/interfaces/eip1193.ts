@@ -1,4 +1,5 @@
 import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
+import type { SafeEventEmitter } from ".."
 import type { HappyUser } from "./happyUser"
 
 // === HAPPY METHODS =============================================================================
@@ -69,4 +70,11 @@ export type EIP1193PermissionsRequest = Extract<
  */
 export function isPermissionsRequest(args: { method: string; params?: unknown }): args is EIP1193PermissionsRequest {
     return eip1193PermissionsMethodsSet.has(args.method)
+}
+
+export interface EIP1193ConnectionHandler extends SafeEventEmitter {
+    isConnected(): boolean
+    request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
+        args: EIP1193RequestParameters<TString>,
+    ): Promise<EIP1193RequestResult<TString>>
 }
