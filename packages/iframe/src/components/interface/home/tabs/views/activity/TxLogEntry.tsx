@@ -10,7 +10,6 @@ interface TxLogEntryProps {
  * Retrieves and presents details based on tx receipt.
  */
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
-    console.log(tx)
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
             <div className="flex flex-row items-center justify-center space-x-1">

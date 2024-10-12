@@ -74,7 +74,6 @@ export function removePendingTx(address: Address, hash: Hash) {
  * If the receipt is not immediately available, it retries fetching the receipt a specified number
  * of times with a delay between each attempt.
  */
-
 export const subscribeToPendingTxAtom = store.sub(PendingTxHashesAtom, () => {
     const user = getUser()
     const publicClient = getPublicClient()
@@ -92,7 +91,6 @@ export const subscribeToPendingTxAtom = store.sub(PendingTxHashesAtom, () => {
         return
     }
 
-    // Iterate over all hashes in the hashList and fetch their receipts
     hashList.forEach((hash) => {
         publicClient.waitForTransactionReceipt({ hash }).then((receipt) => {
             if (!receipt) {
