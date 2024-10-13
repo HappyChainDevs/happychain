@@ -1,3 +1,4 @@
+import type { HTTPString } from "@happychain/common"
 import { AuthState, Msgs, SafeEventEmitter, waitForCondition } from "@happychain/sdk-shared"
 import type { EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
 import { InjectedWalletHandler } from "./injectedWalletHandler"
