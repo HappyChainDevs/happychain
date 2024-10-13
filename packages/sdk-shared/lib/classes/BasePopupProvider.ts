@@ -7,8 +7,7 @@ import type {
     EIP1193RequestParameters,
     EIP1193RequestResult,
 } from "../interfaces/eip1193"
-import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "../interfaces/errors"
-import type { Msgs, PopupMsgsFromIframe, ProviderEventResponse } from "../interfaces/events"
+import { EIP1193UserRejectedRequestError } from "../interfaces/errors"
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -191,31 +190,5 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
         const popup = window.open(`${url}?${searchParams}`, "_blank", BasePopupProvider.POPUP_FEATURES)
 
         return popup ?? undefined
-    }
-
-    public handleRequestResolution(data: ProviderEventResponse | PopupMsgsFromIframe[Msgs.RequestResponse]) {
-        const req = this.inFlightRequests.get(data.key)
-
-        if (!req) {
-            return { resolve: null, reject: null }
-        }
-
-        const { resolve, reject, popup } = req
-        this.inFlightRequests.delete(data.key)
-        popup?.close()
-
-        if (reject && data.error) {
-            reject(
-                new GenericProviderRpcError({
-                    code: data.error.code,
-                    message: data.error.message,
-                    data: data.error.data,
-                }),
-            )
-        } else if (resolve) {
-            resolve(data.payload)
-        } else {
-            // no key associated, perhaps from another tab context?
-        }
     }
 }
