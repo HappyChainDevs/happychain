@@ -7,7 +7,9 @@ import type {
     EIP1193RequestParameters,
     EIP1193RequestResult,
 } from "../interfaces/eip1193"
-import { EIP1193UserRejectedRequestError } from "../interfaces/errors"
+import { type EIP1193ErrorObject, EIP1193UserRejectedRequestError, GenericProviderRpcError } from "../interfaces/errors"
+import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
+import type { ProviderEventError, ProviderEventPayload } from "../interfaces/payloads"
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -84,6 +86,8 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
         { resolve, reject }?: InFlightRequest,
     ): Promise<boolean | unknown>
 
+    protected abstract performOptionalUserAndAuthCheck(): Promise<unknown>
+
     /**
      * Sends an EIP-1193 request to the provider.
      */
@@ -92,12 +96,14 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
     ): Promise<EIP1193RequestResult<TString>> {
         const key = createUUID()
 
+        this.performOptionalUserAndAuthCheck()
+
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: resolved later
-        return new Promise(async (resolve, reject) => {
-            let requiresApproval = await this.requiresUserApproval(args)
+        return new Promise<EIP1193RequestResult<TString>>(async (resolve, reject) => {
+            let requiresApproval = await this.requiresUserApproval(args, key)
 
             if (!requiresApproval) {
-                this.handlePermissionlessRequest(key, args, { resolve: resolve as ResolveType, reject })
+                this.handlePermissionless(key, args, { resolve: resolve as ResolveType, reject })
                 return
             }
 
@@ -122,9 +128,9 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
      * Method to determine if a request requires user approval.
      * Must return true if unable to determine and/or if extra permissions (beyond user approval) are required.
      */
-    protected abstract requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean | unknown>
+    protected abstract requiresUserApproval(args: EIP1193RequestParameters, key?: UUID): Promise<boolean | unknown>
 
-    protected abstract handlePermissionlessRequest(
+    protected abstract handlePermissionless(
         key: UUID,
         args: EIP1193RequestParameters,
         { resolve, reject }: InFlightRequest,
@@ -190,5 +196,36 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
         const popup = window.open(`${url}?${searchParams}`, "_blank", BasePopupProvider.POPUP_FEATURES)
 
         return popup ?? undefined
+    }
+
+    public handleRequestResolution(
+        data:
+            | ProviderEventPayload<EIP1193RequestResult>
+            | ProviderEventError<EIP1193ErrorObject>
+            | ProviderMsgsFromIframe[Msgs.RequestResponse],
+    ) {
+        const req = this.inFlightRequests.get(data.key)
+
+        if (!req) {
+            return { resolve: null, reject: null }
+        }
+
+        const { resolve, reject, popup } = req
+        this.inFlightRequests.delete(data.key)
+        popup?.close()
+
+        if (reject && data.error) {
+            reject(
+                new GenericProviderRpcError({
+                    code: data.error.code,
+                    message: data.error.message,
+                    data: data.error.data,
+                }),
+            )
+        } else if (resolve) {
+            resolve(data.payload)
+        } else {
+            // no key associated, perhaps from another tab context?
+        }
     }
 }

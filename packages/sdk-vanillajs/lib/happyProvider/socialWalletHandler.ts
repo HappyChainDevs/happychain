@@ -2,27 +2,17 @@ import { type UUID, createUUID } from "../common-utils"
 
 import {
     AuthState,
-    type EIP1193RequestMethods,
+    BasePopupProvider,
     type EIP1193RequestParameters,
-    type EIP1193RequestResult,
     EIP1193UserRejectedRequestError,
-    GenericProviderRpcError,
     type HappyUser,
+    type InFlightRequest,
     Msgs,
     type ProviderMsgsFromIframe,
+    type ResolveType,
 } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared"
-import SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
-
-type Timer = ReturnType<typeof setInterval>
-
-type InFlightRequest = {
-    // biome-ignore lint/suspicious/noExplicitAny: difficult type, viem _returnType
-    resolve: (value: any) => void
-    reject: (reason?: unknown) => void
-    popup: Window | null
-}
+import type { HappyProviderConfig } from "./interface"
 
 type InFlightCheck = {
     resolve: (value: boolean) => void
@@ -40,10 +30,8 @@ const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "m
  * where the user can approve/reject the requests before they are sent
  * to the iframe to be handled
  */
-export class SocialWalletHandler extends SafeEventEmitter implements EIP1193ConnectionHandler {
-    private inFlightRequests = new Map<string, InFlightRequest>()
+export class SocialWalletHandler extends BasePopupProvider {
     private inFlightChecks = new Map<string, InFlightCheck>()
-    private timer: Timer | null = null
 
     private user: HappyUser | undefined
     private authState: AuthState = AuthState.Connecting
@@ -62,89 +50,98 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         config.providerBus.on(Msgs.ProviderEvent, this.handleProviderNativeEvent.bind(this))
 
         // Social Auth (Iframe Proxy)
-        config.providerBus.on(Msgs.RequestResponse, this.handleCompletedRequest.bind(this))
+        config.providerBus.on(Msgs.RequestResponse, this.handleRequestResolution.bind(this))
 
         config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
 
-    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
-        args: EIP1193RequestParameters<TString>,
-    ): Promise<EIP1193RequestResult<TString>> {
-        // Every request gets proxied through this function.
-        // If it is eth_call or a non-tx non-signature request, we can auto-approve
-        // by posting the request args using request:approve,
-        // otherwise we open the popup and pass the request args through the hash URL.
-        const key = createUUID()
+    protected override async requiresUserApproval(
+        args: EIP1193RequestParameters,
+        key: UUID,
+    ): Promise<boolean | unknown> {
+        return new Promise((resolve, reject) => {
+            this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
+                key,
+                windowId: this.config.windowId,
+                payload: args,
+                error: null,
+            })
 
-        // biome-ignore lint/suspicious/noAsyncPromiseExecutor: we need this to resolve elsewhere
-        return new Promise(async (resolve, reject) => {
-            const requiresUserApproval = await this.requiresApproval(args)
-
-            if (!requiresUserApproval) {
-                const popup = this.autoApprove(key, args)
-                this.queueRequest(key, { resolve, reject, popup })
-                return
-            }
-
-            /**
-             * If the user is not connected (and not logged in)
-             * Display the login screen. If/when the login is successful,
-             * run the initial protected request. If the original request
-             * was explicit permissions request, then it was granted automatically
-             * as part of the login flow, so we can auto-approve here and the response
-             * will be what is returned to the originating caller
-             */
-            if (!this.user && this.authState === AuthState.Disconnected) {
-                void this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
-
-                const unsubscribeClose = this.config.msgBus.on(Msgs.ModalToggle, (state) => {
-                    if (state.isOpen) return
-                    unsubscribeClose()
-                    if (state.cancelled) {
-                        unsubscribeSuccess()
-                        this.inFlightChecks.delete(key)
-                        reject(new EIP1193UserRejectedRequestError())
-                    }
-                })
-
-                const unsubscribeSuccess = this.config.msgBus.on(Msgs.UserChanged, (user) => {
-                    if (user) {
-                        // auto-approve only works for these methods, since this is a direct response
-                        // the the user login flow, and upon user login, these permissions get granted automatically
-                        const popup = ["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
-                            ? this.autoApprove(key, args)
-                            : this.promptUser(key, args)
-
-                        // process request when user is logged in successfully
-                        this.queueRequest(key, { resolve, reject, popup })
-                        unsubscribeSuccess()
-                        unsubscribeClose()
-                    }
-                })
-                return
-            }
-
-            /**
-             * If the user is Logged In, but not connected to the dapp,
-             * and is making a protected request _other than_ explicitly requesting
-             * a connection, then intercept with a connection request, and only proceed
-             * if the permissions are granted
-             */
-            if (
-                !this.user &&
-                this.authState === AuthState.Connected &&
-                !["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
-            ) {
-                // request wallet permissions on the dapps behalf, then run dapps request
-                await this.request({
-                    method: "wallet_requestPermissions",
-                    params: [{ eth_accounts: {} }],
-                })
-            }
-
-            const popup = this.promptUser(key, args)
-            this.queueRequest(key, { resolve, reject, popup })
+            this.inFlightChecks.set(key, { resolve, reject })
         })
+    }
+
+    protected handlePermissionless(
+        key: UUID,
+        args: EIP1193RequestParameters,
+        { resolve, reject }: InFlightRequest,
+    ): void {
+        this.autoApprove(key, args)
+        this.trackRequest(key, { resolve: resolve as ResolveType, reject })
+        return
+    }
+
+    protected override async requestPermissions(
+        key: UUID,
+        args: EIP1193RequestParameters,
+        { resolve, reject }: InFlightRequest,
+    ): Promise<boolean | unknown> {
+        /**
+         * If the user is not connected (and not logged in)
+         * Display the login screen. If/when the login is successful,
+         * run the initial protected request. If the original request
+         * was explicit permissions request, then it was granted automatically
+         * as part of the login flow, so we can auto-approve here and the response
+         * will be what is returned to the originating caller
+         */
+        if (!this.user && this.authState === AuthState.Disconnected) {
+            void this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
+
+            const unsubscribeClose = this.config.msgBus.on(Msgs.ModalToggle, (state) => {
+                if (state.isOpen) return
+                unsubscribeClose()
+                if (state.cancelled) {
+                    unsubscribeSuccess()
+                    this.inFlightChecks.delete(key)
+                    reject(new EIP1193UserRejectedRequestError())
+                }
+            })
+
+            const unsubscribeSuccess = this.config.msgBus.on(Msgs.UserChanged, (user) => {
+                if (user) {
+                    // auto-approve only works for these methods, since this is a direct response
+                    // the user login flow, and upon user login, these permissions get granted automatically
+
+                    ;["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
+                        ? this.autoApprove(key, args)
+                        : this.promptUser(key, args)
+
+                    // process request when user is logged in successfully
+                    this.trackRequest(key, { resolve: resolve as ResolveType, reject })
+                    unsubscribeSuccess()
+                    unsubscribeClose()
+                }
+            })
+            return
+        }
+
+        /**
+         * If the user is Logged In, but not connected to the dapp,
+         * and is making a protected request _other than_ explicitly requesting
+         * a connection, then intercept with a connection request, and only proceed
+         * if the permissions are granted
+         */
+        if (
+            !this.user &&
+            this.authState === AuthState.Connected &&
+            !["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)
+        ) {
+            // request wallet permissions on the dapps behalf, then run dapps request
+            await this.request({
+                method: "wallet_requestPermissions",
+                params: [{ eth_accounts: {} }],
+            })
+        }
     }
 
     isConnected(): boolean {
@@ -181,64 +178,6 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
         this.emit(data.payload.event, data.payload.args)
     }
 
-    private handleCompletedRequest(data: ProviderMsgsFromIframe[Msgs.RequestResponse]) {
-        const req = this.inFlightRequests.get(data.key)
-
-        if (!req) {
-            return { resolve: null, reject: null }
-        }
-
-        const { resolve, reject, popup } = req
-        this.inFlightRequests.delete(data.key)
-        popup?.close()
-
-        if (reject && data.error) {
-            reject(
-                new GenericProviderRpcError({
-                    code: data.error.code,
-                    message: data.error.message,
-                    data: data.error.data,
-                }),
-            )
-        } else if (resolve) {
-            resolve(data.payload)
-        } else {
-            // no key associated, perhaps from another tab context?
-        }
-    }
-
-    private queueRequest(key: string, { resolve, reject, popup }: InFlightRequest) {
-        this.inFlightRequests.set(key, { resolve, reject, popup })
-
-        const intervalMs = 100
-
-        if (!this.timer && popup) {
-            // every interval, check if popup has been manually closed
-            this.timer = setInterval(() => {
-                let withPopups = 0
-                for (const [k, req] of this.inFlightRequests) {
-                    if (!req.popup) {
-                        continue
-                    }
-
-                    if (req.popup.closed) {
-                        // manually closed without explicit rejection
-                        req.reject(new EIP1193UserRejectedRequestError())
-                        this.inFlightRequests.delete(k)
-                    } else {
-                        // still open
-                        withPopups++
-                    }
-                }
-
-                if (this.timer && !withPopups) {
-                    clearInterval(this.timer)
-                    this.timer = null
-                }
-            }, intervalMs)
-        }
-    }
-
     private autoApprove(key: UUID, args: EIP1193RequestParameters) {
         void this.config.providerBus.emit(Msgs.RequestPermissionless, {
             key,
@@ -260,5 +199,9 @@ export class SocialWalletHandler extends SafeEventEmitter implements EIP1193Conn
 
         const searchParams = new URLSearchParams(opts).toString()
         return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
+    }
+
+    protected async performOptionalUserAndAuthCheck(): Promise<unknown> {
+        return null
     }
 }
