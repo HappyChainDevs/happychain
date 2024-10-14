@@ -90,6 +90,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
     }
 
     protected handlePermissionless(key: UUID, args: EIP1193RequestParameters): void {
+        // Note that this always works regardless of log in or connection status.
         void this.config.providerBus.emit(Msgs.RequestPermissionless, {
             key,
             windowId: this.config.windowId,
@@ -122,10 +123,10 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
             // Otherwise the login is successful, the UserChanged callback will be called.
         })
 
-        // NOTE: This *should* be safe: either the logging succeeds from this app and we get
-        // connection permission auto-granted (and get the user as a result), or it fails (possibly
-        // because logging was complete from another app first?) and the ModdlaToggle callback will
-        // be called.
+        // NOTE: This *should* be safe: either the login succeeds from this app and we get
+        // connection permissions auto-granted (and get the user as a result), or it fails (possibly
+        // because login was complete from another app first?) and the ModdlaToggle callback will be
+        // called.
 
         const unsubscribeSuccess = this.config.msgBus.on(Msgs.UserChanged, (user) => {
             if (!user) return
@@ -140,9 +141,6 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
     protected override async requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean> {
         // We are connected, no need for extra permissions, we needed approval before and still do.
         if (this.user) return true
-
-        // We're currently logging in or out, wait until that is settled to proceed.
-        await waitForCondition(() => this.authState !== AuthState.Connecting)
 
         // biome-ignore format: readability
         const isConnectionRequest
@@ -162,8 +160,6 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
             if (isConnectionRequest) return true // still requires approval
 
             // Recursively request a connection permission (base case is the `if` right above).
-            // There's a tiny chance we got logged out in the interface, then the request simply
-            // fails.
             await this.request({
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
@@ -190,9 +186,15 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         //
         // 3. Mixed connection and non-connection permissions requested.
         //    A, B, C:  Same as 2A, 2B, 2C.
-        //    D. Otherwise, we returned above (`is (isConnectionRequest`) to get explicit user approval.
+        //    D. Otherwise, we returned above (`if (isConnectionRequest`) to get explicit user approval.
         //
         // The below logic will handles cases 1B, 2C, 2D, 3C.
+
+        // NOTE: There is always a tiny chance that the authentication or connection status shifts
+        // out from underneath us. This is okay: at worse either (1) say something doesn't require
+        // approval when it now does, leading to an exception in the console and the user having to
+        // retry, or (2) say something requires a permission when it doesn't, leading to an
+        // unnecessary prompt.
 
         // biome-ignore format: readability
         const onlyConnectionRequested
