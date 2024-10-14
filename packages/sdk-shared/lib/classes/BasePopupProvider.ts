@@ -211,7 +211,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
     ): Promise<boolean | unknown>
 
     /** used by iframe to check for user and auth status */
-    protected abstract performOptionalUserAndAuthCheck(): Promise<unknown>
+    protected abstract performOptionalUserAndAuthCheck(): Promise<void>
 
     /**
      * Method to determine if a request requires user approval.

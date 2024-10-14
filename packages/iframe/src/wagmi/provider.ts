@@ -72,7 +72,7 @@ export class IframeProvider extends BasePopupProvider {
         }
     }
 
-    protected override async performOptionalUserAndAuthCheck(): Promise<unknown> {
+    protected override async performOptionalUserAndAuthCheck(): Promise<void> {
         if (!getUser()) {
             // Necessary because wagmi will attempt to reconnect on page load. This currently could
             // work fine (with a permission not found warning), but is brittle, better to explicitly
@@ -83,8 +83,6 @@ export class IframeProvider extends BasePopupProvider {
         }
 
         await waitForCondition(() => getAuthState() !== AuthState.Connecting)
-
-        return null
     }
 }
 
