@@ -1,5 +1,5 @@
 import { type UUID, createUUID } from "@happychain/common"
-import { AuthState, EIP1193UnauthorizedError, EIP1193UserRejectedRequestError } from "@happychain/sdk-shared"
+import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
 import { getDefaultStore } from "jotai"
