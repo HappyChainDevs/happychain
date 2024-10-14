@@ -1,8 +1,7 @@
 name: Deploy ERC-4337 bundler
 
-# TODO: change to only run on manual dispatch
 on:
-  pull_request:
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
