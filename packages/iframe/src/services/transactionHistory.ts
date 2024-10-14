@@ -1,15 +1,26 @@
 import { getDefaultStore } from "jotai"
 import type { Address, Hash, TransactionReceipt } from "viem"
 import { serialize } from "wagmi"
-import { type PendingTxHistoryRecord, pendingTxHashesAtom } from "../state/pendingTxs"
+import { pendingTxHashesAtom } from "../state/pendingTxs"
 import { getPublicClient } from "../state/publicClient"
 import { txHistoryAtom } from "../state/txHistory"
 import { getUser } from "../state/user"
 
-/** When user sends a transaction, the hash generated is stored
- *  in the pending tx atom. On addition, it is processed by the `subscribeToPendingTxAtom` function
- *  which calls viem's `getTransactionReceipt` function to generate the full transaction receipt.
- *  This is then stored in the txHistory atom, which is then displayed in the `Activity` Tab.
+/**
+ * When a new transaction hash is added to the pending transactions atom, Viem's 
+ * {@link https://viem.sh/docs/actions/public/waitForTransactionReceipt.html | waitForTransactionReceipt}
+ * function is called to monitor the transaction and retrieve the `TransactionReceipt` once it is included in a block.
+ * 
+ * Once a receipt is obtained:
+ * - It is serialized and stored in the `txHistoryAtom` to maintain a log of completed transactions for the user.
+ * - The transaction hash is removed from the `pendingTxHashesAtom` as the transaction is no longer pending.
+ * 
+ * The `Activity` Tab can then display the transaction history by reading from the `txHistoryAtom`.
+ * 
+ * In summary:
+ * 1. A pending transaction hash is added to `pendingTxHashesAtom` after the user sends a transaction.
+ * 2. `subscribeToPendingTxAtom` processes this hash and waits for the corresponding transaction to be included in a block.
+ * 3. Once the `TransactionReceipt` is received, it is stored in `txHistoryAtom` and removed from `pendingTxHashesAtom`.
  */
 
 // -------------------------------------------------------------------------------------------------
@@ -26,15 +37,11 @@ export function addHistoryLogEntry(address: Address, entry: TransactionReceipt) 
     })
 }
 
-export function getPendingTxHashes(): PendingTxHistoryRecord {
-    return store.get(pendingTxHashesAtom)
-}
-
-export function addPendingTx(address: Address, newHash: Hash) {
+export function addPendingTxEntry(address: Address, newHash: Hash) {
     let entryExists = false
     store.set(pendingTxHashesAtom, (existingEntries) => {
         const pendingTxHashes = existingEntries[address] || []
-        entryExists = pendingTxHashes.some((asset) => asset === newHash)
+        entryExists = pendingTxHashes.some((pendingHash) => pendingHash === newHash)
 
         return entryExists
             ? existingEntries
@@ -46,12 +53,12 @@ export function addPendingTx(address: Address, newHash: Hash) {
     return !entryExists
 }
 
-export function removePendingTx(address: Address, hash: Hash) {
+export function removePendingTxEntry(address: Address, hash: Hash) {
     store.set(pendingTxHashesAtom, (existingEntries) => {
         const pendingTxHashes = existingEntries[address] || []
 
         // Filter out the hash to be removed
-        const updatedHashes = pendingTxHashes.filter((asset) => asset !== hash)
+        const updatedHashes = pendingTxHashes.filter((pendingHash) => pendingHash !== hash)
 
         // If the updatedHashes is empty, remove the address entry from the record
         if (updatedHashes.length === 0) {
@@ -98,7 +105,7 @@ export const subscribeToPendingTxAtom = store.sub(pendingTxHashesAtom, () => {
             // once receipt is found, add it to the user's transaction history
             addHistoryLogEntry(user.address, receipt)
             // Remove the hash from pending atom since it's no longer 'pending'
-            removePendingTx(user.address, hash)
+            removePendingTxEntry(user.address, hash)
         })
     })
 })

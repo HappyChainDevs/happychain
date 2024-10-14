@@ -9,7 +9,7 @@ import {
 } from "@happychain/sdk-shared"
 import type { Client, Hash } from "viem"
 import { grantPermissions } from "../services/permissions"
-import { addPendingTx } from "../services/transactionHistory"
+import { addPendingTxEntry } from "../services/transactionHistory"
 import { addWatchedAsset } from "../services/watchedAssets"
 import { getChainsMap, setChains } from "../state/chains"
 import { getUser } from "../state/user"
@@ -34,7 +34,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_sendTransaction": {
             const tx = await sendToWalletClient(request)
             const user = getUser()
-            if (user) addPendingTx(user.address, tx as Hash)
+            if (user) addPendingTxEntry(user.address, tx as Hash)
             return tx
         }
 
