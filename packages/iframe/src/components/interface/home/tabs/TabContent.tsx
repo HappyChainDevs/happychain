@@ -1,4 +1,4 @@
-import { ContentType } from "../../../../state/walletInfoView"
+import { ContentType } from "../../../../state/interfaceState"
 import GamesView from "./views/GamesView"
 import TokenView from "./views/TokenView"
 import ActivityView from "./views/activity/ActivityView"
