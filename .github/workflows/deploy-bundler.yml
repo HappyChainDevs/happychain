@@ -52,8 +52,8 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            sudo /usr/local/bin/copy-to-bundler.sh
-            sudo -u bundler -i
+            sudo -u bundler bash -c '
             cd /home/bundler/happy-bundler
-            ARGS="./alto/src/lib/cli/alto.js -- run --config ./configs/config.happySepolia.json --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }} --name ${{ env.PM2_PROCESS_NAME }}"
-            pm2 restart $ARGS || pm2 start $ARGS
+            ARGS="./alto/src/lib/cli/alto.js -- run --config ./configs/config.happySepolia.json --executor-private-keys $BUNDLER_EXECUTOR_WALLET --utility-private-key $BUNDLER_UTILITY_WALLET --name $PM2_PROCESS_NAME"
+            pm2 restart "$ARGS" || pm2 start "$ARGS"
+            '
