@@ -107,14 +107,13 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         const { promise, resolve } = promiseWithResolvers<boolean>()
         const key = createUUID()
 
-        // TODO: Verify that state.cancelled is properly set in all cases where the login fails.
-
         const unsubscribeClose = this.config.msgBus.on(Msgs.ModalToggle, (state) => {
             if (state.isOpen) return
             // The login modal was closed.
+            // Note that a failing login attempt does not close the modal (the user is free to retry).
             unsubscribeClose()
             if (state.cancelled) {
-                // Closing is because the user cancelled the login (or it failed).
+                // Closing is because the user cancelled the login.
                 unsubscribeSuccess()
                 this.inFlightChecks.delete(key)
                 resolve(false)
