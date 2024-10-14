@@ -41,7 +41,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           source: "packages/bundler/alto/*,packages/bundler/configs/config.happySepolia.json"
           target: ${{ env.DEPLOYMENT_DIR }}
-          strip_components: 2
+          strip_components: 2 
           rm: true
 
       - name: Deploy bundler to server
