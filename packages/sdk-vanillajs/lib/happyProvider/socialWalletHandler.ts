@@ -9,7 +9,6 @@ import {
     type HappyUser,
     Msgs,
     type ProviderMsgsFromIframe,
-    waitForCondition,
 } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
@@ -216,6 +215,4 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         // Now that we are connected, these other requests can be made.
         return true
     }
-
-    protected async performOptionalUserAndAuthCheck(): Promise<void> {}
 }
