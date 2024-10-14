@@ -66,10 +66,11 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         const key = createUUID()
         const { promise, resolve, reject } = promiseWithResolvers<EIP1193RequestResult>()
         const requiresApproval = (await this.requiresUserApproval(args)) && (await this.requestExtraPermissions(args))
+        // noinspection JSVoidFunctionReturnValueUsed
         const popup = requiresApproval
             ? this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, config.iframePath)
-            : (this.handlePermissionless(key, args) ?? undefined)
-        this.trackRequest(key, { resolve, reject, popup })
+            : this.handlePermissionless(key, args)
+        this.trackRequest(key, { resolve, reject, popup: popup })
         return promise
     }
 
@@ -119,7 +120,8 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     /**
      * Handles a request that does not require user approval.
      */
-    protected abstract handlePermissionless(key: UUID, args: EIP1193RequestParameters): void
+    // Return type is undefined on purpose, avoid overrides returning anything.
+    protected abstract handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined
 
     // === PRIVATE METHODS =========================================================================
 

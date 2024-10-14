@@ -34,7 +34,7 @@ export class IframeProvider extends BasePopupProvider {
         return checkIfRequestRequiresConfirmation(args)
     }
 
-    protected override async handlePermissionless(key: UUID, args: EIP1193RequestParameters): Promise<void> {
+    protected override handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
         void handlePermissionlessRequest({
             key,
             windowId: iframeID,
