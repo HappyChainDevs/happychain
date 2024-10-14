@@ -1,5 +1,5 @@
 import { useAtom } from "jotai"
-import { type ContentType, walletInfoViewAtom } from "../../../../state/walletInfoView"
+import { type ContentType, walletInfoViewAtom } from "../../../../state/interfaceState"
 
 interface TabProps {
     title: ContentType

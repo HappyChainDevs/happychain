@@ -1,5 +1,5 @@
 import { useAtom } from "jotai"
-import { ContentType, walletInfoViewAtom } from "../../state/walletInfoView"
+import { ContentType, walletInfoViewAtom } from "../../state/interfaceState"
 import Tab from "./home/tabs/Tab"
 import TabContent from "./home/tabs/TabContent"
 

@@ -4,7 +4,7 @@ import { debounce } from "lodash"
 import type React from "react"
 import { useCallback, useState } from "react"
 import { formatEther, parseEther } from "viem"
-import { trackSendAtom } from "../../../state/trackSend"
+import { trackSendAtom } from "../../../state/interfaceState"
 
 interface SendInputProps {
     balance: bigint | undefined

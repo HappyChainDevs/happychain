@@ -4,8 +4,7 @@ import { useAtom } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
 import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
-import { trackSendAtom } from "../../../state/trackSend"
-import { ContentType, walletInfoViewAtom } from "../../../state/walletInfoView"
+import { ContentType, trackSendAtom, walletInfoViewAtom } from "../../../state/interfaceState"
 
 interface SendButtonsInterface {
     sendValue: string | undefined
@@ -24,12 +23,12 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     useEffect(() => {
         // if tx is successful, move back to home page of wallet
         if (isConfirmed) {
-            setSendInFlight(false)
+            setSendInFlight({ val: false })
             setView(ContentType.TOKENS)
             navigate({ to: "/embed" })
         }
         if (error) {
-            setSendInFlight(false)
+            setSendInFlight({ val: false })
         }
     }, [error, isConfirmed, setView, navigate, setSendInFlight])
 
@@ -40,7 +39,7 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
 
     const submitSend = useCallback(() => {
         if (targetAddress && sendValue) {
-            setSendInFlight(true)
+            setSendInFlight({ val: false })
             // send tx
             sendTransaction({
                 to: targetAddress as Address,
