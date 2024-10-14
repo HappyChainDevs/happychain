@@ -58,10 +58,8 @@ export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods>
 export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1193ConnectionHandler {
     protected inFlightRequests = new Map<string, InFlightRequest>()
     protected timer: Timer | null = null
-    protected static readonly POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(
-        ",",
-    )
-    protected iframePath = config.iframePath
+    protected static readonly POPUP_FEATURES = //
+        ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
 
     public windowId = createUUID()
 
@@ -73,7 +71,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
     ): Promise<EIP1193RequestResult<TString>> {
         const key = createUUID()
 
-        this.performOptionalUserAndAuthCheck()
+        void this.performOptionalUserAndAuthCheck()
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: resolved later
         return new Promise<EIP1193RequestResult<TString>>(async (resolve, reject) => {
@@ -95,7 +93,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
             })
             // If approval is still required after permissions, open a popup for the user
             if (!requiresApproval) {
-                const popup = this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, this.iframePath)
+                const popup = this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, config.iframePath)
                 this.trackRequest(key, { resolve: resolve as ResolveType, reject, popup })
             }
         })
