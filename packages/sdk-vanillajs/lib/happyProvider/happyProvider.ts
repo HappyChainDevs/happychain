@@ -45,11 +45,9 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
         this.registerConnectionHandlerEvents(this.socialWalletHandler)
     }
 
-    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
-        args: EIP1193RequestParameters<TString>,
-    ): Promise<EIP1193RequestResult<TString>> {
+    public async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
         if (this.authState === AuthState.Connecting) {
-            // wait till either authenticated or unauthenticated
+            // wait until either authenticated or unauthenticated
             await waitForCondition(() => this.authState !== AuthState.Connecting)
         }
 

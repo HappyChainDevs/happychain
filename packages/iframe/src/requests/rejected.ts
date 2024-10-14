@@ -19,7 +19,7 @@ export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): 
     }
 
     if (isIframeId(data.windowId)) {
-        void iframeProvider.handleRequestResolution(response)
+        iframeProvider.handleRequestResolution(response)
     } else {
         void happyProviderBus.emit(Msgs.RequestResponse, response)
     }

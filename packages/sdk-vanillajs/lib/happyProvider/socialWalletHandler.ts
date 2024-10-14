@@ -12,7 +12,7 @@ import {
     waitForCondition,
 } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared"
-import type { HappyProviderConfig } from "./interface"
+import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 type InFlightCheck = {
     resolve: (value: boolean) => void
@@ -28,15 +28,16 @@ type InFlightCheck = {
  * where the user can approve/reject the requests before they are sent
  * to the iframe to be handled
  */
-export class SocialWalletHandler extends BasePopupProvider {
-    private inFlightChecks = new Map<string, InFlightCheck>()
+export class SocialWalletHandler extends BasePopupProvider implements EIP1193ConnectionHandler {
+    // === SETUP ===================================================================================
 
+    private inFlightChecks = new Map<string, InFlightCheck>()
     private user: HappyUser | undefined
     private authState: AuthState = AuthState.Connecting
 
     constructor(private config: HappyProviderConfig) {
         super(config.windowId)
-        // sync local user state
+
         config.msgBus.on(Msgs.UserChanged, (_user) => {
             this.user = _user
         })
@@ -46,25 +47,46 @@ export class SocialWalletHandler extends BasePopupProvider {
         })
 
         config.providerBus.on(Msgs.ProviderEvent, this.handleProviderNativeEvent.bind(this))
-
-        // Social Auth (Iframe Proxy)
         config.providerBus.on(Msgs.RequestResponse, this.handleRequestResolution.bind(this))
-
         config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
+    }
+
+    private async handlePermissionCheck(data: ProviderMsgsFromIframe[Msgs.PermissionCheckResponse]) {
+        const inFlight = this.inFlightChecks.get(data.key)
+        if (!inFlight) return
+        if (typeof data.payload === "boolean") {
+            inFlight.resolve(data.payload)
+        } else {
+            inFlight.reject(data.error)
+        }
+        this.inFlightChecks.delete(data.key)
+    }
+
+    private handleProviderNativeEvent(data: ProviderMsgsFromIframe[Msgs.ProviderEvent]) {
+        this.emit(data.payload.event, data.payload.args)
+    }
+
+    // === ABSTRACT METHOD IMPLEMENTATION ==========================================================
+
+    public isConnected(): boolean {
+        // The social provider is always connected: it can always access the iframe's provider
+        // for public calls.
+        return true
     }
 
     protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
         const key = createUUID()
-        return new Promise((resolve, reject) => {
-            this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
-                key,
-                windowId: this.config.windowId,
-                payload: args,
-                error: null,
-            })
+        const { promise, resolve, reject } = promiseWithResolvers<boolean>()
+        this.inFlightChecks.set(key, { resolve, reject })
 
-            this.inFlightChecks.set(key, { resolve, reject })
+        void this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
+            key,
+            windowId: this.config.windowId,
+            payload: args,
+            error: null,
         })
+
+        return promise
     }
 
     protected handlePermissionless(key: UUID, args: EIP1193RequestParameters): void {
@@ -191,26 +213,6 @@ export class SocialWalletHandler extends BasePopupProvider {
         // Everything else (non-permission requests): required approval to begin with and still does.
         // Now that we are connected, these other requests can be made.
         return true
-    }
-
-    isConnected(): boolean {
-        // this is the fallback handler, always marked as 'connected' for public RPC's etc
-        return true
-    }
-
-    private async handlePermissionCheck(data: ProviderMsgsFromIframe[Msgs.PermissionCheckResponse]) {
-        const inFlight = this.inFlightChecks.get(data.key)
-        if (!inFlight) return
-        if (typeof data.payload === "boolean") {
-            inFlight.resolve(data.payload)
-        } else {
-            inFlight.reject(data.error)
-        }
-        this.inFlightChecks.delete(data.key)
-    }
-
-    private handleProviderNativeEvent(data: ProviderMsgsFromIframe[Msgs.ProviderEvent]) {
-        this.emit(data.payload.event, data.payload.args)
     }
 
     protected async performOptionalUserAndAuthCheck(): Promise<void> {}

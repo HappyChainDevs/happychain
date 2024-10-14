@@ -72,9 +72,3 @@ export type EIP1193PermissionsRequest = Extract<
 export function isPermissionsRequest(args: { method: string; params?: unknown }): args is EIP1193PermissionsRequest {
     return eip1193PermissionsMethodsSet.has(args.method)
 }
-
-export interface EIP1193ConnectionHandler<TString extends EIP1193RequestMethods = EIP1193RequestMethods>
-    extends SafeEventEmitter {
-    isConnected(): boolean
-    request(args: EIP1193RequestParameters<TString>): Promise<EIP1193RequestResult<TString>>
-}
