@@ -71,7 +71,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
     ): Promise<EIP1193RequestResult<TString>> {
         const key = createUUID()
 
-        void this.performOptionalUserAndAuthCheck()
+        await this.performOptionalUserAndAuthCheck()
 
         let resolve = null as unknown as ResolveType<TString>
         let reject = null as unknown as (reason?: unknown) => void
@@ -80,8 +80,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
             reject = _reject
         })
 
-        const requiresApproval =
-            (await this.requiresUserApproval(args, key)) && (await this.requestExtraPermissions(args))
+        const requiresApproval = (await this.requiresUserApproval(args)) && (await this.requestExtraPermissions(args))
 
         let popup: Window | undefined
         if (requiresApproval) {
@@ -154,7 +153,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
         return popup ?? undefined
     }
 
-    protected handleRequestResolution(data: ProviderEvent | ProviderMsgsFromIframe[Msgs.RequestResponse]) {
+    public handleRequestResolution(data: ProviderEvent | ProviderMsgsFromIframe[Msgs.RequestResponse]) {
         const req = this.inFlightRequests.get(data.key)
 
         if (!req) {
@@ -208,7 +207,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
      * Method to determine if a request requires user approval.
      * Must return true if unable to determine and/or if extra permissions (beyond user approval) are required.
      */
-    protected abstract requiresUserApproval(args: EIP1193RequestParameters, key?: UUID): Promise<boolean | unknown>
+    protected abstract requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean>
 
     protected abstract handlePermissionless(key: UUID, args: EIP1193RequestParameters): void
 }

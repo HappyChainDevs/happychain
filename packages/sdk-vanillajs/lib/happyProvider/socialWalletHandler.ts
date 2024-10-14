@@ -52,10 +52,8 @@ export class SocialWalletHandler extends BasePopupProvider {
         config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
 
-    protected override async requiresUserApproval(
-        args: EIP1193RequestParameters,
-        key: UUID,
-    ): Promise<boolean | unknown> {
+    protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
+        const key = createUUID()
         return new Promise((resolve, reject) => {
             this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
                 key,
@@ -122,18 +120,29 @@ export class SocialWalletHandler extends BasePopupProvider {
 
     protected override async requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean> {
         // We are connected, no need for extra permissions, we needed approval before and still do.
-        if (this.user) return /* stillRequiresApproval = */ true
+        if (this.user) return true
 
         // We're currently logging in or out, wait until that is settled to proceed.
         await waitForCondition(() => this.authState !== AuthState.Connecting)
+
+        // biome-ignore format: readability
+        const isConnectionRequest
+            =  args.method === "eth_requestAccounts"
+            || args.method === "wallet_requestPermissions"
+                && args.params.find((p) => p.eth_accounts)
 
         // We are logged out, we need to log in, which will auto-grant connection permission.
         if (this.authState === AuthState.Disconnected) {
             const loggedIn = await this.requestLogin()
             if (!loggedIn) throw new EIP1193UserRejectedRequestError()
         }
-        // We are logged in but not connected, request connection.
+
+        // We are logged in but not connected.
         else if (!this.user) {
+            // This requested the connection permission directly, let user approve it explicitly.
+            if (isConnectionRequest) return true // still requires approval
+
+            // Recursively request a connection permission (base case is the `if` right above).
             // There's a tiny chance we got logged out in the interface, then the request simply
             // fails.
             await this.request({
@@ -142,23 +151,49 @@ export class SocialWalletHandler extends BasePopupProvider {
             })
         }
 
+        // NOTE: How we handle permission requests (eth_requestAccounts, wallet_requestPermissions)
+        //
+        // 1. Only connection permission requested.
+        //    A. If we were already connected, `requiresUserApproval` returned false,
+        //       this function doesn't get called.
+        //    B. If we logged in in this function, implicitly granted, must handle below.
+        //    C. If not, we returned above (`if (isConnectionRequest)` to get explicit user approval.
+        //
+        // 2. Non-connection permissions requested.
+        //    A. If we were already connected & we had the permissions, `requiresUserApproval`
+        //       returned false, this function doesn't get called.
+        //    B. If we were already connected but didn't have the permissions, we returned true
+        //       at the top of this function.
+        //    C. If we logged in in this function, we have been implicitly connected,
+        //       must handle below.
+        //    D. Otherwise, we have explicitly connected through the recursive
+        //       `wallet_requestPermissions` call above, must handle below.
+        //
+        // 3. Mixed connection and non-connection permissions requested.
+        //    A, B, C:  Same as 2A, 2B, 2C.
+        //    D. Otherwise, we returned above (`is (isConnectionRequest`) to get explicit user approval.
+        //
+        // The below logic will handles cases 1B, 2C, 2D, 3C.
+
         // biome-ignore format: readability
-        const isConnectionRequest =
-            args.method === "eth_requestAccounts"
+        const onlyConnectionRequested
+            =  args.method === "eth_requestAccounts"
             || args.method === "wallet_requestPermissions"
                 && args.params.length === 1
-                && Object.keys(args.params).length === 1
-                && "eth_accounts" in args.params[0]
+                && "eth_accounts" in Object.keys(args.params[0])
 
-        // If requesting a connection permission, it was granted by logging in or connecting, no
-        // need for further approval. Otherwise, if multiple permissions were requested, we need
-        // to recheck to see if all permissions are granted. Otherwise, we still need to approve.
+        // Case 1B: connection permission implicitly granted by logging in.
+        if (onlyConnectionRequested) return false
 
-        // biome-ignore format: readability
-        const allPermissionsGranted = isConnectionRequest
-          || (args.method === "wallet_requestPermissions" && await this.requiresApproval(args))
+        // Cases 2C, 2D, 3C: we're now connected and have requested other permissions, check to see
+        // if we have them.
+        if (args.method === "wallet_requestPermissions") {
+            return await this.requiresUserApproval(args) // still requires approval?
+        }
 
-        return /* stillNeedsApproval = */ !allPermissionsGranted
+        // Everything else (non-permission requests): required approval to begin with and still does.
+        // Now that we are connected, these other requests can be made.
+        return true
     }
 
     isConnected(): boolean {
@@ -175,20 +210,6 @@ export class SocialWalletHandler extends BasePopupProvider {
             inFlight.reject(data.error)
         }
         this.inFlightChecks.delete(data.key)
-    }
-
-    private async requiresApproval(args: EIP1193RequestParameters) {
-        const key = createUUID()
-        return new Promise((resolve, reject) => {
-            this.config.providerBus.emit(Msgs.PermissionCheckRequest, {
-                key,
-                windowId: this.config.windowId,
-                payload: args,
-                error: null,
-            })
-
-            this.inFlightChecks.set(key, { resolve, reject })
-        })
     }
 
     private handleProviderNativeEvent(data: ProviderMsgsFromIframe[Msgs.ProviderEvent]) {
