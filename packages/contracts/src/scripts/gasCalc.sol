@@ -2,115 +2,116 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {console} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
 
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.sol";
 
 import {UserOpLib} from "./UserOpLib.sol";
+import {ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
+import {HappyPaymaster} from "../HappyPaymaster.sol";
 
 /* solhint-disable no-console*/
-contract GasEstimator is Test {
+contract GasEstimator is Script, Test {
     using UserOpLib for PackedUserOperation;
 
+    bytes32 public constant DEPLOYMENT_SALT = 0;
+    address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address public constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-    address public constant HAPPY_PAYMASTER = 0x9c07bA84B9e12835ee60f6F7A26d90930911DAFA;
+    uint256 public constant DUMMY_REQUIRED_PREFUND = 1e18;
 
     IPaymaster private happyPaymaster;
 
     function setUp() public {
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/out/deployment.json");
-        string memory json = vm.readFile(path);
-        address happyPaymasterAddress = vm.parseJsonAddress(json, ".HappyPaymaster");
+        if (ENTRYPOINT_V7.code.length == 0) {
+            (bool success, ) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE); // solhint-disable-line
+            require(success, "Failed to deploy EntryPointV7"); // solhint-disable-line
+        }
 
-        // Set the paymaster address in the contract
-        happyPaymaster = IPaymaster(happyPaymasterAddress);
-//        happyPaymaster = IPaymaster(HAPPY_PAYMASTER);
+        address[] memory allowedBundlers = new address[](0);
+        happyPaymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(ENTRYPOINT_V7, allowedBundlers);
     }
 
     /// @notice Estimates gas for a single UserOp.
     function testEstimateGasSingleUserOp() public {
-        PackedUserOperation memory userOp = _createSimpleUserOp();
+        PackedUserOperation memory userOp = _createSingleUserOp();
         uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
         console.log("Gas used for single UserOp: %d", gasUsed);
-        gasUsed = _estimatePaymasterGasUsage(userOp);
-        console.log("Gas used for single UserOp: %d", gasUsed);
-    }
-
-    /// @notice Estimates gas when the same UserOp is processed multiple times.
-    function testEstimateGasMultipleIdenticalUserOps() public {
-        PackedUserOperation memory userOp = _createSimpleUserOp();
-        uint256 repetitions = 5;
-        uint256 totalGas = 0;
-
-        for (uint256 i = 0; i < repetitions; i++) {
-            uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
-            totalGas += gasUsed;
-            console.log("Gas used for repetition %d: %d", i + 1, gasUsed);
-        }
-        console.log("Total gas used for identical UserOps: %d", totalGas);
-        console.log("Average gas used for identical UserOps: %d", totalGas / repetitions);
     }
 
     /// @notice Estimates gas when different UserOps are processed in sequence.
     function testEstimateGasMultipleDifferentUserOps() public {
-        PackedUserOperation[] memory userOpsArray = _createVariedUserOps();
+        PackedUserOperation[] memory userOpsArray = _createMultipleUserOps();
         uint256 totalGas = 0;
 
-        for (uint256 i = 0; i < userOpsArray.length; i++) {
+        uint256 firstUserOpGas = _estimatePaymasterGasUsage(userOpsArray[0]);
+        console.log("Gas used for initial UserOp (UserOp 1): %d", firstUserOpGas);
+
+        for (uint256 i = 1; i < userOpsArray.length; i++) {
             uint256 gasUsed = _estimatePaymasterGasUsage(userOpsArray[i]);
             totalGas += gasUsed;
-            console.log("Gas used for UserOp %d: %d", i + 1, gasUsed);
+            console.log("Gas used for subsequent UserOp %d: %d", i + 1, gasUsed);
         }
-        console.log("Total gas used for different UserOps: %d", totalGas);
-        console.log("Average gas used for different UserOps: %d", totalGas / userOpsArray.length);
+
+        uint256 numSubsequentUserOps = userOpsArray.length - 1;
+        console.log(
+            "Average gas used for subsequent UserOps (UserOps 2 to %d): %d",
+            userOpsArray.length,
+            totalGas / numSubsequentUserOps
+        );
     }
 
     /// @notice Estimates gas when different UserOps ƒorm the same sender are processed in sequence.
     function testEstimateGasMultipleDifferentUserOpsSameSender() public {
-        PackedUserOperation[] memory userOpsArray = _createVariedUserOps();
+        PackedUserOperation[] memory userOpsArray = _createMultipleUserOps();
         uint256 totalGas = 0;
 
         for (uint256 i = 0; i < userOpsArray.length; i++) {
-            userOpsArray[i].sender = address(0x19AC95A5524dB39021bA2f10e4F65574dfed2741);
+            userOpsArray[i].sender = userOpsArray[0].sender;
             uint256 gasUsed = _estimatePaymasterGasUsage(userOpsArray[i]);
             totalGas += gasUsed;
             console.log("Gas used for UserOp %d: %d", i + 1, gasUsed);
         }
-        console.log("Total gas used for different UserOps: %d", totalGas);
         console.log("Average gas used for different UserOps: %d", totalGas / userOpsArray.length);
     }
 
     /// @notice Estimates gas for a UserOp with very large calldata (worst-case scenario).
     function testEstimateGasLargeCalldata() public {
-        PackedUserOperation memory userOp = _createUserOpWithLargeCalldata();
+        bytes memory largeCalldata = new bytes(1024 * 10); // 10 KB
+        for (uint256 i = 0; i < largeCalldata.length; i++) {
+            largeCalldata[i] = bytes1(uint8(i));
+        }
+
+        PackedUserOperation memory userOp = _createSingleUserOp();
+        userOp.callData = largeCalldata;
+
         uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
         console.log("Gas used for UserOp with large calldata: %d", gasUsed);
     }
 
     /// @notice Estimates gas when the paymaster's validatePaymasterUserOp function reverts due to overusage.
     function testEstimateGasPaymasterOverUseGasBudget() public {
-        PackedUserOperation memory userOp = _createUserOpOverGasUsage();
+        PackedUserOperation memory userOp = _createSingleUserOp();
+        userOp.preVerificationGas = 100_000_000;
+
         uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
-        console.log("Gas used when paymaster reverts due to overusage: %d", gasUsed);
+        console.log("Gas used when exceeding gas budget: %d", gasUsed);
     }
 
     // Helper Functions
 
     function _estimatePaymasterGasUsage(PackedUserOperation memory userOp) internal returns (uint256) {
         bytes32 userOpHash = userOp.getEncodedUserOpHash();
-        uint256 requiredPrefund = 1e18; // Dummy Value
 
         vm.prank(ENTRYPOINT_V7);
         uint256 gasBefore = gasleft();
-        happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, requiredPrefund);
+        happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
         uint256 gasAfter = gasleft();
 
         return gasBefore - gasAfter;
     }
 
-    function _createSimpleUserOp() internal pure returns (PackedUserOperation memory) {
+    function _createSingleUserOp() internal pure returns (PackedUserOperation memory) {
         // Simple UserOp with minimal data
         return PackedUserOperation({
             sender: address(0x19AC95A5524dB39021bA2f10e4F65574dfed2741),
@@ -129,7 +130,7 @@ contract GasEstimator is Test {
         });
     }
 
-    function _createVariedUserOps() internal pure returns (PackedUserOperation[] memory) {
+    function _createMultipleUserOps() internal pure returns (PackedUserOperation[] memory) {
         PackedUserOperation[] memory userOpsArray = new PackedUserOperation[](5);
 
         userOpsArray[0] = PackedUserOperation({
@@ -213,46 +214,5 @@ contract GasEstimator is Test {
         });
 
         return userOpsArray;
-    }
-
-    function _createUserOpWithLargeCalldata() internal pure returns (PackedUserOperation memory) {
-        bytes memory largeCalldata = new bytes(1024 * 10); // 10 KB
-        for (uint256 i = 0; i < largeCalldata.length; i++) {
-            largeCalldata[i] = bytes1(uint8(i));
-        }
-
-        return PackedUserOperation({
-            sender: address(0x19AC95A5524dB39021bA2f10e4F65574dfed2741),
-            nonce: 1709544157355333882523719095375585908392260257582749875196537894944636929,
-            initCode: "",
-            callData: largeCalldata,
-            accountGasLimits: bytes32(0x0000000000000000000000000002474700000000000000000000000000024f0b),
-            preVerificationGas: 55378,
-            gasFees: bytes32(0x0000000000000000000000003b9aca000000000000000000000000003b9deb7c),
-            paymasterAndData: bytes(
-                hex"a33009b1552a751929b7e240aaa62b2640782fbc0000000000000000000000000000bbb800000000000000000000000000000001" // solhint-disable-line max-line-length
-            ),
-            signature: bytes(
-                hex"7cfc78c01ec5ea50208d14fb1ee865569e015da08c27807575d70bf66041ffe335fe5e4e0dbcce07fddf357e4584b9e6de77ca13806d2d715ade184ba4bc15fc1b" // solhint-disable-line max-line-length
-            )
-        });
-    }
-
-    function _createUserOpOverGasUsage() internal pure returns (PackedUserOperation memory) {
-        return PackedUserOperation({
-            sender: address(0x19AC95A5524dB39021bA2f10e4F65574dfed2741),
-            nonce: 1709544157355333882523719095375585908392260257582749875196537894944636929,
-            initCode: "",
-            callData: "",
-            accountGasLimits: bytes32(0x0000000000000000000000000002474700000000000000000000000000024f0b),
-            preVerificationGas: 100_000_000, // Exceeds the paymaster's gas budget
-            gasFees: bytes32(0x0000000000000000000000003b9aca000000000000000000000000003b9deb7c),
-            paymasterAndData: bytes(
-                hex"a33009b1552a751929b7e240aaa62b2640782fbc0000000000000000000000000000bbb800000000000000000000000000000001" // solhint-disable-line max-line-length
-            ),
-            signature: bytes(
-                hex"7cfc78c01ec5ea50208d14fb1ee865569e015da08c27807575d70bf66041ffe335fe5e4e0dbcce07fddf357e4584b9e6de77ca13806d2d715ade184ba4bc15fc1b" // solhint-disable-line max-line-length
-            )
-        });
     }
 }
