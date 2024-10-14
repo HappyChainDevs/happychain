@@ -12,6 +12,7 @@ export type HappyMethods = [
 ]
 
 // === RPC METHODS =============================================================================
+
 export type RPCMethods = [...HappyMethods, ...EIP1474Methods]
 
 // === EIP1193 METHODS =============================================================================
@@ -72,9 +73,8 @@ export function isPermissionsRequest(args: { method: string; params?: unknown })
     return eip1193PermissionsMethodsSet.has(args.method)
 }
 
-export interface EIP1193ConnectionHandler extends SafeEventEmitter {
+export interface EIP1193ConnectionHandler<TString extends EIP1193RequestMethods = EIP1193RequestMethods>
+    extends SafeEventEmitter {
     isConnected(): boolean
-    request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
-        args: EIP1193RequestParameters<TString>,
-    ): Promise<EIP1193RequestResult<TString>>
+    request(args: EIP1193RequestParameters<TString>): Promise<EIP1193RequestResult<TString>>
 }
