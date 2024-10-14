@@ -7,16 +7,16 @@ import { txHistoryAtom } from "../state/txHistory"
 import { getUser } from "../state/user"
 
 /**
- * When a new transaction hash is added to the pending transactions atom, Viem's 
+ * When a new transaction hash is added to the pending transactions atom, Viem's
  * {@link https://viem.sh/docs/actions/public/waitForTransactionReceipt.html | waitForTransactionReceipt}
  * function is called to monitor the transaction and retrieve the `TransactionReceipt` once it is included in a block.
- * 
+ *
  * Once a receipt is obtained:
  * - It is serialized and stored in the `txHistoryAtom` to maintain a log of completed transactions for the user.
  * - The transaction hash is removed from the `pendingTxHashesAtom` as the transaction is no longer pending.
- * 
+ *
  * The `Activity` Tab can then display the transaction history by reading from the `txHistoryAtom`.
- * 
+ *
  * In summary:
  * 1. A pending transaction hash is added to `pendingTxHashesAtom` after the user sends a transaction.
  * 2. `subscribeToPendingTxAtom` processes this hash and waits for the corresponding transaction to be included in a block.
