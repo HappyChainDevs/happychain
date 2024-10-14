@@ -54,7 +54,7 @@ jobs:
               cd /home/bundler/happy-bundler
               pm2 restart ${{ env.PM2_PROCESS_NAME }} || pm2 start ./alto/src/lib/cli/alto.js -- run \
                   --config ./configs/config.happySepolia.json \
-                  --executor-private-keys "$BUNDLER_EXECUTOR_WALLET" \
-                  --utility-private-key "$BUNDLER_UTILITY_WALLET" \
+                  --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} \
+                  --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }} \
                   --name ${{ env.PM2_PROCESS_NAME }}
             '
