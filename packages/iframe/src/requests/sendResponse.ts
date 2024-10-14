@@ -39,7 +39,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
 
         request.windowId === parentID
             ? void happyProviderBus.emit(Msgs.RequestResponse, response)
-            : void iframeProvider.handleRequestResolution(response)
+            : iframeProvider.handleRequestResolution(response)
     } catch (e) {
         const response = {
             key: request.key,
@@ -50,6 +50,6 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
 
         request.windowId === parentID
             ? void happyProviderBus.emit(Msgs.RequestResponse, response)
-            : void iframeProvider.handleRequestResolution(response)
+            : iframeProvider.handleRequestResolution(response)
     }
 }

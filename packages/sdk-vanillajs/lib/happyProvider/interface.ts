@@ -54,9 +54,8 @@ export type HappyProviderConfig = Pick<typeof config, "iframePath"> & {
     msgBus: EventBus<MsgsFromIframe, MsgsFromApp>
 }
 
-export interface EIP1193ConnectionHandler extends SafeEventEmitter {
+export interface EIP1193ConnectionHandler<TString extends EIP1193RequestMethods = EIP1193RequestMethods>
+    extends SafeEventEmitter {
     isConnected(): boolean
-    request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
-        args: EIP1193RequestParameters<TString>,
-    ): Promise<EIP1193RequestResult<TString>>
+    request(args: EIP1193RequestParameters<TString>): Promise<EIP1193RequestResult<TString>>
 }

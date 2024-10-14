@@ -8,19 +8,13 @@ import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 /**
- * Custom Provider for the iframe fed to WagmiProvider's config to route wagmi
- * hook calls to our middleware functions (where viem handles the calls).
+ * EIP-1193 provider for transactions initiated from the iframe, most notably used by wagmi.
  *
- * Provider is fed into a {@link https://wagmi.sh/core/api/connectors/injected#target | custom Connector}
- * which is configured to represent the HappyChain's iframe provider as below.
+ * The provider routes the call to our logic in the `requests` directory.
  */
 export class IframeProvider extends BasePopupProvider {
     constructor() {
         super(iframeID)
-    }
-
-    public isConnected(): boolean {
-        throw new Error("Method not implemented.")
     }
 
     protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
@@ -37,18 +31,18 @@ export class IframeProvider extends BasePopupProvider {
     }
 
     protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
-        // TODO: This is broken and will pop an explicit modal for the wagmi provider until we fix the permission system.
-        //       The iframe is auto-connected by default, there is never a need for extra permissions.
+        // The iframe is auto-connected by default, there is never a need for extra permissions.
         return true
     }
 
     protected override async performOptionalUserAndAuthCheck(): Promise<void> {
         if (!getUser()) {
             // Necessary because wagmi will attempt to reconnect on page load. This currently could
-            // work fine (with a permission not found warning), but is brittle, better to explicitly
-            // reject here. We explicitly connect to wagmi via `useConnect` once the user becomes
-            // available.
-            // Wagmi swallows these exceptions, they don't show up on the console.
+            // work fine (with a "permission not found" warning), but is brittle, better to
+            // explicitly reject here. We explicitly connect to wagmi via `useConnect` once the user
+            // becomes available.
+            //
+            // Wagmi swallows these exceptions, so they won't pollute the console.
             throw new ResourceUnavailableRpcError(new Error("user not initialized yet"))
         }
 
