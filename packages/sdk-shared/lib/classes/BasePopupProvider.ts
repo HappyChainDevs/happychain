@@ -73,9 +73,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
     ): Promise<EIP1193RequestResult<TString>> {
         const key = createUUID()
 
-        console.log({ args })
-
-        // this.performOptionalUserAndAuthCheck()
+        this.performOptionalUserAndAuthCheck()
 
         // biome-ignore lint/suspicious/noAsyncPromiseExecutor: resolved later
         return new Promise<EIP1193RequestResult<TString>>(async (resolve, reject) => {
