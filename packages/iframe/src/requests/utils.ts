@@ -1,4 +1,4 @@
-import { type UUID, createUUID } from "@happychain/common"
+import type { UUID } from "@happychain/common"
 import {
     AuthState,
     type EIP1193RequestParameters,
@@ -14,7 +14,8 @@ import { iframeProvider } from "../wagmi/provider"
 /** ID passed to the iframe by the parent window. */
 const parentID = new URLSearchParams(window.location.search).get("windowId")
 
-export const iframeID = createUUID()
+/** ID of the internal iframe provider instance */
+export const iframeID = iframeProvider.windowId
 
 /** Whether the source ID is allowed: either the iframe or its parent (app). */
 export const isAllowedSourceId = (sourceId: UUID) => {
