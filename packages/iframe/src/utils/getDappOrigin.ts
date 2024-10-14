@@ -4,7 +4,8 @@ export function getIframeOrigin(): HTTPString {
     return location.origin as HTTPString
 }
 
-const dappOrigin = new URL(location.ancestorOrigins?.[0] ?? document.referrer).origin
+const dappURL = location.ancestorOrigins?.[0] ?? document.referrer
+const dappOrigin = dappURL ? new URL(dappURL).origin : ""
 
 export function getDappOrigin(): HTTPString {
     if (!dappOrigin) {
