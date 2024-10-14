@@ -18,6 +18,19 @@ export class IframeProvider extends BasePopupProvider {
     }
 
     protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
+        if (!getUser()) {
+            // Necessary because wagmi will attempt to reconnect on page load. This currently could
+            // work fine (with a "permission not found" warning), but is brittle, better to
+            // explicitly reject here. We explicitly connect to wagmi via `useConnect` once the user
+            // becomes available.
+            //
+            // Wagmi swallows these exceptions, so they won't pollute the console.
+            throw new ResourceUnavailableRpcError(new Error("user not initialized yet"))
+        }
+
+        // We're logging in or out, wait for the auth state to settle.
+        await waitForCondition(() => getAuthState() !== AuthState.Connecting)
+
         return checkIfRequestRequiresConfirmation(args)
     }
 
@@ -33,20 +46,6 @@ export class IframeProvider extends BasePopupProvider {
     protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
         // The iframe is auto-connected by default, there is never a need for extra permissions.
         return true
-    }
-
-    protected override async performOptionalUserAndAuthCheck(): Promise<void> {
-        if (!getUser()) {
-            // Necessary because wagmi will attempt to reconnect on page load. This currently could
-            // work fine (with a "permission not found" warning), but is brittle, better to
-            // explicitly reject here. We explicitly connect to wagmi via `useConnect` once the user
-            // becomes available.
-            //
-            // Wagmi swallows these exceptions, so they won't pollute the console.
-            throw new ResourceUnavailableRpcError(new Error("user not initialized yet"))
-        }
-
-        await waitForCondition(() => getAuthState() !== AuthState.Connecting)
     }
 }
 

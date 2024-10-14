@@ -64,21 +64,12 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      */
     public async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
         const key = createUUID()
-
-        await this.performOptionalUserAndAuthCheck()
-
         const { promise, resolve, reject } = promiseWithResolvers<EIP1193RequestResult>()
-
         const requiresApproval = (await this.requiresUserApproval(args)) && (await this.requestExtraPermissions(args))
-
-        let popup: Window | undefined
-        if (requiresApproval) {
-            popup = this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, config.iframePath)
-        } else {
-            this.handlePermissionless(key, args)
-        }
+        const popup = requiresApproval
+            ? this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, config.iframePath)
+            : (this.handlePermissionless(key, args) ?? undefined)
         this.trackRequest(key, { resolve, reject, popup })
-
         return promise
     }
 
@@ -129,9 +120,6 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      * Handles a request that does not require user approval.
      */
     protected abstract handlePermissionless(key: UUID, args: EIP1193RequestParameters): void
-
-    // TODO rework this
-    protected abstract performOptionalUserAndAuthCheck(): Promise<void>
 
     // === PRIVATE METHODS =========================================================================
 
