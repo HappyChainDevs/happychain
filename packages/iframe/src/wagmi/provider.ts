@@ -15,6 +15,10 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
  * which is configured to represent the HappyChain's iframe provider as below.
  */
 export class IframeProvider extends BasePopupProvider {
+    constructor() {
+        super(iframeID)
+    }
+
     public isConnected(): boolean {
         throw new Error("Method not implemented.")
     }

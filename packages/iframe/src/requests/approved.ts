@@ -15,7 +15,8 @@ import { getUser } from "../state/user"
 import { getWalletClient } from "../state/walletClient"
 import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin"
 import { isAddChainParams } from "../utils/isAddChainParam"
-import { isAllowedSourceId, isIframeId, sendResponse } from "./utils"
+import { sendResponse } from "./sendResponse"
+import { isAllowedSourceId, isIframeId } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,

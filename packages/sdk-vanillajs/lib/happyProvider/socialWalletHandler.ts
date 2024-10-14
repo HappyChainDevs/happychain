@@ -34,7 +34,7 @@ export class SocialWalletHandler extends BasePopupProvider {
     private authState: AuthState = AuthState.Connecting
 
     constructor(private config: HappyProviderConfig) {
-        super()
+        super(config.windowId)
         // sync local user state
         config.msgBus.on(Msgs.UserChanged, (_user) => {
             this.user = _user

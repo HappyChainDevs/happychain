@@ -71,7 +71,7 @@ export function getCurrentUser(): HappyUser | undefined {
 export const happyProvider = new HappyProvider({
     iframePath: config.iframePath,
 
-    windowId: windowId,
+    windowId,
 
     providerBus: new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>({
         mode: EventBusMode.AppPort,

@@ -61,7 +61,9 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
     private static readonly POPUP_FEATURES = //
         ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
 
-    public windowId = createUUID()
+    protected constructor(private windowId: UUID) {
+        super()
+    }
 
     /**
      * Sends an EIP-1193 request to the provider.
