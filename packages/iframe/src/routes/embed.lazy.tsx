@@ -1,19 +1,23 @@
 import { AuthState, Msgs } from "@happychain/sdk-shared"
+import { ModalStates } from "@happychain/sdk-shared"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
+import clsx from "clsx"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo } from "react"
 import { ConnectModal } from "../components/ConnectModal"
+import GlobalHeader from "../components/interface/GlobalHeader"
+import UserInfo from "../components/interface/UserInfo"
+import {
+    DialogConfirmSignOut,
+    DialogPermissions,
+    SecondaryActionsMenu,
+    TriggerSecondaryActionsMenu,
+} from "../components/interface/menu-secondary-actions"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
 import { appMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
-
-import { ModalStates } from "@happychain/sdk-shared"
-import { Power } from "@phosphor-icons/react"
-import clsx from "clsx"
-import GlobalHeader from "../components/interface/GlobalHeader"
-import UserInfo from "../components/interface/UserInfo"
 import { userAtom } from "../state/user"
 
 export const Route = createLazyFileRoute("/embed")({
@@ -27,7 +31,6 @@ function signalOpen() {
 function Embed() {
     const authState = useAtomValue(authStateAtom)
     const user = useAtomValue(userAtom)
-
     const navigate = useNavigate()
 
     const location = useLocation()
@@ -93,18 +96,22 @@ function Embed() {
                     </div>
 
                     <GlobalHeader />
+                    <div className="relative flex flex-col grow w-full">
+                        <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
+                            <UserInfo />
+                            {location.pathname === "/embed" && <TriggerSecondaryActionsMenu />}
+                        </div>
 
-                    <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
-                        <UserInfo />
-                        {location.pathname === "/embed" && (
-                            <button className="w-6 h-6 rounded-xl" onClick={disconnect} type="button">
-                                <Power size={22} />
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="hidden lg:flex w-full grow overflow-y-auto">
-                        <Outlet />
+                        <div className="hidden relative lg:flex w-full grow overflow-y-auto">
+                            <Outlet />
+                            {location.pathname === "/embed" && (
+                                <>
+                                    <SecondaryActionsMenu />
+                                    <DialogConfirmSignOut handleDisconnect={disconnect} />
+                                </>
+                            )}
+                        </div>
+                        {location.pathname === "/embed" && <DialogPermissions />}
                     </div>
                 </div>
             </main>
