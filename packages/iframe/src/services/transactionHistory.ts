@@ -1,7 +1,7 @@
 import { getDefaultStore } from "jotai"
 import type { Address, Hash, TransactionReceipt } from "viem"
 import { serialize } from "wagmi"
-import { PendingTxHashesAtom, type PendingTxHistoryRecord } from "../state/pendingTxs"
+import { type PendingTxHistoryRecord, pendingTxHashesAtom } from "../state/pendingTxs"
 import { getPublicClient } from "../state/publicClient"
 import { txHistoryAtom } from "../state/txHistory"
 import { getUser } from "../state/user"
@@ -27,12 +27,12 @@ export function addHistoryLogEntry(address: Address, entry: TransactionReceipt) 
 }
 
 export function getPendingTxHashes(): PendingTxHistoryRecord {
-    return store.get(PendingTxHashesAtom)
+    return store.get(pendingTxHashesAtom)
 }
 
 export function addPendingTx(address: Address, newHash: Hash) {
     let entryExists = false
-    store.set(PendingTxHashesAtom, (existingEntries) => {
+    store.set(pendingTxHashesAtom, (existingEntries) => {
         const pendingTxHashes = existingEntries[address] || []
         entryExists = pendingTxHashes.some((asset) => asset === newHash)
 
@@ -47,7 +47,7 @@ export function addPendingTx(address: Address, newHash: Hash) {
 }
 
 export function removePendingTx(address: Address, hash: Hash) {
-    store.set(PendingTxHashesAtom, (existingEntries) => {
+    store.set(pendingTxHashesAtom, (existingEntries) => {
         const pendingTxHashes = existingEntries[address] || []
 
         // Filter out the hash to be removed
@@ -68,13 +68,11 @@ export function removePendingTx(address: Address, hash: Hash) {
 }
 
 /**
- * Subscribes to changes in the `PendingTxHashesAtom` and attempts to retrieve transaction receipts for
- * pending transactions of the current user. If a transaction receipt is successfully fetched, it is
- * added to the user's transaction history and removed from the pending transactions list.
- * If the receipt is not immediately available, it retries fetching the receipt a specified number
- * of times with a delay between each attempt.
+ * Subscribes to changes in the `pendingTxHashesAtom`, uses viem's
+ * {@link https://viem.sh/docs/actions/public/waitForTransactionReceipt.html | waitForTransactionReceipt}
+ * to fetch the associated `TransactionReceipt` once the tx is included in a block.
  */
-export const subscribeToPendingTxAtom = store.sub(PendingTxHashesAtom, () => {
+export const subscribeToPendingTxAtom = store.sub(pendingTxHashesAtom, () => {
     const user = getUser()
     const publicClient = getPublicClient()
 
@@ -83,7 +81,7 @@ export const subscribeToPendingTxAtom = store.sub(PendingTxHashesAtom, () => {
         return
     }
 
-    const pendingTxHashes = store.get(PendingTxHashesAtom)
+    const pendingTxHashes = store.get(pendingTxHashesAtom)
     const hashList = pendingTxHashes[user.address]
 
     if (!hashList || hashList.length === 0) {
@@ -97,9 +95,9 @@ export const subscribeToPendingTxAtom = store.sub(PendingTxHashesAtom, () => {
                 throw new Error(`Receipt not found for transaction hash: ${hash}`)
             }
 
-            // If receipt is found, add it to the user's transaction history
+            // once receipt is found, add it to the user's transaction history
             addHistoryLogEntry(user.address, receipt)
-            // Remove the hash from local storage since it's no longer 'pending'
+            // Remove the hash from pending atom since it's no longer 'pending'
             removePendingTx(user.address, hash)
         })
     })
