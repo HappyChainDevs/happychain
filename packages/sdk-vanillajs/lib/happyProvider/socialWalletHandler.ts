@@ -1,3 +1,4 @@
+import { promiseWithResolvers } from "@happychain/common"
 import { type UUID, createUUID } from "../common-utils"
 
 import {
@@ -81,11 +82,7 @@ export class SocialWalletHandler extends BasePopupProvider {
     private async requestLogin(): Promise<boolean> {
         void this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
 
-        let resolve: (value: boolean | PromiseLike<boolean>) => void
-        const result = new Promise<boolean>((_resolve) => {
-            resolve = _resolve
-        })
-
+        const { promise, resolve } = promiseWithResolvers<boolean>()
         const key = createUUID()
 
         // TODO: Verify that state.cancelled is properly set in all cases where the login fails.
@@ -115,7 +112,7 @@ export class SocialWalletHandler extends BasePopupProvider {
             unsubscribeClose()
         })
 
-        return result
+        return promise
     }
 
     protected override async requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean> {

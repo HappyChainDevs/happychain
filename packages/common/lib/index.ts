@@ -17,3 +17,7 @@ export { createUUID, type UUID } from "./utils/uuid.js"
 export { nowInSeconds } from "./utils/date.js"
 
 export { onlyUnique } from "./utils/streams.js"
+
+export { promiseWithResolvers } from "./utils/promises.js"
+
+export type { PromiseWithResolvers, ResolveInputType, ResolveType, RejectType } from "./utils/promises.js"

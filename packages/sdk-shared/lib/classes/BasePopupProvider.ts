@@ -1,26 +1,17 @@
-import { type UUID, createUUID } from "@happychain/common"
+import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happychain/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { config } from "../config"
-import type {
-    EIP1193ConnectionHandler,
-    EIP1193RequestMethods,
-    EIP1193RequestParameters,
-    EIP1193RequestResult,
-} from "../interfaces/eip1193"
+import type { EIP1193ConnectionHandler, EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "../interfaces/errors"
 import type { Msgs, ProviderEvent, ProviderMsgsFromIframe } from "../interfaces/events"
 
 type Timer = ReturnType<typeof setInterval>
 
-export type InFlightRequest<T extends EIP1193RequestMethods = EIP1193RequestMethods> = {
-    resolve: (value: EIP1193RequestResult<T>) => void
-    reject: (reason?: unknown) => void
+type InFlightRequest = {
+    resolve: ResolveType<EIP1193RequestResult>
+    reject: RejectType
     popup?: Window
 }
-
-export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods> = (
-    value: EIP1193RequestResult<T>,
-) => void
 
 /**
  * This class serves as a base for EIP-1193 providers that sometimes need to create popups to
@@ -68,19 +59,12 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
     /**
      * Sends an EIP-1193 request to the provider.
      */
-    public async request<TString extends EIP1193RequestMethods = EIP1193RequestMethods>(
-        args: EIP1193RequestParameters<TString>,
-    ): Promise<EIP1193RequestResult<TString>> {
+    public async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
         const key = createUUID()
 
         await this.performOptionalUserAndAuthCheck()
 
-        let resolve = null as unknown as ResolveType<TString>
-        let reject = null as unknown as (reason?: unknown) => void
-        const result = new Promise<EIP1193RequestResult<TString>>((_resolve, _reject) => {
-            resolve = _resolve as unknown as ResolveType<TString>
-            reject = _reject
-        })
+        const { promise, resolve, reject } = promiseWithResolvers<EIP1193RequestResult>()
 
         const requiresApproval = (await this.requiresUserApproval(args)) && (await this.requestExtraPermissions(args))
 
@@ -90,9 +74,9 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
         } else {
             this.handlePermissionless(key, args)
         }
-        this.trackRequest(key, { resolve: resolve! as unknown as ResolveType, reject, popup })
+        this.trackRequest(key, { resolve, reject, popup })
 
-        return result
+        return promise
     }
 
     /**
@@ -155,11 +139,11 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
         return popup ?? undefined
     }
 
-    public handleRequestResolution(data: ProviderEvent | ProviderMsgsFromIframe[Msgs.RequestResponse]) {
+    public handleRequestResolution(data: ProviderEvent | ProviderMsgsFromIframe[Msgs.RequestResponse]): void {
         const req = this.inFlightRequests.get(data.key)
-
         if (!req) {
-            return { resolve: null, reject: null }
+            console.warn("handleRequestResolution: no request found for key", data.key)
+            return
         }
 
         const { resolve, reject, popup } = req
