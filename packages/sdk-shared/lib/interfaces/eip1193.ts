@@ -1,5 +1,4 @@
 import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
-import type { SafeEventEmitter } from ".."
 import type { HappyUser } from "./happyUser"
 
 // === HAPPY METHODS =============================================================================

@@ -1,16 +1,13 @@
 import {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
-    EIP1193UserRejectedRequestError,
     type Msgs,
     type ProviderMsgsFromApp,
     getChainFromSearchParams,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import { getDefaultStore } from "jotai"
 import type { Client } from "viem"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "../services/permissions"
-import { permissionsAtom } from "../state/permissions.ts"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
