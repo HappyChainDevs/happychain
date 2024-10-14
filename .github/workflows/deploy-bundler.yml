@@ -43,10 +43,6 @@ jobs:
           target: ${{ env.DEPLOYMENT_DIR }}
           strip_components: 2   
           rm: true
-      
-      - name: Move to bundler user
-        run: |
-          sudo /usr/local/bin/copy-to-bundler.sh
 
       - name: Deploy bundler to server
         uses: appleboy/ssh-action@v1.1.0
@@ -56,6 +52,7 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
+            sudo /usr/local/bin/copy-to-bundler.sh
             sudo -u bundler -i
             cd ${{ env.DEPLOYMENT_DIR }}
             ARGS="./alto/src/lib/cli/alto.js -- run --config ./configs/config.happySepolia.json --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }} --name ${{ env.PM2_PROCESS_NAME }}"
