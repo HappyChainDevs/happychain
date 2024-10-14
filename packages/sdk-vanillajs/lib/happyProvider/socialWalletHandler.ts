@@ -202,7 +202,5 @@ export class SocialWalletHandler extends BasePopupProvider {
         return window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
     }
 
-    protected async performOptionalUserAndAuthCheck(): Promise<unknown> {
-        return null
-    }
+    protected async performOptionalUserAndAuthCheck(): Promise<void> {}
 }
