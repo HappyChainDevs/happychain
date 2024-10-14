@@ -113,6 +113,9 @@ export function useSocialProviders() {
             // Connect/disconnect the wagmi provider (for iframe-initiated transactions).
             // We need the `needsImplicitConnectionPerm` check to avoid reconnecting on logout.
             if (loggedIn && wagmiStatus === "disconnected") {
+                // TODO: If this fails fast, will enter a spammy loop as wagmiStatus gets updated
+                //       back and forth between "disconnected" and "connecting".
+                //       A timeout needs to be added — maybe exponential backoff.
                 await connectAsync({ connector: connectors[0] })
             } else if (loggedOut && wagmiStatus === "connected") {
                 await disconnectAsync()

@@ -7,8 +7,10 @@ import {
     getChainFromSearchParams,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
+import { getDefaultStore } from "jotai"
 import type { Client } from "viem"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "../services/permissions"
+import { permissionsAtom } from "../state/permissions.ts"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
@@ -38,9 +40,11 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_requestAccounts":
             checkAuthenticated()
-            if (!hasPermissions("eth_accounts")) {
-                throw new EIP1193UserRejectedRequestError()
-            }
+            // TODO TEMP HACK: temporarily disable this check to avoid explicit request when logging in on page reload
+            //   Uncomment this when we fix the permissions.
+            // if (!hasPermissions("eth_accounts")) {
+            //     throw new EIP1193UserRejectedRequestError()
+            // }
             return getUser()?.addresses
 
         case "wallet_getPermissions":

@@ -1,23 +1,11 @@
 import type { UUID } from "@happychain/common"
-import {
-    AuthState,
-    BasePopupProvider,
-    type EIP1193RequestMethods,
-    type EIP1193RequestParameters,
-    type EIP1193RequestResult,
-    type InFlightRequest,
-    waitForCondition,
-} from "@happychain/sdk-shared"
+import { AuthState, BasePopupProvider, type EIP1193RequestParameters, waitForCondition } from "@happychain/sdk-shared"
 import { type EIP1193Provider, ResourceUnavailableRpcError } from "viem"
 import { handlePermissionlessRequest } from "../requests"
-import { handleApprovedRequest } from "../requests/approved"
 import { iframeID } from "../requests/utils"
 import { getAuthState } from "../state/authState"
 import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
-
-// custom type for promise resolve methods
-type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods> = (value: EIP1193RequestResult<T>) => void
 
 /**
  * Custom Provider for the iframe fed to WagmiProvider's config to route wagmi
@@ -35,41 +23,19 @@ export class IframeProvider extends BasePopupProvider {
         return checkIfRequestRequiresConfirmation(args)
     }
 
-    protected override async handlePermissionless(
-        key: UUID,
-        args: EIP1193RequestParameters,
-        { resolve, reject }: InFlightRequest,
-    ): Promise<void> {
-        const reqPayload = {
+    protected override async handlePermissionless(key: UUID, args: EIP1193RequestParameters): Promise<void> {
+        void handlePermissionlessRequest({
             key,
             windowId: iframeID,
             error: null,
             payload: args,
-        }
-
-        void handlePermissionlessRequest(reqPayload)
-        this.trackRequest(key, { resolve: resolve as ResolveType, reject })
-        return
+        })
     }
 
-    protected override async requestPermissions(
-        key: UUID,
-        args: EIP1193RequestParameters,
-        { resolve, reject }: InFlightRequest,
-    ): Promise<boolean | unknown> {
-        const reqPayload = {
-            key,
-            windowId: iframeID,
-            error: null,
-            payload: args,
-        }
-
-        if (["eth_requestAccounts", "wallet_requestPermissions"].includes(args?.method)) {
-            // auto-approve internal iframe permissions without popups
-            void handleApprovedRequest(reqPayload)
-            this.trackRequest(key, { resolve: resolve as ResolveType, reject })
-            return
-        }
+    protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
+        // TODO: This is broken and will pop an explicit modal for the wagmi provider until we fix the permission system.
+        //       The iframe is auto-connected by default, there is never a need for extra permissions.
+        return true
     }
 
     protected override async performOptionalUserAndAuthCheck(): Promise<void> {
@@ -78,7 +44,7 @@ export class IframeProvider extends BasePopupProvider {
             // work fine (with a permission not found warning), but is brittle, better to explicitly
             // reject here. We explicitly connect to wagmi via `useConnect` once the user becomes
             // available.
-
+            // Wagmi swallows these exceptions, they don't show up on the console.
             throw new ResourceUnavailableRpcError(new Error("user not initialized yet"))
         }
 

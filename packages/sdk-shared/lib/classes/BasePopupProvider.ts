@@ -56,9 +56,9 @@ export type ResolveType<T extends EIP1193RequestMethods = EIP1193RequestMethods>
  * can possibly be thrown by the handlers (these are thrown in a setTimeout instead).
  */
 export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1193ConnectionHandler {
-    protected inFlightRequests = new Map<string, InFlightRequest>()
-    protected timer: Timer | null = null
-    protected static readonly POPUP_FEATURES = //
+    private inFlightRequests = new Map<string, InFlightRequest>()
+    private timer: Timer | null = null
+    private static readonly POPUP_FEATURES = //
         ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
 
     public windowId = createUUID()
@@ -73,30 +73,25 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
 
         void this.performOptionalUserAndAuthCheck()
 
-        // biome-ignore lint/suspicious/noAsyncPromiseExecutor: resolved later
-        return new Promise<EIP1193RequestResult<TString>>(async (resolve, reject) => {
-            let requiresApproval = await this.requiresUserApproval(args, key)
-
-            if (!requiresApproval) {
-                this.handlePermissionless(key, args, { resolve: resolve as ResolveType, reject })
-                return
-            }
-
-            /**
-             * Check if additional permissions are required for the request to proceed
-             * (e.g. trying to make a request when the app isn't connected to the wallet,
-             * requiring a connection authorization).
-             */
-            requiresApproval = await this.requestPermissions(key, args, {
-                resolve: resolve as ResolveType,
-                reject,
-            })
-            // If approval is still required after permissions, open a popup for the user
-            if (!requiresApproval) {
-                const popup = this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, config.iframePath)
-                this.trackRequest(key, { resolve: resolve as ResolveType, reject, popup })
-            }
+        let resolve = null as unknown as ResolveType<TString>
+        let reject = null as unknown as (reason?: unknown) => void
+        const result = new Promise<EIP1193RequestResult<TString>>((_resolve, _reject) => {
+            resolve = _resolve as unknown as ResolveType<TString>
+            reject = _reject
         })
+
+        const requiresApproval =
+            (await this.requiresUserApproval(args, key)) && (await this.requestExtraPermissions(args))
+
+        let popup: Window | undefined
+        if (requiresApproval) {
+            popup = this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, config.iframePath)
+        } else {
+            this.handlePermissionless(key, args)
+        }
+        this.trackRequest(key, { resolve: resolve! as unknown as ResolveType, reject, popup })
+
+        return result
     }
 
     /**
@@ -133,18 +128,15 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
      * and will be tracked until it is either resolved or rejected. If the request involves a popup,
      * the popup is also tracked for closure.
      */
-    protected trackRequest(requestKey: UUID, { resolve, reject, popup }: InFlightRequest): void {
+    private trackRequest(requestKey: UUID, { resolve, reject, popup }: InFlightRequest): void {
         this.inFlightRequests.set(requestKey, { resolve, reject, popup })
         if (popup) this.startPopupCheckTimer()
     }
 
-    /** Returns connected status */
-    public abstract isConnected(): boolean
-
     /**
      * Opens a popup window for the user request approval process.
      */
-    protected openPopupAndAwaitResponse(
+    private openPopupAndAwaitResponse(
         key: UUID,
         args: EIP1193RequestParameters,
         windowId: UUID,
@@ -162,7 +154,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
         return popup ?? undefined
     }
 
-    public handleRequestResolution(data: ProviderEvent | ProviderMsgsFromIframe[Msgs.RequestResponse]) {
+    protected handleRequestResolution(data: ProviderEvent | ProviderMsgsFromIframe[Msgs.RequestResponse]) {
         const req = this.inFlightRequests.get(data.key)
 
         if (!req) {
@@ -190,25 +182,24 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
 
     // ------------------------- Abstract functions -------------------------
 
+    /** Returns connected status */
+    public abstract isConnected(): boolean
+
     /**
-     * Whenever requiresUserApproval is true for a request, this is called
-     * to check if additional permissions are required for the request to proceed
-     * (e.g. trying to make a request when the app isn't connected to the wallet,
-     * requiring a connection authorization).
+     * Whenever requiresUserApproval is true for a request, this is called to check if additional
+     * permissions are required for the request to proceed (e.g. trying to make a request when the
+     * app isn't connected to the wallet, requiring a connection authorization).
      *
-     * The method should solicit the permissions from the user and then return
-     * whether the original request is be treated as permissionless or requires a further user approval.
-     * The return value is needed because in some cases we cannot know in
-     * advance if a request requires user approval. This is the case with permission requests:
-     * we can only know if the permission was already granted after we are connected.
-     * In this case requiresUserApproval must be conservative and return true,
-     * but we can correct things after connection by returning true from this function.
+     * The method should solicit the permissions from the user and then return whether the original
+     * request is be treated as permissionless or requires a further user approval.
+     *
+     * The return value is needed because in some cases we cannot know in advance if a request
+     * requires user approval. This is the case with permission requests: we can only know if the
+     * permission was already granted after we are connected. In this case requiresUserApproval must
+     * be conservative and return true, but we can correct things after connection by returning true
+     * from this function.
      */
-    protected abstract requestPermissions(
-        key?: UUID,
-        args?: EIP1193RequestParameters,
-        { resolve, reject }?: InFlightRequest,
-    ): Promise<boolean | unknown>
+    protected abstract requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean>
 
     /** used by iframe to check for user and auth status */
     protected abstract performOptionalUserAndAuthCheck(): Promise<void>
@@ -219,9 +210,5 @@ export abstract class BasePopupProvider extends SafeEventEmitter implements EIP1
      */
     protected abstract requiresUserApproval(args: EIP1193RequestParameters, key?: UUID): Promise<boolean | unknown>
 
-    protected abstract handlePermissionless(
-        key: UUID,
-        args: EIP1193RequestParameters,
-        { resolve, reject }: InFlightRequest,
-    ): void
+    protected abstract handlePermissionless(key: UUID, args: EIP1193RequestParameters): void
 }

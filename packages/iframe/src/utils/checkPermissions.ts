@@ -4,6 +4,8 @@ import { hasPermissions } from "../services/permissions"
 import { getChains } from "../state/chains"
 import { getUser } from "../state/user"
 
+let allowIframeToConnectTmpHack = true
+
 export function checkIfRequestRequiresConfirmation(
     payload: ProviderMsgsFromApp[Msgs.PermissionCheckRequest]["payload"],
 ) {
@@ -32,6 +34,11 @@ export function checkIfRequestRequiresConfirmation(
         case "wallet_requestPermissions":
             return !hasPermissions(payload.params[0])
         case "eth_requestAccounts":
+            // TODO TEMP while while we fix permission system (this avoids an explicit request when logging in on page reload)
+            if (allowIframeToConnectTmpHack) {
+                allowIframeToConnectTmpHack = false
+                return false
+            }
             return !hasPermissions("eth_accounts")
     }
 
