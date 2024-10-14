@@ -18,19 +18,19 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash })
 
     const [, setView] = useAtom(walletInfoViewAtom)
-    const [, setSendInFlight] = useAtom(trackSendAtom)
+    const [, setTrackSend] = useAtom(trackSendAtom)
 
     useEffect(() => {
         // if tx is successful, move back to home page of wallet
         if (isConfirmed) {
-            setSendInFlight({ val: false })
+            setTrackSend({ val: false })
             setView(ContentType.TOKENS)
             navigate({ to: "/embed" })
         }
         if (error) {
-            setSendInFlight({ val: false })
+            setTrackSend({ val: false })
         }
-    }, [error, isConfirmed, setView, navigate, setSendInFlight])
+    }, [error, isConfirmed, setView, navigate, setTrackSend])
 
     // navigates back to home page
     const cancelSend = useCallback(() => {
@@ -39,14 +39,14 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
 
     const submitSend = useCallback(() => {
         if (targetAddress && sendValue) {
-            setSendInFlight({ val: false })
+            setTrackSend({ val: false })
             // send tx
             sendTransaction({
                 to: targetAddress as Address,
                 value: parseEther(sendValue),
             })
         }
-    }, [sendTransaction, sendValue, setSendInFlight, targetAddress])
+    }, [sendTransaction, sendValue, setTrackSend, targetAddress])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">

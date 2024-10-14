@@ -16,7 +16,7 @@ const TabContent = ({ view }: TabContentProps) => {
         )
     }
 
-    const renderContent = () => {
+    const renderTabContent = () => {
         switch (view) {
             case ContentType.TOKENS:
                 return <TokenView />
@@ -29,7 +29,7 @@ const TabContent = ({ view }: TabContentProps) => {
         }
     }
 
-    return <div className="flex flex-col w-full h-full">{renderContent()}</div>
+    return <div className="flex flex-col w-full h-full">{renderTabContent()}</div>
 }
 
 export default TabContent
