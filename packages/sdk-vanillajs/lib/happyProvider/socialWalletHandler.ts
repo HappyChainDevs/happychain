@@ -88,7 +88,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         return promise
     }
 
-    protected handlePermissionless(key: UUID, args: EIP1193RequestParameters): void {
+    protected handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
         // Note that this always works regardless of log in or connection status.
         void this.config.providerBus.emit(Msgs.RequestPermissionless, {
             key,
