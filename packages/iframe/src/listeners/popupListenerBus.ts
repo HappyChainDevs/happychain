@@ -1,5 +1,5 @@
 import { Msgs } from "@happychain/sdk-shared"
-import { handleRejectedRequest, handlerApprovedRequest } from "../requests"
+import { handleApprovedRequest, handleRejectedRequest } from "../requests"
 import { popupListenBus } from "../services/eventBus"
 
 /**
@@ -8,5 +8,5 @@ import { popupListenBus } from "../services/eventBus"
  * before being executed. Rejected requests will simple be forwarded to
  * the requesting app to be handled by the developer.
  */
-popupListenBus.on(Msgs.PopupApprove, handlerApprovedRequest)
+popupListenBus.on(Msgs.PopupApprove, handleApprovedRequest)
 popupListenBus.on(Msgs.PopupReject, handleRejectedRequest)
