@@ -50,6 +50,7 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
+            sudo /usr/local/bin/copy-to-bundler.sh
             sudo -u bundler bash -c '
               cd /home/bundler/happy-bundler
               pm2 restart ${{ env.PM2_PROCESS_NAME }} || pm2 start ./alto/src/lib/cli/alto.js -- run \
