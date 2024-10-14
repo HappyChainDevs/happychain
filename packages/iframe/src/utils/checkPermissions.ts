@@ -34,7 +34,7 @@ export function checkIfRequestRequiresConfirmation(
         case "wallet_requestPermissions":
             return !hasPermissions(payload.params[0])
         case "eth_requestAccounts":
-            // TODO TEMP while while we fix permission system (this avoids an explicit request when logging in on page reload)
+            // TODO TEMP HACK while while we fix permission system (this avoids an explicit request when logging in on page reload)
             if (allowIframeToConnectTmpHack) {
                 allowIframeToConnectTmpHack = false
                 return false
