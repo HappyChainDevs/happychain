@@ -1,5 +1,5 @@
 /**
- * Placeholder component to show loading status of 
+ * Placeholder component to show loading status of
  * transaction being confirmed in a block.
  */
 const LoadingSkeleton = () => {
