@@ -10,6 +10,7 @@ import {
     Msgs,
     type ProviderMsgsFromIframe,
     type ResolveType,
+    config,
 } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared"
 import type { HappyProviderConfig } from "./interface"
@@ -190,7 +191,7 @@ export class SocialWalletHandler extends BasePopupProvider {
     }
 
     private promptUser(key: UUID, args: EIP1193RequestParameters) {
-        const url = new URL("request", this.config.iframePath)
+        const url = new URL("request", config.iframePath)
         const opts = {
             windowId: this.config.windowId,
             key: key,
