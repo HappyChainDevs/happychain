@@ -7,7 +7,7 @@ interface TxLogEntryProps {
 }
 
 /**
- * Retrieves and presents details based on tx receipt.
+ * Used to present details based on tx receipt from user's activity.
  */
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     return (

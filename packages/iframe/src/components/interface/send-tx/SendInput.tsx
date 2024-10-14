@@ -14,7 +14,7 @@ interface SendInputProps {
 
 const SendInput = ({ balance, sendValue, setSendValue }: SendInputProps) => {
     const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
-    const [sendInFlight] = useAtom(trackSendAtom)
+    const [trackSend] = useAtom(trackSendAtom)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
@@ -82,7 +82,7 @@ const SendInput = ({ balance, sendValue, setSendValue }: SendInputProps) => {
                             placeholder={`${balance ? formatEther(balance) : "0"}`}
                             value={sendValue || ""}
                             onChange={handleTokenBalanceChange}
-                            disabled={!balance || sendInFlight}
+                            disabled={!balance || trackSend}
                         />
 
                         <p className="text-[14px]">HAPPY</p>
@@ -92,7 +92,7 @@ const SendInput = ({ balance, sendValue, setSendValue }: SendInputProps) => {
                         className="flex text-center text-[14px] text-white border border-blue-600 px-2 rounded-lg bg-blue-600 disabled:opacity-50"
                         type="button"
                         onClick={handleMaxButtonClick}
-                        disabled={sendInFlight}
+                        disabled={trackSend}
                     >
                         Max
                     </button>

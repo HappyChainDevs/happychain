@@ -1,5 +1,7 @@
-/** Placeholder component to show loading status of transaction
- *  being confirmed in a block. */
+/**
+ * Placeholder component to show loading status of 
+ * transaction being confirmed in a block.
+ */
 const LoadingSkeleton = () => {
     return (
         <div className="border border-blue-300 shadow rounded-md p-4 w-full">
