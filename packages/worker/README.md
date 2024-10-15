@@ -1,4 +1,4 @@
-# @happychain/vite-plugin-shared-worker
+# @happychain/worker
 
 Fork of https://github.com/yjl9903/vite-plugin-sharedworker
 

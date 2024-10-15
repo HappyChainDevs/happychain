@@ -1,5 +1,5 @@
 {
-    "name": "@happychain/vite-plugin-shared-worker",
+    "name": "@happychain/worker",
     "private": true,
     "version": "0.0.0",
     "type": "module",
