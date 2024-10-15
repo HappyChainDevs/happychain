@@ -1,8 +1,7 @@
 import { useAtomValue } from "jotai"
 import type { TransactionReceipt } from "viem"
 import { deserialize } from "wagmi"
-import { pendingTxHashesAtom } from "../../../../../../state/pendingTxs"
-import { txHistoryAtom } from "../../../../../../state/txHistory"
+import { confirmedTxsAtom, pendingTxsAtom } from "../../../../../../state/txHistory"
 import { userAtom } from "../../../../../../state/user"
 import LoadingSkeleton from "../../../../LoadingSkeleton"
 import TxLogEntry from "./TxLogEntry"
@@ -17,8 +16,8 @@ import TxLogEntry from "./TxLogEntry"
  * */
 const ActivityView = () => {
     const user = useAtomValue(userAtom)
-    const txHistory = useAtomValue(txHistoryAtom)
-    const pendingTxs = useAtomValue(pendingTxHashesAtom)
+    const txHistory = useAtomValue(confirmedTxsAtom)
+    const pendingTxs = useAtomValue(pendingTxsAtom)
 
     if (!user) {
         return <div className="w-full h-full p-2">No user connected.</div>

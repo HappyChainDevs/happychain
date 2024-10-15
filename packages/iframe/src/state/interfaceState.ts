@@ -1,17 +1,18 @@
 import { useNavigate } from "@tanstack/react-router"
 import { atom } from "jotai"
 
+export enum ContentType {
+    TOKENS = "Tokens",
+    GAMES = "Games",
+    ACTIVITY = "Activity",
+}
+
 /**
  * Collection of atoms that track different view / button states across
  * the iframe UI. The idea is to use jotai to escape "provider hell" and create
  * a more simplistic API for (minimal render) state management.
  */
 
-export enum ContentType {
-    TOKENS = "Tokens",
-    GAMES = "Games",
-    ACTIVITY = "Activity",
-}
 /**
  * Atom to help toggle between view states in
  * landing page of the wallet iframe component.

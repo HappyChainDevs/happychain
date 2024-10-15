@@ -5,6 +5,8 @@ export enum StorageKey {
     HappyUser = "happychain:user",
     Chains = "happychain:supported_chains",
     UserPermissions = "happychain:user_permissions",
+    PendingTxs = "happychain:pending_txs",
+    TxHistory = "happychain:tx_history",
 }
 
 // cache user within iframe to manage auto-reconnect

@@ -8,14 +8,6 @@ interface TabContentProps {
 }
 
 const TabContent = ({ view }: TabContentProps) => {
-    const defaultRender = () => {
-        return (
-            <div className="flex flex-col w-full h-4/5 p-2 bg-slate-300 rounded-b-xl rounded-tr-xl">
-                No details available.
-            </div>
-        )
-    }
-
     const renderTabContent = () => {
         switch (view) {
             case ContentType.TOKENS:
@@ -25,7 +17,11 @@ const TabContent = ({ view }: TabContentProps) => {
             case ContentType.ACTIVITY:
                 return <ActivityView />
             default:
-                return defaultRender()
+                return (
+                    <div className="flex flex-col w-full h-4/5 p-2 bg-slate-300 rounded-b-xl rounded-tr-xl">
+                        No details available.
+                    </div>
+                )
         }
     }
 

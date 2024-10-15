@@ -32,8 +32,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
-            const tx = await sendToWalletClient(request)
             const user = getUser()
+            const tx = await sendToWalletClient(request)
             if (user) addPendingTxEntry(user.address, tx as Hash)
             return tx
         }

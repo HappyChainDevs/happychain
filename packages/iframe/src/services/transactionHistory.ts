@@ -1,9 +1,8 @@
 import { getDefaultStore } from "jotai"
 import type { Address, Hash, TransactionReceipt } from "viem"
 import { serialize } from "wagmi"
-import { pendingTxHashesAtom } from "../state/pendingTxs"
 import { getPublicClient } from "../state/publicClient"
-import { txHistoryAtom } from "../state/txHistory"
+import { confirmedTxsAtom, pendingTxsAtom } from "../state/txHistory"
 import { getUser } from "../state/user"
 
 /**
@@ -12,15 +11,15 @@ import { getUser } from "../state/user"
  * function is called to monitor the transaction and retrieve the `TransactionReceipt` once it is included in a block.
  *
  * Once a receipt is obtained:
- * - It is serialized and stored in the `txHistoryAtom` to maintain a log of completed transactions for the user.
- * - The transaction hash is removed from the `pendingTxHashesAtom` as the transaction is no longer pending.
+ * - It is serialized and stored in the `confirmedTxsAtom` to maintain a log of completed transactions for the user.
+ * - The transaction hash is removed from the `pendingTxsAtom` as the transaction is no longer pending.
  *
- * The `Activity` Tab can then display the transaction history by reading from the `txHistoryAtom`.
+ * The `Activity` Tab can then display the transaction history by reading from the `confirmedTxsAtom`.
  *
  * In summary:
- * 1. A pending transaction hash is added to `pendingTxHashesAtom` after the user sends a transaction.
+ * 1. A pending transaction hash is added to `pendingTxsAtom` after the user sends a transaction.
  * 2. `subscribeToPendingTxAtom` processes this hash and waits for the corresponding transaction to be included in a block.
- * 3. Once the `TransactionReceipt` is received, it is stored in `txHistoryAtom` and removed from `pendingTxHashesAtom`.
+ * 3. Once the `TransactionReceipt` is received, it is stored in `confirmedTxsAtom` and removed from `pendingTxsAtom`.
  */
 
 // -------------------------------------------------------------------------------------------------
@@ -29,7 +28,7 @@ const store = getDefaultStore()
 
 export function addHistoryLogEntry(address: Address, entry: TransactionReceipt) {
     let entryExists = false
-    store.set(txHistoryAtom, (existingEntries) => {
+    store.set(confirmedTxsAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
         const serialiazedEntry = serialize(entry)
         entryExists = userHistory.some((log) => log === serialiazedEntry)
@@ -40,7 +39,7 @@ export function addHistoryLogEntry(address: Address, entry: TransactionReceipt) 
 
 export function addPendingTxEntry(address: Address, newHash: Hash) {
     let entryExists = false
-    store.set(pendingTxHashesAtom, (existingEntries) => {
+    store.set(pendingTxsAtom, (existingEntries) => {
         const pendingTxHashes = existingEntries[address] || []
         entryExists = pendingTxHashes.some((pendingHash) => pendingHash === newHash)
 
@@ -55,7 +54,7 @@ export function addPendingTxEntry(address: Address, newHash: Hash) {
 }
 
 export function removePendingTxEntry(address: Address, hash: Hash) {
-    store.set(pendingTxHashesAtom, (existingEntries) => {
+    store.set(pendingTxsAtom, (existingEntries) => {
         const pendingTxHashes = existingEntries[address] || []
 
         // Filter out the hash to be removed
@@ -76,24 +75,22 @@ export function removePendingTxEntry(address: Address, hash: Hash) {
 }
 
 /**
- * Subscribes to changes in the `pendingTxHashesAtom`, uses viem's
+ * Subscribes to changes in the `pendingTxsAtom`, uses viem's
  * {@link https://viem.sh/docs/actions/public/waitForTransactionReceipt.html | waitForTransactionReceipt}
  * to fetch the associated `TransactionReceipt` once the tx is included in a block.
  */
-export const subscribeToPendingTxAtom = store.sub(pendingTxHashesAtom, () => {
+export const subscribeToPendingTxAtom = store.sub(pendingTxsAtom, () => {
     const user = getUser()
     const publicClient = getPublicClient()
 
     if (!user) {
-        console.warn("No user found, cannot access tx history.")
         return
     }
 
-    const pendingTxHashes = store.get(pendingTxHashesAtom)
+    const pendingTxHashes = store.get(pendingTxsAtom)
     const hashList = pendingTxHashes[user.address]
 
     if (!hashList || hashList.length === 0) {
-        console.warn("No pending transactions found for this user.")
         return
     }
 
