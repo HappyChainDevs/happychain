@@ -1,4 +1,4 @@
-import { type UUID, createUUID } from "@happychain/common"
+import { type HTTPString, type UUID, createUUID } from "@happychain/common"
 import { AuthState } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
@@ -10,20 +10,23 @@ import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../approved"
 
+const origin = "http://localhost:4321"
 vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => "http://localhost:5160",
-    getIframeOrigin: () => "http://localhost:5160",
+    getDappOrigin: () => origin,
+    getIframeOrigin: () => origin,
 }))
-const parentID = createUUID()
+
 const iframeID = createUUID()
 vi.mock("../utils", (importUtils) =>
     importUtils<typeof import("../utils")>().then((utils) => ({
         ...utils,
-        isAllowedSourceId: (sourceId: UUID) => sourceId === parentID || sourceId === iframeID,
-        isParentId: (sourceId: UUID) => sourceId === parentID,
-        isIframeId: (sourceId: UUID) => sourceId === iframeID,
+        originForSourceID(sourceId: UUID): HTTPString | undefined {
+            if (sourceId === iframeID) return origin
+            return undefined
+        },
     })),
 )
+
 describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     let user: HappyUser
 
@@ -35,23 +38,23 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     })
 
     test("adds eth_account permissions", async () => {
-        expect(getAllPermissions().length).toBe(1)
+        expect(getAllPermissions({ origin }).length).toBe(1)
         const request = makePayload(iframeID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
         const response = await dispatchHandlers(request)
-        expect(getAllPermissions()).toStrictEqual(response)
+        expect(getAllPermissions({ origin })).toStrictEqual(response)
         expect(response).toStrictEqual([
             {
                 caveats: [],
                 id: expect.any(String),
                 date: expect.any(Number),
-                invoker: "http://localhost:5160",
+                invoker: origin,
                 parentCapability: "eth_accounts",
             },
         ])
     })
 
     test("throws error on caveat use", async () => {
-        expect(getAllPermissions().length).toBe(1)
+        expect(getAllPermissions({ origin }).length).toBe(1)
         const request = makePayload(iframeID, {
             method: "wallet_requestPermissions",
             params: [{ eth_accounts: { requiredMethods: ["signTypedData_v3"] } }],
@@ -60,12 +63,12 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     })
 
     test("only adds permissions once", async () => {
-        expect(getAllPermissions().length).toBe(1)
+        expect(getAllPermissions({ origin }).length).toBe(1)
         const request = makePayload(iframeID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
         await dispatchHandlers(request)
         await dispatchHandlers(request)
         await dispatchHandlers(request)
         await dispatchHandlers(request)
-        expect(getAllPermissions().length).toBe(1)
+        expect(getAllPermissions({ origin }).length).toBe(1)
     })
 })

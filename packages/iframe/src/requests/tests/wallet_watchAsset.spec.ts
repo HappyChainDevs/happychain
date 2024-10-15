@@ -1,4 +1,4 @@
-import { type UUID, createUUID } from "@happychain/common"
+import { type HTTPString, type UUID, createUUID } from "@happychain/common"
 import { AuthState } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
@@ -10,19 +10,19 @@ import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../approved"
 
-vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => "http://localhost:5160",
-    getIframeOrigin: () => "http://localhost:5160",
-}))
+const originA = "http://localhost:1234"
+const originB = "http://localhost:4321"
 
 const parentID = createUUID()
 const iframeID = createUUID()
 vi.mock("../utils", (importUtils) =>
     importUtils<typeof import("../utils")>().then((utils) => ({
         ...utils,
-        isAllowedSourceId: (sourceId: UUID) => sourceId === parentID || sourceId === iframeID,
-        isParentId: (sourceId: UUID) => sourceId === parentID,
-        isIframeId: (sourceId: UUID) => sourceId === iframeID,
+        originForSourceID(sourceId: UUID): HTTPString | undefined {
+            if (sourceId === parentID) return originA
+            if (sourceId === iframeID) return originB
+            return undefined
+        },
     })),
 )
 
