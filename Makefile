@@ -13,7 +13,7 @@ include makefiles/help.mk
 SHARED_PKGS := common,sdk-shared
 
 # packages only used in the SDK
-SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components,vite-plugin-shared-worker
+SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components,worker
 
 # packages only used in the iframe (order matters)
 IFRAME_ONLY_PKGS := sdk-firebase-web3auth-strategy,iframe

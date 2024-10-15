@@ -1,10 +1,11 @@
 import type { Plugin } from "vite"
+import pkg from "../../package.json"
 import { clientCodeGen, workerCodeGen } from "./codegen"
 import { filter } from "./utils"
 
 export function DevelopmentPlugin(): Plugin {
     return {
-        name: "@happychain/vite-plugin-sharedworker:development",
+        name: `${pkg.name}:development`,
         apply: "serve",
         enforce: "pre",
         transform(code: string, id: string) {
