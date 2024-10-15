@@ -26,30 +26,40 @@ contract GasEstimator is Test {
     GasMeasurementHelper private gasMeasurementHelper;
 
     function setUp() public {
-        if (ENTRYPOINT_V7.code.length == 0) {
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE); // solhint-disable-line
-            require(success, "Failed to deploy EntryPointV7"); // solhint-disable-line
-        }
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(root, "/deployments/anvil/testing/deployment.json");
+        string memory json = vm.readFile(path);
+        address happyPaymasterAddress = vm.parseJsonAddress(json, ".HappyPaymaster");
 
-        address[] memory allowedBundlers = new address[](0);
-        happyPaymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(ENTRYPOINT_V7, allowedBundlers);
-
+        happyPaymaster = IPaymaster(happyPaymasterAddress);
         gasMeasurementHelper = new GasMeasurementHelper();
     }
 
+    /**
+     * @notice Measures gas usage for various user operations in isolated transactions.
+     *
+     * This test estimates gas consumption for:
+     * 1. Initial storage initialization.
+     * 2. Cold storage access with a different sender.
+     * 3. Warm storage access by validating the same user operation again.
+     * 4. A user operation with large calldata (10 KB).
+     *
+     * Since the tests are run with the `--isolate` flag, each call is executed as a separate
+     * top-level transaction. Warm storage cannot be simulated in this test due to isolation.
+     */
     function testEstimatePaymasterValidateUserOpGasIsolatedTxns() public {
         // Step 1: Gas cost when storage transitions from zero to non-zero (worst-case scenario)
         PackedUserOperation memory userOp1 = _getUserOp();
         uint256 gasUsedStep1 = _estimatePaymasterValidateUserOpGas(userOp1);
         console.log("Gas used for initial userOp (storage initialization): %d gas", gasUsedStep1);
 
-        // Step 2: Gas cost for a normal UserOp (different sender) (storage has been initialized, but cold)
+        // Step 2: Gas cost for a normal UserOp with a different sender (cold storage access)
         PackedUserOperation memory userOp2 = userOp1;
         userOp2.sender = address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742);
         uint256 gasUsedStep2 = _estimatePaymasterValidateUserOpGas(userOp2);
         console.log("Gas used for normal userOp (storage initialized, but cold): %d gas", gasUsedStep2);
 
-        // Step 3: Gas cost when validating the same UserOp again (warm storage access)
+        // Step 3: Gas cost when validating the same UserOp again (still cold storage access due to isolation)
         PackedUserOperation memory userOp3 = userOp2;
         userOp3.nonce = userOp3.nonce + 1; // Increment nonce to simulate a new operation
         uint256 gasUsedStep3 = _estimatePaymasterValidateUserOpGas(userOp3);
@@ -67,7 +77,14 @@ contract GasEstimator is Test {
         console.log("Gas used for UserOp with large calldata (10 KB): %d gas", gasUsedStep4);
     }
 
-    function testEstimatePaymasterValidateUserOpGasForSameUserOpTwice() public {
+    /**
+     * @notice Measures gas usage when validating the same user operation twice within a single transaction.
+     *
+     * This test uses the `gasMeasurementHelper` contract to execute both validations within the same transaction,
+     * thereby simulating warm storage access for the second validation despite the `--isolate` flag.
+     * It helps determine the gas savings when a user has multiple operations in the same block.
+     */
+    function testEstimatePaymasterValidateUserOpGasWarmStorageSameUser() public {
         PackedUserOperation memory userOp1 = _getUserOp();
         userOp1.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
         PackedUserOperation memory userOp2 = userOp1;
@@ -84,7 +101,14 @@ contract GasEstimator is Test {
         console.log("Gas used for validating same userOp again (warm storage access): %d gas", gasUsed[1]);
     }
 
-    function testEstimatePaymasterValidateUserOpGasForDifferentSenders() public {
+    /**
+     * @notice Measures gas usage when validating user operations from different senders within a single transaction.
+     *
+     * This test checks if storage slots accessed by one user affect the gas consumption for another user
+     * when validations are executed within the same transaction using the `gasMeasureMentHelper` contract.
+     * It helps determine if multiple users in the same block can benefit from warm storage access.
+     */
+    function testEstimatePaymasterValidateUserOpGasWarmStorageDifferentUsers() public {
         PackedUserOperation memory userOp1 = _getUserOp();
         userOp1.sender = address(0x19aC95a5524Db39021ba2F10E4f65574dfEd2745);
         PackedUserOperation memory userOp2 = userOp1;
@@ -102,6 +126,10 @@ contract GasEstimator is Test {
         console.log("Gas used for validating userOp with different sender: %d gas", gasUsed[1]);
     }
 
+    /**
+     * @dev Internal function to estimate gas used by `validatePaymasterUserOp` for a single user operation.
+     *      This function is used when each call is executed as a separate transaction (due to `--isolate` flag).
+     */
     function _estimatePaymasterValidateUserOpGas(PackedUserOperation memory userOp) internal returns (uint256) {
         bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
@@ -113,6 +141,10 @@ contract GasEstimator is Test {
         return gasBefore - gasAfter;
     }
 
+    /**
+     * @dev Internal helper function to create a simple `PackedUserOperation`.
+     *      The values are hardcoded for testing purposes.
+     */
     function _getUserOp() internal pure returns (PackedUserOperation memory) {
         return PackedUserOperation({
             sender: address(0x19AC95A5524dB39021bA2f10e4F65574dfed2741),
