@@ -22,7 +22,19 @@ export function SharedWorkerClientPlugin(): Plugin {
         config() {
             return {
                 // inject production worker plugin
-                worker: { format: "es", plugins: () => [SharedWorkerServerPlugin()] },
+                worker: {
+                    format: "es",
+                    plugins: () => [SharedWorkerServerPlugin()],
+                    rollupOptions: {
+                        output: {
+                            manualChunks: (id) => {
+                                if (id.includes("node_modules")) {
+                                    return "vendor"
+                                }
+                            },
+                        },
+                    },
+                },
             }
         },
         transform(code: string, id: string) {
