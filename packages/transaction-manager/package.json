@@ -17,7 +17,7 @@
         }
     },
     "mikro-orm": {
-        "configPaths": ["./dist/mikro-orm.config.js"]
+        "configPaths": ["./dist/lib/mikro-orm.config.js"]
     },
     "devDependencies": {
         "@mikro-orm/cli": "^6.3.10",
