@@ -28,12 +28,13 @@ import { getUser } from "../state/user"
 const store = getDefaultStore()
 
 export function addHistoryLogEntry(address: Address, entry: TransactionReceipt) {
+    let entryExists = false
     store.set(txHistoryAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
-        return {
-            ...existingEntries,
-            [address]: [serialize(entry), ...userHistory],
-        }
+        const serialiazedEntry = serialize(entry)
+        entryExists = userHistory.some((log) => log === serialiazedEntry)
+
+        return entryExists ? existingEntries : { ...existingEntries, [address]: [serialiazedEntry, ...userHistory] }
     })
 }
 
@@ -84,7 +85,7 @@ export const subscribeToPendingTxAtom = store.sub(pendingTxHashesAtom, () => {
     const publicClient = getPublicClient()
 
     if (!user) {
-        console.warn("No user found, can't access tx history.")
+        console.warn("No user found, cannot access tx history.")
         return
     }
 
