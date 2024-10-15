@@ -5,8 +5,8 @@ import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
 import { useBalance, useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
-import { userAtom } from "../../../state/user"
 import { ContentType, trackSendAtom, walletInfoViewAtom } from "../../../state/interfaceState"
+import { userAtom } from "../../../state/user"
 
 interface SendButtonsInterface {
     sendValue: string | undefined
@@ -65,7 +65,7 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
 
             await queryClient.invalidateQueries({ queryKey })
         }
-    }, [sendTransaction, sendValue, targetAddress, queryClient, queryKey])
+    }, [sendTransaction, sendValue, targetAddress, queryClient, queryKey, setTrackSend])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">

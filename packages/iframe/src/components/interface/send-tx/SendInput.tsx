@@ -5,8 +5,8 @@ import { debounce } from "lodash"
 import type React from "react"
 import { useCallback, useState } from "react"
 import { formatEther, parseEther } from "viem"
-import { trackSendAtom } from "../../../state/interfaceState"
 import { useBalance } from "wagmi"
+import { trackSendAtom } from "../../../state/interfaceState"
 import { userAtom } from "../../../state/user"
 
 interface SendInputProps {
