@@ -1,5 +1,5 @@
 import "./web3auth.polyfill"
-import type { MessageCallback, SharedWorkerServer } from "@happychain/vite-plugin-shared-worker/runtime"
+import type { HappyWorker, MessageCallback } from "@happychain/worker/runtime"
 import { tssLib } from "@toruslabs/tss-dkls-lib"
 import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider"
 import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from "@web3auth/mpc-core-kit"
@@ -7,7 +7,7 @@ import { config } from "./config"
 
 // weird ts hacks to make tsc happy. it compiles to JS perfectly without it, but tsc doesn't understand the RPC setup
 // TODO: would be nice to figure out how to make `declare module '*.shared-worker'` to inject these globally...
-declare const worker: SharedWorkerServer // available within the context of the worker
+declare const worker: HappyWorker // available within the context of the worker
 // export declare function addMessageListener<T>(fn: MessageCallback<T>): void // this should work i believe but doesn't in dev...
 export function addMessageListener(_fn: MessageCallback<unknown>): void {} // this gest stripped out by the build system and replaced with actual implementation
 // shared between contexts, but does not persist.
