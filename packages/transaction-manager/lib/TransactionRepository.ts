@@ -29,6 +29,25 @@ export class TransactionRepository {
         }
     }
 
+    removeTransactions(transactions: Transaction[]) {
+        for (const transaction of transactions) {
+            this.notFinalizedTransactions.splice(this.notFinalizedTransactions.indexOf(transaction), 1)
+            this.transactionManager.entityManager.remove(transaction)
+        }
+    }
+
+    getHighestNonce(): number | undefined {
+        return this.notFinalizedTransactions.length > 0
+            ? Math.max(...this.notFinalizedTransactions.flatMap((t) => t.attempts.map((a) => a.nonce)))
+            : undefined
+    }
+
+    getNotReservedNoncesInRange(from: number, to: number): number[] {
+        return Array.from({ length: to - from + 1 }, (_, i) => from + i).filter(
+            (n) => !this.notFinalizedTransactions.some((t) => t.attempts.some((a) => a.nonce === n)),
+        )
+    }
+
     async flush() {
         this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
             NotFinalizedStatuses.includes(transaction.status),

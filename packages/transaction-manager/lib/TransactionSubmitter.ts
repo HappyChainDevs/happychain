@@ -1,4 +1,7 @@
-import { type Hash, type Hex, type TransactionRequestEIP1559, encodeFunctionData, keccak256 } from "viem"
+import { unknownToError } from "@happychain/common"
+import { type Result, ResultAsync, err, ok } from "neverthrow"
+import type { Hash, Hex, TransactionRequestEIP1559 } from "viem"
+import { encodeFunctionData, keccak256 } from "viem"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
@@ -9,6 +12,21 @@ export interface SignReturn {
 
 export type AttemptSubmissionParameters = Omit<Attempt, "hash" | "gas">
 
+export enum AttemptSubmissionErrorCause {
+    ABINotFound = "ABINotFound",
+    FailedToFlush = "FailedToFlush",
+    FailedToEstimateGas = "FailedToEstimateGas",
+    FailedToSignTransaction = "FailedToSignTransaction",
+    FailedToSendRawTransaction = "FailedToSendRawTransaction",
+}
+
+export type AttemptSubmissionError = {
+    cause: AttemptSubmissionErrorCause
+    flushed: boolean
+}
+
+export type AttemptSubmissionResult = Result<undefined, AttemptSubmissionError>
+
 export class TransactionSubmitter {
     private readonly txmgr: TransactionManager
 
@@ -16,7 +34,10 @@ export class TransactionSubmitter {
         this.txmgr = txmgr
     }
 
-    public async attemptSubmission(transaction: Transaction, payload: AttemptSubmissionParameters): Promise<void> {
+    public async attemptSubmission(
+        transaction: Transaction,
+        payload: AttemptSubmissionParameters,
+    ): Promise<AttemptSubmissionResult> {
         const { nonce, maxFeePerGas, maxPriorityFeePerGas, type } = payload
 
         let transactionRequest: TransactionRequestEIP1559 & { gas: bigint }
@@ -37,18 +58,24 @@ export class TransactionSubmitter {
 
             if (!abi) {
                 console.error(`ABI not found for contract ${transaction.contractName}`)
-                return
+                return err({ cause: AttemptSubmissionErrorCause.ABINotFound, flushed: false })
             }
 
             const functionName = transaction.functionName
             const args = transaction.args
             const data = encodeFunctionData({ abi, functionName, args })
 
-            const gas = await this.txmgr.viemClient.estimateGas({
+            const gasResult = await this.txmgr.viemClient.safeEstimateGas({
                 to: transaction.address,
                 data,
                 value: 0n,
             })
+
+            if (gasResult.isErr()) {
+                return err({ cause: AttemptSubmissionErrorCause.FailedToEstimateGas, flushed: false })
+            }
+
+            const gas = gasResult.value
 
             transactionRequest = {
                 type: "eip1559",
@@ -63,15 +90,13 @@ export class TransactionSubmitter {
             }
         }
 
-        let signedTransaction: Hex
-        if (this.txmgr.viemWallet.account.signTransaction) {
-            signedTransaction = await this.txmgr.viemWallet.account.signTransaction({
-                ...transactionRequest,
-                chainId: this.txmgr.viemWallet.chain.id,
-            })
-        } else {
-            signedTransaction = await this.txmgr.viemWallet.signTransaction(transactionRequest)
+        const signedTransactionResult = await this.txmgr.viemWallet.safeSignTransaction(transactionRequest)
+
+        if (signedTransactionResult.isErr()) {
+            return err({ cause: AttemptSubmissionErrorCause.FailedToSignTransaction, flushed: false })
         }
+
+        const signedTransaction = signedTransactionResult.value
 
         const hash = keccak256(signedTransaction)
 
@@ -84,10 +109,21 @@ export class TransactionSubmitter {
             gas: transactionRequest.gas,
         })
 
-        await this.txmgr.transactionRepository.flush()
+        const flushResult = await ResultAsync.fromPromise(this.txmgr.transactionRepository.flush(), unknownToError)
 
-        await this.txmgr.viemWallet.sendRawTransaction({
+        if (flushResult.isErr()) {
+            transaction.removeAttempt(hash)
+            return err({ cause: AttemptSubmissionErrorCause.FailedToFlush, flushed: false })
+        }
+
+        const sendRawTransactionResult = await this.txmgr.viemWallet.safeSendRawTransaction({
             serializedTransaction: signedTransaction,
         })
+
+        if (sendRawTransactionResult.isErr()) {
+            return err({ cause: AttemptSubmissionErrorCause.FailedToSendRawTransaction, flushed: true })
+        }
+
+        return ok(undefined)
     }
 }

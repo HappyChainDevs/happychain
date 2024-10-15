@@ -7,6 +7,7 @@ import { JsonBigIntTypeOrm } from "./JsonBigIntTypeOrm.js"
 export enum TransactionStatus {
     Pending = "Pending",
     Failed = "Failed",
+    Expired = "Expired",
     Cancelling = "Cancelling",
     Cancelled = "Cancelled",
     Success = "Success",
@@ -91,6 +92,13 @@ export class Transaction {
 
     addAttempt(attempt: Attempt): void {
         this.attempts.push(attempt)
+    }
+
+    removeAttempt(hash: Hash): void {
+        const index = this.attempts.findIndex((attempt) => attempt.hash === hash)
+        if (index > -1) {
+            this.attempts.splice(index, 1)
+        }
     }
 
     getInAirAttempts(): Attempt[] {
