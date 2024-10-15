@@ -81,17 +81,14 @@ test-gas:
 	forge test --gas-report
 .PHONY: test-gas
 
+# Please, ensure that all Account Abstraction (AA) contracts are deployed before running the test-script.
 test-aa-gas:
 	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasIsolatedTxns --rpc-url $(RPC_LOCAL) --isolate --flamechart
-	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasIsolatedTxns.svg ./src/scripts/isolatedTransactions.svg
+	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasIsolatedTxns.svg ./src/scripts/flameCharts/isolatedTransactions.svg
 	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasForSameUserOpTwice --rpc-url $(RPC_LOCAL) --isolate --flamechart
-	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasForSameUserOpTwice.svg ./src/scripts/sameUserOp.svg
+	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasForSameUserOpTwice.svg ./src/scripts/flameCharts/sameUserOp.svg
 	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasForDifferentSenders --rpc-url $(RPC_LOCAL) --isolate --flamechart
-	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasForDifferentSenders.svg ./src/scripts/differentSenders.svg
-.PHONY: test-aa-gas
-
-test-aa-gasv:
-	forge test -vvvv --match-contract GasEstimator --rpc-url $(RPC_$(CONFIG)) --isolate
+	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasForDifferentSenders.svg ./src/scripts/flameCharts/differentSenders.svg
 .PHONY: test-aa-gas
 
 test-fork:

@@ -7,6 +7,7 @@ import {console} from "forge-std/Script.sol";
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.sol";
 
+import {GasMeasurementHelper} from "./utils/gasMeasurementHelper.sol";
 import {UserOpLib} from "./UserOpLib.sol";
 import {ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
 import {HappyPaymaster} from "../HappyPaymaster.sol";
@@ -22,7 +23,7 @@ contract GasEstimator is Test {
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 
     IPaymaster private happyPaymaster;
-    GasMeasurementHelper private gasHelper;
+    GasMeasurementHelper private gasMeasurementHelper;
 
     function setUp() public {
         if (ENTRYPOINT_V7.code.length == 0) {
@@ -33,7 +34,7 @@ contract GasEstimator is Test {
         address[] memory allowedBundlers = new address[](0);
         happyPaymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(ENTRYPOINT_V7, allowedBundlers);
 
-        gasHelper = new GasMeasurementHelper();
+        gasMeasurementHelper = new GasMeasurementHelper();
     }
 
     function testEstimatePaymasterValidateUserOpGasIsolatedTxns() public {
@@ -76,7 +77,9 @@ contract GasEstimator is Test {
         userOps[0] = userOp1;
         userOps[1] = userOp2;
 
-        uint256[] memory gasUsed = gasHelper.measureValidatePaymasterUserOpGas(happyPaymaster, userOps);
+        uint256[] memory gasUsed = gasMeasurementHelper.measureValidatePaymasterUserOpGas(
+            happyPaymaster, userOps, ENTRYPOINT_V7, DUMMY_REQUIRED_PREFUND
+        );
         console.log("Gas used for initial userOp (storage initialization): %d gas", gasUsed[0]);
         console.log("Gas used for validating same userOp again (warm storage access): %d gas", gasUsed[1]);
     }
@@ -92,7 +95,9 @@ contract GasEstimator is Test {
         userOps[0] = userOp1;
         userOps[1] = userOp2;
 
-        uint256[] memory gasUsed = gasHelper.measureValidatePaymasterUserOpGas(happyPaymaster, userOps);
+        uint256[] memory gasUsed = gasMeasurementHelper.measureValidatePaymasterUserOpGas(
+            happyPaymaster, userOps, ENTRYPOINT_V7, DUMMY_REQUIRED_PREFUND
+        );
         console.log("Gas used for initial userOp (storage initialization): %d gas", gasUsed[0]);
         console.log("Gas used for validating userOp with different sender: %d gas", gasUsed[1]);
     }
@@ -128,31 +133,5 @@ contract GasEstimator is Test {
                 hex"7cfc78c01ec5ea50208d14fb1ee865569e015da08c27807575d70bf66041ffe335fe5e4e0dbcce07fddf357e4584b9e6de77ca13806d2d715ade184ba4bc15fc1b" // solhint-disable-line max-line-length
             )
         });
-    }
-}
-
-// Helper Contract for Gas Measurement for Warm Storage Access
-contract GasMeasurementHelper is Test {
-    using UserOpLib for PackedUserOperation;
-
-    function measureValidatePaymasterUserOpGas(IPaymaster happyPaymaster, PackedUserOperation[] memory userOps)
-        public
-        returns (uint256[] memory)
-    {
-        uint256[] memory gasUsedArray = new uint256[](userOps.length);
-
-        for (uint256 i = 0; i < userOps.length; i++) {
-            PackedUserOperation memory userOp = userOps[i];
-            bytes32 userOpHash = userOp.getEncodedUserOpHash();
-
-            vm.prank(ENTRYPOINT_V7);
-            uint256 gasBefore = gasleft();
-            happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
-            uint256 gasAfter = gasleft();
-
-            gasUsedArray[i] = gasBefore - gasAfter;
-        }
-
-        return gasUsedArray;
     }
 }
