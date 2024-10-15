@@ -8,41 +8,41 @@ type PortUnion = SharedWorker["port"] | Worker
 export class HappyClient {
     readonly port: PortUnion
 
-    #callbacks = new Map<string, (payload: RpcPayload) => void>()
+    private callbacks = new Map<string, (payload: RpcPayload) => void>()
     // biome-ignore lint/suspicious/noExplicitAny: its a generic callback in use, type not needed here
-    #messageCallbacks: MessageCallback<any>[] = []
+    private messageCallbacks: MessageCallback<any>[] = []
 
     constructor(worker: WorkerUnion) {
         this.port = "port" in worker ? worker.port : worker
         //
-        this.#heartbeat()
+        this.heartbeat()
 
-        this.port.onmessage = this.#handleMessage.bind(this)
+        this.port.onmessage = this.handleMessage.bind(this)
     }
 
-    #heartbeat() {
+    private heartbeat() {
         // 'keep-alive' ping so the worker knows we are still connected
         setInterval(() => this.port.postMessage(makePingPayload()), 500)
     }
 
-    #handleMessage = (event: MessageEvent) => {
+    private handleMessage = (event: MessageEvent) => {
         const payload = parsePayload(event.data)
         // all unsupported calls will be silently dropped
         if (!payload) return
 
         switch (payload.command) {
             case "rpc": {
-                const callback = this.#callbacks.get(payload.data.id)
+                const callback = this.callbacks.get(payload.data.id)
                 if (!callback) return
 
                 callback(payload.data)
-                this.#callbacks.delete(payload.data.id)
+                this.callbacks.delete(payload.data.id)
                 break
             }
             case "broadcast": {
                 // 'allSettled' vs 'all' so any errors in app code don't propagate here.
                 // don't need to wait for the promises to resolve
-                void Promise.allSettled(this.#messageCallbacks.map((fn) => fn.apply(event, [payload.data])))
+                void Promise.allSettled(this.messageCallbacks.map((fn) => fn.apply(event, [payload.data])))
                 break
             }
             case "console": {
@@ -62,7 +62,7 @@ export class HappyClient {
             const id = crypto.randomUUID()
             const payload = makeRpcPayload(id, name, args)
             return new Promise((res, rej) => {
-                this.#callbacks.set(id, (payload) => {
+                this.callbacks.set(id, (payload) => {
                     const action = payload.isError ? rej : res
                     action(payload.args)
                 })
@@ -73,7 +73,7 @@ export class HappyClient {
 
     // exported client function
     addMessageListener<T>(fn: MessageCallback<T>) {
-        this.#messageCallbacks.push(fn)
+        this.messageCallbacks.push(fn)
     }
 
     // exported client function

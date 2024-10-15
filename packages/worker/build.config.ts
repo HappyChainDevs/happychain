@@ -6,7 +6,7 @@ export default defineConfig([
         checkExports: false,
         bunConfig: {
             entrypoints: ["./src/index.ts"],
-            sourcemap: "none",
+            sourcemap: "inline",
             target: "bun",
             external: ["mlly"],
         },
@@ -16,7 +16,7 @@ export default defineConfig([
         checkExports: false,
         bunConfig: {
             entrypoints: ["./src/runtime/index.ts"],
-            sourcemap: "none",
+            sourcemap: "inline",
         },
     },
 ]) as Config
