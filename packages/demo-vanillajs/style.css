@@ -4,8 +4,6 @@
 
 /* Custom Connect Badge Styling */
 connect-button {
-    @apply fixed left-0 top-0;
-
     .happychain-badge {
         @apply flex items-center justify-center;
         & > span {

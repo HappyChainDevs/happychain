@@ -6,24 +6,26 @@
   <link rel="icon" type="image/png" href="/happychain.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HappyChain VanillaJS SDK Demo</title>
+  <link rel="stylesheet" href="style.css">
   <!-- Include via CDN script tag if not using NPM -->
   <!-- <script src="http://localhost:3000/index.umd.js"></script> -->
 </head>
 
 <body>
   <main
-    class="flex min-h-dvh w-full flex-col items-center gap-4 bg-[url('/francesco-ungaro-Wn8JoB8FP70-unsplash.jpg')] bg-cover p-4">
+    class="flex min-h-dvh w-full flex-col items-center gap-4 bg-sky-800 bg-[url('/francesco-ungaro-Wn8JoB8FP70-unsplash.jpg')] bg-cover p-4">
 
-    <h1 class="text-white text-4xl font-bold p-16">HappyChain + JS + Ethers</h1>
+    <h1 class="text-white text-4xl font-bold mt-20 sm:mt-0 sm:p-16 text-center">HappyChain + JS + Ethers</h1>
 
+    <!-- Persistent Badge from @happychain/ui -->
+    <connect-button disable-styles></connect-button>
+    
     <button id="connect-btn" type="button" class="rounded-lg bg-sky-300 p-2 shadow-xl">
       Connect
     </button>
 
-    <!-- Persistent Badge from @happychain/ui -->
-    <connect-button disable-styles></connect-button>
 
-    <div class="w-96 overflow-auto bg-gray-200 p-4">
+    <div class="max-w-96 md:max-w-screen-lg w-full overflow-auto bg-gray-200 p-4">
       <p class="text-lg font-bold">User Details</p>
       <pre id="user-dump"></pre>
     </div>
@@ -32,7 +34,7 @@
       Sign Message
     </button>
 
-    <div class="w-96 overflow-auto bg-gray-200 p-4">
+    <div class="max-w-96 md:max-w-screen-lg w-full overflow-auto bg-gray-200 p-4">
       <p class="text-lg font-bold">Results:</p>
       <pre id="signature-dump"></pre>
     </div>
@@ -40,7 +42,7 @@
     <button type="button" id="get-block-btn" class="rounded-lg bg-sky-300 p-2 shadow-xl">
       Get Block
     </button>
-    <div class="w-96 overflow-auto bg-gray-200 p-4">
+    <div class="max-w-96 md:max-w-screen-lg w-full overflow-auto bg-gray-200 p-4">
       <p class="text-lg font-bold">Results:</p>
       <pre id="block-dump"></pre>
     </div>
