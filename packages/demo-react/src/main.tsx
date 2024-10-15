@@ -5,8 +5,6 @@ import { HappyWalletProvider, chains, happyProvider } from "@happychain/react"
 
 import App from "./App.tsx"
 
-import "./index.css"
-
 /**
  * Console demo. to prompt for connection, or login, in the console try typing
  * await window.happyProvider.request({ method: 'eth_requestAccounts' })
