@@ -66,6 +66,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         const key = createUUID()
         const { promise, resolve, reject } = promiseWithResolvers<EIP1193RequestResult>()
         const requiresApproval = (await this.requiresUserApproval(args)) && (await this.requestExtraPermissions(args))
+
         // noinspection JSVoidFunctionReturnValueUsed
         const popup = requiresApproval
             ? this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, config.iframePath)

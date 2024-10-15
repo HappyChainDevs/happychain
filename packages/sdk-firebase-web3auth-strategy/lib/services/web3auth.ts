@@ -1,75 +1,44 @@
-import { tssLib } from "@toruslabs/tss-dkls-lib"
-import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider"
-import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from "@web3auth/mpc-core-kit"
+import SafeEventEmitter from "@metamask/safe-event-emitter"
+import type { JWTLoginParams } from "@web3auth/mpc-core-kit"
 import type { EIP1193Provider } from "viem"
-import { config } from "./config"
+import { addMessageListener, connect, disconnect, init3 as init, request } from "../workers/web3auth.sw"
 
-/***
- * Setup
+/**
+ * Web3Auth EIP1193 Provider. this proxies all requests to the shared worker
+ * and all events from the shared worker, back to be emitted again here
  */
-const web3AuthClientId = import.meta.env.VITE_WEB3AUTH_CLIENT_ID
+class Web3ProviderProxy extends SafeEventEmitter {
+    async request({ method, params }: { method: string; params?: unknown[] }) {
+        return await request({ method, params })
+    }
+}
 
-export const web3Auth = new Web3AuthMPCCoreKit({
-    web3AuthClientId,
-    web3AuthNetwork: config.web3AuthNetwork,
-    manualSync: true, // This is the recommended approach
-    tssLib: tssLib,
-    enableLogging: false,
-    storage: window.localStorage,
+export const web3EIP1193Provider = new Web3ProviderProxy() as EIP1193Provider
+
+// forward events from provider
+addMessageListener((n: unknown) => {
+    if (!(n && typeof n === "object" && "action" in n)) {
+        return
+    }
+
+    switch (n.action) {
+        case "connect":
+        case "disconnect":
+        case "chainChanged":
+        case "accountsChanged":
+            ;(web3EIP1193Provider as Web3ProviderProxy).emit(n.action, "data" in n ? n.data : undefined)
+            break
+    }
 })
 
-const ethereumSigningProvider = new EthereumSigningProvider({
-    config: {
-        skipLookupNetwork: true,
-        chainConfig: {
-            chainNamespace: config.web3AuthChainNamespace,
-            chainId: config.chainId,
-            rpcTarget: config.rpcUrls[0],
-            displayName: config.chainName,
-            blockExplorerUrl: config.blockExplorerUrls?.[0],
-            ticker: config.nativeCurrency.symbol,
-            tickerName: config.nativeCurrency.name,
-            decimals: config.nativeCurrency.decimals,
+export async function web3AuthInit() {
+    await init()
+}
 
-            wsTarget: undefined, // unsupported currently
-        },
-    },
-})
-ethereumSigningProvider.setupProvider(makeEthereumSigner(web3Auth))
-export const web3AuthEvmProvider = ethereumSigningProvider as EIP1193Provider
-
-let lastToken = ""
-export async function web3AuthConnect(jwt: JWTLoginParams): Promise<`0x${string}`[]> {
-    if (jwt.idToken !== lastToken) {
-        lastToken = jwt.idToken
-        await web3Auth.loginWithJWT(jwt)
-    }
-
-    if (web3Auth.status === COREKIT_STATUS.LOGGED_IN) {
-        try {
-            await web3Auth.commitChanges() // Needed for new accounts
-        } catch {
-            // simple retry
-            await new Promise((resolve, _reject) => setTimeout(resolve, 3_000))
-            await web3Auth.commitChanges()
-        }
-    }
-
-    const addresses = await ethereumSigningProvider.request({
-        method: "eth_accounts",
-    })
-
-    if (
-        !addresses ||
-        !Array.isArray(addresses) ||
-        !addresses.every((a) => typeof a === "string" && a.startsWith("0x"))
-    ) {
-        throw new Error("[web3Auth] Failed to retrieve addresses")
-    }
-
-    return addresses as `0x${string}`[]
+export async function web3AuthConnect(jwt: JWTLoginParams) {
+    return await connect(jwt)
 }
 
 export async function web3AuthDisconnect() {
-    await web3Auth.logout()
+    return await disconnect()
 }

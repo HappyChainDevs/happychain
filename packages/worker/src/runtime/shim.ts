@@ -1,7 +1,6 @@
 /// <reference lib="WebWorker" />
 
-import type { ServerInterface } from "./interface"
-import type { MessageCallback } from "./types"
+import type { MessageCallback, ServerInterface } from "./types"
 
 /**
  * SharedWorkerShim

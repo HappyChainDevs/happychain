@@ -1,9 +1,14 @@
-import { web3Auth, web3AuthEvmProvider } from "./services/web3auth"
+import { googleLogo } from "./logos"
+import { FirebaseConnector } from "./services/FirebaseConnector"
+import { web3AuthInit, web3EIP1193Provider } from "./services/web3auth"
 
-export async function init() {
-    return await web3Auth.init()
+export { FirebaseConnector }
+export const configs = {
+    google: {
+        name: "Google",
+        icon: googleLogo,
+    },
 }
 
-export const defaultProvider = web3AuthEvmProvider
-
-export { useFirebaseWeb3AuthStrategy } from "./hooks/useFirebaseWeb3AuthStrategy"
+export const init = web3AuthInit
+export const defaultProvider = web3EIP1193Provider
