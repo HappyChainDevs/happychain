@@ -1,7 +1,7 @@
 name: Deploy ERC-4337 bundler
 
 on:
-  pull_request:
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
