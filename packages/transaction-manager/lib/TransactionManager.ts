@@ -1,3 +1,9 @@
+import {
+    type SafeViemPublicClient,
+    type SafeViemWalletClient,
+    convertToSafeViemPublicClient,
+    convertToSafeViemWalletClient,
+} from "@happychain/common"
 import type { EntityManager } from "@mikro-orm/core"
 import { type Abi, type Account, type Chain, type Transport, createPublicClient, createWalletClient } from "viem"
 import { ABIManager } from "./AbiManager.js"
@@ -11,7 +17,6 @@ import { TransactionSubmitter } from "./TransactionSubmitter.js"
 import { TxMonitor } from "./TxMonitor.js"
 import { dbDriver } from "./db.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
-import type { ViemPublicClient, ViemWalletClient } from "./viemTypes.js"
 
 export type TransactionManagerConfig = {
     /** The transport protocol used for the client. See {@link Transport} from viem for more details. */
@@ -68,8 +73,8 @@ export type TransactionOriginator = () => Transaction[]
 export class TransactionManager {
     public readonly collectors: TransactionOriginator[]
     public readonly blockMonitor: BlockMonitor
-    public readonly viemWallet: ViemWalletClient
-    public readonly viemClient: ViemPublicClient
+    public readonly viemWallet: SafeViemWalletClient
+    public readonly viemClient: SafeViemPublicClient
     public readonly nonceManager: NonceManager
     public readonly gasPriceOracle: GasPriceOracle
     public readonly abiManager: ABIManager
@@ -88,15 +93,21 @@ export class TransactionManager {
 
     constructor(_config: TransactionManagerConfig) {
         this.collectors = []
-        this.viemWallet = createWalletClient({
-            account: _config.account,
-            transport: _config.transport,
-            chain: _config.chain,
-        })
-        this.viemClient = createPublicClient({
-            transport: _config.transport,
-            chain: _config.chain,
-        })
+        this.viemWallet = convertToSafeViemWalletClient(
+            createWalletClient({
+                account: _config.account,
+                transport: _config.transport,
+                chain: _config.chain,
+            }),
+        )
+
+        this.viemClient = convertToSafeViemPublicClient(
+            createPublicClient({
+                transport: _config.transport,
+                chain: _config.chain,
+            }),
+        )
+
         this.nonceManager = new NonceManager(this)
         this.gasPriceOracle = new GasPriceOracle(this)
         this.blockMonitor = new BlockMonitor(this)
@@ -130,6 +141,9 @@ export class TransactionManager {
     }
 
     public async start(): Promise<void> {
-        await Promise.all([this.nonceManager.start(), this.transactionRepository.start(), this.gasPriceOracle.start()])
+        await Promise.all([this.transactionRepository.start(), this.gasPriceOracle.start()])
+
+        // NonceManager depends on TransactionRepository to start
+        await this.nonceManager.start()
     }
 }

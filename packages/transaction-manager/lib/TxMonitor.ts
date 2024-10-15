@@ -1,10 +1,12 @@
-import { bigIntMax } from "@happychain/common"
-import type { TransactionReceipt } from "viem"
+import { bigIntMax, promiseWithResolvers, unknownToError } from "@happychain/common"
+import { type Result, ResultAsync, err, ok } from "neverthrow"
+import { type GetTransactionReceiptErrorType, type TransactionReceipt, TransactionReceiptNotFoundError } from "viem"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { type Attempt, AttemptType, type Transaction, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
-import type { DebugTransactionSchema } from "./viemTypes.js"
+
+type AttemptWithReceipt = { attempt: Attempt; receipt: TransactionReceipt }
 
 export class TxMonitor {
     private readonly transactionManager: TransactionManager
@@ -20,40 +22,69 @@ export class TxMonitor {
         const promises = transactions.map(async (transaction) => {
             const inAirAttempts = transaction.getInAirAttempts()
 
-            const promises: Promise<{ attempt: Attempt; receipt: TransactionReceipt } | null>[] = inAirAttempts.map(
-                async (attempt) => {
-                    try {
-                        const receipt = await this.transactionManager.viemClient.getTransactionReceipt({
+            // This could happen if, on the first try, the attempt to submit the transaction fails before flush
+            if (inAirAttempts.length === 0) {
+                return this.handleNotAttemptedTransaction(transaction, block)
+            }
+
+            let isResolved = false
+            const { promise: receiptPromise, resolve, reject: _reject } = promiseWithResolvers<AttemptWithReceipt>()
+
+            const promises: Promise<Result<AttemptWithReceipt | null, GetTransactionReceiptErrorType>>[] =
+                inAirAttempts.map(
+                    async (attempt): Promise<Result<AttemptWithReceipt | null, GetTransactionReceiptErrorType>> => {
+                        const receiptResult = await this.transactionManager.viemClient.safeGetTransactionReceipt({
                             hash: attempt.hash,
                         })
-                        return { attempt, receipt }
-                    } catch (_error) {
-                        return null
-                    }
-                },
-            )
 
-            // Select the attempt that was included onchain, or undefined if none was.
-            const attemptWithReceipt = (await Promise.all(promises)).filter((result) => result).pop()
+                        if (receiptResult.isOk()) {
+                            const attemptWithReceipt = { attempt, receipt: receiptResult.value }
+                            if (!isResolved) {
+                                isResolved = true
+                                resolve(attemptWithReceipt)
+                            }
+                            return ok(attemptWithReceipt)
+                        }
+                        if (receiptResult.error instanceof TransactionReceiptNotFoundError) {
+                            return ok(null)
+                        }
+                        return err(receiptResult.error)
+                    },
+                )
+            const attemptOrResults = await Promise.race([receiptPromise, Promise.all(promises)])
 
-            if (!attemptWithReceipt) {
+            if (Array.isArray(attemptOrResults)) {
+                /*
+                    If there are any errors, then we should return because there is a risk 
+                    that the transaction was executed and we don’t know
+                */
+                if (attemptOrResults.some((v) => v.isErr())) {
+                    console.error(`Failed to get transaction receipt for transaction ${transaction.intentId}`)
+                    return
+                }
+
                 return await (transaction.isExpired(block, this.transactionManager.blockTime)
                     ? this.handleExpiredTransaction(transaction)
                     : this.handleStuckTransaction(transaction))
             }
 
-            const { attempt, receipt } = attemptWithReceipt
+            const { attempt, receipt } = attemptOrResults
 
             if (receipt.status === "success") {
                 if (attempt.type === AttemptType.Cancellation) {
                     console.error(`Transaction ${transaction.intentId} was cancelled`)
                     return transaction.changeStatus(TransactionStatus.Cancelled)
                 }
-
                 return transaction.changeStatus(TransactionStatus.Success)
             }
 
-            if (!this.transactionManager.rpcAllowDebug) {
+            const traceResult = this.transactionManager.rpcAllowDebug
+                ? await this.transactionManager.viemClient.safeDebugTransaction(attempt.hash, {
+                      tracer: "callTracer",
+                  })
+                : undefined
+
+            if (!traceResult || traceResult.isErr()) {
                 if (receipt.gasUsed === attempt.gas) {
                     return await this.handleOutOfGasTransaction(transaction)
                 }
@@ -61,19 +92,26 @@ export class TxMonitor {
                 return transaction.changeStatus(TransactionStatus.Failed)
             }
 
-            const trace = await this.transactionManager.viemClient.request<DebugTransactionSchema>({
-                method: "debug_traceTransaction",
-                params: [attempt.hash, { tracer: "callTracer" }],
-            })
+            const trace = traceResult.value
+
             if (trace.revertReason === "Out of Gas") {
                 await this.handleOutOfGasTransaction(transaction)
             } else {
                 console.error(`Transaction ${transaction.intentId} failed with reason: ${trace.revertReason}`)
-                transaction.changeStatus(TransactionStatus.Failed)
+                return transaction.changeStatus(TransactionStatus.Failed)
             }
         })
 
         await Promise.all(promises)
+
+        const result = await ResultAsync.fromPromise(
+            this.transactionManager.transactionRepository.flush(),
+            unknownToError,
+        )
+
+        if (result.isErr()) {
+            console.error("Error flushing transactions in onNewBlock")
+        }
     }
 
     private calcReplacementFee(
@@ -143,16 +181,42 @@ export class TxMonitor {
         })
     }
 
-    private async handleOutOfGasTransaction(transaction: Transaction): Promise<void> {
+    private async handleNotAttemptedTransaction(transaction: Transaction, block: LatestBlock): Promise<void> {
+        if (transaction.isExpired(block, this.transactionManager.blockTime)) {
+            return transaction.changeStatus(TransactionStatus.Expired)
+        }
+
         const nonce = this.transactionManager.nonceManager.requestNonce()
+
         const { maxFeePerGas: marketMaxFeePerGas, maxPriorityFeePerGas: marketMaxPriorityFeePerGas } =
             this.transactionManager.gasPriceOracle.suggestGasForNextBlock()
 
-        await this.transactionManager.transactionSubmitter.attemptSubmission(transaction, {
+        const submissionResult = await this.transactionManager.transactionSubmitter.attemptSubmission(transaction, {
             type: AttemptType.Original,
             nonce,
             maxFeePerGas: marketMaxFeePerGas,
             maxPriorityFeePerGas: marketMaxPriorityFeePerGas,
         })
+
+        if (submissionResult.isErr() && !submissionResult.error.flushed) {
+            this.transactionManager.nonceManager.returnNonce(nonce)
+        }
+    }
+
+    private async handleOutOfGasTransaction(transaction: Transaction): Promise<void> {
+        const nonce = this.transactionManager.nonceManager.requestNonce()
+        const { maxFeePerGas: marketMaxFeePerGas, maxPriorityFeePerGas: marketMaxPriorityFeePerGas } =
+            this.transactionManager.gasPriceOracle.suggestGasForNextBlock()
+
+        const submissionResult = await this.transactionManager.transactionSubmitter.attemptSubmission(transaction, {
+            type: AttemptType.Original,
+            nonce,
+            maxFeePerGas: marketMaxFeePerGas,
+            maxPriorityFeePerGas: marketMaxPriorityFeePerGas,
+        })
+
+        if (submissionResult.isErr() && !submissionResult.error.flushed) {
+            this.transactionManager.nonceManager.returnNonce(nonce)
+        }
     }
 }

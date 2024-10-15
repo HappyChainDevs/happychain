@@ -21,3 +21,9 @@ export { onlyUnique } from "./utils/streams.js"
 export { promiseWithResolvers } from "./utils/promises.js"
 
 export type { PromiseWithResolvers, ResolveInputType, ResolveType, RejectType } from "./utils/promises.js"
+
+export { unknownToError } from "./utils/error.js"
+
+export type { SafeViemWalletClient, SafeViemPublicClient } from "./utils/safeViemClients.js"
+
+export { convertToSafeViemWalletClient, convertToSafeViemPublicClient } from "./utils/safeViemClients.js"

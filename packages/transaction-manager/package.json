@@ -7,7 +7,7 @@
     "module": "dist/lib/index.js",
     "types": "dist/lib/index.d.ts",
     "mikro-orm": {
-        "configPaths": ["./dist/mikro-orm.config.js"]
+        "configPaths": ["./dist/lib/mikro-orm.config.js"]
     },
     "devDependencies": {
         "@mikro-orm/cli": "^6.3.10",
@@ -24,6 +24,7 @@
         "@mikro-orm/better-sqlite": "^6.3.10",
         "@mikro-orm/core": "^6.3.10",
         "@mikro-orm/migrations": "^6.3.10",
-        "eventemitter3": "^5.0.1"
+        "eventemitter3": "^5.0.1",
+        "neverthrow": "^8.0.0"
     }
 }
