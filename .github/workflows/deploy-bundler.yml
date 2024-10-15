@@ -50,7 +50,8 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             chmod -R o+rX /home/deployer/happy-bundler
-            mv /home/deployer/happy-bundler /tmp/happy-bundler
+            rm -rf /tmp/happy-bundler
+            mv /home/deployer/happy-bundler /tmp
             sudo -u bundler bash -c '
               rm -rf /home/bundler/happy-bundler
               cp -r /tmp/happy-bundler /home/bundler/happy-bundler
