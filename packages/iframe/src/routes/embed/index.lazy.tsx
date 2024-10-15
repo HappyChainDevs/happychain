@@ -1,9 +1,9 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
 
-import ActionButtons from "../../components/interface/ActionButtons"
-import AppStatus from "../../components/interface/AppStatus"
-import HappyBalance from "../../components/interface/HappyBalance"
 import WalletContentInfo from "../../components/interface/WalletContentInfo"
+import ActionButtons from "../../components/interface/home/ActionButtons"
+import AppStatus from "../../components/interface/home/AppStatus"
+import HappyBalance from "../../components/interface/home/HappyBalance"
 
 export const Route = createLazyFileRoute("/embed/")({
     component: EmbedHome,

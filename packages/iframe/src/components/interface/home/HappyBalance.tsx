@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai"
 import { formatEther } from "viem"
 import { useBalance } from "wagmi"
-import { userAtom } from "../../state/user"
+import { userAtom } from "../../../state/user"
 
 const HappyBalance = () => {
     const user = useAtomValue(userAtom)
