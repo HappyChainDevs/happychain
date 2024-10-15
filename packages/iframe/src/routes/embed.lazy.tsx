@@ -8,11 +8,12 @@ import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
 import {
-    DialogConfirmSignOut,
-    DialogPermissions,
     SecondaryActionsMenu,
     TriggerSecondaryActionsMenu,
-} from "../components/interface/menu-secondary-actions"
+} from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
+import { DialogAllDappsWithPermissions } from "../components/interface/menu-secondary-actions/dapps-permissions/DialogAllDappsWithPermissions"
+import { DialogConfirmSignOut } from "../components/interface/menu-secondary-actions/sign-out/DialogConfirmSignOut"
+import { DialogDappDetailedPermissions } from "../components/interface/permissions/DialogDappDetailedPermissions"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
@@ -111,7 +112,12 @@ function Embed() {
                                 </>
                             )}
                         </div>
-                        {location.pathname === "/embed" && <DialogPermissions />}
+                        {location.pathname === "/embed" && (
+                            <>
+                                <DialogAllDappsWithPermissions />
+                                <DialogDappDetailedPermissions />
+                            </>
+                        )}
                     </div>
                 </div>
             </main>

@@ -1,7 +1,8 @@
 import { Menu } from "@ark-ui/react/menu"
-import { X as CloseIcon, DotsThreeVertical as MenuIcon } from "@phosphor-icons/react"
+import { CaretDown, CaretRight, CaretUp } from "@phosphor-icons/react"
 import { useAtom } from "jotai"
 import type { FC } from "react"
+import { recipeContent, recipePositioner } from "../../primitives/popover/variants"
 import { secondaryMenuState } from "./state"
 
 /**
@@ -20,7 +21,7 @@ const TriggerSecondaryActionsMenu: FC = () => {
                 })
             }
         >
-            {state.visibilityMenu ? <CloseIcon size="1.5em" /> : <MenuIcon size="1.5em" />}
+            {state.visibilityMenu ? <CaretUp size="1.25em" /> : <CaretDown size="1.25em" />}
         </button>
     )
 }
@@ -34,6 +35,7 @@ enum MenuActions {
  */
 const SecondaryActionsMenu: FC = () => {
     const [state, setState] = useAtom(secondaryMenuState)
+
     return (
         <Menu.Root
             open={state.visibilityMenu}
@@ -67,9 +69,24 @@ const SecondaryActionsMenu: FC = () => {
                 }
             }}
         >
-            <div className="flex justify-center absolute z-[99] bottom-0 start-0 h-full w-full">
-                <Menu.Content className="py-2 [&_[data-part=item]]:p-2 [&_[data-part=item]]:font-medium [&_[data-part=item][data-highlighted]]:bg-base-200 bg-base-100 text-sm text-neutral-11 min-h-fit h-full inset-0 pb-3 sm:pb-0 relative overflow-y-auto w-full [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
-                    <Menu.Item value={MenuActions.Permissions}>Permissions</Menu.Item>
+            <div
+                className={recipePositioner({
+                    originY: "bottom",
+                    mode: "modal",
+                })}
+            >
+                <Menu.Content
+                    className={recipeContent({
+                        scale: "default",
+                        intent: "default",
+                        animation: "modal",
+                        class: "py-2 sm:pb-0 [&_[data-part=item]]:inline-flex [&_[data-part=item]]:gap-2 [&_[data-part=item]]:items-center [&_[data-part=item]]:justify-between [&_[data-part=item]]:not([data-disabled])]:cursor-pointer &_[data-part=item][data-disabled]]:cursor-not-allowed [&_[data-part=item]]:p-2 [&_[data-part=item]]:font-medium [&_[data-part=item][data-highlighted]]:bg-base-200",
+                    })}
+                >
+                    <Menu.Item value={MenuActions.Permissions}>
+                        <span>Permissions</span>
+                        <CaretRight size="1em" />
+                    </Menu.Item>
                     <Menu.Item value={MenuActions.Disconnect}>Disconnect</Menu.Item>
                 </Menu.Content>
             </div>
