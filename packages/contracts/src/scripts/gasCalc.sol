@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {Script, console} from "forge-std/Script.sol";
+import {console} from "forge-std/Script.sol";
 
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.sol";
@@ -11,96 +11,93 @@ import {UserOpLib} from "./UserOpLib.sol";
 import {ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
 import {HappyPaymaster} from "../HappyPaymaster.sol";
 
+address constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
+uint256 constant DUMMY_REQUIRED_PREFUND = 1e18;
+
 /* solhint-disable no-console*/
-contract GasEstimator is Script, Test {
+contract GasEstimator is Test {
     using UserOpLib for PackedUserOperation;
 
     bytes32 public constant DEPLOYMENT_SALT = 0;
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
-    address public constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-    uint256 public constant DUMMY_REQUIRED_PREFUND = 1e18;
 
     IPaymaster private happyPaymaster;
+    GasMeasurementHelper private gasHelper;
 
     function setUp() public {
         if (ENTRYPOINT_V7.code.length == 0) {
-            (bool success, ) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE); // solhint-disable-line
+            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE); // solhint-disable-line
             require(success, "Failed to deploy EntryPointV7"); // solhint-disable-line
         }
 
         address[] memory allowedBundlers = new address[](0);
         happyPaymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(ENTRYPOINT_V7, allowedBundlers);
+
+        gasHelper = new GasMeasurementHelper();
     }
 
-    /// @notice Estimates gas for a single UserOp.
-    function testEstimateGasSingleUserOp() public {
-        PackedUserOperation memory userOp = _createSingleUserOp();
-        uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
-        console.log("Gas used for single UserOp: %d", gasUsed);
-    }
+    function testEstimatePaymasterValidateUserOpGasIsolatedTxns() public {
+        // Step 1: Gas cost when storage transitions from zero to non-zero (worst-case scenario)
+        PackedUserOperation memory userOp1 = _getUserOp();
+        uint256 gasUsedStep1 = _estimatePaymasterValidateUserOpGas(userOp1);
+        console.log("Gas used for initial userOp (storage initialization): %d gas", gasUsedStep1);
 
-    /// @notice Estimates gas when different UserOps are processed in sequence.
-    function testEstimateGasMultipleDifferentUserOps() public {
-        PackedUserOperation[] memory userOpsArray = _createMultipleUserOps();
-        uint256 totalGas = 0;
+        // Step 2: Gas cost for a normal UserOp (different sender) (storage has been initialized, but cold)
+        PackedUserOperation memory userOp2 = userOp1;
+        userOp2.sender = address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742);
+        uint256 gasUsedStep2 = _estimatePaymasterValidateUserOpGas(userOp2);
+        console.log("Gas used for normal userOp (storage initialized, but cold): %d gas", gasUsedStep2);
 
-        uint256 firstUserOpGas = _estimatePaymasterGasUsage(userOpsArray[0]);
-        console.log("Gas used for initial UserOp (UserOp 1): %d", firstUserOpGas);
+        // Step 3: Gas cost when validating the same UserOp again (warm storage access)
+        PackedUserOperation memory userOp3 = userOp2;
+        userOp3.nonce = userOp3.nonce + 1; // Increment nonce to simulate a new operation
+        uint256 gasUsedStep3 = _estimatePaymasterValidateUserOpGas(userOp3);
+        console.log("Gas used for same UserOp validated again (warm storage access): %d gas", gasUsedStep3);
 
-        for (uint256 i = 1; i < userOpsArray.length; i++) {
-            uint256 gasUsed = _estimatePaymasterGasUsage(userOpsArray[i]);
-            totalGas += gasUsed;
-            console.log("Gas used for subsequent UserOp %d: %d", i + 1, gasUsed);
-        }
-
-        uint256 numSubsequentUserOps = userOpsArray.length - 1;
-        console.log(
-            "Average gas used for subsequent UserOps (UserOps 2 to %d): %d",
-            userOpsArray.length,
-            totalGas / numSubsequentUserOps
-        );
-    }
-
-    /// @notice Estimates gas when different UserOps ƒorm the same sender are processed in sequence.
-    function testEstimateGasMultipleDifferentUserOpsSameSender() public {
-        PackedUserOperation[] memory userOpsArray = _createMultipleUserOps();
-        uint256 totalGas = 0;
-
-        for (uint256 i = 0; i < userOpsArray.length; i++) {
-            userOpsArray[i].sender = userOpsArray[0].sender;
-            uint256 gasUsed = _estimatePaymasterGasUsage(userOpsArray[i]);
-            totalGas += gasUsed;
-            console.log("Gas used for UserOp %d: %d", i + 1, gasUsed);
-        }
-        console.log("Average gas used for different UserOps: %d", totalGas / userOpsArray.length);
-    }
-
-    /// @notice Estimates gas for a UserOp with very large calldata (worst-case scenario).
-    function testEstimateGasLargeCalldata() public {
+        // Step 4: Gas cost for a UserOp with larger calldata (10 KB)
+        PackedUserOperation memory userOp4 = userOp1;
+        userOp4.sender = address(0x19aC95A5524Db39021ba2F10E4F65574DfED2743);
         bytes memory largeCalldata = new bytes(1024 * 10); // 10 KB
         for (uint256 i = 0; i < largeCalldata.length; i++) {
             largeCalldata[i] = bytes1(uint8(i));
         }
-
-        PackedUserOperation memory userOp = _createSingleUserOp();
-        userOp.callData = largeCalldata;
-
-        uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
-        console.log("Gas used for UserOp with large calldata: %d", gasUsed);
+        userOp4.callData = largeCalldata;
+        uint256 gasUsedStep4 = _estimatePaymasterValidateUserOpGas(userOp4);
+        console.log("Gas used for UserOp with large calldata (10 KB): %d gas", gasUsedStep4);
     }
 
-    /// @notice Estimates gas when the paymaster's validatePaymasterUserOp function reverts due to overusage.
-    function testEstimateGasPaymasterOverUseGasBudget() public {
-        PackedUserOperation memory userOp = _createSingleUserOp();
-        userOp.preVerificationGas = 100_000_000;
+    function testEstimatePaymasterValidateUserOpGasForSameUserOpTwice() public {
+        PackedUserOperation memory userOp1 = _getUserOp();
+        userOp1.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
+        PackedUserOperation memory userOp2 = userOp1;
+        userOp2.nonce = userOp1.nonce + 1; // Increment nonce to simulate a new operation
 
-        uint256 gasUsed = _estimatePaymasterGasUsage(userOp);
-        console.log("Gas used when exceeding gas budget: %d", gasUsed);
+        PackedUserOperation[] memory userOps = new PackedUserOperation[](2);
+        userOps[0] = userOp1;
+        userOps[1] = userOp2;
+
+        uint256[] memory gasUsed = gasHelper.measureValidatePaymasterUserOpGas(happyPaymaster, userOps);
+        console.log("Gas used for initial userOp (storage initialization): %d gas", gasUsed[0]);
+        console.log("Gas used for validating same userOp again (warm storage access): %d gas", gasUsed[1]);
     }
 
-    // Helper Functions
+    function testEstimatePaymasterValidateUserOpGasForDifferentSenders() public {
+        PackedUserOperation memory userOp1 = _getUserOp();
+        userOp1.sender = address(0x19aC95a5524Db39021ba2F10E4f65574dfEd2745);
+        PackedUserOperation memory userOp2 = userOp1;
+        userOp2.nonce = userOp1.nonce + 1; // Increment nonce to simulate a new operation
+        userOp2.sender = address(0x19aC95A5524DB39021Ba2f10e4f65574DFED2746);
 
-    function _estimatePaymasterGasUsage(PackedUserOperation memory userOp) internal returns (uint256) {
+        PackedUserOperation[] memory userOps = new PackedUserOperation[](2);
+        userOps[0] = userOp1;
+        userOps[1] = userOp2;
+
+        uint256[] memory gasUsed = gasHelper.measureValidatePaymasterUserOpGas(happyPaymaster, userOps);
+        console.log("Gas used for initial userOp (storage initialization): %d gas", gasUsed[0]);
+        console.log("Gas used for validating userOp with different sender: %d gas", gasUsed[1]);
+    }
+
+    function _estimatePaymasterValidateUserOpGas(PackedUserOperation memory userOp) internal returns (uint256) {
         bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
         vm.prank(ENTRYPOINT_V7);
@@ -111,13 +108,16 @@ contract GasEstimator is Script, Test {
         return gasBefore - gasAfter;
     }
 
-    function _createSingleUserOp() internal pure returns (PackedUserOperation memory) {
-        // Simple UserOp with minimal data
+    function _getUserOp() internal pure returns (PackedUserOperation memory) {
         return PackedUserOperation({
             sender: address(0x19AC95A5524dB39021bA2f10e4F65574dfed2741),
             nonce: 1709544157355333882523719095375585908392260257582749875196537894944636929,
-            initCode: "",
-            callData: "",
+            initCode: bytes(
+                hex"c5265d5d0000000000000000000000000c97547853926e209d9f3c3fd0b7bdf126d3bf860000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001243c3b752b01F7B2845C4c0cA860D5d60A1332769375d01F7AAD0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000014f39Fd6e51aad88F6F4ce6aB8827279cffFb922660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" // solhint-disable-line max-line-length
+            ),
+            callData: bytes(
+                hex"e9ae5c53000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000034613497A7883d2F76b9F397811F5F10c40c7a65c9000000000000000000000000000000000000000000000000002386f26fc10000000000000000000000000000" // solhint-disable-line max-line-length
+            ),
             accountGasLimits: bytes32(0x0000000000000000000000000002474700000000000000000000000000024f0b),
             preVerificationGas: 55378,
             gasFees: bytes32(0x0000000000000000000000003b9aca000000000000000000000000003b9deb7c),
@@ -129,90 +129,30 @@ contract GasEstimator is Script, Test {
             )
         });
     }
+}
 
-    function _createMultipleUserOps() internal pure returns (PackedUserOperation[] memory) {
-        PackedUserOperation[] memory userOpsArray = new PackedUserOperation[](5);
+// Helper Contract for Gas Measurement for Warm Storage Access
+contract GasMeasurementHelper is Test {
+    using UserOpLib for PackedUserOperation;
 
-        userOpsArray[0] = PackedUserOperation({
-            sender: address(0x19AC95A5524dB39021bA2f10e4F65574dfed2741),
-            nonce: 1709544157355333882523719095375585908392260257582749875196537894944636929,
-            initCode: "",
-            callData: "",
-            accountGasLimits: bytes32(0x0000000000000000000000000002474700000000000000000000000000024f0b),
-            preVerificationGas: 55378,
-            gasFees: bytes32(0x0000000000000000000000003b9aca000000000000000000000000003b9deb7c),
-            paymasterAndData: bytes(
-                hex"a33009b1552a751929b7e240aaa62b2640782fbc0000000000000000000000000000bbb800000000000000000000000000000001" // solhint-disable-line max-line-length
-            ),
-            signature: bytes(
-                hex"7cfc78c01ec5ea50208d14fb1ee865569e015da08c27807575d70bf66041ffe335fe5e4e0dbcce07fddf357e4584b9e6de77ca13806d2d715ade184ba4bc15fc1b" // solhint-disable-line max-line-length
-            )
-        });
+    function measureValidatePaymasterUserOpGas(IPaymaster happyPaymaster, PackedUserOperation[] memory userOps)
+        public
+        returns (uint256[] memory)
+    {
+        uint256[] memory gasUsedArray = new uint256[](userOps.length);
 
-        userOpsArray[1] = PackedUserOperation({
-            sender: address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742),
-            nonce: 1,
-            initCode: bytes(
-                hex"c5265d5d0000000000000000000000000c97547853926e209d9f3c3fd0b7bdf126d3bf860000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001243c3b752b01F7B2845C4c0cA860D5d60A1332769375d01F7AAD0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000014f39Fd6e51aad88F6F4ce6aB8827279cffFb922660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" // solhint-disable-line max-line-length
-            ),
-            callData: "",
-            accountGasLimits: bytes32(0x0000000000000000000000000001e84800000000000000000000000000030d40),
-            preVerificationGas: 50000,
-            gasFees: bytes32(0x00000000000000000000000004a817c800000000000000000000000004a817c8),
-            paymasterAndData: bytes(
-                hex"a33009b1552a751929b7e240aaa62b2640782fbc0000000000000000000000000000bbb800000000000000000000000000000002" // solhint-disable-line max-line-length
-            ),
-            signature: bytes(hex"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef")
-        });
+        for (uint256 i = 0; i < userOps.length; i++) {
+            PackedUserOperation memory userOp = userOps[i];
+            bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
-        userOpsArray[2] = PackedUserOperation({
-            sender: address(0x19aC95A5524Db39021ba2F10E4F65574DfED2743),
-            nonce: 2,
-            initCode: "",
-            callData: bytes(
-                hex"e9ae5c53000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000034613497A7883d2F76b9F397811F5F10c40c7a65c9000000000000000000000000000000000000000000000000002386f26fc10000000000000000000000000000" // solhint-disable-line max-line-length
-            ),
-            accountGasLimits: bytes32(0x0000000000000000000000000002dc6c000000000000000000000000000493e0),
-            preVerificationGas: 60000,
-            gasFees: bytes32(0x000000000000000000000000059682f0000000000000000000000000059682f0),
-            paymasterAndData: bytes(
-                hex"a33009b1552a751929b7e240aaa62b2640782fbc0000000000000000000000000000bbb800000000000000000000000000000001" // solhint-disable-line max-line-length
-            ),
-            signature: bytes(hex"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef")
-        });
+            vm.prank(ENTRYPOINT_V7);
+            uint256 gasBefore = gasleft();
+            happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
+            uint256 gasAfter = gasleft();
 
-        userOpsArray[3] = PackedUserOperation({
-            sender: address(0x19AC95a5524db39021ba2f10e4f65574DfED2744),
-            nonce: 3,
-            initCode: bytes(
-                hex"c5265d5d0000000000000000000000000c97547853926e209d9f3c3fd0b7bdf126d3bf860000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001243c3b752b01F7B2845C4c0cA860D5d60A1332769375d01F7AAD0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000014f39Fd6e51aad88F6F4ce6aB8827279cffFb922660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" // solhint-disable-line max-line-length
-            ),
-            callData: bytes(
-                hex"e9ae5c53000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000034613497A7883d2F76b9F397811F5F10c40c7a65c9000000000000000000000000000000000000000000000000002386f26fc10000000000000000000000000000" // solhint-disable-line max-line-length
-            ),
-            accountGasLimits: bytes32(0x0000000000000000000000000003d090000000000000000000000000005dc0aa),
-            preVerificationGas: 70000,
-            gasFees: bytes32(0x00000000000000000000000006fc23ac00000000000000000000000006fc23ac),
-            paymasterAndData: bytes(
-                hex"0badc0de0badc0de0badc0de0badc0de0badc0de0000000000000000000000000009c40000000000000000000000000000000401" // solhint-disable-line max-line-length
-            ),
-            signature: bytes(hex"fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210")
-        });
+            gasUsedArray[i] = gasBefore - gasAfter;
+        }
 
-        userOpsArray[4] = PackedUserOperation({
-            sender: address(0x19aC95a5524Db39021ba2F10E4f65574dfEd2745),
-            nonce: 4,
-            initCode: "",
-            callData: "",
-            accountGasLimits: bytes32(0x0000000000000000000000000004c4b40000000000000000000000000007a120),
-            preVerificationGas: 80000,
-            gasFees: bytes32(0x00000000000000000000000007a120000000000000000000000000007a120000),
-            paymasterAndData: bytes(
-                hex"baddcafebaddcafebaddcafebaddcafebaddcafe000000000000000000000000000bb80000000000000000000000000000000502" // solhint-disable-line max-line-length
-            ),
-            signature: bytes(hex"cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe")
-        });
-
-        return userOpsArray;
+        return gasUsedArray;
     }
 }

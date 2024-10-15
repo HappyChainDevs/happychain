@@ -82,10 +82,12 @@ test-gas:
 .PHONY: test-gas
 
 test-aa-gas:
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_$(CONFIG)) --isolate
-	make deploy-aa
-	make save-deployment DEPLOY_SCRIPT=DeployAA.s.sol DEPLOYMENT_NAME=anvil/testing CONFIG=LOCAL
-	make aa-demo
+	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasIsolatedTxns --rpc-url $(RPC_LOCAL) --isolate --flamechart
+	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasIsolatedTxns.svg ./src/scripts/isolatedTransactions.svg
+	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasForSameUserOpTwice --rpc-url $(RPC_LOCAL) --isolate --flamechart
+	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasForSameUserOpTwice.svg ./src/scripts/sameUserOp.svg
+	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasForDifferentSenders --rpc-url $(RPC_LOCAL) --isolate --flamechart
+	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasForDifferentSenders.svg ./src/scripts/differentSenders.svg
 .PHONY: test-aa-gas
 
 test-aa-gasv:
