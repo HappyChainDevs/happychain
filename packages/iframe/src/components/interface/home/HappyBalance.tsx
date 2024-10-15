@@ -1,16 +1,19 @@
-import { CircleNotch } from "@phosphor-icons/react"
+import { useAtomValue } from "jotai"
 import { formatEther } from "viem"
+import { userAtom } from "../../state/user"
+import { useBalance } from "wagmi"
 
-interface HappyBalanceProps {
-    balance: bigint | undefined
-}
+const HappyBalance = () => {
+    const user = useAtomValue(userAtom)
 
-const HappyBalance = ({ balance }: HappyBalanceProps) => {
+    const { data: balance } = useBalance({ address: user?.address, query: { refetchInterval: 10000 } })
+
+    // if user is undefined, it displays a loading skeleton
     const truncatedBalance = balance ? (
-        (Math.floor(Number.parseFloat(formatEther(balance)) * 1000) / 1000).toString()
+        (Math.floor(Number.parseFloat(formatEther(balance.value)) * 1000) / 1000).toString()
     ) : (
-        <div className="animate-spin">
-            <CircleNotch />
+        <div className="animate-pulse">
+            <div className="rounded-full bg-slate-500 h-4 w-10" />
         </div>
     )
 
