@@ -50,7 +50,6 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             chmod -R o+rX /home/deployer/happy-bundler
-            rm -rf /tmp/happy-bundler
             mv /home/deployer/happy-bundler /tmp
             sudo -u bundler bash -c '
               rm -rf /home/bundler/happy-bundler
@@ -63,3 +62,4 @@ jobs:
                   --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} \
                   --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }}
             '
+            rm -rf /tmp/happy-bundler
