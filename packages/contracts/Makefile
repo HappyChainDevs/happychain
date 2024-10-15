@@ -83,12 +83,16 @@ test-gas:
 
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the test-script.
 test-aa-gas:
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate
+.PHONY: test-aa-gas
+
+test-aa-gas-flamechart:
 	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasIsolatedTxns --rpc-url $(RPC_LOCAL) --isolate --flamechart
 	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasIsolatedTxns.svg ./src/scripts/flameCharts/isolatedTransactions.svg
-	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasForSameUserOpTwice --rpc-url $(RPC_LOCAL) --isolate --flamechart
-	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasForSameUserOpTwice.svg ./src/scripts/flameCharts/sameUserOp.svg
-	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasForDifferentSenders --rpc-url $(RPC_LOCAL) --isolate --flamechart
-	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasForDifferentSenders.svg ./src/scripts/flameCharts/differentSenders.svg
+	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasWarmStorageSameUser --rpc-url $(RPC_LOCAL) --isolate --flamechart
+	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasWarmStorageSameUser.svg ./src/scripts/flameCharts/sameUserOp.svg
+	forge test -vv --match-test testEstimatePaymasterValidateUserOpGasWarmStorageDifferentUsers --rpc-url $(RPC_LOCAL) --isolate --flamechart
+	mv cache/flamechart_GasEstimator_testEstimatePaymasterValidateUserOpGasWarmStorageDifferentUsers.svg ./src/scripts/flameCharts/differentSenders.svg
 .PHONY: test-aa-gas
 
 test-fork:
