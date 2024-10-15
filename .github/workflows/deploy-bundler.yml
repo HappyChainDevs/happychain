@@ -1,7 +1,7 @@
 name: Deploy ERC-4337 bundler
 
 on:
-  workflow_dispatch:
+  pull_request:
 
 env:
   REGISTRY: ghcr.io
@@ -49,8 +49,11 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            sudo /usr/local/bin/copy-to-bundler.sh
+            chmod -R o+rX /home/deployer/happy-bundler
+            mv /home/deployer/happy-bundler /tmp/happy-bundler
             sudo -u bundler bash -c '
+              rm -rf /home/bundler/happy-bundler
+              mv /tmp/happy-bundler /home/bundler/happy-bundler
               cd /home/bundler/happy-bundler
               pm2 restart ${{ env.PM2_PROCESS_NAME }} || pm2 start ./alto/src/lib/cli/alto.js -- run \
                   --config ./configs/config.happySepolia.json \
