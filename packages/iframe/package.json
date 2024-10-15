@@ -25,6 +25,7 @@
     "devDependencies": {
         "@happychain/configs": "workspace:^",
         "@happychain/testing": "workspace:^",
+        "@happychain/worker": "workspace:^",
         "@tanstack/router-devtools": "^1.51.0",
         "@tanstack/router-plugin": "^1.51.0",
         "@testing-library/react": "^16.0.1",
