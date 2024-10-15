@@ -40,10 +40,7 @@ export function getDappPermissions({
     origin = getDappOrigin(),
     permissions = store.get(permissionsAtom),
 }: GetDappPermissionOptions = {}): AppPermissions {
-    if (!user) {
-        logger.warn("No user found, returning empty permissions.")
-        return {}
-    }
+    if (!user) return {}
 
     const permissionLookupResult = permissions[user.address]?.[origin]
 
@@ -80,8 +77,8 @@ export function getDappPermissions({
 function setDappPermissions(permissions: AppPermissions): void {
     const user = getUser()
     if (!user) {
-        // This should never happen and requires investigatin if it does!
-        console.warn("No user found, not setting permissions.")
+        // This should never happen and requires investigating if it does!
+        logger.warn("No user found, not setting permissions.")
         return
     }
 
@@ -96,6 +93,8 @@ function setDappPermissions(permissions: AppPermissions): void {
         // if not all permissions supplied are scoped to the
         // same origin, we will ignore the request as its invalid
         if (!values.every((a) => a.invoker === values[0].invoker)) {
+            // this should never happen!
+            console.warn("Invalid permission update requested, not setting permissions.")
             return prev
         }
 
@@ -163,7 +162,11 @@ export function grantPermissions(
  */
 export function revokePermissions(
     permissions: PermissionsSpec,
-    dappPermissions: AppPermissions = getDappPermissions(),
+    // biome-ignore format: readability
+    {
+        origin = getDappOrigin(),
+        dappPermissions = getDappPermissions({ origin }),
+    }: PermissionAccessOptions = {},
 ): void {
     for (const [name] of getPermissionArray(permissions)) {
         delete dappPermissions[name]
@@ -201,7 +204,13 @@ export function hasPermissions(
 /**
  * Return all of the user's permissions.
  */
-export function getAllPermissions(dappPermissions: AppPermissions = getDappPermissions()): WalletPermission[] {
+export function getAllPermissions(
+    // biome-ignore format: readability
+    {
+        origin = getDappOrigin(),
+        dappPermissions = getDappPermissions({ origin }),
+    }: PermissionAccessOptions = {},
+): WalletPermission[] {
     return Array.from(Object.values(dappPermissions))
 }
 
@@ -213,7 +222,11 @@ export function getAllPermissions(dappPermissions: AppPermissions = getDappPermi
  */
 export function getPermissions(
     permissions: PermissionsSpec,
-    dappPermissions: AppPermissions = getDappPermissions(),
+    // biome-ignore format: readability
+    {
+        origin = getDappOrigin(),
+        dappPermissions = getDappPermissions({ origin }),
+    }: PermissionAccessOptions = {},
 ): WalletPermission[] {
     return getPermissionArray(permissions)
         .map(([name]) => dappPermissions[name])

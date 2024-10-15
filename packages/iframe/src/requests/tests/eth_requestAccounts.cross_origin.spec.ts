@@ -1,4 +1,4 @@
-import { type UUID, createUUID } from "@happychain/common"
+import { type HTTPString, type UUID, createUUID } from "@happychain/common"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
@@ -10,21 +10,26 @@ import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../permissionless"
 
+const originDapp = "http://localhost:1234"
+const originIframe = "http://localhost:4321"
 vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => "http://localhost:5173",
-    getIframeOrigin: () => "http://localhost:5160",
+    getDappOrigin: () => originDapp,
+    getIframeOrigin: () => originIframe,
 }))
+
 const parentID = createUUID()
 const iframeID = createUUID()
 vi.mock("../utils", (importUtils) =>
     importUtils<typeof import("../utils")>().then((utils) => ({
         ...utils,
-        isAllowedSourceId: (sourceId: UUID) => sourceId === parentID || sourceId === iframeID,
-        isParentId: (sourceId: UUID) => sourceId === parentID,
-        isIframeId: (sourceId: UUID) => sourceId === iframeID,
+        originForSourceID(sourceId: UUID): HTTPString | undefined {
+            if (sourceId === parentID) return originDapp
+            if (sourceId === iframeID) return originIframe
+            return undefined
+        },
     })),
 )
-describe("#publicClient #eth_requestAccounts #cross_origin", () => {
+describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
     describe("disconnected user", () => {
         beforeEach(() => {
             clearPermissions()
