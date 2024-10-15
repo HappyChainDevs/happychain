@@ -9,48 +9,48 @@ type Fn = (...rest: unknown[]) => unknown
 const genName = () => `SharedWorker-${crypto.randomUUID()}`
 
 export class HappyWorker {
-    readonly #fns: Fn[]
-    readonly #map = new Map<string, Fn>()
-    #ports = new Map<MessagePort, number>()
-    readonly #scope: SharedWorkerGlobalScope
+    private _ports = new Map<MessagePort, number>()
+    private readonly fns: Fn[]
+    private readonly map = new Map<string, Fn>()
+    private readonly scope: SharedWorkerGlobalScope
 
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    #messageCallbacks: MessageCallback<any>[] = []
+    private messageCallbacks: MessageCallback<any>[] = []
 
     constructor(
         scope: SharedWorkerGlobalScope,
         _fns: Fn[],
         public readonly workerName = genName(),
     ) {
-        this.#scope = scope
+        this.scope = scope
         // Filter function
-        this.#fns = _fns.filter((fn) => typeof fn === "function")
+        this.fns = _fns.filter((fn) => typeof fn === "function")
 
-        for (const fn of this.#fns) {
-            this.#map.set(fn.name, fn)
+        for (const fn of this.fns) {
+            this.map.set(fn.name, fn)
         }
 
-        this.#heartbeat()
-        this.#connect()
+        this.heartbeat()
+        this.connect()
     }
 
-    #heartbeat() {
+    private heartbeat() {
         // iterate over ports removing the disconnected ones
         // each port should update this timestamp every 500ms
         // if the connection is successful as a result of a
         // 'ping' command
         setInterval(() => {
             const now = Date.now()
-            for (const [port, date] of this.#ports) {
+            for (const [port, date] of this._ports) {
                 if (now - date >= 2000) {
-                    this.#ports.delete(port)
+                    this._ports.delete(port)
                 }
             }
         }, 1000)
     }
 
-    #start = (port: MessagePort) => {
-        this.#ports.set(port, Date.now())
+    private start = (port: MessagePort) => {
+        this._ports.set(port, Date.now())
 
         for (const key of Object.keys(console)) {
             const possible = console[key as keyof typeof console]
@@ -72,7 +72,7 @@ export class HappyWorker {
 
             switch (payload.command) {
                 case "rpc": {
-                    const fn = this.#map.get(payload.data.name)
+                    const fn = this.map.get(payload.data.name)
                     if (fn) {
                         try {
                             const result = await fn.apply(event, payload.data.args)
@@ -90,11 +90,11 @@ export class HappyWorker {
                     break
                 }
                 case "broadcast": {
-                    void Promise.allSettled(this.#messageCallbacks.map((fn) => fn.apply(event, [payload.data])))
+                    void Promise.allSettled(this.messageCallbacks.map((fn) => fn.apply(event, [payload.data])))
                     break
                 }
                 case "ping": {
-                    this.#ports.set(port, Date.now())
+                    this._ports.set(port, Date.now())
                     break
                 }
                 default: {
@@ -104,31 +104,31 @@ export class HappyWorker {
         }
     }
 
-    #connect() {
-        this.#scope.onconnect = (event) => {
+    private connect() {
+        this.scope.onconnect = (event) => {
             const port = event.ports[0]
-            this.#start(port)
+            this.start(port)
             console.log("Started as SharedWorker")
         }
 
         // Start as web worker, if not a shared worker
         if (!("SharedWorkerGlobalScope" in self)) {
-            this.#start(self as unknown as MessagePort)
+            this.start(self as unknown as MessagePort)
             console.log("Started as WebWorker")
         }
     }
 
     ports() {
-        return [...this.#ports.keys()]
+        return [...this._ports.keys()]
     }
     dispatch(port: MessagePort, data: unknown) {
         port.postMessage(makeBroadcastPayload(data))
     }
     addMessageListener<T>(fn: MessageCallback<T>) {
-        this.#messageCallbacks.push(fn)
+        this.messageCallbacks.push(fn)
     }
     broadcast(data: unknown) {
-        for (const port of this.#ports.keys()) {
+        for (const port of this._ports.keys()) {
             port.postMessage(makeBroadcastPayload(data))
         }
     }
