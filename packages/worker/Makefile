@@ -15,5 +15,15 @@ build.runtime.watch:
 .PHONY: build.runtime.watch
 
 build.tsc.watch:
-	bun tsc --build tsconfig.types.json --watch;
+	bun tsc --build tsconfig.build.json --watch;
 .PHONY: build.tsc.watch
+
+
+dev:: node_modules
+	@rm -rf ./dist
+	@mkdir ./dist
+	@ln -s ../src/index.ts ./dist/index.es.js
+	@ln -s ../src/index.ts ./dist/index.d.ts
+	@ln -s ../src/runtime/index.ts ./dist/runtime.js
+	@ln -s ../src/runtime/index.ts ./dist/runtime.d.ts
+.PHONY: dev

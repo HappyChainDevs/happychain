@@ -19,8 +19,8 @@ export function clientCodeGen(code: string, id: string) {
         + `import { HappyClient } from "${pkg.name}/runtime"\n`
         + `const __worker__ = new SharedWorker(new URL(${stringId}, import.meta.url), ${options})\n`
         + "const __client__ = new HappyClient(__worker__)\n"
-        + "export const dispatch = __client__.dispatch\n"
-        + "export const addMessageListener = __client__.addMessageListener\n"
+        + "export const dispatch = __client__.dispatch.bind(__client__)\n"
+        + "export const addMessageListener = __client__.addMessageListener.bind(__client__)\n"
         + `// ${pkg.name} ends\n`
         + exports.map(defineFunc).join("\n")
 }
