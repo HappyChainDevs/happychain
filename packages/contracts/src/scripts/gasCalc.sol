@@ -7,23 +7,18 @@ import {console} from "forge-std/Script.sol";
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.sol";
 
-import {GasMeasurementHelper} from "./utils/gasMeasurementHelper.sol";
 import {UserOpLib} from "./UserOpLib.sol";
-import {ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
-import {HappyPaymaster} from "../HappyPaymaster.sol";
-
-address constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-uint256 constant DUMMY_REQUIRED_PREFUND = 1e18;
 
 /* solhint-disable no-console*/
 contract GasEstimator is Test {
     using UserOpLib for PackedUserOperation;
 
-    bytes32 public constant DEPLOYMENT_SALT = 0;
-    address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
+    bytes32 private constant DEPLOYMENT_SALT = 0;
+    address private constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
+    address private constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
+    uint256 private constant DUMMY_REQUIRED_PREFUND = 1e18;
 
     IPaymaster private happyPaymaster;
-    GasMeasurementHelper private gasMeasurementHelper;
 
     function setUp() public {
         string memory root = vm.projectRoot();
@@ -32,7 +27,6 @@ contract GasEstimator is Test {
         address happyPaymasterAddress = vm.parseJsonAddress(json, ".HappyPaymaster");
 
         happyPaymaster = IPaymaster(happyPaymasterAddress);
-        gasMeasurementHelper = new GasMeasurementHelper();
     }
 
     /**
@@ -87,50 +81,80 @@ contract GasEstimator is Test {
     /**
      * @notice Measures gas usage when validating the same user operation twice within a single transaction.
      *
-     * This test uses the `gasMeasurementHelper` contract to execute both validations within the same transaction,
-     * thereby simulating warm storage access for the second validation despite the `--isolate` flag.
-     * It helps determine the gas savings when a user has multiple operations in the same block.
+     * This test simulates warm storage access for the second userOp by executing both userOps within the same
+     * transaction. This allows us to measure gas savings when the same user submits multiple userOps.
+     *
+     * Storage slots remain warm between validations, providing accurate
+     * gas measurements for multiple operations by the same sender.
      */
     function testEstimatePaymasterValidateUserOpGasWarmStorageSameUser() public {
         PackedUserOperation memory userOp1 = _getUserOp();
         userOp1.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
-        PackedUserOperation memory userOp2 = userOp1;
-        userOp2.nonce = userOp1.nonce + 1; // Increment nonce to simulate a new operation
+        PackedUserOperation memory userOp2 = _getUserOp();
+        userOp2.nonce = userOp2.nonce + 1; // Increment nonce to simulate a new operation
 
         PackedUserOperation[] memory userOps = new PackedUserOperation[](2);
         userOps[0] = userOp1;
         userOps[1] = userOp2;
 
-        uint256[] memory gasUsed = gasMeasurementHelper.measureValidatePaymasterUserOpGas(
-            happyPaymaster, userOps, ENTRYPOINT_V7, DUMMY_REQUIRED_PREFUND
-        );
-        console.log("Gas used for initial userOp (storage initialization): %d gas", gasUsed[0]);
+        uint256[] memory gasUsed = this._estimatePaymasterValidateUserOpGasForMultipleOps(userOps);
+
         console.log("Gas used for validating same userOp again (warm storage access): %d gas", gasUsed[1]);
     }
 
     /**
      * @notice Measures gas usage when validating user operations from different senders within a single transaction.
      *
-     * This test checks if storage slots accessed by one user affect the gas consumption for another user
-     * when validations are executed within the same transaction using the `gasMeasureMentHelper` contract.
-     * It helps determine if multiple users in the same block can benefit from warm storage access.
+     * This test checks how storage slots accessed by one user affect gas consumption for another user when
+     * multiple userOps are executed within the same transaction.
+     *
+     * It simulates warm storage access, allowing us to determine if multiple users
+     * in the same block benefit from reduced gas costs due to previously initialized storage slots.
      */
     function testEstimatePaymasterValidateUserOpGasWarmStorageDifferentUsers() public {
         PackedUserOperation memory userOp1 = _getUserOp();
         userOp1.sender = address(0x19aC95a5524Db39021ba2F10E4f65574dfEd2745);
-        PackedUserOperation memory userOp2 = userOp1;
-        userOp2.nonce = userOp1.nonce + 1; // Increment nonce to simulate a new operation
+        PackedUserOperation memory userOp2 = _getUserOp();
+        userOp2.nonce = userOp2.nonce + 1; // Increment nonce to simulate a new operation
         userOp2.sender = address(0x19aC95A5524DB39021Ba2f10e4f65574DFED2746);
 
         PackedUserOperation[] memory userOps = new PackedUserOperation[](2);
         userOps[0] = userOp1;
         userOps[1] = userOp2;
 
-        uint256[] memory gasUsed = gasMeasurementHelper.measureValidatePaymasterUserOpGas(
-            happyPaymaster, userOps, ENTRYPOINT_V7, DUMMY_REQUIRED_PREFUND
-        );
-        console.log("Gas used for initial userOp (storage initialization): %d gas", gasUsed[0]);
-        console.log("Gas used for validating userOp with different sender: %d gas", gasUsed[1]);
+        uint256[] memory gasUsed = this._estimatePaymasterValidateUserOpGasForMultipleOps(userOps);
+        console.log("Gas used for validating userOp with different sender (warm storage access): %d gas", gasUsed[1]);
+    }
+
+    /**
+     * @notice Measures gas usage for validating multiple user operations within a single transaction.
+     *
+     * By executing multiple validations in the same transaction, this function simulates warm storage access
+     * ensuring that storage slots remain warm between calls. This allows us to measure the gas savings
+     * from using already-initialized storage (warm storage).
+     *
+     * @param userOps An array of `PackedUserOperation` to validate.
+     * @return gasUsedArray An array of gas used for each user operation validation.
+     */
+    function _estimatePaymasterValidateUserOpGasForMultipleOps(PackedUserOperation[] memory userOps)
+        external
+        returns (uint256[] memory)
+    {
+        uint256[] memory gasUsedArray = new uint256[](userOps.length);
+
+        for (uint256 i = 0; i < userOps.length; i++) {
+            PackedUserOperation memory userOp = userOps[i];
+            bytes32 userOpHash = userOp.getEncodedUserOpHash();
+
+            vm.prank(ENTRYPOINT_V7);
+            uint256 gasBefore = gasleft();
+            happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
+            uint256 gasAfter = gasleft();
+
+            gasUsedArray[i] = gasBefore - gasAfter;
+        }
+
+        return gasUsedArray;
     }
 
     /**
