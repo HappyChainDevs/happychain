@@ -8,6 +8,7 @@ import {
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "../services/permissions"
+import { getAuthState } from "../state/authState"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
@@ -43,6 +44,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             // if (!hasPermissions("eth_accounts")) {
             //     throw new EIP1193UserRejectedRequestError()
             // }
+
             return getUser()?.addresses
 
         case "wallet_getPermissions":
