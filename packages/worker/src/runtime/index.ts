@@ -1,6 +1,6 @@
-export { HappyClient } from "./client"
+export { SharedWorkerClient } from "./client"
 
-export { HappyWorker } from "./worker"
+export { SharedWorkerServer } from "./server"
 
 export * from "./types"
 

@@ -8,26 +8,25 @@ type Fn = (...rest: unknown[]) => unknown
 
 const genName = () => `SharedWorker-${crypto.randomUUID()}`
 
-export class HappyWorker {
-    private _ports = new Map<MessagePort, number>()
-    private readonly fns: Fn[]
-    private readonly map = new Map<string, Fn>()
-    private readonly scope: SharedWorkerGlobalScope
+export class SharedWorkerServer {
+    // maps heartbeat ports to the latest heartbeat
+    private readonly _ports = new Map<MessagePort, number>()
+    private readonly _functions = new Map<string, Fn>()
+    private readonly _scope: SharedWorkerGlobalScope
 
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    private messageCallbacks: MessageCallback<any>[] = []
+    private readonly _messageCallbacks: MessageCallback<any>[] = []
 
     constructor(
         scope: SharedWorkerGlobalScope,
-        _fns: Fn[],
+        fns: Fn[],
         public readonly workerName = genName(),
     ) {
-        this.scope = scope
-        // Filter function
-        this.fns = _fns.filter((fn) => typeof fn === "function")
+        this._scope = scope
+        const _fns = fns.filter((fn) => typeof fn === "function")
 
-        for (const fn of this.fns) {
-            this.map.set(fn.name, fn)
+        for (const fn of _fns) {
+            this._functions.set(fn.name, fn)
         }
 
         this.heartbeat()
@@ -49,6 +48,20 @@ export class HappyWorker {
         }, 1000)
     }
 
+    private connect() {
+        this._scope.onconnect = (event) => {
+            const port = event.ports[0]
+            this.start(port)
+            console.log("Started as SharedWorker")
+        }
+
+        // Start as web worker, if not a shared worker
+        if (!("SharedWorkerGlobalScope" in self)) {
+            this.start(self as unknown as MessagePort)
+            console.log("Started as WebWorker")
+        }
+    }
+
     private start = (port: MessagePort) => {
         this._ports.set(port, Date.now())
 
@@ -56,8 +69,8 @@ export class HappyWorker {
             const possible = console[key as keyof typeof console]
             if (typeof possible !== "function") return
 
-            // @ts-expect-error override 'console' within the worker
-            // so that it attempts to proxy the commands to the client,
+            // @ts-expect-error
+            // Override 'console' within the worker so that it attempts to proxy the commands to the client,
             // prefixed by the sender filename, instead of logging into the void
             console[key] = (...args: unknown[]) =>
                 port.postMessage(makeConsolePayload(key, [`[${this.workerName}]`, ...args]))
@@ -72,7 +85,7 @@ export class HappyWorker {
 
             switch (payload.command) {
                 case "rpc": {
-                    const fn = this.map.get(payload.data.name)
+                    const fn = this._functions.get(payload.data.name)
                     if (fn) {
                         try {
                             const result = await fn.apply(event, payload.data.args)
@@ -90,7 +103,7 @@ export class HappyWorker {
                     break
                 }
                 case "broadcast": {
-                    void Promise.allSettled(this.messageCallbacks.map((fn) => fn.apply(event, [payload.data])))
+                    void Promise.allSettled(this._messageCallbacks.map((fn) => fn.apply(event, [payload.data])))
                     break
                 }
                 case "ping": {
@@ -104,20 +117,6 @@ export class HappyWorker {
         }
     }
 
-    private connect() {
-        this.scope.onconnect = (event) => {
-            const port = event.ports[0]
-            this.start(port)
-            console.log("Started as SharedWorker")
-        }
-
-        // Start as web worker, if not a shared worker
-        if (!("SharedWorkerGlobalScope" in self)) {
-            this.start(self as unknown as MessagePort)
-            console.log("Started as WebWorker")
-        }
-    }
-
     ports() {
         return [...this._ports.keys()]
     }
@@ -125,7 +124,7 @@ export class HappyWorker {
         port.postMessage(makeBroadcastPayload(data))
     }
     addMessageListener<T>(fn: MessageCallback<T>) {
-        this.messageCallbacks.push(fn)
+        this._messageCallbacks.push(fn)
     }
     broadcast(data: unknown) {
         for (const port of this._ports.keys()) {
