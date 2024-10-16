@@ -14,7 +14,8 @@ import { getChainsMap, setChains } from "../state/chains"
 import { getUser } from "../state/user"
 import { getWalletClient } from "../state/walletClient"
 import { isAddChainParams } from "../utils/isAddChainParam"
-import { originForSourceID, sendResponse } from "./utils"
+import { sendResponse } from "./sendResponse"
+import { originForSourceID } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
