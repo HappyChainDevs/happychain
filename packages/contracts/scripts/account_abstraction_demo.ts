@@ -354,11 +354,11 @@ async function testCustomValidator(
     const gasEstimates = await pimlicoClient.estimateUserOperationGas({
         ...userOp,
         signature: "0x", // Ensure signature is empty for estimation
-    });
-    console.log("Estimated Gas Limits:");
-    console.log(`  PreVerificationGas: ${gasEstimates.preVerificationGas}`);
-    console.log(`  VerificationGasLimit: ${gasEstimates.verificationGasLimit}`);
-    console.log(`  CallGasLimit: ${gasEstimates.callGasLimit}`);
+    })
+    console.log("Estimated Gas Limits:")
+    console.log(`  PreVerificationGas: ${gasEstimates.preVerificationGas}`)
+    console.log(`  VerificationGasLimit: ${gasEstimates.verificationGasLimit}`)
+    console.log(`  CallGasLimit: ${gasEstimates.callGasLimit}`)
 
     userOp.signature = await sessionSigner.signUserOperation({
         ...userOp,
