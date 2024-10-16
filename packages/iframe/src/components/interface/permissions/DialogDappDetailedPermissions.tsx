@@ -1,14 +1,9 @@
-import { Collapsible, useCollapsible } from "@ark-ui/react"
 import { Dialog } from "@ark-ui/react/dialog"
 import type { HTTPString } from "@happychain/common"
-import { cx } from "class-variance-authority"
 import { atom, useAtom } from "jotai"
 import type { FC } from "react"
-import { useHasPermissions } from "../../../hooks/useHasPermissions"
-import { grantPermissions, revokePermissions } from "../../../services/permissions"
+import { revokePermissions } from "../../../services/permissions"
 import type { AppPermissions } from "../../../state/permissions"
-import { queryClient } from "../../../tanstack-query/config"
-import { Button, recipeButton } from "../../primitives/button/Button"
 import { BackIcon } from "../../primitives/dialog/icons"
 import {
     recipeDialogBody,
@@ -16,10 +11,10 @@ import {
     recipeDialogHeadline,
 } from "../../primitives/dialog/variants"
 import { recipeContent, recipePositioner } from "../../primitives/popover/variants"
-import { Switch } from "../../primitives/toggle-switch/Switch"
-import { KEY_QUERY_GET_ALL_DAPPS_WIHT_PERMISSIONS } from "../menu-secondary-actions/dapps-permissions/DialogAllDappsWithPermissions"
+import { ClearAllPermissions } from "./ClearAllPermissions"
+import { ListDappPermissions } from "./ListPermissions"
 
-const dappPermissionsState = atom<{
+const dialogDappPermissionsAtom = atom<{
     selectedDapp?: {
         url: string
         permissions: AppPermissions
@@ -28,69 +23,32 @@ const dappPermissionsState = atom<{
     selectedDapp: undefined,
 })
 
-const DICTIONARIES_PERMISSIONS_MEANING = {
-    eth_accounts: "Can recognize you by the Ethereum address you're currently using",
-}
-type Permission = keyof typeof DICTIONARIES_PERMISSIONS_MEANING
-
-interface DappPermissionProps {
-    permission: Permission
-    dappUrl: HTTPString
-}
-/**
- * Allow user to toggle permission on/off
- */
-const DappPermission: FC<DappPermissionProps> = (props) => {
-    const { permission, dappUrl } = props
-    const hasPermission = useHasPermissions(permission)
-    return (
-        <>
-            <Switch
-                checked={hasPermission}
-                onCheckedChange={(e) => {
-                    e.checked === false
-                        ? revokePermissions(permission)
-                        : grantPermissions(permission, {
-                              origin: dappUrl,
-                          })
-                    queryClient.invalidateQueries({ queryKey: [KEY_QUERY_GET_ALL_DAPPS_WIHT_PERMISSIONS] })
-                }}
-                className="justify-between w-full [&_[data-part=label]]:w-3/4 flex-row-reverse"
-                switchLabel={DICTIONARIES_PERMISSIONS_MEANING[permission]}
-            />
-        </>
-    )
-}
 /**
  * Displays all the permissions of a given dApp and lets the user revoke said permission(s)
  */
 const DialogDappDetailedPermissions: FC = () => {
-    const [state, setState] = useAtom(dappPermissionsState)
-    const collapsibleClearPermissions = useCollapsible()
+    const [state, setState] = useAtom(dialogDappPermissionsAtom)
     return (
         <Dialog.Root
             lazyMount
             unmountOnExit
             open={!!state.selectedDapp}
-            onInteractOutside={() =>
+            onInteractOutside={() => {
                 setState({
                     selectedDapp: undefined,
                 })
-            }
-            onEscapeKeyDown={() =>
+            }}
+            onEscapeKeyDown={() => {
                 setState({
                     selectedDapp: undefined,
                 })
-            }
-            onOpenChange={(details) => {
-                if (!details.open) collapsibleClearPermissions.setOpen(false)
             }}
         >
             <Dialog.Positioner
                 className={recipePositioner({
                     originY: "bottom",
                     mode: "modal",
-                    class: "aria-hidden:[&_[data-part=close-trigger]]:opacity-0",
+                    class: " aria-hidden:[&_[data-part=close-trigger]]:opacity-0",
                 })}
             >
                 <Dialog.Content
@@ -98,6 +56,7 @@ const DialogDappDetailedPermissions: FC = () => {
                         intent: "default",
                         scale: "default",
                         animation: "modal",
+                        class: "max-h-[calc(100%-3rem)] !overflow-hidden",
                     })}
                 >
                     <div
@@ -119,73 +78,40 @@ const DialogDappDetailedPermissions: FC = () => {
                         <Dialog.Title>{state.selectedDapp?.url}</Dialog.Title>
                     </div>
                     <div
-                        data-part="additional-actions"
                         className={recipeDialogBody({
                             spacing: "default",
-                            class: "relative",
+                            class: "relative overflow-y-auto",
                         })}
                     >
                         <Dialog.Description className="sr-only">
                             Access and change the permissions of {state.selectedDapp?.url}.
                         </Dialog.Description>
-
-                        {state?.selectedDapp?.permissions && (
-                            <ul className="divide-y divide-neutral/10">
-                                {Object.keys(state?.selectedDapp?.permissions).map((permission) => {
-                                    return (
-                                        <li
-                                            className="text-xs w-full items-center inline-flex gap-4 justify-between p-2"
-                                            key={`edit-permission-${permission}-${state.selectedDapp?.url}`}
-                                        >
-                                            <DappPermission
-                                                dappUrl={state?.selectedDapp?.url as HTTPString}
-                                                permission={permission as Permission}
-                                            />
-                                        </li>
-                                    )
-                                })}
-                            </ul>
+                        {state?.selectedDapp?.permissions ? (
+                            <>
+                                {Object.keys(state?.selectedDapp?.permissions)?.length === 0 ? (
+                                    <p className="text-neutral/50 italic text-xs py-4 text-center">
+                                        This app has no permissions enabled.
+                                    </p>
+                                ) : (
+                                    <>
+                                        <ListDappPermissions
+                                            dappUrl={state.selectedDapp.url as HTTPString}
+                                            list={state.selectedDapp.permissions}
+                                        />
+                                        <ClearAllPermissions
+                                            handleClearAllPermissions={() => {
+                                                revokePermissions(state.selectedDapp!.permissions as AppPermissions)
+                                                setState({
+                                                    selectedDapp: undefined,
+                                                })
+                                            }}
+                                        />
+                                    </>
+                                )}
+                            </>
+                        ) : (
+                            <p className="text-xs text-neutral/50 text-center py-4">No permissions</p>
                         )}
-                        <Collapsible.RootProvider value={collapsibleClearPermissions}>
-                            <div
-                                className={`${collapsibleClearPermissions.visible ? "rounded-t-3xl pt-4" : "rounded-t-none"} fixed flex flex-col bottom-0 start-0 min-h-12 w-full border-t border-neutral/10`}
-                            >
-                                <Collapsible.Trigger
-                                    className={cx(
-                                        "text-xs grow w-full justify-center",
-                                        collapsibleClearPermissions.visible
-                                            ? "font-bold text-base-content"
-                                            : recipeButton({
-                                                  intent: "ghost-negative",
-                                                  class: "focus:!bg-transparent",
-                                              }),
-                                    )}
-                                >
-                                    Clear all permissions
-                                </Collapsible.Trigger>
-
-                                <Collapsible.Content>
-                                    <div className="px-2 pb-6 pt-8 grid gap-4 mx-auto max-w-sm">
-                                        <p className="text-neutral text-center text-xs">
-                                            Are you sure you want to clear all permissions for this app ?
-                                        </p>
-                                        <div className="grid gap-2">
-                                            <Button className="justify-center" intent="outline-negative">
-                                                Yes, clear all permissions
-                                            </Button>
-                                            <Collapsible.Trigger
-                                                className={recipeButton({
-                                                    intent: "ghost",
-                                                    class: "opacity-75 justify-center",
-                                                })}
-                                            >
-                                                Go back
-                                            </Collapsible.Trigger>
-                                        </div>
-                                    </div>
-                                </Collapsible.Content>
-                            </div>
-                        </Collapsible.RootProvider>
                     </div>
                     <Dialog.CloseTrigger
                         className={recipeDialogHeaderActionsControls({
@@ -198,7 +124,7 @@ const DialogDappDetailedPermissions: FC = () => {
                             })
                         }}
                     >
-                        <BackIcon />
+                        <BackIcon weight="bold" className="text-[1rem]" />
                         <span className="sr-only">Back</span>
                     </Dialog.CloseTrigger>
                 </Dialog.Content>
@@ -207,4 +133,4 @@ const DialogDappDetailedPermissions: FC = () => {
     )
 }
 
-export { DialogDappDetailedPermissions, dappPermissionsState }
+export { DialogDappDetailedPermissions, dialogDappPermissionsAtom }
