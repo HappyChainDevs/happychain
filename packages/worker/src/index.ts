@@ -1,7 +1,35 @@
 import type { Plugin } from "vite"
 import { DevelopmentPlugin } from "./plugin/DevelopmentPlugin"
-import { ProductionClientPlugin } from "./plugin/ProductionClientPlugin"
+import { SharedWorkerClientPlugin } from "./plugin/SharedWorkerClientPlugin"
+import { SharedWorkerShimPlugin } from "./plugin/SharedWorkerShimPlugin"
 
-export function SharedWorkerPlugin(): Plugin[] {
-    return [DevelopmentPlugin(), ProductionClientPlugin()]
+type Options = {
+    /**
+     * When true, uses the SharedWorkerShimPlugin & SharedWorkerShim
+     * instead of true SharedWorker or WebWorkers. This can be helpful for
+     * debugging misbehaving workers, as it simply injects the expected Worker API
+     * into the worker module, but runs the file locally instead so that things such
+     * as console.log will work as they do when not in a shared worker context.
+     */
+    disabled?: boolean
+}
+
+/**
+ * SharedWorkerPlugin
+ *
+ * Converts .ws.ts modules into an RPC based SharedWorker for easier use.
+ */
+export function SharedWorkerPlugin({ disabled = false }: Options = {}): Plugin[] {
+    return disabled //
+        ? [
+              // injects 'worker' interface to server,
+              // and exposes compatible exports to client
+              SharedWorkerShimPlugin(),
+          ]
+        : [
+              // only impacts 'serve' command, i.e. 'vite'
+              DevelopmentPlugin(),
+              // only impacts 'build' command i.e. 'vite build'
+              SharedWorkerClientPlugin(),
+          ]
 }

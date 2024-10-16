@@ -1,1 +1,1 @@
-export type MessageCallback<T> = (this: Event, data: T) => void | Promise<void>
+export type MessageCallback<T> = (data: T) => void | Promise<void>

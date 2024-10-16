@@ -1,4 +1,6 @@
 /// <reference lib="WebWorker" />
+
+import type { ServerInterface } from "./interface"
 import { makeBroadcastPayload, makeConsolePayload, makeRpcPayload, parsePayload } from "./payload"
 import type { MessageCallback } from "./types"
 
@@ -19,7 +21,7 @@ const genName = () => `SharedWorker-${crypto.randomUUID()}`
  * The public functions of this class can also be used to exchange arbitrary (but serializable)
  * messages between the worker and its clients.
  */
-export class SharedWorkerServer {
+export class SharedWorkerServer implements ServerInterface {
     // maps heartbeat ports to the latest heartbeat
     private readonly _ports = new Map<MessagePort, number>()
     private readonly _functions = new Map<string, Fn>()

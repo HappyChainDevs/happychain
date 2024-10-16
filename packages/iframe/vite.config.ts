@@ -10,9 +10,7 @@ export default defineConfig({
     plugins: [
         nodePolyfills({ globals: { Buffer: true } }), // required for web3Auth
         TanStackRouterVite(),
-        react({
-            babel: { presets: ["jotai/babel/preset"] },
-        }),
+        react({ babel: { presets: ["jotai/babel/preset"] } }),
     ],
     resolve: {
         alias: {

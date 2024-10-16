@@ -41,3 +41,14 @@ export function workerCodeGen(code: string, id: string) {
         + `// ${pkg.name} ends\n`
         + code
 }
+
+export function shimCodeGen(code: string, _id: string) {
+    // biome-ignore format: tidy
+    return ""
+        + "// ${pkg.name} starts\n"
+        + "import { SharedWorkerShim } from '${pkg.name}/runtime'\n"
+        + "const worker = new SharedWorkerShim()\n"
+        + "export const addMessageListener = worker.addMessageListener.bind(worker)\n"
+        + "// ${pkg.name} ends\n"
+        + code
+}
