@@ -18,7 +18,8 @@ import {
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
-import { checkAuthenticated, originForSourceID, sendResponse } from "./utils"
+import { sendResponse } from "./sendResponse"
+import { checkAuthenticated, originForSourceID } from "./utils"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
