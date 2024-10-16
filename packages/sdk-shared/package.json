@@ -3,14 +3,13 @@
     "version": "1.0.0",
     "private": true,
     "type": "module",
-    "main": "./lib/index.ts",
-    "module": "./lib/index.ts",
-    "types": "./dist/types/lib/index.d.ts",
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.es.d.ts",
     "exports": {
         ".": {
-            "bun": "./lib/index.ts",
-            "default": "./lib/index.ts",
-            "types": "./dist/types/lib.index.d.ts"
+            "default": "./dist/index.es.js",
+            "types": "./dist/index.es.d.ts"
         }
     },
     "dependencies": {
@@ -19,6 +18,7 @@
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
+        "@happychain/scripts": "workspace:^",
         "@happychain/configs": "workspace:^",
         "@types/bun": "^1.1.8",
         "happy-dom": "^15.0.0",

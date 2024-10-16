@@ -8,7 +8,6 @@ import {
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "../services/permissions"
-import { getAuthState } from "../state/authState"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"

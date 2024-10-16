@@ -103,8 +103,8 @@ iframe-dev-command := cd packages/iframe && make dev
 sdk.dev:
 	@# intentially building sequentially. 
 	@# get sporadic build errors when in parralel and starting demos
-	cd packages/common && make build
-	cd packages/sdk-shared && make build
+	cd packages/common && make dev
+	cd packages/sdk-shared && make dev
 	cd packages/sdk-frontend-components && make dev
 	cd packages/sdk-vanillajs && make dev
 	cd packages/sdk-react && make dev
