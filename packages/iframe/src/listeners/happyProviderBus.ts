@@ -1,6 +1,7 @@
 import { Msgs } from "@happychain/sdk-shared"
 import { handlePermissionlessRequest } from "../requests"
 import { happyProviderBus } from "../services/eventBus"
+import { getAppURL } from "../utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 /**
@@ -28,7 +29,7 @@ happyProviderBus.on(Msgs.RequestPermissionless, handlePermissionlessRequest)
  * the request will be rejected
  */
 happyProviderBus.on(Msgs.PermissionCheckRequest, (data) => {
-    const result = checkIfRequestRequiresConfirmation(data.payload)
+    const result = checkIfRequestRequiresConfirmation(getAppURL(), data.payload)
 
     return happyProviderBus.emit(Msgs.PermissionCheckResponse, {
         key: data.key,

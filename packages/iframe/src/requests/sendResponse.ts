@@ -4,9 +4,12 @@ import {
     type ProviderEventPayload,
     getEIP1193ErrorObjectFromUnknown,
 } from "@happychain/sdk-shared"
+// biome-ignore lint/correctness/noUnusedImports: keep type for doc
+import type { UnauthorizedProviderError } from "viem"
 import { happyProviderBus } from "../services/eventBus"
+import { getAppURL } from "../utils/appURL"
 import { iframeProvider } from "../wagmi/provider"
-import { isAllowedSourceId, parentID } from "./utils"
+import { appForSourceID } from "./utils"
 
 /**
  * Runs the supplied dispatch function on the supplied request, sending the response back to the app
@@ -27,8 +30,13 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
     request: Request,
     dispatch: (request: Request) => Promise<T>,
 ): Promise<void> {
+    const app = appForSourceID(request.windowId)
+    if (!app) {
+        console.warn("Unsupported source app, abandoning request", app, request)
+        return
+    }
+
     try {
-        if (!isAllowedSourceId(request.windowId)) return
         const payload = await dispatch(request)
         const response = {
             key: request.key,
@@ -37,7 +45,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             payload: payload ?? undefined,
         }
 
-        request.windowId === parentID
+        app === getAppURL()
             ? void happyProviderBus.emit(Msgs.RequestResponse, response)
             : iframeProvider.handleRequestResolution(response)
     } catch (e) {
@@ -48,7 +56,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             payload: null,
         }
 
-        request.windowId === parentID
+        app === getAppURL()
             ? void happyProviderBus.emit(Msgs.RequestResponse, response)
             : iframeProvider.handleRequestResolution(response)
     }

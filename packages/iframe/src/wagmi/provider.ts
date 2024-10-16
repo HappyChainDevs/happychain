@@ -5,6 +5,7 @@ import { handlePermissionlessRequest } from "../requests"
 import { iframeID } from "../requests/utils"
 import { getAuthState } from "../state/authState"
 import { getUser } from "../state/user"
+import { getIframeURL } from "../utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 /**
@@ -14,7 +15,7 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
  */
 export class IframeProvider extends BasePopupProvider {
     constructor() {
-        super(iframeID)
+        super(iframeID())
     }
 
     protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
@@ -31,13 +32,13 @@ export class IframeProvider extends BasePopupProvider {
         // We're logging in or out, wait for the auth state to settle.
         await waitForCondition(() => getAuthState() !== AuthState.Connecting)
 
-        return checkIfRequestRequiresConfirmation(args)
+        return checkIfRequestRequiresConfirmation(getIframeURL(), args)
     }
 
     protected override handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
         void handlePermissionlessRequest({
             key,
-            windowId: iframeID,
+            windowId: iframeID(),
             error: null,
             payload: args,
         })

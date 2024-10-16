@@ -1,8 +1,12 @@
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import { type PermissionsSpec, atomForPermissionsCheck } from "../state/permissions"
+import { type PermissionsRequest, atomForPermissionsCheck } from "../state/permissions"
 
-export function useHasPermissions(permissions: PermissionsSpec) {
-    const permissionsAtom = useMemo(() => atomForPermissionsCheck(permissions), [permissions])
+export function useHasPermissions(permissionsRequest: PermissionsRequest) {
+    // This must be memoized to avoid an infinite render loop.
+    const permissionsAtom = useMemo(
+        () => atomForPermissionsCheck(permissionsRequest), //
+        [permissionsRequest],
+    )
     return useAtomValue(permissionsAtom)
 }

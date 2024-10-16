@@ -3,9 +3,9 @@ import { type Atom, atom } from "jotai"
 
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address } from "viem"
-import { getDappPermissions, hasPermissions } from "../services/permissions"
+import { hasPermissions } from "../services/permissions"
 import { StorageKey } from "../services/storage"
-import { getDappOrigin } from "../utils/getDappOrigin.ts"
+import { type AppURL, getAppURL } from "../utils/appURL"
 import { userAtom } from "./user"
 
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
@@ -26,7 +26,7 @@ import { userAtom } from "./user"
  * Maps an user + app pair to a {@link AppPermissions}, which is the set of permissions
  * for that user on that app.
  */
-export type PermissionsMap = Record<Address, Record<HTTPString, AppPermissions>>
+export type PermissionsMap = Record<Address, Record<AppURL, AppPermissions>>
 
 /**
  * Maps permissions names to permission objects.
@@ -62,39 +62,42 @@ type WalletPermissionCaveat = {
 }
 
 /**
- * A request for permissions on a specific EIP-1193 request.
+ * A request for one or more permissions.
  */
-export type PermissionRequest = {
+export type PermissionRequestObject = {
     [requestName: string]: { [caveatName: string]: unknown }
 }
 
 /**
  * A permissions specifier, which can be either a single EIP-1193 request name, or a {@link
- * PermissionRequest}.
+ * PermissionRequestObject}.
  */
-export type PermissionsSpec = string | PermissionRequest
+export type PermissionsRequest = string | PermissionRequestObject
 
-export const permissionsAtom = atomWithStorage<PermissionsMap>(StorageKey.UserPermissions, {}, createJSONStorage(), {
+/**
+ * Maps an user + app pair to a {@link AppPermissions}, which is the set of permissions
+ * for that user on that app.
+ */
+export const permissionsMapAtom = atomWithStorage<PermissionsMap>(StorageKey.UserPermissions, {}, createJSONStorage(), {
     getOnInit: true,
 })
 
 type PermissionCheckParams = {
-    ps: PermissionsSpec
-    origin: HTTPString
+    permissionsRequest: PermissionsRequest
+    app: AppURL
 }
 
-const _atomForPermissionsCheck: (params: PermissionCheckParams) => Atom<boolean> = atomFamily(({ ps, origin }) => {
-    return atom((get) => {
-        const user = get(userAtom)
-        if (!user) return false
-        const permissionsMap = getDappPermissions({
-            user,
-            origin,
-            permissions: get(permissionsAtom),
+const _atomForPermissionsCheck: (params: PermissionCheckParams) => Atom<boolean> = //
+    atomFamily(({ permissionsRequest, app }) => {
+        return atom((get) => {
+            const user = get(userAtom)
+            if (!user) return false
+            // This call *might* be required to record the dependency, which occurs via
+            // `getDefaultStore().get` during `hasPermissions`.
+            get(permissionsMapAtom)
+            return hasPermissions(app, permissionsRequest)
         })
-        return hasPermissions(ps, permissionsMap)
     })
-})
 
 /**
  * A function that returns a new atom that subscribes to a check on the specified permissions.
@@ -103,6 +106,9 @@ const _atomForPermissionsCheck: (params: PermissionCheckParams) => Atom<boolean>
  * set of permissions, it is necessary to call `atomForPermissionsCheck.remove(oldPermissions)`
  * when changing the permissions!
  */
-export function atomForPermissionsCheck(ps: PermissionsSpec, origin: HTTPString = getDappOrigin()): Atom<boolean> {
-    return _atomForPermissionsCheck({ ps, origin })
+export function atomForPermissionsCheck(
+    permissionsRequest: PermissionsRequest, //
+    app: AppURL = getAppURL(),
+): Atom<boolean> {
+    return _atomForPermissionsCheck({ permissionsRequest, app })
 }

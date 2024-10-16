@@ -1,4 +1,4 @@
-import { type HTTPString, type UUID, createUUID } from "@happychain/common"
+import { type UUID, createUUID } from "@happychain/common"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
@@ -7,21 +7,22 @@ import { vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "../../services/permissions"
 import { setAuthState } from "../../state/authState"
 import { setUser } from "../../state/user"
+import type { AppURL } from "../../utils/appURL"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../permissionless"
 
-const origin = "http://localhost:4321"
-vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => origin,
-    getIframeOrigin: () => origin,
+const appURL = "http://localhost:4321" as AppURL
+vi.mock("../../utils/appURL", async () => ({
+    getAppURL: () => appURL,
+    getIframeURL: () => appURL,
 }))
 
 const iframeID = createUUID()
 vi.mock("../utils", (importUtils) =>
     importUtils<typeof import("../utils")>().then((utils) => ({
         ...utils,
-        originForSourceID(sourceId: UUID): HTTPString | undefined {
-            if (sourceId === iframeID) return origin
+        appForSourceID(sourceId: UUID): AppURL | undefined {
+            if (sourceId === iframeID) return appURL
             return undefined
         },
     })),
@@ -37,7 +38,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
         })
 
         test("skips wallet_requestPermissions permissions when no user", async () => {
-            expect(getAllPermissions().length).toBe(0)
+            expect(getAllPermissions(appURL).length).toBe(0)
             const request = makePayload(iframeID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
@@ -56,7 +57,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
         })
 
         test("does not add permissions", async () => {
-            expect(getAllPermissions().length).toBe(1)
+            expect(getAllPermissions(appURL).length).toBe(1)
             const request = makePayload(iframeID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
@@ -65,7 +66,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
             await dispatchHandlers(request)
             await dispatchHandlers(request)
             await dispatchHandlers(request)
-            expect(getAllPermissions().length).toBe(1)
+            expect(getAllPermissions(appURL).length).toBe(1)
         })
     })
 })

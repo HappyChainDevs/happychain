@@ -1,26 +1,27 @@
-import { type HTTPString, type UUID, createUUID } from "@happychain/common"
+import { type UUID, createUUID } from "@happychain/common"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
 import { getAuthState } from "../state/authState"
-import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin.ts"
+import { type AppURL, getAppURL, getIframeURL } from "../utils/appURL.ts"
 
 /** ID passed to the iframe by the parent window (app). */
-export const parentID = new URLSearchParams(window.location.search).get("windowId")
+const _parentID = new URLSearchParams(window.location.search).get("windowId")
 
 /** ID generated for this iframe (tied to a specific app). */
-export const iframeID = createUUID()
+const _iframeID = createUUID()
 
-/** Whether the source ID is allowed: either the iframe or its parent (app). */
-export const isAllowedSourceId = (sourceId: UUID) => {
-    return sourceId === parentID || sourceId === iframeID
+/** ID generated for this iframe (tied to a specific app). */
+// Expose as a function so that the function can be mocked.
+export function iframeID(): UUID {
+    return _iframeID
 }
 
 /**
- * Returns the origin URL for the source ID, or undefined if the source ID is not allowed (i.e.
- * neither the iframe nor its parent).
+ * Returns the app URL for the source ID, or undefined if the source ID is not allowed (i.e. neither
+ * the iframe nor its parent).
  */
-export function originForSourceID(sourceId: UUID): HTTPString | undefined {
-    if (sourceId === parentID) return getDappOrigin()
-    if (sourceId === iframeID) return getIframeOrigin()
+export function appForSourceID(sourceId: UUID): AppURL | undefined {
+    if (sourceId === _parentID) return getAppURL()
+    if (sourceId === _iframeID) return getIframeURL()
     return undefined
 }
 

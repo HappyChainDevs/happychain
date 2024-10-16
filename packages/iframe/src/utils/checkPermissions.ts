@@ -1,14 +1,13 @@
-import type { HTTPString } from "@happychain/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared"
 import { hasPermissions } from "../services/permissions"
 import { getChains } from "../state/chains"
 import { getUser } from "../state/user"
-import { getDappOrigin } from "./getDappOrigin.ts"
+import type { AppURL } from "./appURL.ts"
 
 export function checkIfRequestRequiresConfirmation(
+    app: AppURL,
     payload: ProviderMsgsFromApp[Msgs.PermissionCheckRequest]["payload"],
-    origin: HTTPString = getDappOrigin(),
 ) {
     const neverRequiresApproval = !requiresApproval(payload)
 
@@ -30,10 +29,10 @@ export function checkIfRequestRequiresConfirmation(
 
         // Users don't need to approve permissions that have already been granted.
         case "wallet_requestPermissions":
-            return !hasPermissions(payload.params[0], { origin })
+            return !hasPermissions(app, payload.params[0])
 
         case "eth_requestAccounts":
-            return !hasPermissions("eth_accounts", { origin })
+            return !hasPermissions(app, "eth_accounts")
     }
 
     return true

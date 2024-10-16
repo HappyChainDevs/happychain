@@ -1,4 +1,4 @@
-import { type HTTPString, type UUID, createUUID } from "@happychain/common"
+import { type UUID, createUUID } from "@happychain/common"
 import { AuthState } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
@@ -7,14 +7,15 @@ import { vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "../../services/permissions"
 import { setAuthState } from "../../state/authState"
 import { setUser } from "../../state/user"
+import type { AppURL } from "../../utils/appURL"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../approved"
 
-const originDapp = "http://localhost:1234"
-const originIframe = "http://localhost:4321"
-vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => originDapp,
-    getIframeOrigin: () => originIframe,
+const appURL = "http://localhost:1234" as AppURL
+const iframeURL = "http://localhost:4321" as AppURL
+vi.mock("../../utils/appURL", async () => ({
+    getAppURL: () => appURL,
+    getIframeURL: () => iframeURL,
 }))
 
 const parentID = createUUID()
@@ -22,9 +23,9 @@ const iframeID = createUUID()
 vi.mock("../utils", (importUtils) =>
     importUtils<typeof import("../utils")>().then((utils) => ({
         ...utils,
-        originForSourceID(sourceId: UUID): HTTPString | undefined {
-            if (sourceId === parentID) return originDapp
-            if (sourceId === iframeID) return originIframe
+        appForSourceID(sourceId: UUID): AppURL | undefined {
+            if (sourceId === parentID) return appURL
+            if (sourceId === iframeID) return iframeURL
             return undefined
         },
     })),
@@ -41,43 +42,43 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
     })
 
     test("adds eth_account permissions", async () => {
-        expect(getAllPermissions({ origin: originDapp }).length).toBe(0)
-        expect(getAllPermissions({ origin: originIframe }).length).toBe(1)
+        expect(getAllPermissions(appURL).length).toBe(0)
+        expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
         const response = await dispatchHandlers(request)
-        expect(getAllPermissions({ origin: originDapp }).length).toBe(1)
-        expect(getAllPermissions({ origin: originIframe }).length).toBe(1)
-        expect(getAllPermissions({ origin: originDapp })).toStrictEqual(response)
+        expect(getAllPermissions(appURL).length).toBe(1)
+        expect(getAllPermissions(iframeURL).length).toBe(1)
+        expect(getAllPermissions(appURL)).toStrictEqual(response)
         expect(response).toStrictEqual([
             {
                 caveats: [],
                 id: expect.any(String),
                 date: expect.any(Number),
-                invoker: originDapp,
+                invoker: appURL,
                 parentCapability: "eth_accounts",
             },
         ])
     })
 
     test("throws error on caveat use", async () => {
-        expect(getAllPermissions({ origin: originDapp }).length).toBe(0)
-        expect(getAllPermissions({ origin: originIframe }).length).toBe(1)
+        expect(getAllPermissions(appURL).length).toBe(0)
+        expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, {
             method: "wallet_requestPermissions",
             params: [{ eth_accounts: { requiredMethods: ["signTypedData_v3"] } }],
         })
-        expect(dispatchHandlers(request)).rejects.toThrow("WalletPermissionCaveats Not Yet Supported")
+        expect(dispatchHandlers(request)).rejects.toThrow("Wallet permission caveats not yet supported")
     })
 
     test("only adds permissions once", async () => {
-        expect(getAllPermissions({ origin: originDapp }).length).toBe(0)
-        expect(getAllPermissions({ origin: originIframe }).length).toBe(1)
+        expect(getAllPermissions(appURL).length).toBe(0)
+        expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
         await dispatchHandlers(request)
         await dispatchHandlers(request)
         await dispatchHandlers(request)
         await dispatchHandlers(request)
-        expect(getAllPermissions({ origin: originDapp }).length).toBe(1)
-        expect(getAllPermissions({ origin: originIframe }).length).toBe(1)
+        expect(getAllPermissions(appURL).length).toBe(1)
+        expect(getAllPermissions(iframeURL).length).toBe(1)
     })
 })
