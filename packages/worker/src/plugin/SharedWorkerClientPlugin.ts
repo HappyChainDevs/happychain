@@ -1,6 +1,6 @@
 import type { Plugin } from "vite"
 import pkg from "../../package.json"
-import { ProductionWorkerPlugin } from "./ProductionWorkerPlugin"
+import { SharedWorkerServerPlugin } from "./SharedWorkerServerPlugin"
 import { clientCodeGen } from "./codegen"
 import { filter } from "./utils"
 
@@ -14,7 +14,7 @@ import { filter } from "./utils"
  * vite will follow that import as a [Worker](https://vite.dev/config/worker-options)
  * and the worker plugin will be executed handling the worker-side generation
  */
-export function ProductionClientPlugin(): Plugin {
+export function SharedWorkerClientPlugin(): Plugin {
     return {
         name: `${pkg.name}:client`,
         apply: "build",
@@ -22,7 +22,7 @@ export function ProductionClientPlugin(): Plugin {
         config() {
             return {
                 // inject production worker plugin
-                worker: { format: "es", plugins: () => [ProductionWorkerPlugin()] },
+                worker: { format: "es", plugins: () => [SharedWorkerServerPlugin()] },
             }
         },
         transform(code: string, id: string) {

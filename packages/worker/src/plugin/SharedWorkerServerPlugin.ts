@@ -12,7 +12,7 @@ import { filter } from "./utils"
  * and handles the RPC functionality, managing requests and responses between
  * server and clients
  */
-export function ProductionWorkerPlugin(): Plugin {
+export function SharedWorkerServerPlugin(): Plugin {
     return {
         name: `${pkg.name}:worker`,
         apply: "build",
