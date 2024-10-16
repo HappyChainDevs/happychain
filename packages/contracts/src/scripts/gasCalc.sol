@@ -91,6 +91,7 @@ contract GasEstimator is Test {
         PackedUserOperation memory userOp1 = _getUserOp();
         userOp1.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
         PackedUserOperation memory userOp2 = _getUserOp();
+        userOp2.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
         userOp2.nonce = userOp2.nonce + 1; // Increment nonce to simulate a new operation
 
         PackedUserOperation[] memory userOps = new PackedUserOperation[](2);
