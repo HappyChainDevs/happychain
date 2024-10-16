@@ -33,10 +33,6 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
             this.authState = _authState
         })
 
-        config.msgBus.on(Msgs.OriginRequest, () =>
-            config.msgBus.emit(Msgs.OriginResponse, location.origin as HTTPString),
-        )
-
         this.injectedWalletHandler = new InjectedWalletHandler(config)
         this.registerConnectionHandlerEvents(this.injectedWalletHandler)
 
