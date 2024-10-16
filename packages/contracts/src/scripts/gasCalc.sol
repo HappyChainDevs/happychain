@@ -16,6 +16,7 @@ contract GasEstimator is Test {
     bytes32 private constant DEPLOYMENT_SALT = 0;
     address private constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address private constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
+    address private constant ALLOWED_BUNDLER = 0x0000000000000000000000000000000000000000;
     uint256 private constant DUMMY_REQUIRED_PREFUND = 1e18;
 
     IPaymaster private happyPaymaster;
@@ -30,18 +31,20 @@ contract GasEstimator is Test {
     }
 
     /**
-     * @notice Measures gas usage for various user operations in isolated transactions.
+     * @notice Measures gas usage for various user operations, including:
+     * 1. Cold storage access in isolated transactions.
+     * 2. Warm storage access by the same user within a single transaction.
+     * 3. Warm storage access by different users within a single transaction.
      *
      * This test estimates gas consumption for:
-     * 1. Initial storage initialization.
+     * 1. Initial storage initialization (cold storage).
      * 2. Cold storage access with a different sender.
      * 3. Cold storage access by validating the same user operation again.
      * 4. A user operation with larger calldata (round number and double the size).
-     *
-     * Since the tests are run with the `--isolate` flag, each call is executed as a separate top-level
-     * transaction. Thus, Warm storage (in steps 2 and 3) cannot be simulated in this test due to isolation.
+     * 5. Another userOp by the same user in a single transaction (Warm storage access).
+     * 6. Another userOp by different user in a single transaction (Warm storage access).
      */
-    function testEstimatePaymasterValidateUserOpGasIsolatedTxns() public {
+    function testEstimatePaymasterValidateUserOpGas() public {
         // Step 1: Gas cost when storage transitions from zero to non-zero (worst-case scenario)
         PackedUserOperation memory userOp1 = _getUserOp();
         uint256 gasForStorageInitialization = _estimatePaymasterValidateUserOpGas(userOp1);
@@ -64,67 +67,47 @@ contract GasEstimator is Test {
         userOp4.callData = _createCalldata(512);
         uint256 gasForDoubleCalldata = _estimatePaymasterValidateUserOpGas(userOp4);
 
-        console.log("Gas Report for User Operations:");
-        console.log("  1. Initial userOp (storage initialization):");
-        console.log("     - Gas used: %d gas", gasForStorageInitialization);
+        console.log("Gas Report for Cold Storage Operations:");
+        console.log("  1. Initial userOp (storage initialization): %d gas", gasForStorageInitialization);
+        console.log("  2. Normal userOp with a different sender: %d gas", gasForDifferentSender);
+        console.log("  3. Same userOp with the same sender: %d gas", gasForSameSender);
+        console.log(
+            "  4. Doubling calldata size (512 bytes vs 256 bytes): %d gas", gasForDoubleCalldata - gasForBaseCalldata
+        );
 
-        console.log("  2. Normal userOp with a different sender (cold storage access):");
-        console.log("     - Gas used: %d gas", gasForDifferentSender);
+        // Step 5: Warm storage - Gas cost when the same user submits multiple operations within a single transaction
+        PackedUserOperation memory userOpWarm1 = _getUserOp();
+        userOpWarm1.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
+        PackedUserOperation memory userOpWarm2 = _getUserOp();
+        userOpWarm2.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
+        userOpWarm2.nonce = userOpWarm2.nonce + 1; // Increment nonce to simulate a new operation
 
-        console.log("  3. Same userOp with the same sender (cold storage access due to isolation):");
-        console.log("     - Gas used: %d gas", gasForSameSender);
+        PackedUserOperation[] memory userOpsWarmSame = new PackedUserOperation[](2);
+        userOpsWarmSame[0] = userOpWarm1;
+        userOpsWarmSame[1] = userOpWarm2;
+        uint256[] memory gasUsedWarmSame = this._estimatePaymasterValidateUserOpGasForMultipleOps(userOpsWarmSame);
 
-        console.log("  4. Doubling calldata size (512 bytes vs 256 bytes):");
-        console.log("     - Additional gas cost: %d gas", gasForDoubleCalldata - gasForBaseCalldata);
-    }
+        // Step 6: Warm storage - Gas cost when different users submit operations within a single transaction
+        PackedUserOperation memory userOpWarmDiff1 = _getUserOp();
+        userOpWarmDiff1.sender = address(0x19aC95a5524Db39021ba2F10E4f65574dfEd2745);
+        PackedUserOperation memory userOpWarmDiff2 = _getUserOp();
+        userOpWarmDiff2.nonce = userOpWarmDiff2.nonce + 1; // Increment nonce to simulate a new operation
+        userOpWarmDiff2.sender = address(0x19aC95A5524DB39021Ba2f10e4f65574DFED2746);
 
-    /**
-     * @notice Measures gas usage when validating the same user operation twice within a single transaction.
-     *
-     * This test simulates warm storage access for the second userOp by executing both userOps within the same
-     * transaction. This allows us to measure gas savings when the same user submits multiple userOps.
-     *
-     * Storage slots remain warm between validations, providing accurate
-     * gas measurements for multiple operations by the same sender.
-     */
-    function testEstimatePaymasterValidateUserOpGasWarmStorageSameUser() public {
-        PackedUserOperation memory userOp1 = _getUserOp();
-        userOp1.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
-        PackedUserOperation memory userOp2 = _getUserOp();
-        userOp2.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
-        userOp2.nonce = userOp2.nonce + 1; // Increment nonce to simulate a new operation
+        PackedUserOperation[] memory userOpsWarmDiff = new PackedUserOperation[](2);
+        userOpsWarmDiff[0] = userOpWarmDiff1;
+        userOpsWarmDiff[1] = userOpWarmDiff2;
+        uint256[] memory gasUsedWarmDiff = this._estimatePaymasterValidateUserOpGasForMultipleOps(userOpsWarmDiff);
 
-        PackedUserOperation[] memory userOps = new PackedUserOperation[](2);
-        userOps[0] = userOp1;
-        userOps[1] = userOp2;
-
-        uint256[] memory gasUsed = this._estimatePaymasterValidateUserOpGasForMultipleOps(userOps);
-
-        console.log("Gas used for validating same userOp again (warm storage access): %d gas", gasUsed[1]);
-    }
-
-    /**
-     * @notice Measures gas usage when validating user operations from different senders within a single transaction.
-     *
-     * This test checks how storage slots accessed by one user affect gas consumption for another user when
-     * multiple userOps are executed within the same transaction.
-     *
-     * It simulates warm storage access, allowing us to determine if multiple users
-     * in the same block benefit from reduced gas costs due to previously initialized storage slots.
-     */
-    function testEstimatePaymasterValidateUserOpGasWarmStorageDifferentUsers() public {
-        PackedUserOperation memory userOp1 = _getUserOp();
-        userOp1.sender = address(0x19aC95a5524Db39021ba2F10E4f65574dfEd2745);
-        PackedUserOperation memory userOp2 = _getUserOp();
-        userOp2.nonce = userOp2.nonce + 1; // Increment nonce to simulate a new operation
-        userOp2.sender = address(0x19aC95A5524DB39021Ba2f10e4f65574DFED2746);
-
-        PackedUserOperation[] memory userOps = new PackedUserOperation[](2);
-        userOps[0] = userOp1;
-        userOps[1] = userOp2;
-
-        uint256[] memory gasUsed = this._estimatePaymasterValidateUserOpGasForMultipleOps(userOps);
-        console.log("Gas used for validating userOp with different sender (warm storage access): %d gas", gasUsed[1]);
+        console.log("Gas Report for Warm Storage Operations:");
+        console.log(
+            "  5. Validating another userOp from the same sender in same transaction (warm storage access): %d gas",
+            gasUsedWarmSame[1]
+        );
+        console.log(
+            "  6. Validating another userOp from different sender in same transaction (warm storage access): %d gas",
+            gasUsedWarmDiff[1]
+        );
     }
 
     /**
@@ -147,7 +130,7 @@ contract GasEstimator is Test {
             PackedUserOperation memory userOp = userOps[i];
             bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
-            vm.prank(ENTRYPOINT_V7);
+            vm.prank(ENTRYPOINT_V7, ALLOWED_BUNDLER);
             uint256 gasBefore = gasleft();
             happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
             uint256 gasAfter = gasleft();
@@ -165,7 +148,7 @@ contract GasEstimator is Test {
     function _estimatePaymasterValidateUserOpGas(PackedUserOperation memory userOp) internal returns (uint256) {
         bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
-        vm.prank(ENTRYPOINT_V7);
+        vm.prank(ENTRYPOINT_V7, ALLOWED_BUNDLER);
         uint256 gasBefore = gasleft();
         happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
         uint256 gasAfter = gasleft();
