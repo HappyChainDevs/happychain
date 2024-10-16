@@ -84,6 +84,7 @@ test-gas:
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the test-script.
 test-aa-gas:
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate
+	make aa-demo
 .PHONY: test-aa-gas
 
 test-aa-gas-flamechart:
