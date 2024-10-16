@@ -18,7 +18,6 @@ build.tsc.watch:
 	bun tsc --build tsconfig.build.json --watch;
 .PHONY: build.tsc.watch
 
-
 dev:: node_modules
 	@rm -rf ./dist
 	@mkdir ./dist

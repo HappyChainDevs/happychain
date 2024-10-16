@@ -16,9 +16,9 @@ export function clientCodeGen(code: string, id: string) {
     return ""
         + `// ${pkg.name} starts\n`
         + 'import SharedWorker from "@okikio/sharedworker"\n'
-        + `import { HappyClient } from "${pkg.name}/runtime"\n`
+        + `import { SharedWorkerClient } from "${pkg.name}/runtime"\n`
         + `const __worker__ = new SharedWorker(new URL(${stringId}, import.meta.url), ${options})\n`
-        + "const __client__ = new HappyClient(__worker__)\n"
+        + "const __client__ = new SharedWorkerClient(__worker__)\n"
         + "export const dispatch = __client__.dispatch.bind(__client__)\n"
         + "export const addMessageListener = __client__.addMessageListener.bind(__client__)\n"
         + `// ${pkg.name} ends\n`
@@ -34,8 +34,8 @@ export function workerCodeGen(code: string, id: string) {
     // biome-ignore format: tidy
     return ""
         + `// ${pkg.name} starts\n`
-        + `import { HappyWorker } from '${pkg.name}/runtime'\n`
-        + "const worker = new HappyWorker(self, [\n"
+        + `import { SharedWorkerServer } from '${pkg.name}/runtime'\n`
+        + "const worker = new SharedWorkerServer(self, [\n"
         +       exports.map((ex) => `    ${ex.name}`).join(",\n")
         + `], ${stringWorkerName})\n`
         + `// ${pkg.name} ends\n`

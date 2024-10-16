@@ -5,7 +5,7 @@ import { type RpcPayload, makeBroadcastPayload, makePingPayload, makeRpcPayload,
 type WorkerUnion = SharedWorker | Worker
 type PortUnion = SharedWorker["port"] | Worker
 
-export class HappyClient {
+export class SharedWorkerClient {
     readonly port: PortUnion
 
     private callbacks = new Map<string, (payload: RpcPayload) => void>()
@@ -14,9 +14,7 @@ export class HappyClient {
 
     constructor(worker: WorkerUnion) {
         this.port = "port" in worker ? worker.port : worker
-        //
         this.heartbeat()
-
         this.port.onmessage = this.handleMessage.bind(this)
     }
 
@@ -28,7 +26,10 @@ export class HappyClient {
     private handleMessage = (event: MessageEvent) => {
         const payload = parsePayload(event.data)
         // all unsupported calls will be silently dropped
-        if (!payload) return
+        if (!payload) {
+            console.error(`Unknown SharedWorker payload received: ${JSON.stringify(event.data, null, 2)}`)
+            return
+        }
 
         switch (payload.command) {
             case "rpc": {
@@ -41,7 +42,6 @@ export class HappyClient {
             }
             case "broadcast": {
                 // 'allSettled' vs 'all' so any errors in app code don't propagate here.
-                // don't need to wait for the promises to resolve
                 void Promise.allSettled(this.messageCallbacks.map((fn) => fn.apply(event, [payload.data])))
                 break
             }
@@ -71,12 +71,12 @@ export class HappyClient {
         }
     }
 
-    // exported client function
+    // Codegen will export this function at the top-level when importing a worker file.
     addMessageListener<T>(fn: MessageCallback<T>) {
         this.messageCallbacks.push(fn)
     }
 
-    // exported client function
+    // Codegen will export this function at the top-level when importing a worker file.
     dispatch(data: unknown) {
         this.port.postMessage(makeBroadcastPayload(data))
     }
