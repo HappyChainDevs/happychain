@@ -1,10 +1,15 @@
 Ran 3 tests for src/scripts/gasCalc.sol:GasEstimator
-[PASS] testEstimatePaymasterValidateUserOpGasIsolatedTxns() (gas: 370473)
+[PASS] testEstimatePaymasterValidateUserOpGasIsolatedTxns() (gas: 371135)
 Logs:
-  Gas used for initial userOp (storage initialization): 62960 gas
-  Gas used for normal UserOp with a different sender (cold storage access): 58398 gas
-  Gas used for the same UserOp with the same sender (cold storage access due to isolation): 41559 gas
-  Additional gas cost for doubling calldata (512 bytes vs 256 bytes): 4106 gas
+  Gas Report for User Operations:
+    1. Initial userOp (storage initialization):
+       - Gas used: 62960 gas
+    2. Normal userOp with a different sender (cold storage access):
+       - Gas used: 58366 gas
+    3. Same userOp with the same sender (cold storage access due to isolation):
+       - Gas used: 41515 gas
+    4. Doubling calldata size (512 bytes vs 256 bytes):
+       - Additional gas cost: 4107 gas
 
 [PASS] testEstimatePaymasterValidateUserOpGasWarmStorageDifferentUsers() (gas: 101530)
 Logs:
@@ -16,6 +21,4 @@ Logs:
   Gas used for initial userOp (storage initialization): 30730 gas
   Gas used for validating same userOp again (warm storage access): 4482 gas
 
-Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 137.19ms (139.18ms CPU time)
 
-Ran 1 test suite in 175.39ms (137.19ms CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)

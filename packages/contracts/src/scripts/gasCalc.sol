@@ -44,46 +44,44 @@ contract GasEstimator is Test {
      * 3. Cold storage access by validating the same user operation again.
      * 4. A user operation with larger calldata (round number and double the size).
      *
-     * Since the tests are run with the `--isolate` flag, each call is executed as a separate
-     * top-level transaction. Warm storage cannot be simulated in this test due to isolation.
+     * Since the tests are run with the `--isolate` flag, each call is executed as a separate top-level
+     * transaction. Thus, Warm storage (in steps 2 and 3) cannot be simulated in this test due to isolation.
      */
     function testEstimatePaymasterValidateUserOpGasIsolatedTxns() public {
         // Step 1: Gas cost when storage transitions from zero to non-zero (worst-case scenario)
         PackedUserOperation memory userOp1 = _getUserOp();
-        uint256 gasUsedStep1 = _estimatePaymasterValidateUserOpGas(userOp1);
-        console.log("Gas used for initial userOp (storage initialization): %d gas", gasUsedStep1);
+        uint256 gasForStorageInitialization = _estimatePaymasterValidateUserOpGas(userOp1);
 
-        // Step 2: Gas cost for a normal UserOp with a different sender (cold storage access)
+        // Step 2: Gas cost for a different sender (cold storage access)
         PackedUserOperation memory userOp2 = userOp1;
-        userOp2.sender = address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742); // Different sender from userOp1
-        uint256 gasUsedStep2 = _estimatePaymasterValidateUserOpGas(userOp2);
-        console.log("Gas used for normal UserOp with a different sender (cold storage access): %d gas", gasUsedStep2);
+        userOp2.sender = address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742);
+        uint256 gasForDifferentSender = _estimatePaymasterValidateUserOpGas(userOp2);
 
-        // Step 3: Gas cost for the same UserOp (same sender, different nonce) in isolated transaction
-        PackedUserOperation memory userOp3 = userOp2; // Same as userOp2, same sender
+        // Step 3: Gas cost for the same sender (different nonce)
+        PackedUserOperation memory userOp3 = userOp2;
         userOp3.nonce = userOp3.nonce + 1; // Increment nonce to represent a new operation with the same sender
-        uint256 gasUsedStep3 = _estimatePaymasterValidateUserOpGas(userOp3);
-        console.log("Gas used for the same UserOp with the same sender (cold storage access due to isolation): %d gas", gasUsedStep3);
+        uint256 gasForSameSender = _estimatePaymasterValidateUserOpGas(userOp3);
 
         // Step 4: Gas cost for a UserOp with larger calldata (round number and double that)
         PackedUserOperation memory userOp4 = _getUserOp();
+        userOp4.callData = _createCalldata(256);
+        uint256 gasForBaseCalldata = _estimatePaymasterValidateUserOpGas(userOp4);
 
-        bytes memory baseCalldata = new bytes(256); // 256 bytes for the first userOp
-        for (uint256 i = 0; i < baseCalldata.length; i++) {
-            baseCalldata[i] = bytes1(uint8(i));
-        }
+        userOp4.callData = _createCalldata(512);
+        uint256 gasForDoubleCalldata = _estimatePaymasterValidateUserOpGas(userOp4);
 
-        userOp4.callData = baseCalldata;
-        uint256 gasUsedStep4Base = _estimatePaymasterValidateUserOpGas(userOp4);
+        console.log("Gas Report for User Operations:");
+        console.log("  1. Initial userOp (storage initialization):");
+        console.log("     - Gas used: %d gas", gasForStorageInitialization);
 
-        bytes memory doubleCalldata = new bytes(512); // 512 bytes for the second userOp
-        for (uint256 i = 0; i < doubleCalldata.length; i++) {
-            doubleCalldata[i] = bytes1(uint8(i));
-        }
-        userOp4.callData = doubleCalldata;
-        uint256 gasUsedStep4Double = _estimatePaymasterValidateUserOpGas(userOp4);
+        console.log("  2. Normal userOp with a different sender (cold storage access):");
+        console.log("     - Gas used: %d gas", gasForDifferentSender);
 
-        console.log("Additional gas cost for doubling calldata (512 bytes vs 256 bytes): %d gas", gasUsedStep4Double - gasUsedStep4Base);
+        console.log("  3. Same userOp with the same sender (cold storage access due to isolation):");
+        console.log("     - Gas used: %d gas", gasForSameSender);
+
+        console.log("  4. Doubling calldata size (512 bytes vs 256 bytes):");
+        console.log("     - Additional gas cost: %d gas", gasForDoubleCalldata - gasForBaseCalldata);
     }
 
     /**
@@ -175,5 +173,13 @@ contract GasEstimator is Test {
                 hex"7cfc78c01ec5ea50208d14fb1ee865569e015da08c27807575d70bf66041ffe335fe5e4e0dbcce07fddf357e4584b9e6de77ca13806d2d715ade184ba4bc15fc1b" // solhint-disable-line max-line-length
             )
         });
+    }
+
+    function _createCalldata(uint256 size) internal pure returns (bytes memory) {
+        bytes memory calldataBytes = new bytes(size);
+        for (uint256 i = 0; i < size; i++) {
+            calldataBytes[i] = bytes1(uint8(i));
+        }
+        return calldataBytes;
     }
 }
