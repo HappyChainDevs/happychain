@@ -1,6 +1,8 @@
 import { Dialog } from "@ark-ui/react/dialog"
 import { useAtom } from "jotai"
 import type { FC } from "react"
+import { recipeButton } from "../../../primitives/button/variants"
+import { recipePositioner } from "../../../primitives/popover/variants"
 import { secondaryMenuState } from "../state"
 
 interface DialogConfirmSignOutProps {
@@ -24,12 +26,34 @@ const DialogConfirmSignOut: FC<DialogConfirmSignOutProps> = (props) => {
             }}
             open={state.visibilityDialogSignOutConfirmation}
         >
-            <Dialog.Positioner className="flex justify-center absolute z-[99] bottom-0 start-0 h-full w-full">
-                <Dialog.Content className="bg-base-100 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit h-full inset-0 pb-3 sm:pb-0 relative overflow-y-auto w-full [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
-                    <Dialog.Title>Are you sure you want to sign out ?</Dialog.Title>
-                    <Dialog.Description>You will have to sign-in again to continue using this app.</Dialog.Description>
-                    <Dialog.CloseTrigger onClick={handleDisconnect}>Yes, sign me out</Dialog.CloseTrigger>
-                    <Dialog.CloseTrigger>Go back</Dialog.CloseTrigger>
+            <Dialog.Positioner
+                className={recipePositioner({
+                    mode: "modal",
+                    originY: "bottom",
+                })}
+            >
+                <Dialog.Content className="text-center bg-base-100 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
+                    <div className="my-auto grid gap-2">
+                        <Dialog.Title className="font-bold text-base-content">
+                            Are you sure you want to sign out ?
+                        </Dialog.Title>
+                        <Dialog.Description className="text-neutral text-center text-xs">
+                            You will have to sign-in again to continue using this app.
+                        </Dialog.Description>
+                    </div>
+                    <div className="mt-auto py-4 grid gap-2">
+                        <Dialog.CloseTrigger
+                            className={recipeButton({ intent: "outline-negative", class: "justify-center" })}
+                            onClick={handleDisconnect}
+                        >
+                            Yes, sign me out
+                        </Dialog.CloseTrigger>
+                        <Dialog.CloseTrigger
+                            className={recipeButton({ intent: "ghost", class: "opacity-75 justify-center" })}
+                        >
+                            Go back
+                        </Dialog.CloseTrigger>
+                    </div>
                 </Dialog.Content>
             </Dialog.Positioner>
         </Dialog.Root>

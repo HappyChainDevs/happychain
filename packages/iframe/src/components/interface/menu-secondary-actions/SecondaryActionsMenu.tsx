@@ -80,14 +80,16 @@ const SecondaryActionsMenu: FC = () => {
                         scale: "default",
                         intent: "default",
                         animation: "modal",
-                        class: "py-2 sm:pb-0 [&_[data-part=item]]:inline-flex [&_[data-part=item]]:gap-2 [&_[data-part=item]]:items-center [&_[data-part=item]]:justify-between [&_[data-part=item]]:not([data-disabled])]:cursor-pointer &_[data-part=item][data-disabled]]:cursor-not-allowed [&_[data-part=item]]:p-2 [&_[data-part=item]]:font-medium [&_[data-part=item][data-highlighted]]:bg-base-200",
+                        class: "motion-safe:data-[state=open]:animate-growIn motion-safe:data-[state=closed]:animate-growOut py-2 sm:pb-0 [&_[data-part=item]]:cursor-pointer [&_[data-part=item]]:inline-flex [&_[data-part=item]]:gap-2 [&_[data-part=item]]:items-center [&_[data-part=item]]:min-h-10 [&_[data-part=item]]:justify-between [&_[data-part=item]]:not([data-disabled])]:cursor-pointer &_[data-part=item][data-disabled]]:cursor-not-allowed [&_[data-part=item]]:p-2 [&_[data-part=item]]:font-medium [&_[data-part=item][data-highlighted]]:bg-base-200",
                     })}
                 >
-                    <Menu.Item value={MenuActions.Permissions}>
-                        <span>Permissions</span>
-                        <CaretRight size="1em" />
-                    </Menu.Item>
-                    <Menu.Item value={MenuActions.Disconnect}>Disconnect</Menu.Item>
+                    <div className="overflow-y-auto flex flex-col">
+                        <Menu.Item value={MenuActions.Permissions}>
+                            <span>Permissions</span>
+                            <CaretRight size="1em" />
+                        </Menu.Item>
+                        <Menu.Item value={MenuActions.Disconnect}>Disconnect</Menu.Item>
+                    </div>
                 </Menu.Content>
             </div>
         </Menu.Root>
