@@ -1,15 +1,30 @@
+import { type UUID, createUUID } from "@happychain/common"
 import { generateTestUser } from "@happychain/testing"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { setUser } from "../state/user"
+import type { AppURL } from "../utils/appURL"
 import { clearPermissions, getAllPermissions, grantPermissions, hasPermissions, revokePermissions } from "./permissions"
 
-const originIframe = "http://localhost:1234" as const
-const originDapp = "http://localhost:4321" as const
+const appURL = "http://localhost:1234" as AppURL
+const iframeURL = "http://localhost:4321" as AppURL
 
-vi.mock("../../utils/getDappOrigin", async () => ({
-    getDappOrigin: () => originIframe,
-    getIframeOrigin: () => originDapp,
+vi.mock("../../utils/appURL", async () => ({
+    getAppURL: () => appURL,
+    getIframeURL: () => iframeURL,
 }))
+
+const parentID = createUUID()
+const iframeID = createUUID()
+vi.mock("../requests/utils", (importUtils) =>
+    importUtils<typeof import("../requests/utils")>().then((utils) => ({
+        ...utils,
+        appForSourceID(sourceId: UUID): AppURL | undefined {
+            if (sourceId === parentID) return appURL
+            if (sourceId === iframeID) return iframeURL
+            return undefined
+        },
+    })),
+)
 
 describe("PermissionsService", () => {
     describe("hasPermissions", () => {
@@ -19,19 +34,20 @@ describe("PermissionsService", () => {
                     clearPermissions()
                     setUser(generateTestUser())
                 })
+
                 it("should return true if eth_accounts permission is granted and user exists", () => {
-                    grantPermissions("eth_accounts", { origin: originIframe })
-                    const result = hasPermissions("eth_accounts", { origin: originIframe })
+                    grantPermissions(appURL, "eth_accounts")
+                    const result = hasPermissions(appURL, "eth_accounts")
                     expect(result).toBe(true)
                 })
 
                 it("should return false if eth_accounts permission is not granted and user exists", () => {
-                    const result = hasPermissions("eth_accounts", { origin: originIframe })
+                    const result = hasPermissions(appURL, "eth_accounts")
                     expect(result).toBe(false)
                 })
 
                 it("should return false for an invalid permission", () => {
-                    const result = hasPermissions("invalid_permission", { origin: originIframe })
+                    const result = hasPermissions(appURL, "invalid_permission")
                     expect(result).toBe(false)
                 })
             })
@@ -41,18 +57,18 @@ describe("PermissionsService", () => {
                     setUser(undefined)
                 })
                 it("should return false if eth_accounts permission is granted", () => {
-                    grantPermissions("eth_accounts", { origin: originIframe })
-                    const result = hasPermissions("eth_accounts", { origin: originIframe })
+                    grantPermissions(appURL, "eth_accounts")
+                    const result = hasPermissions(appURL, "eth_accounts")
                     expect(result).toBe(false)
                 })
 
                 it("should return false if eth_accounts permission is not granted", () => {
-                    const result = hasPermissions("eth_accounts", { origin: originIframe })
+                    const result = hasPermissions(appURL, "eth_accounts")
                     expect(result).toBe(false)
                 })
 
                 it("should return false for an invalid permission", () => {
-                    const result = hasPermissions("invalid_permission", { origin: originIframe })
+                    const result = hasPermissions(appURL, "invalid_permission")
                     expect(result).toBe(false)
                 })
             })
@@ -64,8 +80,8 @@ describe("PermissionsService", () => {
                     setUser(generateTestUser())
                 })
                 it("should return false if eth_accounts permission is granted and user exists", () => {
-                    grantPermissions("eth_accounts", { origin: originIframe })
-                    const result = hasPermissions("eth_accounts", { origin: originDapp })
+                    grantPermissions(appURL, "eth_accounts")
+                    const result = hasPermissions(iframeURL, "eth_accounts")
                     expect(result).toBe(false)
                 })
             })
@@ -80,23 +96,23 @@ describe("PermissionsService", () => {
                     setUser(generateTestUser())
                 })
                 it("should grant eth_accounts permission", () => {
-                    const initialState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(false)
 
-                    grantPermissions("eth_accounts", { origin: originIframe })
+                    grantPermissions(appURL, "eth_accounts")
 
-                    const finalState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(true)
                 })
 
                 it("should not change state if eth_accounts permission is already granted", () => {
-                    grantPermissions("eth_accounts", { origin: originIframe })
-                    const initialState = hasPermissions("eth_accounts", { origin: originIframe })
+                    grantPermissions(appURL, "eth_accounts")
+                    const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(true)
 
-                    grantPermissions("eth_accounts", { origin: originIframe })
+                    grantPermissions(appURL, "eth_accounts")
 
-                    const finalState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(true)
                 })
             })
@@ -107,12 +123,12 @@ describe("PermissionsService", () => {
                     setUser(undefined)
                 })
                 it("should not grant eth_accounts permission", () => {
-                    const initialState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(false)
 
-                    grantPermissions("eth_accounts", { origin: originIframe })
+                    grantPermissions(appURL, "eth_accounts")
 
-                    const finalState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(false)
                 })
             })
@@ -124,27 +140,27 @@ describe("PermissionsService", () => {
                     setUser(generateTestUser())
                 })
                 it("should not grant eth_accounts permission", () => {
-                    const initialState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(false)
 
-                    grantPermissions("eth_accounts", { origin: originDapp })
+                    grantPermissions(iframeURL, "eth_accounts")
 
-                    const finalState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(false)
                 })
 
                 it("should not change state if eth_accounts permission is already granted", () => {
-                    grantPermissions("eth_accounts", { origin: originDapp })
-                    const initialStateA = hasPermissions("eth_accounts", { origin: originIframe })
+                    grantPermissions(iframeURL, "eth_accounts")
+                    const initialStateA = hasPermissions(appURL, "eth_accounts")
                     expect(initialStateA).toBe(false)
-                    const initialStateB = hasPermissions("eth_accounts", { origin: originDapp })
+                    const initialStateB = hasPermissions(iframeURL, "eth_accounts")
                     expect(initialStateB).toBe(true)
 
-                    grantPermissions("eth_accounts", { origin: originDapp })
+                    grantPermissions(iframeURL, "eth_accounts")
 
-                    const finalStateA = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalStateA = hasPermissions(appURL, "eth_accounts")
                     expect(finalStateA).toBe(false)
-                    const finalStateB = hasPermissions("eth_accounts", { origin: originDapp })
+                    const finalStateB = hasPermissions(iframeURL, "eth_accounts")
                     expect(finalStateB).toBe(true)
                 })
             })
@@ -155,15 +171,15 @@ describe("PermissionsService", () => {
                     setUser(undefined)
                 })
                 it("should not grant eth_accounts permission", () => {
-                    const initialStateA = hasPermissions("eth_accounts", { origin: originIframe })
+                    const initialStateA = hasPermissions(appURL, "eth_accounts")
                     expect(initialStateA).toBe(false)
-                    const initialStateB = hasPermissions("eth_accounts", { origin: originDapp })
+                    const initialStateB = hasPermissions(iframeURL, "eth_accounts")
                     expect(initialStateB).toBe(false)
-                    grantPermissions("eth_accounts", { origin: originIframe })
+                    grantPermissions(appURL, "eth_accounts")
 
-                    const finalStateA = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalStateA = hasPermissions(appURL, "eth_accounts")
                     expect(finalStateA).toBe(false)
-                    const finalStateB = hasPermissions("eth_accounts", { origin: originDapp })
+                    const finalStateB = hasPermissions(iframeURL, "eth_accounts")
                     expect(finalStateB).toBe(false)
                 })
             })
@@ -179,23 +195,23 @@ describe("PermissionsService", () => {
                 })
 
                 it("should revoke eth_accounts permission", () => {
-                    grantPermissions("eth_accounts", { origin: originIframe })
-                    const initialState = hasPermissions("eth_accounts", { origin: originIframe })
+                    grantPermissions(appURL, "eth_accounts")
+                    const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(true)
 
-                    revokePermissions("eth_accounts", { origin: originIframe })
+                    revokePermissions(appURL, "eth_accounts")
 
-                    const finalState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(false)
                 })
 
                 it("should not change state if eth_accounts permission is already revoked", () => {
-                    const initialState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(false)
 
-                    revokePermissions("eth_accounts", { origin: originIframe })
+                    revokePermissions(appURL, "eth_accounts")
 
-                    const finalState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(false)
                 })
             })
@@ -206,12 +222,12 @@ describe("PermissionsService", () => {
                     setUser(undefined)
                 })
                 it("should not change state", () => {
-                    const initialState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(false)
 
-                    revokePermissions("eth_accounts", { origin: originIframe })
+                    revokePermissions(appURL, "eth_accounts")
 
-                    const finalState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(false)
                 })
             })
@@ -223,14 +239,14 @@ describe("PermissionsService", () => {
                     setUser(generateTestUser())
                 })
 
-                it("should not revoke eth_accounts permission for wrong origin", () => {
-                    grantPermissions("eth_accounts", { origin: originIframe })
-                    const initialState = hasPermissions("eth_accounts", { origin: originIframe })
+                it("should not revoke eth_accounts permission for wrong app", () => {
+                    grantPermissions(appURL, "eth_accounts")
+                    const initialState = hasPermissions(appURL, "eth_accounts")
                     expect(initialState).toBe(true)
 
-                    revokePermissions("eth_accounts", { origin: originDapp })
+                    revokePermissions(iframeURL, "eth_accounts")
 
-                    const finalState = hasPermissions("eth_accounts", { origin: originIframe })
+                    const finalState = hasPermissions(appURL, "eth_accounts")
                     expect(finalState).toBe(true)
                 })
             })
@@ -246,16 +262,16 @@ describe("PermissionsService", () => {
                 })
 
                 it("returns empty array when no permissions have been granted", () => {
-                    expect(getAllPermissions({ origin: originIframe }).length).toBe(0)
+                    expect(getAllPermissions(appURL).length).toBe(0)
                 })
 
-                it("returns all permissions granted to origin", () => {
-                    expect(getAllPermissions({ origin: originIframe }).length).toBe(0)
+                it("returns all permissions granted to app", () => {
+                    expect(getAllPermissions(appURL).length).toBe(0)
 
-                    grantPermissions("eth_accounts", { origin: originIframe })
-                    grantPermissions("test_permission", { origin: originIframe })
+                    grantPermissions(appURL, "eth_accounts")
+                    grantPermissions(appURL, "test_permission")
 
-                    expect(getAllPermissions({ origin: originIframe }).length).toBe(2)
+                    expect(getAllPermissions(appURL).length).toBe(2)
                 })
             })
             describe("without user", () => {
@@ -265,7 +281,7 @@ describe("PermissionsService", () => {
                 })
 
                 it("returns empty array when no permissions have been granted", () => {
-                    expect(getAllPermissions({ origin: originIframe }).length).toBe(0)
+                    expect(getAllPermissions(appURL).length).toBe(0)
                 })
             })
         })
@@ -277,11 +293,11 @@ describe("PermissionsService", () => {
                 })
 
                 it("returns all permissions granted to origin", () => {
-                    grantPermissions("eth_accounts", { origin: originIframe })
-                    grantPermissions("test_permission", { origin: originIframe })
-                    grantPermissions("correct_origin", { origin: originDapp })
+                    grantPermissions(appURL, "eth_accounts")
+                    grantPermissions(appURL, "test_permission")
+                    grantPermissions(iframeURL, "correct_origin")
 
-                    expect(getAllPermissions({ origin: originDapp }).length).toBe(1)
+                    expect(getAllPermissions(iframeURL).length).toBe(1)
                 })
             })
         })
@@ -294,16 +310,16 @@ describe("PermissionsService", () => {
             })
 
             it("clears all permissions granted", () => {
-                expect(getAllPermissions({ origin: originIframe }).length).toBe(0)
+                expect(getAllPermissions(appURL).length).toBe(0)
 
-                grantPermissions("eth_accounts", { origin: originIframe })
-                grantPermissions("test_permission", { origin: originIframe })
+                grantPermissions(appURL, "eth_accounts")
+                grantPermissions(appURL, "test_permission")
 
-                expect(getAllPermissions({ origin: originIframe }).length).toBe(2)
+                expect(getAllPermissions(appURL).length).toBe(2)
 
                 clearPermissions()
 
-                expect(getAllPermissions({ origin: originIframe }).length).toBe(0)
+                expect(getAllPermissions(appURL).length).toBe(0)
             })
         })
         describe("without user", () => {
@@ -313,16 +329,16 @@ describe("PermissionsService", () => {
             })
 
             it("clears all permissions granted", () => {
-                expect(getAllPermissions({ origin: originIframe }).length).toBe(0)
+                expect(getAllPermissions(appURL).length).toBe(0)
 
-                grantPermissions("eth_accounts", { origin: originIframe })
-                grantPermissions("test_permission", { origin: originIframe })
+                grantPermissions(appURL, "eth_accounts")
+                grantPermissions(appURL, "test_permission")
 
-                expect(getAllPermissions({ origin: originIframe }).length).toBe(0)
+                expect(getAllPermissions(appURL).length).toBe(0)
 
                 clearPermissions()
 
-                expect(getAllPermissions({ origin: originIframe }).length).toBe(0)
+                expect(getAllPermissions(appURL).length).toBe(0)
             })
         })
     })

@@ -1,16 +1,17 @@
-import { type HTTPString, createUUID } from "@happychain/common"
-import { type HappyUser, logger } from "@happychain/sdk-shared"
+import { createUUID } from "@happychain/common"
+import { logger } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/index"
+import type { WalletPermissionCaveat } from "viem"
 import {
     type AppPermissions,
     type PermissionsMap,
-    type PermissionsSpec,
+    type PermissionsRequest,
     type WalletPermission,
-    permissionsAtom,
+    permissionsMapAtom,
 } from "../state/permissions"
 import { getUser } from "../state/user"
+import { type AppURL, getAppURL, getIframeURL } from "../utils/appURL"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
-import { getDappOrigin, getIframeOrigin } from "../utils/getDappOrigin"
 
 // === NOTICE ======================================================================================
 
@@ -22,140 +23,145 @@ const store = getDefaultStore()
 
 // === UTILS =======================================================================================
 
-type GetDappPermissionOptions = {
-    user?: HappyUser | undefined
-    origin?: HTTPString
-    permissions?: PermissionsMap
-}
-
-export type PermissionAccessOptions = {
-    /** The URL requesting the permission (either an app or the iframe itself. */
-    origin?: HTTPString
-    /** The permissions for {@link origin}. */
-    dappPermissions?: AppPermissions
-}
-
-export function getDappPermissions({
-    user = getUser(),
-    origin = getDappOrigin(),
-    permissions = store.get(permissionsAtom),
-}: GetDappPermissionOptions = {}): AppPermissions {
+/**
+ * Returns all permissions for the current user on the given app.
+ */
+export function getAppPermissions(app: AppURL): AppPermissions {
+    const user = getUser()
     if (!user) {
         // This should never happen and requires investigating if it does!
         logger.warn("No user found, returning empty permissions.")
         return {}
     }
 
-    const permissionLookupResult = permissions[user.address]?.[origin]
+    const permissionsMap = store.get(permissionsMapAtom)
+    const appPermissions = permissionsMap[user.address]?.[app]
 
-    if (!permissionLookupResult) {
-        // Permissions don't exist, create them.
-        let basePermissions: AppPermissions
-
-        if (user && origin === getIframeOrigin()) {
-            // The iframe is always granted the `eth_accounts` permission.
-            const eth_accounts: WalletPermission = {
-                invoker: getIframeOrigin(),
-                parentCapability: "eth_accounts",
-                caveats: [],
-                date: Date.now(),
-                id: createUUID(),
-            }
-            basePermissions = { eth_accounts }
-        } else {
-            basePermissions = {}
-        }
-
-        // It's not required to set the permissionsAtom here because the permissions don't actually
-        // change (so nothing dependent on the atom needs to update). We just write them to avoid
-        // rerunning the above logic on each lookup.
-        permissions[user.address] ??= {}
-        permissions[user.address][origin] = basePermissions
-
-        return basePermissions
+    if (appPermissions) {
+        return appPermissions
     }
 
-    return permissionLookupResult
+    // Permissions don't exist, create them.
+
+    const baseAppPermissions: AppPermissions =
+        app === getIframeURL()
+            ? {
+                  // The iframe is always granted the `eth_accounts` permission.
+                  eth_accounts: {
+                      invoker: app,
+                      parentCapability: "eth_accounts",
+                      caveats: [],
+                      date: Date.now(),
+                      id: createUUID(),
+                  },
+              }
+            : {}
+
+    // It's not required to set the permissionsAtom here because the permissions don't actually
+    // change (so nothing dependent on the atom needs to update). We just write them to avoid
+    // rerunning the above logic on each lookup.
+    permissionsMap[user.address] ??= {}
+    permissionsMap[user.address][app] = baseAppPermissions
+
+    return baseAppPermissions
 }
 
-function setDappPermissions(permissions: AppPermissions): void {
+/**
+ * Sets the permissions for the current user on the given app.
+ */
+function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
     const user = getUser()
+
     if (!user) {
         // This should never happen and requires investigating if it does!
         logger.warn("No user found, not setting permissions.")
         return
     }
 
-    store.set(permissionsAtom, (prev) => {
-        const values = Object.values(permissions)
-        if (!values.length) {
-            // a call with empty permissions, will clear
-            // all of the connected dapps permissions
-            return { ...prev, [getDappOrigin()]: {} }
-        }
+    const permissionArray = Object.values(appPermissions)
 
-        // if not all permissions supplied are scoped to the
-        // same origin, we will ignore the request as its invalid
-        if (!values.every((a) => a.invoker === values[0].invoker)) {
-            // this should never happen!
+    if (!permissionArray.length) {
+        clearAppPermissions(app)
+        return
+    }
+
+    store.set(permissionsMapAtom, (prev: PermissionsMap) => {
+        if (!permissionArray.every((a) => a.invoker === app)) {
+            // No all permissions supplied are scoped to the app.
+            // This should never happen!
             console.warn("Invalid permission update requested, not setting permissions.")
             return prev
         }
 
-        // All the invokers
-        const { invoker } = values[0]
         return {
             ...prev,
-            [user.address]: {
-                ...prev[user.address],
-                [invoker]: permissions,
-            },
+            [user.address]: { ...prev[user.address], [app]: appPermissions },
         }
     })
 }
 
-function getPermissionArray(permissions: PermissionsSpec): [string, unknown][] {
-    return typeof permissions === "string" ? [[permissions, {}]] : Object.entries(permissions)
+type PermissionRequestEntry = {
+    name: string
+    caveats: WalletPermissionCaveat[]
+}
+
+/**
+ * Converts a permission spec into an array of permission request entries.
+ */
+function permissionRequestEntries(permissions: PermissionsRequest): PermissionRequestEntry[] {
+    const entries: [string, { [caveatType: string]: unknown }][] =
+        typeof permissions === "string" //
+            ? [[permissions, {}]]
+            : Object.entries(permissions)
+
+    return entries.map(([name, caveatsRequest]) => {
+        if (typeof caveatsRequest === "object" && Object.keys(caveatsRequest).length) {
+            throw new Error("Wallet permission caveats not yet supported")
+        }
+
+        // Proper caveat transposition logic — though never used in practice.
+        const caveats: WalletPermissionCaveat[] = //
+            Object.entries(caveatsRequest) //
+                .map(([type, value]) => ({ type, value }))
+
+        return { name, caveats }
+    })
 }
 
 // === GRANT PERMISSIONS ===========================================================================
 
 /**
- * Grants the given permission(s) for the user and returns the list of granted permissions.
- *
- * @notice Caveats are not yet supported
+ * Grants the given permission(s) for the current user and the given app, and returns the list of
+ * granted permissions.
  */
 export function grantPermissions(
-    permissions: PermissionsSpec,
-    // biome-ignore format: readability
-    {
-        origin = getDappOrigin(),
-        dappPermissions = getDappPermissions({ origin }),
-    }: PermissionAccessOptions = {},
+    app: AppURL, //
+    permissionRequest: PermissionsRequest,
 ): WalletPermission[] {
     const grantedPermissions = []
+    const appPermissions = getAppPermissions(app)
 
-    for (const [name, value] of getPermissionArray(permissions)) {
-        if (value && typeof value === "object" && Object.keys(value).length) {
-            throw new Error("WalletPermissionCaveats Not Yet Supported")
-        }
-
+    for (const { name, caveats } of permissionRequestEntries(permissionRequest)) {
         const grantedPermission = {
-            caveats: [],
-            invoker: origin,
+            caveats: caveats,
+            invoker: app,
             parentCapability: name,
             date: Date.now(),
             id: createUUID(),
         }
         grantedPermissions.push(grantedPermission)
-        dappPermissions[name] = grantedPermission
 
-        if (name === "eth_accounts" && origin === getDappOrigin()) {
+        // Ok to update in place: `setAppPermissions` will construct a new object for
+        // permissionsMapAtom.
+        appPermissions[name] = grantedPermission
+
+        // Accounts permission granted, which lets the app access the user object.
+        if (name === "eth_accounts" && app === getAppURL()) {
             emitUserUpdate(getUser())
         }
     }
 
-    setDappPermissions(dappPermissions)
+    setAppPermissions(app, appPermissions)
     return grantedPermissions
 }
 
@@ -165,57 +171,39 @@ export function grantPermissions(
  * Revokes the given permission(s) of the user.
  */
 export function revokePermissions(
-    permissions: PermissionsSpec,
-    // biome-ignore format: readability
-    {
-        origin = getDappOrigin(),
-        dappPermissions = getDappPermissions({ origin }),
-    }: PermissionAccessOptions = {},
+    app: AppURL, //
+    permissionsRequest: PermissionsRequest,
 ): void {
-    for (const [name] of getPermissionArray(permissions)) {
-        delete dappPermissions[name]
+    const appPermissions = getAppPermissions(app)
+
+    for (const { name } of permissionRequestEntries(permissionsRequest)) {
+        delete appPermissions[name]
         if (name === "eth_accounts") {
             emitUserUpdate(undefined)
         }
     }
 
-    setDappPermissions(dappPermissions)
+    setAppPermissions(app, appPermissions)
 }
 
 // === QUERY PERMISSIONS (BOOLEAN) =================================================================
 
 /**
  * Check if user has (all of) the given permission(s).
- *
- * @notice Caveats are not yet supported
  */
 export function hasPermissions(
-    permissions: PermissionsSpec,
-    // biome-ignore format: readability
-    {
-        origin = getDappOrigin(),
-        dappPermissions = getDappPermissions({ origin }),
-    }: PermissionAccessOptions = {},
+    app: AppURL, //
+    permissionsRequest: PermissionsRequest,
 ): boolean {
-    return getPermissionArray(permissions).every(([name, value]) => {
-        if (value && typeof value === "object" && Object.keys(value).length) {
-            throw new Error("WalletPermissionCaveats not yet supported")
-        }
-        return name in dappPermissions
-    })
+    const appPermissions = getAppPermissions(app)
+    return permissionRequestEntries(permissionsRequest).every(({ name }) => name in appPermissions)
 }
 
 /**
  * Return all of the user's permissions.
  */
-export function getAllPermissions(
-    // biome-ignore format: readability
-    {
-        origin = getDappOrigin(),
-        dappPermissions = getDappPermissions({ origin }),
-    }: PermissionAccessOptions = {},
-): WalletPermission[] {
-    return Array.from(Object.values(dappPermissions))
+export function getAllPermissions(app: AppURL): WalletPermission[] {
+    return Array.from(Object.values(getAppPermissions(app)))
 }
 
 // === QUERY PERMISSIONS (WITH CAVEATS) ============================================================
@@ -225,28 +213,40 @@ export function getAllPermissions(
  * and returns an aray that contains the permission only if it is granted, along with its caveats.
  */
 export function getPermissions(
-    permissions: PermissionsSpec,
-    // biome-ignore format: readability
-    {
-        origin = getDappOrigin(),
-        dappPermissions = getDappPermissions({ origin }),
-    }: PermissionAccessOptions = {},
+    app: AppURL, //
+    permissionsRequest: PermissionsRequest,
 ): WalletPermission[] {
-    return getPermissionArray(permissions)
-        .map(([name]) => dappPermissions[name])
-        .filter((permission) => !!permission)
+    const appPermissions = getAppPermissions(app)
+    return permissionRequestEntries(permissionsRequest)
+        .map(({ name }) => appPermissions[name])
+        .filter(Boolean)
 }
 
 // === CLEAR PERMISSIONS ===========================================================================
 
 /**
- * Clears all permissions for the current user + app pair.
+ * Clears all permissions for the current user (for all apps).
  */
 export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
-    store.set(permissionsAtom, (prev) => {
+    store.set(permissionsMapAtom, (prev) => {
         const { [user.address]: _, ...rest } = prev
         return rest
+    })
+}
+
+/**
+ * Clears all permissions for the user on the given app.
+ */
+export function clearAppPermissions(app: AppURL): void {
+    const user = getUser()
+    if (!user) return
+    store.set(permissionsMapAtom, (prev) => {
+        const {
+            [user.address]: { [app]: _, ...otherApps },
+            ...otherUsers
+        } = prev
+        return { ...otherUsers, [user.address]: otherApps }
     })
 }

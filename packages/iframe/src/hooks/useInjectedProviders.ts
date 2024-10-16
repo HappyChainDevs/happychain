@@ -6,6 +6,7 @@ import { appMessageBus } from "../services/eventBus"
 import { grantPermissions, revokePermissions } from "../services/permissions"
 import { StorageKey, storage } from "../services/storage"
 import { authStateAtom } from "../state/authState"
+import { getAppURL } from "../utils/appURL"
 import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"
 import { isEip6963Event } from "../utils/isEip6963Event"
 
@@ -27,7 +28,7 @@ export function useInjectedProviders(): ConnectionProvider[] {
         })
     }, [])
 
-    const providers = useMemo(
+    return useMemo(
         () =>
             Array.from(injectedProviders.values()).map((eip1193Provider) => {
                 return {
@@ -49,8 +50,6 @@ export function useInjectedProviders(): ConnectionProvider[] {
             }),
         [setAuthState, injectedProviders],
     )
-
-    return providers
 }
 
 function useRequestEIP6963Providers() {
@@ -79,14 +78,15 @@ function useRequestEIP6963Providers() {
         // forward the request and response to the iframe so that we can mirror the permission.
         return appMessageBus.on(Msgs.MirrorPermissions, ({ request, response }) => {
             const hasResponse = Array.isArray(response) && response.length
+            const app = getAppURL()
             switch (request.method) {
                 case "eth_accounts":
                 case "eth_requestAccounts":
                     // Revoke the eth_accounts permission if the response is empty.
                     // biome-ignore format: readability
                     hasResponse
-                      ? grantPermissions("eth_accounts")
-                      : revokePermissions("eth_accounts")
+                      ? grantPermissions(app, "eth_accounts")
+                      : revokePermissions(app, "eth_accounts")
                     return
 
                 case "wallet_requestPermissions":
@@ -94,11 +94,11 @@ function useRequestEIP6963Providers() {
                     // setting the permissions that the user has authorized, since we either will be
                     // more permissive (e.g. allow methods only on the basis of eth_accounts and
                     // user approval) or do not support the capability the permission relates to.
-                    hasResponse && grantPermissions(request.params[0])
+                    hasResponse && grantPermissions(app, request.params[0])
                     return
 
                 case "wallet_revokePermissions":
-                    request.params && revokePermissions(request.params[0])
+                    request.params && revokePermissions(app, request.params[0])
                     return
             }
         })

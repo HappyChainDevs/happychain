@@ -7,6 +7,7 @@ import { setUserWithProvider } from "../actions/setUserWithProvider"
 import { grantPermissions, hasPermissions } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
 import { userAtom } from "../state/user"
+import { getAppURL } from "../utils/appURL"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 
 // Whether to grant the eth_accounts permission upon login.
@@ -100,9 +101,8 @@ export function useSocialProviders() {
                 // Logged in from the app, implicitly grant `eth_accounts` (connection) permission.
                 if (needsImplicitConnectionPerm.current) {
                     needsImplicitConnectionPerm.current = false // only grant once
-                    grantPermissions("eth_accounts")
-                    emitUserUpdate(user)
-                } else if (hasPermissions("eth_accounts")) {
+                    grantPermissions(getAppURL(), "eth_accounts") // will emit UserChanged
+                } else if (hasPermissions(getAppURL(), "eth_accounts")) {
                     // The user is automatically sent to the app whenever the user changes or
                     // when the `eth_accounts` permission is granted. However, if reconnecting on
                     // page load, neither of these change, and we need to manually send here.
