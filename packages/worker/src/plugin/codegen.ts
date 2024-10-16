@@ -8,8 +8,8 @@ export function clientCodeGen(code: string, id: string) {
     const stringId = JSON.stringify(id)
     const options = JSON.stringify({ type: "module", name: workerName })
 
-    const defineFunc = (ex: ReturnType<typeof findExports>[number]) => {
-        return `export const ${ex.name} = __client__.__defineFunction(${JSON.stringify(ex.name)})`
+    const defineFunc = (ex: ReturnType<typeof findExports>[number], idx: number) => {
+        return `export const ${ex.name} = __client__.__defineFunction('__FUNC_${idx}__')`
     }
 
     // biome-ignore format: tidy

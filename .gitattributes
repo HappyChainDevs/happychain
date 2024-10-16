@@ -1,3 +1,4 @@
 api-extractor.json  linguist-language=JSON-with-Comments
 tsconfig.json  linguist-language=JSON-with-Comments
 tsconfig.*.json  linguist-language=JSON-with-Comments
+*.lockb binary diff=lockb

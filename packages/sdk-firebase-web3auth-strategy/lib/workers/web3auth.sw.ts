@@ -77,8 +77,7 @@ ethereumSigningProvider.on("accountsChanged", (data) => {
  * - connect
  * - disconnect
  */
-// TEMP RENAMED DUE TO NAMING COLLISION WITH web3Auth
-export async function init3() {
+export async function init() {
     await web3Auth.init()
 }
 

@@ -1,7 +1,7 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { JWTLoginParams } from "@web3auth/mpc-core-kit"
 import type { EIP1193Provider } from "viem"
-import { addMessageListener, connect, disconnect, init3 as init, request } from "../workers/web3auth.sw"
+import { addMessageListener, connect, disconnect, init, request } from "../workers/web3auth.sw"
 
 /**
  * Web3Auth EIP1193 Provider. this proxies all requests to the shared worker

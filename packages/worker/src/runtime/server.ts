@@ -35,10 +35,17 @@ export class SharedWorkerServer implements ServerInterface {
         public readonly workerName = genName(),
     ) {
         this._scope = scope
-        const _fns = fns.filter((fn) => typeof fn === "function")
 
-        for (const fn of _fns) {
-            this._functions.set(fn.name, fn)
+        // Filter function
+        const filteredFns = fns.filter((fn) => typeof fn === "function")
+
+        let idx = 0
+
+        // Indexed based function recovery so that
+        // when the code is minified, both sides of the RPC
+        // service still match
+        for (const fn of filteredFns) {
+            this._functions.set(`__FUNC_${idx++}__`, fn)
         }
 
         this.heartbeat()
@@ -71,23 +78,14 @@ export class SharedWorkerServer implements ServerInterface {
         this._scope.onconnect = (event) => {
             const port = event.ports[0]
             this.start(port)
-            console.log("Started as SharedWorker")
+            console.log(`Started as SharedWorker. Client #${this._ports.size}`)
         }
     }
 
-    private start = (port: MessagePort) => {
+    private start(port: MessagePort) {
         this._ports.set(port, Date.now())
 
-        for (const key of Object.keys(console)) {
-            const possible = console[key as keyof typeof console]
-            if (typeof possible !== "function") return
-
-            // @ts-expect-error
-            // Override 'console' within the worker so that it attempts to proxy the commands to the client,
-            // prefixed by the sender filename, instead of logging into the void
-            console[key] = (...args: unknown[]) =>
-                port.postMessage(makeConsolePayload(key, [`[${this.workerName}]`, ...args]))
-        }
+        this.patchConsole(port)
 
         port.onmessage = async (event) => {
             const payload = parsePayload(event.data)
@@ -127,6 +125,27 @@ export class SharedWorkerServer implements ServerInterface {
                     console.error(`Unknown payload command: ${JSON.stringify(event.data, null, 2)}`)
                 }
             }
+        }
+    }
+
+    /**
+     * Within a Worker there is no console available, so this attempts to remedy that
+     *
+     * Overrides all console.___ functions with a postMessage attempt
+     * to execute the console function on the client instead. Since this overwrites
+     * console functions directly, logs will be viewable only on the most recently
+     * connected tab/window
+     */
+    private patchConsole(port: MessagePort) {
+        for (const key of Object.keys(console)) {
+            const possible = console[key as keyof typeof console]
+            if (typeof possible !== "function") return
+
+            // @ts-expect-error
+            // Override 'console' within the worker so that it attempts to proxy the commands to the client,
+            // prefixed by the sender filename, instead of logging into the void
+            console[key] = (...args: unknown[]) =>
+                port.postMessage(makeConsolePayload(key, [`[${this.workerName}]`, ...args]))
         }
     }
 
