@@ -31,7 +31,7 @@ const ActivityView = () => {
     }
 
     return (
-        <div className="flex flex-col w-full space-y-2 h-4/5 p-2 bg-slate-300 rounded-b-xl rounded-tr-xl overflow-y-auto">
+        <div className="flex flex-col w-full space-y-2 h-full p-2 bg-slate-300 rounded-b-xl rounded-tr-xl overflow-y-auto">
             {userPendingTxs.length > 0 && <LoadingSkeleton />}
 
             {userTxHistory.length > 0 &&

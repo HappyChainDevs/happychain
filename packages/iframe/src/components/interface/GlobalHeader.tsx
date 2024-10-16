@@ -1,26 +1,30 @@
 import { ArrowLeft } from "@phosphor-icons/react"
 import { useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtom } from "jotai"
-import { useState } from "react"
 import { trackSendAtom } from "../../state/interfaceState"
 
 const GlobalHeader = () => {
-    const [showModal, setShowModal] = useState(false)
-    const [, setTrackSend] = useAtom(trackSendAtom)
+    const [trackSend, setTrackSend] = useAtom(trackSendAtom)
 
     const location = useLocation()
     const navigate = useNavigate()
 
+    const handleBackButtonClick = () => {
+        if (!trackSend) {
+            // no tx send in progress
+            navigate({ to: "/embed" })
+        }
+    }
+
     const handleModalClose = () => {
-        setShowModal(false)
-        setTrackSend({ val: false })
+        setTrackSend(false)
         navigate({ to: "/embed" })
     }
 
     return (
         <div className="relative flex items-center w-full p-1">
             {location.pathname !== "/embed" && (
-                <button onClick={() => setTrackSend({ setShowModal: setShowModal })} type="button">
+                <button onClick={handleBackButtonClick} type="button">
                     <ArrowLeft weight="bold" className="absolute left-2 top-5" />
                 </button>
             )}
@@ -28,7 +32,7 @@ const GlobalHeader = () => {
             <span className="text-black text-xl py-2 mx-auto hidden lg:flex justify-center">🤠 HappyChain</span>
 
             {/* alert modal for user */}
-            {showModal && (
+            {trackSend && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
                     <div className="modal-box">
                         <h3 className="font-bold text-lg">Transaction in Progress</h3>

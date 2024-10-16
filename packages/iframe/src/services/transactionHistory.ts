@@ -26,7 +26,6 @@ import { confirmedTxsAtom, pendingTxsAtom } from "../state/txHistory"
  * This ensures that the transaction history is updated in real-time as transactions are confirmed.
  */
 
-
 const store = getDefaultStore()
 
 export function addHistoryLogEntry(address: Address, receipt: TransactionReceipt) {

@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useAtom } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
-import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
+import { useSendTransaction } from "wagmi"
 import { trackSendAtom } from "../../../state/interfaceState"
 
 interface SendButtonsInterface {
@@ -13,21 +13,16 @@ interface SendButtonsInterface {
 
 const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     const navigate = useNavigate()
-    const { data: hash, isPending, sendTransaction, error } = useSendTransaction()
+    const { sendTransaction, isPending, isSuccess } = useSendTransaction()
 
-    const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash })
     const [, setTrackSend] = useAtom(trackSendAtom)
 
     useEffect(() => {
-        // if tx is successful, move back to home page of wallet
-        if (isConfirmed) {
-            setTrackSend({ val: false }) // tell iframe state that there's a transaction in-flight
+        if (isSuccess) {
+            setTrackSend(false)
             navigate({ to: "/embed" })
         }
-        if (error) {
-            setTrackSend({ val: false })
-        }
-    }, [error, isConfirmed, navigate, setTrackSend])
+    }, [isSuccess, setTrackSend, navigate])
 
     // navigates back to home page
     const cancelSend = useCallback(() => {
@@ -36,12 +31,13 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
 
     const submitSend = useCallback(() => {
         if (targetAddress && sendValue) {
-            setTrackSend({ val: false })
             // send tx
             sendTransaction({
                 to: targetAddress as Address,
                 value: parseEther(sendValue),
             })
+
+            setTrackSend(true) // tx being set
         }
     }, [sendTransaction, sendValue, setTrackSend, targetAddress])
 
