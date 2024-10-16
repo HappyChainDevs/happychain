@@ -1,58 +1,47 @@
 import { Dialog } from "@ark-ui/react/dialog"
 import { config } from "@happychain/sdk-shared"
-import { CaretLeft as BackIcon, CaretRight as GoToIcon } from "@phosphor-icons/react"
-import { useQuery } from "@tanstack/react-query"
+import { type UseQueryResult, useQuery } from "@tanstack/react-query"
 import { useAtom, useAtomValue } from "jotai"
 import type { FC } from "react"
 import { useAccount } from "wagmi"
-import { permissionsAtom } from "../../../../state/permissions"
+import { revokePermissions } from "../../../../services/permissions"
+import { type AppPermissions, permissionsAtom } from "../../../../state/permissions"
 import { userAtom } from "../../../../state/user"
+import { BackIcon, GoToIcon } from "../../../primitives/dialog/icons"
 import {
     recipeDialogBody,
     recipeDialogHeaderActionsControls,
     recipeDialogHeadline,
 } from "../../../primitives/dialog/variants"
 import { recipeContent, recipePositioner } from "../../../primitives/popover/variants"
-import { dappPermissionsState } from "../../permissions/DialogDappDetailedPermissions"
+import { dialogDappPermissionsAtom } from "../../permissions/DialogDappDetailedPermissions"
 import { secondaryMenuState } from "../state"
+import { ClearAllDappsPermissions } from "./ClearAllDappsPermissions"
 
 const KEY_QUERY_GET_ALL_DAPPS_WIHT_PERMISSIONS = "GET_ALL_DAPPS_WITH_PERMISSIONS"
 
+interface ListDappsProps {
+    query: UseQueryResult<[string, AppPermissions][] | undefined, Error>
+}
 /**
- * List all dapps with permissions
+ * Fetch and display all dapps with 1 or more permissions
  */
-const ListDapps: FC = () => {
-    const [, setStateDisplayedPermissions] = useAtom(dappPermissionsState)
-    const user = useAtomValue(userAtom)
-    const permissionsMap = useAtom(permissionsAtom)[0]
-    const account = useAccount()
+const ListDapps: FC<ListDappsProps> = (props) => {
+    const { query } = props
+    const [, setStateDisplayedPermissions] = useAtom(dialogDappPermissionsAtom)
 
-    const queryDappsWithPermissions = useQuery({
-        enabled: !!(user?.address && account?.address),
-        queryKey: [KEY_QUERY_GET_ALL_DAPPS_WIHT_PERMISSIONS, account?.address],
-        queryFn: () => {
-            return permissionsMap[account.address!]
-        },
-        select(data) {
-            if (!data) return
-            return Object.entries(data).filter((record) => {
-                const [dappUrl, dappPermissions] = record
-                return dappUrl !== config.iframePath && Object.keys(dappPermissions).length > 0
-            })
-        },
-    })
-    if (queryDappsWithPermissions.status === "error") return <p>Something went wrong</p>
-    if (queryDappsWithPermissions.status === "pending") return <>...</>
+    if (query.status === "error") return <p>Something went wrong</p>
+    if (query.status === "pending") return <>...</>
     return (
-        <>
-            {(queryDappsWithPermissions?.data?.length ?? 0) > 0 ? (
+        <div data-part="wrapper">
+            {(query?.data?.length ?? 0) > 0 ? (
                 <>
                     <ul>
-                        {queryDappsWithPermissions.data!.map((record) => {
+                        {query.data!.map((record) => {
                             const [dappUrl, permissions] = record
                             return (
                                 <li
-                                    className="inline-flex w-full p-2 focus-within:bg-base-200 focus-within:[&_svg]:text-accent-content font-medium relative overflow-hidden text-ellipsis items-center gap-2 text-sm"
+                                    className="inline-flex w-full p-2 min-h-10 focus-within:bg-base-200 focus-within:[&_svg]:text-accent-content font-medium relative overflow-hidden text-ellipsis items-center gap-2 text-sm"
                                     key={`list-permissions-dapp-${dappUrl}`}
                                 >
                                     <img
@@ -88,15 +77,33 @@ const ListDapps: FC = () => {
                     It seems there aren't any apps you gave permissions to.
                 </p>
             )}
-        </>
+        </div>
     )
 }
 
 /**
- * Displays all dapps with permissions
+ * Displays all dapps with permissions and let user open dapp detailed permission view
  */
 const DialogAllDappsWithPermissions: FC = () => {
     const [state, setState] = useAtom(secondaryMenuState)
+    const user = useAtomValue(userAtom)
+    const permissionsMap = useAtom(permissionsAtom)[0]
+    const account = useAccount()
+
+    const queryDappsWithPermissions = useQuery({
+        enabled: !!(user?.address && account?.address),
+        queryKey: [KEY_QUERY_GET_ALL_DAPPS_WIHT_PERMISSIONS, account?.address],
+        queryFn: () => {
+            return permissionsMap[account.address!]
+        },
+        select(data) {
+            if (!data) return
+            return Object.entries(data).filter((record) => {
+                const [dappUrl, dappPermissions] = record
+                return dappUrl !== config.iframePath && Object.keys(dappPermissions).length > 0
+            })
+        },
+    })
 
     return (
         <Dialog.Root
@@ -123,6 +130,7 @@ const DialogAllDappsWithPermissions: FC = () => {
                         intent: "default",
                         scale: "default",
                         animation: "modal",
+                        class: "max-h-[calc(100%-3rem)] !overflow-hidden",
                     })}
                 >
                     <Dialog.Title
@@ -131,7 +139,7 @@ const DialogAllDappsWithPermissions: FC = () => {
                             spacing: "tight",
                             scale: "default",
                             label: "default",
-                            class: "flex items-center justify-center",
+                            class: "flex motion-safe:animate-slideDown items-center justify-center",
                         })}
                     >
                         Permissions
@@ -139,20 +147,30 @@ const DialogAllDappsWithPermissions: FC = () => {
                     <div
                         className={recipeDialogBody({
                             spacing: "default",
-                            class: "grid",
+                            class: "grid relative overflow-y-auto",
                         })}
                     >
                         <Dialog.Description className="sr-only">
                             Access and change the permissions of all dApps you interacted with.
                         </Dialog.Description>
-                        <ListDapps />
+                        <ListDapps query={queryDappsWithPermissions} />
+                        <ClearAllDappsPermissions
+                            handleClearAllDappsPermissions={() => {
+                                queryDappsWithPermissions.data?.forEach((record) => {
+                                    const [, dappPermissions] = record
+
+                                    revokePermissions(dappPermissions)
+                                })
+                            }}
+                        />
+
                         <Dialog.CloseTrigger
                             className={recipeDialogHeaderActionsControls({
                                 layer: "header",
                                 alignmentX: "start",
                             })}
                         >
-                            <BackIcon />
+                            <BackIcon weight="bold" className="text-[1rem]" />
                             <span className="sr-only">Back to menu</span>
                         </Dialog.CloseTrigger>
                     </div>

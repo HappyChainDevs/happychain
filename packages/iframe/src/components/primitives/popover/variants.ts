@@ -8,7 +8,7 @@ const recipePositioner = cva("", {
     variants: {
         mode: {
             default: "",
-            modal: "flex justify-center absolute z-[99] start-0 size-full",
+            modal: "flex justify-center absolute z-[99] pointer-events-none overflow-hidden start-0 size-full",
         },
         originY: {
             default: "",
@@ -21,11 +21,11 @@ const recipePositioner = cva("", {
     },
 })
 
-const recipeContent = cva(["min-h-fit size-full inset-0 relative overflow-y-auto [&[data-state=open]]:flex flex-col"], {
+const recipeContent = cva(["min-h-fit size-full inset-0 relative data-[state=open]:flex flex-col"], {
     variants: {
         animation: {
             default: "",
-            modal: "motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut",
+            modal: "motion-safe:[&[data-state=open]_[data-part=wrapper]]:animate-growIn motion-safe:[&[data-state=closed]_[data-part=wrapper]]:animate-growOut",
         },
         intent: {
             default: "bg-base-100",
