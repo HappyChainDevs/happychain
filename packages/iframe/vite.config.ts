@@ -5,17 +5,27 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ command }) => ({
     server: { port: 5160 },
+    preview: { port: 5160 },
     plugins: [
         TanStackRouterVite(),
         react({ babel: { presets: ["jotai/babel/preset"] } }),
         SharedWorkerPlugin({ disabled: false }),
     ],
+    resolve: {
+        alias: {
+            crypto: "empty-module",
+            http: "empty-module",
+            https: "empty-module",
+            zlib: "empty-module",
+        },
+    },
+
     build: {
         rollupOptions: {
             external:
-                mode === "production"
+                command === "build"
                     ? []
                     : [
                           "react",
