@@ -40,7 +40,11 @@ export function getDappPermissions({
     origin = getDappOrigin(),
     permissions = store.get(permissionsAtom),
 }: GetDappPermissionOptions = {}): AppPermissions {
-    if (!user) return {}
+    if (!user) {
+        // This should never happen and requires investigating if it does!
+        logger.warn("No user found, returning empty permissions.")
+        return {}
+    }
 
     const permissionLookupResult = permissions[user.address]?.[origin]
 
