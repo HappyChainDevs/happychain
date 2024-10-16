@@ -8,7 +8,6 @@
     "types": "./dist/index.es.d.ts",
     "exports": {
         ".": {
-            "bun": "./dist/index.es.js",
             "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
         }
