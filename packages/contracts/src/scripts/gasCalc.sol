@@ -8,6 +8,8 @@ import {PackedUserOperation} from "account-abstraction/contracts/interfaces/Pack
 import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.sol";
 
 import {UserOpLib} from "./UserOpLib.sol";
+import {HappyPaymaster} from "../HappyPaymaster.sol";
+import {ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
 
 /* solhint-disable no-console*/
 contract GasEstimator is Test {
@@ -16,18 +18,21 @@ contract GasEstimator is Test {
     bytes32 private constant DEPLOYMENT_SALT = 0;
     address private constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address private constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-    address private constant ALLOWED_BUNDLER = 0x0000000000000000000000000000000000000000;
+    address private constant ALLOWED_BUNDLER = 0x0000000000000000000000000000000000000001;
     uint256 private constant DUMMY_REQUIRED_PREFUND = 1e18;
 
     IPaymaster private happyPaymaster;
 
     function setUp() public {
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/deployments/anvil/testing/deployment.json");
-        string memory json = vm.readFile(path);
-        address happyPaymasterAddress = vm.parseJsonAddress(json, ".HappyPaymaster");
+        if (ENTRYPOINT_V7.code.length == 0) {
+            // solhint-disable-next-line
+            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
+            require(success, "Failed to deploy EntryPointV7");
+        }
 
-        happyPaymaster = IPaymaster(happyPaymasterAddress);
+        address[] memory allowedBundlers = new address[](1);
+        allowedBundlers[0] = ALLOWED_BUNDLER;
+        happyPaymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(ENTRYPOINT_V7, allowedBundlers);
     }
 
     /**
