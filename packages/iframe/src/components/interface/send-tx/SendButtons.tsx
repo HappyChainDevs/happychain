@@ -4,7 +4,7 @@ import { useAtom } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
 import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
-import { ContentType, trackSendAtom, walletInfoViewAtom } from "../../../state/interfaceState"
+import { trackSendAtom } from "../../../state/interfaceState"
 
 interface SendButtonsInterface {
     sendValue: string | undefined
@@ -16,21 +16,18 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     const { data: hash, isPending, sendTransaction, error } = useSendTransaction()
 
     const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash })
-
-    const [, setView] = useAtom(walletInfoViewAtom)
     const [, setTrackSend] = useAtom(trackSendAtom)
 
     useEffect(() => {
         // if tx is successful, move back to home page of wallet
         if (isConfirmed) {
-            setTrackSend({ val: false })
-            setView(ContentType.TOKENS)
+            setTrackSend({ val: false }) // tell iframe state that there's a transaction in-flight
             navigate({ to: "/embed" })
         }
         if (error) {
             setTrackSend({ val: false })
         }
-    }, [error, isConfirmed, setView, navigate, setTrackSend])
+    }, [error, isConfirmed, navigate, setTrackSend])
 
     // navigates back to home page
     const cancelSend = useCallback(() => {
