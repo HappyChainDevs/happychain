@@ -336,29 +336,9 @@ async function testCustomValidator(
                 value: parseEther(AMOUNT),
                 data: "0x",
             },
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
         ],
         nonce: customNonce,
     })
-
-    // Estimate Gas Limits
-    const gasEstimates = await pimlicoClient.estimateUserOperationGas({
-        ...userOp,
-        signature: "0x", // Ensure signature is empty for estimation
-    })
-    console.log("Estimated Gas Limits:")
-    console.log(`  PreVerificationGas: ${gasEstimates.preVerificationGas}`)
-    console.log(`  VerificationGasLimit: ${gasEstimates.verificationGasLimit}`)
-    console.log(`  CallGasLimit: ${gasEstimates.callGasLimit}`)
 
     userOp.signature = await sessionSigner.signUserOperation({
         ...userOp,
@@ -373,8 +353,6 @@ async function testCustomValidator(
     const receipt = await kernelClient.waitForUserOperationReceipt({
         hash: userOpHash,
     })
-
-    console.log("receipt:", receipt)
 
     if (!receipt.success) {
         throw new Error("Validation using custom validator module failed")
