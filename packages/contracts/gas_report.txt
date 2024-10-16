@@ -1,5 +1,5 @@
 Ran 3 tests for src/scripts/gasCalc.sol:GasEstimator
-[PASS] testEstimatePaymasterValidateUserOpGasIsolatedTxns() (gas: 371154)
+[PASS] testEstimatePaymasterValidateUserOpGasIsolatedTxns() (gas: 371131)
 Logs:
   Gas Report for User Operations:
     1. Initial userOp (storage initialization):
@@ -15,8 +15,8 @@ Logs:
 Logs:
   Gas used for validating userOp with different sender (warm storage access): 26338 gas
 
-[PASS] testEstimatePaymasterValidateUserOpGasWarmStorageSameUser() (gas: 117965)
+[PASS] testEstimatePaymasterValidateUserOpGasWarmStorageSameUser() (gas: 96332)
 Logs:
-  Gas used for validating same userOp again (warm storage access): 26338 gas
+  Gas used for validating same userOp again (warm storage access): 4674 gas
 
 
