@@ -3,107 +3,108 @@ import type { Address, Hash, TransactionReceipt } from "viem"
 import { serialize } from "wagmi"
 import { getPublicClient } from "../state/publicClient"
 import { confirmedTxsAtom, pendingTxsAtom } from "../state/txHistory"
-import { getUser } from "../state/user"
 
 /**
- * When a new transaction hash is added to the pending transactions atom, Viem's
+ * When a new transaction hash is added to the `pendingTxsAtom`, Viem's
  * {@link https://viem.sh/docs/actions/public/waitForTransactionReceipt.html | waitForTransactionReceipt}
  * function is called to monitor the transaction and retrieve the `TransactionReceipt` once it is included in a block.
  *
- * Once a receipt is obtained:
- * - It is serialized and stored in the `confirmedTxsAtom` to maintain a log of completed transactions for the user.
- * - The transaction hash is removed from the `pendingTxsAtom` as the transaction is no longer pending.
+ * Once the receipt is obtained:
+ * - The receipt is serialized and stored in the `confirmedTxsAtom` to maintain a log of completed transactions for the user.
+ * - The transaction hash is removed from the `pendingTxsAtom`, as the transaction is no longer pending.
  *
  * The `Activity` Tab can then display the transaction history by reading from the `confirmedTxsAtom`.
  *
  * In summary:
- * 1. A pending transaction hash is added to `pendingTxsAtom` after the user sends a transaction.
- * 2. `subscribeToPendingTxAtom` processes this hash and waits for the corresponding transaction to be included in a block.
- * 3. Once the `TransactionReceipt` is received, it is stored in `confirmedTxsAtom` and removed from `pendingTxsAtom`.
+ * 1. A pending transaction hash is added to `pendingTxsAtom` when the user sends a transaction.
+ * 2. The `addPendingTxEntry` function processes this hash and starts monitoring the transaction by calling
+ *    {@link https://viem.sh/docs/actions/public/waitForTransactionReceipt.html | waitForTransactionReceipt}.
+ * 3. Once the `TransactionReceipt` is received:
+ *    - It is serialized and added to the `confirmedTxsAtom`.
+ *    - The corresponding hash is removed from the `pendingTxsAtom`.
+ *
+ * This ensures that the transaction history is updated in real-time as transactions are confirmed.
  */
 
-// -------------------------------------------------------------------------------------------------
 
 const store = getDefaultStore()
 
-export function addHistoryLogEntry(address: Address, entry: TransactionReceipt) {
-    let entryExists = false
+export function addHistoryLogEntry(address: Address, receipt: TransactionReceipt) {
+    const serializedReceipt = serialize(receipt)
+
     store.set(confirmedTxsAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
-        const serialiazedEntry = serialize(entry)
-        entryExists = userHistory.some((log) => log === serialiazedEntry)
+        const isReceiptAlreadyLogged = userHistory.includes(serializedReceipt)
 
-        return entryExists ? existingEntries : { ...existingEntries, [address]: [serialiazedEntry, ...userHistory] }
+        if (!isReceiptAlreadyLogged) {
+            return {
+                ...existingEntries,
+                [address]: [serializedReceipt, ...userHistory],
+            }
+        }
+
+        return existingEntries
     })
 }
 
+/**
+ * Handles waiting for the transaction receipt and updates the state accordingly.
+ * It waits for the transaction to be included in a block, adds it to the `confirmedTxsAtom`,
+ * and removes it from the `pendingTxsAtom`.
+ * Uses viem's {@link https://viem.sh/docs/actions/public/waitForTransactionReceipt.html | waitForTransactionReceipt}
+ * to fetch the associated `TransactionReceipt` once the tx is included in a block.
+ */
+function monitorTransactionReceipt(address: Address, hash: Hash) {
+    const publicClient = getPublicClient()
+
+    publicClient
+        .waitForTransactionReceipt({ hash })
+        .then((receipt) => {
+            if (!receipt) {
+                throw new Error(`Receipt not found for transaction hash: ${hash}`)
+            }
+
+            // Add the transaction receipt to confirmed history
+            addHistoryLogEntry(address, receipt)
+            // Remove the transaction from the pending list
+            removePendingTxEntry(address, hash)
+        })
+        .catch((error) => {
+            console.error(`Error monitoring transaction receipt for hash: ${hash}`, error)
+        })
+}
+
 export function addPendingTxEntry(address: Address, newHash: Hash) {
-    let entryExists = false
     store.set(pendingTxsAtom, (existingEntries) => {
         const pendingTxHashes = existingEntries[address] || []
-        entryExists = pendingTxHashes.some((pendingHash) => pendingHash === newHash)
+        const isHashAlreadyPending = pendingTxHashes.includes(newHash)
 
-        return entryExists
-            ? existingEntries
-            : {
-                  ...existingEntries,
-                  [address]: [newHash, ...pendingTxHashes],
-              }
+        // If the hash is already being tracked, do nothing
+        if (!isHashAlreadyPending) {
+            monitorTransactionReceipt(address, newHash) // Start monitoring
+            return {
+                ...existingEntries,
+                [address]: [newHash, ...pendingTxHashes],
+            }
+        }
+
+        return existingEntries
     })
-    return !entryExists
 }
 
 export function removePendingTxEntry(address: Address, hash: Hash) {
     store.set(pendingTxsAtom, (existingEntries) => {
-        const pendingTxHashes = existingEntries[address] || []
+        const updatedHashes = (existingEntries[address] || []).filter((pendingHash) => pendingHash !== hash)
 
-        // Filter out the hash to be removed
-        const updatedHashes = pendingTxHashes.filter((pendingHash) => pendingHash !== hash)
-
-        // If the updatedHashes is empty, remove the address entry from the record
+        // If no pending transactions remain for the user, remove the user's entry
         if (updatedHashes.length === 0) {
             const { [address]: _, ...remainingEntries } = existingEntries
             return remainingEntries
         }
 
-        // Return the updated record
         return {
             ...existingEntries,
             [address]: updatedHashes,
         }
     })
 }
-
-/**
- * Subscribes to changes in the `pendingTxsAtom`, uses viem's
- * {@link https://viem.sh/docs/actions/public/waitForTransactionReceipt.html | waitForTransactionReceipt}
- * to fetch the associated `TransactionReceipt` once the tx is included in a block.
- */
-export const subscribeToPendingTxAtom = store.sub(pendingTxsAtom, () => {
-    const user = getUser()
-    const publicClient = getPublicClient()
-
-    if (!user) {
-        return
-    }
-
-    const pendingTxHashes = store.get(pendingTxsAtom)
-    const hashList = pendingTxHashes[user.address]
-
-    if (!hashList || hashList.length === 0) {
-        return
-    }
-
-    hashList.forEach((hash) => {
-        publicClient.waitForTransactionReceipt({ hash }).then((receipt) => {
-            if (!receipt) {
-                throw new Error(`Receipt not found for transaction hash: ${hash}`)
-            }
-
-            // once receipt is found, add it to the user's transaction history
-            addHistoryLogEntry(user.address, receipt)
-            // Remove the hash from pending atom since it's no longer 'pending'
-            removePendingTxEntry(user.address, hash)
-        })
-    })
-})
