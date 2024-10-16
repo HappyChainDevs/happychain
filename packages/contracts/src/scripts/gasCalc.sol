@@ -41,8 +41,8 @@ contract GasEstimator is Test {
      * This test estimates gas consumption for:
      * 1. Initial storage initialization.
      * 2. Cold storage access with a different sender.
-     * 3. Warm storage access by validating the same user operation again.
-     * 4. A user operation with large calldata (10 KB).
+     * 3. Cold storage access by validating the same user operation again.
+     * 4. A user operation with larger calldata (round number and double the size).
      *
      * Since the tests are run with the `--isolate` flag, each call is executed as a separate
      * top-level transaction. Warm storage cannot be simulated in this test due to isolation.
@@ -55,26 +55,35 @@ contract GasEstimator is Test {
 
         // Step 2: Gas cost for a normal UserOp with a different sender (cold storage access)
         PackedUserOperation memory userOp2 = userOp1;
-        userOp2.sender = address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742);
+        userOp2.sender = address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742); // Different sender from userOp1
         uint256 gasUsedStep2 = _estimatePaymasterValidateUserOpGas(userOp2);
-        console.log("Gas used for normal userOp (storage initialized, but cold): %d gas", gasUsedStep2);
+        console.log("Gas used for normal UserOp with a different sender (cold storage access): %d gas", gasUsedStep2);
 
-        // Step 3: Gas cost when validating the same UserOp again (still cold storage access due to isolation)
-        PackedUserOperation memory userOp3 = userOp2;
-        userOp3.nonce = userOp3.nonce + 1; // Increment nonce to simulate a new operation
+        // Step 3: Gas cost for the same UserOp (same sender, different nonce) in isolated transaction
+        PackedUserOperation memory userOp3 = userOp2; // Same as userOp2, same sender
+        userOp3.nonce = userOp3.nonce + 1; // Increment nonce to represent a new operation with the same sender
         uint256 gasUsedStep3 = _estimatePaymasterValidateUserOpGas(userOp3);
-        console.log("Gas used for same UserOp validated again (warm storage access): %d gas", gasUsedStep3);
+        console.log("Gas used for the same UserOp with the same sender (cold storage access due to isolation): %d gas", gasUsedStep3);
 
-        // Step 4: Gas cost for a UserOp with larger calldata (10 KB)
-        PackedUserOperation memory userOp4 = userOp1;
-        userOp4.sender = address(0x19aC95A5524Db39021ba2F10E4F65574DfED2743);
-        bytes memory largeCalldata = new bytes(1024 * 10); // 10 KB
-        for (uint256 i = 0; i < largeCalldata.length; i++) {
-            largeCalldata[i] = bytes1(uint8(i));
+        // Step 4: Gas cost for a UserOp with larger calldata (round number and double that)
+        PackedUserOperation memory userOp4 = _getUserOp();
+
+        bytes memory baseCalldata = new bytes(256); // 256 bytes for the first userOp
+        for (uint256 i = 0; i < baseCalldata.length; i++) {
+            baseCalldata[i] = bytes1(uint8(i));
         }
-        userOp4.callData = largeCalldata;
-        uint256 gasUsedStep4 = _estimatePaymasterValidateUserOpGas(userOp4);
-        console.log("Gas used for UserOp with large calldata (10 KB): %d gas", gasUsedStep4);
+
+        userOp4.callData = baseCalldata;
+        uint256 gasUsedStep4Base = _estimatePaymasterValidateUserOpGas(userOp4);
+
+        bytes memory doubleCalldata = new bytes(512); // 512 bytes for the second userOp
+        for (uint256 i = 0; i < doubleCalldata.length; i++) {
+            doubleCalldata[i] = bytes1(uint8(i));
+        }
+        userOp4.callData = doubleCalldata;
+        uint256 gasUsedStep4Double = _estimatePaymasterValidateUserOpGas(userOp4);
+
+        console.log("Additional gas cost for doubling calldata (512 bytes vs 256 bytes): %d gas", gasUsedStep4Double - gasUsedStep4Base);
     }
 
     /**
@@ -143,7 +152,8 @@ contract GasEstimator is Test {
 
     /**
      * @dev Internal helper function to create a simple `PackedUserOperation`.
-     *      The values are hardcoded for testing purposes.
+     *      The values are hardcoded for testing purposes. The effect of this
+     *      userOp is irrelevant since we're only testing the paymaster validation logic.
      */
     function _getUserOp() internal pure returns (PackedUserOperation memory) {
         return PackedUserOperation({
