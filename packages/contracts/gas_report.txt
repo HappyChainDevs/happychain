@@ -1,10 +1,10 @@
   Gas Report for Cold Storage Operations:
-    1. Initial userOp (storage initialization): 62967 gas
-    2. Normal userOp with a different sender: 58376 gas
-    3. Same userOp with the same sender: 41525 gas
-    4. Doubling calldata size (512 bytes vs 256 bytes): 4111 gas
+    1. Initial userOp (storage initialization): 62858 gas
+    2. Normal userOp with a different sender: 58272 gas
+    3. Same userOp with the same sender: 41421 gas
+    4. Doubling calldata size (512 bytes vs 256 bytes): 4116 gas
   Gas Report for Warm Storage Operations:
-    5. Validating another userOp from the same sender in same transaction (warm storage access): 4663 gas
-    6. Validating another userOp from different sender in same transaction (warm storage access): 26327 gas
+    5. Validating another userOp from the same sender in same transaction (warm storage access): 4560 gas
+    6. Validating another userOp from different sender in same transaction (warm storage access): 26224 gas
 
 

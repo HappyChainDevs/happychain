@@ -83,11 +83,11 @@ test-gas:
 
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the test-script.
 test-aa-gas:
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' > gas_report.txt
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --via-ir --optimizer-runs 200 --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' > gas_report.txt
 .PHONY: test-aa-gas
 
 test-aa-gas-flamechart:
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --via-ir --optimizer-runs 200 --isolate --flamechart
 .PHONY: test-aa-gas-flamechart
 
 test-fork:
