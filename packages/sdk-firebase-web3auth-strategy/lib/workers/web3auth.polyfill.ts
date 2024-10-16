@@ -26,6 +26,5 @@ if (typeof window === "undefined") {
 // we make use of other env variables for the web3 setup also
 if (typeof process === "undefined") {
     // @ts-expect-error web3auth accesses this, but its not available in SharedWorker context
-    // and its not compiled away by vite
     globalThis.process = { env: import.meta.env }
 }

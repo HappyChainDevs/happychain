@@ -73,9 +73,8 @@ endef
 # BASICS COMMANDS
 #   To get the project running locally.
 
-setup: install-frozen enable-hooks ## To be run when first setting up the repository.
+setup: install-frozen enable-hooks enable-bun-lockfile-diffs ## To be run when first setting up the repository.
 	$(call forall_make , $(ALL_PKGS) , setup)
-	cd packages/contracts && make setup
 .PHONY: setup
 
 clean: ts.clean docs.clean contracts.clean ## Removes build artifacts
@@ -395,3 +394,13 @@ enable-hooks:
 disable-hooks:
 	git config --unset core.hooksPath
 .PHONY: disable-hooks
+
+enable-bun-lockfile-diffs:
+	git config diff.lockb.textconv bun
+	git config diff.lockb.binary true
+.PHONY: enable-bun-lockfile-diffs
+
+disable-bun-lockfile-diffs:
+	git config --unset diff.lockb.textconv
+	git config --unset diff.lockb.binary
+.PHONY: disable-bun-lockfile-diffs
