@@ -25,9 +25,8 @@ contract GasEstimator is Test {
 
     function setUp() public {
         if (ENTRYPOINT_V7.code.length == 0) {
-            // solhint-disable-next-line
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
-            require(success, "Failed to deploy EntryPointV7");
+            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE); // solhint-disable-line
+            require(success, "Failed to deploy EntryPointV7"); // solhint-disable-line
         }
 
         address[] memory allowedBundlers = new address[](1);
@@ -52,25 +51,27 @@ contract GasEstimator is Test {
     function testEstimatePaymasterValidateUserOpGas() public {
         // Step 1: Gas cost when storage transitions from zero to non-zero (worst-case scenario)
         PackedUserOperation memory userOp1 = _getUserOp();
-        uint256 gasForStorageInitialization = _estimatePaymasterValidateUserOpGas(userOp1);
+        uint256 gasForStorageInitialization = this._estimatePaymasterValidateUserOpGas(userOp1);
 
         // Step 2: Gas cost for a different sender (cold storage access)
         PackedUserOperation memory userOp2 = userOp1;
         userOp2.sender = address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742);
-        uint256 gasForDifferentSender = _estimatePaymasterValidateUserOpGas(userOp2);
+        uint256 gasForDifferentSender = this._estimatePaymasterValidateUserOpGas(userOp2);
 
         // Step 3: Gas cost for the same sender (different nonce)
         PackedUserOperation memory userOp3 = userOp2;
         userOp3.nonce = userOp3.nonce + 1; // Increment nonce to represent a new operation with the same sender
-        uint256 gasForSameSender = _estimatePaymasterValidateUserOpGas(userOp3);
+        uint256 gasForSameSender = this._estimatePaymasterValidateUserOpGas(userOp3);
 
         // Step 4: Gas cost for a UserOp with larger calldata (round number and double that)
         PackedUserOperation memory userOp4 = _getUserOp();
+        userOp4.sender = address(0x19ac95A5524Db39021Ba2F10E4F65574DFED2750);
         userOp4.callData = _createCalldata(256);
-        uint256 gasForBaseCalldata = _estimatePaymasterValidateUserOpGas(userOp4);
+        uint256 gasForBaseCalldata = this._estimatePaymasterValidateUserOpGas(userOp4);
 
+        userOp4.sender = address(0x19ac95A5524db39021ba2F10E4F65574dFed2751);
         userOp4.callData = _createCalldata(512);
-        uint256 gasForDoubleCalldata = _estimatePaymasterValidateUserOpGas(userOp4);
+        uint256 gasForDoubleCalldata = this._estimatePaymasterValidateUserOpGas(userOp4);
 
         console.log("Gas Report for Cold Storage Operations:");
         console.log("  1. Initial userOp (storage initialization): %d gas", gasForStorageInitialization);
@@ -150,7 +151,7 @@ contract GasEstimator is Test {
      * @dev Internal function to estimate gas used by `validatePaymasterUserOp` for a single user operation.
      *      This function is used when each call is executed as a separate transaction (due to `--isolate` flag).
      */
-    function _estimatePaymasterValidateUserOpGas(PackedUserOperation memory userOp) internal returns (uint256) {
+    function _estimatePaymasterValidateUserOpGas(PackedUserOperation memory userOp) external returns (uint256) {
         bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
         vm.prank(ENTRYPOINT_V7, ALLOWED_BUNDLER);
