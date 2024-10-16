@@ -11,7 +11,19 @@ export const filter = (id: string) => {
  */
 const reservedWords = new Set(["dispatch", "addMessageListener"])
 export function findExports(code: string) {
-    return mllyFindExports(code).filter((ex) => !!ex.name && !reservedWords.has(ex.name))
+    return mllyFindExports(code).filter((ex) => {
+        if (!ex.name) {
+            console.warn(`[@happychain/worker] export missing name ${ex.name}`)
+            return false
+        }
+
+        if (reservedWords.has(ex.name)) {
+            console.warn(`[@happychain/worker] export reserved name used ${ex.name}`)
+            return false
+        }
+
+        return true
+    })
 }
 
 export function getWorkerName(id: string) {
