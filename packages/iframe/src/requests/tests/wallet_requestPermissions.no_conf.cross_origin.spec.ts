@@ -2,12 +2,11 @@ import { type UUID, createUUID } from "@happychain/common"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
-import { getDefaultStore } from "jotai"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "../../services/permissions"
-import { authStateAtom } from "../../state/authState"
-import { userAtom } from "../../state/user"
+import { setAuthState } from "../../state/authState"
+import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../permissionless"
 
@@ -30,8 +29,8 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
         beforeEach(() => {
             clearPermissions()
             // logout
-            getDefaultStore().set(userAtom, undefined)
-            getDefaultStore().set(authStateAtom, AuthState.Disconnected)
+            setUser(undefined)
+            setAuthState(AuthState.Disconnected)
         })
 
         test("skips wallet_requestPermissions permissions when no user", async () => {
@@ -50,8 +49,8 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
         beforeEach(() => {
             clearPermissions()
             user = createHappyUserFromWallet("io.testing", addressFactory())
-            getDefaultStore().set(userAtom, user)
-            getDefaultStore().set(authStateAtom, AuthState.Connected)
+            setUser(user)
+            setAuthState(AuthState.Connected)
         })
 
         test("does not add permissions", async () => {

@@ -2,12 +2,11 @@ import { type UUID, createUUID } from "@happychain/common"
 import { AuthState } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
-import { getDefaultStore } from "jotai"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "../../services/permissions"
-import { authStateAtom } from "../../state/authState"
-import { userAtom } from "../../state/user"
+import { setAuthState } from "../../state/authState"
+import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../approved"
 
@@ -31,8 +30,8 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     beforeEach(() => {
         clearPermissions()
         user = createHappyUserFromWallet("io.testing", addressFactory())
-        getDefaultStore().set(userAtom, user)
-        getDefaultStore().set(authStateAtom, AuthState.Connected)
+        setUser(user)
+        setAuthState(AuthState.Connected)
     })
 
     test("adds eth_account permissions", async () => {
