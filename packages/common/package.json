@@ -3,18 +3,19 @@
     "version": "1.0.0",
     "private": true,
     "type": "module",
-    "main": "./lib/index.ts",
-    "module": "./lib/index.ts",
-    "types": "./dist/types/lib/index.d.ts",
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.es.d.ts",
     "exports": {
         ".": {
-            "bun": "./lib/index.ts",
-            "default": "./lib/index.ts",
-            "types": "./dist/types/lib.index.d.ts"
+            "bun": "./dist/index.es.js",
+            "default": "./dist/index.es.js",
+            "types": "./dist/index.es.d.ts"
         }
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
+        "@happychain/scripts": "workspace:^",
         "@types/react": "^18.3.4",
         "jotai": "^2.9.3",
         "react": "^18.3.1",
