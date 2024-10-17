@@ -64,7 +64,6 @@ deploy: ## Deploys contracts to Anvil
 build: node_modules ts.build  ## Creates production builds
 .PHONY: build
 
-
 check: node_modules ts.check contracts.check ## Runs code quality & formatting checks
 	@# cf. makefiles/formatting.mk
 	biome check ./;
@@ -108,7 +107,6 @@ demo-vue.dev: setup shared.dev sdk.dev ## Serves the VueJS demo application as h
 shared.dev:
 	cd packages/common && make dev
 	cd packages/sdk-shared && make dev
-	cd packages/worker && make dev
 .PHONY: shared.dev
 
 sdk.dev:
