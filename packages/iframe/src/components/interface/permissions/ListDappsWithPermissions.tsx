@@ -1,7 +1,7 @@
 import { CaretRight } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import type { FC } from "react"
-import { getDappOrigin } from "../../../utils/getDappOrigin"
+import { getAppURL } from "../../../utils/appURL"
 import type { ResultGetAllDappsWithPermissions } from "./use-list-dapps-with-permissions"
 
 interface ListItemProps {
@@ -66,9 +66,9 @@ const ListDappsWithPermissions: FC<ListDappsWithPermissionsProps> = (props) => {
 
     return (
         <ul className="flex flex-col">
-            <ListItem dappUrl={getDappOrigin()} />
+            <ListItem dappUrl={getAppURL()} />
             {query
-                .data!.filter((record) => record[0] !== getDappOrigin())
+                .data!.filter((record) => record[0] !== getAppURL())
                 .map((record) => {
                     const [dappUrl] = record
 

@@ -1,8 +1,7 @@
-import type { HTTPString } from "@happychain/common"
-import { type FC, useMemo } from "react"
+import type { FC } from "react"
 import { useHasPermissions } from "../../../hooks/useHasPermissions"
 import { grantPermissions, revokePermissions } from "../../../services/permissions"
-import { getDappOrigin } from "../../../utils/getDappOrigin"
+import type { AppURL } from "../../../utils/appURL"
 import { Switch } from "../../primitives/toggle-switch/Switch"
 import type { ResultGetDappPermissions } from "./use-dapp-permissions"
 
@@ -13,7 +12,7 @@ type PermissionDescriptionIndex = keyof typeof DICTIONARIES_PERMISSIONS_MEANING
 
 interface ListItemProps {
     permission: keyof typeof DICTIONARIES_PERMISSIONS_MEANING
-    dappUrl: HTTPString
+    dappUrl: AppURL
 }
 /**
  * Let the user toggle a given permission on/off
@@ -21,24 +20,12 @@ interface ListItemProps {
 const ListItem: FC<ListItemProps> = (props) => {
     const { permission, dappUrl } = props
     const hasPermission = useHasPermissions(permission)
-    const isCurrentDapp = useMemo(() => new URL(dappUrl).host === new URL(getDappOrigin()).host, [dappUrl])
     return (
         <>
             <Switch
                 checked={hasPermission}
-                title={
-                    !hasPermission && !isCurrentDapp
-                        ? "Visit this dapp to enable this permission back"
-                        : "Toggle this permission"
-                }
-                disabled={!hasPermission && !isCurrentDapp}
                 onCheckedChange={(e) => {
-                    //@todo - update/verify once permissions refactor is complete
-                    e.checked === false
-                        ? revokePermissions(permission)
-                        : grantPermissions(permission, {
-                              origin: dappUrl,
-                          })
+                    hasPermission ? revokePermissions(dappUrl, permission) : grantPermissions(dappUrl, permission)
                 }}
                 className="justify-between w-full [&_[data-part=label]]:w-3/4 flex-row-reverse"
                 switchLabel={DICTIONARIES_PERMISSIONS_MEANING?.[permission] ?? "---"}
@@ -49,7 +36,7 @@ const ListItem: FC<ListItemProps> = (props) => {
 
 interface ListDappPermissionsProps {
     query: ResultGetDappPermissions
-    dappUrl: HTTPString
+    dappUrl: AppURL
 }
 /**
  * Displays all the permissions of a given dApp and lets the user revoke said permission(s)

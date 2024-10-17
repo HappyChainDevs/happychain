@@ -1,6 +1,6 @@
 import { AuthState, Msgs } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared"
-import { Outlet, createLazyFileRoute, useNavigate } from "@tanstack/react-router"
+import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import clsx from "clsx"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo } from "react"
@@ -28,6 +28,7 @@ function signalOpen() {
 }
 
 function Embed() {
+    const location = useLocation()
     const authState = useAtomValue(authStateAtom)
     const user = useAtomValue(userAtom)
     const navigate = useNavigate()
@@ -94,15 +95,21 @@ function Embed() {
 
                     <GlobalHeader />
                     <div className="relative flex flex-col grow w-full">
-                        <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
-                            <UserInfo />
-                            <TriggerSecondaryActionsMenu />
-                        </div>
+                        {!location.pathname.includes("permissions") && (
+                            <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
+                                <UserInfo />
+                                <TriggerSecondaryActionsMenu />
+                            </div>
+                        )}
 
                         <div className="hidden relative lg:flex w-full grow overflow-y-auto">
                             <Outlet />
-                            <SecondaryActionsMenu />
-                            <DialogConfirmSignOut handleDisconnect={disconnect} />
+                            {!location.pathname.includes("permissions") && (
+                                <>
+                                    <SecondaryActionsMenu />
+                                    <DialogConfirmSignOut handleDisconnect={disconnect} />
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
