@@ -5,5 +5,6 @@ export default defineConfig({
     apiExtractorConfig: false,
     bunConfig: {
         entrypoints: ["./lib/index.ts"],
+        external: ["viem", "@happychain/common"],
     },
 })
