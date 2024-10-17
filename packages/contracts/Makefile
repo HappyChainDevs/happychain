@@ -278,8 +278,16 @@ deploy-mocks:
 	make deploy DEPLOY_SCRIPT=mocks/DeployMocks.s.sol
 .PHONY: deploy-mocks
 
+deploy-random:
+	make deploy DEPLOY_SCRIPT=DeployRandom.s.sol
+.PHONY: deploy-random
+
 save-local-aa-deployment:
 	make save-deployment DEPLOY_SCRIPT=DeployAA.s.sol DEPLOYMENT_NAME=anvil/testing CONFIG=LOCAL
 .PHONY: save-local-aa-deployment
+
+save-local-random-deployment:
+	make save-deployment DEPLOY_SCRIPT=DeployRandom.s.sol DEPLOYMENT_NAME=anvil/random CONFIG=LOCAL
+.PHONY: save-local-random-deployment
 
 ####################################################################################################
