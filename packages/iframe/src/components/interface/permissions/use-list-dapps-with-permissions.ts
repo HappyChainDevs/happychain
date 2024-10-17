@@ -5,7 +5,7 @@ import { useAccount } from "wagmi"
 import { permissionsMapAtom } from "../../../state/permissions"
 import { userAtom } from "../../../state/user"
 
-const KEY_QUERY_GET_ALL_DAPPS_WIHT_PERMISSIONS = "GET_ALL_DAPPS_WITH_PERMISSIONS"
+const KEY_QUERY_GET_ALL_DAPPS_WITH_PERMISSIONS = "GET_ALL_DAPPS_WITH_PERMISSIONS"
 
 function useGetAllDappsWithPermissions() {
     const user = useAtomValue(userAtom)
@@ -17,7 +17,7 @@ function useGetAllDappsWithPermissions() {
      */
     const queryGetAllDappsWithPermissions = useQuery({
         enabled: !!(user?.address && account?.address),
-        queryKey: [KEY_QUERY_GET_ALL_DAPPS_WIHT_PERMISSIONS, account?.address],
+        queryKey: [KEY_QUERY_GET_ALL_DAPPS_WITH_PERMISSIONS, account?.address],
         queryFn: () => {
             return permissionsMap[account.address!]
         },
@@ -40,6 +40,6 @@ type ResultGetAllDappsWithPermissions = ReturnType<
 
 export {
     useGetAllDappsWithPermissions,
-    KEY_QUERY_GET_ALL_DAPPS_WIHT_PERMISSIONS,
+    KEY_QUERY_GET_ALL_DAPPS_WITH_PERMISSIONS,
     type ResultGetAllDappsWithPermissions,
 }
