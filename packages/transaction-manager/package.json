@@ -3,16 +3,23 @@
     "version": "0.0.0",
     "private": true,
     "type": "module",
-    "main": "dist/lib/index.js",
-    "module": "dist/lib/index.js",
-    "types": "dist/lib/index.d.ts",
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.es.d.ts",
+    "exports": {
+        ".": {
+            "default": "./dist/index.es.js",
+            "types": "./dist/index.es.d.ts"
+        }
+    },
     "mikro-orm": {
-        "configPaths": ["./dist/lib/mikro-orm.config.js"]
+        "configPaths": ["./dist/mikro-orm.config.js"]
     },
     "devDependencies": {
         "@mikro-orm/cli": "^6.3.10",
         "ts-node": "^10.9.2",
-        "typescript": "^5.6.2"
+        "typescript": "^5.6.2",
+        "@happychain/scripts": "workspace:^"
     },
     "peerDependencies": {
         "viem": "^2.20.1"

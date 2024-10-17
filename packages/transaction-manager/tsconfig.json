@@ -1,15 +1,8 @@
 {
-    "extends": "@happychain/configs/tsconfig.base.json",
+    "extends": ["@happychain/configs/tsconfig.base.json", "@happychain/configs/tsconfig.types.json"],
     "include": ["lib"],
     "compilerOptions": {
-        "allowImportingTsExtensions": false,
-        "noEmit": false,
-        "outDir": "./dist",
-        "declaration": true,
-        "declarationMap": true,
-        "sourceMap": true,
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "esModuleInterop": true
+        "emitDecoratorMetadata": true
     }
 }
