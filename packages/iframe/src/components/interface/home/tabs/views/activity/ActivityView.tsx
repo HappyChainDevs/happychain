@@ -3,7 +3,7 @@ import type { TransactionReceipt } from "viem"
 import { deserialize } from "wagmi"
 import { confirmedTxsAtom, pendingTxsAtom } from "../../../../../../state/txHistory"
 import { userAtom } from "../../../../../../state/user"
-import LoadingSkeleton from "../../../../LoadingSkeleton"
+import TxLoadingSkeleton from "../../../../TxLoadingSkeleton"
 import TxLogEntry from "./TxLogEntry"
 
 /**
@@ -32,7 +32,7 @@ const ActivityView = () => {
 
     return (
         <div className="flex flex-col w-full space-y-2 h-full p-2 bg-slate-300 rounded-b-xl rounded-tr-xl overflow-y-auto">
-            {userPendingTxs.length > 0 && <LoadingSkeleton />}
+            {userPendingTxs.length > 0 && userPendingTxs.map((tx) => <TxLoadingSkeleton key={tx} tx={tx} />)}
 
             {userTxHistory.length > 0 &&
                 userTxHistory.map((tx) => <TxLogEntry key={tx} tx={deserialize(tx) as TransactionReceipt} />)}
