@@ -3,6 +3,7 @@ import { useAtomValue } from "jotai"
 import { useAccount } from "wagmi"
 import { userAtom } from "../../state/user"
 import AddressInfo from "./AddressInfo"
+import UserLoadingSkeleton from "./UserLoadingSkeleton"
 
 const UserInfo = () => {
     const user = useAtomValue(userAtom)
@@ -16,8 +17,7 @@ const UserInfo = () => {
     }
 
     if (!account.address) {
-        // TODO this is normal, wagmi gets connected from a hook, need to handle gracefully (skeleton)
-        return
+        return <UserLoadingSkeleton />
     }
 
     if (account.address !== user.address) {
