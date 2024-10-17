@@ -6,22 +6,22 @@
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.es.d.ts",
+    "files": ["dist"],
     "exports": {
         ".": {
             "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
         }
     },
-    "dependencies": {
+    "peerDependencies": {
         "@happychain/common": "workspace:^",
         "viem": "^2.21.18"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
-        "@happychain/scripts": "workspace:^",
         "@happychain/configs": "workspace:^",
+        "@happychain/scripts": "workspace:^",
         "@types/bun": "^1.1.8",
-        "happy-dom": "^15.0.0",
-        "vite-plugin-node-polyfills": "^0.22.0"
+        "happy-dom": "^15.0.0"
     }
 }

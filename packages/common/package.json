@@ -6,19 +6,21 @@
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.es.d.ts",
+    "files": ["dist"],
     "exports": {
         ".": {
             "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
         }
     },
+    "peerDependencies": {
+        "jotai": "^2.9.3",
+        "react": "^18.3.1",
+        "viem": "^2.21.18"
+    },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
         "@happychain/scripts": "workspace:^",
-        "@types/react": "^18.3.4",
-        "jotai": "^2.9.3",
-        "react": "^18.3.1",
-        "vite-plugin-node-polyfills": "^0.22.0",
-        "viem": "^2.21.18"
+        "@types/react": "^18.3.4"
     }
 }
