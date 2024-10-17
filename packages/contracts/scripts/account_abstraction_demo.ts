@@ -290,6 +290,33 @@ async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccoun
     })
 }
 
+async function sendDirectTransactions(count = 1): Promise<bigint> {
+    const receiverAddress = getRandomAccount()
+    let totalGas = 0n
+
+    console.log("Direct Transaction :-")
+
+    for ( let i = 0 ; i < count ; i++) {
+        const txHash = await walletClient.sendTransaction({
+            account: account,
+            to: receiverAddress,
+            chain: localhost,
+            value: parseEther(AMOUNT),
+        });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+            hash: txHash,
+            confirmations: 1,
+        });
+        totalGas += receipt.gasUsed
+    }
+        // console.log("  GasUsed: ", receipt.gasUsed)
+        // console.log("  GasPrice: ", receipt.effectiveGasPrice)
+        // console.log("  CumulativeGasUsed: ", receipt.cumulativeGasUsed)
+
+    return totalGas
+}
+
 async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
     const receiverAddress = getRandomAccount()
 
@@ -317,6 +344,193 @@ async function testRootValidator(kernelAccount: SmartAccount, kernelClient: Smar
     }
 }
 
+async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+    console.log("\nSending Single UserOp\n")
+    const receiverAddress = getRandomAccount()
+
+    const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
+        account: kernelAccount,
+        calls: [
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+        ],
+    })
+
+    userOp.signature = await kernelAccount.signUserOperation({
+        ...userOp,
+        chainId: localhost.id,
+        signature: "0x", // The signature field must be empty when hashing and signing the user operation.
+    })
+
+    const userOpHash = await kernelClient.sendUserOperation({
+        ...userOp,
+    })
+
+    const receipt = await kernelClient.waitForUserOperationReceipt({
+        hash: userOpHash,
+    })
+
+    if (!receipt.success) {
+        throw new Error("Validation using custom validator module failed")
+    }
+
+    console.log("UserOp via Bundler Receipt :-");
+    console.log("  ActualGasUsed: ", receipt.actualGasUsed);
+    console.log("  ActualGasCost: ", receipt.actualGasCost);
+    console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
+    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed);
+    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice);
+
+    const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed;
+    console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
+
+    const directTxnGasCost = 21000n; // Hardcoded as it's direct ETH transfer gas cost
+    const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost;
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+}
+
+async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+    console.log("\nSending Single UserOp with 5 transfer Calls\n")
+    const receiverAddress = getRandomAccount()
+
+    const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
+        account: kernelAccount,
+        calls: [
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+        ],
+    })
+
+    userOp.signature = await kernelAccount.signUserOperation({
+        ...userOp,
+        chainId: localhost.id,
+        signature: "0x", // The signature field must be empty when hashing and signing the user operation.
+    })
+
+    const userOpHash = await kernelClient.sendUserOperation({
+        ...userOp,
+    })
+
+    const receipt = await kernelClient.waitForUserOperationReceipt({
+        hash: userOpHash,
+    })
+
+    if (!receipt.success) {
+        throw new Error("Validation using custom validator module failed")
+    }
+
+    console.log("UserOp via Bundler Receipt :-");
+    console.log("  ActualGasUsed: ", receipt.actualGasUsed);
+    console.log("  ActualGasCost: ", receipt.actualGasCost);
+    console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
+    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed);
+    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice);
+
+    const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed;
+    console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
+
+    const directTxnGasCost = await sendDirectTransactions(5)
+    const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost;
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+}
+
+async function batchedUserOperationsGasResult() {
+    console.log("\nSending 5 separate UserOps\n")
+
+    console.log("\nSending Single UserOp with 5 transfer Calls\n")
+    const receiverAddress = getRandomAccount()
+
+    const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
+        account: kernelAccount,
+        calls: [
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+        ],
+    })
+
+    userOp.signature = await kernelAccount.signUserOperation({
+        ...userOp,
+        chainId: localhost.id,
+        signature: "0x", // The signature field must be empty when hashing and signing the user operation.
+    })
+
+    const userOpHash = await kernelClient.sendUserOperation({
+        ...userOp,
+    })
+
+    const receipt = await kernelClient.waitForUserOperationReceipt({
+        hash: userOpHash,
+    })
+
+    if (!receipt.success) {
+        throw new Error("Validation using custom validator module failed")
+    }
+
+    console.log("UserOp via Bundler Receipt :-");
+    console.log("  ActualGasUsed: ", receipt.actualGasUsed);
+    console.log("  ActualGasCost: ", receipt.actualGasCost);
+    console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
+    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed);
+    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice);
+
+    const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed;
+    console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
+
+    const directTxnGasCost = await sendDirectTransactions(5)
+    const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost;
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+}
+
+
 async function testCustomValidator(
     kernelAccount: SmartAccount,
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
@@ -339,6 +553,12 @@ async function testCustomValidator(
         ],
         nonce: customNonce,
     })
+
+    const gasVals = await pimlicoClient.estimateUserOperationGas({
+        ...userOp
+    })
+
+    console.log("gasVals:", gasVals)
 
     userOp.signature = await sessionSigner.signUserOperation({
         ...userOp,
@@ -383,17 +603,35 @@ async function main() {
         throw new Error("Paymaster Deposit failed")
     }
 
+    // try {
+    //     await sendDirectTransactions()
+    // } catch (error) {
+    //     console.error("Direct Transaction: ", error)
+    // }
+
     try {
-        await testRootValidator(kernelAccount, kernelClient)
+        await singleUserOperationGasResult(kernelAccount, kernelClient)
     } catch (error) {
-        console.error("Root Validator: ", error)
+        console.error("Single UserOp: ", error)
     }
 
     try {
-        await testCustomValidator(kernelAccount, kernelClient, kernelAddress)
+        await batchedCallsGasResult(kernelAccount, kernelClient)
     } catch (error) {
-        console.error("Custom Validator: ", error)
+        console.error("Batched CallData: ", error)
     }
+
+    // try {
+    //     await testRootValidator(kernelAccount, kernelClient)
+    // } catch (error) {
+    //     console.error("Root Validator: ", error)
+    // }
+
+    // try {
+    //     await testCustomValidator(kernelAccount, kernelClient, kernelAddress)
+    // } catch (error) {
+    //     console.error("Custom Validator: ", error)
+    // }
 }
 
 main().then(() => {
