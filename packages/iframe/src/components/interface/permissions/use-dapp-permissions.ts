@@ -1,15 +1,15 @@
-import type { HTTPString } from "@happychain/common"
 import { useQuery } from "@tanstack/react-query"
 import { useAtom, useAtomValue } from "jotai"
 import { useAccount } from "wagmi"
-import { permissionsAtom } from "../../../state/permissions"
+import { permissionsMapAtom } from "../../../state/permissions"
 import { userAtom } from "../../../state/user"
+import type { AppURL } from "../../../utils/appURL"
 
 const KEY_QUERY_GET_DAPP_PERMISSIONS = "GET_DAPP_PERMISSIONS"
 
-function useGetDappPermissions(dappUrl: HTTPString) {
+function useGetDappPermissions(dappUrl: AppURL) {
     const user = useAtomValue(userAtom)
-    const permissionsMap = useAtom(permissionsAtom)[0]
+    const permissionsMap = useAtom(permissionsMapAtom)[0]
     const account = useAccount()
 
     /**
