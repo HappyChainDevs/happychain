@@ -1,9 +1,12 @@
 import type { FC } from "react"
+import { useAccount } from "wagmi"
 import { useHasPermissions } from "../../../hooks/useHasPermissions"
 import { grantPermissions, revokePermissions } from "../../../services/permissions"
+import { queryClient } from "../../../tanstack-query/config"
 import type { AppURL } from "../../../utils/appURL"
 import { Switch } from "../../primitives/toggle-switch/Switch"
-import type { ResultGetDappPermissions } from "./use-dapp-permissions"
+import { KEY_QUERY_GET_DAPP_PERMISSIONS, type ResultGetDappPermissions } from "./use-dapp-permissions"
+import { KEY_QUERY_GET_ALL_DAPPS_WITH_PERMISSIONS } from "./use-list-dapps-with-permissions"
 
 const DICTIONARIES_PERMISSIONS_MEANING = {
     eth_accounts: "Can recognize you by the Ethereum address you're currently using",
@@ -19,13 +22,21 @@ interface ListItemProps {
  */
 const ListItem: FC<ListItemProps> = (props) => {
     const { permission, dappUrl } = props
-    const hasPermission = useHasPermissions(permission)
+    const hasPermission = useHasPermissions(permission, dappUrl)
+    const account = useAccount()
+
     return (
         <>
             <Switch
-                checked={hasPermission}
+                defaultChecked={hasPermission}
                 onCheckedChange={(e) => {
-                    hasPermission ? revokePermissions(dappUrl, permission) : grantPermissions(dappUrl, permission)
+                    !e.checked ? revokePermissions(dappUrl, permission) : grantPermissions(dappUrl, permission)
+                    queryClient.invalidateQueries({
+                        queryKey: [KEY_QUERY_GET_ALL_DAPPS_WITH_PERMISSIONS, account?.address],
+                    })
+                    queryClient.invalidateQueries({
+                        queryKey: [KEY_QUERY_GET_DAPP_PERMISSIONS, account?.address, dappUrl],
+                    })
                 }}
                 className="justify-between w-full [&_[data-part=label]]:w-3/4 flex-row-reverse"
                 switchLabel={DICTIONARIES_PERMISSIONS_MEANING?.[permission] ?? "---"}

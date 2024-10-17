@@ -24,7 +24,10 @@ function Permissions() {
                         handleClearAllDappsPermissions={() => {
                             queryGetAllDappsWithPermissions.data?.forEach((record) => {
                                 const [url, dappPermissions] = record
-                                revokePermissions(url as AppURL, dappPermissions)
+                                // Loop in a loop is not ideal, maybe revokePermissions() could accept Array<string> as well ?
+                                Object.keys(dappPermissions).forEach((permission) =>
+                                    revokePermissions(url as AppURL, permission),
+                                )
                             })
                         }}
                     />

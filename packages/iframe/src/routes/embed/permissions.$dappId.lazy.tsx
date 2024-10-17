@@ -1,8 +1,14 @@
 import { createLazyFileRoute, useParams } from "@tanstack/react-router"
+import { useAccount } from "wagmi"
 import { ClearAllPermissions } from "../../components/interface/permissions/ClearAllPermissions"
 import { ListDappPermissions } from "../../components/interface/permissions/ListPermissions"
-import { useGetDappPermissions } from "../../components/interface/permissions/use-dapp-permissions"
+import {
+    KEY_QUERY_GET_DAPP_PERMISSIONS,
+    useGetDappPermissions,
+} from "../../components/interface/permissions/use-dapp-permissions"
+import { KEY_QUERY_GET_ALL_DAPPS_WITH_PERMISSIONS } from "../../components/interface/permissions/use-list-dapps-with-permissions"
 import { revokePermissions } from "../../services/permissions"
+import { queryClient } from "../../tanstack-query/config"
 import type { AppURL } from "../../utils/appURL"
 
 export const Route = createLazyFileRoute("/embed/permissions/$dappId")({
@@ -10,6 +16,7 @@ export const Route = createLazyFileRoute("/embed/permissions/$dappId")({
 })
 
 function DappPermissions() {
+    const account = useAccount()
     const dappUrl = useParams({
         from: "/embed/permissions/$dappId",
         select: (params) => decodeURI(params.dappId),
@@ -33,6 +40,12 @@ function DappPermissions() {
                                             revokePermissions(dappUrl as AppURL, permission)
                                         },
                                     )
+                                    queryClient.invalidateQueries({
+                                        queryKey: [KEY_QUERY_GET_ALL_DAPPS_WITH_PERMISSIONS, account?.address],
+                                    })
+                                    queryClient.invalidateQueries({
+                                        queryKey: [KEY_QUERY_GET_DAPP_PERMISSIONS, account?.address, dappUrl],
+                                    })
                                 }}
                             />
                         )}
