@@ -15,7 +15,7 @@ import { TransactionCollector } from "./TransactionCollector.js"
 import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
 import { TxMonitor } from "./TxMonitor.js"
-import { dbDriver } from "./db.js"
+import { dbDriver, startDbDriver } from "./db.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
 
 export type TransactionManagerConfig = {
@@ -79,7 +79,7 @@ export class TransactionManager {
     public readonly gasPriceOracle: GasPriceOracle
     public readonly abiManager: ABIManager
     public readonly pendingTxReporter: TxMonitor
-    public readonly entityManager: EntityManager
+    public entityManager!: EntityManager
     public readonly transactionRepository: TransactionRepository
     public readonly transactionCollector: TransactionCollector
     public readonly transactionSubmitter: TransactionSubmitter
@@ -115,7 +115,6 @@ export class TransactionManager {
         this.transactionRepository = new TransactionRepository(this)
         this.transactionCollector = new TransactionCollector(this)
         this.transactionSubmitter = new TransactionSubmitter(this)
-        this.entityManager = dbDriver.em.fork()
 
         this.id = _config.id
         this.eip1559 = _config.eip1559 || opStackDefaultEIP1559Parameters
@@ -141,9 +140,9 @@ export class TransactionManager {
     }
 
     public async start(): Promise<void> {
+        await startDbDriver()
+        this.entityManager = dbDriver.em.fork()
         await Promise.all([this.transactionRepository.start(), this.gasPriceOracle.start()])
-
-        // NonceManager depends on TransactionRepository to start
         await this.nonceManager.start()
     }
 }
