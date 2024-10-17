@@ -294,8 +294,6 @@ async function sendDirectTransactions(count = 1): Promise<bigint> {
     const receiverAddress = getRandomAccount()
     let totalGas = 0n
 
-    console.log("Direct Transaction :-")
-
     for ( let i = 0 ; i < count ; i++) {
         const txHash = await walletClient.sendTransaction({
             account: account,
@@ -358,6 +356,11 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
             },
         ],
     })
+
+    const paymasterGasEstimates = await pimlicoClient.estimateUserOperationGas({
+        ...userOp
+    })
+    console.log("Paymaster Gas Estimates:", paymasterGasEstimates)
 
     userOp.signature = await kernelAccount.signUserOperation({
         ...userOp,
@@ -460,35 +463,18 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
 }
 
-async function batchedUserOperationsGasResult() {
+async function batchedUserOperationsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
     console.log("\nSending 5 separate UserOps\n")
-
-    console.log("\nSending Single UserOp with 5 transfer Calls\n")
+    const kernelAddress = await kernelAccount.getAddress()
     const receiverAddress = getRandomAccount()
 
-    const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
+    const customNonce1 = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.ECDSAValidator, 0n)
+    const customNonce2 = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.ECDSAValidator, 1n)
+
+    const userOp1 = kernelClient.sendUserOperation({
         account: kernelAccount,
+        nonce: customNonce1,
         calls: [
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
             {
                 to: receiverAddress,
                 value: parseEther(AMOUNT),
@@ -497,37 +483,30 @@ async function batchedUserOperationsGasResult() {
         ],
     })
 
-    userOp.signature = await kernelAccount.signUserOperation({
-        ...userOp,
-        chainId: localhost.id,
-        signature: "0x", // The signature field must be empty when hashing and signing the user operation.
+    const userOp2 = kernelClient.sendUserOperation({
+        account: kernelAccount,
+        nonce: customNonce2,
+        calls: [
+            {
+                to: receiverAddress,
+                value: parseEther(AMOUNT),
+                data: "0x",
+            },
+        ],
     })
 
-    const userOpHash = await kernelClient.sendUserOperation({
-        ...userOp,
-    })
+    const hashes = await Promise.all([userOp1, userOp2])
+    console.log("1st hash:", hashes[0])
 
-    const receipt = await kernelClient.waitForUserOperationReceipt({
-        hash: userOpHash,
-    })
-
-    if (!receipt.success) {
-        throw new Error("Validation using custom validator module failed")
-    }
-
-    console.log("UserOp via Bundler Receipt :-");
-    console.log("  ActualGasUsed: ", receipt.actualGasUsed);
-    console.log("  ActualGasCost: ", receipt.actualGasCost);
-    console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
-    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed);
-    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice);
-
-    const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed;
-    console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
-
-    const directTxnGasCost = await sendDirectTransactions(5)
-    const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost;
-    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+    // const userOpsActualGas = hashes[0].receipt.actualGasUsed + hashes[0].receipt.actualGasUsed
+    // const userOpsGasUsed = hashes[0].receipt.receipt.gasUsed + hashes[0].receipt.receipt.gasUsed
+    //
+    // const bundlerOverhead = userOpsActualGas - userOpsGasUsed
+    // console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
+    //
+    // const directTxnGasCost = await sendDirectTransactions(2)
+    // const extraCostUsingUserOp = userOpsActualGas - directTxnGasCost;
+    // console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
 }
 
 
@@ -619,6 +598,12 @@ async function main() {
         await batchedCallsGasResult(kernelAccount, kernelClient)
     } catch (error) {
         console.error("Batched CallData: ", error)
+    }
+
+    try {
+        await batchedUserOperationsGasResult(kernelAccount, kernelClient)
+    } catch (error) {
+        console.error("Batched UserOps: ", error)
     }
 
     // try {
