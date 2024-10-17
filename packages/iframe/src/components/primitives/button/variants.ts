@@ -18,7 +18,7 @@ const recipeButton = cva(
                 "outline-negative": "text-error border-neutral/10 hover:bg-error/10 focus:bg-error/15",
             },
             scale: {
-                default: "py-[0.25em] px-[1em] border",
+                default: "py-[1.15ch] px-[2ex] border",
             },
             label: {
                 default: "font-bold",

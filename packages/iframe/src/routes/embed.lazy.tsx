@@ -1,6 +1,6 @@
 import { AuthState, Msgs } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared"
-import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
+import { Outlet, createLazyFileRoute, useNavigate } from "@tanstack/react-router"
 import clsx from "clsx"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo } from "react"
@@ -11,9 +11,7 @@ import {
     SecondaryActionsMenu,
     TriggerSecondaryActionsMenu,
 } from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
-import { DialogAllDappsWithPermissions } from "../components/interface/menu-secondary-actions/dapps-permissions/DialogAllDappsWithPermissions"
 import { DialogConfirmSignOut } from "../components/interface/menu-secondary-actions/sign-out/DialogConfirmSignOut"
-import { DialogDappDetailedPermissions } from "../components/interface/permissions/DialogDappDetailedPermissions"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
@@ -33,8 +31,6 @@ function Embed() {
     const authState = useAtomValue(authStateAtom)
     const user = useAtomValue(userAtom)
     const navigate = useNavigate()
-
-    const location = useLocation()
 
     const web3Providers = useInjectedProviders()
     const socialProviders = useSocialProviders()
@@ -100,24 +96,14 @@ function Embed() {
                     <div className="relative flex flex-col grow w-full">
                         <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 p-2 border-t border-b border-black">
                             <UserInfo />
-                            {location.pathname === "/embed" && <TriggerSecondaryActionsMenu />}
+                            <TriggerSecondaryActionsMenu />
                         </div>
 
                         <div className="hidden relative lg:flex w-full grow overflow-y-auto">
                             <Outlet />
-                            {location.pathname === "/embed" && (
-                                <>
-                                    <SecondaryActionsMenu />
-                                    <DialogConfirmSignOut handleDisconnect={disconnect} />
-                                </>
-                            )}
+                            <SecondaryActionsMenu />
+                            <DialogConfirmSignOut handleDisconnect={disconnect} />
                         </div>
-                        {location.pathname === "/embed" && (
-                            <>
-                                <DialogAllDappsWithPermissions />
-                                <DialogDappDetailedPermissions />
-                            </>
-                        )}
                     </div>
                 </div>
             </main>
