@@ -14,7 +14,6 @@ import { type SmartAccountClient, createSmartAccountClient } from "permissionles
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
 import { createPimlicoClient } from "permissionless/clients/pimlico"
-import { encodeNonce } from "permissionless/utils"
 
 import { abis, deployment } from "../deployments/anvil/testing/abis"
 import { getCustomNonce } from "./getNonce"
@@ -321,7 +320,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     const receiverAddress = getRandomAccount()
 
     const directTxGas = await sendDirectTransactions(1)
-    console.log("  Direct Transaction Gas:", directTxGas)
+    console.log("Direct Transaction Gas:", directTxGas)
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelAccount,
@@ -337,7 +336,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     const paymasterGasEstimates = await pimlicoClient.estimateUserOperationGas({
         ...userOp
     })
-    console.log("\n  Paymaster Gas Estimates:", paymasterGasEstimates)
+    console.log("\nPaymaster Gas Estimates:", paymasterGasEstimates)
 
     userOp.signature = await kernelAccount.signUserOperation({
         ...userOp,
@@ -357,7 +356,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
         throw new Error("Validation using custom validator module failed")
     }
 
-    console.log("\n  UserOp via Bundler Receipt :-");
+    console.log("\nUserOp via Bundler Receipt :-");
     console.log("  ActualGasUsed: ", receipt.actualGasUsed);
     console.log("  ActualGasCost: ", receipt.actualGasCost);
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
@@ -370,13 +369,15 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     const directTxnGasCost = 21000n; // Hardcoded as it's direct ETH transfer gas cost
     const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost;
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
-
-    console.log("\n------------------------------------------------\n")
+    console.log("------------------------------------------------\n")
 }
 
 async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    console.log("\nSending Single UserOp with 5 transfer1 Calls\n")
+    console.log("\nSending a Single UserOp with 5 transfer Calls")
     const receiverAddress = getRandomAccount()
+
+    const directTxGas = await sendDirectTransactions(5)
+    console.log("\nDirect Transaction Gas:", directTxGas)
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelAccount,
@@ -409,6 +410,11 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
         ],
     })
 
+    const paymasterGasEstimates = await pimlicoClient.estimateUserOperationGas({
+        ...userOp
+    })
+    console.log("\nPaymaster Gas Estimates:", paymasterGasEstimates)
+
     userOp.signature = await kernelAccount.signUserOperation({
         ...userOp,
         chainId: localhost.id,
@@ -427,7 +433,7 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
         throw new Error("Validation using custom validator module failed")
     }
 
-    console.log("UserOp via Bundler Receipt :-");
+    console.log("\nUserOp via Bundler Receipt :-");
     console.log("  ActualGasUsed: ", receipt.actualGasUsed);
     console.log("  ActualGasCost: ", receipt.actualGasCost);
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
@@ -436,12 +442,9 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
 
     const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed;
     console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
-
-    const directTxnGasCost = await sendDirectTransactions(5)
-    const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost;
+    const extraCostUsingUserOp = receipt.actualGasUsed - directTxGas;
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
-
-    console.log("\n------------------------------------------------\n")
+    console.log("------------------------------------------------\n")
 }
 
 async function batchedUserOperationsGasResult() {
@@ -484,7 +487,7 @@ async function batchedUserOperationsGasResult() {
     }
 
     const userOp1 = kernelClient1.sendUserOperation({
-        account: kernelAccount,
+        account: kernelAccount1,
         calls: [
             {
                 to: receiverAddress,
@@ -494,8 +497,8 @@ async function batchedUserOperationsGasResult() {
         ],
     })
 
-    const userOp2 = sessionClient.sendUserOperation({
-        account: sessionSigner,
+    const userOp2 = kernelClient2.sendUserOperation({
+        account: kernelAccount2,
         calls: [
             {
                 to: receiverAddress,
@@ -506,14 +509,14 @@ async function batchedUserOperationsGasResult() {
     })
 
     const hashes = await Promise.all([userOp1, userOp2])
-    // console.log("1st hash:", hashes[0])
-    // console.log("2nd hash:", hashes[1])
+    console.log("1st hash:", hashes[0])
+    console.log("2nd hash:", hashes[1])
 
-    const receipt1 = await kernelClient.waitForUserOperationReceipt({
+    const receipt1 = await kernelClient1.waitForUserOperationReceipt({
         hash: hashes[0],
     })
 
-    const receipt2 = await sessionClient.waitForUserOperationReceipt({
+    const receipt2 = await kernelClient2.waitForUserOperationReceipt({
         hash: hashes[1],
     })
 
@@ -530,7 +533,7 @@ async function batchedUserOperationsGasResult() {
     // const extraCostUsingUserOp = userOpsActualGas - directTxnGasCost;
     // console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
 
-    console.log("\n------------------------------------------------\n")
+    console.log("------------------------------------------------\n")
 }
 
 async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
@@ -638,8 +641,9 @@ async function main() {
         console.error("Custom Validator: ", error)
     }
 
-    console.log("\n------------------------------------------------\n")
-    console.log("Gas Usage Results:\n")
+    console.log("\n------------------------------------------------")
+    console.log("Gas Usage Results :-")
+    console.log("------------------------------------------------\n")
 
     try {
         await singleUserOperationGasResult(kernelAccount, kernelClient)
