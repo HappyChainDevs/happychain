@@ -1,6 +1,5 @@
 import { getDefaultStore } from "jotai"
 import type { Address, Hash, TransactionReceipt } from "viem"
-import { serialize } from "wagmi"
 import { setTxSendState } from "../state/interfaceState"
 import { getPublicClient } from "../state/publicClient"
 import { confirmedTxsAtom, pendingTxsAtom } from "../state/txHistory"

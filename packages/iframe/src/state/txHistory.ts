@@ -1,6 +1,6 @@
 import { atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address, Hash, TransactionReceipt } from "viem"
-import { serialize, deserialize } from "wagmi"
+import { deserialize, serialize } from "wagmi"
 import { StorageKey } from "../services/storage"
 
 export type TxHistory = Record<Address, TransactionReceipt[]>
