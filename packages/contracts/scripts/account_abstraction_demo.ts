@@ -294,23 +294,23 @@ async function sendDirectTransactions(count = 1): Promise<bigint> {
     const receiverAddress = getRandomAccount()
     let totalGas = 0n
 
-    for ( let i = 0 ; i < count ; i++) {
+    for (let i = 0; i < count; i++) {
         const txHash = await walletClient.sendTransaction({
             account: account,
             to: receiverAddress,
             chain: localhost,
             value: parseEther(AMOUNT),
-        });
+        })
 
         const receipt = await publicClient.waitForTransactionReceipt({
             hash: txHash,
             confirmations: 1,
-        });
+        })
         totalGas += receipt.gasUsed
     }
-        // console.log("  GasUsed: ", receipt.gasUsed)
-        // console.log("  GasPrice: ", receipt.effectiveGasPrice)
-        // console.log("  CumulativeGasUsed: ", receipt.cumulativeGasUsed)
+    // console.log("  GasUsed: ", receipt.gasUsed)
+    // console.log("  GasPrice: ", receipt.effectiveGasPrice)
+    // console.log("  CumulativeGasUsed: ", receipt.cumulativeGasUsed)
 
     return totalGas
 }
@@ -334,7 +334,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     })
 
     const paymasterGasEstimates = await pimlicoClient.estimateUserOperationGas({
-        ...userOp
+        ...userOp,
     })
     console.log("\nPaymaster Gas Estimates:", paymasterGasEstimates)
 
@@ -356,19 +356,19 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
         throw new Error("Validation using custom validator module failed")
     }
 
-    console.log("\nUserOp via Bundler Receipt :-");
-    console.log("  ActualGasUsed: ", receipt.actualGasUsed);
-    console.log("  ActualGasCost: ", receipt.actualGasCost);
+    console.log("\nUserOp via Bundler Receipt :-")
+    console.log("  ActualGasUsed: ", receipt.actualGasUsed)
+    console.log("  ActualGasCost: ", receipt.actualGasCost)
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
-    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed);
-    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice);
+    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed)
+    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice)
 
-    const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed;
-    console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
+    const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed
+    console.log("\nBundler Overhead (Gas Used):", bundlerOverhead)
 
-    const directTxnGasCost = 21000n; // Hardcoded as it's direct ETH transfer gas cost
-    const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost;
-    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+    const directTxnGasCost = 21000n // Hardcoded as it's direct ETH transfer gas cost
+    const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp)
     console.log("------------------------------------------------\n")
 }
 
@@ -411,7 +411,7 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
     })
 
     const paymasterGasEstimates = await pimlicoClient.estimateUserOperationGas({
-        ...userOp
+        ...userOp,
     })
     console.log("\nPaymaster Gas Estimates:", paymasterGasEstimates)
 
@@ -433,17 +433,17 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
         throw new Error("Validation using custom validator module failed")
     }
 
-    console.log("\nUserOp via Bundler Receipt :-");
-    console.log("  ActualGasUsed: ", receipt.actualGasUsed);
-    console.log("  ActualGasCost: ", receipt.actualGasCost);
+    console.log("\nUserOp via Bundler Receipt :-")
+    console.log("  ActualGasUsed: ", receipt.actualGasUsed)
+    console.log("  ActualGasCost: ", receipt.actualGasCost)
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
-    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed);
-    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice);
+    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed)
+    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice)
 
-    const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed;
-    console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
-    const extraCostUsingUserOp = receipt.actualGasUsed - directTxGas;
-    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+    const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed
+    console.log("\nBundler Overhead (Gas Used):", bundlerOverhead)
+    const extraCostUsingUserOp = receipt.actualGasUsed - directTxGas
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp)
     console.log("------------------------------------------------\n")
 }
 
@@ -509,29 +509,24 @@ async function batchedUserOperationsGasResult() {
     })
 
     const hashes = await Promise.all([userOp1, userOp2])
-    console.log("1st hash:", hashes[0])
-    console.log("2nd hash:", hashes[1])
-
     const receipt1 = await kernelClient1.waitForUserOperationReceipt({
         hash: hashes[0],
     })
-
     const receipt2 = await kernelClient2.waitForUserOperationReceipt({
         hash: hashes[1],
     })
 
-    console.log("receipt1:", receipt1)
-    console.log("receipt2:", receipt2)
+    console.log("\nUserOp via Bundler: Receipt #1 :-")
+    console.log("  UserOp1 Block: ", receipt1.receipt.blockNumber)
+    console.log("  UserOp1 Txn Index: , ", receipt1.receipt.transactionIndex)
+    console.log("  ActualGasUsed: ", receipt1.actualGasUsed)
+    console.log("  Txn.gasUsed: ", receipt1.receipt.gasUsed)
 
-    // const userOpsActualGas = receipt1.actualGasUsed + receipt2.actualGasUsed
-    // const userOpsGasUsed = receipt1.receipt.gasUsed + receipt2.receipt.gasUsed
-    //
-    // const bundlerOverhead = userOpsActualGas - userOpsGasUsed
-    // console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
-    //
-    // const directTxnGasCost = await sendDirectTransactions(2)
-    // const extraCostUsingUserOp = userOpsActualGas - directTxnGasCost;
-    // console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+    console.log("\nUserOp via Bundler: Receipt #2 :-")
+    console.log("  UserOp2 Block: ", receipt2.receipt.blockNumber)
+    console.log("  UserOp2 Txn Index: , ", receipt2.receipt.transactionIndex)
+    console.log("  ActualGasUsed: ", receipt2.actualGasUsed)
+    console.log("  Txn.gasUsed: ", receipt2.receipt.gasUsed)
 
     console.log("------------------------------------------------\n")
 }
