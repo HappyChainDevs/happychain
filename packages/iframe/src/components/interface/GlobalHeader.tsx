@@ -1,13 +1,11 @@
 import { ArrowLeft } from "@phosphor-icons/react"
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import { useAtom } from "jotai"
-import { trackSendAtom } from "../../state/interfaceState"
+import { getTxSendState } from "../../state/interfaceState"
 
 const GlobalHeader = () => {
-    const [trackSend, setTrackSend] = useAtom(trackSendAtom)
-
     const location = useLocation()
     const navigate = useNavigate()
+    const trackSend = getTxSendState()
 
     const handleBackButtonClick = () => {
         if (!trackSend) {
@@ -17,7 +15,6 @@ const GlobalHeader = () => {
     }
 
     const handleModalClose = () => {
-        setTrackSend(false)
         navigate({ to: "/embed" })
     }
 
@@ -32,14 +29,11 @@ const GlobalHeader = () => {
             <span className="text-black text-xl py-2 mx-auto hidden lg:flex justify-center">🤠 HappyChain</span>
 
             {/* alert modal for user */}
-            {trackSend && (
+            {trackSend === true && location.pathname === "/send" && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
                     <div className="modal-box">
                         <h3 className="font-bold text-lg">Transaction in Progress</h3>
-                        <p className="py-4">
-                            The transaction is being sent and won't be cancelled. You can check its status in the
-                            History tab.
-                        </p>
+                        <p className="py-4">There is currently a sent transaction being included in a block.</p>
                         <div className="modal-action">
                             <button onClick={handleModalClose} className="btn btn-primary" type="button">
                                 Okay

@@ -4,7 +4,7 @@ import { debounce } from "lodash"
 import type React from "react"
 import { useCallback, useState } from "react"
 import { formatEther, parseEther } from "viem"
-import { trackSendAtom } from "../../../state/interfaceState"
+import { transactionFromSendPageAtom } from "../../../state/interfaceState"
 
 interface SendInputProps {
     balance: bigint | undefined
@@ -14,7 +14,7 @@ interface SendInputProps {
 
 const SendInput = ({ balance, sendValue, setSendValue }: SendInputProps) => {
     const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
-    const [trackSend] = useAtom(trackSendAtom)
+    const [trackSend] = useAtom(transactionFromSendPageAtom)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()

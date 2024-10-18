@@ -1,6 +1,7 @@
 import { getDefaultStore } from "jotai"
 import type { Address, Hash, TransactionReceipt } from "viem"
 import { serialize } from "wagmi"
+import { setTxSendState } from "../state/interfaceState"
 import { getPublicClient } from "../state/publicClient"
 import { confirmedTxsAtom, pendingTxsAtom } from "../state/txHistory"
 
@@ -63,6 +64,8 @@ function monitorTransactionReceipt(address: Address, hash: Hash) {
                 throw new Error(`Receipt not found for transaction hash: ${hash}`)
             }
 
+            // set UI state for pending tx
+            setTxSendState(false)
             // Add the transaction receipt to confirmed history
             addHistoryLogEntry(address, receipt)
             // Remove the transaction from the pending list
@@ -80,6 +83,7 @@ export function addPendingTxEntry(address: Address, newHash: Hash) {
 
         // If the hash is already being tracked, do nothing
         if (!isHashAlreadyPending) {
+            setTxSendState(true)
             monitorTransactionReceipt(address, newHash) // Start monitoring
             return {
                 ...existingEntries,

@@ -1,10 +1,8 @@
 import { CircleNotch } from "@phosphor-icons/react"
 import { useNavigate } from "@tanstack/react-router"
-import { useAtom } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
 import { useSendTransaction } from "wagmi"
-import { trackSendAtom } from "../../../state/interfaceState"
 
 interface SendButtonsInterface {
     sendValue: string | undefined
@@ -15,14 +13,11 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     const navigate = useNavigate()
     const { sendTransaction, isPending, isSuccess } = useSendTransaction()
 
-    const [, setTrackSend] = useAtom(trackSendAtom)
-
     useEffect(() => {
         if (isSuccess) {
-            setTrackSend(false)
             navigate({ to: "/embed" })
         }
-    }, [isSuccess, setTrackSend, navigate])
+    }, [isSuccess, navigate])
 
     // navigates back to home page
     const cancelSend = useCallback(() => {
@@ -36,10 +31,8 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
                 to: targetAddress as Address,
                 value: parseEther(sendValue),
             })
-
-            setTrackSend(true) // tx being set
         }
-    }, [sendTransaction, sendValue, setTrackSend, targetAddress])
+    }, [sendTransaction, sendValue, targetAddress])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">
