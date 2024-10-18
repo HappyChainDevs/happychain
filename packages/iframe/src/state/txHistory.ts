@@ -20,7 +20,6 @@ const confirmedTxsStorage = createJSONStorage<TxHistory>(() => localStorage, {
     },
     reviver: (_key, value) => {
         if (typeof value === "string" && value.startsWith("0x")) {
-            // This is likely a serialized TransactionReceipt, so deserialize it
             try {
                 return deserialize(value) as TransactionReceipt
             } catch {
