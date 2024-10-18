@@ -1,7 +1,7 @@
 import { atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address, Hash, TransactionReceipt } from "viem"
-import { StorageKey } from "../services/storage"
 import { deserialize, serialize } from "wagmi"
+import { StorageKey } from "../services/storage"
 
 export type TxHistory = Record<Address, string[]>
 export type PendingTxHistoryRecord = Record<Address, Hash[]>
@@ -12,31 +12,27 @@ export type PendingTxHistoryRecord = Record<Address, Hash[]>
  */
 const confirmedTxsStorage = createJSONStorage<TxHistory>(() => localStorage, {
     replacer: (_key, value) => {
-      if (value && typeof value === 'object' && 'blockHash' in value) {
-        // This is likely a TransactionReceipt, so serialize it
-        return serialize(value as TransactionReceipt)
-      }
-      return value
+        if (value && typeof value === "object" && "blockHash" in value) {
+            // This is likely a TransactionReceipt, so serialize it
+            return serialize(value as TransactionReceipt)
+        }
+        return value
     },
     reviver: (_key, value) => {
-      if (typeof value === 'string' && value.startsWith('0x')) {
-        // This is likely a serialized TransactionReceipt, so deserialize it
-        try {
-          return deserialize(value) as TransactionReceipt
-        } catch {
-          // If deserialization fails, return the original value
-          return value
+        if (typeof value === "string" && value.startsWith("0x")) {
+            // This is likely a serialized TransactionReceipt, so deserialize it
+            try {
+                return deserialize(value) as TransactionReceipt
+            } catch {
+                // If deserialization fails, return the original value
+                return value
+            }
         }
-      }
-      return value
-    }
-  })
-  
-  export const confirmedTxsAtom = atomWithStorage<TxHistory>(
-    StorageKey.TxHistory,
-    {},
-    confirmedTxsStorage
-  )
+        return value
+    },
+})
+
+export const confirmedTxsAtom = atomWithStorage<TxHistory>(StorageKey.TxHistory, {}, confirmedTxsStorage)
 
 /**
  * Atom to store pending transaction hashes mapped to user's address, using localStorage.
