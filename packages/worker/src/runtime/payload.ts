@@ -7,14 +7,12 @@ export interface RpcPayload<T = any> {
 }
 
 export type Payload =
-    // biome-ignore lint/suspicious/noExplicitAny: TODO: generics
-    | { command: "broadcast"; data: any }
+    | { command: "broadcast"; data: unknown }
     | { command: "rpc"; data: RpcPayload }
     | { command: "ping" }
     | { command: "console"; data: unknown[]; key: string }
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export function makeRpcPayload(id: string, name: string, args: any, isError = false): Payload {
+export function makeRpcPayload(id: string, name: string, args: unknown, isError = false): Payload {
     return {
         command: "rpc",
         data: {

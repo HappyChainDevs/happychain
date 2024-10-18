@@ -6,9 +6,9 @@
  */
 
 // supply window.Buffer functionality
-// biome-ignore lint/style/useNodejsImportProtocol: it's the npm module polyfill, not the Node.js import
-import Buffer from "buffer"
-globalThis.Buffer = globalThis.Buffer || Buffer.Buffer
+// biome-ignore lint/style/useNodejsImportProtocol: it's the npm module polyfill, not the NodeJS import
+import { Buffer } from "buffer"
+globalThis.Buffer = globalThis.Buffer || Buffer
 
 // web3Auth uses global.XXX but global is not defined in the SharedWorker
 if (typeof global === "undefined") {
@@ -22,7 +22,8 @@ if (typeof window === "undefined") {
 }
 
 // Web3Auth uses process.env.NODE_DEBUG but process.env is not defined in the SharedWorker.
-// We make use of other env variables for the Web3Auth setup also.
+// We also make use of other env variables for setting up Web3Auth defaults, so this injects
+// them from the vite build step.
 if (typeof process === "undefined") {
     // @ts-expect-error
     globalThis.process = { env: import.meta.env }

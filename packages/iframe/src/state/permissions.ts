@@ -1,7 +1,6 @@
 import { type HTTPString, type UUID, createUUID } from "@happychain/common"
-import { type Atom, atom, getDefaultStore } from "jotai"
-
 import { logger } from "@happychain/sdk-shared"
+import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address } from "viem"
 import { emitUserUpdate } from "#src/utils/emitUserUpdate.ts"

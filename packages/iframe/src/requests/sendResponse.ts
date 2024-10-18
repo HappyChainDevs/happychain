@@ -38,6 +38,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
 
     try {
         const payload = await dispatch(request)
+
         const response = {
             key: request.key,
             windowId: request.windowId,

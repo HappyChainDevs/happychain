@@ -22,7 +22,9 @@ export default defineConfig({
             crypto: "empty-module",
             http: "empty-module",
             https: "empty-module",
+            url: "empty-module",
             zlib: "empty-module",
+            stream: "empty-module",
         },
     },
 

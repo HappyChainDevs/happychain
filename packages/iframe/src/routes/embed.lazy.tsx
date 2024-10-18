@@ -3,7 +3,8 @@ import { ModalStates } from "@happychain/sdk-shared"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import clsx from "clsx"
 import { useAtomValue } from "jotai"
-import { useEffect, useMemo } from "react"
+import { useEffect } from "react"
+import { useDisconnect } from "wagmi"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
@@ -13,8 +14,7 @@ import {
     TriggerSecondaryActionsMenu,
 } from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
-import { useInjectedProviders } from "../hooks/useInjectedProviders"
-import { useSocialProviders } from "../hooks/useSocialProviders"
+import { useActiveConnectionProvider } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
 import { userAtom } from "../state/user"
@@ -31,10 +31,9 @@ function Embed() {
     const location = useLocation()
     const authState = useAtomValue(authStateAtom)
     const user = useAtomValue(userAtom)
+    const { disconnectAsync } = useDisconnect()
+    const activeProvider = useActiveConnectionProvider()
     const navigate = useNavigate()
-
-    const web3Providers = useInjectedProviders()
-    const socialProviders = useSocialProviders()
 
     useEffect(() => {
         return appMessageBus.on(Msgs.RequestDisplay, (screen) => {
@@ -51,21 +50,18 @@ function Embed() {
         })
     }, [navigate])
 
-    const activeProvider = useMemo(
-        () =>
-            socialProviders.concat(web3Providers).find((a) => user && a.id.startsWith(`${user.type}:${user.provider}`)),
-        [user, socialProviders, web3Providers],
-    )
-
-    async function disconnect() {
-        await activeProvider?.disconnect()
+    async function logout() {
         void appMessageBus.emit(Msgs.ModalToggle, { isOpen: false, cancelled: false })
+        await disconnectAsync()
+        await activeProvider?.disconnect()
     }
 
     if (authState === AuthState.Connecting) {
         return (
             <main className="h-screen w-screen flex items-center justify-center">
-                <DotLinearMotionBlurLoader />
+                <div className="top-4 right-4 absolute">
+                    <DotLinearMotionBlurLoader />
+                </div>
             </main>
         )
     }
@@ -89,7 +85,16 @@ function Embed() {
                         className="flex items-center justify-center gap-2 p-1 lg:hidden w-full h-full"
                         onClick={signalOpen}
                     >
-                        <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
+                        <div className="relative">
+                            <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
+                            {activeProvider && (
+                                <img
+                                    src={activeProvider.icon}
+                                    alt={activeProvider.name}
+                                    className="h-4 rounded-full absolute bottom-0 right-0 bg-white"
+                                />
+                            )}
+                        </div>
                         <p className="">{user?.ens || user?.email || user?.name}</p>
                     </div>
 
@@ -107,7 +112,7 @@ function Embed() {
                             {!location.pathname.includes("permissions") && (
                                 <>
                                     <SecondaryActionsMenu />
-                                    <DialogConfirmSignOut handleDisconnect={disconnect} />
+                                    <DialogConfirmSignOut handleDisconnect={logout} />
                                 </>
                             )}
                         </div>

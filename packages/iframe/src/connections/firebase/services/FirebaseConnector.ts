@@ -1,7 +1,22 @@
-import { type HappyUser, WalletType } from "@happychain/sdk-shared"
+import {
+    type ConnectionProvider,
+    type HappyUser,
+    type Msgs,
+    type MsgsFromApp,
+    type MsgsFromIframe,
+    WalletType,
+} from "@happychain/sdk-shared"
 import type { JWTLoginParams } from "@web3auth/mpc-core-kit"
-import { GoogleAuthProvider, type User, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth"
+import {
+    GoogleAuthProvider,
+    type User,
+    browserPopupRedirectResolver,
+    onAuthStateChanged,
+    signInWithPopup,
+} from "firebase/auth"
 import type { EIP1193Provider } from "viem"
+import { getPermissions } from "#src/state/permissions.ts"
+import { getAppURL } from "#src/utils/appURL.ts"
 import { firebaseAuth } from "../services/firebase"
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEIP1193Provider } from "../services/web3auth"
 import {
@@ -13,15 +28,15 @@ import {
 import { FirebaseAuthState } from "../workers/firebaseAuthState"
 import { isConnected as isWeb3AuthConnected } from "../workers/web3auth.sw"
 
-export abstract class FirebaseConnector {
+export abstract class FirebaseConnector implements ConnectionProvider {
     public readonly type: string
     public readonly id: string
     public readonly name: string
     public readonly icon: string
 
     constructor(opts: { name: string; icon: string }) {
-        this.id = `social:firebase:${opts.name}`.toLowerCase()
         this.type = WalletType.Social
+        this.id = `${this.type}:firebase:${opts.name}`.toLowerCase()
         this.name = opts.name
         this.icon = opts.icon
 
@@ -40,31 +55,39 @@ export abstract class FirebaseConnector {
      * It gets set to false when onAuthChange response after the login attempt
      */
     private instanceIsConnecting = false
-    public async connect() {
+    public async connect(request: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {
         this.instanceIsConnecting = true
         await setFirebaseAuthState(FirebaseAuthState.Connecting)
         try {
             const googleProvider = new GoogleAuthProvider()
-            // forces select account screen
+            // forces select account screen on every connect
             googleProvider.setCustomParameters({ prompt: "select_account" })
-            const userCredential = await signInWithPopup(firebaseAuth, googleProvider)
+            const userCredential = await signInWithPopup(firebaseAuth, googleProvider, browserPopupRedirectResolver)
             const token = await this.fetchLoginTokenForUser(userCredential.user)
             const happyUser = await this.connectWithWeb3Auth(
-                FirebaseConnector.makeHappyUserPartial(userCredential.user),
+                FirebaseConnector.makeHappyUserPartial(userCredential.user, this.id),
                 token,
             )
             if (!happyUser) throw new Error(`Failed to connect ${this.id}`)
             await setFirebaseAuthState(FirebaseAuthState.Connected)
             await this.onConnect(happyUser, web3AuthEIP1193Provider)
-        } catch {
+            return {
+                request,
+                response:
+                    request.payload.method === "eth_requestAccounts"
+                        ? happyUser.addresses
+                        : getPermissions(getAppURL(), "eth_accounts"),
+            }
+        } catch (e) {
             await setFirebaseAuthState(FirebaseAuthState.Disconnected)
+            throw e
         }
     }
 
     public async disconnect() {
         try {
             await setFirebaseAuthState(FirebaseAuthState.Disconnecting)
-            await Promise.allSettled([signOut(firebaseAuth), web3AuthDisconnect()])
+            await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
             await this.onDisconnect(undefined, web3AuthEIP1193Provider)
             await setFirebaseAuthState(FirebaseAuthState.Disconnected)
         } catch (e) {
@@ -74,11 +97,11 @@ export abstract class FirebaseConnector {
         }
     }
 
-    private static makeHappyUserPartial(user: User) {
+    private static makeHappyUserPartial(user: User, id: string) {
         return {
             // connection type
             type: WalletType.Social,
-            provider: "firebase",
+            provider: id,
             // social details
             uid: user.uid,
             email: user.email || "",
@@ -104,14 +127,16 @@ export abstract class FirebaseConnector {
         partialUser: ReturnType<typeof FirebaseConnector.makeHappyUserPartial>,
         token: JWTLoginParams,
     ) {
-        try {
-            // have to refresh JWT since web3auth fails if duplicate token is found
-            const addresses = await web3AuthConnect(token)
-            const user = FirebaseConnector.makeHappyUser(partialUser, addresses)
-            await setFirebaseSharedUser(user)
-            return user
-        } catch {
-            // TODO: handle retry logic, and failure state
+        for (let i = 0; i < 5; i++) {
+            try {
+                // have to refresh JWT since web3auth fails if duplicate token is found
+                const addresses = await web3AuthConnect(token)
+                const user = FirebaseConnector.makeHappyUser(partialUser, addresses)
+                await setFirebaseSharedUser(user)
+                return user
+            } catch {
+                await new Promise((resolve) => setTimeout(resolve, 1_000))
+            }
         }
     }
 
@@ -162,7 +187,11 @@ export abstract class FirebaseConnector {
             }
 
             const token = await this.fetchLoginTokenForUser(_user)
-            const happyUser = await this.connectWithWeb3Auth(FirebaseConnector.makeHappyUserPartial(_user), token)
+
+            const happyUser = await this.connectWithWeb3Auth(
+                FirebaseConnector.makeHappyUserPartial(_user, this.id),
+                token,
+            )
 
             if (happyUser) {
                 await this.onReconnect(happyUser, web3AuthEIP1193Provider)

@@ -1,6 +1,5 @@
-import { validateNumericInput } from "@happychain/common"
+import { debounce, validateNumericInput } from "@happychain/common"
 import { useAtomValue } from "jotai"
-import { debounce } from "lodash"
 import type React from "react"
 import { useCallback, useState } from "react"
 import { formatEther, parseEther } from "viem"

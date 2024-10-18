@@ -2,11 +2,10 @@ import { AuthState, Msgs } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/vanilla"
 import { http, createPublicClient } from "viem"
 import { mainnet } from "viem/chains"
+import { permissionsMapAtom } from "#src/state/permissions.ts"
 import { appMessageBus } from "../services/eventBus"
 import { authStateAtom } from "../state/authState"
-import { hasPermissions } from "../state/permissions"
 import { userAtom } from "../state/user"
-import { getAppURL, isStandaloneIframe } from "../utils/appURL"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 
 const store = getDefaultStore()
@@ -20,7 +19,7 @@ const store = getDefaultStore()
 void appMessageBus.emit(Msgs.AuthStateChanged, store.get(authStateAtom))
 
 /**
- * Emits the current auth state to the app when it changes.
+ * Emits the current auth & user state to the app when it changes.
  *
  * - If the auth state is {@link AuthState.Connected} and app has permissions, the user will also be emitted.
  * - If the auth state is {@link AuthState.Disconnected} then the user will be cleared.
@@ -35,35 +34,35 @@ store.sub(authStateAtom, () => {
     const authState = store.get(authStateAtom)
     void appMessageBus.emit(Msgs.AuthStateChanged, authState)
 
-    if (AuthState.Connecting === authState) {
-        // no user updates in this state
-        return
-    }
+    // no user updates in this state
+    if (AuthState.Connecting === authState) return
 
-    emitUserUpdateOnLoginLogoutEvent()
+    emitUserUpdate(store.get(userAtom))
 })
 
 /**
- * Emits user updates to the app (if permitted).
+ * Emits user updates to the app if permitted and needed.
  *
  * @listens userAtom
  *
- * @emits {@link Msgs.AuthStateChanged} (optional)
+ * @emits {@link Msgs.UserChanged} (optional)
  * @emits {@link Msgs.ProviderEvent} (optional)
  */
-store.sub(userAtom, emitUserUpdateOnLoginLogoutEvent)
+store.sub(userAtom, () => {
+    emitUserUpdate(store.get(userAtom))
+})
 
 /**
- * Sync all logout events to the app, and sync login events if the user already has connection
- * permission for the app.
+ * Emits user updates to the app if permitted and needed.
+ *
+ * @listens permissionsMapAtom
+ *
+ * @emits {@link Msgs.UserChanged} (optional)
+ * @emits {@link Msgs.ProviderEvent} (optional)
  */
-function emitUserUpdateOnLoginLogoutEvent() {
-    const user = store.get(userAtom)
-    // Note that `hasPermissions` needs to be short-circuited, as it is meaningless without a user.
-    if (!user || (!isStandaloneIframe() && hasPermissions(getAppURL(), "eth_account"))) {
-        emitUserUpdate(user)
-    }
-}
+store.sub(permissionsMapAtom, () => {
+    emitUserUpdate(store.get(userAtom))
+})
 
 /**
  * Asynchronously updates the ENS username when the user updates.
@@ -81,9 +80,8 @@ store.sub(userAtom, async () => {
     if (!user || user.ens) return
 
     const ensName = await mainnetClient.getEnsName({ address: user.address })
+    if (!ensName) return
 
-    if (ensName) {
-        user.ens = ensName
-        store.set(userAtom, user)
-    }
+    user.ens = ensName
+    store.set(userAtom, user)
 })

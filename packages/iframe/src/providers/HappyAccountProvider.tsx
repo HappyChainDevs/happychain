@@ -1,6 +1,6 @@
-import { init as web3AuthInit } from "@happychain/firebase-web3auth-strategy"
 import { Msgs, logger } from "@happychain/sdk-shared"
 import { type PropsWithChildren, useEffect, useState } from "react"
+import { init as web3AuthInit } from "../connections/firebase"
 
 import { useProviderEventsProxy } from "../hooks/useProviderEventsProxy"
 import { appMessageBus } from "../services/eventBus"
