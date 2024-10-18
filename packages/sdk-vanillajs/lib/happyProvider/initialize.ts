@@ -12,7 +12,6 @@ import type { EIP1193Provider } from "viem"
 import { createUUID } from "../common-utils"
 import { HappyProvider } from "./happyProvider"
 import { icon64x64 } from "./icons"
-
 import type { HappyProviderPublic } from "./interface"
 import { registerListeners } from "./listeners"
 
@@ -82,26 +81,54 @@ export const happyProvider = new HappyProvider({
     // In practice the 'request' functions are compatible, but the types don't line up for now.
 }) as HappyProvider & EIP1193Provider
 
+/**
+ * HappyProvider is a EIP1193 Ethereum Provider {@link https://eips.ethereum.org/EIPS/eip-1193}
+ *
+ * @example
+ * ### Setting up viem client
+ * ```ts twoslash
+ * import { createPublicClient, custom } from 'viem'
+ * import { happyProvider } from '@happychain/js'
+ * // ---cut---
+ * const publicClient = createPublicClient({
+ *   transport: custom(happyProvider)
+ * })
+ * ```
+ */
 export const happyProviderPublic: HappyProviderPublic = happyProvider
 
 /**
  * Connect the app to the Happy Account (will prompt user for permission).
+ *
+ * @returns true if successful, otherwise false
  */
 export const connect = async () => {
-    await happyProvider.request({
-        method: "wallet_requestPermissions",
-        params: [{ eth_accounts: {} }],
-    })
+    try {
+        await happyProvider.request({
+            method: "wallet_requestPermissions",
+            params: [{ eth_accounts: {} }],
+        })
+        return true
+    } catch {
+        return false
+    }
 }
 
 /**
  * Disconnect the app from the Happy Account.
+ *
+ * @returns true if successful, otherwise false
  */
 export const disconnect = async () => {
-    await happyProvider.request({
-        method: "wallet_revokePermissions",
-        params: [{ eth_accounts: {} }],
-    })
+    try {
+        await happyProvider.request({
+            method: "wallet_revokePermissions",
+            params: [{ eth_accounts: {} }],
+        })
+        return true
+    } catch {
+        return false
+    }
 }
 
 export const unsubscribe = announceProvider({

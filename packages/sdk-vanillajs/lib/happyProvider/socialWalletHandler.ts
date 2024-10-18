@@ -5,12 +5,10 @@ import {
     AuthState,
     BasePopupProvider,
     type EIP1193RequestParameters,
-    EIP1193UserRejectedRequestError,
     type HappyUser,
     Msgs,
     type ProviderMsgsFromIframe,
 } from "@happychain/sdk-shared"
-import { ModalStates } from "@happychain/sdk-shared"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 type InFlightCheck = {
@@ -99,115 +97,47 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
     }
 
     /**
-     * Requests the user to log in, returns true if that succeeded, false if cancelled or failed.
+     * requestExtraPermissions is short circuited by requiresUserApproval. If the request does not
+     * require permissions (i.e. eth_chainId) then this function will not be called. Here we check
+     * if the user first requires either a Login and/or a Connection. In the event they need to
+     * log in, we throw an error so that the root HappyProvider may prompt the user, then retry the
+     * request using their preferred connection provider (this or injected) if needed. In the event
+     * they are already logged in, but the dapp does not have eth_accounts permissions, we will
+     * either intercept here and request these permissions before proceeding if the original
+     * request was unrelated (ie. sendTransaction) or if it was already a connection request, we
+     * can allow the flow to proceed as normal and the user will approve in the popup as usual.
      */
-    private async requestLogin(): Promise<boolean> {
-        void this.config.msgBus.emit(Msgs.RequestDisplay, ModalStates.Login)
-
-        const { promise, resolve } = promiseWithResolvers<boolean>()
-        const key = createUUID()
-
-        const unsubscribeClose = this.config.msgBus.on(Msgs.ModalToggle, (state) => {
-            if (state.isOpen) return
-            // The login modal was closed.
-            // Note that a failing login attempt does not close the modal (the user is free to retry).
-            unsubscribeClose()
-            if (state.cancelled) {
-                // Closing is because the user cancelled the login.
-                unsubscribeSuccess()
-                this.inFlightChecks.delete(key)
-                resolve(false)
-            }
-            // Otherwise the login is successful, the UserChanged callback will be called.
-        })
-
-        // NOTE: This *should* be safe: either the login succeeds from this app and we get
-        // connection permissions auto-granted (and get the user as a result), or it fails (possibly
-        // because login was complete from another app first?) and the ModdlaToggle callback will be
-        // called.
-
-        const unsubscribeSuccess = this.config.msgBus.on(Msgs.UserChanged, (user) => {
-            if (!user) return
-            resolve(true) // successfully logged in
-            unsubscribeSuccess()
-            unsubscribeClose()
-        })
-
-        return promise
-    }
-
     protected override async requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean> {
         // We are connected, no need for extra permissions, we needed approval before and still do.
         if (this.user) return true
+
+        // We are completely logged out, we need to log in.
+        // HappyProvider will manage re-executing the original request if needed
+        // and will resubmit here, or to the injectedHandler depending on what the user
+        // connects with
+        if (this.authState === AuthState.Disconnected) {
+            // throw an error, so that login can be handled at the root HappyProvider
+            // this is required so that if the user logs in with the injected wallet
+            // we can continue the request there instead of here with the social wallet
+            throw new (class extends Error {
+                name = "LoginRequired"
+            })()
+        }
 
         // biome-ignore format: readability
         const isConnectionRequest
             =  args.method === "eth_requestAccounts"
             || args.method === "wallet_requestPermissions"
-                && args.params.find((p) => p.eth_accounts)
+                && args.params.some((p) => p.eth_accounts)
 
-        // We are logged out, we need to log in, which will auto-grant connection permission.
-        if (this.authState === AuthState.Disconnected) {
-            const loggedIn = await this.requestLogin()
-            if (!loggedIn) throw new EIP1193UserRejectedRequestError()
-        }
-
-        // We are logged in but not connected.
-        else if (!this.user) {
-            // This requested the connection permission directly, let user approve it explicitly.
-            if (isConnectionRequest) return true // still requires approval
-
-            // Recursively request a connection permission (base case is the `if` right above).
+        // We are already logged in, but don't have the correct permissions. If this was not already
+        // a connection request, we make an explicit connection request, before proceeding with the
+        // original request. Otherwise, we can just proceed and execute the original request directly
+        if (!isConnectionRequest) {
             await this.request({
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
             })
-        }
-
-        // NOTE: How we handle permission requests (eth_requestAccounts, wallet_requestPermissions)
-        //
-        // 1. Only connection permission requested.
-        //    A. If we were already connected, `requiresUserApproval` returned false,
-        //       this function doesn't get called.
-        //    B. If we logged in in this function, implicitly granted, must handle below.
-        //    C. If not, we returned above (`if (isConnectionRequest)` to get explicit user approval.
-        //
-        // 2. Non-connection permissions requested.
-        //    A. If we were already connected & we had the permissions, `requiresUserApproval`
-        //       returned false, this function doesn't get called.
-        //    B. If we were already connected but didn't have the permissions, we returned true
-        //       at the top of this function.
-        //    C. If we logged in in this function, we have been implicitly connected,
-        //       must handle below.
-        //    D. Otherwise, we have explicitly connected through the recursive
-        //       `wallet_requestPermissions` call above, must handle below.
-        //
-        // 3. Mixed connection and non-connection permissions requested.
-        //    A, B, C:  Same as 2A, 2B, 2C.
-        //    D. Otherwise, we returned above (`if (isConnectionRequest`) to get explicit user approval.
-        //
-        // The below logic will handles cases 1B, 2C, 2D, 3C.
-
-        // NOTE: There is always a tiny chance that the authentication or connection status shifts
-        // out from underneath us. This is okay: at worse either (1) say something doesn't require
-        // approval when it now does, leading to an exception in the console and the user having to
-        // retry, or (2) say something requires a permission when it doesn't, leading to an
-        // unnecessary prompt.
-
-        // biome-ignore format: readability
-        const onlyConnectionRequested
-            =  args.method === "eth_requestAccounts"
-            || args.method === "wallet_requestPermissions"
-                && args.params.length === 1
-                && "eth_accounts" in Object.keys(args.params[0])
-
-        // Case 1B: connection permission implicitly granted by logging in.
-        if (onlyConnectionRequested) return false
-
-        // Cases 2C, 2D, 3C: we're now connected and have requested other permissions, check to see
-        // if we have them.
-        if (args.method === "wallet_requestPermissions") {
-            return await this.requiresUserApproval(args) // still requires approval?
         }
 
         // Everything else (non-permission requests): required approval to begin with and still does.

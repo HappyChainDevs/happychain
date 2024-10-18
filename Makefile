@@ -15,17 +15,14 @@ SHARED_PKGS := common,sdk-shared
 # packages only used in the SDK
 SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components,worker
 
-# packages only used in the iframe (order matters)
-IFRAME_ONLY_PKGS := sdk-firebase-web3auth-strategy,iframe
-
 # packages needed to build the sdk
 SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
 
 # packages needed to build the iframe
-IFRAME_PKGS := $(SHARED_PKGS),$(IFRAME_ONLY_PKGS)
+IFRAME_PKGS := $(SHARED_PKGS),iframe
 
 # packages needed to build the sdk and iframe
-ACCOUNT_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS),$(IFRAME_ONLY_PKGS)
+ACCOUNT_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS),iframe
 
 # demo packages (not including dependencies)
 DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue

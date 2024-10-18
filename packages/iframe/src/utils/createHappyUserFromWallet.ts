@@ -1,10 +1,10 @@
 import { type HappyUser, WalletType } from "@happychain/sdk-shared"
 
-export function createHappyUserFromWallet(rdns: string, address: `0x${string}`): HappyUser {
+export function createHappyUserFromWallet(providerId: string, address: `0x${string}`): HappyUser {
     return {
         // connection type
         type: WalletType.Injected,
-        provider: rdns,
+        provider: providerId,
         // social details
         uid: address,
         email: "",

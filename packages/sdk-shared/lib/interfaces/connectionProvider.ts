@@ -1,3 +1,5 @@
+import type { Msgs, MsgsFromApp, MsgsFromIframe } from "./events"
+
 /**
  * Interface for a connectable provider (for injected or social wallets).
  *
@@ -8,6 +10,6 @@ export interface ConnectionProvider {
     name: string
     icon: string
     type: string
-    connect: () => Promise<void>
+    connect: (request: MsgsFromApp[Msgs.ConnectRequest]) => Promise<MsgsFromIframe[Msgs.ConnectResponse]>
     disconnect: () => Promise<void>
 }

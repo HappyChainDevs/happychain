@@ -20,6 +20,15 @@ export enum Msgs {
     /** Instructs the iframe to display the requested page. */
     RequestDisplay = "request-display",
 
+    /** Instructs the iframe to display the connection modal. */
+    ConnectRequest = "connect-request",
+
+    /**
+     * A response from the iframe to the app that the connect modal is no longer in use.
+     * Either the user connected successfully, or they closed the modal without connecting
+     */
+    ConnectResponse = "connect-response",
+
     /**
      * Informs the iframe that the user has connected/disconnected to/from an injected wallet.
      * This is emitted in response to {@link Msgs.InjectedWalletRequestConnect} and whenever
@@ -108,26 +117,45 @@ export enum ModalStates {
 }
 
 export type MsgsFromApp = {
+    [Msgs.ConnectRequest]: ProviderEventPayload<
+        EIP1193RequestParameters<"eth_requestAccounts" | "wallet_requestPermissions">
+    >
+    [Msgs.InjectedWalletConnected]:
+        | {
+              rdns: string
+              address: `0x${string}`
+              request: MsgsFromApp[Msgs.ConnectRequest]
+              response: MsgsFromIframe[Msgs.ConnectResponse]["response"]
+          }
+        | {
+              rdns?: undefined
+              address?: undefined
+              request?: MsgsFromApp[Msgs.ConnectRequest] | undefined
+              response?: undefined
+          }
+    [Msgs.MirrorPermissions]: { rdns: string; request: EIP1193PermissionsRequest; response: unknown }
     [Msgs.RequestDisplay]: ModalStates
-    [Msgs.InjectedWalletConnected]: { rdns: string; address: `0x${string}` } | { rdns?: undefined; address?: undefined }
-    [Msgs.MirrorPermissions]: {
-        request: EIP1193PermissionsRequest
-        response: unknown
-    }
 }
 
 // =================================================================================================
 // === MESSAGE BUS EVENTS FROM IFRAME ==============================================================
 
+interface AuthResponse<
+    T extends "eth_requestAccounts" | "wallet_requestPermissions" = "eth_requestAccounts" | "wallet_requestPermissions",
+> {
+    request: ProviderEventPayload<EIP1193RequestParameters<T>>
+    response: EIP1193RequestResult<T> | null
+}
 /**
  * Events sent from the iframe to the app on the general message bus.
  */
 export type MsgsFromIframe = {
     [Msgs.IframeInit]: boolean
+    [Msgs.ConnectResponse]: AuthResponse
     [Msgs.ModalToggle]: { isOpen: boolean; cancelled: boolean }
     [Msgs.UserChanged]: HappyUser | undefined
     [Msgs.AuthStateChanged]: AuthState
-    [Msgs.InjectedWalletRequestConnect]: { rdns?: string }
+    [Msgs.InjectedWalletRequestConnect]: { rdns?: string; request: MsgsFromApp[Msgs.ConnectRequest] }
 }
 
 // =================================================================================================

@@ -58,8 +58,8 @@ let _addresses: `0x${string}`[] = []
 ethereumSigningProvider.on("connect", async (data) => {
     worker.broadcast({ action: "connect", data })
 })
-ethereumSigningProvider.on("disconnect", (data) => {
-    worker.broadcast({ action: "disconnect", data })
+ethereumSigningProvider.on("disconnect", () => {
+    worker.broadcast({ action: "disconnect", data: undefined })
 })
 ethereumSigningProvider.on("chainChanged", async (data) => {
     worker.broadcast({ action: "chainChanged", data })

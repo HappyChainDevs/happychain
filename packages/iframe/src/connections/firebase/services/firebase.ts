@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app"
-import { getAuth } from "firebase/auth"
+import { indexedDBLocalPersistence, initializeAuth } from "firebase/auth"
 
 // See: https://firebase.google.com/docs/web/learn-more#config-object
 
@@ -16,4 +16,9 @@ const firebaseConfig = {
 export const firebaseApp = initializeApp(firebaseConfig)
 
 // Initialize Firebase Authentication and get a reference to the service
-export const firebaseAuth = getAuth(firebaseApp)
+// https://firebase.google.com/docs/auth/web/custom-dependencies
+export const firebaseAuth = initializeAuth(firebaseApp, {
+    persistence: indexedDBLocalPersistence,
+    // No popupRedirectResolver defined. will be defined in signInWithPopup
+    popupRedirectResolver: undefined,
+})

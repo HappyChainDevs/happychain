@@ -18,6 +18,8 @@ export { nowInSeconds } from "./utils/date.js"
 
 export { onlyUnique } from "./utils/streams.js"
 
+export { debounce } from "./utils/debounce.js"
+
 export { promiseWithResolvers } from "./utils/promises.js"
 
 export { keys, entries } from "./utils/records.js"

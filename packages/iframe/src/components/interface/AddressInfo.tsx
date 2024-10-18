@@ -28,7 +28,7 @@ const AddressInfo = ({ address }: AddressInfoProps) => {
 
     return (
         <div className="flex flex-row items-center justify-center space-x-1">
-            <p>{`${shortenAddress(address, 4)}`}</p>
+            <p>{shortenAddress(address, 4)}</p>
             <div
                 className="flex flex-row items-center justify-center tooltip"
                 data-tip={copied ? "Copied!" : "Copy Address"}

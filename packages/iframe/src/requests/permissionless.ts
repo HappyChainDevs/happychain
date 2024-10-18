@@ -39,8 +39,10 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return user && hasPermissions(app, "eth_accounts") ? user.addresses : []
         }
 
-        case "happy_user":
-            return hasPermissions(app, "eth_accounts") ? getUser() : undefined
+        case "happy_user": {
+            const user = getUser()
+            return user && hasPermissions(app, "eth_accounts") ? getUser() : undefined
+        }
 
         case "eth_requestAccounts":
             checkAuthenticated()

@@ -26,6 +26,7 @@ function App() {
             alert("no user connected")
             return
         }
+
         setSignatureResult("")
 
         const signature = await walletClient.signMessage({ message })
