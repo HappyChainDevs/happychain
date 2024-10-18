@@ -14,6 +14,7 @@ import { type SmartAccountClient, createSmartAccountClient } from "permissionles
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
 import { createPimlicoClient } from "permissionless/clients/pimlico"
+import { encodeNonce } from "permissionless/utils"
 
 import { abis, deployment } from "../deployments/anvil/testing/abis"
 import { getCustomNonce } from "./getNonce"
@@ -315,36 +316,12 @@ async function sendDirectTransactions(count = 1): Promise<bigint> {
     return totalGas
 }
 
-async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    const receiverAddress = getRandomAccount()
-
-    const txHash = await kernelClient.sendTransaction({
-        account: kernelAccount,
-        to: receiverAddress,
-        chain: localhost,
-        value: parseEther(AMOUNT),
-    })
-
-    const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-        confirmations: 1,
-    })
-
-    if (receipt.status !== "success") {
-        throw new Error("KernelClient transaction failed")
-    }
-
-    const balance = await checkBalance(receiverAddress)
-    if (balance === AMOUNT) {
-        console.log(`Using RootValidator: Balance is correct: ${balance} ETH`)
-    } else {
-        throw new Error(`Using RootValidator: Balance is not correct: ${balance} ETH`)
-    }
-}
-
 async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    console.log("\nSending Single UserOp\n")
+    console.log("\nSending a Single UserOp :-")
     const receiverAddress = getRandomAccount()
+
+    const directTxGas = await sendDirectTransactions(1)
+    console.log("  Direct Transaction Gas:", directTxGas)
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelAccount,
@@ -360,7 +337,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     const paymasterGasEstimates = await pimlicoClient.estimateUserOperationGas({
         ...userOp
     })
-    console.log("Paymaster Gas Estimates:", paymasterGasEstimates)
+    console.log("\n  Paymaster Gas Estimates:", paymasterGasEstimates)
 
     userOp.signature = await kernelAccount.signUserOperation({
         ...userOp,
@@ -380,7 +357,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
         throw new Error("Validation using custom validator module failed")
     }
 
-    console.log("UserOp via Bundler Receipt :-");
+    console.log("\n  UserOp via Bundler Receipt :-");
     console.log("  ActualGasUsed: ", receipt.actualGasUsed);
     console.log("  ActualGasCost: ", receipt.actualGasCost);
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
@@ -393,10 +370,12 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     const directTxnGasCost = 21000n; // Hardcoded as it's direct ETH transfer gas cost
     const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost;
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+
+    console.log("\n------------------------------------------------\n")
 }
 
 async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    console.log("\nSending Single UserOp with 5 transfer Calls\n")
+    console.log("\nSending Single UserOp with 5 transfer1 Calls\n")
     const receiverAddress = getRandomAccount()
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
@@ -461,19 +440,51 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
     const directTxnGasCost = await sendDirectTransactions(5)
     const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost;
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+
+    console.log("\n------------------------------------------------\n")
 }
 
-async function batchedUserOperationsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    console.log("\nSending 5 separate UserOps\n")
-    const kernelAddress = await kernelAccount.getAddress()
+async function batchedUserOperationsGasResult() {
+    console.log("\nSending 2 separate UserOps\n")
     const receiverAddress = getRandomAccount()
 
-    const customNonce1 = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.ECDSAValidator, 0n)
-    const customNonce2 = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.ECDSAValidator, 1n)
+    const privateKey1 = generatePrivateKey()
+    const privateKey2 = generatePrivateKey()
 
-    const userOp1 = kernelClient.sendUserOperation({
+    const account1 = privateKeyToAccount(privateKey1)
+    const account2 = privateKeyToAccount(privateKey2)
+
+    const walletClient1 = createWalletClient({
+        account: account1,
+        chain: localhost,
+        transport: http(rpcURL),
+    })
+
+    const walletClient2 = createWalletClient({
+        account: account2,
+        chain: localhost,
+        transport: http(rpcURL),
+    })
+
+    const kernelAccount1: SmartAccount = await getKernelAccount(walletClient1, account1)
+    const kernelAddress1 = await kernelAccount1.getAddress()
+    const kernelClient1 = getKernelClient(kernelAccount1)
+
+    const kernelAccount2: SmartAccount = await getKernelAccount(walletClient2, account2)
+    const kernelAddress2 = await kernelAccount2.getAddress()
+    const kernelClient2 = getKernelClient(kernelAccount2)
+
+    const prefundRes1 = await fund_smart_account(kernelAddress1)
+    if (prefundRes1 !== "success") {
+        throw new Error("Funding SmartAccount1 failed")
+    }
+    const prefundRes2 = await fund_smart_account(kernelAddress2)
+    if (prefundRes2 !== "success") {
+        throw new Error("Funding SmartAccount2 failed")
+    }
+
+    const userOp1 = kernelClient1.sendUserOperation({
         account: kernelAccount,
-        nonce: customNonce1,
         calls: [
             {
                 to: receiverAddress,
@@ -483,9 +494,8 @@ async function batchedUserOperationsGasResult(kernelAccount: SmartAccount, kerne
         ],
     })
 
-    const userOp2 = kernelClient.sendUserOperation({
-        account: kernelAccount,
-        nonce: customNonce2,
+    const userOp2 = sessionClient.sendUserOperation({
+        account: sessionSigner,
         calls: [
             {
                 to: receiverAddress,
@@ -496,10 +506,22 @@ async function batchedUserOperationsGasResult(kernelAccount: SmartAccount, kerne
     })
 
     const hashes = await Promise.all([userOp1, userOp2])
-    console.log("1st hash:", hashes[0])
+    // console.log("1st hash:", hashes[0])
+    // console.log("2nd hash:", hashes[1])
 
-    // const userOpsActualGas = hashes[0].receipt.actualGasUsed + hashes[0].receipt.actualGasUsed
-    // const userOpsGasUsed = hashes[0].receipt.receipt.gasUsed + hashes[0].receipt.receipt.gasUsed
+    const receipt1 = await kernelClient.waitForUserOperationReceipt({
+        hash: hashes[0],
+    })
+
+    const receipt2 = await sessionClient.waitForUserOperationReceipt({
+        hash: hashes[1],
+    })
+
+    console.log("receipt1:", receipt1)
+    console.log("receipt2:", receipt2)
+
+    // const userOpsActualGas = receipt1.actualGasUsed + receipt2.actualGasUsed
+    // const userOpsGasUsed = receipt1.receipt.gasUsed + receipt2.receipt.gasUsed
     //
     // const bundlerOverhead = userOpsActualGas - userOpsGasUsed
     // console.log("\nBundler Overhead (Gas Used):", bundlerOverhead);
@@ -507,8 +529,36 @@ async function batchedUserOperationsGasResult(kernelAccount: SmartAccount, kerne
     // const directTxnGasCost = await sendDirectTransactions(2)
     // const extraCostUsingUserOp = userOpsActualGas - directTxnGasCost;
     // console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp);
+
+    console.log("\n------------------------------------------------\n")
 }
 
+async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+    const receiverAddress = getRandomAccount()
+
+    const txHash = await kernelClient.sendTransaction({
+        account: kernelAccount,
+        to: receiverAddress,
+        chain: localhost,
+        value: parseEther(AMOUNT),
+    })
+
+    const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+        confirmations: 1,
+    })
+
+    if (receipt.status !== "success") {
+        throw new Error("KernelClient transaction failed")
+    }
+
+    const balance = await checkBalance(receiverAddress)
+    if (balance === AMOUNT) {
+        console.log(`Using RootValidator: Balance is correct: ${balance} ETH`)
+    } else {
+        throw new Error(`Using RootValidator: Balance is not correct: ${balance} ETH`)
+    }
+}
 
 async function testCustomValidator(
     kernelAccount: SmartAccount,
@@ -532,12 +582,6 @@ async function testCustomValidator(
         ],
         nonce: customNonce,
     })
-
-    const gasVals = await pimlicoClient.estimateUserOperationGas({
-        ...userOp
-    })
-
-    console.log("gasVals:", gasVals)
 
     userOp.signature = await sessionSigner.signUserOperation({
         ...userOp,
@@ -582,11 +626,20 @@ async function main() {
         throw new Error("Paymaster Deposit failed")
     }
 
-    // try {
-    //     await sendDirectTransactions()
-    // } catch (error) {
-    //     console.error("Direct Transaction: ", error)
-    // }
+    try {
+        await testRootValidator(kernelAccount, kernelClient)
+    } catch (error) {
+        console.error("Root Validator: ", error)
+    }
+
+    try {
+        await testCustomValidator(kernelAccount, kernelClient, kernelAddress)
+    } catch (error) {
+        console.error("Custom Validator: ", error)
+    }
+
+    console.log("\n------------------------------------------------\n")
+    console.log("Gas Usage Results:\n")
 
     try {
         await singleUserOperationGasResult(kernelAccount, kernelClient)
@@ -601,22 +654,10 @@ async function main() {
     }
 
     try {
-        await batchedUserOperationsGasResult(kernelAccount, kernelClient)
+        await batchedUserOperationsGasResult()
     } catch (error) {
         console.error("Batched UserOps: ", error)
     }
-
-    // try {
-    //     await testRootValidator(kernelAccount, kernelClient)
-    // } catch (error) {
-    //     console.error("Root Validator: ", error)
-    // }
-
-    // try {
-    //     await testCustomValidator(kernelAccount, kernelClient, kernelAddress)
-    // } catch (error) {
-    //     console.error("Custom Validator: ", error)
-    // }
 }
 
 main().then(() => {
