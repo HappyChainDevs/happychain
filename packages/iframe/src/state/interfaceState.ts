@@ -31,6 +31,6 @@ export const walletInfoViewAtom = atom<ContentType>(ContentType.TOKENS)
  * - `undefined`: There is a pending tx, but user has chosen to navigate away
  *    from the Send page.
  */
-export const trackSendAtom = atom<boolean | undefined>(false)
+export const transactionFromSendPageAtom = atom<boolean | undefined>(false)
 
-export const { getValue: getTxSendState, setValue: setTxSendState } = accessorsFromAtom(trackSendAtom)
+export const { getValue: getTxSendState, setValue: setTxSendState } = accessorsFromAtom(transactionFromSendPageAtom)
