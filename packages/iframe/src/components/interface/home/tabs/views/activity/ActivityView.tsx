@@ -1,6 +1,4 @@
 import { useAtomValue } from "jotai"
-import type { TransactionReceipt } from "viem"
-import { deserialize } from "wagmi"
 import { confirmedTxsAtom, pendingTxsAtom } from "../../../../../../state/txHistory"
 import { userAtom } from "../../../../../../state/user"
 import TxLoadingSkeleton from "../../../../TxLoadingSkeleton"
@@ -35,7 +33,8 @@ const ActivityView = () => {
             {userPendingTxs.length > 0 && userPendingTxs.map((tx) => <TxLoadingSkeleton key={tx} tx={tx} />)}
 
             {userTxHistory.length > 0 &&
-                userTxHistory.map((tx) => <TxLogEntry key={tx} tx={deserialize(tx) as TransactionReceipt} />)}
+                // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                userTxHistory.map((tx, index) => <TxLogEntry key={index} tx={tx} />)}
         </div>
     )
 }

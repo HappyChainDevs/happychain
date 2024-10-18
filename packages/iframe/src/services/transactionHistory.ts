@@ -32,13 +32,12 @@ const store = getDefaultStore()
 export function addHistoryLogEntry(address: Address, receipt: TransactionReceipt) {
     store.set(confirmedTxsAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
-        const serializedReceipt = serialize(receipt)
-        const isReceiptAlreadyLogged = userHistory.includes(serializedReceipt)
+        const isReceiptAlreadyLogged = userHistory.includes(receipt)
 
         if (!isReceiptAlreadyLogged) {
             return {
                 ...existingEntries,
-                [address]: [serializedReceipt, ...userHistory],
+                [address]: [receipt, ...userHistory],
             }
         }
 

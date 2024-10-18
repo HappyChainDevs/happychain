@@ -1,14 +1,14 @@
 import { atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address, Hash, TransactionReceipt } from "viem"
-import { deserialize, serialize } from "wagmi"
+import { serialize, deserialize } from "wagmi"
 import { StorageKey } from "../services/storage"
 
-export type TxHistory = Record<Address, string[]>
+export type TxHistory = Record<Address, TransactionReceipt[]>
 export type PendingTxHistoryRecord = Record<Address, Hash[]>
 
 /**
  * Atom to manage recent (confirmed) transaction history mapped to a user's address, using localStorage.
- * Transaction receipts are stored in a 'serialized` format (using the wagmi helper).
+ * Transaction receipts are stored using the {@link serialize} helper.
  */
 const confirmedTxsStorage = createJSONStorage<TxHistory>(() => localStorage, {
     replacer: (_key, value) => {
