@@ -1,30 +1,13 @@
-import { type UUID, createUUID } from "@happychain/common"
 import { generateTestUser } from "@happychain/testing"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { setUser } from "../state/user"
-import type { AppURL } from "../utils/appURL"
 import { clearPermissions, getAllPermissions, grantPermissions, hasPermissions, revokePermissions } from "./permissions"
 
-const appURL = "http://localhost:1234" as AppURL
-const iframeURL = "http://localhost:4321" as AppURL
+const { appURL, iframeURL, appURLMock, requestUtilsMock } = await vi //
+    .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
 
-vi.mock("../../utils/appURL", async () => ({
-    getAppURL: () => appURL,
-    getIframeURL: () => iframeURL,
-}))
-
-const parentID = createUUID()
-const iframeID = createUUID()
-vi.mock("../requests/utils", (importUtils) =>
-    importUtils<typeof import("../requests/utils")>().then((utils) => ({
-        ...utils,
-        appForSourceID(sourceId: UUID): AppURL | undefined {
-            if (sourceId === parentID) return appURL
-            if (sourceId === iframeID) return iframeURL
-            return undefined
-        },
-    })),
-)
+vi.mock(import("#src/utils/appURL"), appURLMock)
+vi.mock(import("#src/requests/utils"), requestUtilsMock)
 
 describe("PermissionsService", () => {
     describe("hasPermissions", () => {

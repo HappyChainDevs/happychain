@@ -33,7 +33,14 @@ export default defineConfig({
     },
     build: {
         rollupOptions: {
-            external: ["react", "viem", "@web3auth/base", "@web3auth/ethereum-mpc-provider", "@web3auth/mpc-core-kit"],
+            external: [
+                "react",
+                "viem",
+                "@web3auth/base",
+                "@web3auth/ethereum-mpc-provider",
+                "@web3auth/mpc-core-kit",
+                /\\.mocks$/,
+            ],
         },
     },
     define: { global: "globalThis" }, // required for web3Auth
