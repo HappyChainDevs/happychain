@@ -264,10 +264,10 @@ describe("PermissionsService", () => {
 
                 it("returns all permissions granted to origin", () => {
                     grantPermissions(appURL, "eth_accounts")
-                    grantPermissions(appURL, "test_permission")
-                    grantPermissions(iframeURL, "correct_origin")
-
-                    expect(getAllPermissions(iframeURL).length).toBe(1)
+                    grantPermissions(appURL, "test_permission_app_1")
+                    grantPermissions(appURL, "test_permission_app_2")
+                    grantPermissions(iframeURL, "test_permission_iframe")
+                    expect(getAllPermissions(iframeURL).length).toBe(2)
                 })
             })
         })
