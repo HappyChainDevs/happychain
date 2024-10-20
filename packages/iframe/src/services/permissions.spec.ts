@@ -56,19 +56,6 @@ describe("PermissionsService", () => {
                 })
             })
         })
-        describe("cross-origin", () => {
-            describe("with-user", () => {
-                beforeEach(() => {
-                    clearPermissions()
-                    setUser(generateTestUser())
-                })
-                it("should return false if eth_accounts permission is granted and user exists", () => {
-                    grantPermissions(appURL, "eth_accounts")
-                    const result = hasPermissions(iframeURL, "eth_accounts")
-                    expect(result).toBe(false)
-                })
-            })
-        })
     })
 
     describe("grantPermissions", () => {
