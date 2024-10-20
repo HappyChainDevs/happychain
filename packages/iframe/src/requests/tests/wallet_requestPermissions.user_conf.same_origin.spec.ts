@@ -1,4 +1,3 @@
-import { type UUID, createUUID } from "@happychain/common"
 import { AuthState } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
@@ -7,26 +6,14 @@ import { vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "../../services/permissions"
 import { setAuthState } from "../../state/authState"
 import { setUser } from "../../state/user"
-import type { AppURL } from "../../utils/appURL"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../approved"
 
-const appURL = "http://localhost:4321" as AppURL
-vi.mock("../../utils/appURL", async () => ({
-    getAppURL: () => appURL,
-    getIframeURL: () => appURL,
-}))
+const { appURL, iframeID, appURLMock, requestUtilsMock } = await vi //
+    .hoisted(async () => await import("#src/testing/same_origin.mocks"))
 
-const iframeID = createUUID()
-vi.mock("../utils", (importUtils) =>
-    importUtils<typeof import("../utils")>().then((utils) => ({
-        ...utils,
-        appForSourceID(sourceId: UUID): AppURL | undefined {
-            if (sourceId === iframeID) return appURL
-            return undefined
-        },
-    })),
-)
+vi.mock(import("#src/utils/appURL"), appURLMock)
+vi.mock(import("#src/requests/utils"), requestUtilsMock)
 
 describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     let user: HappyUser

@@ -1,35 +1,19 @@
-import { type UUID, createUUID } from "@happychain/common"
 import { AuthState, EIP1193UnauthorizedError, EIP1193UserRejectedRequestError } from "@happychain/sdk-shared"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
-import { beforeEach, describe, expect, test } from "vitest"
-import { vi } from "vitest"
+import { beforeEach, describe, expect, test, vi } from "vitest"
 import { clearPermissions, getAllPermissions, grantPermissions } from "../../services/permissions"
 import { setAuthState } from "../../state/authState"
 import { setUser } from "../../state/user"
-import type { AppURL } from "../../utils/appURL"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../permissionless"
 
-const appURL = "http://localhost:1234" as AppURL
-const iframeURL = "http://localhost:4321" as AppURL
-vi.mock("../../utils/appURL", async () => ({
-    getAppURL: () => appURL,
-    getIframeURL: () => iframeURL,
-}))
+const { appURL, parentID, appURLMock, requestUtilsMock } = await vi //
+    .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
 
-const parentID = createUUID()
-const iframeID = createUUID()
-vi.mock("../utils", (importUtils) =>
-    importUtils<typeof import("../utils")>().then((utils) => ({
-        ...utils,
-        appForSourceID(sourceId: UUID): AppURL | undefined {
-            if (sourceId === parentID) return appURL
-            if (sourceId === iframeID) return iframeURL
-            return undefined
-        },
-    })),
-)
+vi.mock(import("#src/utils/appURL"), appURLMock)
+vi.mock(import("#src/requests/utils"), requestUtilsMock)
+
 describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
     describe("disconnected user", () => {
         beforeEach(() => {
