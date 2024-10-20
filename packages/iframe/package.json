@@ -3,6 +3,9 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "imports": {
+        "#src/*": "./src/*"
+    },
     "dependencies": {
         "@happychain/common": "workspace:^",
         "@happychain/firebase-web3auth-strategy": "workspace:^",
