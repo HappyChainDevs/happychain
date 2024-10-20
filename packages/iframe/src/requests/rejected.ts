@@ -1,6 +1,6 @@
 import { EIP1193ErrorCodes, Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happychain/sdk-shared"
 import { happyProviderBus } from "../services/eventBus"
-import { getAppURL, getIframeURL } from "../utils/appURL"
+import { isApp, isIframe } from "../utils/appURL"
 import { iframeProvider } from "../wagmi/provider"
 import { appForSourceID } from "./utils"
 
@@ -19,9 +19,9 @@ export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): 
 
     const app = appForSourceID(data.windowId)
 
-    if (app === getIframeURL()) {
+    if (app && isIframe(app)) {
         void iframeProvider.handleRequestResolution(response)
-    } else if (app === getAppURL()) {
+    } else if (app && isApp(app)) {
         void happyProviderBus.emit(Msgs.RequestResponse, response)
     } else {
         console.warn("Unsupported source app, abandoning rejected request", app, data)

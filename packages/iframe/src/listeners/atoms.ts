@@ -6,7 +6,7 @@ import { appMessageBus } from "../services/eventBus"
 import { hasPermissions } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
 import { userAtom } from "../state/user"
-import { getAppURL } from "../utils/appURL"
+import { getAppURL, isStandaloneIframe } from "../utils/appURL"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 
 const store = getDefaultStore()
@@ -60,7 +60,7 @@ store.sub(userAtom, emitUserUpdateOnLoginLogoutEvent)
 function emitUserUpdateOnLoginLogoutEvent() {
     const user = store.get(userAtom)
     // Note that `hasPermissions` needs to be short-circuited, as it is meaningless without a user.
-    if (!user || hasPermissions(getAppURL(), "eth_account")) {
+    if (!user || (!isStandaloneIframe() && hasPermissions(getAppURL(), "eth_account"))) {
         emitUserUpdate(user)
     }
 }
