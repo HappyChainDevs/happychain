@@ -6,7 +6,7 @@ import { clearAppPermissions } from "../services/permissions"
 import { authStateAtom } from "../state/authState"
 import { providerAtom } from "../state/provider"
 import { userAtom } from "../state/user"
-import { getAppURL } from "../utils/appURL"
+import { getAppURL, isStandaloneIframe } from "../utils/appURL"
 
 const store = getDefaultStore()
 
@@ -20,7 +20,7 @@ export function setUserWithProvider(user: HappyUser | undefined, provider: EIP11
     // Clear all dapp permissions on logout.
     // TODO we actually don't want this, but it's very handy right now
     //      let's remove this once we can manage permissions in-UI
-    if (!user) {
+    if (!user && !isStandaloneIframe()) {
         clearAppPermissions(getAppURL())
     }
 }

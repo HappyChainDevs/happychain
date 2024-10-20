@@ -7,7 +7,7 @@ import {
 // biome-ignore lint/correctness/noUnusedImports: keep type for doc
 import type { UnauthorizedProviderError } from "viem"
 import { happyProviderBus } from "../services/eventBus"
-import { getAppURL } from "../utils/appURL"
+import { isIframe } from "../utils/appURL"
 import { iframeProvider } from "../wagmi/provider"
 import { appForSourceID } from "./utils"
 
@@ -45,9 +45,9 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             payload: payload ?? undefined,
         }
 
-        app === getAppURL()
-            ? void happyProviderBus.emit(Msgs.RequestResponse, response)
-            : iframeProvider.handleRequestResolution(response)
+        isIframe(app)
+            ? iframeProvider.handleRequestResolution(response)
+            : void happyProviderBus.emit(Msgs.RequestResponse, response)
     } catch (e) {
         const response = {
             key: request.key,
@@ -56,8 +56,8 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             payload: null,
         }
 
-        app === getAppURL()
-            ? void happyProviderBus.emit(Msgs.RequestResponse, response)
-            : iframeProvider.handleRequestResolution(response)
+        isIframe(app)
+            ? iframeProvider.handleRequestResolution(response)
+            : void happyProviderBus.emit(Msgs.RequestResponse, response)
     }
 }

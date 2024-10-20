@@ -1,7 +1,10 @@
 import { type HappyUser, Msgs } from "@happychain/sdk-shared"
 import { appMessageBus, happyProviderBus } from "../services/eventBus"
+import { isStandaloneIframe } from "./appURL"
 
 export function emitUserUpdate(user?: HappyUser) {
+    if (isStandaloneIframe()) return
+
     // emit full user update for dApp
     void appMessageBus.emit(Msgs.UserChanged, user)
 

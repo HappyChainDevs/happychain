@@ -10,7 +10,7 @@ import {
     permissionsMapAtom,
 } from "../state/permissions"
 import { getUser } from "../state/user"
-import { type AppURL, getAppURL, getIframeURL } from "../utils/appURL"
+import { type AppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 
 // === NOTICE ======================================================================================
@@ -156,7 +156,7 @@ export function grantPermissions(
         appPermissions[name] = grantedPermission
 
         // Accounts permission granted, which lets the app access the user object.
-        if (name === "eth_accounts" && app === getAppURL()) {
+        if (name === "eth_accounts" && isApp(app) && !isStandaloneIframe()) {
             emitUserUpdate(getUser())
         }
     }
