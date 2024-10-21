@@ -7,9 +7,11 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import type { Client } from "viem"
+import type { Client, Hash } from "viem"
 import { grantPermissions } from "../services/permissions"
-import { addWatchedAsset } from "../services/watchedAssets/utils"
+
+import { addPendingTxEntry } from "../services/transactionHistory"
+import { addWatchedAsset } from "../services/watchedAssets"
 import { getChainsMap, setChains } from "../state/chains"
 import { getUser } from "../state/user"
 import { getWalletClient } from "../state/walletClient"
@@ -30,9 +32,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
     switch (request.payload.method) {
-        case "eth_sendTransaction":
-            // TODO: record tx in history
-            return await sendToWalletClient(request)
+        case "eth_sendTransaction": {
+            const tx = await sendToWalletClient(request)
+            const user = getUser()
+            if (user) addPendingTxEntry(user.address, tx as Hash)
+            return tx
+        }
 
         case "eth_requestAccounts": {
             const user = getUser()

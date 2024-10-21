@@ -18,7 +18,7 @@ The Happy Account is a global account for all applications on HappyChain.
 
 The account is an EIP-4337 smart contract wallet controlled by a private key (EOA). The private key
 can be derived from a social account (Google, Twitter, Discord, ...) or come from a browser-injected
-wallet extension like Metamask. The social account solution is noncustodial via seamless 2FA.
+wallet extension like Metamask. The social account solution is non-custodial via seamless 2FA.
 
 <!-- TODO mention the social login provider once it is decided -->
 
@@ -39,7 +39,7 @@ Note that the React SDK also re-exports everything exposed by the vanilla JS SDK
 
 A Vue SDK will be published very soon.
 
-Beyond enabling the creation and interactions with the HappyAccount, the SDK also provides a
+Beyond enabling the creation and interactions with the HappyAccount, the SDK also provides an
 embedded wallet UI similar to that of injected wallets (Metamask & co), allowing them to track
 their tokens, view transaction history, make transfers, and more.
 
@@ -92,7 +92,7 @@ The Happy Account supports two types of signers:
 When using an injected wallet, the `happyProvider` forwards the request to the injected wallet.
 This is the traditional flow that web3 users are familiar with.
 
-> When we integrate EIP-4337, things might look a little bit different. Most wallet don't have
+> When we integrate EIP-4337, things might look a little bit different. Most wallets don't have
 > built-in EIP-4337 support at the UI level, and so the usual transaction request is replaced by a
 > signing request over a byte string representing an EIP-4337 user operation. It's not ideal to not
 > know what you are signing, and so we will display our own pre-confirmation popup before routing

@@ -1,11 +1,11 @@
 # HappyChain Monorepo
 
-HappyChain is a blockchain focused on fully onchain game.
+HappyChain is a blockchain focused on fully onchain gaming.
 
 Our flagship feature is the Happy Account, a global account for all applications on HappyChain,
 implemented via a wallet that can be permissionlessly embedded into any app.
 
-The Happy Account enabling secure asset self-custody and transaction signing via an EIP-4337 smart
+The Happy Account enables secure asset self-custody and transaction signing via an EIP-4337 smart
 account controlled by private key, either derived from a social account (Google, Twitter, Discord,
 ...) + seamless 2FA, or via a traditional wallet extension (Metamask, Rabby, etc).
 
@@ -27,7 +27,7 @@ You can run `make help` to get a short description of the most common commands.
 
 - `make setup` — don't forget to run this before anything else, or when dependencies change!
 - `make build` — builds all packages
-- `make docs` — build the docs package and opens and serves them on http://localhost:4173
+- `make docs` — build the `docs` package and opens and serves them on http://localhost:4173.
   - Requires running `make build` first.
   - This is different from architecture docs, which are in [/docs](/docs).
 - `make check` — runs code quality & formatting checks
@@ -36,7 +36,7 @@ You can run `make help` to get a short description of the most common commands.
 - `make nuke` — removes all build artifacts and dependencies
   - you need to rerun `make setup` after this
 
-Most package have a version of `make build`, `make clean`, `make check` and `make format`.
+Most packages have a version of `make build`, `make clean`, `make check` and `make format`.
 
 Some packages have their own `make setup` — when that is the case, it does **not** install the pnpm
 dependencies (so that not time is wasted doing this after installing everything once at the top
@@ -45,7 +45,7 @@ level).
 ## Development & Running Demos
 
 - `make {sdk,iframe,account,demos,ts,docs,contracts}.{build,clean,check,format}`
-  - This runs the specified command (after the dot) in a subset of packages.
+  - This runs the specified command (after the dot) in a subset of the packages.
   - `sdk`: all packages needed to build the sdk
   - `iframe`: all packages needed to build the iframe
   - `account`: sdk + iframe
@@ -71,4 +71,4 @@ level).
 
 ## More Commands
 
-See the [Makefile](/Makefile) for a description of all top-level make commands.
+See the [Makefile](/Makefile) for descriptions of all top-level make commands.
