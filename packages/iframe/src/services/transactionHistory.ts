@@ -18,7 +18,7 @@ import { type PendingTxDetails, confirmedTxsAtom, pendingTxsAtom } from "../stat
 
 const store = getDefaultStore()
 
-export function addConfirmedTx(address: Address, receipt: TransactionReceipt) {
+export function addConfirmedTx(address: Address, receipt: TransactionReceipt, value?: string) {
     store.set(confirmedTxsAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
         const isReceiptAlreadyLogged = userHistory.includes(receipt)
@@ -37,7 +37,7 @@ export function addConfirmedTx(address: Address, receipt: TransactionReceipt) {
 
         return {
             ...existingEntries,
-            [address]: [receipt, ...userHistory],
+            [address]: [{ ...receipt, sendValue: value }, ...userHistory],
         }
     })
 }
@@ -60,7 +60,7 @@ function monitorTransactionHash(address: Address, payload: PendingTxDetails) {
             }
 
             // Add the tx receipt to confirmed history
-            addConfirmedTx(address, receipt)
+            addConfirmedTx(address, receipt, payload.value)
             // Remove the tx hash from the pending list
             removePendingTxEntry(address, payload)
         })
