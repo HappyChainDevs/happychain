@@ -2,8 +2,8 @@ import { WalletType } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 import { useAccount } from "wagmi"
 import { userAtom } from "../../state/user"
-import AddressInfo from "./AddressInfo"
 import UserInfoLoader from "../loaders/UserInfoLoader"
+import AddressInfo from "./AddressInfo"
 
 const UserInfo = () => {
     const user = useAtomValue(userAtom)
