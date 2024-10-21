@@ -106,14 +106,11 @@ demo-vue.dev: setup shared.dev sdk.dev ## Serves the VueJS demo application as h
 # DEVELOPMENT
 
 shared.dev:
-	cd packages/common && make dev
-	cd packages/sdk-shared && make dev
+	$(call forall_make , $(SHARED_PKGS) , dev)
 .PHONY: shared.dev
 
 sdk.dev:
-	cd packages/sdk-frontend-components && make dev
-	cd packages/sdk-vanillajs && make dev
-	cd packages/sdk-react && make dev
+	$(call forall_make , $(SDK_ONLY_PKGS) , dev)
 .PHONY: sdk-dev
 
 # start docs in watch mode (can crash, see packages/docs/Makefile for more info)
