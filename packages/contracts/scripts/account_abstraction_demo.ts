@@ -5,6 +5,7 @@ import type {
     GetPaymasterStubDataParameters,
     SmartAccount,
     UserOperation,
+    UserOperationCall,
 } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
@@ -68,6 +69,12 @@ const EXECUTE_FUNCTION_SELECTOR = "0xe9ae5c53"
 
 // A dummy constant representing the amount of ETH to transfer in the demo.
 const AMOUNT = "0.01"
+
+const createEthTransferCall = (): UserOperationCall => ({
+    to: getRandomAccount(),
+    value: parseEther(AMOUNT),
+    data: "0x",
+});
 
 function toHexDigits(number: bigint, size: number): string {
     return numberToHex(number, { size }).slice(2)
@@ -308,35 +315,28 @@ async function sendDirectTransactions(count = 1): Promise<bigint> {
         })
         totalGas += receipt.gasUsed
     }
-    // console.log("  GasUsed: ", receipt.gasUsed)
-    // console.log("  GasPrice: ", receipt.effectiveGasPrice)
-    // console.log("  CumulativeGasUsed: ", receipt.cumulativeGasUsed)
 
     return totalGas
 }
 
 async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
     console.log("\nSending a Single UserOp :-")
-    const receiverAddress = getRandomAccount()
-
-    const directTxGas = await sendDirectTransactions(1)
-    console.log("Direct Transaction Gas:", directTxGas)
+    const directTxnGas = await sendDirectTransactions(1)
+    console.log("Direct Transaction Gas:", directTxnGas)
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelAccount,
-        calls: [
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-        ],
+        calls: [createEthTransferCall()],
     })
 
     const paymasterGasEstimates = await pimlicoClient.estimateUserOperationGas({
         ...userOp,
     })
-    console.log("\nPaymaster Gas Estimates:", paymasterGasEstimates)
+    console.log("\nPaymaster Gas Estimates :-")
+    console.log("  PreVerificationGas: ", paymasterGasEstimates.preVerificationGas)
+    console.log("  VerificationGasLimit: ", paymasterGasEstimates.verificationGasLimit)
+    console.log("  CallGasLimit: ", paymasterGasEstimates.callGasLimit)
+
 
     userOp.signature = await kernelAccount.signUserOperation({
         ...userOp,
@@ -351,69 +351,43 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     const receipt = await kernelClient.waitForUserOperationReceipt({
         hash: userOpHash,
     })
-
     if (!receipt.success) {
         throw new Error("Validation using custom validator module failed")
     }
 
     console.log("\nUserOp via Bundler Receipt :-")
     console.log("  ActualGasUsed: ", receipt.actualGasUsed)
-    console.log("  ActualGasCost: ", receipt.actualGasCost)
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
-    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed)
-    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice)
-
     const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed
     console.log("\nBundler Overhead (Gas Used):", bundlerOverhead)
-
-    const directTxnGasCost = 21000n // Hardcoded as it's direct ETH transfer gas cost
-    const extraCostUsingUserOp = receipt.actualGasUsed - directTxnGasCost
-    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp)
+    const extraCostOfUsingUserOp = receipt.actualGasUsed - directTxnGas
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostOfUsingUserOp)
     console.log("------------------------------------------------\n")
 }
 
 async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    console.log("\nSending a Single UserOp with 5 transfer Calls")
-    const receiverAddress = getRandomAccount()
-
+    console.log("Sending a Single UserOp with 5 transfer Calls")
     const directTxGas = await sendDirectTransactions(5)
     console.log("\nDirect Transaction Gas:", directTxGas)
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelAccount,
         calls: [
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
+            createEthTransferCall(),
+            createEthTransferCall(),
+            createEthTransferCall(),
+            createEthTransferCall(),
+            createEthTransferCall(),
         ],
     })
 
     const paymasterGasEstimates = await pimlicoClient.estimateUserOperationGas({
         ...userOp,
     })
-    console.log("\nPaymaster Gas Estimates:", paymasterGasEstimates)
+    console.log("\nPaymaster Gas Estimates :-")
+    console.log("  PreVerificationGas: ", paymasterGasEstimates.preVerificationGas)
+    console.log("  VerificationGasLimit: ", paymasterGasEstimates.verificationGasLimit)
+    console.log("  CallGasLimit: ", paymasterGasEstimates.callGasLimit)
 
     userOp.signature = await kernelAccount.signUserOperation({
         ...userOp,
@@ -435,27 +409,28 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
 
     console.log("\nUserOp via Bundler Receipt :-")
     console.log("  ActualGasUsed: ", receipt.actualGasUsed)
-    console.log("  ActualGasCost: ", receipt.actualGasCost)
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
-    console.log("  Txn.cumulativeGasUsed: ", receipt.receipt.cumulativeGasUsed)
-    console.log("  Txn.effectiveGasPrice: ", receipt.receipt.effectiveGasPrice)
-
     const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed
     console.log("\nBundler Overhead (Gas Used):", bundlerOverhead)
     const extraCostUsingUserOp = receipt.actualGasUsed - directTxGas
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp)
-    console.log("------------------------------------------------\n")
+    console.log("\n------------------------------------------------\n")
 }
 
 async function batchedUserOperationsGasResult() {
-    console.log("\nSending 2 separate UserOps\n")
-    const receiverAddress = getRandomAccount()
+    console.log("Sending 5 separate UserOps from unique senders :-")
 
     const privateKey1 = generatePrivateKey()
     const privateKey2 = generatePrivateKey()
+    const privateKey3 = generatePrivateKey()
+    const privateKey4 = generatePrivateKey()
+    const privateKey5 = generatePrivateKey()
 
     const account1 = privateKeyToAccount(privateKey1)
     const account2 = privateKeyToAccount(privateKey2)
+    const account3 = privateKeyToAccount(privateKey3)
+    const account4 = privateKeyToAccount(privateKey4)
+    const account5 = privateKeyToAccount(privateKey5)
 
     const walletClient1 = createWalletClient({
         account: account1,
@@ -469,6 +444,24 @@ async function batchedUserOperationsGasResult() {
         transport: http(rpcURL),
     })
 
+    const walletClient3 = createWalletClient({
+        account: account3,
+        chain: localhost,
+        transport: http(rpcURL),
+    })
+
+    const walletClient4 = createWalletClient({
+        account: account4,
+        chain: localhost,
+        transport: http(rpcURL),
+    })
+
+    const walletClient5 = createWalletClient({
+        account: account5,
+        chain: localhost,
+        transport: http(rpcURL),
+    })
+
     const kernelAccount1: SmartAccount = await getKernelAccount(walletClient1, account1)
     const kernelAddress1 = await kernelAccount1.getAddress()
     const kernelClient1 = getKernelClient(kernelAccount1)
@@ -477,58 +470,122 @@ async function batchedUserOperationsGasResult() {
     const kernelAddress2 = await kernelAccount2.getAddress()
     const kernelClient2 = getKernelClient(kernelAccount2)
 
+    const kernelAccount3: SmartAccount = await getKernelAccount(walletClient3, account3)
+    const kernelAddress3 = await kernelAccount3.getAddress()
+    const kernelClient3 = getKernelClient(kernelAccount3)
+
+    const kernelAccount4: SmartAccount = await getKernelAccount(walletClient4, account4)
+    const kernelAddress4 = await kernelAccount4.getAddress()
+    const kernelClient4 = getKernelClient(kernelAccount4)
+
+    const kernelAccount5: SmartAccount = await getKernelAccount(walletClient5, account5)
+    const kernelAddress5 = await kernelAccount5.getAddress()
+    const kernelClient5 = getKernelClient(kernelAccount5)
+
     const prefundRes1 = await fund_smart_account(kernelAddress1)
     if (prefundRes1 !== "success") {
-        throw new Error("Funding SmartAccount1 failed")
+        throw new Error("Funding SmartAccount 1 failed")
     }
+
     const prefundRes2 = await fund_smart_account(kernelAddress2)
     if (prefundRes2 !== "success") {
-        throw new Error("Funding SmartAccount2 failed")
+        throw new Error("Funding SmartAccount 2 failed")
+    }
+
+    const prefundRes3 = await fund_smart_account(kernelAddress3)
+    if (prefundRes3 !== "success") {
+        throw new Error("Funding SmartAccount 3 failed")
+    }
+
+    const prefundRes4 = await fund_smart_account(kernelAddress4)
+    if (prefundRes4 !== "success") {
+        throw new Error("Funding SmartAccount 4 failed")
+    }
+
+    const prefundRes5 = await fund_smart_account(kernelAddress5)
+    if (prefundRes5 !== "success") {
+        throw new Error("Funding SmartAccount 5 failed")
     }
 
     const userOp1 = kernelClient1.sendUserOperation({
         account: kernelAccount1,
-        calls: [
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-        ],
+        calls: [createEthTransferCall()],
     })
 
     const userOp2 = kernelClient2.sendUserOperation({
         account: kernelAccount2,
-        calls: [
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-        ],
+        calls: [createEthTransferCall()],
     })
 
-    const hashes = await Promise.all([userOp1, userOp2])
-    const receipt1 = await kernelClient1.waitForUserOperationReceipt({
+    const userOp3 = kernelClient3.sendUserOperation({
+        account: kernelAccount3,
+        calls: [createEthTransferCall()],
+    })
+
+    const userOp4 = kernelClient4.sendUserOperation({
+        account: kernelAccount4,
+        calls: [createEthTransferCall()],
+    })
+
+    const userOp5 = kernelClient5.sendUserOperation({
+        account: kernelAccount5,
+        calls: [createEthTransferCall()],
+    })
+
+    const hashes = await Promise.all([userOp1, userOp2, userOp3, userOp4, userOp5])
+
+    const receipt1 = kernelClient1.waitForUserOperationReceipt({
         hash: hashes[0],
     })
-    const receipt2 = await kernelClient2.waitForUserOperationReceipt({
+
+    const receipt2 = kernelClient2.waitForUserOperationReceipt({
         hash: hashes[1],
     })
 
-    console.log("\nUserOp via Bundler: Receipt #1 :-")
-    console.log("  UserOp1 Block: ", receipt1.receipt.blockNumber)
-    console.log("  UserOp1 Txn Index: , ", receipt1.receipt.transactionIndex)
-    console.log("  ActualGasUsed: ", receipt1.actualGasUsed)
-    console.log("  Txn.gasUsed: ", receipt1.receipt.gasUsed)
+    const receipt3 = kernelClient3.waitForUserOperationReceipt({
+        hash: hashes[2],
+    })
 
-    console.log("\nUserOp via Bundler: Receipt #2 :-")
-    console.log("  UserOp2 Block: ", receipt2.receipt.blockNumber)
-    console.log("  UserOp2 Txn Index: , ", receipt2.receipt.transactionIndex)
-    console.log("  ActualGasUsed: ", receipt2.actualGasUsed)
-    console.log("  Txn.gasUsed: ", receipt2.receipt.gasUsed)
+    const receipt4 = kernelClient4.waitForUserOperationReceipt({
+        hash: hashes[3],
+    })
 
-    console.log("------------------------------------------------\n")
+    const receipt5 = kernelClient5.waitForUserOperationReceipt({
+        hash: hashes[4],
+    })
+
+    const receipts = await Promise.all([receipt1, receipt2, receipt3, receipt4, receipt5])
+
+    // Check if all userOps have the same block number and transaction index
+    const allSameBlock = receipts.every(
+        (receipt) => receipt.receipt.blockNumber === receipts[0].receipt.blockNumber
+    );
+    if (!allSameBlock) {
+        throw new Error("All userOps do not have the same block number");
+    }
+    const allSameTxnIndex = receipts.every(
+        (receipt) => receipt.receipt.transactionIndex === receipts[0].receipt.transactionIndex
+    );
+    if (!allSameTxnIndex) {
+        throw new Error("All userOps do not have the same transaction index");
+    }
+    console.log("r1: ", receipts[0].receipt.transactionIndex)
+    console.log("r2: ", receipts[1].receipt.transactionIndex)
+    console.log("r3: ", receipts[2].receipt.transactionIndex)
+    console.log("r4: ", receipts[3].receipt.transactionIndex)
+    console.log("r5: ", receipts[4].receipt.transactionIndex)
+
+    console.log("Gas Usage on first userOp (including smart account deployment) :-\n")
+    console.log("  UserOp1 Block: ", receipts[0].receipt.blockNumber)
+    console.log("  UserOp1 Txn Index: , ", receipts[0].receipt.transactionIndex)
+    console.log("  ActualGasUsed: ", receipts[0].actualGasUsed)
+    console.log("  Txn.gasUsed: ", receipts[0].receipt.gasUsed)
+    console.log("  Bundler Gas Used: ", receipts[0].actualGasUsed - receipts[0].receipt.gasUsed)
+    const direcTxnGas = await sendDirectTransactions(5)
+    console.log("  Extra Gas Used with UserOps: ", receipts[0].receipt.gasUsed - direcTxnGas)
+    console.log("\n------------------------------------------------\n")
+
+    console.log("Gas Usage on second userOp (smart account already deployed) :-\n")
 }
 
 async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
@@ -638,7 +695,7 @@ async function main() {
 
     console.log("\n------------------------------------------------")
     console.log("Gas Usage Results :-")
-    console.log("------------------------------------------------\n")
+    console.log("------------------------------------------------")
 
     try {
         await singleUserOperationGasResult(kernelAccount, kernelClient)
