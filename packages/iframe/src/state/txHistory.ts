@@ -1,5 +1,5 @@
 import { atomWithStorage, createJSONStorage } from "jotai/utils"
-import type { Address, Hash, TransactionReceipt } from "viem"
+import type { Address, Hash, TransactionReceipt, TransactionType } from "viem"
 import { StorageKey } from "../services/storage"
 
 export type TxRecord<T> = Record<Address, T[]>
@@ -20,10 +20,23 @@ export type PendingTxDetails = {
 export type PendingTxHistoryRecord = TxRecord<PendingTxDetails>
 
 /**
+ * Extension of the {@link TransactionReceipt} type to account for an optional send value.
+ */
+export type ExtendedTransactionReceipt<
+    quantity = bigint,
+    index = number,
+    status = "success" | "reverted",
+    type = TransactionType,
+> = TransactionReceipt<quantity, index, status, type> & {
+    /** Optional value sent with the transaction, represented as a hex string */
+    sendValue?: string
+}
+
+/**
  * Record of confirmed transactions, organized by the sender's address.
  * Each address maps to an array of transaction receipts (confirmations).
  */
-export type ConfirmedTransactionsRecord = TxRecord<TransactionReceipt>
+export type ConfirmedTransactionsRecord = TxRecord<ExtendedTransactionReceipt>
 
 /**
  * Creates a storage mechanism for confirmed transactions using localStorage.
