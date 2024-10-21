@@ -10,6 +10,7 @@ import {
 import type { Client } from "viem"
 
 import { getChainsMap, setChains } from "../state/chains"
+import type { PendingTxDetails } from "../state/txHistory"
 import { getUser } from "../state/user"
 import { getWalletClient } from "../state/walletClient"
 import { isAddChainParams } from "../utils/isAddChainParam"
@@ -35,7 +36,13 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_sendTransaction": {
             const tx = await sendToWalletClient(request)
             const user = getUser()
-            if (user) addPendingTxEntry(user.address, tx as Hash)
+            if (user) {
+                const payload: PendingTxDetails = {
+                    hash: tx as Hash,
+                    value: request.payload.params[0].value,
+                }
+                addPendingTxEntry(user.address, payload)
+            }
             return tx
         }
 

@@ -1,16 +1,21 @@
 import { validateNumericInput } from "@happychain/common"
+import { useAtomValue } from "jotai"
 import { debounce } from "lodash"
 import type React from "react"
 import { useCallback, useState } from "react"
 import { formatEther, parseEther } from "viem"
+import { useBalance } from "wagmi"
+import { userAtom } from "../../../state/user"
 
 interface SendInputProps {
-    balance: bigint | undefined
     sendValue: string | undefined
     setSendValue: React.Dispatch<React.SetStateAction<string | undefined>>
 }
 
-const SendInput = ({ balance, sendValue, setSendValue }: SendInputProps) => {
+const SendInput = ({ sendValue, setSendValue }: SendInputProps) => {
+    const user = useAtomValue(userAtom)
+    const { data: balance } = useBalance({ address: user?.address })
+
     const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,13 +56,13 @@ const SendInput = ({ balance, sendValue, setSendValue }: SendInputProps) => {
         // Perform validation and balance checking
         if (validateNumericInput(formattedValue) || formattedValue === "") {
             // Check if the input value exceeds the balance
-            setIsExceedingBalance(formattedValue && balance ? parseEther(formattedValue) > balance : false)
+            setIsExceedingBalance(formattedValue && balance ? parseEther(formattedValue) > balance.value : false)
         }
     }, 500)
 
     const handleMaxButtonClick = useCallback(() => {
         if (balance) {
-            setSendValue(formatEther(balance))
+            setSendValue(formatEther(balance.value))
             setIsExceedingBalance(false)
         }
     }, [balance, setSendValue])
@@ -67,7 +72,7 @@ const SendInput = ({ balance, sendValue, setSendValue }: SendInputProps) => {
             <div className="flex flex-row h-[60px] w-full items-center justify-between">
                 <div className="flex flex-col items-start justify-start">
                     <p className="text-[18px]">$HAPPY</p>
-                    <p className="text-[12px]">{balance ? `Balance: ${formatEther(balance)}` : "0"}</p>
+                    <p className="text-[12px]">{balance ? `Balance: ${formatEther(balance.value)}` : "0.0"}</p>
                 </div>
 
                 <div className="flex flex-col items-end justify-end">
@@ -76,7 +81,7 @@ const SendInput = ({ balance, sendValue, setSendValue }: SendInputProps) => {
                             className={`w-[100px] h-[30px] text-[20px] px-2 text-slate-600 text-right placeholder:text-[20px] placeholder:text-slate-600 placeholder:opacity-50 ${
                                 isExceedingBalance ? "border-red-500" : ""
                             }`}
-                            placeholder={`${balance ? formatEther(balance) : "0"}`}
+                            placeholder={`${balance ? formatEther(balance.value) : "0.0"}`}
                             value={sendValue || ""}
                             onChange={handleTokenBalanceChange}
                             disabled={!balance}
