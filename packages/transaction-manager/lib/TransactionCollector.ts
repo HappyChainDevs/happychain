@@ -1,5 +1,6 @@
 import { unknownToError } from "@happychain/common"
 import { ResultAsync } from "neverthrow"
+import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
@@ -12,11 +13,11 @@ export class TransactionCollector {
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
-    private async onNewBlock() {
+    private async onNewBlock(block: LatestBlock) {
         const { maxFeePerGas, maxPriorityFeePerGas } = this.txmgr.gasPriceOracle.suggestGasForNextBlock()
 
         const transactionsBatch = this.txmgr.collectors
-            .flatMap((c) => c())
+            .flatMap((c) => c(block))
             .sort((a, b) => (a.deadline ?? Number.POSITIVE_INFINITY) - (b.deadline ?? Number.POSITIVE_INFINITY))
 
         this.txmgr.transactionRepository.saveTransactions(transactionsBatch)

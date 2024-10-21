@@ -76,8 +76,8 @@ const contractToAbi = {
                 },
                 {
                     name: "commitmentHash",
-                    type: "uint256",
-                    internalType: "uint256",
+                    type: "bytes32",
+                    internalType: "bytes32",
                 },
             ],
             outputs: [],
@@ -152,9 +152,9 @@ const contractToAbi = {
                 },
                 {
                     name: "commitment",
-                    type: "uint256",
+                    type: "bytes32",
                     indexed: false,
-                    internalType: "uint256",
+                    internalType: "bytes32",
                 },
             ],
             anonymous: false,
