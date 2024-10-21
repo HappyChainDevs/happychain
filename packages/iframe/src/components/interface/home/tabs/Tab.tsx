@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react"
-import type { ContentType } from "./WalletContentInfo"
+import type { ContentType } from "../../../../state/interfaceState"
 
 interface TabProps {
     title: ContentType

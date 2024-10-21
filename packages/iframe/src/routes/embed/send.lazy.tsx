@@ -18,13 +18,10 @@ function Send() {
 
     // user's happy balance, will be moved to a wagmi script that handles this
     const [happyBalance, setHappyBalance] = useState<bigint | undefined>(undefined)
-
     // address to send $HAPPY to
     const [targetAddress, setTargetAddress] = useState<Address | string | undefined>(undefined)
     // amount to send
     const [sendValue, setSendValue] = useState<string | undefined>(undefined)
-    // is there a tx in progress currently
-    const [inProgress, setInProgress] = useState(false)
 
     const getBalance = useCallback(async () => {
         if (user) {
@@ -51,16 +48,11 @@ function Send() {
                 <AddressSelector targetAddress={targetAddress} setTargetAddress={setTargetAddress} />
                 {/* appears when target address has been confirmed */}
                 {targetAddress !== undefined && isAddress(targetAddress) && (
-                    <SendInput
-                        balance={happyBalance}
-                        sendValue={sendValue}
-                        setSendValue={setSendValue}
-                        inProgress={inProgress}
-                    />
+                    <SendInput balance={happyBalance} sendValue={sendValue} setSendValue={setSendValue} />
                 )}
             </div>
 
-            <SendButttons sendValue={sendValue} targetAddress={targetAddress} setInProgress={setInProgress} />
+            <SendButttons sendValue={sendValue} targetAddress={targetAddress} />
         </div>
     )
 }

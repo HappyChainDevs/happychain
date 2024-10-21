@@ -1,0 +1,27 @@
+import { accessorsFromAtom } from "@happychain/common"
+import { atom } from "jotai"
+import type { Hash } from "viem"
+
+export enum ContentType {
+    TOKENS = "Tokens",
+    GAMES = "Games",
+    ACTIVITY = "Activity",
+}
+
+/**
+ * Collection of atoms that track different view / button states across
+ * the iframe UI. The intent is to use jotai to escape "provider hell" and create
+ * a more simplistic API for (minimal render) state management.
+ */
+
+/**
+ * Atom to help toggle between view states in the
+ * landing page of the wallet iframe component.
+ */
+export const walletInfoViewAtom = atom<ContentType>(ContentType.TOKENS)
+
+// ------------------------------------------------------------------------------------
+
+export const transactionFromSendPageAtom = atom<Hash | undefined>(undefined)
+
+export const { getValue: getTxSendState, setValue: setTxSendState } = accessorsFromAtom(transactionFromSendPageAtom)
