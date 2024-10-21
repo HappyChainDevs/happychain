@@ -74,7 +74,7 @@ const createEthTransferCall = (): UserOperationCall => ({
     to: getRandomAccount(),
     value: parseEther(AMOUNT),
     data: "0x",
-});
+})
 
 function toHexDigits(number: bigint, size: number): string {
     return numberToHex(number, { size }).slice(2)
@@ -337,7 +337,6 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     console.log("  VerificationGasLimit: ", paymasterGasEstimates.verificationGasLimit)
     console.log("  CallGasLimit: ", paymasterGasEstimates.callGasLimit)
 
-
     userOp.signature = await kernelAccount.signUserOperation({
         ...userOp,
         chainId: localhost.id,
@@ -534,58 +533,112 @@ async function batchedUserOperationsGasResult() {
 
     const hashes = await Promise.all([userOp1, userOp2, userOp3, userOp4, userOp5])
 
-    const receipt1 = kernelClient1.waitForUserOperationReceipt({
+    const r1 = kernelClient1.waitForUserOperationReceipt({
         hash: hashes[0],
     })
 
-    const receipt2 = kernelClient2.waitForUserOperationReceipt({
+    const r2 = kernelClient2.waitForUserOperationReceipt({
         hash: hashes[1],
     })
 
-    const receipt3 = kernelClient3.waitForUserOperationReceipt({
+    const r3 = kernelClient3.waitForUserOperationReceipt({
         hash: hashes[2],
     })
 
-    const receipt4 = kernelClient4.waitForUserOperationReceipt({
+    const r4 = kernelClient4.waitForUserOperationReceipt({
         hash: hashes[3],
     })
 
-    const receipt5 = kernelClient5.waitForUserOperationReceipt({
+    const r5 = kernelClient5.waitForUserOperationReceipt({
         hash: hashes[4],
     })
 
-    const receipts = await Promise.all([receipt1, receipt2, receipt3, receipt4, receipt5])
+    const receipts = await Promise.all([r1, r2, r3, r4, r5])
 
-    // Check if all userOps have the same block number and transaction index
-    const allSameBlock = receipts.every(
-        (receipt) => receipt.receipt.blockNumber === receipts[0].receipt.blockNumber
-    );
-    if (!allSameBlock) {
-        throw new Error("All userOps do not have the same block number");
-    }
-    const allSameTxnIndex = receipts.every(
-        (receipt) => receipt.receipt.transactionIndex === receipts[0].receipt.transactionIndex
-    );
-    if (!allSameTxnIndex) {
-        throw new Error("All userOps do not have the same transaction index");
-    }
-    console.log("r1: ", receipts[0].receipt.transactionIndex)
-    console.log("r2: ", receipts[1].receipt.transactionIndex)
-    console.log("r3: ", receipts[2].receipt.transactionIndex)
-    console.log("r4: ", receipts[3].receipt.transactionIndex)
-    console.log("r5: ", receipts[4].receipt.transactionIndex)
+    const txn0Count = receipts.filter((receipt) => receipt.receipt.transactionIndex === 0).length
+    const txn1Count = receipts.filter((receipt) => receipt.receipt.transactionIndex === 1).length
 
-    console.log("Gas Usage on first userOp (including smart account deployment) :-\n")
-    console.log("  UserOp1 Block: ", receipts[0].receipt.blockNumber)
-    console.log("  UserOp1 Txn Index: , ", receipts[0].receipt.transactionIndex)
-    console.log("  ActualGasUsed: ", receipts[0].actualGasUsed)
-    console.log("  Txn.gasUsed: ", receipts[0].receipt.gasUsed)
-    console.log("  Bundler Gas Used: ", receipts[0].actualGasUsed - receipts[0].receipt.gasUsed)
-    const direcTxnGas = await sendDirectTransactions(5)
-    console.log("  Extra Gas Used with UserOps: ", receipts[0].receipt.gasUsed - direcTxnGas)
+    // Pick the transactions with more userOps (receipt1) and fewer userOps (receipt2)
+    const receipt1 =
+        txn0Count >= txn1Count
+            ? receipts.find((receipt) => receipt.receipt.transactionIndex === 0)
+            : receipts.find((receipt) => receipt.receipt.transactionIndex === 1)
+
+    const receipt2 =
+        txn0Count < txn1Count
+            ? receipts.find((receipt) => receipt.receipt.transactionIndex === 0)
+            : receipts.find((receipt) => receipt.receipt.transactionIndex === 1)
+
+    if (!receipt1 || !receipt2) {
+        throw new Error("No receipt found for either receipt1 or receipt2")
+    }
+
+    console.log(`\nBundle #1: containing ${txn0Count >= txn1Count ? txn0Count : txn1Count} userOps:`)
+    console.log("  Block: ", receipt1.receipt.blockNumber)
+    console.log("  Txn Index: ", receipt1.receipt.transactionIndex)
+    console.log("  Actual Gas Used: ", receipt1.actualGasUsed)
+    console.log("  Txn.gasUsed: ", receipt1.receipt.gasUsed)
+    console.log("\nBundler Overhead: ", receipt1.receipt.gasUsed - receipt1.actualGasUsed)
+    const directTxnGas1 = await sendDirectTransactions(txn0Count >= txn1Count ? txn0Count : txn1Count)
+    console.log("  Extra Gas Used with UserOps (for the first userOp): ", receipts[0].receipt.gasUsed - directTxnGas1)
+
+    console.log(`\nBundle #2: containing ${txn0Count < txn1Count ? txn0Count : txn1Count} userOps:`)
+    console.log("  Block: ", receipt2.receipt.blockNumber)
+    console.log("  Txn Index: ", receipt2.receipt.transactionIndex)
+    console.log("  Actual Gas Used: ", receipt2.actualGasUsed)
+    console.log("  Txn.gasUsed: ", receipt2.receipt.gasUsed)
+    console.log("\nBundler Overhead: ", receipt2.receipt.gasUsed - receipt2.actualGasUsed)
+    const directTxnGas2 = await sendDirectTransactions(txn0Count >= txn1Count ? txn1Count : txn0Count)
+    console.log("  Extra Gas Used with UserOps (for the first userOp): ", receipts[0].receipt.gasUsed - directTxnGas2)
+
     console.log("\n------------------------------------------------\n")
-
     console.log("Gas Usage on second userOp (smart account already deployed) :-\n")
+
+    const u1 = kernelClient1.sendUserOperation({
+        account: kernelAccount1,
+        calls: [createEthTransferCall()],
+    })
+
+    const u2 = kernelClient2.sendUserOperation({
+        account: kernelAccount2,
+        calls: [createEthTransferCall()],
+    })
+
+    const u3 = kernelClient3.sendUserOperation({
+        account: kernelAccount3,
+        calls: [createEthTransferCall()],
+    })
+
+    const uHashes = await Promise.all([u1, u2, u3])
+
+    const r01 = kernelClient1.waitForUserOperationReceipt({
+        hash: uHashes[0],
+    })
+    const r02 = kernelClient2.waitForUserOperationReceipt({
+        hash: uHashes[1],
+    })
+    const r03 = kernelClient3.waitForUserOperationReceipt({
+        hash: uHashes[2],
+    })
+
+    const receipts0 = await Promise.all([r01, r02, r03])
+    if (
+        receipts0[0].receipt.transactionIndex !== receipts0[1].receipt.transactionIndex ||
+        receipts0[0].receipt.transactionIndex !== receipts0[2].receipt.transactionIndex
+    ) {
+        throw new Error("All userOps should have same txn index")
+    }
+    const r = receipts0[0]
+
+    console.log("\nBundle containing 3 userOps:")
+    console.log("  Block: ", r.receipt.blockNumber)
+    console.log("  Txn Index: ", r.receipt.transactionIndex)
+    console.log("  Actual Gas Used: ", r.actualGasUsed)
+    console.log("  Txn.gasUsed: ", r.receipt.gasUsed)
+    console.log("\nBundler Overhead: ", r.receipt.gasUsed - r.actualGasUsed)
+    const directTxnGas = await sendDirectTransactions(3)
+    console.log("  Extra Gas Used with UserOps (for the first userOp): ", r.receipt.gasUsed - directTxnGas)
+    console.log("\n------------------------------------------------\n")
 }
 
 async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
