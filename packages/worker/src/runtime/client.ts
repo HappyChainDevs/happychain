@@ -5,6 +5,25 @@ import { type RpcPayload, makeBroadcastPayload, makePingPayload, makeRpcPayload,
 type WorkerUnion = SharedWorker | Worker
 type PortUnion = SharedWorker["port"] | Worker
 
+/**
+ * SharedWorkerClient
+ *
+ * This file will substitute the imported worker in the client side during the build step.
+ * For example, given:
+ * ```ts
+ * // worker.sw.ts
+ * export async function foo() {
+ *   return 'bar'
+ * }
+ *
+ * // app.tsx
+ * import { foo } from './worker.sw'
+ * expect(foo()).resolves.toBe('bar') // true
+ * ```
+ * This will be responsible for generating the app-side definition for `foo()` which when called
+ * under the hood will emit a postMessage to the shared worker to be processed, and then awaits
+ * for a response with a matching id so the promise can be resolved.
+ */
 export class SharedWorkerClient {
     readonly port: PortUnion
 
@@ -57,7 +76,11 @@ export class SharedWorkerClient {
         }
     }
 
-    defineFunction(name: string) {
+    /**
+     * Used during code generation. This maps a function which was defined and exported
+     * in the worker to a local async function which executes as an RPC call to the SharedWorkerServer
+     */
+    __defineFunction(name: string) {
         return <T>(...args: T[]) => {
             const id = crypto.randomUUID()
             const payload = makeRpcPayload(id, name, args)
@@ -71,12 +94,16 @@ export class SharedWorkerClient {
         }
     }
 
-    // Codegen will export this function at the top-level when importing a worker file.
+    /**
+     * Listen for incoming messages sent from the SharedWorkerServer
+     */
     addMessageListener<T>(fn: MessageCallback<T>) {
         this.messageCallbacks.push(fn)
     }
 
-    // Codegen will export this function at the top-level when importing a worker file.
+    /**
+     * Dispatch a message to the SharedWorkerServer.
+     */
     dispatch(data: unknown) {
         this.port.postMessage(makeBroadcastPayload(data))
     }

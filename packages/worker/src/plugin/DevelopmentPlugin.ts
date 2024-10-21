@@ -3,6 +3,11 @@ import pkg from "../../package.json"
 import { clientCodeGen, workerCodeGen } from "./codegen"
 import { filter } from "./utils"
 
+/**
+ * Plugin runs during the 'serve' command, i.e. 'bun vite'
+ *
+ * This generates both client & server code during development bundling
+ */
 export function DevelopmentPlugin(): Plugin {
     return {
         name: `${pkg.name}:development`,

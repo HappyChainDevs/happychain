@@ -4,6 +4,16 @@ import { ProductionWorkerPlugin } from "./ProductionWorkerPlugin"
 import { clientCodeGen } from "./codegen"
 import { filter } from "./utils"
 
+/**
+ * Plugin runs during the 'build' command, i.e. 'bun vite build'
+ *
+ * This generates the client-side code, and injects the 'worker' plugin
+ * for the server.
+ *
+ * When the generated code imports the worker file via new SharedWorker(...)
+ * vite will follow that import as a [Worker](https://vite.dev/config/worker-options)
+ * and the worker plugin will be executed handling the worker-side generation
+ */
 export function ProductionClientPlugin(): Plugin {
     return {
         name: `${pkg.name}:client`,
