@@ -32,7 +32,7 @@ const ActivityView = () => {
 
     return (
         <div className="flex flex-col items-center justify-center w-full space-y-2 p-2 bg-slate-300 rounded-b-xl rounded-tr-xl overflow-y-auto overflow-x-none">
-            {userPendingTxs.length > 0 && userPendingTxs.map((tx) => <TxLoadingSkeleton key={tx} tx={tx} />)}
+            {userPendingTxs.length > 0 && userPendingTxs.map((tx) => <TxLoadingSkeleton key={tx.hash} tx={tx.hash} />)}
 
             {userTxHistory.length > 0 &&
                 // biome-ignore lint/suspicious/noArrayIndexKey: type TransactionReceipt doesn't make for a good key

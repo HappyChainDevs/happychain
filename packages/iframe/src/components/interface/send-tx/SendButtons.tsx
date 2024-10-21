@@ -1,8 +1,11 @@
 import { CircleNotch } from "@phosphor-icons/react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
+import { useAtomValue } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
-import { useSendTransaction } from "wagmi"
+import { useBalance, useSendTransaction } from "wagmi"
+import { userAtom } from "../../../state/user"
 
 interface SendButtonsInterface {
     sendValue: string | undefined
@@ -10,20 +13,35 @@ interface SendButtonsInterface {
 }
 
 const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
+    const user = useAtomValue(userAtom)
     const navigate = useNavigate()
-    const { sendTransaction, isPending, isSuccess } = useSendTransaction()
+    const { sendTransaction, isPending, isSuccess, isError } = useSendTransaction()
+    const { queryKey } = useBalance({ address: user?.address, query: { enabled: isPending } })
 
+    const queryClient = useQueryClient()
+
+    /**
+     * This useEffect tracks whether the tx has landed successfully
+     * or there is an error, invalidates the useBalance hook `queryKey`
+     * and navigates the user to the home page, displaying the
+     * associated message.
+     */
     useEffect(() => {
-        // if tx is successful, move back to home page of wallet
-        if (isSuccess) {
-            navigate({ to: "/embed" })
+        const handleQueryInvalidation = async () => {
+            await queryClient.invalidateQueries({ queryKey })
         }
-    }, [isSuccess, navigate])
+
+        if (isSuccess || isError) {
+            handleQueryInvalidation()
+            navigate({ to: "/embed" }) // move back to home page of the wallet
+            // TODO use toast component from ark to show success / error status
+        }
+    }, [isSuccess, isError, queryClient, queryKey, navigate])
 
     const submitSend = useCallback(() => {
         if (targetAddress && sendValue) {
             // send tx
-            sendTransaction({
+            void sendTransaction({
                 to: targetAddress as Address,
                 value: parseEther(sendValue),
             })
