@@ -29,6 +29,9 @@ endif
 # Name of the package the makefile is executed for (based on the current directory).
 PKG := $(notdir $(shell pwd))
 
+# Empty stubs (so that we can iterate over packages and call these commands even if not defined)
+# Can be overriden any including Makefile.
+
 build:
 .PHONY: build
 
