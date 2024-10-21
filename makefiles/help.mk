@@ -1,10 +1,3 @@
-##@ General
-
-# Follows all makefile includes to supply help where needed.
-# The comments are extracted form "##" comments on the same line as the command's name.
-# categories are defined by lines that begin with '##@'
-# in order for MAKEFILE_LIST to be fully populated, this help.mk
-# needs to be the last file to be included: https://ftp.gnu.org/old-gnu/Manuals/make/html_node/make_17.html
 CYAN = \033[0;36m
 GREEN = \033[1;36m
 BOLD = \033[1m
@@ -12,6 +5,7 @@ BLUE = \033[0;34m
 PURPLE = \033[0;35m
 YELLOW = \033[0;33m
 COLOR_OFF = \033[0m
+
 MAKEFILE_NAME := $(firstword $(MAKEFILE_LIST))
 MAKEFILE_INCLUDES := $(wordlist 2,$(words $(MAKEFILE_LIST)), $(MAKEFILE_LIST))
 RUN_FIGLET = "  $(CYAN)\n$$(bunx figlet $(1))$(COLOR_OFF)"
@@ -33,6 +27,13 @@ FIND_HELP_COMMANDS := @grep -E '^[\.0-9a-zA-Z_-]*:?.*?\#\#[ @].*$$' $(MAKEFILE_I
 AWK_REMOVE_INTRO := awk 'BEGIN {FS = "^[^:]*:"}; {printf $$2 "\n"}'
 AWK_COLORIZE_COMMANDS := awk 'BEGIN {FS = ":.*?\#\#"}; $(REGEX_MAKEFILE_TARGET) {printf $(LABEL_MAKEFILE_TARGET) } $(REGEX_CATEGORY) { printf $(LABEL_CATEGORY) }'
 
+##@ General
+
+# Follows all makefile includes to supply help where needed.
+# The comments are extracted form "##" comments on the same line as the command's name.
+# categories are defined by lines that begin with '##@'
+# in order for MAKEFILE_LIST to be fully populated, this help.mk
+# needs to be the last file to be included: https://ftp.gnu.org/old-gnu/Manuals/make/html_node/make_17.html
 help: ## Show this help
 	@echo -e $(call RUN_FIGLET, $(APP_NAME))
 	@echo ""

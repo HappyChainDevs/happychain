@@ -53,19 +53,30 @@ setup: install-frozen enable-hooks ## To be run when first setting up the reposi
 	cd packages/contracts && make setup
 .PHONY: setup
 
-anvil: ## Runs anvil (local EVM node)
-	cd packages/contracts && make anvil
-.PHONY: anvil
-
-deploy: ## Deploys contracts to Anvil
-	cd packages/contracts && make deploy
-.PHONY: deploy
+clean: ts.clean contracts.clean ## Removes build artifacts
+	biome clean ./;
+.PHONY: clean
 
 build: node_modules ts.build  ## Creates production builds
 .PHONY: build
 
+nuke: remove-modules clean ## Removes build artifacts and dependencies
+	cd packages/contracts && make nuke
+	cd packages/bundler && make nuke
+.PHONY: nuke
+
+test: sdk.test iframe.test ## Run tests
+.PHONY: test
+
+docs: node_modules docs.contained ## Builds latest docs and starts dev server http://localhost:4173
+	cd packages/docs && make preview
+.PHONY: docs
+
+# ==================================================================================================
+##@ Formatting
+# cf. makefiles/formatting.mk
+
 check: node_modules ts.check contracts.check ## Runs code quality & formatting checks
-	@# cf. makefiles/formatting.mk
 	biome check ./;
 .PHONY: check
 
@@ -73,19 +84,9 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 	biome check ./ --write;
 .PHONY: format
 
-test: sdk.test iframe.test ## Run tests
-.PHONY: test
+# ==================================================================================================
+##@ Demos & Apps
 
-nuke: remove-modules clean ## Removes build artifacts and dependencies
-	cd packages/contracts && make nuke
-	cd packages/bundler && make nuke
-.PHONY: nuke
-
-docs: node_modules docs.contained ## Builds latest docs and starts dev server http://localhost:4173
-	cd packages/docs && make preview
-.PHONY: docs
-
-##@ Demos
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
 	cd packages/iframe && make dev
 .PHONY: iframe.dev
@@ -101,6 +102,18 @@ demo-react.dev: setup shared.dev sdk.dev ## Serves the React demo application as
 demo-vue.dev: setup shared.dev sdk.dev ## Serves the VueJS demo application as http://localhost:5173
 	$(MULTIRUN) --names "iframe,demo-vue" "cd packages/iframe && make dev" "cd packages/demo-wagmi-vue && make dev"
 .PHONY: demo-vue.dev
+
+
+# ==================================================================================================
+##@ Contracts
+
+anvil: ## Runs anvil (local EVM node)
+	cd packages/contracts && make anvil
+.PHONY: anvil
+
+deploy: ## Deploys contracts to Anvil
+	cd packages/contracts && make deploy
+.PHONY: deploy
 
 # ==================================================================================================
 # DEVELOPMENT
@@ -153,6 +166,9 @@ sdk.check:
 iframe.test:
 	$(call forall_make , $(IFRAME_PKGS) , test)
 .PHONY: iframe.test
+
+# ==================================================================================================
+# FORMATTING
 
 iframe.check:
 	$(call forall_make , $(IFRAME_PKGS) , check)
@@ -257,9 +273,6 @@ docs.preview: docs.contained
 # ==================================================================================================
 # CLEANING
 
-clean: ts.clean contracts.clean
-.PHONY: clean
-
 sdk.clean:
 	$(call forall_make , $(SDK_PKGS) , clean)
 .PHONY: sdk.clean
@@ -340,7 +353,7 @@ remove-modules:
 .PHONY: remove-modules
 
 # ==================================================================================================
-# Extras
+# EXTRAS
 
 # install this to run github workflows locally
 # https://nektosact.com/
