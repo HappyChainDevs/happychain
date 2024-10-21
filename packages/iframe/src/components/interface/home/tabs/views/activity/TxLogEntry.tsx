@@ -10,7 +10,7 @@ interface TxLogEntryProps {
 
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     return (
-        <div className="flex flex-row items-center w-[90%] justify-between px-3 py-4 border rounded-md border-slate-700">
+        <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
             <div className="flex flex-row items-center justify-center space-x-1">
                 <ArrowUpRight
                     className={clsx({
