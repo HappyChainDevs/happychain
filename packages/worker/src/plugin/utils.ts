@@ -2,9 +2,7 @@ import path from "node:path"
 import { findExports as mllyFindExports } from "mlly"
 
 /** Determines if the transformer/plugin should handle the file or not. */
-export const filter = (id: string) => {
-    return id.includes(".sw.ts")
-}
+export const filter = (id: string) => id.includes(".sw.ts")
 
 /**
  * Returns all user defined exports _except_ for reserved keywords 'dispatch' and 'addMessageListener'
@@ -26,6 +24,10 @@ export function findExports(code: string) {
     })
 }
 
+/**
+ * finds the worker filename without .ts extension
+ * i.e. ./foo/bar/baz.sw.ts => baz.sw
+ */
 export function getWorkerName(id: string) {
     return path.basename(id.split("?")[0])
 }
