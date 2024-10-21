@@ -1,36 +1,73 @@
-//import { happyChainTestnetChain } from "@happychain/common"
-import { Transaction, TransactionManager } from "@happychain/transaction-manager"
-import { http } from "viem"
+import { TransactionManager } from "@happychain/transaction-manager"
+import type { LatestBlock, Transaction } from "@happychain/transaction-manager"
+import { webSocket } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { anvil } from "viem/chains"
 import { abis } from "./ABI/random.js"
+import { CommitmentManager } from "./CommitmentManager.js"
+import { CommitmentTransactionFactory } from "./Factories/CommitmentTransactionFactory.js"
+import { RevealValueTransactionFactory } from "./Factories/RevealValueTransactionFactory.js"
+import { environmentVariables } from "./env.js"
 
-const client = await TransactionManager.create({
-    account: privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"),
-    transport: http(),
-    chain: anvil,
-    id: "randomness-service",
-    abis: abis,
-})
-
-client.addTransactionCollector(() => {
-    const transactionCount = 1
-    const transactions = []
-
-    for (let i = 0; i < transactionCount; i++) {
-        const transaction = new Transaction({
-            chainId: anvil.id,
-            address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-            functionName: "postCommitment",
-            alias: "Random",
-            args: [
-                Math.floor(Date.now() / 1000) * 20,
-                "0x4e3f2a1b5c6d7e8f9a0b1c2d3e4f5061728394a5b6c7d8e9f0a1b2c3d4e5f607",
-            ],
-            deadline: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 60),
+class RandomnessService {
+    private readonly commitmentManager: CommitmentManager
+    private readonly txm: TransactionManager
+    private readonly commitmentTransactionFactory: CommitmentTransactionFactory
+    private readonly revealValueTransactionFactory: RevealValueTransactionFactory
+    constructor() {
+        this.commitmentManager = new CommitmentManager()
+        this.commitmentTransactionFactory = new CommitmentTransactionFactory(
+            anvil.id,
+            environmentVariables.RANDOM_CONTRACT_ADDRESS,
+            environmentVariables.PRECOMMIT_DELAY,
+        )
+        this.revealValueTransactionFactory = new RevealValueTransactionFactory(
+            anvil.id,
+            environmentVariables.RANDOM_CONTRACT_ADDRESS,
+        )
+        this.txm = new TransactionManager({
+            account: privateKeyToAccount(environmentVariables.PRIVATE_KEY),
+            transport: webSocket(),
+            chain: anvil,
+            id: "randomness-service",
+            abis: abis,
         })
-        transactions.push(transaction)
     }
 
-    return transactions
-})
+    async start() {
+        this.txm.start()
+        this.txm.addTransactionCollector(this.onCollectTransactions.bind(this))
+    }
+
+    private onCollectTransactions(block: LatestBlock): Transaction[] {
+        const transactions: Transaction[] = []
+
+        const commitmentTimestamp =
+            block.timestamp + environmentVariables.PRECOMMIT_DELAY + environmentVariables.POST_COMMIT_MARGIN
+        const commitment = this.commitmentManager.generateCommitmentForTimestamp(commitmentTimestamp)
+
+        const commitmentTransaction = this.commitmentTransactionFactory.create(
+            commitmentTimestamp,
+            commitment.commitment,
+        )
+
+        transactions.push(commitmentTransaction)
+
+        const revealValueCommitment = this.commitmentManager.getCommitmentForTimestamp(
+            block.timestamp + environmentVariables.TIME_BLOCK,
+        )
+
+        if (revealValueCommitment) {
+            const revealValueTransaction = this.revealValueTransactionFactory.create(
+                block.timestamp + environmentVariables.TIME_BLOCK,
+                revealValueCommitment.value,
+            )
+            transactions.push(revealValueTransaction)
+        }
+
+        return transactions
+    }
+}
+
+const service = new RandomnessService()
+service.start()

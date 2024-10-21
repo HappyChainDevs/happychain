@@ -9,9 +9,9 @@ contract Random is Ownable {
 
     uint256 private currentRevealedValue;
     uint256 private currentRevealTimestamp;
-    mapping(uint256 timestamp => uint256) private commitments;
+    mapping(uint256 timestamp => bytes32) private commitments;
 
-    event CommitmentPosted(uint256 indexed timestamp, uint256 commitment);
+    event CommitmentPosted(uint256 indexed timestamp, bytes32 commitment);
     event ValueRevealed(uint256 indexed timestamp, uint256 revealedValue);
 
     error CommitmentTooLate();
@@ -23,7 +23,7 @@ contract Random is Ownable {
 
     constructor() Ownable(msg.sender) {}
 
-    function postCommitment(uint256 timestamp, uint256 commitmentHash) external onlyOwner {
+    function postCommitment(uint256 timestamp, bytes32 commitmentHash) external onlyOwner {
         if (block.timestamp > timestamp - PRECOMMIT_DELAY) {
             revert CommitmentTooLate();
         }
@@ -37,7 +37,7 @@ contract Random is Ownable {
     }
 
     function revealValue(uint256 timestamp, uint256 revealedValue) external onlyOwner {
-        uint256 storedCommitment = commitments[timestamp];
+        bytes32 storedCommitment = commitments[timestamp];
 
         if (storedCommitment == 0) {
             revert NoCommitmentFound();
@@ -47,7 +47,7 @@ contract Random is Ownable {
             revert RevealMustBeOnExactBlock();
         }
 
-        if (storedCommitment != uint256(keccak256(abi.encodePacked(revealedValue)))) {
+        if (storedCommitment != keccak256(abi.encodePacked(revealedValue))) {
             revert InvalidReveal();
         }
 

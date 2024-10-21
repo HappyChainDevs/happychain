@@ -36,6 +36,7 @@ export class GasEstimator {
         const data = encodeFunctionData({ abi, functionName, args })
 
         const gasResult = await transactionManager.viemClient.safeEstimateGas({
+            account: transactionManager.viemWallet.account,
             to: transaction.address,
             data,
             value: 0n,
