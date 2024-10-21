@@ -93,7 +93,7 @@ requesting a review.
 ### Relevant Context
 
 - [ ] List relevant issues with a #-reference for Github and a URL for Linear.  
-       If this PR closes an issue, pleasing add a bullet item.
+       If this PR closes an issue, please add a bullet item.
     - “closes #999999” for Github
     - “closes <linear issue URL>” for Linear
 - [ ] List other non-trivial links or documentation.  
