@@ -29,31 +29,6 @@ endif
 # Name of the package the makefile is executed for (based on the current directory).
 PKG := $(notdir $(shell pwd))
 
-# Follows all makefile includes to supply help where needed.
-# The comments are extracted form "##" comments on the same line as the command's name.
-MAKEFILE_NAME := $(firstword $(MAKEFILE_LIST))
-MAKEFILE_INCLUDES := $(wordlist 2,$(words $(MAKEFILE_LIST)), $(MAKEFILE_LIST))
-RUN_FIGLET = "  \033[0;36m\n$$(bunx figlet $(1))\033[0m"
-APP_NAME = $$(bun --print "require('./package.json').name")
-APP_VERSION = $$(bun --print "require('./package.json').version")
-FIND_HELP_COMMANDS := @grep -E '^[\.0-9a-zA-Z_-]+:.*?\#\# .*$$' $(MAKEFILE_INCLUDES) $(MAKEFILE_NAME) 
-AWK_REMOVE_INTRO := awk 'BEGIN {FS = "^[^:]*:"}; {printf $$2 "\n"}' 
-AWK_COLORIZE_COMMANDS := awk 'BEGIN {FS = ":.*?\#\# "}; {printf "    \033[0;36m%-18s\033[m %s\n", $$1, $$2}'
-help: ## Show this help
-	@echo -e $(call RUN_FIGLET, $(APP_NAME))
-	@echo ""
-	@echo " " $(APP_NAME) v$(APP_VERSION)
-	@echo ""
-	@echo "  Usage: make <command>"
-	@echo "  Check ./$(MAKEFILE_NAME) for the full list of available commands."
-	@echo ""
-	@echo "  Specify a command. The suggested choices are:"
-	@echo ""
-	$(call FIND_HELP_COMMANDS) | $(call AWK_REMOVE_INTRO) | $(call AWK_COLORIZE_COMMANDS)
-.PHONY: help
-
-# Empty Stubs — these can be overriden in any including Makefile.
-
 build:
 .PHONY: build
 

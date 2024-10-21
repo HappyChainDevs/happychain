@@ -1,5 +1,7 @@
 TSC_BIN ?= tsc
 
+##@ Vite
+
 # Like build.watch but also serves the page on localhost if applicable
 dev: node_modules ## Serves or bundles the package in watch mode
 	@if [[ -r index.html ]]; then \

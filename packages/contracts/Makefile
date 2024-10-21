@@ -1,4 +1,5 @@
 include ../../makefiles/lib.mk
+include ../../makefiles/help.mk
 
 # include .env file and export its env vars
 # (-include to ignore error if it does not exist)

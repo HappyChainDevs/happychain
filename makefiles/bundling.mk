@@ -1,4 +1,5 @@
 # Fragment to be imported in packages that need to bundle their typescript code.
+##@ HappyBuild
 
 build: node_modules dist ## Build and bundle the package
 .PHONY: build

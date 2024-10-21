@@ -1,3 +1,5 @@
+##@ Formatting
+
 check: ## Runs code quality & formatting checks
 	@biome check ./;
 .PHONT: check
