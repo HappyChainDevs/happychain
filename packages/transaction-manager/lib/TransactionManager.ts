@@ -140,9 +140,20 @@ export class TransactionManager {
     }
 
     public async start(): Promise<void> {
+        // Start the gas price oracle asynchronously
+        const priceOraclePromise = this.gasPriceOracle.start()
+
+        // Initialize the database driver and set up the EntityManager
         await startDbDriver()
         this.entityManager = dbDriver.em.fork()
-        await Promise.all([this.transactionRepository.start(), this.gasPriceOracle.start()])
+
+        // Start the transaction repository, which depends on the initialized database driver
+        await this.transactionRepository.start()
+
+        // Start the nonce manager, which depends on the transaction repository
         await this.nonceManager.start()
+
+        // Await the completion of the gas price oracle startup before marking the TransactionManager as started
+        await priceOraclePromise
     }
 }
