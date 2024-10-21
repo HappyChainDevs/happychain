@@ -16,7 +16,7 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     const user = useAtomValue(userAtom)
     const navigate = useNavigate()
     const { sendTransaction, isPending, isSuccess, isError } = useSendTransaction()
-    const { queryKey } = useBalance({ address: user?.address, query: { enabled: isPending } })
+    const { queryKey } = useBalance({ address: user?.address })
 
     const queryClient = useQueryClient()
 
