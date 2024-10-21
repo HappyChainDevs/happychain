@@ -1,5 +1,6 @@
 include ../../makefiles/lib.mk
 include ../../makefiles/formatting.mk
+include ../../makefiles/help.mk
 
 # Vocs seems unstable, and changes to several files like this can crash it easily. Leaving this
 # here, as it is convenient but if you plan on working on documentation for awhile you are better

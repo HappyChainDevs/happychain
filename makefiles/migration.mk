@@ -1,3 +1,5 @@
+##@ Migrations
+
 migration-generate: ## Generates a new Migration
 	mikro-orm migration:create;
 .PHONY: migration-generate

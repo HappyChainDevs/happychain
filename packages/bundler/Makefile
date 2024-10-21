@@ -1,4 +1,5 @@
 include ../../makefiles/lib.mk
+include ../../makefiles/help.mk
 
 # Set TARGET to "anvil" by default. Other valid values: "sepolia" or "happySepolia".
 TARGET ?= anvil
@@ -9,7 +10,7 @@ ALTO_REPO := https://github.com/pimlicolabs/alto.git
 ALTO_BRANCH := $(shell cat alto.version)
 
 # Parameterized configuration file path based on TARGET value
-ALTO_CONFIG_FILE=configs/config.$(TARGET).json
+ALTO_CONFIG_FILE = configs/config.$(TARGET).json
 
 # Clone or update Alto repository based on alto.version
 alto: alto.version

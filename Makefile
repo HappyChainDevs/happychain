@@ -4,7 +4,7 @@ ifndef VERBOSE
 endif
 
 include makefiles/lib.mk
-
+include makefiles/help.mk
 
 # ==================================================================================================
 # Packages
@@ -85,6 +85,7 @@ docs: node_modules docs.contained ## Builds latest docs and starts dev server ht
 	cd packages/docs && make preview
 .PHONY: docs
 
+##@ Demos
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
 	cd packages/iframe && make dev
 .PHONY: iframe.dev

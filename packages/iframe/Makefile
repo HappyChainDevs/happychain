@@ -1,6 +1,7 @@
 include ../../makefiles/lib.mk
 include ../../makefiles/vite.mk
 include ../../makefiles/formatting.mk
+include ../../makefiles/help.mk
 
 test: ## Runs tests
 	vitest run
