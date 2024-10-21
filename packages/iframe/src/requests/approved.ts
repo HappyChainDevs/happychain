@@ -32,9 +32,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
     switch (request.payload.method) {
-        case "eth_sendTransaction":
-            // TODO: record tx in history
-            return await sendToWalletClient(request)
+        case "eth_sendTransaction": {
+            const tx = await sendToWalletClient(request)
+            const user = getUser()
+            if (user) addPendingTxEntry(user.address, tx as Hash)
+            return tx
+        }
 
         case "eth_requestAccounts": {
             const user = getUser()
