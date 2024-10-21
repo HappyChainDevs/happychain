@@ -3,6 +3,8 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "main": "dist/index.es.js",
+    "module": "dist/index.es.js",
     "dependencies": {
         "@happychain/transaction-manager": "workspace:^",
         "neverthrow": "^8.1.0",

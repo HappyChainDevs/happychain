@@ -1,9 +1,0 @@
-{
-    "extends": "@happychain/configs/tsconfig.base.json",
-    "include": ["src"],
-    "compilerOptions": {
-        "allowImportingTsExtensions": false,
-        "noEmit": false,
-        "sourceMap": true
-    }
-}
