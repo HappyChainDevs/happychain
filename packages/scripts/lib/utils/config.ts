@@ -76,7 +76,7 @@ export function getConfigArray(configs: DefineConfigParameters, options: typeof 
  * 5. `pkg.exports[entrypoint].require`
  * 6. `undefined`
  */
-export function getEntrypointPath(entrypoint = "."): string {
+export function getEntrypointPath(entrypoint = "."): string | undefined {
     if (entrypoint === ".") {
         if (pkg.module) return pkg.module
         if (pkg.main) return pkg.main

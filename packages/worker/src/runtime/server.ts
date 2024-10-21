@@ -1,20 +1,33 @@
 /// <reference lib="WebWorker" />
-
-import type { MessageCallback } from "./types"
-
 import { makeBroadcastPayload, makeConsolePayload, makeRpcPayload, parsePayload } from "./payload"
+import type { MessageCallback } from "./types"
 
 type Fn = (...rest: unknown[]) => unknown
 
 const genName = () => `SharedWorker-${crypto.randomUUID()}`
 
+/**
+ * SharedWorkerServer
+ *
+ * This file will be injected and initialized at the head of your worker file.
+ * It will be exposed as a global 'worker' variable within the context of the
+ * SharedWorker itself.
+ *
+ * It is responsible for listening to messages sent from the SharedWorkerClient via postMessage
+ * and mapping said message to an exported function within the worker (defined in userland code).
+ * It executes the function then returns the result to the client via another postMessage. The
+ * end result is a seamless RPC experience allowing you to simply export functions from the worker,
+ * and import them in the client.
+ *
+ * All data transmitted between client and server must be serializable using the
+ * [Structured Clone Algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm)
+ */
 export class SharedWorkerServer {
     // maps heartbeat ports to the latest heartbeat
     private readonly _ports = new Map<MessagePort, number>()
     private readonly _functions = new Map<string, Fn>()
     private readonly _scope: SharedWorkerGlobalScope
-
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    // biome-ignore lint/suspicious/noExplicitAny: MessageCallback is generic and accepts any type here
     private readonly _messageCallbacks: MessageCallback<any>[] = []
 
     constructor(
@@ -117,15 +130,36 @@ export class SharedWorkerServer {
         }
     }
 
+    /**
+     * All connected 'clients'.
+     *
+     * Each client is a separate browsing context
+     * such as a new window, or new tab.
+     *
+     * This list is pruned regularly via the scheduled
+     * 'heartbeat' check.
+     */
     ports() {
         return [...this._ports.keys()]
     }
+
+    /**
+     * Dispatch a message to a specific client.
+     */
     dispatch(port: MessagePort, data: unknown) {
         port.postMessage(makeBroadcastPayload(data))
     }
+
+    /**
+     * Listen for incoming messages sent from connected clients
+     */
     addMessageListener<T>(fn: MessageCallback<T>) {
         this._messageCallbacks.push(fn)
     }
+
+    /**
+     * Dispatch a message to all connected clients.
+     */
     broadcast(data: unknown) {
         for (const port of this._ports.keys()) {
             port.postMessage(makeBroadcastPayload(data))
