@@ -260,9 +260,12 @@ contracts.build:
 # ==================================================================================================
 # DOCS
 
-# Fully self-contained target to build docs, to be used by docs page host.
-docs.contained: setup shared.build sdk.dev
+docs.build:
 	cd packages/docs && make build
+.PHONY: docs.build
+
+# Fully self-contained target to build docs, to be used by docs page host.
+docs.contained: setup shared.build sdk.dev docs.build
 .PHONY: docs.contained
 
 # Serve already-built docs
