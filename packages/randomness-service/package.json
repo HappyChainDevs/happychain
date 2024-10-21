@@ -5,6 +5,7 @@
     "type": "module",
     "dependencies": {
         "@happychain/transaction-manager": "workspace:^",
+        "dotenv": "^16.4.5",
         "viem": "^2.21.18"
     },
     "devDependencies": {

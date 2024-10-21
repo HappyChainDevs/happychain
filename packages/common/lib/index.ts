@@ -27,3 +27,5 @@ export { unknownToError } from "./utils/error.js"
 export type { SafeViemWalletClient, SafeViemPublicClient } from "./utils/safeViemClients.js"
 
 export { convertToSafeViemWalletClient, convertToSafeViemPublicClient } from "./utils/safeViemClients.js"
+
+export { env, envHex, envInt, envBigInt } from "./node/env.js"

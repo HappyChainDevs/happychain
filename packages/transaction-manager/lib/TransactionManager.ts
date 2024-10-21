@@ -7,7 +7,7 @@ import {
 import type { EntityManager } from "@mikro-orm/core"
 import { type Abi, type Account, type Chain, type Transport, createPublicClient, createWalletClient } from "viem"
 import { ABIManager } from "./AbiManager.js"
-import { BlockMonitor } from "./BlockMonitor.js"
+import { BlockMonitor, type LatestBlock } from "./BlockMonitor.js"
 import { GasPriceOracle } from "./GasPriceOracle.js"
 import { NonceManager } from "./NonceManager.js"
 import type { Transaction } from "./Transaction.js"
@@ -68,7 +68,7 @@ export type TransactionManagerConfig = {
     blockTime?: bigint
 }
 
-export type TransactionOriginator = () => Transaction[]
+export type TransactionOriginator = (block: LatestBlock) => Transaction[]
 
 export class TransactionManager {
     public readonly collectors: TransactionOriginator[]
@@ -125,14 +125,6 @@ export class TransactionManager {
 
         this.rpcAllowDebug = _config.rpcAllowDebug || false
         this.blockTime = _config.blockTime || 2n
-    }
-
-    static async create(config: TransactionManagerConfig): Promise<TransactionManager> {
-        const transactionManager = new TransactionManager(config)
-
-        await transactionManager.start()
-
-        return transactionManager
     }
 
     public addTransactionCollector(collector: TransactionOriginator): void {
