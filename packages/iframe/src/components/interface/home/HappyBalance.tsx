@@ -1,13 +1,17 @@
+import { useAtomValue } from "jotai"
 import { formatEther } from "viem"
+import { useBalance } from "wagmi"
+import { userAtom } from "../../../state/user"
 
-interface HappyBalanceProps {
-    balance: bigint | undefined
-}
+const HappyBalance = () => {
+    const user = useAtomValue(userAtom)
 
-const HappyBalance = ({ balance }: HappyBalanceProps) => {
+    const { data: balance } = useBalance({ address: user?.address })
+
     const truncatedBalance = balance
-        ? (Math.floor(Number.parseFloat(formatEther(balance)) * 1000) / 1000).toString()
-        : "0"
+        ? (Math.floor(Number.parseFloat(formatEther(balance.value)) * 1000) / 1000).toString()
+        : "0.0"
+
     return (
         <div className="flex flex-row w-full items-center justify-between">
             <p className="text-lg">$HAPPY</p>
