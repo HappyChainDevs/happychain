@@ -4,7 +4,7 @@ import { appList } from "../../../../../utils/lists"
 const GamesView = () => {
     return (
         <div className="flex flex-col w-full h-4/5 p-2 bg-slate-300 rounded-b-xl rounded-tr-xl">
-            {appList && appList.length > 0 ? (
+            {appList?.length > 0 ? (
                 appList.map((app) => (
                     <div key={app.name} className="flex flex-row items-center justify-between px-2 h-12">
                         <span>{`${app.name}`}</span>

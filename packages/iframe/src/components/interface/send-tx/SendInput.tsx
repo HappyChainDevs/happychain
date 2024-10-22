@@ -94,7 +94,6 @@ const SendInput = ({ sendValue, setSendValue }: SendInputProps) => {
                         className="flex text-center text-[14px] text-white border border-blue-600 px-2 rounded-lg bg-blue-600 disabled:opacity-50"
                         type="button"
                         onClick={handleMaxButtonClick}
-                        // disabled={inProgress} // replace with interfaceState atom
                     >
                         Max
                     </button>
