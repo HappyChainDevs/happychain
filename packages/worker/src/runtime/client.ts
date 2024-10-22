@@ -44,7 +44,6 @@ export class SharedWorkerClient {
 
     private handleMessage = (event: MessageEvent) => {
         const payload = parsePayload(event.data)
-        // all unsupported calls will be silently dropped
         if (!payload) {
             console.error(`Unknown SharedWorker payload received: ${JSON.stringify(event.data, null, 2)}`)
             return
