@@ -17,7 +17,6 @@ import { injected } from "@wagmi/vue/connectors"
 // biome-ignore lint/suspicious/noExplicitAny: demo purposes only. not needed under regular usage
 ;(window as any).happyProvider = happyProvider
 
-// TODO:
 export const happyConnector = injected({
     shimDisconnect: false,
     target() {
