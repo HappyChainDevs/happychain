@@ -14,16 +14,6 @@ export function SharedWorkerShimPlugin(): Plugin {
     return {
         name: `${pkg.name}:shim`,
         enforce: "pre",
-        config(_config, env) {
-            if (env.command === "serve") {
-                return {
-                    build: {
-                        // required to avoid `"addMessageListener" is not exported by` type errors
-                        rollupOptions: { preserveEntrySignatures: "strict" },
-                    },
-                }
-            }
-        },
         transform(code: string, id: string) {
             if (!filter(id)) return
             return { code: shimCodeGen(code, id) }

@@ -13,16 +13,6 @@ export function DevelopmentPlugin(): Plugin {
         name: `${pkg.name}:development`,
         apply: "serve",
         enforce: "pre",
-        config(_config, env) {
-            if (env.command === "serve") {
-                return {
-                    build: {
-                        // required to avoid `"addMessageListener" is not exported by` type errors
-                        rollupOptions: { preserveEntrySignatures: "strict" },
-                    },
-                }
-            }
-        },
         transform(code: string, id: string) {
             if (!filter(id)) return
             // In development, vite appends "?worker_file&type=module" to the worker files, which

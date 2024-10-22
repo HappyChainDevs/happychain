@@ -15,27 +15,62 @@ though, so should be acceptable.
 
 We also added generalized error handling and logging.
 
+## Installation
+
+```ts
+import { SharedWorkerPlugin } from '@happychain/worker'
+
+// vite.config.ts
+export default defineConfig({
+  plugins: [ SharedWorkerPlugin()]
+})
+```
+
 ## Basic Usage
 
 Define the functions you want to run in the worker in a `.sw.ts` file. They will run on the shared
 worker but you will be able to call them seamlessly from your app by importing the `sw.ts` file.
 
+### Shared Data Example
 ```ts
 // worker.sw.ts
 let pageLoads = 0;
-
-// worker exports are always async
-export async function getPageLoads() {
+export async function getPageLoads() { // worker exports are always async
     return ++pageLoads
 }
+
+// app.tsx @ localhost:1234
+import { getPageLoads } from './worker.sw'
+console.log({ pageLoads: await getPageLoads() }) // 1
+
+// app.tsx @ localhost:4321
+import { getPageLoads } from './worker.sw'
+console.log({ pageLoads: await getPageLoads() }) // 2
 ```
+
+### Communication Example
 
 ```ts
-// app.tsx
-import { getPageLoads } from './worker.sw'
+// worker.sw.ts
+import { worker } from "@happychain/worker/runtime"
+export { addMessageListener, dispatch } from "@happychain/worker/runtime"
+worker.addMessageListener((data: unknown) => {
+    console.log(data) // "hello worker, from client"
+    worker.dispatch(worker.ports()[0], "hello client 1, from worker")
+    worker.broadcast("hello everyone, from worker")
+})
+export function sayHello() { 
+  worker.broadcast("Hello!")
+}
 
-console.log({ pageLoads: await getPageLoads() })
+// app.tsx
+import { addMessageListener, dispatch, sayHello } from "./testing.sw"
+addMessageListener((data: unknown) => console.log(data)) // "hello client 1, from worker", "hello everyone, from worker"
+dispatch("hello worker, from client")
+await sayHello() // worker will broadcast => "Hello!"
 ```
+
+Note that the worker cannot send messages (`broadcast` and `dispatch`) when it initializes, as it is loaded before the clients, and so the clients won't be ready to receive its messages yet.
 
 All data transmitted between client and server (including function parameters) must be serializable
 using the [Structured Clone Algorithm][SCA].

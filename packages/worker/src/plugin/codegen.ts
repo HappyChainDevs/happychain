@@ -3,7 +3,7 @@ import { findExports, getWorkerName } from "./utils"
 
 export function clientCodeGen(code: string, id: string) {
     const workerName = getWorkerName(id)
-    const exports = findExports(code)
+    const exports = findExports(code, id)
 
     const stringId = JSON.stringify(id)
     const options = JSON.stringify({ type: "module", name: workerName })
@@ -33,7 +33,7 @@ export function clientCodeGen(code: string, id: string) {
 
 export function workerCodeGen(code: string, id: string) {
     const workerName = getWorkerName(id)
-    const exports = findExports(code)
+    const exports = findExports(code, id)
 
     const stringWorkerName = JSON.stringify(workerName)
 
@@ -41,7 +41,7 @@ export function workerCodeGen(code: string, id: string) {
     return ""
         + `// ${pkg.name} starts\n`
         + `import { SharedWorkerServer } from '${pkg.name}/runtime'\n`
-        + "const worker = new SharedWorkerServer(self, [\n"
+        + "globalThis.__worker__ = new SharedWorkerServer(self, [\n"
         +       exports.map((ex) => `    ${ex.name}`).join(",\n")
         + `], ${stringWorkerName})\n`
         + `// ${pkg.name} ends\n`
@@ -53,8 +53,8 @@ export function shimCodeGen(code: string, _id: string) {
     return ""
         + "// ${pkg.name} starts\n"
         + `import { SharedWorkerShim } from '${pkg.name}/runtime'\n`
-        + "const worker = new SharedWorkerShim()\n"
-        + "export const addMessageListener = worker.addMessageListener.bind(worker)\n"
+        + 'globalThis.__is_shim_worker__ = true\n'
+        + "globalThis.__worker__ = new SharedWorkerShim()\n"
         + "// ${pkg.name} ends\n"
         + code
 }
