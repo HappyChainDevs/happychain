@@ -289,11 +289,17 @@ function outputFileForEntrypoint(config: Config, entrypoint: string, ext: string
 
 function typeOutputFileForEntrypoint(config: Config, entrypoint: string): string {
     let outputFile = ""
-    // TODO can we gen multiple files?
-    const exportName = config.exports?.[0]
-    if (exportName && pkg.exports?.[exportName]?.types) {
-        outputFile = pkg.exports[exportName].types
-    } else if (entrypoint) {
+    if (config.exports?.length === 1) {
+        // If there's only one export, we look up the name of the types output file if it exists.
+        // We can't do this if there is more than one export, as we don't know about how entrypoints
+        // map to exports.
+        const exportName = config.exports[0]
+        if (pkg.exports?.[exportName]?.types) {
+            outputFile = pkg.exports[exportName].types
+            if (outputFile) return outputFile
+        }
+    }
+    if (entrypoint) {
         outputFile = outputFileForEntrypoint(config, entrypoint, "d.ts")
     } else if (pkg.exports?.["."]?.types) {
         outputFile = pkg.exports["."].types
