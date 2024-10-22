@@ -17,7 +17,7 @@ import type { ProviderEventError, ProviderEventPayload } from "./payloads.ts"
 export enum Msgs {
     // --- EventsFromApp ---------------------------------------------------------------------------
 
-    /** Instructs the iframe to display the connection modal. */
+    /** Instructs the iframe to display the requested page. */
     RequestDisplay = "request-display",
 
     /**
