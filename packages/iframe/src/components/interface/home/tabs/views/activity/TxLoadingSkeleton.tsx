@@ -1,4 +1,4 @@
-import { happyChainSepolia, shortenAddress } from "@happychain/sdk-shared"
+import { convertToViemChain, getChainFromSearchParams, shortenAddress } from "@happychain/sdk-shared"
 import { CircleNotch } from "@phosphor-icons/react"
 import type { Hash } from "viem"
 
@@ -10,11 +10,12 @@ interface TxLoadingSkeletonProps {
     tx: Hash
 }
 const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
+    const currChain = convertToViemChain(getChainFromSearchParams())
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
             <span>
                 <a
-                    href={`${happyChainSepolia.blockExplorerUrls[0]}/tx/${tx}`}
+                    href={`${currChain.blockExplorerUrls[0]}/tx/${tx}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:text-purple-500 hover:underline"

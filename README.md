@@ -27,7 +27,7 @@ You can run `make help` to get a short description of the most common commands.
 
 - `make setup` — don't forget to run this before anything else, or when dependencies change!
 - `make build` — builds all packages
-- `make docs` — build the `docs` package and opens and serves them on http://localhost:4173.
+- `make docs` — build and serves the documentationm on http://localhost:4173.
   - Requires running `make build` first.
   - This is different from architecture docs, which are in [/docs](/docs).
 - `make check` — runs code quality & formatting checks

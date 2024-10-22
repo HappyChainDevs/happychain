@@ -10,7 +10,7 @@ export type TxRecord<T> = Record<Address, T[]>
  */
 export type PendingTxDetails = {
     hash: Hash
-    value?: string
+    value?: bigint
 }
 
 /**
@@ -29,7 +29,7 @@ export type ExtendedTransactionReceipt<
     type = TransactionType,
 > = TransactionReceipt<quantity, index, status, type> & {
     /** Optional value sent with the transaction, represented as a hex string */
-    sendValue?: string
+    sendValue?: bigint
 }
 
 /**
@@ -39,25 +39,26 @@ export type ExtendedTransactionReceipt<
 export type ConfirmedTransactionsRecord = TxRecord<ExtendedTransactionReceipt>
 
 /**
- * Creates a storage mechanism for confirmed transactions using localStorage.
- * - This implementation handles the serialization and deserialization of `bigint` values.
+ * Utility function to create a JSON storage with custom handling of `bigint` values.
  * - BigInt values are stringified during storage and restored upon retrieval using a custom replacer and reviver.
+ * - This utility can be used for any atom that stores data containing `bigint`.
  */
-const confirmedTxsStorage = createJSONStorage<ConfirmedTransactionsRecord>(() => localStorage, {
-    replacer: (_key, value) => (typeof value === "bigint" ? `#bigint.${value}` : value),
-    reviver: (_key, value) =>
-        typeof value === "string" && value.startsWith("#bigint.") ? BigInt(value.slice(8)).valueOf() : value,
-})
+const createBigIntStorage = <T>() =>
+    createJSONStorage<T>(() => localStorage, {
+        replacer: (_key, value) => (typeof value === "bigint" ? `#bigint.${value}` : value),
+        reviver: (_key, value) =>
+            typeof value === "string" && value.startsWith("#bigint.") ? BigInt(value.slice(8)).valueOf() : value,
+    })
 
 /**
  * Atom to store confirmed transaction records in localStorage.
  * - This atom is initialized with an empty object (`{}`) if no transactions are stored.
- * - Transactions are retrieved and saved using the `confirmedTxsStorage` with proper handling of BigInt values.
+ * - Transactions are retrieved and saved using the `createBigIntStorage` with proper handling of BigInt values.
  */
 export const confirmedTxsAtom = atomWithStorage<ConfirmedTransactionsRecord>(
     StorageKey.ConfirmedTxs,
     {},
-    confirmedTxsStorage,
+    createBigIntStorage<ConfirmedTransactionsRecord>(),
 )
 
 /**
@@ -65,4 +66,8 @@ export const confirmedTxsAtom = atomWithStorage<ConfirmedTransactionsRecord>(
  * - This atom is initialized with an empty object (`{}`) if no pending transactions are stored.
  * - Pending transactions are stored in their raw format without any special serialization logic.
  */
-export const pendingTxsAtom = atomWithStorage<PendingTxHistoryRecord>(StorageKey.PendingTxs, {})
+export const pendingTxsAtom = atomWithStorage<PendingTxHistoryRecord>(
+    StorageKey.PendingTxs,
+    {},
+    createBigIntStorage<PendingTxHistoryRecord>(),
+)
