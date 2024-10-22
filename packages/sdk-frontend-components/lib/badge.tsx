@@ -2,7 +2,7 @@
 import { onUserUpdate } from "@happychain/js"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { useEffect, useState } from "preact/hooks"
-import { useConnection } from "./useConnection.ts"
+import { useConnection } from "./useConnection"
 
 import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"
@@ -47,7 +47,9 @@ export function Badge({ disableStyles = false }: BadgeProps) {
                           Later, we need to replace this with a happy.tech URL.
                     */}
                     <img src="/happychain.png" alt="HappyChain logo" className="happychain-icon" />
-                    <div className="happychain-status">{connecting ? "Connecting" : user ? user.email : "Connect"}</div>
+                    <div className="happychain-status">
+                        {connecting ? "Connecting" : user ? user.email || user.name : "Connect"}
+                    </div>
                 </span>
             </button>
         </div>
