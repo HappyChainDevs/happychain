@@ -55,38 +55,48 @@ Extra Cost of Using a UserOp vs Direct Transaction (Gas): 220569n
 
 Sending multiple UserOps from unique senders (userOps involve deployment of Smart Contract Account) :-
 Bundle with 3 UserOps :-
-  Block:  6987n
+  Block:  88n
   Txn Index:  1
   Actual Gas Used for each UserOp:
-    UserOp1:  342066n
-    UserOp2:  365985n
+    UserOp1:  342079n
+    UserOp2:  365959n
     UserOp3:  342081n
-  Total ActualGas Used:  1050132n
-  Txn.gasUsed (Total for batch):  942791n
+  Total ActualGas Used:  1050119n
+  Txn.gasUsed (Total for the bundle):  942779n
 
-Bundler Overhead:  107341n
+Bundler Overhead:  107340n
 Direct Transaction Gas:  63000n
-Extra Cost of Using a UserOp vs Direct Transaction (Gas):  987132n
+Extra Cost of Using a UserOp vs Direct Transaction (Gas):  987119n
 
 ------------------------------------------------
 
 Gas Usage on UserOps when Smart Account are already deployed :-
 
 Bundle with 5 UserOps :-
-  Block:  6995n
+  Block:  96n
   Txn Index:  0
   Actual Gas Used for each UserOp:
-    UserOp1:  163990n
-    UserOp2:  163993n
-    UserOp3:  163995n
-    UserOp4:  178346n
-    UserOp5:  163988n
-  Total ActualGas Used:  834312n
-  Txn.gasUsed (Total for the bundle):  635519n
+    UserOp1:  178336n
+    UserOp2:  178331n
+    UserOp3:  163991n
+    UserOp4:  163989n
+    UserOp5:  163986n
+  Total ActualGas Used:  848633n
+  Txn.gasUsed (Total for the bundle):  164764n
 
-Bundler Overhead:  198793n
+Bundler Overhead:  683869n
 Direct Transaction Gas:  105000n
-Extra Cost of Using a UserOp vs Direct Transaction (Gas):  729312n
+Extra Cost of Using a UserOp vs Direct Transaction (Gas):  743633n
 
 ------------------------------------------------
 
+Gas Usage Results Comparison Table :-
+
+|-------------------------------------------------------------------------------------------------------------------------------------------|
+| Scenario                             | Direct Txn Gas | ActualGasUsed | Txn.gasUsed | Bundler Overhead | Extra Cost (vs Direct)| #UserOps |
+|--------------------------------------|----------------|---------------|-------------|------------------|-----------------------|----------|
+| Single UserOp                        | 21000          | 178336        | 164776      | 13560            | 157336                | 1        |
+| Single UserOp                        | 105000         | 325569        | 311659      | 13910            | 220569                | 1        |
+| Multiple UserOps with Deployment     | 63000          | 1050119       | 942779      | 107340           | 987119                | 3        |
+| Multiple UserOps without Deployment  | 105000         | 848633        | 164764      | 683869           | 743633                | 5        |
+|-------------------------------------------------------------------------------------------------------------------------------------------|
