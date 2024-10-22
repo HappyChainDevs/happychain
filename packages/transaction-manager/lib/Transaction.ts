@@ -43,7 +43,7 @@ export class Transaction {
     @Property()
     readonly functionName: string
 
-    @Property()
+    @Property({ type: JsonBigIntTypeOrm, nullable: true })
     readonly args: ContractFunctionArgs | undefined
 
     @Property()
