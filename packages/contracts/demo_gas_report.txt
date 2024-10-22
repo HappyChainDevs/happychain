@@ -38,33 +38,33 @@ Extra Cost of Using a UserOp vs Direct Transaction (Gas): 157336n
 Sending a Single UserOp with 5 transfer Calls (Smart Account already Deployed) :-
 
 Paymaster Gas Estimates :-
-  PreVerificationGas:  58110n
+  PreVerificationGas:  58124n
   VerificationGasLimit:  119619n
   CallGasLimit:  249144n
 
 UserOp via Bundler Receipt :-
-  ActualGasUsed:  325555n
-  Txn.gasUsed:  311635n
+  ActualGasUsed:  325569n
+  Txn.gasUsed:  311659n
 
-Bundler Overhead (Gas Used): 13920n
+Bundler Overhead (Gas Used): 13910n
 
 Direct Transaction Gas: 105000n
-Extra Cost of Using a UserOp vs Direct Transaction (Gas): 220555n
+Extra Cost of Using a UserOp vs Direct Transaction (Gas): 220569n
 
 ------------------------------------------------
 
 Sending multiple UserOps from unique senders (userOps involve deployment of Smart Contract Account) :-
 Bundle with 3 UserOps :-
-  Block:  6773n
+  Block:  6987n
   Txn Index:  1
   Actual Gas Used for each UserOp:
-    UserOp1:  365985n
-    UserOp2:  342066n
+    UserOp1:  342066n
+    UserOp2:  365985n
     UserOp3:  342081n
   Total ActualGas Used:  1050132n
-  Txn.gasUsed (Total for batch):  942779n
+  Txn.gasUsed (Total for batch):  942791n
 
-Bundler Overhead:  107353n
+Bundler Overhead:  107341n
 Direct Transaction Gas:  63000n
 Extra Cost of Using a UserOp vs Direct Transaction (Gas):  987132n
 
@@ -72,19 +72,21 @@ Extra Cost of Using a UserOp vs Direct Transaction (Gas):  987132n
 
 Gas Usage on UserOps when Smart Account are already deployed :-
 
-Bundle with 3 UserOps :-
-  Block:  6781n
-  Txn Index:  1
+Bundle with 5 UserOps :-
+  Block:  6995n
+  Txn Index:  0
   Actual Gas Used for each UserOp:
-    UserOp1:  163987n
-    UserOp2:  178341n
-    UserOp3:  163985n
-  Total ActualGas Used:  1050132n
-  Txn.gasUsed (Total for batch):  942779n
+    UserOp1:  163990n
+    UserOp2:  163993n
+    UserOp3:  163995n
+    UserOp4:  178346n
+    UserOp5:  163988n
+  Total ActualGas Used:  834312n
+  Txn.gasUsed (Total for the bundle):  635519n
 
-Bundler Overhead:  107353n
-Direct Transaction Gas:  63000n
-Extra Cost of Using a UserOp vs Direct Transaction (Gas):  987132n
+Bundler Overhead:  198793n
+Direct Transaction Gas:  105000n
+Extra Cost of Using a UserOp vs Direct Transaction (Gas):  729312n
 
 ------------------------------------------------
 
