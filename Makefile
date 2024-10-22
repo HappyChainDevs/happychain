@@ -56,8 +56,7 @@ setup: install-frozen enable-hooks ## To be run when first setting up the reposi
 	cd packages/contracts && make setup
 .PHONY: setup
 
-clean: ts.clean contracts.clean ## Removes build artifacts
-	biome clean ./;
+clean: ts.clean docs.clean contracts.clean ## Removes build artifacts
 .PHONY: clean
 
 build: node_modules ts.build  ## Creates production builds
