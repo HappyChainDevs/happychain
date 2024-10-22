@@ -10,6 +10,10 @@
         ".": {
             "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
+        },
+        "./mikro-orm.config": {
+            "default": "./dist/mikro-orm.config.es.js",
+            "types": "./dist/mikro-orm.config.es.d.ts"
         }
     },
     "mikro-orm": {
