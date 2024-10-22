@@ -34,8 +34,10 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return chainId ?? (await sendToPublicClient(app, request))
         }
 
-        case "eth_accounts":
-            return hasPermissions(app, "eth_accounts") ? getUser()?.addresses : []
+        case "eth_accounts": {
+            const user = getUser()
+            return user && hasPermissions(app, "eth_accounts") ? user.addresses : []
+        }
 
         case "happy_user":
             return hasPermissions(app, "eth_accounts") ? getUser() : undefined

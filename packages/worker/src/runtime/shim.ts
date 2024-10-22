@@ -14,11 +14,30 @@ import type { MessageCallback, ServerInterface } from "./types"
  */
 export class SharedWorkerShim implements ServerInterface {
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    private _messageCallbacks = new Set<MessageCallback<any>>()
+    private _messageCallbacks: MessageCallback<any>[] = []
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    private _messageListeners: MessageCallback<any>[] = []
 
     ports() {
-        return []
+        return [new MessageChannel().port1]
     }
+
+    clientDispatch(data: unknown) {
+        for (const cb of this._messageListeners) {
+            cb(data)
+        }
+    }
+
+    addMessageCallback<T>(fn: MessageCallback<T>) {
+        this._messageCallbacks.push(fn)
+    }
+
+    clientBroadcast(data: unknown) {
+        for (const cb of this._messageListeners) {
+            cb(data)
+        }
+    }
+
     dispatch(_: MessagePort, data: unknown) {
         for (const cb of this._messageCallbacks) {
             cb(data)
@@ -26,7 +45,7 @@ export class SharedWorkerShim implements ServerInterface {
     }
 
     addMessageListener<T>(fn: MessageCallback<T>) {
-        this._messageCallbacks.add(fn)
+        this._messageListeners.push(fn)
     }
 
     broadcast(data: unknown) {

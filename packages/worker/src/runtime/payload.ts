@@ -25,8 +25,8 @@ export function makeRpcPayload(id: string, name: string, args: any, isError = fa
         },
     }
 }
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export function makeBroadcastPayload(data: any): Payload {
+
+export function makeBroadcastPayload(data: unknown): Payload {
     return {
         command: "broadcast",
         data,

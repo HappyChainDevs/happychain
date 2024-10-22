@@ -1,13 +1,12 @@
 import "./web3auth.polyfill"
 import { waitForCondition } from "@happychain/sdk-shared"
-import type { MessageCallback, ServerInterface } from "@happychain/worker/runtime"
 import { tssLib } from "@toruslabs/tss-dkls-lib"
 import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider"
 import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from "@web3auth/mpc-core-kit"
 import { config } from "../services/config"
 
-declare const worker: ServerInterface // available within the context of the worker
-export declare function addMessageListener<T>(_fn: MessageCallback<T>): void
+import { worker } from "@happychain/worker/runtime"
+export { addMessageListener } from "@happychain/worker/runtime"
 
 // if persisting is desirable, we can use IndexedDB as IAsyncStorage
 const web3AuthWorkerStorage = {
