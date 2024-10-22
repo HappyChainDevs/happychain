@@ -1,7 +1,7 @@
-import { happyChainSepolia, shortenAddress } from "@happychain/sdk-shared"
+import { convertToViemChain, getChainFromSearchParams, shortenAddress } from "@happychain/sdk-shared"
 import { ArrowUpRight, CircleNotch } from "@phosphor-icons/react"
 import clsx from "clsx"
-import { formatEther, hexToBigInt } from "viem"
+import { formatEther } from "viem"
 import type { ExtendedTransactionReceipt } from "../../../../../../state/txHistory"
 
 interface TxLogEntryProps {
@@ -9,6 +9,7 @@ interface TxLogEntryProps {
 }
 
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
+    const currChain = convertToViemChain(getChainFromSearchParams())
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
             <div className="flex flex-row items-center justify-center space-x-1">
@@ -22,7 +23,7 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                     <span className="text-black">Send</span>
                     <span>
                         <a
-                            href={`${happyChainSepolia.blockExplorerUrls[0]}/tx/${tx.transactionHash}`}
+                            href={`${currChain.blockExplorerUrls[0]}/tx/${tx.transactionHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 hover:text-purple-500 hover:underline"
@@ -35,7 +36,7 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
 
             <div>
                 {tx.sendValue ? (
-                    <span className="text-black">{`- ${formatEther(hexToBigInt(tx.sendValue as `0x${string}`))} $HAPPY`}</span>
+                    <span className="text-black">{`- ${formatEther(tx.sendValue)} $HAPPY`}</span>
                 ) : (
                     <div className="animate-spin">
                         <CircleNotch />

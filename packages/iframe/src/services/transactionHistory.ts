@@ -18,7 +18,7 @@ import { type PendingTxDetails, confirmedTxsAtom, pendingTxsAtom } from "../stat
 
 const store = getDefaultStore()
 
-export function addConfirmedTx(address: Address, receipt: TransactionReceipt, value?: string) {
+export function addConfirmedTx(address: Address, receipt: TransactionReceipt, value?: bigint) {
     store.set(confirmedTxsAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
         const isReceiptAlreadyLogged = userHistory.includes(receipt)
@@ -79,7 +79,7 @@ export function addPendingTxEntry(address: Address, payload: PendingTxDetails) {
             return existingEntries
         }
 
-        void monitorTransactionHash(address, payload)
+        monitorTransactionHash(address, payload)
         return {
             ...existingEntries,
             [address]: [payload, ...pendingTxEntriesByUser],
