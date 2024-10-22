@@ -62,16 +62,17 @@ export class SharedWorkerServer {
     }
 
     private connect() {
+        // Shared workers unsupported, start as web worker
+        if (!("SharedWorkerGlobalScope" in self)) {
+            this.start(self as unknown as MessagePort)
+            console.log("Started as WebWorker")
+            return
+        }
+
         this._scope.onconnect = (event) => {
             const port = event.ports[0]
             this.start(port)
             console.log("Started as SharedWorker")
-        }
-
-        // Start as web worker, if not a shared worker
-        if (!("SharedWorkerGlobalScope" in self)) {
-            this.start(self as unknown as MessagePort)
-            console.log("Started as WebWorker")
         }
     }
 

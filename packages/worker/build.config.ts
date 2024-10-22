@@ -7,6 +7,7 @@ export default defineConfig([
         bunConfig: {
             entrypoints: ["./src/index.ts"],
             sourcemap: "inline",
+            // The build here builds the plugin, not browser code. This makes it slightly leaner.
             target: "bun",
             external: ["mlly"],
         },
