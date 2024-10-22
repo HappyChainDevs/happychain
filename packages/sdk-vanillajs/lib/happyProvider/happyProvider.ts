@@ -122,3 +122,12 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
         })
     }
 }
+
+/**
+ * Mock implementation that ensures the SDK can be imported in SSR-first frameworks without errors
+ */
+export class HappyProviderSSRSafe extends SafeEventEmitter implements HappyProviderPublic {
+    async request(): Promise<never> {
+        throw new Error("Provider not available in server environment")
+    }
+}

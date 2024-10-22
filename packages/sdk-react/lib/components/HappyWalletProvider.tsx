@@ -20,7 +20,9 @@ export function HappyWalletProvider({ init, children }: HappyWalletProviderProps
     useEffect(() => register(init), [init])
 
     // subscription to user changes
-    useEffect(() => onUserUpdate(setUser), [])
+    useEffect(() => {
+        onUserUpdate(setUser)
+    }, [])
 
     return <HappyContext.Provider value={{ user, initialized: true }}>{children}</HappyContext.Provider>
 }
@@ -35,6 +37,7 @@ export function useHappyChain() {
     }, [initialized])
 
     return {
+        initialized,
         provider: happyProvider,
         connect,
         disconnect,

@@ -27,6 +27,10 @@ tsconfig.tsbuildinfo
 dist
 build
 dist-ssr
+/build
+/public/build
+/.cache
+
 
 # Contract outputs
 packages/contracts/cache/
@@ -63,3 +67,7 @@ packages/contracts/deployments/LOCAL/
 
 # SQLite files
 *.sqlite
+
+# Graphql
+packages/dex-magicswap/.graphclient/
+packages/dex-magicswap/app/generated.ts
