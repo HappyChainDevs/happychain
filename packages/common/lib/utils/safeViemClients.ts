@@ -125,9 +125,10 @@ export function convertToSafeViemWalletClient(client: ViemWalletClient): SafeVie
                         chainId: client.chain.id,
                     })
                 }
+                // biome-ignore format: tidy
                 console.warn(
-                    "No signTransaction method found on the account, using signMessage instead. An update to viem is probably needed",
-                )
+                    "No signTransaction method found on the account, using signMessage instead. " +
+                    "A viem update probably change the internal signing API.")
                 return client.signTransaction(args)
             })(),
     })
