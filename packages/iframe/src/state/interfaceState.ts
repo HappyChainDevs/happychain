@@ -1,6 +1,4 @@
-import { accessorsFromAtom } from "@happychain/common"
 import { atom } from "jotai"
-import type { Hash } from "viem"
 
 export enum ContentType {
     TOKENS = "Tokens",
@@ -21,7 +19,3 @@ export enum ContentType {
 export const walletInfoViewAtom = atom<ContentType>(ContentType.TOKENS)
 
 // ------------------------------------------------------------------------------------
-
-export const transactionFromSendPageAtom = atom<Hash | undefined>(undefined)
-
-export const { getValue: getTxSendState, setValue: setTxSendState } = accessorsFromAtom(transactionFromSendPageAtom)

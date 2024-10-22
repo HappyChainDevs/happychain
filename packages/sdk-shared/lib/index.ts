@@ -6,7 +6,6 @@ export { config } from "./config"
 
 export * as chains from "./chains"
 export { getChainFromSearchParams, defaultChain, convertToViemChain } from "./chains/utils"
-export { happyChainSepolia } from "./chains"
 
 export { AuthState, WalletType } from "./interfaces/happyUser"
 export { isPermissionsRequest } from "./interfaces/eip1193"
