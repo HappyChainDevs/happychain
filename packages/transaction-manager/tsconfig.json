@@ -1,8 +1,10 @@
 {
-    "extends": "@happychain/configs/tsconfig.base.json",
-    "include": ["lib", "package.json"],
+    "extends": "./tsconfig.build.json",
     "compilerOptions": {
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
+        "emitDecoratorMetadata": true,
+        "paths": {
+            "ts-node": ["./node_modules/ts-node/dist/bin.js"]
+        }
     }
 }
