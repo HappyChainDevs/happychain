@@ -362,6 +362,16 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     const extraCostOfUsingUserOp = receipt.actualGasUsed - directTxnGas
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostOfUsingUserOp)
     console.log("------------------------------------------------\n")
+
+    return {
+        scenario: "Single UserOp",
+        directTxnGas,
+        actualGasUsed: receipt.actualGasUsed,
+        txnGasUsed: receipt.receipt.gasUsed,
+        bundlerOverhead,
+        extraCost: extraCostOfUsingUserOp,
+        numberOfUserOps: 1,
+    }
 }
 
 async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
@@ -409,11 +419,21 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
     const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed
     console.log("\nBundler Overhead (Gas Used):", bundlerOverhead)
-    const directTxGas = await sendDirectTransactions(5)
-    console.log("\nDirect Transaction Gas:", directTxGas)
-    const extraCostUsingUserOp = receipt.actualGasUsed - directTxGas
-    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp)
+    const directTxnGas = await sendDirectTransactions(5)
+    console.log("\nDirect Transaction Gas:", directTxnGas)
+    const extraCostOfUsingUserOp = receipt.actualGasUsed - directTxnGas
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostOfUsingUserOp)
     console.log("\n------------------------------------------------\n")
+
+    return {
+        scenario: "Single UserOp",
+        directTxnGas,
+        actualGasUsed: receipt.actualGasUsed,
+        txnGasUsed: receipt.receipt.gasUsed,
+        bundlerOverhead,
+        extraCost: extraCostOfUsingUserOp,
+        numberOfUserOps: 1,
+    }
 }
 
 async function batchedUserOperationsGasResult() {
@@ -571,15 +591,12 @@ async function batchedUserOperationsGasResult() {
 
     const totalActualGas = receipts1.reduce((acc, receipt) => acc + receipt.actualGasUsed, BigInt(0))
     console.log("  Total ActualGas Used: ", totalActualGas)
-
-    console.log("  Txn.gasUsed (Total for batch): ", receipts1[0].receipt.gasUsed)
+    console.log("  Txn.gasUsed (Total for the bundle): ", receipts1[0].receipt.gasUsed)
     console.log("\nBundler Overhead: ", totalActualGas - receipts1[0].receipt.gasUsed)
     const directTxnGas = await sendDirectTransactions(receipts1.length)
     console.log("Direct Transaction Gas: ", directTxnGas)
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas): ", totalActualGas - directTxnGas)
-
     console.log("\n------------------------------------------------\n")
-    console.log("Gas Usage on UserOps when Smart Account are already deployed :-\n")
 
     const u1 = kernelClient1.sendUserOperation({
         account: kernelAccount1,
@@ -633,6 +650,7 @@ async function batchedUserOperationsGasResult() {
             ? rcpts.filter((receipt) => receipt.receipt.transactionIndex === 0)
             : rcpts.filter((receipt) => receipt.receipt.transactionIndex === 1)
 
+    console.log("Gas Usage on UserOps when Smart Account are already deployed :-\n")
     console.log(`Bundle with ${receipts2.length} UserOps :-`)
     console.log("  Block: ", receipts2[0].receipt.blockNumber)
     console.log("  Txn Index: ", receipts2[0].receipt.transactionIndex)
@@ -649,6 +667,28 @@ async function batchedUserOperationsGasResult() {
     console.log("Direct Transaction Gas: ", directTxnGasUsed)
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas): ", totalActualGasUsed - directTxnGasUsed)
     console.log("\n------------------------------------------------\n")
+
+    const multipleUserOpsDeploymentResults = {
+        scenario: "Multiple UserOps with Deployment",
+        directTxnGas,
+        actualGasUsed: totalActualGas,
+        txnGasUsed: receipts1[0].receipt.gasUsed,
+        bundlerOverhead: totalActualGas - receipts1[0].receipt.gasUsed,
+        extraCost: totalActualGas - directTxnGas,
+        numberOfUserOps: receipts1.length,
+    }
+
+    const multipleUserOpsNoDeploymentResults = {
+        scenario: "Multiple UserOps without Deployment",
+        directTxnGas: directTxnGasUsed,
+        actualGasUsed: totalActualGasUsed,
+        txnGasUsed: receipts2[0].receipt.gasUsed,
+        bundlerOverhead: totalActualGasUsed - receipts2[0].receipt.gasUsed,
+        extraCost: totalActualGasUsed - directTxnGasUsed,
+        numberOfUserOps: receipts2.length,
+    }
+
+    return { multipleUserOpsDeploymentResults, multipleUserOpsNoDeploymentResults }
 }
 
 async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
@@ -776,25 +816,67 @@ async function main() {
     console.log("- CallGasLimit: Gas allocated for executing the actual userOp (e.g., transfers or contract calls).")
     console.log("\n------------------------------------------------\n")
 
+    type GasResult = {
+        scenario: string
+        directTxnGas: bigint
+        actualGasUsed: bigint
+        txnGasUsed: bigint
+        bundlerOverhead: bigint
+        extraCost: bigint
+        numberOfUserOps: number
+    }
+
+    let singleOpResults: GasResult | undefined
     try {
-        await singleUserOperationGasResult(kernelAccount, kernelClient)
+        singleOpResults = await singleUserOperationGasResult(kernelAccount, kernelClient)
     } catch (error) {
         console.error("Single UserOp: ", error)
     }
 
+    let batchedCallsResults: GasResult | undefined
     try {
-        await batchedCallsGasResult(kernelAccount, kernelClient)
+        batchedCallsResults = await batchedCallsGasResult(kernelAccount, kernelClient)
     } catch (error) {
         console.error("Batched CallData: ", error)
     }
 
+    let multipleUserOpsDeploymentResults: GasResult | undefined
+    let multipleUserOpsNoDeploymentResults: GasResult | undefined
     try {
-        await batchedUserOperationsGasResult()
+        const results = await batchedUserOperationsGasResult()
+        multipleUserOpsDeploymentResults = results.multipleUserOpsDeploymentResults
+        multipleUserOpsNoDeploymentResults = results.multipleUserOpsNoDeploymentResults
     } catch (error) {
         console.error("Batched UserOps: ", error)
     }
-}
 
+    const gasUsageResults = [
+        singleOpResults,
+        batchedCallsResults,
+        multipleUserOpsDeploymentResults,
+        multipleUserOpsNoDeploymentResults,
+    ].filter((result): result is GasResult => result !== undefined)
+
+    console.log("Gas Usage Results Comparison Table :-\n")
+    console.log(
+        "|-------------------------------------------------------------------------------------------------------------------------------------------|",
+    )
+    console.log(
+        "| Scenario                             | Direct Txn Gas | ActualGasUsed | Txn.gasUsed | Bundler Overhead | Extra Cost (vs Direct)| #UserOps |",
+    )
+    console.log(
+        "|--------------------------------------|----------------|---------------|-------------|------------------|-----------------------|----------|",
+    )
+
+    gasUsageResults.forEach((result) => {
+        console.log(
+            `| ${result.scenario.padEnd(36)} | ${result.directTxnGas.toString().padEnd(14)} | ${result.actualGasUsed.toString().padEnd(13)} | ${result.txnGasUsed.toString().padEnd(11)} | ${result.bundlerOverhead.toString().padEnd(16)} | ${result.extraCost.toString().padEnd(21)} | ${result.numberOfUserOps.toString().padEnd(8)} |`,
+        )
+    })
+    console.log(
+        "|-------------------------------------------------------------------------------------------------------------------------------------------|",
+    )
+}
 main().then(() => {
     process.exit(0)
 })
