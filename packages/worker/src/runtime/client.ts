@@ -6,28 +6,30 @@ type WorkerUnion = SharedWorker | Worker
 type PortUnion = SharedWorker["port"] | Worker
 
 /**
- * SharedWorkerClient
+ * See README.md for general context on the shared worker architecture.
  *
- * This file will substitute the imported worker in the client side during the build step.
- * For example, given:
- * ```ts
- * // worker.sw.ts
- * export async function foo() {
- *   return 'bar'
- * }
+ * This class is instantiated on the "client" side (web app) to enable communication with the shared
+ * worker. It enables RPC-style communication with the worker (server), as well as sending and
+ * receiving arbitrary (but serializable) messages.
  *
- * // app.tsx
- * import { foo } from './worker.sw'
- * expect(foo()).resolves.toBe('bar') // true
- * ```
- * This will be responsible for generating the app-side definition for `foo()` which when called
- * under the hood will emit a postMessage to the shared worker to be processed, and then awaits
- * for a response with a matching id so the promise can be resolved.
+ * For the RPC side, the functions defined in a `<WorkerName>.sw.ts` files are made runnable in the
+ * shared worker, and RPC versions of these functions are made available to the client, which
+ * package the call into a message, and listen for the response. These methods are async.
+ *
+ * When importing the `.sw.ts` file (which contains the actual function definition to be run on the
+ * worker), the client actually imports the RPC version of the methods.
+ *
+ * The client can also import the  {@link dispatch} and {@link addMessageListener} function from
+ * this class, re-exported as top-level methods. These are used for sending & listening to
+ * arbitrary messages.
+ *
+ * The client does not have access to the client instance.
  */
 export class SharedWorkerClient {
     readonly port: PortUnion
 
     private callbacks = new Map<string, (payload: RpcPayload) => void>()
+
     // biome-ignore lint/suspicious/noExplicitAny: its a generic callback in use, type not needed here
     private messageCallbacks: MessageCallback<any>[] = []
 
@@ -76,8 +78,8 @@ export class SharedWorkerClient {
     }
 
     /**
-     * Used during code generation. This maps a function which was defined and exported
-     * in the worker to a local async function which executes as an RPC call to the SharedWorkerServer
+     * Used during code generation. This maps a function which was defined and exported in the
+     * worker to a local async function which executes as an RPC call to the SharedWorkerServer
      */
     __defineFunction(name: string) {
         return <T>(...args: T[]) => {
@@ -94,14 +96,16 @@ export class SharedWorkerClient {
     }
 
     /**
-     * Listen for incoming messages sent from the SharedWorkerServer
+     * Listen for incoming messages sent from the {@link SharedWorkerServer} toa all clients via
+     * his {@link SharedWorkerServer.broadcast} method.
      */
     addMessageListener<T>(fn: MessageCallback<T>) {
         this.messageCallbacks.push(fn)
     }
 
     /**
-     * Dispatch a message to the SharedWorkerServer.
+     * Dispatch a message to the {@link SharedWorkerServer} who can listen to them via his
+     * own {@link SharedWorkerServer.addMessageListener} method.
      */
     dispatch(data: unknown) {
         this.port.postMessage(makeBroadcastPayload(data))

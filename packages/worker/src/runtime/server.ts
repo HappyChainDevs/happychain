@@ -7,20 +7,17 @@ type Fn = (...rest: unknown[]) => unknown
 const genName = () => `SharedWorker-${crypto.randomUUID()}`
 
 /**
- * SharedWorkerServer
+ * See README.md for general context on the shared worker architecture.
  *
- * This file will be injected and initialized at the head of your worker file.
- * It will be exposed as a global 'worker' variable within the context of the
- * SharedWorker itself.
+ * An instance of this class is made available as a global `worker` variable in your
+ * `<WorkerName>.sw.ts` file.
  *
- * It is responsible for listening to messages sent from the SharedWorkerClient via postMessage
- * and mapping said message to an exported function within the worker (defined in userland code).
- * It executes the function then returns the result to the client via another postMessage. The
- * end result is a seamless RPC experience allowing you to simply export functions from the worker,
- * and import them in the client.
+ * It is responsible for listening to messages sent from the {@link SharedWorkerClient} and mapping
+ * said message to an exported function by the worker (defined in your `.sw.ts` file). It executes
+ * the function then returns the result to the client.
  *
- * All data transmitted between client and server must be serializable using the
- * [Structured Clone Algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm)
+ * The public functions of this class can also be used to exchange arbitrary (but serializable)
+ * messages between the worker and its clients.
  */
 export class SharedWorkerServer {
     // maps heartbeat ports to the latest heartbeat
