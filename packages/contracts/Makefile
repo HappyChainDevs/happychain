@@ -95,7 +95,7 @@ test-fork:
 
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the demo.
 aa-demo:
-	tsx ./scripts/account_abstraction_demo.ts;
+	@tsx ./scripts/account_abstraction_demo.ts | awk 'BEGIN {start=0} /Using RootValidator/ {start=1} {if (start) print}' > demo_gas_report.txt
 .PHONY: aa-demo
 
 ####################################################################################################

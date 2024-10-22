@@ -1,0 +1,90 @@
+Using RootValidator: Balance is correct: 0.01 ETH
+Using CustomValidator: Balance is correct: 0.01 ETH
+
+------------------------------------------------
+Gas Usage Results :-
+------------------------------------------------
+
+Gas Fields Explained:
+- DirectTxnGas: Gas cost for a normal transaction, used as a baseline for comparison.
+- actualGasUsed: Total gas used by the entire user operation, including bundler and EntryPoint processing.
+- receipt.gasUsed: Gas used by the transaction with the UserOps Bundle from bundler to EntryPoint.
+- Bundler Overhead: Difference between actualGasUsed and receipt.gasUsed, representing extra cost of the bundler.
+
+Paymaster Gas Fields:
+- PreVerificationGas: Gas used before validating the userOp (e.g., signature checks).
+- VerificationGasLimit: Gas limit for full validation of the userOp.
+- CallGasLimit: Gas allocated for executing the actual userOp (e.g., transfers or contract calls).
+
+------------------------------------------------
+
+
+Sending a Single UserOp (Smart Account already Deployed):-
+
+Paymaster Gas Estimates :-
+  PreVerificationGas:  52923n
+  VerificationGasLimit:  118222n
+  CallGasLimit:  107972n
+
+UserOp via Bundler Receipt :-
+  ActualGasUsed:  178336n
+  Txn.gasUsed:  164776n
+
+Bundler Overhead (Gas Used): 13560n
+Direct Transaction Gas: 21000n
+Extra Cost of Using a UserOp vs Direct Transaction (Gas): 157336n
+------------------------------------------------
+
+Sending a Single UserOp with 5 transfer Calls (Smart Account already Deployed) :-
+
+Paymaster Gas Estimates :-
+  PreVerificationGas:  58110n
+  VerificationGasLimit:  119619n
+  CallGasLimit:  249144n
+
+UserOp via Bundler Receipt :-
+  ActualGasUsed:  325555n
+  Txn.gasUsed:  311635n
+
+Bundler Overhead (Gas Used): 13920n
+
+Direct Transaction Gas: 105000n
+Extra Cost of Using a UserOp vs Direct Transaction (Gas): 220555n
+
+------------------------------------------------
+
+Sending multiple UserOps from unique senders (userOps involve deployment of Smart Contract Account) :-
+Bundle with 3 UserOps :-
+  Block:  6773n
+  Txn Index:  1
+  Actual Gas Used for each UserOp:
+    UserOp1:  365985n
+    UserOp2:  342066n
+    UserOp3:  342081n
+  Total ActualGas Used:  1050132n
+  Txn.gasUsed (Total for batch):  942779n
+
+Bundler Overhead:  107353n
+Direct Transaction Gas:  63000n
+Extra Cost of Using a UserOp vs Direct Transaction (Gas):  987132n
+
+------------------------------------------------
+
+Gas Usage on UserOps when Smart Account are already deployed :-
+
+Bundle with 3 UserOps :-
+  Block:  6781n
+  Txn Index:  1
+  Actual Gas Used for each UserOp:
+    UserOp1:  163987n
+    UserOp2:  178341n
+    UserOp3:  163985n
+  Total ActualGas Used:  1050132n
+  Txn.gasUsed (Total for batch):  942779n
+
+Bundler Overhead:  107353n
+Direct Transaction Gas:  63000n
+Extra Cost of Using a UserOp vs Direct Transaction (Gas):  987132n
+
+------------------------------------------------
+
