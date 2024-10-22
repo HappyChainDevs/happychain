@@ -30,8 +30,11 @@ ACCOUNT_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS),$(IFRAME_ONLY_PKGS)
 # demo packages (not including dependencies)
 DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue
 
-# backend packages (order matters)
-BACKEND_PKGS := transaction-manager,randomness-service
+# packages only used in the backend services (order matters)
+BACKEND_ONLY_PKGS := transaction-manager,randomness-service
+
+# packages needed to build the backend services (order matters)
+BACKEND_PKGS := common,$(BACKEND_ONLY_PKGS)
 
 # all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
@@ -187,6 +190,10 @@ docs.check:
 	cd packages/docs && make check
 .PHONY: docs.check
 
+backend.check:
+	$(call forall_make , $(BACKEND_PKGS) , check)
+.PHONY: backend.check
+
 ts.check:
 	echo $(TS_PKGS)
 	$(call forall_make , $(TS_PKGS) , check)
@@ -216,6 +223,10 @@ demos.format:
 docs.format:
 	cd packages/docs && make format
 .PHONY: docs.format
+
+backend.format:
+	$(call forall_make , $(BACKEND_PKGS) , format)
+.PHONY: backend.format
 
 ts.format:
 	$(call forall_make , $(TS_PKGS) , format)
@@ -248,6 +259,10 @@ account.build:
 demos.build:
 	$(call forall_make , $(DEMOS_PKGS) , build)
 .PHONY: apps.build
+
+backend.build:
+	$(call forall_make , $(BACKEND_PKGS) , build)
+.PHONY: backend.build
 
 ts.build:
 	$(call forall_make , $(TS_PKGS) , build)
@@ -296,10 +311,12 @@ docs.clean:
 	cd packages/docs && make clean
 .PHONY: docs.clean
 
+backend.clean:
+	$(call forall_make , $(BACKEND_PKGS) , clean)
+.PHONY: backend.clean
+
 ts.clean:
 	$(call forall_make , $(TS_PKGS) , clean)
-	echo "Running make clean in packages/docs"
-	cd packages/docs && make clean
 .PHONY: ts.clean
 
 contracts.clean:
