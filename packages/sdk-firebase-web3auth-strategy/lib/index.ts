@@ -1,6 +1,6 @@
 import { googleLogo } from "./logos"
 import { FirebaseConnector } from "./services/FirebaseConnector"
-import { web3AuthInit, web3EIP1193Provider } from "./services/web3auth"
+import { web3AuthEIP1193Provider, web3AuthInit } from "./services/web3auth"
 
 export { FirebaseConnector }
 export const configs = {
@@ -11,4 +11,4 @@ export const configs = {
 }
 
 export const init = web3AuthInit
-export const defaultProvider = web3EIP1193Provider
+export const defaultProvider = web3AuthEIP1193Provider

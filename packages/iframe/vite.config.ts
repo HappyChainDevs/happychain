@@ -15,6 +15,7 @@ export default defineConfig(({ command }) => ({
     ],
     resolve: {
         alias: {
+            // https://web3auth.io/docs/troubleshooting/vite-issues
             crypto: "empty-module",
             http: "empty-module",
             https: "empty-module",

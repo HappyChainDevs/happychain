@@ -1,12 +1,12 @@
 /**
  * Web3Auth Required Polyfills
  * For use in a SharedWorker context as in a regular context.
- * In a regular build system there are easier ways to polyfill
- * but in the web worker its not so easy
+ * In a regular build system there are easier ways to polyfill,
+ * but in the web worker it's not so easy.
  */
 
 // supply window.Buffer functionality
-// biome-ignore lint/style/useNodejsImportProtocol: its the npm module polyfill, not the nodejs import
+// biome-ignore lint/style/useNodejsImportProtocol: it's the npm module polyfill, not the Node.js import
 import Buffer from "buffer"
 globalThis.Buffer = globalThis.Buffer || Buffer.Buffer
 
@@ -17,14 +17,13 @@ if (typeof global === "undefined") {
 
 // web3Auth uses window.XXX but window is not defined in the SharedWorker
 if (typeof window === "undefined") {
-    // @ts-expect-error web3auth accesses this, but its not available in SharedWorker context
-    // and its not compiled away by vite
+    // @ts-expect-error
     globalThis.window = globalThis
 }
 
-// web3Auth uses process.env.NODE_DEBUG but process.env is not defined in the SharedWorker
-// we make use of other env variables for the web3 setup also
+// Web3Auth uses process.env.NODE_DEBUG but process.env is not defined in the SharedWorker.
+// We make use of other env variables for the Web3Auth setup also.
 if (typeof process === "undefined") {
-    // @ts-expect-error web3auth accesses this, but its not available in SharedWorker context
+    // @ts-expect-error
     globalThis.process = { env: import.meta.env }
 }
