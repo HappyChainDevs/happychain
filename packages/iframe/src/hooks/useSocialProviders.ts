@@ -16,17 +16,18 @@ import { emitUserUpdate } from "../utils/emitUserUpdate"
 // the modal, who disappears upon log in, to be taken over by the use of the same hook in /embed.
 // This is a big hack, the listener should exist outside of React.
 
-const googleProvider = new FirebaseConnector({
+const googleConnector = new FirebaseConnector({
     ...configs.google,
-    onConnect: onConnect,
-    onReconnect: onReconnect,
-    onDisconnect: onDisconnect,
+    onConnect,
+    onReconnect,
+    onDisconnect,
 })
 
-const providers = [googleProvider].map(
+const providers = [googleConnector].map(
     (provider) =>
         ({
             ...provider,
+            disable: provider.disable,
             enable: async () => {
                 try {
                     // will automatically disable loading state when user+provider are set
@@ -37,7 +38,6 @@ const providers = [googleProvider].map(
                     throw e
                 }
             },
-            disable: provider.disable,
         }) as ConnectionProvider,
 )
 
@@ -45,21 +45,21 @@ export function useSocialProviders() {
     const { connectAsync, connectors } = useConnect()
     const { disconnectAsync } = useDisconnect()
     const user = useAtomValue(userAtom)
-    const { status } = useAccount()
+    const { status: wagmiStatus } = useAccount()
     /**
      * Connect wagmi on user details changing
      */
     useEffect(() => {
         // TODO: this works but applies to injected wallets also, need to decide how to handle injected wallets!
         const init = async () => {
-            if (user && status === "disconnected") {
+            if (user && wagmiStatus === "disconnected") {
                 await connectAsync({ connector: connectors[0] })
-            } else if (!user && status === "connected") {
+            } else if (!user && wagmiStatus === "connected") {
                 await disconnectAsync()
             }
         }
         init()
-    }, [user, connectAsync, connectors, disconnectAsync, status])
+    }, [user, connectAsync, connectors, disconnectAsync, wagmiStatus])
 
     return providers
 }
