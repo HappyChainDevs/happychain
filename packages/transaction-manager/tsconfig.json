@@ -1,5 +1,5 @@
 {
-    "extends": ["@happychain/configs/tsconfig.base.json", "@happychain/configs/tsconfig.types.json"],
+    "extends": "@happychain/configs/tsconfig.base.json",
     "include": ["lib", "package.json"],
     "compilerOptions": {
         "experimentalDecorators": true,
