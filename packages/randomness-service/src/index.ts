@@ -7,8 +7,8 @@ import { anvil } from "viem/chains"
 import { abis } from "./ABI/random.js"
 import { CommitmentManager } from "./CommitmentManager.js"
 import { CommitmentTransactionFactory } from "./Factories/CommitmentTransactionFactory.js"
-import { config } from "./config.js"
 import { RevealValueTransactionFactory } from "./Factories/RevealValueTransactionFactory.js"
+import { config } from "./config.js"
 
 class RandomnessService {
     private readonly commitmentManager: CommitmentManager
@@ -22,10 +22,7 @@ class RandomnessService {
             config.randomContractAddress,
             config.precommitDelay,
         )
-        this.revealValueTransactionFactory = new RevealValueTransactionFactory(
-            anvil.id,
-            config.randomContractAddress,
-        )
+        this.revealValueTransactionFactory = new RevealValueTransactionFactory(anvil.id, config.randomContractAddress)
         this.txm = new TransactionManager({
             account: privateKeyToAccount(config.privateKey),
             transport: http(),

@@ -1,6 +1,6 @@
 import crypto from "node:crypto"
 import type { Hex } from "viem"
-import { keccak256, toHex, encodePacked } from "viem"
+import { encodePacked, keccak256 } from "viem"
 
 interface Commitment {
     value: bigint

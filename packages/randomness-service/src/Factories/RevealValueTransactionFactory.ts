@@ -1,6 +1,5 @@
-import type { Address } from "viem"
 import { Transaction } from "@happychain/transaction-manager"
-
+import type { Address } from "viem"
 
 export class RevealValueTransactionFactory {
     private readonly chainId: number

@@ -1,5 +1,5 @@
-import type { Address, Hex } from "viem"
 import { Transaction } from "@happychain/transaction-manager"
+import type { Address, Hex } from "viem"
 
 export class CommitmentTransactionFactory {
     private readonly chainId: number
