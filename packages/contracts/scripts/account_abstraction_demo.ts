@@ -320,9 +320,7 @@ async function sendDirectTransactions(count = 1): Promise<bigint> {
 }
 
 async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    console.log("\nSending a Single UserOp :-")
-    const directTxnGas = await sendDirectTransactions(1)
-    console.log("Direct Transaction Gas:", directTxnGas)
+    console.log("\nSending a Single UserOp (Smart Account already Deployed):-")
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelAccount,
@@ -359,15 +357,15 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
     const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed
     console.log("\nBundler Overhead (Gas Used):", bundlerOverhead)
+    const directTxnGas = await sendDirectTransactions(1)
+    console.log("Direct Transaction Gas:", directTxnGas)
     const extraCostOfUsingUserOp = receipt.actualGasUsed - directTxnGas
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostOfUsingUserOp)
     console.log("------------------------------------------------\n")
 }
 
 async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    console.log("Sending a Single UserOp with 5 transfer Calls")
-    const directTxGas = await sendDirectTransactions(5)
-    console.log("\nDirect Transaction Gas:", directTxGas)
+    console.log("Sending a Single UserOp with 5 transfer Calls (Smart Account already Deployed) :-")
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelAccount,
@@ -411,13 +409,17 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
     console.log("  Txn.gasUsed: ", receipt.receipt.gasUsed)
     const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed
     console.log("\nBundler Overhead (Gas Used):", bundlerOverhead)
+    const directTxGas = await sendDirectTransactions(5)
+    console.log("\nDirect Transaction Gas:", directTxGas)
     const extraCostUsingUserOp = receipt.actualGasUsed - directTxGas
     console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas):", extraCostUsingUserOp)
     console.log("\n------------------------------------------------\n")
 }
 
 async function batchedUserOperationsGasResult() {
-    console.log("Sending 5 separate UserOps from unique senders :-")
+    console.log(
+        "Sending multiple UserOps from unique senders (userOps involve deployment of Smart Contract Account) :-",
+    )
 
     const privateKey1 = generatePrivateKey()
     const privateKey2 = generatePrivateKey()
@@ -558,41 +560,30 @@ async function batchedUserOperationsGasResult() {
     const txn0Count = receipts.filter((receipt) => receipt.receipt.transactionIndex === 0).length
     const txn1Count = receipts.filter((receipt) => receipt.receipt.transactionIndex === 1).length
 
-    // Pick the transactions with more userOps (receipt1) and fewer userOps (receipt2)
-    const receipt1 =
+    const receipts1 =
         txn0Count >= txn1Count
-            ? receipts.find((receipt) => receipt.receipt.transactionIndex === 0)
-            : receipts.find((receipt) => receipt.receipt.transactionIndex === 1)
+            ? receipts.filter((receipt) => receipt.receipt.transactionIndex === 0)
+            : receipts.filter((receipt) => receipt.receipt.transactionIndex === 1)
 
-    const receipt2 =
-        txn0Count < txn1Count
-            ? receipts.find((receipt) => receipt.receipt.transactionIndex === 0)
-            : receipts.find((receipt) => receipt.receipt.transactionIndex === 1)
+    console.log(`Bundle with ${receipts1.length} UserOps :-`)
+    console.log("  Block: ", receipts1[0].receipt.blockNumber)
+    console.log("  Txn Index: ", receipts1[0].receipt.transactionIndex)
+    console.log("  Actual Gas Used for each UserOp:")
+    receipts1.forEach((receipt, index) => {
+        console.log(`    UserOp${index + 1}: `, receipt.actualGasUsed)
+    })
 
-    if (!receipt1 || !receipt2) {
-        throw new Error("No receipt found for either receipt1 or receipt2")
-    }
+    const totalActualGas = receipts1.reduce((acc, receipt) => acc + receipt.actualGasUsed, BigInt(0))
+    console.log("  Total ActualGas Used: ", totalActualGas)
 
-    console.log(`\nBundle #1: containing ${txn0Count >= txn1Count ? txn0Count : txn1Count} userOps:`)
-    console.log("  Block: ", receipt1.receipt.blockNumber)
-    console.log("  Txn Index: ", receipt1.receipt.transactionIndex)
-    console.log("  Actual Gas Used: ", receipt1.actualGasUsed)
-    console.log("  Txn.gasUsed: ", receipt1.receipt.gasUsed)
-    console.log("\nBundler Overhead: ", receipt1.receipt.gasUsed - receipt1.actualGasUsed)
-    const directTxnGas1 = await sendDirectTransactions(txn0Count >= txn1Count ? txn0Count : txn1Count)
-    console.log("  Extra Gas Used with UserOps (for the first userOp): ", receipts[0].receipt.gasUsed - directTxnGas1)
-
-    console.log(`\nBundle #2: containing ${txn0Count < txn1Count ? txn0Count : txn1Count} userOps:`)
-    console.log("  Block: ", receipt2.receipt.blockNumber)
-    console.log("  Txn Index: ", receipt2.receipt.transactionIndex)
-    console.log("  Actual Gas Used: ", receipt2.actualGasUsed)
-    console.log("  Txn.gasUsed: ", receipt2.receipt.gasUsed)
-    console.log("\nBundler Overhead: ", receipt2.receipt.gasUsed - receipt2.actualGasUsed)
-    const directTxnGas2 = await sendDirectTransactions(txn0Count >= txn1Count ? txn1Count : txn0Count)
-    console.log("  Extra Gas Used with UserOps (for the first userOp): ", receipts[0].receipt.gasUsed - directTxnGas2)
+    console.log("  Txn.gasUsed (Total for batch): ", receipts1[0].receipt.gasUsed)
+    console.log("\nBundler Overhead: ", totalActualGas - receipts1[0].receipt.gasUsed)
+    const directTxnGas = await sendDirectTransactions(receipts1.length)
+    console.log("Direct Transaction Gas: ", directTxnGas)
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas): ", totalActualGas - directTxnGas)
 
     console.log("\n------------------------------------------------\n")
-    console.log("Gas Usage on second userOp (smart account already deployed) :-\n")
+    console.log("Gas Usage on UserOps when Smart Account are already deployed :-\n")
 
     const u1 = kernelClient1.sendUserOperation({
         account: kernelAccount1,
@@ -609,7 +600,17 @@ async function batchedUserOperationsGasResult() {
         calls: [createEthTransferCall()],
     })
 
-    const uHashes = await Promise.all([u1, u2, u3])
+    const u4 = kernelClient4.sendUserOperation({
+        account: kernelAccount4,
+        calls: [createEthTransferCall()],
+    })
+
+    const u5 = kernelClient5.sendUserOperation({
+        account: kernelAccount5,
+        calls: [createEthTransferCall()],
+    })
+
+    const uHashes = await Promise.all([u1, u2, u3, u4, u5])
 
     const r01 = kernelClient1.waitForUserOperationReceipt({
         hash: uHashes[0],
@@ -620,24 +621,38 @@ async function batchedUserOperationsGasResult() {
     const r03 = kernelClient3.waitForUserOperationReceipt({
         hash: uHashes[2],
     })
+    const r04 = kernelClient4.waitForUserOperationReceipt({
+        hash: uHashes[3],
+    })
+    const r05 = kernelClient5.waitForUserOperationReceipt({
+        hash: uHashes[4],
+    })
 
-    const receipts0 = await Promise.all([r01, r02, r03])
-    if (
-        receipts0[0].receipt.transactionIndex !== receipts0[1].receipt.transactionIndex ||
-        receipts0[0].receipt.transactionIndex !== receipts0[2].receipt.transactionIndex
-    ) {
-        throw new Error("All userOps should have same txn index")
-    }
-    const r = receipts0[0]
+    const rcpts = await Promise.all([r01, r02, r03, r04, r05])
+    const txn0Cnt = rcpts.filter((receipt) => receipt.receipt.transactionIndex === 0).length
+    const txn1Cnt = rcpts.filter((receipt) => receipt.receipt.transactionIndex === 1).length
 
-    console.log("\nBundle containing 3 userOps:")
-    console.log("  Block: ", r.receipt.blockNumber)
-    console.log("  Txn Index: ", r.receipt.transactionIndex)
-    console.log("  Actual Gas Used: ", r.actualGasUsed)
-    console.log("  Txn.gasUsed: ", r.receipt.gasUsed)
-    console.log("\nBundler Overhead: ", r.receipt.gasUsed - r.actualGasUsed)
-    const directTxnGas = await sendDirectTransactions(3)
-    console.log("  Extra Gas Used with UserOps (for the first userOp): ", r.receipt.gasUsed - directTxnGas)
+    const receipts2 =
+        txn0Cnt >= txn1Cnt
+            ? rcpts.filter((receipt) => receipt.receipt.transactionIndex === 0)
+            : rcpts.filter((receipt) => receipt.receipt.transactionIndex === 1)
+
+    console.log(`Bundle with ${receipts2.length} UserOps :-`)
+    console.log("  Block: ", receipts2[0].receipt.blockNumber)
+    console.log("  Txn Index: ", receipts2[0].receipt.transactionIndex)
+    console.log("  Actual Gas Used for each UserOp:")
+    receipts2.forEach((receipt, index) => {
+        console.log(`    UserOp${index + 1}: `, receipt.actualGasUsed)
+    })
+
+    const totalActualGasUsed = receipts1.reduce((acc, receipt) => acc + receipt.actualGasUsed, BigInt(0))
+    console.log("  Total ActualGas Used: ", totalActualGas)
+
+    console.log("  Txn.gasUsed (Total for batch): ", receipts1[0].receipt.gasUsed)
+    console.log("\nBundler Overhead: ", totalActualGasUsed - receipts1[0].receipt.gasUsed)
+    const directTxnGasUsed = await sendDirectTransactions(receipts2.length)
+    console.log("Direct Transaction Gas: ", directTxnGasUsed)
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas): ", totalActualGas - directTxnGasUsed)
     console.log("\n------------------------------------------------\n")
 }
 
@@ -749,6 +764,22 @@ async function main() {
     console.log("\n------------------------------------------------")
     console.log("Gas Usage Results :-")
     console.log("------------------------------------------------")
+
+    console.log("\nGas Fields Explained:")
+    console.log("- DirectTxnGas: Gas cost for a normal transaction, used as a baseline for comparison.")
+    console.log(
+        "- actualGasUsed: Total gas used by the entire user operation, including bundler and EntryPoint processing.",
+    )
+    console.log("- receipt.gasUsed: Gas used by the transaction with the UserOps Bundle from bundler to EntryPoint.")
+    console.log(
+        "- Bundler Overhead: Difference between actualGasUsed and receipt.gasUsed, representing extra cost of the bundler.",
+    )
+
+    console.log("\nPaymaster Gas Fields:")
+    console.log("- PreVerificationGas: Gas used before validating the userOp (e.g., signature checks).")
+    console.log("- VerificationGasLimit: Gas limit for full validation of the userOp.")
+    console.log("- CallGasLimit: Gas allocated for executing the actual userOp (e.g., transfers or contract calls).")
+    console.log("\n------------------------------------------------\n")
 
     try {
         await singleUserOperationGasResult(kernelAccount, kernelClient)
