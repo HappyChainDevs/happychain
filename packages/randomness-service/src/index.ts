@@ -8,17 +8,23 @@ import { abis } from "./ABI/random.js"
 import { CommitmentManager } from "./CommitmentManager.js"
 import { CommitmentTransactionFactory } from "./Factories/CommitmentTransactionFactory.js"
 import { config } from "./config.js"
+import { RevealValueTransactionFactory } from "./Factories/RevealValueTransactionFactory.js"
 
 class RandomnessService {
     private readonly commitmentManager: CommitmentManager
     private readonly txm: TransactionManager
     private readonly commitmentTransactionFactory: CommitmentTransactionFactory
+    private readonly revealValueTransactionFactory: RevealValueTransactionFactory
     constructor() {
         this.commitmentManager = new CommitmentManager()
         this.commitmentTransactionFactory = new CommitmentTransactionFactory(
             anvil.id,
             config.randomContractAddress,
             config.precommitDelay,
+        )
+        this.revealValueTransactionFactory = new RevealValueTransactionFactory(
+            anvil.id,
+            config.randomContractAddress,
         )
         this.txm = new TransactionManager({
             account: privateKeyToAccount(config.privateKey),
@@ -31,15 +37,23 @@ class RandomnessService {
 
     async start() {
         this.txm.start()
-        this.txm.addTransactionCollector(this.onCollectTransactions)
+        this.txm.addTransactionCollector(this.onCollectTransactions.bind(this))
     }
 
     private onCollectTransactions(block: LatestBlock): Transaction[] {
-        const commitment = this.commitmentManager.generateCommitment(
-            block.timestamp + config.precommitDelay + config.postCommitMargin,
+        const commitmentTimestamp = block.timestamp + config.precommitDelay + config.postCommitMargin
+        const commitment = this.commitmentManager.generateCommitmentForTimestamp(commitmentTimestamp)
+        const commitmentTransaction = this.commitmentTransactionFactory.create(
+            commitmentTimestamp,
+            commitment.commitment,
         )
-        const transaction = this.commitmentTransactionFactory.create(block.timestamp, commitment)
-        return [transaction]
+
+        const revealValueTransaction = this.revealValueTransactionFactory.create(
+            block.timestamp + config.timeBlock,
+            commitment.value,
+        )
+
+        return [commitmentTransaction, revealValueTransaction]
     }
 }
 

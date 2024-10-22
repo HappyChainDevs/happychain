@@ -1,17 +1,39 @@
 import crypto from "node:crypto"
 import type { Hex } from "viem"
-import { toHex } from "viem"
+import { keccak256, toHex, encodePacked } from "viem"
+
+interface Commitment {
+    value: bigint
+    commitment: Hex
+}
 
 export class CommitmentManager {
-    private readonly map = new Map<bigint, Hex>()
+    private readonly map = new Map<bigint, Commitment>()
 
-    generateCommitment(timestamp: bigint): Hex {
-        const commitment = toHex(crypto.randomBytes(32))
-        this.map.set(timestamp, commitment)
-        return commitment
+    generateCommitmentForTimestamp(timestamp: bigint): Commitment {
+        const value = this.generateRandomness()
+        const commitment = this.hashValue(value)
+        const commitmentObject = { value, commitment }
+        this.map.set(timestamp, commitmentObject)
+        return commitmentObject
     }
 
-    getCommitmentForTimestamp(timestamp: bigint): Hex | undefined {
+    getCommitmentForTimestamp(timestamp: bigint): Commitment | undefined {
         return this.map.get(timestamp)
+    }
+
+    private generateRandomness(): bigint {
+        const bytes = crypto.randomBytes(32)
+        let hex = "0x"
+
+        for (const byte of bytes) {
+            hex += byte.toString(16).padStart(2, "0")
+        }
+
+        return BigInt(hex)
+    }
+
+    private hashValue(value: bigint): Hex {
+        return keccak256(encodePacked(["uint256"], [value]))
     }
 }
