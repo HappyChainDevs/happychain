@@ -538,19 +538,15 @@ async function batchedUserOperationsGasResult() {
     const r1 = kernelClient1.waitForUserOperationReceipt({
         hash: hashes[0],
     })
-
     const r2 = kernelClient2.waitForUserOperationReceipt({
         hash: hashes[1],
     })
-
     const r3 = kernelClient3.waitForUserOperationReceipt({
         hash: hashes[2],
     })
-
     const r4 = kernelClient4.waitForUserOperationReceipt({
         hash: hashes[3],
     })
-
     const r5 = kernelClient5.waitForUserOperationReceipt({
         hash: hashes[4],
     })
@@ -645,14 +641,13 @@ async function batchedUserOperationsGasResult() {
         console.log(`    UserOp${index + 1}: `, receipt.actualGasUsed)
     })
 
-    const totalActualGasUsed = receipts1.reduce((acc, receipt) => acc + receipt.actualGasUsed, BigInt(0))
-    console.log("  Total ActualGas Used: ", totalActualGas)
-
-    console.log("  Txn.gasUsed (Total for batch): ", receipts1[0].receipt.gasUsed)
-    console.log("\nBundler Overhead: ", totalActualGasUsed - receipts1[0].receipt.gasUsed)
+    const totalActualGasUsed = receipts2.reduce((acc, receipt) => acc + receipt.actualGasUsed, BigInt(0))
+    console.log("  Total ActualGas Used: ", totalActualGasUsed)
+    console.log("  Txn.gasUsed (Total for the bundle): ", receipts2[0].receipt.gasUsed)
+    console.log("\nBundler Overhead: ", totalActualGasUsed - receipts2[0].receipt.gasUsed)
     const directTxnGasUsed = await sendDirectTransactions(receipts2.length)
     console.log("Direct Transaction Gas: ", directTxnGasUsed)
-    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas): ", totalActualGas - directTxnGasUsed)
+    console.log("Extra Cost of Using a UserOp vs Direct Transaction (Gas): ", totalActualGasUsed - directTxnGasUsed)
     console.log("\n------------------------------------------------\n")
 }
 
