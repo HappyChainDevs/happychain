@@ -11,9 +11,9 @@ function App() {
 
     const { provider, user, connect, disconnect, showSendScreen } = useHappyChain()
 
-    const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
+    const publicClient = useMemo(() => createPublicClient({ transport: custom(provider!) }), [provider])
     const walletClient = useMemo(
-        () => user?.address && createWalletClient({ account: user.address, transport: custom(provider) }),
+        () => user?.address && createWalletClient({ account: user.address, transport: custom(provider!) }),
         [user, provider],
     )
 

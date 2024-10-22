@@ -5,58 +5,82 @@ import type {
     ProviderMsgsFromApp,
     ProviderMsgsFromIframe,
 } from "@happychain/sdk-shared"
-import { EventBus, EventBusMode, config } from "@happychain/sdk-shared"
-import { ModalStates, Msgs } from "@happychain/sdk-shared"
+import { EventBus, EventBusMode, ModalStates, Msgs, config } from "@happychain/sdk-shared"
 import { announceProvider } from "mipd"
 import type { EIP1193Provider } from "viem"
-import { createUUID } from "../common-utils"
-import { HappyProvider } from "./happyProvider"
+import { type UUID, createUUID } from "../common-utils"
+import { HappyProvider, HappyProviderSSRSafe } from "./happyProvider"
 import { icon64x64 } from "./icons"
 import type { HappyProviderPublic } from "./interface"
 import { registerListeners } from "./listeners"
 
 /**
- * Unique Window UUID
- *
+ * Unique Window UUID.
+ * Falls back to "server" in SSR environments.
  * @internal
  */
-export const windowId = createUUID()
+export const windowId = typeof window === "undefined" ? "server" : createUUID()
+
+let iframeMessageBus: EventBus<MsgsFromIframe, MsgsFromApp> | null = null
+let provider: (HappyProvider & EIP1193Provider) | null = null
+let iframeReady = false
+let user: HappyUser | undefined
+let unsubscribeProvider: (() => void) | null = null
 
 /**
- * App side of the app <> iframe general purpose message bus.
- *
- * This will be used to send UI requests to the iframe, receive auth updates, etc.
+ * Initializes the Happy Account wallet state and communication with the iframe.
+ * Handles authentication, connection, and messaging between app and iframe contexts.
  */
-const iframeMessageBus = new EventBus<MsgsFromIframe, MsgsFromApp>({
-    mode: EventBusMode.AppPort,
-    scope: "happy-chain-dapp-bus",
-})
+function initializeProvider() {
+    if (typeof window === "undefined") return null
+    if (provider) return provider
 
-export const { onUserUpdate, onModalUpdate, onAuthStateUpdate, onIframeInit } = registerListeners(iframeMessageBus)
+    iframeMessageBus = new EventBus<MsgsFromIframe, MsgsFromApp>({
+        mode: EventBusMode.AppPort,
+        scope: "happy-chain-dapp-bus",
+    })
 
-let iframeReady = false
+    const { onUserUpdate: _onUserUpdate, onIframeInit: _onIframeInit } = registerListeners(iframeMessageBus)
 
-onIframeInit((ready: boolean) => {
-    iframeReady = ready
-})
+    _onIframeInit((ready: boolean) => {
+        iframeReady = ready
+    })
 
-let user: HappyUser | undefined
+    _onUserUpdate((_user?: HappyUser) => {
+        user = _user
+    })
 
-onUserUpdate((_user?: HappyUser) => {
-    user = _user
-})
+    provider = new HappyProvider({
+        iframePath: config.iframePath,
+        windowId: windowId as UUID,
+        providerBus: new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>({
+            mode: EventBusMode.AppPort,
+            scope: "happy-chain-eip1193-provider",
+        }),
+        msgBus: iframeMessageBus,
+    }) as HappyProvider & EIP1193Provider
+
+    unsubscribeProvider = announceProvider({
+        info: {
+            icon: icon64x64,
+            name: "HappyWallet",
+            rdns: "tech.happy",
+            uuid: createUUID(),
+        },
+        provider: provider,
+    })
+
+    return provider
+}
+
+function getInitializedProvider() {
+    return provider ?? initializeProvider()
+}
 
 /**
  * @returns The user currently connected to the app, if any.
- *
- * @example
- * ```ts twoslash
- * import { getCurrentUser } from '@happychain/js'
- * // ---cut---
- * const user = getCurrentUser()
- * ```
  */
-export function getCurrentUser(): HappyUser | undefined {
+export const getCurrentUser = (): HappyUser | undefined => {
     if (!iframeReady) {
         console.warn("getCurrentUser was called before happychain-sdk was ready. result will be empty")
     }
@@ -64,22 +88,46 @@ export function getCurrentUser(): HappyUser | undefined {
 }
 
 /**
- * This is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider}
- * and is an initialized instance of {@link HappyProvider}.
+ * Connect the app to the Happy Account (will prompt user for permission).
  */
-export const happyProvider = new HappyProvider({
-    iframePath: config.iframePath,
+export const connect = async (): Promise<void> => {
+    const _provider = getInitializedProvider()
+    if (!_provider) return
 
-    windowId,
+    await _provider.request({
+        method: "wallet_requestPermissions",
+        params: [{ eth_accounts: {} }],
+    })
+}
 
-    providerBus: new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>({
-        mode: EventBusMode.AppPort,
-        scope: "happy-chain-eip1193-provider",
-    }),
-    msgBus: iframeMessageBus,
-    // Cast to EIP1193 provider for compatibility with Viem/Wagmi.
-    // In practice the 'request' functions are compatible, but the types don't line up for now.
-}) as HappyProvider & EIP1193Provider
+/**
+ * Disconnect the app from the Happy Account.
+ */
+export const disconnect = async (): Promise<void> => {
+    const _provider = getInitializedProvider()
+    if (!_provider) return
+
+    await _provider.request({
+        method: "wallet_revokePermissions",
+        params: [{ eth_accounts: {} }],
+    })
+}
+
+/**
+ * Display the send screen in the iframe
+ */
+export const showSendScreen = (): void => {
+    void iframeMessageBus?.emit(Msgs.RequestDisplay, ModalStates.Send)
+}
+
+/**
+ * This is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider}
+ */
+export const happyProvider = (
+    typeof window === "undefined"
+        ? new HappyProviderSSRSafe()
+        : (provider ?? initializeProvider() ?? new HappyProviderSSRSafe())
+) as HappyProvider & EIP1193Provider
 
 /**
  * HappyProvider is a EIP1193 Ethereum Provider {@link https://eips.ethereum.org/EIPS/eip-1193}
@@ -97,50 +145,15 @@ export const happyProvider = new HappyProvider({
  */
 export const happyProviderPublic: HappyProviderPublic = happyProvider
 
-/**
- * Connect the app to the Happy Account (will prompt user for permission).
- *
- * @returns true if successful, otherwise false
- */
-export const connect = async () => {
-    try {
-        await happyProvider.request({
-            method: "wallet_requestPermissions",
-            params: [{ eth_accounts: {} }],
-        })
-        return true
-    } catch {
-        return false
-    }
+const getListeners = () => {
+    return iframeMessageBus
+        ? registerListeners(iframeMessageBus)
+        : {
+              onUserUpdate: () => () => {},
+              onModalUpdate: () => () => {},
+              onAuthStateUpdate: () => () => {},
+              onIframeInit: () => () => {},
+          }
 }
 
-/**
- * Disconnect the app from the Happy Account.
- *
- * @returns true if successful, otherwise false
- */
-export const disconnect = async () => {
-    try {
-        await happyProvider.request({
-            method: "wallet_revokePermissions",
-            params: [{ eth_accounts: {} }],
-        })
-        return true
-    } catch {
-        return false
-    }
-}
-
-export const unsubscribe = announceProvider({
-    info: {
-        icon: icon64x64,
-        name: "HappyWallet",
-        rdns: "tech.happy",
-        uuid: createUUID(),
-    },
-    provider: happyProvider,
-})
-
-export const showSendScreen = () => {
-    void iframeMessageBus.emit(Msgs.RequestDisplay, ModalStates.Send)
-}
+export const { onUserUpdate, onModalUpdate, onAuthStateUpdate, onIframeInit } = getListeners()

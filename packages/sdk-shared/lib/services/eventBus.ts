@@ -1,6 +1,16 @@
 import { waitForCondition } from "../utils/waitForCondition"
 import { type Logger, silentLogger } from "./logger"
 
+// Browser APIs type definition for SSR safety
+type BrowserGlobal = typeof globalThis & {
+    MessageChannel?: {
+        new (): MessageChannel
+    }
+    BroadcastChannel?: {
+        new (scope: string): BroadcastChannel
+    }
+}
+
 /**
  * Defines different modes in which the event bus can operate.
  */
@@ -31,6 +41,11 @@ export type EventKey = string | number | symbol
  */
 export type EventHandler<S, K extends keyof S = keyof S> = (payload: S[K]) => void
 
+// Type-safe references to browser message port types
+type SafeMessagePort = globalThis.MessagePort
+type SafeBroadcastChannel = globalThis.BroadcastChannel
+type SafePort = SafeMessagePort | SafeBroadcastChannel
+
 /**
  * Defines name, logger, error handler, and mode for the event bus.
  */
@@ -43,7 +58,7 @@ export type EventBusOptions = {
     | { mode: EventBusMode.IframePort; target: Window }
     | { mode: EventBusMode.AppPort }
     | { mode: EventBusMode.Broadcast }
-    | { mode: EventBusMode.Forced; port: MessagePort | BroadcastChannel }
+    | { mode: EventBusMode.Forced; port: SafePort }
 )
 
 /**
@@ -58,28 +73,42 @@ export type EventBusOptions = {
  */
 export class EventBus<SL, SE = SL> {
     private handlerMap: Map<keyof SL, Set<EventHandler<SL>>> = new Map()
-    private port: MessagePort | BroadcastChannel | null = null
+    private port: SafePort | null = null
+    private isServer: boolean
 
     constructor(private config: EventBusOptions) {
-        config.logger ??= silentLogger
+        this.isServer = typeof window === "undefined"
+        if (this.isServer) return
 
-        switch (config.mode) {
+        this.config.logger ??= silentLogger
+        this.initializePort()
+    }
+
+    private initializePort(): void {
+        if (this.isServer) return
+
+        const browserGlobal = globalThis as BrowserGlobal
+        switch (this.config.mode) {
             case EventBusMode.Forced:
-                this.registerPortListener(config.port)
+                this.registerPortListener(this.config.port)
                 break
             case EventBusMode.Broadcast:
-                this.registerPortListener(new BroadcastChannel(config.scope))
+                if (browserGlobal.BroadcastChannel) {
+                    this.registerPortListener(new browserGlobal.BroadcastChannel(this.config.scope))
+                }
                 break
             case EventBusMode.IframePort: {
-                const mc = new MessageChannel()
-                this.registerPortListener(mc.port1)
-                const message = `happychain:${config.scope}:init`
-                config.target.postMessage(message, "*", [mc.port2])
+                if (browserGlobal.MessageChannel) {
+                    const mc = new browserGlobal.MessageChannel()
+                    this.registerPortListener(mc.port1)
+                    const message = `happychain:${this.config.scope}:init`
+                    this.config.target.postMessage(message, "*", [mc.port2])
+                }
                 break
             }
             case EventBusMode.AppPort: {
-                addEventListener("message", (e: MessageEvent) => {
-                    const message = `happychain:${config.scope}:init`
+                window.addEventListener("message", (e: MessageEvent) => {
+                    const message = `happychain:${this.config.scope}:init`
                     if (e.data === message) {
                         this.registerPortListener(e.ports[0])
                     }
@@ -89,7 +118,9 @@ export class EventBus<SL, SE = SL> {
         }
     }
 
-    private registerPortListener(_port: MessagePort | BroadcastChannel) {
+    private registerPortListener(_port: SafePort): void {
+        if (this.isServer) return
+
         this.port = _port
         // @notice - if using .addEventListener(...) syntax, .start() must be called manually
         // https://developer.mozilla.org/en-US/docs/Web/API/MessagePort/start
@@ -111,14 +142,18 @@ export class EventBus<SL, SE = SL> {
             const onError = this.config.onError ?? this.config.logger?.warn
             onError?.(event)
         }
-        this.config.logger?.log(
-            `[EventBus] Port initialized ${this.config.mode}=>${this.config.scope}`,
-            location.origin,
-        )
+
+        if (!this.isServer) {
+            this.config.logger?.log(
+                `[EventBus] Port initialized ${this.config.mode}=>${this.config.scope}`,
+                location.origin,
+            )
+        }
     }
 
     /** Remove event handler. */
-    public off<Key extends keyof SL>(key: Key, handler: EventHandler<SL, Key>) {
+    public off<Key extends keyof SL>(key: Key, handler: EventHandler<SL, Key>): void {
+        if (this.isServer) return
         this.handlerMap.get(key)?.delete(handler as EventHandler<SL>)
         if (this.handlerMap.get(key)?.size === 0) {
             this.handlerMap.delete(key)
@@ -127,6 +162,8 @@ export class EventBus<SL, SE = SL> {
 
     /** Register Event handler. */
     public on<Key extends keyof SL>(key: Key, handler: EventHandler<SL, Key>): () => void {
+        if (this.isServer) return () => {}
+
         const prev = this.handlerMap.get(key) ?? new Set()
         this.handlerMap.set(key, prev.add(handler as EventHandler<SL>))
 
@@ -135,7 +172,9 @@ export class EventBus<SL, SE = SL> {
     }
 
     /** Emit event. */
-    public async emit<Key extends keyof SE>(key: Key, payload: SE[Key]) {
+    public async emit<Key extends keyof SE>(key: Key, payload: SE[Key]): Promise<boolean> {
+        if (this.isServer) return false
+
         if (!this.port) {
             this.config.logger?.warn(
                 `[EventBus] Port not initialized ${this.config.mode}=>${this.config.scope}`,
@@ -145,7 +184,6 @@ export class EventBus<SL, SE = SL> {
             // to retry until connection is made
             try {
                 await waitForCondition(() => Boolean(this.port), 30_000, 50)
-
                 this.port!.postMessage({
                     scope: this.config.scope,
                     type: key,
@@ -164,11 +202,13 @@ export class EventBus<SL, SE = SL> {
             payload,
         })
 
-        return Boolean(this.port) // if port exists, assume successful
+        return true
     }
 
     /** Register event handler that will be removed after the first invocation. */
-    public once<Key extends keyof SL>(key: Key, handler: EventHandler<SL, Key>) {
+    public once<Key extends keyof SL>(key: Key, handler: EventHandler<SL, Key>): void {
+        if (this.isServer) return
+
         const handleOnce: typeof handler = (payload) => {
             handler(payload)
             this.off(key, handleOnce)
@@ -178,7 +218,9 @@ export class EventBus<SL, SE = SL> {
     }
 
     /** Remove all event handlers. */
-    public clear() {
+    public clear(): void {
+        if (this.isServer) return
+
         this.handlerMap.forEach((handlers, key) => {
             for (const handler of handlers) {
                 this.off(key, handler)
