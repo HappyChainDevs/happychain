@@ -4,7 +4,9 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "paths": {
-            "ts-node": ["./node_modules/ts-node/dist/bin.js"] // Overrides ts-node to version 11 because mikro-orm requires this version for compatibility with multiple files in the tsconfig extends field
+            // Overrides ts-node to version 11 because mikro-orm requires this version for
+            // compatibility with multiple files in the tsconfig extends field.
+            "ts-node": ["./node_modules/ts-node/dist/bin.js"]
         }
     }
 }
