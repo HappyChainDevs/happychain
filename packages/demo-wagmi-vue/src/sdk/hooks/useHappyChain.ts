@@ -10,6 +10,6 @@ onUserUpdate((_user) => {
 export function useHappyChain(): { user: Ref<HappyUser | undefined>; happyProvider: HappyProvider } {
     return {
         user,
-        happyProvider,
+        happyProvider: happyProvider!,
     }
 }

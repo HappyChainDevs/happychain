@@ -1,6 +1,6 @@
 import { createConfig, custom } from "@wagmi/vue"
 import { sepolia } from "@wagmi/vue/chains"
-import { happyProvider } from "./sdk"
+import { type HappyProvider, happyProvider } from "./sdk"
 export { WagmiPlugin } from "@wagmi/vue"
 
 import { injected } from "@wagmi/vue/connectors"
@@ -33,6 +33,6 @@ export const config = createConfig({
     multiInjectedProviderDiscovery: false, // toggle on to display native injected browsers
     connectors: [happyConnector],
     transports: {
-        [sepolia.id]: custom(happyProvider),
+        [sepolia.id]: custom(happyProvider as HappyProvider),
     },
 })
