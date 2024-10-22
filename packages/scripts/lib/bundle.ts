@@ -33,11 +33,17 @@ export async function build({
     const cleanupPaths: string[][] = []
 
     const start = performance.now()
+
     for (const [i, config] of configs.entries()) {
         if (config.name) {
             pkgConfigName = join(pkg.name, config.name)
+        } else if (configs.length === 1) {
+            pkgConfigName = pkg.name
         } else if (config.exports) {
-            pkgConfigName = join(pkg.name, ...config.exports)
+            pkgConfigName =
+                config.exports.length === 1
+                    ? join(pkg.name, config.exports[0])
+                    : join(pkg.name, `{${config.exports.join(", ")}`)
         }
 
         const t0 = performance.now()
