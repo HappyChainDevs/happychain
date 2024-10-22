@@ -3,5 +3,5 @@ export enum AuthStates {
     Disconnecting = "disconnecting",
     Connected = "connected",
     Connecting = "connecting",
-    Reconnecting = "re-connecting",
+    Reconnecting = "reconnecting",
 }

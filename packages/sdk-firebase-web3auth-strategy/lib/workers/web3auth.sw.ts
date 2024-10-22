@@ -1,10 +1,10 @@
 import "./web3auth.polyfill"
+import { waitForCondition } from "@happychain/sdk-shared"
 import type { MessageCallback, ServerInterface } from "@happychain/worker/runtime"
 import { tssLib } from "@toruslabs/tss-dkls-lib"
 import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider"
 import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from "@web3auth/mpc-core-kit"
 import { config } from "../services/config"
-import { poll } from "../utils"
 
 declare const worker: ServerInterface // available within the context of the worker
 export declare function addMessageListener<T>(_fn: MessageCallback<T>): void
@@ -41,7 +41,6 @@ const ethereumSigningProvider = new EthereumSigningProvider({
             ticker: config.nativeCurrency.symbol,
             tickerName: config.nativeCurrency.name,
             decimals: config.nativeCurrency.decimals,
-
             wsTarget: undefined, // unsupported currently
         },
     },
@@ -70,19 +69,12 @@ ethereumSigningProvider.on("accountsChanged", (data) => {
     worker.broadcast({ action: "accountsChanged", data })
 })
 
-/**
- * Exported functions
- * - init
- * - request (EIP1193Request)
- * - connect
- * - disconnect
- */
 export async function init() {
     await web3Auth.init()
 }
 
 export async function request({ method, params }: { method: string; params?: unknown[] }) {
-    await poll(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
+    await waitForCondition(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
     return await ethereumSigningProvider.request({ method, params })
 }
 
@@ -91,7 +83,7 @@ export function isConnected() {
 }
 
 export async function connect(jwt: JWTLoginParams) {
-    await poll(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
+    await waitForCondition(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
 
     // if we are already logged in, then just return the saved addresses
     if (web3Auth.status === COREKIT_STATUS.LOGGED_IN && _addresses.length) {
@@ -99,7 +91,7 @@ export async function connect(jwt: JWTLoginParams) {
     }
 
     // only run if in the context of shared worker
-    await poll(() => state !== "connecting")
+    await waitForCondition(() => state !== "connecting")
 
     if (state === "connected") {
         return _addresses
@@ -133,7 +125,7 @@ export async function connect(jwt: JWTLoginParams) {
 }
 
 export async function disconnect() {
-    await poll(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
+    await waitForCondition(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
 
     if (["disconnecting", "disconnected"].includes(state)) {
         return

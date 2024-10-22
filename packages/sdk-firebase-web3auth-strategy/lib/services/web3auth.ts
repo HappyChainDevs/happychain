@@ -1,19 +1,20 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import type { JWTLoginParams } from "@web3auth/mpc-core-kit"
 import type { EIP1193Provider } from "viem"
+
 import { addMessageListener, connect, disconnect, init, request } from "../workers/web3auth.sw"
 
 /**
  * Web3Auth EIP1193 Provider. this proxies all requests to the shared worker
  * and all events from the shared worker, back to be emitted again here
  */
-class Web3ProviderProxy extends SafeEventEmitter {
+class Web3AuthProviderProxy extends SafeEventEmitter {
     async request({ method, params }: { method: string; params?: unknown[] }) {
         return await request({ method, params })
     }
 }
 
-export const web3EIP1193Provider = new Web3ProviderProxy() as EIP1193Provider
+export const web3AuthEIP1193Provider = new Web3AuthProviderProxy() as EIP1193Provider
 
 // forward events from provider
 addMessageListener((n: unknown) => {
@@ -26,7 +27,7 @@ addMessageListener((n: unknown) => {
         case "disconnect":
         case "chainChanged":
         case "accountsChanged":
-            ;(web3EIP1193Provider as Web3ProviderProxy).emit(n.action, "data" in n ? n.data : undefined)
+            ;(web3AuthEIP1193Provider as Web3AuthProviderProxy).emit(n.action, "data" in n ? n.data : undefined)
             break
     }
 })

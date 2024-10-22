@@ -395,6 +395,7 @@ disable-hooks:
 	git config --unset core.hooksPath
 .PHONY: disable-hooks
 
+# Allows git diffs for bun lockfiles https://bun.sh/docs/install/lockfile
 enable-bun-lockfile-diffs:
 	git config diff.lockb.textconv bun
 	git config diff.lockb.binary true
