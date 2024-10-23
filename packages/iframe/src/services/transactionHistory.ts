@@ -54,7 +54,7 @@ function monitorTransactionHash(address: Address, payload: PendingTxDetails) {
 
     void publicClient
         .waitForTransactionReceipt({ hash: payload.hash })
-        .then((receipt) => {
+        .then((receipt: TransactionReceipt) => {
             if (!receipt) {
                 throw new Error(`Receipt not found for transaction hash: ${payload.hash}`)
             }
@@ -64,7 +64,7 @@ function monitorTransactionHash(address: Address, payload: PendingTxDetails) {
             // Remove the tx hash from the pending list
             removePendingTxEntry(address, payload)
         })
-        .catch((error) => {
+        .catch((error: Error) => {
             console.error(`Error monitoring transaction receipt for hash: ${payload.hash}`, error)
         })
 }
@@ -92,7 +92,6 @@ export function removePendingTxEntry(address: Address, payload: PendingTxDetails
         const updatedEntries = (existingEntries[address] || []).filter(
             (pendingPayload) => pendingPayload.hash !== payload.hash,
         )
-        console.log({ updatedEntries })
 
         // If no pending transactions remain for the user, remove the user's entry
         if (updatedEntries.length === 0) {
