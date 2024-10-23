@@ -1,7 +1,13 @@
 import { generateTestUser } from "@happychain/testing"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import {
+    clearPermissions,
+    getAllPermissions,
+    grantPermissions,
+    hasPermissions,
+    revokePermissions,
+} from "#src/state/permissions.ts"
 import { setUser } from "../state/user"
-import { clearPermissions, getAllPermissions, grantPermissions, hasPermissions, revokePermissions } from "./permissions"
 
 const { appURL, iframeURL, appURLMock, requestUtilsMock } = await vi //
     .hoisted(async () => await import("#src/testing/cross_origin.mocks"))
