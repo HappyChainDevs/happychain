@@ -82,7 +82,7 @@ test-gas:
 .PHONY: test-gas
 
 gas-paymaster:
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > gas_report.txt
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --via-ir --optimizer-runs 200 --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > gas_report.txt
 .PHONY: gas-paymaster
 
 test-aa-gas-flamechart:

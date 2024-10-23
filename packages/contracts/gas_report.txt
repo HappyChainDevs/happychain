@@ -1,5 +1,5 @@
-1. userOp with paymaster storage initialization: 33550 gas
-2. userOp with cold paymaster storage: 16863 gas
-3. userOp with warm paymaster storage: 5530 gas
-4. discount for a cold userOp that isn't the first one in the bundle: 6533 gas
-5. overhead when doubling the calldata size (512 bytes vs 256 bytes): 51 gas
+1. userOp with paymaster storage initialization: 32652 gas
+2. userOp with cold paymaster storage: 15788 gas
+3. userOp with warm paymaster storage: 4457 gas
+4. discount for a cold userOp that isn't the first one in the bundle: 6531 gas
+5. overhead when doubling the calldata size (512 bytes vs 256 bytes): 52 gas
