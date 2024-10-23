@@ -349,12 +349,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     console.log("Sending a Single User Operation (Smart Account already Deployed):")
     console.log("------------------------------------------------\n")
 
-    const { receipt, directTxnGas } = await sendAndProcessUserOp(
-        kernelAccount,
-        kernelClient,
-        [createEthTransferCall()],
-        1,
-    )
+    const { receipt, directTxnGas } = await sendAndProcessUserOp(kernelAccount, kernelClient, [createEthTransferCall()])
 
     return createGasResult("Single UserOp with 1 call", directTxnGas, receipt.actualGasUsed, receipt.receipt.gasUsed, 1)
 }
@@ -364,18 +359,13 @@ async function batchedCallsGasResult(kernelAccount: SmartAccount, kernelClient: 
     console.log("Sending a Single UserOp with 5 transfer Calls (Smart Account already Deployed) :-")
     console.log("------------------------------------------------\n")
 
-    const { receipt, directTxnGas } = await sendAndProcessUserOp(
-        kernelAccount,
-        kernelClient,
-        [
-            createEthTransferCall(),
-            createEthTransferCall(),
-            createEthTransferCall(),
-            createEthTransferCall(),
-            createEthTransferCall(),
-        ],
-        5,
-    )
+    const { receipt, directTxnGas } = await sendAndProcessUserOp(kernelAccount, kernelClient, [
+        createEthTransferCall(),
+        createEthTransferCall(),
+        createEthTransferCall(),
+        createEthTransferCall(),
+        createEthTransferCall(),
+    ])
 
     return createGasResult(
         "Single UserOp with 5 calls",
@@ -390,7 +380,6 @@ async function sendAndProcessUserOp(
     kernelAccount: SmartAccount,
     kernelClient: SmartAccountClient,
     calls: UserOperationCall[],
-    count: number,
 ) {
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelAccount,
@@ -412,7 +401,7 @@ async function sendAndProcessUserOp(
         throw new Error("Validation using custom validator module failed")
     }
 
-    const directTxnGas = await sendDirectTransactions(count)
+    const directTxnGas = await sendDirectTransactions(calls.length)
     const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed
     const userOpOverhead = receipt.actualGasUsed - directTxnGas
 
