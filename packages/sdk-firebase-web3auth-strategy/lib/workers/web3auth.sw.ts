@@ -78,7 +78,8 @@ export async function request({ method, params }: { method: string; params?: unk
     return await ethereumSigningProvider.request({ method, params })
 }
 
-export function isConnected() {
+export async function isConnected() {
+    await waitForCondition(() => state !== "connecting")
     return _addresses.length > 0
 }
 
@@ -90,7 +91,7 @@ export async function connect(jwt: JWTLoginParams) {
         return _addresses
     }
 
-    // only run if in the context of shared worker
+    // avoid multiple concurrent calls
     await waitForCondition(() => state !== "connecting")
 
     if (state === "connected") {

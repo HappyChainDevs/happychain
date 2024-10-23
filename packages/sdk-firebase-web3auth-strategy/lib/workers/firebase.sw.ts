@@ -1,5 +1,5 @@
 import type { HappyUser } from "@happychain/sdk-shared"
-import { AuthStates } from "../constants/enums"
+import { FirebaseAuthState } from "./firebaseAuthState"
 
 // === SHARED USER STATE ===========================================================================
 
@@ -14,11 +14,11 @@ export async function setUser(_user?: HappyUser) {
 
 // === SHARED AUTH STATE ===========================================================================
 
-let state = AuthStates.Disconnected
+let state = FirebaseAuthState.Disconnected
 
 export function getState() {
     return state
 }
-export async function setState(_state: AuthStates) {
+export async function setState(_state: FirebaseAuthState) {
     state = _state
 }

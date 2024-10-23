@@ -1,7 +1,7 @@
 import type { UUID } from "@happychain/common"
 import { AuthState, BasePopupProvider, type EIP1193RequestParameters, waitForCondition } from "@happychain/sdk-shared"
 import type { EIP1193Provider } from "viem"
-import { handleApprovedRequest, handlePermissionlessRequest } from "../requests"
+import { handlePermissionlessRequest } from "../requests"
 import { iframeID } from "../requests/utils"
 import { getAuthState } from "../state/authState"
 import { getIframeURL } from "../utils/appURL"
@@ -32,13 +32,7 @@ export class IframeProvider extends BasePopupProvider {
             payload: args,
         }
 
-        if (["eth_requestAccounts", "wallet_requestPermissions"].includes(args.method)) {
-            // TODO: temp hack while waiting for permissions fix
-            // auto approve these requests for wagmi
-            void handleApprovedRequest(req)
-        } else {
-            void handlePermissionlessRequest(req)
-        }
+        void handlePermissionlessRequest(req)
     }
 
     protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {

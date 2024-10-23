@@ -10,11 +10,12 @@ import { addMessageListener, connect, disconnect, init, request } from "../worke
  */
 class Web3AuthProviderProxy extends SafeEventEmitter {
     async request({ method, params }: { method: string; params?: unknown[] }) {
+        // web3auth.sw request function, not recursive :)
         return await request({ method, params })
     }
 }
 
-export const web3AuthEIP1193Provider = new Web3AuthProviderProxy() as EIP1193Provider
+export const web3AuthEIP1193Provider = new Web3AuthProviderProxy() as EIP1193Provider & Web3AuthProviderProxy
 
 // forward events from provider
 addMessageListener((n: unknown) => {
@@ -27,7 +28,7 @@ addMessageListener((n: unknown) => {
         case "disconnect":
         case "chainChanged":
         case "accountsChanged":
-            ;(web3AuthEIP1193Provider as Web3AuthProviderProxy).emit(n.action, "data" in n ? n.data : undefined)
+            web3AuthEIP1193Provider.emit(n.action, "data" in n ? n.data : undefined)
             break
     }
 })

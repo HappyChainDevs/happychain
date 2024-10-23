@@ -14,7 +14,7 @@
         }
     },
     "peerDependencies": {
-        "@happychain/common": "workspace:^",
+        "@happychain/sdk-shared": "workspace:^",
         "viem": "^2.21.18"
     },
     "devDependencies": {

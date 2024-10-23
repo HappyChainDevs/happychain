@@ -8,6 +8,12 @@ export function clientCodeGen(code: string, id: string) {
     const stringId = JSON.stringify(id)
     const options = JSON.stringify({ type: "module", name: workerName })
 
+    /**
+     * During minification for production builds the function names get mangled, making them
+     * an unreliable source of truth here. Instead we are maintaining order and remapping them to
+     * their relative index within the file, so that the names are generated correctly regardless
+     * of minification
+     */
     const defineFunc = (ex: ReturnType<typeof findExports>[number], idx: number) => {
         return `export const ${ex.name} = __client__.__defineFunction('__FUNC_${idx}__')`
     }
