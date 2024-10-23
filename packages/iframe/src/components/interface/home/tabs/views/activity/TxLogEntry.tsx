@@ -1,9 +1,8 @@
 import { shortenAddress } from "@happychain/sdk-shared"
 import { ArrowUpRight, CircleNotch } from "@phosphor-icons/react"
 import clsx from "clsx"
-import { useAtomValue } from "jotai"
 import { formatEther } from "viem"
-import { currentChainAtom } from "../../../../../../state/currentChain"
+import { getCurrentChainBlockExplorerUrl } from "../../../../../../state/currentChain"
 import type { ExtendedTransactionReceipt } from "../../../../../../state/txHistory"
 
 interface TxLogEntryProps {
@@ -11,8 +10,8 @@ interface TxLogEntryProps {
 }
 
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
-    const currentChain = useAtomValue(currentChainAtom)
-    const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
+    const blockExplorerUrl = getCurrentChainBlockExplorerUrl()
+
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
             <div className="flex flex-row items-center justify-center space-x-1">

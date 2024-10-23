@@ -1,8 +1,7 @@
 import { shortenAddress } from "@happychain/sdk-shared"
 import { CircleNotch } from "@phosphor-icons/react"
-import { useAtomValue } from "jotai"
 import type { Hash } from "viem"
-import { currentChainAtom } from "../../../../../../state/currentChain"
+import { getCurrentChainBlockExplorerUrl } from "../../../../../../state/currentChain"
 
 /**
  * Placeholder component to show loading status of a
@@ -12,8 +11,7 @@ interface TxLoadingSkeletonProps {
     tx: Hash
 }
 const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
-    const currentChain = useAtomValue(currentChainAtom)
-    const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
+    const blockExplorerUrl = getCurrentChainBlockExplorerUrl()
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
             <span>
