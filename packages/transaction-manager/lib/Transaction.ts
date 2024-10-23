@@ -58,6 +58,13 @@ export class Transaction {
     @Property({ type: JsonBigIntTypeOrm })
     readonly attempts: Attempt[]
 
+    /**
+     * Stores additional information for the transaction.
+     * Enables originators to provide extra details, such as gas limits, which can be leveraged by customizable services.
+     */
+    @Property({ type: JsonBigIntTypeOrm, nullable: true })
+    metadata: Record<string, unknown> | undefined
+
     constructor({
         intentId,
         chainId,
@@ -68,6 +75,7 @@ export class Transaction {
         deadline,
         status,
         attempts,
+        metadata,
     }: {
         intentId?: UUID
         chainId: number
@@ -78,6 +86,7 @@ export class Transaction {
         deadline?: number
         status?: TransactionStatus
         attempts?: Attempt[]
+        metadata?: Record<string, unknown>
     }) {
         this.intentId = intentId ?? createUUID()
         this.chainId = chainId
@@ -88,6 +97,7 @@ export class Transaction {
         this.deadline = deadline
         this.status = status ?? TransactionStatus.Pending
         this.attempts = attempts ?? []
+        this.metadata = metadata
     }
 
     addAttempt(attempt: Attempt): void {
