@@ -5,7 +5,7 @@ import {IEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {BasePaymaster} from "account-abstraction/contracts/core/BasePaymaster.sol";
 import {UserOperationLib} from "account-abstraction/contracts/core/UserOperationLib.sol";
-import {SIG_VALIDATION_SUCCESS, SIG_VALIDATION_FAILED} from "account-abstraction/contracts/core/Helpers.sol";
+import {SIG_VALIDATION_SUCCESS} from "account-abstraction/contracts/core/Helpers.sol";
 
 /**
  * @notice A simple paymaster contract that approves all incoming user operations while managing
@@ -20,6 +20,7 @@ contract HappyPaymaster is BasePaymaster {
     using UserOperationLib for PackedUserOperation;
 
     error InsufficientGasBudget();
+    error InvalidBundler();
 
     uint256 public constant MAX_GAS_BUDGET = 50_000_000;
     uint256 public constant REFILL_PERIOD = 24 * 60 * 60;
@@ -52,11 +53,9 @@ contract HappyPaymaster is BasePaymaster {
         bytes32, /*userOpHash*/
         uint256 /*requiredPreFund*/
     ) internal override returns (bytes memory context, uint256 validationData) {
-        bool failed = false;
-
         // solhint-disable-next-line avoid-tx-origin
         if (!allowedBundlers[tx.origin]) {
-            failed = true;
+            revert InvalidBundler();
         }
 
         address user = userOp.getSender();
@@ -65,18 +64,14 @@ contract HappyPaymaster is BasePaymaster {
         uint32 updatedGasBudget = _updateUserGasBudget(info);
 
         if (updatedGasBudget < requestedGas) {
-            failed = true;
-            // for gas estimation
-            info.userGasBudget = info.userGasBudget;
-            info.lastUpdated = info.lastUpdated;
-            userInfo[user] = info;
+            revert InsufficientGasBudget();
         } else {
             info.userGasBudget = updatedGasBudget - uint32(requestedGas);
             info.lastUpdated = uint64(block.timestamp);
             userInfo[user] = info;
         }
 
-        return ("", failed ? SIG_VALIDATION_FAILED : SIG_VALIDATION_SUCCESS);
+        return ("", SIG_VALIDATION_SUCCESS);
     }
 
     /**

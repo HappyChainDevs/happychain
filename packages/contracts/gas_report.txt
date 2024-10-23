@@ -1,10 +1,5 @@
-  Gas Report for Cold Storage Operations:
-    1. Initial userOp (storage initialization): 32800 gas
-    2. Normal userOp with a different sender: 32800 gas
-    3. Same userOp with the same sender: 15936 gas
-    4. Doubling calldata size (512 bytes vs 256 bytes): 53 gas
-  Gas Report for Warm Storage Operations:
-    5. Validating another userOp from the same sender in same transaction (warm storage access): 4561 gas
-    6. Validating another userOp from different sender in same transaction (warm storage access): 26225 gas
-
-
+1. userOp with paymaster storage initialization: 33646 gas
+2. userOp with cold paymaster storage: 16959 gas
+3. userOp with warm paymaster storage: 5578 gas
+4. discount for a cold userOp that isn't the first one in the bundle: 6581 gas
+5. overhead when doubling the calldata size (512 bytes vs 256 bytes): 53 gas
