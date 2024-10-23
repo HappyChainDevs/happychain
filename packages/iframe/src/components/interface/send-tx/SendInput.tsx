@@ -81,7 +81,7 @@ const SendInput = ({ sendValue, setSendValue }: SendInputProps) => {
                             className={`w-[100px] h-[30px] text-[20px] px-2 text-slate-600 text-right placeholder:text-[20px] placeholder:text-slate-600 placeholder:opacity-50 ${
                                 isExceedingBalance ? "border-red-500" : ""
                             }`}
-                            placeholder={`${balance ? formatEther(balance.value) : "0.0"}`}
+                            placeholder={"0.0"}
                             value={sendValue || ""}
                             onChange={handleTokenBalanceChange}
                             disabled={!balance}
