@@ -25,15 +25,15 @@ Sending a Single UserOp with 5 transfer Calls (Smart Account already Deployed) :
 ------------------------------------------------
 
 Estimated UserOperation Gas:
-  PreVerificationGas:   58,124 gas
+  PreVerificationGas:   58,097 gas
   VerificationGasLimit: 119,619 gas
   CallGasLimit:         249,144 gas
 User Operation Gas Details:
-  Actual Gas Used:        325,555 gas
-  Transaction Gas Used:   311,647 gas
-  Bundler Overhead:       13,908 gas
-  Direct Transaction Gas: 21,000 gas
-  Extra Cost:             304,555 gas
+  Actual Gas Used:        325,542 gas
+  Transaction Gas Used:   311,635 gas
+  Bundler Overhead:       13,907 gas
+  Direct Transaction Gas: 105,000 gas
+  Extra Cost:             220,542 gas
 
 ------------------------------------------------
 Sending multiple UserOps from unique senders (Smart Accounts NOT Deployed) :-
@@ -41,11 +41,11 @@ Sending multiple UserOps from unique senders (Smart Accounts NOT Deployed) :-
 
 (Bundle contains 3 UserOps)
 User Operation Gas Details:
-  Actual Gas Used:        1,050,119 gas
-  Transaction Gas Used:   942,767 gas
-  Bundler Overhead:       107,352 gas
+  Actual Gas Used:        1,050,145 gas
+  Transaction Gas Used:   942,791 gas
+  Bundler Overhead:       107,354 gas
   Direct Transaction Gas: 63,000 gas
-  Extra Cost:             987,119 gas
+  Extra Cost:             987,145 gas
 
 ------------------------------------------------
 Sending multiple UserOps from unique senders (Smart Accounts Deployed) :-
@@ -54,8 +54,8 @@ Sending multiple UserOps from unique senders (Smart Accounts Deployed) :-
 (Bundle contains 5 UserOps)
 User Operation Gas Details:
   Actual Gas Used:        834,312 gas
-  Transaction Gas Used:   635,543 gas
-  Bundler Overhead:       198,769 gas
+  Transaction Gas Used:   635,555 gas
+  Bundler Overhead:       198,757 gas
   Direct Transaction Gas: 105,000 gas
   Extra Cost:             729,312 gas
 
@@ -67,7 +67,7 @@ Gas Usage Results Comparison Table :-
 | Scenario                             | Direct Txn Gas | ActualGasUsed | Txn.gasUsed | Bundler Overhead | Extra Cost (vs Direct)| #UserOps |
 |--------------------------------------|----------------|---------------|-------------|------------------|-----------------------|----------|
 | Single UserOp with 1 call            | 21000          | 178336        | 164776      | 13560            | 157336                | 1        |
-| Single UserOp with 5 calls           | 21000          | 325555        | 311647      | 13908            | 304555                | 1        |
-| Multiple UserOps with Deployment     | 63000          | 1050119       | 942767      | 107352           | 987119                | 3        |
-| Multiple UserOps without Deployment  | 105000         | 834312        | 635543      | 198769           | 729312                | 5        |
+| Single UserOp with 5 calls           | 105000         | 325542        | 311635      | 13907            | 220542                | 1        |
+| Multiple UserOps with Deployment     | 63000          | 1050145       | 942791      | 107354           | 987145                | 3        |
+| Multiple UserOps without Deployment  | 105000         | 834312        | 635555      | 198757           | 729312                | 5        |
 |-------------------------------------------------------------------------------------------------------------------------------------------|
