@@ -3,7 +3,7 @@ import { ArrowUpRight, CircleNotch } from "@phosphor-icons/react"
 import clsx from "clsx"
 import { useAtomValue } from "jotai"
 import { formatEther } from "viem"
-import { currentChainAtom } from "../../../../../../state/currentChainFromSearchParams"
+import { currentChainAtom } from "../../../../../../state/currentChain"
 import type { ExtendedTransactionReceipt } from "../../../../../../state/txHistory"
 
 interface TxLogEntryProps {
