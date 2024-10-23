@@ -92,6 +92,16 @@
                     "nullable": false,
                     "length": null,
                     "mappedType": "json"
+                },
+                "metadata": {
+                    "name": "metadata",
+                    "type": "json",
+                    "unsigned": false,
+                    "autoincrement": false,
+                    "primary": false,
+                    "nullable": true,
+                    "length": null,
+                    "mappedType": "json"
                 }
             },
             "name": "transaction",

@@ -8,6 +8,7 @@ import type { EntityManager } from "@mikro-orm/core"
 import { type Abi, type Account, type Chain, type Transport, createPublicClient, createWalletClient } from "viem"
 import { ABIManager } from "./AbiManager.js"
 import { BlockMonitor } from "./BlockMonitor.js"
+import { GasEstimator } from "./GasEstimator.js"
 import { GasPriceOracle } from "./GasPriceOracle.js"
 import { NonceManager } from "./NonceManager.js"
 import type { Transaction } from "./Transaction.js"
@@ -66,6 +67,13 @@ export type TransactionManagerConfig = {
      * Defaults to 2 seconds.
      */
     blockTime?: bigint
+
+    /**
+     * The gas estimator to use for estimating the gas limit of a transaction.
+     * You can provide your own implementation to override the default one.
+     * Default: {@link GasEstimator}
+     */
+    gasEstimator?: GasEstimator
 }
 
 export type TransactionOriginator = () => Transaction[]
@@ -77,6 +85,7 @@ export class TransactionManager {
     public readonly viemClient: SafeViemPublicClient
     public readonly nonceManager: NonceManager
     public readonly gasPriceOracle: GasPriceOracle
+    public readonly gasEstimator: GasEstimator
     public readonly abiManager: ABIManager
     public readonly pendingTxReporter: TxMonitor
     public entityManager!: EntityManager
@@ -110,6 +119,7 @@ export class TransactionManager {
 
         this.nonceManager = new NonceManager(this)
         this.gasPriceOracle = new GasPriceOracle(this)
+        this.gasEstimator = _config.gasEstimator || new GasEstimator()
         this.blockMonitor = new BlockMonitor(this)
         this.pendingTxReporter = new TxMonitor(this)
         this.transactionRepository = new TransactionRepository(this)

@@ -2,6 +2,7 @@ import { unknownToError } from "@happychain/common"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import type { Hash, Hex, TransactionRequestEIP1559 } from "viem"
 import { encodeFunctionData, keccak256 } from "viem"
+import type { EstimateGasErrorCause } from "./GasEstimator.js"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
@@ -21,7 +22,7 @@ export enum AttemptSubmissionErrorCause {
 }
 
 export type AttemptSubmissionError = {
-    cause: AttemptSubmissionErrorCause
+    cause: AttemptSubmissionErrorCause | EstimateGasErrorCause
     flushed: boolean
 }
 
@@ -65,14 +66,10 @@ export class TransactionSubmitter {
             const args = transaction.args
             const data = encodeFunctionData({ abi, functionName, args })
 
-            const gasResult = await this.txmgr.viemClient.safeEstimateGas({
-                to: transaction.address,
-                data,
-                value: 0n,
-            })
+            const gasResult = await this.txmgr.gasEstimator.estimateGas(this.txmgr, transaction)
 
             if (gasResult.isErr()) {
-                return err({ cause: AttemptSubmissionErrorCause.FailedToEstimateGas, flushed: false })
+                return err({ cause: gasResult.error, flushed: false })
             }
 
             const gas = gasResult.value
