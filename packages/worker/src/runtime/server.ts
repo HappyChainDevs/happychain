@@ -41,8 +41,7 @@ export class SharedWorkerServer implements ServerInterface {
 
         let idx = 0
 
-        // Indexed based function recovery so that
-        // when the code is minified, both sides of the RPC
+        // Indexed based function recovery so that when the code is minified, both sides of the RPC
         // service still match
         for (const fn of filteredFns) {
             this._functions.set(`__FUNC_${idx++}__`, fn)
