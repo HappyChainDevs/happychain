@@ -35,16 +35,18 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
-            const tx = await sendToWalletClient(request)
             const user = getUser()
-            if (user) {
-                const sentValue = hexToBigInt(request.payload.params[0].value as `0x{string}`)
-                const payload: PendingTxDetails = {
-                    hash: tx as Hash,
-                    value: sentValue,
-                }
-                addPendingTxEntry(user.address, payload)
+            if (!user) return false
+
+            const tx = await sendToWalletClient(request)
+            // payload creation for localstorage atom
+            const sentValue = hexToBigInt(request.payload.params[0].value as `0x{string}`)
+            const payload: PendingTxDetails = {
+                hash: tx as Hash,
+                value: sentValue,
             }
+            addPendingTxEntry(user.address, payload)
+
             return tx
         }
 
