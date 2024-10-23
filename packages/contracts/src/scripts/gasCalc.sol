@@ -42,46 +42,26 @@ contract GasEstimator is Test {
      *
      * This test estimates gas consumption for:
      * 1. Initial storage initialization (cold storage).
-     * 2. Cold storage access with a different sender.
-     * 3. Cold storage access by validating the same user operation again.
-     * 4. A user operation with larger calldata (round number and double the size).
-     * 5. Another userOp by the same user in a single transaction (Warm storage access).
-     * 6. Another userOp by different user in a single transaction (Warm storage access).
+     * 2. Cold storage access by validating the same user operation again.
+     * 3. A user operation with larger calldata (round number and double the size).
+     * 4. Another userOp by the same user in a single transaction (Warm storage access).
+     * 5. Another userOp by different user in a single transaction (Warm storage access).
      */
     function testEstimatePaymasterValidateUserOpGas() public {
         // Step 1: Gas cost when storage transitions from zero to non-zero (worst-case scenario)
         PackedUserOperation memory userOp1 = _getUserOp();
-        uint256 gasForStorageInitialization = this._estimatePaymasterValidateUserOpGas(userOp1);
+        uint256 gasUninitialized = this._estimatePaymasterValidateUserOpGas(userOp1);
 
-        // Step 2: Gas cost for a different sender (cold storage access)
-        PackedUserOperation memory userOp2 = userOp1;
-        userOp2.sender = address(0x19Ac95a5524DB39021BA2f10E4F65574DfEd2742);
-        uint256 gasForDifferentSender = this._estimatePaymasterValidateUserOpGas(userOp2);
+        console.log("1. userOp with paymaster storage initialization: %d gas", gasUninitialized);
 
-        // Step 3: Gas cost for the same sender (different nonce)
-        PackedUserOperation memory userOp3 = userOp2;
-        userOp3.nonce = userOp3.nonce + 1; // Increment nonce to represent a new operation with the same sender
-        uint256 gasForSameSender = this._estimatePaymasterValidateUserOpGas(userOp3);
+        // Step 2: Gas cost for the same sender (different nonce)
+        PackedUserOperation memory userOp2 = _getUserOp();
+        userOp2.nonce = userOp2.nonce + 1; // Increment nonce to represent a new operation with the same sender
+        uint256 gasCold = this._estimatePaymasterValidateUserOpGas(userOp2);
 
-        // Step 4: Gas cost for a UserOp with larger calldata (round number and double that)
-        PackedUserOperation memory userOp4 = _getUserOp();
-        userOp4.sender = address(0x19ac95A5524Db39021Ba2F10E4F65574DFED2750);
-        userOp4.callData = _createCalldata(256);
-        uint256 gasForBaseCalldata = this._estimatePaymasterValidateUserOpGas(userOp4);
+        console.log("2. userOp with cold paymaster storage: %d gas", gasCold);
 
-        userOp4.sender = address(0x19ac95A5524db39021ba2F10E4F65574dFed2751);
-        userOp4.callData = _createCalldata(512);
-        uint256 gasForDoubleCalldata = this._estimatePaymasterValidateUserOpGas(userOp4);
-
-        console.log("Gas Report for Cold Storage Operations:");
-        console.log("  1. Initial userOp (storage initialization): %d gas", gasForStorageInitialization);
-        console.log("  2. Normal userOp with a different sender: %d gas", gasForDifferentSender);
-        console.log("  3. Same userOp with the same sender: %d gas", gasForSameSender);
-        console.log(
-            "  4. Doubling calldata size (512 bytes vs 256 bytes): %d gas", gasForDoubleCalldata - gasForBaseCalldata
-        );
-
-        // Step 5: Warm storage - Gas cost when the same user submits multiple operations within a single transaction
+        // Step 3: Warm storage - Gas cost when the same user submits multiple operations within a single transaction
         PackedUserOperation memory userOpWarm1 = _getUserOp();
         userOpWarm1.sender = address(0x19AC95a5524db39021ba2f10e4f65574DfED2744);
         PackedUserOperation memory userOpWarm2 = _getUserOp();
@@ -93,26 +73,39 @@ contract GasEstimator is Test {
         userOpsWarmSame[1] = userOpWarm2;
         uint256[] memory gasUsedWarmSame = this._estimatePaymasterValidateUserOpGasForMultipleOps(userOpsWarmSame);
 
-        // Step 6: Warm storage - Gas cost when different users submit operations within a single transaction
+        console.log("3. userOp with warm paymaster storage: %d gas", gasUsedWarmSame[1]);
+
+        // Step 4: Warm storage - Gas cost when different users submit operations within a single transaction
         PackedUserOperation memory userOpWarmDiff1 = _getUserOp();
         userOpWarmDiff1.sender = address(0x19aC95a5524Db39021ba2F10E4f65574dfEd2745);
         PackedUserOperation memory userOpWarmDiff2 = _getUserOp();
         userOpWarmDiff2.nonce = userOpWarmDiff2.nonce + 1; // Increment nonce to simulate a new operation
         userOpWarmDiff2.sender = address(0x19aC95A5524DB39021Ba2f10e4f65574DFED2746);
 
+        this._estimatePaymasterValidateUserOpGas(userOpWarmDiff2); // Initialize the userInfo Slot beforehand
+
         PackedUserOperation[] memory userOpsWarmDiff = new PackedUserOperation[](2);
         userOpsWarmDiff[0] = userOpWarmDiff1;
         userOpsWarmDiff[1] = userOpWarmDiff2;
         uint256[] memory gasUsedWarmDiff = this._estimatePaymasterValidateUserOpGasForMultipleOps(userOpsWarmDiff);
 
-        console.log("Gas Report for Warm Storage Operations:");
         console.log(
-            "  5. Validating another userOp from the same sender in same transaction (warm storage access): %d gas",
-            gasUsedWarmSame[1]
+            "4. discount for a cold userOp that isn't the first one in the bundle: %d gas", gasCold - gasUsedWarmDiff[1]
         );
+
+        // Step 5: Gas cost for a UserOp with larger calldata (round number and double that)
+        PackedUserOperation memory userOp5 = _getUserOp();
+        userOp5.sender = address(0x19ac95A5524Db39021Ba2F10E4F65574DFED2750);
+        userOp5.callData = _createCalldata(256);
+        uint256 gasForBaseCalldata = this._estimatePaymasterValidateUserOpGas(userOp5);
+
+        userOp5.sender = address(0x19ac95A5524db39021ba2F10E4F65574dFed2751);
+        userOp5.callData = _createCalldata(512);
+        uint256 gasForDoubleCalldata = this._estimatePaymasterValidateUserOpGas(userOp5);
+
         console.log(
-            "  6. Validating another userOp from different sender in same transaction (warm storage access): %d gas",
-            gasUsedWarmDiff[1]
+            "5. overhead when doubling the calldata size (512 bytes vs 256 bytes): %d gas",
+            gasForDoubleCalldata - gasForBaseCalldata
         );
     }
 
@@ -175,7 +168,7 @@ contract GasEstimator is Test {
                 hex"c5265d5d0000000000000000000000000c97547853926e209d9f3c3fd0b7bdf126d3bf860000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001243c3b752b01F7B2845C4c0cA860D5d60A1332769375d01F7AAD0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000014f39Fd6e51aad88F6F4ce6aB8827279cffFb922660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" // solhint-disable-line max-line-length
             ),
             callData: bytes(
-                hex"e9ae5c53000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000034613497A7883d2F76b9F397811F5F10c40c7a65c9000000000000000000000000000000000000000000000000002386f26fc10000000000000000000000000000" // solhint-disable-line max-line-length
+                hex"e9ae5c53000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000034613497A7883d2F76b9F397811F5F10c40c7a65c9000000000000000000000000000000000000000000000000002386f26fc100000000000000000000000000002386f26fc134613497A7883d2F76b9F397811F5F10c40c7a65c9000000000000000000000000000000000000000000000000002386f26fc100000000000000000000000000002386f26fc10000000000000000000000002386f26fc1" // solhint-disable-line max-line-length
             ),
             accountGasLimits: bytes32(0x0000000000000000000000000002474700000000000000000000000000024f0b),
             preVerificationGas: 55378,
