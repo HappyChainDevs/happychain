@@ -12,7 +12,6 @@ export const currentChainAtom: Atom<ChainParameters> = atom(() => {
 
 export const { getValue: getCurrentChain } = accessorsFromAtom(currentChainAtom)
 
-
 // === State Accessors ========================================================================
 
 /**
