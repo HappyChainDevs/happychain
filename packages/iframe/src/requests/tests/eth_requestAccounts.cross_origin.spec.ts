@@ -2,7 +2,7 @@ import { AuthState, EIP1193UnauthorizedError, EIP1193UserRejectedRequestError } 
 import type { HappyUser } from "@happychain/sdk-shared"
 import { addressFactory, makePayload } from "@happychain/testing"
 import { beforeEach, describe, expect, test, vi } from "vitest"
-import { clearPermissions, getAllPermissions, grantPermissions } from "../../services/permissions"
+import { clearPermissions, getAllPermissions, grantPermissions } from "#src/state/permissions.ts"
 import { setAuthState } from "../../state/authState"
 import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"

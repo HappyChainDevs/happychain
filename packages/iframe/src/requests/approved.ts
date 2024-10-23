@@ -8,14 +8,16 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
-import { grantPermissions } from "../services/permissions"
-import { addWatchedAsset } from "../services/watchedAssets/utils"
+
 import { getChainsMap, setChains } from "../state/chains"
 import { getUser } from "../state/user"
 import { getWalletClient } from "../state/walletClient"
 import { isAddChainParams } from "../utils/isAddChainParam"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
+
+import { grantPermissions } from "#src/state/permissions.ts"
+import { addWatchedAsset } from "#src/state/watchedAssets.ts"
 
 /**
  * Processes requests approved by the user in the pop-up,
