@@ -11,3 +11,14 @@ export const currentChainAtom: Atom<ChainParameters> = atom(() => {
 })
 
 export const { getValue: getCurrentChain } = accessorsFromAtom(currentChainAtom)
+
+
+// === State Accessors ========================================================================
+
+/**
+ * Returns the Block Explorer URL, if present.
+ */
+export function getCurrentChainBlockExplorerUrl(): string {
+    const currentChain = getCurrentChain()
+    return currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
+}
