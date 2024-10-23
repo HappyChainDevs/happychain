@@ -25,15 +25,15 @@ Sending a Single UserOp with 5 transfer Calls (Smart Account already Deployed) :
 ------------------------------------------------
 
 Estimated UserOperation Gas:
-  PreVerificationGas:   58,097 gas
+  PreVerificationGas:   58,124 gas
   VerificationGasLimit: 119,619 gas
   CallGasLimit:         249,144 gas
 User Operation Gas Details:
-  Actual Gas Used:        325,542 gas
-  Transaction Gas Used:   311,635 gas
-  Bundler Overhead:       13,907 gas
+  Actual Gas Used:        325,569 gas
+  Transaction Gas Used:   311,659 gas
+  Bundler Overhead:       13,910 gas
   Direct Transaction Gas: 105,000 gas
-  Extra Cost:             220,542 gas
+  Extra Cost:             220,569 gas
 
 ------------------------------------------------
 Sending multiple UserOps from unique senders (Smart Accounts NOT Deployed) :-
@@ -53,11 +53,11 @@ Sending multiple UserOps from unique senders (Smart Accounts Deployed) :-
 
 (Bundle contains 5 UserOps)
 User Operation Gas Details:
-  Actual Gas Used:        834,312 gas
-  Transaction Gas Used:   635,555 gas
-  Bundler Overhead:       198,757 gas
+  Actual Gas Used:        834,299 gas
+  Transaction Gas Used:   635,531 gas
+  Bundler Overhead:       198,768 gas
   Direct Transaction Gas: 105,000 gas
-  Extra Cost:             729,312 gas
+  Extra Cost:             729,299 gas
 
 ------------------------------------------------
 
@@ -67,7 +67,7 @@ Gas Usage Results Comparison Table :-
 | Scenario                             | Direct Txn Gas | ActualGasUsed | Txn.gasUsed | Bundler Overhead | Extra Cost (vs Direct)| #UserOps |
 |--------------------------------------|----------------|---------------|-------------|------------------|-----------------------|----------|
 | Single UserOp with 1 call            | 21000          | 178336        | 164776      | 13560            | 157336                | 1        |
-| Single UserOp with 5 calls           | 105000         | 325542        | 311635      | 13907            | 220542                | 1        |
+| Single UserOp with 5 calls           | 105000         | 325569        | 311659      | 13910            | 220569                | 1        |
 | Multiple UserOps with Deployment     | 63000          | 1050145       | 942791      | 107354           | 987145                | 3        |
-| Multiple UserOps without Deployment  | 105000         | 834312        | 635555      | 198757           | 729312                | 5        |
+| Multiple UserOps without Deployment  | 105000         | 834299        | 635531      | 198768           | 729299                | 5        |
 |-------------------------------------------------------------------------------------------------------------------------------------------|
