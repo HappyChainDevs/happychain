@@ -1,7 +1,9 @@
-import { convertToViemChain, getChainFromSearchParams, shortenAddress } from "@happychain/sdk-shared"
+import { convertToViemChain, shortenAddress } from "@happychain/sdk-shared"
 import { ArrowUpRight, CircleNotch } from "@phosphor-icons/react"
 import clsx from "clsx"
+import { useAtomValue } from "jotai"
 import { formatEther } from "viem"
+import { currentChainAtom } from "../../../../../../state/currentChainFromSearchParams"
 import type { ExtendedTransactionReceipt } from "../../../../../../state/txHistory"
 
 interface TxLogEntryProps {
@@ -9,7 +11,8 @@ interface TxLogEntryProps {
 }
 
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
-    const currChain = convertToViemChain(getChainFromSearchParams())
+    const currentChain = useAtomValue(currentChainAtom)
+    const viemChain = convertToViemChain(currentChain)
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
             <div className="flex flex-row items-center justify-center space-x-1">
@@ -23,7 +26,7 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                     <span className="text-black">Send</span>
                     <span>
                         <a
-                            href={`${currChain.blockExplorerUrls[0]}/tx/${tx.transactionHash}`}
+                            href={`${viemChain.blockExplorerUrls[0]}/tx/${tx.transactionHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 hover:text-purple-500 hover:underline"
