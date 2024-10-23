@@ -44,6 +44,7 @@ class RandomnessService {
     private onCollectTransactions(block: LatestBlock): Transaction[] {
         const transactions: Transaction[] = []
 
+        // We try to commit the ramdomness POST_COMMIT_MARGIN to be safe that the transaction is included before the PRECOMMIT_DELAY
         const commitmentTimestamp =
             block.timestamp + environmentVariables.PRECOMMIT_DELAY + environmentVariables.POST_COMMIT_MARGIN
         const commitment = this.commitmentManager.generateCommitmentForTimestamp(commitmentTimestamp)
