@@ -4,17 +4,18 @@ import {
     EIP1193UserRejectedRequestError,
     type Msgs,
     type ProviderMsgsFromApp,
-    getChainFromSearchParams,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
-import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
+
+import { getCurrentChain } from "../state/currentChainFromSearchParams"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
+import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions.ts"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -30,7 +31,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
     switch (request.payload.method) {
         case "eth_chainId": {
-            const chainId = getChainFromSearchParams()?.chainId
+            const chainId = getCurrentChain().chainId
             return chainId ?? (await sendToPublicClient(app, request))
         }
 
