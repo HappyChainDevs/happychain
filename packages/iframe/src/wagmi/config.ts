@@ -1,7 +1,8 @@
 import { onlyUnique } from "@happychain/common"
-import { chains as _chains, convertToViemChain, getChainFromSearchParams } from "@happychain/sdk-shared"
+import { chains as _chains, convertToViemChain } from "@happychain/sdk-shared"
 import { type Chain, createClient, custom } from "viem"
 import { createConfig } from "wagmi"
+import { getCurrentChain } from "../state/currentChainFromSearchParams"
 import { happyConnector } from "./connnector"
 import { iframeProvider } from "./provider"
 
@@ -12,7 +13,7 @@ declare module "wagmi" {
     }
 }
 
-const currentChain: Chain = convertToViemChain(getChainFromSearchParams())
+const currentChain: Chain = convertToViemChain(getCurrentChain())
 const allChains = Object.values(_chains).map(convertToViemChain)
 const chains = [currentChain, ...allChains].filter(onlyUnique)
 
