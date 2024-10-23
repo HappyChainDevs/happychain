@@ -29,6 +29,7 @@ export { logger } from "./services/logger"
 export { requestPayloadIsHappyMethod } from "./utils/requestPayloadIsHappyMethod"
 export { waitForCondition } from "./utils/waitForCondition"
 export { shortenAddress } from "./utils/shortenAddress"
+export { formatUserBalance } from "./utils/balanceFormatter"
 
 // === TYPES =======================================================================================
 
