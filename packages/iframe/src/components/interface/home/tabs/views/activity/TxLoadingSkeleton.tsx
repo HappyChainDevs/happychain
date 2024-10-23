@@ -2,7 +2,7 @@ import { convertToViemChain, shortenAddress } from "@happychain/sdk-shared"
 import { CircleNotch } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import type { Hash } from "viem"
-import { currentChainAtom } from "../../../../../../state/currentChainFromSearchParams"
+import { currentChainAtom } from "../../../../../../state/currentChain"
 
 /**
  * Placeholder component to show loading status of

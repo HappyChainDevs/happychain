@@ -8,7 +8,7 @@ import {
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "../services/permissions"
-import { getCurrentChain } from "../state/currentChainFromSearchParams"
+import { getCurrentChain } from "../state/currentChain"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
