@@ -89,7 +89,10 @@ export function addPendingTxEntry(address: Address, payload: PendingTxDetails) {
 
 export function removePendingTxEntry(address: Address, payload: PendingTxDetails) {
     store.set(pendingTxsAtom, (existingEntries) => {
-        const updatedEntries = (existingEntries[address] || []).filter((pendingHash) => pendingHash !== payload)
+        const updatedEntries = (existingEntries[address] || []).filter(
+            (pendingPayload) => pendingPayload.hash !== payload.hash,
+        )
+        console.log({ updatedEntries })
 
         // If no pending transactions remain for the user, remove the user's entry
         if (updatedEntries.length === 0) {
