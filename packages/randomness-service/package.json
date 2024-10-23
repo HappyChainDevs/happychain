@@ -5,6 +5,7 @@
     "type": "module",
     "dependencies": {
         "@happychain/transaction-manager": "workspace:^",
+        "neverthrow": "^8.1.0",
         "viem": "^2.21.18",
         "zod": "^3.23.8"
     },
