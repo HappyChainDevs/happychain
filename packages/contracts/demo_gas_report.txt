@@ -5,88 +5,59 @@ Using CustomValidator: Balance is correct: 0.01 ETH
 Gas Usage Results :-
 ------------------------------------------------
 
-Gas Fields Explained:
-- DirectTxnGas: Gas cost for a normal transaction, used as a baseline for comparison.
-- actualGasUsed: Total gas used by the entire user operation, including bundler and EntryPoint processing.
-- receipt.gasUsed: Gas used by the transaction with the UserOps Bundle from bundler to EntryPoint.
-- Bundler Overhead: Difference between actualGasUsed and receipt.gasUsed, representing extra cost of the bundler.
-
-Paymaster Gas Fields:
-- PreVerificationGas: Gas used before validating the userOp (e.g., signature checks).
-- VerificationGasLimit: Gas limit for full validation of the userOp.
-- CallGasLimit: Gas allocated for executing the actual userOp (e.g., transfers or contract calls).
-
+------------------------------------------------
+Sending a Single User Operation (Smart Account already Deployed):
 ------------------------------------------------
 
+Estimated UserOperation Gas:
+  PreVerificationGas:   52,923 gas
+  VerificationGasLimit: 118,222 gas
+  CallGasLimit:         107,972 gas
+User Operation Gas Details:
+  Actual Gas Used:        178,336 gas
+  Transaction Gas Used:   164,776 gas
+  Bundler Overhead:       13,560 gas
+  Direct Transaction Gas: 21,000 gas
+  Extra Cost:             157,336 gas
 
-Sending a Single UserOp (Smart Account already Deployed):-
-
-Paymaster Gas Estimates :-
-  PreVerificationGas:  52923n
-  VerificationGasLimit:  118222n
-  CallGasLimit:  107972n
-
-UserOp via Bundler Receipt :-
-  ActualGasUsed:  178336n
-  Txn.gasUsed:  164776n
-
-Bundler Overhead (Gas Used): 13560n
-Direct Transaction Gas: 21000n
-Extra Cost of Using a UserOp vs Direct Transaction (Gas): 157336n
 ------------------------------------------------
-
 Sending a Single UserOp with 5 transfer Calls (Smart Account already Deployed) :-
-
-Paymaster Gas Estimates :-
-  PreVerificationGas:  58124n
-  VerificationGasLimit:  119619n
-  CallGasLimit:  249144n
-
-UserOp via Bundler Receipt :-
-  ActualGasUsed:  325569n
-  Txn.gasUsed:  311659n
-
-Bundler Overhead (Gas Used): 13910n
-
-Direct Transaction Gas: 105000n
-Extra Cost of Using a UserOp vs Direct Transaction (Gas): 220569n
-
 ------------------------------------------------
 
-Sending multiple UserOps from unique senders (userOps involve deployment of Smart Contract Account) :-
-Bundle with 3 UserOps :-
-  Block:  88n
-  Txn Index:  1
-  Actual Gas Used for each UserOp:
-    UserOp1:  342079n
-    UserOp2:  365959n
-    UserOp3:  342081n
-  Total ActualGas Used:  1050119n
-  Txn.gasUsed (Total for the bundle):  942779n
-
-Bundler Overhead:  107340n
-Direct Transaction Gas:  63000n
-Extra Cost of Using a UserOp vs Direct Transaction (Gas):  987119n
+Estimated UserOperation Gas:
+  PreVerificationGas:   58,124 gas
+  VerificationGasLimit: 119,619 gas
+  CallGasLimit:         249,144 gas
+User Operation Gas Details:
+  Actual Gas Used:        325,555 gas
+  Transaction Gas Used:   311,647 gas
+  Bundler Overhead:       13,908 gas
+  Direct Transaction Gas: 21,000 gas
+  Extra Cost:             304,555 gas
 
 ------------------------------------------------
+Sending multiple UserOps from unique senders (Smart Accounts NOT Deployed) :-
+------------------------------------------------
 
-Gas Usage on UserOps when Smart Account are already deployed :-
+(Bundle contains 3 UserOps)
+User Operation Gas Details:
+  Actual Gas Used:        1,050,119 gas
+  Transaction Gas Used:   942,767 gas
+  Bundler Overhead:       107,352 gas
+  Direct Transaction Gas: 63,000 gas
+  Extra Cost:             987,119 gas
 
-Bundle with 5 UserOps :-
-  Block:  96n
-  Txn Index:  0
-  Actual Gas Used for each UserOp:
-    UserOp1:  178336n
-    UserOp2:  178331n
-    UserOp3:  163991n
-    UserOp4:  163989n
-    UserOp5:  163986n
-  Total ActualGas Used:  848633n
-  Txn.gasUsed (Total for the bundle):  164764n
+------------------------------------------------
+Sending multiple UserOps from unique senders (Smart Accounts Deployed) :-
+------------------------------------------------
 
-Bundler Overhead:  683869n
-Direct Transaction Gas:  105000n
-Extra Cost of Using a UserOp vs Direct Transaction (Gas):  743633n
+(Bundle contains 5 UserOps)
+User Operation Gas Details:
+  Actual Gas Used:        834,312 gas
+  Transaction Gas Used:   635,543 gas
+  Bundler Overhead:       198,769 gas
+  Direct Transaction Gas: 105,000 gas
+  Extra Cost:             729,312 gas
 
 ------------------------------------------------
 
@@ -95,8 +66,8 @@ Gas Usage Results Comparison Table :-
 |-------------------------------------------------------------------------------------------------------------------------------------------|
 | Scenario                             | Direct Txn Gas | ActualGasUsed | Txn.gasUsed | Bundler Overhead | Extra Cost (vs Direct)| #UserOps |
 |--------------------------------------|----------------|---------------|-------------|------------------|-----------------------|----------|
-| Single UserOp                        | 21000          | 178336        | 164776      | 13560            | 157336                | 1        |
-| Single UserOp                        | 105000         | 325569        | 311659      | 13910            | 220569                | 1        |
-| Multiple UserOps with Deployment     | 63000          | 1050119       | 942779      | 107340           | 987119                | 3        |
-| Multiple UserOps without Deployment  | 105000         | 848633        | 164764      | 683869           | 743633                | 5        |
+| Single UserOp with 1 call            | 21000          | 178336        | 164776      | 13560            | 157336                | 1        |
+| Single UserOp with 5 calls           | 21000          | 325555        | 311647      | 13908            | 304555                | 1        |
+| Multiple UserOps with Deployment     | 63000          | 1050119       | 942767      | 107352           | 987119                | 3        |
+| Multiple UserOps without Deployment  | 105000         | 834312        | 635543      | 198769           | 729312                | 5        |
 |-------------------------------------------------------------------------------------------------------------------------------------------|
