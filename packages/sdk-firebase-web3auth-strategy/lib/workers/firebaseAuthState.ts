@@ -1,4 +1,4 @@
-export enum AuthStates {
+export enum FirebaseAuthState {
     Disconnected = "disconnected",
     Disconnecting = "disconnecting",
     Connected = "connected",

@@ -11,7 +11,10 @@ export default defineConfig(({ command }) => ({
     plugins: [
         TanStackRouterVite(),
         react({ babel: { presets: ["jotai/babel/preset"] } }),
-        SharedWorkerPlugin({ disabled: false }),
+        SharedWorkerPlugin({
+            disabled: false,
+            prodChunks: sharedWorkerChunkStrategy(),
+        }),
     ],
     resolve: {
         alias: {
@@ -27,7 +30,7 @@ export default defineConfig(({ command }) => ({
         rollupOptions: {
             external:
                 command === "build"
-                    ? []
+                    ? [/\\.mocks$/]
                     : [
                           "react",
                           "viem",
@@ -42,3 +45,30 @@ export default defineConfig(({ command }) => ({
         environment: "happy-dom",
     },
 }))
+
+/**
+ * Chunking here is optional, but extracting the common runtime into a
+ * shared resource allows us only load the runtime once, regardless of
+ * how many shared workers we create. Extracting web3auth independently
+ * will allow us to cache it separate from our code so we will only
+ * need to bust this cache if the web3auth dependency itself is updated.
+ * This can be advantageous due to its size, which is 2,000+kb at the
+ * time of writing
+ */
+function sharedWorkerChunkStrategy() {
+    return (id: string) => {
+        // must be vendor if web3 is vendored so that
+        // it can be loaded first, _always_
+        if (id.includes("web3auth.polyfill.ts")) {
+            return "worker-web3auth-polyfill-chunk"
+        }
+
+        if (id.includes("@web3auth") || id.includes("@toruslabs")) {
+            return "worker-web3auth-chunk"
+        }
+
+        if (id.includes("worker/dist/runtime.js")) {
+            return "worker-happychain-chunk"
+        }
+    }
+}
