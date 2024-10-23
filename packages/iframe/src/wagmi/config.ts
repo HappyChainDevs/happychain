@@ -2,7 +2,7 @@ import { onlyUnique } from "@happychain/common"
 import { chains as _chains, convertToViemChain } from "@happychain/sdk-shared"
 import { type Chain, createClient, custom } from "viem"
 import { createConfig } from "wagmi"
-import { getCurrentChain } from "../state/currentChainFromSearchParams"
+import { getCurrentChain } from "../state/currentChain"
 import { happyConnector } from "./connnector"
 import { iframeProvider } from "./provider"
 

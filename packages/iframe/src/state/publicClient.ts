@@ -4,7 +4,7 @@ import { type Atom, atom } from "jotai"
 import type { CustomTransport, HttpTransport, PublicClient } from "viem"
 import { http, createPublicClient } from "viem"
 import { publicActionsL2 } from "viem/op-stack"
-import { currentChainAtom } from "./currentChainFromSearchParams"
+import { currentChainAtom } from "./currentChain"
 import { transportAtom } from "./transport"
 
 export const publicClientAtom: Atom<PublicClient<CustomTransport | HttpTransport>> = atom((get) => {
