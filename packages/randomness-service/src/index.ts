@@ -5,6 +5,7 @@ import { privateKeyToAccount } from "viem/accounts"
 import { anvil } from "viem/chains"
 import { abis } from "./ABI/random.js"
 import { CommitmentManager } from "./CommitmentManager.js"
+import { CustomGasEstimator } from "./CustomGasEstimator.js"
 import { CommitmentTransactionFactory } from "./Factories/CommitmentTransactionFactory.js"
 import { RevealValueTransactionFactory } from "./Factories/RevealValueTransactionFactory.js"
 import { environmentVariables } from "./env.js"
@@ -31,6 +32,7 @@ class RandomnessService {
             chain: anvil,
             id: "randomness-service",
             abis: abis,
+            gasEstimator: new CustomGasEstimator(),
         })
     }
 
