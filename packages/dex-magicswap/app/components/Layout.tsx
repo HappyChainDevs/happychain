@@ -11,7 +11,7 @@ import {
   TWITTER_URL,
 } from "~/consts";
 import { cn } from "~/lib/utils";
-import { ConnectButton } from "./ConnectButton";
+import { ConnectButton } from "./ConnectButton.client";
 import { Footer } from "./Footer";
 import { DiscordIcon, TwitterIcon } from "./Icons";
 import { Button } from "./ui/Button";
@@ -23,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/Dropdown";
+import { VisibleOnClient } from "./VisibleOnClient";
 
 const NAV = [
   { name: "Swap", href: "/swap" },
@@ -57,7 +58,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
               ))}
             </div>
           </div>
-          <div className="flex flex-1 items-center justify-end gap-3">
+          <div className="flex flex-1 items-center justify-between lg:justify-end ps-3 gap-3">
             <div className="lg:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -132,7 +133,9 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <ConnectButton />
+            <VisibleOnClient>
+              <ConnectButton />
+            </VisibleOnClient>
           </div>
         </div>
       </header>

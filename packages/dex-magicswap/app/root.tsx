@@ -12,12 +12,9 @@ import {
   useNavigation,
 } from "@remix-run/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import NProgress from "nprogress";
 import { useEffect, useMemo, useState } from "react";
-import { http, WagmiProvider, createConfig } from "wagmi";
-import { arbitrum, arbitrumSepolia } from "wagmi/chains";
-
+import { WagmiProvider } from "wagmi";
 import { Layout } from "./components/Layout";
 import { AccountProvider } from "./contexts/account";
 import { ENV } from "./lib/env.server";
@@ -26,6 +23,8 @@ import { useSettingsStore } from "./store/settings";
 import "./styles/nprogress.css";
 import "./styles/tailwind.css";
 import { Toaster } from "./components/ui/Toast";
+import { HappyWalletProvider } from "@happychain/react";
+import { wagmiConfig } from "./configs/wagmi";
 
 const queryClient = new QueryClient();
 
@@ -50,27 +49,6 @@ export const shouldRevalidate: ShouldRevalidateFunction = () => {
 export type RootLoader = typeof loader;
 
 export default function App() {
-  const { env } = useLoaderData<RootLoader>();
-
-  const [client] = useState(() =>
-    createConfig(
-      getDefaultConfig({
-        appName: "Magicswap",
-        transports: {
-          [env.PUBLIC_CHAIN_ID]: http(
-            `https://${env.PUBLIC_CHAIN_ID}.rpc.thirdweb.com/${env.PUBLIC_THIRDWEB_CLIENT_ID}`,
-          ),
-        },
-        walletConnectProjectId: env.PUBLIC_WALLET_CONNECT_PROJECT_ID,
-        chains: [
-          env.PUBLIC_CHAIN_ID === arbitrumSepolia.id
-            ? arbitrumSepolia
-            : arbitrum,
-        ],
-      }),
-    ),
-  );
-
   const transition = useNavigation();
 
   const fetchers = useFetchers();
@@ -127,17 +105,17 @@ export default function App() {
         <Links />
       </head>
       <body className="h-full antialiased">
-        <WagmiProvider config={client}>
-          <QueryClientProvider client={queryClient}>
-            <ConnectKitProvider theme="midnight">
+        <HappyWalletProvider>
+          <WagmiProvider config={wagmiConfig}>
+            <QueryClientProvider client={queryClient}>
               <Layout>
                 <AccountProvider>
                   <Outlet />
                 </AccountProvider>
               </Layout>
-            </ConnectKitProvider>
-          </QueryClientProvider>
-        </WagmiProvider>
+            </QueryClientProvider>
+          </WagmiProvider>
+        </HappyWalletProvider>
         <Scripts />
         <ScrollRestoration />
         <Toaster />

@@ -1,10 +1,7 @@
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
-import { ConnectKitButton, useIsMounted, useModal } from "connectkit";
-import { AnimatePresence, motion } from "framer-motion";
 import { XIcon } from "lucide-react";
 import * as React from "react";
-
 import { cn } from "~/lib/utils";
 
 const buttonVariants = cva(
@@ -71,59 +68,18 @@ const CloseButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
 CloseButton.displayName = "CloseButton";
 
-export const TransactionButton = React.forwardRef<
-  HTMLButtonElement,
-  ButtonProps
->(({ children, disabled, onClick, ...props }, ref) => {
-  const isMounted = useIsMounted();
-  const { openSwitchNetworks } = useModal();
-  return (
-    <ConnectKitButton.Custom>
-      {({ isConnected, chain, show }) => {
-        const unsupported = chain?.unsupported ?? false;
-        const isDisabled = disabled && isConnected && !unsupported;
-
-        const handleClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-          if (isConnected) {
-            if (unsupported) {
-              openSwitchNetworks();
-            } else {
-              onClick?.(e);
-            }
-          } else {
-            show?.();
-          }
-        };
-
-        return (
-          <AnimatePresence>
-            {isMounted && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <Button
-                  ref={ref}
-                  disabled={isDisabled}
-                  onClick={handleClick}
-                  {...props}
-                >
-                  {isConnected
-                    ? unsupported
-                      ? "Wrong Network"
-                      : children
-                    : "Connect Wallet"}
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        );
-      }}
-    </ConnectKitButton.Custom>
-  );
-});
-
+const TransactionButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => {
+    return (
+      <button
+        type="button"
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    );
+  },
+);
 TransactionButton.displayName = "TransactionButton";
 
-export { Button };
+export { Button, TransactionButton };

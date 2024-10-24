@@ -1,5 +1,5 @@
 {
-  "name": "magicswapv2",
+  "name": "@happychain/dex",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -17,6 +17,8 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@happychain/react": "workspace:^",
+    "@happychain/ui": "workspace:^",
     "@epic-web/cachified": "^5.2.0",
     "@radix-ui/react-checkbox": "^1.0.3",
     "@radix-ui/react-dialog": "^1.0.3",
@@ -36,7 +38,6 @@
     "buffer-polyfill": "npm:buffer@^6.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "connectkit": "^1.7.2",
     "dayjs": "^1.11.13",
     "decimal.js-light": "^2.5.1",
     "framer-motion": "^11.2.6",
@@ -85,11 +86,5 @@
     "vite": "^5.2.2",
     "vite-tsconfig-paths": "^5.0.1",
     "vitest": "^2.0.1"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "lint-staged": {
-    "app/**/{*.ts,*.tsx}": "npm run fix"
   }
 }

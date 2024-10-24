@@ -29,6 +29,20 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+@layer components {
+  /* Custom Connect Badge Styling */
+  connect-button {
+    .happychain-badge {
+      @apply inline-flex items-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ring-offset-background !bg-primary text-primary-foreground hover:!bg-primary/90 h-11 ps-2 !pe-6 w-full;
+      background-image: unset !important;
+      font-family: inherit;
+    }
+
+    .happychain-icon {
+      @apply size-6 object-contain !bg-white;
+    }
+  }
+}
 
 @font-face {
   font-family: "Whyte";
