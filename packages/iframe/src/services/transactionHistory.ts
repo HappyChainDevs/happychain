@@ -1,7 +1,7 @@
 import { getDefaultStore } from "jotai"
-import type { Address, TransactionReceipt } from "viem"
+import type { Address } from "viem"
 import { getPublicClient } from "../state/publicClient"
-import { type PendingTxDetails, confirmedTxsAtom, pendingTxsAtom } from "../state/txHistory"
+import { type PendingTxDetails, type TxInfo, confirmedTxsAtom, pendingTxsAtom } from "../state/txHistory"
 
 /**
  * When a new transaction hash is added to the `pendingTxsAtom`, Viem's
@@ -47,7 +47,7 @@ async function monitorTransactionHash(address: Address, payload: PendingTxDetail
     const receipt = await getPublicClient().waitForTransactionReceipt({ hash: payload.hash })
     if (receipt) {
         // Add the tx receipt to confirmed history
-        addConfirmedTx(address, receipt, payload.value)
+        addConfirmedTx(address, { receipt, value: payload.value })
         // Remove the tx hash from the pending list
         removePendingTx(address, payload)
     } else {
@@ -74,10 +74,10 @@ export function removePendingTx(address: Address, payload: PendingTxDetails) {
     })
 }
 
-export function addConfirmedTx(address: Address, receipt: TransactionReceipt, value?: bigint) {
+export function addConfirmedTx(address: Address, txInfo: TxInfo) {
     store.set(confirmedTxsAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
-        const isReceiptAlreadyLogged = userHistory.includes(receipt)
+        const isReceiptAlreadyLogged = userHistory.includes(txInfo)
 
         if (isReceiptAlreadyLogged) {
             console.warn("(⊙_⊙) transaction already confirmed — this should never happen (⊙_⊙)")
@@ -86,7 +86,7 @@ export function addConfirmedTx(address: Address, receipt: TransactionReceipt, va
 
         return {
             ...existingEntries,
-            [address]: [{ ...receipt, sendValue: value }, ...userHistory],
+            [address]: [txInfo, ...userHistory],
         }
     })
 }

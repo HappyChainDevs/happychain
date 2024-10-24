@@ -1,8 +1,6 @@
 import { atomWithStorage, createJSONStorage } from "jotai/utils"
-import type { Address, Hash, TransactionReceipt, TransactionType } from "viem"
+import type { Address, Hash, TransactionReceipt } from "viem"
 import { StorageKey } from "../services/storage"
-
-export type TxRecord<T> = Record<Address, T[]>
 
 /**
  * Represents the details of a pending transaction,
@@ -10,33 +8,16 @@ export type TxRecord<T> = Record<Address, T[]>
  */
 export type PendingTxDetails = {
     hash: Hash
-    value?: bigint
+    value: bigint
 }
-
-/**
- * Record of pending transactions, organized by the sender's address.
- * Each address maps to an array of pending transaction details.
- */
-export type PendingTxHistoryRecord = TxRecord<PendingTxDetails>
 
 /**
  * Extension of the {@link TransactionReceipt} type to account for an optional send value.
  */
-export type ExtendedTransactionReceipt<
-    quantity = bigint,
-    index = number,
-    status = "success" | "reverted",
-    type = TransactionType,
-> = TransactionReceipt<quantity, index, status, type> & {
-    /** Optional value sent with the transaction, represented as a hex string */
-    sendValue?: bigint
+export type TxInfo = {
+    receipt: TransactionReceipt
+    value: bigint
 }
-
-/**
- * Record of confirmed transactions, organized by the sender's address.
- * Each address maps to an array of transaction receipts (confirmations).
- */
-export type ConfirmedTransactionsRecord = TxRecord<ExtendedTransactionReceipt>
 
 /**
  * Utility function to create a JSON storage with custom handling of `bigint` values.
@@ -55,10 +36,10 @@ const createBigIntStorage = <T>() =>
  * - This atom is initialized with an empty object (`{}`) if no transactions are stored.
  * - Transactions are retrieved and saved using the `createBigIntStorage` with proper handling of BigInt values.
  */
-export const confirmedTxsAtom = atomWithStorage<ConfirmedTransactionsRecord>(
+export const confirmedTxsAtom = atomWithStorage<Record<Address, TxInfo[]>>(
     StorageKey.ConfirmedTxs,
     {},
-    createBigIntStorage<ConfirmedTransactionsRecord>(),
+    createBigIntStorage<Record<Address, TxInfo[]>>(),
 )
 
 /**
@@ -66,8 +47,8 @@ export const confirmedTxsAtom = atomWithStorage<ConfirmedTransactionsRecord>(
  * - This atom is initialized with an empty object (`{}`) if no pending transactions are stored.
  * - Pending transactions are stored in their raw format without any special serialization logic.
  */
-export const pendingTxsAtom = atomWithStorage<PendingTxHistoryRecord>(
+export const pendingTxsAtom = atomWithStorage<Record<Address, PendingTxDetails[]>>(
     StorageKey.PendingTxs,
     {},
-    createBigIntStorage<PendingTxHistoryRecord>(),
+    createBigIntStorage<Record<Address, PendingTxDetails[]>>(),
 )
