@@ -1,6 +1,6 @@
 import { type HappyUser, Msgs } from "@happychain/sdk-shared"
+import { hasPermissions } from "#src/state/permissions.ts"
 import { appMessageBus, happyProviderBus } from "../services/eventBus"
-import { hasPermissions } from "../services/permissions"
 import { getAppURL, isStandaloneIframe } from "./appURL"
 
 export function emitUserUpdate(user?: HappyUser) {
