@@ -1,23 +1,22 @@
 import { useHappyChain } from "@happychain/react"
-
 import { useEffect, useMemo, useState } from "react"
-import { createPublicClient, createWalletClient, custom } from "viem"
+import { createPublicClient, createWalletClient, custom, type PublicClient, type WalletClient } from "viem"
 import { ConnectButton } from "./BadgeComponent"
 
 function App() {
-    const [signatureResult, setSignatureResult] = useState<string>()
-    const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
-
     const { provider, user, connect, disconnect, showSendScreen } = useHappyChain()
-
-    const publicClient = useMemo(() => createPublicClient({ transport: custom(provider) }), [provider])
-    const walletClient = useMemo(
-        () => user?.address && createWalletClient({ account: user.address, transport: custom(provider) }),
+    const publicClient = useMemo<PublicClient | undefined>(() => {
+        if(provider) return createPublicClient({ transport: custom(provider) })
+    }, [provider])
+    const walletClient = useMemo<WalletClient | undefined>(
+        () => (user?.address && provider) && createWalletClient({ account: user.address, transport: custom(provider) }),
         [user, provider],
     )
+    const [signatureResult, setSignatureResult] = useState<string>()
+    const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<PublicClient['getBlock']>>>()
 
     async function sendStub() {
-        showSendScreen()
+        showSendScreen && showSendScreen()
     }
 
     async function signMessage(message: string) {
@@ -27,9 +26,11 @@ function App() {
         }
         setSignatureResult("")
 
-        const signature = await walletClient.signMessage({ message })
-
-        const valid = await publicClient.verifyMessage({
+        const signature = await walletClient.signMessage({ 
+            message,
+            account: user.address
+        })
+        const valid = await publicClient!!.verifyMessage({
             address: user.address,
             message,
             signature,
@@ -41,7 +42,7 @@ function App() {
     }
 
     async function getBlock() {
-        const block = await publicClient.getBlock()
+        const block = await publicClient!!.getBlock()
         setBlockResult(block)
     }
 
@@ -59,7 +60,7 @@ function App() {
             <button
                 type="button"
                 onClick={() => {
-                    user ? disconnect() : connect()
+                    user ? disconnect!!() : connect!!()
                 }}
                 className="rounded-lg bg-sky-300 p-2 shadow-xl"
             >

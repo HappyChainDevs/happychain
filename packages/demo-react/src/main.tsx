@@ -1,8 +1,6 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
-
-import { HappyWalletProvider, chains, happyProvider } from "@happychain/react"
-
+import { HappyWalletProvider } from "@happychain/react"
 import App from "./App.tsx"
 
 /**
@@ -14,12 +12,10 @@ import App from "./App.tsx"
  * to disconnect
  * await window.happyProvider.request({ method: 'wallet_revokePermissions', params: [{eth_accounts: {}}] })
  */
-// biome-ignore lint/suspicious/noExplicitAny: demo purposes only. not needed under regular usage
-;(window as any).happyProvider = happyProvider
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <HappyWalletProvider init={{ chain: chains.testnet }}>
+        <HappyWalletProvider>
             <App />
         </HappyWalletProvider>
     </React.StrictMode>,
