@@ -5,9 +5,7 @@ import { userAtom } from "../../../state/user"
 
 const HappyBalance = () => {
     const user = useAtomValue(userAtom)
-
     const { data: balance } = useBalance({ address: user?.address })
-
     const formattedBalance = formatUserBalance(balance?.value)
 
     return (

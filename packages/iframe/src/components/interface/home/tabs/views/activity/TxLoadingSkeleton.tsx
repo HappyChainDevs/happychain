@@ -3,13 +3,14 @@ import { CircleNotch } from "@phosphor-icons/react"
 import type { Hash } from "viem"
 import { getCurrentChainBlockExplorerUrl } from "../../../../../../state/currentChain"
 
+interface TxLoadingSkeletonProps {
+    tx: Hash
+}
+
 /**
  * Placeholder component to show loading status of a
  * transaction being confirmed in a block.
  */
-interface TxLoadingSkeletonProps {
-    tx: Hash
-}
 const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
     const blockExplorerUrl = getCurrentChainBlockExplorerUrl()
     return (
