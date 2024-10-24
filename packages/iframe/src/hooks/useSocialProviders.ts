@@ -16,6 +16,9 @@ const providers = [googleConnector].map(
     (provider) =>
         ({
             ...provider,
+            onConnect: provider.onConnect,
+            onReconnect: provider.onReconnect,
+            onDisconnect: provider.onDisconnect,
             disconnect: provider.disconnect,
             connect: async () => {
                 try {

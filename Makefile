@@ -373,6 +373,7 @@ update-latest:
 .PHONY: update-latest
 
 remove-modules:
+	@echo "Removing all node_modules"
 	rm -rf node_modules packages/*/node_modules
 .PHONY: remove-modules
 
