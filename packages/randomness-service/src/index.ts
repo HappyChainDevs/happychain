@@ -31,9 +31,7 @@ class RandomnessService {
             abis: abis,
             gasEstimator: new CustomGasEstimator(),
         })
-    }
 
-    async start() {
         this.txm.start()
         this.txm.addTransactionCollector(this.onCollectTransactions.bind(this))
     }
@@ -66,5 +64,4 @@ class RandomnessService {
     }
 }
 
-const service = new RandomnessService()
-service.start()
+new RandomnessService()
