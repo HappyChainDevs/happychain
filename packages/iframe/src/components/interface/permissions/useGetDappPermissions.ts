@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtomValue } from "jotai"
 import { useAccount } from "wagmi"
 import { permissionsMapAtom } from "../../../state/permissions"
 import { userAtom } from "../../../state/user"
@@ -9,7 +9,7 @@ const KEY_QUERY_GET_DAPP_PERMISSIONS = "GET_DAPP_PERMISSIONS"
 
 function useGetDappPermissions(dappUrl: AppURL) {
     const user = useAtomValue(userAtom)
-    const permissionsMap = useAtom(permissionsMapAtom)[0]
+    const permissionsMap = useAtomValue(permissionsMapAtom)
     const account = useAccount()
 
     /**
