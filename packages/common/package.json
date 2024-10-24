@@ -24,7 +24,8 @@
         "jotai": { "optional": true },
         "react": { "optional": true },
         "viem": { "optional": true },
-        "neverthrow": { "optional": true }
+        "neverthrow": { "optional": true },
+        "zod": { "optional": true }
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
