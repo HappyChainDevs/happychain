@@ -36,12 +36,12 @@ export function useInjectedProviders(): ConnectionProvider[] {
                     id: `injected:${eip1193Provider.info.rdns}`,
                     name: eip1193Provider.info.name,
                     icon: eip1193Provider.info.icon,
-                    enable: async () => {
+                    connect: async () => {
                         // will automatically disable loading state when user+provider are set
                         setAuthState(AuthState.Connecting)
                         await enable(eip1193Provider)
                     },
-                    disable: async () => {
+                    disconnect: async () => {
                         // will automatically disable loading state when user+provider are set
                         setAuthState(AuthState.Connecting)
                         await disable(eip1193Provider)

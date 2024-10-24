@@ -57,7 +57,7 @@ export default defineConfig(({ command }) => ({
  */
 function sharedWorkerChunkStrategy() {
     return (id: string) => {
-        // must be vendor if web3 is vendored so that
+        // must be vendor if Web3Auth is vendored so that
         // it can be loaded first, _always_
         if (id.includes("web3auth.polyfill.ts")) {
             return "worker-web3auth-polyfill-chunk"
