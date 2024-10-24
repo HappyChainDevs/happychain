@@ -1,21 +1,21 @@
 import "./web3auth.polyfill"
 import { waitForCondition } from "@happychain/sdk-shared"
+import { worker } from "@happychain/worker/runtime"
 import { tssLib } from "@toruslabs/tss-dkls-lib"
 import { EthereumSigningProvider } from "@web3auth/ethereum-mpc-provider"
 import { COREKIT_STATUS, type JWTLoginParams, Web3AuthMPCCoreKit, makeEthereumSigner } from "@web3auth/mpc-core-kit"
+import { createStore, get, set } from "idb-keyval"
 import { config } from "../services/config"
-
-import { worker } from "@happychain/worker/runtime"
 export { addMessageListener } from "@happychain/worker/runtime"
 
-// if persisting is desirable, we can use IndexedDB as IAsyncStorage
+const web3AuthStore = createStore("web-3-auth-db", "web-3-auth-store")
+
 const web3AuthWorkerStorage = {
-    cache: new Map(),
-    getItem(key: string) {
-        return this.cache.get(key)
+    async getItem(key: string) {
+        return get(key, web3AuthStore)
     },
-    setItem(key: string, value: string) {
-        return this.cache.set(key, value)
+    async setItem(key: string, value: string) {
+        return set(key, value, web3AuthStore)
     },
 }
 
