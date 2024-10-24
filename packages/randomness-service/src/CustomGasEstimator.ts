@@ -18,6 +18,6 @@ export class CustomGasEstimator extends GasEstimator {
             return ok(100000n)
         }
 
-        return this.estimateGasSimulating(transactionManager, transaction)
+        return this.simulateTransactionForGas(transactionManager, transaction)
     }
 }
