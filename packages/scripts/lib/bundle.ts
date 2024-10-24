@@ -76,21 +76,23 @@ export async function build({
 
         const t2 = performance.now()
 
-        const buildResults = await bunBuild(config)
-        if (!buildResults?.success) {
-            if (buildResults?.logs) {
-                for (const log of buildResults.logs) {
-                    console.warn(log)
+        if (config.bundle) {
+            const buildResults = await bunBuild(config)
+            if (!buildResults?.success) {
+                if (buildResults?.logs) {
+                    for (const log of buildResults.logs) {
+                        console.warn(log)
+                    }
+                } else {
+                    console.log("Build Failed")
                 }
-            } else {
-                console.log("Build Failed")
+                break
             }
-            break
         }
 
         const t3 = performance.now()
 
-        await areTheTypesWrong(config)
+        if (config.bundle && config.checkExports) await areTheTypesWrong(config)
 
         const t4 = performance.now()
 
@@ -123,14 +125,16 @@ export async function build({
     const reportSizes = configs.some((c) => c.reportSizes)
 
     const sizeData = await pkgSize(base, { sizes: ["size", "gzip", "brotli"] })
-
     const moduleFile = getEntrypointPath(".")?.replace(/^\.\//, "") // remove leading './' if present
     const bundleFile = sizeData.files.find((f) => f.path === moduleFile)
-    const bundleFileSize = byteSize(bundleFile?.size ?? 0, { units: "metric" }).toString()
-    spinner.success(
-        `${pkgConfigName} — Finished in ${chalk.green(`${Math.ceil(performance.now() - start)}ms`)} 🎉` +
-            ` (JS Bundle Size: ${bundleFileSize})`,
-    )
+
+    let sizeSummary = ""
+    if (bundleFile) {
+        const bundleFileSize = byteSize(bundleFile.size, { units: "metric" }).toString()
+        sizeSummary = ` (JS Bundle Size: ${bundleFileSize})`
+    }
+    const timeSummary = chalk.green(`${Math.ceil(performance.now() - start)}ms`)
+    spinner.success(`${pkgConfigName} — Finished in ${timeSummary} 🎉${sizeSummary}`)
 
     if (reportTime) {
         const report = generateTimeReport(buildTimes)
@@ -197,7 +201,6 @@ function generateTimeReport(buildTimes: Map<string, Record<string, string>>) {
 }
 
 async function areTheTypesWrong(config: Config) {
-    if (!config?.checkExports) return
     spinner.setText(`${pkgConfigName} — Checking for packaging issues...`)
 
     let output: string
@@ -394,8 +397,11 @@ async function tscBuild(config: Config) {
     if (!config.tsConfig) return
 
     const tsconfigPath = join(base, config.tsConfig)
+    const forceOpt = config.cleanOutDir ? "--force" : ""
+
     spinner.setText(`${pkgConfigName} — Generating types (tsc)...`)
-    const out = await $`bun tsc --build ${tsconfigPath} ${config.cleanOutDir ? "--force" : ""}`.nothrow()
+
+    const out = await $`bun tsc --build ${tsconfigPath} ${forceOpt}`.nothrow()
 
     if (out.exitCode) {
         console.error(out.text())
