@@ -2,14 +2,14 @@ import { useAtomValue } from "jotai"
 
 import { userAtom } from "../../../../../../state/user"
 
-import { confirmedTxsAtom, pendingTxsAtom } from "../../../../../../state/txHistory"
+import { confirmedTxsAtom, pendingTxsAtom } from "#src/state/txHistory.ts"
 import TxLoadingSkeleton from "./TxLoadingSkeleton"
 import TxLogEntry from "./TxLogEntry"
 
 /**
  * Displays HappyUser's recent transaction history.
  * TxReceipts are fetched from the atom, and user specific
- * receipts are fed into the child component.
+ * receipt information is fed into the child component.
  *
  * For transactions that haven't been confirmed yet, a skeleton is rendered.
  */
