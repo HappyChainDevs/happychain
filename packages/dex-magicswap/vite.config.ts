@@ -7,6 +7,17 @@ installGlobals();
 
 export default defineConfig({
   plugins: [remix(), tsconfigPaths()],
+  build: {
+    target: "esnext",
+  },
+  esbuild: {
+    target: "esnext",
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "esnext",
+    },
+  },
   ssr: {
     noExternal: ["react-use"],
   },
