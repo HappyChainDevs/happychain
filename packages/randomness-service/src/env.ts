@@ -25,4 +25,4 @@ if (!parsedEnv.success) {
     throw new Error("There is an error with the server environment variables")
 }
 
-export const environmentVariables = parsedEnv.data
+export const env = parsedEnv.data

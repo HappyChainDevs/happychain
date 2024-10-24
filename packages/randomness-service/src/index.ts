@@ -8,7 +8,7 @@ import { CommitmentManager } from "./CommitmentManager.js"
 import { CustomGasEstimator } from "./CustomGasEstimator.js"
 import { CommitmentTransactionFactory } from "./Factories/CommitmentTransactionFactory.js"
 import { RevealValueTransactionFactory } from "./Factories/RevealValueTransactionFactory.js"
-import { environmentVariables } from "./env.js"
+import { env } from "./env.js"
 
 class RandomnessService {
     private readonly commitmentManager: CommitmentManager
@@ -19,15 +19,12 @@ class RandomnessService {
         this.commitmentManager = new CommitmentManager()
         this.commitmentTransactionFactory = new CommitmentTransactionFactory(
             anvil.id,
-            environmentVariables.RANDOM_CONTRACT_ADDRESS,
-            environmentVariables.PRECOMMIT_DELAY,
+            env.RANDOM_CONTRACT_ADDRESS,
+            env.PRECOMMIT_DELAY,
         )
-        this.revealValueTransactionFactory = new RevealValueTransactionFactory(
-            anvil.id,
-            environmentVariables.RANDOM_CONTRACT_ADDRESS,
-        )
+        this.revealValueTransactionFactory = new RevealValueTransactionFactory(anvil.id, env.RANDOM_CONTRACT_ADDRESS)
         this.txm = new TransactionManager({
-            account: privateKeyToAccount(environmentVariables.PRIVATE_KEY),
+            account: privateKeyToAccount(env.PRIVATE_KEY),
             transport: webSocket(),
             chain: anvil,
             id: "randomness-service",
@@ -45,8 +42,7 @@ class RandomnessService {
         const transactions: Transaction[] = []
 
         // We try to commit the ramdomness POST_COMMIT_MARGIN to be safe that the transaction is included before the PRECOMMIT_DELAY
-        const commitmentTimestamp =
-            block.timestamp + environmentVariables.PRECOMMIT_DELAY + environmentVariables.POST_COMMIT_MARGIN
+        const commitmentTimestamp = block.timestamp + env.PRECOMMIT_DELAY + env.POST_COMMIT_MARGIN
         const commitment = this.commitmentManager.generateCommitmentForTimestamp(commitmentTimestamp)
 
         const commitmentTransaction = this.commitmentTransactionFactory.create(
@@ -56,13 +52,11 @@ class RandomnessService {
 
         transactions.push(commitmentTransaction)
 
-        const revealValueCommitment = this.commitmentManager.getCommitmentForTimestamp(
-            block.timestamp + environmentVariables.TIME_BLOCK,
-        )
+        const revealValueCommitment = this.commitmentManager.getCommitmentForTimestamp(block.timestamp + env.TIME_BLOCK)
 
         if (revealValueCommitment) {
             const revealValueTransaction = this.revealValueTransactionFactory.create(
-                block.timestamp + environmentVariables.TIME_BLOCK,
+                block.timestamp + env.TIME_BLOCK,
                 revealValueCommitment.value,
             )
             transactions.push(revealValueTransaction)
