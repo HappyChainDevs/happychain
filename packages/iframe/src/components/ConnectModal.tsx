@@ -13,7 +13,7 @@ function setModalState({ isOpen, cancelled }: Parameters<typeof appMessageBus.em
 }
 
 async function connect(provider: ConnectionProvider) {
-    await provider.enable()
+    await provider.connect()
     setModalState({ isOpen: false, cancelled: false })
 }
 

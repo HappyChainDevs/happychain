@@ -5,10 +5,10 @@ import { FirebaseAuthState } from "./firebaseAuthState"
 
 let user: HappyUser | undefined
 
-export async function getUser() {
+export async function getFirebaseSharedUser() {
     return user
 }
-export async function setUser(_user?: HappyUser) {
+export async function setFirebaseSharedUser(_user?: HappyUser) {
     user = _user
 }
 
@@ -16,9 +16,9 @@ export async function setUser(_user?: HappyUser) {
 
 let state = FirebaseAuthState.Disconnected
 
-export function getState() {
+export function getFirebaseAuthState() {
     return state
 }
-export async function setState(_state: FirebaseAuthState) {
+export async function setFirebaseAuthState(_state: FirebaseAuthState) {
     state = _state
 }

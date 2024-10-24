@@ -4,7 +4,12 @@ import { GoogleAuthProvider, type User, onAuthStateChanged, signInWithPopup } fr
 import type { EIP1193Provider } from "viem"
 import { firebaseAuth } from "../services/firebase"
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEIP1193Provider } from "../services/web3auth"
-import { getState, getUser, setState, setUser } from "../workers/firebase.sw"
+import {
+    getFirebaseAuthState,
+    getFirebaseSharedUser,
+    setFirebaseAuthState,
+    setFirebaseSharedUser,
+} from "../workers/firebase.sw"
 import { FirebaseAuthState } from "../workers/firebaseAuthState"
 import { isConnected as isWeb3AuthConnected } from "../workers/web3auth.sw"
 
@@ -13,12 +18,10 @@ export abstract class FirebaseConnector {
     public readonly id: string
     public readonly name: string
     public readonly icon: string
-    constructor(
-        private opts: {
-            name: string
-            icon: string
-        },
-    ) {
+    constructor(opts: {
+        name: string
+        icon: string
+    }) {
         this.id = `social:firebase:${opts.name}`.toLowerCase()
         this.type = WalletType.Social
         this.name = opts.name
@@ -39,9 +42,9 @@ export abstract class FirebaseConnector {
      * It gets set to false when onAuthChange response after the login attempt
      */
     private instanceIsConnecting = false
-    public async enable() {
+    public async connect() {
         this.instanceIsConnecting = true
-        await setState(FirebaseAuthState.Connecting)
+        await setFirebaseAuthState(FirebaseAuthState.Connecting)
         try {
             const userCredential = await signInWithPopup(firebaseAuth, new GoogleAuthProvider())
             const token = await this.fetchLoginTokenForUser(userCredential.user)
@@ -50,22 +53,22 @@ export abstract class FirebaseConnector {
                 token,
             )
             if (!happyUser) throw new Error(`Failed to connect ${this.id}`)
-            await setState(FirebaseAuthState.Connected)
+            await setFirebaseAuthState(FirebaseAuthState.Connected)
             await this.onConnect(happyUser, web3AuthEIP1193Provider)
         } catch {
-            await setState(FirebaseAuthState.Disconnected)
+            await setFirebaseAuthState(FirebaseAuthState.Disconnected)
         }
     }
 
-    public async disable() {
+    public async disconnect() {
         try {
-            await setState(FirebaseAuthState.Disconnecting)
+            await setFirebaseAuthState(FirebaseAuthState.Disconnecting)
             await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
             await this.onDisconnect(undefined, web3AuthEIP1193Provider)
-            await setState(FirebaseAuthState.Disconnected)
+            await setFirebaseAuthState(FirebaseAuthState.Disconnected)
         } catch {
             const next = (await isWeb3AuthConnected()) ? FirebaseAuthState.Connected : FirebaseAuthState.Disconnected
-            await setState(next)
+            await setFirebaseAuthState(next)
         }
     }
 
@@ -103,7 +106,7 @@ export abstract class FirebaseConnector {
             // have to refresh JWT since web3auth fails if duplicate token is found
             const addresses = await web3AuthConnect(token)
             const user = FirebaseConnector.makeHappyUser(partialUser, addresses)
-            await setUser(user)
+            await setFirebaseSharedUser(user)
             return user
         } catch {
             // TODO: handle retry logic, and failure state
@@ -127,8 +130,8 @@ export abstract class FirebaseConnector {
     private listenForAuthChange() {
         onAuthStateChanged(firebaseAuth, async (_user) => {
             if (!_user) {
-                if ((await getState()) !== FirebaseAuthState.Disconnecting) {
-                    await this.disable()
+                if ((await getFirebaseAuthState()) !== FirebaseAuthState.Disconnecting) {
+                    await this.disconnect()
                 }
                 return
             }
@@ -146,7 +149,7 @@ export abstract class FirebaseConnector {
             // only once, so if a user is not connected already, we must refresh the JWT with
             // firebase prior to a connection.
             if (await isWeb3AuthConnected()) {
-                const user = await getUser()
+                const user = await getFirebaseSharedUser()
                 if (user) {
                     await this.onReconnect(user, web3AuthEIP1193Provider)
                     return

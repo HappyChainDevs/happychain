@@ -16,12 +16,12 @@ const providers = [googleConnector].map(
     (provider) =>
         ({
             ...provider,
-            disable: provider.disable,
-            enable: async () => {
+            disconnect: provider.disconnect,
+            connect: async () => {
                 try {
                     // will automatically disable loading state when user+provider are set
                     setAuthState(AuthState.Connecting)
-                    await provider.enable()
+                    await provider.connect()
                 } catch (e) {
                     setAuthState(AuthState.Disconnected)
                     throw e
@@ -39,7 +39,8 @@ export function useSocialProviders() {
      * Connect wagmi on user details changing
      */
     useEffect(() => {
-        // TODO: this works but applies to injected wallets also, need to decide how to handle injected wallets!
+        // TODO: this works but applies to injected wallets also, will be tackled in injected wallet
+        // refactor: https://github.com/HappyChainDevs/happychain/pull/191
         const init = async () => {
             if (user && wagmiStatus === "disconnected") {
                 await connectAsync({ connector: connectors[0] })
