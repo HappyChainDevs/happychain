@@ -32,6 +32,9 @@ PKG := $(notdir $(shell pwd))
 # Empty stubs (so that we can iterate over packages and call these commands even if not defined)
 # Can be overriden any including Makefile.
 
+setup:
+.PHONY: setup
+
 build:
 .PHONY: build
 
