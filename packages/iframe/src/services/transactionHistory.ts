@@ -1,7 +1,13 @@
 import { getDefaultStore } from "jotai"
-import type { Address } from "viem"
-import { getPublicClient } from "../state/publicClient"
-import { type PendingTxDetails, type TxInfo, confirmedTxsAtom, pendingTxsAtom } from "../state/txHistory"
+import { type Address, hexToNumber, stringToHex } from "viem"
+
+import type { QueryKey } from "@tanstack/react-query"
+import { getBalanceQueryKey } from "wagmi/query"
+import { queryClient } from "#src/main.tsx"
+import { getCurrentChain } from "#src/state/currentChain.ts"
+import { getPublicClient } from "#src/state/publicClient.ts"
+import { type PendingTxDetails, type TxInfo, confirmedTxsAtom, pendingTxsAtom } from "#src/state/txHistory.ts"
+import { getUser } from "#src/state/user.ts"
 
 /**
  * When a new transaction hash is added to the `pendingTxsAtom`, Viem's
@@ -50,6 +56,10 @@ async function monitorTransactionHash(address: Address, payload: PendingTxDetail
         addConfirmedTx(address, { receipt, value: payload.value })
         // Remove the tx hash from the pending list
         removePendingTx(address, payload)
+        // invalidate queryKey to refetch balance post tx confirmation
+        queryClient.invalidateQueries({
+            queryKey: getQueryKey(),
+        })
     } else {
         console.warn(`Error monitoring transaction receipt for hash: ${payload.hash}`)
     }
@@ -88,5 +98,13 @@ export function addConfirmedTx(address: Address, txInfo: TxInfo) {
             ...existingEntries,
             [address]: [txInfo, ...userHistory],
         }
+    })
+}
+
+// queryKey util
+function getQueryKey(): QueryKey {
+    return getBalanceQueryKey({
+        address: getUser()?.address,
+        chainId: hexToNumber(stringToHex(getCurrentChain().chainId)),
     })
 }

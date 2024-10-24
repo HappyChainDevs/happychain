@@ -16,7 +16,9 @@ import { config } from "./wagmi/config"
 
 // Create a new router instance
 const router = createRouter({ routeTree })
-const queryClient = new QueryClient()
+
+// new QueryClient instance, exportable for query invalidations
+export const queryClient = new QueryClient()
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {
