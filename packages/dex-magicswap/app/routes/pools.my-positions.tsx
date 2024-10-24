@@ -34,6 +34,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       ? getCollectionIdsMapForGame(game, ENV.PUBLIC_CHAIN_ID)
       : {};
 
+    /*
     return {
       total,
       positions: positions.filter(
@@ -57,11 +58,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
             )),
       ),
     };
+    */
   };
-
+  return defer({
+    userPositions: { total: 0, positions: [] },
+  });
+  /*
   return defer({
     userPositions: fetchAndFilterUserPositions(),
-  });
+  });*/
 }
 
 const RowSkeleton = () => (

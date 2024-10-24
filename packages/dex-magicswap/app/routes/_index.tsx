@@ -8,13 +8,6 @@ import { DOCS_URL } from "~/consts";
 import { generateUrl, getSocialMetas } from "~/lib/seo";
 import type { RootLoader } from "~/root";
 
-// export async function loader() {
-//   const stats = await fetchStats();
-//   return json({
-//     stats,
-//   });
-// }
-
 export const meta: MetaFunction<
   unknown, // typeof loader,
   {
@@ -94,75 +87,6 @@ export default function Homepage() {
           </motion.div>
         </div>
       </div>
-      {/* <div className="-translate-y-1/4 md:-translate-y-1/2 container grid w-full grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
-        <motion.div
-          className="div"
-          initial={{
-            opacity: 0,
-            y: -30,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.2,
-          }}
-        >
-          <StatisticCard value={stats?.pairCount ?? 0} title="Trading Pairs" />
-        </motion.div>
-        <motion.div
-          className="div"
-          initial={{
-            opacity: 0,
-            y: -30,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.25,
-          }}
-        >
-          <StatisticCard value={stats?.userCount ?? 0} title="Traders" />
-        </motion.div>
-        <motion.div
-          className="div"
-          initial={{
-            opacity: 0,
-            y: -30,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.3,
-          }}
-        >
-          <StatisticCard
-            value={formatNumber(stats?.reserveNFT ?? 0)}
-            title="NFTs Supplied"
-          />
-        </motion.div>
-        <motion.div
-          className="div"
-          initial={{
-            opacity: 0,
-            y: -30,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.35,
-          }}
-        >
-          <StatisticCard value={stats?.txCount ?? 0} title="Transactions" />
-        </motion.div>
-      </div> */}
       <motion.div
         className="container mt-12 flex flex-col items-center justify-between gap-8 md:mt-0 md:mb-0 md:h-[556px] md:flex-row"
         initial={{ opacity: 0 }}
