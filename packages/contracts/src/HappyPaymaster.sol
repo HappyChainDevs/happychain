@@ -9,11 +9,12 @@ import {SIG_VALIDATION_SUCCESS} from "account-abstraction/contracts/core/Helpers
 
 /**
  * @notice A simple paymaster contract that approves all incoming user operations while managing
- * user-specific gas budgets. Each user has a maximum gas budget of 1,000,000 gas units, which
+ * user-specific gas budgets. Each user has a maximum gas budget of 50,000,000 gas units, which
  * gradually refills over a 24-hour period. For every transaction, the required gas amount is
  * deducted from the user's budget, and the operation is approved if sufficient balance is available.
  *
- * If the user's budget is insufficient to cover the gas cost, the transaction gets reverted.
+ * If the user's budget is insufficient to cover the gas cost, or if the bundler isn't authorized,
+ * the transaction reverts. This is in accordance with the EIP spec.
  */
 contract HappyPaymaster is BasePaymaster {
     using UserOperationLib for PackedUserOperation;

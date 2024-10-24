@@ -42,10 +42,10 @@ contract GasEstimator is Test {
      *
      * This test estimates gas consumption for:
      * 1. Initial storage initialization (cold storage).
-     * 2. Cold storage access by validating the same user operation again.
-     * 3. A user operation with larger calldata (round number and double the size).
-     * 4. Another userOp by the same user in a single transaction (Warm storage access).
-     * 5. Another userOp by different user in a single transaction (Warm storage access).
+     * 2. Cold storage access by validating new userOp by same sender again, in different transaction.
+     * 3. Another userOp by the same user in a single transaction (Warm storage access).
+     * 4. Another userOp by different user in a single transaction (Warm storage access).
+     * 5. A user operation with larger calldata (round number and double the size).
      */
     function testEstimatePaymasterValidateUserOpGas() public {
         // Step 1: Gas cost when storage transitions from zero to non-zero (worst-case scenario)
