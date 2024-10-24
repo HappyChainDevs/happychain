@@ -2,9 +2,9 @@ import { useCollapsible } from "@ark-ui/react"
 import type { FC } from "react"
 import { revokePermissions } from "../../../services/permissions"
 import type { AppPermissions } from "../../../state/permissions"
+import type { AppURL } from "../../../utils/appURL"
 import { Button } from "../../primitives/button/Button"
 import { InlineDrawer } from "../../primitives/collapsible/InlineDrawer"
-import type { AppURL } from "../../../utils/appURL"
 
 interface ClearAllDappsPermissionsProps {
     listDappsWithPermissions: Array<[string, AppPermissions]>
@@ -30,7 +30,9 @@ const ClearAllDappsPermissions: FC<ClearAllDappsPermissionsProps> = (props) => {
                         listDappsWithPermissions.forEach((record) => {
                             const [url, dappPermissions] = record
                             // @todo - use `revokePermissions(url, dappPermissions)` once caveats are supported
-                            Object.keys(dappPermissions).forEach((permission) => revokePermissions(url as AppURL, permission))
+                            Object.keys(dappPermissions).forEach((permission) =>
+                                revokePermissions(url as AppURL, permission),
+                            )
                         })
 
                         api.setOpen(false)
