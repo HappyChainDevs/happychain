@@ -59,6 +59,7 @@ const EmbedSendLazyRoute = EmbedSendLazyImport.update({
 } as any).lazy(() => import('./routes/embed/send.lazy').then((d) => d.Route))
 
 const EmbedPermissionsIndexLazyRoute = EmbedPermissionsIndexLazyImport.update({
+  id: '/permissions/',
   path: '/permissions/',
   getParentRoute: () => EmbedLazyRoute,
 } as any).lazy(() =>
@@ -67,6 +68,7 @@ const EmbedPermissionsIndexLazyRoute = EmbedPermissionsIndexLazyImport.update({
 
 const EmbedPermissionsDappIdLazyRoute = EmbedPermissionsDappIdLazyImport.update(
   {
+    id: '/permissions/$dappId',
     path: '/permissions/$dappId',
     getParentRoute: () => EmbedLazyRoute,
   } as any,
