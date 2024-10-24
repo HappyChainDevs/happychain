@@ -161,6 +161,8 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     return baseAppPermissions
 }
 
+// === State Mutators =======================================================================================
+
 /**
  * Sets the permissions for the current user on the given app.
  */
@@ -192,6 +194,35 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
             ...prev,
             [user.address]: { ...prev[user.address], [app]: appPermissions },
         }
+    })
+}
+
+// === CLEAR PERMISSIONS ===========================================================================
+
+/**
+ * Clears all permissions for the current user (for all apps).
+ */
+export function clearPermissions(): void {
+    const user = getUser()
+    if (!user) return
+    store.set(permissionsMapAtom, (prev) => {
+        const { [user.address]: _, ...rest } = prev
+        return rest
+    })
+}
+
+/**
+ * Clears all permissions for the user on the given app.
+ */
+export function clearAppPermissions(app: AppURL): void {
+    const user = getUser()
+    if (!user) return
+    store.set(permissionsMapAtom, (prev) => {
+        const {
+            [user.address]: { [app]: _, ...otherApps },
+            ...otherUsers
+        } = prev
+        return { ...otherUsers, [user.address]: otherApps }
     })
 }
 
@@ -315,33 +346,4 @@ export function getPermissions(
     return permissionRequestEntries(permissionsRequest)
         .map(({ name }) => appPermissions[name])
         .filter(Boolean)
-}
-
-// === CLEAR PERMISSIONS ===========================================================================
-
-/**
- * Clears all permissions for the current user (for all apps).
- */
-export function clearPermissions(): void {
-    const user = getUser()
-    if (!user) return
-    store.set(permissionsMapAtom, (prev) => {
-        const { [user.address]: _, ...rest } = prev
-        return rest
-    })
-}
-
-/**
- * Clears all permissions for the user on the given app.
- */
-export function clearAppPermissions(app: AppURL): void {
-    const user = getUser()
-    if (!user) return
-    store.set(permissionsMapAtom, (prev) => {
-        const {
-            [user.address]: { [app]: _, ...otherApps },
-            ...otherUsers
-        } = prev
-        return { ...otherUsers, [user.address]: otherApps }
-    })
 }

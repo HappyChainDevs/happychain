@@ -20,6 +20,8 @@ export function getWatchedAssets(): UserWatchedAssetsRecord {
     return store.get(watchedAssetsAtom)
 }
 
+// === State Mutators ===================================================================================
+
 /**
  * Adds a new asset to the store under the provided address.
  * If the asset does not already exist for the address, it's added.
