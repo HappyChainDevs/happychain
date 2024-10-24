@@ -3,21 +3,17 @@
     "version": "0.0.0",
     "private": true,
     "type": "module",
-    "main": "./dist/lib/index.es.js",
-    "module": "./dist/lib/index.es.js",
-    "types": "./dist/lib/index.es.d.ts",
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.es.d.ts",
     "exports": {
         ".": {
-            "default": "./dist/lib/index.es.js",
+            "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
         },
         "./mikro-orm.config": {
-            "default": "./dist/lib/mikro-orm.config.es.js",
+            "default": "./dist/mikro-orm.config.es.js",
             "types": "./dist/mikro-orm.config.es.d.ts"
-        },
-        "./build.config": {
-            "default": "./dist/build.config.es.js",
-            "types": "./dist/build.es.d.ts"
         }
     },
     "mikro-orm": {
