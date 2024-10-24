@@ -9,7 +9,7 @@ import pkgSize from "pkg-size"
 import type { PkgSizeData } from "pkg-size/dist/interfaces"
 import type { cliArgs } from "./cli-args"
 import type { Config, DefineConfigParameters } from "./defineConfig"
-import { getConfigArray, getEntrypointPath } from "./utils/config"
+import { getConfigs, getEntrypointPath } from "./utils/config"
 import { base, pkg } from "./utils/globals"
 import { spinner } from "./utils/spinner"
 
@@ -25,7 +25,7 @@ export async function build({
 }: { configs: DefineConfigParameters; options: typeof cliArgs }) {
     spinner.start("Building...")
 
-    const configs = getConfigArray(_configs, options)
+    const configs = getConfigs(_configs, options)
 
     const buildTimes = new Map<string, Record<string, string>>()
     const usedTsConfigs = new Set<string>()

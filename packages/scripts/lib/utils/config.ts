@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
 import type { cliArgs } from "../cli-args"
-import { defaultConfig } from "../defineConfig"
+import { type PartialConfig, defaultConfig } from "../defineConfig"
 import type { Config, DefineConfigParameters } from "../defineConfig"
 import { pkg } from "./globals"
 
@@ -8,45 +8,52 @@ import { pkg } from "./globals"
  * Constructs the effective config by merging the user-provided config with the default values
  * and applying other default heuristics.
  */
-function applyDefaults(config: Config): Config {
-    const newConfig = {
+function applyDefaults(config: PartialConfig): Config {
+    // bundle iff `bunConfig` is set or `bundle` is true
+    const bundle = config.bundle === undefined ? !!config.bunConfig : config.bundle
+
+    // Read exports from package.json if unspecified.
+    let exports = config.exports || []
+    if (!config.exports) {
+        const exportNames = Object.keys(pkg.exports ?? {})
+        exports = exportNames.length > 0 ? exportNames : ["."]
+    }
+
+    const newConfig: Config = {
         ...defaultConfig,
         ...config,
+        bundle,
+        exports,
         bunConfig: {
             ...defaultConfig.bunConfig,
             ...config.bunConfig,
         },
     }
-    if (!config.exports) {
-        // Read exports from package.json if unspecified.
-        const exportNames = Object.keys(pkg.exports ?? {})
-        newConfig.exports = exportNames.length > 0 ? exportNames : ["."]
-    }
+
+    // Default to `api-extractor.json` if it exists.
     if (config.apiExtractorConfig === undefined && existsSync("api-extractor.json")) {
         newConfig.apiExtractorConfig = "api-extractor.json"
     }
-    detectNaming(newConfig)
+
+    detectNaming(config?.bunConfig?.naming, newConfig)
     return newConfig
 }
 
 /**
- * Attempts to detect the naming scheme for exports if not specified explicitly and applicable.
- * This edits the passed config object in-place.
- *
- * This is only applicable if not code-splitting and we have one export matching a single entrypoint.
+ * Attempt to detect the Bun naming scheme if not explicitly specified, and only if the config
+ * has exactly one entry point and one export specified.
  */
-function detectNaming(config: Config) {
-    // cf. docstring on applicability
-    if (config.bunConfig.naming !== defaultConfig.bunConfig.naming) return
-    if (!config.exports) return
-    if (config.bunConfig.splitting) return
-    if (!(config.bunConfig.entrypoints.length === 1 && config.exports.length === 1)) return
+function detectNaming(userNaming: string | undefined, config: Config) {
+    const bunConfig = config.bunConfig
 
-    const entryPointName = getEntrypointPath(config.exports[0]) //
-        ?.replace(config.bunConfig.outdir, "[dir]")
-        .replace(".js", ".[ext]")
+    if (!userNaming && config.exports.length === 1 && bunConfig.entrypoints.length === 1) {
+        //
+        const naming = getEntrypointPath(config.exports[0])
+            ?.replace(bunConfig.outdir, "[dir]")
+            ?.replace(".js", ".[ext]")
 
-    config.bunConfig.naming = entryPointName || defaultConfig.bunConfig.naming
+        bunConfig.naming = naming || defaultConfig.bunConfig.naming
+    }
 }
 
 /**
@@ -61,7 +68,7 @@ const configArgs = {
  * Obtains the effective config array by calling function-type configs with the config arguments and
  * CLI options, and applying defaults values & heuristics.
  */
-export function getConfigArray(configs: DefineConfigParameters, options: typeof cliArgs): Config[] {
+export function getConfigs(configs: DefineConfigParameters, options: typeof cliArgs): Config[] {
     const _configs: DefineConfigParameters =
         typeof configs === "function" //
             ? configs({ ...configArgs, ...options })
