@@ -94,7 +94,7 @@ export async function connect(jwt: JWTLoginParams) {
     // avoid multiple concurrent calls
     await waitForCondition(() => state !== "connecting")
 
-    if (state === "connected") {
+    if (state === "connected" && _addresses.length) {
         return _addresses
     }
 
@@ -102,7 +102,6 @@ export async function connect(jwt: JWTLoginParams) {
 
     await web3Auth.loginWithJWT(jwt)
 
-    // note: web3auth.status gets mutated, so we need to check here again
     if (web3Auth.status === COREKIT_STATUS.LOGGED_IN) {
         await web3Auth.commitChanges()
     }

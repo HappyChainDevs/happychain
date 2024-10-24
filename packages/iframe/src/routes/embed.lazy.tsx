@@ -57,7 +57,7 @@ function Embed() {
     )
 
     async function disconnect() {
-        await activeProvider?.disable()
+        await activeProvider?.disconnect()
         void appMessageBus.emit(Msgs.ModalToggle, { isOpen: false, cancelled: false })
     }
 
