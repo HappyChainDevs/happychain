@@ -10,7 +10,7 @@ import {
     permissionsMapAtom,
 } from "../state/permissions"
 import { getUser } from "../state/user"
-import { type AppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
+import { type AppURL, getAppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
 
 // === NOTICE ======================================================================================
