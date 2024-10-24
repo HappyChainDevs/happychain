@@ -86,7 +86,13 @@ function Embed() {
                         onClick={signalOpen}
                     >
                         <div className="relative">
-                            <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-8 rounded-full" />
+                            a
+                            <img
+                                src={user.avatar}
+                                alt={`${user.name}'s avatar`}
+                                className="h-8 rounded-full"
+                                referrerPolicy="no-referrer"
+                            />
                             {activeProvider && (
                                 <img
                                     src={activeProvider.icon}
