@@ -1,8 +1,4 @@
 query GetStats {
-  globals {
-    magicUSD
-    userCount
-  }
   factories {
     pairCount
     reserveNFT
