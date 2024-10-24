@@ -39,7 +39,7 @@ BACKEND_PKGS := common,$(BACKEND_ONLY_PKGS)
 # all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
 
-# all packages (have a package.json)
+# all packages (that have a package.json)
 ALL_PKGS := $(TS_PKGS),docs,contracts,configs
 
 # ==================================================================================================
@@ -49,10 +49,32 @@ ALL_PKGS := $(TS_PKGS),docs,contracts,configs
 MULTIRUN ?= concurrently
 
 # ==================================================================================================
+# FORALL
+
+define forall
+	$(eval PKGS := $(strip $(1)))
+	$(eval CMD := $(2))
+	for name in packages/{$(PKGS)}; do\
+		echo "Running $(CMD) in $${name}";\
+		cd $${name} && $(CMD) && cd ../.. || (cd ../.. && exit 1);\
+	done
+endef
+
+define forall_make
+	$(eval PKGS := $(strip $(1)))
+	$(eval TARGET := $(2))
+	for name in packages/{$(PKGS)}; do\
+		echo "Running make $(TARGET) in $${name}";\
+		make $(TARGET) --directory=$${name} || exit 1;\
+	done
+endef
+
+# ==================================================================================================
 # BASICS COMMANDS
 #   To get the project running locally.
 
 setup: install-frozen enable-hooks ## To be run when first setting up the repository.
+	$(call forall_make , $(ALL_PKGS) , setup)
 	cd packages/contracts && make setup
 .PHONY: setup
 
@@ -132,27 +154,6 @@ sdk.dev:
 docs.dev: shared.dev sdk.dev
 	cd packages/docs && make dev
 .PHONY: docs.watch
-
-# ==================================================================================================
-# FORALL
-
-define forall
-	$(eval PKGS := $(strip $(1)))
-	$(eval CMD := $(2))
-	for name in packages/{$(PKGS)}; do\
-		echo "Running $(CMD) in $${name}";\
-		cd $${name} && $(CMD) && cd ../.. || (cd ../.. && exit 1);\
-	done
-endef
-
-define forall_make
-	$(eval PKGS := $(strip $(1)))
-	$(eval TARGET := $(2))
-	for name in packages/{$(PKGS)}; do\
-		echo "Running make $(TARGET) in $${name}";\
-		make $(TARGET) --directory=$${name} || exit 1;\
-	done
-endef
 
 # ==================================================================================================
 # CORRECTNESS
