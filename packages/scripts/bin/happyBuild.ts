@@ -3,7 +3,7 @@ import { join } from "node:path"
 import watcher from "@parcel/watcher"
 import { build } from "../lib/bundle"
 import { cliArgs } from "../lib/cli-args"
-import { getConfigs } from "../lib/defineConfig"
+import { getConfigs } from "../lib/utils/config"
 
 // load config
 const { default: configs } = await import(join(process.cwd(), cliArgs.config))

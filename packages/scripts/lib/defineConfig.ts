@@ -25,9 +25,9 @@ export interface Config {
     name?: string
     /**
      * List of exports from package.json to include in the outputs.
-     * Default: undefined, will read all exports from package.json, or default to "." otherwise.
+     * Default: reads all exports from package.json if specified, "." otherwise.
      */
-    exports?: string[]
+    exports: string[]
     /**
      * Remove the output directory before building. Default: "dist"
      */
@@ -49,6 +49,11 @@ export interface Config {
      * Ignored if {@link tsConfig} is undefined.
      */
     apiExtractorConfig?: string
+    /**
+     * Whether to generate a bundle. Default: true if {@link bunConfig} is defined, false otherwise.
+     * Note that we never output non-bundled .js files.
+     */
+    bundle: boolean
     /**
      * {@link Bun.build} options {@link BuildConfig}. Default: see {@link defaultConfig}
      */
@@ -85,56 +90,17 @@ export const defaultConfig = {
         splitting: false,
         naming: "[dir]/[name].es.[ext]",
     },
-} as const satisfies Config
+} as const satisfies Partial<Config>
 
 export type ConfigFactoryArgs = { mode?: "production" | "development" | string } & typeof cliArgs
 
-export type DefineConfigParameters = Config | Config[] | ((args: ConfigFactoryArgs) => Config | Config[])
+export type PartialConfig = Partial<Omit<Config, "bunConfig"> & { bunConfig: Partial<BunConfig> }>
 
-export function defineConfig(config: Partial<DefineConfigParameters>): DefineConfigParameters {
-    return config as DefineConfigParameters
-}
+export type DefineConfigParameters =
+    | PartialConfig
+    | PartialConfig[]
+    | ((args: ConfigFactoryArgs) => PartialConfig | PartialConfig[])
 
-function applyBunConfigDefaults(config: Config): BunConfig {
-    if (
-        config.exports &&
-        config.bunConfig.entrypoints.length === 1 &&
-        config.exports?.length === 1 &&
-        !config.bunConfig?.naming &&
-        !config.bunConfig.splitting
-    ) {
-        const exports = pkg.exports?.[config.exports[0]]
-        // if explicitly defined in package.json, but not in bunConfigDir
-        // we will reconstruct and inject it as the new default
-        const outdir = config.bunConfig.outdir || defaultConfig.bunConfig.outdir
-
-        return {
-            ...defaultConfig.bunConfig,
-            ...config.bunConfig,
-            naming: (exports?.default || exports?.import || exports?.require || "")
-                .replace(outdir, "[dir]")
-                .replace(".js", ".[ext]"),
-        }
-    }
-
-    return { ...defaultConfig.bunConfig, ...config.bunConfig }
-}
-
-function applyDefaults(config: Config): Config {
-    return {
-        ...defaultConfig,
-        ...config,
-        bunConfig: applyBunConfigDefaults(config),
-    }
-}
-const configArgs = {
-    mode: process.env.NODE_ENV,
-}
-
-export function getConfigs(configs: DefineConfigParameters, options: typeof cliArgs): Config[] {
-    const _configs: DefineConfigParameters =
-        typeof configs === "function" //
-            ? configs({ ...configArgs, ...options })
-            : configs
-    return ((Array.isArray(_configs) ? _configs : [_configs]) as Config[]).map((conf) => applyDefaults(conf))
+export function defineConfig(config: DefineConfigParameters): DefineConfigParameters {
+    return config
 }
