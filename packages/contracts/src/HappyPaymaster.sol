@@ -13,8 +13,7 @@ import {SIG_VALIDATION_SUCCESS} from "account-abstraction/contracts/core/Helpers
  * gradually refills over a 24-hour period. For every transaction, the required gas amount is
  * deducted from the user's budget, and the operation is approved if sufficient balance is available.
  *
- * If the user's budget is insufficient to cover the gas cost, the transaction is rejected, returning
- * a validation failure code (SIG_VALIDATION_FAILED = 1).
+ * If the user's budget is insufficient to cover the gas cost, the transaction gets reverted.
  */
 contract HappyPaymaster is BasePaymaster {
     using UserOperationLib for PackedUserOperation;
