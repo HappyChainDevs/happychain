@@ -1,17 +1,17 @@
 import { useCollapsible } from "@ark-ui/react"
 import type { FC } from "react"
+import { revokePermissions } from "../../../services/permissions"
+import type { AppPermissions } from "../../../state/permissions"
 import { Button } from "../../primitives/button/Button"
 import { InlineDrawer } from "../../primitives/collapsible/InlineDrawer"
+import type { AppURL } from "../../../utils/appURL"
 
 interface ClearAllDappsPermissionsProps {
-    handleClearAllDappsPermissions: () => void
+    listDappsWithPermissions: Array<[string, AppPermissions]>
 }
-/**
- * Let the user clear all permissions for all dApps
- * Displays a verification message to confirm the action before proceeding.
- */
+
 const ClearAllDappsPermissions: FC<ClearAllDappsPermissionsProps> = (props) => {
-    const { handleClearAllDappsPermissions } = props
+    const { listDappsWithPermissions } = props
     const api = useCollapsible()
     return (
         <InlineDrawer
@@ -27,7 +27,12 @@ const ClearAllDappsPermissions: FC<ClearAllDappsPermissionsProps> = (props) => {
             <div className="grid gap-2">
                 <Button
                     onClick={() => {
-                        handleClearAllDappsPermissions()
+                        listDappsWithPermissions.forEach((record) => {
+                            const [url, dappPermissions] = record
+                            // @todo - use `revokePermissions(url, dappPermissions)` once caveats are supported
+                            Object.keys(dappPermissions).forEach((permission) => revokePermissions(url as AppURL, permission))
+                        })
+
                         api.setOpen(false)
                     }}
                     className="justify-center"

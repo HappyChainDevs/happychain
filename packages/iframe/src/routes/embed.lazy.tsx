@@ -7,11 +7,11 @@ import { useEffect, useMemo } from "react"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
+import { DialogConfirmSignOut } from "../components/interface/menu-secondary-actions/DialogConfirmSignOut"
 import {
     SecondaryActionsMenu,
     TriggerSecondaryActionsMenu,
 } from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
-import { DialogConfirmSignOut } from "../components/interface/menu-secondary-actions/sign-out/DialogConfirmSignOut"
 import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"

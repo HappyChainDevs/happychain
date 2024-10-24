@@ -19,17 +19,14 @@ const InlineDrawer: FC<InlineDrawerProps> = (props) => {
     const { rootContext, trigger, children } = props
     return (
         <Collapsible.RootProvider
-            className={
-                cx(
-                    [
-                        // Pseudo backdrop styles
-                        "before:fixed before:inset-0 before:size-full before:content-[' ']",
-                        "before:bg-opacity-0 before:bg-neutral",
-                        "data-[state=closed]:before:z-[-1]",
-                        "data-[state=open]:before:bg-opacity-50 data-[state=open]:before:z-auto",
-                        "motion-safe:data-[state=open]:before:animate-fadeIn motion-safe:data-[state=closed]:before:animate-fadeOut",
-                    ]
-                )}
+            className={cx([
+                // Pseudo backdrop styles
+                "before:fixed before:inset-0 before:size-full before:content-[' ']",
+                "before:bg-opacity-0 before:bg-neutral",
+                "data-[state=closed]:before:z-[-1]",
+                "data-[state=open]:before:bg-opacity-50 data-[state=open]:before:z-auto",
+                "motion-safe:data-[state=open]:before:animate-fadeIn motion-safe:data-[state=closed]:before:animate-fadeOut",
+            ])}
             value={rootContext}
         >
             <div

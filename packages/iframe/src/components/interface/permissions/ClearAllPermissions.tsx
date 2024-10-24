@@ -1,18 +1,19 @@
 import { useCollapsible } from "@ark-ui/react"
 import type { FC } from "react"
+import { revokePermissions } from "../../../services/permissions"
+import type { AppPermissions } from "../../../state/permissions"
+import type { AppURL } from "../../../utils/appURL"
 import { Button } from "../../primitives/button/Button"
 import { InlineDrawer } from "../../primitives/collapsible/InlineDrawer"
 
-interface ClearAllPermissionsProps {
-    handleClearAllPermissions: () => void
+interface ClearAllDappsPermissionsProps {
+    url: AppURL
+    permissions: AppPermissions
 }
-/**
- * Let the user clear all permissions for a given dApp.
- * Displays a verification message to confirm the action before proceeding.
- */
-const ClearAllPermissions: FC<ClearAllPermissionsProps> = (props) => {
-    const { handleClearAllPermissions } = props
+
+const ClearAllPermissions: FC<ClearAllDappsPermissionsProps> = (props) => {
     const api = useCollapsible()
+    const { url, permissions } = props
     return (
         <InlineDrawer
             trigger={{
@@ -27,7 +28,8 @@ const ClearAllPermissions: FC<ClearAllPermissionsProps> = (props) => {
             <div className="grid gap-2">
                 <Button
                     onClick={() => {
-                        handleClearAllPermissions()
+                        // @todo - use `revokePermissions(url, permissions)` once caveats are supported
+                        Object.keys(permissions).forEach((permission) => revokePermissions(url, permission))
                         api.setOpen(false)
                     }}
                     className="justify-center"

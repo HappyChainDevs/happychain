@@ -1,8 +1,6 @@
 import { atom } from "jotai"
 
-const secondaryMenuState = atom({
-    visibilityMenu: false,
-    visibilityDialogSignOutConfirmation: false,
-})
+const secondaryMenuVisibilityAtom = atom(false)
+const dialogSignOutConfirmationVisibilityAtom = atom(false)
 
-export { secondaryMenuState }
+export { secondaryMenuVisibilityAtom, dialogSignOutConfirmationVisibilityAtom }
