@@ -69,7 +69,9 @@ ethereumSigningProvider.on("accountsChanged", (data) => {
 })
 
 export async function init() {
-    await web3Auth.init()
+    if (web3Auth.status === COREKIT_STATUS.NOT_INITIALIZED) {
+        await web3Auth.init()
+    }
 }
 
 export async function request({ method, params }: { method: string; params?: unknown[] }) {
