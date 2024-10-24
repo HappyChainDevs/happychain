@@ -7,15 +7,7 @@ export enum ContentType {
 }
 
 /**
- * Collection of atoms that track different view / button states across
- * the iframe UI. The intent is to use jotai to escape "provider hell" and create
- * a more simplistic API for (minimal render) state management.
- */
-
-/**
  * Atom to help toggle between view states in the
  * landing page of the wallet iframe component.
  */
 export const walletInfoViewAtom = atom<ContentType>(ContentType.TOKENS)
-
-// ------------------------------------------------------------------------------------

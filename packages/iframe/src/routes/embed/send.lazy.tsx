@@ -2,7 +2,7 @@ import { createLazyFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
 import { type Address, isAddress } from "viem"
 import AddressSelector from "../../components/interface/send-tx/AddressSelector"
-import SendButttons from "../../components/interface/send-tx/SendButtons"
+import SendButtons from "../../components/interface/send-tx/SendButtons"
 import SendInput from "../../components/interface/send-tx/SendInput"
 
 export const Route = createLazyFileRoute("/embed/send")({
@@ -25,7 +25,7 @@ function Send() {
                 )}
             </div>
 
-            <SendButttons sendValue={sendValue} targetAddress={targetAddress} />
+            <SendButtons sendValue={sendValue} targetAddress={targetAddress} />
         </div>
     )
 }

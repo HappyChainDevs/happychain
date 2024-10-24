@@ -9,17 +9,8 @@ import { formatEther } from "viem"
  * - Uses `Intl.NumberFormat` to format the number according to the user's locale, adding commas (or the appropriate
  *   grouping separator for thousands) and controlling the number of decimal places.
  *
- * @param {bigint | undefined} balanceValue - The balance in wei (as a bigint) to be formatted. Can be `undefined`.
- * @param {number} [decimals=3] - The number of decimal places to display. Defaults to 3 if not provided.
- *
- * @returns {string} - A formatted string representing the balance in Ether, with commas and specified decimal places.
- * If `balanceValue` is undefined, the function returns "0.0".
- *
- * ### How {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat | `Intl.NumberFormat`} Works:
- * - `Intl.NumberFormat` is a built-in JavaScript object that formats numbers based on the specified locale (in this case,
- *   the user's locale, derived from `navigator.language`).
- * - It automatically adds the appropriate thousands separator (e.g., commas in the US, spaces in many European countries)
- *   and allows you to control the number of decimal places using `minimumFractionDigits` and `maximumFractionDigits`.
+ * @param balanceValue - The balance in wei (as a bigint) to be formatted. Can be `undefined`.
+ * @param decimals - The number of decimal places to display. Defaults to 3 if not provided.
  *
  * ### Example Inputs and Outputs:
  * 1. **Input**: `balanceValue = BigInt("1234500000000000000"), decimals = 3`

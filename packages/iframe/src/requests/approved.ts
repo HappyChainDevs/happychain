@@ -7,8 +7,9 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import { type Client, type Hash, hexToBigInt } from "viem"
+import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
 
+import { addPendingTx } from "../services/transactionHistory"
 import { getChainsMap, setChains } from "../state/chains"
 import type { PendingTxDetails } from "../state/txHistory"
 import { getUser } from "../state/user"
@@ -19,7 +20,6 @@ import { appForSourceID } from "./utils"
 
 import { grantPermissions } from "#src/state/permissions.ts"
 import { addWatchedAsset } from "#src/state/watchedAssets.ts"
-import { addPendingTxEntry } from "#src/services/transactionHistory.ts"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -38,16 +38,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             const user = getUser()
             if (!user) return false
 
-            const tx = await sendToWalletClient(request)
-            // payload creation for localstorage atom
-            const sentValue = hexToBigInt(request.payload.params[0].value as `0x{string}`)
-            const payload: PendingTxDetails = {
-                hash: tx as Hash,
-                value: sentValue,
-            }
-            addPendingTxEntry(user.address, payload)
+            const hash = (await sendToWalletClient(request)) as Hash
+            const value = hexToBigInt(request.payload.params[0].value as Hex)
+            const payload: PendingTxDetails = { hash, value }
+            addPendingTx(user.address, payload)
 
-            return tx
+            return hash
         }
 
         case "eth_requestAccounts": {
