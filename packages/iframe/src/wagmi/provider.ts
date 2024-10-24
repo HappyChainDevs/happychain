@@ -25,14 +25,12 @@ export class IframeProvider extends BasePopupProvider {
     }
 
     protected override handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
-        const req = {
+        void handlePermissionlessRequest({
             key,
             windowId: iframeID(),
             error: null,
             payload: args,
-        }
-
-        void handlePermissionlessRequest(req)
+        })
     }
 
     protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {

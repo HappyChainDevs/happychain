@@ -8,6 +8,6 @@ export interface ConnectionProvider {
     name: string
     icon: string
     type: string
-    enable: () => Promise<void>
-    disable: () => Promise<void>
+    connect: () => Promise<void>
+    disconnect: () => Promise<void>
 }

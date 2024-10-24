@@ -18,10 +18,8 @@ export abstract class FirebaseConnector {
     public readonly id: string
     public readonly name: string
     public readonly icon: string
-    constructor(opts: {
-        name: string
-        icon: string
-    }) {
+
+    constructor(opts: { name: string; icon: string }) {
         this.id = `social:firebase:${opts.name}`.toLowerCase()
         this.type = WalletType.Social
         this.name = opts.name
@@ -66,7 +64,8 @@ export abstract class FirebaseConnector {
             await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
             await this.onDisconnect(undefined, web3AuthEIP1193Provider)
             await setFirebaseAuthState(FirebaseAuthState.Disconnected)
-        } catch {
+        } catch (e) {
+            console.warn(e)
             const next = (await isWeb3AuthConnected()) ? FirebaseAuthState.Connected : FirebaseAuthState.Disconnected
             await setFirebaseAuthState(next)
         }
