@@ -38,7 +38,12 @@ const UserInfo = () => {
     return (
         <div className="flex flex-row items-center space-x-4">
             <div className="relative">
-                <img src={user.avatar} alt={`${user.name}'s avatar`} className="h-12 rounded-full" />
+                <img
+                    src={user.avatar}
+                    alt={`${user.name}'s avatar`}
+                    className="h-12 rounded-full"
+                    referrerPolicy="no-referrer"
+                />
                 <img
                     src={activeProvider.icon}
                     alt={activeProvider.name}
