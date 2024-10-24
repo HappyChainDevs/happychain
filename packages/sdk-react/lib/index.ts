@@ -2,11 +2,11 @@ export { HappyWalletProvider, useHappyChain } from "./components/HappyWalletProv
 
 let sdk: Promise<typeof import("@happychain/js")> | undefined = undefined
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
     sdk = import("@happychain/js")
 }
 
-export const chains = sdk ? (await sdk).chains : { devnet: {}, testnet: {}, defaultChain: {}}
+export const chains = sdk ? (await sdk).chains : { devnet: {}, testnet: {}, defaultChain: {} }
 export const happyProvider = sdk ? (await sdk).happyProvider : undefined
 export const onModalUpdate = sdk ? (await sdk).onModalUpdate : () => {}
 export const onUserUpdate = sdk ? (await sdk).onUserUpdate : () => {}

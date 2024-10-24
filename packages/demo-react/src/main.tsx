@@ -1,6 +1,6 @@
+import { HappyWalletProvider } from "@happychain/react"
 import React from "react"
 import ReactDOM from "react-dom/client"
-import { HappyWalletProvider } from "@happychain/react"
 import App from "./App.tsx"
 
 /**

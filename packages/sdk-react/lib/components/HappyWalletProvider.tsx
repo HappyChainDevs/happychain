@@ -1,10 +1,10 @@
+import type { HappyUser } from "@happychain/js"
 // HappyWalletProvider.tsx
 import { createContext, useContext, useEffect, useState } from "react"
-import type { HappyUser } from "@happychain/js"
 
-type SDK = typeof import('@happychain/js')
+type SDK = typeof import("@happychain/js")
 type HappyWalletProviderProps = React.PropsWithChildren & {
-    init?: Parameters<typeof import('@happychain/js').register>[0]
+    init?: Parameters<typeof import("@happychain/js").register>[0]
 }
 
 type THappyContext = {
@@ -13,7 +13,7 @@ type THappyContext = {
     sdk: SDK | null
 }
 
-export const HappyContext = createContext<THappyContext>({ user: undefined, initialized: false, sdk: null  })
+export const HappyContext = createContext<THappyContext>({ user: undefined, initialized: false, sdk: null })
 
 export function HappyWalletProvider({ init, children }: HappyWalletProviderProps): React.JSX.Element {
     const [user, setUser] = useState<HappyUser | undefined>()
@@ -21,9 +21,9 @@ export function HappyWalletProvider({ init, children }: HappyWalletProviderProps
 
     useEffect(() => {
         // 1. Ensure we are in a browser context
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
             // 2. Dynamically load the JS SDK
-            import('@happychain/js').then(loadedSdk => {
+            import("@happychain/js").then((loadedSdk) => {
                 // register iframe component
                 loadedSdk.register(init)
 
@@ -34,10 +34,17 @@ export function HappyWalletProvider({ init, children }: HappyWalletProviderProps
         }
     }, [init])
 
-    return <HappyContext.Provider value={{ 
-        user, 
-        initialized: Boolean(sdk), 
-        sdk  }}>{children}</HappyContext.Provider>
+    return (
+        <HappyContext.Provider
+            value={{
+                user,
+                initialized: Boolean(sdk),
+                sdk,
+            }}
+        >
+            {children}
+        </HappyContext.Provider>
+    )
 }
 
 export function useHappyChain() {
@@ -48,7 +55,6 @@ export function useHappyChain() {
             console.warn("useHappyChain() is not initialized. Did you miss adding <HappyWalletProvider />?")
         }
     }, [initialized])
-
 
     return {
         provider: sdk?.happyProvider,
