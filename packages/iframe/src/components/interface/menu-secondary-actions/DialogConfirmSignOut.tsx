@@ -1,30 +1,25 @@
 import { Dialog } from "@ark-ui/react/dialog"
 import { useAtom } from "jotai"
 import type { FC } from "react"
-import { recipeButton } from "../../../primitives/button/variants"
-import { recipePositioner } from "../../../primitives/popover/variants"
-import { secondaryMenuState } from "../state"
+import { recipeButton } from "../../primitives/button/variants"
+import { recipePositioner } from "../../primitives/popover/variants"
+import { dialogSignOutConfirmationVisibilityAtom } from "./state"
 
 interface DialogConfirmSignOutProps {
     handleDisconnect: () => Promise<void>
 }
-/**
- * Dialog permissions list
- */
+
 const DialogConfirmSignOut: FC<DialogConfirmSignOutProps> = (props) => {
-    const [state, setState] = useAtom(secondaryMenuState)
+    const [isVisible, setVisibility] = useAtom(dialogSignOutConfirmationVisibilityAtom)
     const { handleDisconnect } = props
     return (
         <Dialog.Root
             lazyMount
             unmountOnExit
             onOpenChange={(details) => {
-                setState({
-                    ...state,
-                    visibilityDialogSignOutConfirmation: details.open,
-                })
+                setVisibility(details.open)
             }}
-            open={state.visibilityDialogSignOutConfirmation}
+            open={isVisible}
         >
             <Dialog.Positioner
                 className={recipePositioner({

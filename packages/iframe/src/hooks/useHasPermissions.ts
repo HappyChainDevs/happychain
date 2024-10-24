@@ -3,11 +3,11 @@ import { useMemo } from "react"
 import { type PermissionsRequest, atomForPermissionsCheck } from "../state/permissions"
 import { type AppURL, getAppURL } from "../utils/appURL"
 
-export function useHasPermissions(permissionsRequest: PermissionsRequest, appUrl?: string) {
+export function useHasPermissions(permissionsRequest: PermissionsRequest, app: AppURL = getAppURL()) {
     // This must be memoized to avoid an infinite render loop.
     const permissionsAtom = useMemo(
-        () => atomForPermissionsCheck(permissionsRequest, (appUrl ?? getAppURL()) as AppURL), //
-        [permissionsRequest, appUrl],
+        () => atomForPermissionsCheck(permissionsRequest, app), //
+        [permissionsRequest, app],
     )
     return useAtomValue(permissionsAtom)
 }

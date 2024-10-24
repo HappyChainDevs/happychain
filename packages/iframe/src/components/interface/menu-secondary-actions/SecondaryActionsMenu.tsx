@@ -4,27 +4,21 @@ import { Link } from "@tanstack/react-router"
 import { useAtom } from "jotai"
 import type { FC } from "react"
 import { recipeContent, recipePositioner } from "../../primitives/popover/variants"
-import { secondaryMenuState } from "./state"
+import { dialogSignOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "./state"
 
-/**
- * Trigger button for the secondary menu. Controls secondary menu visibility state.
- */
 const TriggerSecondaryActionsMenu: FC = () => {
-    const [state, setState] = useAtom(secondaryMenuState)
+    const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
 
     return (
         <button
             type="button"
-            aria-label="Open secondary actions menu"
+            title={isVisible ? "Close this menu" : "Open this menu"}
+            aria-label={isVisible ? "Close secondary actions menu" : "Open secondary actions menu"}
             onClick={() => {
-                if (!state.visibilityMenu)
-                    setState({
-                        ...state,
-                        visibilityMenu: true,
-                    })
+                setVisibility(!isVisible)
             }}
         >
-            {state.visibilityMenu ? <CaretUp size="1.25em" /> : <CaretDown size="1.25em" />}
+            {isVisible ? <CaretUp size="1.25em" /> : <CaretDown size="1.25em" />}
         </button>
     )
 }
@@ -33,33 +27,24 @@ enum MenuActions {
     Permissions = "permissions",
     Disconnect = "disconnect",
 }
-/**
- * App secondary menu. Controlled via visibility atom.
- */
+
 const SecondaryActionsMenu: FC = () => {
-    const [state, setState] = useAtom(secondaryMenuState)
+    const [isSecondaryMenuVisible, setSecondaryMenuVisibility] = useAtom(secondaryMenuVisibilityAtom)
+    const [, setDialogSignOutConfirmationVisibility] = useAtom(dialogSignOutConfirmationVisibilityAtom)
+
     return (
         <Menu.Root
-            open={state.visibilityMenu}
+            open={isSecondaryMenuVisible}
             onInteractOutside={() => {
-                setState({
-                    ...state,
-                    visibilityMenu: false,
-                })
+                setDialogSignOutConfirmationVisibility(false)
             }}
             onSelect={(details: { value: string }) => {
                 switch (details.value) {
                     case MenuActions.Disconnect:
-                        setState({
-                            ...state,
-                            visibilityDialogSignOutConfirmation: true,
-                        })
+                        setDialogSignOutConfirmationVisibility(true)
                         break
                     default:
-                        setState({
-                            ...state,
-                            visibilityMenu: false,
-                        })
+                        setSecondaryMenuVisibility(false)
                         break
                 }
             }}

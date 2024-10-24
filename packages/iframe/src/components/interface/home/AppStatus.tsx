@@ -4,7 +4,7 @@ import { getAppURL } from "#src/utils/appURL"
 const AppStatus = () => {
     const hasPermission = useHasPermissions("eth_accounts")
     return (
-        <div className="flex w-full items-center justify-center relative text-sm font-bold">
+        <div className="focus-within:bg-neutral/5 rounded-md flex w-full items-center justify-center relative text-sm font-bold">
             {`${hasPermission ? "✅" : "❌"} ${new URL(getAppURL()).host}`}
             <Link
                 className="absolute inset-0 block z-10 size-full opacity-0"

@@ -1,14 +1,7 @@
 import { createLazyFileRoute, useParams } from "@tanstack/react-router"
-import { useAccount } from "wagmi"
 import { ClearAllPermissions } from "../../components/interface/permissions/ClearAllPermissions"
 import { ListDappPermissions } from "../../components/interface/permissions/ListPermissions"
-import {
-    KEY_QUERY_GET_DAPP_PERMISSIONS,
-    useGetDappPermissions,
-} from "../../components/interface/permissions/use-dapp-permissions"
-import { KEY_QUERY_GET_ALL_DAPPS_WITH_PERMISSIONS } from "../../components/interface/permissions/use-list-dapps-with-permissions"
-import { revokePermissions } from "../../services/permissions"
-import { queryClient } from "../../tanstack-query/config"
+import { useGetDappPermissions } from "../../components/interface/permissions/useGetDappPermissions"
 import type { AppURL } from "../../utils/appURL"
 
 export const Route = createLazyFileRoute("/embed/permissions/$dappId")({
@@ -16,39 +9,21 @@ export const Route = createLazyFileRoute("/embed/permissions/$dappId")({
 })
 
 function DappPermissions() {
-    const account = useAccount()
     const dappUrl = useParams({
         from: "/embed/permissions/$dappId",
         select: (params) => decodeURI(params.dappId),
     })
-
-    const { queryGetDappPermissions } = useGetDappPermissions(dappUrl as AppURL)
+    const { listAppPermissions } = useGetDappPermissions(dappUrl as AppURL)
     return (
         <div className="bg-base-100 grow">
             <div className="absolute animate-appear inset-0 w-full overflow-hidden">
                 <h2 className="text-center bg-base-200 text-base-content font-bold p-1 text-sm">{dappUrl}</h2>
                 <div className="overflow-y-auto max-h-[calc(100%-3rem)] ">
                     <p className="sr-only">Access and change the permissions of all dApps you interacted with.</p>
-                    <ListDappPermissions dappUrl={dappUrl as AppURL} query={queryGetDappPermissions} />
-
-                    {queryGetDappPermissions?.data &&
-                        (Object.keys(queryGetDappPermissions?.data?.permissions as object).length ?? 0) > 0 && (
-                            <ClearAllPermissions
-                                handleClearAllPermissions={() => {
-                                    Object.keys(queryGetDappPermissions?.data?.permissions as object).forEach(
-                                        (permission) => {
-                                            revokePermissions(dappUrl as AppURL, permission)
-                                        },
-                                    )
-                                    queryClient.invalidateQueries({
-                                        queryKey: [KEY_QUERY_GET_ALL_DAPPS_WITH_PERMISSIONS, account?.address],
-                                    })
-                                    queryClient.invalidateQueries({
-                                        queryKey: [KEY_QUERY_GET_DAPP_PERMISSIONS, account?.address, dappUrl],
-                                    })
-                                }}
-                            />
-                        )}
+                    <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
+                    {Object.keys(listAppPermissions).length > 0 && (
+                        <ClearAllPermissions url={dappUrl as AppURL} permissions={listAppPermissions} />
+                    )}
                 </div>
             </div>
         </div>
