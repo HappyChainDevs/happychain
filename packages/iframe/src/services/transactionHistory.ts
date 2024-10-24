@@ -18,26 +18,20 @@ import { type PendingTxDetails, confirmedTxsAtom, pendingTxsAtom } from "../stat
 
 const store = getDefaultStore()
 
-export function addConfirmedTx(address: Address, receipt: TransactionReceipt, value?: bigint) {
-    store.set(confirmedTxsAtom, (existingEntries) => {
-        const userHistory = existingEntries[address] || []
-        const isReceiptAlreadyLogged = userHistory.includes(receipt)
+export function addPendingTx(address: Address, payload: PendingTxDetails) {
+    store.set(pendingTxsAtom, (existingEntries) => {
+        const pendingTxEntriesByUser = existingEntries[address] || []
+        const isHashAlreadyPending = pendingTxEntriesByUser.includes(payload)
 
-        /**
-         * for this case to be reached, it would require:
-         * 1. the exact same transaction to be sent twice
-         *      - an app could indeed easily do this — needs some ingress checking
-         * 2. that transaction to successfully be submitted
-         *    (hash obtained) both times
-         */
-        if (isReceiptAlreadyLogged) {
-            console.warn("(⊙_⊙) abnormal scenario (⊙_⊙)")
+        if (isHashAlreadyPending) {
+            console.warn("(⊙_⊙) pending transaction already recorded (⊙_⊙)")
             return existingEntries
         }
 
+        void monitorTransactionHash(address, payload)
         return {
             ...existingEntries,
-            [address]: [{ ...receipt, sendValue: value }, ...userHistory],
+            [address]: [payload, ...pendingTxEntriesByUser],
         }
     })
 }
@@ -49,45 +43,19 @@ export function addConfirmedTx(address: Address, receipt: TransactionReceipt, va
  * Uses viem's {@link https://viem.sh/docs/actions/public/waitForTransactionReceipt.html | waitForTransactionReceipt}
  * method to fetch the associated `TransactionReceipt` once the tx is included in a block.
  */
-function monitorTransactionHash(address: Address, payload: PendingTxDetails) {
-    const publicClient = getPublicClient()
-
-    void publicClient
-        .waitForTransactionReceipt({ hash: payload.hash })
-        .then((receipt: TransactionReceipt) => {
-            if (!receipt) {
-                throw new Error(`Receipt not found for transaction hash: ${payload.hash}`)
-            }
-
-            // Add the tx receipt to confirmed history
-            addConfirmedTx(address, receipt, payload.value)
-            // Remove the tx hash from the pending list
-            removePendingTxEntry(address, payload)
-        })
-        .catch((error: Error) => {
-            console.error(`Error monitoring transaction receipt for hash: ${payload.hash}`, error)
-        })
+async function monitorTransactionHash(address: Address, payload: PendingTxDetails) {
+    const receipt = await getPublicClient().waitForTransactionReceipt({ hash: payload.hash })
+    if (receipt) {
+        // Add the tx receipt to confirmed history
+        addConfirmedTx(address, receipt, payload.value)
+        // Remove the tx hash from the pending list
+        removePendingTx(address, payload)
+    } else {
+        console.warn(`Error monitoring transaction receipt for hash: ${payload.hash}`)
+    }
 }
 
-export function addPendingTxEntry(address: Address, payload: PendingTxDetails) {
-    store.set(pendingTxsAtom, (existingEntries) => {
-        const pendingTxEntriesByUser = existingEntries[address] || []
-        const isHashAlreadyPending = pendingTxEntriesByUser.includes(payload)
-
-        if (isHashAlreadyPending) {
-            console.warn("(⊙_⊙) abnormal scenario (⊙_⊙)")
-            return existingEntries
-        }
-
-        monitorTransactionHash(address, payload)
-        return {
-            ...existingEntries,
-            [address]: [payload, ...pendingTxEntriesByUser],
-        }
-    })
-}
-
-export function removePendingTxEntry(address: Address, payload: PendingTxDetails) {
+export function removePendingTx(address: Address, payload: PendingTxDetails) {
     store.set(pendingTxsAtom, (existingEntries) => {
         const updatedEntries = (existingEntries[address] || []).filter(
             (pendingPayload) => pendingPayload.hash !== payload.hash,
@@ -102,6 +70,23 @@ export function removePendingTxEntry(address: Address, payload: PendingTxDetails
         return {
             ...existingEntries,
             [address]: updatedEntries,
+        }
+    })
+}
+
+export function addConfirmedTx(address: Address, receipt: TransactionReceipt, value?: bigint) {
+    store.set(confirmedTxsAtom, (existingEntries) => {
+        const userHistory = existingEntries[address] || []
+        const isReceiptAlreadyLogged = userHistory.includes(receipt)
+
+        if (isReceiptAlreadyLogged) {
+            console.warn("(⊙_⊙) transaction already confirmed — this should never happen (⊙_⊙)")
+            return existingEntries
+        }
+
+        return {
+            ...existingEntries,
+            [address]: [{ ...receipt, sendValue: value }, ...userHistory],
         }
     })
 }
