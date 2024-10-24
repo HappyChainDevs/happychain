@@ -13,7 +13,7 @@ export class GasEstimator {
         transactionManager: TransactionManager,
         transaction: Transaction,
     ): Promise<Result<bigint, EstimateGasErrorCause>> {
-        return this.estimateGasSimulating(transactionManager, transaction)
+        return this.simulateTransactionForGas(transactionManager, transaction)
     }
 
     /**
@@ -21,7 +21,7 @@ export class GasEstimator {
      * to use the default case without needing to reimplement it. This is particularly
      * useful for services like the Randomness service.
      */
-    protected async estimateGasSimulating(
+    protected async simulateTransactionForGas(
         transactionManager: TransactionManager,
         transaction: Transaction,
     ): Promise<Result<bigint, EstimateGasErrorCause>> {
