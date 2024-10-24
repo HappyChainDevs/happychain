@@ -18,7 +18,7 @@ import type { EIP1193Provider } from "viem"
 import { getPermissions } from "#src/state/permissions.ts"
 import { getAppURL } from "#src/utils/appURL.ts"
 import { firebaseAuth } from "../services/firebase"
-import { web3AuthConnect, web3AuthDisconnect, web3AuthEIP1193Provider } from "../services/web3auth"
+import { web3AuthConnect, web3AuthDisconnect, web3AuthEIP1193Provider, web3AuthInit } from "../services/web3auth"
 import {
     getFirebaseAuthState,
     getFirebaseSharedUser,
@@ -129,6 +129,8 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     ) {
         for (let i = 0; i < 5; i++) {
             try {
+                await web3AuthInit()
+
                 // have to refresh JWT since web3auth fails if duplicate token is found
                 const addresses = await web3AuthConnect(token)
                 const user = FirebaseConnector.makeHappyUser(partialUser, addresses)
