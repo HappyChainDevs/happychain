@@ -12,8 +12,9 @@ const AppStatus = () => {
                 params={{
                     dappId: encodeURI(getAppURL()),
                 }}
+                title={`View ${new URL(getAppURL()).host} permissions`}
             >
-                View permissions
+                View {new URL(getAppURL()).host} permissions
             </Link>
         </div>
     )
