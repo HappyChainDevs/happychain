@@ -1,0 +1,10 @@
+{
+  "ignore": [
+    "./artifacts/*",
+    "./app/components/StatisticCard.tsx",
+    "./app/graphql/*",
+    "./postcss.config.cjs",
+    "./wagmi.config.ts"
+  ],
+  "ignoreDependencies": ["@vitest/coverage-v8", "autoprefixer", "graphql-tag"]
+}

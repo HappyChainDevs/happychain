@@ -1,0 +1,41 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.7.3/schema.json",
+  "files": {
+    "ignore": [
+      ".graphclient/**",
+      ".husky/**",
+      "app/entry.server.tsx",
+      "app/generated.ts",
+      "build/**",
+      "dist/**",
+      "node_modules/",
+      ".dockerignore",
+      ".gitignore",
+      "package-lock.json"
+    ]
+  },
+  "organizeImports": {
+    "enabled": true
+  },
+  "formatter": {
+    "indentStyle": "space"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "a11y": {
+        "noSvgWithoutTitle": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "warn"
+      },
+      "correctness": {
+        "noUnusedVariables": "error"
+      },
+      "nursery": {
+        "useSortedClasses": "error"
+      }
+    }
+  }
+}

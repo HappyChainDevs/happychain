@@ -1,0 +1,29 @@
+name: PR Checks
+on: pull_request
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate code
+        run: npm run generate
+        env:
+          MAGICSWAPV2_API_URL: ${{ vars.MAGICSWAPV2_API_URL }}
+      - name: Lint code
+        run: npm run lint
+      - name: Analyze code
+        run: npm run knip
+      - name: Test code
+        run: npm test
+      - name: Check types
+        run: npm run typecheck
+      - name: Build code
+        run: npm run build

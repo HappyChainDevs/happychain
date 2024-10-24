@@ -1,0 +1,27 @@
+name: Deploy
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'development' }}
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+      - name: Set up flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy
+        run: flyctl deploy --no-cache --config ./fly.toml --app ${{ vars.APP_NAME }} --remote-only --build-arg MAGICSWAPV2_API_URL=${{ vars.MAGICSWAPV2_API_URL }}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Purge Cloudflare cache
+        uses: jakejarvis/cloudflare-purge-action@master
+        if: vars.ENVIRONMENT == 'production'
+        env:
+          CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}

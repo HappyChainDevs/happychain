@@ -1,0 +1,40 @@
+/* app/tailwind.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.container {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.ruby-glow {
+  background: radial-gradient(
+      30.92% 30.92% at 50% 100%,
+      rgba(255, 60, 60, 0.06) 38.23%,
+      rgba(255, 0, 0, 0) 100%
+    ),
+    radial-gradient(
+      64.29% 64.29% at 50% 100%,
+      rgba(220, 38, 38, 0.05) 0%,
+      rgba(220, 38, 38, 0) 100%
+    );
+}
+
+@layer base {
+  * {
+    @apply border-border scrollbar-thin scrollbar-track-night-1000 scrollbar-thumb-night-800 scrollbar-thumb-rounded;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@font-face {
+  font-family: "Whyte";
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+  src: url("/fonts/ABCWhyteVariable.woff2") format("woff2"),
+    url("/fonts/ABCWhyteVariable.woff") format("woff");
+}
