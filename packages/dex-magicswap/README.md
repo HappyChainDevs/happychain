@@ -24,10 +24,15 @@ Check out the repo and install dependencies in the root folder:
 bun install
 ```
 
-Create environment variable file:
+Create your environment variables file:
 
-```sh
-cp .env.dist .env
+```
+MAGICSWAPV2_API_URL=
+PUBLIC_CHAIN_ID=421614
+PUBLIC_THIRDWEB_CLIENT_ID=
+PUBLIC_WALLET_CONNECT_PROJECT_ID=
+# You can ignore this one, we're "mocking" API calls
+TROVE_API_KEY=
 ```
 
 Fill in relevant environment variables and run code generation:
