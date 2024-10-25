@@ -17,7 +17,7 @@
         }
     },
     "mikro-orm": {
-        "configPaths": ["./dist/lib/mikro-orm.config.es.js"]
+        "configPaths": ["./dist/mikro-orm.config.es.js"]
     },
     "devDependencies": {
         "@happychain/scripts": "workspace:^",
@@ -36,6 +36,15 @@
         "@mikro-orm/core": "^6.3.10",
         "@mikro-orm/migrations": "^6.3.10",
         "eventemitter3": "^5.0.1",
-        "neverthrow": "^8.0.0"
+        "neverthrow": "^8.0.0",
+        "sqlite3": "npm:empty-module@0.0.2",
+        "mysql2": "npm:empty-module@0.0.2",
+        "mysql": "npm:empty-module@0.0.2",
+        "tedious": "npm:empty-module@0.0.2",
+        "pg": "npm:empty-module@0.0.2",
+        "pg-query-stream": "npm:empty-module@0.0.2",
+        "mariadb/callback": "npm:empty-module@0.0.2",
+        "libsql": "npm:empty-module@0.0.2",
+        "oracledb": "npm:empty-module@0.0.2"
     }
 }
