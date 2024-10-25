@@ -13,21 +13,23 @@
             "default": "./dist/index.es.js"
         }
     },
-    "devDependencies": {
-        "@happy-dom/global-registrator": "^15.0.0",
+    "dependencies": {
         "@happychain/common": "workspace:^",
-        "@happychain/scripts": "workspace:^",
-        "@happychain/configs": "workspace:^",
         "@happychain/sdk-shared": "workspace:^",
-        "@preact/preset-vite": "^2.9.0",
-        "@types/bun": "^1.1.8",
-        "@types/preact-custom-element": "^4.0.4",
         "clsx": "^2.1.1",
-        "happy-dom": "^15.0.0",
         "mipd": "^0.0.7",
         "preact": "^10.24.0",
         "preact-custom-element": "^4.3.0",
-        "typescript": "^5.6.2",
         "viem": "^2.21.18"
+    },
+    "devDependencies": {
+        "@happy-dom/global-registrator": "^15.0.0",
+        "@happychain/scripts": "workspace:^",
+        "@happychain/configs": "workspace:^",
+        "@preact/preset-vite": "^2.9.0",
+        "@types/bun": "^1.1.8",
+        "@types/preact-custom-element": "^4.0.4",
+        "happy-dom": "^15.0.0",
+        "typescript": "^5.6.2"
     }
 }
