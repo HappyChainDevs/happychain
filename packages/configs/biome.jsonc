@@ -5,6 +5,7 @@
             ".pnpm-store",
             ".next",
             "dist",
+            "build",
             "generated.ts",
             "node_modules",
             "routeTree.gen.ts",
