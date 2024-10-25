@@ -1,6 +1,6 @@
 import { type HappyUser, WalletType } from "@happychain/sdk-shared"
 import type { JWTLoginParams } from "@web3auth/mpc-core-kit"
-import { GoogleAuthProvider, type User, onAuthStateChanged, signInWithPopup } from "firebase/auth"
+import { GoogleAuthProvider, type User, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth"
 import type { EIP1193Provider } from "viem"
 import { firebaseAuth } from "../services/firebase"
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEIP1193Provider } from "../services/web3auth"
@@ -44,7 +44,10 @@ export abstract class FirebaseConnector {
         this.instanceIsConnecting = true
         await setFirebaseAuthState(FirebaseAuthState.Connecting)
         try {
-            const userCredential = await signInWithPopup(firebaseAuth, new GoogleAuthProvider())
+            const googleProvider = new GoogleAuthProvider()
+            // forces select account screen
+            googleProvider.setCustomParameters({ prompt: "select_account" })
+            const userCredential = await signInWithPopup(firebaseAuth, googleProvider)
             const token = await this.fetchLoginTokenForUser(userCredential.user)
             const happyUser = await this.connectWithWeb3Auth(
                 FirebaseConnector.makeHappyUserPartial(userCredential.user),
@@ -61,7 +64,7 @@ export abstract class FirebaseConnector {
     public async disconnect() {
         try {
             await setFirebaseAuthState(FirebaseAuthState.Disconnecting)
-            await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
+            await Promise.allSettled([signOut(firebaseAuth), web3AuthDisconnect()])
             await this.onDisconnect(undefined, web3AuthEIP1193Provider)
             await setFirebaseAuthState(FirebaseAuthState.Disconnected)
         } catch (e) {
