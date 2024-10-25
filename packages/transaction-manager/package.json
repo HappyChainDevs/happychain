@@ -43,6 +43,7 @@
         "tedious": "npm:empty-module@0.0.2",
         "pg": "npm:empty-module@0.0.2",
         "pg-query-stream": "npm:empty-module@0.0.2",
+        "mariadb": "npm:empty-module@0.0.2",
         "mariadb/callback": "npm:empty-module@0.0.2",
         "libsql": "npm:empty-module@0.0.2",
         "oracledb": "npm:empty-module@0.0.2"
