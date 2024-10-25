@@ -13,7 +13,7 @@ function DappPermissions() {
         from: "/embed/permissions/$dappId",
         select: (params) => decodeURI(params.dappId),
     })
-    const { listAppPermissions } = useGetDappPermissions(dappUrl as AppURL)
+    const listAppPermissions = useGetDappPermissions(dappUrl as AppURL)
     return (
         <div className="bg-base-100 grow">
             <div className="absolute animate-appear inset-0 w-full overflow-hidden">

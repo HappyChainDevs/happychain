@@ -1,5 +1,4 @@
 import { useCollapsible } from "@ark-ui/react"
-import type { FC } from "react"
 import { revokePermissions } from "../../../services/permissions"
 import type { AppPermissions } from "../../../state/permissions"
 import type { AppURL } from "../../../utils/appURL"
@@ -11,9 +10,8 @@ interface ClearAllDappsPermissionsProps {
     permissions: AppPermissions
 }
 
-const ClearAllPermissions: FC<ClearAllDappsPermissionsProps> = (props) => {
+const ClearAllPermissions = ({ url, permissions }: ClearAllDappsPermissionsProps) => {
     const api = useCollapsible()
-    const { url, permissions } = props
     return (
         <InlineDrawer
             trigger={{
@@ -28,8 +26,7 @@ const ClearAllPermissions: FC<ClearAllDappsPermissionsProps> = (props) => {
             <div className="grid gap-2">
                 <Button
                     onClick={() => {
-                        // @todo - use `revokePermissions(url, permissions)` once caveats are supported
-                        Object.keys(permissions).forEach((permission) => revokePermissions(url, permission))
+                        revokePermissions(url, permissions)
                         api.setOpen(false)
                     }}
                     className="justify-center"

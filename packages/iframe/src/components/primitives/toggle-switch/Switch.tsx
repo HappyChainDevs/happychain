@@ -1,6 +1,6 @@
 import { Switch as ArkSwitch } from "@ark-ui/react"
 import { type VariantProps, cva } from "class-variance-authority"
-import type { ComponentProps, FC } from "react"
+import type { ComponentProps } from "react"
 
 /**
  * Brand styling for any UI element that implements a toggle behaviour
@@ -68,8 +68,7 @@ interface SwitchProps extends ComponentProps<typeof ArkSwitch.Root>, SwitchVaria
  * @see https://ark-ui.com/react/docs/components/switch - Component API
  * @see https://zagjs.com/components/react/switch#styling-guide - Styling reference
  */
-const Switch: FC<SwitchProps> = (props) => {
-    const { className, switchLabel, intent, scale, ...rootProps } = props
+const Switch = ({ className, switchLabel, intent, scale, ...rootProps }: SwitchProps) => {
     return (
         <ArkSwitch.Root {...rootProps} className={recipeToggle({ intent, scale, class: className ?? "" })}>
             <ArkSwitch.Control>

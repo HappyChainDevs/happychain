@@ -1,6 +1,6 @@
 import { Collapsible, type UseCollapsibleReturn } from "@ark-ui/react"
 import { cx } from "class-variance-authority"
-import type { FC, PropsWithChildren } from "react"
+import type { PropsWithChildren } from "react"
 import { type ButtonVariantsProps, recipeButton } from "../button/variants"
 
 interface InlineDrawerProps extends PropsWithChildren {
@@ -15,8 +15,7 @@ interface InlineDrawerProps extends PropsWithChildren {
  * A collapsible acting like an inline bottom drawer.
  * @see https://ark-ui.com/react/docs/components/collapsible#using-the-root-provider
  */
-const InlineDrawer: FC<InlineDrawerProps> = (props) => {
-    const { rootContext, trigger, children } = props
+const InlineDrawer = ({ rootContext, trigger, children }: InlineDrawerProps) => {
     return (
         <Collapsible.RootProvider
             className={cx([

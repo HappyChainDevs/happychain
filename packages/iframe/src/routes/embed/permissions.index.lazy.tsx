@@ -8,7 +8,7 @@ export const Route = createLazyFileRoute("/embed/permissions/")({
 })
 
 function Permissions() {
-    const { listDappsWithPermissions } = useGetAllDappsWithPermissions()
+    const listDappsWithPermissions = useGetAllDappsWithPermissions()
 
     return (
         <div className="bg-base-100 grow">

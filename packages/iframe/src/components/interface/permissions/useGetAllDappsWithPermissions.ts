@@ -1,23 +1,14 @@
-import { config } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 import { useAccount } from "wagmi"
-import { permissionsMapAtom } from "../../../state/permissions"
+import { type AppURL, isIframe } from "#src/utils/appURL.ts"
+import { type AppPermissions, permissionsMapAtom } from "../../../state/permissions"
 
-function useGetAllDappsWithPermissions() {
+function useGetAllDappsWithPermissions(): [string, AppPermissions][] {
     const permissionsMap = useAtomValue(permissionsMapAtom)
     const account = useAccount()
 
-    const dappsWithPermissions =
-        account?.address && permissionsMap[account.address]
-            ? Object.entries(permissionsMap[account.address]).filter(
-                  ([dappUrl, dappPermissions]) =>
-                      dappUrl !== config.iframePath && Object.keys(dappPermissions).length > 0,
-              )
-            : []
-
-    return {
-        listDappsWithPermissions: dappsWithPermissions,
-    }
+    return Object.entries(permissionsMap[account?.address ?? "0x0"] ?? {}) //
+        .filter(([app]) => !isIframe(app as AppURL))
 }
 
 export { useGetAllDappsWithPermissions }
