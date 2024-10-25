@@ -9,6 +9,9 @@ import { StorageKey } from "../services/storage"
 import { type AppURL, getAppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
 import { getUser, userAtom } from "./user"
 
+// STORE INSTANTIATION
+const store = getDefaultStore()
+
 // In EIP-2255, permissions define whether an app can make certain EIP-1193 requests to the wallets.
 // These permissions are scoped per app and per account.
 //
@@ -114,9 +117,7 @@ export function atomForPermissionsCheck(
     return _atomForPermissionsCheck({ permissionsRequest, app })
 }
 
-// === State Accessors =======================================================================================
-
-const store = getDefaultStore()
+// === GET ALL PERMISSIONS =======================================================================================
 
 /**
  * Returns all permissions for the current user on the given app.
@@ -161,7 +162,7 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     return baseAppPermissions
 }
 
-// === State Mutators =======================================================================================
+// === WRITE ALL PERMISSIONS =======================================================================================
 
 /**
  * Sets the permissions for the current user on the given app.
@@ -260,10 +261,7 @@ function permissionRequestEntries(permissions: PermissionsRequest): PermissionRe
  * Grants the given permission(s) for the current user and the given app, and returns the list of
  * granted permissions.
  */
-export function grantPermissions(
-    app: AppURL, //
-    permissionRequest: PermissionsRequest,
-): WalletPermission[] {
+export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequest): WalletPermission[] {
     const grantedPermissions = []
     const appPermissions = getAppPermissions(app)
 

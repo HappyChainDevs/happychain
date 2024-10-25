@@ -4,14 +4,17 @@ import type { Address, WatchAssetParameters } from "viem"
 
 export type UserWatchedAssetsRecord = Record<Address, WatchAssetParameters[]>
 
+// === Atom Definition ==================================================================================
+
 /**
  * Atom to manage watched assets mapped to user's address, using localStorage.
  */
 export const watchedAssetsAtom = atomWithStorage<UserWatchedAssetsRecord>("watchedAssets", {})
 
-// === State Accessors ==================================================================================
-
+// Store Instantiation
 const store = getDefaultStore()
+
+// === State Accessors ==================================================================================
 
 /**
  * Retrieves the current list of watched assets from the Jotai store.
