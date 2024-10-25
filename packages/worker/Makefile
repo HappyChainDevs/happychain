@@ -7,6 +7,6 @@ include ../../makefiles/bundling.mk
 setup-symlinks::
 	@if ! [[ -r ./dist/runtime.es.js ]]; then \
   		ln -s ../src/runtime/index.ts ./dist/runtime.es.js; \
-  		ln -s ../src/runtime/index.ts ./dist/runtime.es.ts; \
+  		ln -s ../src/runtime/index.ts ./dist/runtime.es.d.ts; \
 	fi
 .PHONY: setup-symlinks

@@ -9,7 +9,7 @@ export default defineConfig([
             sourcemap: "inline",
             // The build here builds the plugin, not browser code. This makes it slightly leaner.
             target: "bun",
-            external: ["mlly"],
+            packages: "external",
         },
     },
     {
