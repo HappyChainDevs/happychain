@@ -1,12 +1,12 @@
 import { Menu } from "@ark-ui/react/menu"
 import { CaretDown, CaretRight, CaretUp } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
+import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
-import type { FC } from "react"
 import { recipeContent, recipePositioner } from "../../primitives/popover/variants"
 import { dialogSignOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "./state"
 
-const TriggerSecondaryActionsMenu: FC = () => {
+const TriggerSecondaryActionsMenu = () => {
     const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
 
     return (
@@ -28,7 +28,7 @@ enum MenuActions {
     Disconnect = "disconnect",
 }
 
-const SecondaryActionsMenu: FC = () => {
+const SecondaryActionsMenu = () => {
     const [isSecondaryMenuVisible, setSecondaryMenuVisibility] = useAtom(secondaryMenuVisibilityAtom)
     const [, setDialogSignOutConfirmationVisibility] = useAtom(dialogSignOutConfirmationVisibilityAtom)
 
@@ -56,12 +56,28 @@ const SecondaryActionsMenu: FC = () => {
                 })}
             >
                 <Menu.Content
-                    className={recipeContent({
-                        scale: "default",
-                        intent: "default",
-                        animation: "default",
-                        class: "motion-safe:data-[state=open]:animate-growIn py-2 sm:pb-0 [&_[data-part=item]:focus]:outline-none [&_[data-part=item]]:cursor-pointer [&_[data-part=item]]:inline-flex [&_[data-part=item]]:gap-2 [&_[data-part=item]]:items-center [&_[data-part=item]]:min-h-10 [&_[data-part=item]]:justify-between [&_[data-part=item]]:not([data-disabled])]:cursor-pointer &_[data-part=item][data-disabled]]:cursor-not-allowed [&_[data-part=item]]:p-2 [&_[data-part=item]]:font-medium [&_[data-part=item][data-highlighted]]:bg-base-200",
-                    })}
+                    className={cx(
+                        [
+                            // Animation
+                            "motion-safe:data-[state=open]:animate-growIn",
+                            "py-2 sm:pb-0",
+                            // Item
+                            "[&_[data-part=item]]:font-medium",
+                            // Item: flex properties
+                            "[&_[data-part=item]]:inline-flex [&_[data-part=item]]:items-center [&_[data-part=item]]:justify-between",
+                            // Item: spacing, size
+                            "[&_[data-part=item]]:min-h-10 [&_[data-part=item]]:p-2 [&_[data-part=item]]:gap-2",
+                            // Item: cursor interactivity
+                            "[&_[data-part=item]]:not([data-disabled])]:cursor-pointer &_[data-part=item][data-disabled]]:cursor-not-allowed",
+                            // Item (highlighted)
+                            " [&_[data-part=item][data-highlighted]]:bg-base-200",
+                        ],
+                        recipeContent({
+                            scale: "default",
+                            intent: "default",
+                            animation: "default",
+                        }),
+                    )}
                 >
                     <div className="overflow-y-auto flex flex-col">
                         <Menu.Item asChild value={MenuActions.Permissions}>

@@ -1,4 +1,3 @@
-import type { FC } from "react"
 import { useHasPermissions } from "../../../hooks/useHasPermissions"
 import { grantPermissions, revokePermissions } from "../../../services/permissions"
 import type { AppPermissions } from "../../../state/permissions"
@@ -15,8 +14,7 @@ interface ListItemProps {
     dappUrl: AppURL
 }
 
-const ListItem: FC<ListItemProps> = (props) => {
-    const { permission, dappUrl } = props
+const ListItem = ({ permission, dappUrl }: ListItemProps) => {
     const hasPermission = useHasPermissions(permission, dappUrl)
 
     return (
@@ -38,9 +36,7 @@ interface ListDappPermissionsProps {
     dappUrl: AppURL
 }
 
-const ListDappPermissions: FC<ListDappPermissionsProps> = (props) => {
-    const { dappUrl, items } = props
-
+const ListDappPermissions = ({ dappUrl, items }: ListDappPermissionsProps) => {
     if (Object.keys(items).length === 0)
         return (
             <p className="text-sm italic px-2 text-center py-24 w-10/12 mx-auto text-neutral/50">

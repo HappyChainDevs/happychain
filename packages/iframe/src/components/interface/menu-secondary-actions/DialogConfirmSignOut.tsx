@@ -1,6 +1,5 @@
 import { Dialog } from "@ark-ui/react/dialog"
 import { useAtom } from "jotai"
-import type { FC } from "react"
 import { recipeButton } from "../../primitives/button/variants"
 import { recipePositioner } from "../../primitives/popover/variants"
 import { dialogSignOutConfirmationVisibilityAtom } from "./state"
@@ -9,9 +8,8 @@ interface DialogConfirmSignOutProps {
     handleDisconnect: () => Promise<void>
 }
 
-const DialogConfirmSignOut: FC<DialogConfirmSignOutProps> = (props) => {
+const DialogConfirmSignOut = ({ handleDisconnect }: DialogConfirmSignOutProps) => {
     const [isVisible, setVisibility] = useAtom(dialogSignOutConfirmationVisibilityAtom)
-    const { handleDisconnect } = props
     return (
         <Dialog.Root
             lazyMount
