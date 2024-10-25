@@ -16,7 +16,7 @@ export const happyConnector = injected({
 
 const config = createConfig({
   chains: [chains.defaultChain as Chain],
-  multiInjectedProviderDiscovery: true,
+  multiInjectedProviderDiscovery: false,
   connectors: [happyConnector],
   transports: {
     [chains.defaultChain.chaindId]: custom(happyProvider!!),
