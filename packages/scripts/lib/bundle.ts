@@ -9,7 +9,7 @@ import pkgSize from "pkg-size"
 import type { PkgSizeData } from "pkg-size/dist/interfaces"
 import type { cliArgs } from "./cli-args"
 import type { Config, DefineConfigParameters } from "./defineConfig"
-import { getConfigs, getEntrypointPath } from "./utils/config"
+import { getConfigs, getExportedPath } from "./utils/config"
 import { base, pkg } from "./utils/globals"
 import { spinner } from "./utils/spinner"
 
@@ -70,6 +70,12 @@ export async function build({
             } else {
                 await writeTypesEntryStub(config)
             }
+
+            for (const entrypoint of config.bunConfig.entrypoints) {
+                const typeOutputFile = typeOutputFileForEntrypoint(config, entrypoint)
+                const typeExportFile = typeExportFileForEntrypoint(config, entrypoint)
+                await $`ln -sf ../${typeOutputFile} ${typeExportFile}`
+            }
         } else {
             console.log(`${pkgConfigName} — TS config file not specified, skipping types generation`)
         }
@@ -88,6 +94,16 @@ export async function build({
                 }
                 break
             }
+        }
+
+        // Create a symlink in export dir for each entrypoint, either to the generated bundle file,
+        // or the entrypoint itself (if not bundling).
+        for (const entrypoint of config.bunConfig.entrypoints) {
+            const exportFile = exportFileForEntrypoint(config, entrypoint, "js")
+            const symlinkDest = config.bundle //
+                ? outputFileForEntrypoint(config, entrypoint, "js")
+                : entrypoint
+            await $`ln -sf ../${symlinkDest} ${exportFile}`
         }
 
         const t3 = performance.now()
@@ -114,7 +130,7 @@ export async function build({
             .flat() as string[],
     )
 
-    // TODO this can actually cleans paths inside the output dir (e.g. `dist/types`)
+    // TODO this can actually cleans paths inside the output dir (e.g. `build/types`)
     for (const path of pathsToClean) {
         await $`rm -rf ${path}`
     }
@@ -125,7 +141,7 @@ export async function build({
     const reportSizes = configs.some((c) => c.reportSizes)
 
     const sizeData = await pkgSize(base, { sizes: ["size", "gzip", "brotli"] })
-    const moduleFile = getEntrypointPath(".")?.replace(/^\.\//, "") // remove leading './' if present
+    const moduleFile = getExportedPath(".")?.replace(/^\.\//, "") // remove leading './' if present
     const bundleFile = sizeData.files.find((f) => f.path === moduleFile)
 
     let sizeSummary = ""
@@ -292,36 +308,55 @@ async function cleanOutDir(config: Config) {
  * Returns the output path for a given entrypoint and extension, using {@link BunConfig.naming}.
  */
 function outputFileForEntrypoint(config: Config, entrypoint: string, ext: string): string {
-    const bunConfig = config.bunConfig
-    return bunConfig.naming
-        .replace("[dir]", bunConfig.outdir)
-        .replace("[name]", basename(entrypoint).split(".")[0])
+    // biome-ignore format: terse
+    return config.bunConfig.naming //
+        .replace("[dir]", config.bunConfig.outdir)
+        // This is brittle, but will be fixed when rationalizing entrypoints and exports.
+        .replace("[name]", basename(entrypoint).replace(".ts", ""))
         .replace("[ext]", ext)
 }
 
-function typeOutputFileForEntrypoint(config: Config, entrypoint: string): string {
-    let outputFile = ""
+/**
+ * Returns the file in the export directory for a given entrypoint and extension,
+ * using [@link BunConfig.naming}.
+ */
+function exportFileForEntrypoint(config: Config, entrypoint: string, ext: string): string {
+    // biome-ignore format: terse
+    return config.bunConfig.naming
+        .replace("[dir]", config.exportDir)
+        // This is brittle, but will be fixed when rationalizing entrypoints and exports.
+        .replace("[name]", basename(entrypoint).replace(".ts", ""))
+        .replace("[ext]", ext)
+}
+
+function typeExportFileForEntrypoint(config: Config, entrypoint: string): string {
+    let exportFile = ""
     if (config.exports?.length === 1) {
         // If there's only one export, we look up the name of the types output file if it exists.
         // We can't do this if there is more than one export, as we don't know about how entrypoints
         // map to exports.
         const exportName = config.exports[0]
         if (pkg.exports?.[exportName]?.types) {
-            outputFile = pkg.exports[exportName].types
-            if (outputFile) return outputFile
+            exportFile = pkg.exports[exportName].types
+            if (exportFile) return exportFile
         }
     }
     if (entrypoint) {
-        outputFile = outputFileForEntrypoint(config, entrypoint, "d.ts")
+        exportFile = exportFileForEntrypoint(config, entrypoint, "d.ts")
     } else if (pkg.exports?.["."]?.types) {
-        outputFile = pkg.exports["."].types
+        exportFile = pkg.exports["."].types
     } else {
         // biome-ignore format: +
         throw new Error(
             "Unable to determine type output file: no entrypoint in build config, "
             + "no 'types' properties in package.json.")
     }
-    return outputFile
+    return exportFile
+}
+
+function typeOutputFileForEntrypoint(config: Config, entrypoint: string): string {
+    return typeExportFileForEntrypoint(config, entrypoint) //
+        .replace(config.exportDir, config.bunConfig.outdir)
 }
 
 async function rollupTypes(config: Config) {
@@ -330,24 +365,25 @@ async function rollupTypes(config: Config) {
     spinner.setText(`${pkgConfigName} — Bundling types (API Extractor)...`)
     const cleanUpPaths = new Set<string>()
 
-    // temp fix to disable a lot of useless output from api extractor
-    const ogLog = console.log.bind(console)
-    const ogWarn = console.warn.bind(console)
-    console.log = () => {}
-    console.warn = (...msg) => ogWarn(chalk.blue("[@microsoft/api-extractor]"), ...msg)
-
     const tsconfig = await $`tsc --project ${config.tsConfig} --showConfig`.nothrow().json()
 
     const apiExtractorJsonPath: string = join(base, config.apiExtractorConfig)
 
     if (!(await Bun.file(ExtractorConfig.loadFile(apiExtractorJsonPath).mainEntryPointFilePath).exists())) {
-        // Force a full rebuild if main entry point (dist/types folder doesn't exist).
+        // Force a full rebuild if main entry point (build/types folder doesn't exist).
         // This can happen with incremental builds when the types are removed,
         // but the buildinfo file is not updated.
         await tscBuild({ ...config, cleanOutDir: true })
     }
 
     const extractorConfig = ExtractorConfig.loadFileAndPrepare(apiExtractorJsonPath)
+
+    // temp fix to disable a lot of useless output from api extractor
+    const ogLog = console.log.bind(console)
+    const ogWarn = console.warn.bind(console)
+    console.log = () => {}
+    console.warn = (...msg) => ogWarn(chalk.blue("[@microsoft/api-extractor]"), ...msg)
+
     const extractorResult = Extractor.invoke(extractorConfig, {
         localBuild: true,
         typescriptCompilerFolder: require.resolve("typescript").replace("/lib/typescript.js", ""), // use project's typescript version
@@ -377,18 +413,19 @@ async function writeTypesEntryStub(config: Config) {
     if (config.bunConfig.entrypoints?.length) {
         spinner.setText(`${pkgConfigName} — API Extractor config file not specified, generating index type stub...`)
         for (const entry of config.bunConfig.entrypoints) {
-            // index.d.ts stub to re-export all from main types entry
+            // index.es.d.ts stub to re-export all from main types entry
             const outputFile = typeOutputFileForEntrypoint(config, entry)
+            // Must remove existing file to avoid writing through a symlink.
+            await $`rm -f ${join(base, outputFile)}`
             await Bun.write(
                 join(base, outputFile),
-                `export * from './${join("types", entry).replace(".ts", "")}'\nexport {}`,
+                `export * from '${join(base, config.bunConfig.outdir, "types", entry).replace(".ts", "")}'\nexport {}`,
             )
         }
     }
 }
 
 async function bunBuild(config: Config) {
-    if (!config) return
     spinner.setText(`${pkgConfigName} — Bundling JS...`)
     return await Bun.build(config.bunConfig)
 }

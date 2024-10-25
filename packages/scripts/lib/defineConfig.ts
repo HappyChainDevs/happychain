@@ -1,6 +1,5 @@
 import type { BuildConfig } from "bun"
 import type { cliArgs } from "./cli-args"
-import { pkg } from "./utils/globals"
 
 /**
  * Constrained version of {@link BuildConfig}.
@@ -12,7 +11,7 @@ export interface BunConfig extends BuildConfig {
      */
     naming: string
     /**
-     * Output directory. Default: "./dist"
+     * Output directory. Default: "./build"
      */
     outdir: string
 }
@@ -29,7 +28,7 @@ export interface Config {
      */
     exports: string[]
     /**
-     * Remove the output directory before building. Default: "dist"
+     * Remove the output directory before building. Default: true.
      */
     cleanOutDir: boolean
     /**
@@ -38,6 +37,13 @@ export interface Config {
      * Default: true
      */
     cleanOutsideOutDir: boolean
+    /**
+     * The directory where package.json exports are read from. Default: "./dist".
+     *
+     * Not to be confused with {@link BunConfig.outdir}, which is where the build configs are
+     * written. Our build system will symlink files in the exportDir to the outDir when building.
+     */
+    exportDir: string
     /**
      * Path to the TS config file. Default: "tsconfig.build.json"
      * If undefined, types will not be bundled.
@@ -82,9 +88,10 @@ export const defaultConfig = {
     checkExports: !!process.env.CI,
     reportSizes: !!process.env.CI,
     reportTime: !!process.env.CI,
+    exportDir: "./dist",
     bunConfig: {
         entrypoints: ["./lib/index.ts"],
-        outdir: "./dist",
+        outdir: "./build",
         minify: true,
         sourcemap: "linked",
         splitting: false,

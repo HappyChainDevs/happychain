@@ -3,7 +3,7 @@
     "display": "Default",
     "compilerOptions": {
         "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.base.tsbuildinfo",
-        "outDir": "${configDir}/dist",
+        "outDir": "${configDir}/build",
         "incremental": true,
         "composite": true,
 

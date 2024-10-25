@@ -47,9 +47,13 @@ function detectNaming(userNaming: string | undefined, config: Config) {
     const bunConfig = config.bunConfig
 
     if (!userNaming && config.exports.length === 1 && bunConfig.entrypoints.length === 1) {
-        //
-        const naming = getEntrypointPath(config.exports[0])
-            ?.replace(bunConfig.outdir, "[dir]")
+        const exportedPath = getExportedPath(config.exports[0])
+
+        // TODO This is extremely brittle.
+        //  - dependent on relative paths being similarly prefix with "./" or not
+        //  - dependent on the path ending with `.js`
+        const naming = exportedPath //
+            ?.replace(config.exportDir, "[dir]")
             ?.replace(".js", ".[ext]")
 
         bunConfig.naming = naming || defaultConfig.bunConfig.naming
@@ -77,7 +81,7 @@ export function getConfigs(configs: DefineConfigParameters, options: typeof cliA
 }
 
 /**
- * Reads the output path for the given entrypoint in package.json.
+ * Reads the output path for the given export name in package.json.
  *
  * The lookup order is as follows:
  * 1. `pkg.main` (only for `entrypoint === "."`)
@@ -87,11 +91,11 @@ export function getConfigs(configs: DefineConfigParameters, options: typeof cliA
  * 5. `pkg.exports[entrypoint].require`
  * 6. `undefined`
  */
-export function getEntrypointPath(entrypoint = "."): string | undefined {
-    if (entrypoint === ".") {
+export function getExportedPath(exportName = "."): string | undefined {
+    if (exportName === ".") {
         if (pkg.module) return pkg.module
         if (pkg.main) return pkg.main
     }
-    const entry = pkg.exports?.[entrypoint]
+    const entry = pkg.exports?.[exportName]
     return entry?.default || entry?.import || entry?.require || undefined
 }
