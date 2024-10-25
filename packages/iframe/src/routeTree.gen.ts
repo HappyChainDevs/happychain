@@ -25,26 +25,31 @@ const EmbedSendLazyImport = createFileRoute('/embed/send')()
 // Create/Update Routes
 
 const EmbedLazyRoute = EmbedLazyImport.update({
+  id: '/embed',
   path: '/embed',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/embed.lazy').then((d) => d.Route))
 
 const RequestRoute = RequestImport.update({
+  id: '/request',
   path: '/request',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/request.lazy').then((d) => d.Route))
 
 const IndexLazyRoute = IndexLazyImport.update({
+  id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 
 const EmbedIndexLazyRoute = EmbedIndexLazyImport.update({
+  id: '/',
   path: '/',
   getParentRoute: () => EmbedLazyRoute,
 } as any).lazy(() => import('./routes/embed/index.lazy').then((d) => d.Route))
 
 const EmbedSendLazyRoute = EmbedSendLazyImport.update({
+  id: '/send',
   path: '/send',
   getParentRoute: () => EmbedLazyRoute,
 } as any).lazy(() => import('./routes/embed/send.lazy').then((d) => d.Route))
