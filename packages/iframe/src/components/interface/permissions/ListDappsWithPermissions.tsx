@@ -1,6 +1,6 @@
 import { CaretRight } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
-import type { FC } from "react"
+import { type FC, useState } from "react"
 import type { AppPermissions } from "../../../state/permissions"
 import { getAppURL } from "../../../utils/appURL"
 
@@ -10,14 +10,21 @@ interface ListItemProps {
 
 const ListItem: FC<ListItemProps> = (props) => {
     const { dappUrl } = props
+    const [isFaviconBroken, setIsFaviconBroken] = useState(false)
+
     return (
         <li className="inline-flex w-full p-2 min-h-10 hover:bg-accent/10 [&:focus-within_[data-part=icon]]:bg-accent/10 font-medium relative overflow-hidden text-ellipsis items-center gap-2 text-sm">
             <img
+                alt={dappUrl}
                 loading="lazy"
                 height="16"
+                onError={() => setIsFaviconBroken(true)}
+                src={
+                    isFaviconBroken || dappUrl.includes("localhost:")
+                        ? "/happychain.png"
+                        : `https://www.google.com/s2/favicons?domain=${dappUrl}&sz=16`
+                }
                 width="16"
-                alt={dappUrl}
-                src={`https://www.google.com/s2/favicons?domain=${dappUrl}&sz=16`}
             />
             <span className="me-auto inline-block">{dappUrl}</span>
             <span className="p-0.5 rounded-full center" data-part="icon">
