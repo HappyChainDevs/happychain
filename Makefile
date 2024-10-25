@@ -329,8 +329,13 @@ contracts.clean:
 
 # Install packages as specified in the bun.lockb.
 install-frozen:
-	bun install --frozen-lockfile
-.PHONY: install-deps
+	# --frozen-lockfile will not generate the lockfile if missing
+	@if [ -r bun.lockb ]; then \
+		bun install --frozen-lockfile; \
+	else \
+		bun install; \
+	fi
+.PHONY: install-frozen
 
 # NOTES:
 #  Below "version specifier" refers to the version strings (e.g. "^1.2.3") in package.json.
