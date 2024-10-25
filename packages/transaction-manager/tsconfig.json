@@ -1,5 +1,5 @@
 {
-    "extends": "./tsconfig.build.json",
+    "extends": ["../configs/tsconfig.base.json"],
     "compilerOptions": {
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
@@ -8,5 +8,6 @@
             // compatibility with multiple files in the tsconfig extends field.
             "ts-node": ["./node_modules/ts-node/dist/bin.js"]
         }
-    }
+    },
+    "include": ["lib", "*.ts", "package.json"]
 }
