@@ -19,15 +19,6 @@
     "mikro-orm": {
         "configPaths": ["./dist/mikro-orm.config.es.js"]
     },
-    "devDependencies": {
-        "@happychain/scripts": "workspace:^",
-        "@mikro-orm/cli": "^6.3.10",
-        "ts-node": "11.0.0-beta.1",
-        "typescript": "^5.6.2"
-    },
-    "peerDependencies": {
-        "viem": "^2.20.1"
-    },
     "dependencies": {
         "@happychain/common": "workspace:^",
         "@happychain/configs": "workspace:^",
@@ -47,5 +38,14 @@
         "mariadb/callback": "npm:empty-module@0.0.2",
         "libsql": "npm:empty-module@0.0.2",
         "oracledb": "npm:empty-module@0.0.2"
+    },
+    "peerDependencies": {
+        "viem": "^2.20.1"
+    },
+    "devDependencies": {
+        "@happychain/scripts": "workspace:^",
+        "@mikro-orm/cli": "^6.3.10",
+        "ts-node": "11.0.0-beta.1",
+        "typescript": "^5.6.2"
     }
 }
