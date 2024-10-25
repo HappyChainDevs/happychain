@@ -1,6 +1,5 @@
 /** @jsxImportSource preact */
-import { onUserUpdate } from "@happychain/js"
-import type { HappyUser } from "@happychain/sdk-shared"
+import { type HappyUser, onUserUpdate } from "@happychain/js"
 import { useEffect, useState } from "preact/hooks"
 import { useConnection } from "./useConnection"
 

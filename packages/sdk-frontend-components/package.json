@@ -16,23 +16,15 @@
             "default": "./dist/preact.es.js"
         }
     },
-    "devDependencies": {
-        "@happychain/configs": "workspace:^",
-        "@happychain/scripts": "workspace:^",
-        "@happychain/sdk-shared": "workspace:^",
-        "@types/preact-custom-element": "^4.0.4",
-        "mipd": "^0.0.7",
-        "preact": "^10.24.1",
-        "preact-custom-element": "^4.3.0",
-        "typescript": "^5.6.2",
-        "viem": "^2.21.18"
-    },
     "peerDependencies": {
         "@happychain/js": "workspace:^"
     },
-    "optionalDependencies": {
-        "preact": "^10.24.0",
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1"
+    "devDependencies": {
+        "@happychain/configs": "workspace:^",
+        "@happychain/scripts": "workspace:^",
+        "@types/preact-custom-element": "^4.0.4",
+        "preact": "^10.24.1",
+        "preact-custom-element": "^4.3.0",
+        "typescript": "^5.6.2"
     }
 }

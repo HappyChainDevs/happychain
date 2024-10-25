@@ -6,6 +6,7 @@ export default defineConfig([
         exports: ["."],
         bunConfig: {
             entrypoints: ["./lib/index.ts"],
+            external: ["@happychain/js"],
             plugins: [inlineCssPlugin],
         },
     },
@@ -15,7 +16,7 @@ export default defineConfig([
         apiExtractorConfig: "api-extractor-preact.json",
         bunConfig: {
             entrypoints: ["./lib/badge.tsx"],
-            external: ["preact"],
+            external: ["@happychain/js", "preact"],
             plugins: [inlineCssPlugin],
         },
     },
