@@ -25,6 +25,7 @@ node_modules
 next-env.d.ts
 tsconfig.tsbuildinfo
 dist
+build
 dist-ssr
 
 # Contract outputs

@@ -15,6 +15,7 @@ build.watch: node_modules  ## Build the package in watch mode
 
 clean: ## Removes build artifacts
 	@rm -rf dist
+	@rm -rf build
 	@rm -rf node_modules/.tmp
 	@make setup-symlinks
 .PHONY: clean

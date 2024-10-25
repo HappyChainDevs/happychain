@@ -7,7 +7,7 @@
         "incremental": true,
         "noEmit": false,
         "emitDeclarationOnly": true,
-        "declarationDir": "${configDir}/dist/types",
+        "declarationDir": "${configDir}/build/types",
         "declaration": true
     }
 }
