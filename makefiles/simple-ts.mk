@@ -1,5 +1,5 @@
 # Fragment to be imported for Makefiles that do not need bundling (as handled by the
-# happyBuild script). This includes backend packages and frontend support packages.
+# happybuild script). This includes backend packages and frontend support packages.
 ##@ Typescript
 
 build: node_modules dist ## Builds package with TSC

@@ -21,7 +21,7 @@
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
-        "@happychain/scripts": "workspace:^",
+        "@happychain/build": "workspace:^",
         "@types/bun": "latest",
         "@types/node": "^22.7.4",
         "mlly": "^1.7.1",

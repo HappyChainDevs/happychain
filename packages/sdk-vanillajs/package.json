@@ -15,9 +15,9 @@
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
-        "@happychain/common": "workspace:^",
+        "@happychain/build": "workspace:^",
         "@happychain/configs": "workspace:^",
-        "@happychain/scripts": "workspace:^",
+        "@happychain/common": "workspace:^",
         "@happychain/sdk-shared": "workspace:^",
         "@types/bun": "^1.1.8",
         "@types/preact-custom-element": "^4.0.4",

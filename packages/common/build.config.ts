@@ -1,3 +1,3 @@
-import { defineConfig } from "@happychain/scripts"
+import { defineConfig } from "@happychain/build"
 
 export default defineConfig({})

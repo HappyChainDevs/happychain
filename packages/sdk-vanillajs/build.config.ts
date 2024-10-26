@@ -1,4 +1,4 @@
-import { defineConfig, inlineCssPlugin } from "@happychain/scripts"
+import { defineConfig, inlineCssPlugin } from "@happychain/build"
 
 export default defineConfig({
     bunConfig: {
