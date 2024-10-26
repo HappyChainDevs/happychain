@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 import { join } from "node:path"
 import watcher from "@parcel/watcher"
-import { build } from "../lib/bundle"
+import { build } from "../lib/build"
 import { cliArgs } from "../lib/cli-args"
-import { getConfigs } from "../lib/utils/config"
+import { getConfigs } from "../lib/config/getConfigs"
 
 // load config
 const { default: configs } = await import(join(process.cwd(), cliArgs.config))
@@ -30,7 +30,7 @@ if (!cliArgs.watch) {
     })
 
     process.on("SIGINT", () => {
-        subscription.unsubscribe()
+        void subscription.unsubscribe()
         process.exit()
     })
 }

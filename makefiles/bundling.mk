@@ -10,7 +10,7 @@ build: node_modules dist ## Build and bundle the package
 .PHONY: build
 
 build.watch: node_modules  ## Build the package in watch mode
-	@happyBuild --config build.config.ts --watch;
+	@happybuild --config build.config.ts --watch;
 .PHONY: build.watch
 
 clean: ## Removes build artifacts
@@ -53,7 +53,7 @@ DIST_DEPS := $(shell find . \
 FORCE_UDPATE := $(shell test -f node_modules/.tmp/.dev && echo force_update)
 
 dist: $(DIST_DEPS) $(FORCE_UDPATE)
-	@happyBuild --config build.config.ts;
+	@happybuild --config build.config.ts;
 	@# force updates modified_at timestamp
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 

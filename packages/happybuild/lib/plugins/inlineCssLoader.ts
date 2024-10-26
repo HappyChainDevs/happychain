@@ -1,7 +1,7 @@
 /**
  * To import CSS file, it is necessary to import this plugin, as well as to add a `.d.ts` file
  * (suggested name: `happy-build.d.ts`) in the source that contains the comment:
- * /// <reference types="@happychain/scripts/plugins" />
+ * /// <reference types="@happychain/build/plugins" />
  */
 
 import { readFileSync } from "node:fs"
