@@ -3,9 +3,7 @@ import { defineConfig } from "@happychain/build"
 export default defineConfig([
     {
         exports: ["."],
-        checkExports: false,
         bunConfig: {
-            entrypoints: ["./src/index.ts"],
             sourcemap: "inline",
             // The build here builds the plugin, not browser code. This makes it slightly leaner.
             target: "bun",
@@ -13,10 +11,8 @@ export default defineConfig([
         },
     },
     {
-        exports: ["./runtime"],
-        checkExports: false,
+        exports: [{ name: "./runtime", entrypoint: "./src/runtime/index.ts" }],
         bunConfig: {
-            entrypoints: ["./src/runtime/index.ts"],
             sourcemap: "inline",
         },
     },
