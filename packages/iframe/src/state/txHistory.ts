@@ -1,4 +1,5 @@
-import { atomWithStorage, createJSONStorage } from "jotai/utils"
+import { createBigIntStorage } from "@happychain/common"
+import { atomWithStorage } from "jotai/utils"
 import type { Address, Hash, TransactionReceipt } from "viem"
 import { StorageKey } from "../services/storage"
 
@@ -18,18 +19,6 @@ export type TxInfo = {
     receipt: TransactionReceipt
     value: bigint
 }
-
-/**
- * Utility function to create a JSON storage with custom handling of `bigint` values.
- * - BigInt values are stringified during storage and restored upon retrieval using a custom replacer and reviver.
- * - This utility can be used for any atom that stores data containing `bigint`.
- */
-const createBigIntStorage = <T>() =>
-    createJSONStorage<T>(() => localStorage, {
-        replacer: (_key, value) => (typeof value === "bigint" ? `#bigint.${value}` : value),
-        reviver: (_key, value) =>
-            typeof value === "string" && value.startsWith("#bigint.") ? BigInt(value.slice(8)).valueOf() : value,
-    })
 
 /**
  * Atom to store confirmed transaction records in localStorage.
