@@ -3,7 +3,8 @@ import { ArrowUpRight, CircleNotch } from "@phosphor-icons/react"
 import clsx from "clsx"
 import { formatEther } from "viem"
 
-import { getCurrentChainBlockExplorerUrl } from "#src/state/currentChain.ts"
+import { useAtomValue } from "jotai"
+import { currentChainAtom } from "#src/state/currentChain.ts"
 import type { TxInfo } from "#src/state/txHistory.ts"
 
 interface TxLogEntryProps {
@@ -11,7 +12,8 @@ interface TxLogEntryProps {
 }
 
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
-    const blockExplorerUrl = getCurrentChainBlockExplorerUrl()
+    const currentChain = useAtomValue(currentChainAtom)
+    const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     const { receipt, value } = tx
 
     return (

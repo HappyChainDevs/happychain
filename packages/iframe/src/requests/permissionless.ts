@@ -7,8 +7,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
-
-import { getCurrentChain } from "../state/currentChain"
+import { getCurrentChain } from "#src/state/currentChain.ts"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
@@ -31,8 +30,8 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
     switch (request.payload.method) {
         case "eth_chainId": {
-            const chainId = getCurrentChain().chainId
-            return chainId ?? (await sendToPublicClient(app, request))
+            const currChain = getCurrentChain()
+            return currChain ?? (await sendToPublicClient(app, request))
         }
 
         case "eth_accounts": {
