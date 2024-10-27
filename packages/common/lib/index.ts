@@ -2,7 +2,7 @@ export { createStorage } from "./services/storage.js"
 
 export { useIsHydrated } from "./hooks/isHydrated.js"
 
-export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom } from "./utils/jotai.js"
+export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai.js"
 
 export type { HTTPString, AssertAssignableTo, AssertCompatible, TupleUnion } from "./utils/types.js"
 

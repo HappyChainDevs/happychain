@@ -1,5 +1,6 @@
-import { atomWithReducer } from "jotai/utils"
+import { atomWithReducer, createJSONStorage } from "jotai/utils"
 import { type Atom, type WritableAtom, getDefaultStore } from "jotai/vanilla"
+import { bigIntReplacer, bigIntReviver } from "./bigint"
 
 /**
  * https://jotai.org/docs/recipes/atom-with-compare
@@ -80,3 +81,14 @@ export function accessorsFromAtom<TValue, TAtom extends Atom<TValue>>(atom: TAto
         },
     }
 }
+
+/**
+ * Utility function to create a JSON storage with custom handling of `bigint` values.
+ * - BigInt values are stringified during storage and restored upon retrieval using a custom replacer and reviver.
+ * - This utility can be used for any atom that stores data containing `bigint`.
+ */
+export const createBigIntStorage = <T>() =>
+    createJSONStorage<T>(() => localStorage, {
+        replacer: bigIntReplacer,
+        reviver: bigIntReviver,
+    })
