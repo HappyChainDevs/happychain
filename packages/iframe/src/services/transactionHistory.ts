@@ -15,7 +15,7 @@ import { getUser } from "#src/state/user.ts"
  * function is called to monitor the transaction and retrieve the `TransactionReceipt` once it is included in a block.
  *
  * Once the receipt is obtained:
- * - The receipt is serialized and stored in the `confirmedTxsAtom` to maintain a log of completed transactions for the user.
+ * - The receipt is stored in the `confirmedTxsAtom` to maintain a log of completed transactions for the user.
  * - The transaction hash is removed from the `pendingTxsAtom`, as the transaction is no longer 'pending'.
  *
  * The `Activity` Tab can then display the transaction history by reading from the `confirmedTxsAtom`.
