@@ -1,0 +1,5 @@
+{
+  "MockTokenA": "MockERC20Token",
+  "MockTokenB": "MockERC20Token",
+  "MockTokenC": "MockERC20Token"
+}

@@ -517,24 +517,16 @@ async function main() {
     ].filter((result): result is GasResult => result !== undefined)
 
     console.log("\nGas Usage Results Comparison Table :-")
-    console.log("----------------------------------------------------------------------------------\n")
-    console.log(
-        "|-------------------------------------------------------------------------------------------------------------------------------------------|",
-    )
-    console.log(
-        "| Scenario                             | Direct Txn Gas | ActualGasUsed | Txn.gasUsed | Bundler Overhead | Extra Cost (vs Direct)| #UserOps |",
-    )
-    console.log(
-        "|--------------------------------------|----------------|---------------|-------------|------------------|-----------------------|----------|",
-    )
-
-    gasUsageResults.forEach((result) => {
-        console.log(
-            `| ${result.scenario.padEnd(36)} | ${result.directTxnGas.toString().padEnd(14)} | ${result.actualGasUsed.toString().padEnd(13)} | ${result.txnGasUsed.toString().padEnd(11)} | ${result.bundlerOverhead.toString().padEnd(16)} | ${result.extraCost.toString().padEnd(21)} | ${result.numberOfUserOps.toString().padEnd(8)} |`,
-        )
-    })
-    console.log(
-        "|-------------------------------------------------------------------------------------------------------------------------------------------|",
+    console.table(
+        gasUsageResults.map((result) => ({
+            Scenario: result.scenario,
+            "Direct Txn Gas": result.directTxnGas,
+            ActualGasUsed: result.actualGasUsed,
+            "Txn.gasUsed": result.txnGasUsed,
+            "Bundler Overhead": result.bundlerOverhead,
+            "Extra Cost (vs Direct)": result.extraCost,
+            "#UserOps": result.numberOfUserOps,
+        })),
     )
 }
 main().then(() => {
