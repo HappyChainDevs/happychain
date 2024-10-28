@@ -1,0 +1,82 @@
+Sending a Single User Operation (Smart Account already Deployed):
+----------------------------------------------------------------------------------
+
+Estimated UserOperation Gas:
+  PreVerificationGas:   56,368 gas
+  VerificationGasLimit: 399,150 gas
+  CallGasLimit:         107,972 gas
+User Operation Gas Details:
+  Actual Gas Used:        365,978 gas
+  Transaction Gas Used:   352,003 gas
+  Bundler Overhead:       13,975 gas
+  Direct Transaction Gas: 21,000 gas
+  Extra Cost:             344,978 gas
+Estimated UserOperation Gas:
+  PreVerificationGas:   52,923 gas
+  VerificationGasLimit: 118,222 gas
+  CallGasLimit:         107,972 gas
+User Operation Gas Details:
+  Actual Gas Used:        178,336 gas
+  Transaction Gas Used:   164,776 gas
+  Bundler Overhead:       13,560 gas
+  Direct Transaction Gas: 21,000 gas
+  Extra Cost:             157,336 gas
+
+Sending a Single UserOp with 5 transfer Calls (Smart Account already Deployed) :-
+----------------------------------------------------------------------------------
+
+Estimated UserOperation Gas:
+  PreVerificationGas:   61,569 gas
+  VerificationGasLimit: 400,560 gas
+  CallGasLimit:         249,144 gas
+User Operation Gas Details:
+  Actual Gas Used:        513,219 gas
+  Transaction Gas Used:   498,894 gas
+  Bundler Overhead:       14,325 gas
+  Direct Transaction Gas: 105,000 gas
+  Extra Cost:             408,219 gas
+Estimated UserOperation Gas:
+  PreVerificationGas:   58,124 gas
+  VerificationGasLimit: 119,619 gas
+  CallGasLimit:         124,144 gas
+User Operation Gas Details:
+  Actual Gas Used:        200,569 gas
+  Transaction Gas Used:   186,659 gas
+  Bundler Overhead:       13,910 gas
+  Direct Transaction Gas: 105,000 gas
+  Extra Cost:             95,569 gas
+
+Sending multiple UserOps from unique senders (Smart Accounts NOT Deployed) :-
+----------------------------------------------------------------------------------
+
+(Bundle contains 3 UserOps)
+User Operation Gas Details:
+  Actual Gas Used:        1,050,145 gas
+  Transaction Gas Used:   942,803 gas
+  Bundler Overhead:       107,342 gas
+  Direct Transaction Gas: 63,000 gas
+  Extra Cost:             987,145 gas
+Sending multiple UserOps from unique senders (Smart Accounts Deployed) :-
+----------------------------------------------------------------------------------
+
+(Bundle contains 5 UserOps)
+User Operation Gas Details:
+  Actual Gas Used:        834,286 gas
+  Transaction Gas Used:   635,531 gas
+  Bundler Overhead:       198,755 gas
+  Direct Transaction Gas: 105,000 gas
+  Extra Cost:             729,286 gas
+
+Gas Usage Results Comparison Table :-
+----------------------------------------------------------------------------------
+
+|-------------------------------------------------------------------------------------------------------------------------------------------|
+| Scenario                             | Direct Txn Gas | ActualGasUsed | Txn.gasUsed | Bundler Overhead | Extra Cost (vs Direct)| #UserOps |
+|--------------------------------------|----------------|---------------|-------------|------------------|-----------------------|----------|
+| Single UserOp with 1 call            | 21000          | 365978        | 352003      | 13975            | 344978                | 1        |
+| Single UserOp with 1 call            | 21000          | 178336        | 164776      | 13560            | 157336                | 1        |
+| Single UserOp with 5 calls           | 105000         | 513219        | 498894      | 14325            | 408219                | 1        |
+| Single UserOp with 5 calls           | 105000         | 200569        | 186659      | 13910            | 95569                 | 1        |
+| Multiple UserOps with Deployment     | 63000          | 1050145       | 942803      | 107342           | 987145                | 3        |
+| Multiple UserOps without Deployment  | 105000         | 834286        | 635531      | 198755           | 729286                | 5        |
+|-------------------------------------------------------------------------------------------------------------------------------------------|
