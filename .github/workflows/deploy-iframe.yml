@@ -37,7 +37,7 @@ jobs:
           strip_components: 3 # Remove the first 3 levels of directories from the source path to copy only the files inside dist
           rm: true
 
-      - name: Deploy bundler to server
+      - name: Deploy iframe to server
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -49,6 +49,6 @@ jobs:
             mv /home/deployer/iframe /tmp
             sudo -u iframe bash -c '
               rm -rf /var/www/iframe
-              cp -r /tmp/iframe /var/www/iframe
+              cp -r /tmp/iframe /var/www
             '
             rm -rf /tmp/iframe
