@@ -1,4 +1,4 @@
-import { tokenList } from "../../../../../utils/lists"
+import { tokenList } from "#src/utils/lists.ts"
 
 /**
  * Displays user's $HAPPY balance.
