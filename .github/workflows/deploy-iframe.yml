@@ -48,7 +48,7 @@ jobs:
             chmod -R o+rX /home/deployer/iframe
             mv /home/deployer/iframe /tmp
             sudo -u iframe bash -c '
-              rm -rf /var/www/iframe
-              cp -r /tmp/iframe /var/www
+              rm -rf /var/www/iframe/*
+              cp -r /tmp/iframe/* /var/www/iframe
             '
             rm -rf /tmp/iframe
