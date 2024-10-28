@@ -25,7 +25,8 @@ jobs:
 
       - name: Build code
         run: |
-          make iframe.build
+          cd packages/bundler
+          make build
 
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
