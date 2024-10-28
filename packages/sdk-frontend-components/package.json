@@ -17,13 +17,18 @@
         }
     },
     "peerDependencies": {
-        "@happychain/js": "workspace:^"
+        "@happychain/js": "workspace:^",
+        "preact": "^10.x"
+    },
+    "peerDependenciesMeta": {
+        "preact": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
         "@happychain/scripts": "workspace:^",
         "@types/preact-custom-element": "^4.0.4",
-        "preact": "^10.24.1",
         "preact-custom-element": "^4.3.0",
         "typescript": "^5.6.2"
     }
