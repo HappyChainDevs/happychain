@@ -1,4 +1,4 @@
-import type { Address, Hex, PrivateKeyAccount, WalletClient } from "viem"
+import { type Address, type Hex, type PrivateKeyAccount, type WalletClient, encodeFunctionData } from "viem"
 import { http, createPublicClient, createWalletClient, parseEther } from "viem"
 import type {
     GetPaymasterDataParameters,
@@ -16,6 +16,7 @@ import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
 import { createPimlicoClient } from "permissionless/clients/pimlico"
 
+import { abis as mockAbis, deployment as mockDeployment } from "../deployments/anvil/mockTokens/abis"
 import { abis, deployment } from "../deployments/anvil/testing/abis"
 
 const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
@@ -81,6 +82,18 @@ function createEthTransferCall(): UserOperationCall {
         to: getRandomAccount(),
         value: parseEther(AMOUNT),
         data: "0x",
+    }
+}
+
+function createMintCall(): UserOperationCall {
+    return {
+        to: mockDeployment.MockTokenA,
+        value: 0n,
+        data: encodeFunctionData({
+            abi: mockAbis.MockTokenA,
+            functionName: "mint",
+            args: [getRandomAccount(), parseEther(AMOUNT)],
+        }),
     }
 }
 
@@ -300,7 +313,7 @@ async function sendUserOps(
         accounts.map((account) =>
             account.kernelClient.sendUserOperation({
                 account: account.kernelAccount,
-                calls: [createEthTransferCall()],
+                calls: [createMintCall()],
             }),
         ),
     )
@@ -354,7 +367,7 @@ async function singleUserOperationGasResult() {
     console.log("-----------------------------------------------------\n")
 
     const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
-    const { receipt, directTxnGas } = await processSingleUserOp(kernelAccount, kernelClient, [createEthTransferCall()])
+    const { receipt, directTxnGas } = await processSingleUserOp(kernelAccount, kernelClient, [createMintCall()])
 
     const singleOpDeploymentResults = createGasResult(
         "Single UserOp with 1 call (with Deployment)",
@@ -364,7 +377,7 @@ async function singleUserOperationGasResult() {
     )
 
     const { receipt: receipt1, directTxnGas: directTxnGas1 } = await processSingleUserOp(kernelAccount, kernelClient, [
-        createEthTransferCall(),
+        createMintCall(),
     ])
 
     const singleOpNoDeploymentResults = createGasResult(
@@ -384,7 +397,7 @@ async function batchedCallsGasResult() {
     const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
     const calls = Array(5)
         .fill(null)
-        .map(() => createEthTransferCall())
+        .map(() => createMintCall())
     const { receipt, directTxnGas } = await processSingleUserOp(kernelAccount, kernelClient, calls)
 
     const batchedCallsDeploymentResults = createGasResult(
