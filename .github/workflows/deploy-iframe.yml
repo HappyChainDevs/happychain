@@ -22,6 +22,7 @@ jobs:
 
       - name: Build code
         run: |
+          make setup
           make iframe.build
 
       - name: Copy files to server
