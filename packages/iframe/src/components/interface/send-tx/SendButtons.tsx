@@ -1,11 +1,8 @@
 import { CircleNotch } from "@phosphor-icons/react"
-import { useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { useAtomValue } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
-import { useBalance, useSendTransaction } from "wagmi"
-import { userAtom } from "../../../state/user"
+import { useSendTransaction } from "wagmi"
 
 interface SendButtonsInterface {
     sendValue: string | undefined
@@ -13,12 +10,8 @@ interface SendButtonsInterface {
 }
 
 const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
-    const user = useAtomValue(userAtom)
     const navigate = useNavigate()
     const { sendTransaction, isPending, isSuccess, isError } = useSendTransaction()
-    const { queryKey } = useBalance({ address: user?.address })
-
-    const queryClient = useQueryClient()
 
     /**
      * This useEffect tracks whether the tx has landed successfully
@@ -27,20 +20,14 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
      * associated message.
      */
     useEffect(() => {
-        const handleQueryInvalidation = async () => {
-            await queryClient.invalidateQueries({ queryKey })
-        }
-
         if (isSuccess || isError) {
-            handleQueryInvalidation()
             navigate({ to: "/embed" }) // move back to home page of the wallet
             // TODO use toast component from ark to show success / error status
         }
-    }, [isSuccess, isError, queryClient, queryKey, navigate])
+    }, [isSuccess, navigate, isError])
 
     const submitSend = useCallback(() => {
         if (targetAddress && sendValue) {
-            // send tx
             void sendTransaction({
                 to: targetAddress as Address,
                 value: parseEther(sendValue),
