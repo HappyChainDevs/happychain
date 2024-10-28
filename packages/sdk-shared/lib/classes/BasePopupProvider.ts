@@ -27,7 +27,7 @@ type InFlightRequest = {
  * subclasses). If no approval is required, the {@link handlePermissionless} method is called
  * instead.
  *
- * The {@link requestExtraPermissions] method is called to check if some permissions (beyond a
+ * The {@link requestExtraPermissions} method is called to check if some permissions (beyond a
  * simple user approval) are required for the request to proceed (so far this only happens when the
  * app tries to make a request but isn't connected to the wallet). The method should attempt getting
  * the permissions from the user (i.e. implement prompting) and then return a boolean whose meaning
