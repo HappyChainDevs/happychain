@@ -395,6 +395,7 @@ async function main() {
         console.error("Custom Validator: ", error)
     }
 }
+
 main().then(() => {
     process.exit(0)
 })
