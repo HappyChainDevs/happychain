@@ -1,8 +1,8 @@
 import { CaretRight } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
-import type { AppPermissions } from "../../../state/permissions"
-import { getAppURL } from "../../../utils/appURL"
+import type { AppPermissions } from "#src/state/permissions"
+import { getAppURL } from "#src/utils/appURL"
 
 interface ListItemProps {
     dappUrl: string
