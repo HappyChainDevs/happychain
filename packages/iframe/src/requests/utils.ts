@@ -1,10 +1,14 @@
 import { type UUID, createUUID } from "@happychain/common"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
 import { getAuthState } from "../state/authState"
-import { type AppURL, getAppURL, getIframeURL } from "../utils/appURL.ts"
+import { type AppURL, getAppURL, getIframeURL, isIframe } from "../utils/appURL.ts"
 
 /** ID passed to the iframe by the parent window (app). */
 const _parentID = new URLSearchParams(window.location.search).get("windowId")
+
+if (!isIframe(getAppURL()) && !_parentID) {
+    console.warn("Iframe initialized without windowId")
+}
 
 /** ID generated for this iframe (tied to a specific app). */
 const _iframeID = createUUID()

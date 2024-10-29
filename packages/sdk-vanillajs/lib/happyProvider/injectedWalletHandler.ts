@@ -63,9 +63,9 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     }
 
     /** Injected Wallet Handlers */
-    private async handleProviderDisconnectionRequest() {
+    private async handleProviderDisconnectionRequest(params: MsgsFromApp[Msgs.InjectedWalletConnected]) {
         this.removeListeners()
-        void this.config.msgBus.emit(Msgs.InjectedWalletConnected, { rdns: undefined, address: undefined })
+        void this.config.msgBus.emit(Msgs.InjectedWalletConnected, params)
     }
 
     private async handleProviderConnectionRequest({
@@ -74,13 +74,13 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
     }: { rdns?: string; request: MsgsFromApp[Msgs.ConnectRequest] }) {
         if (!rdns) {
             // provider not specified, disconnect
-            return this.handleProviderDisconnectionRequest()
+            return this.handleProviderDisconnectionRequest({ request })
         }
         try {
             const providerDetails = store.findProvider({ rdns })
             if (!providerDetails) {
                 // cant find extension, disconnect
-                return this.handleProviderDisconnectionRequest()
+                return this.handleProviderDisconnectionRequest({ request })
             }
 
             // cleanup any existing listeners from other connections
@@ -98,13 +98,13 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
         } catch {
             // Reached if eth_requestAccounts fails, meaning the user declined to give permission.
             // We just clear the existing provider in that case.
-            void this.handleProviderDisconnectionRequest()
+            void this.handleProviderDisconnectionRequest({ request })
         }
     }
 
     private onAccountsChange(accounts: `0x${string}`[]) {
         this.emit("accountsChanged", accounts)
-        if (!accounts.length) return this.handleProviderDisconnectionRequest()
+        if (!accounts.length) return this.handleProviderDisconnectionRequest({})
     }
     private onChainChanged(chainId: string) {
         this.emit("chainChanged", chainId)

@@ -1,22 +1,33 @@
-import { useState } from "react"
-
+import { Tabs } from "@ark-ui/react/tabs"
 import { ContentType } from "../../state/interfaceState"
-import Tab from "./home/tabs/Tab"
-import TabContent from "./home/tabs/TabContent"
+import { Tab } from "./home/tabs/Tab"
+import { TabContent } from "./home/tabs/TabContent"
+import GamesView from "./home/tabs/views/GamesView"
+import TokenView from "./home/tabs/views/TokenView"
+import ActivityView from "./home/tabs/views/activity/ActivityView"
 
 const WalletContentInfo = () => {
-    const [view, setView] = useState<ContentType>(ContentType.TOKENS)
-
     return (
-        <div className="flex w-full h-full items-start justify-center flex-col px-1">
-            <div className="flex flex-row items-start justify-center space-x-2">
-                <Tab title={ContentType.TOKENS} setView={setView} />
-                <Tab title={ContentType.GAMES} setView={setView} />
-                <Tab title={ContentType.ACTIVITY} setView={setView} />
-            </div>
-            <div className="flex flex-col w-full h-4/5 p-2 bg-slate-300 rounded-b-xl rounded-tr-xl">
-                <TabContent view={view} />
-            </div>
+        <div className="flex size-full items-start justify-center flex-col px-1 py-2">
+            <Tabs.Root defaultValue={ContentType.TOKENS} className="size-full" lazyMount unmountOnExit>
+                <Tabs.List className="gap-2 space-x-1">
+                    <Tab title={ContentType.TOKENS} />
+                    <Tab title={ContentType.GAMES} />
+                    <Tab title={ContentType.ACTIVITY} />
+                </Tabs.List>
+
+                <TabContent title={ContentType.TOKENS}>
+                    <TokenView />
+                </TabContent>
+
+                <TabContent title={ContentType.GAMES}>
+                    <GamesView />
+                </TabContent>
+
+                <TabContent title={ContentType.ACTIVITY}>
+                    <ActivityView />
+                </TabContent>
+            </Tabs.Root>
         </div>
     )
 }

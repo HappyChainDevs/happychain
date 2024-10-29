@@ -15,7 +15,7 @@ import {
  */
 export type UserUpdateCallback = (user?: HappyUser) => void
 
-export type ModalUpdateCallback = (state: { isOpen: boolean; cancelled: boolean }) => void
+export type WalletVisibilityCallback = (state: { isOpen: boolean }) => void
 
 export type AuthStateUpdateCallback = (state: AuthState) => void
 
@@ -36,7 +36,7 @@ export type ListenerUnsubscribeFn = () => void
 
 export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromApp>) {
     const onUserUpdateCallbacks = new Set<UserUpdateCallback>()
-    const onModalUpdateCallbacks = new Set<ModalUpdateCallback>()
+    const onWalletVisibilityCallbacks = new Set<WalletVisibilityCallback>()
     const onIframeInitCallbacks = new Set<IframeInitCallback>()
     const onAuthStateUpdateCallbacks = new Set<AuthStateUpdateCallback>()
 
@@ -52,9 +52,9 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
         }
     })
 
-    messageBus.on(Msgs.ModalToggle, ({ isOpen, cancelled }) => {
-        for (const call of onModalUpdateCallbacks) {
-            call({ isOpen, cancelled })
+    messageBus.on(Msgs.WalletVisibility, ({ isOpen }) => {
+        for (const call of onWalletVisibilityCallbacks) {
+            call({ isOpen })
         }
     })
 
@@ -97,10 +97,10 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * @param callback
      * @returns Unsubscribe function
      */
-    const onModalUpdate = (callback: ModalUpdateCallback): ListenerUnsubscribeFn => {
-        onModalUpdateCallbacks.add(callback)
+    const onWalletVisibilityUpdate = (callback: WalletVisibilityCallback): ListenerUnsubscribeFn => {
+        onWalletVisibilityCallbacks.add(callback)
         return () => {
-            onModalUpdateCallbacks.delete(callback)
+            onWalletVisibilityCallbacks.delete(callback)
         }
     }
 
@@ -134,7 +134,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
 
     return {
         onUserUpdate,
-        onModalUpdate,
+        onWalletVisibilityUpdate,
         onAuthStateUpdate,
         onIframeInit,
     }

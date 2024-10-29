@@ -34,7 +34,7 @@ const AddressInfo = ({ address }: AddressInfoProps) => {
                 data-tip={copied ? "Copied!" : "Copy Address"}
             >
                 <button
-                    className="w-4 h-4 rounded-xl hover:opacity-80 items-center justify-center"
+                    className="size-4 rounded-xl hover:opacity-80 items-center justify-center"
                     onClick={handleCopy}
                     type="button"
                 >

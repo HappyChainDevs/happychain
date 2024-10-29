@@ -1,7 +1,4 @@
 {
     "extends": ["./tsconfig.json", "@happychain/configs/tsconfig.types.json"],
-    "compilerOptions": {
-        "plugins": [{ "name": "typescript-plugin-css-modules" }]
-    },
     "include": ["lib"]
 }
