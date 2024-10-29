@@ -15,9 +15,8 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
 
     /**
      * This useEffect tracks whether the tx has landed successfully
-     * or there is an error, invalidates the useBalance hook `queryKey`
-     * and navigates the user to the home page, displaying the
-     * associated message.
+     * or there is an error, navigates to the home page and shows the status of
+     * the tx.
      */
     useEffect(() => {
         if (isSuccess || isError) {
