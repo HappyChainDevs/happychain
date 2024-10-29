@@ -18,7 +18,7 @@ export enum Msgs {
     // --- EventsFromApp ---------------------------------------------------------------------------
 
     /** Instructs the iframe to display the requested page. */
-    RequestDisplay = "request-display",
+    RequestWalletDisplay = "request-wallet-display",
 
     /** Instructs the iframe to display the connection modal. */
     ConnectRequest = "connect-request",
@@ -51,7 +51,7 @@ export enum Msgs {
     IframeInit = "iframe-init",
 
     /** Instructs the SDK to resize the resize the iframe to toggle the wallet modal. */
-    ModalToggle = "modal-toggle",
+    WalletVisibility = "wallet-visibility",
 
     /** Informs the app that the user information has changed (including connect & disconnect). */
     UserChanged = "user-changed",
@@ -111,9 +111,15 @@ export enum Msgs {
 /**
  * Events sent from the app to the iframe on the general message bus.
  */
-export enum ModalStates {
-    Login = "login-modal", // embed
-    Send = "send-modal", // embed/send
+export enum WalletDisplayAction {
+    /** Navigate to /embed */
+    Home = "home-screen",
+    /** Navigate to /embed/send */
+    Send = "send-screen",
+    /** Hide the wallet's interface (no navigation) */
+    Closed = "closed",
+    /** Show the wallet's interface (no navigation) */
+    Open = "open",
 }
 
 export type MsgsFromApp = {
@@ -134,7 +140,7 @@ export type MsgsFromApp = {
               response?: undefined
           }
     [Msgs.MirrorPermissions]: { rdns: string; request: EIP1193PermissionsRequest; response: unknown }
-    [Msgs.RequestDisplay]: ModalStates
+    [Msgs.RequestWalletDisplay]: WalletDisplayAction
 }
 
 // =================================================================================================
@@ -152,7 +158,7 @@ interface AuthResponse<
 export type MsgsFromIframe = {
     [Msgs.IframeInit]: boolean
     [Msgs.ConnectResponse]: AuthResponse
-    [Msgs.ModalToggle]: { isOpen: boolean; cancelled: boolean }
+    [Msgs.WalletVisibility]: { isOpen: boolean }
     [Msgs.UserChanged]: HappyUser | undefined
     [Msgs.AuthStateChanged]: AuthState
     [Msgs.InjectedWalletRequestConnect]: { rdns?: string; request: MsgsFromApp[Msgs.ConnectRequest] }

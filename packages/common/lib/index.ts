@@ -20,6 +20,8 @@ export { onlyUnique } from "./utils/streams.js"
 
 export { debounce } from "./utils/debounce.js"
 
+export { throttle } from "./utils/throttle.js"
+
 export { promiseWithResolvers } from "./utils/promises.js"
 
 export { keys, entries } from "./utils/records.js"

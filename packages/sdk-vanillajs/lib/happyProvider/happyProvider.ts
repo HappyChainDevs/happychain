@@ -4,6 +4,7 @@ import {
     EIP1193UserRejectedRequestError,
     Msgs,
     SafeEventEmitter,
+    WalletDisplayAction,
     WalletType,
     waitForCondition,
 } from "@happychain/sdk-shared"
@@ -95,6 +96,9 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
     }
 
     private async requestLogin(args: EIP1193RequestParameters): Promise<ReturnType<typeof this.request>> {
+        // Open Wallet
+        this.config.msgBus?.emit(Msgs.RequestWalletDisplay, WalletDisplayAction.Open)
+
         const isConnectionRequest = this.isConnectionRequest(args)
         const req = {
             key: createUUID(),

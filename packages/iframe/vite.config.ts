@@ -27,6 +27,9 @@ if (config.error) {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    optimizeDeps: {
+        exclude: ["@happychain/worker"],
+    },
     server: { port: 5160 },
     preview: { port: 4160 },
     plugins: [

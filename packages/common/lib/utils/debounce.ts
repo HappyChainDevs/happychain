@@ -1,13 +1,16 @@
 /**
- * Simple debounce helper to avoid multiple emits when authState+user+permissions all change at once
+ * Creates a debounced function which is will not be called until <delay> milliseconds have passed
+ * since the last call.
+ *
+ * For more info: {@link https://css-tricks.com/debouncing-throttling-explained-examples/}
  */
-export function debounce<T>(callback: (_arg: T) => void, time: number) {
-    let interval: ReturnType<typeof setTimeout> | undefined = undefined
+export function debounce<T>(callback: (_arg: T) => void, delay: number) {
+    let interval: ReturnType<typeof setTimeout> | undefined
     return (arg: T) => {
         clearTimeout(interval)
         interval = setTimeout(() => {
             interval = undefined
             callback(arg)
-        }, time)
+        }, delay)
     }
 }

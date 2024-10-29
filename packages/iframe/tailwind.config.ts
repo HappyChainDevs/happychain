@@ -112,7 +112,7 @@ export default {
         },
     },
     plugins: [daisyui],
-    darkMode: ["class", '[data-theme="night"]'],
+    darkMode: ["selector", '[data-theme="night"]'],
     daisyui: {
         logs: false,
         themes: ["winter", "night"],

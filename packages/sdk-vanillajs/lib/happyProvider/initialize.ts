@@ -6,7 +6,7 @@ import type {
     ProviderMsgsFromApp,
     ProviderMsgsFromIframe,
 } from "@happychain/sdk-shared"
-import { EventBus, EventBusMode, ModalStates, Msgs } from "@happychain/sdk-shared"
+import { EventBus, EventBusMode, Msgs, WalletDisplayAction } from "@happychain/sdk-shared"
 import { announceProvider } from "mipd"
 import type { EIP1193Provider } from "viem"
 import { config } from "../config"
@@ -117,7 +117,10 @@ export const disconnect = async (): Promise<void> => {
  * Display the send screen in the iframe
  */
 export const showSendScreen = (): void => {
-    void iframeMessageBus?.emit(Msgs.RequestDisplay, ModalStates.Send)
+    void iframeMessageBus?.emit(Msgs.RequestWalletDisplay, WalletDisplayAction.Send)
+}
+export function emitWalletDisplayAction(open: boolean) {
+    void iframeMessageBus?.emit(Msgs.RequestWalletDisplay, open ? WalletDisplayAction.Open : WalletDisplayAction.Closed)
 }
 
 /**
@@ -150,10 +153,10 @@ const getListeners = () => {
         ? registerListeners(iframeMessageBus)
         : {
               onUserUpdate: () => () => {},
-              onModalUpdate: () => () => {},
+              onWalletVisibilityUpdate: () => () => {},
               onAuthStateUpdate: () => () => {},
               onIframeInit: () => () => {},
           }
 }
 
-export const { onUserUpdate, onModalUpdate, onAuthStateUpdate, onIframeInit } = getListeners()
+export const { onUserUpdate, onWalletVisibilityUpdate, onAuthStateUpdate, onIframeInit } = getListeners()

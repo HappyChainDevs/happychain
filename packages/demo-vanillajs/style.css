@@ -42,7 +42,7 @@ connect-button {
     }
 
     .happychain-icon {
-        @apply w-12 h-12;
+        @apply size-12;
     }
 
     /* badge animations */

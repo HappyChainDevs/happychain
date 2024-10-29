@@ -11,14 +11,12 @@ export function useConnection() {
             setConnecting(true)
             await hcConnect()
         } catch (e) {
-            if (e instanceof Error) {
-                // don't need to throw every time they reject
-                if ("code" in e && e.code === userRejectionErrorCode) {
-                    return
-                }
-
-                console.error(e)
+            // don't need to throw every time they reject
+            if (e instanceof Error && "code" in e && e.code === userRejectionErrorCode) {
+                return
             }
+
+            console.error(e)
         } finally {
             setConnecting(false)
         }

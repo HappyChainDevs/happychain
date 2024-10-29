@@ -1,6 +1,14 @@
 export { HappyWalletProvider, useHappyChain } from "./components/HappyWalletProvider"
 
-export { happyProvider, onModalUpdate, onUserUpdate, getCurrentUser, chains, connect, disconnect } from "@happychain/js"
+export {
+    happyProvider,
+    onWalletVisibilityUpdate,
+    onUserUpdate,
+    getCurrentUser,
+    chains,
+    connect,
+    disconnect,
+} from "@happychain/js"
 
 export type {
     HappyUser,

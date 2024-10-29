@@ -1,0 +1,168 @@
+:host {
+    --happy-closed-size: 3rem;
+    --happy-closed-border-radius: 1.5rem;
+    --happy-open-width: 24rem;
+    --happy-open-height: 32rem;
+    --happy-translate-x: 0;
+    --happy-translate-y: 0;
+    --happy-rotate: 0;
+    --happy-skew-x: 0;
+    --happy-skew-y: 0;
+    --happy-scale-x: 1;
+    --happy-scale-y: 1;
+}
+
+/* 
+ * Wallet container is an invisible padding around the grabber, so that it can popup as you get 
+ * close, instead of waiting for an actual hover then popping out
+ */
+.wallet-container {
+    position: fixed;
+    inset-inline-end: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    border-start-start-radius: 9999px;
+    border-end-start-radius: 9999px;
+
+    --happy-translate-x: 0rem;
+    transform: translate(var(--happy-translate-x), var(--happy-translate-y)) rotate(var(--happy-rotate))
+        skew(var(--happy-skew-x)) skewY(var(--happy-skew-y)) scaleX(var(--happy-scale-x)) scaleY(var(--happy-scale-y));
+
+    --transition-property: none;
+    --transition-duration: 0s;
+    transition-property: var(--transition-property);
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: var(--transition-duration);
+
+    &[data-open-state="false"],
+    &[data-drag-state="false"] {
+        --transition-property: transform;
+        --transition-duration: 0.15s;
+    }
+
+    &[data-open-state="true"],
+    &[data-drag-state="true"] {
+        --transition-property: none;
+        --transition-duration: 0s;
+    }
+
+    &,
+    &[data-open-state="false"],
+    &[data-drag-state="false"],
+    &[data-open-state="true"],
+    &[data-drag-state="true"],
+    &:hover {
+        @media (prefers-reduced-motion) {
+            --transition-duration: 0;
+        }
+    }
+}
+
+.wallet-grabber {
+    --happy-bg-opacity: 1;
+    background-color: rgb(63 63 70 / var(--happy-bg-opacity));
+
+    --happy-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --happy-shadow-colored: 0 20px 25px -5px var(--happy-shadow-color), 0 8px 10px -6px var(--happy-shadow-color);
+    box-shadow: var(--happy-ring-offset-shadow, 0 0 #0000), var(--happy-ring-shadow, 0 0 #0000), var(--happy-shadow);
+
+    border-start-start-radius: 9999px;
+    border-end-start-radius: 9999px;
+    width: 6rem;
+    display: flex;
+    align-items: center;
+    cursor: grab;
+}
+
+.wallet-frame-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: auto;
+    width: var(--happy-closed-size);
+    height: var(--happy-closed-size);
+}
+
+.wallet-grip {
+    --happy-text-opacity: 1;
+    color: rgb(203 213 225 / var(--happy-text-opacity));
+    position: absolute;
+    inset-inline-end: 0;
+    width: var(--happy-closed-size);
+    height: var(--happy-closed-size);
+}
+
+.wallet-frame {
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    transform-origin: center center;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--happy-closed-border-radius);
+    transform: translateY(var(--wallet-offset-y));
+    transition-property: background-color;
+    transition-duration: 0.6s;
+
+    @media (prefers-reduced-motion) {
+        transition-duration: 0;
+    }
+
+    &[data-auth-state="loading"] {
+        background-color: rgb(252 211 77 / 1);
+    }
+
+    &[data-auth-state="authenticated"] {
+        background-color: rgb(14 165 233 / 1);
+    }
+
+    &[data-auth-state="unauthenticated"] {
+        background-color: rgb(251 113 133 / 1);
+    }
+}
+
+.wallet-logo {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    cursor: pointer;
+    width: var(--happy-closed-size);
+    height: var(--happy-closed-size);
+    transition-property: opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 0.15s;
+
+    @media (prefers-reduced-motion) {
+        transition-duration: 0;
+    }
+
+    &[data-open-state="true"] {
+        opacity: 0;
+    }
+
+    &[data-open-state="unauthenticated"] {
+        opacity: 1;
+    }
+}
+
+.wallet-iframe-wrapper {
+    position: absolute;
+    right: 0;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.wallet-iframe {
+    border: none;
+    width: 100%;
+    height: 100%;
+}
