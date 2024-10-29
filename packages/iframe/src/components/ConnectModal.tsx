@@ -1,6 +1,7 @@
 import { type ConnectionProvider, Msgs } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared"
 import clsx from "clsx"
+import happychainLogo from "../assets/happychain.png"
 import { useInjectedProviders } from "../hooks/useInjectedProviders"
 import { useSocialProviders } from "../hooks/useSocialProviders"
 import { appMessageBus } from "../services/eventBus"
@@ -47,11 +48,7 @@ export function ConnectModal() {
                     >
                         <div className="flex items-center justify-center">
                             <div className="flex flex-col items-center gap-4">
-                                <img
-                                    alt="HappyChain Logo"
-                                    src="../assets/happychain.png"
-                                    className="mx-auto h-24 w-24"
-                                />
+                                <img alt="HappyChain Logo" src={happychainLogo} className="mx-auto h-24 w-24" />
                                 <p className="text-2xl font-bold">HappyChain</p>
                             </div>
                         </div>
