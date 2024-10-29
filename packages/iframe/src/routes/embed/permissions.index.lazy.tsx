@@ -1,7 +1,7 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { ClearAllDappsPermissions } from "../../components/interface/permissions/ClearAllDappsPermissions"
-import { ListDappsWithPermissions } from "../../components/interface/permissions/ListDappsWithPermissions"
-import { useGetAllDappsWithPermissions } from "../../components/interface/permissions/useGetAllDappsWithPermissions"
+import { ClearAllDappsPermissions } from "#src/components/interface/permissions/ClearAllDappsPermissions"
+import { ListDappsWithPermissions } from "#src/components/interface/permissions/ListDappsWithPermissions"
+import { useGetAllDappsWithPermissions } from "#src/components/interface/permissions/useGetAllDappsWithPermissions"
 
 export const Route = createLazyFileRoute("/embed/permissions/")({
     component: Permissions,

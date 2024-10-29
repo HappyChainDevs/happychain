@@ -1,7 +1,7 @@
 import { Dialog } from "@ark-ui/react/dialog"
 import { useAtom } from "jotai"
-import { recipeButton } from "../../primitives/button/variants"
-import { recipePositioner } from "../../primitives/popover/variants"
+import { recipeButton } from "#src/components/primitives/button/variants"
+import { recipePositioner } from "#src/components/primitives/popover/variants"
 import { dialogSignOutConfirmationVisibilityAtom } from "./state"
 
 interface DialogConfirmSignOutProps {

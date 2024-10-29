@@ -1,5 +1,5 @@
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
-import { grantPermissions, revokePermissions, type AppPermissions } from "#src/state/permissions"
+import { type AppPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 import { Switch } from "../../primitives/toggle-switch/Switch"
 
@@ -9,7 +9,7 @@ const DICTIONARIES_PERMISSIONS_MEANING = {
 type PermissionDescriptionIndex = keyof typeof DICTIONARIES_PERMISSIONS_MEANING
 
 interface ListItemProps {
-    permission: keyof typeof DICTIONARIES_PERMISSIONS_MEANING
+    permission: PermissionDescriptionIndex
     dappUrl: AppURL
 }
 

@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai"
 import { useAccount } from "wagmi"
-import { type AppURL, isIframe } from "#src/utils/appURL"
 import { type AppPermissions, permissionsMapAtom } from "#src/state/permissions"
+import { type AppURL, isIframe } from "#src/utils/appURL"
 
 function useGetAllDappsWithPermissions(): [string, AppPermissions][] {
     const permissionsMap = useAtomValue(permissionsMapAtom)
