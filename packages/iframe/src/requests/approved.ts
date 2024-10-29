@@ -9,17 +9,17 @@ import {
 } from "@happychain/sdk-shared"
 import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
 
-import { addPendingTx } from "../services/transactionHistory"
-import { getChainsMap, setChains } from "../state/chains"
-import type { PendingTxDetails } from "../state/txHistory"
-import { getUser } from "../state/user"
-import { getWalletClient } from "../state/walletClient"
-import { isAddChainParams } from "../utils/isAddChainParam"
+import { addPendingTx } from "#src/services/transactionHistory.ts"
+import { getChainsMap, setChains } from "#src/state/chains.ts"
+import { setCurrentChain } from "#src/state/currentChain.ts"
+import { grantPermissions } from "#src/state/permissions.ts"
+import type { PendingTxDetails } from "#src/state/txHistory.ts"
+import { getUser } from "#src/state/user.ts"
+import { getWalletClient } from "#src/state/walletClient.ts"
+import { addWatchedAsset } from "#src/state/watchedAssets.ts"
+import { isAddChainParams } from "#src/utils/isAddChainParam.ts"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
-
-import { grantPermissions } from "#src/state/permissions.ts"
-import { addWatchedAsset } from "#src/state/watchedAssets.ts"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -32,10 +32,10 @@ export function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): vo
 // exported for testing
 export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
+    const user = getUser()
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
-            const user = getUser()
             if (!user) return false
 
             const hash = (await sendToWalletClient(request)) as Hash
@@ -47,7 +47,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         case "eth_requestAccounts": {
-            const user = getUser()
             if (!user) return []
             grantPermissions(app, "eth_accounts")
             return user.addresses ?? [user.address]
@@ -73,21 +72,18 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.ChainNotRecognized)
             }
             const response = await sendToWalletClient(request)
-            if ("URLSearchParams" in window) {
-                const searchParams = new URLSearchParams(window.location.search)
-                const chain = chains.get(request.payload.params[0].chainId)
-                searchParams.set("chain", JSON.stringify(chain))
-                history.replaceState(
-                    history.state,
-                    "",
-                    `${location.origin}${location.pathname}?${searchParams.toString()}`,
-                )
+            const chain = chains.get(request.payload.params[0].chainId)
+            if (chain) {
+                setCurrentChain(chain)
+            } else {
+                console.warn("Chain not found; error in request.")
+                return false
             }
+
             return response
         }
 
         case "wallet_watchAsset": {
-            const user = getUser()
             return user ? addWatchedAsset(user.address, request.payload.params) : false
         }
 
