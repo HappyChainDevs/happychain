@@ -319,21 +319,26 @@ async function sendUserOps(accounts: Accounts[]) {
     const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
 
     const numOps = BigInt(filteredReceipts.length)
-    const directTxGas = (await sendDirectTransactions(numOps)) / numOps
-    const bundlerTxGas = filteredReceipts[0].receipt.gasUsed / numOps
-    const totalUserOpGas = filteredReceipts.reduce((acc, receipt) => acc + receipt.actualGasUsed, BigInt(0)) / numOps
-    const bundlerOverhead = totalUserOpGas - bundlerTxGas
-    const totalOverhead = totalUserOpGas - directTxGas
-    const userOpOverhead = totalOverhead - bundlerOverhead
+    const avgDirectTxGas = (await sendDirectTransactions(numOps)) / numOps
+    const totalBundlerTxGas = filteredReceipts[0].receipt.gasUsed
+    const avgBundlerTxGas = totalBundlerTxGas / numOps
+    const totalBundlerOverhead = filteredReceipts.reduce(
+        (acc, receipt) => acc + (receipt.actualGasUsed - avgBundlerTxGas),
+        BigInt(0),
+    )
+    const avgBundlerOverhead = totalBundlerOverhead / numOps
+    const avgTotalUserOpGas = avgBundlerOverhead + avgBundlerTxGas
+    const avgTotalOverhead = avgTotalUserOpGas - avgDirectTxGas
+    const avgUserOpOverhead = avgTotalOverhead - avgBundlerOverhead
 
     return {
         numOps,
-        directTxGas,
-        bundlerTxGas,
-        totalUserOpGas,
-        totalOverhead,
-        bundlerOverhead,
-        userOpOverhead,
+        directTxGas: avgDirectTxGas,
+        bundlerTxGas: avgBundlerTxGas,
+        totalUserOpGas: avgTotalUserOpGas,
+        totalOverhead: avgTotalOverhead,
+        bundlerOverhead: avgBundlerOverhead,
+        userOpOverhead: avgUserOpOverhead,
     }
 }
 
