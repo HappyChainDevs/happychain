@@ -1,7 +1,6 @@
 import { getDefaultStore } from "jotai"
 import { type Address, hexToNumber, stringToHex } from "viem"
 
-import type { QueryKey } from "@tanstack/react-query"
 import { getBalanceQueryKey } from "wagmi/query"
 import { queryClient } from "#src/main.tsx"
 import { getCurrentChain } from "#src/state/currentChain.ts"
@@ -58,7 +57,10 @@ async function monitorTransactionHash(address: Address, payload: PendingTxDetail
         removePendingTx(address, payload)
         // invalidate queryKey to refetch balance post tx confirmation
         queryClient.invalidateQueries({
-            queryKey: getQueryKey(),
+            queryKey: getBalanceQueryKey({
+                address: getUser()?.address,
+                chainId: hexToNumber(stringToHex(getCurrentChain().chainId)),
+            }),
         })
     } else {
         console.warn(`Error monitoring transaction receipt for hash: ${payload.hash}`)
@@ -98,13 +100,5 @@ export function addConfirmedTx(address: Address, txInfo: TxInfo) {
             ...existingEntries,
             [address]: [txInfo, ...userHistory],
         }
-    })
-}
-
-// queryKey util
-function getQueryKey(): QueryKey {
-    return getBalanceQueryKey({
-        address: getUser()?.address,
-        chainId: hexToNumber(stringToHex(getCurrentChain().chainId)),
     })
 }
