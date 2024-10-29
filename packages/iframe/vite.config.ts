@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => ({
+export default defineConfig({
     server: { port: 5160 },
     preview: { port: 5160 },
     plugins: [
@@ -34,7 +34,7 @@ export default defineConfig(({ command }) => ({
     test: {
         environment: "happy-dom",
     },
-}))
+})
 
 /**
  * Chunking here is optional, but extracting the common runtime into a
@@ -47,18 +47,12 @@ export default defineConfig(({ command }) => ({
  */
 function sharedWorkerChunkStrategy() {
     return (id: string) => {
-        // must be vendor if Web3Auth is vendored so that
-        // it can be loaded first, _always_
-        if (id.includes("web3auth.polyfill.ts")) {
-            return "worker-web3auth-polyfill-chunk"
-        }
-
-        if (id.includes("@web3auth") || id.includes("@toruslabs")) {
+        if (id.includes("web3auth.polyfill") || id.includes("@web3auth") || id.includes("@toruslabs")) {
             return "worker-web3auth-chunk"
         }
-
-        if (id.includes("worker/dist/runtime.js")) {
+        if (id.includes("worker/dist/runtime")) {
             return "worker-happychain-chunk"
         }
+        return undefined
     }
 }
