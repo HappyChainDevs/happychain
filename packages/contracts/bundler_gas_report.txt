@@ -2,31 +2,31 @@ Sending a Single User Operation (with Deployment) :-
 ---------------------------------------------------------------------
 
 Estimated UserOperation Gas:
-  PreVerificationGas:   56,975 gas
+  PreVerificationGas:   56,988 gas
   VerificationGasLimit: 399,261 gas
   CallGasLimit:         106,084 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     51,399 gas
-  Bundler Transaction Gas:    350,745 gas
-  Total UserOp Gas:           364,764 gas
-  Bundler Overhead:           14,019 gas
-  UserOp Overhead:            299,346 gas
-  Total Overhead:             313,365 gas
+  Bundler Transaction Gas:    350,757 gas
+  Total UserOp Gas:           364,777 gas
+  Bundler Overhead:           14,020 gas
+  UserOp Overhead:            299,358 gas
+  Total Overhead:             313,378 gas
 
 Sending a Single User Operation (no Deployment) :-
 ---------------------------------------------------------------------
 
 Estimated UserOperation Gas:
-  PreVerificationGas:   53,490 gas
+  PreVerificationGas:   53,517 gas
   VerificationGasLimit: 118,332 gas
   CallGasLimit:         106,084 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     51,399 gas
-  Bundler Transaction Gas:    163,494 gas
-  Total UserOp Gas:           177,083 gas
-  Bundler Overhead:           13,589 gas
-  UserOp Overhead:            112,095 gas
-  Total Overhead:             125,684 gas
+  Bundler Transaction Gas:    163,518 gas
+  Total UserOp Gas:           177,110 gas
+  Bundler Overhead:           13,592 gas
+  UserOp Overhead:            112,119 gas
+  Total Overhead:             125,711 gas
 
 Sending a Single UserOp with 5 transfer Calls (with Deployment) :-
 ---------------------------------------------------------------------
@@ -37,10 +37,10 @@ Estimated UserOperation Gas:
   CallGasLimit:         210,528 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     51,399 gas
-  Bundler Transaction Gas:    92,869 gas
+  Bundler Transaction Gas:    92,871 gas
   Total UserOp Gas:           95,791 gas
-  Bundler Overhead:           2,922 gas
-  UserOp Overhead:            41,470 gas
+  Bundler Overhead:           2,920 gas
+  UserOp Overhead:            41,472 gas
   Total Overhead:             44,392 gas
 
 Sending a Single UserOp with 5 transfer Calls (no Deployment) :-
@@ -65,30 +65,30 @@ Sending multiple UserOps from unique senders (with Deployment) :-
 User Operation Gas Details (avg):
   Direct Transaction Gas:     51,399 gas
   Bundler Transaction Gas:    308,147 gas
-  Total UserOp Gas:           344,459 gas
+  Total UserOp Gas:           344,463 gas
   Bundler Overhead:           256,748 gas
-  UserOp Overhead:            36,312 gas
-  Total Overhead:             293,060 gas
+  UserOp Overhead:            36,316 gas
+  Total Overhead:             293,064 gas
 Sending multiple UserOps from unique senders (no Deployment) :-
 ---------------------------------------------------------------------
 
-(Bundle contains 3 UserOps)
+(Bundle contains 5 UserOps)
 User Operation Gas Details (avg):
   Direct Transaction Gas:     51,399 gas
-  Bundler Transaction Gas:    127,238 gas
-  Total UserOp Gas:           163,156 gas
-  Bundler Overhead:           75,839 gas
-  UserOp Overhead:            35,918 gas
-  Total Overhead:             111,757 gas
+  Bundler Transaction Gas:    120,010 gas
+  Total UserOp Gas:           160,374 gas
+  Bundler Overhead:           68,611 gas
+  UserOp Overhead:            40,364 gas
+  Total Overhead:             108,975 gas
 
 Gas Usage Results Comparison Table (avg values per tx) :-
 ┌─────────┬────────────────────────────────────────────────┬───────────────┬────────────────┬──────────────────┬──────────────────┬─────────────────┬────────────────┬─────────────────────────┐
 │ (index) │ Scenario                                       │ Direct Tx Gas │ Bundler Tx Gas │ Total UserOp Gas │ Bundler Overhead │ UserOp Overhead │ Total Overhead │ SCA Deployment Overhead │
 ├─────────┼────────────────────────────────────────────────┼───────────────┼────────────────┼──────────────────┼──────────────────┼─────────────────┼────────────────┼─────────────────────────┤
-│ 0       │ 'Single UserOp with 1 call (with Deployment)'  │ '51,399'      │ '350,745'      │ '364,764'        │ '14,019'         │ '299,346'       │ '313,365'      │ '187,681'               │
-│ 1       │ 'Single UserOp with 1 call (no Deployment)'    │ '51,399'      │ '163,494'      │ '177,083'        │ '13,589'         │ '112,095'       │ '125,684'      │ '0'                     │
-│ 2       │ 'Single UserOp with 5 calls (with Deployment)' │ '51,399'      │ '92,869'       │ '95,791'         │ '2,922'          │ '41,470'        │ '44,392'       │ '54,631'                │
+│ 0       │ 'Single UserOp with 1 call (with Deployment)'  │ '51,399'      │ '350,757'      │ '364,777'        │ '14,020'         │ '299,358'       │ '313,378'      │ '187,667'               │
+│ 1       │ 'Single UserOp with 1 call (no Deployment)'    │ '51,399'      │ '163,518'      │ '177,110'        │ '13,592'         │ '112,119'       │ '125,711'      │ '0'                     │
+│ 2       │ 'Single UserOp with 5 calls (with Deployment)' │ '51,399'      │ '92,871'       │ '95,791'         │ '2,920'          │ '41,472'        │ '44,392'       │ '54,631'                │
 │ 3       │ 'Single UserOp with 5 calls (no Deployment)'   │ '51,399'      │ '38,321'       │ '41,160'         │ '2,839'          │ '-13,078'       │ '-10,239'      │ '0'                     │
-│ 4       │ 'Multiple (3) UserOps (with Deployment)'       │ '51,399'      │ '308,147'      │ '344,459'        │ '36,312'         │ '256,748'       │ '293,060'      │ '181,303'               │
-│ 5       │ 'Multiple (3) UserOps (without Deployment)'    │ '51,399'      │ '127,238'      │ '163,156'        │ '35,918'         │ '75,839'        │ '111,757'      │ '0'                     │
+│ 4       │ 'Multiple (3) UserOps (with Deployment)'       │ '51,399'      │ '308,147'      │ '344,463'        │ '36,316'         │ '256,748'       │ '293,064'      │ '184,089'               │
+│ 5       │ 'Multiple (5) UserOps (without Deployment)'    │ '51,399'      │ '120,010'      │ '160,374'        │ '40,364'         │ '68,611'        │ '108,975'      │ '0'                     │
 └─────────┴────────────────────────────────────────────────┴───────────────┴────────────────┴──────────────────┴──────────────────┴─────────────────┴────────────────┴─────────────────────────┘
