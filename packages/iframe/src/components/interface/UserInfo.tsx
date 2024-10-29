@@ -42,6 +42,8 @@ const UserInfo = () => {
                     src={user.avatar}
                     alt={`${user.name}'s avatar`}
                     className="h-12 rounded-full"
+                    // This is required to avoid google avatars from sometimes failing
+                    // to load properly
                     referrerPolicy="no-referrer"
                 />
                 <img
