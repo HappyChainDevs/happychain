@@ -6,7 +6,7 @@ export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBi
 
 export type { HTTPString, AssertAssignableTo, AssertCompatible, TupleUnion } from "./utils/types.js"
 
-export { bigIntMax } from "./utils/bigint.js"
+export { bigIntMax, bigIntReplacer, bigIntReviver } from "./utils/bigint.js"
 
 export { validateNumericInput } from "./utils/regexChecks.js"
 
