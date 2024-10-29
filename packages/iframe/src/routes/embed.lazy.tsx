@@ -82,7 +82,7 @@ function Embed() {
                     "rounded-xl border border-black bg-base-200",
                 )}
             >
-                <div className={clsx("w-full h-full flex-col items-center justify-start flex")}>
+                <div className={clsx("flex flex-col w-full h-full items-center justify-start")}>
                     {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
                     <div
                         className="flex items-center justify-center gap-2 p-1 lg:hidden w-full h-full"
