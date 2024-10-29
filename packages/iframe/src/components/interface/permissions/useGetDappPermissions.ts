@@ -1,6 +1,5 @@
-import type { AppPermissions } from "#src/state/permissions.ts"
-import { getAppPermissions } from "../../../services/permissions"
-import type { AppURL } from "../../../utils/appURL"
+import { getAppPermissions, type AppPermissions } from "#src/state/permissions"
+import type { AppURL } from "#src/utils/appURL"
 
 function useGetDappPermissions(dappUrl: AppURL): AppPermissions {
     return getAppPermissions(dappUrl)

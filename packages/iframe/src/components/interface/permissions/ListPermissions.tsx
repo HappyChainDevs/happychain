@@ -1,7 +1,6 @@
-import { useHasPermissions } from "../../../hooks/useHasPermissions"
-import { grantPermissions, revokePermissions } from "../../../services/permissions"
-import type { AppPermissions } from "../../../state/permissions"
-import type { AppURL } from "../../../utils/appURL"
+import { useHasPermissions } from "#src/hooks/useHasPermissions"
+import { grantPermissions, revokePermissions, type AppPermissions } from "#src/state/permissions"
+import type { AppURL } from "#src/utils/appURL"
 import { Switch } from "../../primitives/toggle-switch/Switch"
 
 const DICTIONARIES_PERMISSIONS_MEANING = {

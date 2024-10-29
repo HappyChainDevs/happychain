@@ -1,16 +1,14 @@
 import { useCollapsible } from "@ark-ui/react"
-import { revokePermissions } from "../../../services/permissions"
-import type { AppPermissions } from "../../../state/permissions"
-import type { AppURL } from "../../../utils/appURL"
-import { Button } from "../../primitives/button/Button"
-import { InlineDrawer } from "../../primitives/collapsible/InlineDrawer"
+import { clearAppPermissions } from "#src/state/permissions"
+import type { AppURL } from "#src/utils/appURL"
+import { Button } from "#src/components/primitives/button/Button"
+import { InlineDrawer } from "#src/components/primitives/collapsible/InlineDrawer"
 
 interface ClearAllDappsPermissionsProps {
     url: AppURL
-    permissions: AppPermissions
 }
 
-const ClearAllPermissions = ({ url, permissions }: ClearAllDappsPermissionsProps) => {
+const ClearAllPermissions = ({ url }: ClearAllDappsPermissionsProps) => {
     const api = useCollapsible()
     return (
         <InlineDrawer
@@ -26,7 +24,7 @@ const ClearAllPermissions = ({ url, permissions }: ClearAllDappsPermissionsProps
             <div className="grid gap-2">
                 <Button
                     onClick={() => {
-                        revokePermissions(url, permissions)
+                        clearAppPermissions(url)
                         api.setOpen(false)
                     }}
                     className="justify-center"
