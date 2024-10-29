@@ -28,17 +28,7 @@ export default defineConfig(({ command }) => ({
 
     build: {
         rollupOptions: {
-            external:
-                command === "build"
-                    ? [/\\.mocks$/]
-                    : [
-                          "react",
-                          "viem",
-                          "@web3auth/base",
-                          "@web3auth/ethereum-mpc-provider",
-                          "@web3auth/mpc-core-kit",
-                          /\\.mocks$/,
-                      ],
+            external: [/\\.mocks$/],
         },
     },
     test: {
