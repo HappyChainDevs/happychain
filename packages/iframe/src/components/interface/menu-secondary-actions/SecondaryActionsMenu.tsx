@@ -3,7 +3,7 @@ import { CaretDown, CaretRight, CaretUp } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
-import { recipeContent, recipePositioner } from "../../primitives/popover/variants"
+import { recipeContent, recipePositioner } from "#src/components/primitives/popover/variants"
 import { dialogSignOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "./state"
 
 const TriggerSecondaryActionsMenu = () => {

@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { getAppURL } from "#src/utils/appURL"
 
