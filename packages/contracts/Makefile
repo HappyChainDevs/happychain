@@ -98,7 +98,7 @@ aa-demo:
 	@tsx ./scripts/account_abstraction_demo.ts
 .PHONY: aa-demo
 
-# Please, ensure that all Account Abstraction (AA) contracts are deployed before generating the gas report.
+# Please, ensure that all Account Abstraction (AA) and Mock Token contracts are deployed before generating the gas report.
 gas-bundler:
 	@tsx ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Sending a Single User Operation/ {start=1} {if (start) print}' > bundler_gas_report.txt
 .PHONY: gas-bundler

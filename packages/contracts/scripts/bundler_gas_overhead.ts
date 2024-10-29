@@ -42,11 +42,13 @@ interface UserOpReceipt {
 
 interface GasResult {
     scenario: string
-    directTxnGas: bigint
-    actualGasUsed: bigint
-    txnGasUsed: bigint
+    directTxGas: bigint
+    bundlerTxGas: bigint
+    totalUserOpGas: bigint
+    totalOverhead: bigint
     bundlerOverhead: bigint
-    extraCost: bigint
+    userOpOverhead: bigint
+    accountDeploymentOverhead: bigint
 }
 
 const account = privateKeyToAccount(privateKey)
@@ -75,14 +77,6 @@ const AMOUNT = "0.01"
 
 function getRandomAccount() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Hex
-}
-
-function createEthTransferCall(): UserOperationCall {
-    return {
-        to: getRandomAccount(),
-        value: parseEther(AMOUNT),
-        data: "0x",
-    }
 }
 
 function createMintCall(): UserOperationCall {
@@ -159,23 +153,19 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
 }
 
 async function fund_smart_account(accountAddress: Address): Promise<string> {
-    const txHash = await walletClient.sendTransaction({
+    const hash = await walletClient.sendTransaction({
         account: account,
         to: accountAddress,
         chain: localhost,
         value: parseEther("0.1"),
     })
 
-    const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-        confirmations: 1,
-    })
-
+    const receipt = await publicClient.waitForTransactionReceipt({ hash })
     return receipt.status
 }
 
 async function deposit_paymaster(): Promise<string> {
-    const txHash = await walletClient.writeContract({
+    const hash = await walletClient.writeContract({
         address: entryPoint07Address,
         abi: abis.EntryPointV7,
         functionName: "depositTo",
@@ -183,23 +173,8 @@ async function deposit_paymaster(): Promise<string> {
         value: parseEther("10"),
     })
 
-    const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-        confirmations: 1,
-    })
-
+    const receipt = await publicClient.waitForTransactionReceipt({ hash })
     return receipt.status
-}
-
-function createGasResult(scenario: string, directTxnGas: bigint, totalActualGas: bigint, txnGasUsed: bigint) {
-    return {
-        scenario,
-        directTxnGas,
-        actualGasUsed: totalActualGas,
-        txnGasUsed,
-        bundlerOverhead: totalActualGas - txnGasUsed,
-        extraCost: totalActualGas - directTxnGas,
-    }
 }
 
 function printPaymasterGasEstimates(preVerificationGas: bigint, verificationGasLimit: bigint, callGasLimit: bigint) {
@@ -210,18 +185,20 @@ function printPaymasterGasEstimates(preVerificationGas: bigint, verificationGasL
 }
 
 function printUserOperationGasDetails(
-    actualGasUsed: bigint,
-    txnGasUsed: bigint,
+    directTxGas: bigint,
+    bundlerTxGas: bigint,
+    totalUserOpGas: bigint,
+    totalOverHead: bigint,
+    userOpOverHead: bigint,
     bundlerOverhead: bigint,
-    directTxnGas: bigint,
-    extraCost: bigint,
 ) {
-    console.log("User Operation Gas Details:")
-    console.log(`  Actual Gas Used:        ${actualGasUsed.toLocaleString()} gas`)
-    console.log(`  Transaction Gas Used:   ${txnGasUsed.toLocaleString()} gas`)
-    console.log(`  Bundler Overhead:       ${bundlerOverhead.toLocaleString()} gas`)
-    console.log(`  Direct Transaction Gas: ${directTxnGas.toLocaleString()} gas`)
-    console.log(`  Extra Cost:             ${extraCost.toLocaleString()} gas`)
+    console.log("User Operation Gas Details (avg):")
+    console.log(`  Direct Transaction Gas:     ${directTxGas.toLocaleString()} gas`)
+    console.log(`  Bundler Transaction Gas:    ${bundlerTxGas.toLocaleString()} gas`)
+    console.log(`  Total UserOp Gas:           ${totalUserOpGas.toLocaleString()} gas`)
+    console.log(`  Bundler Overhead:           ${bundlerOverhead.toLocaleString()} gas`)
+    console.log(`  UserOp Overhead:            ${userOpOverHead.toLocaleString()} gas`)
+    console.log(`  Total Overhead:             ${totalOverHead.toLocaleString()} gas`)
 }
 
 async function generatePrefundedKernelAccounts(count: number) {
@@ -282,9 +259,13 @@ async function processSingleUserOp(
         throw new Error("Validation using custom validator module failed")
     }
 
-    const directTxnGas = await sendDirectTransactions(calls.length)
-    const bundlerOverhead = receipt.actualGasUsed - receipt.receipt.gasUsed
-    const userOpOverhead = receipt.actualGasUsed - directTxnGas
+    const numCalls = BigInt(calls.length)
+    const directTxGas = (await sendDirectTransactions(numCalls)) / numCalls
+    const bundlerTxGas = receipt.receipt.gasUsed / numCalls
+    const totalUserOpGas = receipt.actualGasUsed / numCalls
+    const totalOverhead = totalUserOpGas - directTxGas
+    const bundlerOverhead = totalUserOpGas - bundlerTxGas
+    const userOpOverhead = totalOverhead - bundlerOverhead
 
     printPaymasterGasEstimates(
         paymasterGasEstimates.preVerificationGas,
@@ -293,22 +274,25 @@ async function processSingleUserOp(
     )
 
     printUserOperationGasDetails(
-        receipt.actualGasUsed,
-        receipt.receipt.gasUsed,
-        bundlerOverhead,
-        directTxnGas,
+        directTxGas,
+        bundlerTxGas,
+        totalUserOpGas,
+        totalOverhead,
         userOpOverhead,
+        bundlerOverhead,
     )
 
     return {
-        receipt,
-        directTxnGas,
+        directTxGas,
+        bundlerTxGas,
+        totalUserOpGas,
+        totalOverhead,
+        bundlerOverhead,
+        userOpOverhead,
     }
 }
 
-async function sendUserOps(
-    accounts: Accounts[],
-): Promise<{ receipts: UserOpReceipt[]; totalActualGas: bigint; directTxnGas: bigint }> {
+async function sendUserOps(accounts: Accounts[]) {
     const hashes = await Promise.all(
         accounts.map((account) =>
             account.kernelClient.sendUserOperation({
@@ -334,28 +318,35 @@ async function sendUserOps(
 
     const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
 
-    const totalActualGas = filteredReceipts.reduce((acc, receipt) => acc + receipt.actualGasUsed, BigInt(0))
-    const directTxnGas = await sendDirectTransactions(filteredReceipts.length)
+    const numOps = BigInt(filteredReceipts.length)
+    const directTxGas = (await sendDirectTransactions(numOps)) / numOps
+    const bundlerTxGas = filteredReceipts[0].receipt.gasUsed / numOps
+    const totalUserOpGas = filteredReceipts.reduce((acc, receipt) => acc + receipt.actualGasUsed, BigInt(0)) / numOps
+    const bundlerOverhead = totalUserOpGas - bundlerTxGas
+    const totalOverhead = totalUserOpGas - directTxGas
+    const userOpOverhead = totalOverhead - bundlerOverhead
 
-    return { receipts: filteredReceipts, totalActualGas, directTxnGas }
+    return {
+        numOps,
+        directTxGas,
+        bundlerTxGas,
+        totalUserOpGas,
+        totalOverhead,
+        bundlerOverhead,
+        userOpOverhead,
+    }
 }
 
-async function sendDirectTransactions(count = 1): Promise<bigint> {
-    const receiverAddress = getRandomAccount()
+async function sendDirectTransactions(count = 1n) {
     let totalGas = 0n
 
     for (let i = 0; i < count; i++) {
-        const txHash = await walletClient.sendTransaction({
+        const hash = await walletClient.sendTransaction({
             account: account,
-            to: receiverAddress,
-            chain: localhost,
-            value: parseEther(AMOUNT),
+            ...createMintCall(),
         })
 
-        const receipt = await publicClient.waitForTransactionReceipt({
-            hash: txHash,
-            confirmations: 1,
-        })
+        const receipt = await publicClient.waitForTransactionReceipt({ hash })
         totalGas += receipt.gasUsed
     }
 
@@ -363,118 +354,189 @@ async function sendDirectTransactions(count = 1): Promise<bigint> {
 }
 
 async function singleUserOperationGasResult() {
-    console.log("\nSending a Single User Operation :-")
-    console.log("-----------------------------------------------------\n")
+    console.log("\nSending a Single User Operation (with Deployment) :-")
+    console.log("---------------------------------------------------------------------\n")
 
     const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
-    const { receipt, directTxnGas } = await processSingleUserOp(kernelAccount, kernelClient, [createMintCall()])
+    const {
+        directTxGas: directTxGas1,
+        bundlerTxGas: bundlerTxGas1,
+        totalUserOpGas: totalUserOpGas1,
+        totalOverhead: totalOverhead1,
+        bundlerOverhead: bundlerOverhead1,
+        userOpOverhead: userOpOverhead1,
+    } = await processSingleUserOp(kernelAccount, kernelClient, [createMintCall()])
 
-    const singleOpDeploymentResults = createGasResult(
-        "Single UserOp with 1 call (with Deployment)",
-        directTxnGas,
-        receipt.actualGasUsed,
-        receipt.receipt.gasUsed,
-    )
+    const singleOpWithDeploymentResults = {
+        scenario: "Single UserOp with 1 call (with Deployment)",
+        directTxGas: directTxGas1,
+        bundlerTxGas: bundlerTxGas1,
+        totalUserOpGas: totalUserOpGas1,
+        totalOverhead: totalOverhead1,
+        bundlerOverhead: bundlerOverhead1,
+        userOpOverhead: userOpOverhead1,
+        accountDeploymentOverhead: 0n,
+    }
 
-    const { receipt: receipt1, directTxnGas: directTxnGas1 } = await processSingleUserOp(kernelAccount, kernelClient, [
-        createMintCall(),
-    ])
+    console.log("\nSending a Single User Operation (no Deployment) :-")
+    console.log("---------------------------------------------------------------------\n")
 
-    const singleOpNoDeploymentResults = createGasResult(
-        "Single UserOp with 1 call (no Deployment)",
-        directTxnGas1,
-        receipt1.actualGasUsed,
-        receipt1.receipt.gasUsed,
-    )
+    const {
+        directTxGas: directTxGas2,
+        bundlerTxGas: bundlerTxGas2,
+        totalUserOpGas: totalUserOpGas2,
+        totalOverhead: totalOverhead2,
+        bundlerOverhead: bundlerOverhead2,
+        userOpOverhead: userOpOverhead2,
+    } = await processSingleUserOp(kernelAccount, kernelClient, [createMintCall()])
 
-    return { singleOpDeploymentResults, singleOpNoDeploymentResults }
+    const singleOpNoDeploymentResults = {
+        scenario: "Single UserOp with 1 call (no Deployment)",
+        directTxGas: directTxGas2,
+        bundlerTxGas: bundlerTxGas2,
+        totalUserOpGas: totalUserOpGas2,
+        totalOverhead: totalOverhead2,
+        bundlerOverhead: bundlerOverhead2,
+        userOpOverhead: userOpOverhead2,
+        accountDeploymentOverhead: 0n,
+    }
+
+    singleOpWithDeploymentResults.accountDeploymentOverhead =
+        singleOpWithDeploymentResults.totalOverhead - singleOpNoDeploymentResults.totalOverhead
+    return { singleOpWithDeploymentResults, singleOpNoDeploymentResults }
 }
 
-async function batchedCallsGasResult() {
-    console.log("\nSending a Single UserOp with 5 transfer Calls :-")
-    console.log("-----------------------------------------------------\n")
+async function multipleCallsGasResult() {
+    console.log("\nSending a Single UserOp with 5 transfer Calls (with Deployment) :-")
+    console.log("---------------------------------------------------------------------\n")
 
     const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
     const calls = Array(5)
         .fill(null)
         .map(() => createMintCall())
-    const { receipt, directTxnGas } = await processSingleUserOp(kernelAccount, kernelClient, calls)
 
-    const batchedCallsDeploymentResults = createGasResult(
-        "Single UserOp with 5 calls (with Deployment)",
-        directTxnGas,
-        receipt.actualGasUsed,
-        receipt.receipt.gasUsed,
-    )
+    const {
+        directTxGas: directTxGas1,
+        bundlerTxGas: bundlerTxGas1,
+        totalUserOpGas: totalUserOpGas1,
+        totalOverhead: totalOverhead1,
+        bundlerOverhead: bundlerOverhead1,
+        userOpOverhead: userOpOverhead1,
+    } = await processSingleUserOp(kernelAccount, kernelClient, calls)
 
-    const { receipt: receipt1, directTxnGas: directTxnGas1 } = await processSingleUserOp(
-        kernelAccount,
-        kernelClient,
-        calls,
-    )
-    const batchedCallsNoDeploymentResults = createGasResult(
-        "Single UserOp with 5 calls (no Deployment)",
-        directTxnGas1,
-        receipt1.actualGasUsed,
-        receipt1.receipt.gasUsed,
-    )
+    const multipleCallsWithDeploymentResults = {
+        scenario: "Single UserOp with 5 calls (with Deployment)",
+        directTxGas: directTxGas1,
+        bundlerTxGas: bundlerTxGas1,
+        totalUserOpGas: totalUserOpGas1,
+        totalOverhead: totalOverhead1,
+        bundlerOverhead: bundlerOverhead1,
+        userOpOverhead: userOpOverhead1,
+        accountDeploymentOverhead: 0n,
+    }
 
-    return { batchedCallsDeploymentResults, batchedCallsNoDeploymentResults }
+    console.log("\nSending a Single UserOp with 5 transfer Calls (no Deployment) :-")
+    console.log("---------------------------------------------------------------------\n")
+
+    const {
+        directTxGas: directTxGas2,
+        bundlerTxGas: bundlerTxGas2,
+        totalUserOpGas: totalUserOpGas2,
+        totalOverhead: totalOverhead2,
+        bundlerOverhead: bundlerOverhead2,
+        userOpOverhead: userOpOverhead2,
+    } = await processSingleUserOp(kernelAccount, kernelClient, calls)
+
+    const multipleCallsNoDeploymentResults = {
+        scenario: "Single UserOp with 5 calls (no Deployment)",
+        directTxGas: directTxGas2,
+        bundlerTxGas: bundlerTxGas2,
+        totalUserOpGas: totalUserOpGas2,
+        totalOverhead: totalOverhead2,
+        bundlerOverhead: bundlerOverhead2,
+        userOpOverhead: userOpOverhead2,
+        accountDeploymentOverhead: 0n,
+    }
+
+    multipleCallsWithDeploymentResults.accountDeploymentOverhead =
+        multipleCallsWithDeploymentResults.totalOverhead - multipleCallsNoDeploymentResults.totalOverhead
+    return { multipleCallsWithDeploymentResults, multipleCallsNoDeploymentResults }
 }
 
 async function batchedUserOperationsGasResult() {
     const accounts = await generatePrefundedKernelAccounts(5)
 
     const {
-        receipts: receipts1,
-        totalActualGas: totalActualGas1,
-        directTxnGas: directTxnGas1,
+        numOps: numOps1,
+        directTxGas: directTxGas1,
+        bundlerTxGas: bundlerTxGas1,
+        totalUserOpGas: totalUserOpGas1,
+        totalOverhead: totalOverhead1,
+        bundlerOverhead: bundlerOverhead1,
+        userOpOverhead: userOpOverhead1,
     } = await sendUserOps(accounts)
 
-    console.log("\nSending multiple UserOps from unique senders :-")
-    console.log("-----------------------------------------------------\n")
-    console.log(`(Bundle contains ${receipts1.length} UserOps)`)
+    console.log("\nSending multiple UserOps from unique senders (with Deployment) :-")
+    console.log("---------------------------------------------------------------------\n")
+    console.log(`(Bundle contains ${numOps1} UserOps)`)
+
     printUserOperationGasDetails(
-        totalActualGas1,
-        receipts1[0].receipt.gasUsed,
-        totalActualGas1 - receipts1[0].receipt.gasUsed,
-        directTxnGas1,
-        totalActualGas1 - directTxnGas1,
+        directTxGas1,
+        bundlerTxGas1,
+        totalUserOpGas1,
+        totalOverhead1,
+        bundlerOverhead1,
+        userOpOverhead1,
     )
 
     const {
-        receipts: receipts2,
-        totalActualGas: totalActualGas2,
-        directTxnGas: directTxnGas2,
+        numOps: numOps2,
+        directTxGas: directTxGas2,
+        bundlerTxGas: bundlerTxGas2,
+        totalUserOpGas: totalUserOpGas2,
+        totalOverhead: totalOverhead2,
+        bundlerOverhead: bundlerOverhead2,
+        userOpOverhead: userOpOverhead2,
     } = await sendUserOps(accounts)
 
-    console.log("Sending multiple UserOps from unique senders :-")
-    console.log("-----------------------------------------------------\n")
-    console.log(`(Bundle contains ${receipts2.length} UserOps)`)
+    console.log("Sending multiple UserOps from unique senders (no Deployment) :-")
+    console.log("---------------------------------------------------------------------\n")
+    console.log(`(Bundle contains ${numOps2} UserOps)`)
 
     printUserOperationGasDetails(
-        totalActualGas2,
-        receipts2[0].receipt.gasUsed,
-        totalActualGas2 - receipts2[0].receipt.gasUsed,
-        directTxnGas2,
-        totalActualGas2 - directTxnGas2,
+        directTxGas2,
+        bundlerTxGas2,
+        totalUserOpGas2,
+        totalOverhead2,
+        bundlerOverhead2,
+        userOpOverhead2,
     )
 
-    const multipleUserOpsDeploymentResults = createGasResult(
-        `Multiple (${receipts1.length}) UserOps (with Deployment)`,
-        directTxnGas1,
-        totalActualGas1,
-        receipts1[0].receipt.gasUsed,
-    )
+    const multipleUserOpsWithDeploymentResults = {
+        scenario: `Multiple (${numOps1}) UserOps (with Deployment)`,
+        directTxGas: directTxGas1,
+        bundlerTxGas: bundlerTxGas1,
+        totalUserOpGas: totalUserOpGas1,
+        totalOverhead: totalOverhead1,
+        bundlerOverhead: bundlerOverhead1,
+        userOpOverhead: userOpOverhead1,
+        accountDeploymentOverhead: 0n,
+    }
 
-    const multipleUserOpsNoDeploymentResults = createGasResult(
-        `Multiple (${receipts2.length}) UserOps (without Deployment)`,
-        directTxnGas2,
-        totalActualGas2,
-        receipts2[0].receipt.gasUsed,
-    )
+    const multipleUserOpsNoDeploymentResults = {
+        scenario: `Multiple (${numOps2}) UserOps (without Deployment)`,
+        directTxGas: directTxGas2,
+        bundlerTxGas: bundlerTxGas2,
+        totalUserOpGas: totalUserOpGas2,
+        totalOverhead: totalOverhead2,
+        bundlerOverhead: bundlerOverhead2,
+        userOpOverhead: userOpOverhead2,
+        accountDeploymentOverhead: 0n,
+    }
 
-    return { multipleUserOpsDeploymentResults, multipleUserOpsNoDeploymentResults }
+    multipleUserOpsWithDeploymentResults.accountDeploymentOverhead =
+        multipleUserOpsWithDeploymentResults.totalOverhead - multipleUserOpsNoDeploymentResults.totalOverhead
+    return { multipleUserOpsWithDeploymentResults, multipleUserOpsNoDeploymentResults }
 }
 
 async function main() {
@@ -483,49 +545,51 @@ async function main() {
         throw new Error("Paymaster Deposit failed")
     }
 
-    let singleOpDeploymentResults: GasResult | undefined
+    let singleOpWithDeploymentResults: GasResult | undefined
     let singleOpNoDeploymentResults: GasResult | undefined
     try {
-        ;({ singleOpDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult())
+        ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult())
     } catch (error) {
         console.error("Single UserOp: ", error)
     }
 
-    let batchedCallsDeploymentResults: GasResult | undefined
-    let batchedCallsNoDeploymentResults: GasResult | undefined
+    let multipleCallsWithDeploymentResults: GasResult | undefined
+    let multipleCallsNoDeploymentResults: GasResult | undefined
     try {
-        ;({ batchedCallsDeploymentResults, batchedCallsNoDeploymentResults } = await batchedCallsGasResult())
+        ;({ multipleCallsWithDeploymentResults, multipleCallsNoDeploymentResults } = await multipleCallsGasResult())
     } catch (error) {
         console.error("Batched CallData: ", error)
     }
 
-    let multipleUserOpsDeploymentResults: GasResult | undefined
+    let multipleUserOpsWithDeploymentResults: GasResult | undefined
     let multipleUserOpsNoDeploymentResults: GasResult | undefined
     try {
-        ;({ multipleUserOpsDeploymentResults, multipleUserOpsNoDeploymentResults } =
+        ;({ multipleUserOpsWithDeploymentResults, multipleUserOpsNoDeploymentResults } =
             await batchedUserOperationsGasResult())
     } catch (error) {
         console.error("Batched UserOps: ", error)
     }
 
     const gasUsageResults = [
-        singleOpDeploymentResults,
+        singleOpWithDeploymentResults,
         singleOpNoDeploymentResults,
-        batchedCallsDeploymentResults,
-        batchedCallsNoDeploymentResults,
-        multipleUserOpsDeploymentResults,
+        multipleCallsWithDeploymentResults,
+        multipleCallsNoDeploymentResults,
+        multipleUserOpsWithDeploymentResults,
         multipleUserOpsNoDeploymentResults,
     ].filter((result): result is GasResult => result !== undefined)
 
-    console.log("\nGas Usage Results Comparison Table :-")
+    console.log("\nGas Usage Results Comparison Table (avg values per tx) :-")
     console.table(
         gasUsageResults.map((result) => ({
-            Scenario: result.scenario,
-            "Direct Txn Gas": result.directTxnGas,
-            ActualGasUsed: result.actualGasUsed,
-            "Txn.gasUsed": result.txnGasUsed,
-            "Bundler Overhead": result.bundlerOverhead,
-            "Extra Cost (vs Direct)": result.extraCost,
+            Scenario: result.scenario.toLocaleString(),
+            "Direct Tx Gas": result.directTxGas.toLocaleString(),
+            "Bundler Tx Gas": result.bundlerTxGas.toLocaleString(),
+            "Total UserOp Gas": result.totalUserOpGas.toLocaleString(),
+            "Bundler Overhead": result.bundlerOverhead.toLocaleString(),
+            "UserOp Overhead": result.userOpOverhead.toLocaleString(),
+            "Total Overhead": result.totalOverhead.toLocaleString(),
+            "SCA Deployment Overhead": result.accountDeploymentOverhead.toLocaleString(),
         })),
     )
 }
