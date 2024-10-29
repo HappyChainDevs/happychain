@@ -7,3 +7,9 @@ export const requestLabels = {
     wallet_switchEthereumChain: "Switch Network",
     wallet_watchAsset: "Watch Asset",
 } as const
+
+export const permissionDescriptions = {
+    eth_accounts: "Connection: the app can see your information and suggest transactions.",
+}
+
+export type PermissionDescriptionIndex = keyof typeof permissionDescriptions

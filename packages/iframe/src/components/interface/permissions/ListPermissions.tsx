@@ -1,12 +1,8 @@
+import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { type AppPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 import { Switch } from "../../primitives/toggle-switch/Switch"
-
-const DICTIONARIES_PERMISSIONS_MEANING = {
-    eth_accounts: "Connection: the app can see your information and suggest transactions.",
-}
-type PermissionDescriptionIndex = keyof typeof DICTIONARIES_PERMISSIONS_MEANING
 
 interface ListItemProps {
     permission: PermissionDescriptionIndex
@@ -24,7 +20,7 @@ const ListItem = ({ permission, dappUrl }: ListItemProps) => {
                     !e.checked ? revokePermissions(dappUrl, permission) : grantPermissions(dappUrl, permission)
                 }}
                 className="justify-between w-full [&_[data-part=label]]:w-3/4 flex-row-reverse"
-                switchLabel={DICTIONARIES_PERMISSIONS_MEANING?.[permission] ?? "---"}
+                switchLabel={permissionDescriptions?.[permission] ?? "---"}
             />
         </>
     )
