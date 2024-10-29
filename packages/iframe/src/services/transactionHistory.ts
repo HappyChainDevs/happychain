@@ -2,7 +2,7 @@ import { getDefaultStore } from "jotai"
 import { type Address, hexToNumber, stringToHex } from "viem"
 
 import { getBalanceQueryKey } from "wagmi/query"
-import { queryClient } from "#src/main.tsx"
+// import { queryClient } from "#src/main.tsx"
 import { getCurrentChain } from "#src/state/currentChain.ts"
 import { getPublicClient } from "#src/state/publicClient.ts"
 import { type PendingTxDetails, type TxInfo, confirmedTxsAtom, pendingTxsAtom } from "#src/state/txHistory.ts"
@@ -27,12 +27,10 @@ export function addPendingTx(address: Address, payload: PendingTxDetails) {
     store.set(pendingTxsAtom, (existingEntries) => {
         const pendingTxEntriesByUser = existingEntries[address] || []
         const isHashAlreadyPending = pendingTxEntriesByUser.includes(payload)
-
         if (isHashAlreadyPending) {
             console.warn("(⊙_⊙) pending transaction already recorded (⊙_⊙)")
             return existingEntries
         }
-
         void monitorTransactionHash(address, payload)
         return {
             ...existingEntries,
@@ -56,12 +54,14 @@ async function monitorTransactionHash(address: Address, payload: PendingTxDetail
         // Remove the tx hash from the pending list
         removePendingTx(address, payload)
         // invalidate queryKey to refetch balance post tx confirmation
-        queryClient.invalidateQueries({
-            queryKey: getBalanceQueryKey({
-                address: getUser()?.address,
-                chainId: hexToNumber(stringToHex(getCurrentChain().chainId)),
+        await import("#src/main.tsx").then((a) =>
+            a.queryClient.invalidateQueries({
+                queryKey: getBalanceQueryKey({
+                    address: getUser()?.address,
+                    chainId: hexToNumber(stringToHex(getCurrentChain().chainId)),
+                }),
             }),
-        })
+        )
     } else {
         console.warn(`Error monitoring transaction receipt for hash: ${payload.hash}`)
     }
@@ -72,13 +72,11 @@ export function removePendingTx(address: Address, payload: PendingTxDetails) {
         const updatedEntries = (existingEntries[address] || []).filter(
             (pendingPayload) => pendingPayload.hash !== payload.hash,
         )
-
         // If no pending transactions remain for the user, remove the user's entry
         if (updatedEntries.length === 0) {
             const { [address]: _, ...remainingEntries } = existingEntries
             return remainingEntries
         }
-
         return {
             ...existingEntries,
             [address]: updatedEntries,
@@ -90,12 +88,10 @@ export function addConfirmedTx(address: Address, txInfo: TxInfo) {
     store.set(confirmedTxsAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
         const isReceiptAlreadyLogged = userHistory.includes(txInfo)
-
         if (isReceiptAlreadyLogged) {
             console.warn("(⊙_⊙) transaction already confirmed — this should never happen (⊙_⊙)")
             return existingEntries
         }
-
         return {
             ...existingEntries,
             [address]: [txInfo, ...userHistory],

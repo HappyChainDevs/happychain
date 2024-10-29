@@ -35,7 +35,6 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
         console.warn("Unsupported source app, abandoning request", app, request)
         return
     }
-
     try {
         const payload = await dispatch(request)
         const response = {
@@ -44,7 +43,6 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             error: null,
             payload: payload ?? undefined,
         }
-
         isIframe(app)
             ? iframeProvider.handleRequestResolution(response)
             : void happyProviderBus.emit(Msgs.RequestResponse, response)
@@ -55,7 +53,6 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             error: getEIP1193ErrorObjectFromUnknown(e),
             payload: null,
         }
-
         isIframe(app)
             ? iframeProvider.handleRequestResolution(response)
             : void happyProviderBus.emit(Msgs.RequestResponse, response)

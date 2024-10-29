@@ -20,7 +20,6 @@ export class IframeProvider extends BasePopupProvider {
     protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
         // We're logging in or out, wait for the auth state to settle.
         await waitForCondition(() => getAuthState() !== AuthState.Connecting)
-
         return checkIfRequestRequiresConfirmation(getIframeURL(), args)
     }
 
