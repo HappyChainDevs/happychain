@@ -82,7 +82,7 @@ test-gas:
 .PHONY: test-gas
 
 gas-paymaster:
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --via-ir --optimizer-runs 200 --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > gas_report.txt
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --via-ir --optimizer-runs 200 --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
 .PHONY: gas-paymaster
 
 test-aa-gas-flamechart:
@@ -95,12 +95,12 @@ test-fork:
 
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the demo.
 aa-demo:
-	@tsx ./scripts/account_abstraction_demo.ts
+	@tsx ./scripts/account_abstraction_demo.ts;
 .PHONY: aa-demo
 
 # Please, ensure that all Account Abstraction (AA) and Mock Token contracts are deployed before generating the gas report.
 gas-bundler:
-	@tsx ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Sending a Single User Operation/ {start=1} {if (start) print}' > bundler_gas_report.txt
+	@tsx ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Gas Usage for a Single UserOp/ {start=1} {if (start) print}' > bundler_gas_report.txt
 .PHONY: gas-bundler
 
 ####################################################################################################
