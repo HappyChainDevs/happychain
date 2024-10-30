@@ -4,6 +4,7 @@ on:
   push:
     branches: [master]
   pull_request:
+    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -26,7 +27,6 @@ jobs:
           version: nightly
       - name: Fake contract deployment
         run: mkdir -p packages/contracts/out && echo "{}" > packages/contracts/out/deployment.json
-      - run: make install-frozen
       - run: make setup
       - run: make check
       - run: make build
