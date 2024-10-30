@@ -1,5 +1,5 @@
-import { AuthState, Msgs } from "@happychain/sdk-shared"
 import { ModalStates } from "@happychain/sdk-shared"
+import { Msgs } from "@happychain/sdk-shared"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import clsx from "clsx"
 import { useAtomValue } from "jotai"
@@ -13,10 +13,8 @@ import {
     SecondaryActionsMenu,
     TriggerSecondaryActionsMenu,
 } from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
-import { DotLinearMotionBlurLoader } from "../components/loaders/DotLinearMotionBlurLoader"
 import { useActiveConnectionProvider } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
-import { authStateAtom } from "../state/authState"
 import { userAtom } from "../state/user"
 
 export const Route = createLazyFileRoute("/embed")({
@@ -29,7 +27,6 @@ function signalOpen() {
 
 function Embed() {
     const location = useLocation()
-    const authState = useAtomValue(authStateAtom)
     const user = useAtomValue(userAtom)
     const { disconnectAsync } = useDisconnect()
     const activeProvider = useActiveConnectionProvider()
@@ -54,16 +51,6 @@ function Embed() {
         void appMessageBus.emit(Msgs.ModalToggle, { isOpen: false, cancelled: false })
         await disconnectAsync()
         await activeProvider?.disconnect()
-    }
-
-    if (authState === AuthState.Connecting) {
-        return (
-            <main className="h-screen w-screen flex items-center justify-center">
-                <div className="top-4 right-4 absolute">
-                    <DotLinearMotionBlurLoader />
-                </div>
-            </main>
-        )
     }
 
     if (!user) {

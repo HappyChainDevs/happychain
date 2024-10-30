@@ -1,5 +1,4 @@
 import { AuthState, type ConnectionProvider, Msgs, type MsgsFromApp } from "@happychain/sdk-shared"
-import clsx from "clsx"
 import { useCallback, useEffect, useState } from "react"
 import { useConnect } from "wagmi"
 import happychainLogo from "../assets/happychain.png"
@@ -36,51 +35,33 @@ export function ConnectModal() {
         [req, connectAsync, connectors],
     )
 
-    const abort = useCallback(() => {
-        if (req) void appMessageBus.emit(Msgs.ConnectResponse, { request: req, response: null })
-        setModalState({ isOpen: false, cancelled: true })
-    }, [req])
-
     return (
         <>
-            <main className="h-dvh w-screen rounded-xl overflow-hidden">
-                <div
-                    onClick={abort}
-                    onKeyDown={abort}
-                    className={clsx(
-                        "fixed left-0 right-0 top-0 h-dvh",
-                        "flex items-center justify-center",
-                        "bg-slate-900/50 backdrop-blur-sm",
-                        "transition duration-0 lg:duration-300 opacity-0 lg:opacity-100",
-                    )}
-                >
-                    <div
-                        className="flex gap-4 rounded-md bg-zinc-100 p-8"
-                        onClick={(e) => e.stopPropagation()}
-                        onKeyDown={(e) => e.stopPropagation()}
-                    >
-                        <div className="flex items-center justify-center">
-                            <div className="flex flex-col items-center gap-4">
-                                <img alt="HappyChain Logo" src={happychainLogo} className="mx-auto h-24 w-24" />
-                                <p className="text-2xl font-bold">HappyChain</p>
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-4">
-                            {providers.map((prov) => {
-                                return (
-                                    <button
-                                        type="button"
-                                        key={prov.id}
-                                        onClick={() => login(prov)}
-                                        className="flex w-full items-center gap-4 bg-zinc-200 px-4 py-2 shadow-md transition hover:scale-[103%] hover:bg-white focus:shadow active:scale-[95%]"
-                                    >
-                                        <img className="h-8 w-8" src={prov.icon} alt={`${prov.name} icon`} />
-                                        {prov.name}
-                                    </button>
-                                )
-                            })}
-                        </div>
+            <main className="h-dvh w-screen rounded-3xl overflow-hidden   px-16 py-8 flex flex-col justify-around shadow-inner border-4 border-sky-500 dark:border-sky-900 ">
+                <div className="flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-4">
+                        <img
+                            alt="HappyChain Logo"
+                            src={happychainLogo}
+                            className="mx-auto h-24 w-24 drop-shadow-lg hover:animate-spin"
+                        />
+                        <p className="text-2xl font-bold">HappyChain</p>
                     </div>
+                </div>
+                <div className="flex flex-col gap-4">
+                    {providers.map((prov) => {
+                        return (
+                            <button
+                                type="button"
+                                key={prov.id}
+                                onClick={() => login(prov)}
+                                className="btn dark:btn-neutral flex w-full items-center gap-4 px-4 py-2 shadow-md transition hover:scale-[103%] focus:shadow active:scale-[95%]"
+                            >
+                                <img className="h-8 w-8" src={prov.icon} alt={`${prov.name} icon`} />
+                                {prov.name}
+                            </button>
+                        )
+                    })}
                 </div>
             </main>
         </>

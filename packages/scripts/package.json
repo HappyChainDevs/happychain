@@ -11,7 +11,10 @@
     },
     "exports": {
         ".": "./lib/index.ts",
-        "./plugins": "./plugins/lib/index.ts"
+        "./plugins": {
+            "default": "./plugins/lib/index.ts",
+            "types": "./plugins/lib/index.d.ts"
+        }
     },
     "devDependencies": {
         "@arethetypeswrong/cli": "^0.16.4",
