@@ -3240,6 +3240,11 @@
     },
     {
       "type": "error",
+      "name": "InvalidBundler",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "OwnableInvalidOwner",
       "inputs": [
         {
