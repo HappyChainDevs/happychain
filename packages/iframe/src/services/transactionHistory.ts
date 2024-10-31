@@ -2,11 +2,12 @@ import { getDefaultStore } from "jotai"
 import { type Address, hexToNumber, stringToHex } from "viem"
 
 import { getBalanceQueryKey } from "wagmi/query"
-import { queryClient } from "#src/main.tsx"
+
 import { getCurrentChain } from "#src/state/currentChain.ts"
 import { getPublicClient } from "#src/state/publicClient.ts"
 import { type PendingTxDetails, type TxInfo, confirmedTxsAtom, pendingTxsAtom } from "#src/state/txHistory.ts"
 import { getUser } from "#src/state/user.ts"
+import { queryClient } from "#src/tanstack-query/config.js"
 
 /**
  * When a new transaction hash is added to the `pendingTxsAtom`, Viem's
