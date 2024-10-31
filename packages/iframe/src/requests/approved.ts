@@ -56,12 +56,18 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             return grantPermissions(app, request.payload.params[0])
 
         case "wallet_addEthereumChain": {
+            const chains = getChainsMap()
+            const params = Array.isArray(request.payload.params) && request.payload.params[0]
+            const isValid = isAddChainParams(params)
+
+            if (!isValid)
+                throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Invalid request body")
+
+            if (chains.has(params.chainId))
+                throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Chain already exists")
+
             const response = await sendToWalletClient(request)
-            // only add chain if the request is successful
-            const params: unknown = Array.isArray(request.payload.params) && request.payload.params?.[0]
-            if (params && isAddChainParams(params)) {
-                setChains((previous) => [...previous, params])
-            }
+            setChains((previous) => [...previous, params]) // Only add chain if the request is successful.
             return response
         }
 
