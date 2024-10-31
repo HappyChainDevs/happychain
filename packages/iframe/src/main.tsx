@@ -10,15 +10,14 @@ import { routeTree } from "./routeTree.gen"
 import "./listeners"
 
 import "./index.css"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider } from "wagmi"
 import { config } from "./wagmi/config"
+import { queryClient } from "./tanstack-query/config"
 
 // Create a new router instance
 const router = createRouter({ routeTree })
 
-// new QueryClient instance, exportable for query invalidations
-export const queryClient = new QueryClient()
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {
