@@ -32,7 +32,6 @@ export default defineConfig({
         },
     },
     test: {
-        setupFiles: ["@vitest/web-worker"],
         environment: "happy-dom",
     },
 })
