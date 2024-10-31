@@ -1,7 +1,8 @@
-import { useHappyChain } from "@happychain/react"
+import { chains, useHappyChain } from "@happychain/react"
 
 import { useEffect, useMemo, useState } from "react"
-import { createPublicClient, createWalletClient, custom } from "viem"
+import { type Hex, createPublicClient, createWalletClient, custom, hexToNumber } from "viem"
+import { gnosis } from "viem/chains"
 import { ConnectButton } from "./BadgeComponent"
 
 function App() {
@@ -43,6 +44,23 @@ function App() {
     async function getBlock() {
         const block = await publicClient.getBlock()
         setBlockResult(block)
+    }
+
+    async function addChain() {
+        await walletClient?.addChain({ chain: gnosis })
+    }
+
+    async function addConflictedChain() {
+        await walletClient?.addChain({ chain: { ...gnosis, name: "Gnosis 2" } })
+        console.error("successfully added conflicting chain")
+    }
+
+    async function switchChain() {
+        await walletClient?.switchChain({ id: gnosis.id })
+    }
+
+    async function switchBack() {
+        await walletClient?.switchChain({ id: hexToNumber(chains.testnet.chainId as Hex) })
     }
 
     useEffect(() => {
@@ -89,13 +107,30 @@ function App() {
             <button type="button" onClick={getBlock} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Get Block
             </button>
+
             <div className="max-w-96 w-full overflow-auto bg-gray-200 p-4">
                 <p className="text-lg font-bold">Results:</p>
                 <pre>{JSON.stringify(blockResult, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2)}</pre>
             </div>
 
+            <button type="button" onClick={addChain} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Add Chain
+            </button>
+
+            <button type="button" onClick={addConflictedChain} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Add Conflicted Chain
+            </button>
+
+            <button type="button" onClick={switchChain} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Switch to New Chain
+            </button>
+
+            <button type="button" onClick={switchBack} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Switch Back
+            </button>
+
             <button type="button" onClick={sendStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Send
+                Show Send Screen
             </button>
         </main>
     )
