@@ -1,10 +1,22 @@
 import { accessorsFromAtom } from "@happychain/common"
 import { chains as defaultChains } from "@happychain/sdk-shared"
-import { type ChainParameters, getChainFromSearchParams } from "@happychain/sdk-shared"
+import type { ChainParameters } from "@happychain/sdk-shared"
 import { type WritableAtom, atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import type { AddEthereumChainParameter } from "viem"
 import { StorageKey } from "../services/storage"
+
+function getChainFromSearchParams(): ChainParameters {
+    const chainId = new URLSearchParams(window.location.search).get("chainId")
+    const chains = getChains()
+    return chainId && chainId in chains //
+        ? chains[chainId]
+        : defaultChains.defaultChain
+}
+
+function getDefaultChainsRecord() {
+    return Object.fromEntries(Object.entries(defaultChains).map(([_, chain]) => [chain.chainId, chain]))
+}
 
 /**
  * This atom maps chain IDs to their respective chain parameters. Initialized with the officially
@@ -12,7 +24,7 @@ import { StorageKey } from "../services/storage"
  */
 export const chainsAtom = atomWithStorage<
     Record<string, AddEthereumChainParameter> //
->(StorageKey.Chains, defaultChains)
+>(StorageKey.Chains, getDefaultChainsRecord())
 
 export const {
     /** See {@link chainsAtom} */

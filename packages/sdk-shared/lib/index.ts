@@ -5,7 +5,7 @@ import SafeEventEmitter from "@metamask/safe-event-emitter"
 export { config } from "./config"
 
 export * as chains from "./chains"
-export { getChainFromSearchParams, defaultChain, convertToViemChain } from "./chains/utils"
+export { getChainFromSearchParams, convertToViemChain } from "./chains/utils"
 
 export { AuthState, WalletType } from "./interfaces/happyUser"
 export { isPermissionsRequest } from "./interfaces/eip1193"
