@@ -10,7 +10,7 @@ import {
 import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
 
 import { addPendingTx } from "#src/services/transactionHistory.ts"
-import { getChainsMap, setChains } from "#src/state/chains.ts"
+import { getChains, setChains } from "#src/state/chains.ts"
 import { getCurrentChain, setCurrentChain } from "#src/state/currentChain.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
 import type { PendingTxDetails } from "#src/state/txHistory.ts"
@@ -56,27 +56,28 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             return grantPermissions(app, request.payload.params[0])
 
         case "wallet_addEthereumChain": {
-            const chains = getChainsMap()
+            const chains = getChains()
             const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
 
             if (!isValid)
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Invalid request body")
 
-            if (chains.has(params.chainId))
+            if (params.chainId in chains)
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Chain already exists")
 
             const response = await sendToWalletClient(request)
-            setChains((previous) => [...previous, params]) // Only add chain if the request is successful.
+            // Only add chain if the request is successful.
+            setChains((prev) => ({ ...prev, [params.chainId]: params }))
             return response
         }
 
         case "wallet_switchEthereumChain": {
-            const chains = getChainsMap()
+            const chains = getChains()
             const chainId = request.payload.params[0].chainId
 
             // ensure chain has already been added
-            if (!chains.has(chainId)) {
+            if (!(chainId in chains)) {
                 throw getEIP1193ErrorObjectFromCode(
                     EIP1193ErrorCodes.SwitchChainError,
                     "Unrecognized chain ID, try adding the chain first.",
@@ -89,7 +90,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 return null // correct response for a successful request
             }
 
-            const chain = chains.get(chainId)
+            const chain = chains[chainId]
             if (chain) {
                 setCurrentChain(chain)
             } else {

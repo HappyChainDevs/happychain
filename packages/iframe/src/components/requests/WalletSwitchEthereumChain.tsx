@@ -15,7 +15,7 @@ export function WalletSwitchEthereumChain({
 }: RequestConfirmationProps<"wallet_switchEthereumChain">) {
     const chains = useAtomValue(chainsAtom)
 
-    const chain = chains.find((chain) => chain.chainId === params[0].chainId)
+    const chain = chains[params[0].chainId]
     if (!chain) {
         return (
             <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
