@@ -57,6 +57,17 @@
         --transition-property: none;
         --transition-duration: 0s;
     }
+
+    &,
+    &[data-open-state="false"],
+    &[data-drag-state="false"],
+    &[data-open-state="true"],
+    &[data-drag-state="true"],
+    &:hover {
+        @media (prefers-reduced-motion) {
+            --transition-duration: 0;
+        }
+    }
 }
 
 .wallet-grabber {
@@ -115,6 +126,10 @@
     transition-property: background-color;
     transition-duration: 0.3s;
 
+    @media (prefers-reduced-motion) {
+        transition-duration: 0;
+    }
+
     &[data-auth-state="loading"] {
         background-color: rgb(13 148 136 / 1);
     }
@@ -137,6 +152,10 @@
     transition-property: opacity;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: .15s;
+
+    @media (prefers-reduced-motion) {
+        transition-duration: 0;
+    }
 
     &[data-open-state="true"] {
         opacity: 0;
