@@ -11,7 +11,7 @@ import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
 
 import { addPendingTx } from "#src/services/transactionHistory.ts"
 import { getChainsMap, setChains } from "#src/state/chains.ts"
-import { setCurrentChain } from "#src/state/currentChain.ts"
+import { getCurrentChain, setCurrentChain } from "#src/state/currentChain.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
 import type { PendingTxDetails } from "#src/state/txHistory.ts"
 import { getUser } from "#src/state/user.ts"
@@ -67,12 +67,23 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
         case "wallet_switchEthereumChain": {
             const chains = getChainsMap()
+            const chainId = request.payload.params[0].chainId
+
             // ensure chain has already been added
-            if (!chains.has(request.payload.params[0].chainId)) {
-                throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.ChainNotRecognized)
+            if (!chains.has(chainId)) {
+                throw getEIP1193ErrorObjectFromCode(
+                    EIP1193ErrorCodes.SwitchChainError,
+                    "Unrecognized chain ID, try adding the chain first.",
+                )
             }
+
             const response = await sendToWalletClient(request)
-            const chain = chains.get(request.payload.params[0].chainId)
+
+            if (chainId === getCurrentChain()?.chainId) {
+                return null // correct response for a successful request
+            }
+
+            const chain = chains.get(chainId)
             if (chain) {
                 setCurrentChain(chain)
             } else {

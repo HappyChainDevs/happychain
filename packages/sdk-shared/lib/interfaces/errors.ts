@@ -17,7 +17,7 @@ export enum EIP1193ErrorCodes {
     UnsupportedMethod = 4200,
     Disconnected = 4900,
     ChainDisconnected = 4901,
-    ChainNotRecognized = 4902, // non-standard, supported by viem
+    SwitchChainError = 4902, // non-standard, supported by viem
     Unknown = -1,
 }
 
@@ -141,7 +141,7 @@ export class EIP1193ChainDisconnectedError extends GenericProviderRpcError {
 export class EIP1193ChainNotRecognizedError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
-            code: EIP1193ErrorCodes.ChainNotRecognized,
+            code: EIP1193ErrorCodes.SwitchChainError,
             message: errObj?.message || "Chain Not Recognized",
             data: errObj?.data || "Chain Not Recognized",
         })
@@ -198,7 +198,7 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
         return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.ChainDisconnected, error.details)
     }
     if (error instanceof SwitchChainError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.ChainNotRecognized, error.details)
+        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, error.details)
     }
     if (error instanceof GenericProviderRpcError) {
         return getEIP1193ErrorObjectFromCode(error.code, error.message)
@@ -234,7 +234,7 @@ export function convertErrorObjectToEIP1193ErrorInstance(error: EIP1193ErrorObje
             return new EIP1193DisconnectedError(error as EIP1193ErrorObject)
         case EIP1193ErrorCodes.ChainDisconnected:
             return new EIP1193ChainDisconnectedError(error as EIP1193ErrorObject)
-        case EIP1193ErrorCodes.ChainNotRecognized:
+        case EIP1193ErrorCodes.SwitchChainError:
             return new EIP1193ChainNotRecognizedError(error as EIP1193ErrorObject)
         default:
             return new GenericProviderRpcError(error)
