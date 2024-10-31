@@ -65,6 +65,12 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "wallet_addEthereumChain":
             // If this is permissionless, the chain already exists, so we simply succeed.
+            // The app may have bypassed the permission check, but this doesn't do anything.
+            return null
+
+        case "wallet_switchEthereumChain":
+            // If this is permissionless, we're already on the right chain so we simply succeed.
+            // The app may have bypassed the permission check, but this doesn't do anything.
             return null
 
         default:
