@@ -84,20 +84,11 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 )
             }
 
+            if (chainId === getCurrentChain()?.chainId) return null // correct response for a successful request
+
             const response = await sendToWalletClient(request)
-
-            if (chainId === getCurrentChain()?.chainId) {
-                return null // correct response for a successful request
-            }
-
-            const chain = chains[chainId]
-            if (chain) {
-                setCurrentChain(chain)
-            } else {
-                console.warn("Chain not found; error in request.")
-                return false
-            }
-
+            // Currently this fails: web3Auth is hardcoded to the default intial chain.
+            setCurrentChain(chains[chainId])
             return response
         }
 

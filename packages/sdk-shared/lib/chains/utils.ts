@@ -1,18 +1,12 @@
-import { getChains } from "@happychain/iframe/src/state/chains"
 import { type AddEthereumChainParameter, defineChain } from "viem"
 
 import { happyChainSepolia, happyChainSepoliaViemChain } from "./definitions/happyChainSepolia"
 
-export const defaultChain = happyChainSepolia
-
 export type ChainParameters = Readonly<AddEthereumChainParameter & { opStack?: boolean }>
 
+// TODO delete this function after the web3auth logic is migrated to the iframe package
 export function getChainFromSearchParams(): ChainParameters {
-    const chainId = new URLSearchParams(window.location.search).get("chainId")
-    const chains = getChains()
-    return chainId && chainId in chains //
-        ? chains[chainId]
-        : defaultChain
+    return happyChainSepolia
 }
 
 export function convertToViemChain(chain: ChainParameters): ReturnType<typeof defineChain> {
