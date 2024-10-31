@@ -19,14 +19,12 @@ export const currentChainAtom: WritableAtom<
     [AddEthereumChainParameter | Readonly<AddEthereumChainParameter> | undefined],
     void
 > = atom(getChainFromSearchParams(), (_get, set, newChain) => {
-    if ("URLSearchParams" in window && newChain) {
-        // Update the URL with the new chain value
-        const searchParams = new URLSearchParams(window.location.search)
-        searchParams.set("chain", JSON.stringify(newChain))
-        history.replaceState(history.state, "", `${location.origin}${location.pathname}?${searchParams.toString()}`)
-    }
-
     set(currentChainAtom, newChain)
+    if (!newChain || !("URLSearchParams" in window)) return
+    // Update the URL with the new chain ID
+    const searchParams = new URLSearchParams(window.location.search)
+    searchParams.set("chainId", newChain.chainId)
+    history.replaceState(history.state, "", `${location.origin}${location.pathname}?${searchParams.toString()}`)
 })
 
 export const { getValue: getCurrentChain, setValue: setCurrentChain } = accessorsFromAtom(currentChainAtom)

@@ -1,5 +1,5 @@
 export { register } from "./register"
-export type { WalletRegisterOptions, ChainParameters } from "./register"
+export type { WalletRegisterOptions } from "./register"
 export type { AddEthereumChainParameter } from "viem"
 
 export type { HappyProviderPublic as HappyProvider } from "./happyProvider/interface"
