@@ -41,6 +41,7 @@
     }
 
     &[data-open-state="true"],
+    &[data-drag-state="true"],
     &:hover {
         --happy-translate-x: 0px;
     }

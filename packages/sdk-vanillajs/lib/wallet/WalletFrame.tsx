@@ -4,8 +4,9 @@ import { useAnimatedStateTransitions } from "./hooks/useAnimatedStateTransitions
 import { useAuthState } from "./hooks/useAuthState"
 import { useIsOpen } from "./hooks/useIsOpen"
 import { useWalletActions } from "./hooks/useWalletActions"
+import { isFirefox } from "./utils"
 
-const iframePermissions = navigator.userAgent.includes("Firefox")
+const iframePermissions = isFirefox
     ? "" // Avoid warning in Firefox (safe: permissions inherited by default)
     : "; clipboard-write 'src'" // Explicit grant needed at least for Chrome
 

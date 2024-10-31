@@ -22,3 +22,5 @@ export function makeBlankImage() {
     img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs="
     return img
 }
+
+export const isFirefox = navigator.userAgent.includes("Firefox")
