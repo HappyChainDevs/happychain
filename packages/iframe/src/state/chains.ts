@@ -24,7 +24,7 @@ function getDefaultChainsRecord() {
  */
 export const chainsAtom = atomWithStorage<
     Record<string, AddEthereumChainParameter> //
->(StorageKey.Chains, getDefaultChainsRecord())
+>(StorageKey.Chains, getDefaultChainsRecord(), undefined, { getOnInit: true })
 
 export const {
     /** See {@link chainsAtom} */
