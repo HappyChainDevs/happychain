@@ -2,11 +2,11 @@ import { createStorage } from "@happychain/common"
 import type { HappyUser } from "@happychain/sdk-shared"
 
 export enum StorageKey {
-    HappyUser = "happychain:user",
-    Chains = "happychain:supported_chains",
-    UserPermissions = "happychain:user_permissions",
-    ConfirmedTxs = "happychain:confirmed_txs",
-    PendingTxs = "happychain:pending_txs",
+    HappyUser = "happychain:user:v1",
+    Chains = "happychain:chains:v1",
+    UserPermissions = "happychain:user_permissions:v1",
+    ConfirmedTxs = "happychain:confirmed_txs:v1",
+    PendingTxs = "happychain:pending_txs:v1",
 }
 
 // cache user within iframe to manage auto-reconnect
@@ -15,3 +15,27 @@ type StorageSchema = {
 }
 
 export const storage = createStorage<StorageSchema>()
+
+// biome-ignore lint/suspicious/noExplicitAny: let's not record the types for every version
+const migrations: Record<string, (oldVal: any) => any> = {}
+
+function cleanOrMigrateStorage() {
+    if (typeof window === "undefined") return
+
+    for (const [key, value] of Object.entries(localStorage)) {
+        const components = value.split(":")
+        if (components.length === 3 && components[0] === "happychain") {
+            const name = components[1]
+            const version = components[2]
+            const newKey = Object.keys(StorageKey).find((k) => k.split(":")[1] === name)
+            const newVersion = newKey?.split(":")[2]
+
+            if (newKey && newVersion !== version) {
+                const migrate = migrations[key]
+                migrate ? localStorage.setItem(newKey, migrate(localStorage.get(key))) : localStorage.removeItem(key)
+            }
+        }
+    }
+}
+
+cleanOrMigrateStorage()
