@@ -1,5 +1,5 @@
 // register web-component & import useful functions
-import { connect, disconnect, getCurrentUser, happyProvider, onUserUpdate, register } from "@happychain/js"
+import { chains, connect, disconnect, getCurrentUser, happyProvider, onUserUpdate, register } from "@happychain/js"
 import { defineBadgeComponent } from "@happychain/ui"
 import { BrowserProvider } from "ethers"
 
@@ -10,9 +10,9 @@ import { BrowserProvider } from "ethers"
 // expose on window for demo purposes
 window.happyProvider = happyProvider
 
-register()
+register({ chainId: chains.testnet.chainId })
 
-defineBadgeComponent("connect-button", false)
+void defineBadgeComponent("connect-button", false)
 
 const ethersProvider = new BrowserProvider(happyProvider)
 
@@ -37,9 +37,8 @@ onUserUpdate((user) => {
     }
 
     elConnectButton.innerText = "Disconnect"
-    // update user
-    const userString = JSON.stringify(user, null, 2)
-    elUserDump.innerHTML = userString
+    // update user field
+    elUserDump.innerHTML = JSON.stringify(user, null, 2)
 })
 
 elConnectButton.addEventListener("click", async () => {
@@ -52,11 +51,11 @@ elConnectButton.addEventListener("click", async () => {
 
 elSignMessageButton.addEventListener("click", async () => {
     const signer = await ethersProvider.getSigner()
-    const sig = await signer.signMessage("Hello, World!")
-    elSignatureDump.innerHTML = sig
+    // update signature field
+    elSignatureDump.innerHTML = await signer.signMessage("Hello, World!")
 })
 
 elGetBlockButton.addEventListener("click", async () => {
-    const result = await ethersProvider.getBlock()
+    const result = await ethersProvider.getBlock("latest")
     elBlockDump.innerHTML = JSON.stringify(result, null, 2)
 })

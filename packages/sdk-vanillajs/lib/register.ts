@@ -1,33 +1,26 @@
 import { chains } from "@happychain/sdk-shared"
 import define from "preact-custom-element"
-import type { AddEthereumChainParameter } from "viem"
 import { HappyWallet } from "./happy-wallet"
 import { windowId } from "./happyProvider/initialize"
 
 /**
- * Default options, custom options will be merged in afterwards
- * merge strategy: { ...DEFAULT_OPTIONS, ...userOptions }
+ * Options for the {@link register} function.
  */
-const defaultOptions = {
-    chain: chains.defaultChain,
-} satisfies WalletRegisterOptions
-
-export type ChainParameters = AddEthereumChainParameter | Readonly<AddEthereumChainParameter>
-
-/**
- * Use a built in chain option, and/or a custom RPC
- */
-
 export type WalletRegisterOptions = {
-    rpcUrl?: string[] | string
-    chain?: ChainParameters
+    /**
+     * The ID of the default chain to connect to, if it exists in the Happy Wallet.
+     *
+     * If the chain with the given ID hasn't been added to the Happy Wallet yet, this will be
+     * ignored, and you must add and switch to chain once the user is connected
+     */
+    chainId?: string
 }
 
 /**
  * Registers the required components and initializes the SDK
  *
  * @example
- * Basic Example
+ * Connect to HappyChain Sepolia
  * ```ts twoslash
  * import { register } from '@happychain/js'
  * // ---cut---
@@ -35,39 +28,21 @@ export type WalletRegisterOptions = {
  * ```
  *
  * @example
- * Connect to a custom RPC
- * ```ts twoslash
- * import { register } from '@happychain/js'
- * // ---cut---
- * register({ rpcUrl: 'https://....' })
- * ```
- *
- *
- * @example
  * Connect to a pre-defined chain
  * ```ts twoslash
  * import { register } from '@happychain/js'
  * import { testnet } from '@happychain/js/chains'
  * // ---cut---
- * register({ chain: testnet })
+ * register({ chainId: testnet.chainId })
  * ```
- *
  *
  * @example
  * Connect to a custom chain
  * ```ts twoslash
  * import { register } from '@happychain/js'
  * // ---cut---
- * register({
- *   chain: {
- *     chainName: "DevNet (localhost)",
- *     rpcUrls: ["http://127.0.0.1:8545", "ws://127.0.0.1:8545"],
- *     nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
- *     chainId: "0x7a69",
- *   }
- * })
+ * register({ chainId: "0x7a69" }) // in hex format
  * ```
- *
  */
 export function register(opts: WalletRegisterOptions = {}) {
     // don't register if already exists on page
@@ -75,20 +50,13 @@ export function register(opts: WalletRegisterOptions = {}) {
         return
     }
 
-    // merge with defaults
-    const options = { ...defaultOptions, ...opts } satisfies WalletRegisterOptions
-
-    if (!options.chain) {
-        throw new Error("Missing chain")
-    }
-
     define(HappyWallet, "happy-wallet", [], { shadow: true })
 
     const wallet = document.createElement("happy-wallet")
     wallet.setAttribute("window-id", windowId)
-    if (options.chain) wallet.setAttribute("chain", JSON.stringify(options.chain))
-    if (options.rpcUrl)
-        wallet.setAttribute("rpc-url", Array.isArray(options.rpcUrl) ? options.rpcUrl.join(",") : options.rpcUrl)
+
+    const chainId = opts.chainId || chains.defaultChain.chainId
+    wallet.setAttribute("chainId", JSON.stringify(chainId))
 
     document.body.appendChild(wallet)
 }

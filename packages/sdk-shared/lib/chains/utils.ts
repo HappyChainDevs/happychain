@@ -1,3 +1,4 @@
+import { getChainsMap } from "@happychain/iframe/src/state/chains"
 import { type AddEthereumChainParameter, defineChain } from "viem"
 
 import { happyChainSepolia, happyChainSepoliaViemChain } from "./definitions/happyChainSepolia"
@@ -6,35 +7,12 @@ export const defaultChain = happyChainSepolia
 
 export type ChainParameters = Readonly<AddEthereumChainParameter & { opStack?: boolean }>
 
-/***
- * Utilities
- */
-function getChain() {
-    const urlChainString = new URLSearchParams(window.location.search).get("chain")
-
-    if (!urlChainString) {
-        return defaultChain
-    }
-    try {
-        return JSON.parse(urlChainString)
-    } catch {
-        return defaultChain
-    }
-}
-
 export function getChainFromSearchParams(): ChainParameters {
-    const rpcUrls = new URLSearchParams(window.location.search).get("rpc-urls")?.split(",")
-
-    const chain = getChain()
-
-    if (rpcUrls?.length) {
-        return {
-            ...chain,
-            rpcUrls: rpcUrls,
-        }
-    }
-
-    return chain
+    const chainId = new URLSearchParams(window.location.search).get("chainId")
+    const chainsMap = getChainsMap()
+    return chainId && chainsMap.has(chainId) //
+        ? chainsMap.get(chainId)!
+        : defaultChain
 }
 
 export function convertToViemChain(chain: ChainParameters): ReturnType<typeof defineChain> {

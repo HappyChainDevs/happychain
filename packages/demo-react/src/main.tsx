@@ -19,7 +19,7 @@ import App from "./App.tsx"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <HappyWalletProvider init={{ chain: chains.testnet }}>
+        <HappyWalletProvider init={{ chainId: chains.testnet.chainId }}>
             <App />
         </HappyWalletProvider>
     </React.StrictMode>,
