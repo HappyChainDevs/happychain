@@ -33,6 +33,9 @@ export function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): vo
 export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
     const user = getUser()
+    if (!user) {
+        console.warn("Request approved, but no user found")
+    }
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
