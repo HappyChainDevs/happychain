@@ -4,8 +4,8 @@ import clsx from "clsx"
 import { formatEther } from "viem"
 
 import { useAtomValue } from "jotai"
-import { currentChainAtom } from "#src/state/currentChain.ts"
-import type { TxInfo } from "#src/state/txHistory.ts"
+import { currentChainAtom } from "#src/state/chains"
+import type { TxInfo } from "#src/state/txHistory"
 
 interface TxLogEntryProps {
     tx: TxInfo

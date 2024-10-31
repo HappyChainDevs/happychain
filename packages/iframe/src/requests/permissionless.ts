@@ -7,7 +7,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
-import { getCurrentChain } from "#src/state/currentChain.ts"
+import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions.ts"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"

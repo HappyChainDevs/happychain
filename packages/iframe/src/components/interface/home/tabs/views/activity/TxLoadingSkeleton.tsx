@@ -2,7 +2,7 @@ import { shortenAddress } from "@happychain/sdk-shared"
 import { CircleNotch } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import type { Hash } from "viem"
-import { currentChainAtom } from "#src/state/currentChain.ts"
+import { currentChainAtom } from "#src/state/chains"
 
 interface TxLoadingSkeletonProps {
     tx: Hash
