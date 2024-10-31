@@ -26,7 +26,7 @@ export const currentChainAtom: WritableAtom<
         history.replaceState(history.state, "", `${location.origin}${location.pathname}?${searchParams.toString()}`)
     }
 
-    set(currentChainAtom, getChainFromSearchParams())
+    set(currentChainAtom, newChain)
 })
 
 export const { getValue: getCurrentChain, setValue: setCurrentChain } = accessorsFromAtom(currentChainAtom)
