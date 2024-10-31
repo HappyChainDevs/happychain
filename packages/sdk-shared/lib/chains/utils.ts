@@ -1,4 +1,4 @@
-import { getChainsMap } from "@happychain/iframe/src/state/chains"
+import { getChains } from "@happychain/iframe/src/state/chains"
 import { type AddEthereumChainParameter, defineChain } from "viem"
 
 import { happyChainSepolia, happyChainSepoliaViemChain } from "./definitions/happyChainSepolia"
@@ -9,9 +9,9 @@ export type ChainParameters = Readonly<AddEthereumChainParameter & { opStack?: b
 
 export function getChainFromSearchParams(): ChainParameters {
     const chainId = new URLSearchParams(window.location.search).get("chainId")
-    const chainsMap = getChainsMap()
-    return chainId && chainsMap.has(chainId) //
-        ? chainsMap.get(chainId)!
+    const chains = getChains()
+    return chainId && chainId in chains //
+        ? chains[chainId]
         : defaultChain
 }
 
