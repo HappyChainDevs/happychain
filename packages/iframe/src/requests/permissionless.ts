@@ -63,6 +63,10 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             revokePermissions(app, request.payload.params[0])
             return []
 
+        case "wallet_addEthereumChain":
+            // If this is permissionless, the chain already exists, so we simply succeed.
+            return null
+
         default:
             return sendToPublicClient(app, request)
     }

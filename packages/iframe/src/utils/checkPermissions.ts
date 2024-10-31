@@ -24,8 +24,11 @@ export function checkIfRequestRequiresConfirmation(
     switch (payload.method) {
         // Users don't need to approve adding a chain that has already been added
         // (this won't result in a duplicated chain).
-        case "wallet_addEthereumChain":
-            return !getChains()[payload.params[0].chainId]
+        case "wallet_addEthereumChain": {
+            const existingChainJSON = JSON.stringify(getChains()[payload.params[0].chainId])
+            const newChainJSON = JSON.stringify(payload.params[0])
+            return existingChainJSON !== newChainJSON
+        }
 
         // Users don't need to approve permissions that have already been granted.
         case "wallet_requestPermissions":
