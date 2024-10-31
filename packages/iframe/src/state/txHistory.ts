@@ -29,6 +29,7 @@ export const confirmedTxsAtom = atomWithStorage<Record<Address, TxInfo[]>>(
     StorageKey.ConfirmedTxs,
     {},
     createBigIntStorage<Record<Address, TxInfo[]>>(),
+    { getOnInit: true },
 )
 
 /**
@@ -40,4 +41,5 @@ export const pendingTxsAtom = atomWithStorage<Record<Address, PendingTxDetails[]
     StorageKey.PendingTxs,
     {},
     createBigIntStorage<Record<Address, PendingTxDetails[]>>(),
+    { getOnInit: true },
 )
