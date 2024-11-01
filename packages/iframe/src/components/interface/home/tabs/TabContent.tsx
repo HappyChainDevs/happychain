@@ -18,7 +18,7 @@ const TabContent = ({ view }: TabContentProps) => {
                 return <ActivityView />
             default:
                 return (
-                    <div className="flex flex-col w-full h-4/5 p-2 bg-slate-300 rounded-b-xl rounded-tr-xl">
+                    <div className="flex flex-col w-full h-4/5 p-2 rounded-b-xl rounded-tr-xl">
                         No details available.
                     </div>
                 )

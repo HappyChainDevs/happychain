@@ -96,7 +96,7 @@ function Embed() {
                     <GlobalHeader />
                     <div className="relative flex flex-col grow w-full">
                         {!location.pathname.includes("permissions") && (
-                            <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-slate-200 dark:bg-base-100 p-2 border-t border-b border-black">
+                            <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-base-100 p-2 border-t border-b border-black">
                                 <UserInfo />
                                 <TriggerSecondaryActionsMenu />
                             </div>

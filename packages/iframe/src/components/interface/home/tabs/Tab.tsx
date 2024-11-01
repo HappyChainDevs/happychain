@@ -9,7 +9,7 @@ interface TabProps {
 const Tab = ({ title, setView }: TabProps) => {
     return (
         <button
-            className="h-10 w-24 bg-slate-300 dark:bg-base-300 rounded-t-xl"
+            className="h-10 w-24 bg-base-300 rounded-t-xl"
             type="button"
             onClick={(e) => {
                 e.stopPropagation()
