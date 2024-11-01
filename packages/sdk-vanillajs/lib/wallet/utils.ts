@@ -1,4 +1,5 @@
 import { config } from "@happychain/sdk-shared"
+import { blankIcon } from "../happyProvider/icons"
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }
@@ -19,7 +20,7 @@ export function makeIframeSource({ windowId, chain, rpcUrl }: { windowId: string
  */
 export function makeBlankImage() {
     const img = new Image()
-    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs="
+    img.src = blankIcon
     return img
 }
 

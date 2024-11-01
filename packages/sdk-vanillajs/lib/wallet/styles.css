@@ -1,7 +1,6 @@
 :host {
-    --happy-closed-width: 48px;
-    --happy-closed-height: 48px;
-    --happy-closed-border-radius: 24px;
+    --happy-closed-size: 3rem;
+    --happy-closed-border-radius: 1.5rem;
     --happy-open-width: 24rem;
     --happy-open-height: 32rem;
     --happy-translate-x: 0;
@@ -13,18 +12,20 @@
     --happy-scale-y: 1;
 }
 
+/* 
+ * Wallet container is an invisible padding around the grabber, so that it can popup as you get 
+ * close, instead of waiting for an actual hover then popping out
+ */
 .wallet-container {
     position: fixed;
     right: 0;
     top: 0;
-    padding-left: 1rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 1rem 0 1rem 1rem;
     color: rgb(0 0 0);
     display: flex;
     align-items: center;
-    border-top-left-radius: 9999px;
-    border-bottom-left-radius: 9999px;
+    border-start-start-radius: 9999px;
+    border-end-start-radius: 9999px;
 
     --happy-translate-x: 0rem;
     transform: translate(var(--happy-translate-x), var(--happy-translate-y)) rotate(var(--happy-rotate))
@@ -78,10 +79,9 @@
     --happy-shadow-colored: 0 20px 25px -5px var(--happy-shadow-color), 0 8px 10px -6px var(--happy-shadow-color);
     box-shadow: var(--happy-ring-offset-shadow, 0 0 #0000), var(--happy-ring-shadow, 0 0 #0000), var(--happy-shadow);
 
-    border-top-left-radius: 9999px;
-    border-bottom-left-radius: 9999px;
-
-    width: 96px;
+    border-start-start-radius: 9999px;
+    border-end-start-radius: 9999px;
+    width: 6rem;
     display: flex;
     align-items: center;
     cursor: grab;
@@ -91,23 +91,20 @@
     position: relative;
     display: flex;
     align-items: center;
-
     justify-content: center;
     margin: 0.25rem;
     cursor: auto;
-
-    width: var(--happy-closed-width);
-    height: var(--happy-closed-height);
+    width: var(--happy-closed-size);
+    height: var(--happy-closed-size);
 }
 
 .wallet-grip {
     --happy-text-opacity: 1;
     color: rgb(203 213 225 / var(--happy-text-opacity));
     position: absolute;
-    right: 0;
-
-    width: var(--happy-closed-width);
-    height: var(--happy-closed-height);
+    inset-inline-end: 0;
+    width: var(--happy-closed-size);
+    height: var(--happy-closed-size);
 }
 
 .wallet-frame {
@@ -116,8 +113,8 @@
     background: none;
     box-shadow: none;
     position: absolute;
-    top: 0;
-    right: 0;
+    inset-block-start: 0;
+    inset-inline-end: 0;
     transform-origin: center center;
     aspect-ratio: 1 / 1;
     overflow: hidden;
@@ -145,13 +142,13 @@
 
 .wallet-logo {
     position: absolute;
-    top: 0;
-    right: 0;
-    width: var(--happy-closed-width);
-    height: var(--happy-closed-height);
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    width: var(--happy-closed-size);
+    height: var(--happy-closed-size);
     transition-property: opacity;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: .15s;
+    transition-duration: 0.15s;
 
     @media (prefers-reduced-motion) {
         transition-duration: 0;
@@ -162,7 +159,7 @@
     }
 
     &[data-open-state="unauthenticated"] {
-        opacity: 100;
+        opacity: 1;
     }
 }
 

@@ -38,7 +38,7 @@ export function ConnectModal() {
 
     return (
         <>
-            <main className="h-dvh w-screen rounded-3xl overflow-hidden px-16 py-8 flex flex-col justify-around shadow-inner border-4 border-sky-500 dark:border-sky-900 ">
+            <main className="h-dvh w-screen rounded-3xl overflow- px-16 py-8 flex flex-col justify-around">
                 <div className="flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
                         <img
@@ -63,7 +63,7 @@ export function ConnectModal() {
                                     "motion-safe:hover:scale-[103%] motion-safe:active:scale-[95%]",
                                 )}
                             >
-                                <img className="h-8 w-8" src={prov.icon} alt={`${prov.name} icon`} />
+                                <img className="size-8" src={prov.icon} alt={`${prov.name} icon`} />
                                 {prov.name}
                             </button>
                         )

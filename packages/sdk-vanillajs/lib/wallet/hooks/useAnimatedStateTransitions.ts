@@ -16,13 +16,13 @@ export function useAnimatedStateTransitions() {
 
         const walletAnimation = isOpen
             ? {
-                  height: ["var(--happy-closed-height)", "var(--happy-open-height)"],
-                  width: ["var(--happy-closed-width)", "var(--happy-open-width)"],
+                  height: ["var(--happy-closed-size)", "var(--happy-open-height)"],
+                  width: ["var(--happy-closed-size)", "var(--happy-open-width)"],
                   transform: ["translateY(0)", "translateY(var(--wallet-offset-y))"],
               }
             : {
-                  height: [null, "var(--happy-closed-height)"],
-                  width: [null, "var(--happy-closed-width)"],
+                  height: [null, "var(--happy-closed-size)"],
+                  width: [null, "var(--happy-closed-size)"],
                   transform: [null, "translateY(0)"],
               }
 

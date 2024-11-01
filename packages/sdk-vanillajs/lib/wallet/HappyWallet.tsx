@@ -24,16 +24,16 @@ export const HappyWallet = ({ windowId, chain, rpcUrl }: HappyWalletProps) => {
                 data-open-state={isOpen}
                 data-drag-state={dragging}
                 style={{ "--happy-translate-y": `${handleOffset}px` }}
-                className={"wallet-container"}
+                className="wallet-container"
             >
-                <div className={"wallet-grabber"} {...dragProps}>
+                <div className="wallet-grabber" {...dragProps}>
                     <IsOpenContext.Provider value={{ isOpen, setIsOpen }}>
                         <div className={"wallet-frame-wrapper"} style={{ "--wallet-offset-y": `${walletOffset}%` }}>
                             <WalletFrame dragging={dragging} iframeSrc={iframeSrc} />
                         </div>
                     </IsOpenContext.Provider>
 
-                    <GripVerticalIcon className={"wallet-grip"} />
+                    <GripVerticalIcon className="wallet-grip" />
                 </div>
             </div>
         </>

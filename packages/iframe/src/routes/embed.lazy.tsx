@@ -1,7 +1,6 @@
 import { ModalStates } from "@happychain/sdk-shared"
 import { Msgs } from "@happychain/sdk-shared"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
-import clsx from "clsx"
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { useDisconnect } from "wagmi"
@@ -59,14 +58,8 @@ function Embed() {
 
     return (
         <>
-            <main
-                className={clsx(
-                    "flex h-screen w-screen items-stretch",
-                    "overflow-hidden",
-                    "rounded-xl border border-black bg-base-200",
-                )}
-            >
-                <div className={clsx("flex flex-col size-full items-center justify-start")}>
+            <main className="flex h-screen w-screen items-stretch overflow-hidden bg-base-200">
+                <div className="flex flex-col size-full items-center justify-start">
                     {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
                     <div
                         className="flex items-center justify-center gap-2 p-1 lg:hidden size-full"
@@ -94,9 +87,10 @@ function Embed() {
                     </div>
 
                     <GlobalHeader />
+
                     <div className="relative flex flex-col grow w-full">
                         {!location.pathname.includes("permissions") && (
-                            <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-base-100 p-2 border-t border-b border-black">
+                            <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-base-100 p-2 border-t border-b border-neutral">
                                 <UserInfo />
                                 <TriggerSecondaryActionsMenu />
                             </div>

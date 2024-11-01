@@ -17,7 +17,7 @@ const TabContent = ({ view }: TabContentProps) => {
             case ContentType.ACTIVITY:
                 return <ActivityView />
             default:
-                return <div className="flex flex-col w-full  p-2 rounded-b-xl rounded-tr-xl">No details available.</div>
+                return <div className="flex flex-col w-full p-2 rounded-es-xl rounded-e-xl">No details available.</div>
         }
     }
 

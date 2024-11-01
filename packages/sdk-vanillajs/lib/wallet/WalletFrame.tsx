@@ -31,19 +31,20 @@ export const WalletFrame = ({ iframeSrc, dragging }: WalletFrameProps) => {
             // It is not a 'close' button then since the iframe swallows all click events
             // with none if this visible for clicking, as it simply sets the iframe size.
             // We also don't want the full iframe wallet embedded inside of a 'button' at all times.
-            role={isOpen ? "button" : "generic"}
+            role={!isOpen ? "button" : "generic"}
+            aria-label={!isOpen ? "Open Wallet" : ""}
             tabIndex={0}
             ref={frame}
             onClick={toggleWalletOpen}
             onKeyDown={toggleWalletOpen}
             data-auth-state={authState}
             data-drag-state={dragging}
-            className={"wallet-frame"}
+            className="wallet-frame"
         >
             {/* Base64 to avoid any bundle issues and network requests */}
-            <img src={icon64x64} alt="HappyChain Logo" data-open-state={isOpen} className={"wallet-logo"} />
+            <img src={icon64x64} alt="HappyChain Logo" data-open-state={isOpen} className="wallet-logo" />
 
-            <div className={"wallet-iframe-wrapper"}>
+            <div className="wallet-iframe-wrapper" data-open-state={isOpen} data-auth-state={authState}>
                 <iframe
                     ref={iframe}
                     data-open-state={isOpen}
@@ -51,7 +52,7 @@ export const WalletFrame = ({ iframeSrc, dragging }: WalletFrameProps) => {
                     title="happy-iframe"
                     onError={onErrorHandler}
                     src={iframeSrc}
-                    className={"wallet-iframe"}
+                    className="wallet-iframe"
                     allow={iframePermissions}
                 />
             </div>
