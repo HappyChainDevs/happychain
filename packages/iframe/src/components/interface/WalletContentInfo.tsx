@@ -8,7 +8,7 @@ const WalletContentInfo = () => {
     const [view, setView] = useState<ContentType>(ContentType.TOKENS)
 
     return (
-        <div className="flex w-full h-full items-start justify-center flex-col px-1">
+        <div className="flex size-full items-start justify-center flex-col px-1">
             <div className="flex flex-row items-start justify-center space-x-2">
                 <Tab title={ContentType.TOKENS} setView={setView} />
                 <Tab title={ContentType.GAMES} setView={setView} />

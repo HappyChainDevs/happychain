@@ -19,14 +19,14 @@ const ActivityView = () => {
     const pendingTxs = useAtomValue(pendingTxsAtom)
 
     if (!user) {
-        return <div className="w-full h-full p-2">No user connected.</div>
+        return <div className="size-full p-2">No user connected.</div>
     }
 
     const userTxHistory = txHistory[user.address] || []
     const userPendingTxs = pendingTxs[user.address] || []
 
     if (userTxHistory.length === 0 && userPendingTxs.length === 0) {
-        return <div className="w-full h-full p-2">No transactions to display.</div>
+        return <div className="size-full p-2">No transactions to display.</div>
     }
 
     return (

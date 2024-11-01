@@ -16,8 +16,8 @@ function Send() {
     const [sendValue, setSendValue] = useState<string | undefined>(undefined)
 
     return (
-        <div className="relative flex flex-col w-full h-full items-center justify-between">
-            <div className="flex flex-col w-full h-full items-center justify-start">
+        <div className="relative flex flex-col size-full items-center justify-between">
+            <div className="flex flex-col size-full items-center justify-start">
                 <AddressSelector targetAddress={targetAddress} setTargetAddress={setTargetAddress} />
                 {/* appears when target address has been confirmed */}
                 {targetAddress !== undefined && isAddress(targetAddress) && (

@@ -37,13 +37,13 @@ export function ConnectModal() {
 
     return (
         <>
-            <main className="h-dvh w-screen rounded-3xl overflow-hidden   px-16 py-8 flex flex-col justify-around shadow-inner border-4 border-sky-500 dark:border-sky-900 ">
+            <main className="h-dvh w-screen rounded-3xl overflow-hidden px-16 py-8 flex flex-col justify-around shadow-inner border-4 border-sky-500 dark:border-sky-900 ">
                 <div className="flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
                         <img
                             alt="HappyChain Logo"
                             src={happychainLogo}
-                            className="mx-auto h-24 w-24 drop-shadow-lg hover:animate-spin"
+                            className="mx-auto size-24 drop-shadow-lg hover:animate-spin"
                         />
                         <p className="text-2xl font-bold">HappyChain</p>
                     </div>

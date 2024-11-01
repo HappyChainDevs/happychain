@@ -25,7 +25,7 @@ const TabContent = ({ view }: TabContentProps) => {
         }
     }
 
-    return <div className="flex flex-col w-full h-full">{renderTabContent()}</div>
+    return <div className="flex flex-col size-full">{renderTabContent()}</div>
 }
 
 export default TabContent
