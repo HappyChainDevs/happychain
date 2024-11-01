@@ -20,6 +20,8 @@ export { onlyUnique } from "./utils/streams.js"
 
 export { promiseWithResolvers } from "./utils/promises.js"
 
+export { keys, entries } from "./utils/records.js"
+
 export type { PromiseWithResolvers, ResolveInputType, ResolveType, RejectType } from "./utils/promises.js"
 
 export { unknownToError } from "./utils/error.js"
