@@ -17,15 +17,11 @@ const TabContent = ({ view }: TabContentProps) => {
             case ContentType.ACTIVITY:
                 return <ActivityView />
             default:
-                return (
-                    <div className="flex flex-col w-full h-4/5 p-2 rounded-b-xl rounded-tr-xl">
-                        No details available.
-                    </div>
-                )
+                return <div className="flex flex-col w-full  p-2 rounded-b-xl rounded-tr-xl">No details available.</div>
         }
     }
 
-    return <div className="flex flex-col size-full">{renderTabContent()}</div>
+    return <div className="flex flex-col overflow-y-auto size-full bg-base-200 px-4 py-2">{renderTabContent()}</div>
 }
 
 export default TabContent

@@ -5,10 +5,10 @@ import { tokenList } from "#src/utils/lists.ts"
  */
 const TokenView = () => {
     return (
-        <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 rounded-b-xl rounded-tr-xl">
+        <div className="flex flex-col rounded-es-xl rounded-e-xl size-full">
             {tokenList && tokenList.length > 0 ? (
                 tokenList.map((token) => (
-                    <div key={token.name} className="flex flex-row items-center justify-between px-2 h-12">
+                    <div key={token.name} className="flex flex-row items-center justify-between h-12">
                         <span>{`${token.name} (${token.symbol})`}</span>
                         <span>{`${token.balance}`}</span>
                     </div>

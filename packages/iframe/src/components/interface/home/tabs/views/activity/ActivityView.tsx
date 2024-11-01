@@ -26,11 +26,11 @@ const ActivityView = () => {
     const userPendingTxs = pendingTxs[user.address] || []
 
     if (userTxHistory.length === 0 && userPendingTxs.length === 0) {
-        return <div className="size-full p-2">No transactions to display.</div>
+        return <div className="rounded-es-xl rounded-e-xl size-full">No transactions to display.</div>
     }
 
     return (
-        <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 rounded-b-xl rounded-tr-xl space-y-1">
+        <div className="flex flex-col rounded-es-xl rounded-e-xl size-full space-y-1">
             {userPendingTxs.length > 0 && userPendingTxs.map((tx) => <TxLoadingSkeleton key={tx.hash} tx={tx.hash} />)}
             {userTxHistory.length > 0 &&
                 userTxHistory.map((tx) => <TxLogEntry key={tx.receipt.transactionHash} tx={tx} />)}
