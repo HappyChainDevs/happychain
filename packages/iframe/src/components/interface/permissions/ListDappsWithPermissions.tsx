@@ -1,6 +1,7 @@
 import { CaretRight } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
+import happychainLogo from "#src/assets/happychain.png"
 import type { AppPermissions } from "#src/state/permissions"
 import { getAppURL } from "#src/utils/appURL"
 
@@ -21,7 +22,7 @@ const ListItem = ({ dappUrl }: ListItemProps) => {
                 onError={() => setIsFaviconBroken(true)}
                 src={
                     isFaviconBroken || dappUrl.includes("localhost:")
-                        ? "/happychain.png"
+                        ? happychainLogo
                         : `https://www.google.com/s2/favicons?domain=${dappUrl}&sz=16`
                 }
                 width="16"

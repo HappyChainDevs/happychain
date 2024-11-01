@@ -11,7 +11,7 @@ const GlobalHeader = () => {
                 </Link>
             )}
 
-            <span className="text-black dark:text-primary text-xl py-2 mx-auto hidden lg:flex justify-center">
+            <span className="text-base-content dark:text-primary text-xl py-2 mx-auto hidden lg:flex justify-center">
                 🤠 HappyChain
             </span>
         </div>

@@ -1,4 +1,5 @@
 import { AuthState, type ConnectionProvider, Msgs, type MsgsFromApp } from "@happychain/sdk-shared"
+import { cx } from "class-variance-authority"
 import { useCallback, useEffect, useState } from "react"
 import { useConnect } from "wagmi"
 import happychainLogo from "../assets/happychain.png"
@@ -55,7 +56,12 @@ export function ConnectModal() {
                                 type="button"
                                 key={prov.id}
                                 onClick={() => login(prov)}
-                                className="btn dark:btn-neutral flex w-full items-center gap-4 px-4 py-2 shadow-md transition hover:scale-[103%] focus:shadow active:scale-[95%]"
+                                className={cx(
+                                    "btn dark:btn-neutral",
+                                    "flex items-center w-full gap-4 px-4 py-2",
+                                    "shadow-md focus:shadow transition",
+                                    "motion-safe:hover:scale-[103%] motion-safe:active:scale-[95%]",
+                                )}
                             >
                                 <img className="h-8 w-8" src={prov.icon} alt={`${prov.name} icon`} />
                                 {prov.name}

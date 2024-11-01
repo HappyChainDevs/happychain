@@ -1,5 +1,5 @@
+import { ContentType } from "../../state/interfaceState"
 import { appList, historyList, tokenList } from "../../utils/lists"
-import { ContentType } from "./WalletContentInfo"
 
 interface TabContentProps {
     view: ContentType
