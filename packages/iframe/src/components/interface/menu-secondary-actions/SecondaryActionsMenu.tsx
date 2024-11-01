@@ -81,7 +81,7 @@ const SecondaryActionsMenu = () => {
                 >
                     <div className="overflow-y-auto flex flex-col">
                         <Menu.Item asChild value={MenuActions.Permissions}>
-                            <Link to="/embed/permissions">
+                            <Link preload="intent" to="/embed/permissions">
                                 <span>Permissions</span>
                                 <CaretRight size="1em" />
                             </Link>
