@@ -485,10 +485,10 @@ async function main() {
 
     const gasUsageResults = [
         singleOpWithDeploymentResults,
-        singleOpNoDeploymentResults,
         multipleCallsWithDeploymentResults,
-        multipleCallsNoDeploymentResults,
         multipleUserOpsWithDeploymentResults,
+        singleOpNoDeploymentResults,
+        multipleCallsNoDeploymentResults,
         multipleUserOpsNoDeploymentResults,
     ].filter((result): result is GasResult => result !== undefined)
 
@@ -497,8 +497,8 @@ async function main() {
         gasUsageResults.map((result) => ({
             Scenario: result.scenario,
             "Direct Tx Gas": result.directTxGas.toLocaleString("en-US"),
-            "Bundler Tx Gas": result.bundlerTxGas.toLocaleString("en-US"),
             "Total UserOp Gas": result.totalUserOpGas.toLocaleString("en-US"),
+            "Bundler Tx Gas": result.bundlerTxGas.toLocaleString("en-US"),
             "Bundler Overhead": result.bundlerOverhead.toLocaleString("en-US"),
             "UserOp Overhead": result.userOpOverhead.toLocaleString("en-US"),
             "Total Overhead": result.totalOverhead.toLocaleString("en-US"),
