@@ -3,6 +3,7 @@ import type { Insertable, Selectable } from "kysely"
 import type { Address, ContractFunctionArgs, Hash } from "viem"
 import type { LatestBlock } from "./BlockMonitor"
 import type { TransactionTable } from "./db/types.js"
+import { eventBus, Topics } from "./EventBus.js"
 
 export enum TransactionStatus {
     Pending = "Pending",
@@ -113,6 +114,11 @@ export class Transaction {
 
     changeStatus(status: TransactionStatus): void {
         this.status = status
+
+        eventBus.emit(Topics.TransactionStatusChanged, {
+            intentId: this.intentId,
+            status,
+        })
     }
 
     get attemptCount(): number {
