@@ -1,5 +1,6 @@
 import { unknownToError } from "@happychain/common"
 import { type Result, ResultAsync } from "neverthrow"
+import type { UUID } from "@happychain/common"
 import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { db } from "./db/driver.js"
@@ -25,6 +26,22 @@ export class TransactionRepository {
 
     getNotFinalizedTransactions(): Transaction[] {
         return [...this.notFinalizedTransactions]
+    }
+
+    async getTransaction(intentId: UUID): Promise<Transaction | undefined> {
+        const cachedTransaction =  this.notFinalizedTransactions.find((t) => t.intentId === intentId)
+
+        if (cachedTransaction) {
+            return cachedTransaction;
+        }
+
+        const persistedTransaction = await db
+            .selectFrom("transaction")
+            .where("intentId", "=", intentId)
+            .selectAll()
+            .executeTakeFirst()
+
+        return persistedTransaction ? Transaction.fromDbRow(persistedTransaction) : undefined
     }
 
     async saveTransactions(transactions: Transaction[]): Promise<Result<void, Error>> {

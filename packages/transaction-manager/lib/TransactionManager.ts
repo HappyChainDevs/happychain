@@ -1,6 +1,7 @@
 import {
     type SafeViemPublicClient,
     type SafeViemWalletClient,
+    type UUID,
     convertToSafeViemPublicClient,
     convertToSafeViemWalletClient,
 } from "@happychain/common"
@@ -16,6 +17,7 @@ import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
 import { TxMonitor } from "./TxMonitor.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
+import { HookManager, type TxmHookType, type TxmHookHandler } from "./HookManager.js"
 
 export type TransactionManagerConfig = {
     /** The transport protocol used for the client. See {@link Transport} from viem for more details. */
@@ -89,6 +91,7 @@ export class TransactionManager {
     public readonly transactionRepository: TransactionRepository
     public readonly transactionCollector: TransactionCollector
     public readonly transactionSubmitter: TransactionSubmitter
+    public readonly hookManager: HookManager
 
     public readonly id: string
     public readonly eip1559: EIP1559Parameters
@@ -122,6 +125,7 @@ export class TransactionManager {
         this.transactionRepository = new TransactionRepository(this)
         this.transactionCollector = new TransactionCollector(this)
         this.transactionSubmitter = new TransactionSubmitter(this)
+        this.hookManager = new HookManager()
 
         this.id = _config.id
         this.eip1559 = _config.eip1559 || opStackDefaultEIP1559Parameters
@@ -136,6 +140,14 @@ export class TransactionManager {
 
     public addTransactionCollector(collector: TransactionOriginator): void {
         this.collectors.push(collector)
+    }
+
+    public async addHook(type: TxmHookType, handler: TxmHookHandler): Promise<void> {
+        await this.hookManager.addHook(type, handler);
+    }
+
+    public async getTransaction(txIntentId: UUID): Promise<Transaction | undefined> {
+        return this.transactionRepository.getTransaction(txIntentId)
     }
 
     public async start(): Promise<void> {

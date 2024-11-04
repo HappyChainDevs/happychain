@@ -1,5 +1,5 @@
-import { TransactionManager } from "@happychain/transaction-manager"
-import type { LatestBlock, Transaction } from "@happychain/transaction-manager"
+import { TransactionManager, TxmHookType } from "@happychain/transaction-manager"
+import type { LatestBlock, Transaction,  } from "@happychain/transaction-manager"
 import { webSocket } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { anvil } from "viem/chains"
@@ -34,6 +34,9 @@ class RandomnessService {
 
         this.txm.start()
         this.txm.addTransactionCollector(this.onCollectTransactions.bind(this))
+        this.txm.addHook(TxmHookType.TransactionStatusChanged, (event) => {
+            console.log(event)
+        })
     }
 
     private onCollectTransactions(block: LatestBlock): Transaction[] {
