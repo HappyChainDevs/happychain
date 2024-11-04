@@ -1,24 +1,19 @@
-import type { Dispatch, SetStateAction } from "react"
+import { Tabs } from "@ark-ui/react/tabs"
+import { cx } from "class-variance-authority"
 import type { ContentType } from "../../../../state/interfaceState"
 
 interface TabProps {
     title: ContentType
-    setView: Dispatch<SetStateAction<ContentType>>
+    active: string
 }
 
-const Tab = ({ title, setView }: TabProps) => {
+export const Tab = ({ title, active }: TabProps) => {
     return (
-        <button
-            className="h-10 w-24 bg-base-300 rounded-t-xl"
-            type="button"
-            onClick={(e) => {
-                e.stopPropagation()
-                setView(title)
-            }}
+        <Tabs.Trigger
+            className={cx("h-10 w-24 rounded-t-xl", title === active ? "bg-base-300" : "bg-base-200")}
+            value={title}
         >
             {title}
-        </button>
+        </Tabs.Trigger>
     )
 }
-
-export default Tab

@@ -38,7 +38,7 @@ export function ConnectModal() {
 
     return (
         <>
-            <main className="h-dvh w-screen rounded-3xl overflow- px-16 py-8 flex flex-col justify-around">
+            <main className="h-dvh w-screen rounded-3xl px-16 py-8 flex flex-col justify-around">
                 <div className="flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
                         <img
