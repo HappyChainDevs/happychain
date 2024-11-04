@@ -1,7 +1,7 @@
 import { CircleNotch } from "@phosphor-icons/react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect } from "react"
-import { type Address, parseEther } from "viem"
+import { type Address, parseEther, parseGwei } from "viem"
 import { useSendTransaction } from "wagmi"
 
 interface SendButtonsInterface {
@@ -30,6 +30,8 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
             void sendTransaction({
                 to: targetAddress as Address,
                 value: parseEther(sendValue),
+                maxFeePerGas: parseGwei("20"),
+                maxPriorityFeePerGas: parseGwei("2"),
             })
         }
     }, [sendTransaction, sendValue, targetAddress])
