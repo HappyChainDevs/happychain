@@ -52,14 +52,14 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
         const response: EIP1193RequestResult<TString> = await this.localConnection.provider.request(args)
 
         if (isPermissionsRequest(args)) {
-            this.proxyPermissions({ request: args, response, rdns: this.localConnection.info.rdns })
+            void this.config.msgBus.emit(Msgs.MirrorPermissions, {
+                request: args,
+                response,
+                rdns: this.localConnection.info.rdns,
+            })
         }
 
         return response
-    }
-
-    private proxyPermissions(params: MsgsFromApp[Msgs.MirrorPermissions]) {
-        void this.config.msgBus.emit(Msgs.MirrorPermissions, params)
     }
 
     /** Injected Wallet Handlers */
