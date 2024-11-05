@@ -140,6 +140,10 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
             })
         }
 
+        if (args.method === "wallet_requestPermissions") {
+            return await this.requiresUserApproval(args) // still requires approval?
+        }
+
         // Everything else (non-permission requests): required approval to begin with and still does.
         // Now that we are connected, these other requests can be made.
         return true
