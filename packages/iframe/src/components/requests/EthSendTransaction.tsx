@@ -1,6 +1,4 @@
 import { type RpcTransactionRequest, formatEther } from "viem"
-import { useEstimateGas } from "wagmi"
-import { getCurrentChain } from "#src/state/chains"
 import { requestLabels } from "../../constants/requestLabels"
 import { StorageKey, storage } from "../../services/storage"
 import { BlobTxWarning } from "./common/BlobTxWarning"
@@ -18,13 +16,13 @@ export function EthSendTransaction({
 
     const shouldEstimateGas = !tx.maxFeePerGas && !tx.maxPriorityFeePerGas
 
-    const { data: gasEstimate } = useEstimateGas({
-        chainId: Number(getCurrentChain().chainId),
-        to: tx.to as `0x${string}`,
-        value: tx.value ? BigInt(tx.value) : undefined,
-        data: tx.data,
-        account: user?.address,
-    })
+    // const { data: gasEstimate } = useEstimateGas({
+    //     chainId: Number(getCurrentChain().chainId),
+    //     to: tx.to as `0x${string}`,
+    //     value: tx.value ? BigInt(tx.value) : undefined,
+    //     data: tx.data,
+    //     account: user?.address,
+    // })
 
     const classifyTxType = (tx: RpcTransactionRequest) => {
         if (tx.maxFeePerGas || tx.maxPriorityFeePerGas) {
@@ -62,7 +60,7 @@ export function EthSendTransaction({
                 updatedTx.maxFeePerGas = tx.gasPrice as `0x${string}`
                 updatedTx.gasPrice = undefined
             } else {
-                updatedTx.maxFeePerGas = (gasEstimate?.toString() as `0x${string}`) ?? ("0x0" as `0x${string}`)
+                updatedTx.maxFeePerGas = "0x10F1" // 4337 in hex - dummy value
                 updatedTx.maxPriorityFeePerGas = "0x0"
             }
         }
