@@ -142,8 +142,13 @@ export class TransactionManager {
         this.collectors.push(collector)
     }
 
-    public async addHook(type: TxmHookType, handler: TxmHookHandler): Promise<void> {
-        await this.hookManager.addHook(type, handler)
+    /**
+     * Adds a hook to the hook manager.
+     * @param type - The type of hook to add. Defaults to All.
+     * @param handler - The handler function to add.
+     */
+    public async addHook(payload: { type?: TxmHookType; handler: TxmHookHandler }): Promise<void> {
+        await this.hookManager.addHook(payload)
     }
 
     public async getTransaction(txIntentId: UUID): Promise<Transaction | undefined> {
