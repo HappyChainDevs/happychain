@@ -25,7 +25,6 @@ let iframeMessageBus: EventBus<MsgsFromIframe, MsgsFromApp> | null = null
 let provider: (HappyProvider & EIP1193Provider) | null = null
 let iframeReady = false
 let user: HappyUser | undefined
-let unsubscribeProvider: (() => void) | null = null
 
 /**
  * Initializes the Happy Account wallet state and communication with the iframe.
@@ -60,7 +59,7 @@ function initializeProvider() {
         msgBus: iframeMessageBus,
     }) as HappyProvider & EIP1193Provider
 
-    unsubscribeProvider = announceProvider({
+    announceProvider({
         info: {
             icon: icon64x64,
             name: "HappyWallet",
