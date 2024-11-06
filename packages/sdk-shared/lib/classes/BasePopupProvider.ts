@@ -82,7 +82,8 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     public handleRequestResolution(data: ProviderMsgsFromIframe[Msgs.RequestResponse]): void {
         const req = this.inFlightRequests.get(data.key)
         if (!req) {
-            console.warn("handleRequestResolution: no request found for key", data.key)
+            // TODO: expected if being handled by another provider...
+            // console.warn("handleRequestResolution: no request found for key", data.key)
             return
         }
 

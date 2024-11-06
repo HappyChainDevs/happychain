@@ -16,8 +16,9 @@ import { iframeID } from "../requests/utils"
 import { appMessageBus } from "../services/eventBus"
 import { StorageKey, storage } from "../services/storage"
 import { grantPermissions, revokePermissions } from "../state/permissions"
-import { getAppURL } from "../utils/appURL"
+import { getAppURL, isStandaloneIframe } from "../utils/appURL"
 import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"
+import { InjectedProviderProxy } from "./InjectedProviderProxy"
 
 const IsInIframe = window.parent !== window
 
@@ -71,7 +72,10 @@ export class InjectedConnector implements ConnectionProvider {
 
     public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {
         const { user, request, response } = await this.connectToInjectedWallet(req)
-        await this.onConnect(user, this.detail.provider)
+        await this.onConnect(
+            user,
+            isStandaloneIframe() ? this.detail.provider : (new InjectedProviderProxy() as EIP1193Provider),
+        )
         return { request, response }
     }
 
@@ -95,7 +99,10 @@ export class InjectedConnector implements ConnectionProvider {
             } as const
 
             this.connectToInjectedWallet(reconnectRequest).then(({ user }: { user: HappyUser }) => {
-                this.onReconnect(user, this.detail.provider)
+                this.onReconnect(
+                    user,
+                    isStandaloneIframe() ? this.detail.provider : (new InjectedProviderProxy() as EIP1193Provider),
+                )
             })
         }
     }

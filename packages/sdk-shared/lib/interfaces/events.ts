@@ -15,6 +15,8 @@ import type { ProviderEventError, ProviderEventPayload } from "./payloads.ts"
  * Names of types of messages that can be sent on both the general message bus and the provider bus.
  */
 export enum Msgs {
+    ExecuteInjectedResponse = "execute-injected-response",
+    ExecuteInjectedRequest = "execute-injected-request",
     // --- EventsFromApp ---------------------------------------------------------------------------
 
     /** Instructs the iframe to display the requested page. */
@@ -173,6 +175,7 @@ export type MsgsFromIframe = {
 export type ProviderMsgsFromApp = {
     [Msgs.RequestPermissionless]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.ExecuteInjectedResponse]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
 }
 
 // =================================================================================================
@@ -185,6 +188,7 @@ export type ProviderEvent = ProviderEventError<EIP1193ErrorObject> | ProviderEve
 export type ProviderMsgsFromIframe = {
     [Msgs.RequestResponse]: ProviderEvent
     [Msgs.PermissionCheckResponse]: ProviderEventPayload<boolean> | ProviderEventError
+    [Msgs.ExecuteInjectedRequest]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.ProviderEvent]: {
         payload: { event: EIP1193EventName; args: unknown }
     }
