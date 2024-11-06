@@ -36,6 +36,8 @@ export class SharedWorkerServer implements ServerInterface {
     ) {
         this._scope = scope
 
+        this.patchConsole()
+
         // Filter function
         const filteredFns = fns.filter((fn) => typeof fn === "function")
 
@@ -83,8 +85,6 @@ export class SharedWorkerServer implements ServerInterface {
 
     private start(port: MessagePort) {
         this._ports.set(port, Date.now())
-
-        this.patchConsole(port)
 
         port.onmessage = async (event) => {
             const payload = parsePayload(event.data)
@@ -143,7 +143,7 @@ export class SharedWorkerServer implements ServerInterface {
      * console functions directly, logs will be viewable only on the most recently
      * connected tab/window
      */
-    private patchConsole(port: MessagePort) {
+    private patchConsole() {
         for (const key of Object.keys(console)) {
             const possible = console[key as keyof typeof console]
             if (typeof possible !== "function") return
@@ -151,8 +151,11 @@ export class SharedWorkerServer implements ServerInterface {
             // @ts-expect-error
             // Override 'console' within the worker so that it attempts to proxy the commands to the client,
             // prefixed by the sender filename, instead of logging into the void
-            console[key] = (...args: unknown[]) =>
-                port.postMessage(makeConsolePayload(key, [`[${this.workerName}]`, ...args]))
+            console[key] = (...args: unknown[]) => {
+                for (const port of this._ports.keys()) {
+                    port.postMessage(makeConsolePayload(key, [`[${this.workerName}]`, ...args]))
+                }
+            }
         }
     }
 
