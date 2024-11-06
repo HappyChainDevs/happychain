@@ -2,7 +2,6 @@
 import { icon64x64 } from "../happyProvider/icons"
 import { useAnimatedStateTransitions } from "./hooks/useAnimatedStateTransitions"
 import { useAuthState } from "./hooks/useAuthState"
-import { useIsOpen } from "./hooks/useIsOpen"
 import { useWalletActions } from "./hooks/useWalletActions"
 import { isFirefox } from "./utils"
 
@@ -20,9 +19,8 @@ export interface WalletFrameProps {
 }
 
 export const WalletFrame = ({ iframeSrc, dragging }: WalletFrameProps) => {
-    const { isOpen } = useIsOpen()
     const { authState } = useAuthState()
-    const { toggleWalletOpen } = useWalletActions()
+    const { toggleWalletOpen, isOpen } = useWalletActions()
     const { frame, iframe } = useAnimatedStateTransitions()
 
     return (

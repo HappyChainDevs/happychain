@@ -31,5 +31,5 @@ export function useWalletActions() {
         [isOpen, setIsOpen],
     )
 
-    return { toggleWalletOpen }
+    return { toggleWalletOpen, isOpen }
 }
