@@ -10,6 +10,7 @@ import { ABIManager } from "./AbiManager.js"
 import { BlockMonitor, type LatestBlock } from "./BlockMonitor.js"
 import { GasEstimator } from "./GasEstimator.js"
 import { GasPriceOracle } from "./GasPriceOracle.js"
+import { HookManager, type TxmHookHandler, type TxmHookType } from "./HookManager.js"
 import { NonceManager } from "./NonceManager.js"
 import type { Transaction } from "./Transaction.js"
 import { TransactionCollector } from "./TransactionCollector.js"
@@ -17,7 +18,6 @@ import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
 import { TxMonitor } from "./TxMonitor.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
-import { HookManager, type TxmHookType, type TxmHookHandler } from "./HookManager.js"
 
 export type TransactionManagerConfig = {
     /** The transport protocol used for the client. See {@link Transport} from viem for more details. */
@@ -143,7 +143,7 @@ export class TransactionManager {
     }
 
     public async addHook(type: TxmHookType, handler: TxmHookHandler): Promise<void> {
-        await this.hookManager.addHook(type, handler);
+        await this.hookManager.addHook(type, handler)
     }
 
     public async getTransaction(txIntentId: UUID): Promise<Transaction | undefined> {
