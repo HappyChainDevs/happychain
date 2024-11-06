@@ -1,3 +1,4 @@
+import { type UUID, createUUID } from "@happychain/common"
 import type {
     HappyUser,
     MsgsFromApp,
@@ -8,7 +9,6 @@ import type {
 import { EventBus, EventBusMode, ModalStates, Msgs, config } from "@happychain/sdk-shared"
 import { announceProvider } from "mipd"
 import type { EIP1193Provider } from "viem"
-import { type UUID, createUUID } from "../common-utils"
 import { HappyProvider, HappyProviderSSRSafe } from "./happyProvider"
 import { icon64x64 } from "./icons"
 import type { HappyProviderPublic } from "./interface"

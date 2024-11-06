@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test"
+import { createUUID } from "@happychain/common"
 import {
     AuthState,
     EventBus,
@@ -13,7 +14,6 @@ import {
     config,
 } from "@happychain/sdk-shared"
 import type { RpcBlock } from "viem"
-import { createUUID } from "../common-utils"
 import { HappyProvider } from "./happyProvider"
 import { SocialWalletHandler } from "./socialWalletHandler"
 

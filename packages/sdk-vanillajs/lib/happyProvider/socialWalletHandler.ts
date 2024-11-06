@@ -1,5 +1,4 @@
-import { promiseWithResolvers } from "@happychain/common"
-import { type UUID, createUUID } from "../common-utils"
+import { type UUID, createUUID, promiseWithResolvers } from "@happychain/common"
 
 import {
     AuthState,
