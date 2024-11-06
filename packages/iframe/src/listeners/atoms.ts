@@ -79,9 +79,13 @@ store.sub(userAtom, async () => {
     // don't update if ens already has been found
     if (!user || user.ens) return
 
-    const ensName = await mainnetClient.getEnsName({ address: user.address })
-    if (!ensName) return
+    try {
+        const ensName = await mainnetClient.getEnsName({ address: user.address })
+        if (!ensName) return
 
-    user.ens = ensName
-    store.set(userAtom, user)
+        user.ens = ensName
+        store.set(userAtom, user)
+    } catch {
+        console.warn(`Failed to check ENS name for address ${user.address}`)
+    }
 })
