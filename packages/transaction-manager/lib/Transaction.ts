@@ -50,6 +50,10 @@ export class Transaction {
 
     readonly attempts: Attempt[]
 
+    createdAt: Date
+
+    updatedAt: Date
+
     /**
      * Stores additional information for the transaction.
      * Enables originators to provide extra details, such as gas limits, which can be leveraged by customizable services.
@@ -66,6 +70,8 @@ export class Transaction {
         deadline,
         status,
         attempts,
+        createdAt,
+        updatedAt,
         metadata,
     }: {
         intentId?: UUID
@@ -77,6 +83,8 @@ export class Transaction {
         deadline?: number
         status?: TransactionStatus
         attempts?: Attempt[]
+        createdAt?: Date
+        updatedAt?: Date
         metadata?: Record<string, unknown>
     }) {
         this.intentId = intentId ?? createUUID()
@@ -88,11 +96,14 @@ export class Transaction {
         this.deadline = deadline
         this.status = status ?? TransactionStatus.Pending
         this.attempts = attempts ?? []
+        this.createdAt = createdAt ?? new Date()
+        this.updatedAt = updatedAt ?? new Date()
         this.metadata = metadata
     }
 
     addAttempt(attempt: Attempt): void {
         this.attempts.push(attempt)
+        this.updatedAt = new Date()
     }
 
     removeAttempt(hash: Hash): void {
@@ -100,6 +111,7 @@ export class Transaction {
         if (index > -1) {
             this.attempts.splice(index, 1)
         }
+        this.updatedAt = new Date()
     }
 
     getInAirAttempts(): Attempt[] {
@@ -114,7 +126,7 @@ export class Transaction {
 
     changeStatus(status: TransactionStatus): void {
         this.status = status
-
+        this.updatedAt = new Date()
         eventBus.emit(Topics.TransactionStatusChanged, {
             transaction: this,
         })
@@ -140,6 +152,8 @@ export class Transaction {
             status: this.status,
             attempts: JSON.stringify(this.attempts, bigIntReplacer),
             metadata: this.metadata ? JSON.stringify(this.metadata, bigIntReplacer) : undefined,
+            createdAt: this.createdAt.getTime(),
+            updatedAt: this.updatedAt.getTime(),
         }
     }
 
@@ -149,6 +163,8 @@ export class Transaction {
             args: JSON.parse(row.args, bigIntReviver),
             attempts: JSON.parse(row.attempts, bigIntReviver),
             metadata: row.metadata ? JSON.parse(row.metadata, bigIntReviver) : undefined,
+            createdAt: new Date(row.createdAt),
+            updatedAt: new Date(row.updatedAt),
         })
     }
 }

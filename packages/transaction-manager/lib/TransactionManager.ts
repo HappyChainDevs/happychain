@@ -69,6 +69,12 @@ export type TransactionManagerConfig = {
     blockTime?: bigint
 
     /**
+     * The time (in milliseconds) after which finalized transactions are purged from the database.
+     * Defaults to 2 minutes.
+     */
+    finalizedTransactionPurgeTime?: number
+
+    /**
      * The gas estimator to use for estimating the gas limit of a transaction.
      * You can provide your own implementation to override the default one.
      * Default: {@link GasEstimator}
@@ -99,6 +105,7 @@ export class TransactionManager {
     public readonly maxPriorityFeePerGas: bigint
     public readonly rpcAllowDebug: boolean
     public readonly blockTime: bigint
+    public readonly finalizedTransactionPurgeTime: number
 
     constructor(_config: TransactionManagerConfig) {
         this.collectors = []
@@ -136,6 +143,7 @@ export class TransactionManager {
 
         this.rpcAllowDebug = _config.rpcAllowDebug || false
         this.blockTime = _config.blockTime || 2n
+        this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
     }
 
     /**

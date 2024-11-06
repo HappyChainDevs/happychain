@@ -1,6 +1,7 @@
 import { unknownToError } from "@happychain/common"
 import type { UUID } from "@happychain/common"
 import { type Result, ResultAsync } from "neverthrow"
+import { Topics, eventBus } from "./EventBus.js"
 import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { db } from "./db/driver.js"
@@ -20,8 +21,9 @@ export class TransactionRepository {
             .where("status", "in", NotFinalizedStatuses)
             .selectAll()
             .execute()
-
+    
         this.notFinalizedTransactions = transactionRows.map((row) => Transaction.fromDbRow(row))
+        eventBus.on(Topics.NewBlock, this.purgeFinalizedTransactions.bind(this))
     }
 
     getNotFinalizedTransactions(): Transaction[] {
@@ -102,5 +104,13 @@ export class TransactionRepository {
         return Array.from({ length: to - from + 1 }, (_, i) => from + i).filter(
             (n) => !this.notFinalizedTransactions.some((t) => t.attempts.some((a) => a.nonce === n)),
         )
+    }
+
+    async purgeFinalizedTransactions() {
+        await db
+            .deleteFrom("transaction")
+            .where("status", "not in", NotFinalizedStatuses)
+            .where("updatedAt", "<", Date.now() - this.transactionManager.finalizedTransactionPurgeTime)
+            .execute()
     }
 }
