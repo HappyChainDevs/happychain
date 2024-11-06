@@ -1,4 +1,5 @@
 import type { EventEmitter } from "node:events"
+import type { UUID } from "@happychain/common"
 import type {
     EIP1193RequestMethods,
     EIP1193RequestParameters,
@@ -12,7 +13,6 @@ import type {
     config,
 } from "@happychain/sdk-shared"
 import type SafeEventEmitter from "@metamask/safe-event-emitter"
-import type { UUID } from "../common-utils"
 
 /**
  * HappyProvider is a EIP1193 Ethereum Provider {@link https://eips.ethereum.org/EIPS/eip-1193}
