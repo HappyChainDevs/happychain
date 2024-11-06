@@ -102,10 +102,18 @@ export class SharedWorkerServer implements ServerInterface {
                             port.postMessage(makeRpcPayload(payload.data.id, payload.data.name, result))
                         } catch (e: unknown) {
                             const errorMsg = e && typeof e === "object" && "message" in e ? e.message : e
-                            console.error(
-                                `Error calling function '${payload.data.name}: ${JSON.stringify(event.data, null, 2)}'`,
-                                errorMsg,
-                            )
+                            const func = this._functions.get(payload.data.name)
+
+                            if (func?.name) {
+                                const args = event.data?.data?.args?.map(JSON.stringify) ?? []
+                                console.error(
+                                    "Error calling worker function\n\n",
+                                    `\t${func.name}(${args.join(", ")})\n\t  ->`,
+                                    errorMsg,
+                                )
+                            } else {
+                                console.error(`Unknown function called ${payload.data.name}`, errorMsg)
+                            }
                         }
                     } else {
                         console.error(`Unknown message: ${JSON.stringify(payload, null, 2)}`)
