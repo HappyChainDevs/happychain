@@ -173,7 +173,6 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                 }
                 return
             }
-
             // if we land here and have a _user, and are already connecting, then another connection
             // attempt must be ongoing elsewhere. Exit early, and leave state updates to whoever is
             // currently connecting
@@ -181,7 +180,6 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                 this.instanceIsConnecting = false
                 return
             }
-
             // web3auth doesn't need this call as calling connect() multiple times simply returns
             // the current user if they are already logged in, however each firebase JWT can be used
             // only once, so if a user is not connected already, we must refresh the JWT with
@@ -192,18 +190,14 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                     await this.onReconnect(user, web3AuthEIP1193Provider)
                     return
                 }
-
                 // allow fall through to refresh JWT and log in again
                 console.warn("failed to reconnect to network")
             }
-
             const token = await this.fetchLoginTokenForUser(_user)
-
             const happyUser = await this.connectWithWeb3Auth(
                 FirebaseConnector.makeHappyUserPartial(_user, this.id),
                 token,
             )
-
             if (happyUser) {
                 await this.onReconnect(happyUser, web3AuthEIP1193Provider)
             } else {
