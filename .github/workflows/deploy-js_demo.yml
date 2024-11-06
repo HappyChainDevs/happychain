@@ -1,0 +1,52 @@
+name: Deploy js demo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build code
+        run: |
+          make setup
+          make js_demo.build
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "packages/demo-vanillajs/dist"
+          target: /home/deployer/js-demo
+          strip_components: 3 # Remove the first 3 levels of directories from the source path to copy only the files inside dist
+          rm: true
+
+      - name: Deploy js demo to server
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            chmod -R o+rX /home/deployer/js-demo
+            mv /home/deployer/js-demo /tmp
+            sudo -u js_demo bash -c '
+              rm -rf /var/www/js-demo/*
+              cp -r /tmp/js-demo/* /var/www/js-demo
+            '
+            rm -rf /tmp/js-demo

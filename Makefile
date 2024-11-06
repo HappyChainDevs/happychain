@@ -252,6 +252,10 @@ account.build:
 	make iframe.build
 .PHONY: account.build
 
+js_demo.build:
+	cd packages/demo-vanillajs && make build
+.PHONY: js_demo.build
+
 demos.build:
 	$(call forall_make , $(DEMOS_PKGS) , build)
 .PHONY: apps.build
