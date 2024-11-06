@@ -8,15 +8,14 @@ export enum TxmHookType {
 }
 
 export type TxmHookPayload = {
-    type: TxmHookType,
-    intentId: UUID,
+    type: TxmHookType
+    intentId: UUID
 }
 
 export type TxmHookHandler = (event: TxmHookPayload) => void
 
-
 export class HookManager {
-    private hooks: Record<TxmHookType, TxmHookHandler[]>;
+    private hooks: Record<TxmHookType, TxmHookHandler[]>
 
     constructor() {
         this.hooks = {
@@ -34,17 +33,21 @@ export class HookManager {
     }
 
     private async onTransactionStatusChanged(payload: {
-        intentId: UUID,
+        intentId: UUID
         status: TransactionStatus
     }): Promise<void> {
-        this.hooks[TxmHookType.TransactionStatusChanged].map((h) => h({
-            type: TxmHookType.TransactionStatusChanged,
-            intentId: payload.intentId,
-        }))
+        this.hooks[TxmHookType.TransactionStatusChanged].map((h) =>
+            h({
+                type: TxmHookType.TransactionStatusChanged,
+                intentId: payload.intentId,
+            }),
+        )
 
-        this.hooks[TxmHookType.All].map((h) => h({
-            type: TxmHookType.All,
-            intentId: payload.intentId,
-        }))
+        this.hooks[TxmHookType.All].map((h) =>
+            h({
+                type: TxmHookType.All,
+                intentId: payload.intentId,
+            }),
+        )
     }
 }

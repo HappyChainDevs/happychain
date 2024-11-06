@@ -1,5 +1,5 @@
 import { TransactionManager, TxmHookType } from "@happychain/transaction-manager"
-import type { LatestBlock, Transaction,  } from "@happychain/transaction-manager"
+import type { LatestBlock, Transaction } from "@happychain/transaction-manager"
 import { webSocket } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { anvil } from "viem/chains"
