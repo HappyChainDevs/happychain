@@ -27,10 +27,7 @@ tsconfig.tsbuildinfo
 dist
 build
 dist-ssr
-/build
-/public/build
 /.cache
-
 
 # Contract outputs
 packages/contracts/cache/
