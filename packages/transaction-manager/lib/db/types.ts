@@ -13,6 +13,8 @@ export interface TransactionTable {
     status: TransactionStatus
     attempts: string
     metadata: string | undefined
+    createdAt: number
+    updatedAt: number
 }
 
 export interface Database {
