@@ -2,7 +2,13 @@
 
 import type { MessageCallback, ServerInterface } from "./types"
 
-import { makeBroadcastPayload, makeConsolePayload, makeRpcPayload, parsePayload } from "./payload"
+import {
+    makeBroadcastPayload,
+    makeConsolePayload,
+    makeDispatchPayload,
+    makeRpcResponsePayload,
+    parseClientPayload,
+} from "./payload"
 
 type Fn = (...rest: unknown[]) => unknown
 
@@ -87,19 +93,19 @@ export class SharedWorkerServer implements ServerInterface {
         this._ports.set(port, Date.now())
 
         port.onmessage = async (event) => {
-            const payload = parsePayload(event.data)
+            const payload = parseClientPayload(event.data)
             if (!payload) {
                 console.error(`Unknown payload: ${JSON.stringify(event.data, null, 2)}`)
                 return
             }
 
             switch (payload.command) {
-                case "rpc": {
+                case "rpcRequest": {
                     const fn = this._functions.get(payload.data.name)
                     if (fn) {
                         try {
                             const result = await fn.apply(event, payload.data.args)
-                            port.postMessage(makeRpcPayload(payload.data.id, payload.data.name, result))
+                            port.postMessage(makeRpcResponsePayload(payload.data.id, payload.data.name, result))
                         } catch (e: unknown) {
                             const errorMsg = e && typeof e === "object" && "message" in e ? e.message : e
                             const func = this._functions.get(payload.data.name)
@@ -120,7 +126,7 @@ export class SharedWorkerServer implements ServerInterface {
                     }
                     break
                 }
-                case "broadcast": {
+                case "dispatch": {
                     void Promise.allSettled(this._messageCallbacks.map((fn) => fn.apply(event, [payload.data])))
                     break
                 }
@@ -176,7 +182,7 @@ export class SharedWorkerServer implements ServerInterface {
      * Dispatch a message to a specific client.
      */
     dispatch(port: MessagePort, data: unknown) {
-        port.postMessage(makeBroadcastPayload(data))
+        port.postMessage(makeDispatchPayload(data))
     }
 
     /**

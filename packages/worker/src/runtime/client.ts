@@ -1,6 +1,12 @@
 import type { MessageCallback } from "./types"
 
-import { type RpcPayload, makeBroadcastPayload, makePingPayload, makeRpcPayload, parsePayload } from "./payload"
+import {
+    type RpcPayload,
+    makeDispatchPayload,
+    makePingPayload,
+    makeRpcRequestPayload,
+    parseServerPayload,
+} from "./payload"
 
 type WorkerUnion = SharedWorker | Worker
 type PortUnion = SharedWorker["port"] | Worker
@@ -45,14 +51,14 @@ export class SharedWorkerClient {
     }
 
     private handleMessage = (event: MessageEvent) => {
-        const payload = parsePayload(event.data)
+        const payload = parseServerPayload(event.data)
         if (!payload) {
             console.error(`Unknown SharedWorker payload received: ${JSON.stringify(event.data, null, 2)}`)
             return
         }
 
         switch (payload.command) {
-            case "rpc": {
+            case "rpcResponse": {
                 const callback = this.callbacks.get(payload.data.id)
                 if (!callback) return
 
@@ -60,6 +66,7 @@ export class SharedWorkerClient {
                 this.callbacks.delete(payload.data.id)
                 break
             }
+            case "dispatch":
             case "broadcast": {
                 // 'allSettled' vs 'all' so any errors in app code don't propagate here.
                 void Promise.allSettled(this.messageCallbacks.map((fn) => fn.apply(event, [payload.data])))
@@ -84,7 +91,7 @@ export class SharedWorkerClient {
     __defineFunction(name: string) {
         return <T>(...args: T[]) => {
             const id = crypto.randomUUID()
-            const payload = makeRpcPayload(id, name, args)
+            const payload = makeRpcRequestPayload(id, name, args)
             return new Promise((res, rej) => {
                 this.callbacks.set(id, (payload) => {
                     const action = payload.isError ? rej : res
@@ -108,6 +115,6 @@ export class SharedWorkerClient {
      * own {@link SharedWorkerServer.addMessageListener} method.
      */
     dispatch(data: unknown) {
-        this.port.postMessage(makeBroadcastPayload(data))
+        this.port.postMessage(makeDispatchPayload(data))
     }
 }

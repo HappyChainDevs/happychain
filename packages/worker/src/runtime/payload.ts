@@ -6,15 +6,30 @@ export interface RpcPayload<T = any> {
     args: T
 }
 
-export type Payload =
-    | { command: "broadcast"; data: unknown }
-    | { command: "rpc"; data: RpcPayload }
-    | { command: "ping" }
-    | { command: "console"; data: unknown[]; key: string }
+type DispatchPayload = { command: "dispatch"; data: unknown }
+type BroadcastPayload = { command: "broadcast"; data: unknown }
+type RpcResponsePayload = { command: "rpcResponse"; data: RpcPayload }
+type RpcRequestPayload = { command: "rpcRequest"; data: RpcPayload }
+type ConsolePayload = { command: "console"; data: unknown[]; key: string }
+type PingPayload = { command: "ping" }
 
-export function makeRpcPayload(id: string, name: string, args: unknown, isError = false): Payload {
+export type ServerPayload = BroadcastPayload | DispatchPayload | RpcResponsePayload | ConsolePayload
+export type ClientPayload = DispatchPayload | RpcRequestPayload | PingPayload
+
+export function makeRpcRequestPayload(id: string, name: string, args: unknown, isError = false): RpcRequestPayload {
     return {
-        command: "rpc",
+        command: "rpcRequest",
+        data: {
+            id,
+            name,
+            args,
+            isError,
+        },
+    }
+}
+export function makeRpcResponsePayload(id: string, name: string, args: unknown, isError = false): RpcResponsePayload {
+    return {
+        command: "rpcResponse",
         data: {
             id,
             name,
@@ -24,14 +39,21 @@ export function makeRpcPayload(id: string, name: string, args: unknown, isError 
     }
 }
 
-export function makeBroadcastPayload(data: unknown): Payload {
+export function makeBroadcastPayload(data: unknown): BroadcastPayload {
     return {
         command: "broadcast",
         data,
     }
 }
 
-export function makeConsolePayload(key: string, data: unknown[]): Payload {
+export function makeDispatchPayload(data: unknown): DispatchPayload {
+    return {
+        command: "dispatch",
+        data,
+    }
+}
+
+export function makeConsolePayload(key: string, data: unknown[]): ConsolePayload {
     return {
         command: "console",
         key, // info, warn, error, etc
@@ -39,17 +61,27 @@ export function makeConsolePayload(key: string, data: unknown[]): Payload {
     }
 }
 
-export function makePingPayload(): Payload {
+export function makePingPayload(): PingPayload {
     return {
         command: "ping",
     }
 }
 
-export function parsePayload(payload?: Payload): Payload | undefined {
+export function parseClientPayload(payload?: ClientPayload): ClientPayload | undefined {
     switch (payload?.command) {
         case "ping":
-        case "rpc":
+        case "rpcRequest":
+        case "dispatch":
+            return payload
+        default:
+            return
+    }
+}
+export function parseServerPayload(payload?: ServerPayload): ServerPayload | undefined {
+    switch (payload?.command) {
+        case "rpcResponse":
         case "broadcast":
+        case "dispatch":
         case "console":
             return payload
         default:
