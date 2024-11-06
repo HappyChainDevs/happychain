@@ -132,7 +132,7 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x",
-                    paymasterVerificationGasLimit: 80_000n, // Increased value to account for possible higher gas usage
+                    paymasterVerificationGasLimit: 10_000n, // Increased value to account for possible higher gas usage
                     paymasterPostOpGasLimit: 0n, // Set to 0 since the postOp function is never called
                 }
             },
@@ -287,15 +287,27 @@ async function processSingleUserOp(
     return gasDetails
 }
 
-async function sendUserOps(accounts: Accounts[]) {
-    const hashes = await Promise.all(
-        accounts.map((account) =>
-            account.kernelClient.sendUserOperation({
-                account: account.kernelAccount,
-                calls: [createMintCall()],
-            }),
-        ),
-    )
+async function prepareAndSendUserOps(accounts: Accounts[]) {
+    const userOps = await Promise.all(accounts.map(async ({ kernelAccount, kernelClient }) => {
+        const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
+            account: kernelAccount,
+            calls: [createMintCall()],
+        })
+
+        userOp.signature = await kernelAccount.signUserOperation({
+            ...userOp,
+            chainId: localhost.id,
+            signature: "0x",
+        })
+
+        return userOp
+    }))
+
+    const hashes = await Promise.all(userOps.map(async (userOp, index) => {
+        return await accounts[index].kernelClient.sendUserOperation({
+            ...userOp,
+        })
+    }))
 
     const receipts: UserOperationReceipt[] = await Promise.all(
         accounts.map((account, idx) =>
@@ -304,6 +316,127 @@ async function sendUserOps(accounts: Accounts[]) {
             }),
         ),
     )
+
+    const dominantTransactionIndex = receipts
+        .map((r) => r.receipt.transactionIndex)
+        .sort(
+            (a, b) =>
+                receipts.filter((r) => r.receipt.transactionIndex === b).length -
+                receipts.filter((r) => r.receipt.transactionIndex === a).length,
+        )[0]
+
+    const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
+
+    const numOps = BigInt(filteredReceipts.length)
+    const avgDirectTxGas = (await sendDirectTransactions(numOps)) / numOps
+    const totalBundlerTxGas = filteredReceipts[0].receipt.gasUsed
+    const avgBundlerTxGas = totalBundlerTxGas / numOps
+    const totalBundlerOverhead = filteredReceipts.reduce(
+        (acc, receipt) => acc + (receipt.actualGasUsed - avgBundlerTxGas),
+        BigInt(0),
+    )
+    const avgBundlerOverhead = totalBundlerOverhead / numOps
+    const avgTotalUserOpGas = avgBundlerOverhead + avgBundlerTxGas
+    const avgTotalOverhead = avgTotalUserOpGas - avgDirectTxGas
+    const avgUserOpOverhead = avgTotalOverhead - avgBundlerOverhead
+
+    const gasDetails: GasDetails = {
+        directTxGas: avgDirectTxGas,
+        bundlerTxGas: avgBundlerTxGas,
+        totalUserOpGas: avgTotalUserOpGas,
+        totalOverhead: avgTotalOverhead,
+        bundlerOverhead: avgBundlerOverhead,
+        userOpOverhead: avgUserOpOverhead,
+    }
+
+    return { numOps, gasDetails }
+}
+
+async function sendUserOps(accounts: Accounts[]) {
+    const timings: {
+        account: string;
+        prepareTime: Date;
+        sendTime: Date;
+        receiveTime?: Date;
+        hash: string;
+        totalDuration?: number;
+    }[] = [];
+
+    // Send userOps concurrently and log timings
+    const hashes = await Promise.all(
+        accounts.map((account) =>
+            (async () => {
+                const prepareTime = new Date();
+                console.log(`Preparing userOp for account ${account.kernelAccount.address} at ${prepareTime.toISOString()}`);
+
+                // Start timing the preparation and sending
+                const startTime = Date.now();
+
+                const hash = await account.kernelClient.sendUserOperation({
+                    account: account.kernelAccount,
+                    calls: [createMintCall()],
+                });
+
+                const sendTime = new Date();
+                const sendDuration = Date.now() - startTime;
+                console.log(`Sent userOp for account ${account.kernelAccount.address} at ${sendTime.toISOString()}`);
+                console.log(`Time taken to prepare and send userOp for account ${account.kernelAccount.address}: ${sendDuration} ms`);
+
+                // Store timing information
+                timings.push({
+                    account: account.kernelAccount.address,
+                    prepareTime,
+                    sendTime,
+                    hash,
+                });
+
+                return hash;
+            })(),
+        ),
+    );
+
+    // Wait for receipts concurrently and log timings
+    const receipts: UserOperationReceipt[] = await Promise.all(
+        accounts.map((account, idx) =>
+            (async () => {
+                console.log(`Waiting for receipt of userOp from account ${account.kernelAccount.address} at ${new Date().toISOString()}`);
+
+                // Start timing the receipt waiting
+                const startWaitTime = Date.now();
+
+                const receipt = await account.kernelClient.waitForUserOperationReceipt({
+                    hash: hashes[idx],
+                });
+
+                const receiveTime = new Date();
+                const receiveDuration = Date.now() - startWaitTime;
+                console.log(`Received receipt for userOp from account ${account.kernelAccount.address} at ${receiveTime.toISOString()}`);
+                console.log(`Time taken to receive receipt for account ${account.kernelAccount.address}: ${receiveDuration} ms`);
+
+                // Update timing information
+                const timing = timings.find((t) => t.account === account.kernelAccount.address);
+                if (timing) {
+                    timing.receiveTime = receiveTime;
+                    timing.totalDuration = receiveTime.getTime() - timing.prepareTime.getTime();
+                }
+
+                return receipt;
+            })(),
+        ),
+    );
+
+    // Log the collected timing details
+    console.log('\n--- User Operation Timings ---');
+    timings.forEach((t) => {
+        console.log(`Account: ${t.account}`);
+        console.log(`  Prepared at: ${t.prepareTime.toISOString()}`);
+        console.log(`  Sent at:     ${t.sendTime.toISOString()}`);
+        if (t.receiveTime) {
+            console.log(`  Receipt received at: ${t.receiveTime.toISOString()}`);
+            console.log(`  Total time from preparation to receipt: ${t.totalDuration} ms`);
+        }
+        console.log('-------------------------------------');
+    });
 
     const dominantTransactionIndex = receipts
         .map((r) => r.receipt.transactionIndex)
@@ -405,15 +538,7 @@ async function batchedUserOperationsGasResult() {
     const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(accounts)
     const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(accounts)
 
-    console.log("\nGas Usage per UserOp (with Deployment) from Unique Senders:")
-    console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)`)
-    console.log("---------------------------------------------------------------------\n")
-    printUserOperationGasDetails(gasDetails1)
 
-    console.log("\nGas Usage per UserOp (no Deployment) from Unique Senders:")
-    console.log(`(Processed ${numOps2} UserOps in this bundle, each from a different sender)`)
-    console.log("---------------------------------------------------------------------\n")
-    printUserOperationGasDetails(gasDetails2)
 
     const multipleUserOpsWithDeploymentResults = {
         scenario: `Avg UserOp in a Bundle of ${numOps1} UserOps (with Deployment)`,

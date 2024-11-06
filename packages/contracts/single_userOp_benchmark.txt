@@ -1,0 +1,93 @@
+Root Validator: Sending UserOP
+
+-> sendUserOperation() .js
+
+    -> Calling prepareUserOperation (prepareUserOperation() .js)
+
+        -> Calling estimateUserOperationGas
+        estimateUserOperationGas() .js
+        Preparing Partial UserOp for gas estimation:  { 1 ms taken }
+
+        estimateUserOperationGas Benchmark Results (ms): {
+          start: 1730893946497,
+          parseAccountStart: 0,
+          parseAccountTimeTaken: 0,
+          prepareUserOpStart: 0,
+          prepareUserOpTimeTaken: 1,
+          rpcRequestStart: 1,
+          rpcRequestTaken: 28, **
+          totalTime: 1
+        }
+
+        -> Calling getPaymasterData
+
+            -> Calls estimateUserOperationGas (for paymasterVerificationGasLimit and postOpGasLimit)
+                -> Preparing Partial UserOp for gas estimation: { 0 ms taken }
+                -> RPC call to eth_estimateUserOperationGas { 11 ms taken }
+
+        getPaymasterData Benchmark Results (ms): {
+          'RPC Request Start (ms)': 0,
+          'RPC Request Duration (ms)': 11,
+          'Total Function Time (ms)': 11
+        }
+
+    prepareUserOperation Benchmark Results (ms): {
+      start: 1730893946490,
+      parseAccount: 0,
+      paymasterSetup: 0,
+      encodeCalls: 0,
+      factory: 3,
+      fees: 4,
+      nonce: 0,
+      signature: 0,
+      gasEstimation: 30,
+      getPaymasterData: 11,
+      totalTime: 48
+    }
+
+-> RPC call eth_sendUserOperation
+
+sendUserOp Benchmarking Results: {
+  start: 1730894874019,
+  parseAccountStart: 0,
+  parseAccountTimeTaken: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationTimeTaken: 58, ***
+  signUserOperationStart: 58,
+  signUserOperationTimeTaken: 2,
+  rpcRequestStart: 60,
+  rpcRequestTimeTaken: 7, *** (Preparing userOp takes more time)
+  totalTime: 67
+}
+
+Root Validator: Waiting for userOp receipt
+
+receipt: {
+  type: 'eip1559',
+  status: 'success',
+  cumulativeGasUsed: 164701n,
+  logs: [...],
+  logsBloom: '0x00000000000000000000000000000000000000000000080000000000000000000008000000000000000000010000004000000000080000000000020000000000000000000000000000000000000000000040000000000000000000000000000000000000000800000020000000020000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000400000000000000000000000000000000002000000000000000040000000400001000000000000000000000000000000000000000000000000000000000000400000000000004000000000000000000000000000000000',
+  transactionHash: '0xbf523a33e1322c62267d11d4f5dc5f1b6e724aa032b892e23675c5f4da4ae21b',
+  transactionIndex: 0,
+  blockHash: '0x6260991479ebe330f69f4abb5af71a2c2ae9245052e6c600d7e701dbc79a90fe',
+  blockNumber: 14257n,
+  gasUsed: 164701n,
+  effectiveGasPrice: 1000000007n,
+  blobGasPrice: 1n,
+  from: '0x14dC79964da2C08b23698B3D3cc7Ca32193d9955',
+  to: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
+  contractAddress: null,
+  root: '0xcf7ff06fe685f0c50217ce42a4a65aabef7d2d940fe03aa0d73fb292eb45e692'
+}
+
+Root Validator Gas Report: {
+  "Transaction Hash": "0xbf523a33e1322c62267d11d4f5dc5f1b6e724aa032b892e23675c5f4da4ae21b",
+  "Timings (ms)": {
+    "Send Transaction": 4089, ***
+    "Wait for Receipt": 8,
+    "Check Balance": 1,
+    "Total Time": 4101 ***
+  },
+  "Gas Used": "164701",
+}

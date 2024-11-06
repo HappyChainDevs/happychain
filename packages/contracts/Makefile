@@ -95,12 +95,12 @@ test-fork:
 
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the demo.
 aa-demo:
-	@tsx ./scripts/account_abstraction_demo.ts;
+	@tsx ./scripts/account_abstraction_demo.ts | awk 'BEGIN {start=0} /Root Validator: Sending UserOP/ {start=1} {if (start) print}' > single_userOp_benchmark.txt
 .PHONY: aa-demo
 
 # Please, ensure that all Account Abstraction (AA) and Mock Token contracts are deployed before generating the gas report.
 gas-bundler:
-	@tsx ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Gas Usage for a Single UserOp/ {start=1} {if (start) print}' > bundler_gas_report.txt
+	@tsx ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Root Validator: Sending UserOP/ {start=1} {if (start) print}' > multiple_userOp_benchmark.txt
 .PHONY: gas-bundler
 
 ####################################################################################################
