@@ -28,7 +28,7 @@ export class GoogleConnector extends FirebaseConnector {
         return googleProvider
     }
 
-    async onDisconnect(_: undefined, _provider: undefined) {
+    async onDisconnect() {
         if (getUser()?.type !== WalletType.Social) return
         await disconnect(config)
         setUserWithProvider(undefined, undefined)
