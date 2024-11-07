@@ -4,13 +4,13 @@ import { entryPoint07Address } from "viem/account-abstraction"
 
 import { getAccountNonce } from "permissionless/actions"
 
-enum VALIDATOR_TYPE {
+export enum VALIDATOR_TYPE {
     ROOT = "0x00",
     VALIDATOR = "0x01",
     PERMISSION = "0x02",
 }
 
-enum VALIDATOR_MODE {
+export enum VALIDATOR_MODE {
     DEFAULT = "0x00",
     ENABLE = "0x01",
 }
