@@ -35,6 +35,11 @@ const ImportTokensMenu = () => {
         decimals: "",
     })
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: value }))
+    }
+
     const handleSubmit = useCallback(
         (e: React.FormEvent) => {
             e.preventDefault()
@@ -101,41 +106,20 @@ const ImportTokensMenu = () => {
                                 </button>
                             </Menu.ItemGroupLabel>
                             <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-                                <Menu.Item value="address" className="flex flex-col gap-1">
-                                    <p>Address</p>
-                                    <input
-                                        type="text"
-                                        className="input input-bordered input-sm w-full"
-                                        placeholder="Contract Address"
-                                        value={formData.address}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
-                                        required
-                                    />
-                                </Menu.Item>
-                                <Menu.Separator />
-                                <Menu.Item value="symbol" className="flex flex-col gap-1">
-                                    <p>Symbol</p>
-                                    <input
-                                        type="text"
-                                        className="input input-bordered input-sm w-full"
-                                        placeholder="Symbol"
-                                        value={formData.symbol}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, symbol: e.target.value }))}
-                                        required
-                                    />
-                                </Menu.Item>
-                                <Menu.Separator />
-                                <Menu.Item value="decimals" className="flex flex-col gap-1">
-                                    <p>Decimals</p>
-                                    <input
-                                        type="text"
-                                        className="input input-bordered input-sm w-full"
-                                        placeholder="Decimals"
-                                        value={formData.decimals}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, decimals: e.target.value }))}
-                                        required
-                                    />
-                                </Menu.Item>
+                                {['address', 'symbol', 'decimals'].map((field) => (
+                                    <Menu.Item key={field} value={field} className="flex flex-col gap-1">
+                                        <p>{field.charAt(0).toUpperCase() + field.slice(1)}</p>
+                                        <input
+                                            type="text"
+                                            name={field}
+                                            className="input input-bordered input-sm w-full"
+                                            placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                                            value={formData[field as keyof typeof formData]}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                    </Menu.Item>
+                                ))}
                                 <Menu.Separator />
                                 <Button type="submit" className="justify-center">
                                     Add
