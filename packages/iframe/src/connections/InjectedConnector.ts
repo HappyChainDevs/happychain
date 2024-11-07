@@ -67,7 +67,7 @@ export class InjectedConnector implements ConnectionProvider {
         setAuthState(AuthState.Connected)
     }
 
-    public async onDisconnect(_: undefined, _provider: EIP1193Provider) {
+    public async onDisconnect() {
         await disconnect(config)
         setUserWithProvider(undefined, undefined)
         setAuthState(AuthState.Disconnected)
@@ -84,7 +84,7 @@ export class InjectedConnector implements ConnectionProvider {
 
         // ensure we clear the right one
         if (past?.provider === this.id) {
-            this.onDisconnect(undefined, this.detail.provider)
+            this.onDisconnect()
         }
     }
 

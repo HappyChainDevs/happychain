@@ -47,7 +47,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
 
     abstract onConnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
     abstract onReconnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
-    abstract onDisconnect(user: undefined, provider: undefined): Promise<void> | void
+    abstract onDisconnect(): Promise<void> | void
 
     /**
      * When a user manually connects, we mark this flag true. This prevents the firebase auth
@@ -91,7 +91,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         try {
             await setFirebaseAuthState(FirebaseAuthState.Disconnecting)
             await Promise.allSettled([firebaseAuth.signOut(), web3AuthDisconnect()])
-            await this.onDisconnect(undefined, undefined)
+            await this.onDisconnect()
             await setFirebaseAuthState(FirebaseAuthState.Disconnected)
         } catch (e) {
             console.warn(e)
