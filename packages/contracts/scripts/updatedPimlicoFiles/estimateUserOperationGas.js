@@ -58,6 +58,7 @@ export async function estimateUserOperationGas(client, parameters) {
     timings.parseAccountEnd = Date.now() - timings.parseAccountStart - startTime;
 
     // Benchmarking: Prepare User Operation
+    console.log("Preparing Partial UserOp for gas estimation")
     timings.prepareUserOpStart = Date.now() - startTime;
     const rpcStateOverride = serializeStateOverride(stateOverride);
     const request = account
@@ -83,6 +84,7 @@ export async function estimateUserOperationGas(client, parameters) {
         timings.rpcRequestEnd = Date.now() - timings.rpcRequestStart - startTime; // End Benchmarking RPC Request
         timings.totalTime = Date.now() - timings.rpcRequestEnd - startTime;
 
+        console.log("estimateUserOpGas Sender: ", request.sender)
         console.log("estimateUserOperationGas Benchmark Results:", timings);
         return formatUserOperationGas(result);
     }

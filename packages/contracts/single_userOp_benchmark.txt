@@ -1,11 +1,10 @@
 Root Validator: Sending UserOP
 
--> sendUserOperation() .js
+-> Callin sendUserOperation (sendUserOperation() .js)
 
     -> Calling prepareUserOperation (prepareUserOperation() .js)
 
-        -> Calling estimateUserOperationGas
-        estimateUserOperationGas() .js
+        -> Calling estimateUserOperationGas (estimateUserOperationGas() .js)
         Preparing Partial UserOp for gas estimation:  { 1 ms taken }
 
         estimateUserOperationGas Benchmark Results (ms): {
@@ -19,17 +18,16 @@ Root Validator: Sending UserOP
           totalTime: 1
         }
 
-        -> Calling getPaymasterData
+            -> Calling getPaymasterData
+                -> Calls estimateUserOperationGas (for paymasterVerificationGasLimit and postOpGasLimit)
+                    -> Preparing Partial UserOp for gas estimation: { 0 ms taken }
+                    -> RPC call to eth_estimateUserOperationGas { 11 ms taken }
 
-            -> Calls estimateUserOperationGas (for paymasterVerificationGasLimit and postOpGasLimit)
-                -> Preparing Partial UserOp for gas estimation: { 0 ms taken }
-                -> RPC call to eth_estimateUserOperationGas { 11 ms taken }
-
-        getPaymasterData Benchmark Results (ms): {
-          'RPC Request Start (ms)': 0,
-          'RPC Request Duration (ms)': 11,
-          'Total Function Time (ms)': 11
-        }
+            getPaymasterData Benchmark Results (ms): {
+              'RPC Request Start (ms)': 0,
+              'RPC Request Duration (ms)': 11,
+              'Total Function Time (ms)': 11
+            }
 
     prepareUserOperation Benchmark Results (ms): {
       start: 1730893946490,

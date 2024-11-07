@@ -113,37 +113,37 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
         }),
         paymaster: {
             async getPaymasterData(parameters: GetPaymasterDataParameters) {
-                const startTime = Date.now();
+                const startTime = Date.now()
                 const timings = {
                     rpcRequestStart: 0,
                     rpcRequestDuration: 0,
                     totalTime: 0,
-                };
+                }
 
                 // Start timing for the RPC call
-                timings.rpcRequestStart = Date.now() - startTime;
-                const rpcRequestStartTime = Date.now();
+                timings.rpcRequestStart = Date.now() - startTime
+                const rpcRequestStartTime = Date.now()
                 const gasEstimates = await pimlicoClient.estimateUserOperationGas({
                     ...parameters,
                     paymaster: paymasterAddress,
-                });
-                timings.rpcRequestDuration = Date.now() - rpcRequestStartTime;
+                })
+                timings.rpcRequestDuration = Date.now() - rpcRequestStartTime
 
                 // Calculate total function time
-                timings.totalTime = Date.now() - startTime;
+                timings.totalTime = Date.now() - startTime
 
                 console.log("getPaymasterData Benchmark Results:", {
                     "RPC Request Start (ms)": timings.rpcRequestStart,
                     "RPC Request Duration (ms)": timings.rpcRequestDuration,
                     "Total Function Time (ms)": timings.totalTime,
-                });
+                })
 
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x", // Only required for extra context, no need to encode paymaster gas values manually
                     paymasterVerificationGasLimit: gasEstimates.paymasterVerificationGasLimit ?? 0n,
                     paymasterPostOpGasLimit: gasEstimates.paymasterPostOpGasLimit ?? 0n,
-                };
+                }
             },
             // Using stub values from the docs for paymaster-related fields in unsigned user operations for gas estimation.
             async getPaymasterStubData(_parameters: GetPaymasterStubDataParameters) {
@@ -310,10 +310,10 @@ async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccoun
 }
 
 async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    const receiverAddress = getRandomAccount();
+    const receiverAddress = getRandomAccount()
 
     // Initialize benchmarking timings
-    const startTime = Date.now();
+    const startTime = Date.now()
     const timings = {
         start: startTime,
         sendTransactionStart: 0,
@@ -323,46 +323,46 @@ async function testRootValidator(kernelAccount: SmartAccount, kernelClient: Smar
         checkBalanceStart: 0,
         checkBalanceEnd: 0,
         totalTime: 0,
-    };
+    }
 
-    console.log("Root Validator: Sending UserOP");
-    timings.sendTransactionStart = Date.now();
+    console.log("Root Validator: Sending UserOP")
+    timings.sendTransactionStart = Date.now()
     const txHash = await kernelClient.sendTransaction({
         account: kernelAccount,
         to: receiverAddress,
         chain: localhost,
         value: parseEther(AMOUNT),
-    });
-    timings.sendTransactionEnd = Date.now();
+    })
+    timings.sendTransactionEnd = Date.now()
 
-    console.log("Root Validator: Waiting for userOp receipt");
-    timings.waitForReceiptStart = Date.now();
+    console.log("Root Validator: Waiting for userOp receipt")
+    timings.waitForReceiptStart = Date.now()
     const receipt = await publicClient.waitForTransactionReceipt({
         hash: txHash,
         confirmations: 1,
-    });
-    timings.waitForReceiptEnd = Date.now();
+    })
+    timings.waitForReceiptEnd = Date.now()
 
     // Check if the transaction was successful
     if (receipt.status !== "success") {
-        throw new Error("KernelClient transaction failed");
+        throw new Error("KernelClient transaction failed")
     }
 
     console.log("receipt:", receipt)
 
     // Check balance and benchmark this step as well
-    timings.checkBalanceStart = Date.now();
-    const balance = await checkBalance(receiverAddress);
-    timings.checkBalanceEnd = Date.now();
+    timings.checkBalanceStart = Date.now()
+    const balance = await checkBalance(receiverAddress)
+    timings.checkBalanceEnd = Date.now()
 
     if (balance === AMOUNT) {
-        console.log(`Using RootValidator: Balance is correct: ${balance} ETH`);
+        console.log(`Using RootValidator: Balance is correct: ${balance} ETH`)
     } else {
-        throw new Error(`Using RootValidator: Balance is not correct: ${balance} ETH`);
+        throw new Error(`Using RootValidator: Balance is not correct: ${balance} ETH`)
     }
 
     // Calculate total time taken
-    timings.totalTime = Date.now() - startTime;
+    timings.totalTime = Date.now() - startTime
 
     // Generate a readable gas report
     const gasReport = {
@@ -375,11 +375,10 @@ async function testRootValidator(kernelAccount: SmartAccount, kernelClient: Smar
         },
         "Gas Used": receipt.gasUsed?.toString() ?? "N/A",
         "Final Balance": balance,
-    };
+    }
 
-    console.log("Root Validator Gas Report:", JSON.stringify(gasReport, null, 2));
+    console.log("Root Validator Gas Report:", JSON.stringify(gasReport, null, 2))
 }
-
 
 async function testCustomValidator(
     kernelAccount: SmartAccount,

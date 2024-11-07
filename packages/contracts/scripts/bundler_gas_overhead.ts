@@ -288,26 +288,30 @@ async function processSingleUserOp(
 }
 
 async function prepareAndSendUserOps(accounts: Accounts[]) {
-    const userOps = await Promise.all(accounts.map(async ({ kernelAccount, kernelClient }) => {
-        const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
-            account: kernelAccount,
-            calls: [createMintCall()],
-        })
+    const userOps = await Promise.all(
+        accounts.map(async ({ kernelAccount, kernelClient }) => {
+            const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
+                account: kernelAccount,
+                calls: [createMintCall()],
+            })
 
-        userOp.signature = await kernelAccount.signUserOperation({
-            ...userOp,
-            chainId: localhost.id,
-            signature: "0x",
-        })
+            userOp.signature = await kernelAccount.signUserOperation({
+                ...userOp,
+                chainId: localhost.id,
+                signature: "0x",
+            })
 
-        return userOp
-    }))
+            return userOp
+        }),
+    )
 
-    const hashes = await Promise.all(userOps.map(async (userOp, index) => {
-        return await accounts[index].kernelClient.sendUserOperation({
-            ...userOp,
-        })
-    }))
+    const hashes = await Promise.all(
+        userOps.map(async (userOp, index) => {
+            return await accounts[index].kernelClient.sendUserOperation({
+                ...userOp,
+            })
+        }),
+    )
 
     const receipts: UserOperationReceipt[] = await Promise.all(
         accounts.map((account, idx) =>
@@ -354,33 +358,37 @@ async function prepareAndSendUserOps(accounts: Accounts[]) {
 
 async function sendUserOps(accounts: Accounts[]) {
     const timings: {
-        account: string;
-        prepareTime: Date;
-        sendTime: Date;
-        receiveTime?: Date;
-        hash: string;
-        totalDuration?: number;
-    }[] = [];
+        account: string
+        prepareTime: Date
+        sendTime: Date
+        receiveTime?: Date
+        hash: string
+        totalDuration?: number
+    }[] = []
 
     // Send userOps concurrently and log timings
     const hashes = await Promise.all(
         accounts.map((account) =>
             (async () => {
-                const prepareTime = new Date();
-                console.log(`Preparing userOp for account ${account.kernelAccount.address} at ${prepareTime.toISOString()}`);
+                const prepareTime = new Date()
+                console.log(
+                    `Preparing userOp for account ${account.kernelAccount.address} at ${prepareTime.toISOString()}`,
+                )
 
                 // Start timing the preparation and sending
-                const startTime = Date.now();
+                const startTime = Date.now()
 
                 const hash = await account.kernelClient.sendUserOperation({
                     account: account.kernelAccount,
                     calls: [createMintCall()],
-                });
+                })
 
-                const sendTime = new Date();
-                const sendDuration = Date.now() - startTime;
-                console.log(`Sent userOp for account ${account.kernelAccount.address} at ${sendTime.toISOString()}`);
-                console.log(`Time taken to prepare and send userOp for account ${account.kernelAccount.address}: ${sendDuration} ms`);
+                const sendTime = new Date()
+                const sendDuration = Date.now() - startTime
+                console.log(`Sent userOp for account ${account.kernelAccount.address} at ${sendTime.toISOString()}`)
+                console.log(
+                    `Time taken to prepare and send userOp for account ${account.kernelAccount.address}: ${sendDuration} ms`,
+                )
 
                 // Store timing information
                 timings.push({
@@ -388,55 +396,61 @@ async function sendUserOps(accounts: Accounts[]) {
                     prepareTime,
                     sendTime,
                     hash,
-                });
+                })
 
-                return hash;
+                return hash
             })(),
         ),
-    );
+    )
 
     // Wait for receipts concurrently and log timings
     const receipts: UserOperationReceipt[] = await Promise.all(
         accounts.map((account, idx) =>
             (async () => {
-                console.log(`Waiting for receipt of userOp from account ${account.kernelAccount.address} at ${new Date().toISOString()}`);
+                console.log(
+                    `Waiting for receipt of userOp from account ${account.kernelAccount.address} at ${new Date().toISOString()}`,
+                )
 
                 // Start timing the receipt waiting
-                const startWaitTime = Date.now();
+                const startWaitTime = Date.now()
 
                 const receipt = await account.kernelClient.waitForUserOperationReceipt({
                     hash: hashes[idx],
-                });
+                })
 
-                const receiveTime = new Date();
-                const receiveDuration = Date.now() - startWaitTime;
-                console.log(`Received receipt for userOp from account ${account.kernelAccount.address} at ${receiveTime.toISOString()}`);
-                console.log(`Time taken to receive receipt for account ${account.kernelAccount.address}: ${receiveDuration} ms`);
+                const receiveTime = new Date()
+                const receiveDuration = Date.now() - startWaitTime
+                console.log(
+                    `Received receipt for userOp from account ${account.kernelAccount.address} at ${receiveTime.toISOString()}`,
+                )
+                console.log(
+                    `Time taken to receive receipt for account ${account.kernelAccount.address}: ${receiveDuration} ms`,
+                )
 
                 // Update timing information
-                const timing = timings.find((t) => t.account === account.kernelAccount.address);
+                const timing = timings.find((t) => t.account === account.kernelAccount.address)
                 if (timing) {
-                    timing.receiveTime = receiveTime;
-                    timing.totalDuration = receiveTime.getTime() - timing.prepareTime.getTime();
+                    timing.receiveTime = receiveTime
+                    timing.totalDuration = receiveTime.getTime() - timing.prepareTime.getTime()
                 }
 
-                return receipt;
+                return receipt
             })(),
         ),
-    );
+    )
 
     // Log the collected timing details
-    console.log('\n--- User Operation Timings ---');
+    console.log("\n--- User Operation Timings ---")
     timings.forEach((t) => {
-        console.log(`Account: ${t.account}`);
-        console.log(`  Prepared at: ${t.prepareTime.toISOString()}`);
-        console.log(`  Sent at:     ${t.sendTime.toISOString()}`);
+        console.log(`Account: ${t.account}`)
+        console.log(`  Prepared at: ${t.prepareTime.toISOString()}`)
+        console.log(`  Sent at:     ${t.sendTime.toISOString()}`)
         if (t.receiveTime) {
-            console.log(`  Receipt received at: ${t.receiveTime.toISOString()}`);
-            console.log(`  Total time from preparation to receipt: ${t.totalDuration} ms`);
+            console.log(`  Receipt received at: ${t.receiveTime.toISOString()}`)
+            console.log(`  Total time from preparation to receipt: ${t.totalDuration} ms`)
         }
-        console.log('-------------------------------------');
-    });
+        console.log("-------------------------------------")
+    })
 
     const dominantTransactionIndex = receipts
         .map((r) => r.receipt.transactionIndex)
@@ -538,8 +552,6 @@ async function batchedUserOperationsGasResult() {
     const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(accounts)
     const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(accounts)
 
-
-
     const multipleUserOpsWithDeploymentResults = {
         scenario: `Avg UserOp in a Bundle of ${numOps1} UserOps (with Deployment)`,
         ...gasDetails1,
@@ -566,25 +578,25 @@ async function main() {
         throw new Error("Mock Token totalSupply initialization failed")
     }
 
-    const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
+    // const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
 
-    let singleOpWithDeploymentResults: GasResult | undefined
-    let singleOpNoDeploymentResults: GasResult | undefined
-    try {
-        ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult(
-            kernelAccount,
-            kernelClient,
-        ))
-    } catch (error) {
-        console.error("Single UserOp: ", error)
-    }
-
-    let multipleCallsNoDeploymentResults: GasResult | undefined
-    try {
-        multipleCallsNoDeploymentResults = await multipleCallsGasResult(kernelAccount, kernelClient)
-    } catch (error) {
-        console.error("Batched CallData: ", error)
-    }
+    // let singleOpWithDeploymentResults: GasResult | undefined
+    // let singleOpNoDeploymentResults: GasResult | undefined
+    // try {
+    //     ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult(
+    //         kernelAccount,
+    //         kernelClient,
+    //     ))
+    // } catch (error) {
+    //     console.error("Single UserOp: ", error)
+    // }
+    //
+    // let multipleCallsNoDeploymentResults: GasResult | undefined
+    // try {
+    //     multipleCallsNoDeploymentResults = await multipleCallsGasResult(kernelAccount, kernelClient)
+    // } catch (error) {
+    //     console.error("Batched CallData: ", error)
+    // }
 
     let multipleUserOpsWithDeploymentResults: GasResult | undefined
     let multipleUserOpsNoDeploymentResults: GasResult | undefined
@@ -595,27 +607,27 @@ async function main() {
         console.error("Batched UserOps: ", error)
     }
 
-    const gasUsageResults = [
-        singleOpWithDeploymentResults,
-        multipleUserOpsWithDeploymentResults,
-        singleOpNoDeploymentResults,
-        multipleCallsNoDeploymentResults,
-        multipleUserOpsNoDeploymentResults,
-    ].filter((result): result is GasResult => result !== undefined)
-
-    console.log("\nGas Usage Results Comparison Table :-")
-    console.table(
-        gasUsageResults.map((result) => ({
-            Scenario: result.scenario,
-            "Direct Tx Gas": result.directTxGas.toLocaleString("en-US"),
-            "Total UserOp Gas": result.totalUserOpGas.toLocaleString("en-US"),
-            "Bundler Tx Gas": result.bundlerTxGas.toLocaleString("en-US"),
-            "Bundler Overhead": result.bundlerOverhead.toLocaleString("en-US"),
-            "UserOp Overhead": result.userOpOverhead.toLocaleString("en-US"),
-            "Total Overhead": result.totalOverhead.toLocaleString("en-US"),
-            "SCA Deployment Overhead": result.accountDeploymentOverhead.toLocaleString("en-US"),
-        })),
-    )
+    // const gasUsageResults = [
+    //     singleOpWithDeploymentResults,
+    //     multipleUserOpsWithDeploymentResults,
+    //     singleOpNoDeploymentResults,
+    //     multipleCallsNoDeploymentResults,
+    //     multipleUserOpsNoDeploymentResults,
+    // ].filter((result): result is GasResult => result !== undefined)
+    //
+    // console.log("\nGas Usage Results Comparison Table :-")
+    // console.table(
+    //     gasUsageResults.map((result) => ({
+    //         Scenario: result.scenario,
+    //         "Direct Tx Gas": result.directTxGas.toLocaleString("en-US"),
+    //         "Total UserOp Gas": result.totalUserOpGas.toLocaleString("en-US"),
+    //         "Bundler Tx Gas": result.bundlerTxGas.toLocaleString("en-US"),
+    //         "Bundler Overhead": result.bundlerOverhead.toLocaleString("en-US"),
+    //         "UserOp Overhead": result.userOpOverhead.toLocaleString("en-US"),
+    //         "Total Overhead": result.totalOverhead.toLocaleString("en-US"),
+    //         "SCA Deployment Overhead": result.accountDeploymentOverhead.toLocaleString("en-US"),
+    //     })),
+    // )
 }
 
 main().then(() => {

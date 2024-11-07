@@ -100,7 +100,8 @@ aa-demo:
 
 # Please, ensure that all Account Abstraction (AA) and Mock Token contracts are deployed before generating the gas report.
 gas-bundler:
-	@tsx ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Root Validator: Sending UserOP/ {start=1} {if (start) print}' > multiple_userOp_benchmark.txt
+	@tsx ./scripts/bundler_gas_overhead.ts
+# | awk 'BEGIN {start=0} /Root Validator: Sending UserOP/ {start=1} {if (start) print}' > multiple_userOp_benchmark.txt
 .PHONY: gas-bundler
 
 ####################################################################################################

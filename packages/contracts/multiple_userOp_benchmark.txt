@@ -1,0 +1,1026 @@
+❯ make gas-bundler
+Preparing userOp for account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0 at 2024-11-07T09:53:56.108Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Preparing userOp for account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986 at 2024-11-07T09:53:56.114Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Preparing userOp for account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A at 2024-11-07T09:53:56.116Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Preparing userOp for account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA at 2024-11-07T09:53:56.118Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Preparing userOp for account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e at 2024-11-07T09:53:56.119Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+prepareUserOperation Benchmark Results: {
+  start: 1730973236135,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+prepareUserOperation Benchmark Results: {
+  start: 1730973236137,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+prepareUserOperation Benchmark Results: {
+  start: 1730973236138,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+prepareUserOperation Benchmark Results: {
+  start: 1730973236139,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+prepareUserOperation Benchmark Results: {
+  start: 1730973236140,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236138,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 1,
+  rpcRequestStart: 1,
+  rpcRequestEnd: 21,
+  totalTime: 1
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+prepareUserOperation Benchmark Results: {
+  start: 1730973236160,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236139,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 22,
+  totalTime: 0
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+prepareUserOperation Benchmark Results: {
+  start: 1730973236161,
+  parseAccount: 0,
+  paymasterSetup: 1,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 1
+}
+estimateUserOpGas Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236135,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 1,
+  rpcRequestStart: 1,
+  rpcRequestEnd: 26,
+  totalTime: 1
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+prepareUserOperation Benchmark Results: {
+  start: 1730973236162,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236137,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 26,
+  totalTime: 0
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+prepareUserOperation Benchmark Results: {
+  start: 1730973236163,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236140,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 24,
+  totalTime: 0
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+prepareUserOperation Benchmark Results: {
+  start: 1730973236164,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236161,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 1,
+  rpcRequestStart: 1,
+  rpcRequestEnd: 7,
+  totalTime: 1
+}
+prepareUserOperation Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+prepareUserOperation Benchmark Results: {
+  start: 1730973236119,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 10,
+  fees: 19,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 22,
+  getPaymasterData: 8,
+  totalTime: 50
+}
+RPC call eth_sendUserOperation
+estimateUserOpGas Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236162,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 10,
+  totalTime: 0
+}
+prepareUserOperation Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+prepareUserOperation Benchmark Results: {
+  start: 1730973236113,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 11,
+  fees: 19,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 27,
+  getPaymasterData: 10,
+  totalTime: 59
+}
+RPC call eth_sendUserOperation
+estimateUserOpGas Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236160,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 1,
+  rpcRequestStart: 1,
+  rpcRequestEnd: 13,
+  totalTime: 1
+}
+prepareUserOperation Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+prepareUserOperation Benchmark Results: {
+  start: 1730973236117,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 10,
+  fees: 15,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 22,
+  getPaymasterData: 14,
+  totalTime: 57
+}
+RPC call eth_sendUserOperation
+estimateUserOpGas Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236164,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 11,
+  totalTime: 0
+}
+prepareUserOperation Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+prepareUserOperation Benchmark Results: {
+  start: 1730973236119,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 10,
+  fees: 18,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 24,
+  getPaymasterData: 11,
+  totalTime: 56
+}
+RPC call eth_sendUserOperation
+estimateUserOpGas Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973236163,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 14,
+  totalTime: 0
+}
+prepareUserOperation Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+prepareUserOperation Benchmark Results: {
+  start: 1730973236116,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 11,
+  fees: 16,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 26,
+  getPaymasterData: 14,
+  totalTime: 61
+}
+RPC call eth_sendUserOperation
+sendUserOperation Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+sendUserOp Benchmarking Results: {
+  start: 1730973236119,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 50,
+  signUserOperationStart: 50,
+  signUserOperationEnd: 2,
+  formatRequestStart: 52,
+  formatRequestEnd: 52,
+  rpcRequestStart: 52,
+  rpcRequestEnd: 8,
+  totalTime: 60
+}
+Sent userOp for account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA at 2024-11-07T09:53:56.179Z
+Time taken to prepare and send userOp for account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA: 61 ms
+sendUserOperation Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+sendUserOp Benchmarking Results: {
+  start: 1730973236112,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 60,
+  signUserOperationStart: 60,
+  signUserOperationEnd: 1,
+  formatRequestStart: 61,
+  formatRequestEnd: 61,
+  rpcRequestStart: 61,
+  rpcRequestEnd: 8,
+  totalTime: 69
+}
+Sent userOp for account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0 at 2024-11-07T09:53:56.181Z
+Time taken to prepare and send userOp for account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0: 70 ms
+sendUserOperation Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+sendUserOp Benchmarking Results: {
+  start: 1730973236117,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 57,
+  signUserOperationStart: 57,
+  signUserOperationEnd: 1,
+  formatRequestStart: 58,
+  formatRequestEnd: 58,
+  rpcRequestStart: 58,
+  rpcRequestEnd: 7,
+  totalTime: 65
+}
+Sent userOp for account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A at 2024-11-07T09:53:56.182Z
+Time taken to prepare and send userOp for account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A: 66 ms
+sendUserOperation Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+sendUserOp Benchmarking Results: {
+  start: 1730973236119,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 56,
+  signUserOperationStart: 56,
+  signUserOperationEnd: 1,
+  formatRequestStart: 57,
+  formatRequestEnd: 57,
+  rpcRequestStart: 57,
+  rpcRequestEnd: 8,
+  totalTime: 65
+}
+Sent userOp for account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e at 2024-11-07T09:53:56.184Z
+Time taken to prepare and send userOp for account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e: 65 ms
+sendUserOperation Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+sendUserOp Benchmarking Results: {
+  start: 1730973236116,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 61,
+  signUserOperationStart: 61,
+  signUserOperationEnd: 1,
+  formatRequestStart: 62,
+  formatRequestEnd: 62,
+  rpcRequestStart: 62,
+  rpcRequestEnd: 7,
+  totalTime: 69
+}
+Sent userOp for account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986 at 2024-11-07T09:53:56.185Z
+Time taken to prepare and send userOp for account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986: 71 ms
+Waiting for receipt of userOp from account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0 at 2024-11-07T09:53:56.185Z
+Waiting for receipt of userOp from account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986 at 2024-11-07T09:53:56.185Z
+Waiting for receipt of userOp from account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A at 2024-11-07T09:53:56.185Z
+Waiting for receipt of userOp from account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA at 2024-11-07T09:53:56.185Z
+Waiting for receipt of userOp from account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e at 2024-11-07T09:53:56.185Z
+Received receipt for userOp from account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0 at 2024-11-07T09:54:00.213Z
+Time taken to receive receipt for account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0: 4028 ms
+Received receipt for userOp from account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA at 2024-11-07T09:54:00.216Z
+Time taken to receive receipt for account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA: 4031 ms
+Received receipt for userOp from account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986 at 2024-11-07T09:54:00.217Z
+Time taken to receive receipt for account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986: 4032 ms
+Received receipt for userOp from account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e at 2024-11-07T09:54:00.222Z
+Time taken to receive receipt for account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e: 4036 ms
+Received receipt for userOp from account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A at 2024-11-07T09:54:00.225Z
+Time taken to receive receipt for account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A: 4040 ms
+
+--- User Operation Timings ---
+Account: 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+  Prepared at: 2024-11-07T09:53:56.118Z
+  Sent at:     2024-11-07T09:53:56.179Z
+  Receipt received at: 2024-11-07T09:54:00.216Z
+  Total time from preparation to receipt: 4098 ms
+-------------------------------------
+Account: 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+  Prepared at: 2024-11-07T09:53:56.108Z
+  Sent at:     2024-11-07T09:53:56.181Z
+  Receipt received at: 2024-11-07T09:54:00.213Z
+  Total time from preparation to receipt: 4105 ms
+-------------------------------------
+Account: 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+  Prepared at: 2024-11-07T09:53:56.116Z
+  Sent at:     2024-11-07T09:53:56.182Z
+  Receipt received at: 2024-11-07T09:54:00.225Z
+  Total time from preparation to receipt: 4109 ms
+-------------------------------------
+Account: 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+  Prepared at: 2024-11-07T09:53:56.119Z
+  Sent at:     2024-11-07T09:53:56.184Z
+  Receipt received at: 2024-11-07T09:54:00.222Z
+  Total time from preparation to receipt: 4103 ms
+-------------------------------------
+Account: 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+  Prepared at: 2024-11-07T09:53:56.114Z
+  Sent at:     2024-11-07T09:53:56.185Z
+  Receipt received at: 2024-11-07T09:54:00.217Z
+  Total time from preparation to receipt: 4103 ms
+-------------------------------------
+Preparing userOp for account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0 at 2024-11-07T09:54:12.367Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Preparing userOp for account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986 at 2024-11-07T09:54:12.369Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Preparing userOp for account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A at 2024-11-07T09:54:12.370Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Preparing userOp for account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA at 2024-11-07T09:54:12.371Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Preparing userOp for account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e at 2024-11-07T09:54:12.373Z
+sendUserOperation() .js
+Calling prepareUserOperation
+prepareUserOperation() .js
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+prepareUserOperation Benchmark Results: {
+  start: 1730973252387,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+prepareUserOperation Benchmark Results: {
+  start: 1730973252387,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+prepareUserOperation Benchmark Results: {
+  start: 1730973252399,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+prepareUserOperation Benchmark Results: {
+  start: 1730973252400,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252386,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 1,
+  rpcRequestStart: 1,
+  rpcRequestEnd: 14,
+  totalTime: 1
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+prepareUserOperation Benchmark Results: {
+  start: 1730973252401,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 1
+}
+Calling estimateUserOperationGas
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+prepareUserOperation Benchmark Results: {
+  start: 1730973252402,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252399,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 7,
+  totalTime: 0
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+prepareUserOperation Benchmark Results: {
+  start: 1730973252406,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252387,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 12,
+  rpcRequestStart: 12,
+  rpcRequestEnd: 10,
+  totalTime: 12
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+prepareUserOperation Benchmark Results: {
+  start: 1730973252411,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252402,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 1,
+  rpcRequestStart: 1,
+  rpcRequestEnd: 9,
+  totalTime: 1
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+prepareUserOperation Benchmark Results: {
+  start: 1730973252412,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252401,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 1,
+  rpcRequestStart: 1,
+  rpcRequestEnd: 11,
+  totalTime: 1
+}
+prepareUserOperation Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+prepareUserOperation Benchmark Results: {
+  start: 1730973252368,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 10,
+  fees: 17,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 15,
+  getPaymasterData: 12,
+  totalTime: 45
+}
+RPC call eth_sendUserOperation
+estimateUserOpGas Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252400,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 14,
+  totalTime: 0
+}
+estimateUserOperationGas() .js
+Preparing Partial UserOp for gas estimation
+prepareUserOperation() .js
+prepareUserOperation Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+prepareUserOperation Benchmark Results: {
+  start: 1730973252414,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 0,
+  fees: 0,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 0,
+  getPaymasterData: 0,
+  totalTime: 0
+}
+estimateUserOpGas Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252406,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 10,
+  totalTime: 0
+}
+prepareUserOperation Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+prepareUserOperation Benchmark Results: {
+  start: 1730973252371,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 11,
+  fees: 28,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 7,
+  getPaymasterData: 10,
+  totalTime: 45
+}
+RPC call eth_sendUserOperation
+estimateUserOpGas Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252411,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 7,
+  totalTime: 0
+}
+prepareUserOperation Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+prepareUserOperation Benchmark Results: {
+  start: 1730973252370,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 12,
+  fees: 17,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 24,
+  getPaymasterData: 7,
+  totalTime: 48
+}
+RPC call eth_sendUserOperation
+estimateUserOpGas Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252412,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 9,
+  totalTime: 0
+}
+prepareUserOperation Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+prepareUserOperation Benchmark Results: {
+  start: 1730973252373,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 9,
+  fees: 29,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 10,
+  getPaymasterData: 9,
+  totalTime: 48
+}
+RPC call eth_sendUserOperation
+sendUserOperation Sender:  0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+sendUserOp Benchmarking Results: {
+  start: 1730973252368,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 45,
+  signUserOperationStart: 45,
+  signUserOperationEnd: 1,
+  formatRequestStart: 46,
+  formatRequestEnd: 46,
+  rpcRequestStart: 46,
+  rpcRequestEnd: 9,
+  totalTime: 55
+}
+Sent userOp for account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0 at 2024-11-07T09:54:12.423Z
+Time taken to prepare and send userOp for account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0: 56 ms
+estimateUserOpGas Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+estimateUserOperationGas Benchmark Results: {
+  start: 1730973252414,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOpStart: 0,
+  prepareUserOpEnd: 0,
+  rpcRequestStart: 0,
+  rpcRequestEnd: 11,
+  totalTime: 0
+}
+prepareUserOperation Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+prepareUserOperation Benchmark Results: {
+  start: 1730973252372,
+  parseAccount: 0,
+  paymasterSetup: 0,
+  encodeCalls: 0,
+  factory: 10,
+  fees: 28,
+  nonce: 0,
+  signature: 0,
+  gasEstimation: 14,
+  getPaymasterData: 11,
+  totalTime: 53
+}
+RPC call eth_sendUserOperation
+sendUserOperation Sender:  0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+sendUserOp Benchmarking Results: {
+  start: 1730973252371,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 45,
+  signUserOperationStart: 45,
+  signUserOperationEnd: 1,
+  formatRequestStart: 46,
+  formatRequestEnd: 46,
+  rpcRequestStart: 46,
+  rpcRequestEnd: 10,
+  totalTime: 56
+}
+Sent userOp for account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A at 2024-11-07T09:54:12.427Z
+Time taken to prepare and send userOp for account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A: 57 ms
+sendUserOperation Sender:  0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+sendUserOp Benchmarking Results: {
+  start: 1730973252370,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 48,
+  signUserOperationStart: 48,
+  signUserOperationEnd: 1,
+  formatRequestStart: 49,
+  formatRequestEnd: 49,
+  rpcRequestStart: 49,
+  rpcRequestEnd: 9,
+  totalTime: 58
+}
+Sent userOp for account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986 at 2024-11-07T09:54:12.428Z
+Time taken to prepare and send userOp for account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986: 59 ms
+sendUserOperation Sender:  0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+sendUserOp Benchmarking Results: {
+  start: 1730973252373,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 48,
+  signUserOperationStart: 48,
+  signUserOperationEnd: 1,
+  formatRequestStart: 49,
+  formatRequestEnd: 49,
+  rpcRequestStart: 49,
+  rpcRequestEnd: 7,
+  totalTime: 56
+}
+Sent userOp for account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e at 2024-11-07T09:54:12.429Z
+Time taken to prepare and send userOp for account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e: 56 ms
+sendUserOperation Sender:  0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+sendUserOp Benchmarking Results: {
+  start: 1730973252372,
+  parseAccountStart: 0,
+  parseAccountEnd: 0,
+  prepareUserOperationStart: 0,
+  prepareUserOperationEnd: 53,
+  signUserOperationStart: 53,
+  signUserOperationEnd: 0,
+  formatRequestStart: 53,
+  formatRequestEnd: 53,
+  rpcRequestStart: 53,
+  rpcRequestEnd: 7,
+  totalTime: 60
+}
+Sent userOp for account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA at 2024-11-07T09:54:12.432Z
+Time taken to prepare and send userOp for account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA: 61 ms
+Waiting for receipt of userOp from account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0 at 2024-11-07T09:54:12.433Z
+Waiting for receipt of userOp from account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986 at 2024-11-07T09:54:12.436Z
+Waiting for receipt of userOp from account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A at 2024-11-07T09:54:12.436Z
+Waiting for receipt of userOp from account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA at 2024-11-07T09:54:12.436Z
+Waiting for receipt of userOp from account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e at 2024-11-07T09:54:12.437Z
+Received receipt for userOp from account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA at 2024-11-07T09:54:16.469Z
+Time taken to receive receipt for account 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA: 4033 ms
+Received receipt for userOp from account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e at 2024-11-07T09:54:16.470Z
+Time taken to receive receipt for account 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e: 4033 ms
+Received receipt for userOp from account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A at 2024-11-07T09:54:16.471Z
+Time taken to receive receipt for account 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A: 4035 ms
+Received receipt for userOp from account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986 at 2024-11-07T09:54:16.474Z
+Time taken to receive receipt for account 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986: 4038 ms
+Received receipt for userOp from account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0 at 2024-11-07T09:54:16.475Z
+Time taken to receive receipt for account 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0: 4039 ms
+
+--- User Operation Timings ---
+Account: 0x2cBbD6437381b0D91Bf7c1C1d84002c4b8ecDda0
+  Prepared at: 2024-11-07T09:54:12.367Z
+  Sent at:     2024-11-07T09:54:12.423Z
+  Receipt received at: 2024-11-07T09:54:16.475Z
+  Total time from preparation to receipt: 4108 ms
+-------------------------------------
+Account: 0x96Dc5600e67aC44FAE8bd4373166Ff94b573812A
+  Prepared at: 2024-11-07T09:54:12.370Z
+  Sent at:     2024-11-07T09:54:12.427Z
+  Receipt received at: 2024-11-07T09:54:16.471Z
+  Total time from preparation to receipt: 4101 ms
+-------------------------------------
+Account: 0xb1aE1ec26131442c3871F6f8aC37d375ECfDc986
+  Prepared at: 2024-11-07T09:54:12.369Z
+  Sent at:     2024-11-07T09:54:12.428Z
+  Receipt received at: 2024-11-07T09:54:16.474Z
+  Total time from preparation to receipt: 4105 ms
+-------------------------------------
+Account: 0x80C07d03332a99D9414F45Ee5dce598538c4ee0e
+  Prepared at: 2024-11-07T09:54:12.373Z
+  Sent at:     2024-11-07T09:54:12.429Z
+  Receipt received at: 2024-11-07T09:54:16.470Z
+  Total time from preparation to receipt: 4097 ms
+-------------------------------------
+Account: 0xa48F87E36Bb3fB4531A8935a834655Cc797f58bA
+  Prepared at: 2024-11-07T09:54:12.371Z
+  Sent at:     2024-11-07T09:54:12.432Z
+  Receipt received at: 2024-11-07T09:54:16.469Z
+  Total time from preparation to receipt: 4098 ms
+-------------------------------------
+

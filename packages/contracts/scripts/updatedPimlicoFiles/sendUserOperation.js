@@ -58,8 +58,7 @@ export async function sendUserOperation(client, parameters) {
     const account = account_ ? parseAccount(account_) : undefined;
     timings.parseAccountEnd = Date.now() - timings.parseAccountStart - startTime;
 
-    // console.log("Calling prepareUserOperation");
-
+    console.log("Calling prepareUserOperation");
     // Step 2: Prepare user operation request
     timings.prepareUserOperationStart = Date.now() - startTime;
     const request = account
@@ -83,18 +82,22 @@ export async function sendUserOperation(client, parameters) {
 
     // Step 5: Send the user operation via RPC
     try {
+        console.log("RPC call eth_sendUserOperation");
         timings.rpcRequestStart = Date.now() - startTime;
-        return await client.request({
+        const res = await client.request({
             method: 'eth_sendUserOperation',
             params: [
                 rpcParameters,
                 (entryPointAddress ?? account?.entryPoint.address),
             ],
         }, { retryCount: 0 });
+
         timings.rpcRequestEnd = Date.now() - timings.rpcRequestStart - startTime;
         timings.totalTime = Date.now() - startTime;
 
+        console.log("sendUserOperation Sender: ", request.sender)
         console.log("sendUserOp Benchmarking Results:", timings);
+        return res;
     }
     catch (error) {
         const calls = parameters.calls;

@@ -327,7 +327,7 @@ export async function prepareUserOperation(client, parameters_) {
                 typeof request.paymasterPostOpGasLimit === 'undefined') ||
             (request.paymaster &&
                 typeof request.paymasterVerificationGasLimit === 'undefined')) {
-
+            console.log("Calling estimateUserOperationGas");
             const gas = await getAction(bundlerClient, estimateUserOperationGas, 'estimateUserOperationGas')({
                 account,
                 // Some Bundlers fail if nullish gas values are provided for gas estimation :') –
@@ -392,6 +392,7 @@ export async function prepareUserOperation(client, parameters_) {
     ////////////////////////////////////////////////////////////////////////////////
 
     timings.totalTime = Date.now() - startTime;
+    console.log("prepareUserOperation Sender: ", request.sender)
     console.log("prepareUserOperation Benchmark Results:", timings);
 
     return request;
