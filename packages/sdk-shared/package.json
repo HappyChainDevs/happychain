@@ -15,7 +15,7 @@
     },
     "peerDependencies": {
         "@happychain/sdk-shared": "workspace:^",
-        "viem": "^2.21.18"
+        "viem": "^2.21.53"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",

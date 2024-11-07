@@ -3,7 +3,6 @@ import { Msgs } from "@happychain/sdk-shared"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
-import { useDisconnect } from "wagmi"
 import { getAuthState } from "#src/state/authState.ts"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
@@ -49,7 +48,6 @@ function signalClosed() {
 function Embed() {
     const location = useLocation()
     const user = useAtomValue(userAtom)
-    const { disconnectAsync } = useDisconnect()
     const activeProvider = useActiveConnectionProvider()
     const navigate = useNavigate()
 
@@ -82,7 +80,6 @@ function Embed() {
 
     async function logout() {
         void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
-        await disconnectAsync()
         await activeProvider?.disconnect()
     }
 

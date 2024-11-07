@@ -7,9 +7,12 @@ import type {
     MsgsFromIframe,
 } from "@happychain/sdk-shared"
 import { AuthState, EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happychain/sdk-shared"
+import { connect, disconnect } from "@wagmi/core"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
 import { setAuthState } from "#src/state/authState.ts"
+import { config } from "#src/wagmi/config.ts"
+import { happyConnector } from "#src/wagmi/connector.ts"
 import { iframeID } from "../requests/utils"
 import { appMessageBus } from "../services/eventBus"
 import { StorageKey, storage } from "../services/storage"
@@ -50,19 +53,22 @@ export class InjectedConnector implements ConnectionProvider {
         this.setupPermissionMirror()
     }
 
-    public onConnect(user: HappyUser, provider: EIP1193Provider) {
+    public async onConnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
+        await connect(config, { connector: happyConnector })
         setAuthState(AuthState.Connected)
     }
 
-    public onReconnect(user: HappyUser, provider: EIP1193Provider) {
+    public async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
-        grantPermissions(getAppURL(), "eth_accounts") // injected wallets always ask permissions?
+        grantPermissions(getAppURL(), "eth_accounts")
+        await connect(config, { connector: happyConnector })
         setAuthState(AuthState.Connected)
     }
 
-    public onDisconnect(_: undefined, _provider: EIP1193Provider) {
+    public async onDisconnect(_: undefined, _provider: EIP1193Provider) {
+        await disconnect(config)
         setUserWithProvider(undefined, undefined)
         setAuthState(AuthState.Disconnected)
     }
