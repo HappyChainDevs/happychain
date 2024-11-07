@@ -289,14 +289,6 @@ async function processSingleUserOp(
 }
 
 async function sendUserOps(accounts: Accounts[]) {
-    const userOps = await Promise.all(
-        accounts.map((account) =>
-            account.kernelClient.prepareUserOperation({
-                account: account.kernelAccount,
-                calls: [createMintCall()],
-            }),
-        ),
-    )
     const hashes = await Promise.all(
         accounts.map((account) =>
             account.kernelClient.sendUserOperation({
@@ -521,7 +513,10 @@ async function main() {
 
     let multipleUserOpsNoDeploymentSameSenderResults: GasResult | undefined
     try {
-        multipleUserOpsNoDeploymentSameSenderResults = await batchedUserOpsSameSenderGasResult(kernelAccount, kernelClient)
+        multipleUserOpsNoDeploymentSameSenderResults = await batchedUserOpsSameSenderGasResult(
+            kernelAccount,
+            kernelClient,
+        )
     } catch (error) {
         console.error("Batched CallData: ", error)
     }
