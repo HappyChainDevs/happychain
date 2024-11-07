@@ -3,6 +3,7 @@ import { Plus, X } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
 import { useCallback, useState } from "react"
+import { isAddress } from "viem"
 import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
 import { recipeContent, recipePositioner } from "#src/components/primitives/popover/variants"
@@ -35,9 +36,19 @@ const ImportTokensMenu = () => {
         decimals: "",
     })
 
+    const [isValidAddress, setIsValidAddress] = useState(true)
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
-        setFormData((prev) => ({ ...prev, [name]: value }))
+
+        if (name === "address") {
+            const isValid = isAddress(value)
+            setIsValidAddress(isValid)
+            setFormData((prev) => ({ ...prev, [name]: value }))
+        } else if (isValidAddress) {
+            // Only allow updates to other fields if address is valid
+            setFormData((prev) => ({ ...prev, [name]: value }))
+        }
     }
 
     const handleSubmit = useCallback(
@@ -112,12 +123,18 @@ const ImportTokensMenu = () => {
                                         <input
                                             type="text"
                                             name={field}
-                                            className="input input-bordered input-sm w-full"
+                                            className={`input input-bordered input-sm w-full ${
+                                                field === "address" && !isValidAddress ? "input-error" : ""
+                                            }`}
                                             placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                                             value={formData[field as keyof typeof formData]}
                                             onChange={handleInputChange}
                                             required
+                                            disabled={field !== "address" && !isValidAddress}
                                         />
+                                        {field === "address" && !isValidAddress && (
+                                            <span className="text-xs text-error">Invalid EVM address</span>
+                                        )}
                                     </Menu.Item>
                                 ))}
                                 <Menu.Separator />
