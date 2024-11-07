@@ -3,7 +3,6 @@ import { type ConnectionProvider, Msgs, type MsgsFromApp, WalletDisplayAction } 
 import { useMutation } from "@tanstack/react-query"
 import { cx } from "class-variance-authority"
 import { useEffect, useState } from "react"
-import { useConnect } from "wagmi"
 import { iframeID } from "#src/requests/utils.ts"
 import happychainLogo from "../assets/happychain.png"
 import { useConnectionProviders } from "../connections/initialize"
@@ -12,7 +11,6 @@ import { Button } from "./primitives/button/Button"
 
 export function ConnectModal() {
     const providers = useConnectionProviders()
-    const { connectAsync, connectors } = useConnect()
 
     /**
      * This is the connection request from the app. Either eth_requestAccounts
@@ -51,8 +49,6 @@ export function ConnectModal() {
             }
 
             const { response, request } = await provider.connect(connectRequest)
-
-            await connectAsync({ connector: connectors[0] })
 
             return clientConnectionRequest ? { response, request } : undefined
         },

@@ -1,9 +1,9 @@
 import { onlyUnique } from "@happychain/common"
 import { chains as _chains, convertToViemChain } from "@happychain/sdk-shared"
+import { createConfig } from "@wagmi/core"
 import { type Chain, createClient, custom } from "viem"
-import { createConfig } from "wagmi"
 import { getCurrentChain } from "../state/chains"
-import { happyConnector } from "./connnector"
+import { happyConnector } from "./connector"
 import { iframeProvider } from "./provider"
 
 // cf. https://wagmi.sh/react/typescript#declaration-merging

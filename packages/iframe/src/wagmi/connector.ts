@@ -1,4 +1,4 @@
-import { injected } from "wagmi/connectors"
+import { injected } from "@wagmi/connectors"
 import { iframeProvider } from "./provider"
 
 /**

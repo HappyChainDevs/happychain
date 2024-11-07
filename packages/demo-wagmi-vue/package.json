@@ -5,9 +5,9 @@
     "type": "module",
     "dependencies": {
         "@happychain/js": "workspace:^",
-        "@tanstack/vue-query": "^5.52.2",
-        "@wagmi/vue": "^0.0.39",
-        "viem": "^2.21.18",
+        "@tanstack/vue-query": "^5.62.0",
+        "@wagmi/vue": "^0.0.55",
+        "viem": "^2.21.53",
         "vue": "^3.4.37"
     },
     "devDependencies": {
