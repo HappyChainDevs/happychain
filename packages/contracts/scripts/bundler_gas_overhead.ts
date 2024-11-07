@@ -356,9 +356,7 @@ async function sendDirectTransactions(count = 1n) {
     return totalGas
 }
 
-async function singleUserOperationGasResult() {
-    const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
-
+async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
     console.log("\nGas Usage for a Single UserOp (with Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
@@ -384,21 +382,10 @@ async function singleUserOperationGasResult() {
     return { singleOpWithDeploymentResults, singleOpNoDeploymentResults }
 }
 
-async function multipleCallsGasResult() {
-    const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
+async function multipleCallsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
     const calls = Array(5)
         .fill(null)
         .map(() => createMintCall())
-
-    console.log("\nGas Usage for a Single UserOp with 5 Calls (with Deployment):")
-    console.log("---------------------------------------------------------------------\n")
-
-    const gasDetails1 = await processSingleUserOp(kernelAccount, kernelClient, calls)
-    const multipleCallsWithDeploymentResults = {
-        scenario: "Single UserOp with 5 calls (with Deployment)",
-        ...gasDetails1,
-        accountDeploymentOverhead: 0n,
-    }
 
     console.log("\nGas Usage for a Single UserOp with 5 Calls (no Deployment):")
     console.log("---------------------------------------------------------------------\n")
@@ -410,9 +397,7 @@ async function multipleCallsGasResult() {
         accountDeploymentOverhead: 0n,
     }
 
-    multipleCallsWithDeploymentResults.accountDeploymentOverhead =
-        multipleCallsWithDeploymentResults.totalOverhead - multipleCallsNoDeploymentResults.totalOverhead
-    return { multipleCallsWithDeploymentResults, multipleCallsNoDeploymentResults }
+    return multipleCallsNoDeploymentResults
 }
 
 async function batchedUserOperationsGasResult() {
@@ -433,7 +418,7 @@ async function batchedUserOperationsGasResult() {
     const multipleUserOpsWithDeploymentResults = {
         scenario: `Avg UserOp in a Bundle of ${numOps1} UserOps (with Deployment)`,
         ...gasDetails1,
-        accountDeploymentOverhead: 0n,
+        accountDeploymentOverhead: gasDetails1.totalOverhead - gasDetails2.totalOverhead,
     }
 
     const multipleUserOpsNoDeploymentResults = {
@@ -442,8 +427,6 @@ async function batchedUserOperationsGasResult() {
         accountDeploymentOverhead: 0n,
     }
 
-    multipleUserOpsWithDeploymentResults.accountDeploymentOverhead =
-        multipleUserOpsWithDeploymentResults.totalOverhead - multipleUserOpsNoDeploymentResults.totalOverhead
     return { multipleUserOpsWithDeploymentResults, multipleUserOpsNoDeploymentResults }
 }
 
@@ -458,18 +441,22 @@ async function main() {
         throw new Error("Mock Token totalSupply initialization failed")
     }
 
+    const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
+
     let singleOpWithDeploymentResults: GasResult | undefined
     let singleOpNoDeploymentResults: GasResult | undefined
     try {
-        ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult())
+        ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult(
+            kernelAccount,
+            kernelClient,
+        ))
     } catch (error) {
         console.error("Single UserOp: ", error)
     }
 
-    let multipleCallsWithDeploymentResults: GasResult | undefined
     let multipleCallsNoDeploymentResults: GasResult | undefined
     try {
-        ;({ multipleCallsWithDeploymentResults, multipleCallsNoDeploymentResults } = await multipleCallsGasResult())
+        multipleCallsNoDeploymentResults = await multipleCallsGasResult(kernelAccount, kernelClient)
     } catch (error) {
         console.error("Batched CallData: ", error)
     }
@@ -485,7 +472,6 @@ async function main() {
 
     const gasUsageResults = [
         singleOpWithDeploymentResults,
-        multipleCallsWithDeploymentResults,
         multipleUserOpsWithDeploymentResults,
         singleOpNoDeploymentResults,
         multipleCallsNoDeploymentResults,
