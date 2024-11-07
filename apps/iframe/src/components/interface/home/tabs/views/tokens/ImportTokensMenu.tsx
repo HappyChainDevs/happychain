@@ -2,7 +2,7 @@ import { Menu } from "@ark-ui/react"
 import { Plus, X } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
 import { recipeContent, recipePositioner } from "#src/components/primitives/popover/variants"
@@ -20,27 +20,36 @@ const TriggerImportTokensMenu = () => {
             }}
         >
             <Plus size="1em" />
-            <span>Import Token</span>
+            <span>Import Tokens</span>
         </button>
     )
 }
 
 const ImportTokensMenu = () => {
     const [isImportTokensMenuVisible, setIsImportTokensMenuVisible] = useAtom(importTokensMenuVisibilityAtom)
-
     const { watchAsset } = useWatchAsset()
 
-    const watch = useCallback(() => {
-        watchAsset({
-            type: "ERC20",
-            options: {
-                address: "0xe7b1987CE19C0824D03b8bcc5919DB9604096376",
-                symbol: "MTB",
-                decimals: 18,
-            },
-        })
-        setIsImportTokensMenuVisible(false)
-    }, [watchAsset, setIsImportTokensMenuVisible])
+    const [formData, setFormData] = useState({
+        address: "",
+        symbol: "",
+        decimals: "",
+    })
+
+    const handleSubmit = useCallback(
+        (e: React.FormEvent) => {
+            e.preventDefault()
+            void watchAsset({
+                type: "ERC20",
+                options: {
+                    address: formData.address,
+                    symbol: formData.symbol,
+                    decimals: Number(formData.decimals),
+                },
+            })
+            setIsImportTokensMenuVisible(false)
+        },
+        [watchAsset, setIsImportTokensMenuVisible, formData],
+    )
 
     return (
         <Menu.Root
@@ -91,38 +100,47 @@ const ImportTokensMenu = () => {
                                     <X size="1.2em" />
                                 </button>
                             </Menu.ItemGroupLabel>
-                            <div className="flex flex-col gap-2">
+                            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
                                 <Menu.Item value="address" className="flex flex-col gap-1">
                                     <p>Address</p>
                                     <input
                                         type="text"
                                         className="input input-bordered input-sm w-full"
-                                        placeholder="0xe7b1987CE19C0824D03b8bcc5919DB9604096376"
+                                        placeholder="Contract Address"
+                                        value={formData.address}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+                                        required
                                     />
                                 </Menu.Item>
                                 <Menu.Separator />
-                                <Menu.Item value="address" className="flex flex-col gap-1">
+                                <Menu.Item value="symbol" className="flex flex-col gap-1">
                                     <p>Symbol</p>
                                     <input
                                         type="text"
                                         className="input input-bordered input-sm w-full"
-                                        placeholder="MTB"
+                                        placeholder="Symbol"
+                                        value={formData.symbol}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, symbol: e.target.value }))}
+                                        required
                                     />
                                 </Menu.Item>
                                 <Menu.Separator />
-                                <Menu.Item value="address" className="flex flex-col gap-1">
+                                <Menu.Item value="decimals" className="flex flex-col gap-1">
                                     <p>Decimals</p>
                                     <input
                                         type="text"
                                         className="input input-bordered input-sm w-full"
-                                        placeholder="18"
+                                        placeholder="Decimals"
+                                        value={formData.decimals}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, decimals: e.target.value }))}
+                                        required
                                     />
                                 </Menu.Item>
                                 <Menu.Separator />
-                                <Button className="justify-center" onClick={watch}>
+                                <Button type="submit" className="justify-center">
                                     Add
                                 </Button>
-                            </div>
+                            </form>
                         </Menu.ItemGroup>
                     </div>
                 </Menu.Content>
