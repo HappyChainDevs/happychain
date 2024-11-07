@@ -385,9 +385,9 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "MockTokenA": "0xc80629fE33747288AaFb97684F86f7eD2D1aBF69",
-  "MockTokenB": "0xe7b1987CE19C0824D03b8bcc5919DB9604096376",
-  "MockTokenC": "0x901F67FCF4870453CE82eb2E986E4e68AFe7313F"
+  "MockTokenA": "0x157acabFB6511181eF194a3F1C63f2aD243A645A",
+  "MockTokenB": "0x45233f5511fD652e2A83ec100894B40235Ce91e7",
+  "MockTokenC": "0x18666d7d8e08139dB81BeaF1b3d47A862a211542"
 }) as const
 
 export type ContractName = keyof typeof contractToAbi

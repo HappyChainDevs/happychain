@@ -19,6 +19,7 @@ import { createPimlicoClient } from "permissionless/clients/pimlico"
 
 import { abis as mockAbis, deployment as mockDeployment } from "../deployments/anvil/mockTokens/abis"
 import { abis, deployment } from "../deployments/anvil/testing/abis"
+import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce.ts"
 
 const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
 const bundlerRpc = process.env.BUNDLER_LOCAL
@@ -288,6 +289,14 @@ async function processSingleUserOp(
 }
 
 async function sendUserOps(accounts: Accounts[]) {
+    const userOps = await Promise.all(
+        accounts.map((account) =>
+            account.kernelClient.prepareUserOperation({
+                account: account.kernelAccount,
+                calls: [createMintCall()],
+            }),
+        ),
+    )
     const hashes = await Promise.all(
         accounts.map((account) =>
             account.kernelClient.sendUserOperation({
@@ -315,6 +324,13 @@ async function sendUserOps(accounts: Accounts[]) {
 
     const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
 
+    const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
+    return { numOps, gasDetails }
+}
+
+async function calculateGasDetails(
+    filteredReceipts: UserOperationReceipt[],
+): Promise<{ numOps: bigint; gasDetails: GasDetails }> {
     const numOps = BigInt(filteredReceipts.length)
     const avgDirectTxGas = (await sendDirectTransactions(numOps)) / numOps
     const totalBundlerTxGas = filteredReceipts[0].receipt.gasUsed
@@ -400,6 +416,48 @@ async function multipleCallsGasResult(kernelAccount: SmartAccount, kernelClient:
     return multipleCallsNoDeploymentResults
 }
 
+async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+    const kernelAddress = await kernelAccount.getAddress()
+    const nonces = await Promise.all(
+        Array.from({ length: 5 }, (_, i) =>
+            getCustomNonce(
+                walletClient,
+                kernelAddress,
+                deployment.ECDSAValidator,
+                BigInt(i),
+                VALIDATOR_MODE.DEFAULT,
+                VALIDATOR_TYPE.ROOT,
+            ),
+        ),
+    )
+
+    const hashes = await Promise.all(
+        nonces.map((nonce) =>
+            kernelClient.sendUserOperation({
+                account: kernelAccount,
+                calls: [createMintCall()],
+                nonce: nonce,
+            }),
+        ),
+    )
+
+    const receipts = await Promise.all(hashes.map((hash) => kernelClient.waitForUserOperationReceipt({ hash })))
+
+    const { numOps, gasDetails } = await calculateGasDetails(receipts)
+    console.log("\nGas Usage per UserOp (no Deployment) from the same Sender:")
+    console.log(`(Processed ${numOps} UserOps in this bundle)`)
+    console.log("---------------------------------------------------------------------\n")
+    printUserOperationGasDetails(gasDetails)
+
+    const multipleUserOpsNoDeploymentSameSenderResults = {
+        scenario: `Avg UserOp in a Bundle of ${numOps} UserOps (same sender)`,
+        ...gasDetails,
+        accountDeploymentOverhead: 0n,
+    }
+
+    return multipleUserOpsNoDeploymentSameSenderResults
+}
+
 async function batchedUserOperationsGasResult() {
     const accounts = await generatePrefundedKernelAccounts(5)
     const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(accounts)
@@ -461,6 +519,13 @@ async function main() {
         console.error("Batched CallData: ", error)
     }
 
+    let multipleUserOpsNoDeploymentSameSenderResults: GasResult | undefined
+    try {
+        multipleUserOpsNoDeploymentSameSenderResults = await batchedUserOpsSameSenderGasResult(kernelAccount, kernelClient)
+    } catch (error) {
+        console.error("Batched CallData: ", error)
+    }
+
     let multipleUserOpsWithDeploymentResults: GasResult | undefined
     let multipleUserOpsNoDeploymentResults: GasResult | undefined
     try {
@@ -476,6 +541,7 @@ async function main() {
         singleOpNoDeploymentResults,
         multipleCallsNoDeploymentResults,
         multipleUserOpsNoDeploymentResults,
+        multipleUserOpsNoDeploymentSameSenderResults,
     ].filter((result): result is GasResult => result !== undefined)
 
     console.log("\nGas Usage Results Comparison Table :-")
