@@ -37,7 +37,7 @@ const ImportTokensMenu = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
+        setFormData((prev) => ({ ...prev, [name]: value }))
     }
 
     const handleSubmit = useCallback(
@@ -106,7 +106,7 @@ const ImportTokensMenu = () => {
                                 </button>
                             </Menu.ItemGroupLabel>
                             <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-                                {['address', 'symbol', 'decimals'].map((field) => (
+                                {["address", "symbol", "decimals"].map((field) => (
                                     <Menu.Item key={field} value={field} className="flex flex-col gap-1">
                                         <p>{field.charAt(0).toUpperCase() + field.slice(1)}</p>
                                         <input
