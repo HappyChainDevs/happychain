@@ -1,0 +1,27 @@
+export const BUNDLER_RPC_URL = import.meta.env.VITE_BUNDLER_RPC_URL
+
+enum AccountAbstractionContracts {
+    ECDSAValidator = "ECDSAValidator",
+    EntryPointSimulations = "EntryPointSimulations",
+    EntryPointV7 = "EntryPointV7",
+    FactoryStaker = "FactoryStaker",
+    HappyPaymaster = "HappyPaymaster",
+    Kernel = "Kernel",
+    KernelFactory = "KernelFactory",
+    SessionKeyValidator = "SessionKeyValidator",
+}
+
+// Perhaps this should be in its own package (@happychain/account-abstraction-contracts ? @happychain/contracts-registry ?) ?
+// we could export the deployed contracts addres found in `/packages/contracts/deployments`
+// sidenote: the const could probably use a better name
+// (these are deployed on Happy Sepolia)
+export const ACCOUNT_ABSTRACTION_CONTRACTS: Record<AccountAbstractionContracts, `0x${string}`> = {
+    ECDSAValidator: "0xD3e7Da3c163AAD3e45dd4d003399f16328c13F49",
+    EntryPointSimulations: "0x74Cb5e4eE81b86e70f9045036a1C5477de69eE87",
+    EntryPointV7: "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
+    FactoryStaker: "0x9f6945FdD63cF7eD1501CEC6f43E824Ba7991669",
+    HappyPaymaster: "0x70811347E50ee1FAA2c0344BA640bC139850de4b",
+    Kernel: "0x5F25355bd7c71027008F28D63421e8600C4c8E69",
+    KernelFactory: "0xC3C51cF713e5C41e2E27cdd240b37C95B1C9db79",
+    SessionKeyValidator: "0x5FcDD8519AeAD89BC4E82217A4a3d9068663F4FC",
+}

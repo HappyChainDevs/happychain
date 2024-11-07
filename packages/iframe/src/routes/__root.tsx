@@ -1,5 +1,6 @@
 import { Outlet, createRootRoute } from "@tanstack/react-router"
 
+import { useSmartAccount } from "#src/hooks/useSmartAccount"
 import { DevTools } from "../components/DevTools"
 
 export const Route = createRootRoute({
@@ -7,6 +8,8 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
+    useSmartAccount()
+
     return (
         <DevTools>
             <Outlet />
