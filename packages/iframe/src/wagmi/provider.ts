@@ -21,7 +21,7 @@ export class IframeProvider extends BasePopupProvider {
 
     // @todo - remove this - debugging purpose only
     override async request(args: EIP1193RequestParameters) {
-        console.log('IframeProvider handling request:', args)
+        console.log("IframeProvider handling request:", args)
         return super.request(args)
     }
 

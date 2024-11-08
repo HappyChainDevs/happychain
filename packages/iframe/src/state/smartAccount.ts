@@ -70,14 +70,14 @@ export type KernelSmartAccount = SmartAccount & EcdsaKernelSmartAccountImplement
 
 export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = atom(async (get) => {
     const walletClient = get(walletClientAtom)
-    
+
     if (!walletClient?.account) {
-        console.debug('No wallet client or account available')
+        console.debug("No wallet client or account available")
         return undefined
     }
 
     try {
-        console.debug('Creating kernel account for address:', walletClient.account.address)
+        console.debug("Creating kernel account for address:", walletClient.account.address)
 
         const account = await toEcdsaKernelSmartAccount({
             client: walletClient,
@@ -94,7 +94,7 @@ export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = 
         })
 
         const address = await account.getAddress()
-        console.debug('Kernel account address:', address)
+        console.debug("Kernel account address:", address)
         return account
     } catch (error) {
         console.error("Error creating kernel account:", error)
@@ -102,5 +102,3 @@ export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = 
 })
 
 export const { getValue: getSmartAccount } = accessorsFromAtom(kernelAccountAtom)
-
-
