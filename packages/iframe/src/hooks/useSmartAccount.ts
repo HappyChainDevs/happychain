@@ -7,17 +7,17 @@ import { getUser } from "../state/user"
 // this is still a WIP, definitely not a final approach
 export function useSmartAccount() {
     const walletClient = useAtomValue(walletClientAtom)
-     // might want to try using tanstack here since we probably want to track loading/error/success states too
+    // might want to try using tanstack here since we probably want to track loading/error/success states too
     const initialize = useCallback(async () => {
         const user = getUser()
         if (!walletClient?.account || !user) {
             return
         }
 
-        try {       
-            const kernelAccount = await getSmartAccount() // failing for now -> check web3auth.sw 
+        try {
+            const kernelAccount = await getSmartAccount() // failing for now -> check web3auth.sw
             if (!kernelAccount) {
-                throw new Error('Failed to create kernel account')
+                throw new Error("Failed to create kernel account")
             }
 
             const smartAccountAddress = await kernelAccount.getAddress()
@@ -34,6 +34,6 @@ export function useSmartAccount() {
     }, [initialize])
 
     return {
-        retry: initialize
+        retry: initialize,
     }
 }
