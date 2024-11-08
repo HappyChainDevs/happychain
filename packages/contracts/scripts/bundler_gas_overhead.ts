@@ -298,6 +298,8 @@ async function processSingleUserOp(
 }
 
 async function sendUserOps(accounts: Accounts[]) {
+    // Prepare and sign all user operations upfront to send them concurrently.
+    // This increases the chance they are included in the same bundle.
     const userOps: UserOperation<"0.7">[] = await Promise.all(
         accounts.map(async (account) => {
             const userOp: UserOperation<"0.7"> = await account.kernelClient.prepareUserOperation({
