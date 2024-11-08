@@ -20,14 +20,14 @@ export const walletClientAtom: Atom<AccountWalletClient | undefined> = atom<Acco
         account: user.address,
         // ship all requests through the iframe provider (wagmi/provider.ts)
         // (= requests will go through a middleware before passing them to web3auth )
-        transport: custom(iframeProvider), 
+        transport: custom(iframeProvider),
         chain: {
             ...convertToViemChain(chain),
             contracts: {
                 ensRegistry: { address: undefined },
                 ensUniversalResolver: { address: undefined },
-            }
-        }
+            },
+        },
     })
 })
 
