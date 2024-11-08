@@ -1,5 +1,14 @@
-import { type Address, type Hex, type PrivateKeyAccount, type WalletClient, encodeFunctionData } from "viem"
-import { http, createPublicClient, createWalletClient, parseEther } from "viem"
+import {
+    http,
+    type Address,
+    type Hex,
+    type PrivateKeyAccount,
+    type WalletClient,
+    createPublicClient,
+    createWalletClient,
+    encodeFunctionData,
+    parseEther,
+} from "viem"
 import type {
     GetPaymasterDataParameters,
     GetPaymasterStubDataParameters,
@@ -399,13 +408,11 @@ async function multipleCallsGasResult(kernelAccount: SmartAccount, kernelClient:
     console.log("---------------------------------------------------------------------\n")
 
     const gasDetails2 = await processSingleUserOp(kernelAccount, kernelClient, calls)
-    const multipleCallsNoDeploymentResults = {
+    return {
         scenario: "Single UserOp with 5 calls (no Deployment)",
         ...gasDetails2,
         accountDeploymentOverhead: 0n,
     }
-
-    return multipleCallsNoDeploymentResults
 }
 
 async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
@@ -441,13 +448,11 @@ async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, ke
     console.log("---------------------------------------------------------------------\n")
     printUserOperationGasDetails(gasDetails)
 
-    const multipleUserOpsNoDeploymentSameSenderResults = {
+    return {
         scenario: `Avg UserOp in a Bundle of ${numOps} UserOps (same sender)`,
         ...gasDetails,
         accountDeploymentOverhead: 0n,
     }
-
-    return multipleUserOpsNoDeploymentSameSenderResults
 }
 
 async function batchedUserOperationsGasResult() {
@@ -455,12 +460,12 @@ async function batchedUserOperationsGasResult() {
     const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(accounts)
     const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(accounts)
 
-    console.log("\nGas Usage per UserOp (with Deployment) from Unique Senders:")
+    console.log("\nGas Usage per UserOp (with Deployment) from different Senders:")
     console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
     printUserOperationGasDetails(gasDetails1)
 
-    console.log("\nGas Usage per UserOp (no Deployment) from Unique Senders:")
+    console.log("\nGas Usage per UserOp (no Deployment) from different Senders:")
     console.log(`(Processed ${numOps2} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
     printUserOperationGasDetails(gasDetails2)
@@ -518,7 +523,7 @@ async function main() {
             kernelClient,
         )
     } catch (error) {
-        console.error("Batched CallData: ", error)
+        console.error("Batched CallData Same Sender: ", error)
     }
 
     let multipleUserOpsWithDeploymentResults: GasResult | undefined
@@ -527,7 +532,7 @@ async function main() {
         ;({ multipleUserOpsWithDeploymentResults, multipleUserOpsNoDeploymentResults } =
             await batchedUserOperationsGasResult())
     } catch (error) {
-        console.error("Batched UserOps: ", error)
+        console.error("Batched UserOps Different Senders: ", error)
     }
 
     const gasUsageResults = [

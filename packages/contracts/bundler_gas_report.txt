@@ -55,7 +55,7 @@ User Operation Gas Details (avg):
   UserOp Overhead:            70,000 gas
   Total Overhead:             110,352 gas
 
-Gas Usage per UserOp (with Deployment) from Unique Senders:
+Gas Usage per UserOp (with Deployment) from different Senders:
 (Processed 3 UserOps in this bundle, each from a different sender)
 ---------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ User Operation Gas Details (avg):
   UserOp Overhead:            256,709 gas
   Total Overhead:             293,015 gas
 
-Gas Usage per UserOp (no Deployment) from Unique Senders:
+Gas Usage per UserOp (no Deployment) from different Senders:
 (Processed 5 UserOps in this bundle, each from a different sender)
 ---------------------------------------------------------------------
 
