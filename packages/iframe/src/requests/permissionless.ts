@@ -37,7 +37,6 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return sendToPublicClient(app, request)
         }
 
-
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
             return currChain ?? (await sendToPublicClient(app, { ...request, payload: request.payload }))
