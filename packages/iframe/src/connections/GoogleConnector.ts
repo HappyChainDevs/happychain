@@ -1,4 +1,5 @@
 import { AuthState, type HappyUser, WalletType } from "@happychain/sdk-shared"
+import { type AuthProvider, GoogleAuthProvider } from "firebase/auth"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
 import { setAuthState } from "#src/state/authState.ts"
@@ -15,6 +16,13 @@ export class GoogleConnector extends FirebaseConnector {
             name: "Google",
             icon: googleLogo,
         })
+    }
+
+    getAuthProvider(): AuthProvider {
+        const googleProvider = new GoogleAuthProvider()
+        // forces select account screen on every connect
+        googleProvider.setCustomParameters({ prompt: "select_account" })
+        return googleProvider
     }
 
     onDisconnect(_: undefined, provider: EIP1193Provider) {

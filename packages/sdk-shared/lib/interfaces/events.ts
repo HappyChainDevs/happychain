@@ -51,7 +51,7 @@ export enum Msgs {
     IframeInit = "iframe-init",
 
     /** Instructs the SDK to resize the resize the iframe to toggle the wallet modal. */
-    ModalToggle = "modal-toggle",
+    WalletVisibility = "modal-toggle",
 
     /** Informs the app that the user information has changed (including connect & disconnect). */
     UserChanged = "user-changed",
@@ -114,6 +114,8 @@ export enum Msgs {
 export enum ModalStates {
     Login = "login-modal", // embed
     Send = "send-modal", // embed/send
+    Closed = "closed", // closed - no navigation
+    Open = "open", // open - no navigation
 }
 
 export type MsgsFromApp = {
@@ -152,7 +154,7 @@ interface AuthResponse<
 export type MsgsFromIframe = {
     [Msgs.IframeInit]: boolean
     [Msgs.ConnectResponse]: AuthResponse
-    [Msgs.ModalToggle]: { isOpen: boolean; cancelled: boolean }
+    [Msgs.WalletVisibility]: { isOpen: boolean; cancelled: boolean }
     [Msgs.UserChanged]: HappyUser | undefined
     [Msgs.AuthStateChanged]: AuthState
     [Msgs.InjectedWalletRequestConnect]: { rdns?: string; request: MsgsFromApp[Msgs.ConnectRequest] }

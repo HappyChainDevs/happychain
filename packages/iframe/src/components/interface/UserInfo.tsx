@@ -49,7 +49,7 @@ const UserInfo = () => {
                 <img
                     src={activeProvider.icon}
                     alt={activeProvider.name}
-                    className="h-5 rounded-full absolute bottom-0 right-0 bg-white"
+                    className="h-5 rounded-full absolute bottom-0 right-0 bg-base-200"
                 />
             </div>
             <div className="flex flex-col items-start justify-between">

@@ -21,7 +21,10 @@ export const Route = createLazyFileRoute("/embed")({
 })
 
 function signalOpen() {
-    void appMessageBus.emit(Msgs.ModalToggle, { isOpen: true, cancelled: false })
+    void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: true, cancelled: false })
+}
+function signalClosed() {
+    void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false, cancelled: true })
 }
 
 function Embed() {
@@ -42,12 +45,18 @@ function Embed() {
                     void navigate({ to: "/embed/send" })
                     signalOpen()
                     break
+                case ModalStates.Open:
+                    signalOpen()
+                    break
+                case ModalStates.Closed:
+                    signalClosed()
+                    break
             }
         })
     }, [navigate])
 
     async function logout() {
-        void appMessageBus.emit(Msgs.ModalToggle, { isOpen: false, cancelled: false })
+        void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false, cancelled: false })
         await disconnectAsync()
         await activeProvider?.disconnect()
     }
@@ -79,7 +88,7 @@ function Embed() {
                                 <img
                                     src={activeProvider.icon}
                                     alt={activeProvider.name}
-                                    className="h-4 rounded-full absolute bottom-0 right-0 bg-white"
+                                    className="h-4 rounded-full absolute bottom-0 right-0 bg-base-200"
                                 />
                             )}
                         </div>

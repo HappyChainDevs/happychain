@@ -36,7 +36,7 @@ export type ListenerUnsubscribeFn = () => void
 
 export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromApp>) {
     const onUserUpdateCallbacks = new Set<UserUpdateCallback>()
-    const onModalUpdateCallbacks = new Set<ModalUpdateCallback>()
+    const onWalletVisibilityCallbacks = new Set<ModalUpdateCallback>()
     const onIframeInitCallbacks = new Set<IframeInitCallback>()
     const onAuthStateUpdateCallbacks = new Set<AuthStateUpdateCallback>()
 
@@ -52,8 +52,8 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
         }
     })
 
-    messageBus.on(Msgs.ModalToggle, ({ isOpen, cancelled }) => {
-        for (const call of onModalUpdateCallbacks) {
+    messageBus.on(Msgs.WalletVisibility, ({ isOpen, cancelled }) => {
+        for (const call of onWalletVisibilityCallbacks) {
             call({ isOpen, cancelled })
         }
     })
@@ -97,10 +97,10 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * @param callback
      * @returns Unsubscribe function
      */
-    const onModalUpdate = (callback: ModalUpdateCallback): ListenerUnsubscribeFn => {
-        onModalUpdateCallbacks.add(callback)
+    const onWalletVisibilityUpdate = (callback: ModalUpdateCallback): ListenerUnsubscribeFn => {
+        onWalletVisibilityCallbacks.add(callback)
         return () => {
-            onModalUpdateCallbacks.delete(callback)
+            onWalletVisibilityCallbacks.delete(callback)
         }
     }
 
@@ -134,7 +134,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
 
     return {
         onUserUpdate,
-        onModalUpdate,
+        onWalletVisibilityUpdate,
         onAuthStateUpdate,
         onIframeInit,
     }

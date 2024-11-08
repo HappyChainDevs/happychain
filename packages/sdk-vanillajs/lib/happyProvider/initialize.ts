@@ -118,6 +118,9 @@ export const disconnect = async (): Promise<void> => {
 export const showSendScreen = (): void => {
     void iframeMessageBus?.emit(Msgs.RequestDisplay, ModalStates.Send)
 }
+export function emitWalletState(open: boolean) {
+    void iframeMessageBus?.emit(Msgs.RequestDisplay, open ? ModalStates.Open : ModalStates.Closed)
+}
 
 /**
  * This is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider}
@@ -149,10 +152,10 @@ const getListeners = () => {
         ? registerListeners(iframeMessageBus)
         : {
               onUserUpdate: () => () => {},
-              onModalUpdate: () => () => {},
+              onWalletVisibilityUpdate: () => () => {},
               onAuthStateUpdate: () => () => {},
               onIframeInit: () => () => {},
           }
 }
 
-export const { onUserUpdate, onModalUpdate, onAuthStateUpdate, onIframeInit } = getListeners()
+export const { onUserUpdate, onWalletVisibilityUpdate, onAuthStateUpdate, onIframeInit } = getListeners()

@@ -35,6 +35,7 @@ export const WalletFrame = ({ iframeSrc, dragging }: WalletFrameProps) => {
             ref={frame}
             onClick={toggleWalletOpen}
             onKeyDown={toggleWalletOpen}
+            data-open-state={isOpen}
             data-auth-state={authState}
             data-drag-state={dragging}
             className="wallet-frame"

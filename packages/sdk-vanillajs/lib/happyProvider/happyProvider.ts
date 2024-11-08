@@ -2,6 +2,7 @@ import { createUUID } from "@happychain/common"
 import {
     AuthState,
     EIP1193UserRejectedRequestError,
+    ModalStates,
     Msgs,
     SafeEventEmitter,
     WalletType,
@@ -95,6 +96,9 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
     }
 
     private async requestLogin(args: EIP1193RequestParameters): Promise<ReturnType<typeof this.request>> {
+        // Open Wallet
+        this.config.msgBus?.emit(Msgs.RequestDisplay, ModalStates.Open)
+
         const isConnectionRequest = this.isConnectionRequest(args)
         const req = {
             key: createUUID(),

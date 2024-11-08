@@ -5,7 +5,7 @@ export type { AddEthereumChainParameter } from "viem"
 export type { HappyProviderPublic as HappyProvider } from "./happyProvider/interface"
 
 export {
-    onModalUpdate,
+    onWalletVisibilityUpdate,
     onUserUpdate,
     getCurrentUser,
     happyProviderPublic as happyProvider,

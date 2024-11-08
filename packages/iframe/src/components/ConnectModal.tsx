@@ -1,59 +1,68 @@
 import { createUUID } from "@happychain/common"
-import { AuthState, type ConnectionProvider, Msgs, type MsgsFromApp } from "@happychain/sdk-shared"
+import { type ConnectionProvider, ModalStates, Msgs, type MsgsFromApp } from "@happychain/sdk-shared"
+import { useMutation } from "@tanstack/react-query"
 import { cx } from "class-variance-authority"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useConnect } from "wagmi"
 import { iframeID } from "#src/requests/utils.ts"
 import happychainLogo from "../assets/happychain.png"
 import { useConnectionProviders } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
-import { setAuthState } from "../state/authState"
 import { Button } from "./primitives/button/Button"
-
-function setModalState({ isOpen, cancelled }: Parameters<typeof appMessageBus.emit<Msgs.ModalToggle>>[1]) {
-    void appMessageBus.emit(Msgs.ModalToggle, { isOpen, cancelled })
-}
 
 export function ConnectModal() {
     const providers = useConnectionProviders()
     const { connectAsync, connectors } = useConnect()
-    const [loadingProvider, setLoadingProvider] = useState<string>("")
-    const [req, setReq] = useState<null | MsgsFromApp[Msgs.ConnectRequest]>(null)
+
+    /**
+     * This is the connection request from the app. Either eth_requestAccounts
+     * or wallet_requestPermissions. If the connection request was initiated from within the iframe
+     * then the request will be empty as there is no pending promise app side to be resolved
+     */
+    const [clientConnectionRequest, setClientConnectionRequest] = useState<null | MsgsFromApp[Msgs.ConnectRequest]>(
+        null,
+    )
+
+    useEffect(() => appMessageBus.on(Msgs.ConnectRequest, (_req) => setClientConnectionRequest(_req)), [])
 
     useEffect(() => {
-        return appMessageBus.on(Msgs.ConnectRequest, (_req) => {
-            setReq(_req)
-            setModalState({ isOpen: true, cancelled: false })
+        return appMessageBus.on(Msgs.RequestDisplay, (screen) => {
+            switch (screen) {
+                case ModalStates.Closed:
+                    if (clientConnectionRequest) {
+                        void appMessageBus.emit(Msgs.ConnectResponse, {
+                            request: clientConnectionRequest,
+                            response: null,
+                        })
+                    }
+                    break
+            }
         })
-    }, [])
+    }, [clientConnectionRequest])
 
-    const login = useCallback(
-        async (provider: ConnectionProvider) => {
+    const mutationLogin = useMutation({
+        mutationFn: async (provider: ConnectionProvider) => {
             // if no dapp-request exists here, we will initiate a new one
-            const connectRequest = req ?? {
+            const connectRequest = clientConnectionRequest ?? {
                 key: createUUID(),
                 windowId: iframeID(),
                 error: null,
                 payload: { method: "eth_requestAccounts" },
             }
 
-            setAuthState(AuthState.Connecting)
-            try {
-                // pass requested args (eth_requestAccounts, wallet_requestPermissions) so we can get correct response, not just 'login'
-                setLoadingProvider(provider.id)
-                const { response, request } = await provider.connect(connectRequest)
-                await connectAsync({ connector: connectors[0] })
-                if (req) {
-                    // mirror back to dapp
-                    void appMessageBus.emit(Msgs.ConnectResponse, { request, response })
-                }
-                setModalState({ isOpen: false, cancelled: false })
-            } finally {
-                setLoadingProvider("")
-            }
+            const { response, request } = await provider.connect(connectRequest)
+
+            await connectAsync({ connector: connectors[0] })
+
+            return clientConnectionRequest ? { response, request } : undefined
         },
-        [req, connectAsync, connectors],
-    )
+        onSettled(data, _error) {
+            // iframe-originated requests won't need any response to be emitted
+            if (!data) return
+            void appMessageBus.emit(Msgs.ConnectResponse, data)
+            setClientConnectionRequest(null)
+        },
+    })
 
     return (
         <>
@@ -67,18 +76,23 @@ export function ConnectModal() {
                 <div className="flex flex-col gap-4">
                     {providers.map((prov) => {
                         return (
-                            <Button intent="secondary" type="button" key={prov.id} onClick={() => login(prov)}>
+                            <Button
+                                intent="secondary"
+                                type="button"
+                                key={prov.id}
+                                onClick={() => mutationLogin.mutate(prov)}
+                            >
                                 <img
                                     className={cx(
                                         "size-8",
-                                        loadingProvider && loadingProvider !== prov.id && "grayscale",
+                                        mutationLogin.isPending &&
+                                            mutationLogin.variables?.id !== prov.id &&
+                                            "grayscale",
                                     )}
                                     src={prov.icon}
                                     alt={`${prov.name} icon`}
                                 />
-                                <div className="grow mr-8">
-                                    {prov.name} {loadingProvider === prov.id}
-                                </div>
+                                <div className="grow mr-8">{prov.name}</div>
                             </Button>
                         )
                     })}

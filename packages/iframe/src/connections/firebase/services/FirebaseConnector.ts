@@ -8,7 +8,7 @@ import {
 } from "@happychain/sdk-shared"
 import type { JWTLoginParams } from "@web3auth/mpc-core-kit"
 import {
-    GoogleAuthProvider,
+    type AuthProvider,
     type User,
     browserPopupRedirectResolver,
     onAuthStateChanged,
@@ -43,6 +43,8 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         this.listenForAuthChange()
     }
 
+    abstract getAuthProvider(): AuthProvider
+
     abstract onConnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
     abstract onReconnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
     abstract onDisconnect(user: undefined, provider: EIP1193Provider): Promise<void> | void
@@ -59,10 +61,11 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         this.instanceIsConnecting = true
         await setFirebaseAuthState(FirebaseAuthState.Connecting)
         try {
-            const googleProvider = new GoogleAuthProvider()
-            // forces select account screen on every connect
-            googleProvider.setCustomParameters({ prompt: "select_account" })
-            const userCredential = await signInWithPopup(firebaseAuth, googleProvider, browserPopupRedirectResolver)
+            const userCredential = await signInWithPopup(
+                firebaseAuth,
+                this.getAuthProvider(),
+                browserPopupRedirectResolver,
+            )
             const token = await this.fetchLoginTokenForUser(userCredential.user)
             const happyUser = await this.connectWithWeb3Auth(
                 FirebaseConnector.makeHappyUserPartial(userCredential.user, this.id),

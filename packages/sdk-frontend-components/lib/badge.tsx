@@ -13,11 +13,7 @@ export function Badge({ disableStyles = false }: BadgeProps) {
 
     const { connecting, connect, disconnect } = useConnection()
 
-    useEffect(() => {
-        return onUserUpdate((user) => {
-            setUser(user)
-        })
-    }, [])
+    useEffect(() => onUserUpdate((user) => setUser(user)), [])
 
     const connected = !!user?.address
     const onClick = connecting ? undefined : connected ? disconnect : connect

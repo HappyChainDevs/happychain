@@ -11,6 +11,7 @@ export function useConnection() {
             setConnecting(true)
             await hcConnect()
         } catch (e) {
+            console.log(e)
             if (e instanceof Error) {
                 // don't need to throw every time they reject
                 if ("code" in e && e.code === userRejectionErrorCode) {

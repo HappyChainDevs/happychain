@@ -8,17 +8,18 @@ import { InjectedConnector } from "./InjectedConnector"
 
 const store = getDefaultStore()
 
-const connectionProvidersAtom = atom<ConnectionProvider[]>([])
+const connectionProvidersAtom = atom<Record<string, ConnectionProvider>>({})
 
 // === REACT HOOKS =================================================================================
 
 export function useConnectionProviders() {
-    return useAtomValue(connectionProvidersAtom)
+    const providers = useAtomValue(connectionProvidersAtom)
+    return Object.values(providers)
 }
 export function useActiveConnectionProvider() {
     const providers = useAtomValue(connectionProvidersAtom)
     const user = useAtomValue(userAtom)
-    const activeProvider = useMemo(() => user && providers.find((a) => a.id === user.provider), [user, providers])
+    const activeProvider = useMemo(() => user && providers[user.provider], [user, providers])
     return activeProvider
 }
 
@@ -49,9 +50,17 @@ addProvider(new GoogleConnector())
 // === JOTAI UTILS =================================================================================
 
 function addProvider(provider: ConnectionProvider) {
-    store.set(connectionProvidersAtom, (prev) => prev.concat(provider))
+    store.set(connectionProvidersAtom, (prev) => {
+        return {
+            ...prev,
+            [provider.id]: provider,
+        }
+    })
 }
 
 function removeProvider(provider: ConnectionProvider) {
-    store.set(connectionProvidersAtom, (prev) => prev.filter((p) => p.id !== provider.id))
+    store.set(connectionProvidersAtom, (prev) => {
+        const { [provider.id]: _deleted, ...rest } = prev
+        return rest
+    })
 }
