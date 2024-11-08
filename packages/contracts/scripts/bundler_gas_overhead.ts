@@ -299,21 +299,21 @@ async function processSingleUserOp(
 
 async function sendUserOps(accounts: Accounts[]) {
     const userOps: UserOperation<"0.7">[] = await Promise.all(
-            accounts.map(async (account) => {
-                const userOp: UserOperation<"0.7"> = await account.kernelClient.prepareUserOperation({
-                    account: account.kernelAccount,
-                    calls: [createMintCall()],
-                })
-
-                userOp.signature = await account.kernelAccount.signUserOperation({
-                    ...userOp,
-                    chainId: localhost.id,
-                    signature: "0x", // The signature field must be empty when hashing and signing the user operation.
-                })
-
-                return userOp;
+        accounts.map(async (account) => {
+            const userOp: UserOperation<"0.7"> = await account.kernelClient.prepareUserOperation({
+                account: account.kernelAccount,
+                calls: [createMintCall()],
             })
-        )
+
+            userOp.signature = await account.kernelAccount.signUserOperation({
+                ...userOp,
+                chainId: localhost.id,
+                signature: "0x", // The signature field must be empty when hashing and signing the user operation.
+            })
+
+            return userOp
+        }),
+    )
 
     // const hashes = await Promise.all(
     //     accounts.map((account, idx) =>
@@ -324,19 +324,19 @@ async function sendUserOps(accounts: Accounts[]) {
     const hashes = await Promise.all(
         accounts.map((account, idx) =>
             (async () => {
-                const sendStartTime = new Date();
-                console.log(`${idx} start ${sendStartTime.toISOString()}`);
+                const sendStartTime = new Date()
+                console.log(`${idx} start ${sendStartTime.toISOString()}`)
 
-                const hash = await account.kernelClient.sendUserOperation(userOps[idx]);
+                const hash = await account.kernelClient.sendUserOperation(userOps[idx])
 
-                const sendEndTime = new Date();
+                const sendEndTime = new Date()
                 // console.log(`${idx} end ${sendEndTime.toISOString()}`);
-                console.log(`${idx}: time ${sendEndTime.getTime() - sendStartTime.getTime()} ms`);
+                console.log(`${idx}: time ${sendEndTime.getTime() - sendStartTime.getTime()} ms`)
 
-                return hash;
+                return hash
             })(),
         ),
-    );
+    )
 
     const receipts: UserOperationReceipt[] = await Promise.all(
         accounts.map((account, idx) =>
@@ -347,7 +347,7 @@ async function sendUserOps(accounts: Accounts[]) {
     )
 
     receipts.forEach((receipt) => {
-        console.log(`${receipt.receipt.blockNumber} : ${receipt.receipt.transactionIndex}`);
+        console.log(`${receipt.receipt.blockNumber} : ${receipt.receipt.transactionIndex}`)
     })
 
     // const dominantTransactionIndex = receipts
@@ -361,40 +361,39 @@ async function sendUserOps(accounts: Accounts[]) {
     // const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
 
     // Group receipts by (blockNumber, transactionIndex)
-    const receiptGroups = new Map<string, { key: string; receipts: UserOperationReceipt[] }>();
+    const receiptGroups = new Map<string, { key: string; receipts: UserOperationReceipt[] }>()
 
     receipts.forEach((receipt) => {
-        const blockNumber = receipt.receipt.blockNumber;
-        const transactionIndex = receipt.receipt.transactionIndex;
-        const key = `${blockNumber}-${transactionIndex}`; // Unique key for each (blockNumber, transactionIndex) pair
+        const blockNumber = receipt.receipt.blockNumber
+        const transactionIndex = receipt.receipt.transactionIndex
+        const key = `${blockNumber}-${transactionIndex}` // Unique key for each (blockNumber, transactionIndex) pair
 
         if (!receiptGroups.has(key)) {
-            receiptGroups.set(key, { key, receipts: [] });
+            receiptGroups.set(key, { key, receipts: [] })
         }
         const obj = receiptGroups.get(key)
-        if (!obj)
-            throw new Error("receiptGroups.get(key) is null")
-        obj.receipts.push(receipt);
-    });
+        if (!obj) throw new Error("receiptGroups.get(key) is null")
+        obj.receipts.push(receipt)
+    })
 
     // Find the group with the highest number of receipts
-    let dominantGroup = null;
-    let maxGroupSize = 0;
+    let dominantGroup = null
+    let maxGroupSize = 0
 
     for (const group of receiptGroups.values()) {
         if (group.receipts.length > maxGroupSize) {
-            maxGroupSize = group.receipts.length;
-            dominantGroup = group;
+            maxGroupSize = group.receipts.length
+            dominantGroup = group
         }
     }
 
     // Ensure that we have a dominant group
     if (!dominantGroup) {
-        throw new Error('No dominant transaction found among receipts.');
+        throw new Error("No dominant transaction found among receipts.")
     }
 
     // Get the filtered receipts from the dominant group
-    const filteredReceipts = dominantGroup.receipts;
+    const filteredReceipts = dominantGroup.receipts
 
     const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
     return { numOps, gasDetails }
