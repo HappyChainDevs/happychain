@@ -8,6 +8,7 @@ import happychainLogo from "../assets/happychain.png"
 import { useConnectionProviders } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
 import { setAuthState } from "../state/authState"
+import { Button } from "./primitives/button/Button"
 
 function setModalState({ isOpen, cancelled }: Parameters<typeof appMessageBus.emit<Msgs.ModalToggle>>[1]) {
     void appMessageBus.emit(Msgs.ModalToggle, { isOpen, cancelled })
@@ -66,17 +67,7 @@ export function ConnectModal() {
                 <div className="flex flex-col gap-4">
                     {providers.map((prov) => {
                         return (
-                            <button
-                                type="button"
-                                key={prov.id}
-                                onClick={() => login(prov)}
-                                className={cx(
-                                    "btn dark:btn-neutral",
-                                    "flex items-center w-full gap-4 px-4 py-2",
-                                    "shadow-md focus:shadow transition",
-                                    "motion-safe:hover:scale-[103%] motion-safe:active:scale-[95%]",
-                                )}
-                            >
+                            <Button intent="secondary" type="button" key={prov.id} onClick={() => login(prov)}>
                                 <img
                                     className={cx(
                                         "size-8",
@@ -85,8 +76,10 @@ export function ConnectModal() {
                                     src={prov.icon}
                                     alt={`${prov.name} icon`}
                                 />
-                                {prov.name} {loadingProvider === prov.id}
-                            </button>
+                                <div className="grow mr-8">
+                                    {prov.name} {loadingProvider === prov.id}
+                                </div>
+                            </Button>
                         )
                     })}
                 </div>

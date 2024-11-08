@@ -2,12 +2,9 @@
 export function throttle<T, K>(fn: (a: T) => K, delay = 8) {
     let throttle: ReturnType<typeof setTimeout> | undefined
     return (args: T) => {
-        if (throttle) {
-            return
-        } // you no enter
+        if (throttle) return
 
         throttle = setTimeout(() => {
-            // tail it - and do one last ajax request
             fn(args)
             throttle = undefined
         }, delay)
