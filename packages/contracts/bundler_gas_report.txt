@@ -2,46 +2,46 @@ Gas Usage for a Single UserOp (with Deployment):
 ---------------------------------------------------------------------
 
 Estimated UserOperation Gas:
-  PreVerificationGas:   57,002 gas
-  VerificationGasLimit: 399,166 gas
-  CallGasLimit:         106,084 gas
+  PreVerificationGas:   56,988 gas
+  VerificationGasLimit: 397,390 gas
+  CallGasLimit:         151,367 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     51,399 gas
-  Bundler Transaction Gas:    350,718 gas
-  Total UserOp Gas:           364,728 gas
-  Bundler Overhead:           14,010 gas
-  UserOp Overhead:            299,319 gas
-  Total Overhead:             313,329 gas
+  Bundler Transaction Gas:    350,694 gas
+  Total UserOp Gas:           369,243 gas
+  Bundler Overhead:           18,549 gas
+  UserOp Overhead:            299,295 gas
+  Total Overhead:             317,844 gas
 
 Gas Usage for a Single UserOp (no Deployment):
 ---------------------------------------------------------------------
 
 Estimated UserOperation Gas:
   PreVerificationGas:   53,517 gas
-  VerificationGasLimit: 118,237 gas
-  CallGasLimit:         106,084 gas
+  VerificationGasLimit: 116,596 gas
+  CallGasLimit:         151,367 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     51,399 gas
-  Bundler Transaction Gas:    163,467 gas
-  Total UserOp Gas:           177,047 gas
-  Bundler Overhead:           13,580 gas
-  UserOp Overhead:            112,068 gas
-  Total Overhead:             125,648 gas
+  Bundler Transaction Gas:    163,455 gas
+  Total UserOp Gas:           181,576 gas
+  Bundler Overhead:           18,121 gas
+  UserOp Overhead:            112,056 gas
+  Total Overhead:             130,177 gas
 
 Gas Usage for a Single UserOp with 5 Calls (no Deployment):
 ---------------------------------------------------------------------
 
 Estimated UserOperation Gas:
   PreVerificationGas:   61,952 gas
-  VerificationGasLimit: 120,372 gas
-  CallGasLimit:         210,528 gas
+  VerificationGasLimit: 118,731 gas
+  CallGasLimit:         261,468 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     51,399 gas
-  Bundler Transaction Gas:    55,411 gas
-  Total UserOp Gas:           58,248 gas
-  Bundler Overhead:           2,837 gas
-  UserOp Overhead:            4,012 gas
-  Total Overhead:             6,849 gas
+  Bundler Transaction Gas:    55,409 gas
+  Total UserOp Gas:           59,267 gas
+  Bundler Overhead:           3,858 gas
+  UserOp Overhead:            4,010 gas
+  Total Overhead:             7,868 gas
 
 Gas Usage per UserOp (no Deployment) from the same Sender:
 (Processed 5 UserOps in this bundle)
@@ -49,44 +49,44 @@ Gas Usage per UserOp (no Deployment) from the same Sender:
 
 User Operation Gas Details (avg):
   Direct Transaction Gas:     51,399 gas
-  Bundler Transaction Gas:    121,399 gas
-  Total UserOp Gas:           161,751 gas
-  Bundler Overhead:           40,352 gas
-  UserOp Overhead:            70,000 gas
-  Total Overhead:             110,352 gas
+  Bundler Transaction Gas:    54,858 gas
+  Total UserOp Gas:           173,518 gas
+  Bundler Overhead:           118,660 gas
+  UserOp Overhead:            3,459 gas
+  Total Overhead:             122,119 gas
 
 Gas Usage per UserOp (with Deployment) from different Senders:
-(Processed 3 UserOps in this bundle, each from a different sender)
+(Processed 5 UserOps in this bundle, each from a different sender)
 ---------------------------------------------------------------------
 
 User Operation Gas Details (avg):
-  Direct Transaction Gas:     51,395 gas
-  Bundler Transaction Gas:    308,104 gas
-  Total UserOp Gas:           344,410 gas
-  Bundler Overhead:           36,306 gas
-  UserOp Overhead:            256,709 gas
-  Total Overhead:             293,015 gas
+  Direct Transaction Gas:     51,394 gas
+  Bundler Transaction Gas:    299,563 gas
+  Total UserOp Gas:           344,866 gas
+  Bundler Overhead:           45,303 gas
+  UserOp Overhead:            248,169 gas
+  Total Overhead:             293,472 gas
 
 Gas Usage per UserOp (no Deployment) from different Senders:
 (Processed 5 UserOps in this bundle, each from a different sender)
 ---------------------------------------------------------------------
 
 User Operation Gas Details (avg):
-  Direct Transaction Gas:     51,399 gas
-  Bundler Transaction Gas:    119,957 gas
-  Total UserOp Gas:           160,311 gas
-  Bundler Overhead:           40,354 gas
-  UserOp Overhead:            68,558 gas
-  Total Overhead:             108,912 gas
+  Direct Transaction Gas:     51,396 gas
+  Bundler Transaction Gas:    119,940 gas
+  Total UserOp Gas:           164,838 gas
+  Bundler Overhead:           44,898 gas
+  UserOp Overhead:            68,544 gas
+  Total Overhead:             113,442 gas
 
 Gas Usage Results Comparison Table :-
 ┌─────────┬─────────────────────────────────────────────────────────┬───────────────┬──────────────────┬────────────────┬──────────────────┬─────────────────┬────────────────┬─────────────────────────┐
 │ (index) │ Scenario                                                │ Direct Tx Gas │ Total UserOp Gas │ Bundler Tx Gas │ Bundler Overhead │ UserOp Overhead │ Total Overhead │ SCA Deployment Overhead │
 ├─────────┼─────────────────────────────────────────────────────────┼───────────────┼──────────────────┼────────────────┼──────────────────┼─────────────────┼────────────────┼─────────────────────────┤
-│ 0       │ 'Single UserOp with 1 call (with Deployment)'           │ '51,399'      │ '364,728'        │ '350,718'      │ '14,010'         │ '299,319'       │ '313,329'      │ '187,681'               │
-│ 1       │ 'Avg UserOp in a Bundle of 3 UserOps (with Deployment)' │ '51,395'      │ '344,410'        │ '308,104'      │ '36,306'         │ '256,709'       │ '293,015'      │ '184,103'               │
-│ 2       │ 'Single UserOp with 1 call (no Deployment)'             │ '51,399'      │ '177,047'        │ '163,467'      │ '13,580'         │ '112,068'       │ '125,648'      │ '0'                     │
-│ 3       │ 'Single UserOp with 5 calls (no Deployment)'            │ '51,399'      │ '58,248'         │ '55,411'       │ '2,837'          │ '4,012'         │ '6,849'        │ '0'                     │
-│ 4       │ 'Avg UserOp in a Bundle of 5 UserOps (no Deployment)'   │ '51,399'      │ '160,311'        │ '119,957'      │ '40,354'         │ '68,558'        │ '108,912'      │ '0'                     │
-│ 5       │ 'Avg UserOp in a Bundle of 5 UserOps (same sender)'     │ '51,399'      │ '161,751'        │ '121,399'      │ '40,352'         │ '70,000'        │ '110,352'      │ '0'                     │
+│ 0       │ 'Single UserOp with 1 call (with Deployment)'           │ '51,399'      │ '369,243'        │ '350,694'      │ '18,549'         │ '299,295'       │ '317,844'      │ '187,667'               │
+│ 1       │ 'Avg UserOp in a Bundle of 5 UserOps (with Deployment)' │ '51,394'      │ '344,866'        │ '299,563'      │ '45,303'         │ '248,169'       │ '293,472'      │ '180,030'               │
+│ 2       │ 'Single UserOp with 1 call (no Deployment)'             │ '51,399'      │ '181,576'        │ '163,455'      │ '18,121'         │ '112,056'       │ '130,177'      │ '0'                     │
+│ 3       │ 'Single UserOp with 5 calls (no Deployment)'            │ '51,399'      │ '59,267'         │ '55,409'       │ '3,858'          │ '4,010'         │ '7,868'        │ '0'                     │
+│ 4       │ 'Avg UserOp in a Bundle of 5 UserOps (no Deployment)'   │ '51,396'      │ '164,838'        │ '119,940'      │ '44,898'         │ '68,544'        │ '113,442'      │ '0'                     │
+│ 5       │ 'Avg UserOp in a Bundle of 5 UserOps (same sender)'     │ '51,399'      │ '173,518'        │ '54,858'       │ '118,660'        │ '3,459'         │ '122,119'      │ '0'                     │
 └─────────┴─────────────────────────────────────────────────────────┴───────────────┴──────────────────┴────────────────┴──────────────────┴─────────────────┴────────────────┴─────────────────────────┘

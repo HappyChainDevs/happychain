@@ -22,7 +22,7 @@ contract DeployAAContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(3));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address public constant EXPECTED_ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-    address public constant EXPECTED_ENTRYPOINT_SIMULATIONS = 0x74Cb5e4eE81b86e70f9045036a1C5477de69eE87;
+    address public constant EXPECTED_ENTRYPOINT_SIMULATIONS = 0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47;
 
     error EntryPointDeploymentFailed();
     error EntryPointSimulationsDeploymentFailed();
