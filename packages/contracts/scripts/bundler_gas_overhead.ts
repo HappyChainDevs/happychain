@@ -315,27 +315,8 @@ async function sendUserOps(accounts: Accounts[]) {
         }),
     )
 
-    // const hashes = await Promise.all(
-    //     accounts.map((account, idx) =>
-    //         account.kernelClient.sendUserOperation(userOps[idx]),
-    //     ),
-    // )
-
     const hashes = await Promise.all(
-        accounts.map((account, idx) =>
-            (async () => {
-                const sendStartTime = new Date()
-                console.log(`${idx} start ${sendStartTime.toISOString()}`)
-
-                const hash = await account.kernelClient.sendUserOperation(userOps[idx])
-
-                const sendEndTime = new Date()
-                // console.log(`${idx} end ${sendEndTime.toISOString()}`);
-                console.log(`${idx}: time ${sendEndTime.getTime() - sendStartTime.getTime()} ms`)
-
-                return hash
-            })(),
-        ),
+        accounts.map((account, idx) => account.kernelClient.sendUserOperation(userOps[idx])),
     )
 
     const receipts: UserOperationReceipt[] = await Promise.all(
@@ -346,62 +327,21 @@ async function sendUserOps(accounts: Accounts[]) {
         ),
     )
 
-    receipts.forEach((receipt) => {
-        console.log(`${receipt.receipt.blockNumber} : ${receipt.receipt.transactionIndex}`)
-    })
+    const dominantTransactionIndex = receipts
+        .map((r) => r.receipt.transactionIndex)
+        .sort(
+            (a, b) =>
+                receipts.filter((r) => r.receipt.transactionIndex === b).length -
+                receipts.filter((r) => r.receipt.transactionIndex === a).length,
+        )[0]
 
-    // const dominantTransactionIndex = receipts
-    //     .map((r) => r.receipt.transactionIndex)
-    //     .sort(
-    //         (a, b) =>
-    //             receipts.filter((r) => r.receipt.transactionIndex === b).length -
-    //             receipts.filter((r) => r.receipt.transactionIndex === a).length,
-    //     )[0]
-    //
-    // const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
-
-    // Group receipts by (blockNumber, transactionIndex)
-    const receiptGroups = new Map<string, { key: string; receipts: UserOperationReceipt[] }>()
-
-    receipts.forEach((receipt) => {
-        const blockNumber = receipt.receipt.blockNumber
-        const transactionIndex = receipt.receipt.transactionIndex
-        const key = `${blockNumber}-${transactionIndex}` // Unique key for each (blockNumber, transactionIndex) pair
-
-        if (!receiptGroups.has(key)) {
-            receiptGroups.set(key, { key, receipts: [] })
-        }
-        const obj = receiptGroups.get(key)
-        if (!obj) throw new Error("receiptGroups.get(key) is null")
-        obj.receipts.push(receipt)
-    })
-
-    // Find the group with the highest number of receipts
-    let dominantGroup = null
-    let maxGroupSize = 0
-
-    for (const group of receiptGroups.values()) {
-        if (group.receipts.length > maxGroupSize) {
-            maxGroupSize = group.receipts.length
-            dominantGroup = group
-        }
-    }
-
-    // Ensure that we have a dominant group
-    if (!dominantGroup) {
-        throw new Error("No dominant transaction found among receipts.")
-    }
-
-    // Get the filtered receipts from the dominant group
-    const filteredReceipts = dominantGroup.receipts
+    const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
 
     const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
     return { numOps, gasDetails }
 }
 
-async function calculateGasDetails(
-    filteredReceipts: UserOperationReceipt[],
-): Promise<{ numOps: bigint; gasDetails: GasDetails }> {
+async function calculateGasDetails(filteredReceipts: UserOperationReceipt[]) {
     const numOps = BigInt(filteredReceipts.length)
     const avgDirectTxGas = (await sendDirectTransactions(numOps)) / numOps
     const totalBundlerTxGas = filteredReceipts[0].receipt.gasUsed
@@ -526,19 +466,19 @@ async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, ke
 }
 
 async function batchedUserOperationsGasResult() {
-    const accounts = await generatePrefundedKernelAccounts(50)
+    const accounts = await generatePrefundedKernelAccounts(5)
     const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(accounts)
     const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(accounts)
 
     console.log("\nGas Usage per UserOp (with Deployment) from different Senders:")
     console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
-    // printUserOperationGasDetails(gasDetails1)
+    printUserOperationGasDetails(gasDetails1)
 
     console.log("\nGas Usage per UserOp (no Deployment) from different Senders:")
     console.log(`(Processed ${numOps2} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
-    // printUserOperationGasDetails(gasDetails2)
+    printUserOperationGasDetails(gasDetails2)
 
     const multipleUserOpsWithDeploymentResults = {
         scenario: `Avg UserOp in a Bundle of ${numOps1} UserOps (with Deployment)`,
@@ -566,35 +506,35 @@ async function main() {
         throw new Error("Mock Token totalSupply initialization failed")
     }
 
-    // const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
-    //
-    // let singleOpWithDeploymentResults: GasResult | undefined
-    // let singleOpNoDeploymentResults: GasResult | undefined
-    // try {
-    //     ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult(
-    //         kernelAccount,
-    //         kernelClient,
-    //     ))
-    // } catch (error) {
-    //     console.error("Single UserOp: ", error)
-    // }
-    //
-    // let multipleCallsNoDeploymentResults: GasResult | undefined
-    // try {
-    //     multipleCallsNoDeploymentResults = await multipleCallsGasResult(kernelAccount, kernelClient)
-    // } catch (error) {
-    //     console.error("Batched CallData: ", error)
-    // }
-    //
-    // let multipleUserOpsNoDeploymentSameSenderResults: GasResult | undefined
-    // try {
-    //     multipleUserOpsNoDeploymentSameSenderResults = await batchedUserOpsSameSenderGasResult(
-    //         kernelAccount,
-    //         kernelClient,
-    //     )
-    // } catch (error) {
-    //     console.error("Batched CallData Same Sender: ", error)
-    // }
+    const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
+
+    let singleOpWithDeploymentResults: GasResult | undefined
+    let singleOpNoDeploymentResults: GasResult | undefined
+    try {
+        ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult(
+            kernelAccount,
+            kernelClient,
+        ))
+    } catch (error) {
+        console.error("Single UserOp: ", error)
+    }
+
+    let multipleCallsNoDeploymentResults: GasResult | undefined
+    try {
+        multipleCallsNoDeploymentResults = await multipleCallsGasResult(kernelAccount, kernelClient)
+    } catch (error) {
+        console.error("Batched CallData: ", error)
+    }
+
+    let multipleUserOpsNoDeploymentSameSenderResults: GasResult | undefined
+    try {
+        multipleUserOpsNoDeploymentSameSenderResults = await batchedUserOpsSameSenderGasResult(
+            kernelAccount,
+            kernelClient,
+        )
+    } catch (error) {
+        console.error("Batched CallData Same Sender: ", error)
+    }
 
     let multipleUserOpsWithDeploymentResults: GasResult | undefined
     let multipleUserOpsNoDeploymentResults: GasResult | undefined
@@ -605,28 +545,28 @@ async function main() {
         console.error("Batched UserOps Different Senders: ", error)
     }
 
-    // const gasUsageResults = [
-    //     singleOpWithDeploymentResults,
-    //     multipleUserOpsWithDeploymentResults,
-    //     singleOpNoDeploymentResults,
-    //     multipleCallsNoDeploymentResults,
-    //     multipleUserOpsNoDeploymentResults,
-    //     multipleUserOpsNoDeploymentSameSenderResults,
-    // ].filter((result): result is GasResult => result !== undefined)
-    //
-    // console.log("\nGas Usage Results Comparison Table :-")
-    // console.table(
-    //     gasUsageResults.map((result) => ({
-    //         Scenario: result.scenario,
-    //         "Direct Tx Gas": result.directTxGas.toLocaleString("en-US"),
-    //         "Total UserOp Gas": result.totalUserOpGas.toLocaleString("en-US"),
-    //         "Bundler Tx Gas": result.bundlerTxGas.toLocaleString("en-US"),
-    //         "Bundler Overhead": result.bundlerOverhead.toLocaleString("en-US"),
-    //         "UserOp Overhead": result.userOpOverhead.toLocaleString("en-US"),
-    //         "Total Overhead": result.totalOverhead.toLocaleString("en-US"),
-    //         "SCA Deployment Overhead": result.accountDeploymentOverhead.toLocaleString("en-US"),
-    //     })),
-    // )
+    const gasUsageResults = [
+        singleOpWithDeploymentResults,
+        multipleUserOpsWithDeploymentResults,
+        singleOpNoDeploymentResults,
+        multipleCallsNoDeploymentResults,
+        multipleUserOpsNoDeploymentResults,
+        multipleUserOpsNoDeploymentSameSenderResults,
+    ].filter((result): result is GasResult => result !== undefined)
+
+    console.log("\nGas Usage Results Comparison Table :-")
+    console.table(
+        gasUsageResults.map((result) => ({
+            Scenario: result.scenario,
+            "Direct Tx Gas": result.directTxGas.toLocaleString("en-US"),
+            "Total UserOp Gas": result.totalUserOpGas.toLocaleString("en-US"),
+            "Bundler Tx Gas": result.bundlerTxGas.toLocaleString("en-US"),
+            "Bundler Overhead": result.bundlerOverhead.toLocaleString("en-US"),
+            "UserOp Overhead": result.userOpOverhead.toLocaleString("en-US"),
+            "Total Overhead": result.totalOverhead.toLocaleString("en-US"),
+            "SCA Deployment Overhead": result.accountDeploymentOverhead.toLocaleString("en-US"),
+        })),
+    )
 }
 
 main().then(() => {
