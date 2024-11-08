@@ -1,8 +1,15 @@
 import { accessorsFromAtom } from "@happychain/common"
 import { type Atom, atom } from "jotai"
 import { type EcdsaKernelSmartAccountImplementation, toEcdsaKernelSmartAccount } from "permissionless/accounts"
+import { http, createPublicClient, custom } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
+import { privateKeyToAccount } from "viem/accounts"
+import { mainnet, optimismSepolia, sepolia } from "viem/chains"
 import { ACCOUNT_ABSTRACTION_CONTRACTS } from "#src/constants/accountAbstraction"
+import { iframeProvider } from "#src/wagmi/provider.ts"
+import { convertToViemChain } from "../../../sdk-shared/lib"
+import { happyChainSepolia } from "../../../sdk-shared/lib/chains"
+import { currentChainAtom } from "./chains"
 import { walletClientAtom } from "./walletClient"
 
 /**
@@ -79,14 +86,21 @@ export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = 
     try {
         console.debug("Creating kernel account for address:", walletClient.account.address)
 
+        const chain = get(currentChainAtom)
+        const viemChain = convertToViemChain(chain)
+        const publicClient = createPublicClient({
+            transport: http(viemChain.rpcUrls[0]),
+            chain: viemChain,
+        })
+
         const account = await toEcdsaKernelSmartAccount({
-            client: walletClient,
+            client: publicClient,
             entryPoint: {
                 address: entryPoint07Address,
                 version: "0.7",
             },
-            owners: [walletClient],
             version: "0.3.1",
+            owners: [iframeProvider],
             ecdsaValidatorAddress: ACCOUNT_ABSTRACTION_CONTRACTS.ECDSAValidator,
             accountLogicAddress: ACCOUNT_ABSTRACTION_CONTRACTS.Kernel,
             factoryAddress: ACCOUNT_ABSTRACTION_CONTRACTS.KernelFactory,

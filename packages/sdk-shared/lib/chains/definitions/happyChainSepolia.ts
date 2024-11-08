@@ -93,6 +93,7 @@ export const happyChainSepoliaViemChain = defineChain({
     id: Number(happyChainSepolia.chainId),
     name: happyChainSepolia.chainName,
     nativeCurrency: happyChainSepolia.nativeCurrency,
+    testnet: true,
     rpcUrls: {
         default: {
             http: happyChainSepolia.rpcUrls.filter((a) => a.startsWith("https")),
