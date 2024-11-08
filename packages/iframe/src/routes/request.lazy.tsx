@@ -10,7 +10,7 @@ import { PersonalSign } from "../components/requests/PersonalSign"
 import { WalletAddEthereumChain } from "../components/requests/WalletAddEthereumChain"
 import { WalletRequestPermissions } from "../components/requests/WalletRequestPermissions"
 import { WalletSwitchEthereumChain } from "../components/requests/WalletSwitchEthereumChain"
-import { WatchAsset } from "../components/requests/WalletWatchAsset"
+import { WalletWatchAsset } from "../components/requests/WalletWatchAsset"
 import type { requestLabels } from "../constants/requestLabels"
 import { popupEmitBus } from "../services/eventBus"
 
@@ -64,7 +64,7 @@ function Request() {
         case "eth_requestAccounts":
             return <EthRequestAccounts method={req.method} params={req.params} reject={reject} accept={accept} />
         case "wallet_watchAsset":
-            return <WatchAsset method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <WalletWatchAsset method={req.method} params={req.params} reject={reject} accept={accept} />
         default:
             return (
                 <main>

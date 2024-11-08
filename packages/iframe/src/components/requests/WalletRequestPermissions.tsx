@@ -1,12 +1,12 @@
 import { requestLabels } from "../../constants/requestLabels"
 import type { RequestConfirmationProps } from "./props"
 
-export function WalletRequestPermissions({
+export const WalletRequestPermissions = ({
     method,
     params,
     reject,
     accept,
-}: RequestConfirmationProps<"wallet_requestPermissions">) {
+}: RequestConfirmationProps<"wallet_requestPermissions">) => {
     return (
         <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
             <div className="flex w-full grow flex-col gap-4">

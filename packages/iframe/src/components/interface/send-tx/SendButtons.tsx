@@ -1,7 +1,7 @@
 import { CircleNotch } from "@phosphor-icons/react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect } from "react"
-import { type Address, parseEther } from "viem"
+import { type Address, parseEther, parseGwei } from "viem"
 import { useSendTransaction } from "wagmi"
 
 interface SendButtonsInterface {

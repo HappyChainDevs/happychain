@@ -5,12 +5,12 @@ import type { RequestConfirmationProps } from "./props"
 
 const user = storage.get(StorageKey.HappyUser)
 
-export function WalletAddEthereumChain({
+export const WalletAddEthereumChain = ({
     method,
     params,
     reject,
     accept,
-}: RequestConfirmationProps<"wallet_addEthereumChain">) {
+}: RequestConfirmationProps<"wallet_addEthereumChain">) => {
     const [chain, setChain] = useState(params[0])
 
     return (

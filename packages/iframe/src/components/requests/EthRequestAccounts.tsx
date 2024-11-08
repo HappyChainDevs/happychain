@@ -4,12 +4,12 @@ import type { RequestConfirmationProps } from "./props"
 
 const user = storage.get(StorageKey.HappyUser)
 
-export function EthRequestAccounts({
+export const EthRequestAccounts = ({
     method,
     params,
     reject,
     accept,
-}: RequestConfirmationProps<"eth_requestAccounts">) {
+}: RequestConfirmationProps<"eth_requestAccounts">) => {
     return (
         <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
             <div className="flex w-full grow flex-col gap-4">

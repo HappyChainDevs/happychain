@@ -7,12 +7,12 @@ import type { RequestConfirmationProps } from "./props"
 
 const user = storage.get(StorageKey.HappyUser)
 
-export function WalletSwitchEthereumChain({
+export const WalletSwitchEthereumChain = ({
     method,
     params,
     reject,
     accept,
-}: RequestConfirmationProps<"wallet_switchEthereumChain">) {
+}: RequestConfirmationProps<"wallet_switchEthereumChain">) => {
     const chains = useAtomValue(chainsAtom)
 
     const chain = chains[params[0].chainId]

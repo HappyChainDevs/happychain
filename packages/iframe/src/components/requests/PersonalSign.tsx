@@ -2,7 +2,7 @@ import { hexToString } from "viem"
 import { requestLabels } from "../../constants/requestLabels"
 import type { RequestConfirmationProps } from "./props"
 
-export function PersonalSign({ method, params, reject, accept }: RequestConfirmationProps<"personal_sign">) {
+export const PersonalSign = ({ method, params, reject, accept }: RequestConfirmationProps<"personal_sign">) => {
     return (
         <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
             <div className="flex w-full grow flex-col gap-4">
@@ -11,11 +11,20 @@ export function PersonalSign({ method, params, reject, accept }: RequestConfirma
                     {requestLabels[method] ?? "Unknown Signature Type"}
                 </div>
 
-                <div className="flex grow flex-col gap-4 bg-zinc-100 p-4">
-                    <div className="border-b border-zinc-300 pb-2 text-center text-sm font-bold text-blue-600">
-                        Requested Text
+                <div className="flex grow flex-col gap-4 overflow-y-auto rounded-lg bg-base-200 p-4">
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col items-center gap-2">
+                            <span className="text-sm text-neutral-content">Requested Text</span>
+                            <pre className="grow">{hexToString(params[0])}</pre>
+                        </div>
+
+                        <details className="collapse collapse-arrow bg-base-100 items-center">
+                            <summary className="collapse-title text-sm font-medium">View Transaction Details</summary>
+                            <div className="collapse-content flex flex-col gap-3">
+                                <pre className="grow">{JSON.stringify(params, null, 2)}</pre>
+                            </div>
+                        </details>
                     </div>
-                    <pre className="grow">{hexToString(params[0])}</pre>
                 </div>
             </div>
 
