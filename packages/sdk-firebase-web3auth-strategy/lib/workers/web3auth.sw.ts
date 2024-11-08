@@ -74,7 +74,21 @@ export async function init() {
 
 export async function request({ method, params }: { method: string; params?: unknown[] }) {
     await waitForCondition(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
-    return await ethereumSigningProvider.request({ method, params })
+    
+    try {
+        // @todo - remove this check, debugging purpose only
+        if (method === 'eth_call') {
+            //
+            console.debug(`[web3auth.sw] ; request params: ${params}`)
+        }
+
+        // Getting Internal JSON-RPC error 
+        // Oddly enough making a direct RPC call returns a insufficent gas error/max fee per gas less than block base fee error 
+        return await ethereumSigningProvider.request({ method, params })
+    } catch (error) {
+        console.error('Request error:', error)
+    }
+
 }
 
 export async function isConnected() {
