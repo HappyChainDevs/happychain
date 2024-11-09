@@ -5,10 +5,11 @@ import { localhost } from "viem/chains"
 
 import { abis, deployment } from "../../deployments/anvil/testing/abis"
 import { account, publicClient, walletClient } from "./clients"
+import {abis as mockAbis, deployment as mockDeployment} from "../../deployments/anvil/mockTokens/abis.ts";
 
-const PM_DEPOSIT = parseEther("100")
+const DEPOSIT = parseEther("100")
 
-function getRandomAccount() {
+function get_random_address() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Address
 }
 
@@ -17,7 +18,7 @@ async function fund_smart_account(accountAddress: Address): Promise<string> {
         account: account,
         to: accountAddress,
         chain: localhost,
-        value: parseEther("0.1"),
+        value: DEPOSIT,
     })
 
     const receipt = await publicClient.waitForTransactionReceipt({
@@ -34,7 +35,7 @@ async function deposit_paymaster(): Promise<string> {
         abi: abis.EntryPointV7,
         functionName: "depositTo",
         args: [deployment.HappyPaymaster],
-        value: PM_DEPOSIT,
+        value: DEPOSIT,
     })
 
     const receipt = await publicClient.waitForTransactionReceipt({
@@ -45,4 +46,16 @@ async function deposit_paymaster(): Promise<string> {
     return receipt.status
 }
 
-export { getRandomAccount, fund_smart_account, deposit_paymaster }
+async function initialize_total_supply(): Promise<string> {
+    const hash = await walletClient.writeContract({
+        address: mockDeployment.MockTokenA,
+        abi: mockAbis.MockTokenA,
+        functionName: "mint",
+        args: [get_random_address(), DEPOSIT],
+    })
+
+    const receipt = await publicClient.waitForTransactionReceipt({ hash })
+    return receipt.status
+}
+
+export {  deposit_paymaster, fund_smart_account, get_random_address, initialize_total_supply }
