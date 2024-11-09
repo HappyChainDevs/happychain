@@ -1,47 +1,23 @@
-import type { Address, Hex, PrivateKeyAccount, WalletClient } from "viem"
-import { http, createPublicClient, createWalletClient, formatEther, numberToHex, parseEther } from "viem"
-import type {
-    GetPaymasterDataParameters,
-    GetPaymasterStubDataParameters,
-    SmartAccount,
-    UserOperation,
-} from "viem/account-abstraction"
-import { entryPoint07Address } from "viem/account-abstraction"
-import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
+import type { Address, Hex } from "viem"
+import { http, createWalletClient, parseEther } from "viem"
+import type { SmartAccount, UserOperation } from "viem/account-abstraction"
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
 
-import { type SmartAccountClient, createSmartAccountClient } from "permissionless"
-import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
-import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
+import type { SmartAccountClient } from "permissionless"
+import type { Erc7579Actions } from "permissionless/actions/erc7579"
 
-import { abis, deployment } from "../deployments/anvil/testing/abis"
+import { deployment } from "../deployments/anvil/testing/abis"
 import { getCustomNonce } from "./getNonce"
 
-const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
-const bundlerRpc = process.env.BUNDLER_LOCAL
-const rpcURL = process.env.RPC_LOCAL
-
-if (!privateKey || !bundlerRpc || !rpcURL) {
-    throw new Error("Missing environment variables")
-}
-
-const account = privateKeyToAccount(privateKey)
-
-const walletClient = createWalletClient({
-    account,
-    chain: localhost,
-    transport: http(rpcURL),
-})
-
-const publicClient = createPublicClient({
-    chain: localhost,
-    transport: http(rpcURL),
-})
+import { deposit_paymaster, fund_smart_account, getRandomAccount } from "./utils/accounts"
+import { account, publicClient, walletClient } from "./utils/clients"
+import { rpcURL } from "./utils/config"
+import { checkBalance, toHexDigits } from "./utils/helpers"
+import { getKernelAccount, getKernelClient } from "./utils/kernel"
 
 const sessionKey = generatePrivateKey()
-
 const sessionAccount = privateKeyToAccount(sessionKey)
-
 const sessionWallet = createWalletClient({
     account: sessionAccount,
     chain: localhost,
@@ -52,116 +28,11 @@ const sessionWallet = createWalletClient({
 // This is a special constant address that indicates the absence of any additional hooks.
 const NO_HOOKS_ADDRESS = "0x0000000000000000000000000000000000000001"
 
-// The function selector must be whitelisted when installing a validator module.
+// Function selector for transferring ETH from the smart account.
+// The function selector must be whitelisted when installing a validator module to allow ETH transfers.
 const EXECUTE_FUNCTION_SELECTOR = "0xe9ae5c53"
 const AMOUNT = "0.01"
 const EMPTY_SIGNATURE = "0x"
-
-function toHexDigits(number: bigint, size: number): string {
-    return numberToHex(number, { size }).slice(2)
-}
-
-function getRandomAccount() {
-    return privateKeyToAddress(generatePrivateKey()).toString() as Hex
-}
-
-async function checkBalance(receiver: Address): Promise<string> {
-    const balance = await publicClient.getBalance({
-        address: receiver,
-        blockTag: "latest",
-    })
-
-    return formatEther(balance)
-}
-
-async function getKernelAccount(client: WalletClient, account: PrivateKeyAccount): Promise<SmartAccount> {
-    return toEcdsaKernelSmartAccount({
-        client,
-        entryPoint: {
-            address: entryPoint07Address,
-            version: "0.7",
-        },
-        owners: [account],
-        version: "0.3.1",
-        ecdsaValidatorAddress: deployment.ECDSAValidator,
-        accountLogicAddress: deployment.Kernel,
-        factoryAddress: deployment.KernelFactory,
-        metaFactoryAddress: deployment.FactoryStaker,
-    })
-}
-
-function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7579Actions<SmartAccount> {
-    const paymasterAddress = deployment.HappyPaymaster
-
-    const kernelClientBase = createSmartAccountClient({
-        account: kernelAccount,
-        chain: localhost,
-        bundlerTransport: http(bundlerRpc, {
-            timeout: 30_000,
-        }),
-        paymaster: {
-            async getPaymasterData(parameters: GetPaymasterDataParameters) {
-                return {
-                    paymaster: paymasterAddress,
-                    paymasterData: "0x", // Only required for extra context, no need to encode paymaster gas values manually
-                    paymasterVerificationGasLimit: parameters.factory && parameters.factory !== "0x" ? 45000n : 25000n,
-                    paymasterPostOpGasLimit: 1n, // Set to 1 since the postOp function is never called
-                }
-            },
-
-            // Using stub values from the docs for paymaster-related fields in unsigned user operations for gas estimation.
-            async getPaymasterStubData(_parameters: GetPaymasterStubDataParameters) {
-                return {
-                    paymaster: paymasterAddress,
-                    paymasterData: "0x",
-                    paymasterVerificationGasLimit: 45_000n, // A stub value, no significance
-                    paymasterPostOpGasLimit: 1n,
-                }
-            },
-        },
-        userOperation: {
-            estimateFeesPerGas: async () => {
-                return await publicClient.estimateFeesPerGas()
-            },
-        },
-    })
-
-    const extendedClient = kernelClientBase.extend(erc7579Actions())
-    return extendedClient as typeof kernelClientBase & typeof extendedClient
-}
-
-async function fund_smart_account(accountAddress: Address): Promise<string> {
-    const txHash = await walletClient.sendTransaction({
-        account: account,
-        to: accountAddress,
-        chain: localhost,
-        value: parseEther("0.1"),
-    })
-
-    const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-        confirmations: 1,
-    })
-
-    return receipt.status
-}
-
-async function deposit_paymaster(): Promise<string> {
-    const txHash = await walletClient.writeContract({
-        address: entryPoint07Address,
-        abi: abis.EntryPointV7,
-        functionName: "depositTo",
-        args: [deployment.HappyPaymaster],
-        value: parseEther("10"),
-    })
-
-    const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-        confirmations: 1,
-    })
-
-    return receipt.status
-}
 
 function getInitData(hookAddress: Address, validatorData: Hex, hookData: Hex, selectorData: Hex): Hex {
     /**
@@ -215,6 +86,7 @@ function getInitData(hookAddress: Address, validatorData: Hex, hookData: Hex, se
 }
 
 async function installCustomModule(
+    kernelAccount: SmartAccount,
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
     sessionKey: Address,
 ) {
@@ -222,7 +94,7 @@ async function installCustomModule(
         type: "validator",
         address: deployment.SessionKeyValidator,
         context: getInitData(NO_HOOKS_ADDRESS, sessionKey, "0x", EXECUTE_FUNCTION_SELECTOR),
-        nonce: await kernelClient.account!.getNonce(),
+        nonce: await kernelAccount.getNonce(),
     })
 
     const rec = await kernelClient.waitForUserOperationReceipt({
@@ -239,12 +111,15 @@ async function installCustomModule(
     }
 }
 
-async function uninstallCustomModule(kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>) {
+async function uninstallCustomModule(
+    kernelAccount: SmartAccount,
+    kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
+) {
     const opHash = await kernelClient.uninstallModule({
         type: "validator",
         address: deployment.SessionKeyValidator,
         context: NO_HOOKS_ADDRESS,
-        nonce: await kernelClient.account!.getNonce(),
+        nonce: await kernelAccount.getNonce(),
     })
 
     const rec = await kernelClient.waitForUserOperationReceipt({
@@ -269,11 +144,11 @@ async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccoun
     })
 }
 
-async function testRootValidator(kernelClient: SmartAccountClient) {
+async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
     const receiverAddress = getRandomAccount()
 
     const txHash = await kernelClient.sendTransaction({
-        account: kernelClient.account!,
+        account: kernelAccount,
         to: receiverAddress,
         chain: localhost,
         value: parseEther(AMOUNT),
@@ -296,19 +171,19 @@ async function testRootValidator(kernelClient: SmartAccountClient) {
     }
 }
 
-async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>) {
+async function testCustomValidator(
+    kernelAccount: SmartAccount,
+    kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
+    kernelAddress: Address,
+) {
     const receiverAddress = getRandomAccount()
     const sessionSigner = await getKernelAccount(sessionWallet, sessionAccount)
-    const customNonce = await getCustomNonce(
-        kernelClient.account!.client,
-        kernelClient.account!.address,
-        deployment.SessionKeyValidator,
-    )
+    const customNonce = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.SessionKeyValidator)
 
-    await installCustomModule(kernelClient, sessionAccount.address)
+    await installCustomModule(kernelAccount, kernelClient, sessionAccount.address)
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
-        account: kernelClient.account!,
+        account: kernelAccount,
         calls: [
             {
                 to: receiverAddress,
@@ -344,14 +219,15 @@ async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Act
         throw new Error(`Using CustomValidator: Balance is not correct: ${balance} ETH`)
     }
 
-    await uninstallCustomModule(kernelClient)
+    await uninstallCustomModule(kernelAccount, kernelClient)
 }
 
 async function main() {
     const kernelAccount: SmartAccount = await getKernelAccount(walletClient, account)
     const kernelClient = getKernelClient(kernelAccount)
+    const kernelAddress = await kernelAccount.getAddress()
 
-    const prefundRes = await fund_smart_account(kernelClient.account!.address)
+    const prefundRes = await fund_smart_account(kernelAddress)
     if (prefundRes !== "success") {
         throw new Error("Funding SmartAccount failed")
     }
@@ -362,13 +238,13 @@ async function main() {
     }
 
     try {
-        await testRootValidator(kernelClient)
+        await testRootValidator(kernelAccount, kernelClient)
     } catch (error) {
         console.error("Root Validator: ", error)
     }
 
     try {
-        await testCustomValidator(kernelClient)
+        await testCustomValidator(kernelAccount, kernelClient, kernelAddress)
     } catch (error) {
         console.error("Custom Validator: ", error)
     }
