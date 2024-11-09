@@ -1,17 +1,8 @@
 import {
-    http,
-    type Address,
-    type Hex,
-    type PrivateKeyAccount,
-    type WalletClient,
-    createPublicClient,
-    createWalletClient,
     encodeFunctionData,
     parseEther,
 } from "viem"
 import type {
-    GetPaymasterDataParameters,
-    GetPaymasterStubDataParameters,
     SmartAccount,
     UserOperation,
     UserOperationCall,
@@ -21,16 +12,16 @@ import { entryPoint07Address } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
 
-import { type SmartAccountClient, createSmartAccountClient } from "permissionless"
-import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
-import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
-import { type PimlicoClient, createPimlicoClient } from "permissionless/clients/pimlico"
+import type { SmartAccountClient } from "permissionless"
 
 import { abis as mockAbis, deployment as mockDeployment } from "../deployments/anvil/mockTokens/abis"
-import { abis, deployment } from "../deployments/anvil/testing/abis"
+import { deployment } from "../deployments/anvil/testing/abis"
 
 import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce"
-import { bundlerRpc, privateKey, rpcURL } from "./utils/config"
+
+import { deposit_paymaster, get_random_address, initialize_total_supply } from "./utils/accounts"
+import { account, publicClient, walletClient, pimlicoClient } from "./utils/clients"
+import { generatePrefundedKernelAccount, generatePrefundedKernelAccounts } from "./utils/kernel"
 
 interface Accounts {
     kernelAccount: SmartAccount
@@ -51,29 +42,8 @@ interface GasResult extends GasDetails {
     accountDeploymentOverhead: bigint
 }
 
-const account = privateKeyToAccount(privateKey)
-
-const walletClient = createWalletClient({
-    account,
-    chain: localhost,
-    transport: http(rpcURL),
-})
-
-const publicClient = createPublicClient({
-    chain: localhost,
-    transport: http(rpcURL),
-})
-
-const pimlicoClient: PimlicoClient = createPimlicoClient({
-    chain: localhost,
-    transport: http(bundlerRpc),
-    entryPoint: {
-        address: entryPoint07Address,
-        version: "0.7",
-    },
-})
-
-const AMOUNT = "0.01"
+// A dummy constant representing the amount of ETH to transfer in the demo.
+const AMOUNT = parseEther("0.01")
 const EMPTY_SIGNATURE = "0x"
 
 function createMintCall(address: Address): UserOperationCall {
@@ -86,104 +56,6 @@ function createMintCall(address: Address): UserOperationCall {
             args: [address, parseEther(AMOUNT)],
         }),
     }
-}
-
-async function getKernelAccount(client: WalletClient, account: PrivateKeyAccount): Promise<SmartAccount> {
-    return toEcdsaKernelSmartAccount({
-        client,
-        entryPoint: {
-            address: entryPoint07Address,
-            version: "0.7",
-        },
-        owners: [account],
-        version: "0.3.1",
-        ecdsaValidatorAddress: deployment.ECDSAValidator,
-        accountLogicAddress: deployment.Kernel,
-        factoryAddress: deployment.KernelFactory,
-        metaFactoryAddress: deployment.FactoryStaker,
-    })
-}
-
-function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7579Actions<SmartAccount> {
-    const paymasterAddress = deployment.HappyPaymaster
-
-    const kernelClientBase = createSmartAccountClient({
-        account: kernelAccount,
-        chain: localhost,
-        bundlerTransport: http(bundlerRpc, {
-            timeout: 30_000,
-        }),
-        paymaster: {
-            async getPaymasterData(parameters: GetPaymasterDataParameters) {
-                const gasEstimates = await pimlicoClient.estimateUserOperationGas({
-                    ...parameters,
-                    paymaster: paymasterAddress,
-                })
-
-                return {
-                    paymaster: paymasterAddress,
-                    paymasterData: "0x", // Only required for extra context, no need to encode paymaster gas values manually
-                    paymasterVerificationGasLimit: gasEstimates.paymasterVerificationGasLimit ?? 0n,
-                    paymasterPostOpGasLimit: gasEstimates.paymasterPostOpGasLimit ?? 0n,
-                }
-            },
-
-            // Using stub values from the docs for paymaster-related fields in unsigned user operations for gas estimation.
-            async getPaymasterStubData(_parameters: GetPaymasterStubDataParameters) {
-                return {
-                    paymaster: paymasterAddress,
-                    paymasterData: "0x",
-                    paymasterVerificationGasLimit: 80_000n, // Increased value to account for possible higher gas usage
-                    paymasterPostOpGasLimit: 0n, // Set to 0 since the postOp function is never called
-                }
-            },
-        },
-        userOperation: {
-            estimateFeesPerGas: async () => {
-                return await publicClient.estimateFeesPerGas()
-            },
-        },
-    })
-
-    const extendedClient = kernelClientBase.extend(erc7579Actions())
-    return extendedClient as typeof kernelClientBase & typeof extendedClient
-}
-
-async function fund_smart_account(accountAddress: Address): Promise<string> {
-    const hash = await walletClient.sendTransaction({
-        account: account,
-        to: accountAddress,
-        chain: localhost,
-        value: parseEther("0.1"),
-    })
-
-    const receipt = await publicClient.waitForTransactionReceipt({ hash })
-    return receipt.status
-}
-
-async function deposit_paymaster(): Promise<string> {
-    const hash = await walletClient.writeContract({
-        address: entryPoint07Address,
-        abi: abis.EntryPointV7,
-        functionName: "depositTo",
-        args: [deployment.HappyPaymaster],
-        value: parseEther("10"),
-    })
-
-    const receipt = await publicClient.waitForTransactionReceipt({ hash })
-    return receipt.status
-}
-
-async function initializeTokenSupply(accountAddress: Address): Promise<string> {
-    const hash = await walletClient.writeContract({
-        address: mockDeployment.MockTokenA,
-        abi: mockAbis.MockTokenA,
-        functionName: "mint",
-        args: [accountAddress, parseEther(AMOUNT)],
-    })
-
-    const receipt = await publicClient.waitForTransactionReceipt({ hash })
-    return receipt.status
 }
 
 function printPaymasterGasEstimates(preVerificationGas: bigint, verificationGasLimit: bigint, callGasLimit: bigint) {
@@ -203,45 +75,7 @@ function printUserOperationGasDetails(gasDetails: GasDetails) {
     console.log(`  Total Overhead:             ${gasDetails.totalOverhead.toLocaleString("en-US")} gas`)
 }
 
-async function generatePrefundedKernelAccounts(count: number) {
-    const accounts = []
-    for (let i = 0; i < count; i++) {
-        const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
-        accounts.push({ kernelAccount, kernelClient })
-    }
-    return accounts
-}
-
-async function generatePrefundedKernelAccount(): Promise<{
-    kernelAccount: SmartAccount
-    kernelClient: SmartAccountClient
-}> {
-    const account = privateKeyToAccount(generatePrivateKey())
-
-    const walletClient = createWalletClient({
-        account: account,
-        chain: localhost,
-        transport: http(rpcURL),
-    })
-
-    const kernelAccount: SmartAccount = await getKernelAccount(walletClient, account)
-    const kernelAddress = await kernelAccount.getAddress()
-    const kernelClient = getKernelClient(kernelAccount)
-
-    const prefundRes = await fund_smart_account(kernelAddress)
-    if (prefundRes !== "success") {
-        throw new Error("Funding SmartAccount 1 failed")
-    }
-
-    const mintTokenRes = await initializeTokenSupply(kernelAddress)
-    if (mintTokenRes !== "success") {
-        throw new Error("Minting tokens to SmartAccount failed")
-    }
-
-    return { kernelAccount, kernelClient }
-}
-
-async function processSingleUserOp(
+async function sendUserOp(
     kernelAccount: SmartAccount,
     kernelClient: SmartAccountClient,
     calls: UserOperationCall[],
@@ -385,7 +219,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     console.log("\nGas Usage for a Single UserOp (with Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
-    const gasDetails1 = await processSingleUserOp(kernelAccount, kernelClient, [createMintCall()])
+    const gasDetails1 = await sendUserOp(kernelAccount, kernelClient, [createMintCall()])
     const singleOpWithDeploymentResults = {
         scenario: "Single UserOp with 1 call (with Deployment)",
         ...gasDetails1,
@@ -395,7 +229,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     console.log("\nGas Usage for a Single UserOp (no Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
-    const gasDetails2 = await processSingleUserOp(kernelAccount, kernelClient, [createMintCall()])
+    const gasDetails2 = await sendUserOp(kernelAccount, kernelClient, [createMintCall()])
     const singleOpNoDeploymentResults = {
         scenario: "Single UserOp with 1 call (no Deployment)",
         ...gasDetails2,
@@ -415,7 +249,7 @@ async function multipleCallsGasResult(kernelAccount: SmartAccount, kernelClient:
     console.log("\nGas Usage for a Single UserOp with 5 Calls (no Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
-    const gasDetails2 = await processSingleUserOp(kernelAccount, kernelClient, calls)
+    const gasDetails2 = await sendUserOp(kernelAccount, kernelClient, calls)
     return {
         scenario: "Single UserOp with 5 calls (no Deployment)",
         ...gasDetails2,

@@ -1,4 +1,4 @@
-import { http, type PrivateKeyAccount, type WalletClient } from "viem"
+import {createWalletClient, http, type PrivateKeyAccount, type WalletClient} from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { localhost } from "viem/chains"
 
@@ -7,9 +7,11 @@ import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
 
 import { pimlicoClient, publicClient } from "./clients"
-import { bundlerRpc } from "./config"
+import {bundlerRpc, rpcURL} from "./config"
 
 import { deployment } from "../../deployments/anvil/testing/abis"
+import {generatePrivateKey, privateKeyToAccount} from "viem/accounts";
+import {fund_smart_account} from "./accounts.ts";
 
 async function getKernelAccount(client: WalletClient, account: PrivateKeyAccount): Promise<SmartAccount> {
     return toEcdsaKernelSmartAccount({
@@ -70,4 +72,42 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
     return extendedClient as typeof kernelClientBase & typeof extendedClient
 }
 
-export { getKernelAccount, getKernelClient }
+
+async function generatePrefundedKernelAccounts(count: number): Promise<{
+    kernelAccount: SmartAccount
+    kernelClient: SmartAccountClient
+}[]> {
+    const accounts = []
+    for (let i = 0; i < count; i++) {
+        const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
+        accounts.push({ kernelAccount, kernelClient })
+    }
+
+    return accounts
+}
+
+async function generatePrefundedKernelAccount(): Promise<{
+    kernelAccount: SmartAccount
+    kernelClient: SmartAccountClient
+}> {
+    const account = privateKeyToAccount(generatePrivateKey())
+
+    const walletClient = createWalletClient({
+        account: account,
+        chain: localhost,
+        transport: http(rpcURL),
+    })
+
+    const kernelAccount: SmartAccount = await getKernelAccount(walletClient, account)
+    const kernelAddress = await kernelAccount.getAddress()
+    const kernelClient = getKernelClient(kernelAccount)
+
+    const prefundRes = await fund_smart_account(kernelAddress)
+    if (prefundRes !== "success") {
+        throw new Error("Funding SmartAccount 1 failed")
+    }
+
+    return { kernelAccount, kernelClient }
+}
+
+export { getKernelAccount, getKernelClient, generatePrefundedKernelAccount, generatePrefundedKernelAccounts}

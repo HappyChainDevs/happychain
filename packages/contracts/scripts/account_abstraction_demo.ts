@@ -10,7 +10,7 @@ import type { Erc7579Actions } from "permissionless/actions/erc7579"
 import { deployment } from "../deployments/anvil/testing/abis"
 import { getCustomNonce } from "./getNonce"
 
-import { deposit_paymaster, fund_smart_account, getRandomAccount } from "./utils/accounts"
+import { deposit_paymaster, fund_smart_account, get_random_address } from "./utils/accounts"
 import { account, publicClient, walletClient } from "./utils/clients"
 import { rpcURL } from "./utils/config"
 import { checkBalance, toHexDigits } from "./utils/helpers"
@@ -145,7 +145,7 @@ async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccoun
 }
 
 async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    const receiverAddress = getRandomAccount()
+    const receiverAddress = get_random_address()
 
     const txHash = await kernelClient.sendTransaction({
         account: kernelAccount,
@@ -176,7 +176,7 @@ async function testCustomValidator(
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
     kernelAddress: Address,
 ) {
-    const receiverAddress = getRandomAccount()
+    const receiverAddress = get_random_address()
     const sessionSigner = await getKernelAccount(sessionWallet, sessionAccount)
     const customNonce = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.SessionKeyValidator)
 
