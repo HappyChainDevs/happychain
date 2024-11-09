@@ -97,7 +97,7 @@ async function sendUserOp(
     })
 
     if (!receipt.success) {
-        throw new Error("Validation using custom validator module failed")
+        throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`);
     }
 
     const numCalls = BigInt(calls.length)
@@ -158,6 +158,11 @@ async function sendUserOps(accounts: Accounts[]) {
             }),
         ),
     )
+
+    receipts.forEach((receipt) => {
+        if (!receipt.success)
+            throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`);
+    })
 
     const dominantTransactionIndex = receipts
         .map((r) => r.receipt.transactionIndex)
@@ -283,6 +288,11 @@ async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, ke
     )
 
     const receipts = await Promise.all(hashes.map((hash) => kernelClient.waitForUserOperationReceipt({ hash })))
+    receipts.forEach((receipt) => {
+        if (!receipt.success) {
+            throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`);
+        }
+    })
 
     const { numOps, gasDetails } = await calculateGasDetails(receipts)
     console.log("\nGas Usage per UserOp (no Deployment) from the same Sender:")
