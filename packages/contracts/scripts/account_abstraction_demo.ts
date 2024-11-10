@@ -1,5 +1,5 @@
 import type { Address, Hex } from "viem"
-import { http, createWalletClient, parseEther } from "viem"
+import { http, createPublicClient, parseEther } from "viem"
 import type { SmartAccount, UserOperation } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
@@ -11,15 +11,14 @@ import { deployment } from "../deployments/anvil/testing/abis"
 import { getCustomNonce } from "./getNonce"
 
 import { deposit_paymaster, fund_smart_account, get_random_address } from "./utils/accounts"
-import { account, publicClient, walletClient } from "./utils/clients"
+import { account, publicClient } from "./utils/clients"
 import { rpcURL } from "./utils/config"
 import { checkBalance, toHexDigits } from "./utils/helpers"
 import { getKernelAccount, getKernelClient } from "./utils/kernel"
 
 const sessionKey = generatePrivateKey()
 const sessionAccount = privateKeyToAccount(sessionKey)
-const sessionWallet = createWalletClient({
-    account: sessionAccount,
+const sessionPublicClient = createPublicClient({
     chain: localhost,
     transport: http(rpcURL),
 })
@@ -177,7 +176,7 @@ async function testCustomValidator(
     kernelAddress: Address,
 ) {
     const receiverAddress = get_random_address()
-    const sessionSigner = await getKernelAccount(sessionWallet, sessionAccount)
+    const sessionSigner = await getKernelAccount(sessionPublicClient, sessionAccount)
     const customNonce = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.SessionKeyValidator)
 
     await installCustomModule(kernelAccount, kernelClient, sessionAccount.address)
@@ -223,7 +222,7 @@ async function testCustomValidator(
 }
 
 async function main() {
-    const kernelAccount: SmartAccount = await getKernelAccount(walletClient, account)
+    const kernelAccount: SmartAccount = await getKernelAccount(publicClient, account)
     const kernelClient = getKernelClient(kernelAccount)
     const kernelAddress = await kernelAccount.getAddress()
 

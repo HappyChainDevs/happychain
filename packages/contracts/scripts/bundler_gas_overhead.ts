@@ -1,15 +1,5 @@
-import {
-    encodeFunctionData,
-    parseEther,
-} from "viem"
-import type {
-    SmartAccount,
-    UserOperation,
-    UserOperationCall,
-    UserOperationReceipt,
-} from "viem/account-abstraction"
-import { entryPoint07Address } from "viem/account-abstraction"
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { encodeFunctionData, parseEther } from "viem"
+import type { SmartAccount, UserOperation, UserOperationCall, UserOperationReceipt } from "viem/account-abstraction"
 import { localhost } from "viem/chains"
 
 import type { SmartAccountClient } from "permissionless"
@@ -20,7 +10,7 @@ import { deployment } from "../deployments/anvil/testing/abis"
 import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce"
 
 import { deposit_paymaster, get_random_address, initialize_total_supply } from "./utils/accounts"
-import { account, publicClient, walletClient, pimlicoClient } from "./utils/clients"
+import { account, pimlicoClient, publicClient, walletClient } from "./utils/clients"
 import { generatePrefundedKernelAccount, generatePrefundedKernelAccounts } from "./utils/kernel"
 
 interface Accounts {
@@ -75,11 +65,7 @@ function printUserOperationGasDetails(gasDetails: GasDetails) {
     console.log(`  Total Overhead:             ${gasDetails.totalOverhead.toLocaleString("en-US")} gas`)
 }
 
-async function sendUserOp(
-    kernelAccount: SmartAccount,
-    kernelClient: SmartAccountClient,
-    calls: UserOperationCall[],
-) {
+async function sendUserOp(kernelAccount: SmartAccount, kernelClient: SmartAccountClient, calls: UserOperationCall[]) {
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelAccount,
         calls,
@@ -97,7 +83,7 @@ async function sendUserOp(
     })
 
     if (!receipt.success) {
-        throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`);
+        throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`)
     }
 
     const numCalls = BigInt(calls.length)
@@ -160,17 +146,21 @@ async function sendUserOps(accounts: Accounts[]) {
     )
 
     receipts.forEach((receipt) => {
-        if (!receipt.success)
-            throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`);
+        if (!receipt.success) throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`)
     })
 
-    const dominantTransactionIndex = receipts
-        .map((r) => r.receipt.transactionIndex)
-        .sort(
-            (a, b) =>
-                receipts.filter((r) => r.receipt.transactionIndex === b).length -
-                receipts.filter((r) => r.receipt.transactionIndex === a).length,
-        )[0]
+    const transactionFrequency: { [key: string]: number } = receipts.reduce(
+        (freq, r) => {
+            const index = r.receipt.transactionIndex.toString()
+            freq[index] = (freq[index] || 0) + 1
+            return freq
+        },
+        {} as { [key: string]: number },
+    )
+
+    const dominantTransactionIndex = Number(
+        Object.keys(transactionFrequency).reduce((a, b) => (transactionFrequency[a] > transactionFrequency[b] ? a : b)),
+    )
 
     const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
 
@@ -290,7 +280,7 @@ async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, ke
     const receipts = await Promise.all(hashes.map((hash) => kernelClient.waitForUserOperationReceipt({ hash })))
     receipts.forEach((receipt) => {
         if (!receipt.success) {
-            throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`);
+            throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`)
         }
     })
 
