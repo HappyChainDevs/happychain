@@ -1,4 +1,5 @@
-import {createWalletClient, http, type PrivateKeyAccount, type WalletClient} from "viem"
+import type { PrivateKeyAccount, PublicClient } from "viem"
+import { http, createPublicClient } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { localhost } from "viem/chains"
 
@@ -7,15 +8,15 @@ import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
 
 import { pimlicoClient, publicClient } from "./clients"
-import {bundlerRpc, rpcURL} from "./config"
+import { bundlerRpc, rpcURL } from "./config"
 
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { deployment } from "../../deployments/anvil/testing/abis"
-import {generatePrivateKey, privateKeyToAccount} from "viem/accounts";
-import {fund_smart_account} from "./accounts.ts";
+import { fund_smart_account } from "./accounts.ts"
 
-async function getKernelAccount(client: WalletClient, account: PrivateKeyAccount): Promise<SmartAccount> {
+async function getKernelAccount(publicClient: PublicClient, account: PrivateKeyAccount): Promise<SmartAccount> {
     return toEcdsaKernelSmartAccount({
-        client,
+        client: publicClient,
         entryPoint: {
             address: entryPoint07Address,
             version: "0.7",
@@ -72,11 +73,12 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
     return extendedClient as typeof kernelClientBase & typeof extendedClient
 }
 
-
-async function generatePrefundedKernelAccounts(count: number): Promise<{
-    kernelAccount: SmartAccount
-    kernelClient: SmartAccountClient
-}[]> {
+async function generatePrefundedKernelAccounts(count: number): Promise<
+    {
+        kernelAccount: SmartAccount
+        kernelClient: SmartAccountClient
+    }[]
+> {
     const accounts = []
     for (let i = 0; i < count; i++) {
         const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
@@ -92,13 +94,12 @@ async function generatePrefundedKernelAccount(): Promise<{
 }> {
     const account = privateKeyToAccount(generatePrivateKey())
 
-    const walletClient = createWalletClient({
-        account: account,
+    const publicClient = createPublicClient({
         chain: localhost,
         transport: http(rpcURL),
     })
 
-    const kernelAccount: SmartAccount = await getKernelAccount(walletClient, account)
+    const kernelAccount: SmartAccount = await getKernelAccount(publicClient, account)
     const kernelAddress = await kernelAccount.getAddress()
     const kernelClient = getKernelClient(kernelAccount)
 
@@ -110,4 +111,4 @@ async function generatePrefundedKernelAccount(): Promise<{
     return { kernelAccount, kernelClient }
 }
 
-export { getKernelAccount, getKernelClient, generatePrefundedKernelAccount, generatePrefundedKernelAccounts}
+export { getKernelAccount, getKernelClient, generatePrefundedKernelAccount, generatePrefundedKernelAccounts }
