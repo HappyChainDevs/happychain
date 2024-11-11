@@ -142,7 +142,7 @@ export class TransactionManager {
         // Start the gas price oracle asynchronously
         const priceOraclePromise = this.gasPriceOracle.start()
 
-        // Start the transaction repository, which depends on the initialized database driver
+        // Start the transaction repository
         await this.transactionRepository.start()
 
         // Start the nonce manager, which depends on the transaction repository
