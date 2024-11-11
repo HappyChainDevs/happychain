@@ -35,6 +35,6 @@ export enum WalletType {
 
 export enum AuthState {
     Disconnected = "unauthenticated",
-    Connecting = "loading",
+    Initializing = "initializing",
     Connected = "authenticated",
 }

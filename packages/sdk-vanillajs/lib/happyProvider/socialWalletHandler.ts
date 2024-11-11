@@ -31,7 +31,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
 
     private inFlightChecks = new Map<string, InFlightCheck>()
     private user: HappyUser | undefined
-    private authState: AuthState = AuthState.Connecting
+    private authState: AuthState = AuthState.Initializing
 
     constructor(private config: HappyProviderConfig) {
         super(config.windowId)

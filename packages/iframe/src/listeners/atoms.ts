@@ -1,4 +1,4 @@
-import { AuthState, Msgs } from "@happychain/sdk-shared"
+import { Msgs } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai/vanilla"
 import { http, createPublicClient } from "viem"
 import { mainnet } from "viem/chains"
@@ -11,8 +11,9 @@ import { emitUserUpdate } from "../utils/emitUserUpdate"
 const store = getDefaultStore()
 
 /**
- * Runs once at startup to transmit the current auth state to the app (likely
- * {@link AuthState.Disconnected}, or {@link AuthState.Connecting}).
+ * Runs once at startup to transmit the current auth state to the app. Will be one of
+ * {@link AuthState.Disconnected}, or {@link AuthState.Initializing} depending on if a
+ * user is cached in local storage or not
  *
  * @emits {@link Msgs.AuthStateChanged}
  */
@@ -33,9 +34,6 @@ void appMessageBus.emit(Msgs.AuthStateChanged, store.get(authStateAtom))
 store.sub(authStateAtom, () => {
     const authState = store.get(authStateAtom)
     void appMessageBus.emit(Msgs.AuthStateChanged, authState)
-
-    // no user updates in this state
-    if (AuthState.Connecting === authState) return
 
     emitUserUpdate(store.get(userAtom))
 })
