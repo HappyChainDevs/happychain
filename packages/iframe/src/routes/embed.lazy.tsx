@@ -53,7 +53,7 @@ function Embed() {
 
     useEffect(() => {
         const unsubscribe = appMessageBus.on(Msgs.RequestWalletDisplay, async (screen) => {
-            await waitForCondition(() => getAuthState() !== AuthState.Connecting)
+            await waitForCondition(() => getAuthState() !== AuthState.Initializing)
             switch (screen) {
                 case WalletDisplayAction.Home:
                     void navigate({ to: "/embed" })

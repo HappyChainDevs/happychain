@@ -1,9 +1,8 @@
-import { AuthState, type HappyUser, WalletType } from "@happychain/sdk-shared"
+import { type HappyUser, WalletType } from "@happychain/sdk-shared"
 import { connect, disconnect } from "@wagmi/core"
 import { type AuthProvider, GoogleAuthProvider } from "firebase/auth"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
-import { setAuthState } from "#src/state/authState.ts"
 import { getChains } from "#src/state/chains.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
 import { getUser } from "#src/state/user.ts"
@@ -32,13 +31,11 @@ export class GoogleConnector extends FirebaseConnector {
         if (getUser()?.type !== WalletType.Social) return
         await disconnect(config)
         setUserWithProvider(undefined, undefined)
-        setAuthState(AuthState.Disconnected)
     }
 
     async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
         await connect(config, { connector: happyConnector })
-        setAuthState(AuthState.Connected)
     }
 
     async onConnect(user: HappyUser, provider: EIP1193Provider) {
@@ -52,6 +49,5 @@ export class GoogleConnector extends FirebaseConnector {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
         await connect(config, { connector: happyConnector })
-        setAuthState(AuthState.Connected)
     }
 }

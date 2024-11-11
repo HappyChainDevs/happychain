@@ -6,11 +6,10 @@ import type {
     MsgsFromApp,
     MsgsFromIframe,
 } from "@happychain/sdk-shared"
-import { AuthState, EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happychain/sdk-shared"
+import { EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happychain/sdk-shared"
 import { connect, disconnect } from "@wagmi/core"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
-import { setAuthState } from "#src/state/authState.ts"
 import { config } from "#src/wagmi/config.ts"
 import { happyConnector } from "#src/wagmi/connector.ts"
 import { iframeID } from "../requests/utils"
@@ -57,20 +56,17 @@ export class InjectedConnector implements ConnectionProvider {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
         await connect(config, { connector: happyConnector })
-        setAuthState(AuthState.Connected)
     }
 
     public async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
         await connect(config, { connector: happyConnector })
-        setAuthState(AuthState.Connected)
     }
 
     public async onDisconnect() {
         await disconnect(config)
         setUserWithProvider(undefined, undefined)
-        setAuthState(AuthState.Disconnected)
     }
 
     public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {

@@ -19,7 +19,7 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
 
     private initialized = false
 
-    private authState: AuthState = AuthState.Connecting
+    private authState: AuthState = AuthState.Initializing
     private lastConnectedType: WalletType | undefined
 
     constructor(private config: HappyProviderConfig) {
@@ -66,7 +66,7 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
 
     public async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
         // wait until either authenticated or unauthenticated
-        await waitForCondition(() => this.initialized && this.authState !== AuthState.Connecting)
+        await waitForCondition(() => this.initialized && this.authState !== AuthState.Initializing)
 
         try {
             return await this.activeHandler.request(args)
