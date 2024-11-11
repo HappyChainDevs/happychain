@@ -11,7 +11,7 @@
             "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
         },
-        ".migrations": {
+        "./migrations": {
             "default": "./dist/migrate.es.js",
             "types": "./dist/migrate.es.d.ts"
         }

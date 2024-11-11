@@ -142,7 +142,7 @@ export class TransactionManager {
         // Start the gas price oracle to prevent other parts of the application from calling `suggestGasForNextBlock` before the gas price oracle has initialized the gas price after processing the first block
         const priceOraclePromise = this.gasPriceOracle.start()
 
-        // Start the transaction repository, which depends on the initialized database driver
+        // Start the transaction repository
         await this.transactionRepository.start()
 
         // Start the nonce manager, which depends on the transaction repository
