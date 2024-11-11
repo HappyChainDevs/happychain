@@ -5,5 +5,6 @@ export default defineConfig({
         entrypoints: ["./src/index.ts"],
         minify: false,
         target: "node",
+        external: ["better-sqlite3"],
     },
 })

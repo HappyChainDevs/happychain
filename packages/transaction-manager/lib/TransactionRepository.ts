@@ -16,11 +16,11 @@ export class TransactionRepository {
     async start() {
         const transactionRows = await db
             .selectFrom("transaction")
-            .where("status", "<@", NotFinalizedStatuses)
+            .where("status", "in", NotFinalizedStatuses)
             .selectAll()
             .execute()
 
-        this.notFinalizedTransactions = transactionRows.map((row) => new Transaction(row))
+        this.notFinalizedTransactions = transactionRows.map((row) => Transaction.fromDbRow(row))
     }
 
     getNotFinalizedTransactions(): Transaction[] {
@@ -78,6 +78,7 @@ export class TransactionRepository {
     }
 
     getHighestNonce(): number | undefined {
+        console.log(this.notFinalizedTransactions)
         return this.notFinalizedTransactions.length > 0
             ? Math.max(...this.notFinalizedTransactions.flatMap((t) => t.attempts.map((a) => a.nonce)))
             : undefined

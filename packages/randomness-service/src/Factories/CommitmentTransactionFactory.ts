@@ -17,7 +17,7 @@ export class CommitmentTransactionFactory {
             chainId: this.chainId,
             address: this.randomContractAddress,
             functionName: "postCommitment",
-            alias: "Random",
+            contractName: "Random",
             args: [timestamp, commitment],
             deadline: Number(timestamp - this.precommitDelay),
         })

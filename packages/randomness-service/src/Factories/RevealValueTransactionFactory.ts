@@ -15,7 +15,7 @@ export class RevealValueTransactionFactory {
             chainId: this.chainId,
             address: this.randomContractAddress,
             functionName: "revealValue",
-            alias: "Random",
+            contractName: "Random",
             args: [timestamp, revealedValue],
             deadline: Number(timestamp),
         })

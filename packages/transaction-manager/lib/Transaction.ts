@@ -1,5 +1,5 @@
-import { type UUID, createUUID } from "@happychain/common"
-import type { Insertable } from "kysely"
+import { type UUID, bigIntReplacer, bigIntReviver, createUUID } from "@happychain/common"
+import type { Insertable, Selectable } from "kysely"
 import type { Address, ContractFunctionArgs, Hash } from "viem"
 import type { LatestBlock } from "./BlockMonitor"
 import type { TransactionTable } from "./db/types.js"
@@ -129,11 +129,20 @@ export class Transaction {
             address: this.address,
             functionName: this.functionName,
             contractName: this.contractName,
-            args: JSON.stringify(this.args),
+            args: JSON.stringify(this.args, bigIntReplacer),
             deadline: this.deadline,
             status: this.status,
-            attempts: JSON.stringify(this.attempts),
-            metadata: this.metadata ? JSON.stringify(this.metadata) : undefined,
+            attempts: JSON.stringify(this.attempts, bigIntReplacer),
+            metadata: this.metadata ? JSON.stringify(this.metadata, bigIntReplacer) : undefined,
         }
+    }
+
+    static fromDbRow(row: Selectable<TransactionTable>): Transaction {
+        return new Transaction({
+            ...row,
+            args: JSON.parse(row.args, bigIntReviver),
+            attempts: JSON.parse(row.attempts, bigIntReviver),
+            metadata: row.metadata ? JSON.parse(row.metadata, bigIntReviver) : undefined,
+        })
     }
 }

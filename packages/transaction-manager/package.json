@@ -10,6 +10,10 @@
         ".": {
             "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
+        },
+        ".migrations": {
+            "default": "./dist/migrate.es.js",
+            "types": "./dist/migrate.es.d.ts"
         }
     },
     "dependencies": {
