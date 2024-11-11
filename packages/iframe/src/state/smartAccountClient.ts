@@ -1,3 +1,4 @@
+import { accessorsFromAtom } from "@happychain/common"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import { createSmartAccountClient } from "permissionless"
@@ -8,12 +9,14 @@ import type { Transport } from "viem"
 import type { GetPaymasterDataParameters, GetPaymasterStubDataParameters, SmartAccount } from "viem/account-abstraction"
 import { ACCOUNT_ABSTRACTION_CONTRACTS, BUNDLER_RPC_URL } from "#src/constants/accountAbstraction"
 import { currentChainAtom } from "./chains"
+import { type KernelSmartAccount, kernelAccountAtom } from "./kernelAccount"
 import { paymasterClientAtom } from "./paymasterClient"
 import { publicClientAtom } from "./publicClient"
-import { type KernelSmartAccount, kernelAccountAtom } from "./smartAccount"
 
 export type KernelSmartAccountClient = SmartAccountClient<Transport, undefined, KernelSmartAccount>
-export const kernelClientAtom: Atom<Promise<SmartAccountClient & Erc7579Actions<SmartAccount>>> = atom(async (get) => {
+export type ExtendedSmartAccountClient = SmartAccountClient & Erc7579Actions<SmartAccount>
+
+export const smartAccountClientAtom: Atom<Promise<ExtendedSmartAccountClient>> = atom(async (get) => {
     const publicClient = get(publicClientAtom)
     const paymasterClient = get(paymasterClientAtom)
     const currentChain = get(currentChainAtom)
@@ -35,19 +38,18 @@ export const kernelClientAtom: Atom<Promise<SmartAccountClient & Erc7579Actions<
 
                 return {
                     paymaster: paymasterAddress,
-                    paymasterData: "0x", // Only required for extra context, no need to encode paymaster gas values manually
+                    paymasterData: "0x",
                     paymasterVerificationGasLimit: gasEstimates.paymasterVerificationGasLimit ?? 0n,
                     paymasterPostOpGasLimit: gasEstimates.paymasterPostOpGasLimit ?? 0n,
                 }
             },
 
-            // Using stub values from the docs for paymaster-related fields in unsigned user operations for gas estimation.
             async getPaymasterStubData(_parameters: GetPaymasterStubDataParameters) {
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x",
-                    paymasterVerificationGasLimit: 80_000n, // Increased value to account for possible higher gas usage
-                    paymasterPostOpGasLimit: 0n, // Set to 0 since the postOp function is never called
+                    paymasterVerificationGasLimit: 80_000n,
+                    paymasterPostOpGasLimit: 0n,
                 }
             },
         },
@@ -59,5 +61,7 @@ export const kernelClientAtom: Atom<Promise<SmartAccountClient & Erc7579Actions<
     })
 
     const smartAccountClientWithExtensions = basicSmartAccountClient.extend(erc7579Actions())
-    return smartAccountClientWithExtensions as typeof basicSmartAccountClient & typeof smartAccountClientWithExtensions
+    return smartAccountClientWithExtensions as unknown as ExtendedSmartAccountClient
 })
+
+export const { getValue: getSmartAccountClient } = accessorsFromAtom(smartAccountClientAtom)
