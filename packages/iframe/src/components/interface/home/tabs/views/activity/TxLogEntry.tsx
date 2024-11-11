@@ -4,7 +4,6 @@ import clsx from "clsx"
 import { formatEther } from "viem"
 
 import { useAtomValue } from "jotai"
-import { useMemo } from "react"
 import { currentChainAtom } from "#src/state/chains"
 import type { TxInfo } from "#src/state/txHistory"
 
@@ -17,9 +16,7 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     const { receipt, value } = tx
 
-    const sentTxValue = useMemo(() => {
-        return `-${formatEther(value)} HAPPY`
-    }, [value])
+    const sentTxValue = `-${formatEther(value)} HAPPY`
 
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
