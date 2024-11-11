@@ -10,5 +10,6 @@ export async function up(db) {
         .addColumn("deadline", "integer")
         .addColumn("status", "text", (col) => col.notNull())
         .addColumn("attempts", "json", (col) => col.notNull())
-        .addColumn("metadata", "json").execute()
+        .addColumn("metadata", "json")
+        .execute()
 }
