@@ -30,12 +30,6 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
     switch (request.payload.method) {
-        // @todo - remove the case below ; debugging purpose only
-        case "eth_call": {
-            console.debug(request.payload.method, request.payload.params)
-            return sendToPublicClient(app, request)
-        }
-
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
             return currChain ?? (await sendToPublicClient(app, request))
