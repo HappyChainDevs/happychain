@@ -1,11 +1,12 @@
 import { shortenAddress } from "@happychain/sdk-shared"
-import { ArrowUpRight, CircleNotch } from "@phosphor-icons/react"
+import { ArrowUpRight } from "@phosphor-icons/react"
 import clsx from "clsx"
 import { formatEther } from "viem"
 
 import { useAtomValue } from "jotai"
 import { currentChainAtom } from "#src/state/chains"
 import type { TxInfo } from "#src/state/txHistory"
+import { useMemo } from "react"
 
 interface TxLogEntryProps {
     tx: TxInfo
@@ -15,6 +16,10 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     const { receipt, value } = tx
+
+    const sentTxValue = useMemo(() => {
+        return `-${formatEther(value)} HAPPY`
+    }, [value])
 
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
@@ -26,7 +31,7 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                     })}
                 />
                 <div className="flex flex-col items-start justify-center">
-                    <span className="text-black">Send</span>
+                    <span>Send</span>
                     <span>
                         <a
                             href={`${blockExplorerUrl}/tx/${receipt.transactionHash}`}
@@ -40,15 +45,7 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                 </div>
             </div>
 
-            <div>
-                {value !== 0n ? (
-                    <span className="text-black font-semibold">{`-${formatEther(value)} HAPPY`}</span>
-                ) : (
-                    <div className="animate-spin">
-                        <CircleNotch />
-                    </div>
-                )}
-            </div>
+            <span className="font-semibold">{sentTxValue}</span>
         </div>
     )
 }
