@@ -41,7 +41,6 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                     </span>
                 </div>
             </div>
-
             <span className="font-semibold">{sentTxValue}</span>
         </div>
     )
