@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
-import { FileMigrationProvider, Migrator,  } from "kysely"
+import { FileMigrationProvider, Migrator } from "kysely"
 import { db } from "./db/driver"
 
 console.log(path.join(__dirname, "../migrations"))
@@ -13,7 +13,6 @@ async function migrateToLatest() {
             path,
             migrationFolder: path.join(__dirname, "../migrations"),
         }),
-    
     })
 
     const { error, results } = await migrator.migrateToLatest()
