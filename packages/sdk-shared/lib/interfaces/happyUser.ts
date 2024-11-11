@@ -23,6 +23,8 @@ export type HappyUser = {
     ens: string
 
     /** Currently active address */
+    controllingAddress: `0x${string}`
+    /** Associated smart account address */
     address: `0x${string}`
     /** All owned addresses */
     addresses: `0x${string}`[]
