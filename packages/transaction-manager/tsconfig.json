@@ -9,5 +9,5 @@
             "ts-node": ["./node_modules/ts-node/dist/bin.js"]
         }
     },
-    "include": ["lib", "*.ts", "package.json"]
+    "include": ["lib", "*.ts", "package.json", "migrations"]
 }

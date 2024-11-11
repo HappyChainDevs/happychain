@@ -1,5 +1,4 @@
-import { unknownToError } from "@happychain/common"
-import { type Result, ResultAsync, err, ok } from "neverthrow"
+import { type Result, err, ok } from "neverthrow"
 import type { Hash, Hex, TransactionRequestEIP1559 } from "viem"
 import { encodeFunctionData, keccak256 } from "viem"
 import type { EstimateGasErrorCause } from "./GasEstimator.js"
@@ -15,7 +14,7 @@ export type AttemptSubmissionParameters = Omit<Attempt, "hash" | "gas">
 
 export enum AttemptSubmissionErrorCause {
     ABINotFound = "ABINotFound",
-    FailedToFlush = "FailedToFlush",
+    FailedToUpdate = "FailedToUpdate",
     FailedToEstimateGas = "FailedToEstimateGas",
     FailedToSignTransaction = "FailedToSignTransaction",
     FailedToSendRawTransaction = "FailedToSendRawTransaction",
@@ -106,11 +105,11 @@ export class TransactionSubmitter {
             gas: transactionRequest.gas,
         })
 
-        const flushResult = await ResultAsync.fromPromise(this.txmgr.transactionRepository.flush(), unknownToError)
+        const updateResult = await this.txmgr.transactionRepository.updateTransaction(transaction)
 
-        if (flushResult.isErr()) {
+        if (updateResult.isErr()) {
             transaction.removeAttempt(hash)
-            return err({ cause: AttemptSubmissionErrorCause.FailedToFlush, flushed: false })
+            return err({ cause: AttemptSubmissionErrorCause.FailedToUpdate, flushed: false })
         }
 
         const sendRawTransactionResult = await this.txmgr.viemWallet.safeSendRawTransaction({

@@ -10,41 +10,22 @@
         ".": {
             "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
-        },
-        "./mikro-orm.config": {
-            "default": "./dist/mikro-orm.config.es.js",
-            "types": "./dist/mikro-orm.config.es.d.ts"
         }
-    },
-    "mikro-orm": {
-        "configPaths": ["./dist/mikro-orm.config.es.js"]
     },
     "dependencies": {
         "@happychain/common": "workspace:^",
         "@happychain/configs": "workspace:^",
         "@happychain/contracts": "workspace:^",
-        "@mikro-orm/better-sqlite": "^6.3.10",
-        "@mikro-orm/core": "^6.3.10",
-        "@mikro-orm/migrations": "^6.3.10",
+        "better-sqlite3": "^11.5.0",
         "eventemitter3": "^5.0.1",
-        "neverthrow": "^8.0.0",
-        "sqlite3": "npm:empty-module@0.0.2",
-        "mysql2": "npm:empty-module@0.0.2",
-        "mysql": "npm:empty-module@0.0.2",
-        "tedious": "npm:empty-module@0.0.2",
-        "pg": "npm:empty-module@0.0.2",
-        "pg-query-stream": "npm:empty-module@0.0.2",
-        "mariadb": "npm:empty-module@0.0.2",
-        "mariadb/callback": "npm:empty-module@0.0.2",
-        "libsql": "npm:empty-module@0.0.2",
-        "oracledb": "npm:empty-module@0.0.2"
+        "kysely": "^0.27.4"
     },
     "peerDependencies": {
         "viem": "^2.20.1"
     },
     "devDependencies": {
         "@happychain/scripts": "workspace:^",
-        "@mikro-orm/cli": "^6.3.10",
+        "@types/better-sqlite3": "^7.6.11",
         "ts-node": "11.0.0-beta.1",
         "typescript": "^5.6.2"
     }

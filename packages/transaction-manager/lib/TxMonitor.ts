@@ -105,7 +105,7 @@ export class TxMonitor {
         await Promise.all(promises)
 
         const result = await ResultAsync.fromPromise(
-            this.transactionManager.transactionRepository.flush(),
+            this.transactionManager.transactionRepository.updateTransactions(transactions),
             unknownToError,
         )
 

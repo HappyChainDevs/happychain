@@ -4,7 +4,6 @@ import {
     convertToSafeViemPublicClient,
     convertToSafeViemWalletClient,
 } from "@happychain/common"
-import type { EntityManager } from "@mikro-orm/core"
 import { type Abi, type Account, type Chain, type Transport, createPublicClient, createWalletClient } from "viem"
 import { ABIManager } from "./AbiManager.js"
 import { BlockMonitor, type LatestBlock } from "./BlockMonitor.js"
@@ -16,7 +15,6 @@ import { TransactionCollector } from "./TransactionCollector.js"
 import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
 import { TxMonitor } from "./TxMonitor.js"
-import { dbDriver, startDbDriver } from "./db.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
 
 export type TransactionManagerConfig = {
@@ -88,7 +86,6 @@ export class TransactionManager {
     public readonly gasEstimator: GasEstimator
     public readonly abiManager: ABIManager
     public readonly pendingTxReporter: TxMonitor
-    public entityManager!: EntityManager
     public readonly transactionRepository: TransactionRepository
     public readonly transactionCollector: TransactionCollector
     public readonly transactionSubmitter: TransactionSubmitter
@@ -144,10 +141,6 @@ export class TransactionManager {
     public async start(): Promise<void> {
         // Start the gas price oracle to prevent other parts of the application from calling `suggestGasForNextBlock` before the gas price oracle has initialized the gas price after processing the first block
         const priceOraclePromise = this.gasPriceOracle.start()
-
-        // Initialize the database driver and set up the EntityManager
-        await startDbDriver()
-        this.entityManager = dbDriver.em.fork()
 
         // Start the transaction repository, which depends on the initialized database driver
         await this.transactionRepository.start()
