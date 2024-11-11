@@ -10,7 +10,6 @@
     },
     "devDependencies": {
         "@biomejs/biome": "^1.9.3",
-        "@mikro-orm/cli": "^6.3.12",
         "husky": "^9.1.6",
         "typescript": "^5.6.2"
     },

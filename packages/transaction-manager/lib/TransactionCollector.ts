@@ -1,5 +1,3 @@
-import { unknownToError } from "@happychain/common"
-import { ResultAsync } from "neverthrow"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType } from "./Transaction.js"
@@ -20,15 +18,10 @@ export class TransactionCollector {
             .flatMap((c) => c(block))
             .sort((a, b) => (a.deadline ?? Number.POSITIVE_INFINITY) - (b.deadline ?? Number.POSITIVE_INFINITY))
 
-        this.txmgr.transactionRepository.saveTransactions(transactionsBatch)
+        const saveResult = await this.txmgr.transactionRepository.saveTransactions(transactionsBatch)
 
-        // TODO: If flush fails, we should notify the user
-        const flushResult = await ResultAsync.fromPromise(this.txmgr.transactionRepository.flush(), unknownToError)
-
-        if (flushResult.isErr()) {
-            console.error("Failed to flush transactions", flushResult.error)
-            this.txmgr.transactionRepository.removeTransactions(transactionsBatch)
-            throw flushResult.error
+        if (saveResult.isErr()) {
+            throw saveResult.error
         }
 
         await Promise.all(

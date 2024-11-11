@@ -1,8 +1,8 @@
 import { type UUID, createUUID } from "@happychain/common"
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core"
+import type { Insertable } from "kysely"
 import type { Address, ContractFunctionArgs, Hash } from "viem"
 import type { LatestBlock } from "./BlockMonitor"
-import { JsonBigIntTypeOrm } from "./JsonBigIntTypeOrm.js"
+import type { TransactionTable } from "./db/types.js"
 
 export enum TransactionStatus {
     Pending = "Pending",
@@ -29,40 +29,29 @@ export interface Attempt {
 
 export const NotFinalizedStatuses = [TransactionStatus.Pending, TransactionStatus.Cancelling]
 
-@Entity()
 export class Transaction {
-    @PrimaryKey()
     readonly intentId: UUID
 
-    @Property()
     readonly chainId: number
 
-    @Property()
     readonly address: Address
 
-    @Property()
     readonly functionName: string
 
-    @Property({ type: JsonBigIntTypeOrm, nullable: true })
-    readonly args: ContractFunctionArgs | undefined
+    readonly args: ContractFunctionArgs
 
-    @Property()
     readonly contractName: string
 
-    @Property({ type: "integer", nullable: true })
     readonly deadline: number | undefined
 
-    @Property({ type: "string" })
     status: TransactionStatus
 
-    @Property({ type: JsonBigIntTypeOrm })
     readonly attempts: Attempt[]
 
     /**
      * Stores additional information for the transaction.
      * Enables originators to provide extra details, such as gas limits, which can be leveraged by customizable services.
      */
-    @Property({ type: JsonBigIntTypeOrm, nullable: true })
     metadata: Record<string, unknown> | undefined
 
     constructor({
@@ -70,7 +59,7 @@ export class Transaction {
         chainId,
         address,
         functionName,
-        alias,
+        contractName,
         args,
         deadline,
         status,
@@ -81,7 +70,7 @@ export class Transaction {
         chainId: number
         address: Address
         functionName: string
-        alias: string
+        contractName: string
         args: ContractFunctionArgs
         deadline?: number
         status?: TransactionStatus
@@ -92,7 +81,7 @@ export class Transaction {
         this.chainId = chainId
         this.address = address
         this.functionName = functionName
-        this.contractName = alias
+        this.contractName = contractName
         this.args = args
         this.deadline = deadline
         this.status = status ?? TransactionStatus.Pending
@@ -131,5 +120,20 @@ export class Transaction {
 
     get lastAttempt(): Attempt | undefined {
         return this.attempts[this.attempts.length - 1]
+    }
+
+    toDbRow(): Insertable<TransactionTable> {
+        return {
+            intentId: this.intentId,
+            chainId: this.chainId,
+            address: this.address,
+            functionName: this.functionName,
+            contractName: this.contractName,
+            args: JSON.stringify(this.args),
+            deadline: this.deadline,
+            status: this.status,
+            attempts: JSON.stringify(this.attempts),
+            metadata: this.metadata ? JSON.stringify(this.metadata) : undefined,
+        }
     }
 }
