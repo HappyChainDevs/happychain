@@ -2,8 +2,8 @@ import { type UUID, bigIntReplacer, bigIntReviver, createUUID } from "@happychai
 import type { Insertable, Selectable } from "kysely"
 import type { Address, ContractFunctionArgs, Hash } from "viem"
 import type { LatestBlock } from "./BlockMonitor"
+import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionTable } from "./db/types.js"
-import { eventBus, Topics } from "./EventBus.js"
 
 export enum TransactionStatus {
     Pending = "Pending",
