@@ -3,8 +3,6 @@ import path from "node:path"
 import { FileMigrationProvider, Migrator } from "kysely"
 import { db } from "./db/driver"
 
-console.log(path.join(__dirname, "../migrations"))
-
 async function migrateToLatest() {
     const migrator = new Migrator({
         db,
