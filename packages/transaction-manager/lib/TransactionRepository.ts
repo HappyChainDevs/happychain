@@ -78,7 +78,6 @@ export class TransactionRepository {
     }
 
     getHighestNonce(): number | undefined {
-        console.log(this.notFinalizedTransactions)
         return this.notFinalizedTransactions.length > 0
             ? Math.max(...this.notFinalizedTransactions.flatMap((t) => t.attempts.map((a) => a.nonce)))
             : undefined
