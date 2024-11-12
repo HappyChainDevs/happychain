@@ -12,7 +12,7 @@ interface Commitment {
 export class CommitmentManager {
     private readonly map = new Map<bigint, Commitment>()
 
-    generateCommitmentForTimestamp(): Omit<Commitment, "transactionIntentId"> {
+    generateCommitment(): Omit<Commitment, "transactionIntentId"> {
         const value = this.generateRandomness()
         const commitment = this.hashValue(value)
         const commitmentObject = { value, commitment }

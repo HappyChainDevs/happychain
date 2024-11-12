@@ -41,7 +41,7 @@ class RandomnessService {
 
         // We try to commit the ramdomness POST_COMMIT_MARGIN to be safe that the transaction is included before the PRECOMMIT_DELAY
         const commitmentTimestamp = block.timestamp + env.PRECOMMIT_DELAY + env.POST_COMMIT_MARGIN
-        const commitment = this.commitmentManager.generateCommitmentForTimestamp()
+        const commitment = this.commitmentManager.generateCommitment()
 
         const commitmentTransaction = this.commitmentTransactionFactory.create(
             commitmentTimestamp,
@@ -61,7 +61,6 @@ class RandomnessService {
             const transaction = await this.txm.getTransaction(revealValueCommitment.transactionIntentId)
 
             if (transaction?.status === TransactionStatus.Success) {
-                console.log(transaction)
                 const revealValueTransaction = this.revealValueTransactionFactory.create(
                     block.timestamp + env.TIME_BLOCK,
                     revealValueCommitment.value,
