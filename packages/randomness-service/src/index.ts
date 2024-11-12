@@ -1,4 +1,4 @@
-import { TransactionManager, TxmHookType } from "@happychain/transaction-manager"
+import { TransactionManager, TransactionStatus } from "@happychain/transaction-manager"
 import type { LatestBlock, Transaction } from "@happychain/transaction-manager"
 import { webSocket } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
@@ -34,17 +34,14 @@ class RandomnessService {
 
         this.txm.start()
         this.txm.addTransactionCollector(this.onCollectTransactions.bind(this))
-        this.txm.addHook(TxmHookType.TransactionStatusChanged, (event) => {
-            console.log(event)
-        })
     }
 
-    private onCollectTransactions(block: LatestBlock): Transaction[] {
+    private async onCollectTransactions(block: LatestBlock): Promise<Transaction[]> {
         const transactions: Transaction[] = []
 
         // We try to commit the ramdomness POST_COMMIT_MARGIN to be safe that the transaction is included before the PRECOMMIT_DELAY
         const commitmentTimestamp = block.timestamp + env.PRECOMMIT_DELAY + env.POST_COMMIT_MARGIN
-        const commitment = this.commitmentManager.generateCommitmentForTimestamp(commitmentTimestamp)
+        const commitment = this.commitmentManager.generateCommitmentForTimestamp()
 
         const commitmentTransaction = this.commitmentTransactionFactory.create(
             commitmentTimestamp,
@@ -53,14 +50,24 @@ class RandomnessService {
 
         transactions.push(commitmentTransaction)
 
+        this.commitmentManager.setCommitmentForTimestamp(commitmentTimestamp, {
+            ...commitment,
+            transactionIntentId: commitmentTransaction.intentId,
+        })
+
         const revealValueCommitment = this.commitmentManager.getCommitmentForTimestamp(block.timestamp + env.TIME_BLOCK)
 
         if (revealValueCommitment) {
-            const revealValueTransaction = this.revealValueTransactionFactory.create(
-                block.timestamp + env.TIME_BLOCK,
-                revealValueCommitment.value,
-            )
-            transactions.push(revealValueTransaction)
+            const transaction = await this.txm.getTransaction(revealValueCommitment.transactionIntentId)
+
+            if (transaction?.status === TransactionStatus.Success) {
+                console.log(transaction)
+                const revealValueTransaction = this.revealValueTransactionFactory.create(
+                    block.timestamp + env.TIME_BLOCK,
+                    revealValueCommitment.value,
+                )
+                transactions.push(revealValueTransaction)
+            }
         }
 
         return transactions

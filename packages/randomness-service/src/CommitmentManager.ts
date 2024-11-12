@@ -1,21 +1,26 @@
 import crypto from "node:crypto"
+import type { UUID } from "@happychain/common"
 import type { Hex } from "viem"
 import { encodePacked, keccak256 } from "viem"
 
 interface Commitment {
     value: bigint
     commitment: Hex
+    transactionIntentId: UUID
 }
 
 export class CommitmentManager {
     private readonly map = new Map<bigint, Commitment>()
 
-    generateCommitmentForTimestamp(timestamp: bigint): Commitment {
+    generateCommitmentForTimestamp(): Omit<Commitment, "transactionIntentId"> {
         const value = this.generateRandomness()
         const commitment = this.hashValue(value)
         const commitmentObject = { value, commitment }
-        this.map.set(timestamp, commitmentObject)
         return commitmentObject
+    }
+
+    setCommitmentForTimestamp(timestamp: bigint, commitment: Commitment): void {
+        this.map.set(timestamp, commitment)
     }
 
     getCommitmentForTimestamp(timestamp: bigint): Commitment | undefined {

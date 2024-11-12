@@ -23,11 +23,6 @@ export class HookManager {
         eventBus.on(Topics.TransactionStatusChanged, this.onTransactionStatusChanged.bind(this))
     }
 
-    /**
-     * Adds a hook to the hook manager.
-     * @param type - The type of hook to add. Defaults to All.
-     * @param handler - The handler function to add.
-     */
     public async addHook({ type, handler }: { type?: TxmHookType; handler: TxmHookHandler }): Promise<void> {
         const mapKey = type ?? "All"
 
