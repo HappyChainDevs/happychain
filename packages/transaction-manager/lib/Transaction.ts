@@ -116,8 +116,7 @@ export class Transaction {
         this.status = status
 
         eventBus.emit(Topics.TransactionStatusChanged, {
-            intentId: this.intentId,
-            status,
+            transaction: this,
         })
     }
 

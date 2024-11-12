@@ -14,8 +14,9 @@ export class TransactionCollector {
     private async onNewBlock(block: LatestBlock) {
         const { maxFeePerGas, maxPriorityFeePerGas } = this.txmgr.gasPriceOracle.suggestGasForNextBlock()
 
-        const transactionsBatch = this.txmgr.collectors
-            .flatMap((c) => c(block))
+        const transactionUnsorted = await Promise.all(this.txmgr.collectors.map((c) => c(block)))
+        const transactionsBatch = transactionUnsorted
+            .flat()
             .sort((a, b) => (a.deadline ?? Number.POSITIVE_INFINITY) - (b.deadline ?? Number.POSITIVE_INFINITY))
 
         const saveResult = await this.txmgr.transactionRepository.saveTransactions(transactionsBatch)

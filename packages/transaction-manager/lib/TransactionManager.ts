@@ -76,7 +76,7 @@ export type TransactionManagerConfig = {
     gasEstimator?: GasEstimator
 }
 
-export type TransactionOriginator = (block: LatestBlock) => Transaction[]
+export type TransactionOriginator = (block: LatestBlock) => Promise<Transaction[]>
 
 export class TransactionManager {
     public readonly collectors: TransactionOriginator[]
