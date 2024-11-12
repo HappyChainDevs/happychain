@@ -130,7 +130,7 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     }
 
     const permissionsMap = store.get(permissionsMapAtom)
-    const appPermissions = permissionsMap[user.address]?.[app]
+    const appPermissions = permissionsMap[user.address]?.[app] // should we use `address` or `controllingAddress` here ?
 
     if (appPermissions) {
         return appPermissions
@@ -155,7 +155,7 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     // It's not required to set the permissionsAtom here because the permissions don't actually
     // change (so nothing dependent on the atom needs to update). We just write them to avoid
     // rerunning the above logic on each lookup.
-    permissionsMap[user.address] ??= {}
+    permissionsMap[user.address] ??= {} // should we use `address` or `controllingAddress` here ?
     permissionsMap[user.address][app] = baseAppPermissions
 
     return baseAppPermissions
@@ -192,7 +192,7 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
 
         return {
             ...prev,
-            [user.address]: { ...prev[user.address], [app]: appPermissions },
+            [user.address]: { ...prev[user.address], [app]: appPermissions }, // should we use `address` or `controllingAddress` here ?
         }
     })
 }
@@ -206,7 +206,7 @@ export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
     store.set(permissionsMapAtom, (prev) => {
-        const { [user.address]: _, ...rest } = prev
+        const { [user.address]: _, ...rest } = prev // should we use `address` or `controllingAddress` here ?
         return rest
     })
 }
@@ -219,7 +219,7 @@ export function clearAppPermissions(app: AppURL): void {
     if (!user) return
     store.set(permissionsMapAtom, (prev) => {
         const {
-            [user.address]: { [app]: _, ...otherApps },
+            [user.address]: { [app]: _, ...otherApps }, // should we use `address` or `controllingAddress` here ?
             ...otherUsers
         } = prev
         return { ...otherUsers, [user.address]: otherApps }
