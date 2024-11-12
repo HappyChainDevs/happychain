@@ -3,6 +3,8 @@ name: Deploy iframe
 on:
   workflow_dispatch:
 
+env:
+  IFRAME_URL: https://iframe.happy.tech
 
 jobs:
   deploy:
