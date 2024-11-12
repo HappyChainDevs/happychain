@@ -12,7 +12,8 @@ export function createHappyUserFromWallet(providerId: string, address: `0x${stri
         ens: "",
         avatar: `https://avatar.vercel.sh/${address}?size=400`,
         // web3 details
-        address: address,
+        controllingAddress: address,
+        address,
         addresses: [address],
     }
 }

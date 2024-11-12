@@ -39,6 +39,7 @@ export function generateTestUser(): HappyUser {
         avatar: `https://avatar.vercel.sh/${address}?size=400`,
         // web3 details
         address: address,
+        controllingAddress: address,
         addresses: [address],
     }
 }
