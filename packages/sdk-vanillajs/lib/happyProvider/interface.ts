@@ -10,9 +10,9 @@ import type {
     MsgsFromIframe,
     ProviderMsgsFromApp,
     ProviderMsgsFromIframe,
-    config,
 } from "@happychain/sdk-shared"
 import type SafeEventEmitter from "@metamask/safe-event-emitter"
+import type { config } from "../config"
 
 /**
  * HappyProvider is a EIP1193 Ethereum Provider {@link https://eips.ethereum.org/EIPS/eip-1193}

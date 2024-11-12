@@ -8,6 +8,7 @@ import {
     Msgs,
     type ProviderMsgsFromIframe,
 } from "@happychain/sdk-shared"
+import { config } from "../config"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 type InFlightCheck = {
@@ -26,6 +27,7 @@ type InFlightCheck = {
  */
 export class SocialWalletHandler extends BasePopupProvider implements EIP1193ConnectionHandler {
     // === SETUP ===================================================================================
+    protected popupBaseUrl = config.iframePath
 
     private inFlightChecks = new Map<string, InFlightCheck>()
     private user: HappyUser | undefined

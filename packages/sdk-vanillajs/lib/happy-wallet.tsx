@@ -1,7 +1,8 @@
 /** @jsxImportSource preact */
-import { AuthState, config } from "@happychain/sdk-shared"
+import { AuthState } from "@happychain/sdk-shared"
 import { clsx } from "clsx"
 import { useEffect, useState } from "preact/hooks"
+import { config } from "./config"
 import cssStyles from "./happy-wallet.css?inline"
 import { onAuthStateUpdate, onModalUpdate } from "./happyProvider/initialize"
 

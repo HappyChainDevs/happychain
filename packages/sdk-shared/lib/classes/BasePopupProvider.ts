@@ -1,6 +1,5 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happychain/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { config } from "../config"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "../interfaces/errors"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
@@ -47,6 +46,7 @@ type InFlightRequest = {
  */
 export abstract class BasePopupProvider extends SafeEventEmitter {
     // === FIELDS ==================================================================================
+    protected abstract popupBaseUrl: string
 
     private inFlightRequests = new Map<string, InFlightRequest>()
     private timer: Timer | null = null
@@ -69,7 +69,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
 
         // noinspection JSVoidFunctionReturnValueUsed
         const popup = requiresApproval
-            ? this.openPopupAndAwaitResponse(key, args, this.windowId as UUID, config.iframePath)
+            ? this.openPopupAndAwaitResponse(key, args, this.windowId as UUID)
             : this.handlePermissionless(key, args)
         this.trackRequest(key, { resolve, reject, popup: popup })
         return promise
@@ -129,13 +129,8 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     /**
      * Opens a popup window for the user request approval process.
      */
-    private openPopupAndAwaitResponse(
-        key: UUID,
-        args: EIP1193RequestParameters,
-        windowId: UUID,
-        baseUrl: string,
-    ): Window | undefined {
-        const url = new URL("request", baseUrl)
+    private openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters, windowId: UUID): Window | undefined {
+        const url = new URL("request", this.popupBaseUrl)
         const opts = {
             windowId: windowId,
             key: key,
