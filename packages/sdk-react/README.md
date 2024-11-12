@@ -74,16 +74,34 @@ onUserUpdate((user) => {
 
 ```ts
 type HappyUser = {
+    uid: string
+
     /**
-     * Social Details
+     * Social
      */
     email: string
     name: string
     avatar: string
 
     /**
-     * Currently active wallet address
+     * Connection Details
      */
+    /** Connection Provider (rabby, metamask, google) */
+    provider: string
+    /** Connected Wallet Type */
+    type: WalletType
+
+    /**
+     * On-Chain
+     */
+    /** Active Address's ENS */
+    ens: string
+
+    /** Currently active address */
+    controllingAddress: `0x${string}`
+    /** Associated smart account address */
     address: `0x${string}`
+    /** All owned addresses */
+    addresses: `0x${string}`[]
 }
 ```
