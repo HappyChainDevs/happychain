@@ -21,7 +21,7 @@ export class TransactionRepository {
             .where("status", "in", NotFinalizedStatuses)
             .selectAll()
             .execute()
-    
+
         this.notFinalizedTransactions = transactionRows.map((row) => Transaction.fromDbRow(row))
         eventBus.on(Topics.NewBlock, this.purgeFinalizedTransactions.bind(this))
     }
