@@ -44,9 +44,14 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     }
 
     abstract getAuthProvider(): AuthProvider
-
-    abstract onConnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
-    abstract onReconnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
+    abstract onConnect(
+        user: Omit<HappyUser, "controllingAddress" | "addresses">,
+        provider: EIP1193Provider,
+    ): Promise<void> | void
+    abstract onReconnect(
+        user: Omit<HappyUser, "controllingAddress" | "addresses">,
+        provider: EIP1193Provider,
+    ): Promise<void> | void
     abstract onDisconnect(): Promise<void> | void
 
     /**
@@ -111,7 +116,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             name: user.displayName || "",
             ens: "", // filled in later, async, using a jotai atom subscription
             avatar: user.photoURL || "",
-        } satisfies Omit<HappyUser, "address" | "addresses">
+        } satisfies Omit<HappyUser, "address" | "controllingAddress" | "addresses">
     }
 
     private static makeHappyUser(
@@ -122,6 +127,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             ...user,
             // web3 details
             address: addresses[0],
+            controllingAddress: addresses[0],
             addresses,
         } satisfies HappyUser
     }

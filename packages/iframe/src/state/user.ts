@@ -30,6 +30,7 @@ export const { getValue: getUser, setValue: setUser } = accessorsFromAtom(userAt
 function formatUser(user: HappyUser): HappyUser {
     return {
         ...user,
+        controllingAddress: getAddress(user.controllingAddress),
         address: getAddress(user.address),
         addresses: user.addresses.map(getAddress),
     }

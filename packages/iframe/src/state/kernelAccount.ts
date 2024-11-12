@@ -29,7 +29,7 @@ export async function createKernelAccount(walletAddress?: `0x${string}`): Promis
               })
             : iframeProvider
 
-        return await toEcdsaKernelSmartAccount({
+        const account = await toEcdsaKernelSmartAccount({
             client: publicClient,
             entryPoint: {
                 address: entryPoint07Address,
@@ -42,6 +42,11 @@ export async function createKernelAccount(walletAddress?: `0x${string}`): Promis
             factoryAddress: ACCOUNT_ABSTRACTION_CONTRACTS.KernelFactory,
             metaFactoryAddress: ACCOUNT_ABSTRACTION_CONTRACTS.FactoryStaker,
         })
+
+        console.info("owner address", walletAddress)
+        console.info("smart account address", account.address)
+
+        return account
     } catch (error) {
         console.error("Kernel account could not be created:", error)
         return undefined
