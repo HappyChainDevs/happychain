@@ -11,9 +11,9 @@ import {
     type MsgsFromIframe,
     type ProviderMsgsFromApp,
     type ProviderMsgsFromIframe,
-    config,
 } from "@happychain/sdk-shared"
 import type { RpcBlock } from "viem"
+import { config } from "../config"
 import { HappyProvider } from "./happyProvider"
 import { SocialWalletHandler } from "./socialWalletHandler"
 

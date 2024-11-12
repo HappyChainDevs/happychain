@@ -13,6 +13,8 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
  * The provider routes the call to our logic in the `requests` directory.
  */
 export class IframeProvider extends BasePopupProvider {
+    protected popupBaseUrl = getIframeURL()
+
     constructor() {
         super(iframeID())
     }

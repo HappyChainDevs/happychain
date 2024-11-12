@@ -2,8 +2,6 @@ import SafeEventEmitter from "@metamask/safe-event-emitter"
 
 // === VALUES ======================================================================================
 
-export { config } from "./config"
-
 export * as chains from "./chains"
 export { getChainFromSearchParams, convertToViemChain } from "./chains/utils"
 

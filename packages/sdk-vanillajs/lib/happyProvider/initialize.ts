@@ -6,9 +6,10 @@ import type {
     ProviderMsgsFromApp,
     ProviderMsgsFromIframe,
 } from "@happychain/sdk-shared"
-import { EventBus, EventBusMode, ModalStates, Msgs, config } from "@happychain/sdk-shared"
+import { EventBus, EventBusMode, ModalStates, Msgs } from "@happychain/sdk-shared"
 import { announceProvider } from "mipd"
 import type { EIP1193Provider } from "viem"
+import { config } from "../config"
 import { HappyProvider, HappyProviderSSRSafe } from "./happyProvider"
 import { icon64x64 } from "./icons"
 import type { HappyProviderPublic } from "./interface"

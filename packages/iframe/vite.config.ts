@@ -28,7 +28,7 @@ if (config.error) {
 // https://vitejs.dev/config/
 export default defineConfig({
     server: { port: 5160 },
-    preview: { port: 5160 },
+    preview: { port: 4160 },
     plugins: [
         TanStackRouterVite(),
         react({ babel: { presets: ["jotai/babel/preset"] } }),
