@@ -5,6 +5,7 @@ import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
 import { StorageKey, storage } from "#src/services/storage.ts"
 import { getChains } from "#src/state/chains.ts"
+import { createKernelAccount } from "#src/state/kernelAccount.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
 import { getAppURL } from "#src/utils/appURL.ts"
 import { config } from "#src/wagmi/config.ts"
@@ -67,19 +68,40 @@ export class GoogleConnector extends FirebaseConnector {
     }
 
     async onReconnect(user: HappyUser, provider: EIP1193Provider) {
-        setUserWithProvider(user, provider)
+        let happyUser = user
+        const kernelAccount = await createKernelAccount(happyUser.address)
+        if (kernelAccount?.address) {
+            // Update user with smart account
+            happyUser = {
+                ...happyUser,
+                controllingAddress: happyUser.address,
+                address: kernelAccount.address,
+            }
+        }
+
+        setUserWithProvider(happyUser, provider)
         await connectWagmi(config, { connector: happyConnector })
     }
 
     async onConnect(user: HappyUser, provider: EIP1193Provider) {
+        let happyUser = user
         if (user && provider) {
             await Promise.allSettled(
                 Object.values(getChains()).map((chain) => {
                     provider.request({ method: "wallet_addEthereumChain", params: [chain] })
                 }),
             )
+            const kernelAccount = await createKernelAccount(happyUser.address)
+            if (kernelAccount?.address) {
+                // Update user with smart account
+                happyUser = {
+                    ...happyUser,
+                    controllingAddress: happyUser.address,
+                    address: kernelAccount.address,
+                }
+            }
         }
-        setUserWithProvider(user, provider)
+        setUserWithProvider(happyUser, provider)
         grantPermissions(getAppURL(), "eth_accounts")
         await connectWagmi(config, { connector: happyConnector })
     }
