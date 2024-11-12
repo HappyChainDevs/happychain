@@ -138,6 +138,12 @@ export class TransactionManager {
         this.blockTime = _config.blockTime || 2n
     }
 
+    /**
+     * Adds a collector to the transaction manager.
+     * A collector is a function that returns a list of transactions to be sent in the next block.
+     * It is important that the collector function is as fast as possible to avoid delays when sending transactions to the blockchain
+     * @param collector - The collector to add.
+     */
     public addTransactionCollector(collector: TransactionOriginator): void {
         this.collectors.push(collector)
     }
