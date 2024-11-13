@@ -20,6 +20,7 @@ jobs:
 
       - name: Build code
         run: |
+          printf "${IFRAME_ENV}" > packages/iframe/.env
           make setup
           make iframe.build
 
