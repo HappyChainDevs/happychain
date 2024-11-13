@@ -3,6 +3,27 @@ import { SharedWorkerPlugin } from "@happychain/worker"
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
+import z from "zod"
+
+// Quick build time env checks
+
+const config = z
+    .object({
+        VITE_FIREBASE_API_KEY: z.string(),
+        VITE_FIREBASE_AUTH_DOMAIN: z.string(),
+        VITE_FIREBASE_PROJECT_ID: z.string(),
+        VITE_FIREBASE_STORAGE_BUCKET: z.string(),
+        VITE_FIREBASE_MESSAGE_SENDER_ID: z.string(),
+        VITE_FIREBASE_APP_ID: z.string(),
+        VITE_WEB3AUTH_CLIENT_ID: z.string(),
+        VITE_WEB3AUTH_NETWORK: z.string(),
+        VITE_WEB3AUTH_VERIFIER: z.string(),
+    })
+    .safeParse(import.meta.env ?? process.env) // import.meta.env is unavailable in tests
+if (config.error) {
+    console.log(config.error.errors)
+    process.exit(1)
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
