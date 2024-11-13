@@ -114,9 +114,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
 async function sendToWalletClient(request: PopupMsgs[Msgs.PopupApprove]) {
     const client: Client | undefined = getWalletClient()
-    if (!client) {
-        throw new EIP1193DisconnectedError()
-    }
+    if (!client) throw new EIP1193DisconnectedError()
 
     if (requestPayloadIsHappyMethod(request.payload)) {
         throw new EIP1193UnsupportedMethodError()

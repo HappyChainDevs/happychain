@@ -34,8 +34,7 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
 
     protected handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
         // Note that this always works regardless of log in or connection status.
-        // TODO: Msgs.InjectedRequest
-        void this.config.providerBus.emit(Msgs.RequestPermissionless, {
+        void this.config.providerBus.emit(Msgs.RequestInjected, {
             key,
             windowId: this.config.windowId,
             error: null,

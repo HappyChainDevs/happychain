@@ -9,6 +9,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
 
     constructor() {
         super()
+        // TODO: how to handle
         happyProviderBus.on(Msgs.ExecuteInjectedResponse, (resp) => {
             const pending = this.inFlight.get(resp.key)
             console.log({ iframe: resp, pending })
