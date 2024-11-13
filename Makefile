@@ -253,6 +253,7 @@ account.build:
 .PHONY: account.build
 
 js-demo.build:
+	make shared.build
 	cd packages/demo-vanillajs && make build
 .PHONY: js-demo.build
 
