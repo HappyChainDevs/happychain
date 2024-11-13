@@ -1,53 +1,44 @@
-import { requestLabels } from "../../constants/requestLabels"
+import { Button } from "../primitives/button/Button"
+import RawRequestDetails from "./common/RawRequestDetails"
+import RequestContent from "./common/RequestContent"
+import RequestLayout from "./common/RequestLayout"
 import type { RequestConfirmationProps } from "./props"
 
-export function WalletRequestPermissions({
+export const WalletRequestPermissions = ({
     method,
     params,
     reject,
     accept,
-}: RequestConfirmationProps<"wallet_requestPermissions">) {
+}: RequestConfirmationProps<"wallet_requestPermissions">) => {
     return (
-        <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
-            <div className="flex w-full grow flex-col gap-4">
-                <div className="w-full rounded-lg bg-base-200 p-4 font-bold">{window.location.origin}</div>
-                <div className="w-full rounded-lg bg-base-200 p-4 font-bold">
-                    {requestLabels[method] ?? "Unknown Signature Type"}
-                </div>
+        <RequestLayout method={method}>
+            <RequestContent>
+                <ul>
+                    {params.map((param) => {
+                        const [[name]] = Object.entries(param)
+                        return (
+                            <li className="italic font-mono" key={name}>
+                                {name}
+                            </li>
+                        )
+                    })}
+                </ul>
 
-                <div className="flex grow flex-col gap-4 overflow-x-auto bg-zinc-100 p-4">
-                    <div className="border-b border-zinc-300 pb-2 text-center text-sm font-bold text-blue-600">
-                        Request Permissions
-                    </div>
-                    <ul>
-                        {params.map((param) => {
-                            const [[name]] = Object.entries(param)
-                            return <li key={name}>{name}</li>
-                        })}
-                    </ul>
-                </div>
-            </div>
-
-            <div>
-                <br />
-            </div>
+                <RawRequestDetails params={params} />
+            </RequestContent>
 
             <div className="flex w-full gap-4">
-                <button
-                    type="button"
-                    className="btn grow border-2 border-green-300 bg-green-300 hover:bg-green-400"
+                <Button
+                    intent="primary"
+                    className="grow text-neutral-content justify-center"
                     onClick={() => accept({ method, params })}
                 >
-                    Allow
-                </button>
-                <button
-                    type="button"
-                    className="btn border-2 border-red-300 bg-red-100 hover:border-red-100 hover:bg-red-100"
-                    onClick={reject}
-                >
+                    Sign
+                </Button>
+                <Button intent="outline-negative" className="text-base-content" onClick={reject}>
                     Reject
-                </button>
+                </Button>
             </div>
-        </main>
+        </RequestLayout>
     )
 }
