@@ -75,6 +75,9 @@ export enum Msgs {
     /** Sends a request that does not require user approval. */
     RequestPermissionless = "request:permissionless",
 
+    /** Sends a request that will be routed through the injected wallet. */
+    RequestInjected = "request:injected",
+
     /** Sent to check if a request requires user approval. */
     PermissionCheckRequest = "permission-check:request",
 
@@ -174,6 +177,7 @@ export type MsgsFromIframe = {
  */
 export type ProviderMsgsFromApp = {
     [Msgs.RequestPermissionless]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.RequestInjected]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.ExecuteInjectedResponse]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
 }

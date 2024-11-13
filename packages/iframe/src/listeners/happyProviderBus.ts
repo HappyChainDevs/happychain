@@ -1,4 +1,5 @@
 import { Msgs } from "@happychain/sdk-shared"
+import { handleInjectedRequest } from "#src/requests/injected"
 import { handlePermissionlessRequest } from "../requests"
 import { happyProviderBus } from "../services/eventBus"
 import { getAppURL } from "../utils/appURL"
@@ -9,6 +10,7 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
  * and publicClient middleware stack
  */
 happyProviderBus.on(Msgs.RequestPermissionless, handlePermissionlessRequest)
+happyProviderBus.on(Msgs.RequestInjected, handleInjectedRequest)
 
 /**
  * Receives permission checks from the dapp for all requests,
