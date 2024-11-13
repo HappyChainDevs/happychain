@@ -1,8 +1,23 @@
 /// <reference types="vite/client" />
-/// <reference types="../connections/firebase/lib/vite-env" />
 
-// biome-ignore lint/complexity/noBannedTypes: left for easy modifications
-type ImportMetaEnv = {}
+type ImportMetaEnv = {
+    /**
+     * Firebase Setup
+     */
+    readonly VITE_FIREBASE_API_KEY: string
+    readonly VITE_FIREBASE_AUTH_DOMAIN: string
+    readonly VITE_FIREBASE_PROJECT_ID: string
+    readonly VITE_FIREBASE_STORAGE_BUCKET: string
+    readonly VITE_FIREBASE_MESSAGE_SENDER_ID: string
+    readonly VITE_FIREBASE_APP_ID: string
+
+    /**
+     * Web3Auth Setup
+     */
+    readonly VITE_WEB3AUTH_CLIENT_ID: string
+    readonly VITE_WEB3AUTH_NETWORK: "sapphire_mainnet" | "sapphire_devnet"
+    readonly VITE_WEB3AUTH_VERIFIER: string
+}
 
 interface ImportMeta {
     readonly env: ImportMetaEnv
