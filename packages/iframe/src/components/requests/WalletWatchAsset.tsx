@@ -1,58 +1,60 @@
+import { Button } from "../primitives/button/Button"
+import RawRequestDetails from "./common/RawRequestDetails"
+import RequestContent from "./common/RequestContent"
+import RequestLayout from "./common/RequestLayout"
 import type { RequestConfirmationProps } from "./props"
 
-export function WatchAsset({ method, params, reject, accept }: RequestConfirmationProps<"wallet_watchAsset">) {
+export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConfirmationProps<"wallet_watchAsset">) => {
     const { type, options } = params
 
     return (
-        <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
-            <div className="flex w-full grow flex-col gap-4">
-                <div className="w-full rounded-lg bg-base-200 p-4 font-bold">{window.location.origin}</div>
-
-                <div className="flex grow flex-col gap-4 bg-zinc-100 p-4">
-                    <div className="border-b border-zinc-300 pb-2 text-center text-sm font-bold text-blue-600">
-                        Asset Details
-                    </div>
-                    <div className="flex flex-col gap-2 text-sm">
-                        <div className="font-bold">Type:</div>
-                        <div>{type || "N/A"}</div>
-                    </div>
-                    {options && (
-                        <div className="flex flex-col gap-2 text-sm">
-                            <div className="font-bold">Options:</div>
-                            <div>
-                                <span className="font-semibold">Address:</span> {options.address || "N/A"}
+        <RequestLayout method={method}>
+            <RequestContent>
+                <div className="flex grow flex-col gap-4 overflow-y-auto rounded-lg bg-base-200 p-4">
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col items-center gap-2">
+                            <span className="text-2xl font-bold">Asset Details</span>
+                        </div>
+                        <div className="flex flex-col gap-4 rounded-lg bg-base-100 p-4">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-content">Type:</span>
+                                <span className="font-mono text-sm">{type}</span>
                             </div>
-                            <div>
-                                <span className="font-semibold">Decimals:</span> {options.decimals ?? "N/A"}
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-content">Symbol:</span>
+                                <span className="font-mono text-sm">{options.symbol}</span>
                             </div>
-                            <div>
-                                <span className="font-semibold">Symbol:</span> {options.symbol || "N/A"}
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-content">Contract Address:</span>
+                                <span className="font-mono text-sm">{options.address}</span>
                             </div>
-                            <div className="flex flex-row h-16 items-center justify-start space-x-2">
-                                <span className="font-semibold">Image URL:</span>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-content">Decimals:</span>
+                                <span className="font-mono text-sm">{options.decimals}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-content">Image URL:</span>
                                 <img src={options.image} alt={"N/A"} className="h-12 w-12 rounded-xl" />
                             </div>
+
+                            <RawRequestDetails params={params} />
                         </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            </RequestContent>
 
             <div className="flex w-full gap-4">
-                <button
-                    type="button"
-                    className="btn grow border-2 border-green-300 bg-green-300 hover:bg-green-400"
+                <Button
+                    intent="primary"
+                    className="grow text-neutral-content justify-center"
                     onClick={() => accept({ method, params })}
                 >
                     Add
-                </button>
-                <button
-                    type="button"
-                    className="btn border-2 border-red-300 bg-red-100 hover:border-red-100 hover:bg-red-100"
-                    onClick={reject}
-                >
-                    Cancel
-                </button>
+                </Button>
+                <Button intent="outline-negative" className="text-base-content" onClick={reject}>
+                    Reject
+                </Button>
             </div>
-        </main>
+        </RequestLayout>
     )
 }
