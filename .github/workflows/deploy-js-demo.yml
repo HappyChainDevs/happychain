@@ -20,7 +20,10 @@ jobs:
           bun-version: latest
 
       - name: Build code
+        env:
+          IFRAME_URL: "https://iframe.happy.tech"
         run: |
+          echo "IFRAME_URL: $IFRAME_URL"
           make setup
           make js-demo.build
       - name: Copy files to server
