@@ -89,17 +89,34 @@ export class SharedWorkerClient {
      * worker to a local async function which executes as an RPC call to the SharedWorkerServer
      */
     __defineFunction(name: string) {
-        return <T>(...args: T[]) => {
+        const rpcFunc = async <T>(...args: T[]) => {
             const id = crypto.randomUUID()
             const payload = makeRpcRequestPayload(id, name, args)
-            return new Promise((res, rej) => {
-                this.callbacks.set(id, (payload) => {
-                    const action = payload.isError ? rej : res
-                    action(payload.args)
+            try {
+                return await new Promise((res, rej) => {
+                    this.callbacks.set(id, (result) => {
+                        if (result.isError) {
+                            return rej(result.args)
+                        }
+
+                        return res(result.args)
+                    })
+                    this.port.postMessage(payload)
                 })
-                this.port.postMessage(payload)
-            })
+            } catch (_e) {
+                if (!(_e instanceof Error)) throw _e
+
+                // leave original message, merge the stacks.
+                const e: Pick<Error, "stack" | "cause"> = { stack: undefined, cause: undefined }
+                Error.captureStackTrace(e, rpcFunc)
+                const split = e.stack?.split("\n") || []
+                split.splice(0, 1, "")
+                _e.stack += split.join("\n")
+                throw _e
+            }
         }
+
+        return rpcFunc
     }
 
     /**

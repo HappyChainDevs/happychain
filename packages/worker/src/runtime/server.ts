@@ -111,12 +111,18 @@ export class SharedWorkerServer implements ServerInterface {
                             const func = this._functions.get(payload.data.name)
 
                             if (func?.name) {
-                                const args = event.data?.data?.args?.map(JSON.stringify) ?? []
-                                console.error(
-                                    "Error calling worker function\n\n",
-                                    `\t${func.name}(${args.join(", ")})\n\t  ->`,
-                                    errorMsg,
-                                )
+                                const err = e instanceof Error ? e : new Error(e?.toString())
+                                // remove port.onmessage from stack trace. This runs on the assumption that
+                                // the stack will have 10 or fewer frames. If there are more frames than this
+                                // we are dropping them anyways, as 10 is the current (default) limit,
+                                // so the risk of dropping one extra frame here is low.
+                                err.stack = err.stack?.split("\n").slice(0, -1).join("\n")
+
+                                if (e instanceof Error) {
+                                    port.postMessage(
+                                        makeRpcResponsePayload(payload.data.id, payload.data.name, err, true),
+                                    )
+                                }
                             } else {
                                 console.error(`Unknown function called ${payload.data.name}`, errorMsg)
                             }

@@ -19,29 +19,32 @@ const web3AuthWorkerStorage = {
     },
 }
 
-const web3Auth = new Web3AuthMPCCoreKit({
+const web3AuthOptions = {
     web3AuthClientId: import.meta.env.VITE_WEB3AUTH_CLIENT_ID,
     web3AuthNetwork: config.web3AuthNetwork,
     manualSync: true,
     tssLib: tssLib,
     enableLogging: false,
     storage: web3AuthWorkerStorage,
-})
+}
+const web3Auth = new Web3AuthMPCCoreKit(web3AuthOptions)
+
+const signerProviderChainConfig = {
+    chainNamespace: config.web3AuthChainNamespace,
+    chainId: config.chainId,
+    rpcTarget: config.rpcUrls[0],
+    displayName: config.chainName,
+    blockExplorerUrl: config.blockExplorerUrls?.[0],
+    ticker: config.nativeCurrency.symbol,
+    tickerName: config.nativeCurrency.name,
+    decimals: config.nativeCurrency.decimals,
+    wsTarget: undefined, // unsupported currently
+}
 
 const ethereumSigningProvider = new EthereumSigningProvider({
     config: {
         skipLookupNetwork: true,
-        chainConfig: {
-            chainNamespace: config.web3AuthChainNamespace,
-            chainId: config.chainId,
-            rpcTarget: config.rpcUrls[0],
-            displayName: config.chainName,
-            blockExplorerUrl: config.blockExplorerUrls?.[0],
-            ticker: config.nativeCurrency.symbol,
-            tickerName: config.nativeCurrency.name,
-            decimals: config.nativeCurrency.decimals,
-            wsTarget: undefined, // unsupported currently
-        },
+        chainConfig: signerProviderChainConfig,
     },
 })
 ethereumSigningProvider.setupProvider(makeEthereumSigner(web3Auth))

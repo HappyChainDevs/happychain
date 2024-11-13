@@ -16,7 +16,7 @@ export async function setFirebaseSharedUser(_user?: HappyUser) {
 
 let state = FirebaseAuthState.Disconnected
 
-export function getFirebaseAuthState() {
+export async function getFirebaseAuthState() {
     return state
 }
 export async function setFirebaseAuthState(_state: FirebaseAuthState) {

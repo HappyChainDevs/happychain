@@ -3,9 +3,9 @@ import { connect, disconnect } from "@wagmi/core"
 import { type AuthProvider, GoogleAuthProvider } from "firebase/auth"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
+import { StorageKey, storage } from "#src/services/storage.ts"
 import { getChains } from "#src/state/chains.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
-import { getUser } from "#src/state/user.ts"
 import { getAppURL } from "#src/utils/appURL.ts"
 import { config } from "#src/wagmi/config.ts"
 import { happyConnector } from "#src/wagmi/connector.ts"
@@ -28,7 +28,19 @@ export class GoogleConnector extends FirebaseConnector {
     }
 
     async onDisconnect() {
-        if (getUser()?.type !== WalletType.Social) return
+        /**
+         * Note: its important to check user in localStorage here instead of userAtom for
+         * the page-load reconnect to work properly.
+         *
+         * 'userAtom' is undefined on page load, and is set after a successful login attempt is made.
+         * In the event that something goes sideways on page-load/reconnect where the user is
+         * set in localStorage, but fails to authenticate for some reason, the reconnect will attempt
+         * a disconnect to clear everything and start fresh. Since the user isn't actually connected
+         * yet, `userAtom` will be undefined, and so getUser()?.type will not be WalletType.Social
+         * and the user cache in localStorage here will never be cleared properly, causing this process
+         * to repeat on the next page refresh.
+         */
+        if (storage.get(StorageKey.HappyUser)?.type !== WalletType.Social) return
         await disconnect(config)
         setUserWithProvider(undefined, undefined)
     }
