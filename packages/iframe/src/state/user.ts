@@ -5,21 +5,21 @@ import { atom } from "jotai"
 import { getAddress } from "viem"
 import { StorageKey, storage } from "../services/storage.ts"
 
+type OptionalUser = HappyUser | undefined
+const userCompare = (a: OptionalUser, b: OptionalUser) => a?.uid === b?.uid
+const initialUserValue = undefined
+
 // Base atom for the user, wrapped by `userAtom` to provide a custom setter.
-// biome-ignore format: readability
-const baseUserAtom = atomWithCompare<HappyUser | undefined>(
-    undefined,
-    (a, b) => a?.uid === b?.uid,
-)
+const baseUserAtom = atomWithCompare<OptionalUser>(initialUserValue, userCompare)
 
 export const userAtom = atom(
     (get) => get(baseUserAtom),
-    (_get, set, newUser: HappyUser | undefined) => {
+    (_get, set, newUser: OptionalUser) => {
         if (newUser?.address) {
             const formattedUser = formatUser(newUser)
             set(baseUserAtom, formattedUser)
             // share the user with the popup
-            storage.set(StorageKey.HappyUser, newUser)
+            storage.set(StorageKey.HappyUser, formattedUser)
         } else {
             set(baseUserAtom, undefined)
             storage.remove(StorageKey.HappyUser)

@@ -31,7 +31,7 @@ const UserInfo = () => {
     }
 
     if (account.address !== user.address) {
-        console.warn("Could not validate user address")
+        console.warn("Could not validate user address", account.address, user.address)
         return
     }
 

@@ -130,15 +130,23 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         partialUser: ReturnType<typeof FirebaseConnector.makeHappyUserPartial>,
         token: JWTLoginParams,
     ) {
-        for (let i = 0; i < 5; i++) {
+        const maxRetries = 3
+        for (let i = 0; i < maxRetries; i++) {
             try {
                 // have to refresh JWT since web3auth fails if duplicate token is found
                 const addresses = await web3AuthConnect(token)
                 const user = FirebaseConnector.makeHappyUser(partialUser, addresses)
                 await setFirebaseSharedUser(user)
                 return user
-            } catch {
-                await new Promise((resolve) => setTimeout(resolve, 1_000))
+            } catch (e) {
+                if (e instanceof Error && e.message.includes("not logged in yet")) {
+                    // web3Auth can't connect, disconnect everything to allow user to retry
+                    console.warn("Failed to connect. Clearing user", await getFirebaseAuthState())
+                    return await this.disconnect()
+                }
+
+                console.warn(`Failed to connect to web3Auth, Retrying ${i + 1}/${maxRetries}`, e)
+                await new Promise((resolve) => setTimeout(resolve, 3_000))
             }
         }
     }
