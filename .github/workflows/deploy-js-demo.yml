@@ -19,6 +19,8 @@ jobs:
           bun-version: latest
 
       - name: Build code
+        env:
+          IFRAME_URL: "https://iframe.happy.tech"
         run: |
           make setup
           make js-demo.build
