@@ -15,6 +15,7 @@ import {
     signInWithPopup,
 } from "firebase/auth"
 import type { EIP1193Provider } from "viem"
+import { createKernelAccount } from "#src/state/kernelAccount.ts"
 import { getPermissions } from "#src/state/permissions.ts"
 import { getAppURL } from "#src/utils/appURL.ts"
 import { firebaseAuth } from "../services/firebase"
@@ -119,17 +120,25 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         } satisfies Omit<HappyUser, "address" | "controllingAddress" | "addresses">
     }
 
-    private static makeHappyUser(
+    private static async makeHappyUser(
         user: ReturnType<typeof FirebaseConnector.makeHappyUserPartial>,
         addresses: `0x${string}`[],
+        smartAccountAddress?: `0x${string}`,
     ) {
-        return {
+        const happyUser = {
             ...user,
             // web3 details
             address: addresses[0],
             controllingAddress: addresses[0],
             addresses,
-        } satisfies HappyUser
+        }
+
+        if (smartAccountAddress) {
+            happyUser.controllingAddress = smartAccountAddress
+            happyUser.addresses.push(smartAccountAddress)
+        }
+
+        return happyUser satisfies HappyUser
     }
 
     private async connectWithWeb3Auth(
@@ -141,7 +150,8 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             try {
                 // have to refresh JWT since web3auth fails if duplicate token is found
                 const addresses = await web3AuthConnect(token)
-                const user = FirebaseConnector.makeHappyUser(partialUser, addresses)
+                const account = await createKernelAccount(addresses[0])
+                const user = await FirebaseConnector.makeHappyUser(partialUser, addresses, account?.address)
                 await setFirebaseSharedUser(user)
                 return user
             } catch (e) {
