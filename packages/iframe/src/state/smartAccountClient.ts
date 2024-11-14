@@ -7,7 +7,8 @@ import type { SmartAccountClient } from "permissionless/clients"
 import { http } from "viem"
 import type { Transport } from "viem"
 import type { GetPaymasterDataParameters, GetPaymasterStubDataParameters, SmartAccount } from "viem/account-abstraction"
-import { ACCOUNT_ABSTRACTION_CONTRACTS, BUNDLER_RPC_URL } from "#src/constants/accountAbstraction"
+import { BUNDLER_RPC_URL } from "#src/constants/accountAbstraction"
+import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts.ts"
 import { currentChainAtom } from "./chains"
 import { type KernelSmartAccount, kernelAccountAtom } from "./kernelAccount"
 import { paymasterClientAtom } from "./paymasterClient"
@@ -22,8 +23,8 @@ export const smartAccountClientAtom: Atom<Promise<ExtendedSmartAccountClient | u
     const publicClient = get(publicClientAtom)
     const paymasterClient = get(paymasterClientAtom)
     const currentChain = get(currentChainAtom)
-
-    const paymasterAddress = ACCOUNT_ABSTRACTION_CONTRACTS.HappyPaymaster
+    const contracts = getAccountAbstractionContracts(currentChain.chainId)
+    const paymasterAddress = contracts.HappyPaymaster
     const basicSmartAccountClient = createSmartAccountClient({
         account: smartAccount,
         chain: convertToViemChain(currentChain),

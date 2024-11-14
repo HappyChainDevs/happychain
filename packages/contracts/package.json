@@ -6,6 +6,7 @@
     "files": ["*.sol", "deployments/**/*"],
     "type": "module",
     "exports": {
+        "./AccountAbstractionHappySepolia": "./deployments/happy-sepolia/aa/deployment.json",
         "./mockTokens/sepolia": "./deployments/happy-sepolia/mockTokens/abis.ts"
     },
     "dependencies": {
