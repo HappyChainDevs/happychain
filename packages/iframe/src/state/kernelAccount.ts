@@ -5,7 +5,6 @@ import { type EcdsaKernelSmartAccountImplementation, toEcdsaKernelSmartAccount }
 import { http, createPublicClient, createWalletClient } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts.ts"
-import { iframeProvider } from "#src/wagmi/provider"
 import { getCurrentChain } from "./chains"
 import { walletClientAtom } from "./walletClient"
 
@@ -24,12 +23,10 @@ export async function createKernelAccount(walletAddress: `0x${string}`): Promise
         // 1. `publicClientAtom` uses `transportAtom` for its `transport` value, which can be either `custom()` or `http()`
         // 2. `toEcdsaKernelSmartAccount()` expects a simple client with direct RPC access
         const publicClient = createPublicClient(clientOptions)
-        const owner = walletAddress
-            ? createWalletClient({
-                  ...clientOptions,
-                  account: walletAddress,
-              })
-            : iframeProvider
+        const owner = createWalletClient({
+            ...clientOptions,
+            account: walletAddress,
+        })
 
         const account = await toEcdsaKernelSmartAccount({
             client: publicClient,
@@ -44,9 +41,6 @@ export async function createKernelAccount(walletAddress: `0x${string}`): Promise
             factoryAddress: contracts.KernelFactory,
             metaFactoryAddress: contracts.FactoryStaker,
         })
-
-        console.info("owner address", walletAddress)
-        console.info("smart account address", account.address)
 
         return account
     } catch (error) {
