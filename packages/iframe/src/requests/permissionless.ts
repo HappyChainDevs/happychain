@@ -28,7 +28,7 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 // exported for testing
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
-    console.log("GETTING PERMISSIONLESS CLIENT (iframeProvider?)", request.payload)
+
     switch (request.payload.method) {
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId

@@ -17,11 +17,13 @@ export function bigIntMax(...values: bigint[]): bigint {
 /**
  * Function to handle `bigint` serialization
  */
-export const bigIntReplacer = (_key: string, value: unknown): unknown =>
-    typeof value === "bigint" ? `#bigint.${value}` : value
+export const bigIntReplacer = (_key: string, value: unknown): unknown => {
+    return typeof value === "bigint" ? `#bigint.${value}` : value
+}
 
 /**
  * Function to handle `bigint` deserialization
  */
-export const bigIntReviver = (_key: string, value: unknown): unknown =>
-    typeof value === "string" && value.startsWith("#bigint.") ? BigInt(value.slice(8)).valueOf() : value
+export const bigIntReviver = (_key: string, value: unknown): unknown => {
+    return typeof value === "string" && value.startsWith("#bigint.") ? BigInt(value.slice(8)).valueOf() : value
+}

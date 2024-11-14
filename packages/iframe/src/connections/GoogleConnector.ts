@@ -12,6 +12,27 @@ import { happyConnector } from "#src/wagmi/connector.ts"
 import { FirebaseConnector } from "./firebase"
 import { googleLogo } from "./firebase/logos"
 
+/**
+ * A connector for handling Google social authentication in the Happy Wallet.
+ * Extends FirebaseConnector to provide Google-specific sign-in flows.
+ *
+ * This connector manages the lifecycle of a wallet user's signing in with their Google account. It handles :
+ * - Initial connection and chain setup
+ * - Reconnection scenarios
+ * - Disconnection cleanup
+ *
+ * @extends FirebaseConnector
+ * @example
+ * ```ts
+ * const connector = new GoogleConnector()
+ * await connector.connect({ method: 'eth_requestAccounts' })
+ * // user is now authenticated via firebase (google)
+ * // & connected via web3Auth, ready to make transactions
+ * await connector.disconnect()
+ * // user is now un-authenticated & only public RPC calls
+ * // can be made
+ * ```
+ */
 export class GoogleConnector extends FirebaseConnector {
     constructor() {
         super({

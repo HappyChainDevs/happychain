@@ -1,7 +1,9 @@
 import { createBigIntStorage } from "@happychain/common"
+import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import type { Address, Hash, TransactionReceipt } from "viem"
 import { StorageKey } from "../services/storage"
+import { userAtom } from "./user"
 
 /**
  * Represents the details of a pending transaction,
@@ -43,3 +45,16 @@ export const pendingTxsAtom = atomWithStorage<Record<Address, PendingTxDetails[]
     createBigIntStorage<Record<Address, PendingTxDetails[]>>(),
     { getOnInit: true },
 )
+
+export const userTxsAtom = atom((get) => {
+    const user = get(userAtom)
+    const history = get(confirmedTxsAtom)
+    const pending = get(pendingTxsAtom)
+
+    if (!user) return { history: [], pending: [] }
+
+    return {
+        pending: pending[user.address] ?? [],
+        history: history[user.address] ?? [],
+    }
+})

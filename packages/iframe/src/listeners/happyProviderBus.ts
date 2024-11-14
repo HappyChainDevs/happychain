@@ -6,10 +6,13 @@ import { getAppURL } from "../utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 /**
- * Process direct-from-app RPC requests using the public client
- * and publicClient middleware stack
+ * Process direct-from-app RPC requests using the public client and publicClient middleware stack
  */
 happyProviderBus.on(Msgs.RequestPermissionless, handlePermissionlessRequest)
+
+/**
+ * Process direct-from-app RPC requests using the injected wallet client middleware stack
+ */
 happyProviderBus.on(Msgs.RequestInjected, handleInjectedRequest)
 
 /**

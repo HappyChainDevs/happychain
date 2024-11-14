@@ -14,7 +14,6 @@ export const injectedClientAtom: Atom<AccountInjectedClient | undefined> = atom<
         if (!user?.address) return
         return createWalletClient({
             account: user.address,
-            // TODO: This should work when embedded, but what about direct-access?
             transport: custom(new InjectedProviderProxy()),
         })
     },

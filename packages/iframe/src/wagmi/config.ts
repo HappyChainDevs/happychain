@@ -23,10 +23,6 @@ const chains = [currentChain, ...allChains].filter(onlyUnique)
 export const config = createConfig({
     chains: chains as unknown as readonly [Chain, ...Chain[]],
     multiInjectedProviderDiscovery: false,
-    client: ({ chain }) =>
-        createClient({
-            chain,
-            transport: custom(iframeProvider),
-        }),
+    client: ({ chain }) => createClient({ chain, transport: custom(iframeProvider) }),
     connectors: [happyConnector],
 })

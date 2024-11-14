@@ -7,17 +7,18 @@ export function getIframeURL(): AppURL {
 }
 
 const _appURL = location.ancestorOrigins?.[0] ?? document.referrer
-const appURL = _appURL ? new URL(_appURL).origin : ""
+const _appOrigin = _appURL ? new URL(_appURL).origin : ""
+const appURL = _appOrigin && _appOrigin !== getIframeURL() ? _appOrigin : ""
 
 /**
- * Return true iff we're displayed the iframe directly (not embedded in an app).
+ * Return true if we're displayed the iframe directly (not embedded in an app).
  */
 export function isStandaloneIframe(): boolean {
     return !appURL
 }
 
 /**
- * Return true iff the given URL is the iframe.
+ * Return true if the given URL is the iframe.
  */
 export function isIframe(app: AppURL): boolean {
     return app === getIframeURL()
