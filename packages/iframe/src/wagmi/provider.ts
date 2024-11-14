@@ -1,6 +1,14 @@
 import type { UUID } from "@happychain/common"
-import { AuthState, BasePopupProvider, type EIP1193RequestParameters, waitForCondition } from "@happychain/sdk-shared"
+import {
+    AuthState,
+    BasePopupProvider,
+    type EIP1193RequestParameters,
+    WalletType,
+    waitForCondition,
+} from "@happychain/sdk-shared"
 import type { EIP1193Provider } from "viem"
+import { handleInjectedRequest } from "#src/requests/injected.ts"
+import { getUser } from "#src/state/user.ts"
 import { handlePermissionlessRequest } from "../requests"
 import { iframeID } from "../requests/utils"
 import { getAuthState } from "../state/authState"
@@ -23,16 +31,22 @@ export class IframeProvider extends BasePopupProvider {
         // We're logging in or out, wait for the auth state to settle.
         await waitForCondition(() => getAuthState() !== AuthState.Initializing)
 
+        if (this.isInjectedUser) return false
+
         return checkIfRequestRequiresConfirmation(getIframeURL(), args)
     }
 
+    private get isInjectedUser() {
+        return getUser()?.type === WalletType.Injected
+    }
+
     protected override handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
-        void handlePermissionlessRequest({
-            key,
-            windowId: iframeID(),
-            error: null,
-            payload: args,
-        })
+        const req = { key, windowId: iframeID(), error: null, payload: args }
+        if (this.isInjectedUser) {
+            void handleInjectedRequest(req)
+        } else {
+            void handlePermissionlessRequest(req)
+        }
     }
 
     protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {

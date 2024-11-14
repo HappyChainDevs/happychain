@@ -1,21 +1,17 @@
 import {
     EIP1193DisconnectedError,
-    EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
-    EIP1193UserRejectedRequestError,
     type Msgs,
     type ProviderMsgsFromApp,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
 import { getInjectedClient } from "#src/state/injectedClient.ts"
-import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions.ts"
-import { getPublicClient } from "../state/publicClient"
+
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
-import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID, checkAuthenticated } from "./utils"
+import { appForSourceID } from "./utils"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -28,7 +24,7 @@ export function handleInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestI
 // exported for testing
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
-
+    console.log("GETTING INJECTED CLIENT", request)
     const client = getInjectedClient()
     if (!client) throw new EIP1193DisconnectedError()
 
@@ -83,7 +79,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
     }
 }
 
-async function sendToInjectedClient(app: AppURL, request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
+async function sendToInjectedClient(_app: AppURL, request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
     const client: Client | undefined = getInjectedClient()
     if (!client) throw new EIP1193DisconnectedError()
 

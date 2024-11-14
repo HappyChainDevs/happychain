@@ -10,13 +10,14 @@ import { EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happychain/s
 import { connect, disconnect } from "@wagmi/core"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
+import { setInjectedProvider } from "#src/state/injectedProvider.ts"
 import { config } from "#src/wagmi/config.ts"
 import { happyConnector } from "#src/wagmi/connector.ts"
 import { iframeID } from "../requests/utils"
 import { appMessageBus } from "../services/eventBus"
 import { StorageKey, storage } from "../services/storage"
 import { grantPermissions, revokePermissions } from "../state/permissions"
-import { getAppURL, isStandaloneIframe } from "../utils/appURL"
+import { getAppURL } from "../utils/appURL"
 import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"
 import { InjectedProviderProxy } from "./InjectedProviderProxy"
 
@@ -72,10 +73,8 @@ export class InjectedConnector implements ConnectionProvider {
 
     public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {
         const { user, request, response } = await this.connectToInjectedWallet(req)
-        await this.onConnect(
-            user,
-            isStandaloneIframe() ? this.detail.provider : (new InjectedProviderProxy() as EIP1193Provider),
-        )
+        setInjectedProvider(this.detail.provider)
+        await this.onConnect(user, new InjectedProviderProxy() as EIP1193Provider)
         return { request, response }
     }
 
@@ -84,6 +83,7 @@ export class InjectedConnector implements ConnectionProvider {
 
         // ensure we clear the right one
         if (past?.provider === this.id) {
+            setInjectedProvider(undefined)
             this.onDisconnect()
         }
     }
@@ -99,10 +99,8 @@ export class InjectedConnector implements ConnectionProvider {
             } as const
 
             this.connectToInjectedWallet(reconnectRequest).then(({ user }: { user: HappyUser }) => {
-                this.onReconnect(
-                    user,
-                    isStandaloneIframe() ? this.detail.provider : (new InjectedProviderProxy() as EIP1193Provider),
-                )
+                setInjectedProvider(this.detail.provider)
+                this.onReconnect(user, new InjectedProviderProxy() as EIP1193Provider)
             })
         }
     }
