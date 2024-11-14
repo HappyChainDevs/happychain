@@ -130,7 +130,7 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     }
 
     const permissionsMap = store.get(permissionsMapAtom)
-    const appPermissions = permissionsMap[user.controllingAddress]?.[app] // should we use `address` or `controllingAddress` here ?
+    const appPermissions = permissionsMap[user.controllingAddress]?.[app]
 
     if (appPermissions) {
         return appPermissions
@@ -155,7 +155,7 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     // It's not required to set the permissionsAtom here because the permissions don't actually
     // change (so nothing dependent on the atom needs to update). We just write them to avoid
     // rerunning the above logic on each lookup.
-    permissionsMap[user.controllingAddress] ??= {} // should we use `address` or `controllingAddress` here ?
+    permissionsMap[user.controllingAddress] ??= {}
     permissionsMap[user.controllingAddress][app] = baseAppPermissions
 
     return baseAppPermissions
@@ -192,7 +192,7 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
 
         return {
             ...prev,
-            [user.controllingAddress]: { ...prev[user.controllingAddress], [app]: appPermissions }, // should we use `address` or `controllingAddress` here ?
+            [user.controllingAddress]: { ...prev[user.controllingAddress], [app]: appPermissions },
         }
     })
 }
@@ -206,7 +206,7 @@ export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
     store.set(permissionsMapAtom, (prev) => {
-        const { [user.controllingAddress]: _, ...rest } = prev // should we use `address` or `controllingAddress` here ?
+        const { [user.controllingAddress]: _, ...rest } = prev
         return rest
     })
 }
@@ -219,7 +219,7 @@ export function clearAppPermissions(app: AppURL): void {
     if (!user) return
     store.set(permissionsMapAtom, (prev) => {
         const {
-            [user.controllingAddress]: { [app]: _, ...otherApps }, // should we use `address` or `controllingAddress` here ?
+            [user.controllingAddress]: { [app]: _, ...otherApps },
             ...otherUsers
         } = prev
         return { ...otherUsers, [user.controllingAddress]: otherApps }
