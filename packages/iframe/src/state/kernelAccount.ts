@@ -4,7 +4,7 @@ import { type Atom, atom } from "jotai"
 import { type EcdsaKernelSmartAccountImplementation, toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { http, createPublicClient, createWalletClient } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
-import { ACCOUNT_ABSTRACTION_CONTRACTS } from "#src/constants/accountAbstraction"
+import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts.ts"
 import { iframeProvider } from "#src/wagmi/provider"
 import { getCurrentChain } from "./chains"
 import { walletClientAtom } from "./walletClient"
@@ -14,6 +14,7 @@ export type KernelSmartAccount = SmartAccount & EcdsaKernelSmartAccountImplement
 export async function createKernelAccount(walletAddress: `0x${string}`): Promise<KernelSmartAccount | undefined> {
     const chain = getCurrentChain()
     const currentChain = convertToViemChain(chain)
+    const contracts = getAccountAbstractionContracts(currentChain.chainId)
     const clientOptions = {
         transport: http(currentChain.rpcUrls[0]),
         chain: currentChain,
@@ -38,10 +39,10 @@ export async function createKernelAccount(walletAddress: `0x${string}`): Promise
             },
             owners: [owner],
             version: "0.3.1",
-            ecdsaValidatorAddress: ACCOUNT_ABSTRACTION_CONTRACTS.ECDSAValidator,
-            accountLogicAddress: ACCOUNT_ABSTRACTION_CONTRACTS.Kernel,
-            factoryAddress: ACCOUNT_ABSTRACTION_CONTRACTS.KernelFactory,
-            metaFactoryAddress: ACCOUNT_ABSTRACTION_CONTRACTS.FactoryStaker,
+            ecdsaValidatorAddress: contracts.ECDSAValidator,
+            accountLogicAddress: contracts.Kernel,
+            factoryAddress: contracts.KernelFactory,
+            metaFactoryAddress: contracts.FactoryStaker,
         })
 
         console.info("owner address", walletAddress)
