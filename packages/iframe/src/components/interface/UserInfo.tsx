@@ -8,7 +8,6 @@ import AddressInfo from "./AddressInfo"
 
 const UserInfo = () => {
     const user = useAtomValue(userAtom)
-
     const activeProvider = useActiveConnectionProvider()
 
     // will display _wagmi_ connected account here to ensure wagmi is successfully connected
@@ -30,8 +29,8 @@ const UserInfo = () => {
         return <UserInfoLoader />
     }
 
-    if (account.address !== user.address) {
-        console.warn("Could not validate user address", account.address, user.address)
+    if (account.address !== user.controllingAddress) {
+        console.warn("Could not validate user address", account.address, user.controllingAddress)
         return
     }
 
@@ -54,7 +53,7 @@ const UserInfo = () => {
             </div>
             <div className="flex flex-col items-start justify-between">
                 {user.type === WalletType.Social && <p>{user?.email || user?.name}</p>}
-                <AddressInfo address={account.address} />
+                <AddressInfo address={user.address} />
             </div>
         </div>
     )
