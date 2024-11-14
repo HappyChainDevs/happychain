@@ -84,24 +84,14 @@ export class GoogleConnector extends FirebaseConnector {
     }
 
     async onConnect(user: HappyUser, provider: EIP1193Provider) {
-        let happyUser = user
         if (user && provider) {
             await Promise.allSettled(
                 Object.values(getChains()).map((chain) => {
                     provider.request({ method: "wallet_addEthereumChain", params: [chain] })
                 }),
             )
-            const kernelAccount = await createKernelAccount(happyUser.address)
-            if (kernelAccount?.address) {
-                // Update user with smart account
-                happyUser = {
-                    ...happyUser,
-                    controllingAddress: happyUser.address,
-                    address: kernelAccount.address,
-                }
-            }
         }
-        setUserWithProvider(happyUser, provider)
+        setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
         await connectWagmi(config, { connector: happyConnector })
     }

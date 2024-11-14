@@ -7,10 +7,11 @@ import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction
 import { ACCOUNT_ABSTRACTION_CONTRACTS } from "#src/constants/accountAbstraction"
 import { iframeProvider } from "#src/wagmi/provider"
 import { getCurrentChain } from "./chains"
+import { walletClientAtom } from "./walletClient"
 
 export type KernelSmartAccount = SmartAccount & EcdsaKernelSmartAccountImplementation<"0.7">
 
-export async function createKernelAccount(walletAddress?: `0x${string}`): Promise<KernelSmartAccount | undefined> {
+export async function createKernelAccount(walletAddress: `0x${string}`): Promise<KernelSmartAccount | undefined> {
     const chain = getCurrentChain()
     const currentChain = convertToViemChain(chain)
     const clientOptions = {
@@ -53,8 +54,10 @@ export async function createKernelAccount(walletAddress?: `0x${string}`): Promis
     }
 }
 
-export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = atom(async () => {
-    return await createKernelAccount()
+export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = atom(async (get) => {
+    const wallet = await get(walletClientAtom)
+    if (!wallet?.account) return undefined
+    return await createKernelAccount(wallet?.account.address)
 })
 
 export const { getValue: getKernelAccount } = accessorsFromAtom(kernelAccountAtom)
