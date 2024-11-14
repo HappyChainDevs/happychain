@@ -134,7 +134,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         }
 
         if (smartAccountAddress) {
-            happyUser.controllingAddress = smartAccountAddress
+            happyUser.address = smartAccountAddress
             happyUser.addresses.push(smartAccountAddress)
         }
 
