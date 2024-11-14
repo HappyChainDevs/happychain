@@ -34,6 +34,7 @@ export function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): vo
 // exported for testing
 export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
+    console.log("GETTING APPROVED CLIENT (iframeProvider?)")
     const user = getUser()
     if (!user) {
         console.warn("Request approved, but no user found")

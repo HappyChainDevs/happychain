@@ -2,10 +2,13 @@ import {
     type EIP1193RequestParameters,
     Msgs,
     type ProviderEventPayload,
+    WalletType,
     getEIP1193ErrorObjectFromUnknown,
 } from "@happychain/sdk-shared"
 // biome-ignore lint/correctness/noUnusedImports: keep type for doc
 import type { UnauthorizedProviderError } from "viem"
+import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
+import { getUser } from "#src/state/user.ts"
 import { happyProviderBus } from "../services/eventBus"
 import { isIframe } from "../utils/appURL"
 import { iframeProvider } from "../wagmi/provider"
@@ -46,9 +49,16 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             payload: payload ?? undefined,
         }
 
-        isIframe(app)
-            ? iframeProvider.handleRequestResolution(response)
-            : void happyProviderBus.emit(Msgs.RequestResponse, response)
+        const _isIframe = isIframe(app)
+        const _isInjected = getUser()?.type === WalletType.Injected
+
+        if (_isIframe && _isInjected) {
+            new InjectedProviderProxy().handleRequestResolution(response)
+        } else if (_isIframe) {
+            iframeProvider.handleRequestResolution(response)
+        } else {
+            void happyProviderBus.emit(Msgs.RequestResponse, response)
+        }
     } catch (e) {
         const response = {
             key: request.key,

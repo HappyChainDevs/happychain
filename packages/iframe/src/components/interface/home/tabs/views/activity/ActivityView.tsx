@@ -21,7 +21,9 @@ const ActivityView = () => {
     if (!user) return <UserNotFoundWarning />
 
     const userTxHistory = txHistory[user.address] || []
-    const userPendingTxs = pendingTxs[user.address] || []
+    // got nulls for hashes in here for some reason?
+    // this breaks the rendering in the loop below if there is more than one tx in flight
+    const userPendingTxs = (pendingTxs[user.address] || []).filter((a) => a.hash)
 
     if (userTxHistory.length === 0 && userPendingTxs.length === 0) {
         return <div className="rounded-es-xl rounded-e-xl size-full">No transactions to display.</div>
