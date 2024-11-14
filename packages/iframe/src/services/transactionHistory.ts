@@ -35,10 +35,12 @@ export function addPendingTx(address: Address, payload: PendingTxDetails) {
         }
 
         void monitorTransactionHash(address, payload)
-        return {
+        const next = {
             ...existingEntries,
             [address]: [payload, ...pendingTxEntriesByUser],
         }
+
+        return next
     })
 }
 

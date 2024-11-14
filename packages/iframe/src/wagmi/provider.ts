@@ -31,6 +31,7 @@ export class IframeProvider extends BasePopupProvider {
         // We're logging in or out, wait for the auth state to settle.
         await waitForCondition(() => getAuthState() !== AuthState.Initializing)
 
+        // injected wallets don't need permissions here (handled by metamask)
         if (this.isInjectedUser) return false
 
         return checkIfRequestRequiresConfirmation(getIframeURL(), args)

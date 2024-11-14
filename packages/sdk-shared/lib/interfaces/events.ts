@@ -1,9 +1,4 @@
-import type {
-    EIP1193EventName,
-    EIP1193PermissionsRequest,
-    EIP1193RequestParameters,
-    EIP1193RequestResult,
-} from "./eip1193.ts"
+import type { EIP1193EventName, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193.ts"
 import type { EIP1193ErrorObject } from "./errors.ts"
 import type { AuthState, HappyUser } from "./happyUser"
 import type { ProviderEventError, ProviderEventPayload } from "./payloads.ts"
@@ -15,8 +10,6 @@ import type { ProviderEventError, ProviderEventPayload } from "./payloads.ts"
  * Names of types of messages that can be sent on both the general message bus and the provider bus.
  */
 export enum Msgs {
-    ExecuteInjectedResponse = "execute-injected-response",
-    ExecuteInjectedRequest = "execute-injected-request",
     // --- EventsFromApp ---------------------------------------------------------------------------
 
     /** Instructs the iframe to display the requested page. */
@@ -81,6 +74,14 @@ export enum Msgs {
     /** Sent to check if a request requires user approval. */
     PermissionCheckRequest = "permission-check:request",
 
+    // --- InjectedWalletRequests ------------------------------------------------------------------
+
+    /** Injected Request between the InjectedProviderProxy and InjectedWalletWrapper app-side */
+    ExecuteInjectedRequest = "execute-injected-request",
+
+    /** Injected Response from the InjectedWalletWrapper to the InjectedProviderProxy*/
+    ExecuteInjectedResponse = "execute-injected-response",
+
     // --- ProviderBusEventsFromIframe -------------------------------------------------------------
 
     /**
@@ -144,7 +145,6 @@ export type MsgsFromApp = {
               request?: MsgsFromApp[Msgs.ConnectRequest] | undefined
               response?: undefined
           }
-    [Msgs.MirrorPermissions]: { rdns: string; request: EIP1193PermissionsRequest; response: unknown }
     [Msgs.RequestWalletDisplay]: WalletDisplayAction
 }
 

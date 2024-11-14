@@ -4,20 +4,30 @@ import {
     type EIP1193RequestResult,
     Msgs,
     type MsgsFromApp,
+    getEIP1193ErrorObjectFromUnknown,
 } from "@happychain/sdk-shared"
 import { type EIP6963ProviderDetail, createStore } from "mipd"
 import type { HappyProviderConfig } from "./interface"
 
 const store = createStore()
+
 /**
- * This InjectedWallet is an execution wrapper for local metamask accounts or other injected wallets
- * When a request is made from the dapp side, it will be sent to the iframe to be processed and run
- * through the middleware layers. finally when it actually comes down to executing onchain, it will
- * either be sent to web3auth, or it will be sent here to be executed by the users local wallet.
- * in either case, the request is executed, then returned back to the caller.
+ * A wrapper for executing wallet operations through browser-injected providers like Metamask.
+ * It acts as a bridge between the iframe and app contexts for wallet interactions. Its to be
+ * initiated once by the happyProvider in injectedWalletHandler, but is never interacted with
+ * directly from the app side.
  *
- * the TLDR is this executes requests with metamask on the dapp, but can only be triggered
- * directly by the iframe, and will send all responses back to the iframe.
+ * Request flow for app-initiated requests with injected wallet:
+ * - App initiates request
+ * - Request is forwarded to iframe for middleware processing
+ * - Final execution occurs through this wrapper
+ * - Response is returned to iframe, then to original caller
+ *
+ * Request flow for wallet-initiated requests with injected wallet:
+ * - Wallet initiates request
+ * - Request is passed through middleware processing
+ * - Final execution occurs through this wrapper
+ * - Response is returned to iframe, then to original caller
  */
 export class InjectedWalletWrapper {
     public provider: EIP6963ProviderDetail["provider"] | undefined
@@ -29,15 +39,24 @@ export class InjectedWalletWrapper {
 
         // when iframe requests a new request to be executed, it is handled here
         config.providerBus.on(Msgs.ExecuteInjectedRequest, async (request) => {
-            const resp = await this.executeRequest(request.payload)
+            try {
+                const resp = await this.executeRequest(request.payload)
 
-            // the response is returned to the iframe
-            config.providerBus.emit(Msgs.ExecuteInjectedResponse, {
-                key: request.key,
-                windowId: request.windowId,
-                error: null,
-                payload: resp,
-            })
+                // the response is returned to the iframe
+                config.providerBus.emit(Msgs.ExecuteInjectedResponse, {
+                    key: request.key,
+                    windowId: request.windowId,
+                    error: null,
+                    payload: resp,
+                })
+            } catch (e) {
+                config.providerBus.emit(Msgs.ExecuteInjectedResponse, {
+                    key: request.key,
+                    windowId: request.windowId,
+                    error: getEIP1193ErrorObjectFromUnknown(e),
+                    payload: null,
+                })
+            }
         })
     }
 
@@ -48,16 +67,12 @@ export class InjectedWalletWrapper {
     private async executeRequest(args: EIP1193RequestParameters) {
         if (!this.provider) throw new Error("Failed to resolve local provider")
 
-        try {
-            const response: EIP1193RequestResult<EIP1193RequestMethods> = await this.provider.request(
-                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                args as any,
-            )
+        const response: EIP1193RequestResult<EIP1193RequestMethods> = await this.provider.request(
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+            args as any,
+        )
 
-            return response
-        } catch (e) {
-            console.log({ e })
-        }
+        return response
     }
 
     /**
@@ -87,7 +102,6 @@ export class InjectedWalletWrapper {
             this.info = providerDetails.info
             this.provider = providerDetails.provider
 
-            console.log("connected")
             void this.config.msgBus.emit(Msgs.InjectedWalletConnected, { rdns, address, request, response })
         } catch {
             // Reached if eth_requestAccounts fails, meaning the user declined to give permission.
