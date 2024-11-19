@@ -9,7 +9,7 @@ import { deployment } from "../deployments/anvil/testing/abis"
 
 import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce"
 
-import { deposit_paymaster, get_random_address, initialize_total_supply } from "./utils/accounts"
+import { depositPaymaster, getRandomAddress, initializeTotalSupply } from "./utils/accounts"
 import { account, pimlicoClient, publicClient, walletClient } from "./utils/clients"
 import { generatePrefundedKernelAccount, generatePrefundedKernelAccounts } from "./utils/kernel"
 
@@ -327,7 +327,7 @@ async function batchedUserOperationsGasResult() {
 }
 
 async function main() {
-    const pmDepositRes = await deposit_paymaster()
+    const pmDepositRes = await depositPaymaster()
     if (pmDepositRes !== "success") {
         throw new Error("Paymaster Deposit failed")
     }

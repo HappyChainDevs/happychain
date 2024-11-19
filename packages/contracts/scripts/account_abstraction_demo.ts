@@ -10,7 +10,7 @@ import type { Erc7579Actions } from "permissionless/actions/erc7579"
 import { deployment } from "../deployments/anvil/testing/abis"
 import { getCustomNonce } from "./getNonce"
 
-import { deposit_paymaster, fund_smart_account, get_random_address } from "./utils/accounts"
+import { depositPaymaster, fundSmartAccount, getRandomAddress } from "./utils/accounts"
 import { account, publicClient } from "./utils/clients"
 import { rpcURL } from "./utils/config"
 import { checkBalance, toHexDigits } from "./utils/helpers"
@@ -146,7 +146,7 @@ async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccoun
 }
 
 async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    const receiverAddress = get_random_address()
+    const receiverAddress = getRandomAddress()
 
     const txHash = await kernelClient.sendTransaction({
         account: kernelAccount,
@@ -177,7 +177,7 @@ async function testCustomValidator(
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
     kernelAddress: Address,
 ) {
-    const receiverAddress = get_random_address()
+    const receiverAddress = getRandomAddress()
     const sessionSigner = await getKernelAccount(sessionPublicClient, sessionAccount)
     const customNonce = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.SessionKeyValidator)
 
@@ -228,12 +228,12 @@ async function main() {
     const kernelClient = getKernelClient(kernelAccount)
     const kernelAddress = await kernelAccount.getAddress()
 
-    const prefundRes = await fund_smart_account(kernelAddress)
+    const prefundRes = await fundSmartAccount(kernelAddress)
     if (prefundRes !== "success") {
         throw new Error("Funding SmartAccount failed")
     }
 
-    const depositRes = await deposit_paymaster()
+    const depositRes = await depositPaymaster()
     if (depositRes !== "success") {
         throw new Error("Paymaster Deposit failed")
     }
