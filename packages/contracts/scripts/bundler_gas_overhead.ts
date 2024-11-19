@@ -43,7 +43,7 @@ function createMintCall(address: Address): UserOperationCall {
         data: encodeFunctionData({
             abi: mockAbis.MockTokenA,
             functionName: "mint",
-            args: [address, parseEther(AMOUNT)],
+            args: [address, AMOUNT],
         }),
     }
 }
