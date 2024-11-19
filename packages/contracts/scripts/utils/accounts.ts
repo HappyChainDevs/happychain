@@ -3,9 +3,9 @@ import { entryPoint07Address } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts"
 import { localhost } from "viem/chains"
 
+import { abis as mockAbis, deployment as mockDeployment } from "../../deployments/anvil/mockTokens/abis.ts"
 import { abis, deployment } from "../../deployments/anvil/testing/abis"
 import { account, publicClient, walletClient } from "./clients"
-import {abis as mockAbis, deployment as mockDeployment} from "../../deployments/anvil/mockTokens/abis.ts";
 
 const DEPOSIT = parseEther("100")
 
@@ -58,4 +58,4 @@ async function initializeTotalSupply(): Promise<string> {
     return receipt.status
 }
 
-export {  depositPaymaster, fundSmartAccount, getRandomAddress, initializeTotalSupply }
+export { depositPaymaster, fundSmartAccount, getRandomAddress, initializeTotalSupply }
