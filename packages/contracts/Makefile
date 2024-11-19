@@ -136,8 +136,8 @@ anvil:
 # Deployment
 
 VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
-VERIFIER_FLAG := -verifier=blockscout
-VERIFIER_URL := --verifier-url https://happy-testnet-sepolia.rpc.caldera.xyz/api/
+VERIFIER_FLAG := --verifier blockscout
+VERIFIER_URL := --verifier-url https://happy-testnet-sepolia.explorer.caldera.xyz/api/
 CHECK_UPGRADE := make validate-upgrade
 VIA_IR_FLAG := $(if $(findstring DeployAA,$(DEPLOY_SCRIPT)),--via-ir,)
 OPTIMIZER_RUNS_FLAG := $(if $(findstring DeployAA,$(DEPLOY_SCRIPT)),--optimizer-runs 200,)
@@ -189,7 +189,9 @@ define run-deploy-script-key
 		$(VIA_IR_FLAG) \
 		$(OPTIMIZER_RUNS_FLAG) \
 		$(BROADCAST_FLAG) \
-		$(VERIFY_FLAG)
+		$(VERIFY_FLAG) \
+		$(VERIFIER_FLAG) \
+		$(VERIFIER_URL)
 endef
 
 # Deploys using a private key supplied by a Foundry account. The account name and password file
