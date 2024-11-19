@@ -33,7 +33,7 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           source: "packages/demo-vanillajs/dist"
-          target: /home/deployer/js-demo
+          target: /home/deployer/demo-js
           strip_components: 3 # Remove the first 3 levels of directories from the source path to copy only the files inside dist
           rm: true
 
@@ -45,10 +45,10 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            chmod -R o+rX /home/deployer/js-demo
-            mv /home/deployer/js-demo /tmp
+            chmod -R o+rX /home/deployer/demo-js
+            mv /home/deployer/demo-js /tmp
             sudo -u js_demo bash -c '
               rm -rf /var/www/js-demo/*
-              cp -r /tmp/js-demo/* /var/www/js-demo
+              cp -r /tmp/demo-js/* /var/www/js-demo
             '
-            rm -rf /tmp/js-demo
+            rm -rf /tmp/demo-js
