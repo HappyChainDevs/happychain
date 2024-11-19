@@ -108,6 +108,7 @@ aa-demo-complete:
 	@make aa-demo
 	@lsof -ti :8545 | xargs kill -9 2>/dev/null || true
 	@lsof -ti :3000 | xargs kill -9 2>/dev/null || true
+.PHONY: aa-demo-complete
 
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the demo.
 aa-demo:
