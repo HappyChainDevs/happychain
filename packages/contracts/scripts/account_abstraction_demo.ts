@@ -31,7 +31,6 @@ const NO_HOOKS_ADDRESS = "0x0000000000000000000000000000000000000001"
 // The function selector must be whitelisted when installing a validator module to allow ETH transfers.
 const EXECUTE_FUNCTION_SELECTOR = "0xe9ae5c53"
 const AMOUNT = "0.01"
-const EMPTY_SIGNATURE = "0x"
 
 // An empty hex string to be used when signing over a userOperation.
 const EMPTY_SIGNATURE = "0x"

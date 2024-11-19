@@ -34,7 +34,6 @@ interface GasResult extends GasDetails {
 
 // A dummy constant representing the amount of ETH to transfer in the demo.
 const AMOUNT = parseEther("0.01")
-const EMPTY_SIGNATURE = "0x"
 
 function createMintCall(address: Address): UserOperationCall {
     return {
