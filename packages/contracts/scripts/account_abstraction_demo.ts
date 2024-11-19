@@ -33,6 +33,9 @@ const EXECUTE_FUNCTION_SELECTOR = "0xe9ae5c53"
 const AMOUNT = "0.01"
 const EMPTY_SIGNATURE = "0x"
 
+// An empty hex string to be used when signing over a userOperation.
+const EMPTY_SIGNATURE = "0x"
+
 function getInitData(hookAddress: Address, validatorData: Hex, hookData: Hex, selectorData: Hex): Hex {
     /**
      * Reference: https://github.com/zerodevapp/kernel/blob/release/v3.1/src/Kernel.sol#L361-L366
