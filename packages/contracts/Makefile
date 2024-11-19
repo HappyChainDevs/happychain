@@ -93,6 +93,22 @@ test-fork:
 	forge test --gas-report --fork-url $(RPC_$(CONFIG))
 .PHONY: test-fork
 
+# Run the complete AA demo with all prerequisites
+aa-demo-complete:
+	@lsof -ti :8545 | xargs kill -9 2>/dev/null || true
+	@lsof -ti :3000 | xargs kill -9 2>/dev/null || true
+	@make anvil > /dev/null 2>&1 &
+	@sleep 5
+	@cast send 0x4BC8e81Ad3BE83276837f184138FC96770C14297 --value 100ether --private-key 2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
+	@make deploy-aa CONFIG=LOCAL
+	@make save-deployment DEPLOY_SCRIPT=DeployAA.s.sol DEPLOYMENT_NAME=anvil/testing CONFIG=LOCAL
+	@cd ../bundler && make run > /dev/null 2>&1 &
+	@sleep 5
+	@clear
+	@make aa-demo
+	@lsof -ti :8545 | xargs kill -9 2>/dev/null || true
+	@lsof -ti :3000 | xargs kill -9 2>/dev/null || true
+
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the demo.
 aa-demo:
 	@tsx ./scripts/account_abstraction_demo.ts;
