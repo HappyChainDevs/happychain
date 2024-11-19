@@ -1,5 +1,8 @@
 import { type UUID, createUUID } from "@happychain/common"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
+import type { SmartAccountClient } from "permissionless"
+import type { Address, Hex } from "viem"
+import type { UserOperation } from "viem/account-abstraction"
 import { getAuthState } from "../state/authState"
 import { type AppURL, getAppURL, getIframeURL, isIframe } from "../utils/appURL.ts"
 
@@ -36,5 +39,53 @@ export function appForSourceID(sourceId: UUID): AppURL | undefined {
 export function checkAuthenticated() {
     if (getAuthState() !== AuthState.Connected) {
         throw new EIP1193UnauthorizedError()
+    }
+}
+
+/**
+ * @todo - determine if this should be declared here (probably not ?)
+ * Translate a standard transaction to UserOperation format.
+ *
+ * @param tx - Standard Ethereum transaction request from a dapp
+ * @param client - Smart account client instance that handles the actual translation
+ * @returns Prepared UserOperation
+ */
+export async function convertTxToUserOp(
+    tx: {
+        to: Address
+        data?: Hex
+        value?: bigint
+        nonce?: bigint
+    },
+    client: SmartAccountClient,
+): Promise<UserOperation> {
+    if (!tx.to) throw new Error("To address is required")
+
+    const op = await client.prepareUserOperation({
+        account: client.account!,
+        calls: [
+            {
+                to: tx.to,
+                value: tx.value ?? 0n,
+                // presumably for `data`, you'd get this value from using something like either :
+                // - `encodeFunctionData()` ;
+                // - `prepareEncodeFunctionData()` ;
+                data: tx.data,
+            },
+        ],
+        ...(tx.nonce !== undefined && { nonce: tx.nonce }),
+    })
+
+    return {
+        sender: op.sender,
+        nonce: op.nonce,
+        callData: op.callData,
+        callGasLimit: op.callGasLimit,
+        verificationGasLimit: op.verificationGasLimit,
+        preVerificationGas: op.preVerificationGas,
+        maxFeePerGas: op.maxFeePerGas,
+        maxPriorityFeePerGas: op.maxPriorityFeePerGas,
+        paymasterAndData: op.paymasterAndData,
+        signature: op.signature,
     }
 }
