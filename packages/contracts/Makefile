@@ -135,8 +135,8 @@ anvil:
 ####################################################################################################
 # Deployment
 
-VERIFY_FLAG := --verify
-VERIFIER_FLAG := --verifier blockscout
+VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
+VERIFIER_FLAG := -verifier=blockscout
 VERIFIER_URL := --verifier-url https://happy-testnet-sepolia.rpc.caldera.xyz/api/
 CHECK_UPGRADE := make validate-upgrade
 VIA_IR_FLAG := $(if $(findstring DeployAA,$(DEPLOY_SCRIPT)),--via-ir,)
