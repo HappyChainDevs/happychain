@@ -80,6 +80,7 @@ const pimlicoClient = createPimlicoClient({
 })
 
 const AMOUNT = "0.01"
+const EMPTY_SIGNATURE = "0x"
 
 function getRandomAccount() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Hex
@@ -310,7 +311,7 @@ async function sendUserOps(accounts: Accounts[]) {
             userOp.signature = await account.kernelAccount.signUserOperation({
                 ...userOp,
                 chainId: localhost.id,
-                signature: "0x", // The signature field must be empty when hashing and signing the user operation.
+                signature: EMPTY_SIGNATURE, // The signature field must be empty when hashing and signing the user operation.
             })
 
             return userOp
