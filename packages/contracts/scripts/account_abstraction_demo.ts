@@ -65,9 +65,8 @@ const NO_HOOKS_ADDRESS = "0x0000000000000000000000000000000000000001"
 // Function selector for transferring ETH from the smart account.
 // The function selector must be whitelisted when installing a validator module to allow ETH transfers.
 const EXECUTE_FUNCTION_SELECTOR = "0xe9ae5c53"
-
-// A dummy constant representing the amount of ETH to transfer in the demo.
 const AMOUNT = "0.01"
+const EMPTY_SIGNATURE = "0x"
 
 function toHexDigits(number: bigint, size: number): string {
     return numberToHex(number, { size }).slice(2)
@@ -343,7 +342,7 @@ async function testCustomValidator(
     userOp.signature = await sessionSigner.signUserOperation({
         ...userOp,
         chainId: localhost.id,
-        signature: "0x", // The signature field must be empty when hashing and signing the user operation.
+        signature: EMPTY_SIGNATURE, // The signature field must be empty when hashing and signing the user operation.
     })
 
     const userOpHash = await kernelClient.sendUserOperation({
