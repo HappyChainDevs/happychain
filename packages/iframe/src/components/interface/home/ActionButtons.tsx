@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router"
 
 const ActionButtons = () => {
     return (
-        <div className="flex flex-row w-full items-center justify-center space-x-6 px-2 py-2 border border-neutral/50 rounded-lg">
+        <div className="flex flex-row w-full items-center justify-center gap-2 p-2 border border-neutral/50 rounded-lg">
             <Link
                 type="button"
                 className="flex items-center justify-center h-10 w-24 bg-primary text-primary-content rounded-xl text-center"

@@ -1,6 +1,11 @@
-import { ArrowLeft } from "@phosphor-icons/react"
+import { Msgs } from "@happychain/sdk-shared"
+import { ArrowLeft, XCircle } from "@phosphor-icons/react"
 import { Link, useLocation } from "@tanstack/react-router"
+import { appMessageBus } from "#src/services/eventBus.ts"
 
+function signalClosed() {
+    void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
+}
 const GlobalHeader = () => {
     const location = useLocation()
     return (
@@ -14,6 +19,8 @@ const GlobalHeader = () => {
             <span className="text-base-content dark:text-primary text-xl py-2 mx-auto hidden lg:flex justify-center">
                 🤠 HappyChain
             </span>
+
+            <XCircle weight="bold" className="size-8 shrink-0 absolute end-2 opacity-50" onClick={signalClosed} />
         </div>
     )
 }

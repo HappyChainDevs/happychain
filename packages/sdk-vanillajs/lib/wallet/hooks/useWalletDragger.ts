@@ -1,6 +1,7 @@
 import { throttle } from "@happychain/common"
 import { useEffect, useRef, useState } from "preact/hooks"
 import { isChrome, makeBlankImage } from "../utils"
+import { useBreakpoint } from "./useBreakpoint"
 
 const blank = makeBlankImage()
 
@@ -233,10 +234,17 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
 }
 
 export function useWalletDragger() {
+    const isDesktop = useBreakpoint("md")
     const nativeDragEnabled = isChrome
 
     const nativeDrag = useNativeDrag({ enabled: nativeDragEnabled })
     const customDrag = useCustomDrag({ enabled: !nativeDragEnabled })
 
-    return nativeDragEnabled ? nativeDrag : customDrag
+    const dragger = nativeDragEnabled ? nativeDrag : customDrag
+
+    return {
+        ...dragger,
+        walletOffset: isDesktop ? dragger.walletOffset : 0,
+        handleOffset: isDesktop ? dragger.handleOffset : 0,
+    }
 }
