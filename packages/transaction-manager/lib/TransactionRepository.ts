@@ -75,8 +75,8 @@ export class TransactionRepository {
             unknownToError,
         )
 
-        this.notFinalizedTransactions = this.notFinalizedTransactions = this.notFinalizedTransactions.filter(
-            (transaction) => NotFinalizedStatuses.includes(transaction.status),
+        this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
+            NotFinalizedStatuses.includes(transaction.status),
         )
 
         return result.map(() => undefined)
@@ -97,8 +97,8 @@ export class TransactionRepository {
             unknownToError,
         )
 
-        this.notFinalizedTransactions = this.notFinalizedTransactions = this.notFinalizedTransactions.filter(
-            (transaction) => NotFinalizedStatuses.includes(transaction.status),
+        this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
+            NotFinalizedStatuses.includes(transaction.status),
         )
 
         return result
