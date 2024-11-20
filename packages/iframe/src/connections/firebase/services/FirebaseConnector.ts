@@ -29,6 +29,8 @@ import {
 import { FirebaseAuthState } from "../workers/firebaseAuthState"
 import { isConnected as isWeb3AuthConnected } from "../workers/web3auth.sw"
 
+type HappyUserDetails = Omit<HappyUser, "address" | "controllingAddress" | "addresses">
+
 export abstract class FirebaseConnector implements ConnectionProvider {
     public readonly type: string
     public readonly id: string
@@ -117,11 +119,11 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             name: user.displayName || "",
             ens: "", // filled in later, async, using a jotai atom subscription
             avatar: user.photoURL || "",
-        } satisfies Omit<HappyUser, "address" | "controllingAddress" | "addresses">
+        } satisfies HappyUserDetails
     }
 
     private static async makeHappyUser(
-        user: ReturnType<typeof FirebaseConnector.makeHappyUserPartial>,
+        user: HappyUserDetails,
         addresses: `0x${string}`[],
         smartAccountAddress?: `0x${string}`,
     ) {
