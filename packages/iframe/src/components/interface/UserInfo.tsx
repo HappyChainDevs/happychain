@@ -29,11 +29,6 @@ const UserInfo = () => {
         return <UserInfoLoader />
     }
 
-    if (account.address !== user.controllingAddress) {
-        console.warn("Could not validate user address", account.address, user.controllingAddress)
-        return
-    }
-
     return (
         <div className="flex flex-row items-center space-x-4">
             <div className="relative">

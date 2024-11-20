@@ -46,7 +46,7 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
             expect(getAllPermissions(appURL).length).toBe(1)
             const request = makePayload(iframeID, { method: "eth_requestAccounts" })
             const response = await dispatchHandlers(request)
-            expect(response).toStrictEqual(user.addresses)
+            expect(response).toStrictEqual([user.address])
             expect(getAllPermissions(appURL).length).toBe(1)
         })
 

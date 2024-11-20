@@ -56,7 +56,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_requestAccounts": {
             if (!user) return []
             grantPermissions(app, "eth_accounts")
-            return user.addresses ?? [user.address]
+            return [user.address]
         }
 
         case "wallet_requestPermissions":

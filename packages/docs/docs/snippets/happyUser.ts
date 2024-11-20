@@ -1,12 +1,13 @@
+import type { WalletType } from "@happychain/js"
+
 type HappyUser = {
-    address: `0x${string}`
-    addresses: `0x${string}`[]
-    avatar: string
-    controllingAddress: `0x${string}`
-    email: string
-    ens: string
-    name: string
     provider: string
-    type: "social" | "injected"
+    type: WalletType
     uid: string
+    email: string
+    name: string
+    avatar: string
+    address: `0x${string}`
+    controllingAddress: `0x${string}`
+    ens: string
 }

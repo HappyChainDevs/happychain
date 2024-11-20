@@ -53,7 +53,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
             expect(getAllPermissions(appURL).length).toBe(1)
             const request = makePayload(parentID, { method: "eth_requestAccounts" })
             const response = await dispatchHandlers(request)
-            expect(response).toStrictEqual(user.addresses)
+            expect(response).toStrictEqual([user.address])
             expect(getAllPermissions(appURL).length).toBe(1)
         })
 
