@@ -130,7 +130,7 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     }
 
     const permissionsMap = store.get(permissionsMapAtom)
-    const appPermissions = permissionsMap[user.controllingAddress]?.[app]
+    const appPermissions = permissionsMap[user.address]?.[app]
 
     if (appPermissions) {
         return appPermissions
@@ -155,8 +155,8 @@ export function getAppPermissions(app: AppURL): AppPermissions {
     // It's not required to set the permissionsAtom here because the permissions don't actually
     // change (so nothing dependent on the atom needs to update). We just write them to avoid
     // rerunning the above logic on each lookup.
-    permissionsMap[user.controllingAddress] ??= {}
-    permissionsMap[user.controllingAddress][app] = baseAppPermissions
+    permissionsMap[user.address] ??= {}
+    permissionsMap[user.address][app] = baseAppPermissions
 
     return baseAppPermissions
 }
@@ -192,7 +192,7 @@ function setAppPermissions(app: AppURL, appPermissions: AppPermissions): void {
 
         return {
             ...prev,
-            [user.controllingAddress]: { ...prev[user.controllingAddress], [app]: appPermissions },
+            [user.address]: { ...prev[user.address], [app]: appPermissions },
         }
     })
 }
@@ -206,7 +206,7 @@ export function clearPermissions(): void {
     const user = getUser()
     if (!user) return
     store.set(permissionsMapAtom, (prev) => {
-        const { [user.controllingAddress]: _, ...rest } = prev
+        const { [user.address]: _, ...rest } = prev
         return rest
     })
 }
@@ -219,10 +219,10 @@ export function clearAppPermissions(app: AppURL): void {
     if (!user) return
     store.set(permissionsMapAtom, (prev) => {
         const {
-            [user.controllingAddress]: { [app]: _, ...otherApps },
+            [user.address]: { [app]: _, ...otherApps },
             ...otherUsers
         } = prev
-        return { ...otherUsers, [user.controllingAddress]: otherApps }
+        return { ...otherUsers, [user.address]: otherApps }
     })
 }
 
