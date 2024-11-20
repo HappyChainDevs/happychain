@@ -38,7 +38,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_accounts": {
             const user = getUser()
-            return user && hasPermissions(app, "eth_accounts") ? user.addresses : []
+            return user && hasPermissions(app, "eth_accounts") ? [user.address] : []
         }
 
         case HappyMethodNames.HAPPY_USER_RPC_METHOD: {
@@ -51,7 +51,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             if (!hasPermissions(app, "eth_accounts")) {
                 throw new EIP1193UserRejectedRequestError()
             }
-            return getUser()?.addresses
+            return [getUser()?.address]
 
         case "wallet_getPermissions":
             return getAllPermissions(app)

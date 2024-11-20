@@ -15,14 +15,14 @@ const { address } = useAccount()
     <Container title="User">
         <div class="grid grid-cols-2 grid-rows-2 grid-flow-row m-4">
             <div class="col-span-2 row-span-2 flex items-center cursor-default"
-                :class="{'hover:bg-theme-highlight hover:text-black': user.address}">
+                :class="{'hover:bg-theme-highlight hover:text-black': user?.address}">
                 <SelectArrow v-if="address" />
-                Adress (smart account): {{ user.address }}
+                Adress (smart account): {{ user?.address }}
             </div>
             <div class="col-span-2 row-span-2 flex items-center cursor-default"
-                :class="{'hover:bg-theme-highlight hover:text-black': user.controllingAddress}">
-                <SelectArrow v-if="user.controllingAddress" />
-                Controlling address (EOA): {{ user.controllingAddress }}
+                :class="{'hover:bg-theme-highlight hover:text-black': user?.controllingAddress}">
+                <SelectArrow v-if="user?.controllingAddress" />
+                Controlling address (EOA): {{ user?.controllingAddress }}
             </div>
             <div class="cursor-default" :class="{'hover:bg-theme-highlight hover:text-black': user }">
                 Name: {{ user?.name }}

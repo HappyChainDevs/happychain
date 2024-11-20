@@ -74,34 +74,37 @@ onUserUpdate((user) => {
 
 ```ts
 type HappyUser = {
-    uid: string
+    // CONNECTION
 
-    /**
-     * Social
-     */
-    email: string
-    name: string
-    avatar: string
-
-    /**
-     * Connection Details
-     */
-    /** Connection Provider (rabby, metamask, google) */
+    /** Connection provider ("rabby", "metamask", "google", ...) */
     provider: string
-    /** Connected Wallet Type */
+
+    /** Type of the controlling EOA (Social, Injected) */
     type: WalletType
 
-    /**
-     * On-Chain
-     */
-    /** Active Address's ENS */
-    ens: string
+    // USER DETAILS
 
-    /** Currently active address */
-    controllingAddress: `0x${string}`
-    /** Associated smart account address */
+    /** Unique identifier */
+    uid: string
+
+    /** Email (if available, or empty) */
+    email: string
+
+    /** Display name (abbreviated address for Injected) */
+    name: string
+
+    /** Avatar URL (if available, or placeholder avatar) */
+    avatar: string
+
+    // ONCHAIN
+
+    /** Happy account address */
     address: `0x${string}`
-    /** All owned addresses */
-    addresses: `0x${string}`[]
+
+    /** EOA controlling the account */
+    controllingAddress: `0x${string}`
+
+    /** Active Address's ENS (if available, or empty) */
+    ens: string
 }
 ```

@@ -14,6 +14,5 @@ export function createHappyUserFromWallet(providerId: string, address: `0x${stri
         // web3 details
         controllingAddress: address,
         address,
-        addresses: [address],
     }
 }
