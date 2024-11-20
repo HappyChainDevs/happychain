@@ -3,6 +3,7 @@ import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { type GetTransactionReceiptErrorType, type TransactionReceipt, TransactionReceiptNotFoundError } from "viem"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
+import { LatestOnlyMutex } from "./LatestOnlyMutex.js"
 import { type Attempt, AttemptType, type Transaction, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
@@ -34,6 +35,7 @@ export class TxMonitor {
 
     constructor(transactionManager: TransactionManager) {
         this.transactionManager = transactionManager
+        this.txMonitorMutex = new LatestOnlyMutex()
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
