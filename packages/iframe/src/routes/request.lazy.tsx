@@ -1,8 +1,6 @@
-import { useState } from "react"
-
-import { createLazyFileRoute } from "@tanstack/react-router"
-
 import { Msgs, type PopupMsgs } from "@happychain/sdk-shared"
+import { createLazyFileRoute } from "@tanstack/react-router"
+import { useState } from "react"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"

@@ -1,9 +1,10 @@
-import { WalletDisplayAction } from "@happychain/sdk-shared"
+import { AuthState, WalletDisplayAction, waitForCondition } from "@happychain/sdk-shared"
 import { Msgs } from "@happychain/sdk-shared"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { useDisconnect } from "wagmi"
+import { getAuthState } from "#src/state/authState.ts"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
@@ -35,7 +36,8 @@ function Embed() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        return appMessageBus.on(Msgs.RequestWalletDisplay, (screen) => {
+        const unsubscribe = appMessageBus.on(Msgs.RequestWalletDisplay, async (screen) => {
+            await waitForCondition(() => getAuthState() !== AuthState.Connecting)
             switch (screen) {
                 case WalletDisplayAction.Home:
                     void navigate({ to: "/embed" })
@@ -53,6 +55,11 @@ function Embed() {
                     break
             }
         })
+
+        // If we initialized before the above listener is created, then and RequestWalletDisplay
+        // calls will be silently lost
+        void appMessageBus.emit(Msgs.IframeInit, true)
+        return unsubscribe
     }, [navigate])
 
     async function logout() {

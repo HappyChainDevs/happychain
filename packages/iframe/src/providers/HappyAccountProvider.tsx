@@ -1,7 +1,5 @@
-import { Msgs } from "@happychain/sdk-shared"
-import { type PropsWithChildren, useEffect } from "react"
+import type { PropsWithChildren } from "react"
 import { useProviderEventsProxy } from "../hooks/useProviderEventsProxy"
-import { appMessageBus } from "../services/eventBus"
 
 export function HappyAccountProvider({ children }: PropsWithChildren) {
     /**
@@ -16,10 +14,6 @@ export function HappyAccountProvider({ children }: PropsWithChildren) {
         // as user data is exposed or withheld based on the permissions system
         // 'accountsChanged'
     ])
-
-    useEffect(() => {
-        void appMessageBus.emit(Msgs.IframeInit, true)
-    }, [])
 
     return children
 }
