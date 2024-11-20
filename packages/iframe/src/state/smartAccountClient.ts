@@ -6,12 +6,11 @@ import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7
 import type { SmartAccountClient } from "permissionless/clients"
 import { http } from "viem"
 import type { Transport } from "viem"
-import type { GetPaymasterDataParameters, GetPaymasterStubDataParameters, SmartAccount } from "viem/account-abstraction"
+import type { SmartAccount } from "viem/account-abstraction"
 import { BUNDLER_RPC_URL } from "#src/constants/accountAbstraction"
-import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts.ts"
 import { currentChainAtom } from "./chains"
 import { type KernelSmartAccount, kernelAccountAtom } from "./kernelAccount"
-import { paymasterClientAtom } from "./paymasterClient"
+import { paymasterAtom } from "./paymaster"
 import { publicClientAtom } from "./publicClient"
 
 export type KernelSmartAccountClient = SmartAccountClient<Transport, undefined, KernelSmartAccount>
@@ -21,40 +20,13 @@ export const smartAccountClientAtom: Atom<Promise<ExtendedSmartAccountClient | u
     const smartAccount = await get(kernelAccountAtom)
     if (!smartAccount) return undefined
     const publicClient = get(publicClientAtom)
-    const paymasterClient = get(paymasterClientAtom)
     const currentChain = get(currentChainAtom)
-    const contracts = getAccountAbstractionContracts(currentChain.chainId)
-    const paymasterAddress = contracts.HappyPaymaster
+    const paymaster = await get(paymasterAtom)
     const basicSmartAccountClient = createSmartAccountClient({
         account: smartAccount,
         chain: convertToViemChain(currentChain),
-        bundlerTransport: http(BUNDLER_RPC_URL, {
-            timeout: 30_000,
-        }),
-        paymaster: {
-            async getPaymasterData(parameters: GetPaymasterDataParameters) {
-                const gasEstimates = await paymasterClient.estimateUserOperationGas({
-                    ...parameters,
-                    paymaster: paymasterAddress,
-                })
-
-                return {
-                    paymaster: paymasterAddress,
-                    paymasterData: "0x",
-                    paymasterVerificationGasLimit: gasEstimates.paymasterVerificationGasLimit ?? 0n,
-                    paymasterPostOpGasLimit: gasEstimates.paymasterPostOpGasLimit ?? 0n,
-                }
-            },
-
-            async getPaymasterStubData(_parameters: GetPaymasterStubDataParameters) {
-                return {
-                    paymaster: paymasterAddress,
-                    paymasterData: "0x",
-                    paymasterVerificationGasLimit: 80_000n,
-                    paymasterPostOpGasLimit: 0n,
-                }
-            },
-        },
+        bundlerTransport: http(BUNDLER_RPC_URL),
+        paymaster,
         userOperation: {
             estimateFeesPerGas: async () => {
                 return await publicClient.estimateFeesPerGas()
