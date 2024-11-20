@@ -1,7 +1,7 @@
 :host {
     --happy-closed-size: 3rem;
-    --happy-closed-border-radius: 1.5rem;
     --happy-open-width: 24rem;
+    --happy-border-radius: 1.5rem;
     --happy-open-height: 32rem;
     --happy-translate-x: 0;
     --happy-translate-y: 0;
@@ -24,6 +24,8 @@
     align-items: center;
     border-start-start-radius: 9999px;
     border-end-start-radius: 9999px;
+    background: rgb(31 41 55);
+    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
 
     --happy-translate-x: 0rem;
     transform: translate(var(--happy-translate-x), var(--happy-translate-y)) rotate(var(--happy-rotate))
@@ -45,6 +47,7 @@
     &[data-drag-state="true"] {
         --transition-property: none;
         --transition-duration: 0s;
+        padding: 0.25rem 0rem 0.25rem 0.25rem;
     }
 
     &,
@@ -80,7 +83,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: auto;
+    cursor: pointer;
     width: var(--happy-closed-size);
     height: var(--happy-closed-size);
 }
@@ -105,10 +108,24 @@
     transform-origin: center center;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    border-radius: var(--happy-closed-border-radius);
+    border-radius: var(--happy-border-radius);
     transform: translateY(var(--wallet-offset-y));
     transition-property: background-color;
     transition-duration: 0.6s;
+
+    &[data-open-state="true"] {
+        --happy-border-radius: 0rem;
+        @media (min-width: 768px) {
+            --happy-border-radius: 1.5rem;
+        }
+    }
+
+    &[data-open-state="false"] {
+        --happy-border-radius: 0.5rem 0 0.5rem 1.5rem;
+        @media (min-width: 768px) {
+            --happy-border-radius: 1.5rem;
+        }
+    }
 
     @media (prefers-reduced-motion) {
         transition-duration: 0;
@@ -131,7 +148,6 @@
     position: absolute;
     inset-block-start: 0;
     inset-inline-end: 0;
-    cursor: pointer;
     width: var(--happy-closed-size);
     height: var(--happy-closed-size);
     transition-property: opacity;

@@ -11,6 +11,12 @@ export interface HappyWalletProps {
     rpcUrl: string
 }
 
+/**
+ * props are passed in as html attributes using kebab-case
+ *
+ * window-id = windowId
+ * chain-id = chainId
+ */
 export const HappyWallet = ({ windowId, chainId, rpcUrl }: HappyWalletProps) => {
     const { isOpen, setIsOpen } = useSetupIsOpenContext()
     const { handleOffset, walletOffset, dragging, dragProps } = useWalletDragger()

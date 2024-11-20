@@ -84,7 +84,7 @@ export function ConnectModal() {
                             >
                                 <img
                                     className={cx(
-                                        "size-8",
+                                        "h-full w-auto max-w-8",
                                         mutationLogin.isPending &&
                                             mutationLogin.variables?.id !== prov.id &&
                                             "grayscale",
