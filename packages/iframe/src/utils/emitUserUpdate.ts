@@ -19,7 +19,7 @@ export const emitUserUpdate = debounce((user?: HappyUser) => {
 
     const hasPerms = user ? hasPermissions(getAppURL(), "eth_accounts") : false
     const _user = hasPerms ? user : undefined
-    const accounts = _user?.addresses ?? []
+    const accounts = _user?.address ? [_user?.address] : []
 
     // emit full user update for dApp
     void appMessageBus.emit(Msgs.UserChanged, _user)

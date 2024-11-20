@@ -40,6 +40,5 @@ export function generateTestUser(): HappyUser {
         // web3 details
         address: address,
         controllingAddress: address,
-        addresses: [address],
     }
 }
