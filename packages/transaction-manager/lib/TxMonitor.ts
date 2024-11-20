@@ -3,6 +3,7 @@ import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { type GetTransactionReceiptErrorType, type TransactionReceipt, TransactionReceiptNotFoundError } from "viem"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
+import { LatestOnlyMutex } from "./LatestOnlyMutex.js"
 import { type Attempt, AttemptType, type Transaction, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
@@ -10,13 +11,32 @@ type AttemptWithReceipt = { attempt: Attempt; receipt: TransactionReceipt }
 
 export class TxMonitor {
     private readonly transactionManager: TransactionManager
+    private readonly txMonitorMutex: LatestOnlyMutex
 
     constructor(transactionManager: TransactionManager) {
         this.transactionManager = transactionManager
+        this.txMonitorMutex = new LatestOnlyMutex()
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
     private async onNewBlock(block: LatestBlock) {
+        this.txMonitorMutex
+            .acquire()
+            .then(async (releaser) => {
+                try {
+                    await this.handleNewBlock(block)
+                } catch (error) {
+                    console.error("Error in handleNewBlock", error)
+                } finally {
+                    releaser()
+                }
+            })
+            .catch((error) => {
+                console.error("Error in txMonitorMutex.acquire", error)
+            })
+    }
+
+    private async handleNewBlock(block: LatestBlock) {
         const transactions = this.transactionManager.transactionRepository.getNotFinalizedTransactions()
 
         const promises = transactions.map(async (transaction) => {
