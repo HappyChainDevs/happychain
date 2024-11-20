@@ -23,7 +23,7 @@ jobs:
           IFRAME_URL: "https://iframe.happy.tech"
         run: |
           make setup
-          make js-demo.build
+          make demo-js.build
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -46,8 +46,8 @@ jobs:
           script: |
             chmod -R o+rX /home/deployer/demo-js
             mv /home/deployer/demo-js /tmp
-            sudo -u js_demo bash -c '
-              rm -rf /var/www/js-demo/*
-              cp -r /tmp/demo-js/* /var/www/js-demo
+            sudo -u demo_js bash -c '
+              rm -rf /var/www/demo-js/*
+              cp -r /tmp/demo-js/* /var/www/demo-js
             '
             rm -rf /tmp/demo-js
