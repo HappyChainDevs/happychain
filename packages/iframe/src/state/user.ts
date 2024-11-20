@@ -32,6 +32,5 @@ function formatUser(user: HappyUser): HappyUser {
         ...user,
         controllingAddress: getAddress(user.controllingAddress),
         address: getAddress(user.address),
-        addresses: user.addresses.map(getAddress),
     }
 }

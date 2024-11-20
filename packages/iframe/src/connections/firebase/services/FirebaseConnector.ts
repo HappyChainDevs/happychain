@@ -29,7 +29,7 @@ import {
 import { FirebaseAuthState } from "../workers/firebaseAuthState"
 import { isConnected as isWeb3AuthConnected } from "../workers/web3auth.sw"
 
-type HappyUserDetails = Omit<HappyUser, "address" | "controllingAddress" | "addresses">
+type HappyUserDetails = Omit<HappyUser, "address" | "controllingAddress">
 
 export abstract class FirebaseConnector implements ConnectionProvider {
     public readonly type: string
@@ -86,7 +86,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                 request,
                 response:
                     request.payload.method === "eth_requestAccounts"
-                        ? happyUser.addresses
+                        ? [happyUser.address]
                         : getPermissions(getAppURL(), "eth_accounts"),
             }
         } catch (e) {
@@ -132,13 +132,9 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             // web3 details
             address: addresses[0],
             controllingAddress: addresses[0],
-            addresses,
         }
 
-        if (smartAccountAddress) {
-            happyUser.address = smartAccountAddress
-            happyUser.addresses.push(smartAccountAddress)
-        }
+        if (smartAccountAddress) happyUser.address = smartAccountAddress
 
         return happyUser satisfies HappyUser
     }
