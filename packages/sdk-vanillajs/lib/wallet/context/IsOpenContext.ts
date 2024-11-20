@@ -11,7 +11,13 @@ export function useSetupIsOpenContext() {
     const [isOpen, internalSetIsOpen] = useState(false)
 
     // Syncs open state with iframe.
-    useEffect(() => onWalletVisibilityUpdate((state) => internalSetIsOpen(state.isOpen)), [])
+    useEffect(
+        () =>
+            onWalletVisibilityUpdate((state) => {
+                internalSetIsOpen(state.isOpen)
+            }),
+        [],
+    )
 
     // 'Click outside' closes the wallet
     // This simple approach allows clicks anywhere to close it,

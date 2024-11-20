@@ -4,6 +4,7 @@ import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { getAuthState } from "#src/state/authState.ts"
+import { signalClosed, signalOpen } from "#src/utils/walletState.ts"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
@@ -19,31 +20,6 @@ import { userAtom } from "../state/user"
 export const Route = createLazyFileRoute("/embed")({
     component: Embed,
 })
-
-const originalSetTimeout = window.setTimeout
-const patchedSetTimeout: typeof setTimeout = ((...params: Parameters<typeof setTimeout>) => {
-    if (getAuthState() === AuthState.Connected) return originalSetTimeout(...params)
-
-    const [fn, delay, ...args] = params
-    // Check if the delay matches Firebase's _Timeout.AUTH_EVENT
-    return delay === 8000 ? originalSetTimeout(fn, 500, ...args) : originalSetTimeout(fn, delay, ...args)
-}) as typeof setTimeout
-
-function patchTimeoutOn() {
-    window.setTimeout = patchedSetTimeout
-}
-function patchTimeoutOff() {
-    window.setTimeout = originalSetTimeout
-}
-
-function signalOpen() {
-    patchTimeoutOn()
-    void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: true })
-}
-function signalClosed() {
-    patchTimeoutOff()
-    void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
-}
 
 function Embed() {
     const location = useLocation()
@@ -91,31 +67,6 @@ function Embed() {
         <>
             <main className="flex h-screen w-screen items-stretch overflow-hidden bg-base-200">
                 <div className="flex flex-col size-full items-center justify-start">
-                    {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-                    <div
-                        className="flex items-center justify-center gap-2 p-1 lg:hidden size-full"
-                        onClick={signalOpen}
-                    >
-                        <div className="relative">
-                            <img
-                                src={user.avatar}
-                                alt={`${user.name}'s avatar`}
-                                className="h-8 rounded-full"
-                                // This is required to avoid google avatars from sometimes failing
-                                // to load properly
-                                referrerPolicy="no-referrer"
-                            />
-                            {activeProvider && (
-                                <img
-                                    src={activeProvider.icon}
-                                    alt={activeProvider.name}
-                                    className="h-4 rounded-full absolute bottom-0 end-0 bg-base-200"
-                                />
-                            )}
-                        </div>
-                        <p className="">{user?.ens || user?.email || user?.name}</p>
-                    </div>
-
                     <GlobalHeader />
 
                     <div className="relative flex flex-col grow w-full">

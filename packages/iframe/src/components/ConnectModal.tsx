@@ -3,6 +3,7 @@ import { type ConnectionProvider, Msgs, type MsgsFromApp, WalletDisplayAction } 
 import { useMutation } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { iframeID } from "#src/requests/utils.ts"
+import { signalClosed } from "#src/utils/walletState.ts"
 import happychainLogo from "../assets/happychain.png"
 import { useConnectionProviders } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
@@ -99,6 +100,14 @@ export function ConnectModal() {
                                 </Button>
                             )
                         })}
+                        <Button
+                            intent="ghost"
+                            type="button"
+                            className="text-neutral-content justify-center"
+                            onClick={() => signalClosed()}
+                        >
+                            Close
+                        </Button>
                     </div>
                 )}
             </main>

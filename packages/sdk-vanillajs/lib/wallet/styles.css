@@ -22,10 +22,15 @@
     top: 0;
     display: flex;
     align-items: center;
-    border-start-start-radius: 9999px;
-    border-end-start-radius: 9999px;
-    background: rgb(31 41 55);
-    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+    padding: 0rem 0.25rem;
+
+    @media (min-width: 768px) {
+        padding-block: 0.25rem;
+        padding-inline: 0.25rem 0.5rem;
+        background: rgb(31 41 55);
+        border-start-start-radius: 9999px;
+        border-end-start-radius: 9999px;
+    }
 
     --happy-translate-x: 0rem;
     transform: translate(var(--happy-translate-x), var(--happy-translate-y)) rotate(var(--happy-rotate))

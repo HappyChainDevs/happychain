@@ -10,7 +10,7 @@ export const Route = createLazyFileRoute("/embed/")({
 
 function EmbedHome() {
     return (
-        <div className="hidden lg:flex flex-1 flex-col items-start justify-start bg-base-100 p-2">
+        <div className="hidden lg:flex flex-1 flex-col items-start justify-start bg-base-100 p-2 overflow-x-hidden">
             <HappyBalance />
             <ActionButtons />
             <WalletContentInfo />
