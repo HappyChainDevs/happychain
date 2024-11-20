@@ -80,7 +80,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: auto;
+    cursor: pointer;
     width: var(--happy-closed-size);
     height: var(--happy-closed-size);
 }
@@ -131,7 +131,6 @@
     position: absolute;
     inset-block-start: 0;
     inset-inline-end: 0;
-    cursor: pointer;
     width: var(--happy-closed-size);
     height: var(--happy-closed-size);
     transition-property: opacity;
