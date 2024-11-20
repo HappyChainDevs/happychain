@@ -26,7 +26,7 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
     // offset in percentage (so resizes, will retain same location onscreen)
     // const [walletOffset, setWalletOffset] = useState(roundedOffset(handleOffset / window.innerHeight))
     // relative offset to move orb since clicks won't be perfectly centered on orb
-    const [dragStartOffset, setDragStartOffset] = useState(handleOffset)
+    const [dragStartOffset, setDragStartOffset] = useState(0)
 
     // is the orb currently dragging
     const [dragging, setDragging] = useState(false)
@@ -109,7 +109,7 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
     const [handleOffset, setHandleOffset] = useState(getCachedPosition())
 
     // relative offset to move orb since clicks won't be perfectly centered on orb
-    const [dragStartOffset, setDragStartOffset] = useState(handleOffset)
+    const [dragStartOffset, setDragStartOffset] = useState(0)
     const [dragging, setDragging] = useState(false)
     // Firefox: need to disable userSelect manually during drag to avoid highlighting everything
     const [initialUserSelect] = useState(document.body.style.userSelect)

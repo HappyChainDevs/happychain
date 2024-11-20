@@ -30,7 +30,6 @@ happyProviderBus.on(Msgs.RequestPermissionless, handlePermissionlessRequest)
  */
 happyProviderBus.on(Msgs.PermissionCheckRequest, (data) => {
     const result = checkIfRequestRequiresConfirmation(getAppURL(), data.payload)
-
     return happyProviderBus.emit(Msgs.PermissionCheckResponse, {
         key: data.key,
         windowId: data.windowId,

@@ -17,6 +17,8 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
     private readonly injectedWalletHandler: EIP1193ConnectionHandler
     private readonly socialWalletHandler: EIP1193ConnectionHandler
 
+    private initialized = false
+
     private authState: AuthState = AuthState.Connecting
     private lastConnectedType: WalletType | undefined
 
@@ -27,6 +29,10 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
 
         config.msgBus.on(Msgs.UserChanged, (_user) => {
             this.lastConnectedType = _user?.type ?? this.lastConnectedType
+        })
+
+        config.msgBus.on(Msgs.IframeInit, (isInit) => {
+            this.initialized = isInit
         })
 
         config.msgBus.on(Msgs.AuthStateChanged, (_authState) => {
@@ -60,9 +66,7 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
 
     public async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
         // wait until either authenticated or unauthenticated
-        if (this.authState === AuthState.Connecting) {
-            await waitForCondition(() => this.authState !== AuthState.Connecting)
-        }
+        await waitForCondition(() => this.initialized && this.authState !== AuthState.Connecting)
 
         try {
             return await this.activeHandler.request(args)

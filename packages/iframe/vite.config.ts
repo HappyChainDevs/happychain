@@ -26,9 +26,11 @@ if (config.error) {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
     optimizeDeps: {
-        exclude: ["@happychain/worker"],
+        // Vite seems unable to properly optimize shared-workers with code-gen when switching
+        // between branches.
+        exclude: command === "serve" ? ["@happychain/worker"] : [],
     },
     server: { port: 5160 },
     preview: { port: 4160 },
@@ -60,7 +62,7 @@ export default defineConfig({
     test: {
         environment: "happy-dom",
     },
-})
+}))
 
 /**
  * Chunking here is optional, but extracting the common runtime into a
