@@ -1,11 +1,11 @@
 import { useAtomValue } from "jotai"
 
-import { userAtom } from "../../../../../../state/user"
-
 import { confirmedTxsAtom, pendingTxsAtom } from "#src/state/txHistory.ts"
+import UserNotFoundWarning from "../UserNotFoundWarning"
 import TxLoadingSkeleton from "./TxLoadingSkeleton"
 import TxLogEntry from "./TxLogEntry"
 
+import { userAtom } from "#src/state/user.js"
 /**
  * Displays HappyUser's recent transaction history.
  * TxReceipts are fetched from the atom, and user specific
@@ -18,9 +18,7 @@ const ActivityView = () => {
     const txHistory = useAtomValue(confirmedTxsAtom)
     const pendingTxs = useAtomValue(pendingTxsAtom)
 
-    if (!user) {
-        return <div className="size-full p-2">No user connected.</div>
-    }
+    if (!user) return <UserNotFoundWarning />
 
     const userTxHistory = txHistory[user.address] || []
     const userPendingTxs = pendingTxs[user.address] || []
@@ -30,10 +28,11 @@ const ActivityView = () => {
     }
 
     return (
-        <div className="flex flex-col rounded-es-xl rounded-e-xl size-full space-y-1">
-            {userPendingTxs.length > 0 && userPendingTxs.map((tx) => <TxLoadingSkeleton key={tx.hash} tx={tx.hash} />)}
+        <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 bg-neutral-content rounded-b-xl rounded-se-xl space-y-1">
+            {userPendingTxs.length > 0 &&
+                userPendingTxs.map((tx) => <TxLoadingSkeleton key={`pending-tx-${tx.hash}`} tx={tx.hash} />)}
             {userTxHistory.length > 0 &&
-                userTxHistory.map((tx) => <TxLogEntry key={tx.receipt.transactionHash} tx={tx} />)}
+                userTxHistory.map((tx) => <TxLogEntry key={`log-entry-${tx.receipt.transactionHash}`} tx={tx} />)}
         </div>
     )
 }

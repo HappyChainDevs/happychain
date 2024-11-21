@@ -153,7 +153,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         }
 
         return {
-            verifier: import.meta.env.VITE_WEB3AUTH_VERIFIER,
+            verifier: import.meta.env.VITE_WEB3AUTH_NETWORK,
             verifierId: token.claims.sub,
             idToken: token.token,
         } satisfies JWTLoginParams

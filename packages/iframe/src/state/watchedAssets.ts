@@ -52,21 +52,25 @@ export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters
  * Removes a specific asset from the watched assets list by its contract address for a specific user.
  * Returns `true` if the asset was found and removed, or `false` if it was not in the list.
  */
-export function removeWatchedAsset(address: Address, assetAddress: Address): boolean {
+export function removeWatchedAsset(assetAddress: Address, userAddress?: Address): boolean {
+    if (!userAddress) {
+        console.warn("User address not found")
+        return false
+    }
     let assetRemoved = false
     store.set(watchedAssetsAtom, (prevAssets) => {
-        const assetsForAddress = prevAssets[address] || []
+        const assetsForAddress = prevAssets[userAddress] || []
         const updatedAssets = assetsForAddress.filter((asset) => asset.options.address !== assetAddress)
         assetRemoved = updatedAssets.length < assetsForAddress.length
 
         if (updatedAssets.length === 0) {
-            const { [address]: _, ...remainingAssets } = prevAssets
+            const { [userAddress]: _, ...remainingAssets } = prevAssets
             return remainingAssets
         }
 
         return {
             ...prevAssets,
-            [address]: updatedAssets,
+            [userAddress]: updatedAssets,
         }
     })
     return assetRemoved
