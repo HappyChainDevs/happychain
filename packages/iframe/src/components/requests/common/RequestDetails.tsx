@@ -1,21 +1,21 @@
 import { CaretDown } from "@phosphor-icons/react"
 import { type PropsWithChildren, useMemo } from "react"
 import {
-    disclosureContentRecipe,
-    disclosureDetailsRecipe,
-    disclosureSummaryRecipe,
+    recipeDisclosureContent,
+    recipeDisclosureDetails,
+    recipeDisclosureSummary,
 } from "#src/components/primitives/disclosure/variants.js"
 
 const RequestDetails = ({ children }: PropsWithChildren) => {
     const memoizedChildren = useMemo(() => children, [children])
 
     return (
-        <details className={disclosureDetailsRecipe({ intent: "gradient" })}>
-            <summary className={disclosureSummaryRecipe({ intent: "gradient" })}>
+        <details className={recipeDisclosureDetails({ intent: "gradient" })}>
+            <summary className={recipeDisclosureSummary()}>
                 View Request Details:
                 <CaretDown size="1.25em" />
             </summary>
-            <div className={disclosureContentRecipe({ intent: "gradient" })}>{memoizedChildren}</div>
+            <div className={recipeDisclosureContent({ intent: "gradient" })}>{memoizedChildren}</div>
         </details>
     )
 }

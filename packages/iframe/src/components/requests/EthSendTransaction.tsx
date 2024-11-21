@@ -155,7 +155,7 @@ export const EthSendTransaction = ({
                         className="grow text-neutral-content justify-center"
                         onClick={() => {
                             accept({ method, params })
-                            queryClient.invalidateQueries({ queryKey: queryKey })
+                            queryClient.invalidateQueries({ queryKey })
                         }}
                     >
                         Sign
