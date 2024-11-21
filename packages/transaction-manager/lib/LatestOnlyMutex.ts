@@ -1,5 +1,10 @@
+import { promiseWithResolvers } from "@happychain/common"
 import { Mutex, type MutexInterface } from "async-mutex"
 
+/**
+ * A mutex that only allows the latest request to proceed.
+ * Previous pending requests are automatically rejected.
+ */
 export class LatestOnlyMutex {
     private mutex: Mutex
     private latestRequest: ((releaser: MutexInterface.Releaser) => void) | null
@@ -10,14 +15,13 @@ export class LatestOnlyMutex {
     }
 
     async acquire(): Promise<MutexInterface.Releaser> {
-        let resolveAcquire: (releaser: MutexInterface.Releaser) => void
-        let rejectAcquire: (error: Error) => void
+        const {
+            promise: acquirePromise,
+            resolve: resolveAcquire,
+            reject: rejectAcquire,
+        } = promiseWithResolvers<MutexInterface.Releaser>()
 
-        const acquirePromise = new Promise<MutexInterface.Releaser>((resolve, reject) => {
-            this.latestRequest = resolve
-            rejectAcquire = reject
-            resolveAcquire = resolve
-        })
+        this.latestRequest = resolveAcquire
 
         this.mutex.acquire().then((releaser) => {
             if (this.latestRequest === resolveAcquire) {
