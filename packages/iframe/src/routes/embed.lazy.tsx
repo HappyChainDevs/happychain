@@ -97,7 +97,6 @@ function Embed() {
                         onClick={signalOpen}
                     >
                         <div className="relative">
-                            a
                             <img
                                 src={user.avatar}
                                 alt={`${user.name}'s avatar`}
