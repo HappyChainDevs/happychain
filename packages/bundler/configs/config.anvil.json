@@ -11,6 +11,7 @@
     "executor-private-keys": "0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba,0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e,0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356,0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97",
     "utility-private-key": "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6",
     "entrypoints": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
+    "entrypoint-simulation-contract": "0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47",
     "enable-debug-endpoints": true,
     "safe-mode": false,
     "mempool-max-parallel-ops": 5,
