@@ -19,18 +19,16 @@ export class TxMonitor {
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
-    private async onNewBlock(block: LatestBlock) {
+    private onNewBlock(block: LatestBlock) {
         this.txMonitorMutex
             .acquire()
-            .then(async (releaser) => {
-                try {
-                    await this.handleNewBlock(block)
-                } catch (error) {
-                    console.error("Error in handleNewBlock", error)
-                } finally {
-                    releaser()
-                }
-            })
+            .then((releaser) =>
+                this.handleNewBlock(block)
+                    .catch((error) => {
+                        console.error("Error in handleNewBlock", error)
+                    })
+                    .finally(() => releaser()),
+            )
             .catch((error) => {
                 console.error("Error in txMonitorMutex.acquire", error)
             })
