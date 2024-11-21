@@ -1,8 +1,8 @@
 import { CaretDown } from "@phosphor-icons/react"
 import {
-    disclosureContentRecipe,
-    disclosureDetailsRecipe,
-    disclosureSummaryRecipe,
+    recipeDisclosureContent,
+    recipeDisclosureDetails,
+    recipeDisclosureSummary,
 } from "#src/components/primitives/disclosure/variants.js"
 import type { requestLabels } from "#src/constants/requestLabels.js"
 import type { RequestConfirmationProps } from "../props"
@@ -13,12 +13,12 @@ interface RawTxDetailsProps {
 
 const RawRequestDetails = ({ params }: RawTxDetailsProps) => {
     return (
-        <details className={disclosureDetailsRecipe({ intent: "raw" })}>
-            <summary className={disclosureSummaryRecipe({ intent: "raw" })}>
+        <details className={recipeDisclosureDetails({ intent: "default" })}>
+            <summary className={recipeDisclosureSummary()}>
                 Raw Request Payload:
                 <CaretDown size="1.25em" />
             </summary>
-            <pre className={disclosureContentRecipe({ intent: "raw" })}>{JSON.stringify(params, null, 2)}</pre>
+            <pre className={recipeDisclosureContent({ intent: "default" })}>{JSON.stringify(params, null, 2)}</pre>
         </details>
     )
 }
