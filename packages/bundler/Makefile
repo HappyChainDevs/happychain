@@ -19,6 +19,8 @@ alto: alto.version
 	else \
 		git clone $(ALTO_REPO) --branch $(ALTO_BRANCH) alto; \
 	fi
+	@rm -rf alto/.git alto/.gitmodules alto/.gitignore
+	@git rm --cached alto/pnpm-lock.yaml 2>/dev/null || true
 
 # Build target to set up the repository
 build: alto

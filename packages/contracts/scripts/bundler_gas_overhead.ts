@@ -38,9 +38,10 @@ if (!privateKey || !bundlerRpc || !rpcURL) {
     throw new Error("Missing environment variables")
 }
 
-interface Accounts {
+interface KernelBundle {
     kernelAccount: SmartAccount
     kernelClient: SmartAccountClient
+    kernelAddress: Address
 }
 
 interface GasDetails {
@@ -79,21 +80,21 @@ const pimlicoClient = createPimlicoClient({
     },
 })
 
-const AMOUNT = "0.01"
+const AMOUNT = parseEther("0.01")
 const EMPTY_SIGNATURE = "0x"
 
 function getRandomAccount() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Hex
 }
 
-function createMintCall(): UserOperationCall {
+function createMintCall(address: Address): UserOperationCall {
     return {
         to: mockDeployment.MockTokenA,
         value: 0n,
         data: encodeFunctionData({
             abi: mockAbis.MockTokenA,
             functionName: "mint",
-            args: [getRandomAccount(), parseEther(AMOUNT)],
+            args: [address, AMOUNT],
         }),
     }
 }
@@ -120,9 +121,7 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
     const kernelClientBase = createSmartAccountClient({
         account: kernelAccount,
         chain: localhost,
-        bundlerTransport: http(bundlerRpc, {
-            timeout: 30_000,
-        }),
+        bundlerTransport: http(bundlerRpc),
         paymaster: {
             async getPaymasterData(parameters: GetPaymasterDataParameters) {
                 const gasEstimates = await pimlicoClient.estimateUserOperationGas({
@@ -164,7 +163,7 @@ async function fund_smart_account(accountAddress: Address): Promise<string> {
         account: account,
         to: accountAddress,
         chain: localhost,
-        value: parseEther("0.1"),
+        value: AMOUNT,
     })
 
     const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -184,12 +183,17 @@ async function deposit_paymaster(): Promise<string> {
     return receipt.status
 }
 
-async function initialize_total_supply(): Promise<string> {
+async function initialize_paymaster_state() {
+    const kernelBundle = await generatePrefundedKernelAccount()
+    await processSingleUserOp(kernelBundle, [createMintCall(kernelBundle.kernelAddress)])
+}
+
+async function initializeTokenSupply(accountAddress: Address): Promise<string> {
     const hash = await walletClient.writeContract({
         address: mockDeployment.MockTokenA,
         abi: mockAbis.MockTokenA,
         functionName: "mint",
-        args: [getRandomAccount(), parseEther(AMOUNT)],
+        args: [accountAddress, AMOUNT],
     })
 
     const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -216,16 +220,13 @@ function printUserOperationGasDetails(gasDetails: GasDetails) {
 async function generatePrefundedKernelAccounts(count: number) {
     const accounts = []
     for (let i = 0; i < count; i++) {
-        const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
-        accounts.push({ kernelAccount, kernelClient })
+        const kernelBundle = await generatePrefundedKernelAccount()
+        accounts.push(kernelBundle)
     }
     return accounts
 }
 
-async function generatePrefundedKernelAccount(): Promise<{
-    kernelAccount: SmartAccount
-    kernelClient: SmartAccountClient
-}> {
+async function generatePrefundedKernelAccount(): Promise<KernelBundle> {
     const account = privateKeyToAccount(generatePrivateKey())
 
     const walletClient = createWalletClient({
@@ -240,19 +241,20 @@ async function generatePrefundedKernelAccount(): Promise<{
 
     const prefundRes = await fund_smart_account(kernelAddress)
     if (prefundRes !== "success") {
-        throw new Error("Funding SmartAccount 1 failed")
+        throw new Error("Funding SmartAccount failed")
     }
 
-    return { kernelAccount, kernelClient }
+    const mintTokenRes = await initializeTokenSupply(kernelAddress)
+    if (mintTokenRes !== "success") {
+        throw new Error("Minting tokens to SmartAccount failed")
+    }
+
+    return { kernelAccount, kernelClient, kernelAddress }
 }
 
-async function processSingleUserOp(
-    kernelAccount: SmartAccount,
-    kernelClient: SmartAccountClient,
-    calls: UserOperationCall[],
-) {
-    const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
-        account: kernelAccount,
+async function processSingleUserOp(kernelBundle: KernelBundle, calls: UserOperationCall[]) {
+    const userOp: UserOperation<"0.7"> = await kernelBundle.kernelClient.prepareUserOperation({
+        account: kernelBundle.kernelAccount,
         calls,
     })
 
@@ -260,9 +262,9 @@ async function processSingleUserOp(
         ...userOp,
     })
 
-    const receipt = await kernelClient.waitForUserOperationReceipt({
-        hash: await kernelClient.sendUserOperation({
-            account: kernelAccount,
+    const receipt = await kernelBundle.kernelClient.waitForUserOperationReceipt({
+        hash: await kernelBundle.kernelClient.sendUserOperation({
+            account: kernelBundle.kernelAccount,
             calls,
         }),
     })
@@ -298,14 +300,14 @@ async function processSingleUserOp(
     return gasDetails
 }
 
-async function sendUserOps(accounts: Accounts[]) {
+async function sendUserOps(kernelBundles: KernelBundle[]) {
     // Prepare and sign all user operations upfront to send them concurrently.
     // This increases the chance they are included in the same bundle.
     const userOps: UserOperation<"0.7">[] = await Promise.all(
-        accounts.map(async (account) => {
+        kernelBundles.map(async (account) => {
             const userOp: UserOperation<"0.7"> = await account.kernelClient.prepareUserOperation({
                 account: account.kernelAccount,
-                calls: [createMintCall()],
+                calls: [createMintCall(account.kernelAddress)],
             })
 
             userOp.signature = await account.kernelAccount.signUserOperation({
@@ -319,11 +321,11 @@ async function sendUserOps(accounts: Accounts[]) {
     )
 
     const hashes = await Promise.all(
-        accounts.map((account, idx) => account.kernelClient.sendUserOperation(userOps[idx])),
+        kernelBundles.map((account, idx) => account.kernelClient.sendUserOperation(userOps[idx])),
     )
 
     const receipts: UserOperationReceipt[] = await Promise.all(
-        accounts.map((account, idx) =>
+        kernelBundles.map((account, idx) =>
             account.kernelClient.waitForUserOperationReceipt({
                 hash: hashes[idx],
             }),
@@ -376,7 +378,7 @@ async function sendDirectTransactions(count = 1n) {
     for (let i = 0; i < count; i++) {
         const hash = await walletClient.sendTransaction({
             account,
-            ...createMintCall(),
+            ...createMintCall(walletClient.account.address),
         })
 
         const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -386,11 +388,11 @@ async function sendDirectTransactions(count = 1n) {
     return totalGas
 }
 
-async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+async function singleUserOperationGasResult(kernelBundle: KernelBundle) {
     console.log("\nGas Usage for a Single UserOp (with Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
-    const gasDetails1 = await processSingleUserOp(kernelAccount, kernelClient, [createMintCall()])
+    const gasDetails1 = await processSingleUserOp(kernelBundle, [createMintCall(kernelBundle.kernelAddress)])
     const singleOpWithDeploymentResults = {
         scenario: "Single UserOp with 1 call (with Deployment)",
         ...gasDetails1,
@@ -400,7 +402,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     console.log("\nGas Usage for a Single UserOp (no Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
-    const gasDetails2 = await processSingleUserOp(kernelAccount, kernelClient, [createMintCall()])
+    const gasDetails2 = await processSingleUserOp(kernelBundle, [createMintCall(kernelBundle.kernelAddress)])
     const singleOpNoDeploymentResults = {
         scenario: "Single UserOp with 1 call (no Deployment)",
         ...gasDetails2,
@@ -412,15 +414,15 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     return { singleOpWithDeploymentResults, singleOpNoDeploymentResults }
 }
 
-async function multipleCallsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+async function multipleCallsGasResult(kernelBundle: KernelBundle) {
     const calls = Array(5)
         .fill(null)
-        .map(() => createMintCall())
+        .map(() => createMintCall(kernelBundle.kernelAddress))
 
     console.log("\nGas Usage for a Single UserOp with 5 Calls (no Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
-    const gasDetails2 = await processSingleUserOp(kernelAccount, kernelClient, calls)
+    const gasDetails2 = await processSingleUserOp(kernelBundle, calls)
     return {
         scenario: "Single UserOp with 5 calls (no Deployment)",
         ...gasDetails2,
@@ -428,13 +430,12 @@ async function multipleCallsGasResult(kernelAccount: SmartAccount, kernelClient:
     }
 }
 
-async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    const kernelAddress = await kernelAccount.getAddress()
+async function batchedUserOpsSameSenderGasResult(kernelBundle: KernelBundle) {
     const nonces = await Promise.all(
         Array.from({ length: 5 }, (_, i) =>
             getCustomNonce(
                 walletClient,
-                kernelAddress,
+                kernelBundle.kernelAddress,
                 deployment.ECDSAValidator,
                 BigInt(i),
                 VALIDATOR_MODE.DEFAULT,
@@ -445,15 +446,17 @@ async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, ke
 
     const hashes = await Promise.all(
         nonces.map((nonce) =>
-            kernelClient.sendUserOperation({
-                account: kernelAccount,
-                calls: [createMintCall()],
+            kernelBundle.kernelClient.sendUserOperation({
+                account: kernelBundle.kernelAccount,
+                calls: [createMintCall(kernelBundle.kernelAddress)],
                 nonce: nonce,
             }),
         ),
     )
 
-    const receipts = await Promise.all(hashes.map((hash) => kernelClient.waitForUserOperationReceipt({ hash })))
+    const receipts = await Promise.all(
+        hashes.map((hash) => kernelBundle.kernelClient.waitForUserOperationReceipt({ hash })),
+    )
 
     const { numOps, gasDetails } = await calculateGasDetails(receipts)
     console.log("\nGas Usage per UserOp (no Deployment) from the same Sender:")
@@ -469,9 +472,9 @@ async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, ke
 }
 
 async function batchedUserOperationsGasResult() {
-    const accounts = await generatePrefundedKernelAccounts(5)
-    const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(accounts)
-    const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(accounts)
+    const kernelBundles = await generatePrefundedKernelAccounts(5)
+    const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(kernelBundles)
+    const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(kernelBundles)
 
     console.log("\nGas Usage per UserOp (with Deployment) from different Senders:")
     console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)`)
@@ -504,37 +507,35 @@ async function main() {
         throw new Error("Paymaster Deposit failed")
     }
 
-    const res = await initialize_total_supply()
+    await initialize_paymaster_state()
+
+    // Initialize Total Supply of mockToken, to get accurate and consistent gas results in further operations.
+    const res = await initializeTokenSupply(getRandomAccount())
     if (res !== "success") {
         throw new Error("Mock Token totalSupply initialization failed")
     }
 
-    const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
+    const kernelBundle = await generatePrefundedKernelAccount()
 
     let singleOpWithDeploymentResults: GasResult | undefined
     let singleOpNoDeploymentResults: GasResult | undefined
     try {
-        ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult(
-            kernelAccount,
-            kernelClient,
-        ))
+        ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } =
+            await singleUserOperationGasResult(kernelBundle))
     } catch (error) {
         console.error("Single UserOp: ", error)
     }
 
     let multipleCallsNoDeploymentResults: GasResult | undefined
     try {
-        multipleCallsNoDeploymentResults = await multipleCallsGasResult(kernelAccount, kernelClient)
+        multipleCallsNoDeploymentResults = await multipleCallsGasResult(kernelBundle)
     } catch (error) {
         console.error("Batched CallData: ", error)
     }
 
     let multipleUserOpsNoDeploymentSameSenderResults: GasResult | undefined
     try {
-        multipleUserOpsNoDeploymentSameSenderResults = await batchedUserOpsSameSenderGasResult(
-            kernelAccount,
-            kernelClient,
-        )
+        multipleUserOpsNoDeploymentSameSenderResults = await batchedUserOpsSameSenderGasResult(kernelBundle)
     } catch (error) {
         console.error("Batched CallData Same Sender: ", error)
     }
