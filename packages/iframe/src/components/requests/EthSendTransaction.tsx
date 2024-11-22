@@ -50,6 +50,8 @@ export const EthSendTransaction = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
+    // useState + useEffect paradigm works here (over useMemo) since we will have
+    // user interactions for sliders / options for setting gas manually
     const [tx, setTx] = useState<RpcTransactionRequest>(params[0])
 
     const {
@@ -119,9 +121,8 @@ export const EthSendTransaction = ({
                         {/* tx type */}
                         <div className="flex justify-between">
                             <span className="text-sm text-base-content font-mono">Type</span>
-                            {/* derive the type from what's sent through */}
                             <span className="font-mono text-sm">{formattedTxInfo.type}</span>
-                        </div>
+                        </div> 
                         {/* Gas Details */}
                         <span className="text-sm text-content font-mono font-bold italic">Gas Details</span>
                         <div className="flex items-center justify-between">
@@ -149,10 +150,10 @@ export const EthSendTransaction = ({
             {tx.type === TransactionType.EIP4844 ? (
                 <BlobTxWarning onReject={reject} />
             ) : (
-                <div className="flex w-full gap-4">
+                <div className="flex flex-col w-full gap-2">
                     <Button
                         intent="primary"
-                        className="grow text-neutral-content justify-center"
+                        className="text-neutral-content justify-center"
                         onClick={() => {
                             accept({ method, params })
                             queryClient.invalidateQueries({ queryKey })
@@ -160,7 +161,7 @@ export const EthSendTransaction = ({
                     >
                         Sign
                     </Button>
-                    <Button intent="outline-negative" className="text-base-content" onClick={reject}>
+                    <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
                         Reject
                     </Button>
                 </div>
