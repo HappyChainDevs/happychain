@@ -10,7 +10,7 @@ interface BlobTxWarningProps {
 export const BlobTxWarning = ({ onReject }: BlobTxWarningProps) => {
     return (
         <div className="flex w-full flex-col gap-2">
-            <div className="text-error font-mono">EIP-4844 blob transactions are not supported</div>
+            <p className="text-error font-mono">EIP-4844 blob transactions are not supported</p>
             <Button intent={"outline-negative"} onClick={onReject}>
                 Reject
             </Button>

@@ -50,7 +50,7 @@ export const WalletSwitchEthereumChain = ({
                 </div>
             </RequestContent>
 
-            <div className="flex w-full gap-4">
+            <div className="flex flex-col w-full gap-4">
                 <Button
                     intent="primary"
                     className="grow text-neutral-content justify-center"
@@ -58,7 +58,7 @@ export const WalletSwitchEthereumChain = ({
                 >
                     Switch
                 </Button>
-                <Button intent="outline-negative" className="text-base-content" onClick={reject}>
+                <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
                     Cancel
                 </Button>
             </div>

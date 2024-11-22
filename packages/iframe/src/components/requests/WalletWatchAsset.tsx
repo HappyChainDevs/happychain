@@ -43,15 +43,15 @@ export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConf
                 </div>
             </RequestContent>
 
-            <div className="flex w-full gap-4">
+            <div className="flex flex-col w-full gap-2">
                 <Button
                     intent="primary"
-                    className="grow text-neutral-content justify-center"
+                    className="text-neutral-content justify-center"
                     onClick={() => accept({ method, params })}
                 >
                     Add
                 </Button>
-                <Button intent="outline-negative" className="text-base-content" onClick={reject}>
+                <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
                     Reject
                 </Button>
             </div>

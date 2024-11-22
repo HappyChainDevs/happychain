@@ -27,7 +27,7 @@ export const WalletRequestPermissions = ({
                 <RawRequestDetails params={params} />
             </RequestContent>
 
-            <div className="flex w-full gap-4">
+            <div className="flex flex-col w-full gap-4">
                 <Button
                     intent="primary"
                     className="grow text-neutral-content justify-center"
