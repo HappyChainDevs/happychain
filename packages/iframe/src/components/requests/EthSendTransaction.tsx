@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react"
 import { type RpcTransactionRequest, formatEther, formatGwei } from "viem"
 import { useEstimateFeesPerGas } from "wagmi"
 import { queryClient } from "#src/tanstack-query/config.js"
-import FieldLoader from "../loaders/FieldLoader"
 import { Button } from "../primitives/button/Button"
 import { BlobTxWarning } from "./BlobTxWarning"
+import GasFieldDisplay, { GasFieldName } from "./common/GasFieldDisplay"
 import RawRequestDetails from "./common/RawRequestDetails"
 import RequestContent from "./common/RequestContent"
 import RequestDetails from "./common/RequestDetails"
@@ -122,25 +122,13 @@ export const EthSendTransaction = ({
                         <div className="flex justify-between">
                             <span className="text-sm text-base-content font-mono">Type</span>
                             <span className="font-mono text-sm">{formattedTxInfo.type}</span>
-                        </div> 
-                        {/* Gas Details */}
+                        </div>
                         <span className="text-sm text-content font-mono font-bold italic">Gas Details</span>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-content font-mono">MaxFeePerGas:</span>
-                            {formattedTxInfo.maxFeePerGas ? (
-                                <span className="font-mono text-sm uppercase truncate">{`${formattedTxInfo.maxFeePerGas} gwei`}</span>
-                            ) : (
-                                <FieldLoader />
-                            )}
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-content font-mono">PriorityFee:</span>
-                            {formattedTxInfo.maxPriorityFeePerGas ? (
-                                <span className="font-mono text-sm uppercase truncate">{`${formattedTxInfo.maxPriorityFeePerGas} gwei`}</span>
-                            ) : (
-                                <FieldLoader />
-                            )}
-                        </div>
+                        <GasFieldDisplay name={GasFieldName.MaxFeePerGas} field={formattedTxInfo.maxFeePerGas} />
+                        <GasFieldDisplay
+                            name={GasFieldName.MaxPriorityFeePerGas}
+                            field={formattedTxInfo.maxPriorityFeePerGas}
+                        />
                     </div>
                 </RequestDetails>
 
