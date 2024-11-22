@@ -2,16 +2,16 @@ Gas Usage for a Single UserOp (with Deployment):
 ---------------------------------------------------------------------
 
 Estimated UserOperation Gas:
-  PreVerificationGas:   56,988 gas
+  PreVerificationGas:   57,002 gas
   VerificationGasLimit: 397,390 gas
   CallGasLimit:         134,267 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    333,606 gas
-  Total UserOp Gas:           352,143 gas
-  Bundler Overhead:           18,537 gas
-  UserOp Overhead:            299,307 gas
-  Total Overhead:             317,844 gas
+  Bundler Transaction Gas:    333,618 gas
+  Total UserOp Gas:           352,157 gas
+  Bundler Overhead:           18,539 gas
+  UserOp Overhead:            299,319 gas
+  Total Overhead:             317,858 gas
 
 Gas Usage for a Single UserOp (no Deployment):
 ---------------------------------------------------------------------
@@ -37,10 +37,10 @@ Estimated UserOperation Gas:
   CallGasLimit:         156,768 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    34,469 gas
+  Bundler Transaction Gas:    34,471 gas
   Total UserOp Gas:           38,327 gas
-  Bundler Overhead:           3,858 gas
-  UserOp Overhead:            170 gas
+  Bundler Overhead:           3,856 gas
+  UserOp Overhead:            172 gas
   Total Overhead:             4,028 gas
 
 Gas Usage per UserOp (no Deployment) from the same Sender:
@@ -49,10 +49,10 @@ Gas Usage per UserOp (no Deployment) from the same Sender:
 
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    100,455 gas
+  Bundler Transaction Gas:    100,459 gas
   Total UserOp Gas:           145,724 gas
-  Bundler Overhead:           45,269 gas
-  UserOp Overhead:            66,156 gas
+  Bundler Overhead:           45,265 gas
+  UserOp Overhead:            66,160 gas
   Total Overhead:             111,425 gas
 
 Gas Usage per UserOp (with Deployment) from different Senders:
@@ -61,11 +61,11 @@ Gas Usage per UserOp (with Deployment) from different Senders:
 
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    282,487 gas
-  Total UserOp Gas:           327,782 gas
-  Bundler Overhead:           45,295 gas
-  UserOp Overhead:            248,188 gas
-  Total Overhead:             293,483 gas
+  Bundler Transaction Gas:    282,489 gas
+  Total UserOp Gas:           327,780 gas
+  Bundler Overhead:           45,291 gas
+  UserOp Overhead:            248,190 gas
+  Total Overhead:             293,481 gas
 
 Gas Usage per UserOp (no Deployment) from different Senders:
 (Processed 5 UserOps in this bundle, each from a different sender)
@@ -73,20 +73,20 @@ Gas Usage per UserOp (no Deployment) from different Senders:
 
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    102,859 gas
-  Total UserOp Gas:           147,740 gas
-  Bundler Overhead:           44,881 gas
-  UserOp Overhead:            68,560 gas
-  Total Overhead:             113,441 gas
+  Bundler Transaction Gas:    102,852 gas
+  Total UserOp Gas:           147,735 gas
+  Bundler Overhead:           44,883 gas
+  UserOp Overhead:            68,553 gas
+  Total Overhead:             113,436 gas
 
 Gas Usage Results Comparison Table :-
 ┌─────────┬─────────────────────────────────────────────────────────┬───────────────┬──────────────────┬────────────────┬──────────────────┬─────────────────┬────────────────┬─────────────────────────┐
 │ (index) │ Scenario                                                │ Direct Tx Gas │ Total UserOp Gas │ Bundler Tx Gas │ Bundler Overhead │ UserOp Overhead │ Total Overhead │ SCA Deployment Overhead │
 ├─────────┼─────────────────────────────────────────────────────────┼───────────────┼──────────────────┼────────────────┼──────────────────┼─────────────────┼────────────────┼─────────────────────────┤
-│ 0       │ 'Single UserOp with 1 call (with Deployment)'           │ '34,299'      │ '352,143'        │ '333,606'      │ '18,537'         │ '299,307'       │ '317,844'      │ '187,667'               │
-│ 1       │ 'Avg UserOp in a Bundle of 5 UserOps (with Deployment)' │ '34,299'      │ '327,782'        │ '282,487'      │ '45,295'         │ '248,188'       │ '293,483'      │ '180,042'               │
+│ 0       │ 'Single UserOp with 1 call (with Deployment)'           │ '34,299'      │ '352,157'        │ '333,618'      │ '18,539'         │ '299,319'       │ '317,858'      │ '187,681'               │
+│ 1       │ 'Avg UserOp in a Bundle of 5 UserOps (with Deployment)' │ '34,299'      │ '327,780'        │ '282,489'      │ '45,291'         │ '248,190'       │ '293,481'      │ '180,045'               │
 │ 2       │ 'Single UserOp with 1 call (no Deployment)'             │ '34,299'      │ '164,476'        │ '146,367'      │ '18,109'         │ '112,068'       │ '130,177'      │ '0'                     │
-│ 3       │ 'Single UserOp with 5 calls (no Deployment)'            │ '34,299'      │ '38,327'         │ '34,469'       │ '3,858'          │ '170'           │ '4,028'        │ '0'                     │
-│ 4       │ 'Avg UserOp in a Bundle of 5 UserOps (no Deployment)'   │ '34,299'      │ '147,740'        │ '102,859'      │ '44,881'         │ '68,560'        │ '113,441'      │ '0'                     │
-│ 5       │ 'Avg UserOp in a Bundle of 5 UserOps (same sender)'     │ '34,299'      │ '145,724'        │ '100,455'      │ '45,269'         │ '66,156'        │ '111,425'      │ '0'                     │
+│ 3       │ 'Single UserOp with 5 calls (no Deployment)'            │ '34,299'      │ '38,327'         │ '34,471'       │ '3,856'          │ '172'           │ '4,028'        │ '0'                     │
+│ 4       │ 'Avg UserOp in a Bundle of 5 UserOps (no Deployment)'   │ '34,299'      │ '147,735'        │ '102,852'      │ '44,883'         │ '68,553'        │ '113,436'      │ '0'                     │
+│ 5       │ 'Avg UserOp in a Bundle of 5 UserOps (same sender)'     │ '34,299'      │ '145,724'        │ '100,459'      │ '45,265'         │ '66,160'        │ '111,425'      │ '0'                     │
 └─────────┴─────────────────────────────────────────────────────────┴───────────────┴──────────────────┴────────────────┴──────────────────┴─────────────────┴────────────────┴─────────────────────────┘

@@ -114,6 +114,7 @@ aa-demo-auto:
 	@make aa-demo
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
+	@git restore -- deployments/anvil/testing deployments/anvil/mockTokens
 .PHONY: aa-demo-auto
 
 # Please, ensure that all Account Abstraction (AA) and Mock Token contracts are deployed before generating the gas report.
@@ -138,6 +139,7 @@ gas-bundler-auto:
 	@make gas-bundler
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
+	@git restore -- deployments/anvil/testing deployments/anvil/mockTokens
 .PHONY: gas-bundler-auto
 
 ####################################################################################################
