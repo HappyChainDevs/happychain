@@ -10,6 +10,7 @@ import {
 import type { Client } from "viem"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions.ts"
+import { getSmartAccountClient } from "#src/state/smartAccountClient.ts"
 import { getPublicClient } from "../state/publicClient"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
@@ -28,6 +29,7 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 // exported for testing
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
+    const smartAccountClient = await getSmartAccountClient()
 
     switch (request.payload.method) {
         case "eth_chainId": {
@@ -51,6 +53,19 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 throw new EIP1193UserRejectedRequestError()
             }
             return [getUser()?.address]
+
+        case "eth_getTransactionReceipt": {
+            if (!smartAccountClient) return null
+            const [hash] = request.payload.params
+            const opReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
+            if (!opReceipt) return null
+            return opReceipt.receipt
+        }
+
+        case "eth_getTransactionCount": {
+            if (!smartAccountClient?.account) return null
+            return await smartAccountClient.account.getNonce()
+        }
 
         case "wallet_getPermissions":
             return getAllPermissions(app)
