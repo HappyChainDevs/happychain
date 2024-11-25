@@ -9,12 +9,12 @@ import {
 } from "@happychain/sdk-shared"
 import type { Client } from "viem"
 import { getCurrentChain } from "#src/state/chains"
-import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions.ts"
-import { getSmartAccountClient } from "#src/state/smartAccountClient.ts"
-import { getPublicClient } from "../state/publicClient"
-import { getUser } from "../state/user"
-import type { AppURL } from "../utils/appURL"
-import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
+import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
+import { getPublicClient } from "#src/state/publicClient"
+import { getSmartAccountClient } from "#src/state/smartAccountClient"
+import { getUser } from "#src/state/user"
+import type { AppURL } from "#src/utils/appURL"
+import { checkIfRequestRequiresConfirmation } from "#src/utils/checkPermissions"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
 
@@ -30,7 +30,6 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
     const smartAccountClient = await getSmartAccountClient()
-
     switch (request.payload.method) {
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
@@ -55,16 +54,27 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return [getUser()?.address]
 
         case "eth_getTransactionReceipt": {
-            if (!smartAccountClient) return null
             const [hash] = request.payload.params
-            const opReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
-            if (!opReceipt) return null
-            return opReceipt.receipt
+
+            if (smartAccountClient) {
+                const opReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
+                if (opReceipt) return opReceipt.receipt
+            }
+
+            return await sendToPublicClient(app, request)
         }
 
         case "eth_getTransactionCount": {
-            if (!smartAccountClient?.account) return null
-            return await smartAccountClient.account.getNonce()
+            const [address] = request.payload.params
+
+            if (
+                smartAccountClient?.account &&
+                address.toLowerCase() === smartAccountClient.account.address.toLowerCase()
+            ) {
+                return await smartAccountClient.account.getNonce()
+            }
+
+            return await sendToPublicClient(app, request)
         }
 
         case "wallet_getPermissions":
