@@ -22,7 +22,6 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address) {
         abi: erc20Abi,
     }
 
-    // assetAddr might be 0 here, what's returned then?
     const result = useReadContracts({
         contracts: [
             {

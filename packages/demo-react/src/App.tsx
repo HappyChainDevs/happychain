@@ -64,6 +64,18 @@ function App() {
         await walletClient?.switchChain({ id: hexToNumber(chains.testnet.chainId as Hex) })
     }
 
+    async function addNewToken() {
+        // https://happy-testnet-sepolia.explorer.caldera.xyz/address/0xc80629fE33747288AaFb97684F86f7eD2D1aBF69
+        await walletClient?.watchAsset({
+            type: "ERC20",
+            options: {
+                address: "0xc80629fE33747288AaFb97684F86f7eD2D1aBF69",
+                decimals: 18,
+                symbol: "MTA",
+            },
+        })
+    }
+
     useEffect(() => {
         if (!user) {
             setSignatureResult("")
@@ -132,6 +144,10 @@ function App() {
 
             <button type="button" onClick={sendStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Show Send Screen
+            </button>
+
+            <button type="button" onClick={addNewToken} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Add Token
             </button>
         </main>
     )
