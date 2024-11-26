@@ -50,7 +50,7 @@
     }
 
     &[data-open-state="true"] {
-        padding: 0.25rem 0rem 0.25rem 0.25rem;
+        padding: 0rem;
     }
 
     &,
