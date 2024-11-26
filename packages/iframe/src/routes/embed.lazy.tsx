@@ -21,10 +21,28 @@ export const Route = createLazyFileRoute("/embed")({
     component: Embed,
 })
 
+const originalSetTimeout = window.setTimeout
+const patchedSetTimeout: typeof setTimeout = ((...params: Parameters<typeof setTimeout>) => {
+    if (getAuthState() === AuthState.Connected) return originalSetTimeout(...params)
+
+    const [fn, delay, ...args] = params
+    // Check if the delay matches Firebase's _Timeout.AUTH_EVENT
+    return delay === 8000 ? originalSetTimeout(fn, 500, ...args) : originalSetTimeout(fn, delay, ...args)
+}) as typeof setTimeout
+
+function patchTimeoutOn() {
+    window.setTimeout = patchedSetTimeout
+}
+function patchTimeoutOff() {
+    window.setTimeout = originalSetTimeout
+}
+
 function signalOpen() {
+    patchTimeoutOn()
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: true })
 }
 function signalClosed() {
+    patchTimeoutOff()
     void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
 }
 
