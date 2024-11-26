@@ -47,6 +47,9 @@
     &[data-drag-state="true"] {
         --transition-property: none;
         --transition-duration: 0s;
+    }
+
+    &[data-open-state="true"] {
         padding: 0.25rem 0rem 0.25rem 0.25rem;
     }
 
