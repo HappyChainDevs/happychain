@@ -1,15 +1,13 @@
-import { type WatchAssetParameters, isAddress, zeroAddress } from "viem"
-
 import { Check, Trash, X } from "@phosphor-icons/react"
 import { useMemo, useState } from "react"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
 
 import type { HappyUser } from "@happychain/sdk-shared"
-import { removeWatchedAsset } from "#src/state/watchedAssets"
+import { type WatchAssetParametersForStorage, removeWatchedAsset } from "#src/state/watchedAssets"
 
 interface WatchedAssetProps {
     user: HappyUser
-    asset: WatchAssetParameters
+    asset: WatchAssetParametersForStorage
 }
 
 /**
@@ -22,7 +20,7 @@ interface WatchedAssetProps {
 const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     const userAddress = user.address
     // using zeroAddr ensures no data gets returned
-    const tokenAddress = isAddress(asset.options.address) ? asset.options.address : zeroAddress
+    const tokenAddress = asset.options.address
 
     const [isImageSourceBroken, setIsImageSourceBroken] = useState(false)
     const [confirmRemoval, setConfirmRemoval] = useState(false)

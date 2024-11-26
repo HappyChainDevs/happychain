@@ -1,8 +1,18 @@
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import type { Address, WatchAssetParameters } from "viem"
+import { type Address, type WatchAssetParameters, isAddress } from "viem"
 
-export type UserWatchedAssetsRecord = Record<Address, WatchAssetParameters[]>
+/**
+ * Overrides the `address` field in viem's `WatchAssetParameters.options`
+ * to be of type `Address` instead of `string`.
+ */
+export type WatchAssetParametersForStorage = Omit<WatchAssetParameters, "options"> & {
+    options: Omit<WatchAssetParameters["options"], "address"> & {
+        address: Address
+    }
+}
+
+export type UserWatchedAssetsRecord = Record<Address, WatchAssetParametersForStorage[]>
 
 // === Atom Definition ==================================================================================
 
@@ -33,6 +43,11 @@ export function getWatchedAssets(): UserWatchedAssetsRecord {
  * Returns `true` if the asset was successfully added, or `false` if the asset was already in the list.
  */
 export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters): boolean {
+    if (!isAddress(newAsset.options.address)) {
+        console.log("[wallet_watchAsset: addWatchedAsset]: address format incorrect; request failed")
+        return false
+    }
+
     let assetExists = false
     store.set(watchedAssetsAtom, (prevAssets) => {
         const assetsForAddress = prevAssets[address] || []
