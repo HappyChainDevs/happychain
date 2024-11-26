@@ -21,7 +21,8 @@ interface WatchedAssetProps {
  */
 const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     const userAddress = user.address
-    const tokenAddress = isAddress(asset.options.address) ? asset.options.address : zeroAddress // using zeroAddr ensures no data gets returned
+    // using zeroAddr ensures no data gets returned
+    const tokenAddress = isAddress(asset.options.address) ? asset.options.address : zeroAddress
 
     const [isImageSourceBroken, setIsImageSourceBroken] = useState(false)
     const [confirmRemoval, setConfirmRemoval] = useState(false)
