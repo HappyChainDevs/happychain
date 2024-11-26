@@ -23,7 +23,7 @@ const TokenView = () => {
                     </li>
                 ))
             ) : (
-                <div>No tokens found. Please add some!</div>
+                <p className="text-base-content">No apps have added tokens to be tracked.</p>
             )}
         </ul>
     )
