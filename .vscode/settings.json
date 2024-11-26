@@ -20,5 +20,6 @@
         "api-extractor.json": "jsonc",
         "tsconfig.*.json": "jsonc",
         "tsconfig.json": "jsonc"
-    }
+    },
+    "typescript.preferences.importModuleSpecifierEnding": "minimal"
 }
