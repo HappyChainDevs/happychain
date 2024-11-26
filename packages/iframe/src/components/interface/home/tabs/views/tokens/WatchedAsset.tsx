@@ -30,7 +30,10 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     const { data: balanceData } = useERC20Balance(tokenAddress, userAddress)
 
     // shortened fields for UI visibility
-    const tokenSymbol = useMemo(() => asset.options.symbol.substring(0, 4), [asset])
+    const tokenSymbol = useMemo(
+        () => (asset.options.symbol.length > 7 ? `${asset.options.symbol.slice(0, 7)}\u2026` : asset.options.symbol),
+        [asset],
+    )
     const truncatedBalance = useMemo(
         () => balanceData?.formatted && `${Number(balanceData.formatted).toFixed(4)}`,
         [balanceData?.formatted],
@@ -64,7 +67,10 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                     onError={() => setIsImageSourceBroken(true)}
                     src={imageSource}
                 />
-                <span className="font-semibold text-sm">{`${confirmRemoval ? `Stop Tracking ${tokenSymbol}?` : `${tokenSymbol}`}`}</span>
+                <span
+                    className="font-semibold text-sm"
+                    title={asset.options.symbol}
+                >{`${confirmRemoval ? `Stop Tracking ${tokenSymbol}?` : `${tokenSymbol}`}`}</span>
             </div>
 
             <div className="flex flex-row items-center w-1/2 justify-end min-w-0">
