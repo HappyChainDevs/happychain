@@ -66,7 +66,7 @@ function App() {
 
     async function addNewToken() {
         // https://happy-testnet-sepolia.explorer.caldera.xyz/address/0xc80629fE33747288AaFb97684F86f7eD2D1aBF69
-        await walletClient?.watchAsset({
+        const watchAssetCall = await walletClient?.watchAsset({
             type: "ERC20",
             options: {
                 address: "0xc80629fE33747288AaFb97684F86f7eD2D1aBF69",
@@ -74,6 +74,12 @@ function App() {
                 symbol: "MTA",
             },
         })
+
+        if (watchAssetCall) {
+            console.log("[addNewToken]: (•̀•́) asset being watched (•̀•́)")
+        } else {
+            console.log("[addNewToken]: Error adding asset ")
+        }
     }
 
     useEffect(() => {
