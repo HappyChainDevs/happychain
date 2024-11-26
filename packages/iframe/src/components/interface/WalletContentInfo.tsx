@@ -1,7 +1,6 @@
 import { Tabs } from "@ark-ui/react/tabs"
 import { ContentType } from "../../state/interfaceState"
-import { Tab } from "./home/tabs/Tab"
-import { TabContent } from "./home/tabs/TabContent"
+import { Tab, TabContent } from "./home/tabs/Tabs"
 import GamesView from "./home/tabs/views/GamesView"
 import TokenView from "./home/tabs/views/TokenView"
 import ActivityView from "./home/tabs/views/activity/ActivityView"

@@ -165,6 +165,8 @@ describe("HappyProvider", () => {
             })
         })
 
+        await appBusIframe.emit(Msgs.IframeInit, true)
+
         const resultBlock = provider.request({
             method: "eth_getBlockByNumber",
             params: ["latest", false],
@@ -185,7 +187,7 @@ describe("HappyProvider", () => {
             msgBus: newAppMessageBus(appBusConfig),
         })
 
-        void appBusIframe.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
+        await appBusIframe.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
 
         // auto approve permissions (no popup)
         happyProviderBusIframe.on(Msgs.PermissionCheckRequest, ({ key, windowId: uuid }) => {
@@ -210,6 +212,8 @@ describe("HappyProvider", () => {
                 payload: null,
             })
         })
+
+        await appBusIframe.emit(Msgs.IframeInit, true)
 
         // provider request
         expect(
