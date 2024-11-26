@@ -17,9 +17,19 @@ const cachePosition = (position: number) => {
     )
 }
 
+function getParentBoundingRec(e: Event) {
+    if (e.target && "closest" in e.target && e.target.closest && typeof e.target.closest === "function") {
+        return e.target.closest(".wallet-container").getBoundingClientRect?.()
+    }
+}
+
+function getBoundedOffset(boxTop: number, maxHeight: number) {
+    return Math.min(Math.max(boxTop, 0), maxHeight)
+}
+
 function useNativeDrag({ enabled }: { enabled: boolean }) {
     // we will hardcode 48 on page load as the default height, but on click we re-evaluate
-    const [boundingRec, setBoundingRec] = useState({ height: 48 })
+    const [boundingRec, setBoundingRec] = useState({ height: 56 })
     // absolute position of wallet onscreen (y axis in pixels)
     const [handleOffset, setHandleOffset] = useState(getCachedPosition())
 
@@ -36,7 +46,7 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
         if (!enabled) return
 
         const handleResize = () => {
-            const nextOffset = Math.min(Math.max(getCachedPosition(), 0), window.innerHeight - boundingRec.height)
+            const nextOffset = getBoundedOffset(getCachedPosition(), window.innerHeight - boundingRec.height)
             setHandleOffset(nextOffset)
         }
 
@@ -48,11 +58,10 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
         if (!e.dataTransfer) return
 
         setDragging(true)
-
-        if (e.target && "getBoundingClientRect" in e.target && typeof e.target.getBoundingClientRect === "function") {
-            setBoundingRec(e.target.getBoundingClientRect?.())
+        const rec = getParentBoundingRec(e)
+        if (rec) {
+            setBoundingRec(rec)
         }
-
         setDragStartOffset(e.clientY - handleOffset)
 
         // Disables ghosting. cf. makeBlankImage docstring
@@ -62,8 +71,7 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
     function onDragEnd(e: DragEvent) {
         setDragging(false)
 
-        const nextOffset = Math.min(Math.max(e.clientY - dragStartOffset, 0), window.innerHeight - boundingRec.height)
-
+        const nextOffset = getBoundedOffset(e.clientY - dragStartOffset, window.innerHeight - boundingRec.height)
         setHandleOffset(nextOffset)
         // We persist the percentage, so that if window opens in a different resolution, the grabber
         // will still be in the same 'location'
@@ -79,10 +87,11 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
         // is not noticeable by the user
         if (!e.clientY) return
 
-        const nextOffset = Math.min(Math.max(e.clientY - dragStartOffset, 0), window.innerHeight - boundingRec.height)
-
+        const nextOffset = getBoundedOffset(e.clientY - dragStartOffset, window.innerHeight - boundingRec.height)
         setHandleOffset(nextOffset)
     })
+
+    const walletOffset = roundedOffset(handleOffset / (window.innerHeight + boundingRec.height)) * -100
 
     return {
         // Y offset of orb
@@ -90,7 +99,7 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
 
         // Computed percentage that expanded wallet should open
         // 0% means open down (top of screen), -100% means open up (bottom of screen), -50% means open from middle
-        walletOffset: roundedOffset(handleOffset / (window.innerHeight + boundingRec.height - dragStartOffset)) * -100,
+        walletOffset,
         dragging,
         dragProps: {
             // browsers that properly support dragging
@@ -104,7 +113,7 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
 
 function useCustomDrag({ enabled }: { enabled: boolean }) {
     // we will hardcode 48 on page load as the default height, but on click we re-evaluate
-    const [boundingRec, setBoundingRec] = useState({ height: 48 })
+    const [boundingRec, setBoundingRec] = useState({ height: 56 })
     // absolute position of wallet onscreen (y axis in pixels)
     const [handleOffset, setHandleOffset] = useState(getCachedPosition())
 
@@ -121,7 +130,7 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
         if (!enabled) return
 
         const handleResize = () => {
-            const nextOffset = Math.min(Math.max(getCachedPosition(), 0), window.innerHeight - boundingRec.height)
+            const nextOffset = getBoundedOffset(getCachedPosition(), window.innerHeight - boundingRec.height)
             setHandleOffset(nextOffset)
         }
 
@@ -165,21 +174,15 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
 
         const onDragStableCallback = (e: MouseEvent) => {
             if (!enabled) return
-
             if (!dragging) return
+            if (!e.clientY) return
             setHasMoved(true)
 
             document.body.style.userSelect = "none"
 
-            if (e.clientY) {
-                const nextOffset = Math.min(
-                    Math.max(e.clientY - dragStartOffset, 0),
-                    window.innerHeight - boundingRec.height,
-                )
-                setHandleOffset(nextOffset)
-
-                cachePosition(nextOffset)
-            }
+            const nextOffset = getBoundedOffset(e.clientY - dragStartOffset, window.innerHeight - boundingRec.height)
+            setHandleOffset(nextOffset)
+            cachePosition(nextOffset)
         }
 
         window.addEventListener("mousemove", onDragStableCallback)
@@ -190,12 +193,14 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
         }
     }, [dragging, dragStartOffset, boundingRec.height, enabled])
 
+    const walletOffset = roundedOffset(handleOffset / (window.innerHeight + boundingRec.height)) * -100
+
     return {
         handleOffset,
 
         // Computed percentage that expanded wallet should open
         // 0% means open down (top of screen), -100% means open up (bottom of screen), -50% means open from middle
-        walletOffset: roundedOffset(handleOffset / (window.innerHeight + boundingRec.height - dragStartOffset)) * -100,
+        walletOffset,
 
         // won't register as 'dragging' until it has actually moved. otherwise its a click
         dragging: dragging && hasMoved,
@@ -209,12 +214,9 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
                 e.stopPropagation()
                 setDragging(true)
 
-                if (
-                    e.target &&
-                    "getBoundingClientRect" in e.target &&
-                    typeof e.target.getBoundingClientRect === "function"
-                ) {
-                    setBoundingRec(e.target.getBoundingClientRect?.())
+                const rec = getParentBoundingRec(e)
+                if (rec) {
+                    setBoundingRec(rec)
                 }
                 setDragStartOffset(e.clientY - handleOffset)
             },
