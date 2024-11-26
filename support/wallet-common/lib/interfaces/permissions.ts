@@ -119,7 +119,7 @@ const unsafeList = new Set([
 ])
 
 /**
- * Stores the categorized RPC calls.
+ * Currently unused; stores the categorized RPC calls.
  */
 export const permissionsLists = new Map([
     ["unsafe", unsafeList], // requires approvals
