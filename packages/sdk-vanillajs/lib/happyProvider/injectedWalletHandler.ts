@@ -15,7 +15,6 @@ import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
  * provider for the connected wallet
  */
 export class InjectedWalletHandler extends BasePopupProvider implements EIP1193ConnectionHandler {
-    protected popupBaseUrl = ""
     private wrapper: InjectedWalletWrapper
 
     /** InjectedWalletHandler does not require popup */

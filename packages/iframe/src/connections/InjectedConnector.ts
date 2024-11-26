@@ -6,7 +6,7 @@ import type {
     MsgsFromApp,
     MsgsFromIframe,
 } from "@happychain/sdk-shared"
-import { EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happychain/sdk-shared"
+import { EIP1193UserRejectedRequestError, Msgs, WalletType, chains } from "@happychain/sdk-shared"
 import { connect, disconnect } from "@wagmi/core"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
@@ -193,13 +193,24 @@ export class InjectedConnector implements ConnectionProvider {
             // Ensures the chain has been added to the injected wallet
             await this.provider.request({
                 method: "wallet_addEthereumChain",
-                params: [chains.defaultChain],
+                params: [
+                    {
+                        chainId: chains.defaultChain.chainId,
+                        chainName: chains.defaultChain.chainName,
+                        rpcUrls: chains.defaultChain.rpcUrls,
+                        iconUrls: [],
+                        nativeCurrency: chains.defaultChain.nativeCurrency,
+                        blockExplorerUrls: chains.defaultChain.blockExplorerUrls,
+                    },
+                ],
             })
             // Ensures the chain has been selected (will not prompt)
             await this.provider.request({
                 method: "wallet_switchEthereumChain",
-                params: [chains.defaultChain],
+                params: [{ chainId: chains.defaultChain.chainId }],
             })
-        } catch {}
+        } catch (e) {
+            console.error(e)
+        }
     }
 }
