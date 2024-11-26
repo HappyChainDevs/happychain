@@ -342,6 +342,18 @@ async function sendUserOps(kernelBundles: KernelBundle[]) {
 
     const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
 
+    console.log(`Total Bundle Tx GasUsed: ${filteredReceipts[0].receipt.gasUsed}`)
+    const avgBundleTxGas = filteredReceipts[0].receipt.gasUsed / BigInt(filteredReceipts.length)
+    console.log(`per UserOp Bundle Tx GasUsed: ${avgBundleTxGas}`)
+    filteredReceipts.forEach((receipt, idx) => {
+        console.log(`UserOp [${idx}]`)
+        console.log(`    ActualGas: ${receipt.actualGasUsed.toLocaleString("en-US")}`)
+        console.log(
+            `    ActualGas - AvgBundlerTxGas: ${(receipt.actualGasUsed - avgBundleTxGas).toLocaleString("en-US")}`,
+        )
+    })
+    console.log("\n")
+
     const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
     return { numOps, gasDetails }
 }
@@ -444,15 +456,25 @@ async function batchedUserOpsSameSenderGasResult(kernelBundle: KernelBundle) {
         ),
     )
 
-    const hashes = await Promise.all(
-        nonces.map((nonce) =>
-            kernelBundle.kernelClient.sendUserOperation({
+    const userOps: UserOperation<"0.7">[] = await Promise.all(
+        nonces.map(async (nonce) => {
+            const userOp: UserOperation<"0.7"> = await kernelBundle.kernelClient.prepareUserOperation({
                 account: kernelBundle.kernelAccount,
                 calls: [createMintCall(kernelBundle.kernelAddress)],
                 nonce: nonce,
-            }),
-        ),
+            })
+
+            userOp.signature = await kernelBundle.kernelAccount.signUserOperation({
+                ...userOp,
+                chainId: localhost.id,
+                signature: EMPTY_SIGNATURE,
+            })
+
+            return userOp
+        }),
     )
+
+    const hashes = await Promise.all(userOps.map((userOp) => kernelBundle.kernelClient.sendUserOperation(userOp)))
 
     const receipts = await Promise.all(
         hashes.map((hash) => kernelBundle.kernelClient.waitForUserOperationReceipt({ hash })),
@@ -462,6 +484,19 @@ async function batchedUserOpsSameSenderGasResult(kernelBundle: KernelBundle) {
     console.log("\nGas Usage per UserOp (no Deployment) from the same Sender:")
     console.log(`(Processed ${numOps} UserOps in this bundle)`)
     console.log("---------------------------------------------------------------------\n")
+
+    console.log(`Total Bundle Tx GasUsed: ${receipts[0].receipt.gasUsed}`)
+    const avgBundleTxGas = receipts[0].receipt.gasUsed / BigInt(receipts.length)
+    console.log(`per UserOp Bundle Tx GasUsed: ${avgBundleTxGas}`)
+    receipts.forEach((receipt, idx) => {
+        console.log(`UserOp [${idx}]`)
+        console.log(`    ActualGas: ${receipt.actualGasUsed.toLocaleString("en-US")}`)
+        console.log(
+            `    ActualGas - AvgBundlerTxGas: ${(receipt.actualGasUsed - avgBundleTxGas).toLocaleString("en-US")}`,
+        )
+    })
+    console.log("\n")
+
     printUserOperationGasDetails(gasDetails)
 
     return {
@@ -473,15 +508,14 @@ async function batchedUserOpsSameSenderGasResult(kernelBundle: KernelBundle) {
 
 async function batchedUserOperationsGasResult() {
     const kernelBundles = await generatePrefundedKernelAccounts(5)
-    const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(kernelBundles)
-    const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(kernelBundles)
-
     console.log("\nGas Usage per UserOp (with Deployment) from different Senders:")
+    const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(kernelBundles)
     console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
     printUserOperationGasDetails(gasDetails1)
 
     console.log("\nGas Usage per UserOp (no Deployment) from different Senders:")
+    const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(kernelBundles)
     console.log(`(Processed ${numOps2} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
     printUserOperationGasDetails(gasDetails2)
