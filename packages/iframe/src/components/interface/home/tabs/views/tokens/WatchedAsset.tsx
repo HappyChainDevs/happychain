@@ -63,7 +63,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                     onError={() => setIsImageSourceBroken(true)}
                     src={imageSource}
                 />
-                <span className="font-semibold text-sm truncate">{`${confirmRemoval ? `Hide ${tokenSymbol}?` : `${tokenSymbol}`}`}</span>
+                <span className="font-semibold text-sm">{`${confirmRemoval ? `Stop Tracking ${tokenSymbol}?` : `${tokenSymbol}`}`}</span>
             </div>
 
             <div className="flex flex-row items-center w-1/2 justify-end min-w-0">
@@ -74,11 +74,11 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                         </span>
                         <button
                             type="button"
-                            title={`Remove ${tokenSymbol}`}
+                            title={`Stop Tracking ${tokenSymbol}`}
                             className="hidden group-hover:block group-focus-within:block"
                             onClick={handleRemoveClick}
                         >
-                            <span className="sr-only">Remove token</span>
+                            <span className="sr-only">Stop Tracking Token</span>
                             <Trash size="1.5em" />
                         </button>
                     </>
