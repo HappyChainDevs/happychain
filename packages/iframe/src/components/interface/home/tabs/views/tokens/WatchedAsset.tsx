@@ -2,10 +2,10 @@ import { type WatchAssetParameters, isAddress, zeroAddress } from "viem"
 
 import { Check, Trash, X } from "@phosphor-icons/react"
 import { useMemo, useState } from "react"
-import { useERC20Balance } from "#src/hooks/useERC20Balance.js"
+import { useERC20Balance } from "#src/hooks/useERC20Balance"
 
 import type { HappyUser } from "@happychain/sdk-shared"
-import { removeWatchedAsset } from "#src/state/watchedAssets.js"
+import { removeWatchedAsset } from "#src/state/watchedAssets"
 
 interface WatchedAssetProps {
     user: HappyUser

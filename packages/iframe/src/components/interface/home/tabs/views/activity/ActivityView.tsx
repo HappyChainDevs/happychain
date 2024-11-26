@@ -1,11 +1,11 @@
 import { useAtomValue } from "jotai"
 
-import { confirmedTxsAtom, pendingTxsAtom } from "#src/state/txHistory.ts"
+import { confirmedTxsAtom, pendingTxsAtom } from "#src/state/txHistory"
 import UserNotFoundWarning from "../UserNotFoundWarning"
 import TxLoadingSkeleton from "./TxLoadingSkeleton"
 import TxLogEntry from "./TxLogEntry"
 
-import { userAtom } from "#src/state/user.js"
+import { userAtom } from "#src/state/user"
 /**
  * Displays HappyUser's recent transaction history.
  * TxReceipts are fetched from the atom, and user specific
