@@ -4,6 +4,8 @@
         "paths": {
             "#src/*": ["./src/*"]
         },
+        // incl. here to fix auto import issues; the IDE is unable to
+        // parse the inheritance from the base script in some cases
         "moduleResolution": "bundler"
     },
     // Okay to include config files: they are not reachable from entrypoints, won't be picked up by rollup.
