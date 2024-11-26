@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai"
-import { userAtom } from "#src/state/user.js"
-import { watchedAssetsAtom } from "#src/state/watchedAssets.js"
+import { userAtom } from "#src/state/user"
+import { watchedAssetsAtom } from "#src/state/watchedAssets"
 import UserNotFoundWarning from "../UserNotFoundWarning"
 import WatchedAsset from "./WatchedAsset"
 
