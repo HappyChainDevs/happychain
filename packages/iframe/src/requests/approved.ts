@@ -15,13 +15,14 @@ import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { grantPermissions } from "#src/state/permissions"
+import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import type { PendingTxDetails } from "#src/state/txHistory"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID } from "./utils"
+import { appForSourceID, convertTxToUserOp } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -42,14 +43,29 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     switch (request.payload.method) {
         case "eth_sendTransaction": {
             if (!user) return false
+            const tx = request.payload.params[0]
+            const smartAccountClient = await getSmartAccountClient()
+            let hash: Hash
 
-            const hash = (await sendToWalletClient(request)) as Hash
+            if (smartAccountClient?.account) {
+                const userOp = await convertTxToUserOp(
+                    {
+                        to: tx.to as `0x${string}`,
+                        data: tx.data,
+                        value: tx.value ? hexToBigInt(tx.value) : 0n,
+                    },
+                    smartAccountClient,
+                )
 
-            const value = request.payload.params[0].value ? hexToBigInt(request.payload.params[0].value as Hex) : 0n
+                hash = (await smartAccountClient.sendUserOperation(userOp)) as Hash
+            } else {
+                hash = (await sendToWalletClient(request)) as Hash
+            }
 
+            // Track pending transaction
+            const value = hexToBigInt(tx.value as Hex)
             const payload: PendingTxDetails = { hash, value }
             addPendingTx(user.address, payload)
-
             return hash
         }
 

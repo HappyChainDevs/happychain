@@ -8,7 +8,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { decodeNonce } from "permissionless"
-import { type Client, InvalidAddressError, decodeAbiParameters, isAddress, parseAbiParameters } from "viem"
+import { type Client, InvalidAddressError, decodeAbiParameters, isAddress, parseAbiParameters, hexToBigInt } from "viem"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
@@ -17,7 +17,7 @@ import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkPermissions"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID, checkAuthenticated } from "./utils"
+import { appForSourceID, checkAuthenticated, convertTxToUserOp } from "./utils"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -160,6 +160,22 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             }
 
             throw new InvalidAddressError({ address })
+        }
+
+        case "eth_estimateGas": {
+            const [tx] = request.payload.params
+            if (smartAccountClient?.account) {
+                const userOp = await convertTxToUserOp(
+                    {
+                        to: tx.to as `0x${string}`,
+                        data: tx.data,
+                        value: tx.value ? hexToBigInt(tx.value) : 0n,
+                    },
+                    smartAccountClient.account.address,
+                )
+                return userOp.callGasLimit
+            }
+            return await sendToPublicClient(app, request)
         }
 
         case "wallet_getPermissions":
