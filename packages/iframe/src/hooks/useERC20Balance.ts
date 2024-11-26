@@ -16,7 +16,7 @@ type ERC20BalanceQueryData = {
  * and a `formatted` value - using the obtained decimals value to format the balance,
  * to be used in the UI.
  */
-export function useERC20Balance(assetAddr: Address, userAddr: Address) {
+export function useERC20Balance(assetAddr: Address, userAddr: Address): { data?: ERC20BalanceQueryData } {
     const tokenContract = {
         address: assetAddr,
         abi: erc20Abi,
