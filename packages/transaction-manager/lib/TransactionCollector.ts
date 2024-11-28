@@ -3,6 +3,13 @@ import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
+/**
+ * This module is responsible for retrieving transactions from the Originator when a new block is received.
+ * It also sorts the transactions by deadline, prioritizing those that will expire sooner.
+ * Additionally, this module handles submitting the first attempt of every transaction and saves
+ * the initial version of the Transaction object to the database (including its first attempt).
+ */
+
 export class TransactionCollector {
     private readonly txmgr: TransactionManager
 

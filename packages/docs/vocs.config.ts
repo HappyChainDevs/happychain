@@ -2,7 +2,7 @@ import { defineConfig } from "vocs"
 
 export default defineConfig({
     rootDir: "docs",
-    title: "HappyChain SDK",
+    title: "HappyChain Docs",
     socials: [
         {
             link: "https://x.com/HappyChainDevs",
@@ -15,30 +15,50 @@ export default defineConfig({
     ],
     sidebar: [
         {
-            text: "JavaScript & TypeScript",
+            text: "SDK",
+            link: "/sdk",
             items: [
                 {
-                    text: "Getting Started",
-                    link: "/js/getting-started",
+                    text: "JavaScript & TypeScript",
+                    items: [
+                        {
+                            text: "Getting Started",
+                            link: "/sdk/js/getting-started",
+                        },
+                        {
+                            text: "API Reference",
+                            link: "/sdk/js/api",
+                        },
+                    ],
                 },
                 {
-                    text: "API Reference",
-                    link: "/js/api",
-                },
-            ],
+                    text: "React",
+                    items: [
+                        {
+                            text: "Getting Started",
+                            link: "/sdk/react/getting-started",
+                        },
+                        {
+                            text: "API Reference",
+                            link: "/sdk/react/api",
+                        },
+                    ],
+                }
+            ]
         },
         {
-            text: "React",
+            text: "Transaction Manager",
+            link: "/transaction-manager",
             items: [
                 {
                     text: "Getting Started",
-                    link: "/react/getting-started",
+                    link: "/transaction-manager/getting-started",
                 },
                 {
                     text: "API Reference",
-                    link: "/react/api",
+                    link: "/transaction-manager/api",
                 },
-            ],
-        },
+            ]
+        }
     ],
 })
