@@ -7,6 +7,11 @@ import type { TransactionManager } from "./TransactionManager.js"
  */
 export type LatestBlock = Block<bigint, false, "latest">
 
+/**
+ * This module is responsible for emitting the NewBlock event when a new block is received,
+ * notifying other parts of the code that a new block has just occurred. Along with the notification,
+ * it sends the latest block information with the event, allowing other parts of the application to use this data for their own purposes.
+ */
 export class BlockMonitor {
     private txmgr: TransactionManager
 

@@ -33,7 +33,7 @@ class RandomnessService {
         })
 
         this.txm.start()
-        this.txm.addTransactionCollector(this.onCollectTransactions.bind(this))
+        this.txm.addTransactionOriginator(this.onCollectTransactions.bind(this))
     }
 
     private async onCollectTransactions(block: LatestBlock): Promise<Transaction[]> {
