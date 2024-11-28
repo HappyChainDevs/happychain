@@ -1,15 +1,20 @@
-import { Menu } from "@ark-ui/react"
+import { Field, Menu } from "@ark-ui/react"
 import { Plus, X } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useState } from "react"
-import { isAddress } from "viem"
-import { useWatchAsset } from "wagmi"
+import { type Address, isAddress } from "viem"
+// import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
 import { recipeContent, recipePositioner } from "#src/components/primitives/popover/variants"
+import { useERC20Balance } from "#src/hooks/useERC20Balance"
+import { userAtom } from "#src/state/user"
 import { importTokensMenuVisibilityAtom } from "./state"
 
-const TriggerImportTokensMenu = () => {
+/**
+ * Trigger
+ */
+export const TriggerImportTokensMenu = () => {
     const [isVisible, setVisibility] = useAtom(importTokensMenuVisibilityAtom)
 
     return (
@@ -26,46 +31,39 @@ const TriggerImportTokensMenu = () => {
     )
 }
 
-const ImportTokensMenu = () => {
+/**
+ * Menu
+ */
+export const ImportTokensMenu = () => {
     const [isImportTokensMenuVisible, setIsImportTokensMenuVisible] = useAtom(importTokensMenuVisibilityAtom)
-    const { watchAsset } = useWatchAsset()
+    const user = useAtomValue(userAtom)
+    // const { watchAsset } = useWatchAsset()
 
-    const [formData, setFormData] = useState({
-        address: "",
-        symbol: "",
-        decimals: "",
-    })
-
-    const [isValidAddress, setIsValidAddress] = useState(true)
+    const [inputAdd, setInputAdd] = useState("")
+    const [validAddr, setValidAddr] = useState(false)
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-
-        if (name === "address") {
-            const isValid = isAddress(value)
-            setIsValidAddress(isValid)
-            setFormData((prev) => ({ ...prev, [name]: value }))
-        } else if (isValidAddress) {
-            // Only allow updates to other fields if address is valid
-            setFormData((prev) => ({ ...prev, [name]: value }))
-        }
+        const { value } = e.target
+        setInputAdd(value)
     }
 
-    const handleSubmit = useCallback(
-        (e: React.FormEvent) => {
-            e.preventDefault()
-            void watchAsset({
-                type: "ERC20",
-                options: {
-                    address: formData.address,
-                    symbol: formData.symbol,
-                    decimals: Number(formData.decimals),
-                },
-            })
-            setIsImportTokensMenuVisible(false)
-        },
-        [watchAsset, setIsImportTokensMenuVisible, formData],
-    )
+    const {
+        data: { symbol, decimals } = {},
+    } = useERC20Balance(inputAdd as Address, user?.address as Address)
+
+    const handleSubmitAddress = useCallback((e: React.FormEvent) => {
+        e.preventDefault()
+        // void watchAsset({
+        //     type: "ERC20",
+        //     options: {
+        //         address: formData.address,
+        //         symbol: formData.symbol,
+        //         decimals: Number(formData.decimals),
+        //     },
+        // })
+        setValidAddr(true)
+        // setIsImportTokensMenuVisible(false)
+    }, [])
 
     return (
         <Menu.Root
@@ -104,10 +102,10 @@ const ImportTokensMenu = () => {
                         }),
                     )}
                 >
-                    <div className="overflow-y-auto flex flex-col p-4">
-                        <Menu.ItemGroup className="flex-col">
-                            <Menu.ItemGroupLabel className="text-center font-semibold mb-2 flex justify-between items-center">
-                                Import Token
+                    <div className="flex flex-col p-4 overflow-y-auto grow">
+                        <Menu.ItemGroup className="flex flex-col h-full justify-between gap-y-2">
+                            <Menu.ItemGroupLabel className="flex text-center text-xl font-semibold justify-between items-center mb-2">
+                                Import Tokens
                                 <button
                                     type="button"
                                     onClick={() => setIsImportTokensMenuVisible(false)}
@@ -116,32 +114,56 @@ const ImportTokensMenu = () => {
                                     <X size="1.2em" />
                                 </button>
                             </Menu.ItemGroupLabel>
-                            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-                                {["address", "symbol", "decimals"].map((field) => (
-                                    <Menu.Item key={field} value={field} className="flex flex-col gap-1">
-                                        <p>{field.charAt(0).toUpperCase() + field.slice(1)}</p>
-                                        <input
-                                            type="text"
-                                            name={field}
-                                            className={`input input-bordered input-sm w-full ${
-                                                field === "address" && !isValidAddress ? "input-error" : ""
-                                            }`}
-                                            placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                                            value={formData[field as keyof typeof formData]}
-                                            onChange={handleInputChange}
-                                            required
-                                            disabled={field !== "address" && !isValidAddress}
-                                        />
-                                        {field === "address" && !isValidAddress && (
-                                            <span className="text-xs text-error">Invalid EVM address</span>
-                                        )}
-                                    </Menu.Item>
-                                ))}
-                                <Menu.Separator />
-                                <Button type="submit" className="justify-center">
-                                    Add
-                                </Button>
+                            <form onSubmit={handleSubmitAddress} className="flex flex-col gap-2">
+                                <Field.Root className="flex flex-col gap-y-2">
+                                    <Field.Label className="italic">Token Contract Address</Field.Label>
+                                    <Field.Input
+                                        className="h-10 bg-neutral-200 rounded-lg p-2"
+                                        onChange={handleInputChange}
+                                        value={inputAdd}
+                                    />
+                                    {!isAddress(inputAdd) && (
+                                        <Field.ErrorText className="text-error">Invalid Address</Field.ErrorText>
+                                    )}
+                                </Field.Root>
+
+                                {validAddr && (
+                                    <>
+                                        {/* token decimals */}
+                                        <Field.Root className="flex flex-col gap-y-2">
+                                            <Field.Label className="italic">Token Symbol</Field.Label>
+                                            <Field.Input
+                                                className="h-10 bg-neutral-200 rounded-lg p-2"
+                                                onChange={handleInputChange}
+                                                value={symbol ?? symbol}
+                                            />
+                                            {!isAddress(inputAdd) && (
+                                                <Field.ErrorText className="text-error">
+                                                    {!symbol &&
+                                                        "No data returned for symbol; potentially incorrect contract."}
+                                                </Field.ErrorText>
+                                            )}
+                                        </Field.Root>
+                                        <Field.Root className="flex flex-col gap-y-2">
+                                            <Field.Label className="italic">Token Decimals</Field.Label>
+                                            <Field.Input
+                                                className="h-10 bg-neutral-200 rounded-lg p-2"
+                                                onChange={handleInputChange}
+                                                value={decimals ?? decimals}
+                                            />
+                                            {!isAddress(inputAdd) && (
+                                                <Field.ErrorText className="text-error">
+                                                    {!decimals &&
+                                                        "No data returned for decimals; potentially incorrect contract."}
+                                                </Field.ErrorText>
+                                            )}
+                                        </Field.Root>
+                                    </>
+                                )}
                             </form>
+                            <Button type="submit" className="justify-center" onClick={handleSubmitAddress}>
+                                {validAddr ? "Import" : "Submit"}
+                            </Button>
                         </Menu.ItemGroup>
                     </div>
                 </Menu.Content>
@@ -149,5 +171,3 @@ const ImportTokensMenu = () => {
         </Menu.Root>
     )
 }
-
-export { ImportTokensMenu, TriggerImportTokensMenu }
