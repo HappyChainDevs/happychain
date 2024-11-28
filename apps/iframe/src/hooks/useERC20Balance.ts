@@ -38,6 +38,10 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
                 ...tokenContract,
                 functionName: "decimals",
             },
+            {
+                ...tokenContract,
+                functionName: "symbol",
+            },
         ],
         query: {
             select(data): ERC20BalanceQueryData {
