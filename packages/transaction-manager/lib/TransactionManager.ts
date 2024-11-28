@@ -85,6 +85,12 @@ export type TransactionManagerConfig = {
 
 export type TransactionOriginator = (block: LatestBlock) => Promise<Transaction[]>
 
+/**
+ * This is the core module. As a user of the transaction manager, this is the module you need to import and instantiate.
+ * It maintains public references to all other modules, allowing seamless access between them.
+ * While it doesn’t contain much logic itself, as most functionality is distributed across other modules, it serves as the main
+ * public interface, acting as a bridge between the library and the user.
+ */
 export class TransactionManager {
     public readonly collectors: TransactionOriginator[]
     public readonly blockMonitor: BlockMonitor
@@ -148,13 +154,13 @@ export class TransactionManager {
     }
 
     /**
-     * Adds a collector to the transaction manager.
-     * A collector is a function that returns a list of transactions to be sent in the next block.
-     * It is important that the collector function is as fast as possible to avoid delays when sending transactions to the blockchain
-     * @param collector - The collector to add.
+     * Adds a originator to the transaction manager.
+     * A originator is a function that returns a list of transactions to be sent in the next block.
+     * It is important that the originator function is as fast as possible to avoid delays when sending transactions to the blockchain
+     * @param originator - The originator to add.
      */
-    public addTransactionCollector(collector: TransactionOriginator): void {
-        this.collectors.push(collector)
+    public addTransactionOriginator(originator: TransactionOriginator): void {
+        this.collectors.push(originator)
     }
 
     /**

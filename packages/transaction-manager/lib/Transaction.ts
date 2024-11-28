@@ -6,11 +6,29 @@ import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionTable } from "./db/types.js"
 
 export enum TransactionStatus {
+    /**
+     * The transaction is waiting to be included in a block
+     */
     Pending = "Pending",
+    /**
+     * The transaction have been executed but the execution failed
+     */
     Failed = "Failed",
+    /**
+     * The transaction has expired
+     */
     Expired = "Expired",
+    /**
+     * The transaction has expired and we are trying to cancel it to save gas
+     */
     Cancelling = "Cancelling",
+    /**
+     * The transaction have expired and we have successfully cancelled it
+     */
     Cancelled = "Cancelled",
+    /**
+     * The transaction has been successfully executed
+     */
     Success = "Success",
 }
 
@@ -29,6 +47,38 @@ export interface Attempt {
 }
 
 export const NotFinalizedStatuses = [TransactionStatus.Pending, TransactionStatus.Cancelling]
+
+export interface TransactionConstructorConfig {
+    /**
+     * The chain ID where the transaction will be sent
+     */
+    chainId: number
+    /**
+     * The address of the contract that will be called
+     */
+    address: Address
+    /**
+     * The function name of the contract that will be called
+     */
+    functionName: string
+    /**
+     * The contract alias of one of the contracts that you have provided when initializing the transaction manager
+     */
+    contractName: string
+    /**
+     * The arguments of the function that will be called
+     */
+    args: ContractFunctionArgs
+    /**
+     * The deadline of the transaction in seconds (optional)
+     * This is used to try to cancel the transaction if it is not included in a block after the deadline to save gas
+     */
+    deadline?: number
+    /**
+     * Additional metadata for the transaction that can be used by your custom GasEstimator
+     */
+    metadata?: Record<string, unknown>
+}
 
 export class Transaction {
     readonly intentId: UUID
@@ -58,7 +108,7 @@ export class Transaction {
      * Stores additional information for the transaction.
      * Enables originators to provide extra details, such as gas limits, which can be leveraged by customizable services.
      */
-    metadata: Record<string, unknown> | undefined
+    readonly metadata: Record<string, unknown>
 
     constructor({
         intentId,
@@ -73,19 +123,12 @@ export class Transaction {
         createdAt,
         updatedAt,
         metadata,
-    }: {
+    }: TransactionConstructorConfig & {
         intentId?: UUID
-        chainId: number
-        address: Address
-        functionName: string
-        contractName: string
-        args: ContractFunctionArgs
-        deadline?: number
         status?: TransactionStatus
         attempts?: Attempt[]
         createdAt?: Date
         updatedAt?: Date
-        metadata?: Record<string, unknown>
     }) {
         this.intentId = intentId ?? createUUID()
         this.chainId = chainId
@@ -98,7 +141,7 @@ export class Transaction {
         this.attempts = attempts ?? []
         this.createdAt = createdAt ?? new Date()
         this.updatedAt = updatedAt ?? new Date()
-        this.metadata = metadata
+        this.metadata = metadata ?? {}
     }
 
     addAttempt(attempt: Attempt): void {

@@ -6,6 +6,13 @@ import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { db } from "./db/driver.js"
 
+/**
+ * This module act as intermediate layer between the library and the database.
+ * Its maintains an in memory copy of all the not finalized transaction to avoid to access to database and
+ * improving the latency of get transactions. In addition it contains other methods helpful methods like getHighestNonce
+ * that returns the biggest nonce of all the not finalized transactions that exist in the database or the flush function
+ * that is used to commit all the changes that have occurred in tracked entities by the ORM in the database
+ */
 export class TransactionRepository {
     private readonly transactionManager: TransactionManager
     private notFinalizedTransactions: Transaction[]

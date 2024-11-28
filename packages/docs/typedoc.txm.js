@@ -4,14 +4,14 @@ import base from "./typedoc.base.js"
 export default {
     ...base,
     // https://typedoc.org/options/configuration/
-    tsconfig: "./tsconfig.typedoc.sdk-react.json",
+    tsconfig: "./tsconfig.typedoc.txm.json",
     // https://typedoc.org/options/input/
-    name: "@happychain/react",
-    entryPoints: ["../sdk-react/lib/index.ts"],
+    name: "@happychain/transaction-manager",
+    entryPoints: ["../transaction-manager/lib/index.ts"],
 
     // https://typedoc.org/options/output
-    out: "docs/pages/sdk/react/api",
+    out: "docs/pages/transaction-manager/api",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
-    publicPath: "/sdk/react/api/",
+    publicPath: "/transaction-manager/api/",
 }
