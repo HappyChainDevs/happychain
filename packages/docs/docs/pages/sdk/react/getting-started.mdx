@@ -68,7 +68,7 @@ import { happyProvider } from '@happychain/react'
 
 ### Getting the Active User
 
-The `useHappyChain` hook returns the current user as a [HappyUser](/react/api/type-aliases/HappyUser)
+The `useHappyChain` hook returns the current user as a [HappyUser](/sdk/react/api/type-aliases/HappyUser)
 if the user is connected, otherwise it returns undefined.
 
 ```tsx twoslash
@@ -90,7 +90,7 @@ function UserAddressComponent() {
 
 User changes, such as when a user logs in or out, can be subscribed to the `onUserUpdate` listener.
 If the `user` is undefined, then they are not currently logged in have or have logged out. 
-If the `user` is a [HappyUser](/react/api/type-aliases/HappyUser) then it will be populated with all their 
+If the `user` is a [HappyUser](/sdk/react/api/type-aliases/HappyUser) then it will be populated with all their 
 shared info, such as wallet address and name.
 
 ```ts twoslash

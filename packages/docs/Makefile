@@ -45,9 +45,10 @@ vocs.watch:
 
 # generate all markdown API reference
 typedoc: ## Generates the markdown files from package source code
-	concurrently --names "js,react"\
+	concurrently --names "js,react,txm"\
 		'make typedoc-js'\
-		'make typedoc-react';
+		'make typedoc-react'\
+		'make typedoc-txm';
 .PHONY: typedoc
 
 typedoc.clean:
@@ -78,3 +79,14 @@ typedoc-react.watch:
 		--options ./typedoc.react.js;
 .PHONY: typedoc-react.watch
 
+# generate Transaction Manager markdown API reference
+typedoc-txm:
+	typedoc --options ./typedoc.txm.js;
+.PHONY: typedoc-txm
+
+# generate Transaction Manager markdown API reference in watch mode
+typedoc-txm.watch:
+	typedoc\
+		--watch\
+		--options ./typedoc.txm.js;
+.PHONY: typedoc-txm.watch

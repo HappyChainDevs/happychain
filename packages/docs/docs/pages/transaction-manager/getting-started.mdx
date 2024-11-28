@@ -1,0 +1,160 @@
+---
+layout: doc
+---
+
+# Getting Started With Typescript
+
+## Install 
+:::code-group
+
+```bash [npm]
+npm install @happychain/transaction-manager
+```
+
+```bash [pnpm]
+pnpm add @happychain/transaction-manager
+```
+
+```bash [yarn]
+yarn add @happychain/transaction-manager
+```
+
+```bash [bun]
+bun add @happychain/transaction-manager
+```
+
+:::
+
+## Setup
+
+After installing, the first thing you will need to do is import the `TransactionManager` class and then create an instance of it.
+
+```tsx
+import { TransactionManager } from '@happychain/transaction-manager'
+import { anvil } from "viem/chains"
+
+const abiRecord = {
+    "erc20": {
+        "constant": false,
+        "inputs": [
+            {
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "name": "_value",
+                "type": "uint256"
+            }
+        ],
+        "name": "transfer",
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+}
+
+const txm = new TransactionManager({
+    account: privateKeyToAccount("0x..."),
+    transport: webSocket(),
+    chain: anvil,
+    id: "txm-demo",
+    abis: abiRecord
+})
+```
+
+After creating the transaction manager, you will need to start it.
+
+```tsx
+txm.start()
+```
+
+
+## Usage
+
+### Creating Transactions
+
+This package uses a custom implementation of a transaction. This allows for additional functionality, such as the `deadline` field.
+You can see all the fields that a transaction has [here](/transaction-manager/api/classes/Transaction#properties).
+
+To create a transaction, you will have to use its constructor. You can see all the fields that you can provide to the constructor [here](/transaction-manager/api/interfaces/TransactionConstructorConfig).
+
+
+```tsx
+import { Transaction } from '@happychain/transaction-manager'
+
+const tx = new Transaction({
+    chainId: 216,
+    address: "0x...",
+    functionName: "transfer",
+    contractName: "erc20",
+    args: ["0x...", "1000000000000000000"],
+    deadline: Math.floor(Date.now() / 1000) + 60,
+})
+```
+
+
+### Sending Transactions
+
+To send a transaction, you will need to add a [TransactionOriginator](/transaction-manager/api/type-aliases/TransactionOriginator) 
+
+A `TransactionOriginator` is a function that will be called every time a new block is mined. 
+It will receive the latest block as an argument and will need to return an array of [Transactions](/transaction-manager/api/classes/Transaction) to be sent.
+
+```tsx
+import { LatestBlock } from '@happychain/transaction-manager'
+
+const transactions: Transaction[] = []
+
+const demoOriginator = async (block: LatestBlock) => {
+    return transactions
+}
+
+txm.addTransactionOriginator(demoOriginator)
+```
+After adding the transaction originator, the transaction manager will automatically send the transactions returned by the originator and will handle all the errors that may occur during the inclusion of the transactions in a block for you.
+
+### Monitoring Transactions
+
+There are two ways to monitor the status of a transaction that you have sent through the transaction manager.
+
+#### Active monitoring
+
+You can call the method [getTransaction](/transaction-manager/api/classes/TransactionManager#gettransaction) of the transaction manager. This method will return the transaction with the latest changes.
+
+*Example*
+
+```tsx
+import { TransactionStatus } from "@happychain/transaction-manager"
+
+const tx = await txm.getTransaction(intentId)
+
+if (tx.status === TransactionStatus.Success) {
+    console.log("Transaction executed successfully")
+} else if (tx.status === TransactionStatus.Failed) {
+    console.log("Transaction failed")
+}
+```
+
+You can check all the possible statuses of a transaction [here](/transaction-manager/api/enumerations/TransactionStatus).
+
+#### Passive monitoring
+
+Use hooks to be notified when the status of a transaction changes. To subscribe to a hook you will have to use the [addHook](/transaction-manager/api/classes/TransactionManager#addhook) method.
+
+*Example*
+
+```tsx
+import { TxmHookType, TxmHookHandler } from "@happychain/transaction-manager"
+
+const hookHandler: TxmHookHandler = (tx: Transaction) => {
+    console.log("Transaction status changed to", tx.status)
+}
+
+txm.addHook({ type: TxmHookType.OnStatusChange, handler: hookHandler })
+```

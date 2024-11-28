@@ -27,6 +27,22 @@ export type AttemptSubmissionError = {
 
 export type AttemptSubmissionResult = Result<undefined, AttemptSubmissionError>
 
+/**
+ * This module is responsible for submitting a new attempt to the blockchain.
+ * It coordinates the process using a transaction and an `AttemptSubmissionParameters` type, defined as follows:
+ *
+ * type AttemptSubmissionParameters = Omit<Attempt, "hash" | "gas">
+ *
+ * This module given that information is in charge of:
+ * - Requesting a nonce
+ * - Estimating the gas
+ * - Signing the transaction
+ * - Adding the attempt to the transaction attempts list.
+ * - Flushing the transaction. We do this **before** sending the transaction, to avoid the case where the transaction is
+ * sent successfully but not saved to the DB (because of an app/server/… crash),
+ * which would cause us to lose information (there would be an untracked attempt in flight).
+ * - Sending the transaction to the RPC
+ */
 export class TransactionSubmitter {
     private readonly txmgr: TransactionManager
 
