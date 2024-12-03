@@ -7,13 +7,13 @@ const blank = makeBlankImage()
 const roundedOffset = (offset: number) => Math.round(offset * 10000) / 10000
 
 // we can't get the max bound since we may not know the element height here
-const getCachedPosition = () => {
-    return Math.max(Number(localStorage.getItem("happychain:handlePosition.y") || 0), 0) * window.innerHeight
+const getCachedPosition = (usableWindowHeight: number) => {
+    return Math.max(Number(localStorage.getItem("happychain:handlePosition.y") || 0), 0) * usableWindowHeight
 }
-const cachePosition = (position: number) => {
+const cachePosition = (position: number, usableWindowHeight: number) => {
     localStorage.setItem(
         "happychain:handlePosition.y",
-        Math.min(Math.max(roundedOffset(position / window.innerHeight), 0), 1).toString(),
+        Math.min(Math.max(roundedOffset(position / usableWindowHeight), 0), 1).toString(),
     )
 }
 
@@ -31,7 +31,7 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
     // we will hardcode 48 on page load as the default height, but on click we re-evaluate
     const [boundingRec, setBoundingRec] = useState({ height: 56 })
     // absolute position of wallet onscreen (y axis in pixels)
-    const [handleOffset, setHandleOffset] = useState(getCachedPosition())
+    const [handleOffset, setHandleOffset] = useState(getCachedPosition(window.innerHeight - boundingRec.height))
 
     // offset in percentage (so resizes, will retain same location onscreen)
     // const [walletOffset, setWalletOffset] = useState(roundedOffset(handleOffset / window.innerHeight))
@@ -46,7 +46,10 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
         if (!enabled) return
 
         const handleResize = () => {
-            const nextOffset = getBoundedOffset(getCachedPosition(), window.innerHeight - boundingRec.height)
+            const nextOffset = getBoundedOffset(
+                getCachedPosition(window.innerHeight - boundingRec.height),
+                window.innerHeight - boundingRec.height,
+            )
             setHandleOffset(nextOffset)
         }
 
@@ -76,7 +79,7 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
         // We persist the percentage, so that if window opens in a different resolution, the grabber
         // will still be in the same 'location'
 
-        cachePosition(nextOffset)
+        cachePosition(nextOffset, window.innerHeight - boundingRec.height)
     }
 
     const onDrag = throttle((e: DragEvent) => {
@@ -91,15 +94,16 @@ function useNativeDrag({ enabled }: { enabled: boolean }) {
         setHandleOffset(nextOffset)
     })
 
-    const walletOffset = roundedOffset(handleOffset / (window.innerHeight + boundingRec.height)) * -100
+    const pxOffset = boundingRec.height * (handleOffset / (window.innerHeight - boundingRec.height))
+    const walletOffset = roundedOffset(handleOffset / (window.innerHeight - boundingRec.height)) * -100
 
     return {
         // Y offset of orb
         handleOffset,
 
-        // Computed percentage that expanded wallet should open
+        // Computed distance that expanded wallet should open
         // 0% means open down (top of screen), -100% means open up (bottom of screen), -50% means open from middle
-        walletOffset,
+        walletOffset: `calc(${walletOffset}% + ${pxOffset}px)`,
         dragging,
         dragProps: {
             // browsers that properly support dragging
@@ -115,7 +119,7 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
     // we will hardcode 48 on page load as the default height, but on click we re-evaluate
     const [boundingRec, setBoundingRec] = useState({ height: 56 })
     // absolute position of wallet onscreen (y axis in pixels)
-    const [handleOffset, setHandleOffset] = useState(getCachedPosition())
+    const [handleOffset, setHandleOffset] = useState(getCachedPosition(window.innerHeight - boundingRec.height))
 
     // relative offset to move orb since clicks won't be perfectly centered on orb
     const [dragStartOffset, setDragStartOffset] = useState(0)
@@ -130,7 +134,10 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
         if (!enabled) return
 
         const handleResize = () => {
-            const nextOffset = getBoundedOffset(getCachedPosition(), window.innerHeight - boundingRec.height)
+            const nextOffset = getBoundedOffset(
+                getCachedPosition(window.innerHeight - boundingRec.height),
+                window.innerHeight - boundingRec.height,
+            )
             setHandleOffset(nextOffset)
         }
 
@@ -182,7 +189,7 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
 
             const nextOffset = getBoundedOffset(e.clientY - dragStartOffset, window.innerHeight - boundingRec.height)
             setHandleOffset(nextOffset)
-            cachePosition(nextOffset)
+            cachePosition(nextOffset, window.innerHeight - boundingRec.height)
         }
 
         window.addEventListener("mousemove", onDragStableCallback)
@@ -193,14 +200,15 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
         }
     }, [dragging, dragStartOffset, boundingRec.height, enabled])
 
-    const walletOffset = roundedOffset(handleOffset / (window.innerHeight + boundingRec.height)) * -100
+    const pxOffset = boundingRec.height * (handleOffset / (window.innerHeight - boundingRec.height))
+    const walletOffset = roundedOffset(handleOffset / (window.innerHeight - boundingRec.height)) * -100
 
     return {
         handleOffset,
 
-        // Computed percentage that expanded wallet should open
+        // Computed distance that expanded wallet should open
         // 0% means open down (top of screen), -100% means open up (bottom of screen), -50% means open from middle
-        walletOffset,
+        walletOffset: `calc(${walletOffset}% + ${pxOffset}px)`,
 
         // won't register as 'dragging' until it has actually moved. otherwise its a click
         dragging: dragging && hasMoved,
