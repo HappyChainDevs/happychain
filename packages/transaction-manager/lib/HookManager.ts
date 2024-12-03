@@ -13,6 +13,18 @@ export type TxmHookPayload = {
 
 export type TxmHookHandler = (event: TxmHookPayload) => void
 
+/**
+ * This module manages the hooks system. A hook in the transaction manager is a callback function that
+ * executes when specific events occur, such as when a transaction's status changes.
+ * This allows the originator to receive notifications about events and respond accordingly.
+ * To add a hook, call the `addHook` function from the `TransactionManager` class.
+ *
+ * This method accepts two parameters:
+ * - The hook type you want to subscribe to (optional)
+ * - The callback function that executes when the event occurs.
+ *
+ * If you don't specify a hook type, the transaction manager will notify you about all event types.
+ */
 export class HookManager {
     private hooks: Record<TxmHookType, TxmHookHandler[]>
 
