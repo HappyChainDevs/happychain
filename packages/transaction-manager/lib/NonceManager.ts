@@ -24,10 +24,9 @@ export class NonceManager {
             this.returnedNonceQueue = []
         } else {
             this.nonce = highestNonce + 1
-            this.returnedNonceQueue = this.txmgr.transactionRepository.getNotReservedNoncesInRange(
-                blockchainNonce,
-                highestNonce,
-            )
+            this.returnedNonceQueue = this.txmgr.transactionRepository
+                .getNotReservedNoncesInRange(blockchainNonce, highestNonce)
+                .sort((a, b) => a - b)
         }
     }
 
@@ -43,6 +42,12 @@ export class NonceManager {
 
     // Only called when a transaction that has reserved a nonce ultimately doesn't reach the mempool
     public returnNonce(nonce: number) {
-        this.returnedNonceQueue.push(nonce)
+        const index = this.returnedNonceQueue.findIndex((n) => nonce > n)
+
+        if (index === -1) {
+            this.returnedNonceQueue.push(nonce)
+        } else {
+            this.returnedNonceQueue.splice(index, 0, nonce)
+        }
     }
 }
