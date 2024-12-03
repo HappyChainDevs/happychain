@@ -17,15 +17,15 @@ export class NonceManager {
             address: address,
         })
 
-        const highestNonce = this.txmgr.transactionRepository.getHighestNonce()
+        const highestDbNonce = this.txmgr.transactionRepository.getHighestNonce()
 
-        if (!highestNonce) {
+        if (!highestDbNonce || highestDbNonce < blockchainNonce) {
             this.nonce = blockchainNonce
             this.returnedNonceQueue = []
         } else {
-            this.nonce = highestNonce + 1
+            this.nonce = highestDbNonce + 1
             this.returnedNonceQueue = this.txmgr.transactionRepository
-                .getNotReservedNoncesInRange(blockchainNonce, highestNonce)
+                .getNotReservedNoncesInRange(blockchainNonce, highestDbNonce)
                 .sort((a, b) => a - b)
         }
     }
