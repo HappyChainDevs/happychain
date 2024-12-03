@@ -31,9 +31,9 @@ export type WalletRegisterOptions = {
  * Connect to a pre-defined chain
  * ```ts twoslash
  * import { register } from '@happychain/js'
- * import { testnet } from '@happychain/js/chains'
+ * import { chains } from '@happychain/js'
  * // ---cut---
- * register({ chainId: testnet.chainId })
+ * register({ chainId: chains.testnet.chainId })
  * ```
  *
  * @example

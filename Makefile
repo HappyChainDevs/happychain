@@ -161,9 +161,9 @@ sdk.dev:
 .PHONY: sdk-dev
 
 # start docs in watch mode (can crash, see packages/docs/Makefile for more info)
-docs.dev: shared.dev sdk.dev
+docs.dev: setup shared.dev sdk.dev
 	cd packages/docs && make dev
-.PHONY: docs.watch
+.PHONY: docs.dev
 
 # ==================================================================================================
 # CORRECTNESS
