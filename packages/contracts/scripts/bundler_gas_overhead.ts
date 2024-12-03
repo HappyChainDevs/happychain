@@ -28,7 +28,7 @@ import { createPimlicoClient } from "permissionless/clients/pimlico"
 
 import { abis as mockAbis, deployment as mockDeployment } from "../deployments/anvil/mockTokens/abis"
 import { abis, deployment } from "../deployments/anvil/testing/abis"
-import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce.ts"
+import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce"
 
 const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
 const bundlerRpc = process.env.BUNDLER_LOCAL
@@ -332,15 +332,22 @@ async function sendUserOps(kernelBundles: KernelBundle[]) {
         ),
     )
 
-    const dominantTransactionIndex = receipts
-        .map((r) => r.receipt.transactionIndex)
-        .sort(
-            (a, b) =>
-                receipts.filter((r) => r.receipt.transactionIndex === b).length -
-                receipts.filter((r) => r.receipt.transactionIndex === a).length,
-        )[0]
+    // Group receipts by block hash and transaction hash to ensure unique bundle identification
+    const bundleGroups = receipts.reduce(
+        (groups, receipt) => {
+            const key = `${receipt.receipt.blockHash}_${receipt.receipt.transactionHash}`
+            if (!groups[key]) {
+                groups[key] = []
+            }
+            groups[key].push(receipt)
+            return groups
+        },
+        {} as Record<string, typeof receipts>,
+    )
 
-    const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
+    const largestBundleKey = Object.entries(bundleGroups).sort(([, a], [, b]) => b.length - a.length)[0][0]
+
+    const filteredReceipts = bundleGroups[largestBundleKey]
 
     console.log(`Total Bundle Tx GasUsed: ${filteredReceipts[0].receipt.gasUsed}`)
     const avgBundleTxGas = filteredReceipts[0].receipt.gasUsed / BigInt(filteredReceipts.length)
@@ -480,15 +487,39 @@ async function batchedUserOpsSameSenderGasResult(kernelBundle: KernelBundle) {
         hashes.map((hash) => kernelBundle.kernelClient.waitForUserOperationReceipt({ hash })),
     )
 
-    const { numOps, gasDetails } = await calculateGasDetails(receipts)
+    // Group receipts by block hash and transaction hash to ensure unique bundle identification
+    const bundleGroups = receipts.reduce(
+        (groups, receipt) => {
+            const key = `${receipt.receipt.blockHash}_${receipt.receipt.transactionHash}`
+            if (!groups[key]) {
+                groups[key] = []
+            }
+            groups[key].push(receipt)
+            return groups
+        },
+        {} as Record<string, typeof receipts>,
+    )
+
+    const largestBundleKey = Object.entries(bundleGroups).sort(([, a], [, b]) => b.length - a.length)[0][0]
+
+    const filteredReceipts = bundleGroups[largestBundleKey]
+
+    const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
     console.log("\nGas Usage per UserOp (no Deployment) from the same Sender:")
-    console.log(`(Processed ${numOps} UserOps in this bundle)`)
+    console.log(`(Processed ${numOps} UserOps in the largest bundle)`)
     console.log("---------------------------------------------------------------------\n")
 
-    console.log(`Total Bundle Tx GasUsed: ${receipts[0].receipt.gasUsed}`)
-    const avgBundleTxGas = receipts[0].receipt.gasUsed / BigInt(receipts.length)
+    receipts.forEach((receipt, index) => {
+        console.log(
+            `UserOp ${index + 1}: Block #${receipt.receipt.blockNumber}, Tx Index: ${receipt.receipt.transactionIndex}`,
+        )
+    })
+    console.log("\n")
+
+    console.log(`Total Bundle Tx GasUsed: ${filteredReceipts[0].receipt.gasUsed}`)
+    const avgBundleTxGas = filteredReceipts[0].receipt.gasUsed / BigInt(receipts.length)
     console.log(`per UserOp Bundle Tx GasUsed: ${avgBundleTxGas}`)
-    receipts.forEach((receipt, idx) => {
+    filteredReceipts.forEach((receipt, idx) => {
         console.log(`UserOp [${idx}]`)
         console.log(`    ActualGas: ${receipt.actualGasUsed.toLocaleString("en-US")}`)
         console.log(
@@ -509,15 +540,15 @@ async function batchedUserOpsSameSenderGasResult(kernelBundle: KernelBundle) {
 async function batchedUserOperationsGasResult() {
     const kernelBundles = await generatePrefundedKernelAccounts(5)
     console.log("\nGas Usage per UserOp (with Deployment) from different Senders:")
-    const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(kernelBundles)
-    console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
+    const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(kernelBundles)
+    console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)\n`)
     printUserOperationGasDetails(gasDetails1)
 
     console.log("\nGas Usage per UserOp (no Deployment) from different Senders:")
-    const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(kernelBundles)
-    console.log(`(Processed ${numOps2} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
+    const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(kernelBundles)
+    console.log(`(Processed ${numOps2} UserOps in this bundle, each from a different sender)\n`)
     printUserOperationGasDetails(gasDetails2)
 
     const multipleUserOpsWithDeploymentResults = {
