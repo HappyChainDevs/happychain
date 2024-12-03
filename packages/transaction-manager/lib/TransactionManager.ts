@@ -70,6 +70,7 @@ export type TransactionManagerConfig = {
 
     /**
      * The time (in milliseconds) after which finalized transactions are purged from the database.
+     * If finalizedTransactionPurgeTime is 0, finalized transactions are not purged from the database.
      * Defaults to 2 minutes.
      */
     finalizedTransactionPurgeTime?: number

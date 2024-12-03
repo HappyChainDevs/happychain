@@ -23,7 +23,10 @@ export class TransactionRepository {
             .execute()
 
         this.notFinalizedTransactions = transactionRows.map((row) => Transaction.fromDbRow(row))
-        eventBus.on(Topics.NewBlock, this.purgeFinalizedTransactions.bind(this))
+
+        if (this.transactionManager.finalizedTransactionPurgeTime > 0) {
+            eventBus.on(Topics.NewBlock, this.purgeFinalizedTransactions.bind(this))
+        }
     }
 
     getNotFinalizedTransactions(): Transaction[] {
