@@ -9,6 +9,17 @@ optimizer_runs = 20000
 gas_reports = ["*"]
 via_ir = false
 
+# Add compiler profiles for AA contracts
+additional_compiler_profiles = [
+  { name = "kernel", via_ir = true },
+  { name = "aa", via_ir = false }
+]
+
+compilation_restrictions = [
+  { paths = "lib/kernel/src/Kernel.sol", via_ir = true },
+  { paths = "lib/kernel/src/Kernel.sol", optimizer = true, optimizer_runs = 200  }
+]
+
 # Forge targets Paris by default.
 evm_version = "cancun"
 
