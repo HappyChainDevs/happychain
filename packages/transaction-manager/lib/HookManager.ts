@@ -23,7 +23,7 @@ export class HookManager {
         eventBus.on(Topics.TransactionStatusChanged, this.onTransactionStatusChanged.bind(this))
     }
 
-    public async addHook({ type, handler }: { type?: TxmHookType; handler: TxmHookHandler }): Promise<void> {
+    public async addHook(handler: TxmHookHandler, type?: TxmHookType): Promise<void> {
         const mapKey = type ?? "All"
 
         if (!this.hooks[mapKey]) {
