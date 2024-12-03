@@ -1,7 +1,7 @@
 import { Tabs } from "@ark-ui/react/tabs"
 import { cx } from "class-variance-authority"
 import type { PropsWithChildren } from "react"
-import type { ContentType } from "../../../../state/interfaceState"
+import type { ContentType } from "#src/state/interfaceState"
 
 interface TabProps {
     title: ContentType
