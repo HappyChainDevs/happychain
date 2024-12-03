@@ -1,7 +1,6 @@
 {
     "name": "@happychain/docs",
     "version": "0.0.0",
-    "type": "module",
     "devDependencies": {
         "@happychain/configs": "workspace:^",
         "@happychain/js": "workspace:^",
@@ -10,7 +9,6 @@
         "@types/react": "^18.3.4",
         "@types/react-dom": "^18.3.0",
         "@zamiell/typedoc-plugin-not-exported": "^0.3.0",
-        "hono": "^3.10.2",
         "ethers": "^6.13.2",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
@@ -23,7 +21,8 @@
         "typedoc-plugin-zod": "^1.2.1",
         "typescript": "^5.6.2",
         "viem": "^2.21.53",
-        "vocs": "1.0.0-alpha.55",
-        "web3": "^4.12.1"
-    }
+        "vocs": "1.0.0-alpha.62",
+        "web3": "^4.15.0"
+    },
+    "type": "module"
 }
