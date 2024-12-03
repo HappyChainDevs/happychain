@@ -217,18 +217,14 @@ There are two separate concepts here:
 1. *Authentication* refers to the user being logged into his Happy Account in the iframe.
 2. *Connection* refers to the user connecting the app to the Happy Account.
 
-This is very analogous to how Metamask & co work: authentication is aking to selecting an account
+This is very analogous to how Metamask & co work: authentication is akin to selecting an account
 (public key), while connection is akin to connecting an account to an app. The difference is that
 Metamask always has an account selected, while the Happy Account can be unauthenticated.
 
 Authentication with an injected wallet consists of connecting the app to the injected wallet.
 
-Authentication with a social wallet consists of logging into your social account and establishing
-a connection with the social wallet provider.
-
-In the codebase, "authentication" almost always refers to social wallets. There is a lot less code
-to deal with injected wallets, and that code lives in the SDK on the app side, rather than on the
-iframe side. We sometimes use "logged in" instead "authenticated".
+Authentication with a social wallet consists of logging into your social account and deriving an EOA
+from there.
 
 Because connection binds the app to an Happy Account, and authentication is what selects this
 account, you cannot be connected without being authenticated.
@@ -242,7 +238,35 @@ account name) to the app, and let it suggest transactions to sign.
 
 Connection to an app is persistent (on the same device) until the user explicitly disconnects. The
 iframe will remember your app connection status, so if you become unauthenticated, then authenticate
-with the same wallet again on the same app, you will become automatically connected.
+with the same method again on the same app, you will become automatically connected.
+
+### Authentication From An App
+
+When authenticating on an app, the connection is granted automatically, however this connection can
+be revoked, or granted again at any time and is handled on a per-app basis.
+
+While unauthenticated, any action that requires authentication first (such as viewing a users 
+address, or making a transaction) will prompt the user to first authenticate themselves using either
+their injected or social wallet. If this is the first time they have authenticated using a social
+wallet a new EOA will be generated automatically, otherwise the existing account will be used. The 
+authentication prompt itself lives within the secure iframe.
+
+When a social wallet option is selected such as 'Sign In With Google', the familiar google oauth popup 
+will be shown and the user will continue with the traditional oauth flow. Once successful, a JWT 
+will be available to the iframe and used to initialize a Web3Auth EIP1193 Provider. From this 
+point on unless unauthenticated or disconnected, all web3 calls will be passed to this provider.
+
+When an injected wallet option is selected such as Metamask, a 'InjectedProviderProxy' is initialized
+within the iframe. At a high level on the iframe side this behaves the same as the Web3Auth provider, 
+The difference being behind the scenes it proxies all requests back to the app to be executed by the 
+users selected injected wallet. This pattern allows for calls to originate from within either the 
+app or the iframe and be handled in the same manner on the app-side.
+
+### Authentication From The Wallet (IFrame)
+
+When accessing the iframe directly, most of the flow follows the same as the app. The main difference
+is for injected wallets since instead of proxying calls to the app to be executed, the iframe will
+call the injected wallet directly to execute requests.
 
 <!-- TODO
 
