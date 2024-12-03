@@ -104,7 +104,7 @@ aa-demo-auto:
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 	@make anvil > /dev/null 2>&1 &
 	@sleep 5
-	@cast send 0x4BC8e81Ad3BE83276837f184138FC96770C14297 --value 100ether --private-key 2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
+	@cast wallet address --account test-account-0 --password-file .password.local | xargs -I {} cast send {} --value 100ether --private-key 2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
 	@make deploy-aa CONFIG=LOCAL
 	@make save-local-aa-deployment
 	@cd ../bundler && make build > /dev/null
@@ -128,7 +128,7 @@ gas-bundler-auto:
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 	@make anvil > /dev/null 2>&1 &
 	@sleep 5
-	@cast send 0x4BC8e81Ad3BE83276837f184138FC96770C14297 --value 100ether --private-key 2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
+	@cast wallet address --account test-account-0 --password-file .password.local | xargs -I {} cast send {} --value 100ether --private-key 2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
 	@make deploy-aa CONFIG=LOCAL
 	@make save-local-aa-deployment
 	@make deploy-mocks CONFIG=LOCAL
