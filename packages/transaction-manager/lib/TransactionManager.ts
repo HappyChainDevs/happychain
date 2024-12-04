@@ -172,6 +172,11 @@ export class TransactionManager {
         return this.transactionRepository.getTransaction(txIntentId)
     }
 
+    /**
+     * Creates a new transaction.
+     * @param params - {@link TransactionConstructorConfig}.
+     * @returns A new transaction.
+     */
     public createTransaction(params: TransactionConstructorConfig): Transaction {
         return new Transaction({
             ...params,
