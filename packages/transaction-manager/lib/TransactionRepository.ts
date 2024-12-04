@@ -51,6 +51,7 @@ export class TransactionRepository {
         const persistedTransaction = await db
             .selectFrom("transaction")
             .where("intentId", "=", intentId)
+            .where("from", "=", this.transactionManager.viemWallet.account.address)
             .selectAll()
             .executeTakeFirst()
 
@@ -132,6 +133,7 @@ export class TransactionRepository {
             .deleteFrom("transaction")
             .where("status", "not in", NotFinalizedStatuses)
             .where("updatedAt", "<", Date.now() - this.transactionManager.finalizedTransactionPurgeTime)
+            .where("from", "=", this.transactionManager.viemWallet.account.address)
             .execute()
     }
 }
