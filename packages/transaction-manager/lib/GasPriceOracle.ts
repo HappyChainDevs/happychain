@@ -12,13 +12,6 @@ export class GasPriceOracle {
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
-    async start() {
-        const block = await this.txmgr.viemClient.getBlock({
-            blockTag: "latest",
-        })
-        this.onNewBlock(block)
-    }
-
     private onNewBlock(block: LatestBlock) {
         const baseFeePerGas = block.baseFeePerGas
         const gasUsed = block.gasUsed
