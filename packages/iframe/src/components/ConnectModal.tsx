@@ -1,12 +1,12 @@
 import { createUUID } from "@happychain/common"
 import { type ConnectionProvider, Msgs, type MsgsFromApp, WalletDisplayAction } from "@happychain/sdk-shared"
 import { useMutation } from "@tanstack/react-query"
-import { cx } from "class-variance-authority"
 import { useEffect, useState } from "react"
 import { iframeID } from "#src/requests/utils.ts"
 import happychainLogo from "../assets/happychain.png"
 import { useConnectionProviders } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
+import { DotLinearMotionBlurLoader } from "./loaders/DotLinearMotionBlurLoader"
 import { Button } from "./primitives/button/Button"
 
 export function ConnectModal() {
@@ -69,30 +69,38 @@ export function ConnectModal() {
                         <p className="text-2xl font-bold">HappyChain</p>
                     </div>
                 </div>
-                <div className="flex flex-col gap-4 max-h-3/4 w-full overflow-auto">
-                    {providers.map((prov) => {
-                        return (
-                            <Button
-                                intent="secondary"
-                                type="button"
-                                key={prov.id}
-                                onClick={() => mutationLogin.mutate(prov)}
-                            >
-                                <img
-                                    className={cx(
-                                        "h-full w-auto max-w-8",
-                                        mutationLogin.isPending &&
-                                            mutationLogin.variables?.id !== prov.id &&
-                                            "grayscale",
-                                    )}
-                                    src={prov.icon}
-                                    alt={`${prov.name} icon`}
-                                />
-                                <span className="grow me-8">{prov.name}</span>
-                            </Button>
-                        )
-                    })}
-                </div>
+                {mutationLogin.isPending ? (
+                    <div className="grid gap-8">
+                        <div className="flex items-center justify-center gap-4">
+                            <img alt="HappyChain Logo" src={happychainLogo} className="h-12" />
+                            <DotLinearMotionBlurLoader />
+                            <img
+                                className="h-8"
+                                src={mutationLogin.variables?.icon}
+                                alt={`${mutationLogin.variables?.name} icon`}
+                            />
+                        </div>
+                        <div className="text-center flex items-center justify-center">
+                            Verify your {mutationLogin.variables?.name} account to continue with HappyChain.
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-4 max-h-3/4 w-full overflow-auto">
+                        {providers.map((prov) => {
+                            return (
+                                <Button
+                                    intent="secondary"
+                                    type="button"
+                                    key={prov.id}
+                                    onClick={() => mutationLogin.mutate(prov)}
+                                >
+                                    <img className="h-full w-auto max-w-8" src={prov.icon} alt={`${prov.name} icon`} />
+                                    <span className="grow me-8">{prov.name}</span>
+                                </Button>
+                            )
+                        })}
+                    </div>
+                )}
             </main>
         </>
     )

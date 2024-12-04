@@ -45,7 +45,11 @@ function Request() {
     }
 
     if (isLoading) {
-        return <DotLinearWaveLoader />
+        return (
+            <div className="flex h-dvh w-full items-center justify-center">
+                <DotLinearWaveLoader />
+            </div>
+        )
     }
 
     switch (req.method as keyof typeof requestLabels) {
