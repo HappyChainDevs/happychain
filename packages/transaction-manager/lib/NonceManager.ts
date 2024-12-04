@@ -2,7 +2,7 @@ import type { TransactionManager } from "./TransactionManager"
 
 /*
  * This package manages the nonce of the account that the transaction manager is using.
- * This module is critical because a gap in the nonce could render the account unable to emit new transactions.
+ * This module is critical because a gap in the nonce could render the transaction manager unable to send new transactions and lead to unexpected behaviors.
  * The module must be initialized first. During initialization, it retrieves the transaction count from the RPC,
  * which represents the expected next nonce without considering potential pending transactions in the mempool.
  * To handle this scenario, we check for pending transactions in our database and identify the last nonce of these transactions.
