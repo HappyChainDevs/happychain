@@ -11,12 +11,11 @@ import {
     type AuthProvider,
     type User,
     browserPopupRedirectResolver,
+    getRedirectResult,
     onAuthStateChanged,
-    signInWithPopup,
+    signInWithRedirect,
 } from "firebase/auth"
 import type { EIP1193Provider } from "viem"
-import { getPermissions } from "#src/state/permissions.ts"
-import { getAppURL } from "#src/utils/appURL.ts"
 import { firebaseAuth } from "../services/firebase"
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEIP1193Provider } from "../services/web3auth"
 import {
@@ -40,6 +39,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         this.name = opts.name
         this.icon = opts.icon
 
+        this.loginFromRedirect()
         this.listenForAuthChange()
     }
 
@@ -57,34 +57,33 @@ export abstract class FirebaseConnector implements ConnectionProvider {
      * It gets set to false when onAuthChange response after the login attempt
      */
     private instanceIsConnecting = false
-    public async connect(request: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {
+    public async connect(_request: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {
         this.instanceIsConnecting = true
         await setFirebaseAuthState(FirebaseAuthState.Connecting)
         try {
-            const userCredential = await signInWithPopup(
-                firebaseAuth,
-                this.getAuthProvider(),
-                browserPopupRedirectResolver,
-            )
-            const token = await this.fetchLoginTokenForUser(userCredential.user)
-            const happyUser = await this.connectWithWeb3Auth(
-                FirebaseConnector.makeHappyUserPartial(userCredential.user, this.id),
-                token,
-            )
-            if (!happyUser) throw new Error(`Failed to connect ${this.id}`)
-            await setFirebaseAuthState(FirebaseAuthState.Connected)
-            await this.onConnect(happyUser, web3AuthEIP1193Provider)
-            return {
-                request,
-                response:
-                    request.payload.method === "eth_requestAccounts"
-                        ? happyUser.addresses
-                        : getPermissions(getAppURL(), "eth_accounts"),
-            }
+            await signInWithRedirect(firebaseAuth, this.getAuthProvider(), browserPopupRedirectResolver)
         } catch (e) {
             await setFirebaseAuthState(FirebaseAuthState.Disconnected)
             throw e
         }
+
+        throw new Error("Failed to connect")
+    }
+
+    private loginFromRedirect() {
+        getRedirectResult(firebaseAuth, browserPopupRedirectResolver).then(async (userCredential) => {
+            if (!userCredential) return
+            const token = await this.fetchLoginTokenForUser(userCredential.user)
+
+            const happyUser = await this.connectWithWeb3Auth(
+                FirebaseConnector.makeHappyUserPartial(userCredential.user, this.id),
+                token,
+            )
+
+            if (!happyUser) throw new Error("Failed to get user")
+
+            await this.onConnect(happyUser, web3AuthEIP1193Provider)
+        })
     }
 
     public async disconnect() {

@@ -23,7 +23,12 @@ export class GoogleConnector extends FirebaseConnector {
     getAuthProvider(): AuthProvider {
         const googleProvider = new GoogleAuthProvider()
         // forces select account screen on every connect
-        googleProvider.setCustomParameters({ prompt: "select_account" })
+        // googleProvider.setCustomParameters({ prompt: "select_account" })
+        googleProvider.setCustomParameters({ prompt: "consent" })
+        googleProvider.setCustomParameters({ access_type: "online" })
+        googleProvider.setCustomParameters({ approval_prompt: "force" })
+        googleProvider.setCustomParameters({ origin: "http://localhost:5160" })
+
         return googleProvider
     }
 
