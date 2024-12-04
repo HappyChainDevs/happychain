@@ -47,14 +47,8 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     }
 
     abstract getAuthProvider(): AuthProvider
-    abstract onConnect(
-        user: Omit<HappyUser, "controllingAddress" | "addresses">,
-        provider: EIP1193Provider,
-    ): Promise<void> | void
-    abstract onReconnect(
-        user: Omit<HappyUser, "controllingAddress" | "addresses">,
-        provider: EIP1193Provider,
-    ): Promise<void> | void
+    abstract onConnect(user: Omit<HappyUser, "controllingAddress">, provider: EIP1193Provider): Promise<void> | void
+    abstract onReconnect(user: Omit<HappyUser, "controllingAddress">, provider: EIP1193Provider): Promise<void> | void
     abstract onDisconnect(): Promise<void> | void
 
     /**
