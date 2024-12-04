@@ -2,7 +2,9 @@
 layout: doc
 ---
 
-# Getting Started With JavaScript/TypeScript
+# Getting Started With the Transaction Manager
+
+The transaction manager is a package that allows you to easily send transactions to the blockchain without having to handle all the potential errors that may occur until the transaction is included in a block and successfully executed.
 
 ## Install 
 :::code-group
@@ -97,6 +99,12 @@ const tx = new Transaction({
     deadline: Math.floor(Date.now() / 1000) + 60,
 })
 ```
+
+A very important field to understand is the `intentId`. This is a unique identifier for your transaction within the transaction manager.
+
+It is not the same as the transaction hash, because a transaction can be resent multiple times with different nonces, gas prices, and gas limits, which alter the hash.
+
+It is important to note that if you want to monitor the status of the transaction, you will need to use the `intentId`.
 
 
 ### Sending Transactions
