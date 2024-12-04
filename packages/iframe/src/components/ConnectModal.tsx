@@ -62,14 +62,14 @@ export function ConnectModal() {
 
     return (
         <>
-            <main className="h-dvh w-screen rounded-3xl px-16 py-8 flex flex-col justify-center gap-8">
-                <div className="flex items-center justify-center">
+            <main className="h-dvh w-screen rounded-3xl px-16 py-8 flex flex-col justify-around">
+                <div className="flex min-h-1/4 items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
                         <img alt="HappyChain Logo" src={happychainLogo} className="mx-auto size-24 drop-shadow-lg" />
                         <p className="text-2xl font-bold">HappyChain</p>
                     </div>
                 </div>
-                <div className="flex flex-col gap-4 max-w-md mx-auto w-full">
+                <div className="flex flex-col gap-4 max-h-3/4 w-full overflow-auto">
                     {providers.map((prov) => {
                         return (
                             <Button
