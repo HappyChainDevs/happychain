@@ -17,9 +17,9 @@ export interface IGasEstimator {
 
 /**
  * This is the default module used to estimate the gas for a transaction. When creating a new transaction manager,
- * you can pass a custom gas estimator. The custom GasEstimator should implement the same interface as the default GasEstimator.
- * The best approach would be to extend the default GasEstimator to use the protected method `simulateTransactionForGas`,
- * which, as its name suggests, estimates a transaction's gas by simulating it.
+ * you can pass a custom gas estimator. The custom GasEstimator should implement the interface `IGasEstimator`.
+ * The best approach would be to extend the default GasEstimator to make it capable of using the protected method `simulateTransactionForGas`
+ * in specific cases, without the need to reimplement it.
  * Sometimes, the standard process of simulating a transaction to estimate gas is not feasible.
  * When you simulate a transaction, you're doing so in a different block with a different
  * blockchain state than when the transaction will actually be executed.
