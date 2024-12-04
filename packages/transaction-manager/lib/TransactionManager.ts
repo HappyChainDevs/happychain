@@ -12,7 +12,7 @@ import { GasEstimator } from "./GasEstimator.js"
 import { GasPriceOracle } from "./GasPriceOracle.js"
 import { HookManager, type TxmHookHandler, type TxmHookType } from "./HookManager.js"
 import { NonceManager } from "./NonceManager.js"
-import type { Transaction } from "./Transaction.js"
+import { Transaction, type TransactionConstructorConfig } from "./Transaction.js"
 import { TransactionCollector } from "./TransactionCollector.js"
 import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
@@ -26,8 +26,6 @@ export type TransactionManagerConfig = {
     account: Account
     /** The blockchain network configuration. See {@link Chain} from viem for more details. */
     chain: Chain
-    /** A unique identifier for this TransactionManager instance. */
-    id: string
     /** Optional EIP-1559 parameters. If not provided, defaults to the OP stack's stock parameters. */
     eip1559?: EIP1559Parameters
     /**
@@ -106,7 +104,6 @@ export class TransactionManager {
     public readonly transactionSubmitter: TransactionSubmitter
     public readonly hookManager: HookManager
 
-    public readonly id: string
     public readonly eip1559: EIP1559Parameters
     public readonly baseFeeMargin: bigint
     public readonly maxPriorityFeePerGas: bigint
@@ -141,7 +138,6 @@ export class TransactionManager {
         this.transactionSubmitter = new TransactionSubmitter(this)
         this.hookManager = new HookManager()
 
-        this.id = _config.id
         this.eip1559 = _config.eip1559 || opStackDefaultEIP1559Parameters
         this.abiManager = new ABIManager(_config.abis)
 
@@ -174,6 +170,14 @@ export class TransactionManager {
 
     public async getTransaction(txIntentId: UUID): Promise<Transaction | undefined> {
         return this.transactionRepository.getTransaction(txIntentId)
+    }
+
+    public createTransaction(params: TransactionConstructorConfig): Transaction {
+        return new Transaction({
+            ...params,
+            from: this.viemWallet.account.address,
+            chainId: this.viemWallet.chain.id,
+        })
     }
 
     public async start(): Promise<void> {

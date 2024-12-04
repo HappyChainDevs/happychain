@@ -17,21 +17,19 @@ class RandomnessService {
     private readonly revealValueTransactionFactory: RevealValueTransactionFactory
     constructor() {
         this.commitmentManager = new CommitmentManager()
-        this.commitmentTransactionFactory = new CommitmentTransactionFactory(
-            anvil.id,
-            env.RANDOM_CONTRACT_ADDRESS,
-            env.PRECOMMIT_DELAY,
-        )
-        this.revealValueTransactionFactory = new RevealValueTransactionFactory(anvil.id, env.RANDOM_CONTRACT_ADDRESS)
         this.txm = new TransactionManager({
             account: privateKeyToAccount(env.PRIVATE_KEY),
             transport: webSocket(),
             chain: anvil,
-            id: "randomness-service",
             abis: abis,
             gasEstimator: new CustomGasEstimator(),
         })
-
+        this.commitmentTransactionFactory = new CommitmentTransactionFactory(
+            this.txm,
+            env.RANDOM_CONTRACT_ADDRESS,
+            env.PRECOMMIT_DELAY,
+        )
+        this.revealValueTransactionFactory = new RevealValueTransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS)
         this.txm.start()
         this.txm.addTransactionOriginator(this.onCollectTransactions.bind(this))
     }
@@ -39,7 +37,7 @@ class RandomnessService {
     private async onCollectTransactions(block: LatestBlock): Promise<Transaction[]> {
         const transactions: Transaction[] = []
 
-        // We try to commit the ramdomness POST_COMMIT_MARGIN to be safe that the transaction is included before the PRECOMMIT_DELAY
+        // We try to commit the randomness POST_COMMIT_MARGIN to be safe that the transaction is included before the PRECOMMIT_DELAY
         const commitmentTimestamp = block.timestamp + env.PRECOMMIT_DELAY + env.POST_COMMIT_MARGIN
         const commitment = this.commitmentManager.generateCommitment()
 

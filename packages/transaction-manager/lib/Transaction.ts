@@ -50,10 +50,6 @@ export const NotFinalizedStatuses = [TransactionStatus.Pending, TransactionStatu
 
 export interface TransactionConstructorConfig {
     /**
-     * The chain ID where the transaction will be sent
-     */
-    chainId: number
-    /**
      * The address of the contract that will be called
      */
     address: Address
@@ -84,6 +80,8 @@ export interface TransactionConstructorConfig {
 export class Transaction {
     readonly intentId: UUID
 
+    readonly from: Address
+
     readonly chainId: number
 
     readonly address: Address
@@ -113,6 +111,7 @@ export class Transaction {
 
     constructor({
         intentId,
+        from,
         chainId,
         address,
         functionName,
@@ -125,6 +124,8 @@ export class Transaction {
         updatedAt,
         metadata,
     }: TransactionConstructorConfig & {
+        from: Address
+        chainId: number
         intentId?: UUID
         status?: TransactionStatus
         attempts?: Attempt[]
@@ -132,6 +133,7 @@ export class Transaction {
         updatedAt?: Date
     }) {
         this.intentId = intentId ?? createUUID()
+        this.from = from
         this.chainId = chainId
         this.address = address
         this.functionName = functionName
@@ -187,6 +189,7 @@ export class Transaction {
     toDbRow(): Insertable<TransactionTable> {
         return {
             intentId: this.intentId,
+            from: this.from,
             chainId: this.chainId,
             address: this.address,
             functionName: this.functionName,
