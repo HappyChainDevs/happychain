@@ -3,18 +3,24 @@ import { convertToViemChain } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import { createSmartAccountClient } from "permissionless"
 import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
-import type { SmartAccountClient } from "permissionless/clients"
+import type { SmartAccountActions } from "permissionless/clients"
 import { http } from "viem"
-import type { Transport } from "viem"
-import type { SmartAccount } from "viem/account-abstraction"
+import type { BundlerRpcSchema, Chain, Client, Transport } from "viem"
+import type { BundlerActions } from "viem/account-abstraction"
 import { BUNDLER_RPC_URL } from "#src/constants/accountAbstraction"
 import { currentChainAtom } from "./chains"
 import { type KernelSmartAccount, kernelAccountAtom } from "./kernelAccount"
 import { paymasterAtom } from "./paymaster"
 import { publicClientAtom } from "./publicClient"
 
-export type KernelSmartAccountClient = SmartAccountClient<Transport, undefined, KernelSmartAccount>
-export type ExtendedSmartAccountClient = SmartAccountClient & Erc7579Actions<SmartAccount>
+type BaseSmartAccountClient = Client<
+    Transport,
+    Chain | undefined,
+    KernelSmartAccount,
+    BundlerRpcSchema,
+    BundlerActions & SmartAccountActions
+>
+export type ExtendedSmartAccountClient = BaseSmartAccountClient & Erc7579Actions<KernelSmartAccount>
 
 export const smartAccountClientAtom: Atom<Promise<ExtendedSmartAccountClient | undefined>> = atom(async (get) => {
     const smartAccount = await get(kernelAccountAtom)
@@ -35,7 +41,7 @@ export const smartAccountClientAtom: Atom<Promise<ExtendedSmartAccountClient | u
     })
 
     const smartAccountClientWithExtensions = basicSmartAccountClient.extend(erc7579Actions())
-    return smartAccountClientWithExtensions as unknown as ExtendedSmartAccountClient
+    return smartAccountClientWithExtensions as ExtendedSmartAccountClient
 })
 
 export const { getValue: getSmartAccountClient } = accessorsFromAtom(smartAccountClientAtom)
