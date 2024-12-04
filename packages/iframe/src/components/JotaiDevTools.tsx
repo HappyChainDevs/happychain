@@ -1,4 +1,4 @@
-import { DevTools, useAtomsDebugValue, useAtomsDevtools } from "jotai-devtools"
+import { DevTools, useAtomsDebugValue } from "jotai-devtools"
 
 import "jotai-devtools/styles.css"
 
@@ -8,9 +8,6 @@ export function JotaiDevTools() {
     // (By default in Next, the atoms are listed but they don't have their proper names.)
     // Note that the naming here relies on atoms having their `debugLabel` properties set.
     useAtomsDebugValue()
-    // Enables tracking atom value changes in the Redux dev tool, as well as time travelling, etc
-    // The Redux dev tool needs to be open and a state change to happen for it to display anything.
-    useAtomsDevtools("atomDevtools")
 
     return <DevTools position="bottom-right" />
 }
