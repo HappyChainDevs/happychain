@@ -1,18 +1,17 @@
-import { Transaction } from "@happychain/transaction-manager"
+import type { Transaction, TransactionManager } from "@happychain/transaction-manager"
 import type { Address } from "viem"
 
 export class RevealValueTransactionFactory {
-    private readonly chainId: number
+    private readonly transactionManager: TransactionManager
     private readonly randomContractAddress: Address
 
-    constructor(chainId: number, randomContractAddress: Address) {
-        this.chainId = chainId
+    constructor(transactionManager: TransactionManager, randomContractAddress: Address) {
+        this.transactionManager = transactionManager
         this.randomContractAddress = randomContractAddress
     }
 
     create(timestamp: bigint, revealedValue: bigint): Transaction {
-        return new Transaction({
-            chainId: this.chainId,
+        return this.transactionManager.createTransaction({
             address: this.randomContractAddress,
             functionName: "revealValue",
             contractName: "Random",
