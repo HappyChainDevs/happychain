@@ -26,6 +26,7 @@ export class TransactionRepository {
         const transactionRows = await db
             .selectFrom("transaction")
             .where("status", "in", NotFinalizedStatuses)
+            .where("from", "=", this.transactionManager.viemWallet.account.address)
             .selectAll()
             .execute()
 
