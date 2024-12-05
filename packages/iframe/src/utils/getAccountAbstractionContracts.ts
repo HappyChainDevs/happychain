@@ -1,16 +1,16 @@
-import ContractsAAHappySepolia from "@happychain/contracts/AccountAbstractionHappySepolia"
+import { deployment as contractsAddresses } from "@happychain/contracts/sepolia"
 import { chains } from "@happychain/sdk-shared"
 
-type AccountAbstractionContracts = keyof typeof ContractsAAHappySepolia
+type AccountAbstractionContracts = keyof typeof contractsAddresses
 
 export function getAccountAbstractionContracts(chainId: string): Record<AccountAbstractionContracts, `0x${string}`> {
     let contracts = {}
     switch (chainId) {
         case chains.happyChainSepolia.chainId:
-            contracts = ContractsAAHappySepolia
+            contracts = contractsAddresses
             break
         default:
-            contracts = ContractsAAHappySepolia
+            contracts = contractsAddresses
             break
     }
 
