@@ -4,7 +4,16 @@ export { useIsHydrated } from "./hooks/isHydrated.js"
 
 export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai.js"
 
-export type { HTTPString, AssertAssignableTo, AssertCompatible, TupleUnion } from "./utils/types.js"
+export type {
+    HTTPString,
+    AssertAssignableTo,
+    AssertCompatible,
+    Prettify,
+    TupleUnion,
+    UnionToTuple,
+    MapTuple,
+    ObjectFromTuples,
+} from "./utils/types.js"
 
 export { bigIntMax, bigIntReplacer, bigIntReviver } from "./utils/bigint.js"
 
