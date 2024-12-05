@@ -81,12 +81,14 @@ const interactiveList = new Set([
  * This is the list of protected methods.
  * Each of these will require a Confirmation Screen.
  * In most cases, this screen will be displayed every time the request occurs,
- * such as eth_sendTransaction, or personal_sign, however for
- * methods such as wallet_requestPermissions, the confirmation is only shown if the user
+ * such as `eth_sendTransaction`, or `personal_sign`, however for
+ * methods such as `wallet_requestPermissions`, the confirmation is only shown if the user
  * has not previously granted the requested permissions (or has revoked them).
- * subsequent requests would not need the confirmation screen displayed
+ * Subsequent requests would not need the confirmation screen displayed.
  */
 const unsafeList = new Set([
+    // eip-xxxx :)
+    "happy_walletUseAbi",
     // permissions
     "eth_requestAccounts", // https://eips.ethereum.org/EIPS/eip-1102
     "wallet_requestPermissions", // https://eips.ethereum.org/EIPS/eip-2255

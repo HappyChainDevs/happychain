@@ -1,6 +1,7 @@
 import { Msgs, type PopupMsgs } from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
+import { HappyWalletUseAbi } from "#src/components/requests/HappyWalletUseAbi"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
@@ -67,6 +68,8 @@ function Request() {
             return <EthRequestAccounts method={req.method} params={req.params} reject={reject} accept={accept} />
         case "wallet_watchAsset":
             return <WalletWatchAsset method={req.method} params={req.params} reject={reject} accept={accept} />
+        case "happy_walletUseAbi":
+            return <HappyWalletUseAbi method={req.method} params={req.params} reject={reject} accept={accept} />
         default:
             return (
                 <main>

@@ -3,7 +3,7 @@ import { chains, useHappyChain } from "@happychain/react"
 import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { useEffect, useMemo, useState } from "react"
-import { type Hex, createPublicClient, createWalletClient, custom, hexToNumber } from "viem"
+import { type Hex, createPublicClient, createWalletClient, custom, erc20Abi, hexToNumber, zeroAddress } from "viem"
 import { gnosis } from "viem/chains"
 import { ConnectButton } from "./BadgeComponent"
 
@@ -11,7 +11,7 @@ function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { provider, user, connect, disconnect, showSendScreen } = useHappyChain()
+    const { provider, user, connect, disconnect, showSendScreen, recordAbi } = useHappyChain()
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider!) }), [provider])
     const walletClient = useMemo(
@@ -21,6 +21,10 @@ function App() {
 
     async function sendStub() {
         showSendScreen()
+    }
+
+    async function recordAbiStub() {
+        recordAbi(zeroAddress, erc20Abi) // dummy values
     }
 
     async function signMessage(message: string) {

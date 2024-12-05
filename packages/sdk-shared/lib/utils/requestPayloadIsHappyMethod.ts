@@ -5,7 +5,7 @@ import { permissionsLists } from "../interfaces/permissions"
 const what = Array<string>().concat(
     Array.from(permissionsLists.get("safe") ?? []),
     Array.from(permissionsLists.get("interactive") ?? []),
-    Array.from(permissionsLists.get("safe") ?? []),
+    Array.from(permissionsLists.get("unsafe") ?? []),
 )
 const happyMethods = new Set(what.filter((a) => a.startsWith("happy_")))
 export function requestPayloadIsHappyMethod(
