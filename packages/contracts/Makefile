@@ -245,6 +245,7 @@ define post-deploy
 	printf ") as const\n\n" >> out/abis.ts
 
 	cat scripts/abi_types_fragment_end.ts.txt >> out/abis.ts
+	printf "\n" >> out/abis.ts
 endef
 
 # Explanation of the jq command;
