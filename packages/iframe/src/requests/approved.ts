@@ -43,12 +43,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             const hash = (await sendToWalletClient(request)) as Hash
 
-            let value: bigint
-            if (request.payload.params[0].value) {
-                value = hexToBigInt(request.payload.params[0].value as Hex)
-            } else {
-                value = 0n
-            }
+            const value = request.payload.params[0].value ? hexToBigInt(request.payload.params[0].value as Hex) : 0n
 
             const payload: PendingTxDetails = { hash, value }
             addPendingTx(user.address, payload)
