@@ -150,10 +150,10 @@ export class TransactionManager {
 
     /**
      * Adds a hook to the hook manager.
-     * @param type - The type of hook to add. Defaults to All.
+     * @param type - The type of hook to add.
      * @param handler - The handler function to add.
      */
-    public async addHook(handler: TxmHookHandler, type?: TxmHookType): Promise<void> {
+    public async addHook(handler: TxmHookHandler, type: TxmHookType): Promise<void> {
         await this.hookManager.addHook(handler, type)
     }
 
