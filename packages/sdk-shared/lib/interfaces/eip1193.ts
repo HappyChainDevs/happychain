@@ -1,5 +1,10 @@
-import type { EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
+import type { Abi, Address, EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
 import type { HappyUser } from "./happyUser"
+
+export type recordAbiPayload = {
+    address: Address
+    abi: Abi
+}
 
 // === HAPPY METHODS =============================================================================
 export type HappyMethods = [
@@ -7,6 +12,11 @@ export type HappyMethods = [
         Method: "happy_user"
         Parameters?: undefined
         ReturnType: HappyUser | undefined
+    },
+    {
+        Method: "happy_walletUseAbi"
+        Parameters?: recordAbiPayload
+        ReturnType: boolean
     },
 ]
 

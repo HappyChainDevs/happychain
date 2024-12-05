@@ -12,6 +12,7 @@ export {
     connect,
     disconnect,
     showSendScreen,
+    recordAbi,
 } from "./happyProvider/initialize"
 
 export type {

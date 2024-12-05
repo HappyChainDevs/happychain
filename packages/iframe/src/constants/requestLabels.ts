@@ -6,6 +6,7 @@ export const requestLabels = {
     wallet_requestPermissions: "Permission Request",
     wallet_switchEthereumChain: "Switch Network",
     wallet_watchAsset: "Watch Asset",
+    happy_walletUseAbi: "Record ABI",
 } as const
 
 export const permissionDescriptions = {

@@ -8,7 +8,7 @@ import type {
 } from "@happychain/sdk-shared"
 import { EventBus, EventBusMode, Msgs, WalletDisplayAction } from "@happychain/sdk-shared"
 import { announceProvider } from "mipd"
-import type { EIP1193Provider } from "viem"
+import type { Abi, Address, EIP1193Provider } from "viem"
 import { config } from "../config"
 import { HappyProvider, HappyProviderSSRSafe } from "./happyProvider"
 import { icon64x64 } from "./icons"
@@ -110,6 +110,23 @@ export const disconnect = async (): Promise<void> => {
     await _provider.request({
         method: "wallet_revokePermissions",
         params: [{ eth_accounts: {} }],
+    })
+}
+
+/**
+ * Add a contract address and its corresponding ABI to be tracked (in browser)
+ * to translate tx calldata using existing recorded ABI info.
+ */
+export const recordAbi = async (contractAddress: Address, abi: Abi): Promise<void> => {
+    const _provider = getInitializedProvider()
+    if (!_provider) return
+
+    await _provider.request({
+        method: "happy_walletUseAbi",
+        params: {
+            address: contractAddress,
+            abi: abi,
+        },
     })
 }
 
