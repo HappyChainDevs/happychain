@@ -59,59 +59,42 @@ export class TransactionRepository {
     }
 
     async saveTransactions(transactions: Transaction[]): Promise<Result<void, Error>> {
-        const result = await ResultAsync.fromPromise(
-            db
-                .insertInto("transaction")
-                .values(transactions.map((t) => t.toDbRow()))
-                .execute(),
-            unknownToError,
+        const transactionsToFlush = transactions.filter(
+            (t) => !t.flushedAt || t.flushedAt.getTime() <= t.updatedAt.getTime(),
         )
 
-        if (result.isOk()) {
-            for (const transaction of transactions) {
-                if (NotFinalizedStatuses.includes(transaction.status)) {
-                    this.notFinalizedTransactions.push(transaction)
-                }
-            }
-        }
-        return result.map(() => undefined)
-    }
+        const oldFlushedAt = transactionsToFlush.map((t) => t.flushedAt)
 
-    async updateTransaction(transaction: Transaction): Promise<Result<undefined, Error>> {
-        const result = await ResultAsync.fromPromise(
-            db
-                .updateTable("transaction")
-                .set(transaction.toDbRow())
-                .where("intentId", "=", transaction.intentId)
-                .execute(),
-            unknownToError,
-        )
-
-        this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
-            NotFinalizedStatuses.includes(transaction.status),
-        )
-
-        return result.map(() => undefined)
-    }
-
-    async updateTransactions(transactions: Transaction[]): Promise<Result<void, Error>> {
         const result = await ResultAsync.fromPromise(
             db.transaction().execute(async (dbTransaction) => {
-                const promises = transactions.map((t) =>
-                    dbTransaction
-                        .updateTable("transaction")
-                        .set(t.toDbRow())
-                        .where("intentId", "=", t.intentId)
-                        .execute(),
-                )
+                const promises = transactionsToFlush.map((t, index) => {
+                    t.setFlushedAt(new Date())
+                    if (oldFlushedAt[index] === undefined) {
+                        db.insertInto("transaction")
+                            .values(transactions.map((t) => t.toDbRow()))
+                            .execute()
+                    } else {
+                        dbTransaction
+                            .updateTable("transaction")
+                            .set(t.toDbRow())
+                            .where("intentId", "=", t.intentId)
+                            .execute()
+                    }
+                })
                 await Promise.all(promises)
             }),
             unknownToError,
         )
 
-        this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
-            NotFinalizedStatuses.includes(transaction.status),
-        )
+        if (result.isOk()) {
+            this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
+                NotFinalizedStatuses.includes(transaction.status),
+            )
+        } else {
+            for (let i = 0; i < transactions.length; i++) {
+                transactions[i].setFlushedAt(oldFlushedAt[i])
+            }
+        }
 
         return result
     }

@@ -121,7 +121,7 @@ export class TransactionSubmitter {
             gas: transactionRequest.gas,
         })
 
-        const updateResult = await this.txmgr.transactionRepository.updateTransaction(transaction)
+        const updateResult = await this.txmgr.transactionRepository.saveTransactions([transaction])
 
         if (updateResult.isErr()) {
             transaction.removeAttempt(hash)
