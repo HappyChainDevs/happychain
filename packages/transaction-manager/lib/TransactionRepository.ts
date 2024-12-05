@@ -59,20 +59,24 @@ export class TransactionRepository {
     }
 
     async saveTransactions(transactions: Transaction[]): Promise<Result<void, Error>> {
-        const transactionsToFlush = transactions.filter(
-            (t) => !t.flushedAt || t.flushedAt.getTime() <= t.updatedAt.getTime(),
+        const transactionsToFlush = transactions.filter((t) => t.pendingFlush)
+
+        const notPersistedTransactions = transactions.filter((t) => t.notPersisted)
+
+        this.notFinalizedTransactions.push(
+            ...notPersistedTransactions.filter((t) => !this.notFinalizedTransactions.includes(t)),
         )
 
-        const oldFlushedAt = transactionsToFlush.map((t) => t.flushedAt)
+        console.log(
+            "Diff",
+            transactions.filter((t) => !transactionsToFlush.includes(t)),
+        )
 
         const result = await ResultAsync.fromPromise(
             db.transaction().execute(async (dbTransaction) => {
-                const promises = transactionsToFlush.map((t, index) => {
-                    t.setFlushedAt(new Date())
-                    if (oldFlushedAt[index] === undefined) {
-                        db.insertInto("transaction")
-                            .values(transactions.map((t) => t.toDbRow()))
-                            .execute()
+                const promises = transactionsToFlush.map((t) => {
+                    if (t.notPersisted) {
+                        dbTransaction.insertInto("transaction").values(t.toDbRow()).execute()
                     } else {
                         dbTransaction
                             .updateTable("transaction")
@@ -80,6 +84,7 @@ export class TransactionRepository {
                             .where("intentId", "=", t.intentId)
                             .execute()
                     }
+                    t.notifyFlush()
                 })
                 await Promise.all(promises)
             }),
@@ -91,8 +96,18 @@ export class TransactionRepository {
                 NotFinalizedStatuses.includes(transaction.status),
             )
         } else {
-            for (let i = 0; i < transactions.length; i++) {
-                transactions[i].setFlushedAt(oldFlushedAt[i])
+            for (let i = 0; i < transactionsToFlush.length; i++) {
+                transactionsToFlush[i].notifyFlushFailed()
+
+                if (notPersistedTransactions.includes(transactionsToFlush[i])) {
+                    transactionsToFlush[i].notifyNotPersisted()
+                    const index = this.notFinalizedTransactions.findIndex(
+                        (t) => t.intentId === transactionsToFlush[i].intentId,
+                    )
+                    if (index !== -1) {
+                        this.notFinalizedTransactions.splice(index, 1)
+                    }
+                }
             }
         }
 

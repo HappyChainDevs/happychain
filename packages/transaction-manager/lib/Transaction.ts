@@ -99,11 +99,15 @@ export class Transaction {
 
     readonly attempts: Attempt[]
 
+    // Whether the transaction has been updated and needs to be flushed to the database. This field is not persisted in the database.
+    pendingFlush: boolean
+
+    // Whether the transaction has not been persisted in the database yet. This field is not persisted in the database.
+    notPersisted: boolean
+
     createdAt: Date
 
     updatedAt: Date
-
-    flushedAt?: Date
 
     /**
      * Stores additional information for the transaction.
@@ -124,7 +128,8 @@ export class Transaction {
         attempts,
         createdAt,
         updatedAt,
-        flushedAt,
+        pendingFlush,
+        notPersisted,
         metadata,
     }: TransactionConstructorConfig & {
         from: Address
@@ -134,7 +139,8 @@ export class Transaction {
         attempts?: Attempt[]
         createdAt?: Date
         updatedAt?: Date
-        flushedAt?: Date
+        pendingFlush?: boolean
+        notPersisted?: boolean
     }) {
         this.intentId = intentId ?? createUUID()
         this.from = from
@@ -149,12 +155,13 @@ export class Transaction {
         this.createdAt = createdAt ?? new Date()
         this.updatedAt = updatedAt ?? new Date()
         this.metadata = metadata ?? {}
-        this.flushedAt = flushedAt
+        this.pendingFlush = pendingFlush === undefined ? true : pendingFlush
+        this.notPersisted = notPersisted === undefined ? true : notPersisted
     }
 
     addAttempt(attempt: Attempt): void {
         this.attempts.push(attempt)
-        this.updatedAt = new Date()
+        this.markUpdated()
     }
 
     removeAttempt(hash: Hash): void {
@@ -162,7 +169,7 @@ export class Transaction {
         if (index > -1) {
             this.attempts.splice(index, 1)
         }
-        this.updatedAt = new Date()
+        this.markUpdated()
     }
 
     getInAirAttempts(): Attempt[] {
@@ -177,7 +184,7 @@ export class Transaction {
 
     changeStatus(status: TransactionStatus): void {
         this.status = status
-        this.updatedAt = new Date()
+        this.markUpdated()
         eventBus.emit(Topics.TransactionStatusChanged, {
             transaction: this,
         })
@@ -191,8 +198,28 @@ export class Transaction {
         return this.attempts[this.attempts.length - 1]
     }
 
-    setFlushedAt(when: Date | undefined): void {
-        this.flushedAt = when
+    notifyFlush(): void {
+        this.pendingFlush = false
+
+        if (this.notPersisted) {
+            this.notPersisted = false
+        }
+    }
+
+    notifyFlushFailed(): void {
+        this.pendingFlush = true
+    }
+
+    notifyNotPersisted(): void {
+        this.notPersisted = true
+    }
+
+    private markUpdated(): void {
+        this.updatedAt = new Date()
+
+        if (this.pendingFlush === false) {
+            this.pendingFlush = true
+        }
     }
 
     toDbRow(): Insertable<TransactionTable> {
@@ -210,7 +237,6 @@ export class Transaction {
             metadata: this.metadata ? JSON.stringify(this.metadata, bigIntReplacer) : undefined,
             createdAt: this.createdAt.getTime(),
             updatedAt: this.updatedAt.getTime(),
-            flushedAt: this.flushedAt?.getTime(),
         }
     }
 
@@ -222,7 +248,8 @@ export class Transaction {
             metadata: row.metadata ? JSON.parse(row.metadata, bigIntReviver) : undefined,
             createdAt: new Date(row.createdAt),
             updatedAt: new Date(row.updatedAt),
-            flushedAt: row.flushedAt ? new Date(row.flushedAt) : undefined,
+            notPersisted: false,
+            pendingFlush: false,
         })
     }
 }

@@ -23,6 +23,7 @@ class RandomnessService {
             chain: anvil,
             abis: abis,
             gasEstimator: new CustomGasEstimator(),
+            rpcAllowDebug: true,
         })
         this.commitmentTransactionFactory = new CommitmentTransactionFactory(
             this.txm,
