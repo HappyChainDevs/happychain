@@ -62,7 +62,8 @@ export interface TransactionConstructorConfig {
      */
     functionName: string
     /**
-     * The contract alias of one of the contracts that you have provided when initializing the transaction manager
+     * This doesn't need to match the Solidity contract name but must match the contract alias of one of the contracts
+     * that you have provided when initializing the transaction manager with the ABI Manager
      */
     contractName: string
     /**
@@ -91,7 +92,7 @@ export class Transaction {
 
     readonly args: ContractFunctionArgs
 
-    // This doesn't need to match the Solidity contract name but must match the alias specified in the ABI Manager
+    // This doesn't need to match the Solidity contract name but must match the contract alias of one of the contracts that you have provided when initializing the transaction manager with the ABI Manager
     readonly contractName: string
 
     readonly deadline: number | undefined
