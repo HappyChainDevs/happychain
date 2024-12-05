@@ -16,6 +16,7 @@ export interface TransactionTable {
     metadata: string | undefined
     createdAt: number
     updatedAt: number
+    flushedAt: number | undefined
 }
 
 export interface Database {

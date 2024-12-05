@@ -103,6 +103,8 @@ export class Transaction {
 
     updatedAt: Date
 
+    flushedAt?: Date
+
     /**
      * Stores additional information for the transaction.
      * Enables originators to provide extra details, such as gas limits, which can be leveraged by customizable services.
@@ -122,6 +124,7 @@ export class Transaction {
         attempts,
         createdAt,
         updatedAt,
+        flushedAt,
         metadata,
     }: TransactionConstructorConfig & {
         from: Address
@@ -131,6 +134,7 @@ export class Transaction {
         attempts?: Attempt[]
         createdAt?: Date
         updatedAt?: Date
+        flushedAt?: Date
     }) {
         this.intentId = intentId ?? createUUID()
         this.from = from
@@ -145,6 +149,7 @@ export class Transaction {
         this.createdAt = createdAt ?? new Date()
         this.updatedAt = updatedAt ?? new Date()
         this.metadata = metadata ?? {}
+        this.flushedAt = flushedAt
     }
 
     addAttempt(attempt: Attempt): void {
@@ -186,6 +191,10 @@ export class Transaction {
         return this.attempts[this.attempts.length - 1]
     }
 
+    setFlushedAt(when: Date | undefined): void {
+        this.flushedAt = when
+    }
+
     toDbRow(): Insertable<TransactionTable> {
         return {
             intentId: this.intentId,
@@ -201,6 +210,7 @@ export class Transaction {
             metadata: this.metadata ? JSON.stringify(this.metadata, bigIntReplacer) : undefined,
             createdAt: this.createdAt.getTime(),
             updatedAt: this.updatedAt.getTime(),
+            flushedAt: this.flushedAt?.getTime(),
         }
     }
 
@@ -212,6 +222,7 @@ export class Transaction {
             metadata: row.metadata ? JSON.parse(row.metadata, bigIntReviver) : undefined,
             createdAt: new Date(row.createdAt),
             updatedAt: new Date(row.updatedAt),
+            flushedAt: row.flushedAt ? new Date(row.flushedAt) : undefined,
         })
     }
 }
