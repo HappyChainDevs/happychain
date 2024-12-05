@@ -29,12 +29,10 @@ export class TransactionRepository {
 
     async saveTransactions(transactions: Transaction[]): Promise<Result<void, Error>> {
         const result = await ResultAsync.fromPromise(
-            db.transaction().execute(async (dbTransaction) => {
-                const promises = transactions.map((t) =>
-                    dbTransaction.insertInto("transaction").values(t.toDbRow()).execute(),
-                )
-                await Promise.all(promises)
-            }),
+            db
+                .insertInto("transaction")
+                .values(transactions.map((t) => t.toDbRow()))
+                .execute(),
             unknownToError,
         )
 
@@ -45,7 +43,7 @@ export class TransactionRepository {
                 }
             }
         }
-        return result
+        return result.map(() => undefined)
     }
 
     async updateTransaction(transaction: Transaction): Promise<Result<undefined, Error>> {
