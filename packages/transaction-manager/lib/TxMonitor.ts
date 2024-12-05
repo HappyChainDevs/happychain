@@ -143,7 +143,7 @@ export class TxMonitor {
         await Promise.all(promises)
 
         const result = await ResultAsync.fromPromise(
-            this.transactionManager.transactionRepository.updateTransactions(transactions),
+            this.transactionManager.transactionRepository.saveTransactions(transactions),
             unknownToError,
         )
 
