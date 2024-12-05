@@ -2,7 +2,7 @@ import { accessorsFromAtom } from "@happychain/common"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import { type EcdsaKernelSmartAccountImplementation, toEcdsaKernelSmartAccount } from "permissionless/accounts"
-import { http, createPublicClient, createWalletClient } from "viem"
+import { http, type Address, createPublicClient, createWalletClient } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts.ts"
 import { getCurrentChain } from "./chains"
@@ -10,7 +10,7 @@ import { walletClientAtom } from "./walletClient"
 
 export type KernelSmartAccount = SmartAccount & EcdsaKernelSmartAccountImplementation<"0.7">
 
-export async function createKernelAccount(walletAddress: `0x${string}`): Promise<KernelSmartAccount | undefined> {
+export async function createKernelAccount(walletAddress: Address): Promise<KernelSmartAccount | undefined> {
     const chain = getCurrentChain()
     const currentChain = convertToViemChain(chain)
     const contracts = getAccountAbstractionContracts(currentChain.chainId)

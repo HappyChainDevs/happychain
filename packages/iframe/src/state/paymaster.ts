@@ -2,7 +2,7 @@ import { accessorsFromAtom } from "@happychain/common"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import { type PimlicoClient, createPimlicoClient } from "permissionless/clients/pimlico"
-import { http } from "viem"
+import { http, type Address, type Hex } from "viem"
 import {
     type GetPaymasterDataParameters,
     type GetPaymasterStubDataParameters,
@@ -29,14 +29,14 @@ export const getPaymasterClient = accessorsClient.getValue as () => PimlicoClien
 
 export type PaymasterConfig = {
     getPaymasterData: (parameters: GetPaymasterDataParameters) => Promise<{
-        paymaster: `0x${string}`
-        paymasterData: `0x${string}`
+        paymaster: Address
+        paymasterData: Hex
         paymasterVerificationGasLimit: bigint
         paymasterPostOpGasLimit: bigint
     }>
     getPaymasterStubData: (parameters: GetPaymasterStubDataParameters) => Promise<{
-        paymaster: `0x${string}`
-        paymasterData: `0x${string}`
+        paymaster: Address
+        paymasterData: Hex
         paymasterVerificationGasLimit: bigint
         paymasterPostOpGasLimit: bigint
     }>
