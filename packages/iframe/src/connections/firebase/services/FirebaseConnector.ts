@@ -47,8 +47,8 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     }
 
     abstract getAuthProvider(): AuthProvider
-    abstract onConnect(user: Omit<HappyUser, "controllingAddress">, provider: EIP1193Provider): Promise<void> | void
-    abstract onReconnect(user: Omit<HappyUser, "controllingAddress">, provider: EIP1193Provider): Promise<void> | void
+    abstract onConnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
+    abstract onReconnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
     abstract onDisconnect(): Promise<void> | void
 
     /**
@@ -73,6 +73,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                 FirebaseConnector.makeHappyUserPartial(userCredential.user, this.id),
                 token,
             )
+            console.log("happyUser", happyUser)
             if (!happyUser) throw new Error(`Failed to connect ${this.id}`)
             await setFirebaseAuthState(FirebaseAuthState.Connected)
             await this.onConnect(happyUser, web3AuthEIP1193Provider)
