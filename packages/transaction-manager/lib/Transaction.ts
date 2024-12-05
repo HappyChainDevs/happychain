@@ -40,6 +40,7 @@ export class Transaction {
 
     readonly args: ContractFunctionArgs
 
+    // This doesn't need to match the Solidity contract name but must match the alias specified in the ABI Manager
     readonly contractName: string
 
     readonly deadline: number | undefined
