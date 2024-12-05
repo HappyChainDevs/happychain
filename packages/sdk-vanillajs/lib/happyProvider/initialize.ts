@@ -121,13 +121,18 @@ export const recordAbi = async (contractAddress: Address, abi: Abi): Promise<voi
     const _provider = getInitializedProvider()
     if (!_provider) return
 
-    await _provider.request({
+    const req = await _provider.request({
         method: "happy_walletUseAbi",
         params: {
             address: contractAddress,
             abi: abi,
         },
     })
+
+    // rpc call returns true / false
+    if (typeof req === "boolean" && req) {
+        console.log("ABI recorded successfully")
+    }
 }
 
 /**
