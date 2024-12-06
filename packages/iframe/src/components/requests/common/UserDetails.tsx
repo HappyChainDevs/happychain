@@ -1,5 +1,5 @@
 import { useAtomValue } from "jotai"
-import { userAtom } from "#src/state/user.js"
+import { userAtom } from "#src/state/user"
 
 const UserDetails = () => {
     const user = useAtomValue(userAtom)

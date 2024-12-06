@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai"
 
-import { chainsAtom } from "#src/state/chains.js"
+import { chainsAtom } from "#src/state/chains"
 import { Button } from "../primitives/button/Button"
 import RawRequestDetails from "./common/RawRequestDetails"
 import RequestContent from "./common/RequestContent"
