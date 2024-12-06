@@ -1,8 +1,5 @@
 import { TransactionManager, TransactionStatus } from "@happychain/transaction-manager"
 import type { LatestBlock, Transaction } from "@happychain/transaction-manager"
-import { webSocket } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
-import { anvil } from "viem/chains"
 import { abis } from "./ABI/random.js"
 import { CommitmentManager } from "./CommitmentManager.js"
 import { CustomGasEstimator } from "./CustomGasEstimator.js"

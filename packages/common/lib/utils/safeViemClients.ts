@@ -3,6 +3,7 @@ import type {
     Account,
     Chain,
     EstimateGasErrorType,
+    GetChainIdErrorType,
     GetTransactionReceiptErrorType,
     Hash,
     PublicClient,
@@ -83,6 +84,7 @@ export interface SafeViemPublicClient extends ViemPublicClient {
     safeDebugTransaction: (
         ...args: DebugTransactionSchema["Parameters"]
     ) => ResultAsync<DebugTransactionSchema["ReturnType"], RpcErrorType>
+    safeGetChainId: () => ResultAsync<Awaited<ReturnType<ViemPublicClient["getChainId"]>>, GetChainIdErrorType>
 }
 
 export function convertToSafeViemPublicClient(client: ViemPublicClient): SafeViemPublicClient {
@@ -99,6 +101,7 @@ export function convertToSafeViemPublicClient(client: ViemPublicClient): SafeVie
                 }),
                 unknownToError,
             ),
+        safeGetChainId: async () => ResultAsync.fromPromise(client.getChainId(), unknownToError),
     })
 
     return client as SafeViemPublicClient
