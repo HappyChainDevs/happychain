@@ -28,9 +28,12 @@ export class TransactionCollector {
 
         const saveResult = await this.txmgr.transactionRepository.saveTransactions(transactionsBatch)
 
-        // TODO: If flush fails, we should notify the user
         if (saveResult.isErr()) {
-            throw saveResult.error
+            for (const transaction of transactionsBatch) {
+                eventBus.emit(Topics.TransactionSaveFailed, { transaction })
+            }
+            console.error("Error saving transactions", saveResult.error)
+            return
         }
 
         await Promise.all(

@@ -4,6 +4,7 @@ import type { Transaction } from "./Transaction.js"
 export enum TxmHookType {
     All = "All",
     TransactionStatusChanged = "TransactionStatusChanged",
+    TransactionSaveFailed = "TransactionSaveFailed",
 }
 
 export type TxmHookPayload = {
@@ -30,8 +31,10 @@ export class HookManager {
         this.hooks = {
             [TxmHookType.All]: [],
             [TxmHookType.TransactionStatusChanged]: [],
+            [TxmHookType.TransactionSaveFailed]: [],
         }
         eventBus.on(Topics.TransactionStatusChanged, this.onTransactionStatusChanged.bind(this))
+        eventBus.on(Topics.TransactionSaveFailed, this.onTransactionSaveFailed.bind(this))
     }
 
     public async addHook(handler: TxmHookHandler, type: TxmHookType): Promise<void> {
@@ -47,6 +50,17 @@ export class HookManager {
         this.hooks[TxmHookType.TransactionStatusChanged].concat(this.hooks[TxmHookType.All]).map((h) =>
             h({
                 type: TxmHookType.TransactionStatusChanged,
+                transaction: payload.transaction,
+            }),
+        )
+    }
+
+    private async onTransactionSaveFailed(payload: {
+        transaction: Transaction
+    }): Promise<void> {
+        this.hooks[TxmHookType.TransactionSaveFailed].concat(this.hooks[TxmHookType.All]).map((h) =>
+            h({
+                type: TxmHookType.TransactionSaveFailed,
                 transaction: payload.transaction,
             }),
         )

@@ -1,6 +1,6 @@
 import { unknownToError } from "@happychain/common"
 import type { UUID } from "@happychain/common"
-import { type Result, ResultAsync } from "neverthrow"
+import { type Result, ResultAsync, err } from "neverthrow"
 import { Topics, eventBus } from "./EventBus.js"
 import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
