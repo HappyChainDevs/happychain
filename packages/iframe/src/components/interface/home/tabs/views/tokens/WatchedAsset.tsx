@@ -1,4 +1,4 @@
-import { Check, Trash, X } from "@phosphor-icons/react"
+import { Check, Trash, Warning, X } from "@phosphor-icons/react"
 import { useMemo, useState } from "react"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
 
@@ -54,7 +54,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     return (
         <div
             key={`watched-asset-${tokenAddress}`}
-            className="inline-flex justify-between w-full p-2 min-h-10 max-w-full group relative overflow-hidden items-center gap-2 text-sm font-medium hover:bg-accent/10 focus-within:bg-accent/10"
+            className="inline-flex justify-between w-full min-h-10 px-2 max-w-full group relative overflow-hidden items-center gap-2 text-sm font-medium hover:bg-accent/10 focus-within:bg-accent/10"
         >
             <div className="flex flex-row w-1/2 gap-1 items-center min-w-0 max-w-[50%]">
                 <img
@@ -65,7 +65,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                     src={imageSource}
                 />
                 <span
-                    className="font-semibold text-sm"
+                    className="font-semibold text-sm whitespace-nowrap"
                     title={asset.options.symbol}
                 >{`${confirmRemoval ? `Stop Tracking ${tokenSymbol}?` : `${tokenSymbol}`}`}</span>
             </div>
@@ -74,7 +74,16 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                 {!confirmRemoval ? (
                     <>
                         <span className="font-semibold text-sm group-hover:hidden group-focus-within:hidden truncate">
-                            {`${truncatedBalance}`}
+                            {`${
+                                truncatedBalance ? (
+                                    truncatedBalance
+                                ) : (
+                                    <>
+                                        <span className="sr-only">Read Failure</span>
+                                        <Warning size="1.5em" />
+                                    </>
+                                )
+                            }`}
                         </span>
                         <button
                             type="button"

@@ -7,7 +7,7 @@ import TokenView from "./home/tabs/views/tokens/TokenView"
 
 const WalletContentInfo = () => {
     return (
-        <div className="flex size-full items-start justify-center flex-col px-1 py-2">
+        <div className="flex size-full items-start justify-center flex-col py-2">
             <Tabs.Root defaultValue={ContentType.TOKENS} className="size-full" lazyMount unmountOnExit>
                 <Tabs.List className="gap-2 space-x-1">
                     <Tab title={ContentType.TOKENS} />
