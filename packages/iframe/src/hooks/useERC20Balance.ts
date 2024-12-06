@@ -3,9 +3,9 @@ import { type Address, erc20Abi } from "viem"
 import { useReadContracts } from "wagmi"
 
 type ERC20BalanceQueryData = {
-    value: bigint
-    decimals: number | undefined
-    formatted: string
+    value?: bigint
+    decimals?: number
+    formatted?: string
 }
 
 /**
@@ -37,13 +37,15 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): { data?:
         query: {
             select(data): ERC20BalanceQueryData {
                 const [balanceResult, decimalsResult] = data
-                const value = balanceResult.result ?? 0n
-                const decimals = decimalsResult.result ?? 18
+                const value = balanceResult.result
+                const decimals = decimalsResult.result
 
                 return {
                     value,
                     decimals,
-                    formatted: formatUserBalance(value, decimals),
+                    // compute formatted value only if both values are read from the contract,
+                    // else indicate error to user
+                    formatted: value && decimals ? formatUserBalance(value, decimals) : undefined,
                 }
             },
         },
