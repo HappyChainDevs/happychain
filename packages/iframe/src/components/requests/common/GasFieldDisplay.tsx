@@ -10,10 +10,10 @@ interface GasFieldDisplayProps {
     field?: string
 }
 
-const GasFieldDisplay = ({ field }: GasFieldDisplayProps) => {
+const GasFieldDisplay = ({ name, field }: GasFieldDisplayProps) => {
     return (
         <div className="flex items-center justify-between">
-            <span className="text-sm text-content font-mono">MaxFeePerGas:</span>
+            <span className="text-sm text-content font-mono">{name}</span>
             {field ? <span className="font-mono text-sm uppercase truncate">{`${field} gwei`}</span> : <FieldLoader />}
         </div>
     )

@@ -7,8 +7,7 @@ const recipeDisclosureDetails = cva(
         variants: {
             intent: {
                 default: "bg-base-100",
-                gradient:
-                    "bg-gradient-to-br from-[rgb(56,189,248)] via-[rgb(109,40,217)] to-[rgba(241,253,79,0.65)] text-white shadow-lg",
+                gradient: "bg-gradient-to-br from-[rgb(56,189,248)] to-[rgb(109,40,217)] text-white shadow-lg",
             },
         },
         defaultVariants: {
@@ -18,7 +17,17 @@ const recipeDisclosureDetails = cva(
 )
 
 // <summary />
-const recipeDisclosureSummary = cva("list-none text-sm p-4 font-semibold flex justify-between cursor-pointer")
+const recipeDisclosureSummary = cva("list-none text-sm p-4 font-semibold flex justify-between cursor-pointer", {
+    variants: {
+        intent: {
+            default: "",
+            gradient: "",
+        },
+    },
+    defaultVariants: {
+        intent: "default",
+    },
+})
 
 // <></>
 const recipeDisclosureContent = cva("px-4 py-2 text-xs overflow-x-auto group-open:overflow-x-auto", {

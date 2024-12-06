@@ -3,8 +3,8 @@ import {
     recipeDisclosureContent,
     recipeDisclosureDetails,
     recipeDisclosureSummary,
-} from "#src/components/primitives/disclosure/variants.js"
-import type { requestLabels } from "#src/constants/requestLabels.js"
+} from "#src/components/primitives/disclosure/variants"
+import type { requestLabels } from "#src/constants/requestLabels"
 import type { RequestConfirmationProps } from "../props"
 
 interface RawTxDetailsProps {
