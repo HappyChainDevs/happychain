@@ -41,7 +41,6 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
             factoryAddress: contracts.KernelFactory,
             metaFactoryAddress: contracts.FactoryStaker,
         })
-
         return account
     } catch (error) {
         console.error("Kernel account could not be created:", error)

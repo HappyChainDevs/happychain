@@ -14,6 +14,7 @@ import {
     onAuthStateChanged,
     signInWithPopup,
 } from "firebase/auth"
+import { AccountNotFoundError } from "permissionless"
 import type { EIP1193Provider } from "viem"
 import { createKernelAccount } from "#src/state/kernelAccount.ts"
 import { getPermissions } from "#src/state/permissions.ts"
@@ -73,7 +74,6 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                 FirebaseConnector.makeHappyUserPartial(userCredential.user, this.id),
                 token,
             )
-            console.log("happyUser", happyUser)
             if (!happyUser) throw new Error(`Failed to connect ${this.id}`)
             await setFirebaseAuthState(FirebaseAuthState.Connected)
             await this.onConnect(happyUser, web3AuthEIP1193Provider)
@@ -144,6 +144,10 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                 // have to refresh JWT since web3auth fails if duplicate token is found
                 const addresses = await web3AuthConnect(token)
                 const account = await createKernelAccount(addresses[0])
+                if (!account) {
+                    throw new AccountNotFoundError()
+                }
+
                 const user = await FirebaseConnector.makeHappyUser(partialUser, addresses, account?.address)
                 await setFirebaseSharedUser(user)
                 return user

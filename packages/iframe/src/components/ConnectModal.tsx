@@ -70,7 +70,15 @@ export function ConnectModal() {
                         <p className="text-2xl font-bold">HappyChain</p>
                     </div>
                 </div>
-                {mutationLogin.isPending ? (
+                {mutationLogin.isError ? (
+                    <div
+                        role="alert"
+                        className="animate-fadeIn space-y-[1ex] text-content border-warning border rounded-lg py-[2ex] px-[1em] text-xs text-center"
+                    >
+                        <p>Unable to set up your account and complete login.</p>
+                        <p>Please check your connection and try signing in again.</p>
+                    </div>
+                ) : mutationLogin.isPending ? (
                     <div className="grid gap-8">
                         <div className="flex items-center justify-center gap-4">
                             <img alt="HappyChain Logo" src={happychainLogo} className="h-12" />
