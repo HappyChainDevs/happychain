@@ -3,13 +3,13 @@ import { chains } from "@happychain/sdk-shared"
 
 export function getAccountAbstractionContracts(chainId: string): Deployment {
     let contracts = {}
+
     switch (chainId) {
         case chains.happyChainSepolia.chainId:
             contracts = contractsAddresses
             break
         default:
             contracts = contractsAddresses
-            break
     }
 
     return contracts as Deployment
