@@ -18,6 +18,7 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
         transport: http(currentChain.rpcUrls[0]),
         chain: currentChain,
     }
+
     try {
         // We can't use `publicClientAtom` and need to recreate a public client since :
         // 1. `publicClientAtom` uses `transportAtom` for its `transport` value, which can be either `custom()` or `http()`

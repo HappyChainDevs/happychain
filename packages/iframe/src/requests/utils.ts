@@ -1,5 +1,5 @@
 import { type UUID, createUUID } from "@happychain/common"
-import { abis } from "@happychain/contracts/abis"
+import { abis } from "@happychain/contracts/account-abstraction/sepolia"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
 import { type Address, type TransactionRequest, encodeFunctionData } from "viem"
 import type { UserOperation } from "viem/account-abstraction"
@@ -72,7 +72,7 @@ export function convertTxToUserOp(tx: TransactionRequest, sender: Address): Part
     const callData = encodeFunctionData({
         abi: KERNEL_ABI,
         functionName: "execute",
-        args: [CALL_MODE, tx?.data ?? "0x0"],
+        args: [CALL_MODE, tx?.data ?? "0x"],
     })
 
     return {
