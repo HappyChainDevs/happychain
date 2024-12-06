@@ -44,3 +44,5 @@ export type { SafeViemWalletClient, SafeViemPublicClient } from "./utils/safeVie
 export { convertToSafeViemWalletClient, convertToSafeViemPublicClient } from "./utils/safeViemClients.js"
 
 export { hexSchema } from "./utils/zod.js"
+
+export { getUrlProtocol } from "./utils/url.js"
