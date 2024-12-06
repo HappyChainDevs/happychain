@@ -8,8 +8,6 @@ import {
 } from "@happychain/common"
 import {
     type Abi,
-    type Account,
-    type Chain,
     type Hex,
     type Transport as ViemTransport,
     createPublicClient,
@@ -147,12 +145,12 @@ export class TransactionManager {
     public readonly transactionSubmitter: TransactionSubmitter
     public readonly hookManager: HookManager
 
+    public readonly chainId: number
     public readonly eip1559: EIP1559Parameters
     public readonly baseFeeMargin: bigint
     public readonly maxPriorityFeePerGas: bigint
     public readonly rpcAllowDebug: boolean
     public readonly blockTime: bigint
-    private internalChainId!: number
     public readonly finalizedTransactionPurgeTime: number
 
     constructor(_config: TransactionManagerConfig) {
@@ -185,6 +183,11 @@ export class TransactionManager {
 
         const account = privateKeyToAccount(_config.privateKey)
 
+        /**
+         * Define the viem chain object.
+         * Certain properties required by viem are set to "Unknown" because they are not relevant to our library.
+         * This approach eliminates the need for users to provide unnecessary properties when configuring the library.
+         */
         const chain = defineChain({
             id: _config.chainId,
             name: "Unknown",
@@ -226,6 +229,7 @@ export class TransactionManager {
         this.transactionSubmitter = new TransactionSubmitter(this)
         this.hookManager = new HookManager()
 
+        this.chainId = _config.chainId
         this.eip1559 = _config.eip1559 || opStackDefaultEIP1559Parameters
         this.abiManager = new ABIManager(_config.abis)
 
@@ -283,8 +287,8 @@ export class TransactionManager {
         // Start the gas price oracle to prevent other parts of the application from calling `suggestGasForNextBlock` before the gas price oracle has initialized the gas price after processing the first block
         const priceOraclePromise = this.gasPriceOracle.start()
 
-        // Get the chain ID of the blockchain
-        const rpcChainIdPromise = this.viemClient.getChainId()
+        // Get the chain ID of the RPC node
+        const rpcChainIdPromise = this.viemClient.safeGetChainId()
 
         // Start the transaction repository
         await this.transactionRepository.start()
@@ -292,17 +296,19 @@ export class TransactionManager {
         // Start the nonce manager, which depends on the transaction repository
         await this.nonceManager.start()
 
-        // Wait for the chain ID of the blockchain to be retrieved
         const rpcChainId = await rpcChainIdPromise
 
-        // Set the chain ID of the transaction manager
-        this.internalChainId = rpcChainId
+        if (rpcChainId.isErr()) {
+            throw rpcChainId.error
+        }
+
+        if (rpcChainId.value !== this.chainId) {
+            const errorMessage = `The chain ID of the RPC node (${rpcChainId.value}) does not match the chain ID of the transaction manager (${this.chainId}).`
+            console.error(errorMessage)
+            throw new Error(errorMessage)
+        }
 
         // Await the completion of the gas price oracle startup before marking the TransactionManager as started
         await priceOraclePromise
-    }
-
-    public get chainId(): number {
-        return this.internalChainId
     }
 }
