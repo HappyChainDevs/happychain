@@ -151,6 +151,7 @@ export class TransactionManager {
     public readonly maxPriorityFeePerGas: bigint
     public readonly rpcAllowDebug: boolean
     public readonly blockTime: bigint
+    private internalChainId!: number
     public readonly finalizedTransactionPurgeTime: number
 
     constructor(_config: TransactionManagerConfig) {
