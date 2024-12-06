@@ -18,12 +18,13 @@ class RandomnessService {
     constructor() {
         this.commitmentManager = new CommitmentManager()
         this.txm = new TransactionManager({
-            account: privateKeyToAccount(env.PRIVATE_KEY),
-            transport: webSocket(),
-            chain: anvil,
+            privateKey: env.PRIVATE_KEY,
+            chainId: 31337,
             abis: abis,
             gasEstimator: new CustomGasEstimator(),
-            rpcAllowDebug: true,
+            rpc: {
+                url: env.RPC_URL,
+            },
         })
         this.commitmentTransactionFactory = new CommitmentTransactionFactory(
             this.txm,
