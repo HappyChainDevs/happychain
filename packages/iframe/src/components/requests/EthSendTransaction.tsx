@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { type RpcTransactionRequest, formatEther, formatGwei } from "viem"
 import { useEstimateFeesPerGas } from "wagmi"
-import { queryClient } from "#src/tanstack-query/config.js"
+import { queryClient } from "#src/tanstack-query/config"
 import { Button } from "../primitives/button/Button"
 import { BlobTxWarning } from "./BlobTxWarning"
 import GasFieldDisplay, { GasFieldName } from "./common/GasFieldDisplay"
@@ -19,18 +19,15 @@ enum TransactionType {
     EIP7702 = "0x4",
 }
 
+/**
+ * This is used since specifying a type in a `useSendTransaction` call
+ * doesn't propagate to the `request` function of the EIP1193Provider -
+ * hence, we determine the type from the gas fields present in the tx object.
+ */
 function classifyTxType(tx: RpcTransactionRequest) {
-    if (tx.maxFeePerGas || tx.maxPriorityFeePerGas) {
-        return "EIP-1559"
-    }
-
-    if (tx.gasPrice) {
-        return "EIP-1559 (converted from legacy)"
-    }
-
     switch (tx.type) {
         case TransactionType.Legacy:
-            return "Legacy"
+            return "EIP-1559 (converted from legacy)"
         case TransactionType.EIP1559OptionalAccessList:
             return "EIP-1559 (optional access lists)"
         case TransactionType.EIP1559:
@@ -38,9 +35,17 @@ function classifyTxType(tx: RpcTransactionRequest) {
         case TransactionType.EIP4844:
             return "EIP-4844 (unsupported)"
         case TransactionType.EIP7702:
-            return "EIP-7702"
+            return "EIP-7702 (unsupported)"
         default:
-            return "Unknown"
+            // these fields will be set by the wagmi hook if not
+            // already present in the tx object
+            if (tx.maxFeePerGas || tx.maxPriorityFeePerGas) {
+                return "EIP-1559"
+            }
+
+            if (tx.gasPrice) {
+                return "EIP-1559 (converted from legacy)"
+            }
     }
 }
 
@@ -61,7 +66,7 @@ export const EthSendTransaction = ({
     } = useEstimateFeesPerGas({ type: "eip1559" })
 
     /**
-     * if the maxFee/Gas and / or maxPriorityFee/Gas is not
+     * If the maxFee/Gas and / or maxPriorityFee/Gas is not
      * defined in the wagmi hook / call, we get the estimates from the namesake
      * wagmi hook and roll them into the tx object.
      *
@@ -106,29 +111,30 @@ export const EthSendTransaction = ({
                 </div>
 
                 <div className="flex flex-col gap-4 rounded-lg bg-base-100 p-4">
-                    <div className="flex justify-between">
-                        <span className="text-sm text-neutral-content">From:</span>
+                    <div className="flex justify-between items-baseline gap-[1ex]">
+                        <span className="text-sm text-neutral-content">From</span>
                         <span className="font-mono text-sm truncate">{tx.from}</span>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-sm text-neutral-content">To:</span>
+                    <div className="flex justify-between items-baseline gap-[1ex]">
+                        <span className="text-sm text-neutral-content">To</span>
                         <span className="font-mono text-sm truncate">{tx.to}</span>
                     </div>
                 </div>
 
                 <RequestDetails>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-4">
                         {/* tx type */}
-                        <div className="flex justify-between">
-                            <span className="text-sm text-base-content font-mono">Type</span>
+                        <div className="flex justify-between items-baseline gap-[1ex]">
+                            <span className="text-sm font-mono">Type</span>
                             <span className="font-mono text-sm">{formattedTxInfo.type}</span>
                         </div>
-                        <span className="text-sm text-content font-mono font-bold italic">Gas Details</span>
-                        <GasFieldDisplay name={GasFieldName.MaxFeePerGas} field={formattedTxInfo.maxFeePerGas} />
-                        <GasFieldDisplay
-                            name={GasFieldName.MaxPriorityFeePerGas}
-                            field={formattedTxInfo.maxPriorityFeePerGas}
-                        />
+                        <div className="flex flex-col justify-between">
+                            <GasFieldDisplay name={GasFieldName.MaxFeePerGas} field={formattedTxInfo.maxFeePerGas} />
+                            <GasFieldDisplay
+                                name={GasFieldName.MaxPriorityFeePerGas}
+                                field={formattedTxInfo.maxPriorityFeePerGas}
+                            />
+                        </div>
                     </div>
                 </RequestDetails>
 
