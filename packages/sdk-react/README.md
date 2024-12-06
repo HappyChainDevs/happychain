@@ -84,7 +84,7 @@ type HappyUser = {
 
     // USER DETAILS
 
-    /** Unique identifier */
+    /** Unique identifier (Firebase user ID) */
     uid: string
 
     /** Email (if available, or empty) */
