@@ -1,11 +1,11 @@
 import { chains, useHappyChain } from "@happychain/react"
 
+import { convertToViemChain } from "@happychain/sdk-shared"
 import { useEffect, useMemo, useState } from "react"
 import { type Hex, createPublicClient, createWalletClient, custom, hexToNumber } from "viem"
 import { gnosis } from "viem/chains"
 import { ConnectButton } from "./BadgeComponent"
 import { tokenAbi } from "./utils/MockTokenABI"
-import { convertToViemChain } from "@happychain/sdk-shared"
 
 function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
@@ -84,7 +84,6 @@ function App() {
         }
     }
 
-
     /** mints 1 MTA token to the connected account */
     async function mintTokens() {
         try {
@@ -103,7 +102,7 @@ function App() {
             const writeCall = await walletClient.writeContract(request)
 
             if (writeCall) {
-                    console.log("[mintTokens] success:", writeCall)
+                console.log("[mintTokens] success:", writeCall)
             } else {
                 console.log("[mintTokens] failed; please try again!")
             }
