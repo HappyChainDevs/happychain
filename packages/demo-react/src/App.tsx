@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react"
 import { type Hex, createPublicClient, createWalletClient, custom, hexToNumber } from "viem"
 import { gnosis } from "viem/chains"
 import { ConnectButton } from "./BadgeComponent"
+import { tokenAbi } from "./utils/MockTokenABI"
+import { convertToViemChain } from "@happychain/sdk-shared"
 
 function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
@@ -82,6 +84,34 @@ function App() {
         }
     }
 
+
+    /** mints 1 MTA token to the connected account */
+    async function mintTokens() {
+        try {
+            if (!walletClient) return
+
+            const [account] = await walletClient.getAddresses()
+            // cf: https://viem.sh/docs/contract/writeContract.html#usage
+            const { request } = await publicClient.simulateContract({
+                account,
+                address: "0xc80629fE33747288AaFb97684F86f7eD2D1aBF69",
+                abi: tokenAbi.MockERC20Token,
+                functionName: "mint",
+                args: [user?.address, BigInt(1000000000000000000n)],
+                chain: convertToViemChain(chains.defaultChain),
+            })
+            const writeCall = await walletClient.writeContract(request)
+
+            if (writeCall) {
+                    console.log("[mintTokens] success:", writeCall)
+            } else {
+                console.log("[mintTokens] failed; please try again!")
+            }
+        } catch (error) {
+            console.log("[mintTokens] error caught:", error)
+        }
+    }
+
     useEffect(() => {
         if (!user) {
             setSignatureResult("")
@@ -154,6 +184,10 @@ function App() {
 
             <button type="button" onClick={addNewToken} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Add Token
+            </button>
+
+            <button type="button" onClick={mintTokens} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Mint Token
             </button>
         </main>
     )
