@@ -63,15 +63,6 @@ export class TransactionRepository {
 
         const notPersistedTransactions = transactions.filter((t) => t.notPersisted)
 
-        this.notFinalizedTransactions.push(
-            ...notPersistedTransactions.filter((t) => !this.notFinalizedTransactions.includes(t)),
-        )
-
-        console.log(
-            "Diff",
-            transactions.filter((t) => !transactionsToFlush.includes(t)),
-        )
-
         const result = await ResultAsync.fromPromise(
             db.transaction().execute(async (dbTransaction) => {
                 const promises = transactionsToFlush.map((t) => {
@@ -84,7 +75,6 @@ export class TransactionRepository {
                             .where("intentId", "=", t.intentId)
                             .execute()
                     }
-                    t.notifyFlush()
                 })
                 await Promise.all(promises)
             }),
@@ -92,23 +82,11 @@ export class TransactionRepository {
         )
 
         if (result.isOk()) {
+            this.notFinalizedTransactions.push(...notPersistedTransactions)
             this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
                 NotFinalizedStatuses.includes(transaction.status),
             )
-        } else {
-            for (let i = 0; i < transactionsToFlush.length; i++) {
-                transactionsToFlush[i].notifyFlushFailed()
-
-                if (notPersistedTransactions.includes(transactionsToFlush[i])) {
-                    transactionsToFlush[i].notifyNotPersisted()
-                    const index = this.notFinalizedTransactions.findIndex(
-                        (t) => t.intentId === transactionsToFlush[i].intentId,
-                    )
-                    if (index !== -1) {
-                        this.notFinalizedTransactions.splice(index, 1)
-                    }
-                }
-            }
+            transactions.forEach((t) => t.notifyFlush())
         }
 
         return result
