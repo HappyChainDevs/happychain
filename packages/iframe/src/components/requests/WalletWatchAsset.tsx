@@ -16,26 +16,30 @@ export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConf
                             <span className="text-2xl font-bold">Asset Details</span>
                         </div>
                         <div className="flex flex-col gap-4 rounded-lg bg-base-100 p-4">
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-baseline gap-[1ex]">
                                 <span className="text-sm text-content">Type:</span>
                                 <span className="font-mono text-sm">{type}</span>
                             </div>
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-baseline gap-[1ex]">
                                 <span className="text-sm text-content">Symbol:</span>
                                 <span className="font-mono text-sm">{options.symbol}</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-content">Contract Address:</span>
-                                <span className="font-mono text-sm">{options.address}</span>
+                            <div className="flex justify-between items-baseline gap-[1ex]">
+                                <span className="text-sm text-neutral-content">Contract Address:</span>
+                                <span className="font-mono text-sm truncate" title={options.address}>
+                                    {options.address}
+                                </span>
                             </div>
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-baseline gap-[1ex]">
                                 <span className="text-sm text-content">Decimals:</span>
                                 <span className="font-mono text-sm">{options.decimals}</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-content">Image URL:</span>
-                                <img src={options.image} alt={"N/A"} className="h-12 w-12 rounded-xl" />
-                            </div>
+                            {options.image && (
+                                <div className="flex justify-between items-baseline gap-[1ex]">
+                                    <span className="text-sm text-content">Image URL:</span>
+                                    <img src={options.image} alt={"N/A"} className="h-12 w-12 rounded-xl" />
+                                </div>
+                            )}
 
                             <RawRequestDetails params={params} />
                         </div>
