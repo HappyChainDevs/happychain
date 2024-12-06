@@ -113,15 +113,11 @@ export const EthSendTransaction = ({
                 <div className="flex flex-col gap-4 rounded-lg bg-base-100 p-4">
                     <div className="flex justify-between items-baseline gap-[1ex]">
                         <span className="text-sm text-neutral-content">From</span>
-                        <span className="font-mono text-sm truncate">
-                            {tx.from}
-                        </span>
+                        <span className="font-mono text-sm truncate">{tx.from}</span>
                     </div>
                     <div className="flex justify-between items-baseline gap-[1ex]">
                         <span className="text-sm text-neutral-content">To</span>
-                        <span className="font-mono text-sm truncate">
-                            {tx.to}
-                        </span>
+                        <span className="font-mono text-sm truncate">{tx.to}</span>
                     </div>
                 </div>
 
