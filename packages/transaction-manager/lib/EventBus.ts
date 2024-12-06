@@ -3,6 +3,7 @@ import EventEmitter from "eventemitter3"
 export enum Topics {
     NewBlock = "NewBlock",
     TransactionStatusChanged = "TransactionStatusChanged",
+    TransactionSaveFailed = "TransactionSaveFailed",
 }
 
 export type EventBus = EventEmitter<Topics>
