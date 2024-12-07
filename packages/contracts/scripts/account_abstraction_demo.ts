@@ -13,7 +13,6 @@ import { localhost } from "viem/chains"
 import { type SmartAccountClient, createSmartAccountClient } from "permissionless"
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
-import { createPimlicoClient } from "permissionless/clients/pimlico"
 
 import { abis, deployment } from "../deployments/anvil/testing/abis"
 import { getCustomNonce } from "./getNonce"
@@ -39,15 +38,6 @@ const publicClient = createPublicClient({
     transport: http(rpcURL),
 })
 
-const pimlicoClient = createPimlicoClient({
-    chain: localhost,
-    transport: http(bundlerRpc),
-    entryPoint: {
-        address: entryPoint07Address,
-        version: "0.7",
-    },
-})
-
 const sessionKey = generatePrivateKey()
 
 const sessionAccount = privateKeyToAccount(sessionKey)
@@ -62,8 +52,7 @@ const sessionWallet = createWalletClient({
 // This is a special constant address that indicates the absence of any additional hooks.
 const NO_HOOKS_ADDRESS = "0x0000000000000000000000000000000000000001"
 
-// Function selector for transferring ETH from the smart account.
-// The function selector must be whitelisted when installing a validator module to allow ETH transfers.
+// The function selector must be whitelisted when installing a validator module.
 const EXECUTE_FUNCTION_SELECTOR = "0xe9ae5c53"
 const AMOUNT = "0.01"
 const EMPTY_SIGNATURE = "0x"
@@ -112,16 +101,11 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
         }),
         paymaster: {
             async getPaymasterData(parameters: GetPaymasterDataParameters) {
-                const gasEstimates = await pimlicoClient.estimateUserOperationGas({
-                    ...parameters,
-                    paymaster: paymasterAddress,
-                })
-
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x", // Only required for extra context, no need to encode paymaster gas values manually
-                    paymasterVerificationGasLimit: gasEstimates.paymasterVerificationGasLimit ?? 0n,
-                    paymasterPostOpGasLimit: gasEstimates.paymasterPostOpGasLimit ?? 0n,
+                    paymasterVerificationGasLimit: parameters.factory && parameters.factory !== "0x" ? 45000n : 25000n,
+                    paymasterPostOpGasLimit: 1n, // Set to 1 since the postOp function is never called
                 }
             },
 
@@ -130,8 +114,8 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x",
-                    paymasterVerificationGasLimit: 80_000n, // Increased value to account for possible higher gas usage
-                    paymasterPostOpGasLimit: 0n, // Set to 0 since the postOp function is never called
+                    paymasterVerificationGasLimit: 45_000n, // A stub value, no significance
+                    paymasterPostOpGasLimit: 1n,
                 }
             },
         },
@@ -231,7 +215,6 @@ function getInitData(hookAddress: Address, validatorData: Hex, hookData: Hex, se
 }
 
 async function installCustomModule(
-    kernelAccount: SmartAccount,
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
     sessionKey: Address,
 ) {
@@ -239,7 +222,7 @@ async function installCustomModule(
         type: "validator",
         address: deployment.SessionKeyValidator,
         context: getInitData(NO_HOOKS_ADDRESS, sessionKey, "0x", EXECUTE_FUNCTION_SELECTOR),
-        nonce: await kernelAccount.getNonce(),
+        nonce: await kernelClient.account!.getNonce(),
     })
 
     const rec = await kernelClient.waitForUserOperationReceipt({
@@ -256,15 +239,12 @@ async function installCustomModule(
     }
 }
 
-async function uninstallCustomModule(
-    kernelAccount: SmartAccount,
-    kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
-) {
+async function uninstallCustomModule(kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>) {
     const opHash = await kernelClient.uninstallModule({
         type: "validator",
         address: deployment.SessionKeyValidator,
         context: NO_HOOKS_ADDRESS,
-        nonce: await kernelAccount.getNonce(),
+        nonce: await kernelClient.account!.getNonce(),
     })
 
     const rec = await kernelClient.waitForUserOperationReceipt({
@@ -289,11 +269,11 @@ async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccoun
     })
 }
 
-async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+async function testRootValidator(kernelClient: SmartAccountClient) {
     const receiverAddress = getRandomAccount()
 
     const txHash = await kernelClient.sendTransaction({
-        account: kernelAccount,
+        account: kernelClient.account!,
         to: receiverAddress,
         chain: localhost,
         value: parseEther(AMOUNT),
@@ -316,19 +296,19 @@ async function testRootValidator(kernelAccount: SmartAccount, kernelClient: Smar
     }
 }
 
-async function testCustomValidator(
-    kernelAccount: SmartAccount,
-    kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
-    kernelAddress: Address,
-) {
+async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>) {
     const receiverAddress = getRandomAccount()
     const sessionSigner = await getKernelAccount(sessionWallet, sessionAccount)
-    const customNonce = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.SessionKeyValidator)
+    const customNonce = await getCustomNonce(
+        kernelClient.account!.client,
+        kernelClient.account!.address,
+        deployment.SessionKeyValidator,
+    )
 
-    await installCustomModule(kernelAccount, kernelClient, sessionAccount.address)
+    await installCustomModule(kernelClient, sessionAccount.address)
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
-        account: kernelAccount,
+        account: kernelClient.account!,
         calls: [
             {
                 to: receiverAddress,
@@ -364,15 +344,14 @@ async function testCustomValidator(
         throw new Error(`Using CustomValidator: Balance is not correct: ${balance} ETH`)
     }
 
-    await uninstallCustomModule(kernelAccount, kernelClient)
+    await uninstallCustomModule(kernelClient)
 }
 
 async function main() {
     const kernelAccount: SmartAccount = await getKernelAccount(walletClient, account)
     const kernelClient = getKernelClient(kernelAccount)
-    const kernelAddress = await kernelAccount.getAddress()
 
-    const prefundRes = await fund_smart_account(kernelAddress)
+    const prefundRes = await fund_smart_account(kernelClient.account!.address)
     if (prefundRes !== "success") {
         throw new Error("Funding SmartAccount failed")
     }
@@ -383,13 +362,13 @@ async function main() {
     }
 
     try {
-        await testRootValidator(kernelAccount, kernelClient)
+        await testRootValidator(kernelClient)
     } catch (error) {
         console.error("Root Validator: ", error)
     }
 
     try {
-        await testCustomValidator(kernelAccount, kernelClient, kernelAddress)
+        await testCustomValidator(kernelClient)
     } catch (error) {
         console.error("Custom Validator: ", error)
     }

@@ -124,16 +124,11 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
         bundlerTransport: http(bundlerRpc),
         paymaster: {
             async getPaymasterData(parameters: GetPaymasterDataParameters) {
-                const gasEstimates = await pimlicoClient.estimateUserOperationGas({
-                    ...parameters,
-                    paymaster: paymasterAddress,
-                })
-
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x", // Only required for extra context, no need to encode paymaster gas values manually
-                    paymasterVerificationGasLimit: gasEstimates.paymasterVerificationGasLimit ?? 0n,
-                    paymasterPostOpGasLimit: gasEstimates.paymasterPostOpGasLimit ?? 0n,
+                    paymasterVerificationGasLimit: parameters.factory && parameters.factory !== "0x" ? 45000n : 25000n,
+                    paymasterPostOpGasLimit: 1n, // Set to 1 since the postOp function is never called
                 }
             },
 
@@ -142,8 +137,8 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x",
-                    paymasterVerificationGasLimit: 80_000n, // Increased value to account for possible higher gas usage
-                    paymasterPostOpGasLimit: 0n, // Set to 0 since the postOp function is never called
+                    paymasterVerificationGasLimit: 45_000n, // Increased value to account for possible higher gas usage
+                    paymasterPostOpGasLimit: 1n,
                 }
             },
         },
