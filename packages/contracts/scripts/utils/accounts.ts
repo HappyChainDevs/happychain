@@ -1,5 +1,5 @@
-import { type Address, parseEther } from "viem"
-import { entryPoint07Address } from "viem/account-abstraction"
+import { type Address, encodeFunctionData, parseEther } from "viem"
+import { type UserOperationCall, entryPoint07Address } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts"
 import { localhost } from "viem/chains"
 
@@ -8,6 +8,7 @@ import { abis, deployment } from "../../deployments/anvil/testing/abis"
 import { account, publicClient, walletClient } from "./clients"
 
 const DEPOSIT = parseEther("100")
+const AMOUNT = parseEther("0.01")
 
 function getRandomAddress() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Address
@@ -58,4 +59,16 @@ async function initializeTotalSupply(): Promise<string> {
     return receipt.status
 }
 
-export { depositPaymaster, fundSmartAccount, getRandomAddress, initializeTotalSupply }
+function createMintCall(to?: Address): UserOperationCall {
+    return {
+        to: mockDeployment.MockTokenA,
+        value: 0n,
+        data: encodeFunctionData({
+            abi: mockAbis.MockTokenA,
+            functionName: "mint",
+            args: [to ?? getRandomAddress(), AMOUNT],
+        }),
+    }
+}
+
+export { createMintCall, depositPaymaster, fundSmartAccount, getRandomAddress, initializeTotalSupply }
