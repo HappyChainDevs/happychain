@@ -5,7 +5,10 @@ const bundlerRpc = process.env.BUNDLER_LOCAL
 const rpcURL = process.env.RPC_LOCAL
 
 if (!privateKey || !bundlerRpc || !rpcURL) {
-    throw new Error("Missing environment variables")
+    const missing = [!privateKey && "PRIVATE_KEY_LOCAL", !bundlerRpc && "BUNDLER_LOCAL", !rpcURL && "RPC_LOCAL"].filter(
+        Boolean,
+    )
+    throw new Error(`Missing environment variables: ${missing.join(", ")}`)
 }
 
 export { privateKey, bundlerRpc, rpcURL }

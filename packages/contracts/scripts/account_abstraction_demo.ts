@@ -1,5 +1,5 @@
 import type { Address, Hex } from "viem"
-import { http, createPublicClient, parseEther } from "viem"
+import { http, createPublicClient } from "viem"
 import type { SmartAccount, UserOperation } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
@@ -10,10 +10,10 @@ import type { Erc7579Actions } from "permissionless/actions/erc7579"
 import { deployment } from "../deployments/anvil/testing/abis"
 import { getCustomNonce } from "./getNonce"
 
-import { depositPaymaster, fundSmartAccount, getRandomAddress } from "./utils/accounts"
+import { createMintCall, depositPaymaster, fundSmartAccount, getRandomAddress } from "./utils/accounts"
 import { account, publicClient } from "./utils/clients"
 import { rpcURL } from "./utils/config"
-import { checkBalance, toHexDigits } from "./utils/helpers"
+import { checkTokenBalance, toHexDigits } from "./utils/helpers"
 import { getKernelAccount, getKernelClient } from "./utils/kernel"
 
 const sessionKey = generatePrivateKey()
@@ -27,8 +27,7 @@ const sessionPublicClient = createPublicClient({
 // This is a special constant address that indicates the absence of any additional hooks.
 const NO_HOOKS_ADDRESS = "0x0000000000000000000000000000000000000001"
 
-// Function selector for transferring ETH from the smart account.
-// The function selector must be whitelisted when installing a validator module to allow ETH transfers.
+// The function selector must be whitelisted when installing a validator module.
 const EXECUTE_FUNCTION_SELECTOR = "0xe9ae5c53"
 const AMOUNT = "0.01"
 
@@ -87,7 +86,6 @@ function getInitData(hookAddress: Address, validatorData: Hex, hookData: Hex, se
 }
 
 async function installCustomModule(
-    kernelAccount: SmartAccount,
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
     sessionKey: Address,
 ) {
@@ -95,7 +93,7 @@ async function installCustomModule(
         type: "validator",
         address: deployment.SessionKeyValidator,
         context: getInitData(NO_HOOKS_ADDRESS, sessionKey, "0x", EXECUTE_FUNCTION_SELECTOR),
-        nonce: await kernelAccount.getNonce(),
+        nonce: await kernelClient.account!.getNonce(),
     })
 
     const rec = await kernelClient.waitForUserOperationReceipt({
@@ -112,15 +110,12 @@ async function installCustomModule(
     }
 }
 
-async function uninstallCustomModule(
-    kernelAccount: SmartAccount,
-    kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
-) {
+async function uninstallCustomModule(kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>) {
     const opHash = await kernelClient.uninstallModule({
         type: "validator",
         address: deployment.SessionKeyValidator,
         context: NO_HOOKS_ADDRESS,
-        nonce: await kernelAccount.getNonce(),
+        nonce: await kernelClient.account!.getNonce(),
     })
 
     const rec = await kernelClient.waitForUserOperationReceipt({
@@ -145,14 +140,13 @@ async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccoun
     })
 }
 
-async function testRootValidator(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+async function testRootValidator(kernelClient: SmartAccountClient) {
     const receiverAddress = getRandomAddress()
 
     const txHash = await kernelClient.sendTransaction({
-        account: kernelAccount,
-        to: receiverAddress,
+        ...createMintCall(receiverAddress),
+        account: kernelClient.account!,
         chain: localhost,
-        value: parseEther(AMOUNT),
     })
 
     const receipt = await publicClient.waitForTransactionReceipt({
@@ -164,7 +158,7 @@ async function testRootValidator(kernelAccount: SmartAccount, kernelClient: Smar
         throw new Error("KernelClient transaction failed")
     }
 
-    const balance = await checkBalance(receiverAddress)
+    const balance = await checkTokenBalance(receiverAddress)
     if (balance === AMOUNT) {
         console.log(`Using RootValidator: Balance is correct: ${balance} ETH`)
     } else {
@@ -172,26 +166,20 @@ async function testRootValidator(kernelAccount: SmartAccount, kernelClient: Smar
     }
 }
 
-async function testCustomValidator(
-    kernelAccount: SmartAccount,
-    kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
-    kernelAddress: Address,
-) {
+async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>) {
     const receiverAddress = getRandomAddress()
     const sessionSigner = await getKernelAccount(sessionPublicClient, sessionAccount)
-    const customNonce = await getCustomNonce(kernelAccount.client, kernelAddress, deployment.SessionKeyValidator)
+    const customNonce = await getCustomNonce(
+        kernelClient.account!.client,
+        kernelClient.account!.address,
+        deployment.SessionKeyValidator,
+    )
 
-    await installCustomModule(kernelAccount, kernelClient, sessionAccount.address)
+    await installCustomModule(kernelClient, sessionAccount.address)
 
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
-        account: kernelAccount,
-        calls: [
-            {
-                to: receiverAddress,
-                value: parseEther(AMOUNT),
-                data: "0x",
-            },
-        ],
+        account: kernelClient.account!,
+        calls: [createMintCall(receiverAddress)],
         nonce: customNonce,
     })
 
@@ -213,22 +201,21 @@ async function testCustomValidator(
         throw new Error("Validation using custom validator module failed")
     }
 
-    const balance = await checkBalance(receiverAddress)
+    const balance = await checkTokenBalance(receiverAddress)
     if (balance === AMOUNT) {
         console.log(`Using CustomValidator: Balance is correct: ${balance} ETH`)
     } else {
         throw new Error(`Using CustomValidator: Balance is not correct: ${balance} ETH`)
     }
 
-    await uninstallCustomModule(kernelAccount, kernelClient)
+    await uninstallCustomModule(kernelClient)
 }
 
 async function main() {
     const kernelAccount: SmartAccount = await getKernelAccount(publicClient, account)
     const kernelClient = getKernelClient(kernelAccount)
-    const kernelAddress = await kernelAccount.getAddress()
 
-    const prefundRes = await fundSmartAccount(kernelAddress)
+    const prefundRes = await fundSmartAccount(kernelAccount.address)
     if (prefundRes !== "success") {
         throw new Error("Funding SmartAccount failed")
     }
@@ -239,13 +226,13 @@ async function main() {
     }
 
     try {
-        await testRootValidator(kernelAccount, kernelClient)
+        await testRootValidator(kernelClient)
     } catch (error) {
         console.error("Root Validator: ", error)
     }
 
     try {
-        await testCustomValidator(kernelAccount, kernelClient, kernelAddress)
+        await testCustomValidator(kernelClient)
     } catch (error) {
         console.error("Custom Validator: ", error)
     }

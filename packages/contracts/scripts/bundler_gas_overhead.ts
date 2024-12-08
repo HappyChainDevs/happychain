@@ -1,22 +1,14 @@
-import { encodeFunctionData, parseEther } from "viem"
-import type { SmartAccount, UserOperation, UserOperationCall, UserOperationReceipt } from "viem/account-abstraction"
+import type { UserOperation, UserOperationCall, UserOperationReceipt } from "viem/account-abstraction"
 import { localhost } from "viem/chains"
 
 import type { SmartAccountClient } from "permissionless"
-
-import { abis as mockAbis, deployment as mockDeployment } from "../deployments/anvil/mockTokens/abis"
 import { deployment } from "../deployments/anvil/testing/abis"
 
 import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce"
 
-import { depositPaymaster, getRandomAddress, initializeTotalSupply } from "./utils/accounts"
+import { createMintCall, depositPaymaster, initializeTotalSupply } from "./utils/accounts"
 import { account, pimlicoClient, publicClient, walletClient } from "./utils/clients"
-import { generatePrefundedKernelAccount, generatePrefundedKernelAccounts } from "./utils/kernel"
-
-interface Accounts {
-    kernelAccount: SmartAccount
-    kernelClient: SmartAccountClient
-}
+import { generatePrefundedKernelClient, generatePrefundedKernelClients } from "./utils/kernel"
 
 interface GasDetails {
     directTxGas: bigint
@@ -32,20 +24,8 @@ interface GasResult extends GasDetails {
     accountDeploymentOverhead: bigint
 }
 
-// A dummy constant representing the amount of ETH to transfer in the demo.
-const AMOUNT = parseEther("0.01")
-
-function createMintCall(address: Address): UserOperationCall {
-    return {
-        to: mockDeployment.MockTokenA,
-        value: 0n,
-        data: encodeFunctionData({
-            abi: mockAbis.MockTokenA,
-            functionName: "mint",
-            args: [address, AMOUNT],
-        }),
-    }
-}
+// An empty hex string to be used when signing over a userOperation.
+const EMPTY_SIGNATURE = "0x"
 
 function printPaymasterGasEstimates(preVerificationGas: bigint, verificationGasLimit: bigint, callGasLimit: bigint) {
     console.log("Estimated UserOperation Gas:")
@@ -64,9 +44,9 @@ function printUserOperationGasDetails(gasDetails: GasDetails) {
     console.log(`  Total Overhead:             ${gasDetails.totalOverhead.toLocaleString("en-US")} gas`)
 }
 
-async function sendUserOp(kernelAccount: SmartAccount, kernelClient: SmartAccountClient, calls: UserOperationCall[]) {
+async function processSingleUserOp(kernelClient: SmartAccountClient, calls: UserOperationCall[]) {
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
-        account: kernelAccount,
+        account: kernelClient.account!,
         calls,
     })
 
@@ -76,13 +56,13 @@ async function sendUserOp(kernelAccount: SmartAccount, kernelClient: SmartAccoun
 
     const receipt = await kernelClient.waitForUserOperationReceipt({
         hash: await kernelClient.sendUserOperation({
-            account: kernelAccount,
+            account: kernelClient.account!,
             calls,
         }),
     })
 
     if (!receipt.success) {
-        throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`)
+        throw new Error("Validation using custom validator module failed")
     }
 
     const numCalls = BigInt(calls.length)
@@ -112,17 +92,17 @@ async function sendUserOp(kernelAccount: SmartAccount, kernelClient: SmartAccoun
     return gasDetails
 }
 
-async function sendUserOps(accounts: Accounts[]) {
+async function sendUserOps(kernelClients: SmartAccountClient[]) {
     // Prepare and sign all user operations upfront to send them concurrently.
     // This increases the chance they are included in the same bundle.
     const userOps: UserOperation<"0.7">[] = await Promise.all(
-        accounts.map(async (account) => {
-            const userOp: UserOperation<"0.7"> = await account.kernelClient.prepareUserOperation({
-                account: account.kernelAccount,
-                calls: [createMintCall(account.kernelAccount.address)],
+        kernelClients.map(async (kernelClient) => {
+            const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
+                account: kernelClient.account!,
+                calls: [createMintCall(kernelClient.account!.address)],
             })
 
-            userOp.signature = await account.kernelAccount.signUserOperation({
+            userOp.signature = await kernelClient.account!.signUserOperation({
                 ...userOp,
                 chainId: localhost.id,
                 signature: EMPTY_SIGNATURE, // The signature field must be empty when hashing and signing the user operation.
@@ -133,35 +113,44 @@ async function sendUserOps(accounts: Accounts[]) {
     )
 
     const hashes = await Promise.all(
-        accounts.map((account, idx) => account.kernelClient.sendUserOperation(userOps[idx])),
+        kernelClients.map((kernelClient, idx) => kernelClient.sendUserOperation(userOps[idx])),
     )
 
     const receipts: UserOperationReceipt[] = await Promise.all(
-        accounts.map((account, idx) =>
-            account.kernelClient.waitForUserOperationReceipt({
+        kernelClients.map((kernelClient, idx) =>
+            kernelClient.waitForUserOperationReceipt({
                 hash: hashes[idx],
             }),
         ),
     )
 
-    receipts.forEach((receipt) => {
-        if (!receipt.success) throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`)
-    })
-
-    const transactionFrequency: { [key: string]: number } = receipts.reduce(
-        (freq, r) => {
-            const index = r.receipt.transactionIndex.toString()
-            freq[index] = (freq[index] || 0) + 1
-            return freq
+    // Group receipts by block hash and transaction hash to ensure unique bundle identification
+    const bundleGroups = receipts.reduce(
+        (groups, receipt) => {
+            const key = `${receipt.receipt.blockHash}_${receipt.receipt.transactionHash}`
+            if (!groups[key]) {
+                groups[key] = []
+            }
+            groups[key].push(receipt)
+            return groups
         },
-        {} as { [key: string]: number },
+        {} as Record<string, typeof receipts>,
     )
 
-    const dominantTransactionIndex = Number(
-        Object.keys(transactionFrequency).reduce((a, b) => (transactionFrequency[a] > transactionFrequency[b] ? a : b)),
-    )
+    const largestBundleKey = Object.entries(bundleGroups).sort(([, a], [, b]) => b.length - a.length)[0][0]
+    const filteredReceipts = bundleGroups[largestBundleKey]
 
-    const filteredReceipts = receipts.filter((receipt) => receipt.receipt.transactionIndex === dominantTransactionIndex)
+    console.log(`Total Bundle Tx GasUsed: ${filteredReceipts[0].receipt.gasUsed}`)
+    const avgBundleTxGas = filteredReceipts[0].receipt.gasUsed / BigInt(filteredReceipts.length)
+    console.log(`per UserOp Bundle Tx GasUsed: ${avgBundleTxGas}`)
+    filteredReceipts.forEach((receipt, idx) => {
+        console.log(`UserOp [${idx}]`)
+        console.log(`    ActualGas: ${receipt.actualGasUsed.toLocaleString("en-US")}`)
+        console.log(
+            `    ActualGas - AvgBundlerTxGas: ${(receipt.actualGasUsed - avgBundleTxGas).toLocaleString("en-US")}`,
+        )
+    })
+    console.log("\n")
 
     const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
     return { numOps, gasDetails }
@@ -209,11 +198,11 @@ async function sendDirectTransactions(count = 1n) {
     return totalGas
 }
 
-async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+async function singleUserOperationGasResult(kernelClient: SmartAccountClient) {
     console.log("\nGas Usage for a Single UserOp (with Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
-    const gasDetails1 = await sendUserOp(kernelAccount, kernelClient, [createMintCall()])
+    const gasDetails1 = await processSingleUserOp(kernelClient, [createMintCall(kernelClient.account!.address)])
     const singleOpWithDeploymentResults = {
         scenario: "Single UserOp with 1 call (with Deployment)",
         ...gasDetails1,
@@ -223,7 +212,7 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     console.log("\nGas Usage for a Single UserOp (no Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
-    const gasDetails2 = await sendUserOp(kernelAccount, kernelClient, [createMintCall()])
+    const gasDetails2 = await processSingleUserOp(kernelClient, [createMintCall(kernelClient.account!.address)])
     const singleOpNoDeploymentResults = {
         scenario: "Single UserOp with 1 call (no Deployment)",
         ...gasDetails2,
@@ -235,15 +224,15 @@ async function singleUserOperationGasResult(kernelAccount: SmartAccount, kernelC
     return { singleOpWithDeploymentResults, singleOpNoDeploymentResults }
 }
 
-async function multipleCallsGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
+async function multipleCallsGasResult(kernelClient: SmartAccountClient) {
     const calls = Array(5)
         .fill(null)
-        .map(() => createMintCall())
+        .map(() => createMintCall(kernelClient.account!.address))
 
     console.log("\nGas Usage for a Single UserOp with 5 Calls (no Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
-    const gasDetails2 = await sendUserOp(kernelAccount, kernelClient, calls)
+    const gasDetails2 = await processSingleUserOp(kernelClient, calls)
     return {
         scenario: "Single UserOp with 5 calls (no Deployment)",
         ...gasDetails2,
@@ -251,13 +240,12 @@ async function multipleCallsGasResult(kernelAccount: SmartAccount, kernelClient:
     }
 }
 
-async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, kernelClient: SmartAccountClient) {
-    const kernelAddress = await kernelAccount.getAddress()
+async function batchedUserOpsSameSenderGasResult(kernelClient: SmartAccountClient) {
     const nonces = await Promise.all(
         Array.from({ length: 5 }, (_, i) =>
             getCustomNonce(
                 walletClient,
-                kernelAddress,
+                kernelClient.account!.address,
                 deployment.ECDSAValidator,
                 BigInt(i),
                 VALIDATOR_MODE.DEFAULT,
@@ -266,27 +254,69 @@ async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, ke
         ),
     )
 
-    const hashes = await Promise.all(
-        nonces.map((nonce) =>
-            kernelClient.sendUserOperation({
-                account: kernelAccount,
-                calls: [createMintCall()],
+    const userOps: UserOperation<"0.7">[] = await Promise.all(
+        nonces.map(async (nonce) => {
+            const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
+                account: kernelClient.account!,
+                calls: [createMintCall(kernelClient.account!.address)],
                 nonce: nonce,
-            }),
-        ),
+            })
+
+            userOp.signature = await kernelClient.account!.signUserOperation({
+                ...userOp,
+                chainId: localhost.id,
+                signature: EMPTY_SIGNATURE,
+            })
+
+            return userOp
+        }),
     )
 
-    const receipts = await Promise.all(hashes.map((hash) => kernelClient.waitForUserOperationReceipt({ hash })))
-    receipts.forEach((receipt) => {
-        if (!receipt.success) {
-            throw new Error(`UserOperation failed. Receipt: ${JSON.stringify(receipt.receipt)}`)
-        }
-    })
+    const hashes = await Promise.all(userOps.map((userOp) => kernelClient.sendUserOperation(userOp)))
 
-    const { numOps, gasDetails } = await calculateGasDetails(receipts)
+    const receipts = await Promise.all(hashes.map((hash) => kernelClient.waitForUserOperationReceipt({ hash })))
+
+    // Group receipts by block hash and transaction hash to ensure unique bundle identification
+    const bundleGroups = receipts.reduce(
+        (groups, receipt) => {
+            const key = `${receipt.receipt.blockHash}_${receipt.receipt.transactionHash}`
+            if (!groups[key]) {
+                groups[key] = []
+            }
+            groups[key].push(receipt)
+            return groups
+        },
+        {} as Record<string, typeof receipts>,
+    )
+
+    const largestBundleKey = Object.entries(bundleGroups).sort(([, a], [, b]) => b.length - a.length)[0][0]
+
+    const filteredReceipts = bundleGroups[largestBundleKey]
+
+    const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
     console.log("\nGas Usage per UserOp (no Deployment) from the same Sender:")
-    console.log(`(Processed ${numOps} UserOps in this bundle)`)
+    console.log(`(Processed ${numOps} UserOps in the largest bundle)`)
     console.log("---------------------------------------------------------------------\n")
+
+    receipts.forEach((receipt, index) => {
+        console.log(
+            `UserOp ${index + 1}: Block #${receipt.receipt.blockNumber}, Tx Index: ${receipt.receipt.transactionIndex}`,
+        )
+    })
+    console.log("\n")
+
+    console.log(`Total Bundle Tx GasUsed: ${filteredReceipts[0].receipt.gasUsed}`)
+    const avgBundleTxGas = filteredReceipts[0].receipt.gasUsed / BigInt(receipts.length)
+    console.log(`per UserOp Bundle Tx GasUsed: ${avgBundleTxGas}`)
+    filteredReceipts.forEach((receipt, idx) => {
+        console.log(`UserOp [${idx}]`)
+        console.log(`    ActualGas: ${receipt.actualGasUsed.toLocaleString("en-US")}`)
+        console.log(
+            `    ActualGas - AvgBundlerTxGas: ${(receipt.actualGasUsed - avgBundleTxGas).toLocaleString("en-US")}`,
+        )
+    })
+    console.log("\n")
+
     printUserOperationGasDetails(gasDetails)
 
     return {
@@ -297,18 +327,17 @@ async function batchedUserOpsSameSenderGasResult(kernelAccount: SmartAccount, ke
 }
 
 async function batchedUserOperationsGasResult() {
-    const accounts = await generatePrefundedKernelAccounts(5)
-    const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(accounts)
-    const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(accounts)
-
+    const kernelClients = await generatePrefundedKernelClients(5)
     console.log("\nGas Usage per UserOp (with Deployment) from different Senders:")
-    console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
+    const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(kernelClients)
+    console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)\n`)
     printUserOperationGasDetails(gasDetails1)
 
     console.log("\nGas Usage per UserOp (no Deployment) from different Senders:")
-    console.log(`(Processed ${numOps2} UserOps in this bundle, each from a different sender)`)
     console.log("---------------------------------------------------------------------\n")
+    const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(kernelClients)
+    console.log(`(Processed ${numOps2} UserOps in this bundle, each from a different sender)\n`)
     printUserOperationGasDetails(gasDetails2)
 
     const multipleUserOpsWithDeploymentResults = {
@@ -326,44 +355,46 @@ async function batchedUserOperationsGasResult() {
     return { multipleUserOpsWithDeploymentResults, multipleUserOpsNoDeploymentResults }
 }
 
+async function initializePaymasterState() {
+    const kernelClient = await generatePrefundedKernelClient()
+    await processSingleUserOp(kernelClient, [createMintCall()])
+}
+
 async function main() {
     const pmDepositRes = await depositPaymaster()
     if (pmDepositRes !== "success") {
         throw new Error("Paymaster Deposit failed")
     }
 
+    await initializePaymasterState()
+    
     // Initialize Total Supply of mockToken, to get accurate and consistent gas results in further operations.
-    const res = await initializeTokenSupply(account.address)
+    const res = await initializeTotalSupply()
     if (res !== "success") {
         throw new Error("Mock Token totalSupply initialization failed")
     }
 
-    const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
+    const kernelClient = await generatePrefundedKernelClient()
 
     let singleOpWithDeploymentResults: GasResult | undefined
     let singleOpNoDeploymentResults: GasResult | undefined
     try {
-        ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } = await singleUserOperationGasResult(
-            kernelAccount,
-            kernelClient,
-        ))
+        ;({ singleOpWithDeploymentResults, singleOpNoDeploymentResults } =
+            await singleUserOperationGasResult(kernelClient))
     } catch (error) {
         console.error("Single UserOp: ", error)
     }
 
     let multipleCallsNoDeploymentResults: GasResult | undefined
     try {
-        multipleCallsNoDeploymentResults = await multipleCallsGasResult(kernelAccount, kernelClient)
+        multipleCallsNoDeploymentResults = await multipleCallsGasResult(kernelClient)
     } catch (error) {
         console.error("Batched CallData: ", error)
     }
 
     let multipleUserOpsNoDeploymentSameSenderResults: GasResult | undefined
     try {
-        multipleUserOpsNoDeploymentSameSenderResults = await batchedUserOpsSameSenderGasResult(
-            kernelAccount,
-            kernelClient,
-        )
+        multipleUserOpsNoDeploymentSameSenderResults = await batchedUserOpsSameSenderGasResult(kernelClient)
     } catch (error) {
         console.error("Batched CallData Same Sender: ", error)
     }

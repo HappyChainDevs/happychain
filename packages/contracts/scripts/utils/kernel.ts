@@ -1,13 +1,18 @@
 import type { PrivateKeyAccount, PublicClient } from "viem"
 import { http, createPublicClient } from "viem"
-import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
+import {
+    type GetPaymasterDataParameters,
+    type GetPaymasterStubDataParameters,
+    type SmartAccount,
+    entryPoint07Address,
+} from "viem/account-abstraction"
 import { localhost } from "viem/chains"
 
 import { type SmartAccountClient, createSmartAccountClient } from "permissionless"
 import { toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { type Erc7579Actions, erc7579Actions } from "permissionless/actions/erc7579"
 
-import { pimlicoClient, publicClient } from "./clients"
+import { publicClient } from "./clients"
 import { bundlerRpc, rpcURL } from "./config"
 
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
@@ -36,29 +41,24 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
     const kernelClientBase = createSmartAccountClient({
         account: kernelAccount,
         chain: localhost,
-        bundlerTransport: http(bundlerRpc, {
-            timeout: 30_000,
-        }),
+        bundlerTransport: http(bundlerRpc),
         paymaster: {
-            async getPaymasterData(parameters) {
-                const gasEstimates = await pimlicoClient.estimateUserOperationGas({
-                    ...parameters,
-                    paymaster: paymasterAddress,
-                })
-
+            async getPaymasterData(parameters: GetPaymasterDataParameters) {
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x", // Only required for extra context, no need to encode paymaster gas values manually
-                    paymasterVerificationGasLimit: gasEstimates.paymasterVerificationGasLimit ?? 0n,
-                    paymasterPostOpGasLimit: gasEstimates.paymasterPostOpGasLimit ?? 0n,
+                    paymasterVerificationGasLimit: parameters.factory && parameters.factory !== "0x" ? 45000n : 25000n,
+                    paymasterPostOpGasLimit: 1n, // Set to 1 since the postOp function is never called
                 }
             },
-            async getPaymasterStubData(_parameters) {
+
+            // Using stub values from the docs for paymaster-related fields in unsigned user operations for gas estimation.
+            async getPaymasterStubData(_parameters: GetPaymasterStubDataParameters) {
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x",
-                    paymasterVerificationGasLimit: 80_000n, // Increased value to account for possible higher gas usage
-                    paymasterPostOpGasLimit: 0n, // Set to 0 since the postOp function is never called
+                    paymasterVerificationGasLimit: 45_000n, // Increased value to account for possible higher gas usage
+                    paymasterPostOpGasLimit: 1n,
                 }
             },
         },
@@ -73,25 +73,17 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
     return extendedClient as typeof kernelClientBase & typeof extendedClient
 }
 
-async function generatePrefundedKernelAccounts(count: number): Promise<
-    {
-        kernelAccount: SmartAccount
-        kernelClient: SmartAccountClient
-    }[]
-> {
-    const accounts = []
+async function generatePrefundedKernelClients(count: number): Promise<SmartAccountClient[]> {
+    const kernelClients = []
     for (let i = 0; i < count; i++) {
-        const { kernelAccount, kernelClient } = await generatePrefundedKernelAccount()
-        accounts.push({ kernelAccount, kernelClient })
+        const kernelClient = await generatePrefundedKernelClient()
+        kernelClients.push(kernelClient)
     }
 
-    return accounts
+    return kernelClients
 }
 
-async function generatePrefundedKernelAccount(): Promise<{
-    kernelAccount: SmartAccount
-    kernelClient: SmartAccountClient
-}> {
+async function generatePrefundedKernelClient(): Promise<SmartAccountClient> {
     const account = privateKeyToAccount(generatePrivateKey())
 
     const publicClient = createPublicClient({
@@ -100,15 +92,14 @@ async function generatePrefundedKernelAccount(): Promise<{
     })
 
     const kernelAccount: SmartAccount = await getKernelAccount(publicClient, account)
-    const kernelAddress = await kernelAccount.getAddress()
     const kernelClient = getKernelClient(kernelAccount)
 
-    const prefundRes = await fundSmartAccount(kernelAddress)
+    const prefundRes = await fundSmartAccount(kernelAccount.address!)
     if (prefundRes !== "success") {
         throw new Error("Funding SmartAccount 1 failed")
     }
 
-    return { kernelAccount, kernelClient }
+    return kernelClient
 }
 
-export { getKernelAccount, getKernelClient, generatePrefundedKernelAccount, generatePrefundedKernelAccounts }
+export { getKernelAccount, getKernelClient, generatePrefundedKernelClient, generatePrefundedKernelClients }
