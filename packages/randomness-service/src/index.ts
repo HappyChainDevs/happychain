@@ -29,8 +29,12 @@ class RandomnessService {
             env.PRECOMMIT_DELAY,
         )
         this.revealValueTransactionFactory = new RevealValueTransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS)
-        this.txm.start()
+
         this.txm.addTransactionOriginator(this.onCollectTransactions.bind(this))
+    }
+
+    async start() {
+        await Promise.all([this.txm.start(), this.commitmentManager.start()])
     }
 
     private async onCollectTransactions(block: LatestBlock): Promise<Transaction[]> {
@@ -38,18 +42,28 @@ class RandomnessService {
 
         // We try to commit the randomness POST_COMMIT_MARGIN to be safe that the transaction is included before the PRECOMMIT_DELAY
         const commitmentTimestamp = block.timestamp + env.PRECOMMIT_DELAY + env.POST_COMMIT_MARGIN
-        const commitment = this.commitmentManager.generateCommitment()
+        const partialCommitment = this.commitmentManager.generateCommitment()
 
         const commitmentTransaction = this.commitmentTransactionFactory.create(
             commitmentTimestamp,
-            commitment.commitment,
+            partialCommitment.commitment,
         )
 
         transactions.push(commitmentTransaction)
 
-        this.commitmentManager.setCommitmentForTimestamp(commitmentTimestamp, {
-            ...commitment,
+        const commitment = {
+            ...partialCommitment,
             transactionIntentId: commitmentTransaction.intentId,
+            timestamp: commitmentTimestamp,
+        }
+
+        this.commitmentManager.setCommitmentForTimestamp(commitment)
+
+        // We don't await for saving the commitment, because we dont want to block the transaction collection
+        this.commitmentManager.saveCommitment(commitment).then((result) => {
+            if (result.isErr()) {
+                console.error("Failed to save commitment", result.error)
+            }
         })
 
         const revealValueCommitment = this.commitmentManager.getCommitmentForTimestamp(block.timestamp + env.TIME_BLOCK)
@@ -66,8 +80,15 @@ class RandomnessService {
             }
         }
 
+        // We don't await for pruning, because we dont want to block the transaction collection
+        this.commitmentManager.pruneCommitments(block.timestamp).then((result) => {
+            if (result.isErr()) {
+                console.error("Failed to prune commitments", result.error)
+            }
+        })
+
         return transactions
     }
 }
 
-new RandomnessService()
+new RandomnessService().start()
