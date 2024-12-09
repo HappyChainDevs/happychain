@@ -18,7 +18,7 @@ import type {
     UserOperationReceipt,
 } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
-import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
 
 import { type SmartAccountClient, createSmartAccountClient } from "permissionless"
@@ -82,10 +82,6 @@ const pimlicoClient = createPimlicoClient({
 
 const AMOUNT = parseEther("0.01")
 const EMPTY_SIGNATURE = "0x"
-
-function getRandomAccount() {
-    return privateKeyToAddress(generatePrivateKey()).toString() as Hex
-}
 
 function createMintCall(address: Address): UserOperationCall {
     return {
@@ -392,7 +388,7 @@ async function sendDirectTransactions(count = 1n) {
     for (let i = 0; i < count; i++) {
         const hash = await walletClient.sendTransaction({
             account,
-            ...createMintCall(walletClient.account.address),
+            ...createMintCall(account.address),
         })
 
         const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -570,7 +566,7 @@ async function main() {
     await initialize_paymaster_state()
 
     // Initialize Total Supply of mockToken, to get accurate and consistent gas results in further operations.
-    const res = await initializeTokenSupply(getRandomAccount())
+    const res = await initializeTokenSupply(account.address)
     if (res !== "success") {
         throw new Error("Mock Token totalSupply initialization failed")
     }
