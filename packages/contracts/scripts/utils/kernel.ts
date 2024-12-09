@@ -17,7 +17,7 @@ import { bundlerRpc, rpcURL } from "./config"
 
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { deployment } from "../../deployments/anvil/testing/abis"
-import { fundSmartAccount } from "./accounts.ts"
+import { fundSmartAccount, initializeTokenSupply } from "./accounts.ts"
 
 async function getKernelAccount(publicClient: PublicClient, account: PrivateKeyAccount): Promise<SmartAccount> {
     return toEcdsaKernelSmartAccount({
@@ -97,6 +97,11 @@ async function generatePrefundedKernelClient(): Promise<SmartAccountClient> {
     const prefundRes = await fundSmartAccount(kernelAccount.address!)
     if (prefundRes !== "success") {
         throw new Error("Funding SmartAccount 1 failed")
+    }
+
+    const mintTokenRes = await initializeTokenSupply(kernelAccount.address)
+    if (mintTokenRes !== "success") {
+        throw new Error("Minting tokens to SmartAccount failed")
     }
 
     return kernelClient

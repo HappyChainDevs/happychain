@@ -47,12 +47,12 @@ async function depositPaymaster(): Promise<string> {
     return receipt.status
 }
 
-async function initializeTotalSupply(): Promise<string> {
+async function initializeTokenSupply(accountAddress: Address): Promise<string> {
     const hash = await walletClient.writeContract({
         address: mockDeployment.MockTokenA,
         abi: mockAbis.MockTokenA,
         functionName: "mint",
-        args: [getRandomAddress(), DEPOSIT],
+        args: [accountAddress, DEPOSIT],
     })
 
     const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -71,4 +71,4 @@ function createMintCall(to?: Address): UserOperationCall {
     }
 }
 
-export { createMintCall, depositPaymaster, fundSmartAccount, getRandomAddress, initializeTotalSupply }
+export { createMintCall, depositPaymaster, fundSmartAccount, getRandomAddress, initializeTokenSupply }
