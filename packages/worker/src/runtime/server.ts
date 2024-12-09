@@ -100,14 +100,12 @@ export class SharedWorkerServer implements ServerInterface {
         // Shared workers unsupported, start as web worker
         if (!("SharedWorkerGlobalScope" in self)) {
             this.start(self as unknown as MessagePort)
-            console.log("Started as WebWorker")
             return
         }
 
         this._scope.onconnect = (event) => {
             const port = event.ports[0]
             this.start(port)
-            console.log(`Started as SharedWorker. Client #${this._ports.size}`)
         }
     }
 
