@@ -67,6 +67,9 @@ level).
   - The `demo-*` targets will let you access the demo on your browser
     (look for the URL in the terminal)
 
+- make {demo-js,demo-react,demo-vue}.prod  
+  - Builds & run the production version of the specified demo locally.
+
 [`mprocs`]: https://github.com/pvolok/mprocs
 
 ## More Commands
