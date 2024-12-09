@@ -48,3 +48,5 @@ export { hexSchema } from "./utils/zod.js"
 export { HappyMethodNames } from "./utils/constants"
 
 export { getUrlProtocol } from "./utils/url.js"
+
+export type { Hex } from "./utils/hex.js"
