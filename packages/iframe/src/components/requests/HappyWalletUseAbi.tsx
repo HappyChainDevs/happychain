@@ -1,8 +1,10 @@
+import { useAtomValue } from "jotai"
 import { requestLabels } from "#src/constants/requestLabels"
+import { currentChainAtom } from "#src/state/chains"
 import type { RequestConfirmationProps } from "./props"
 
 export function HappyWalletUseAbi({ method, params, reject, accept }: RequestConfirmationProps<"happy_walletUseAbi">) {
-    const explorerBaseUrl = "https://happy-testnet-sepolia.explorer.caldera.xyz/address/"
+    const chain = useAtomValue(currentChainAtom)
 
     return (
         <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
@@ -19,7 +21,7 @@ export function HappyWalletUseAbi({ method, params, reject, accept }: RequestCon
                     <div className="flex flex-col gap-2">
                         <span className="text-sm font-bold text-gray-600">Address:</span>
                         <a
-                            href={`${explorerBaseUrl}${params?.address}`}
+                            href={`${chain.blockExplorerUrls?.[0]}/address/${params?.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 rounded-lg bg-neutral text-sm font-mono break-all text-content underline hover:text-blue-800"
