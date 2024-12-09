@@ -1,9 +1,9 @@
-import { Check, Trash, Warning, X } from "@phosphor-icons/react"
+import { Warning } from "@phosphor-icons/react"
 import { useMemo, useState } from "react"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
 
 import type { HappyUser } from "@happychain/sdk-shared"
-import { type WatchAssetParametersForStorage, removeWatchedAsset } from "#src/state/watchedAssets"
+import type { WatchAssetParametersForStorage } from "#src/state/watchedAssets"
 import { RemoveTokenMenu } from "./RemoveTokenMenu"
 
 interface WatchedAssetProps {
@@ -23,7 +23,6 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     const tokenAddress = asset.options.address
 
     const [isImageSourceBroken, setIsImageSourceBroken] = useState(false)
-    const [confirmRemoval, setConfirmRemoval] = useState(false)
 
     const { data: balanceData } = useERC20Balance(tokenAddress, userAddress)
 
@@ -37,16 +36,6 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
         [balanceData?.formatted],
     )
 
-    const handleRemoveClick = () => {
-        if (confirmRemoval) {
-            // in confirm state
-            setConfirmRemoval(false)
-            removeWatchedAsset(tokenAddress, userAddress)
-        } else {
-            setConfirmRemoval(true)
-        }
-    }
-
     const imageSource =
         asset.options.image && !isImageSourceBroken
             ? asset.options.image
@@ -55,7 +44,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     return (
         <div
             key={`watched-asset-${tokenAddress}`}
-            className="inline-flex justify-between w-full min-h-10 px-2 max-w-full group relative overflow-hidden items-center gap-2 text-sm font-medium hover:bg-accent/10 focus-within:bg-accent/10"
+            className="rounded-xl inline-flex justify-between w-full min-h-10 px-2 max-w-full group overflow-x-hidden items-center gap-2 text-sm font-medium hover:bg-accent/10 focus-within:bg-accent/10"
         >
             <div className="flex flex-row w-1/2 gap-1 items-center min-w-0 max-w-[50%]">
                 <img
@@ -65,51 +54,22 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                     onError={() => setIsImageSourceBroken(true)}
                     src={imageSource}
                 />
-                <span
-                    className="font-semibold text-sm whitespace-nowrap"
-                    title={asset.options.symbol}
-                >{`${confirmRemoval ? `Stop Tracking ${tokenSymbol}?` : `${tokenSymbol}`}`}</span>
-                <RemoveTokenMenu tokenAddress={tokenAddress} userAddress={userAddress} />
+                <span className="font-semibold text-sm whitespace-nowrap" title={asset.options.symbol}>
+                    {tokenSymbol}
+                </span>
             </div>
 
             <div className="flex flex-row items-center w-1/2 justify-end min-w-0">
-                {!confirmRemoval ? (
-                    <>
-                        <span className="font-semibold text-sm group-hover:hidden group-focus-within:hidden truncate">
-                            {`${
-                                truncatedBalance ? (
-                                    truncatedBalance
-                                ) : (
-                                    <>
-                                        <span className="sr-only">Read Failure</span>
-                                        <Warning size="1.5em" />
-                                    </>
-                                )
-                            }`}
-                        </span>
-                        <button
-                            type="button"
-                            title={`Stop Tracking ${tokenSymbol}`}
-                            className="hidden group-hover:block group-focus-within:block"
-                            onClick={handleRemoveClick}
-                        >
-                            <span className="sr-only">Stop Tracking Token</span>
-                            <Trash size="1.5em" />
-                        </button>
-                    </>
+                {truncatedBalance ? (
+                    <span className="font-semibold text-sm truncate">{truncatedBalance}</span>
                 ) : (
-                    <div className="flex flex-row items-center justify-center gap-1">
-                        <button type="button" onClick={handleRemoveClick}>
-                            <span className="sr-only">Confirm removal</span>
-                            <Check size="1.5em" />
-                        </button>
-
-                        <button type="button" onClick={() => setConfirmRemoval(false)}>
-                            <span className="sr-only">Cancel removal</span>
-                            <X size="1.5em" />
-                        </button>
-                    </div>
+                    <span className="flex items-center gap-1 ml-2">
+                        <span className="sr-only">Read Failure</span>
+                        <Warning size="1em" />
+                    </span>
                 )}
+
+                <RemoveTokenMenu tokenAddress={tokenAddress} userAddress={userAddress} />
             </div>
         </div>
     )
