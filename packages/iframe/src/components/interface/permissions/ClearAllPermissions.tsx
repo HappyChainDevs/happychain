@@ -18,7 +18,7 @@ const ClearAllPermissions = ({ url }: ClearAllDappsPermissionsProps) => {
             }}
             rootContext={api}
         >
-            <p className="text-neutral-content text-center text-xs">
+            <p className="text-base-content text-center text-xs">
                 Are you sure you want to clear all permissions for this app ?
             </p>
             <div className="grid gap-2">

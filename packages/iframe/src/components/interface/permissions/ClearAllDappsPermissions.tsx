@@ -18,7 +18,7 @@ const ClearAllDappsPermissions = ({ listDappsWithPermissions }: ClearAllDappsPer
             }}
             rootContext={api}
         >
-            <p className="text-neutral text-center text-xs">
+            <p className="text-base-content text-center text-xs">
                 Are you sure you want to clear the permissions of all apps ?
             </p>
             <div className="grid gap-2">

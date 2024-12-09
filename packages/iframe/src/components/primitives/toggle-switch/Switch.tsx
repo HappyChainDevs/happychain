@@ -30,7 +30,7 @@ const recipeToggle = cva(
                     // Toggle thumb
                     "[&_[data-part=control]_[data-part=thumb]]:bg-base-100 &_[data-part=control]_[data-part=thumb]]:border-base-100",
                     // Label
-                    "text-neutral/75",
+                    "text-base-content/75",
                 ],
             },
             scale: {
