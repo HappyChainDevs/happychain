@@ -58,11 +58,16 @@ export class RetryPolicyManager implements IRetryPolicyManager {
         return this.isOutOfGas(transactionManager, attempt, receipt)
     }
 
-    protected async isOutOfGas(
+    /**
+     * Get the revert reason from the transaction trace
+     * @param transactionManager - The transaction manager
+     * @param attempt - The attempt
+     * @returns The revert reason or undefined if it cannot be retrieved or the rpc does not allow debug
+     */
+    protected async getRevertReason(
         transactionManager: TransactionManager,
         attempt: Attempt,
-        receipt: RevertedTransactionReceipt<"reverted">,
-    ): Promise<boolean> {
+    ): Promise<string | undefined> {
         const traceResult = transactionManager.rpcAllowDebug
             ? await transactionManager.viemClient.safeDebugTransaction(attempt.hash, {
                   tracer: "callTracer",
@@ -70,11 +75,23 @@ export class RetryPolicyManager implements IRetryPolicyManager {
             : undefined
 
         if (!traceResult || traceResult.isErr()) {
+            return undefined
+        }
+
+        return traceResult.value.revertReason
+    }
+
+    protected async isOutOfGas(
+        transactionManager: TransactionManager,
+        attempt: Attempt,
+        receipt: RevertedTransactionReceipt<"reverted">,
+    ): Promise<boolean> {
+        const revertReason = await this.getRevertReason(transactionManager, attempt)
+
+        if (!revertReason) {
             return receipt.gasUsed === attempt.gas
         }
 
-        const trace = traceResult.value
-
-        return trace.revertReason === "Out of Gas"
+        return revertReason === "Out of Gas"
     }
 }
