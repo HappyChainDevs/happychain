@@ -15,10 +15,10 @@ const TokenView = () => {
     const userAssets = watchedAssets[user.address]
 
     return (
-        <ul className="flex flex-col w-full max-h-4/5 overflow-y-auto bg-content rounded-xl gap-y-2">
+        <ul className="flex flex-col w-full max-h-4/5 overflow-y-auto bg-content min-h-full gap-y-2">
             {userAssets?.length > 0 ? (
                 userAssets.map((asset) => (
-                    <li key={`${asset.options.address}-${user.uid}`}>
+                    <li className="relative" key={`${asset.options.address}-${user.uid}`}>
                         <WatchedAsset user={user} asset={asset} />
                     </li>
                 ))
