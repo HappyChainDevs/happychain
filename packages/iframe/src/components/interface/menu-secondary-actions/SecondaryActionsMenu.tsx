@@ -70,7 +70,7 @@ const SecondaryActionsMenu = () => {
                             // Item: cursor interactivity
                             "[&_[data-part=item]]:not([data-disabled])]:cursor-pointer &_[data-part=item][data-disabled]]:cursor-not-allowed",
                             // Item (highlighted)
-                            " [&_[data-part=item][data-highlighted]]:bg-base-200",
+                            "[&_[data-part=item][data-highlighted]]:bg-base-200",
                         ],
                         recipeContent({
                             scale: "default",

@@ -4,6 +4,7 @@ import { useERC20Balance } from "#src/hooks/useERC20Balance"
 
 import type { HappyUser } from "@happychain/sdk-shared"
 import { type WatchAssetParametersForStorage, removeWatchedAsset } from "#src/state/watchedAssets"
+import { RemoveTokenMenu } from "./RemoveTokenMenu"
 
 interface WatchedAssetProps {
     user: HappyUser
@@ -68,6 +69,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                     className="font-semibold text-sm whitespace-nowrap"
                     title={asset.options.symbol}
                 >{`${confirmRemoval ? `Stop Tracking ${tokenSymbol}?` : `${tokenSymbol}`}`}</span>
+                <RemoveTokenMenu tokenAddress={tokenAddress} userAddress={userAddress} />
             </div>
 
             <div className="flex flex-row items-center w-1/2 justify-end min-w-0">
