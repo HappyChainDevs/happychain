@@ -1,30 +1,62 @@
 import crypto from "node:crypto"
-import type { UUID } from "@happychain/common"
+import { type UUID, unknownToError } from "@happychain/common"
+import { type Result, ResultAsync } from "neverthrow"
 import type { Hex } from "viem"
 import { encodePacked, keccak256 } from "viem"
+import { db } from "./db/driver"
+import { commitmentInfoToDb, dbToCommitmentInfo } from "./db/types"
 
-interface Commitment {
+export interface CommitmentInfo {
+    timestamp: bigint
     value: bigint
     commitment: Hex
     transactionIntentId: UUID
 }
 
-export class CommitmentManager {
-    private readonly map = new Map<bigint, Commitment>()
+const COMMITMENT_PRUNE_INTERVAL_SECONDS = 60 * 2 // 2 minutes
 
-    generateCommitment(): Omit<Commitment, "transactionIntentId"> {
+export class CommitmentManager {
+    private readonly map = new Map<bigint, CommitmentInfo>()
+
+    async start(): Promise<void> {
+        const commitmentsDb = (await db.selectFrom("commitments").selectAll().execute()).map(dbToCommitmentInfo)
+        for (const commitment of commitmentsDb) {
+            this.map.set(commitment.timestamp, commitment)
+        }
+    }
+
+    generateCommitment(): Omit<CommitmentInfo, "transactionIntentId" | "timestamp"> {
         const value = this.generateRandomness()
         const commitment = this.hashValue(value)
         const commitmentObject = { value, commitment }
         return commitmentObject
     }
 
-    setCommitmentForTimestamp(timestamp: bigint, commitment: Commitment): void {
-        this.map.set(timestamp, commitment)
+    setCommitmentForTimestamp(commitment: CommitmentInfo): void {
+        this.map.set(commitment.timestamp, commitment)
     }
 
-    getCommitmentForTimestamp(timestamp: bigint): Commitment | undefined {
+    async saveCommitment(commitment: CommitmentInfo): Promise<Result<void, Error>> {
+        const result = await ResultAsync.fromPromise(
+            db.insertInto("commitments").values(commitmentInfoToDb(commitment)).execute(),
+            unknownToError,
+        )
+
+        return result.map(() => undefined)
+    }
+
+    getCommitmentForTimestamp(timestamp: bigint): CommitmentInfo | undefined {
         return this.map.get(timestamp)
+    }
+
+    async pruneCommitments(latestBlockTimestamp: bigint): Promise<Result<void, Error>> {
+        return ResultAsync.fromPromise(
+            db
+                .deleteFrom("commitments")
+                .where("timestamp", "<", Number(latestBlockTimestamp) - COMMITMENT_PRUNE_INTERVAL_SECONDS)
+                .execute(),
+            unknownToError,
+        ).map(() => undefined)
     }
 
     private generateRandomness(): bigint {

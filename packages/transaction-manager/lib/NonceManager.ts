@@ -21,6 +21,7 @@ export class NonceManager {
 
     constructor(_transactionManager: TransactionManager) {
         this.txmgr = _transactionManager
+        this.returnedNonceQueue = []
     }
 
     public async start() {
