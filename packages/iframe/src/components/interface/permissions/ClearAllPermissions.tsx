@@ -34,7 +34,7 @@ const ClearAllPermissions = ({ url }: ClearAllDappsPermissionsProps) => {
                 </Button>
                 <Button
                     intent="ghost"
-                    className="opacity-75 justify-center text-primary"
+                    className="opacity-75 justify-center"
                     onClick={() => {
                         api.setOpen(false)
                     }}
