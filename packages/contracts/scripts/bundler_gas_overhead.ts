@@ -6,7 +6,7 @@ import { deployment } from "../deployments/anvil/testing/abis"
 
 import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce"
 
-import { createMintCall, depositPaymaster, initializeTotalSupply } from "./utils/accounts"
+import { createMintCall, depositPaymaster, initializeTokenSupply } from "./utils/accounts"
 import { account, pimlicoClient, publicClient, walletClient } from "./utils/clients"
 import { generatePrefundedKernelClient, generatePrefundedKernelClients } from "./utils/kernel"
 
@@ -367,9 +367,9 @@ async function main() {
     }
 
     await initializePaymasterState()
-    
+
     // Initialize Total Supply of mockToken, to get accurate and consistent gas results in further operations.
-    const res = await initializeTotalSupply()
+    const res = await initializeTokenSupply(account.address)
     if (res !== "success") {
         throw new Error("Mock Token totalSupply initialization failed")
     }
