@@ -30,7 +30,7 @@ const DialogConfirmSignOut = ({ handleDisconnect }: DialogConfirmSignOutProps) =
                         <Dialog.Title className="font-bold text-base-content">
                             Are you sure you want to sign out ?
                         </Dialog.Title>
-                        <Dialog.Description className="text-neutral text-center text-xs">
+                        <Dialog.Description className="text-content text-center text-xs">
                             You will have to sign-in again to continue using this app.
                         </Dialog.Description>
                     </div>

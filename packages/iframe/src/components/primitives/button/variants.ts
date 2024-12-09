@@ -14,7 +14,7 @@ const recipeButton = cva(
             intent: {
                 primary: "text-primary-content bg-primary focus:bg-error/95 border-transparent", // @todo - setup color-mix tailwind plugin and use it to improve variants
                 secondary: "btn dark:bg-neutral hover:bg-primary/15 focus:bg-primary/25 border-transparent",
-                ghost: "text-neutral/75 hover:bg-neutral/10 focus:bg-neutral/15 border-transparent",
+                ghost: "text-base-content hover:bg-base-content/10 focus:bg-base-content/15 border-transparent",
                 "ghost-negative": "text-error hover:bg-error/10 focus:bg-error/15 border-transparent",
                 "outline-negative": "text-error border-neutral/10 hover:bg-error/10 focus:bg-error/15",
             },
