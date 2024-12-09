@@ -123,6 +123,20 @@ demo-vue.dev: setup shared.dev sdk.dev ## Serves the VueJS demo application as h
 	$(MULTIRUN) --names "iframe,demo-vue" "cd packages/iframe && make dev" "cd packages/demo-wagmi-vue && make dev"
 .PHONY: demo-vue.dev
 
+demo-js.prod: setup  ## builds & run the prod version of the JS demo
+	IFRAME_URL=http://localhost:4160 make demo-js.build
+	$(MULTIRUN) --names "iframe.demo-js" "cd packages/iframe && make preview" "cd packages/demo-vanillajs && make preview"
+.PHONY: demo-js.prod
+
+demo-react.prod: setup  ## builds & run the prod version of the React demo
+	IFRAME_URL=http://localhost:4160 make demo-react.build
+	$(MULTIRUN) --names "iframe.demo-react" "cd packages/iframe && make preview" "cd packages/demo-react && make preview"
+.PHONY: demo-react.prod
+
+demo-vue.prod: setup  ## builds & run the prod version of the Vue demo
+	IFRAME_URL=http://localhost:4160 make demo-vue.build
+	$(MULTIRUN) --names "iframe.demo-vue" "cd packages/iframe && make preview" "cd packages/demo-wagmi-vue && make preview"
+.PHONY: demo-vue.prod
 
 # ==================================================================================================
 ##@ Contracts
