@@ -15,14 +15,15 @@ import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { grantPermissions } from "#src/state/permissions"
-import { getSmartAccountClient } from "#src/state/smartAccountClient"
+// import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import type { PendingTxDetails } from "#src/state/txHistory"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID, convertTxToUserOp } from "./utils"
+// import { appForSourceID, convertTxToUserOp } from "./utils"
+import { appForSourceID } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -45,8 +46,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_sendTransaction": {
             if (!user) return false
             const tx = request.payload.params[0]
-            const smartAccountClient = await getSmartAccountClient()
-            let hash: Hash
+            // const smartAccountClient = await getSmartAccountClient()
+            const hash = (await sendToWalletClient(request)) as Hash
             /*
             if (smartAccountClient?.account) {
                 const userOp = await convertTxToUserOp(
@@ -63,8 +64,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 hash = (await sendToWalletClient(request)) as Hash
             }
             */
-
-            hash = (await sendToWalletClient(request)) as Hash
 
             // Track pending transaction
             const value = hexToBigInt(tx.value as Hex)
