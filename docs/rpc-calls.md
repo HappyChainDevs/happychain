@@ -1,12 +1,13 @@
 # RPC Calls
 
-There are two main sources for RPC requests: a third party app (such as the 'demos' found in this 
+Wallet RPC requests can be originated either from a third-party app (such as the 'demos' found in this 
 repo) or from the iframe/wallet directly. In addition to this, there are 3 main ways these requests 
-can be executed
+can be executed. Regardless of the source of the request, all processing & execution occurs within 
+the iframe/wallet.
 
 - publicClient
     - This is a viem public client initialized using an `http` transport when no user is connected
-      or initialized using a `custom` transport using the connected users preferred EIP1193 provider
+      or initialized using a `custom` transport using the connected users preferred EIP-1193 provider
       if available.
     - This is responsible for executing requests which do not require user confirmations.
 - walletClient
@@ -18,9 +19,8 @@ can be executed
       party injected wallet such as Metamask, so the confirmation security can be relaxed as Metamask
       (or the users preferred wallet) will handle this and have its own rules.
 
-When a call originates from the app, or when a call originates from the iframe but the user session 
-is currently connected through an app, it is done so by sending the request to `happyProvider` which
-is a standard EIP1193 Provider and can be used directly, or to initialize libraries such as viem, 
+When a call originates from an app, it is done so by sending the request to `happyProvider` which
+is a standard EIP-1193 Provider and can be used directly, or to initialize libraries such as viem, 
 ethers, or web3. HappyProvider will first check if a user is connected or not, then if the request
 itself requires user confirmation. If the request does require confirmation, and no user is 
 connected, it will prompt the user to do so (see [Connections](./connections.md)). If a user is 
