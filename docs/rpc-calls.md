@@ -1,5 +1,7 @@
 # RPC Calls
 
+![RPC Request Flow](./images/connection-flow.png)
+
 Wallet RPC requests can be originated either from a third-party app (such as the 'demos' found in this 
 repo) or from the iframe/wallet directly. In addition to this, there are 3 main ways these requests 
 can be executed. Regardless of the source of the request, all processing & execution occurs within 
