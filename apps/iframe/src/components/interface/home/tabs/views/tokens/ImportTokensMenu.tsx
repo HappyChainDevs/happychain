@@ -48,7 +48,7 @@ export const ImportTokensMenu = () => {
     }
 
     const {
-        data: { symbol, decimals } = {},
+        data: { decimals } = {},
     } = useERC20Balance(inputAdd as Address, user?.address as Address)
 
     const handleSubmitAddress = useCallback((e: React.FormEvent) => {
@@ -132,7 +132,7 @@ export const ImportTokensMenu = () => {
                                         {/* token decimals */}
                                         <Field.Root className="flex flex-col gap-y-2">
                                             <Field.Label className="italic">Token Symbol</Field.Label>
-                                            <Field.Input
+                                            {/* <Field.Input
                                                 className="h-10 bg-neutral-200 rounded-lg p-2"
                                                 onChange={handleInputChange}
                                                 value={symbol ?? symbol}
@@ -142,7 +142,7 @@ export const ImportTokensMenu = () => {
                                                     {!symbol &&
                                                         "No data returned for symbol; potentially incorrect contract."}
                                                 </Field.ErrorText>
-                                            )}
+                                            )} */}
                                         </Field.Root>
                                         <Field.Root className="flex flex-col gap-y-2">
                                             <Field.Label className="italic">Token Decimals</Field.Label>
