@@ -1,5 +1,6 @@
 import type { Transaction, TransactionManager } from "@happychain/transaction-manager"
-import type { Address, Hex } from "viem"
+import type { Address } from "viem"
+import type { Randomness } from "../Randomnnes"
 
 export class CommitmentTransactionFactory {
     private readonly transactionManager: TransactionManager
@@ -12,13 +13,13 @@ export class CommitmentTransactionFactory {
         this.precommitDelay = precommitDelay
     }
 
-    create(timestamp: bigint, commitment: Hex): Transaction {
+    create(randomness: Randomness): Transaction {
         return this.transactionManager.createTransaction({
             address: this.randomContractAddress,
             functionName: "postCommitment",
             contractName: "Random",
-            args: [timestamp, commitment],
-            deadline: Number(timestamp - this.precommitDelay),
+            args: [randomness.timestamp, randomness.hashedValue],
+            deadline: Number(randomness.timestamp - this.precommitDelay),
         })
     }
 }

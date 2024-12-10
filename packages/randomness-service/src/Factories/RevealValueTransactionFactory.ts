@@ -1,5 +1,6 @@
 import type { Transaction, TransactionManager } from "@happychain/transaction-manager"
 import type { Address } from "viem"
+import type { Randomness } from "../Randomnnes"
 
 export class RevealValueTransactionFactory {
     private readonly transactionManager: TransactionManager
@@ -10,13 +11,13 @@ export class RevealValueTransactionFactory {
         this.randomContractAddress = randomContractAddress
     }
 
-    create(timestamp: bigint, revealedValue: bigint): Transaction {
+    create(randomness: Randomness): Transaction {
         return this.transactionManager.createTransaction({
             address: this.randomContractAddress,
             functionName: "revealValue",
             contractName: "Random",
-            args: [timestamp, revealedValue],
-            deadline: Number(timestamp),
+            args: [randomness.timestamp, randomness.value],
+            deadline: Number(randomness.timestamp),
         })
     }
 }
