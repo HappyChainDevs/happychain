@@ -47,7 +47,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             const tx = request.payload.params[0]
             const smartAccountClient = await getSmartAccountClient()
             let hash: Hash
-
+            /*
             if (smartAccountClient?.account) {
                 const userOp = await convertTxToUserOp(
                     {
@@ -55,13 +55,16 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                         data: tx.data,
                         value: tx.value ? hexToBigInt(tx.value) : 0n,
                     },
-                    smartAccountClient,
+                    smartAccountClient.account.address,
                 )
 
-                hash = (await smartAccountClient.sendUserOperation(userOp)) as Hash
+            hash = (await smartAccountClient.sendUserOperation(userOp)) as Hash
             } else {
                 hash = (await sendToWalletClient(request)) as Hash
             }
+            */
+
+            hash = (await sendToWalletClient(request)) as Hash
 
             // Track pending transaction
             const value = hexToBigInt(tx.value as Hex)
