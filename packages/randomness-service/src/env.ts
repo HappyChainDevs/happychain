@@ -18,6 +18,7 @@ const envSchema = z.object({
         .transform((s) => BigInt(s)),
     RPC_URL: z.string().trim(),
     RANDOMNESS_DB_PATH: z.string().trim(),
+    TXM_DB_PATH: z.string().trim(),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)
