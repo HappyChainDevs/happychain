@@ -33,6 +33,7 @@ jobs:
       - name: Build
         env:
           IFRAME_URL: "https://iframe.happy.tech"
+          VITE_BUNDLER_RPC_URL: "-"
           VITE_FIREBASE_API_KEY: "-"
           VITE_FIREBASE_AUTH_DOMAIN: "-"
           VITE_FIREBASE_PROJECT_ID: "-"
@@ -45,6 +46,7 @@ jobs:
         run: make build
       - run: make test
         env:
+          VITE_BUNDLER_RPC_URL: "-"
           VITE_FIREBASE_API_KEY: "-"
           VITE_FIREBASE_AUTH_DOMAIN: "-"
           VITE_FIREBASE_PROJECT_ID: "-"
