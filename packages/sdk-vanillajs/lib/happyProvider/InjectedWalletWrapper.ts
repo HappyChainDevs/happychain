@@ -13,7 +13,7 @@ const store = createStore()
 
 /**
  * A wrapper for executing wallet operations through browser-injected providers like Metamask.
- * It acts as a bridge between the iframe and app contexts for wallet interactions. Its to be
+ * It acts as a bridge between the iframe and app contexts for wallet interactions. It is to be
  * initiated once by the happyProvider in injectedWalletHandler, but is never interacted with
  * directly from the app side.
  *

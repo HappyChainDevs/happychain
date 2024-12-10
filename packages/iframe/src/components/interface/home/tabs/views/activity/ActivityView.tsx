@@ -19,16 +19,16 @@ const ActivityView = () => {
     if (!user) return <UserNotFoundWarning />
 
     if (!txs.history.length && !txs.pending.length) {
-        return <div className="w-full h-full p-2">No transactions to display.</div>
+        return <div className="size-full p-2">No transactions to display.</div>
     }
 
     return (
         <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 space-y-1">
             {txs.pending.map((tx) => (
-                <TxLoadingSkeleton key={`pending-tx-${tx.hash}`} tx={tx.hash} />
+                <TxLoadingSkeleton key={`tx_pending_${tx.hash}`} tx={tx.hash} />
             ))}
             {txs.history.map((tx) => (
-                <TxLogEntry key={`log-entry-${tx.receipt.transactionHash}`} tx={tx} />
+                <TxLogEntry key={`tx_history_${tx.receipt.transactionHash}`} tx={tx} />
             ))}
         </div>
     )

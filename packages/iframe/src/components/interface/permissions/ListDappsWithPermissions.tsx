@@ -32,7 +32,7 @@ const ListItem = ({ dappUrl }: ListItemProps) => {
                 <CaretRight />
             </span>
             <Link
-                className="absolute w-full h-full block inset-0 z-10 opacity-0"
+                className="absolute size-full block inset-0 z-10 opacity-0"
                 to="/embed/permissions/$dappId"
                 params={{ dappId: encodeURI(dappUrl) }}
             >
