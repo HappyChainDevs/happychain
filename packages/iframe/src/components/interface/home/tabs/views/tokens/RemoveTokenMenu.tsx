@@ -34,7 +34,7 @@ const RemoveTokenMenu = ({ tokenAddress, userAddress }: RemoveTokensMenuProps) =
                 >
                     <Menu.Item
                         asChild
-                        className="text-white cursor-pointer p-1 bg-base-content/20 rounded-lg"
+                        className="text-white cursor-pointer p-2 bg-base-content/20 rounded-lg"
                         value={TokenMenuActions.Remove}
                         onClick={handleRemoveClick}
                     >
