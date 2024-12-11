@@ -44,9 +44,9 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     return (
         <div
             key={`watched-asset-${tokenAddress}`}
-            className="rounded-xl inline-flex justify-between w-full min-h-10 max-w-full group overflow-x-hidden items-center gap-2 text-sm font-medium hover:bg-accent/10 group-focus-within:bg-accent/10"
+            className="rounded-xl inline-flex justify-between w-full min-h-10 max-w-full group overflow-x-hidden items-center gap-2 text-sm font-medium"
         >
-            <div className="flex flex-row w-1/2 gap-1 items-center min-w-0 max-w-[50%] px-1">
+            <div className="flex flex-row w-1/2 gap-1 items-center min-w-0 max-w-[50%]">
                 <img
                     alt={tokenAddress}
                     className="text-transparent rounded-full flex-shrink-0 size-4"
