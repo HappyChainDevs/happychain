@@ -1,10 +1,7 @@
-import { type ContractName, deployment as contractsAddresses } from "@happychain/contracts/account-abstraction/sepolia"
+import { type Deployment, deployment as contractsAddresses } from "@happychain/contracts/account-abstraction/sepolia"
 import { chains } from "@happychain/sdk-shared"
-import type { Address } from "viem"
 
-type AccountAbstractionContracts = { [Name in ContractName]: Address }
-
-export function getAccountAbstractionContracts(chainId: string): AccountAbstractionContracts {
+export function getAccountAbstractionContracts(chainId: string): Deployment {
     let contracts = {}
     switch (chainId) {
         case chains.happyChainSepolia.chainId:
@@ -15,5 +12,5 @@ export function getAccountAbstractionContracts(chainId: string): AccountAbstract
             break
     }
 
-    return contracts as AccountAbstractionContracts
+    return contracts as Deployment
 }
