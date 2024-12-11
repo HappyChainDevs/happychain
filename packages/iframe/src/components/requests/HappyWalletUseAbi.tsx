@@ -1,9 +1,15 @@
+import { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
 import { useAtomValue } from "jotai"
 import { requestLabels } from "#src/constants/requestLabels"
 import { currentChainAtom } from "#src/state/chains"
 import type { RequestConfirmationProps } from "./props"
 
-export function HappyWalletUseAbi({ method, params, reject, accept }: RequestConfirmationProps<"happy_walletUseAbi">) {
+export function HappyWalletUseAbi({
+    method,
+    params,
+    reject,
+    accept,
+}: RequestConfirmationProps<typeof WALLET_USE_ABI_RPC_METHOD>) {
     const chain = useAtomValue(currentChainAtom)
 
     return (
@@ -44,7 +50,7 @@ export function HappyWalletUseAbi({ method, params, reject, accept }: RequestCon
                 <button
                     type="button"
                     className="btn grow border-2 bg-success/75"
-                    onClick={() => accept({ method: "happy_walletUseAbi", params })}
+                    onClick={() => accept({ method: WALLET_USE_ABI_RPC_METHOD, params })}
                 >
                     Sign
                 </button>

@@ -20,6 +20,7 @@
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
         "@happychain/configs": "workspace:^",
+        "@happychain/common": "workspace:^",
         "@happychain/build": "workspace:^",
         "@types/bun": "^1.1.8",
         "happy-dom": "^15.0.0",

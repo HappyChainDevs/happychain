@@ -1,3 +1,4 @@
+import { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
 import type { EIP1193Parameters } from "viem"
 
 // https://eips.ethereum.org/EIPS/eip-1474
@@ -87,8 +88,8 @@ const interactiveList = new Set([
  * Subsequent requests would not need the confirmation screen displayed.
  */
 const unsafeList = new Set([
-    // eip-xxxx :)
-    "happy_walletUseAbi",
+    // happychain methods
+    WALLET_USE_ABI_RPC_METHOD, // eip-xxxx :)
     // permissions
     "eth_requestAccounts", // https://eips.ethereum.org/EIPS/eip-1102
     "wallet_requestPermissions", // https://eips.ethereum.org/EIPS/eip-2255

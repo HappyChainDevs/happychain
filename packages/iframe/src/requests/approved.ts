@@ -9,6 +9,7 @@ import {
 } from "@happychain/sdk-shared"
 import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
 
+import { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
 import { addPendingTx } from "#src/services/transactionHistory"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
@@ -102,7 +103,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             return user ? addWatchedAsset(user.address, request.payload.params) : false
         }
 
-        case "happy_walletUseAbi": {
+        case WALLET_USE_ABI_RPC_METHOD: {
             return addAbi(request.payload.params)
         }
 
