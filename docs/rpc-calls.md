@@ -9,7 +9,7 @@ the iframe/wallet.
 
 - publicClient
     - This is a viem public client initialized using an `http` transport when no user is connected
-      or initialized using a `custom` transport using the connected users preferred EIP-1193 provider
+      or initialized using a `custom` transport using the connected user's preferred EIP-1193 provider
       if available.
     - This is responsible for executing requests which do not require user confirmations.
 - walletClient
@@ -21,20 +21,23 @@ the iframe/wallet.
       party injected wallet such as Metamask, so the confirmation security can be relaxed as Metamask
       (or the users preferred wallet) will handle this and have its own rules.
 
-When a call originates from an app, it is done so by sending the request to `happyProvider` which
-is a standard EIP-1193 Provider and can be used directly, or to initialize libraries such as viem, 
-ethers, or web3. HappyProvider will first check if a user is connected or not, then if the request
-itself requires user confirmation. If the request does require confirmation, and no user is 
-connected, it will prompt the user to do so (see [Connections](./connections.md)). If a user is 
-connected via an injected wallet, the request will be forwarded to the iframe where it can pass 
-through the injected middleware stack, before being forwarded back to the app to be executed by the 
-connected injected wallet. If there is no user, but the call does not require confirmation, it will 
-be passed to the iframe to be sent through the publicClient middleware and finally be executed by 
-the publicClient in most cases. Lastly if the request requires confirmation and the user has 
-connected via a social wallet, it will be sent through the walletClient stack, and finally be 
-executed by the walletClient (which has been initialized using web3auth as the provider).
+RPC Calls may originate from either an app that has the wallet embedded, or from the wallet itself.
+When the call originates from the app, it is done so by sending the request to `happyProvider`. The 
+`happyProvider` is a standard EIP-1193 Provider that can be used directly, or used to initialize 
+third-party libraries such as viem, ethers, or web3. When it receives a request, HappyProvider will 
+first check if a user is connected or not, then if the request itself requires user confirmation. 
 
-When a call originates from the iframe itself and the user has accessed the wallet directly and not
-through an app, the process is much the same, with the exception of injected wallets being handled 
-slightly differently. Injected wallets will not be forwarded to the app as previously mentioned, but
-instead will be sent directly to the injected wallet provider to be executed
+If no confirmation is needed, the request will be forwarded directly to the wallet to be processed.
+
+If the request does require confirmation, and no user is connected, it will prompt the user to do so
+(see [Connections](./connections.md)), then retry the request after the user has connected. 
+
+If the request does require confirmation and the user is already connected, a popup will be opened
+so the user can validate what they will be signing. This popup exists in the same context as the wallet
+and can not be manipulated by the app in any way. If the user approves the request, the request will 
+then be forwarded to the wallet where it can be processed.
+
+Once the request is ready to be processed inside the wallet (either through one of the above methods, 
+or else if the request originated from within the wallet), it'll be passed through the appropriate
+middleware stack found in `packages/iframe/src/requests`, and finally be executed using one of the 
+clients mentioned at the top of this document.
