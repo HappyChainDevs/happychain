@@ -34,7 +34,7 @@ export function HappyWalletUseAbi({ method, params, reject, accept }: RequestCon
                         <textarea
                             className="grow w-full p-2 rounded-lg bg-neutral text-sm font-mono break-all overflow-auto resize-none"
                             readOnly
-                            value={JSON.stringify(params?.abi, null, 2)} // Formatted JSON
+                            value={JSON.stringify(params?.abi, null, 2)}
                         />
                     </div>
                 </div>

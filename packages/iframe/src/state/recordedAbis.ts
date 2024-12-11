@@ -1,4 +1,4 @@
-import type { recordAbiPayload } from "@happychain/sdk-shared"
+import type { RecordAbiPayload } from "@happychain/sdk-shared"
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import type { Abi, Address } from "viem"
@@ -13,7 +13,6 @@ const abiContractMappingAtom = atomWithStorage<AbiStorageRecord>(StorageKey.Reco
     getOnInit: true,
 })
 
-// Store Instantiation
 const store = getDefaultStore()
 
 // === State Accessors ==================================================================================
@@ -22,11 +21,10 @@ export function getWatchedAssets(): AbiStorageRecord {
     return store.get(abiContractMappingAtom)
 }
 
-// === State Mutators ===================================================================================
+export function addAbi(payload?: RecordAbiPayload): boolean {
+    if (!payload) return false
 
-export function addAbi(payload?: recordAbiPayload): boolean {
     let alreadyRecorded = false
-    if (!payload) return alreadyRecorded
 
     store.set(abiContractMappingAtom, (prevAbis) => {
         if (prevAbis[payload.address]) {

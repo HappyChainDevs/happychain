@@ -1,7 +1,7 @@
 import type { Abi, Address, EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
 import type { HappyUser } from "./happyUser"
 
-export type recordAbiPayload = {
+export type RecordAbiPayload = {
     address: Address
     abi: Abi
 }
@@ -15,7 +15,7 @@ export type HappyMethods = [
     },
     {
         Method: "happy_walletUseAbi"
-        Parameters?: recordAbiPayload
+        Parameters?: RecordAbiPayload
         ReturnType: boolean
     },
 ]
