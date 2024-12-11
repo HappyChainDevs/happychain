@@ -37,6 +37,7 @@ class RandomnessService {
     async start() {
         await Promise.all([this.txm.start(), this.randomnessRepository.start()])
         this.txm.addHook(this.onTransactionStatusChange.bind(this), TxmHookType.TransactionStatusChanged)
+        this.txm.addHook(this.onNewBlock.bind(this), TxmHookType.NewBlock)
     }
 
     private onTransactionStatusChange(payload: { transaction: Transaction }) {
@@ -68,6 +69,15 @@ class RandomnessService {
                 randomness.revealFailed()
             }
         }
+    }
+
+    private async onNewBlock(payload: { block: LatestBlock }) {
+        this.handleRevealNotSubmittedOnTime(payload.block)
+        this.randomnessRepository.pruneRandomnesses(payload.block.timestamp).then((result) => {
+            if (result.isErr()) {
+                console.error("Failed to prune commitments", result.error)
+            }
+        })
     }
 
     private async handleRevealNotSubmittedOnTime(block: LatestBlock) {
@@ -145,13 +155,6 @@ class RandomnessService {
         this.randomnessRepository.updateRandomness(randomnessToReveal).then((result) => {
             if (result.isErr()) {
                 console.error("Failed to update randomness", result.error)
-            }
-        })
-
-        // We don't await for pruning, because we don't want to block the transaction collection
-        this.randomnessRepository.pruneRandomnesses(block.timestamp).then((result) => {
-            if (result.isErr()) {
-                console.error("Failed to prune commitments", result.error)
             }
         })
 
