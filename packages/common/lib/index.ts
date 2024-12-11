@@ -44,3 +44,5 @@ export type { SafeViemWalletClient, SafeViemPublicClient } from "./utils/safeVie
 export { convertToSafeViemWalletClient, convertToSafeViemPublicClient } from "./utils/safeViemClients.js"
 
 export { hexSchema } from "./utils/zod.js"
+
+export { WALLET_USE_ABI_RPC_METHOD } from "./utils/constants"

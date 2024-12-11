@@ -1,3 +1,4 @@
+import { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
 import { Msgs, type PopupMsgs } from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
