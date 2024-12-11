@@ -3,10 +3,10 @@
     "author": "Norswap",
     "license": "BSD-3-Clause-Clear",
     "version": "1.0.0",
-    "files": ["*.sol", "deployments/**/*"],
     "type": "module",
+    "files": ["*.sol", "deployments/**/*"],
     "exports": {
-        "./AccountAbstractionHappySepolia": "./deployments/happy-sepolia/aa/deployment.json",
+        "./account-abstraction/sepolia": "./deployments/happy-sepolia/aa/abis.ts",
         "./mockTokens/sepolia": "./deployments/happy-sepolia/mockTokens/abis.ts"
     },
     "dependencies": {
@@ -19,6 +19,7 @@
         "solady": "0.0.237"
     },
     "devDependencies": {
+        "@happychain/build": "workspace:^",
         "@happychain/configs": "workspace:^",
         "@openzeppelin/upgrades-core": "^1.36.0",
         "node-jq": "^6.0.1",
