@@ -2,6 +2,7 @@ export type ContractToAbi = typeof contractToAbi
 export type AliasToContract = typeof aliasToContract
 export type ContractName = keyof ContractToAbi
 export type ContractAlias = keyof AliasToContract
+export type Deployment = Record<ContractAlias, Address>
 
 type AliasTuple = UnionToTuple<ContractAlias>
 type AbiValuesTuple = MapTuple<MapTuple<AliasTuple, AliasToContract>, ContractToAbi>
@@ -14,3 +15,4 @@ for (const [alias, contractName] of Object.entries(aliasToContract)) {
     // biome-ignore lint/suspicious/noExplicitAny: safe generated code
     abis[alias as ContractAlias] = contractToAbi[contractName as ContractName] as any
 }
+
