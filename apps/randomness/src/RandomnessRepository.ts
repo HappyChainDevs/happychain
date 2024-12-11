@@ -1,7 +1,7 @@
 import { type UUID, unknownToError } from "@happy.tech/common"
 import { bigIntToZeroPadded } from "@happy.tech/common"
 import { type Result, ResultAsync } from "neverthrow"
-import type { Randomness, RandomnessStatus } from "./Randomness"
+import { FINALIZED_STATUSES, type Randomness, type RandomnessStatus } from "./Randomness"
 import { db } from "./db/driver"
 import { randomnessEntityToRow, randomnessRowToEntity } from "./db/types"
 
@@ -87,6 +87,7 @@ export class RandomnessRepository {
                     "<",
                     bigIntToZeroPadded(latestBlockTimestamp - COMMITMENT_PRUNE_INTERVAL_SECONDS, DIGITS_MAX_UINT256),
                 )
+                .where("status", "in", FINALIZED_STATUSES)
                 .execute(),
             unknownToError,
         ).map(() => undefined)
