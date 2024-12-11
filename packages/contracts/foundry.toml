@@ -8,12 +8,12 @@ optimizer = true
 optimizer_runs = 20000
 via_ir = false
 
-# Compiler profile for kernel contract
+# Compiler profile for the Kernel contract
 additional_compiler_profiles = [
   { name = "kernel", via_ir = true, optimizer = true, optimizer_runs = 200 }
 ]
 
-# Restrict kernel.sol to use the kernel profile
+# Restrict Kernel.sol to use the Kernel profile
 compilation_restrictions = [
   { paths = "lib/kernel/src/Kernel.sol", via_ir = true, optimizer = true, optimizer_runs = 200 }
 ]

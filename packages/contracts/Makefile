@@ -82,11 +82,11 @@ test-gas:
 .PHONY: test-gas
 
 gas-paymaster:
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --optimizer-runs 200 --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
 .PHONY: gas-paymaster
 
 test-aa-gas-flamechart:
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --optimizer-runs 200 --isolate --flamechart
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart
 .PHONY: test-aa-gas-flamechart
 
 test-fork:
@@ -139,8 +139,6 @@ VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
 VERIFIER_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_FLAG_$(CONFIG)),)
 VERIFIER_URL := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_URL_$(CONFIG)),)
 CHECK_UPGRADE := make validate-upgrade
-# VIA_IR_FLAG := $(if $(findstring DeployAA,$(DEPLOY_SCRIPT)),--via-ir,)
-# OPTIMIZER_RUNS_FLAG := $(if $(findstring DeployAA,$(DEPLOY_SCRIPT)),--optimizer-runs 200,)
 
 ifeq ($(DEPLOY),deploy)
 	BROADCAST_FLAG := --broadcast
@@ -186,8 +184,6 @@ define run-deploy-script-key
 	forge script $(1) \
 		--fork-url $(RPC_$(CONFIG)) \
 		--private-key $(PRIVATE_KEY_$(CONFIG)) \
-		# $(VIA_IR_FLAG) \
-		# $(OPTIMIZER_RUNS_FLAG) \
 		$(BROADCAST_FLAG) \
 		$(VERIFY_FLAG) \
 		$(VERIFIER_FLAG) \
@@ -206,8 +202,6 @@ define run-deploy-script-account
 		--account $(ACCOUNT_$(CONFIG)) \
 		--password-file $(PASSFILE_$(CONFIG)) \
 		--sender $(DEPLOY_SENDER) \
-		# $(VIA_IR_FLAG) \
-		# $(OPTIMIZER_RUNS_FLAG) \
 		$(BROADCAST_FLAG) \
 		$(VERIFY_FLAG) \
 		$(VERIFIER_FLAG) \
