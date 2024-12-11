@@ -1,6 +1,6 @@
 import { type UUID, unknownToError } from "@happychain/common"
 import { type Result, ResultAsync } from "neverthrow"
-import { Randomness, type RandomnessStatus } from "./Randomness"
+import { FINALIZED_STATUSES, Randomness, type RandomnessStatus } from "./Randomness"
 import { db } from "./db/driver"
 import type { RandomnessRow } from "./db/types"
 
@@ -94,6 +94,7 @@ export class RandomnessRepository {
             db
                 .deleteFrom("randomnesses")
                 .where("timestamp", "<", Number(latestBlockTimestamp) - COMMITMENT_PRUNE_INTERVAL_SECONDS)
+                .where("status", "in", FINALIZED_STATUSES)
                 .execute(),
             unknownToError,
         ).map(() => undefined)
