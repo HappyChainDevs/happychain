@@ -13,6 +13,12 @@ export enum RandomnessStatus {
     REVEAL_NOT_SUBMITTED_ON_TIME = "REVEAL_NOT_SUBMITTED_ON_TIME",
 }
 
+export const FINALIZED_STATUSES = [
+    RandomnessStatus.REVEAL_EXECUTED,
+    RandomnessStatus.REVEAL_FAILED,
+    RandomnessStatus.REVEAL_NOT_SUBMITTED_ON_TIME,
+]
+
 export class Randomness {
     public timestamp: bigint
     public value: bigint
