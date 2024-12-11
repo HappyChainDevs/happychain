@@ -68,9 +68,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                         <Warning size="1em" />
                     </span>
                 )}
-                <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <RemoveTokenMenu tokenAddress={tokenAddress} userAddress={userAddress} />
-                </div>
+                <RemoveTokenMenu tokenAddress={tokenAddress} userAddress={userAddress} />
             </div>
         </div>
     )
