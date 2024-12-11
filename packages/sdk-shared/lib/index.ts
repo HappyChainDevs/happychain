@@ -31,7 +31,7 @@ export { formatUserBalance } from "./utils/balanceFormatter"
 
 // === TYPES =======================================================================================
 
-export type { recordAbiPayload } from "./interfaces/eip1193"
+export type { RecordAbiPayload } from "./interfaces/eip1193"
 export type { ChainParameters } from "./chains/utils"
 export type { ConnectionProvider } from "./interfaces/connectionProvider"
 export type { HappyUser } from "./interfaces/happyUser"
