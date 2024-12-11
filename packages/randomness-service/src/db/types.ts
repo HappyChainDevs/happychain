@@ -1,5 +1,5 @@
 import type { Hex, UUID } from "@happychain/common"
-import type { RandomnessStatus } from "../Randomnnes"
+import type { RandomnessStatus } from "../Randomness"
 
 export interface RandomnessRow {
     // The timestamp is stored as a number because Kisely automatically converts bigint to number

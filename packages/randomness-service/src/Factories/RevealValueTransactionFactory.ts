@@ -1,6 +1,6 @@
 import type { Transaction, TransactionManager } from "@happychain/transaction-manager"
 import type { Address } from "viem"
-import type { Randomness } from "../Randomnnes"
+import type { Randomness } from "../Randomness"
 
 export class RevealValueTransactionFactory {
     private readonly transactionManager: TransactionManager
