@@ -4,8 +4,8 @@ import { abis } from "./ABI/random.js"
 import { CustomGasEstimator } from "./CustomGasEstimator.js"
 import { CommitmentTransactionFactory } from "./Factories/CommitmentTransactionFactory.js"
 import { RevealValueTransactionFactory } from "./Factories/RevealValueTransactionFactory.js"
-import { RandomnessRepository } from "./RandomnesRepository"
-import { Randomness, RandomnessStatus } from "./Randomnnes"
+import { Randomness, RandomnessStatus } from "./Randomness.js"
+import { RandomnessRepository } from "./RandomnessRepository.js"
 import { env } from "./env.js"
 
 class RandomnessService {
