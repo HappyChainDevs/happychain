@@ -1,6 +1,6 @@
 import { type UUID, unknownToError } from "@happychain/common"
 import { type Result, ResultAsync } from "neverthrow"
-import { Randomness, type RandomnessStatus } from "./Randomnnes"
+import { Randomness, type RandomnessStatus } from "./Randomness"
 import { db } from "./db/driver"
 import type { RandomnessRow } from "./db/types"
 
