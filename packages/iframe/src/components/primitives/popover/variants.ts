@@ -12,7 +12,7 @@ const recipePositioner = cva("", {
         },
         originY: {
             default: "",
-            bottom: "bottom-0 ",
+            bottom: "bottom-0",
         },
     },
     defaultVariants: {
