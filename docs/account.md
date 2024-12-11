@@ -151,10 +151,6 @@ application is required.
 The iframe also enables to user to log in only once to his social account, then to connect to any
 app by simply clicking a confirmation button in the popup.
 
-The use of an iframe is required for security reasons: social login providers require whitelisting
-origin domains because the originating domain can approve any transaction, and we can't let any
-application approve arbitrary transactions on behalf of the user after he logs in.
-
 The use of a popup is required for anything that requires the user's approval (connecting to an app,
 transaction confirmation, ...). Otherwise, malicious applications could trick users into approving
 unintended transactions: they could paint over an in-app approval dialog with fake information (e.g.
@@ -245,23 +241,23 @@ with the same method again on the same app, you will become automatically connec
 When authenticating from an app, the connection is granted automatically, however this connection can
 be revoked, or granted again at any time and is handled on a per-app basis.
 
-While unauthenticated, any action that requires authentication first (such as viewing a users 
-address, or making a transaction) will prompt the user to first authenticate themselves using either
-their injected or social wallet. If this is the first time they have authenticated using a social
-wallet a new EOA will be generated automatically, otherwise the existing account will be used. The 
-authentication prompt itself lives within the secure iframe.
+While disconnected, any action that requires connection first (such as viewing a users address, or 
+making a transaction) will prompt the user to either authenticate themselves using either their 
+injected or social wallet if they have not yet done so, or else approve the connection request. If 
+this is the first time they have authenticated using a social wallet a new EOA will be generated 
+automatically, otherwise the existing account will be used. The authentication prompt itself lives 
+within the secure iframe.
 
-When a social wallet option is selected such as 'Sign In With Google', the familiar google oauth popup 
-will be shown and the user will continue with the traditional oauth flow. Once successful, a JWT 
+When a social wallet option is selected (such as 'Sign In With Google'), the familiar oauth popup 
+will be shown and the user will continue with the traditional OAuth flow. Once successful, a JWT 
 will be available to the iframe and used to initialize a Web3Auth 
-[EIP-1193 Wallet Provider](#eip-1193-wallet-provider). From this point on unless unauthenticated or 
+[EIP-1193 Wallet Provider](#eip-1193-wallet-provider). From this point on, unless unauthenticated or 
 disconnected, all web3 calls will be passed to this provider.
 
-When an injected wallet option is selected such as Metamask, an 'InjectedProviderProxy' is initialized
-within the iframe. At a high level on the iframe side this behaves the same as the Web3Auth provider, 
-The difference being behind the scenes it proxies all requests back to the app to be executed by the 
-users selected injected wallet. This pattern allows for calls to originate from within either the 
-app or the iframe and be handled in the same manner on the app-side.
+When an injected wallet option is selected (such as Metamask), an `InjectedProviderProxy` is initialized
+within the iframe. This implementation functions similarly to the Web3Auth provider at a high level. However, instead of directly executing requests, it proxies all requests back to the app, where they
+are executed using the user's selected injected wallet. This approach ensures that requests 
+originating from either the app or the iframe are handled uniformly on the app side.
 
 ### Authentication From The Wallet (Direct Access)
 
