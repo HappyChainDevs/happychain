@@ -1,10 +1,10 @@
 import { accessorsFromAtom } from "@happychain/common"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
-import { type EcdsaKernelSmartAccountImplementation, toEcdsaKernelSmartAccount } from "permissionless/accounts"
+import { type EcdsaKernelSmartAccountImplementation, toKernelSmartAccount } from "permissionless/accounts"
 import { http, type Address, createPublicClient, createWalletClient } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
-import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts.ts"
+import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 import { getCurrentChain } from "./chains"
 import { walletClientAtom } from "./walletClient"
 
@@ -21,14 +21,14 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
     try {
         // We can't use `publicClientAtom` and need to recreate a public client since :
         // 1. `publicClientAtom` uses `transportAtom` for its `transport` value, which can be either `custom()` or `http()`
-        // 2. `toEcdsaKernelSmartAccount()` expects a simple client with direct RPC access
+        // 2. `toKernelSmartAccount()` expects a simple client with direct RPC access
         const publicClient = createPublicClient(clientOptions)
         const owner = createWalletClient({
             ...clientOptions,
             account: walletAddress,
         })
 
-        const account = await toEcdsaKernelSmartAccount({
+        const account = await toKernelSmartAccount({
             client: publicClient,
             entryPoint: {
                 address: entryPoint07Address,
@@ -36,7 +36,7 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
             },
             owners: [owner],
             version: "0.3.1",
-            ecdsaValidatorAddress: contracts.ECDSAValidator,
+            validatorAddress: contracts.ECDSAValidator,
             accountLogicAddress: contracts.Kernel,
             factoryAddress: contracts.KernelFactory,
             metaFactoryAddress: contracts.FactoryStaker,
