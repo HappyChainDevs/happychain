@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority"
 
-// <details />
+/** Defines the container for a `<details>` element. */
 const recipeDisclosureDetails = cva(
     "p-0 group cursor-pointer focus-within:ring-2 rounded-lg items-center [&_svg]:open:-rotate-180 [&_svg]:transition",
     {
@@ -8,6 +8,7 @@ const recipeDisclosureDetails = cva(
             intent: {
                 default: "bg-base-100",
                 gradient: "bg-gradient-to-br from-[rgb(56,189,248)] to-[rgb(109,40,217)] text-white shadow-lg",
+                developerInfo: "",
             },
         },
         defaultVariants: {
@@ -16,7 +17,7 @@ const recipeDisclosureDetails = cva(
     },
 )
 
-// <summary />
+/** Defines the styles for the summary line for a `<details>` element. */
 const recipeDisclosureSummary = cva("list-none text-sm p-4 font-semibold flex justify-between cursor-pointer", {
     variants: {
         intent: {
@@ -29,7 +30,7 @@ const recipeDisclosureSummary = cva("list-none text-sm p-4 font-semibold flex ju
     },
 })
 
-// <></>
+/** Defines the content area of a collapsible `<details>` element. */
 const recipeDisclosureContent = cva("px-4 py-2 text-xs overflow-x-auto group-open:overflow-x-auto", {
     variants: {
         intent: {
