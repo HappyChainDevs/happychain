@@ -8,7 +8,7 @@ import {
     type ProviderMsgsFromApp,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import { type Client, isAddress } from "viem"
+import { type Client, decodeAbiParameters, isAddress } from "viem"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
@@ -31,6 +31,7 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
     const smartAccountClient = await getSmartAccountClient()
+
     switch (request.payload.method) {
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
@@ -57,14 +58,47 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
 
-            if (smartAccountClient) {
-                const opReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
-                if (opReceipt) return opReceipt.receipt
+            if (smartAccountClient?.account) {
+                const userOpReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
+                if (userOpReceipt) {
+                    // Get the original/initial UserOperation to access sender and calldata
+                    const userOpInfo = await smartAccountClient.getUserOperation({ hash: userOpReceipt.userOpHash })
+                    if (!userOpInfo) return await sendToPublicClient(app, request)
+
+                    const userOp = userOpInfo.userOperation
+
+                    try {
+                        // Decode the execute calldata (matches the format in ./utils#convertTxToUserOp())
+                        const executeCalldata = decodeAbiParameters(
+                            [
+                                { type: "bytes32", name: "mode" }, // CALL_MODE
+                                { type: "bytes", name: "data" }, // Actual tx data
+                            ],
+                            userOp.callData.slice(4) as `0x${string}`, // Remove execute function selector
+                        )
+
+                        return {
+                            ...userOpReceipt.receipt,
+                            // UserOp specific fields
+                            from: userOp.sender,
+                            to: smartAccountClient.account.address,
+                            data: executeCalldata[1],
+                            // UserOp specific metadata
+                            status: userOpReceipt.success,
+                            userOpHash: userOpReceipt.userOpHash,
+                            actualGasUsed: userOpReceipt.actualGasUsed,
+                            // Original UserOp receipt for reference
+                            userOpReceipt,
+                        }
+                    } catch (err) {
+                        console.error("Failed to decode userOp calldata:", err)
+                        return await sendToPublicClient(app, request)
+                    }
+                }
             }
 
             return await sendToPublicClient(app, request)
         }
-
         case "eth_getTransactionCount": {
             const [address] = request.payload.params
 
