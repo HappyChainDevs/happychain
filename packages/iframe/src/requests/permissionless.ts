@@ -7,7 +7,7 @@ import {
     type ProviderMsgsFromApp,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import type { Client } from "viem"
+import { type Client, isAddress } from "viem"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
@@ -51,7 +51,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             if (!hasPermissions(app, "eth_accounts")) {
                 throw new EIP1193UserRejectedRequestError()
             }
-            return [getUser()?.address]
+            return isAddress(`${getUser()?.address}`) ? [getUser()?.address] : []
 
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
