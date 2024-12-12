@@ -166,15 +166,17 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         case "eth_estimateGas": {
             const [tx] = request.payload.params
             if (smartAccountClient?.account) {
-                const userOp = await convertTxToUserOp(
-                    {
-                        to: tx.to as `0x${string}`,
-                        data: tx.data,
-                        value: tx.value ? hexToBigInt(tx.value) : 0n,
-                    },
-                    smartAccountClient.account.address,
-                )
-                return userOp.callGasLimit
+                const gasEstimation = await smartAccountClient.estimateUserOperationGas({
+                    calls: [
+                        {
+                            to: tx.to as `0x${string}`,
+                            data: tx.data || "0x",
+                            value: tx.value ? hexToBigInt(tx.value) : 0n,
+                        },
+                    ],
+                })
+
+                return gasEstimation.callGasLimit + gasEstimation.preVerificationGas
             }
             return await sendToPublicClient(app, request)
         }
