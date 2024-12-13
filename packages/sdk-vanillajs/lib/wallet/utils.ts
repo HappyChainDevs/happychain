@@ -1,5 +1,5 @@
+import { blankIcon } from "@happychain/common"
 import { config } from "../config"
-import { blankIcon } from "../happyProvider/icons"
 
 function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: string]: string } {
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }

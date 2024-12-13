@@ -1,7 +1,10 @@
-import type { ConnectionProvider } from "@happychain/sdk-shared"
+import { injectedProviderInfo } from "@happychain/common"
+import { type ConnectionProvider, Msgs } from "@happychain/sdk-shared"
 import { atom, getDefaultStore, useAtomValue } from "jotai"
-import { createStore } from "mipd"
+import { type EIP6963ProviderDetail, createStore } from "mipd"
 import { useMemo } from "react"
+import { appMessageBus } from "#src/services/eventBus.ts"
+import { isStandaloneIframe } from "#src/utils/appURL.ts"
 import { userAtom } from "../state/user"
 import { GoogleConnector } from "./GoogleConnector"
 import { InjectedConnector } from "./InjectedConnector"
@@ -25,23 +28,64 @@ export function useActiveConnectionProvider() {
 
 // === INJECTED PROVIDERS ==========================================================================
 
-const mipdStore = createStore()
+/**
+ * If the wallet is in standalone mode, then we can consume EIP-6963 events directly. However
+ * if the wallet is embedded, then there are situations where these events, as well as injected
+ * wallest such as window.ethereum are shielded from us, preventing us from detecting them.
+ */
+if (isStandaloneIframe()) {
+    const mipdStore = createStore()
 
-// load all initialized providers
-mipdStore.getProviders().forEach((detail) => {
-    addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
-})
+    // load all initialized providers
+    mipdStore.getProviders().forEach((detail) => {
+        addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
+    })
 
-// subscribe to any async changes
-mipdStore.subscribe((details, meta) => {
-    for (const detail of details) {
-        if (meta?.added) {
-            addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
-        } else if (meta?.removed) {
-            removeProvider(new InjectedConnector({ ...detail, autoConnect: false }))
+    // subscribe to any async changes
+    mipdStore.subscribe((details, meta) => {
+        for (const detail of details) {
+            if (meta?.added) {
+                addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
+            } else if (meta?.removed) {
+                removeProvider(new InjectedConnector({ ...detail, autoConnect: false }))
+            }
         }
+    })
+
+    if (window.ethereum) {
+        addProvider(
+            new InjectedConnector({
+                info: injectedProviderInfo,
+                provider: window.ethereum,
+                autoConnect: true,
+            }),
+        )
     }
-})
+} else {
+    // listen to message bus instead of window here because when embedded, in many situations, the
+    // providers will not be detected. Duplicates are fine as we use the provider.id as the unique key
+    appMessageBus.on(Msgs.EIP6963RequestProvider, (provider) => {
+        addProvider(
+            new InjectedConnector({
+                info: provider.info,
+                provider: {
+                    // The following TODO: s are left to be upgraded after
+                    // https://github.com/HappyChainDevs/happychain/pull/233 is merged.
+                    // This connection receiver will likely need to be re-worked, however this is the
+                    // path forward for wiring up injected browser events
+
+                    // TODO:
+                    removeListener: () => {},
+                    /** TODO: */
+                    on: () => {},
+                    /** TODO: */
+                    request: () => {},
+                } as unknown as EIP6963ProviderDetail["provider"],
+                autoConnect: true,
+            }),
+        )
+    })
+}
 
 // === SOCIAL PROVIDERS ============================================================================
 

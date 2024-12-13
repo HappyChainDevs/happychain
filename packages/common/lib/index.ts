@@ -46,3 +46,7 @@ export { convertToSafeViemWalletClient, convertToSafeViemPublicClient } from "./
 export { hexSchema } from "./utils/zod.js"
 
 export { HappyMethodNames } from "./utils/constants"
+
+export { injectedProviderInfo, happyProviderInfo } from "./data/providers"
+
+export { icon64x64, blankIcon } from "./data/icons"

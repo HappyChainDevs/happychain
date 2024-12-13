@@ -77,7 +77,11 @@ export class InjectedWalletHandler extends SafeEventEmitter implements EIP1193Co
             return this.handleProviderDisconnectionRequest({ request })
         }
         try {
-            const providerDetails = store.findProvider({ rdns })
+            const providerDetails =
+                "ethereum" in window && window.ethereum && rdns === "browser.injected"
+                    ? ({ provider: window.ethereum } as EIP6963ProviderDetail)
+                    : store.findProvider({ rdns })
+
             if (!providerDetails) {
                 // cant find extension, disconnect
                 return this.handleProviderDisconnectionRequest({ request })
