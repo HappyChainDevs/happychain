@@ -51,7 +51,7 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
 export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = atom(async (get) => {
     const wallet = await get(walletClientAtom)
     if (!wallet?.account) return undefined
-    return await createKernelAccount(wallet?.account.address)
+    return await createKernelAccount(wallet.account.address)
 })
 
 export const { getValue: getKernelAccount } = accessorsFromAtom(kernelAccountAtom)
