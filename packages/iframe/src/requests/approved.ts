@@ -21,7 +21,7 @@ import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID } from "./utils"
+import { appForSourceID, convertTxToUserOp } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -46,18 +46,33 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             if (!user) return false
 
             const tx = request.payload.params[0]
+            const partialUserOp = await convertTxToUserOp(
+                {
+                    to: tx.to as `0x${string}`,
+                    data: tx.data || "0x",
+                    value: tx.value ? hexToBigInt(tx.value) : 0n,
+                },
+                smartAccountClient.account.address,
+            )
             const preparedUserOp = await smartAccountClient.prepareUserOperation({
                 account: smartAccountClient.account,
                 calls: [
                     {
-                        to: tx.to as `0x${string}`,
-                        data: tx.data || "0x",
-                        value: tx.value ? hexToBigInt(tx.value) : 0n,
+                        ...partialUserOp,
+                        // Optional gas parameters from the transaction
+                        ...(tx.gas && {
+                            callGasLimit: BigInt(tx.gas),
+                        }),
+                        ...(tx.maxFeePerGas && {
+                            maxFeePerGas: BigInt(tx.maxFeePerGas),
+                        }),
+                        ...(tx.maxPriorityFeePerGas && {
+                            maxPriorityFeePerGas: BigInt(tx.maxPriorityFeePerGas),
+                        }),
                     },
                 ],
             })
 
-            // Send operation and wait for inclusion
             const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
             const userOpReceipt = await smartAccountClient.waitForUserOperationReceipt({
                 hash: userOpHash,
