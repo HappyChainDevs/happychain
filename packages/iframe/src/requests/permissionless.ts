@@ -8,6 +8,7 @@ import {
     type ProviderMsgsFromApp,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
+import { decodeNonce } from "permissionless"
 import { type Client, decodeAbiParameters, isAddress } from "viem"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
@@ -17,7 +18,7 @@ import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkPermissions"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID, checkAuthenticated, extractSequenceFromNonce } from "./utils"
+import { appForSourceID, checkAuthenticated } from "./utils"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -106,11 +107,21 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 smartAccountClient?.account &&
                 address.toLowerCase() === smartAccountClient.account.address.toLowerCase()
             ) {
-                // In Kernel smart accounts, nonces have a 2D structure to support parallel transactions.
-                // eth_getTransactionCount should only return the sequence number (transaction count).
-                const fullNonce = await smartAccountClient.account.getNonce()
+                /**
+                 * For smart accounts, we need to handle 2D nonces, which combine :
+                 * - A key (upper 192 bits) for parallel transaction support
+                 * - A sequence number (lower 64 bits) for transaction ordering
+                 *
+                 * @see {@link https://docs.stackup.sh/docs/useroperation-nonce} for detailed explanation
+                 * @see {@link https://github.com/pimlicolabs/entrypoint-estimations/blob/main/lib/account-abstraction/contracts/interfaces/INonceManager.sol}
+                 *
+                 * `eth_getTransactionCount` should return just the sequence number to match
+                 * traditional account behavior and maintain compatibility with existing tools.
+                 */
 
-                return extractSequenceFromNonce(fullNonce)
+                const fullNonce = await smartAccountClient.account.getNonce()
+                const { sequence } = decodeNonce(fullNonce)
+                return sequence
             }
 
             return await sendToPublicClient(app, request)

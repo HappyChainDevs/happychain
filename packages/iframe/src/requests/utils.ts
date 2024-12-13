@@ -1,7 +1,7 @@
 import { type UUID, createUUID } from "@happychain/common"
 import { abis } from "@happychain/contracts/account-abstraction/sepolia"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
-import { type Address, type Hex, type TransactionRequest, encodeFunctionData, hexToBigInt } from "viem"
+import { type Address, type TransactionRequest, encodeFunctionData } from "viem"
 import type { UserOperation } from "viem/account-abstraction"
 import { getAuthState } from "../state/authState"
 import { type AppURL, getAppURL, getIframeURL, isIframe } from "../utils/appURL.ts"
@@ -84,36 +84,4 @@ export function convertTxToUserOp(tx: TransactionRequest, sender: Address): Part
         maxPriorityFeePerGas: tx.maxPriorityFeePerGas,
         // The rest will be filled by `prepareUserOperation()`
     }
-}
-
-/**
- * Extracts the sequence number of transaction from the nonce of a smart account.
- *
- * Smart accounts use a "2D nonce" system that allows multiple transaction sequences
- * to run in parallel :
- *
- * - Each sequence is like a numbered list of transactions starting from 0
- * - Different sequences can run at the same time using different "keys"
- * - When you get a nonce, it contains :
- *   - Which sequence it's from (the key, stored in upper 192 bits)
- *   - What position in that sequence (stored in lower 64 bits)
- *
- * For example :
- * The sequence of key 0 counts : 0, 1, 2, 3 ...
- * The sequence of key 1 counts : 0, 1, 2 ... but is stored as: 18446744073709551616, 18446744073709551617...
- * The sequence of key 2 counts : 0, 1, 2 ... but is stored as: 36893488147419103232, 36893488147419103233...
- *
- * @see {@link https://docs.stackup.sh/docs/useroperation-nonce} for detailed explanation
- * @see {@link https://github.com/pimlicolabs/entrypoint-estimations/blob/main/lib/account-abstraction/contracts/interfaces/INonceManager.sol}
- *
- * @param fullNonce - The full nonce from the smart account
- * @returns The position in the sequence (lower 64 bits)
- *
- * @example
- * const fullNonce = smartAccount.getNonce()
- * const position = extractSequenceFromNonce(fullNonce)
- */
-export function extractSequenceFromNonce(fullNonce: Hex | bigint): bigint {
-    const nonceBigInt = typeof fullNonce === "string" ? hexToBigInt(fullNonce) : fullNonce
-    return nonceBigInt & ((1n << 64n) - 1n)
 }
