@@ -9,11 +9,11 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { decodeNonce } from "permissionless"
-import { type Client, decodeAbiParameters, isAddress } from "viem"
+import { type Client, InvalidAddressError, decodeAbiParameters, isAddress } from "viem"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
-import { getSmartAccountClient } from "#src/state/smartAccountClient"
+import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkPermissions"
@@ -31,7 +31,7 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 // exported for testing
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
-    const smartAccountClient = await getSmartAccountClient()
+    const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
 
     switch (request.payload.method) {
         case "eth_chainId": {
@@ -58,55 +58,53 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
+            const userOpReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
 
-            if (smartAccountClient?.account) {
-                const userOpReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
-                if (userOpReceipt) {
-                    // Get the original/initial UserOperation to access sender and calldata
-                    const userOpInfo = await smartAccountClient.getUserOperation({ hash: userOpReceipt.userOpHash })
-                    if (!userOpInfo) return await sendToPublicClient(app, request)
-
-                    const userOp = userOpInfo.userOperation
-
-                    try {
-                        // Decode the execute calldata (matches the format in ./utils#convertTxToUserOp())
-                        const executeCalldata = decodeAbiParameters(
-                            [
-                                { type: "bytes32", name: "mode" }, // CALL_MODE
-                                { type: "bytes", name: "data" }, // Actual tx data
-                            ],
-                            userOp.callData.slice(4) as `0x${string}`, // Remove execute function selector
-                        )
-
-                        return {
-                            ...userOpReceipt.receipt,
-                            // UserOp specific fields
-                            from: userOp.sender,
-                            to: smartAccountClient.account.address,
-                            data: executeCalldata[1],
-                            // UserOp specific metadata
-                            status: userOpReceipt.success,
-                            userOpHash: userOpReceipt.userOpHash,
-                            actualGasUsed: userOpReceipt.actualGasUsed,
-                            // Original UserOp receipt for reference
-                            userOpReceipt,
-                        }
-                    } catch (err) {
-                        console.error("Failed to decode userOp calldata:", err)
-                        return await sendToPublicClient(app, request)
-                    }
-                }
+            if (!userOpReceipt) {
+                throw new Error(`No receipt found for hash : ${hash}`)
             }
 
-            return await sendToPublicClient(app, request)
+            const userOpInfo = await smartAccountClient.getUserOperation({
+                hash: userOpReceipt.userOpHash,
+            })
+
+            if (!userOpInfo) {
+                throw new Error(`No UserOperation found for hash : ${hash}`)
+            }
+
+            const userOp = userOpInfo.userOperation
+
+            try {
+                // Get actual transaction details
+                const executeCalldata = decodeAbiParameters(
+                    [
+                        { type: "bytes32", name: "mode" },
+                        { type: "bytes", name: "data" },
+                    ],
+                    userOp.callData.slice(4) as `0x${string}`,
+                )
+
+                return {
+                    ...userOpReceipt.receipt,
+                    // UserOp specific fields
+                    from: userOp.sender,
+                    to: smartAccountClient.account.address,
+                    data: executeCalldata[1],
+                    // UserOp specific metadata
+                    status: userOpReceipt.success,
+                    userOpHash: userOpReceipt.userOpHash,
+                    actualGasUsed: userOpReceipt.actualGasUsed,
+                    // Original UserOp receipt for reference
+                    userOpReceipt,
+                }
+            } catch (error) {
+                throw new Error(`Failed to decode UserOperation calldata : ${error}`)
+            }
         }
         case "eth_getTransactionCount": {
             const [address] = request.payload.params
 
-            if (
-                smartAccountClient?.account &&
-                address.toLowerCase() === smartAccountClient.account.address.toLowerCase()
-            ) {
+            if (smartAccountClient && address.toLowerCase() === smartAccountClient.account.address.toLowerCase()) {
                 /**
                  * For smart accounts, we need to handle 2D nonces, which combine :
                  * - A key (upper 192 bits) for parallel transaction support
@@ -118,13 +116,12 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                  * `eth_getTransactionCount` should return just the sequence number to match
                  * traditional account behavior and maintain compatibility with existing tools.
                  */
-
                 const fullNonce = await smartAccountClient.account.getNonce()
                 const { sequence } = decodeNonce(fullNonce)
                 return sequence
             }
 
-            return await sendToPublicClient(app, request)
+            throw new InvalidAddressError({ address })
         }
 
         case "wallet_getPermissions":
