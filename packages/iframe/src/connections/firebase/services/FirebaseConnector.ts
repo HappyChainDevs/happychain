@@ -120,7 +120,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     private static async makeHappyUser(
         user: HappyUserDetails,
         addresses: `0x${string}`[],
-        smartAccountAddress?: `0x${string}`,
+        smartAccountAddress: `0x${string}`,
     ) {
         const happyUser = {
             ...user,
@@ -148,7 +148,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                     throw new AccountNotFoundError()
                 }
 
-                const user = await FirebaseConnector.makeHappyUser(partialUser, addresses, account?.address)
+                const user = await FirebaseConnector.makeHappyUser(partialUser, addresses, account.address)
                 await setFirebaseSharedUser(user)
                 return user
             } catch (e) {
