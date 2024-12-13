@@ -7,3 +7,4 @@ kernel/=lib/kernel/src/
 solady/=lib/solady/src/
 ExcessivelySafeCall/=lib/ExcessivelySafeCall/src/
 @openzeppelin/contracts=lib/openzeppelin/src
+bls-bn254/=lib/bls-bn254/contracts/

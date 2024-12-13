@@ -41,9 +41,11 @@ setup:
 	ln $(LN_FLAGS) ../$(NODE_MODULES)/solady lib/solady
 	ln $(LN_FLAGS) ../$(NODE_MODULES)/kernel lib/kernel
 	ln $(LN_FLAGS) ../$(NODE_MODULES)/forge-std lib/forge-std
+	ln $(LN_FLAGS) ../$(NODE_MODULES)/@kevincharm/bls-bn254 lib/bls-bn254
 	ln $(LN_FLAGS) ../$(NODE_MODULES)/account-abstraction lib/account-abstraction
 	ln $(LN_FLAGS) ../../$(NODE_MODULES)/@openzeppelin/contracts lib/openzeppelin/src
 	ln $(LN_FLAGS) ../../$(NODE_MODULES)/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
+
 .PHONY: setup
 
 ####################################################################################################
@@ -288,6 +290,10 @@ deploy-aa:
 deploy-random:
 	make deploy DEPLOY_SCRIPT=DeployRandom.s.sol
 .PHONY: deploy-random
+
+deploy-drand:
+	make deploy DEPLOY_SCRIPT=DeployDrand.s.sol
+.PHONY: deploy-drand
 
 deploy-mocks:
 	make deploy DEPLOY_SCRIPT=mocks/DeployMocks.s.sol
