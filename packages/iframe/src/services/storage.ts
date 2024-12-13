@@ -7,6 +7,7 @@ export enum StorageKey {
     UserPermissions = "happychain:user_permissions:v1",
     ConfirmedTxs = "happychain:confirmed_txs:v1",
     PendingTxs = "happychain:pending_txs:v1",
+    WatchedAssets = "happychain:watched_assets:v1",
 }
 
 // cache user within iframe to manage auto-reconnect
