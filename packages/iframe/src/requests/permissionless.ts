@@ -18,7 +18,7 @@ import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkPermissions"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID, checkAuthenticated, convertTxToUserOp } from "./utils"
+import { appForSourceID, checkAuthenticated } from "./utils"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -165,20 +165,18 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_estimateGas": {
             const [tx] = request.payload.params
-            if (smartAccountClient?.account) {
-                const gasEstimation = await smartAccountClient.estimateUserOperationGas({
-                    calls: [
-                        {
-                            to: tx.to as `0x${string}`,
-                            data: tx.data || "0x",
-                            value: tx.value ? hexToBigInt(tx.value) : 0n,
-                        },
-                    ],
-                })
+            const gasEstimation = await smartAccountClient.estimateUserOperationGas({
+                calls: [
+                    {
+                        to: tx.to as `0x${string}`,
+                        data: tx.data || "0x",
+                        value: tx.value ? hexToBigInt(tx.value) : 0n,
+                    },
+                ],
+            })
 
-                return gasEstimation.callGasLimit + gasEstimation.preVerificationGas
-            }
-            return await sendToPublicClient(app, request)
+            // Return the sum of essential gas components
+            return gasEstimation.callGasLimit + gasEstimation.preVerificationGas
         }
 
         case "wallet_getPermissions":
