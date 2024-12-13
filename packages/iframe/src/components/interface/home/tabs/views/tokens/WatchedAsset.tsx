@@ -3,12 +3,12 @@ import { useMemo, useState } from "react"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
 
 import type { HappyUser } from "@happychain/sdk-shared"
-import type { WatchAssetParametersForStorage } from "#src/state/watchedAssets"
+import type { Address, WatchAssetParameters } from "viem"
 import { RemoveTokenMenu } from "./RemoveTokenMenu"
 
 interface WatchedAssetProps {
     user: HappyUser
-    asset: WatchAssetParametersForStorage
+    asset: WatchAssetParameters
 }
 
 /**
@@ -24,7 +24,9 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
 
     const [isImageSourceBroken, setIsImageSourceBroken] = useState(false)
 
-    const { data: balanceData } = useERC20Balance(tokenAddress, userAddress)
+    // type assertion(s) as Address here valid since before adding a token
+    // we check that the input string is an Address using the viem helper
+    const { data: balanceData } = useERC20Balance(tokenAddress as Address, userAddress)
 
     // shortened fields for UI visibility
     const tokenSymbol = useMemo(
@@ -68,7 +70,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                         <Warning size="1em" />
                     </span>
                 )}
-                <RemoveTokenMenu tokenAddress={tokenAddress} userAddress={userAddress} />
+                <RemoveTokenMenu tokenAddress={tokenAddress as Address} userAddress={userAddress} />
             </div>
         </div>
     )

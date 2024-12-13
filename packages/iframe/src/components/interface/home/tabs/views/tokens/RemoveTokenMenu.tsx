@@ -5,7 +5,7 @@ import { recipeContent } from "#src/components/primitives/popover/variants"
 import { removeWatchedAsset } from "#src/state/watchedAssets"
 
 enum TokenMenuActions {
-    Remove = "remove",
+    StopTracking = "Stop tracking",
 }
 
 interface RemoveTokensMenuProps {
@@ -14,7 +14,6 @@ interface RemoveTokensMenuProps {
 }
 
 const RemoveTokenMenu = ({ tokenAddress, userAddress }: RemoveTokensMenuProps) => {
-    // un-watches the asset
     const handleRemoveClick = () => {
         removeWatchedAsset(tokenAddress, userAddress)
     }
@@ -35,10 +34,10 @@ const RemoveTokenMenu = ({ tokenAddress, userAddress }: RemoveTokensMenuProps) =
                     <Menu.Item
                         asChild
                         className="text-white cursor-pointer p-2 bg-base-content/20 rounded-lg"
-                        value={TokenMenuActions.Remove}
+                        value={TokenMenuActions.StopTracking}
                         onClick={handleRemoveClick}
                     >
-                        <span className="text-primary/60">{TokenMenuActions.Remove}</span>
+                        <span className="text-primary/60">{TokenMenuActions.StopTracking}</span>
                     </Menu.Item>
                 </Menu.Content>
             </Menu.Positioner>

@@ -1,35 +1,16 @@
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { type Address, type WatchAssetParameters, isAddress } from "viem"
+import { StorageKey } from "#src/services/storage.js"
 
-/**
- * Represents the parameters for storing watched assets in a way that
- * overrides the default `address` field type in the `WatchAssetParameters.options`.
- *
- * This type is a modified version of the {@link WatchAssetParameters | WatchAssetParameters} type from the
- * `viem` library, specifically designed for use with local storage in the
- * context of managing user-watched assets. The key modifications include:
- *
- * - The `options` field is redefined to exclude the original `address` field
- *   (which is typically a string) and instead includes a new `address` field
- *   that is strictly typed as `Address`. This ensures that the address is
- *   validated and conforms to the expected format, enhancing type safety
- *   and reducing the risk of errors related to address handling.
- */
-export type WatchAssetParametersForStorage = Omit<WatchAssetParameters, "options"> & {
-    options: Omit<WatchAssetParameters["options"], "address"> & {
-        address: Address
-    }
-}
-
-export type UserWatchedAssetsRecord = Record<Address, WatchAssetParametersForStorage[]>
+export type UserWatchedAssetsRecord = Record<Address, WatchAssetParameters[]>
 
 // === Atom Definition ==================================================================================
 
 /**
  * Atom to manage watched assets mapped to user's address, using localStorage.
  */
-export const watchedAssetsAtom = atomWithStorage<UserWatchedAssetsRecord>("watchedAssets", {}, undefined, {
+export const watchedAssetsAtom = atomWithStorage<UserWatchedAssetsRecord>(StorageKey.WatchedAssets, {}, undefined, {
     getOnInit: true,
 })
 
