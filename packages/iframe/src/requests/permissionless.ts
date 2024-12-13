@@ -175,8 +175,38 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 ],
             })
 
-            // Return the sum of essential gas components
-            return gasEstimation.callGasLimit + gasEstimation.preVerificationGas
+            /**
+             * Gas estimation that will be used in `eth_sendTransaction`.
+             *
+             * In account abstraction, gas estimation includes multiple components:
+             * 1. `preVerificationGas` (PVG): Static overhead for the bundler to process the operation
+             *    - Always charged, not a limit
+             *    - Covers the cost of the bundler to submit the UserOp to `EntryPoint`
+             *
+             * 2. `verificationGasLimit` (VGL): The maximum gas for validation phase
+             *    - Account and signature validation
+             *    - Smart account deployment (first transaction)
+             *    - Paymaster validation (if used)
+             *
+             * 3. `callGasLimit` (CGL): The maximum gas for the actual transaction execution
+             *    - Like regular EOA transaction gas
+             *    - Used for the main operation (transfer, contract call, etc.)
+             *
+             * Sidenote about total gas calculation :
+             * - Without paymaster: PVG + VGL + CGL
+             * - With paymaster: PVG + (3 * VGL) + CGL
+             *   (`verificationGasLimit` is multiplied by 3 for initial validation, postOp, and potential postOp revert)
+             *
+             * The guaranteed gas consumption is `callGasLimit + preVerificationGas` because :
+             * - These values are guaranteed to be consumed ;
+             * - `verificationGasLimit` handling differs with/without paymaster ;
+             * - The bundler will handle proper gas distribution.
+             *
+             * @see {@link https://docs.stackup.sh/docs/useroperation-gas-values}
+             * @see {@link https://docs.stackup.sh/docs/erc-4337-bundler-rpc-methods#eth_estimateuseroperationgas}
+             */
+            const guaranteedGasConsumption = gasEstimation.callGasLimit + gasEstimation.preVerificationGas
+            return guaranteedGasConsumption
         }
 
         case "wallet_getPermissions":
