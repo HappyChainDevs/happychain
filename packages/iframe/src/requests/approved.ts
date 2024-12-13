@@ -9,13 +9,13 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
+import { type Client, type Hex, hexToBigInt } from "viem"
 import { addPendingTx } from "#src/services/transactionHistory"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { grantPermissions } from "#src/state/permissions"
-import { getSmartAccountClient } from "#src/state/smartAccountClient"
+import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 import type { PendingTxDetails } from "#src/state/txHistory"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
@@ -37,6 +37,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
     const user = getUser()
+    const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
+
     if (!user) {
         console.warn("Request approved, but no user found")
     }
@@ -46,31 +48,26 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             if (!user) return false
 
             const tx = request.payload.params[0]
-            const smartAccountClient = await getSmartAccountClient()
-            let hash: Hash
+            const preparedUserOp = await smartAccountClient.prepareUserOperation({
+                account: smartAccountClient.account,
+                calls: [
+                    {
+                        to: tx.to as `0x${string}`,
+                        data: tx.data || "0x",
+                        value: tx.value ? hexToBigInt(tx.value) : 0n,
+                    },
+                ],
+            })
 
-            if (smartAccountClient?.account) {
-                const preparedUserOp = await smartAccountClient.prepareUserOperation({
-                    account: smartAccountClient.account,
-                    calls: [
-                        {
-                            to: tx.to as `0x${string}`,
-                            data: tx.data || "0x",
-                            value: tx.value ? hexToBigInt(tx.value) : 0n,
-                        },
-                    ],
-                })
-                const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
-                const userOpReceipt = await smartAccountClient.waitForUserOperationReceipt({
-                    hash: userOpHash,
-                })
+            // Send operation and wait for inclusion
+            const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
+            const userOpReceipt = await smartAccountClient.waitForUserOperationReceipt({
+                hash: userOpHash,
+            })
 
-                hash = userOpReceipt.receipt.transactionHash
-            } else {
-                hash = (await sendToWalletClient(request)) as Hash
-            }
+            const hash = userOpReceipt.receipt.transactionHash
 
-            // Track pending transaction
+            // Track pending transaction with actual transaction hash
             const value = hexToBigInt(tx.value as Hex)
             const payload: PendingTxDetails = { hash, value }
             addPendingTx(user.address, payload)
