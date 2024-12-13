@@ -1,11 +1,11 @@
 import { chains, useHappyChain } from "@happychain/react"
 
+import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { useEffect, useMemo, useState } from "react"
 import { type Hex, createPublicClient, createWalletClient, custom, hexToNumber } from "viem"
 import { gnosis } from "viem/chains"
 import { ConnectButton } from "./BadgeComponent"
-import { tokenAbi } from "./utils/MockTokenABI"
 
 function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
@@ -87,16 +87,16 @@ function App() {
     /** mints 1 MTA token to the connected account */
     async function mintTokens() {
         try {
-            if (!walletClient) return
+            if (!walletClient || !user?.address) return
 
             const [account] = await walletClient.getAddresses()
             // cf: https://viem.sh/docs/contract/writeContract.html#usage
             const { request } = await publicClient.simulateContract({
                 account,
-                address: "0xc80629fE33747288AaFb97684F86f7eD2D1aBF69",
-                abi: tokenAbi.MockERC20Token,
+                address: contractsAddresses.MockTokenA,
+                abi: abis.MockTokenA,
                 functionName: "mint",
-                args: [user?.address, BigInt(1000000000000000000n)],
+                args: [user.address, BigInt(1000000000000000000n)],
                 chain: convertToViemChain(chains.defaultChain),
             })
             const writeCall = await walletClient.writeContract(request)
