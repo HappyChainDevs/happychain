@@ -1,158 +1,259 @@
 Gas Usage for a Single UserOp (with Deployment):
 ---------------------------------------------------------------------
 
+
+=== processSingleUserOp: Preparation ===
+UserOp preparation time: 24.57ms
+
+=== processSingleUserOp: Gas Estimation ===
+Gas estimation time: 8.28ms
+
+=== processSingleUserOp: Execution ===
+UserOp execution time: 4029.50ms
 Estimated UserOperation Gas:
   PreVerificationGas:   57,002 gas
-  VerificationGasLimit: 397,390 gas
+  VerificationGasLimit: 394,110 gas
   CallGasLimit:         134,267 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    333,618 gas
-  Total UserOp Gas:           352,157 gas
+  Bundler Transaction Gas:    331,431 gas
+  Total UserOp Gas:           349,970 gas
   Bundler Overhead:           18,539 gas
-  UserOp Overhead:            299,319 gas
-  Total Overhead:             317,858 gas
+  UserOp Overhead:            297,132 gas
+  Total Overhead:             315,671 gas
 
 Gas Usage for a Single UserOp (no Deployment):
 ---------------------------------------------------------------------
 
+
+=== processSingleUserOp: Preparation ===
+UserOp preparation time: 13.41ms
+
+=== processSingleUserOp: Gas Estimation ===
+Gas estimation time: 5.89ms
+
+=== processSingleUserOp: Execution ===
+UserOp execution time: 4026.13ms
 Estimated UserOperation Gas:
   PreVerificationGas:   53,517 gas
-  VerificationGasLimit: 116,596 gas
+  VerificationGasLimit: 113,316 gas
   CallGasLimit:         134,267 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    146,355 gas
-  Total UserOp Gas:           164,476 gas
-  Bundler Overhead:           18,121 gas
-  UserOp Overhead:            112,056 gas
-  Total Overhead:             130,177 gas
+  Bundler Transaction Gas:    144,180 gas
+  Total UserOp Gas:           162,289 gas
+  Bundler Overhead:           18,109 gas
+  UserOp Overhead:            109,881 gas
+  Total Overhead:             127,990 gas
 
 Gas Usage for a Single UserOp with 5 Calls (no Deployment):
 ---------------------------------------------------------------------
 
+
+=== processSingleUserOp: Preparation ===
+UserOp preparation time: 14.20ms
+
+=== processSingleUserOp: Gas Estimation ===
+Gas estimation time: 6.53ms
+
+=== processSingleUserOp: Execution ===
+UserOp execution time: 4032.31ms
 Estimated UserOperation Gas:
   PreVerificationGas:   61,952 gas
-  VerificationGasLimit: 118,731 gas
+  VerificationGasLimit: 115,450 gas
   CallGasLimit:         156,768 gas
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    34,471 gas
-  Total UserOp Gas:           38,327 gas
-  Bundler Overhead:           3,856 gas
-  UserOp Overhead:            172 gas
-  Total Overhead:             4,028 gas
+  Bundler Transaction Gas:    34,034 gas
+  Total UserOp Gas:           37,889 gas
+  Bundler Overhead:           3,855 gas
+  UserOp Overhead:            -265 gas
+  Total Overhead:             3,590 gas
 
 Gas Usage per UserOp (no Deployment) from the same Sender:
 (Processed 5 UserOps in the largest bundle)
 ---------------------------------------------------------------------
 
-UserOp 1: Block #3512, Tx Index: 0
-UserOp 2: Block #3512, Tx Index: 0
-UserOp 3: Block #3512, Tx Index: 0
-UserOp 4: Block #3512, Tx Index: 0
-UserOp 5: Block #3512, Tx Index: 0
+UserOp 1: Block #782, Tx Index: 0
+UserOp 2: Block #782, Tx Index: 0
+UserOp 3: Block #782, Tx Index: 0
+UserOp 4: Block #782, Tx Index: 0
+UserOp 5: Block #782, Tx Index: 0
 
 
-Total Bundle Tx GasUsed: 502287
-per UserOp Bundle Tx GasUsed: 100457
+Total Bundle Tx GasUsed: 499364
+per UserOp Bundle Tx GasUsed: 99872
 UserOp [0]
-    ActualGas: 164,486
-    ActualGas - AvgBundlerTxGas: 64,029
+    ActualGas: 162,299
+    ActualGas - AvgBundlerTxGas: 62,427
 UserOp [1]
-    ActualGas: 141,031
-    ActualGas - AvgBundlerTxGas: 40,574
+    ActualGas: 140,844
+    ActualGas - AvgBundlerTxGas: 40,972
 UserOp [2]
-    ActualGas: 141,034
-    ActualGas - AvgBundlerTxGas: 40,577
+    ActualGas: 140,847
+    ActualGas - AvgBundlerTxGas: 40,975
 UserOp [3]
-    ActualGas: 141,035
-    ActualGas - AvgBundlerTxGas: 40,578
+    ActualGas: 140,848
+    ActualGas - AvgBundlerTxGas: 40,976
 UserOp [4]
-    ActualGas: 141,038
-    ActualGas - AvgBundlerTxGas: 40,581
+    ActualGas: 140,851
+    ActualGas - AvgBundlerTxGas: 40,979
 
 
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    100,457 gas
-  Total UserOp Gas:           145,724 gas
-  Bundler Overhead:           45,267 gas
-  UserOp Overhead:            66,158 gas
-  Total Overhead:             111,425 gas
+  Bundler Transaction Gas:    99,872 gas
+  Total UserOp Gas:           145,137 gas
+  Bundler Overhead:           45,265 gas
+  UserOp Overhead:            65,573 gas
+  Total Overhead:             110,838 gas
 
 Gas Usage per UserOp (with Deployment) from different Senders:
 ---------------------------------------------------------------------
 
-Total Bundle Tx GasUsed: 1412423
-per UserOp Bundle Tx GasUsed: 282484
+
+=== sendUserOps: Start ===
+UserOp 0: Preparation time: 43.35ms
+UserOp 0: Signing time: 1.31ms
+UserOp 4: Preparation time: 42.61ms
+UserOp 4: Signing time: 0.51ms
+UserOp 2: Preparation time: 44.29ms
+UserOp 2: Signing time: 0.91ms
+UserOp 1: Preparation time: 45.77ms
+UserOp 1: Signing time: 0.49ms
+UserOp 3: Preparation time: 45.96ms
+UserOp 3: Signing time: 0.58ms
+
+=== Sending UserOps in Parallel ===
+UserOp 0: Send time: 11.35ms
+UserOp 1: Send time: 11.92ms
+UserOp 2: Send time: 12.95ms
+UserOp 4: Send time: 13.89ms
+UserOp 3: Send time: 14.52ms
+Total parallel send time: 14.65ms
+
+=== Waiting for UserOp Receipts ===
+UserOp 0: Wait time: 4044.94ms
+UserOp 4: Wait time: 4045.07ms
+UserOp 3: Wait time: 4045.65ms
+UserOp 2: Wait time: 4057.92ms
+UserOp 1: Wait time: 4058.38ms
+Total parallel wait time: 4058.69ms
+UserOp 1: Block #815, Tx Index: 0
+UserOp 2: Block #815, Tx Index: 0
+UserOp 3: Block #815, Tx Index: 0
+UserOp 4: Block #815, Tx Index: 0
+UserOp 5: Block #815, Tx Index: 0
+
+
+Total Bundle Tx GasUsed: 1409512
+per UserOp Bundle Tx GasUsed: 281902
 UserOp [0]
-    ActualGas: 352,158
-    ActualGas - AvgBundlerTxGas: 69,674
+    ActualGas: 349,985
+    ActualGas - AvgBundlerTxGas: 68,083
 UserOp [1]
-    ActualGas: 321,685
-    ActualGas - AvgBundlerTxGas: 39,201
+    ActualGas: 321,498
+    ActualGas - AvgBundlerTxGas: 39,596
 UserOp [2]
-    ActualGas: 321,688
-    ActualGas - AvgBundlerTxGas: 39,204
+    ActualGas: 321,501
+    ActualGas - AvgBundlerTxGas: 39,599
 UserOp [3]
-    ActualGas: 321,690
-    ActualGas - AvgBundlerTxGas: 39,206
+    ActualGas: 321,479
+    ActualGas - AvgBundlerTxGas: 39,577
 UserOp [4]
-    ActualGas: 321,693
-    ActualGas - AvgBundlerTxGas: 39,209
+    ActualGas: 321,503
+    ActualGas - AvgBundlerTxGas: 39,601
 
 
+
+=== sendUserOps: End ===
 (Processed 5 UserOps in this bundle, each from a different sender)
 
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    282,484 gas
-  Total UserOp Gas:           327,782 gas
-  Bundler Overhead:           45,298 gas
-  UserOp Overhead:            248,185 gas
-  Total Overhead:             293,483 gas
+  Bundler Transaction Gas:    281,902 gas
+  Total UserOp Gas:           327,193 gas
+  Bundler Overhead:           45,291 gas
+  UserOp Overhead:            247,603 gas
+  Total Overhead:             292,894 gas
 
 Gas Usage per UserOp (no Deployment) from different Senders:
 ---------------------------------------------------------------------
 
-Total Bundle Tx GasUsed: 514299
-per UserOp Bundle Tx GasUsed: 102859
+
+=== sendUserOps: Start ===
+UserOp 2: Preparation time: 23.18ms
+UserOp 2: Signing time: 1.38ms
+UserOp 3: Preparation time: 25.31ms
+UserOp 3: Signing time: 1.46ms
+UserOp 0: Preparation time: 28.18ms
+UserOp 0: Signing time: 0.54ms
+UserOp 1: Preparation time: 29.16ms
+UserOp 1: Signing time: 0.74ms
+UserOp 4: Preparation time: 29.87ms
+UserOp 4: Signing time: 0.85ms
+
+=== Sending UserOps in Parallel ===
+UserOp 0: Send time: 8.96ms
+UserOp 1: Send time: 10.00ms
+UserOp 2: Send time: 10.55ms
+UserOp 3: Send time: 11.04ms
+UserOp 4: Send time: 13.01ms
+Total parallel send time: 13.26ms
+
+=== Waiting for UserOp Receipts ===
+UserOp 0: Wait time: 4033.62ms
+UserOp 4: Wait time: 4033.67ms
+UserOp 1: Wait time: 4034.22ms
+UserOp 2: Wait time: 4040.88ms
+UserOp 3: Wait time: 4041.08ms
+Total parallel wait time: 4041.42ms
+UserOp 1: Block #827, Tx Index: 0
+UserOp 2: Block #827, Tx Index: 0
+UserOp 3: Block #827, Tx Index: 0
+UserOp 4: Block #827, Tx Index: 0
+UserOp 5: Block #827, Tx Index: 0
+
+
+Total Bundle Tx GasUsed: 511316
+per UserOp Bundle Tx GasUsed: 102263
 UserOp [0]
-    ActualGas: 164,486
-    ActualGas - AvgBundlerTxGas: 61,627
+    ActualGas: 162,299
+    ActualGas - AvgBundlerTxGas: 60,036
 UserOp [1]
-    ActualGas: 143,551
-    ActualGas - AvgBundlerTxGas: 40,692
+    ActualGas: 143,364
+    ActualGas - AvgBundlerTxGas: 41,101
 UserOp [2]
-    ActualGas: 143,554
-    ActualGas - AvgBundlerTxGas: 40,695
+    ActualGas: 143,367
+    ActualGas - AvgBundlerTxGas: 41,104
 UserOp [3]
-    ActualGas: 143,555
-    ActualGas - AvgBundlerTxGas: 40,696
+    ActualGas: 143,341
+    ActualGas - AvgBundlerTxGas: 41,078
 UserOp [4]
-    ActualGas: 143,558
-    ActualGas - AvgBundlerTxGas: 40,699
+    ActualGas: 143,371
+    ActualGas - AvgBundlerTxGas: 41,108
 
 
+
+=== sendUserOps: End ===
 (Processed 5 UserOps in this bundle, each from a different sender)
 
 User Operation Gas Details (avg):
   Direct Transaction Gas:     34,299 gas
-  Bundler Transaction Gas:    102,859 gas
-  Total UserOp Gas:           147,740 gas
-  Bundler Overhead:           44,881 gas
-  UserOp Overhead:            68,560 gas
-  Total Overhead:             113,441 gas
+  Bundler Transaction Gas:    102,263 gas
+  Total UserOp Gas:           147,148 gas
+  Bundler Overhead:           44,885 gas
+  UserOp Overhead:            67,964 gas
+  Total Overhead:             112,849 gas
 
 Gas Usage Results Comparison Table :-
 ┌─────────┬─────────────────────────────────────────────────────────┬───────────────┬──────────────────┬────────────────┬──────────────────┬─────────────────┬────────────────┬─────────────────────────┐
 │ (index) │ Scenario                                                │ Direct Tx Gas │ Total UserOp Gas │ Bundler Tx Gas │ Bundler Overhead │ UserOp Overhead │ Total Overhead │ SCA Deployment Overhead │
 ├─────────┼─────────────────────────────────────────────────────────┼───────────────┼──────────────────┼────────────────┼──────────────────┼─────────────────┼────────────────┼─────────────────────────┤
-│ 0       │ 'Single UserOp with 1 call (with Deployment)'           │ '34,299'      │ '352,157'        │ '333,618'      │ '18,539'         │ '299,319'       │ '317,858'      │ '187,681'               │
-│ 1       │ 'Avg UserOp in a Bundle of 5 UserOps (with Deployment)' │ '34,299'      │ '327,782'        │ '282,484'      │ '45,298'         │ '248,185'       │ '293,483'      │ '180,042'               │
-│ 2       │ 'Single UserOp with 1 call (no Deployment)'             │ '34,299'      │ '164,476'        │ '146,355'      │ '18,121'         │ '112,056'       │ '130,177'      │ '0'                     │
-│ 3       │ 'Single UserOp with 5 calls (no Deployment)'            │ '34,299'      │ '38,327'         │ '34,471'       │ '3,856'          │ '172'           │ '4,028'        │ '0'                     │
-│ 4       │ 'Avg UserOp in a Bundle of 5 UserOps (no Deployment)'   │ '34,299'      │ '147,740'        │ '102,859'      │ '44,881'         │ '68,560'        │ '113,441'      │ '0'                     │
-│ 5       │ 'Avg UserOp in a Bundle of 5 UserOps (same sender)'     │ '34,299'      │ '145,724'        │ '100,457'      │ '45,267'         │ '66,158'        │ '111,425'      │ '0'                     │
+│ 0       │ 'Single UserOp with 1 call (with Deployment)'           │ '34,299'      │ '349,970'        │ '331,431'      │ '18,539'         │ '297,132'       │ '315,671'      │ '187,681'               │
+│ 1       │ 'Avg UserOp in a Bundle of 5 UserOps (with Deployment)' │ '34,299'      │ '327,193'        │ '281,902'      │ '45,291'         │ '247,603'       │ '292,894'      │ '180,045'               │
+│ 2       │ 'Single UserOp with 1 call (no Deployment)'             │ '34,299'      │ '162,289'        │ '144,180'      │ '18,109'         │ '109,881'       │ '127,990'      │ '0'                     │
+│ 3       │ 'Single UserOp with 5 calls (no Deployment)'            │ '34,299'      │ '37,889'         │ '34,034'       │ '3,855'          │ '-265'          │ '3,590'        │ '0'                     │
+│ 4       │ 'Avg UserOp in a Bundle of 5 UserOps (no Deployment)'   │ '34,299'      │ '147,148'        │ '102,263'      │ '44,885'         │ '67,964'        │ '112,849'      │ '0'                     │
+│ 5       │ 'Avg UserOp in a Bundle of 5 UserOps (same sender)'     │ '34,299'      │ '145,137'        │ '99,872'       │ '45,265'         │ '65,573'        │ '110,838'      │ '0'                     │
 └─────────┴─────────────────────────────────────────────────────────┴───────────────┴──────────────────┴────────────────┴──────────────────┴─────────────────┴────────────────┴─────────────────────────┘
