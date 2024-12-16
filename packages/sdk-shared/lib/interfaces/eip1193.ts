@@ -17,7 +17,7 @@ export type HappyMethods = [
     {
         Method: typeof WALLET_USE_ABI_RPC_METHOD
         Parameters?: RecordAbiPayload
-        ReturnType: boolean
+        ReturnType: undefined
     },
 ]
 

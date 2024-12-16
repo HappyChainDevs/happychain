@@ -104,7 +104,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         case WALLET_USE_ABI_RPC_METHOD: {
-            return addAbi(request.payload.params)
+            return user ? addAbi(user.address, request.payload.params) : false
         }
 
         default:

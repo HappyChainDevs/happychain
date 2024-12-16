@@ -129,7 +129,6 @@ export const recordAbi = async (contractAddress: Address, abi: Abi): Promise<voi
         },
     })
 
-    // rpc call returns true / false
     if (typeof req === "boolean" && req) {
         console.log("ABI recorded successfully")
     }
