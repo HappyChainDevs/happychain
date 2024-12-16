@@ -6,22 +6,24 @@ import {BLS} from "bls-bn254/BLS.sol";
 contract Drand {
     bytes public constant DST = bytes("BLS_SIG_BN254G1_XMD:KECCAK-256_SVDW_RO_NUL_");
 
-    uint256[4] public publicKey;
-    uint256 public genesisTimestamp;
-    uint256 public period;
-    mapping(uint64 round => bytes32 randomness) public randomness;
+    uint256[4] public drandPublicKey;
+    uint256 public drandGenesisTimestamp;
+    uint256 public drandPeriod;
+    mapping(uint64 round => bytes32 randomness) public drandRandomness;
+
+    event DrandRandomnessPosted(uint64 indexed round, bytes32 randomness);
 
     error InvalidPublicKey(uint256[4] publicKey);
     error InvalidSignature(uint256[4] publicKey, uint256[2] message, uint256[2] signature);
     error DrandNotAvailable(uint64 round);
 
-    constructor(uint256[4] memory _publicKey, uint256 _genesisTimestamp, uint256 _period) {
-        if (!BLS.isValidPublicKey(_publicKey)) {
-            revert InvalidPublicKey(_publicKey);
+    constructor(uint256[4] memory _drandPublicKey, uint256 _drandGenesisTimestamp, uint256 _drandPeriod) {
+        if (!BLS.isValidPublicKey(_drandPublicKey)) {
+            revert InvalidPublicKey(_drandPublicKey);
         }
-        publicKey = _publicKey;
-        genesisTimestamp = _genesisTimestamp;
-        period = _period;
+        drandPublicKey = _drandPublicKey;
+        drandGenesisTimestamp = _drandGenesisTimestamp;
+        drandPeriod = _drandPeriod;
     }
 
     function postDrand(uint64 round, uint256[2] memory signature) external {
@@ -37,38 +39,39 @@ contract Drand {
         // NB: Always check that the signature is a valid signature (a valid G1 point on the curve)!
         bool isValidSignature = BLS.isValidSignature(signature);
         if (!isValidSignature) {
-            revert InvalidSignature(publicKey, message, signature);
+            revert InvalidSignature(drandPublicKey, message, signature);
         }
 
         // Verify the signature over the message using the public key
-        (bool pairingSuccess, bool callSuccess) = BLS.verifySingle(signature, publicKey, message);
+        (bool pairingSuccess, bool callSuccess) = BLS.verifySingle(signature, drandPublicKey, message);
         if (!pairingSuccess) {
-            revert InvalidSignature(publicKey, message, signature);
+            revert InvalidSignature(drandPublicKey, message, signature);
         }
 
         bytes32 roundRandomness = keccak256(abi.encode(signature));
 
-        randomness[round] = roundRandomness;
+        drandRandomness[round] = roundRandomness;
+        emit DrandRandomnessPosted(round, roundRandomness);
     }
 
-    function _unsafeGetDrand(uint64 round) internal view returns (bytes32) {
-        return randomness[round];
+    function unsafeGetDrand(uint64 round) public view returns (bytes32) {
+        return drandRandomness[round];
     }
 
-    function _getDrand(uint64 round) internal view returns (bytes32) {
-        if (randomness[round] == 0) {
+    function getDrand(uint64 round) public view returns (bytes32) {
+        if (drandRandomness[round] == 0) {
             revert DrandNotAvailable(round);
         }
 
-        return randomness[round];
+        return drandRandomness[round];
     }
 
     function _getDrandAtTimestamp(uint256 timestamp) internal view returns (bytes32) {
-        uint64 round = uint64((timestamp - genesisTimestamp) / period);
-        return _getDrand(round);
+        uint64 round = uint64((timestamp - drandGenesisTimestamp) / drandPeriod);
+        return getDrand(round);
     }
 
     function _nextValidTimestamp(uint256 timestamp) internal view returns (uint256) {
-        return timestamp + (period - (timestamp % period));
+        return timestamp + (drandPeriod - (timestamp % drandPeriod));
     }
 }
