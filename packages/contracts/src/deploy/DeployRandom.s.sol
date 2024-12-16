@@ -24,7 +24,11 @@ contract DeployL1 is BaseDeployScript {
     }
 
     function deploy() internal override {
-        random = new Random(DRAND_PUBLIC_KEY, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD);
+        uint256 happyGenesisTimestamp = vm.envUint("HAPPY_GENESIS_TIMESTAMP");
+        uint256 happyTimeBlock = vm.envUint("HAPPY_TIME_BLOCK");
+
+        random =
+            new Random(DRAND_PUBLIC_KEY, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD, happyGenesisTimestamp, happyTimeBlock);
         deployed("Random", address(random));
     }
 }
