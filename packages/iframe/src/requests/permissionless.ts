@@ -8,7 +8,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { decodeNonce } from "permissionless"
-import { type Client, InvalidAddressError, decodeAbiParameters, isAddress } from "viem"
+import { type Client, InvalidAddressError, decodeAbiParameters, isAddress, parseAbiParameters } from "viem"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
@@ -58,61 +58,65 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
             const userOpReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
-
-            if (!userOpReceipt) {
-                throw new Error(`No receipt found for hash : ${hash}`)
-            }
-
             const userOpInfo = await smartAccountClient.getUserOperation({
                 hash: userOpReceipt.userOpHash,
             })
+            const { callData, sender } = userOpInfo.userOperation
 
-            if (!userOpInfo) {
-                throw new Error(`No UserOperation found for hash : ${hash}`)
-            }
+            /**
+             * With smart accounts, transactions use a "2-layers" structure :
+             *
+             * 1. The outer layer is the "execute" function call :
+             *    This is what userOp.callData contains (prefixed with a 4-byte function selector) ;
+             *
+             * 2. The inner layer (`executeCalldata`), which contains the actual transaction parameters.
+             *
+             * We need to decode both layers to get the actual transaction details.
+             *
+             * @see {@link https://docs.stackup.sh/docs/useroperation-calldata} for additional detailed explanation
+             * @see {@link https://eips.ethereum.org/EIPS/eip-4337#definitions} for the complete, detailed specification
+             */
 
-            const userOp = userOpInfo.userOperation
+            // 1. Decode the `execute()` function parameters
+            const [, executeParamsData] = decodeAbiParameters(
+                parseAbiParameters("bytes32 mode, bytes data"),
+                callData.slice(4) as `0x${string}`, // Remove the 4-byte `execute()` function selector
+            )
 
-            try {
-                // Get actual transaction details
-                const executeCalldata = decodeAbiParameters(
-                    [
-                        { type: "bytes32", name: "mode" },
-                        { type: "bytes", name: "data" },
-                    ],
-                    userOp.callData.slice(4) as `0x${string}`,
-                )
+            // 2. Decode the actual transaction parameters
+            const [to, value, data] = decodeAbiParameters(
+                parseAbiParameters("address to, uint256 value, bytes data"),
+                executeParamsData,
+            )
 
-                return {
-                    ...userOpReceipt.receipt,
-                    // UserOp specific fields
-                    from: userOp.sender,
-                    to: smartAccountClient.account.address,
-                    data: executeCalldata[1],
-                    // UserOp specific metadata
-                    status: userOpReceipt.success,
-                    userOpHash: userOpReceipt.userOpHash,
-                    actualGasUsed: userOpReceipt.actualGasUsed,
-                    // Original UserOp receipt for reference
-                    userOpReceipt,
-                }
-            } catch (error) {
-                throw new Error(`Failed to decode UserOperation calldata : ${error}`)
+            return {
+                // Base receipt fields from UserOperation receipt
+                ...userOpReceipt.receipt,
+
+                // Transaction details (matching eth_getTransactionReceipt format)
+                from: sender,
+                to,
+                data,
+                value,
+
+                // Original UserOp receipt for reference
+                userOpReceipt,
             }
         }
+
         case "eth_getTransactionCount": {
             const [address] = request.payload.params
 
             if (smartAccountClient && address.toLowerCase() === smartAccountClient.account.address.toLowerCase()) {
                 /**
-                 * For smart accounts, we need to handle 2D nonces, which combine :
-                 * - A key (upper 192 bits) for parallel transaction support
-                 * - A sequence number (lower 64 bits) for transaction ordering
+                 * For smart accounts, nonces combine :
+                 * - A key (upper 192 bits) for custom wallet logic
+                 * - A sequence number (lower 64 bits) for maintaining uniqueness
                  *
                  * @see {@link https://docs.stackup.sh/docs/useroperation-nonce} for detailed explanation
                  * @see {@link https://github.com/pimlicolabs/entrypoint-estimations/blob/main/lib/account-abstraction/contracts/interfaces/INonceManager.sol}
                  *
-                 * `eth_getTransactionCount` should return just the sequence number to match
+                 * `eth_getTransactionCount` should only return the sequence number to match
                  * traditional account behavior and maintain compatibility with existing tools.
                  */
                 const fullNonce = await smartAccountClient.account.getNonce()
