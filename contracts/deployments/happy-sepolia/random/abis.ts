@@ -6,18 +6,57 @@ const contractToAbi = ({
   "Random": [
     {
       "type": "constructor",
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "_publicKey",
+          "type": "uint256[4]",
+          "internalType": "uint256[4]"
+        },
+        {
+          "name": "_genesisTimestamp",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_period",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_happyGenesisTimestamp",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_happyTimeBlock",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
       "stateMutability": "nonpayable"
     },
     {
       "type": "function",
-      "name": "BLOCK_TIME",
+      "name": "DRAND_DELAY",
       "inputs": [],
       "outputs": [
         {
           "name": "",
           "type": "uint256",
           "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DST",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes",
+          "internalType": "bytes"
         }
       ],
       "stateMutability": "view"
@@ -37,7 +76,154 @@ const contractToAbi = ({
     },
     {
       "type": "function",
+      "name": "drandGenesisTimestamp",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandPeriod",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandPublicKey",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandRandomness",
+      "inputs": [
+        {
+          "name": "round",
+          "type": "uint64",
+          "internalType": "uint64"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "randomness",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getDrand",
+      "inputs": [
+        {
+          "name": "round",
+          "type": "uint64",
+          "internalType": "uint64"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "getRevealedValue",
+      "inputs": [
+        {
+          "name": "blockNumber",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "happyGenesisTimestamp",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "happyTimeBlock",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "nextValidBlock",
+      "inputs": [
+        {
+          "name": "blockNumber",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "nextValidTimestamp",
       "inputs": [
         {
           "name": "timestamp",
@@ -72,7 +258,7 @@ const contractToAbi = ({
       "name": "postCommitment",
       "inputs": [
         {
-          "name": "timestamp",
+          "name": "blockNumber",
           "type": "uint256",
           "internalType": "uint256"
         },
@@ -87,6 +273,75 @@ const contractToAbi = ({
     },
     {
       "type": "function",
+      "name": "postDrand",
+      "inputs": [
+        {
+          "name": "round",
+          "type": "uint64",
+          "internalType": "uint64"
+        },
+        {
+          "name": "signature",
+          "type": "uint256[2]",
+          "internalType": "uint256[2]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "random",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "randomForBlock",
+      "inputs": [
+        {
+          "name": "blockNumber",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "randomForTimestamp",
+      "inputs": [
+        {
+          "name": "timestamp",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "renounceOwnership",
       "inputs": [],
       "outputs": [],
@@ -97,7 +352,7 @@ const contractToAbi = ({
       "name": "revealValue",
       "inputs": [
         {
-          "name": "timestamp",
+          "name": "blockNumber",
           "type": "uint256",
           "internalType": "uint256"
         },
@@ -125,10 +380,29 @@ const contractToAbi = ({
     },
     {
       "type": "function",
+      "name": "unsafeGetDrand",
+      "inputs": [
+        {
+          "name": "round",
+          "type": "uint64",
+          "internalType": "uint64"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "unsafeGetRevealedValue",
       "inputs": [
         {
-          "name": "timestamp",
+          "name": "blockNumber",
           "type": "uint256",
           "internalType": "uint256"
         }
@@ -147,13 +421,32 @@ const contractToAbi = ({
       "name": "CommitmentPosted",
       "inputs": [
         {
-          "name": "timestamp",
+          "name": "blockNumber",
           "type": "uint256",
           "indexed": true,
           "internalType": "uint256"
         },
         {
           "name": "commitment",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "DrandRandomnessPosted",
+      "inputs": [
+        {
+          "name": "round",
+          "type": "uint64",
+          "indexed": true,
+          "internalType": "uint64"
+        },
+        {
+          "name": "randomness",
           "type": "bytes32",
           "indexed": false,
           "internalType": "bytes32"
@@ -185,7 +478,7 @@ const contractToAbi = ({
       "name": "ValueRevealed",
       "inputs": [
         {
-          "name": "timestamp",
+          "name": "blockNumber",
           "type": "uint256",
           "indexed": true,
           "internalType": "uint256"
@@ -201,6 +494,17 @@ const contractToAbi = ({
     },
     {
       "type": "error",
+      "name": "BNAddFailed",
+      "inputs": [
+        {
+          "name": "input",
+          "type": "uint256[4]",
+          "internalType": "uint256[4]"
+        }
+      ]
+    },
+    {
+      "type": "error",
       "name": "CommitmentAlreadyExists",
       "inputs": []
     },
@@ -211,8 +515,105 @@ const contractToAbi = ({
     },
     {
       "type": "error",
+      "name": "DrandNotAvailable",
+      "inputs": [
+        {
+          "name": "round",
+          "type": "uint64",
+          "internalType": "uint64"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "InvalidDSTLength",
+      "inputs": [
+        {
+          "name": "dst",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "InvalidFieldElement",
+      "inputs": [
+        {
+          "name": "x",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "InvalidPublicKey",
+      "inputs": [
+        {
+          "name": "publicKey",
+          "type": "uint256[4]",
+          "internalType": "uint256[4]"
+        }
+      ]
+    },
+    {
+      "type": "error",
       "name": "InvalidReveal",
       "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidSignature",
+      "inputs": [
+        {
+          "name": "publicKey",
+          "type": "uint256[4]",
+          "internalType": "uint256[4]"
+        },
+        {
+          "name": "message",
+          "type": "uint256[2]",
+          "internalType": "uint256[2]"
+        },
+        {
+          "name": "signature",
+          "type": "uint256[2]",
+          "internalType": "uint256[2]"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "MapToPointFailed",
+      "inputs": [
+        {
+          "name": "noSqrt",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ModExpFailed",
+      "inputs": [
+        {
+          "name": "base",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "exponent",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "modulus",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ]
     },
     {
       "type": "error",
@@ -260,7 +661,7 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "Random": "0x51745e910FaD45A6cA620bCc7a7fAB7683B142e5"
+  "Random": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
