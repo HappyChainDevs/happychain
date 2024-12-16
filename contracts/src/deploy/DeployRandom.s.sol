@@ -26,7 +26,9 @@ contract DeployL1 is BaseDeployScript {
     }
 
     function deploy() internal override {
-        (address _random,) = deployDeterministic("Random", type(Random).creationCode, abi.encode(DRAND_PUBLIC_KEY, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD), DEPLOYMENT_SALT);
+        uint256 happyGenesisTimestamp = vm.envUint("HAPPY_GENESIS_TIMESTAMP");
+        uint256 happyTimeBlock = vm.envUint("HAPPY_TIME_BLOCK");
+        (address _random,) = deployDeterministic("Random", type(Random).creationCode, abi.encode(DRAND_PUBLIC_KEY, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD, happyGenesisTimestamp, happyTimeBlock), DEPLOYMENT_SALT);
         random = Random(_random);
         deployed("Random", address(random));
     }
