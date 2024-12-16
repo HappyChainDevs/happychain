@@ -27,12 +27,12 @@ export function HappyWalletUseAbi({
                     <div className="flex flex-col gap-2">
                         <span className="text-sm font-bold text-gray-600">Address:</span>
                         <a
-                            href={`${chain.blockExplorerUrls?.[0]}/address/${params?.address}`}
+                            href={`${chain.blockExplorerUrls?.[0]}/address/${params.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 rounded-lg bg-neutral text-sm font-mono break-all text-content underline hover:text-blue-800"
                         >
-                            {params?.address}
+                            {params.address}
                         </a>
                     </div>
                     <div className="flex flex-col grow gap-2">
