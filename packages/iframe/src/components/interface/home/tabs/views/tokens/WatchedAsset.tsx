@@ -38,6 +38,8 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
         [balanceData?.formatted],
     )
 
+    console.log({ truncatedBalance })
+
     const imageSource =
         asset.options.image && !isImageSourceBroken
             ? asset.options.image
@@ -61,7 +63,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                 </span>
             </div>
 
-            <div className="flex flex-row items-center w-1/2 justify-end min-w-0">
+            <div className="flex flex-row items-center w-1/2 justify-end min-w-0 space-x-1">
                 {truncatedBalance ? (
                     <span className="font-semibold text-sm truncate">{truncatedBalance}</span>
                 ) : (

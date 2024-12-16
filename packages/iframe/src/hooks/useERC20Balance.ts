@@ -1,12 +1,18 @@
 import { formatUserBalance } from "@happychain/sdk-shared"
-import { type Address, erc20Abi } from "viem"
-import { useReadContracts } from "wagmi"
+import { type Address, type ContractFunctionParameters, erc20Abi } from "viem"
+import { type UseReadContractsReturnType, useReadContracts } from "wagmi"
 
 type ERC20BalanceQueryData = {
     value?: bigint
     decimals?: number
     formatted?: string
 }
+
+export type UseERC20BalanceReturnType = UseReadContractsReturnType<
+    readonly ContractFunctionParameters[],
+    true,
+    ERC20BalanceQueryData
+>
 
 /**
  * Hook that uses [useReadContracts](https://wagmi.sh/react/api/hooks/useReadContracts)
@@ -16,7 +22,7 @@ type ERC20BalanceQueryData = {
  * and a `formatted` value - using the obtained decimals value to format the balance,
  * to be used in the UI.
  */
-export function useERC20Balance(assetAddr: Address, userAddr: Address): { data?: ERC20BalanceQueryData } {
+export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20BalanceReturnType {
     const tokenContract = {
         address: assetAddr,
         abi: erc20Abi,
