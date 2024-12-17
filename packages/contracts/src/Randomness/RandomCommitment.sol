@@ -4,6 +4,11 @@ pragma solidity ^0.8.20;
 import {Ownable} from "openzeppelin/access/Ownable.sol";
 
 contract RandomCommitment is Ownable {
+    struct CurrentReveal {
+        uint128 value;
+        uint128 blockNumber;
+    }
+
     /**
      * @dev This delay ensures that the commitment is not submitted too late,
      * maintaining the unpredictability of the randomness. It should be set to
@@ -13,12 +18,11 @@ contract RandomCommitment is Ownable {
      */
     uint256 public constant PRECOMMIT_DELAY = 43200;
 
-    uint256 private currentRevealedValue;
-    uint256 private currentRevealBlockNumber;
-    mapping(uint256 blockNumber => bytes32) private commitments;
+    CurrentReveal private currentReveal;
+    mapping(uint128 blockNumber => bytes32) private commitments;
 
-    event CommitmentPosted(uint256 indexed blockNumber, bytes32 commitment);
-    event ValueRevealed(uint256 indexed blockNumber, uint256 revealedValue);
+    event CommitmentPosted(uint128 indexed blockNumber, bytes32 commitment);
+    event ValueRevealed(uint128 indexed blockNumber, uint128 revealedValue);
 
     error CommitmentTooLate();
     error CommitmentAlreadyExists();
@@ -36,7 +40,7 @@ contract RandomCommitment is Ownable {
      * @param blockNumber The block number for which to set the commitment.
      * @param commitmentHash The hash of the commitment to be stored.
      */
-    function postCommitment(uint256 blockNumber, bytes32 commitmentHash) external onlyOwner {
+    function postCommitment(uint128 blockNumber, bytes32 commitmentHash) external onlyOwner {
         if (block.number > blockNumber - PRECOMMIT_DELAY) {
             revert CommitmentTooLate();
         }
@@ -56,7 +60,7 @@ contract RandomCommitment is Ownable {
      * @param blockNumber The block number for which to reveal the value.
      * @param revealedValue The value to be revealed.
      */
-    function revealValue(uint256 blockNumber, uint256 revealedValue) external onlyOwner {
+    function revealValue(uint128 blockNumber, uint128 revealedValue) external onlyOwner {
         bytes32 storedCommitment = commitments[blockNumber];
 
         if (storedCommitment == 0) {
@@ -71,8 +75,8 @@ contract RandomCommitment is Ownable {
             revert InvalidReveal();
         }
 
-        currentRevealedValue = revealedValue;
-        currentRevealBlockNumber = blockNumber;
+        currentReveal.value = revealedValue;
+        currentReveal.blockNumber = blockNumber;
         delete commitments[blockNumber];
         emit ValueRevealed(blockNumber, revealedValue);
     }
@@ -83,12 +87,12 @@ contract RandomCommitment is Ownable {
      * @param blockNumber The block number for which to retrieve the revealed value.
      * @return revealedValue The revealed value for the specified block number, or 0 if the reveal is not available.
      */
-    function unsafeGetRevealedValue(uint256 blockNumber) public view returns (uint256) {
-        if (currentRevealBlockNumber != blockNumber) {
+    function unsafeGetRevealedValue(uint128 blockNumber) public view returns (uint128) {
+        if (currentReveal.blockNumber != blockNumber) {
             return 0;
         }
 
-        return currentRevealedValue;
+        return currentReveal.value;
     }
 
     /**
@@ -98,11 +102,11 @@ contract RandomCommitment is Ownable {
      * @param blockNumber The block number for which to retrieve the revealed value.
      * @return revealedValue The revealed value associated with the specified block number.
      */
-    function getRevealedValue(uint256 blockNumber) public view returns (uint256) {
-        if (currentRevealBlockNumber != blockNumber) {
+    function getRevealedValue(uint128 blockNumber) public view returns (uint128) {
+        if (currentReveal.blockNumber != blockNumber) {
             revert RevealedValueNotAvailable();
         }
 
-        return currentRevealedValue;
+        return currentReveal.value;
     }
 }
