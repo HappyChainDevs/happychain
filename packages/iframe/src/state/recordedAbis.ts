@@ -8,7 +8,7 @@ type AbiStorageRecord = Record<Address, Abi>
 type AbisRecordedForUser = Record<Address, AbiStorageRecord[]>
 
 /**
- * Atom to record contract address <-> ABI pairs.
+ * Atom to record contract address <-> ABI pairs, scoped by user.
  */
 const abiContractMappingAtom = atomWithStorage<AbisRecordedForUser>(StorageKey.RecordedAbis, {}, undefined, {
     getOnInit: true,
@@ -22,6 +22,13 @@ export function getWatchedAssets(): AbisRecordedForUser {
     return store.get(abiContractMappingAtom)
 }
 
+// === State Mutators ===================================================================================
+
+/**
+ * Adds a new contract <-> ABI mapping scoped by user.
+ * Allows for overwriting if an ABI already exists under an 
+ * address (eg. proxies).
+ */
 export function addAbi(userAddress: Address, payload?: RecordAbiPayload): boolean {
     if (!payload) return false
 
@@ -29,13 +36,13 @@ export function addAbi(userAddress: Address, payload?: RecordAbiPayload): boolea
         const recordedAbisForUser = prevAbis[userAddress] || []
 
         const updatedAbisForUser = [
-            ...recordedAbisForUser.filter((record) => !record[payload.address]), // Exclude existing entry for the same address
-            { [payload.address]: payload.abi }, // Add the new address-to-ABI mapping
+            ...recordedAbisForUser.filter((record) => !record[payload.address]),
+            { [payload.address]: payload.abi }
         ]
 
         return {
             ...prevAbis,
-            [userAddress]: updatedAbisForUser, // Update the user's record
+            [userAddress]: updatedAbisForUser,
         }
     })
 
