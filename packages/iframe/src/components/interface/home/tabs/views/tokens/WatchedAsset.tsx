@@ -33,10 +33,14 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
         () => (asset.options.symbol.length > 7 ? `${asset.options.symbol.slice(0, 7)}\u2026` : asset.options.symbol),
         [asset],
     )
-    const truncatedBalance = useMemo(
-        () => balanceData?.formatted && `${Number(balanceData.formatted).toFixed(4)}`,
-        [balanceData?.formatted],
-    )
+    const truncatedBalance = useMemo(() => {
+        if (!balanceData?.formatted) return undefined
+
+        return new Intl.NumberFormat(navigator.language, {
+            minimumFractionDigits: 4,
+            maximumFractionDigits: 4,
+        }).format(Number(balanceData.formatted))
+    }, [balanceData?.formatted])
 
     const imageSource =
         asset.options.image && !isImageSourceBroken
