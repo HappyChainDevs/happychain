@@ -10,7 +10,7 @@ type AbisRecordedForUser = Record<Address, AbiStorageRecord[]>
 /**
  * Atom to record contract address <-> ABI pairs, scoped by user.
  */
-const abiContractMappingAtom = atomWithStorage<AbisRecordedForUser>(StorageKey.RecordedAbis, {}, undefined, {
+export const abiContractMappingAtom = atomWithStorage<AbisRecordedForUser>(StorageKey.RecordedAbis, {}, undefined, {
     getOnInit: true,
 })
 
