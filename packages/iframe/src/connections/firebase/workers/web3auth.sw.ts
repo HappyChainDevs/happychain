@@ -68,14 +68,14 @@ ethereumSigningProvider.on("accountsChanged", (data) => {
     worker.broadcast({ action: "accountsChanged", data })
 })
 
-export async function init() {
+async function checkInitialization() {
     if (web3Auth.status === COREKIT_STATUS.NOT_INITIALIZED) {
         await web3Auth.init()
     }
 }
 
 export async function request({ method, params }: { method: string; params?: unknown[] }) {
-    await waitForCondition(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
+    await checkInitialization()
     return await ethereumSigningProvider.request({ method, params })
 }
 
@@ -85,7 +85,7 @@ export async function isConnected() {
 }
 
 export async function connect(jwt: JWTLoginParams) {
-    await waitForCondition(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
+    await checkInitialization()
 
     // if we are already logged in, then just return the saved addresses
     if (web3Auth.status === COREKIT_STATUS.LOGGED_IN && _addresses.length) {
@@ -126,7 +126,7 @@ export async function connect(jwt: JWTLoginParams) {
 }
 
 export async function disconnect() {
-    await waitForCondition(() => web3Auth.status !== COREKIT_STATUS.NOT_INITIALIZED)
+    await checkInitialization()
 
     if (["disconnecting", "disconnected"].includes(state)) {
         return
