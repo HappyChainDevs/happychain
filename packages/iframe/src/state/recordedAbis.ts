@@ -26,7 +26,7 @@ export function getWatchedAssets(): AbisRecordedForUser {
 
 /**
  * Adds a new contract <-> ABI mapping scoped by user.
- * Allows for overwriting if an ABI already exists under an 
+ * Allows for overwriting if an ABI already exists under an
  * address (eg. proxies).
  */
 export function addAbi(userAddress: Address, payload?: RecordAbiPayload): boolean {
@@ -37,7 +37,7 @@ export function addAbi(userAddress: Address, payload?: RecordAbiPayload): boolea
 
         const updatedAbisForUser = [
             ...recordedAbisForUser.filter((record) => !record[payload.address]),
-            { [payload.address]: payload.abi }
+            { [payload.address]: payload.abi },
         ]
 
         return {
