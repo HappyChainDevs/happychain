@@ -27,6 +27,10 @@ build: alto
 	cd alto && bunx pnpm install && bunx pnpm run build
 .PHONY: build
 
+build-only:
+	cd alto && bunx pnpm run build
+.PHONY: build-only
+
 # Target to run the Alto bundler with the appropriate configuration
 run:
 	cd alto && ./alto run --config ../$(ALTO_CONFIG_FILE)

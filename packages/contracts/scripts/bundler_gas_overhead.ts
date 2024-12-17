@@ -6,6 +6,7 @@ import { deployment } from "../deployments/anvil/testing/abis"
 
 import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce"
 
+import type { Hex } from "viem"
 import { createMintCall, depositPaymaster, initializeTokenSupply } from "./utils/accounts"
 import { account, pimlicoClient, publicClient, walletClient } from "./utils/clients"
 import { generatePrefundedKernelClient, generatePrefundedKernelClients } from "./utils/kernel"
@@ -44,22 +45,63 @@ function printUserOperationGasDetails(gasDetails: GasDetails) {
     console.log(`  Total Overhead:             ${gasDetails.totalOverhead.toLocaleString("en-US")} gas`)
 }
 
+async function pollForUserOpInclusion(hash: Hex) {
+    const startTime = performance.now()
+    while (true) {
+        const { status } = await pimlicoClient.getUserOperationStatus({ hash })
+        if (["included", "failed", "rejected"].includes(status)) {
+            const endTime = performance.now()
+            console.log(`UserOp ${hash.slice(0, 6)}...: Time to ${status}: ${(endTime - startTime).toFixed(2)}ms`)
+            return status
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
+}
+
 async function processSingleUserOp(kernelClient: SmartAccountClient, calls: UserOperationCall[]) {
+    console.log("\n=== processSingleUserOp: Preparation ===")
+    const prepStartTime = performance.now()
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelClient.account!,
         calls,
     })
+    userOp.preVerificationGas = 60000n
+    userOp.verificationGasLimit += 3000n
+    const prepEndTime = performance.now()
+    console.log(`UserOp preparation time: ${(prepEndTime - prepStartTime).toFixed(2)}ms`)
 
+    console.log("\n=== processSingleUserOp: Gas Estimation ===")
+    const gasEstStartTime = performance.now()
     const paymasterGasEstimates = await pimlicoClient.estimateUserOperationGas({
         ...userOp,
     })
+    const gasEstEndTime = performance.now()
+    console.log(`Gas estimation time: ${(gasEstEndTime - gasEstStartTime).toFixed(2)}ms`)
 
-    const receipt = await kernelClient.waitForUserOperationReceipt({
-        hash: await kernelClient.sendUserOperation({
-            account: kernelClient.account!,
-            calls,
-        }),
+    userOp.signature = await kernelClient.account!.signUserOperation({
+        ...userOp,
+        chainId: localhost.id,
+        signature: EMPTY_SIGNATURE, // The signature field must be empty when hashing and signing the user operation.
     })
+
+    console.log("\n=== processSingleUserOp: Send UserOp ===")
+    const sendStartTime = performance.now()
+    const hash = await kernelClient.sendUserOperation({
+        ...userOp,
+    })
+    const sendEndTime = performance.now()
+    console.log(`UserOp send time: ${(sendEndTime - sendStartTime).toFixed(2)}ms`)
+
+    console.log("\n=== Polling for UserOp Inclusion ===")
+    // await pollForUserOpInclusion(hash)
+
+    console.log("\n=== processSingleUserOp: Wait for Receipt ===")
+    const receiptStartTime = performance.now()
+    const receipt = await kernelClient.waitForUserOperationReceipt({
+        hash,
+    })
+    const receiptEndTime = performance.now()
+    console.log(`Receipt wait time: ${(receiptEndTime - receiptStartTime).toFixed(2)}ms\n`)
 
     if (!receipt.success) {
         throw new Error("Validation using custom validator module failed")
@@ -93,36 +135,76 @@ async function processSingleUserOp(kernelClient: SmartAccountClient, calls: User
 }
 
 async function sendUserOps(kernelClients: SmartAccountClient[]) {
+    console.log("\n=== sendUserOps: Start ===")
     // Prepare and sign all user operations upfront to send them concurrently.
     // This increases the chance they are included in the same bundle.
     const userOps: UserOperation<"0.7">[] = await Promise.all(
-        kernelClients.map(async (kernelClient) => {
+        kernelClients.map(async (kernelClient, index) => {
+            const prepStart = performance.now()
             const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
                 account: kernelClient.account!,
                 calls: [createMintCall(kernelClient.account!.address)],
             })
+            userOp.preVerificationGas = 60000n
+            userOp.verificationGasLimit += 3000n
+            const prepEnd = performance.now()
+            console.log(`UserOp ${index}: Preparation time: ${(prepEnd - prepStart).toFixed(2)}ms`)
 
+            const signStart = performance.now()
             userOp.signature = await kernelClient.account!.signUserOperation({
                 ...userOp,
                 chainId: localhost.id,
                 signature: EMPTY_SIGNATURE, // The signature field must be empty when hashing and signing the user operation.
             })
+            const signEnd = performance.now()
+            console.log(`UserOp ${index}: Signing time: ${(signEnd - signStart).toFixed(2)}ms`)
 
             return userOp
         }),
     )
 
+    console.log("\n=== Sending UserOps in Parallel ===")
+    const sendAllStart = performance.now()
     const hashes = await Promise.all(
-        kernelClients.map((kernelClient, idx) => kernelClient.sendUserOperation(userOps[idx])),
+        kernelClients.map(async (kernelClient, idx) => {
+            const sendStart = performance.now()
+            const hash = await kernelClient.sendUserOperation(userOps[idx])
+            const sendEnd = performance.now()
+            console.log(`UserOp ${idx}: Send time: ${(sendEnd - sendStart).toFixed(2)}ms`)
+            return hash
+        }),
     )
+    const sendAllEnd = performance.now()
+    console.log(`Total parallel send time: ${(sendAllEnd - sendAllStart).toFixed(2)}ms`)
 
+    console.log("\n=== Polling for UserOp Inclusion ===")
+    const pollAllStart = performance.now()
+    await Promise.all(hashes.map(pollForUserOpInclusion))
+    const pollAllEnd = performance.now()
+    console.log(`Total time for all UserOps to be included: ${(pollAllEnd - pollAllStart).toFixed(2)}ms`)
+
+    console.log("\n=== Waiting for UserOp Receipts ===")
+    const waitAllStart = performance.now()
     const receipts: UserOperationReceipt[] = await Promise.all(
-        kernelClients.map((kernelClient, idx) =>
-            kernelClient.waitForUserOperationReceipt({
+        kernelClients.map(async (kernelClient, idx) => {
+            const waitStart = performance.now()
+            const receipt = await kernelClient.waitForUserOperationReceipt({
                 hash: hashes[idx],
-            }),
-        ),
+            })
+            const waitEnd = performance.now()
+            console.log(`UserOp ${idx}: Wait time: ${(waitEnd - waitStart).toFixed(2)}ms`)
+            return receipt
+        }),
     )
+    const waitAllEnd = performance.now()
+    console.log(`Total parallel wait time: ${(waitAllEnd - waitAllStart).toFixed(2)}ms`)
+    console.log("\n")
+    receipts.forEach((receipt, index) => {
+        console.log(
+            `UserOp ${index + 1}: Block #${receipt.receipt.blockNumber}, Tx Index: ${receipt.receipt.transactionIndex}`,
+        )
+    })
+    console.log("\n")
 
     // Group receipts by block hash and transaction hash to ensure unique bundle identification
     const bundleGroups = receipts.reduce(
@@ -143,14 +225,16 @@ async function sendUserOps(kernelClients: SmartAccountClient[]) {
     console.log(`Total Bundle Tx GasUsed: ${filteredReceipts[0].receipt.gasUsed}`)
     const avgBundleTxGas = filteredReceipts[0].receipt.gasUsed / BigInt(filteredReceipts.length)
     console.log(`per UserOp Bundle Tx GasUsed: ${avgBundleTxGas}`)
-    filteredReceipts.forEach((receipt, idx) => {
-        console.log(`UserOp [${idx}]`)
+    filteredReceipts.forEach((receipt, index) => {
+        console.log(`UserOp [${index}]`)
         console.log(`    ActualGas: ${receipt.actualGasUsed.toLocaleString("en-US")}`)
         console.log(
             `    ActualGas - AvgBundlerTxGas: ${(receipt.actualGasUsed - avgBundleTxGas).toLocaleString("en-US")}`,
         )
     })
     console.log("\n")
+
+    console.log("\n=== sendUserOps: End ===")
 
     const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
     return { numOps, gasDetails }
@@ -209,7 +293,7 @@ async function singleUserOperationGasResult(kernelClient: SmartAccountClient) {
         accountDeploymentOverhead: 0n,
     }
 
-    console.log("\nGas Usage for a Single UserOp (no Deployment):")
+    console.log("\n\nGas Usage for a Single UserOp (no Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
     const gasDetails2 = await processSingleUserOp(kernelClient, [createMintCall(kernelClient.account!.address)])
@@ -229,7 +313,7 @@ async function multipleCallsGasResult(kernelClient: SmartAccountClient) {
         .fill(null)
         .map(() => createMintCall(kernelClient.account!.address))
 
-    console.log("\nGas Usage for a Single UserOp with 5 Calls (no Deployment):")
+    console.log("\n\nGas Usage for a Single UserOp with 5 Calls (no Deployment):")
     console.log("---------------------------------------------------------------------\n")
 
     const gasDetails2 = await processSingleUserOp(kernelClient, calls)
@@ -261,7 +345,8 @@ async function batchedUserOpsSameSenderGasResult(kernelClient: SmartAccountClien
                 calls: [createMintCall(kernelClient.account!.address)],
                 nonce: nonce,
             })
-
+            userOp.preVerificationGas = 60000n
+            userOp.verificationGasLimit += 3000n
             userOp.signature = await kernelClient.account!.signUserOperation({
                 ...userOp,
                 chainId: localhost.id,
@@ -290,12 +375,10 @@ async function batchedUserOpsSameSenderGasResult(kernelClient: SmartAccountClien
     )
 
     const largestBundleKey = Object.entries(bundleGroups).sort(([, a], [, b]) => b.length - a.length)[0][0]
-
     const filteredReceipts = bundleGroups[largestBundleKey]
 
-    const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
-    console.log("\nGas Usage per UserOp (no Deployment) from the same Sender:")
-    console.log(`(Processed ${numOps} UserOps in the largest bundle)`)
+    console.log("\n\nGas Usage per UserOp (no Deployment) from the same Sender:")
+    console.log(`(Processed ${filteredReceipts.length} UserOps in the largest bundle)`)
     console.log("---------------------------------------------------------------------\n")
 
     receipts.forEach((receipt, index) => {
@@ -306,10 +389,10 @@ async function batchedUserOpsSameSenderGasResult(kernelClient: SmartAccountClien
     console.log("\n")
 
     console.log(`Total Bundle Tx GasUsed: ${filteredReceipts[0].receipt.gasUsed}`)
-    const avgBundleTxGas = filteredReceipts[0].receipt.gasUsed / BigInt(receipts.length)
+    const avgBundleTxGas = filteredReceipts[0].receipt.gasUsed / BigInt(filteredReceipts.length)
     console.log(`per UserOp Bundle Tx GasUsed: ${avgBundleTxGas}`)
-    filteredReceipts.forEach((receipt, idx) => {
-        console.log(`UserOp [${idx}]`)
+    filteredReceipts.forEach((receipt, index) => {
+        console.log(`UserOp [${index}]`)
         console.log(`    ActualGas: ${receipt.actualGasUsed.toLocaleString("en-US")}`)
         console.log(
             `    ActualGas - AvgBundlerTxGas: ${(receipt.actualGasUsed - avgBundleTxGas).toLocaleString("en-US")}`,
@@ -317,6 +400,7 @@ async function batchedUserOpsSameSenderGasResult(kernelClient: SmartAccountClien
     })
     console.log("\n")
 
+    const { numOps, gasDetails } = await calculateGasDetails(filteredReceipts)
     printUserOperationGasDetails(gasDetails)
 
     return {
@@ -328,13 +412,13 @@ async function batchedUserOpsSameSenderGasResult(kernelClient: SmartAccountClien
 
 async function batchedUserOperationsGasResult() {
     const kernelClients = await generatePrefundedKernelClients(5)
-    console.log("\nGas Usage per UserOp (with Deployment) from different Senders:")
+    console.log("\n\nGas Usage per UserOp (with Deployment) from different Senders:")
     console.log("---------------------------------------------------------------------\n")
     const { numOps: numOps1, gasDetails: gasDetails1 } = await sendUserOps(kernelClients)
     console.log(`(Processed ${numOps1} UserOps in this bundle, each from a different sender)\n`)
     printUserOperationGasDetails(gasDetails1)
 
-    console.log("\nGas Usage per UserOp (no Deployment) from different Senders:")
+    console.log("\n\nGas Usage per UserOp (no Deployment) from different Senders:")
     console.log("---------------------------------------------------------------------\n")
     const { numOps: numOps2, gasDetails: gasDetails2 } = await sendUserOps(kernelClients)
     console.log(`(Processed ${numOps2} UserOps in this bundle, each from a different sender)\n`)
