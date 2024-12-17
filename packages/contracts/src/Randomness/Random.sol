@@ -55,7 +55,7 @@ contract Random is RandomCommitment, Drand {
      * @return drandRandomness The latest drand randomness at the specified block number.
      */
     function randomForBlock(uint256 blockNumber) external view returns (bytes32) {
-        return _getDrandAtTimestamp(blockNumberToTimestamp(blockNumber));
+        return _getDrandAtTimestamp(_blockNumberToTimestamp(blockNumber));
     }
 
     /**
@@ -66,7 +66,7 @@ contract Random is RandomCommitment, Drand {
      * @return nextValidBlockNumber The next block number where the drand randomness remains unrevealed.
      */
     function nextValidBlock(uint256 blockNumber) external view returns (uint256) {
-        return timestampToBlockNumber(nextValidTimestamp(blockNumberToTimestamp(blockNumber)));
+        return _timestampToBlockNumber(nextValidTimestamp(_blockNumberToTimestamp(blockNumber)));
     }
 
     /**
@@ -80,11 +80,11 @@ contract Random is RandomCommitment, Drand {
         return _nextValidTimestamp(timestamp - DRAND_DELAY) + DRAND_DELAY + 2 * DRAND_PERIOD;
     }
 
-    function blockNumberToTimestamp(uint256 blockNumber) internal view returns (uint256) {
+    function _blockNumberToTimestamp(uint256 blockNumber) internal view returns (uint256) {
         return HAPPY_GENESIS_BLOCK + (blockNumber - 1) * HAPPY_TIME_BLOCK;
     }
 
-    function timestampToBlockNumber(uint256 timestamp) internal view returns (uint256) {
+    function _timestampToBlockNumber(uint256 timestamp) internal view returns (uint256) {
         return (timestamp - HAPPY_GENESIS_BLOCK) / HAPPY_TIME_BLOCK + 1;
     }
 }

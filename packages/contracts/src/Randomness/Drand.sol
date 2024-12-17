@@ -48,7 +48,7 @@ contract Drand {
         }
 
         // Verify the signature over the message using the public key
-        (bool pairingSuccess, ) = BLS.verifySingle(signature, drandPublicKey, message);
+        (bool pairingSuccess,) = BLS.verifySingle(signature, drandPublicKey, message);
         if (!pairingSuccess) {
             revert InvalidSignature(drandPublicKey, message, signature);
         }
