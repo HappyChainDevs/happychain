@@ -4,19 +4,18 @@ pragma solidity ^0.8.20;
 import {BaseDeployScript} from "./BaseDeployScript.sol";
 import {Random} from "../randomness/Random.sol";
 
-/**
- * @dev Deploys the Randomness contract.
- */
-contract DeployL1 is BaseDeployScript {
+contract DeployRandom is BaseDeployScript {
     Random public random;
 
-    uint256[4] public drandPublicKey;
-
     /*
-     * To understand this values. Please refer to the following link:
+     * To understand these values. Please refer to the following link:
      * https://docs.anyrand.com/diy/quickstart
      */
+    // Drand evmnet public key
+    uint256[4] public drandPublicKey;
+    // Drand evmnet genesis time (2024-01-29 00:11:15 UTC)
     uint256 public constant DRAND_GENESIS_TIMESTAMP = 1727521075;
+    // Drand evmnet period (3 seconds)
     uint256 public constant DRAND_PERIOD = 3;
 
     constructor() {
