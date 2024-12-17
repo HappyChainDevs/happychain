@@ -13,6 +13,11 @@ contract DeployL1 is BaseDeployScript {
     Random public random;
 
     uint256[4] public drandPublicKey;
+
+    /*
+     * To understand this values. Please refer to the following link:
+     * https://docs.anyrand.com/diy/quickstart
+     */
     uint256 public constant DRAND_GENESIS_TIMESTAMP = 1727521075;
     uint256 public constant DRAND_PERIOD = 3;
 
