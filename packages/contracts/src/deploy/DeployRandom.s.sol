@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {BaseDeployScript} from "./BaseDeployScript.sol";
-import {Random} from "../Randomness/Random.sol";
+import {Random} from "../randomness/Random.sol";
 
 /**
  * @dev Deploys the Randomness contract.
@@ -10,12 +10,12 @@ import {Random} from "../Randomness/Random.sol";
 contract DeployL1 is BaseDeployScript {
     Random public random;
 
-    uint256[4] public DRAND_PUBLIC_KEY;
+    uint256[4] public drandPublicKey;
     uint256 public constant DRAND_GENESIS_TIMESTAMP = 1727521075;
     uint256 public constant DRAND_PERIOD = 3;
 
     constructor() {
-        DRAND_PUBLIC_KEY = [
+        drandPublicKey = [
             2416910118189096557713698606232949750075245832257361418817199221841198809231,
             3565178688866727608783247307855519961161197286613423629330948765523825963906,
             18766085122067595057703228467555884757373773082319035490740181099798629248523,
@@ -28,7 +28,7 @@ contract DeployL1 is BaseDeployScript {
         uint256 happyTimeBlock = vm.envUint("HAPPY_TIME_BLOCK");
 
         random =
-            new Random(DRAND_PUBLIC_KEY, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD, happyGenesisTimestamp, happyTimeBlock);
+            new Random(drandPublicKey, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD, happyGenesisTimestamp, happyTimeBlock);
         deployed("Random", address(random));
     }
 }

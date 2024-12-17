@@ -26,6 +26,12 @@ contract Drand {
         drandPeriod = _drandPeriod;
     }
 
+    /**
+     * @notice Posts a new Drand signature for a given drand round.
+     * @dev This function is used to submit a new signature for a specific drand round.
+     * @param round The drand round number
+     * @param signature The signature of the drand round
+     */
     function postDrand(uint64 round, uint256[2] memory signature) external {
         // Encode round for hash-to-point
         bytes memory hashedRoundBytes = new bytes(32);
@@ -54,10 +60,23 @@ contract Drand {
         emit DrandRandomnessPosted(round, roundRandomness);
     }
 
+    /**
+     * @notice Retrieves the randomness value for a specific drand round.
+     * @dev This function does not revert if the randomness value is not available. Instead, it returns 0.
+     * @param round The drand round number
+     * @return randomness The randomness value for the specified drand round, or 0
+     * if the randomness value is not available.
+     */
     function unsafeGetDrand(uint64 round) public view returns (bytes32) {
         return drandRandomness[round];
     }
 
+    /**
+     * @notice Retrieves the randomness value for a specific drand round.
+     * @dev This function reverts if the randomness value is not available.
+     * @param round The drand round number
+     * @return randomness The randomness value for the specified drand round.
+     */
     function getDrand(uint64 round) public view returns (bytes32) {
         if (drandRandomness[round] == 0) {
             revert DrandNotAvailable(round);
