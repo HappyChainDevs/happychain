@@ -77,7 +77,7 @@ contract Random is RandomCommitment, Drand {
      * @return nextValidTimestamp The next timestamp where the drand randomness remains unrevealed.
      */
     function nextValidTimestamp(uint256 timestamp) public view returns (uint256) {
-        return _nextValidTimestamp(timestamp - DRAND_DELAY) + DRAND_DELAY + 2 * drandPeriod;
+        return _nextValidTimestamp(timestamp - DRAND_DELAY) + DRAND_DELAY + 2 * DRAND_PERIOD;
     }
 
     function blockNumberToTimestamp(uint256 blockNumber) internal view returns (uint256) {
