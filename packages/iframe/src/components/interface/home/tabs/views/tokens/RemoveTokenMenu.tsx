@@ -23,7 +23,7 @@ const RemoveTokenMenu = ({ tokenAddress, userAddress }: RemoveTokensMenuProps) =
             <Menu.Trigger>
                 <DotsThreeVertical className="opacity-80" size="2.2em" />
             </Menu.Trigger>
-            <Menu.Positioner>
+            <Menu.Positioner className="[--z-index:1!important]">
                 <Menu.Content
                     className={recipeContent({
                         animation: "default",
