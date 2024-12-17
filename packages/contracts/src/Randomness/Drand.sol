@@ -7,8 +7,8 @@ contract Drand {
     bytes public constant DST = bytes("BLS_SIG_BN254G1_XMD:KECCAK-256_SVDW_RO_NUL_");
 
     uint256[4] public drandPublicKey;
-    uint256 public drandGenesisTimestamp;
-    uint256 public drandPeriod;
+    uint256 public immutable DRAND_GENESIS_TIMESTAMP;
+    uint256 public immutable DRAND_PERIOD;
     mapping(uint64 round => bytes32 randomness) public drandRandomness;
 
     event DrandRandomnessPosted(uint64 indexed round, bytes32 randomness);
@@ -22,8 +22,8 @@ contract Drand {
             revert InvalidPublicKey(_drandPublicKey);
         }
         drandPublicKey = _drandPublicKey;
-        drandGenesisTimestamp = _drandGenesisTimestamp;
-        drandPeriod = _drandPeriod;
+        DRAND_GENESIS_TIMESTAMP = _drandGenesisTimestamp;
+        DRAND_PERIOD = _drandPeriod;
     }
 
     /**
@@ -43,13 +43,12 @@ contract Drand {
         uint256[2] memory message = BLS.hashToPoint(DST, hashedRoundBytes);
 
         // NB: Always check that the signature is a valid signature (a valid G1 point on the curve)!
-        bool isValidSignature = BLS.isValidSignature(signature);
-        if (!isValidSignature) {
+        if (!BLS.isValidSignature(signature)) {
             revert InvalidSignature(drandPublicKey, message, signature);
         }
 
         // Verify the signature over the message using the public key
-        (bool pairingSuccess, bool callSuccess) = BLS.verifySingle(signature, drandPublicKey, message);
+        (bool pairingSuccess, ) = BLS.verifySingle(signature, drandPublicKey, message);
         if (!pairingSuccess) {
             revert InvalidSignature(drandPublicKey, message, signature);
         }
@@ -86,11 +85,11 @@ contract Drand {
     }
 
     function _getDrandAtTimestamp(uint256 timestamp) internal view returns (bytes32) {
-        uint64 round = uint64((timestamp - drandGenesisTimestamp) / drandPeriod);
+        uint64 round = uint64((timestamp - DRAND_GENESIS_TIMESTAMP) / DRAND_PERIOD);
         return getDrand(round);
     }
 
     function _nextValidTimestamp(uint256 timestamp) internal view returns (uint256) {
-        return timestamp + (drandPeriod - (timestamp % drandPeriod));
+        return timestamp + (DRAND_PERIOD - (timestamp % DRAND_PERIOD));
     }
 }
