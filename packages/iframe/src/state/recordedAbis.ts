@@ -18,7 +18,7 @@ const store = getDefaultStore()
 
 // === State Accessors ==================================================================================
 
-export function getWatchedAssets(): AbisRecordedForUser {
+export function getRecordedAbis(): AbisRecordedForUser {
     return store.get(abiContractMappingAtom)
 }
 
