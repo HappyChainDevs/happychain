@@ -1,5 +1,4 @@
-import { formatUserBalance } from "@happychain/sdk-shared"
-import { type Address, type ContractFunctionParameters, erc20Abi } from "viem"
+import { type Address, type ContractFunctionParameters, erc20Abi, formatUnits } from "viem"
 import { type UseReadContractsReturnType, useReadContracts } from "wagmi"
 
 type ERC20BalanceQueryData = {
@@ -51,7 +50,7 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
                     decimals,
                     // compute formatted value only if both values are read from the contract,
                     // else indicate error to user
-                    formatted: value && decimals ? formatUserBalance(value, decimals) : undefined,
+                    formatted: value && decimals ? formatUnits(value, decimals) : undefined,
                 }
             },
         },

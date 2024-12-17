@@ -38,8 +38,6 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
         [balanceData?.formatted],
     )
 
-    console.log({ truncatedBalance })
-
     const imageSource =
         asset.options.image && !isImageSourceBroken
             ? asset.options.image
