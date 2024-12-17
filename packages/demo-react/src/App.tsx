@@ -11,7 +11,7 @@ function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { provider, user, connect, disconnect, showSendScreen } = useHappyChain()
+    const { provider, user, connect, disconnect, showSendScreen, recordAbi } = useHappyChain()
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider!) }), [provider])
     const walletClient = useMemo(
@@ -82,6 +82,10 @@ function App() {
         } else {
             console.log("[addNewToken]: Error adding asset ")
         }
+    }
+
+    async function recordAbiStub() {
+        recordAbi(zeroAddress, erc20Abi) // dummy values
     }
 
     /** mints 1 MTA token to the connected account */
@@ -187,6 +191,10 @@ function App() {
 
             <button type="button" onClick={mintTokens} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Mint Token
+            </button>
+
+            <button type="button" onClick={recordAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                Record ABI
             </button>
         </main>
     )
