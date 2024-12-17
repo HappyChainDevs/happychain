@@ -29,7 +29,7 @@ contract DeployRandom is BaseDeployScript {
 
     function deploy() internal override {
         uint256 happyGenesisTimestamp = vm.envUint("HAPPY_GENESIS_TIMESTAMP");
-        uint256 happyTimeBlock = vm.envUint("HAPPY_TIME_BLOCK");
+        uint256 happyTimeBlock = vm.envUint("HAPPY_TIME_BLOCK_SECONDS");
 
         random =
             new Random(drandPublicKey, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD, happyGenesisTimestamp, happyTimeBlock);
