@@ -1,6 +1,6 @@
 import { throttle } from "@happychain/common"
 import { useEffect, useRef, useState } from "preact/hooks"
-import { isFirefox, makeBlankImage } from "../utils"
+import { isChrome, makeBlankImage } from "../utils"
 
 const blank = makeBlankImage()
 
@@ -225,8 +225,10 @@ function useCustomDrag({ enabled }: { enabled: boolean }) {
 }
 
 export function useWalletDragger() {
-    const nativeDrag = useNativeDrag({ enabled: !isFirefox })
-    const customDrag = useCustomDrag({ enabled: isFirefox })
+    const nativeDragEnabled = isChrome
 
-    return isFirefox ? customDrag : nativeDrag
+    const nativeDrag = useNativeDrag({ enabled: nativeDragEnabled })
+    const customDrag = useCustomDrag({ enabled: !nativeDragEnabled })
+
+    return nativeDragEnabled ? nativeDrag : customDrag
 }
