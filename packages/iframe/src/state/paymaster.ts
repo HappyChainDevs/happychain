@@ -56,7 +56,7 @@ const PAYMASTER_VERIFICATION_GAS_LIMIT_WITH_FACTORY = 45000n
 const PAYMASTER_VERIFICATION_GAS_LIMIT_WITHOUT_FACTORY = 25000n
 const PAYMASTER_POST_OP_GAS_LIMIT = 1n // Set to 1 since the postOp function is never called
 
-const PAYMASTER_DATA = "0x00" as const
+const PAYMASTER_DATA = "0x" as const
 const getPaymasterVerificationGasLimit = (factory?: Hex) =>
     factory && factory !== "0x"
         ? PAYMASTER_VERIFICATION_GAS_LIMIT_WITH_FACTORY
