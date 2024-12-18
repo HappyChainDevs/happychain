@@ -29,20 +29,18 @@ export function getRecordedAbis(): AbisRecordedForUser {
  * Allows for overwriting if an ABI already exists under an
  * address (eg. proxies).
  */
-export function addAbi(userAddress: Address, payload?: RecordAbiPayload): boolean {
+export function addAbiForUser(userAddress: Address, payload?: RecordAbiPayload): boolean {
     if (!payload) return false
 
     store.set(abiContractMappingAtom, (prevAbis) => {
         const recordedAbisForUser = prevAbis[userAddress] || []
 
-        const updatedAbisForUser = [
-            ...recordedAbisForUser.filter((record) => !record[payload.address]),
-            { [payload.address]: payload.abi },
-        ]
-
         return {
             ...prevAbis,
-            [userAddress]: updatedAbisForUser,
+            [userAddress]: [
+                ...recordedAbisForUser.filter((record) => !record[payload.address]),
+                { [payload.address]: payload.abi },
+            ],
         }
     })
 

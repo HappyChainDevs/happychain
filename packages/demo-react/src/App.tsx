@@ -11,7 +11,7 @@ function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { provider, user, connect, disconnect, showSendScreen, recordAbi } = useHappyChain()
+    const { provider, user, connect, disconnect, showSendScreen, preloadAbi } = useHappyChain()
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider!) }), [provider])
     const walletClient = useMemo(
@@ -85,7 +85,7 @@ function App() {
     }
 
     async function recordAbiStub() {
-        recordAbi(zeroAddress, erc20Abi) // dummy values
+        preloadAbi(zeroAddress, erc20Abi) // dummy values
     }
 
     /** mints 1 MTA token to the connected account */

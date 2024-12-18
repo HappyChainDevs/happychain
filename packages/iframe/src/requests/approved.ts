@@ -14,7 +14,7 @@ import { addPendingTx } from "#src/services/transactionHistory"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { grantPermissions } from "#src/state/permissions"
-import { addAbi } from "#src/state/recordedAbis"
+import { addAbiForUser } from "#src/state/recordedAbis"
 import type { PendingTxDetails } from "#src/state/txHistory"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
@@ -104,7 +104,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         case WALLET_USE_ABI_RPC_METHOD: {
-            return user ? addAbi(user.address, request.payload.params) : false
+            return user ? addAbiForUser(user.address, request.payload.params) : false
         }
 
         default:
