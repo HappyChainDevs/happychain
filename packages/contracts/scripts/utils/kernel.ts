@@ -46,18 +46,18 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
             async getPaymasterData(parameters: GetPaymasterDataParameters) {
                 return {
                     paymaster: paymasterAddress,
-                    paymasterData: "0x", // Only required for extra context, no need to encode paymaster gas values manually
+                    paymasterData: "0x", // Only needed if we need to pass extra context to validatePaymasterUserOp
                     paymasterVerificationGasLimit: parameters.factory && parameters.factory !== "0x" ? 45000n : 25000n,
                     paymasterPostOpGasLimit: 1n, // Set to 1 since the postOp function is never called
                 }
             },
 
             // Using stub values from the docs for paymaster-related fields in unsigned user operations for gas estimation.
-            async getPaymasterStubData(_parameters: GetPaymasterStubDataParameters) {
+            async getPaymasterStubData(parameters: GetPaymasterStubDataParameters) {
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x",
-                    paymasterVerificationGasLimit: 45_000n, // Increased value to account for possible higher gas usage
+                    paymasterVerificationGasLimit: parameters.factory && parameters.factory !== "0x" ? 45000n : 25000n,
                     paymasterPostOpGasLimit: 1n,
                 }
             },

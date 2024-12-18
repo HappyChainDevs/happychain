@@ -337,17 +337,28 @@ deploy-l1up:
 	make deploy DEPLOY_SCRIPT=DeployL1Upgradeable.s.sol
 .PHONY: deploy-l1up
 
+# Deploy both AA and Mock contracts with a single validation step
+deploy-demo-contracts:
+	make validate-upgrade
+	$(call run-deploy-script,src/deploy/DeployAA.s.sol)
+	$(call post-deploy)
+	make save-local-aa-deployment
+	$(call run-deploy-script,src/deploy/mocks/DeployMocks.s.sol)
+	$(call post-deploy)
+	make save-local-mock-deployment
+.PHONY: deploy-demo-contracts
+
 deploy-aa:
 	make deploy DEPLOY_SCRIPT=DeployAA.s.sol
 .PHONY: deploy-aa
 
-deploy-random:
-	make deploy DEPLOY_SCRIPT=DeployRandom.s.sol
-.PHONY: deploy-random
-
 deploy-mocks:
 	make deploy DEPLOY_SCRIPT=mocks/DeployMocks.s.sol
 .PHONY: deploy-mocks
+
+deploy-random:
+	make deploy DEPLOY_SCRIPT=DeployRandom.s.sol
+.PHONY: deploy-random
 
 save-local-aa-deployment:
 	make save-deployment DEPLOY_SCRIPT=DeployAA.s.sol DEPLOYMENT_NAME=anvil/testing CONFIG=LOCAL
