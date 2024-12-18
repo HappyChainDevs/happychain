@@ -75,11 +75,11 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                  * 1. First layer (execute function) :
                  *    The outer wrapper is a call to the `execute()` function (selector: `0xe9ae5c53`)
                  *    We decode this to get :
-                 *    - `mode`: how to execute the transaction
-                 *    - `data`: the actual transaction details (wrapped)
+                 *    - `execMode`: how to execute the transaction
+                 *    - `executeParamsData`: the actual transaction details (wrapped)
                  *
                  * 2. Second layer (transaction details) :
-                 *    Inside `data`, we find the real transaction information (to, value, data).
+                 *    Inside `executeParamsData`, we find the real transaction information (to, value, data).
                  *
                  * @see {@link https://docs.stackup.sh/docs/useroperation-calldata} for additional explanation
                  * @see {@link https://eips.ethereum.org/EIPS/eip-4337#definitions} for the EIP-4337 specification
@@ -87,26 +87,28 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
                 // 1. Decode the `execute()` function parameters
                 const [, executeParamsData] = decodeAbiParameters(
-                    parseAbiParameters("bytes32 mode, bytes data"),
+                    parseAbiParameters("bytes32 execMode, bytes executeParamsData"),
                     callData.slice(10) as `0x${string}`, // Skip execute selector (0xe9ae5c53 = 10 characters including 0x prefix)
                 )
 
                 // 2. Decode the actual transaction parameters
                 const [to] = decodeAbiParameters(parseAbiParameters("address to"), executeParamsData)
 
-                const { receipt: txReceipt } = userOpReceipt
                 const {
-                    gasUsed,
-                    blockHash,
-                    blockNumber,
-                    contractAddress,
-                    cumulativeGasUsed,
-                    effectiveGasPrice,
-                    logs,
-                    logsBloom,
-                    transactionIndex,
-                    type,
-                } = txReceipt
+                    success,
+                    receipt: {
+                        gasUsed,
+                        blockHash,
+                        blockNumber,
+                        contractAddress,
+                        cumulativeGasUsed,
+                        effectiveGasPrice,
+                        logs,
+                        logsBloom,
+                        transactionIndex,
+                        type,
+                    },
+                } = userOpReceipt
 
                 return {
                     // Standard transaction receipt fields
@@ -119,11 +121,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     gasUsed,
                     logs,
                     logsBloom,
-
-                    // Not to be confused with `txReceipt.status`
-                    // `userOpReceipt.success` indicates if this this specific operation succeeded
-                    //  `txReceipt.status` is the bundle transaction status
-                    status: userOpReceipt.success ? "success" : "reverted",
+                    status: success ? "success" : "reverted",
                     to,
 
                     // Not to be confused with `txReceipt.transactionHash`
