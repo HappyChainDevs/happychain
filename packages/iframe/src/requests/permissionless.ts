@@ -58,50 +58,87 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
-            const userOpReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
-            const userOpInfo = await smartAccountClient.getUserOperation({
-                hash: userOpReceipt.userOpHash,
-            })
-            const { callData, sender } = userOpInfo.userOperation
 
-            /**
-             * With smart accounts, transactions use a "2-layers" structure :
-             *
-             * 1. The outer layer is the "execute" function call :
-             *    This is what userOp.callData contains (prefixed with a 4-byte function selector) ;
-             *
-             * 2. The inner layer (`executeCalldata`), which contains the actual transaction parameters.
-             *
-             * We need to decode both layers to get the actual transaction details.
-             *
-             * @see {@link https://docs.stackup.sh/docs/useroperation-calldata} for additional detailed explanation
-             * @see {@link https://eips.ethereum.org/EIPS/eip-4337#definitions} for the complete, detailed specification
-             */
+            // Attempt to retrieve UserOperation details first.
+            // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
+            try {
+                const promiseUserOpInfo = smartAccountClient.getUserOperation({ hash })
+                const promiseUserOpReceipt = smartAccountClient.getUserOperationReceipt({ hash })
 
-            // 1. Decode the `execute()` function parameters
-            const [, executeParamsData] = decodeAbiParameters(
-                parseAbiParameters("bytes32 mode, bytes data"),
-                callData.slice(4) as `0x${string}`, // Remove the 4-byte `execute()` function selector
-            )
+                const [userOpInfo, userOpReceipt] = await Promise.all([promiseUserOpInfo, promiseUserOpReceipt])
 
-            // 2. Decode the actual transaction parameters
-            const [to, value, data] = decodeAbiParameters(
-                parseAbiParameters("address to, uint256 value, bytes data"),
-                executeParamsData,
-            )
+                const { callData, sender } = userOpInfo.userOperation
 
-            return {
-                // Base receipt fields from UserOperation receipt
-                ...userOpReceipt.receipt,
+                /**
+                 * Smart account transactions have 2 nested layers of data that we need to decode :
+                 *
+                 * 1. First layer (execute function) :
+                 *    The outer wrapper is a call to the `execute()` function (selector: `0xe9ae5c53`)
+                 *    We decode this to get :
+                 *    - `mode`: how to execute the transaction
+                 *    - `data`: the actual transaction details (wrapped)
+                 *
+                 * 2. Second layer (transaction details) :
+                 *    Inside `data`, we find the real transaction information (to, value, data).
+                 *
+                 * @see {@link https://docs.stackup.sh/docs/useroperation-calldata} for additional explanation
+                 * @see {@link https://eips.ethereum.org/EIPS/eip-4337#definitions} for the EIP-4337 specification
+                 */
 
-                // Transaction details (matching eth_getTransactionReceipt format)
-                from: sender,
-                to,
-                data,
-                value,
+                // 1. Decode the `execute()` function parameters
+                const [, executeParamsData] = decodeAbiParameters(
+                    parseAbiParameters("bytes32 mode, bytes data"),
+                    callData.slice(10) as `0x${string}`, // Skip execute selector (0xe9ae5c53 = 10 characters including 0x prefix)
+                )
 
-                // Original UserOp receipt for reference
-                userOpReceipt,
+                // 2. Decode the actual transaction parameters
+                const [to] = decodeAbiParameters(parseAbiParameters("address to"), executeParamsData)
+
+                const { receipt: txReceipt } = userOpReceipt
+                const {
+                    gasUsed,
+                    blockHash,
+                    blockNumber,
+                    contractAddress,
+                    cumulativeGasUsed,
+                    effectiveGasPrice,
+                    logs,
+                    logsBloom,
+                    transactionIndex,
+                    type,
+                } = txReceipt
+
+                return {
+                    // Standard transaction receipt fields
+                    blockHash,
+                    blockNumber,
+                    contractAddress,
+                    cumulativeGasUsed,
+                    effectiveGasPrice,
+                    from: sender,
+                    gasUsed,
+                    logs,
+                    logsBloom,
+
+                    // Not to be confused with `txReceipt.status`
+                    // `userOpReceipt.success` indicates if this this specific operation succeeded
+                    //  `txReceipt.status` is the bundle transaction status
+                    status: userOpReceipt.success ? "success" : "reverted",
+                    to,
+
+                    // Not to be confused with `txReceipt.transactionHash`
+                    // `hash` is the hash of the userop transaction
+                    //  `txReceipt.transactionHash` is the hash of the bundled transaction that includes this userop
+                    transactionHash: hash,
+                    transactionIndex,
+                    type,
+
+                    // Original UserOp receipt for reference
+                    originalUserOpReceipt: userOpReceipt,
+                }
+            } catch (_err) {
+                console.warn("UserOperation lookup failed, falling back to regular transaction receipt lookup...")
+                return sendToPublicClient(app, request)
             }
         }
 
