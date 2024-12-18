@@ -4,12 +4,13 @@ import {
     EIP1193ErrorCodes,
     type EIP1193RequestResult,
     EIP1193UnsupportedMethodError,
-    type Msgs,
+    Msgs,
     type PopupMsgs,
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { type Client, type Hex, hexToBigInt } from "viem"
+import { popupEmitBus } from "#src/services/eventBus.ts"
 import { addPendingTx } from "#src/services/transactionHistory"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
@@ -28,7 +29,9 @@ import { appForSourceID } from "./utils"
  * running them through a series of middleware.
  */
 export function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): void {
-    void sendResponse(request, dispatchHandlers)
+    void sendResponse(request, dispatchHandlers).finally(() =>
+        closePopup({ windowId: request.windowId, key: request.key }),
+    )
 }
 
 // exported for testing
@@ -120,4 +123,11 @@ async function sendToWalletClient<T extends PopupMsgs[Msgs.PopupApprove]>(
     }
 
     return await client.request(request.payload)
+}
+
+function closePopup(params: PopupMsgs[Msgs.PopupClose]) {
+    // In most cases this is not needed, however on at least Android FireFox Mobile, it is required.
+    // No harm in leaving this, as worst case it will be requested to close from two locations, and
+    // the slower of the two will drop silently as it will have already been closed.
+    void popupEmitBus.emit(Msgs.PopupClose, params)
 }

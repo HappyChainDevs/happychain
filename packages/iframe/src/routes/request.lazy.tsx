@@ -1,7 +1,7 @@
 import { HappyMethodNames } from "@happychain/common"
 import { Msgs, type PopupMsgs } from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { HappyWalletUseAbi } from "#src/components/requests/HappyWalletUseAbi"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
@@ -12,7 +12,7 @@ import { WalletRequestPermissions } from "../components/requests/WalletRequestPe
 import { WalletSwitchEthereumChain } from "../components/requests/WalletSwitchEthereumChain"
 import { WalletWatchAsset } from "../components/requests/WalletWatchAsset"
 import type { requestLabels } from "../constants/requestLabels"
-import { popupEmitBus } from "../services/eventBus"
+import { popupEmitBus, popupListenBus } from "../services/eventBus"
 
 export const Route = createLazyFileRoute("/request")({
     component: Request,
@@ -22,6 +22,14 @@ function Request() {
     const [isLoading, setIsLoading] = useState(false)
     const { args, key, windowId } = Route.useSearch()
     const req = JSON.parse(atob(args))
+
+    useEffect(
+        () =>
+            popupListenBus.on(Msgs.PopupClose, (msg) => {
+                if (msg.key === key && msg.windowId === windowId) window.close()
+            }),
+        [key, windowId],
+    )
 
     function reject() {
         void popupEmitBus.emit(Msgs.PopupReject, {

@@ -107,6 +107,8 @@ export enum Msgs {
 
     /** Informs the iframe that the user has rejected a request in the popup. */
     PopupReject = "popup:reject",
+
+    PopupClose = "popup:close",
 }
 
 // =================================================================================================
@@ -208,6 +210,7 @@ export type ProviderMsgsFromIframe = {
 export type PopupMsgs = {
     [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.PopupReject]: ProviderEventError<EIP1193ErrorObject>
+    [Msgs.PopupClose]: { windowId: string; key: string }
 }
 
 // =================================================================================================

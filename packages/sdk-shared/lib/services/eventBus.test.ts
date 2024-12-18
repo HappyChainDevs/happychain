@@ -1,6 +1,5 @@
-import { type Mock, beforeEach, describe, expect, it, mock } from "bun:test"
+import { type Mock, beforeEach, describe, expect, it, mock, spyOn } from "bun:test"
 import { setTimeout } from "node:timers/promises"
-
 import { createUUID } from "@happychain/common"
 import { EventBus, EventBusMode, type EventBusOptions } from "./eventBus"
 
@@ -57,6 +56,21 @@ describe("event bus", () => {
         })
     })
     describe("broadcast events", () => {
+        // The LocalStorageBroadcastChannel System relies on the event triggered when setItem
+        // is used in localStorage. This works between tabs and windows, however, all tests run in
+        // the same context, and therefore no even is dispatched automatically.
+        // This does not actually set anything in 'storage' but that is not needed for these tests.
+        spyOn(Storage.prototype, "setItem").mockImplementation((key, value) => {
+            // dispatch events to the same emitting source....
+            globalThis.dispatchEvent(
+                new StorageEvent("storage", {
+                    key,
+                    newValue: value,
+                    oldValue: localStorage.getItem(key),
+                }),
+            )
+        })
+
         let broadcastConfig: EventBusOptions
 
         let args = { data: true, version: 1 }

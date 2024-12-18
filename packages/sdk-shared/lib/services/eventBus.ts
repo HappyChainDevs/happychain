@@ -42,9 +42,7 @@ export type EventKey = string | number | symbol
 export type EventHandler<S, K extends keyof S = keyof S> = (payload: S[K]) => void
 
 // Type-safe references to browser message port types
-type SafeMessagePort = globalThis.MessagePort
-type SafeBroadcastChannel = globalThis.BroadcastChannel
-type SafePort = SafeMessagePort | SafeBroadcastChannel
+type SafePort = Pick<globalThis.MessagePort, "onmessage" | "onmessageerror" | "postMessage">
 
 /**
  * Defines name, logger, error handler, and mode for the event bus.
@@ -60,6 +58,41 @@ export type EventBusOptions = {
     | { mode: EventBusMode.Broadcast }
     | { mode: EventBusMode.Forced; port: SafePort }
 )
+
+/**
+ * LocalStorageBroadcastChannel acts as a drop-in replacement for BroadcastChannel
+ */
+class LocalStorageBroadcastChannel implements SafePort {
+    private readonly key
+
+    constructor(scope: string) {
+        this.key = `local-storage-broadcast-channel:${scope}`
+
+        globalThis.addEventListener("storage", (ev) => {
+            if (!this.isStorageEvent(ev)) return
+            if (ev.key !== this.key) return
+
+            try {
+                const val = ev.newValue ? JSON.parse(ev.newValue) : null
+                this.onmessage(new MessageEvent(`${this.key}-message`, { data: val }))
+            } catch (_e) {
+                this.onmessageerror(new MessageEvent(`${this.key}-message`, { data: _e }))
+            }
+        })
+    }
+
+    // overwrite this
+    onmessage = (_a: MessageEvent) => {}
+    onmessageerror = (_e: MessageEvent) => {}
+
+    postMessage(msg: unknown) {
+        localStorage.setItem(this.key, JSON.stringify(msg))
+    }
+
+    private isStorageEvent(ev: Event): ev is StorageEvent {
+        return "key" in ev && "newValue" in ev && (ev.newValue === null || typeof ev.newValue === "string")
+    }
+}
 
 /**
  * An event bus that enables sending/receiving messages to/from other browsing contexts (windows,
@@ -93,9 +126,7 @@ export class EventBus<SL, SE = SL> {
                 this.registerPortListener(this.config.port)
                 break
             case EventBusMode.Broadcast:
-                if (browserGlobal.BroadcastChannel) {
-                    this.registerPortListener(new browserGlobal.BroadcastChannel(this.config.scope))
-                }
+                this.registerPortListener(new LocalStorageBroadcastChannel(this.config.scope))
                 break
             case EventBusMode.IframePort: {
                 if (browserGlobal.MessageChannel) {

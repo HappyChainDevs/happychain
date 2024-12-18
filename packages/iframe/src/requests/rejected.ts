@@ -8,6 +8,7 @@ import {
 import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
 import { getUser } from "#src/state/user.ts"
 import { happyProviderBus } from "../services/eventBus"
+import { popupEmitBus } from "../services/eventBus"
 import { isIframe } from "../utils/appURL"
 import { iframeProvider } from "../wagmi/provider"
 import { appForSourceID } from "./utils"
@@ -42,4 +43,9 @@ export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): 
     } else {
         void happyProviderBus.emit(Msgs.RequestResponse, response)
     }
+
+    // In most cases this is not needed, however on at least Android FireFox Mobile, it is required.
+    // No harm in leaving this, as worst case it will be requested to close from two locations, and
+    // the slower of the two will drop silently as it will have already been closed.
+    void popupEmitBus.emit(Msgs.PopupClose, { windowId: response.windowId, key: response.key })
 }
