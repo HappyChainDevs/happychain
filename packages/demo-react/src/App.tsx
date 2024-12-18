@@ -189,13 +189,15 @@ function App() {
                 Show Send Screen
             </button>
 
-            <button type="button" onClick={addNewToken} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Add Token
-            </button>
+            <div className="flex flex-row w-full items-center justify-center space-x-6">
+                <button type="button" onClick={addNewToken} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                    Add Token
+                </button>
 
-            <button type="button" onClick={mintTokens} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Mint Token
-            </button>
+                <button type="button" onClick={mintTokens} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                    Mint Token
+                </button>
+            </div>
 
             <button type="button" onClick={loadAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Load ABI
