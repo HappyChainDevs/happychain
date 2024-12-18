@@ -1,4 +1,4 @@
-import { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
+import type { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
 import { useAtomValue } from "jotai"
 import { currentChainAtom } from "#src/state/chains"
 import { Button } from "../primitives/button/Button"
@@ -48,7 +48,7 @@ export function HappyWalletUseAbi({
                 <Button
                     intent="primary"
                     className="text-neutral-content justify-center"
-                    onClick={() => accept({ method: WALLET_USE_ABI_RPC_METHOD, params })}
+                    onClick={() => accept({ method, params })}
                 >
                     Add ABI
                 </Button>
