@@ -1,9 +1,13 @@
+import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
-import { type RpcTransactionRequest, formatEther, formatGwei } from "viem"
+import { type Address, type RpcTransactionRequest, decodeFunctionData, formatEther, formatGwei } from "viem"
 import { useEstimateFeesPerGas } from "wagmi"
+import { abiContractMappingAtom } from "#src/state/recordedAbis"
+import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
 import { Button } from "../primitives/button/Button"
 import { BlobTxWarning } from "./BlobTxWarning"
+import DecodedData from "./common/DecodedData"
 import GasFieldDisplay, { GasFieldName } from "./common/GasFieldDisplay"
 import RawRequestDetails from "./common/RawRequestDetails"
 import RequestContent from "./common/RequestContent"
@@ -59,6 +63,10 @@ export const EthSendTransaction = ({
     // user interactions for sliders / options for setting gas manually
     const [tx, setTx] = useState<RpcTransactionRequest>(params[0])
 
+    const user = useAtomValue(userAtom)
+    const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
+    const targetContractAddress = (tx.to ?? undefined) as Address | undefined
+
     const {
         data: { maxFeePerGas, maxPriorityFeePerGas } = {},
         isError,
@@ -91,6 +99,45 @@ export const EthSendTransaction = ({
             } as RpcTransactionRequest
         })
     }, [maxFeePerGas, maxPriorityFeePerGas, isError])
+
+    /**
+     * Retrieves the ABI for a given contract address associated with the current user's recorded ABIs.
+     *
+     * The memoized value returns `undefined` if:
+     * - The user address is not available.
+     * - The target contract address is not provided.
+     * - No ABIs are found for the user.
+     * - No matching ABI record for the given contract address is found.
+     *
+     * Otherwise, it returns the ABI object for the specified contract address.
+     */
+    const abiForContract = useMemo(() => {
+        // rename?
+        if (!user?.address || !targetContractAddress) return undefined
+
+        const abis = recordedAbisForUser[user.address]
+        if (!abis) return undefined
+
+        const specificAbiRecord = abis.find((record) => targetContractAddress in record)
+        if (!specificAbiRecord) return undefined
+
+        return specificAbiRecord[targetContractAddress]
+    }, [recordedAbisForUser, user?.address, targetContractAddress])
+
+    /**
+     * Decodes the function call data for a given contract ABI and transaction data
+     * using viem's {@link decodeFunctionData | decodeFunctionData }.
+     */
+    const decodedData = useMemo(() => {
+        if (!abiForContract || !tx.data) return undefined
+
+        const { functionName, args } = decodeFunctionData({
+            abi: abiForContract,
+            data: tx.data,
+        })
+
+        return { functionName, args }
+    }, [abiForContract, tx.data])
 
     // memo-ed values formatted for display
     const formattedTxInfo = useMemo(() => {
@@ -138,6 +185,7 @@ export const EthSendTransaction = ({
                     </div>
                 </RequestDetails>
 
+                {decodedData && <DecodedData data={decodedData} />}
                 <RawRequestDetails params={params} />
             </RequestContent>
 
