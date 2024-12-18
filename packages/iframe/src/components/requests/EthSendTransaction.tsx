@@ -112,7 +112,6 @@ export const EthSendTransaction = ({
      * Otherwise, it returns the ABI object for the specified contract address.
      */
     const abiForContract = useMemo(() => {
-        // rename?
         if (!user?.address || !targetContractAddress) return undefined
 
         const abis = recordedAbisForUser[user.address]
