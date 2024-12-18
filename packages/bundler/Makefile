@@ -22,14 +22,19 @@ alto: alto.version
 	@rm -rf alto/.git alto/.gitmodules alto/.gitignore
 	@git rm --cached alto/pnpm-lock.yaml 2>/dev/null || true
 
-# Build target to set up the repository
-build: alto
-	cd alto && bunx pnpm install && bunx pnpm run build
-.PHONY: build
+# Target to set up the repository initially (install dependencies and build)
+setup: alto build
+.PHONY: setup
 
-build-only:
+# Target to install dependencies
+install-deps:
+	cd alto && bunx pnpm install
+.PHONY: install-deps
+
+# Target to build the bundler
+build: install-deps
 	cd alto && bunx pnpm run build
-.PHONY: build-only
+.PHONY: build
 
 # Target to run the Alto bundler with the appropriate configuration
 run:

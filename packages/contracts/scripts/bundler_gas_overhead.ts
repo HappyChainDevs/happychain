@@ -93,7 +93,7 @@ async function processSingleUserOp(kernelClient: SmartAccountClient, calls: User
     console.log(`UserOp send time: ${(sendEndTime - sendStartTime).toFixed(2)}ms`)
 
     console.log("\n=== Polling for UserOp Inclusion ===")
-    // await pollForUserOpInclusion(hash)
+    await pollForUserOpInclusion(hash)
 
     console.log("\n=== processSingleUserOp: Wait for Receipt ===")
     const receiptStartTime = performance.now()
