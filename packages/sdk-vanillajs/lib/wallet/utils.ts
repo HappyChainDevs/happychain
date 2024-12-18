@@ -26,4 +26,10 @@ export function makeBlankImage() {
     return img
 }
 
+/**
+ * Feature Detection would be much better, however not possible in this case. The primary use here
+ * is for the drag-and-drop API, which is baseline/'fully supported' on all modern browsers, however
+ * the implementation for many (such as Firefox and Safari) is broken in reality.
+ */
 export const isFirefox = navigator.userAgent.includes("Firefox")
+export const isChrome = navigator.userAgent.includes("Chrome")
