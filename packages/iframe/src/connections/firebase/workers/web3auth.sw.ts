@@ -68,6 +68,11 @@ ethereumSigningProvider.on("accountsChanged", (data) => {
     worker.broadcast({ action: "accountsChanged", data })
 })
 
+/**
+ * Before calling connect(), disconnect(), or request() functions, we must verify that web3Auth
+ * has been initialized. If it has not yet been initialized, this will initialize it, otherwise
+ * its a no-op.
+ */
 async function checkInitialization() {
     if (web3Auth.status === COREKIT_STATUS.NOT_INITIALIZED) {
         await web3Auth.init()
