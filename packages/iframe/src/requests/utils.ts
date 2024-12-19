@@ -45,6 +45,13 @@ export function checkAuthenticated() {
 const KERNEL_ABI = abis.Kernel
 
 /**
+ * Gas cost for deploying a smart account (Kernel).
+ * Based on our observations: a single UserOperation in a bundle had a deployment overhead of 187K gas.
+ * The value is adjusted to a safe upper limit to account for potential variations.
+ */
+export const ACCOUNT_DEPLOYMENT_COST = 190_000n
+
+/**
  * Execution mode for standard transactions
  * @see https://github.com/zerodevapp/kernel/blob/737db3123165d6009c9261dc98e149a3fdd82f97/src/types/Constants.sol#L4-L23
  */

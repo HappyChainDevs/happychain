@@ -9,7 +9,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { decodeNonce } from "permissionless"
-import { type Client, InvalidAddressError, decodeAbiParameters, isAddress, parseAbiParameters, hexToBigInt } from "viem"
+import { type Client, InvalidAddressError, decodeAbiParameters, hexToBigInt, isAddress, parseAbiParameters } from "viem"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
@@ -18,7 +18,7 @@ import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkPermissions"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID, checkAuthenticated } from "./utils"
+import { ACCOUNT_DEPLOYMENT_COST, appForSourceID, checkAuthenticated } from "./utils"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -32,6 +32,7 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
     const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
+    const isAccountDeployed = await smartAccountClient.account.isDeployed()
 
     switch (request.payload.method) {
         case "eth_chainId": {
@@ -174,11 +175,13 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     },
                 ],
             })
+            const additionalDeploymentCost = isAccountDeployed ? 0n : ACCOUNT_DEPLOYMENT_COST
 
             /**
              * Gas estimation that will be used in `eth_sendTransaction`.
              *
-             * In account abstraction, gas estimation includes multiple components:
+             * In account abstraction, gas estimation includes multiple components :
+             *
              * 1. `preVerificationGas` (PVG): Static overhead for the bundler to process the operation
              *    - Always charged, not a limit
              *    - Covers the cost of the bundler to submit the UserOp to `EntryPoint`
@@ -192,20 +195,24 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
              *    - Like regular EOA transaction gas
              *    - Used for the main operation (transfer, contract call, etc.)
              *
+             * 4. `additionalDeploymentCost`: For first-time smart account deployment
+             *    - Only added if account is not yet deployed
+             *
              * Sidenote about total gas calculation :
              * - Without paymaster: PVG + VGL + CGL
              * - With paymaster: PVG + (3 * VGL) + CGL
              *   (`verificationGasLimit` is multiplied by 3 for initial validation, postOp, and potential postOp revert)
              *
-             * The guaranteed gas consumption is `callGasLimit + preVerificationGas` because :
-             * - These values are guaranteed to be consumed ;
-             * - `verificationGasLimit` handling differs with/without paymaster ;
-             * - The bundler will handle proper gas distribution.
+             * The guaranteed gas consumption includes :
+             * - `callGasLimit`: Gas for the main operation
+             * - `preVerificationGas`: Bundler overhead
+             * - `additionalDeploymentCost`: Gas for smart account deployment (if not deployed yet)
              *
              * @see {@link https://docs.stackup.sh/docs/useroperation-gas-values}
              * @see {@link https://docs.stackup.sh/docs/erc-4337-bundler-rpc-methods#eth_estimateuseroperationgas}
              */
-            const guaranteedGasConsumption = gasEstimation.callGasLimit + gasEstimation.preVerificationGas
+            const guaranteedGasConsumption =
+                gasEstimation.callGasLimit + gasEstimation.preVerificationGas + additionalDeploymentCost
             return guaranteedGasConsumption
         }
 
