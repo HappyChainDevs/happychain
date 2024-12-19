@@ -2,7 +2,7 @@
 export async function up(db) {
     await db.schema
         .createTable("randomnesses")
-        .addColumn("timestamp", "integer", (col) => col.notNull())
+        .addColumn("blockNumber", "integer", (col) => col.notNull())
         .addColumn("value", "text", (col) => col.notNull())
         .addColumn("hashedValue", "text", (col) => col.notNull())
         .addColumn("commitmentTransactionIntentId", "text")

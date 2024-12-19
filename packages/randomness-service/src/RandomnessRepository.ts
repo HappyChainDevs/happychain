@@ -4,14 +4,14 @@ import { FINALIZED_STATUSES, Randomness, type RandomnessStatus } from "./Randomn
 import { db } from "./db/driver"
 import type { RandomnessRow } from "./db/types"
 
-const COMMITMENT_PRUNE_INTERVAL_SECONDS = 60 * 2 // 2 minutes
+const COMMITMENT_PRUNE_INTERVAL_BLOCKS = 60
 
 export class RandomnessRepository {
     private readonly map = new Map<bigint, Randomness>()
 
     private rowToEntity(row: RandomnessRow): Randomness {
         return new Randomness({
-            timestamp: BigInt(row.timestamp),
+            blockNumber: BigInt(row.blockNumber),
             value: BigInt(row.value),
             hashedValue: row.hashedValue,
             commitmentTransactionIntentId: row.commitmentTransactionIntentId,
@@ -22,7 +22,7 @@ export class RandomnessRepository {
 
     private entityToRow(entity: Randomness): RandomnessRow {
         return {
-            timestamp: Number(entity.timestamp),
+            blockNumber: Number(entity.blockNumber),
             value: entity.value.toString(),
             hashedValue: entity.hashedValue,
             commitmentTransactionIntentId: entity.commitmentTransactionIntentId,
@@ -34,12 +34,12 @@ export class RandomnessRepository {
     async start(): Promise<void> {
         const randomnessesDb = (await db.selectFrom("randomnesses").selectAll().execute()).map(this.rowToEntity)
         for (const randomness of randomnessesDb) {
-            this.map.set(randomness.timestamp, randomness)
+            this.map.set(randomness.blockNumber, randomness)
         }
     }
 
-    getRandomnessForTimestamp(timestamp: bigint): Randomness | undefined {
-        return this.map.get(timestamp)
+    getRandomnessForBlockNumber(blockNumber: bigint): Randomness | undefined {
+        return this.map.get(blockNumber)
     }
 
     getRandomnessForIntentId(intentId: UUID): Randomness | undefined {
@@ -50,9 +50,9 @@ export class RandomnessRepository {
         )
     }
 
-    getRandomnessInTimeRange(start: bigint, end: bigint): Randomness[] {
+    getRandomnessInBlockRange(start: bigint, end: bigint): Randomness[] {
         return Array.from(this.map.values()).filter(
-            (randomness) => randomness.timestamp >= start && randomness.timestamp <= end,
+            (randomness) => randomness.blockNumber >= start && randomness.blockNumber <= end,
         )
     }
 
@@ -67,7 +67,7 @@ export class RandomnessRepository {
      * @returns A result indicating the success or failure of the operation
      */
     async saveRandomness(randomness: Randomness): Promise<Result<void, Error>> {
-        this.map.set(randomness.timestamp, randomness)
+        this.map.set(randomness.blockNumber, randomness)
         const row = this.entityToRow(randomness)
         return ResultAsync.fromPromise(db.insertInto("randomnesses").values(row).execute(), unknownToError).map(
             () => undefined,
@@ -81,10 +81,10 @@ export class RandomnessRepository {
      * @returns A result indicating the success or failure of the operation
      */
     async updateRandomness(randomness: Randomness): Promise<Result<void, Error>> {
-        this.map.set(randomness.timestamp, randomness)
+        this.map.set(randomness.blockNumber, randomness)
         const row = this.entityToRow(randomness)
         return ResultAsync.fromPromise(
-            db.updateTable("randomnesses").set(row).where("timestamp", "=", Number(randomness.timestamp)).execute(),
+            db.updateTable("randomnesses").set(row).where("blockNumber", "=", Number(randomness.blockNumber)).execute(),
             unknownToError,
         ).map(() => undefined)
     }
@@ -93,7 +93,7 @@ export class RandomnessRepository {
         return ResultAsync.fromPromise(
             db
                 .deleteFrom("randomnesses")
-                .where("timestamp", "<", Number(latestBlockTimestamp) - COMMITMENT_PRUNE_INTERVAL_SECONDS)
+                .where("blockNumber", "<", Number(latestBlockTimestamp) - COMMITMENT_PRUNE_INTERVAL_BLOCKS)
                 .where("status", "in", FINALIZED_STATUSES)
                 .execute(),
             unknownToError,

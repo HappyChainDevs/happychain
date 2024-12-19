@@ -131,6 +131,8 @@ export class TxMonitor {
                   })
                 : undefined
 
+            console.log("traceResult", JSON.stringify(traceResult, null, 2))
+
             if (!traceResult || traceResult.isErr()) {
                 if (receipt.gasUsed === attempt.gas) {
                     return await this.handleOutOfGasTransaction(transaction)

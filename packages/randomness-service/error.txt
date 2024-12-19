@@ -1,0 +1,692 @@
+node --env-file=.env dist/index.es.js
+Current round 2344112n
+Oldest drand 2344050n
+Drand gaps [
+  2344050n, 2344051n, 2344052n, 2344053n, 2344054n,
+  2344055n, 2344056n, 2344057n, 2344058n, 2344059n,
+  2344060n, 2344061n, 2344062n, 2344063n, 2344064n,
+  2344065n, 2344066n, 2344067n, 2344068n, 2344069n,
+  2344070n, 2344071n, 2344072n, 2344073n, 2344074n,
+  2344075n, 2344076n, 2344077n, 2344078n, 2344079n,
+  2344080n, 2344081n, 2344082n, 2344083n, 2344084n,
+  2344085n, 2344086n, 2344087n, 2344088n, 2344089n,
+  2344090n, 2344091n, 2344092n, 2344093n, 2344094n,
+  2344095n, 2344096n, 2344097n, 2344098n, 2344099n,
+  2344100n, 2344101n, 2344102n, 2344103n, 2344104n,
+  2344105n, 2344106n, 2344107n, 2344108n, 2344109n,
+  2344110n, 2344111n
+]
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344055,
+    "signature": "0x19decbc60cc198d9f47ca007147e5a26c4b05d15ae09b85ef920f937bfcec2130d4cc92b92f8b4b521e9bad0e4eecd2e1b2fc44aa08cd87fabdc21d5555cc6db"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344053,
+    "signature": "0x098e3cb6dc34f1dd680de8358abf1405cd8121e9d0a8b6b00427254b20b6b82e03760baa488ba65add4b32ef891f7bc7ecb2692257771ca1f3363c91b5143ebc"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344064,
+    "signature": "0x075fb10b7eb8b8b9516b33b37f619435411803f1dd7b05adcad32877169330062d953303166f68c73de48154b2178f480b5da4fba374b32f2aa45cbdf6553fa6"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344050,
+    "signature": "0x0826d81ac96f39c639d33ac9c68c7e52cbab96d041da0c80264fcac0dfff851e2f5e487459c16e0184cc6e93242356a1d25b1ef6e0458e115fa86c51e4e648cf"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344057,
+    "signature": "0x1184a0ffe0ad826a2a46c761c213718fe1471fe668c84ce57ed7bc4ebc78492707ea8e700b30916f65dd18fe0537023dc439d03bd3b45511fe9a67ffc7cbecd8"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344059,
+    "signature": "0x1a09f22145a74dc01a28f280f61864d3ff91aca4217c0b17c11507533d8c56cf2d42fa4bc35549433862397f129e0d8c763bb775016ccb62405080e14a4ad3fc"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344074,
+    "signature": "0x23622d53499748045332be09e5f7008bf326e2d0a926004ff0d4bbd8eaf684392d19c510db93250f42a285972ddde29829a079f04a29c728f38a6a72d270f5e6"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344061,
+    "signature": "0x1f88b1bbbfd4a5f98b33e98a745af924a151787d7571fad8e06fe1833ff87a9102ed6141fa6e9420f1a470bf57fa2427e927402c6645d45502736e9f5d5e3ded"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344056,
+    "signature": "0x2036b2f142e13d3fdd1734a487d06ea517ff90d28601a6b5a377363b9a1d65e110c62ce383078ac21f7dd0dcd316048349aea4218db8d334cf4e24d79c28e154"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344075,
+    "signature": "0x2c5aaa59dd5c6aaf6379f59732113e33b65aa686b5209703b8f30932654b14241cf529fe593b7a304c81c66946b868043030f8cf87909e38f2fb6c9f7af64602"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344051,
+    "signature": "0x28163f28d5c2e73c2cffcdcc3b87db4258ae8d6cdf2e4bda6e01a0c974c1925229da405bde5d089bd136694ba89266974af3e42332bd53e50bd0172e45194dcb"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344077,
+    "signature": "0x00d75ab37f5c8ef6d8a6c0df5d39ecc43b9667ac896feb90bd2f205708abf0210cb162df5b42cc030c630b995f13a86cc47170be820facb7134208e57e04d185"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344065,
+    "signature": "0x2551be4167b049ce135f76060f64e23ed6596e92dce2fd792162864b561c2a8d0b8e0772812c9326c4dc0e507cd3cc4af4bdebbff7432c0730a6bf9d30fe7dcb"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344068,
+    "signature": "0x1e523bf0f1592f1e30588b453726df1652390dcb5293adb109527c139cff3c15266025067cf10b0b4ba7c08e5146a02f7fd47a022919f914bafea3aeb5c93c1c"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344069,
+    "signature": "0x2ae17fa34e246bda2770e511c26769854cdc8a1b5890e5144ec819282af0e06c2cea50d1263c726ad67b45d3f08824962e1dc527bf167a7340cd6a5c90a57a99"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344052,
+    "signature": "0x08eba20497a81fcafa788bf4203f812f4da7068abb03f5cac7029eb42d7e4ac525a5ee8529001901539c9953032d630b689aaffc672538006eb98b9fe32f7804"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344066,
+    "signature": "0x15ceac78c21fb8ac1d1b4164b859c0ccc9c06c0748c998ce391b7ca864f74a591dcdddb3084d3065a5e07459c516af0a3bfa1105e44eb8a4ce2eb11a04ea5aa2"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344054,
+    "signature": "0x2ce44675d90efc9f4b3a3057a62d78f510ae332c0834804f9e91d250ca5ca9451f8bda351ca95a904cc5a74ac51fc95bf42f8781750f8a0177f9da582ae9b940"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344060,
+    "signature": "0x2ed6bc880228c9eb419b1c08ae505854d1c2784404306a84850783252cfe71e30d6b992e7ecb8633fe05ab167f0fc903e4d4510bad8d5c32c9282ffb868f8eb4"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344067,
+    "signature": "0x1f7310b3b205ad97c79495a07ba1c4efe3f8b1ab4e2ba3c7577dd34e8582640c0b380f25912766c5ce8f19be24c375e2f08fe6e8bb8b5eb7fcc8169a05653091"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344058,
+    "signature": "0x1a69fa5eae11c3109628531159c801a25daab5d75b348a0a11652daff144e32711e0c91f14e32203c033885791f58931446d56d5b71ea42076ffd4201efc448a"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344062,
+    "signature": "0x238094b45bffb1decdbdb2a1f5f4d1d0fb3578991f933dc1f353be34782f7d791fbbf6943d1ccb8c68cb8a6fd6ea7d0124c98fd4b4c3359d36e0dfab904744ad"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344063,
+    "signature": "0x0d270aa0a13dd0b80b9fa1dd0d2836ca2adce0ab5c39b89394528ffcd1f53b222ac580c04c026a922e1c7e4d2004af2ef5988912ca4eba4cf889f38b9e453b3f"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344087,
+    "signature": "0x121f35ee80fd60c8c89f853550544b4544483c83ae86b98ee1a5fff744c0c3e82d5f3fb5ff8572bd74b7f84a71ce03f35f643452fb00c617fb11fe263c562a8d"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344071,
+    "signature": "0x1e158ef5d86ec9970956aea16f0ec75f7b34cba0403d4509eb65adaa836347df202e25fc1ae658fef761f518993ee55b51d32f39a641c5a8a924b80cdb7e41ba"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344072,
+    "signature": "0x0cbef8a0302f02033ec2b3d3700e0e8603e3e3e4deb00b265909302f61b4f4f304d722315cc7e96d191a420bc7d196f219ab37afa43f641daa45d2b22e82428c"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344093,
+    "signature": "0x2ac56e4ef1866c4e9ee562275caf6648c2f213fdfc4f6d7593940d9fb5d6fe850c070acdfba8f48cf429114146c25b26f9789af42025d07dd48e756d10b526bf"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344078,
+    "signature": "0x29504cc628d1fd5a3a3f17d78d4b6c829e59891e0214a0a898acbc21a26d7ffd0e7e42d351239b803c8124538df2a18ca1df720299a7954625244ada31185dc3"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344083,
+    "signature": "0x221ae4fcd80da907b521b49d2df1a14a589eecdd44bf07763fb7661ddf15bc491a649b206689cb3cbc17159e1cf96a272efb923f6ccc637e274125f19e920a0e"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344073,
+    "signature": "0x01a5d7237229a9b11678beada4737ddda3ff4cf8f8ff8e09823a000f1b0f59aa28328b6f3d71437c8c99584698fe0ba5ebe6cee458cc92645d08ae0e644ef4b0"
+  }
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Response status 429
+Drand beacon {
+  "error": "Other"
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344091,
+    "signature": "0x0ef03310ac5451e405a2b01ccd9a8537dff6103a63d957e8ae7771a3a880214509b32aca8ea6c0074e969019a85cecbaf2d9b3ee3b75d7e5e3594b0a9963666e"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344111,
+    "signature": "0x19bcbd10d6ce343316444f902967ea0d10144854e9392e5084354e11d33e24512aaf994f25aafd586f7161f2e8b0068c825055efc2b078b3a24dc4011c9adac3"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344099,
+    "signature": "0x06b5aadc0cb926d6e8f7529797c9c9e82e29371a83255ee54119ddbab238beb623d643eda0a4ba17ee8f42d02c2d337978d3dd51dc0916b968baff60372fa425"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344089,
+    "signature": "0x04fe3b31c7909ba5e43d4f62d34b1126b8b7fd32f82d25b2a39dd7f5b16548881f03c2362e8d8f5d3dffa750314d689b5a5a7318a317942aa0a3e73b34dee0aa"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344081,
+    "signature": "0x128e544ba5cbfd5a05be5d38122078d59a90c74bf99f356c407391e01dd443f8120d85d6b8f97fa2397a7fb6daec8263259f9cfe8b3d51614dd0cbe02c0f5020"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344082,
+    "signature": "0x16545f4d0594c0c4fe40712b986bfc02fa39487568e0729f9c91dbcd6c25b6f12755cf4ed5409602241ee989c03559b819892647cb75ba6b520fe2ea718574eb"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344080,
+    "signature": "0x19d3c30b30354ada2696691004b58c8c857f7ae5c43e03ce0a61b1574ee9ecec23a9b674661910b292895801319eb3eee0484d646e16cb8d31e0dea1efced390"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344088,
+    "signature": "0x0ab4eef299907e9884ec1bfff8cdf0238eef0931d363ade8ed00d000aa4e682216cbedbfc7f8df83b2244431d47b14ecf85b2fd431b0d6a077986216f1c11d7b"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344085,
+    "signature": "0x28f6ab8b722274fbd23c773d5a6504be11e87bb1544016c433e961c135e84ac61afeeea465ab4b79292ace405e0d6469a0670e6518cdb4c0dc0499349b5a466b"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344070,
+    "signature": "0x01f4e2aab704f7a7a700969d23d554fc6da4a1712035b945c9579881f89fdb5e1f862f53fbeae05a86ac013f610a2e30057fef19da4fc74ff2faf46bede31302"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344104,
+    "signature": "0x13cf0a8a10b8d0e1ec2f96bd5a0cfba22dc23197e92867ef940a09b2a2c69d151965c8f2981c0715cf62874be2fabd2ee2e053844a058e18294e16f7075dacea"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344092,
+    "signature": "0x300c4b96b6ef72dd4d88569be7eebe13c4c77f47d061972d17d7eeabe30e566626a688e10783379a63ae014bce123e653b616d9cfe2d3a8d9cd00046e7a9db39"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344084,
+    "signature": "0x087ea93d3c94487aad646c91511b1d9e41ec82ea524d364905e6322094464dc21fa84c389c79a01da0c4941e099ec39e7e512a409088de6b578b1bf7f88f64a8"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344094,
+    "signature": "0x0b3a610999b424cbff74e58d1b93f36402862650768ed04ff77f3f1bf298725d11f0963d740092c5e9291f2a307bcba574648f911ce3d34fef7dc80bb9144d70"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344097,
+    "signature": "0x0c6433ef57197b7ea44ec4c48a57e50ba43d88de59eb8eca72c3681c118d9ae2126b7e2654c43c22899d34b1d984e0d399bab98cf3a04ea7e0c2629f266529ab"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344095,
+    "signature": "0x115154b3a42295881336f0b6fbd912a0d3d127a8d8c320171098f68f584b4975108547898735c4bfe6cf0dbb8350781a5e82c761282147f09965eaa908053461"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344103,
+    "signature": "0x244d4081d5a8d4dda5d56baf7749e3252e715695fb2bb875457c351f171f90d706c59fe1e3a28f0e6463afa4a179ff9c12e87f23b4861a391a0b783c60d43237"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344100,
+    "signature": "0x07954d6f6afa0e693de61d37a1bdc87d99a622e4df33b76d345e3932093a95292cf9a598f4a374a31718921a7965b843159965e086daa697c89567a1a3af10ed"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344108,
+    "signature": "0x26f8203917615e1df075f4828c98ee51fa93dfdd6b402623f3a327af0f0808941e9bfb4631021817e38d4353685c67a2fc2bd501188d6b5a898202707e8493a1"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344079,
+    "signature": "0x03f15d8410418b72ebdd6492fe7570eca9adcef15b36922818ec14390570c5551a6656e0501f23449822eee7f5683b977d3ff308ac6a0b41c033da59a049c4d5"
+  }
+}
+Current round 2344113n
+Oldest drand 2344050n
+Drand gaps [
+  2344076n, 2344086n,
+  2344090n, 2344096n,
+  2344098n, 2344101n,
+  2344102n, 2344105n,
+  2344106n, 2344107n,
+  2344109n, 2344110n,
+  2344112n
+]
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344096,
+    "signature": "0x1bb3954dfd073808a49bc72b09696c6d669add315b30420cc8a6bad6eac8d9c414ff374fd4939c65e000e48bf48b27105063906e00f37d01bf17a463305dad93"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344101,
+    "signature": "0x120adcc19f49ec5431d6e40ebadcef464f15e400ab99de52f9e0e70723c9e3e30108c6b3d6c4b3bb11ae8c2e2bde269a5fb3dd2bb4fd77d3a7d7800fc93fbb68"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344076,
+    "signature": "0x13ae27895c2a279ac73912d7ce48d615fe3adc596454630db864880951eca83c1f54c56850b46b2b39727a8f2f77c04ba7277f33db96d153b336860b31146a22"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344105,
+    "signature": "0x0569997af0d954e6f17484253c33443337a0bb36beaf28c3ea2881db093a5e3f133c9c52af86130a510956e4cef5ef41dfce1f905d16af44aa96d8b32397ded6"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344110,
+    "signature": "0x157374583258cb1eacd185395e15a9a39dd08fc1e9ce7b377afbe6876816aeb4263a0148a455bcdefc692210ce65422c7b6d040cbc5758a2d5c82ed909e7f6d5"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344102,
+    "signature": "0x1878c1e395c8b2355e353a1df4b46b391d916d38f2abbb2ebe41deb161eea9202f504b013960ec38e826e102d3e15f7eb2dfe2db5c88c587e992f313667a2042"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344107,
+    "signature": "0x17dcb38b8433e4f921b4492dfb6b486a34ccb78aef05e2cb7d23ee11c9952b7e2fd166336c384d1633e1dfd4c7065a40e553315875423793ea0ef80e8c7ff958"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344090,
+    "signature": "0x0b34d24fd143548b199a52ffa99b71ed12b8f41f3938776a05ef9793665695772cf96b92081884ada672452c4961fbd5668ef377b6ec5dd8ef89b2c3915e1ce7"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344086,
+    "signature": "0x1634f4fb777d0fc3f2ad953e58aa2b4974db83ba62729182423a2759b8b873ea1960212397636b04f7c1fceb6de6af167024a99378acc3b366b3e412a89d73e0"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344098,
+    "signature": "0x2981094b9d8081f6b425f334617a3b48834b0e3ea0b8c3c54ea0b3f9d1a5d57b01bb815c0208aa672af4087104d9f2ca26cbe9292dd8504ccb372d95db0c1620"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344109,
+    "signature": "0x14049059a9e1e7bcaa4e5ae317e7601fd1ed2877c4d9e30c4812fdcef34b356d02fc4716274d7a4dc8d025bf3b2d239756d1428cad3e3ebb5b40f5b96c3e1e4f"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344112,
+    "signature": "0x0c90d9491db595293073f61a942f3660528dccc235917ae40fcce3b3bd0fab7d024df400be6ae38b98505fb0335ea42a06a08eab2f459848415416d888a6fa56"
+  }
+}
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344106,
+    "signature": "0x048bdd617007ecc7969170d4aba9b73f5c9a8a018e74ca81fcf341aac857423f1b4528ae4653c78fe88e52ef49db17455780e2ac4f9a8989cee76f1d0dbc4431"
+  }
+}
+Current round 2344114n
+Oldest drand 2344050n
+Drand gaps [ 2344113n ]
+Response {
+  "value": {}
+}
+Drand beacon {
+  "value": {
+    "round": 2344113,
+    "signature": "0x2975cce17193de03277d7a86310c64042491e11f1a7e47dd80d7b73bb520705006a1893393358f80c072b5b8bc4b8d6c5310e46dc5072ba87f64944587ca4eb7"
+  }
+}
