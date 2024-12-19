@@ -4,7 +4,8 @@ import { type UseReadContractsReturnType, useReadContracts } from "wagmi"
 type ERC20BalanceQueryData = {
     value?: bigint
     decimals?: number
-    formatted?: string
+    symbol?: string
+    formatted?: string // formatted value of user's token balance for display
 }
 
 export type UseERC20BalanceReturnType = UseReadContractsReturnType<
@@ -45,13 +46,15 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
         ],
         query: {
             select(data): ERC20BalanceQueryData {
-                const [balanceResult, decimalsResult] = data
+                const [balanceResult, decimalsResult, symbolResult] = data
                 const value = balanceResult.result
                 const decimals = decimalsResult.result
+                const symbol = symbolResult.result
 
                 return {
                     value,
                     decimals,
+                    symbol,
                     // compute formatted value only if both values are read from the contract,
                     // else indicate error to user
                     formatted: value && decimals ? formatUnits(value, decimals) : undefined,

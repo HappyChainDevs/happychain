@@ -8,7 +8,7 @@ import {
     secondaryMenuVisibilityAtom,
 } from "#src/components/interface/menu-secondary-actions/state"
 import { signalClosed, signalOpen } from "#src/utils/walletState"
-import { ImportTokensMenu } from "#src/components/interface/home/tabs/views/tokens/ImportTokensMenu"
+import { ImportTokensDialog } from "#src/components/interface/home/tabs/views/tokens/ImportTokensMenu"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
@@ -86,7 +86,7 @@ function Embed() {
                         <Outlet />
                         {!location.pathname.includes("permissions") && (
                             <>
-                                <ImportTokensMenu />
+                                <ImportTokensDialog />
                                 <SecondaryActionsMenu />
                                 <DialogConfirmLogOut handleDisconnect={logout} />
                             </>
