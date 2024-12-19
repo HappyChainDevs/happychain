@@ -29,7 +29,7 @@ export const appMessageBus = new EventBus<MsgsFromApp, MsgsFromIframe>({
 })
 
 const popupBus = new EventBus<PopupMsgs>({
-    mode: EventBusMode.Broadcast,
+    mode: EventBusMode.LocalStorage,
     scope: "server:popup",
 })
 

@@ -1,4 +1,6 @@
+import type { SafePort } from "../interfaces/safeport"
 import { waitForCondition } from "../utils/waitForCondition"
+import { LocalStorageChannel } from "./LocalStorageChannel"
 import { type Logger, silentLogger } from "./logger"
 
 // Browser APIs type definition for SSR safety
@@ -21,8 +23,11 @@ export enum EventBusMode {
     /** Opened on the app, to communicate with the iframe. */
     AppPort = "messagechannel:port2",
 
-    /** Enables broadcast messages to all browsing contexts within the same URL domain. */
+    /** Enables broadcast messages to all browsing contexts using the same storage partition. */
     Broadcast = "broadcastchannel",
+
+    /** Enables local storage messages to all browsing contexts within the same origin. */
+    LocalStorage = "localstorage",
 
     /**
      * Testing-only mode which enables initializing the bus with a specific MessageChannel or
@@ -41,9 +46,6 @@ export type EventKey = string | number | symbol
  */
 export type EventHandler<S, K extends keyof S = keyof S> = (payload: S[K]) => void
 
-// Type-safe references to browser message port types
-type SafePort = Pick<globalThis.MessagePort, "onmessage" | "onmessageerror" | "postMessage">
-
 /**
  * Defines name, logger, error handler, and mode for the event bus.
  */
@@ -56,43 +58,9 @@ export type EventBusOptions = {
     | { mode: EventBusMode.IframePort; target: Window }
     | { mode: EventBusMode.AppPort }
     | { mode: EventBusMode.Broadcast }
+    | { mode: EventBusMode.LocalStorage }
     | { mode: EventBusMode.Forced; port: SafePort }
 )
-
-/**
- * LocalStorageBroadcastChannel acts as a drop-in replacement for BroadcastChannel
- */
-class LocalStorageBroadcastChannel implements SafePort {
-    private readonly key
-
-    constructor(scope: string) {
-        this.key = `local-storage-broadcast-channel:${scope}`
-
-        globalThis.addEventListener("storage", (ev) => {
-            if (!this.isStorageEvent(ev)) return
-            if (ev.key !== this.key) return
-
-            try {
-                const val = ev.newValue ? JSON.parse(ev.newValue) : null
-                this.onmessage(new MessageEvent(`${this.key}-message`, { data: val }))
-            } catch (_e) {
-                this.onmessageerror(new MessageEvent(`${this.key}-message`, { data: _e }))
-            }
-        })
-    }
-
-    // overwrite this
-    onmessage = (_a: MessageEvent) => {}
-    onmessageerror = (_e: MessageEvent) => {}
-
-    postMessage(msg: unknown) {
-        localStorage.setItem(this.key, JSON.stringify(msg))
-    }
-
-    private isStorageEvent(ev: Event): ev is StorageEvent {
-        return "key" in ev && "newValue" in ev && (ev.newValue === null || typeof ev.newValue === "string")
-    }
-}
 
 /**
  * An event bus that enables sending/receiving messages to/from other browsing contexts (windows,
@@ -126,7 +94,11 @@ export class EventBus<SL, SE = SL> {
                 this.registerPortListener(this.config.port)
                 break
             case EventBusMode.Broadcast:
-                this.registerPortListener(new LocalStorageBroadcastChannel(this.config.scope))
+                this.registerPortListener(new browserGlobal.BroadcastChannel(this.config.scope))
+                break
+
+            case EventBusMode.LocalStorage:
+                this.registerPortListener(new LocalStorageChannel(this.config.scope))
                 break
             case EventBusMode.IframePort: {
                 if (browserGlobal.MessageChannel) {
