@@ -1,7 +1,7 @@
 import { http, type Abi, createPublicClient, decodeFunctionResult, encodeFunctionData } from "viem"
 import { localhost } from "viem/chains"
 import { describe, expect, it } from "vitest"
-import { TransactionManager, type TransactionManagerConfig } from "../../lib/index"
+import { type LatestBlock, TransactionManager, type TransactionManagerConfig } from "../../lib/index"
 import CounterAbi from "../contracts/abi/Counter.json"
 
 describe("TransactionManager", () => {
@@ -36,8 +36,14 @@ describe("TransactionManager", () => {
         })
         console.log(tx)
 
+        const demoOriginator = async (_block: LatestBlock) => {
+            return [tx]
+        }
+
+        transactionManager.addTransactionOriginator(demoOriginator)
+
         const getTxResult = await transactionManager.getTransaction(tx.intentId)
-        console.log(getTxResult) // undefined - already deleted?
+        console.log(getTxResult) // undefined - already deleted or thrown out?
 
         const postCounterVal = await getNumber()
         expect(postCounterVal as bigint).toBe((prevCounterVal as bigint) + 1n)
