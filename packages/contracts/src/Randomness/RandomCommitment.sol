@@ -16,7 +16,7 @@ contract RandomCommitment is Ownable {
      * For more details, please refer to:
      * https://specs.optimism.io/protocol/configurability.html#sequencing-window-size
      */
-    uint256 public constant PRECOMMIT_DELAY = 43200;
+    uint256 public constant PRECOMMIT_DELAY = 10; // TODO: Change to 21600 - only for testing
 
     CurrentReveal private currentReveal;
     mapping(uint128 blockNumber => bytes32) private commitments;
@@ -41,7 +41,7 @@ contract RandomCommitment is Ownable {
      * @param commitmentHash The hash of the commitment to be stored.
      */
     function postCommitment(uint128 blockNumber, bytes32 commitmentHash) external onlyOwner {
-        if (block.number > blockNumber - PRECOMMIT_DELAY) {
+        if (block.number + PRECOMMIT_DELAY < blockNumber) {
             revert CommitmentTooLate();
         }
 
