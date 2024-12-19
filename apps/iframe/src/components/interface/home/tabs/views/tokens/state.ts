@@ -1,5 +1,5 @@
 import { atom } from "jotai"
 
-const importTokensMenuVisibilityAtom = atom(false)
+const importTokensDialogVisibilityAtom = atom(false)
 
-export { importTokensMenuVisibilityAtom }
+export { importTokensDialogVisibilityAtom }

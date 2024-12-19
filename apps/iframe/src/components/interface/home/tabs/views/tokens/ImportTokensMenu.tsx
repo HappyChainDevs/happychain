@@ -1,21 +1,22 @@
-import { Field, Menu } from "@ark-ui/react"
-import { Plus, X } from "@phosphor-icons/react"
-import { cx } from "class-variance-authority"
+import { Dialog, Field } from "@ark-ui/react"
+import { Plus } from "@phosphor-icons/react"
 import { useAtom, useAtomValue } from "jotai"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { type Address, isAddress } from "viem"
 // import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
-import { recipeContent, recipePositioner } from "#src/components/primitives/popover/variants"
+import { FieldInput } from "#src/components/primitives/input/FieldInput"
+import { Input } from "#src/components/primitives/input/Input"
+import { recipePositioner } from "#src/components/primitives/popover/variants"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
 import { userAtom } from "#src/state/user"
-import { importTokensMenuVisibilityAtom } from "./state"
+import { importTokensDialogVisibilityAtom } from "./state"
 
 /**
  * Trigger
  */
 export const TriggerImportTokensMenu = () => {
-    const [isVisible, setVisibility] = useAtom(importTokensMenuVisibilityAtom)
+    const [isVisible, setVisibility] = useAtom(importTokensDialogVisibilityAtom)
 
     return (
         <button
@@ -34,13 +35,15 @@ export const TriggerImportTokensMenu = () => {
 /**
  * Menu
  */
-export const ImportTokensMenu = () => {
-    const [isImportTokensMenuVisible, setIsImportTokensMenuVisible] = useAtom(importTokensMenuVisibilityAtom)
+export const ImportTokensDialog = () => {
+    const [isImportTokensDialogVisible, setIsImportTokensDialogVisible] = useAtom(importTokensDialogVisibilityAtom)
     const user = useAtomValue(userAtom)
-    // const { watchAsset } = useWatchAsset()
 
     const [inputAdd, setInputAdd] = useState("")
-    const [validAddr, setValidAddr] = useState(false)
+
+    const invalidAddressInputCondition = isAddress(inputAdd) === false
+
+    console.log({ invalidAddressInputCondition })
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target
@@ -48,126 +51,89 @@ export const ImportTokensMenu = () => {
     }
 
     const {
-        data: { decimals } = {},
+        data: { decimals, symbol } = {},
     } = useERC20Balance(inputAdd as Address, user?.address as Address)
 
-    const handleSubmitAddress = useCallback((e: React.FormEvent) => {
-        e.preventDefault()
-        // void watchAsset({
-        //     type: "ERC20",
-        //     options: {
-        //         address: formData.address,
-        //         symbol: formData.symbol,
-        //         decimals: Number(formData.decimals),
-        //     },
-        // })
-        setValidAddr(true)
-        // setIsImportTokensMenuVisible(false)
-    }, [])
-
     return (
-        <Menu.Root
-            open={isImportTokensMenuVisible}
-            onInteractOutside={() => {
-                setIsImportTokensMenuVisible(false)
+        <Dialog.Root
+            lazyMount
+            unmountOnExit
+            onOpenChange={(details) => {
+                setIsImportTokensDialogVisible(details.open)
             }}
+            open={isImportTokensDialogVisible}
         >
-            <div
+            <Dialog.Positioner
                 className={recipePositioner({
-                    originY: "bottom",
                     mode: "modal",
+                    originY: "bottom",
                 })}
             >
-                <Menu.Content
-                    className={cx(
-                        [
-                            // Animation
-                            "motion-safe:data-[state=open]:animate-growIn",
-                            "py-2 sm:pb-0",
-                            // Item
-                            "[&_[data-part=item]]:font-medium",
-                            // Item: flex properties
-                            "[&_[data-part=item]]:inline-flex [&_[data-part=item]]:items-center [&_[data-part=item]]:justify-between",
-                            // Item: spacing, size
-                            "[&_[data-part=item]]:min-h-10 [&_[data-part=item]]:p-2 [&_[data-part=item]]:gap-2",
-                            // Item: cursor interactivity
-                            "[&_[data-part=item]]:not([data-disabled])]:cursor-pointer &_[data-part=item][data-disabled]]:cursor-not-allowed",
-                            // Item (highlighted)
-                            " [&_[data-part=item][data-highlighted]]:bg-base-200",
-                        ],
-                        recipeContent({
-                            scale: "default",
-                            intent: "default",
-                            animation: "default",
-                        }),
-                    )}
-                >
-                    <div className="flex flex-col p-4 overflow-y-auto grow">
-                        <Menu.ItemGroup className="flex flex-col h-full justify-between gap-y-2">
-                            <Menu.ItemGroupLabel className="flex text-center text-xl font-semibold justify-between items-center mb-2">
-                                Import Tokens
-                                <button
-                                    type="button"
-                                    onClick={() => setIsImportTokensMenuVisible(false)}
-                                    className="hover:opacity-70"
-                                >
-                                    <X size="1.2em" />
-                                </button>
-                            </Menu.ItemGroupLabel>
-                            <form onSubmit={handleSubmitAddress} className="flex flex-col gap-2">
-                                <Field.Root className="flex flex-col gap-y-2">
-                                    <Field.Label className="italic">Token Contract Address</Field.Label>
-                                    <Field.Input
-                                        className="h-10 bg-neutral-200 rounded-lg p-2"
-                                        onChange={handleInputChange}
-                                        value={inputAdd}
-                                    />
-                                    {!isAddress(inputAdd) && (
-                                        <Field.ErrorText className="text-error">Invalid Address</Field.ErrorText>
-                                    )}
-                                </Field.Root>
-
-                                {validAddr && (
-                                    <>
-                                        {/* token decimals */}
-                                        <Field.Root className="flex flex-col gap-y-2">
-                                            <Field.Label className="italic">Token Symbol</Field.Label>
-                                            {/* <Field.Input
-                                                className="h-10 bg-neutral-200 rounded-lg p-2"
-                                                onChange={handleInputChange}
-                                                value={symbol ?? symbol}
-                                            />
-                                            {!isAddress(inputAdd) && (
-                                                <Field.ErrorText className="text-error">
-                                                    {!symbol &&
-                                                        "No data returned for symbol; potentially incorrect contract."}
-                                                </Field.ErrorText>
-                                            )} */}
-                                        </Field.Root>
-                                        <Field.Root className="flex flex-col gap-y-2">
-                                            <Field.Label className="italic">Token Decimals</Field.Label>
-                                            <Field.Input
-                                                className="h-10 bg-neutral-200 rounded-lg p-2"
-                                                onChange={handleInputChange}
-                                                value={decimals ?? decimals}
-                                            />
-                                            {!isAddress(inputAdd) && (
-                                                <Field.ErrorText className="text-error">
-                                                    {!decimals &&
-                                                        "No data returned for decimals; potentially incorrect contract."}
-                                                </Field.ErrorText>
-                                            )}
-                                        </Field.Root>
-                                    </>
-                                )}
-                            </form>
-                            <Button type="submit" className="justify-center" onClick={handleSubmitAddress}>
-                                {validAddr ? "Import" : "Submit"}
-                            </Button>
-                        </Menu.ItemGroup>
+                <Dialog.Content className="text-center bg-base-100 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
+                    <div className="my-auto grid gap-1 items-start">
+                        <Dialog.Title className="text-start font-bold text-base-content">Import Token</Dialog.Title>
+                        <Dialog.Description className="text-start text-content text-xs">
+                            Enter Token Specifications (ERC-20)
+                        </Dialog.Description>
                     </div>
-                </Menu.Content>
-            </div>
-        </Menu.Root>
+                    <form className="flex flex-col w-full h-full items-center justify-center py-2">
+                        <FieldInput
+                            helperLabel="Token Contract Address"
+                            errorLabel="Invalid address"
+                            invalid={invalidAddressInputCondition}
+                        >
+                            <Field.Label>Address</Field.Label>
+                            <Input
+                                className="bg-slate-300 opacity-50 text-[20px] px-2 w-full text-slate-600 box-border placeholder:text-[20px] placeholder:text-slate-600"
+                                readOnly={false}
+                                aria-invalid={invalidAddressInputCondition}
+                                name="address"
+                                id="import-token-address"
+                                type="string"
+                                onChange={handleInputChange}
+                                value={inputAdd}
+                            />
+                        </FieldInput>
+                        {isAddress(inputAdd) && (
+                            <>
+                                <FieldInput
+                                    helperLabel="Symbol"
+                                    errorLabel="Invalid address"
+                                    invalid={invalidAddressInputCondition}
+                                >
+                                    <Field.Label>Symbol</Field.Label>
+                                    <Input
+                                        className="bg-slate-300 opacity-50 text-[20px] px-2 w-full text-slate-600 box-border placeholder:text-[20px] placeholder:text-slate-600"
+                                        readOnly={true}
+                                        name="symbol"
+                                        id="import-token-symbol"
+                                        type="string"
+                                        onChange={handleInputChange}
+                                        value={symbol}
+                                    />
+                                </FieldInput>
+                                <FieldInput
+                                    helperLabel="Decimals"
+                                    errorLabel="Invalid address"
+                                    invalid={invalidAddressInputCondition}
+                                >
+                                    <Field.Label>Decimals</Field.Label>
+                                    <Input
+                                        className="bg-slate-300 opacity-50 text-[20px] px-2 w-full text-slate-600 box-border placeholder:text-[20px] placeholder:text-slate-600"
+                                        readOnly={true}
+                                        name="decimals"
+                                        id="import-token-decimal"
+                                        type="string"
+                                        onChange={handleInputChange}
+                                        value={decimals}
+                                    />
+                                </FieldInput>
+                                <Button>submit</Button> {/* todo */}
+                            </>
+                        )}
+                    </form>
+                </Dialog.Content>
+            </Dialog.Positioner>
+        </Dialog.Root>
     )
 }
