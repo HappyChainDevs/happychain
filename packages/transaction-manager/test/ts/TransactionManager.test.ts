@@ -1,7 +1,14 @@
 import { http, type Abi, createPublicClient, decodeFunctionResult, encodeFunctionData } from "viem"
 import { localhost } from "viem/chains"
 import { describe, expect, it } from "vitest"
-import { type LatestBlock, TransactionManager, type TransactionManagerConfig } from "../../lib/index"
+import {
+    type LatestBlock,
+    type Transaction,
+    TransactionManager,
+    type TransactionManagerConfig,
+    TransactionStatus,
+    TxmHookType,
+} from "../../lib/index"
 import CounterAbi from "../contracts/abi/Counter.json"
 
 describe("TransactionManager", () => {
@@ -43,10 +50,13 @@ describe("TransactionManager", () => {
         transactionManager.addTransactionOriginator(demoOriginator)
 
         const getTxResult = await transactionManager.getTransaction(tx.intentId)
-        console.log(getTxResult) // undefined - already deleted or thrown out?
+        console.log(getTxResult)
 
-        const postCounterVal = await getNumber()
-        expect(postCounterVal as bigint).toBe((prevCounterVal as bigint) + 1n)
+        transactionManager.addHook(async (payload: { transaction: Transaction }) => {
+            expect(payload.transaction.status).toBe(TransactionStatus.Success)
+            const postCounterVal = await getNumber()
+            expect(postCounterVal as bigint).toBe((prevCounterVal as bigint) + 1n)
+        }, TxmHookType.TransactionStatusChanged)
     })
 
     async function getNumber() {
@@ -63,6 +73,7 @@ describe("TransactionManager", () => {
                 functionName: "number",
             }),
         })
+
         if (!result || !result.data) {
             throw new Error("Failed to get the number from the contract")
         }
