@@ -1,14 +1,24 @@
 import type { Hex } from "viem"
+import { z } from "zod"
 
-const privateKey = process.env.PRIVATE_KEY_LOCAL as Hex
-const bundlerRpc = process.env.BUNDLER_LOCAL
-const rpcURL = process.env.RPC_LOCAL
+const envSchema = z.object({
+    PRIVATE_KEY_LOCAL: z
+        .string()
+        .trim()
+        .transform((val) => val as Hex),
+    BUNDLER_LOCAL: z.string().trim().url(),
+    RPC_LOCAL: z.string().trim().url(),
+})
 
-if (!privateKey || !bundlerRpc || !rpcURL) {
-    const missing = [!privateKey && "PRIVATE_KEY_LOCAL", !bundlerRpc && "BUNDLER_LOCAL", !rpcURL && "RPC_LOCAL"].filter(
-        Boolean,
-    )
-    throw new Error(`Missing environment variables: ${missing.join(", ")}`)
+const parsedEnv = envSchema.safeParse({
+    PRIVATE_KEY_LOCAL: process.env.PRIVATE_KEY_LOCAL,
+    BUNDLER_LOCAL: process.env.BUNDLER_LOCAL,
+    RPC_LOCAL: process.env.RPC_LOCAL,
+})
+
+if (!parsedEnv.success) {
+    console.error(parsedEnv.error.issues)
+    throw new Error("Missing or invalid environment variables")
 }
 
-export { privateKey, bundlerRpc, rpcURL }
+export const { PRIVATE_KEY_LOCAL: privateKey, BUNDLER_LOCAL: bundlerRpc, RPC_LOCAL: rpcURL } = parsedEnv.data
