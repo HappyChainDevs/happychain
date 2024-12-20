@@ -16,7 +16,10 @@ import { getIframeURL } from "../utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
 
 /**
- * EIP-1193 provider for transactions initiated from the iframe, most notably used by wagmi.
+ * EIP-1193 provider for transactions initiated from the wallet.
+ * Used by wagmi to handle all transactions when in standalone mode,
+ * as well as internal transactions such as sending via the Send screen
+ * wether or not in stand alone mode.
  *
  * The provider routes the call to our logic in the `requests` directory.
  */
@@ -31,7 +34,7 @@ export class IframeProvider extends BasePopupProvider {
         // We're logging in or out, wait for the auth state to settle.
         await waitForCondition(() => getAuthState() !== AuthState.Initializing)
 
-        // injected wallets don't need permissions here (handled by metamask)
+        // injected wallets don't need permissions here (handled by the wallet)
         if (this.isInjectedUser) return false
 
         return checkIfRequestRequiresConfirmation(getIframeURL(), args)

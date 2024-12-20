@@ -74,11 +74,6 @@ export enum Msgs {
     /** Sent to check if a request requires user approval. */
     PermissionCheckRequest = "permission-check:request",
 
-    // --- InjectedWalletRequests ------------------------------------------------------------------
-
-    /** Injected Request between the InjectedProviderProxy and InjectedWalletWrapper app-side */
-    ExecuteInjectedRequest = "execute-injected-request",
-
     /** Injected Response from the InjectedWalletWrapper to the InjectedProviderProxy*/
     ExecuteInjectedResponse = "execute-injected-response",
 
@@ -101,6 +96,9 @@ export enum Msgs {
      * Sends an EIP-1193 event to the app.
      */
     ProviderEvent = "provider:event",
+
+    /** Injected Request between the InjectedProviderProxy and InjectedWalletWrapper app-side */
+    ExecuteInjectedRequest = "execute-injected-request",
 
     // --- PopupBusEvents --------------------------------------------------------------------------
 

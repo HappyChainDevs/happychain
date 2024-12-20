@@ -17,7 +17,7 @@ const AppStatus = () => {
                 title={`View ${new URL(getAppURL()).host} permissions`}
                 aria-label={`View ${new URL(getAppURL()).host} permissions`}
             >
-                {hasPermission ? "✅" : "❌"}{" "}
+                {hasPermission ? "✅ " : "❌ "}
                 <div className="text-center gap-2">
                     {new URL(getAppURL()).host} <small>({chain?.chainName})</small>
                 </div>

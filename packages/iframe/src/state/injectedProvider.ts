@@ -11,7 +11,7 @@ import type { EIP1193Provider } from "viem"
  *
  * The reason we don't store this direction in the providerAtom is because in both of the above
  * cases the providerAtom will hold the same InjectedProviderProxy which will make decisions on if
- * the current request is supposed to be forwarded tot eh dapp to be executed, or executed on the
+ * the current request is supposed to be forwarded to the dapp to be executed, or executed on the
  * iframe side.
  */
 export const injectedProviderAtom = atom<EIP1193Provider | undefined>()
