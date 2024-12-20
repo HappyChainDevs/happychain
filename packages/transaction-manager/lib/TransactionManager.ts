@@ -313,4 +313,9 @@ export class TransactionManager {
         // Await the completion of the gas price oracle startup before marking the TransactionManager as started
         await priceOraclePromise
     }
+
+    public stop(): void{
+        this.blockMonitor.stop()
+        this.pendingTxReporter.stop()   
+    }
 }
