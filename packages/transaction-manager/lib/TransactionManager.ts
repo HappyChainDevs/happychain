@@ -314,8 +314,8 @@ export class TransactionManager {
         await priceOraclePromise
     }
 
-    public stop(): void{
+    public stop(): void {
         this.blockMonitor.stop()
-        this.pendingTxReporter.stop()   
+        this.pendingTxReporter.stop()
     }
 }

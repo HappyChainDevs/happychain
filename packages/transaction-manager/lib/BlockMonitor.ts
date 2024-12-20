@@ -18,7 +18,7 @@ export class BlockMonitor {
 
     constructor(_transactionManager: TransactionManager) {
         this.txmgr = _transactionManager
-        
+
         this.unwatchBlocks = this.txmgr.viemClient.watchBlocks({
             onBlock: this.onNewBlock.bind(this),
         })

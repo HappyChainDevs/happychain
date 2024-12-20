@@ -35,6 +35,11 @@ packages/contracts/out/
 
 packages/contracts/lib
 packages/contracts/broadcast/
+
+boardcast/
+cache/
+out/
+
 packages/frontend/src/generated.ts
 
 # Editor configs and files
