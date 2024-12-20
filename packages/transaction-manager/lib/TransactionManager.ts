@@ -6,6 +6,7 @@ import {
     convertToSafeViemWalletClient,
     getUrlProtocol,
 } from "@happychain/common"
+import chalk from "chalk"
 import {
     type Abi,
     type Hex,
@@ -17,8 +18,10 @@ import {
     webSocket as viemWebSocketTransport,
 } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
+const { red } = chalk
 import { ABIManager } from "./AbiManager.js"
 import { BlockMonitor, type LatestBlock } from "./BlockMonitor.js"
+import { eventBus } from "./EventBus.js"
 import { GasEstimator } from "./GasEstimator.js"
 import { GasPriceOracle } from "./GasPriceOracle.js"
 import { HookManager, type TxmHookHandler, type TxmHookType } from "./HookManager.js"
@@ -130,7 +133,7 @@ export type TransactionOriginator = (block: LatestBlock) => Promise<Transaction[
  * public interface, acting as a bridge between the library and the user.
  */
 export class TransactionManager {
-    public readonly collectors: TransactionOriginator[]
+    public collectors: TransactionOriginator[] // this should be renamed "originators"?
     public readonly blockMonitor: BlockMonitor
     public readonly viemWallet: SafeViemWalletClient
     public readonly viemClient: SafeViemPublicClient
@@ -309,5 +312,19 @@ export class TransactionManager {
 
         // Await the completion of the gas price oracle startup before marking the TransactionManager as started
         await priceOraclePromise
+    }
+
+    public async stop(): Promise<void> {
+        console.log(red("stopping transaction manager..."))
+        await this.hookManager.removeAllHooks()
+        this.collectors = []
+
+        // "shut down" event bus
+        eventBus.removeAllListeners()
+
+        await this.pendingTxReporter.stop()
+        this.blockMonitor.stop()
+
+        // todo: stop all other modules/services if required
     }
 }

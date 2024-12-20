@@ -58,6 +58,29 @@ export class HookManager {
         this.hooks[type].push(handler)
     }
 
+    // public async removeHook<T extends TxmHookType>(handler: TxmHookHandler<T>, type: T): Promise<void> {
+    //     if (!this.hooks[type]) {
+    //         console.error(`Hook type ${type} not found, cannot remove`)
+    //         return
+    //     }
+    //     this.hooks[type] = this.hooks[type].filter((h) => h !== handler) as TxmHookHandler<T>[];
+    // }
+
+    public async removeAllHooks<T extends TxmHookType>(type?: T): Promise<void> {
+        if (type) {
+            if (!this.hooks[type]) {
+                console.error(`Hook type ${type} not found, cannot remove all hooks`)
+                return
+            }
+            this.hooks[type as keyof typeof this.hooks] = []
+        } else {
+            Object.keys(this.hooks).forEach((key) => {
+                this.hooks[key as TxmHookType] = []
+            })
+        }
+        console.log("hooks removed", this.hooks)
+    }
+
     private async onTransactionStatusChanged(payload: { transaction: Transaction }): Promise<void> {
         ;[...this.hooks[TxmHookType.TransactionStatusChanged], ...this.hooks[TxmHookType.All]].forEach((h) =>
             h({

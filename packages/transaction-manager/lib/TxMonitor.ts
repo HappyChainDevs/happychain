@@ -39,16 +39,20 @@ export class TxMonitor {
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
+    public async stop() {
+        eventBus.off(Topics.NewBlock)
+    }
+
     private onNewBlock(block: LatestBlock) {
         this.txMonitorMutex
             .acquire()
-            .then((releaser) =>
+            .then((releaser) => {
                 this.handleNewBlock(block)
                     .catch((error) => {
                         console.error("Error in handleNewBlock", error)
                     })
-                    .finally(() => releaser()),
-            )
+                    .finally(() => releaser())
+            })
             .catch((error) => {
                 console.error("Error in txMonitorMutex.acquire", error)
             })
@@ -56,10 +60,11 @@ export class TxMonitor {
 
     private async handleNewBlock(block: LatestBlock) {
         const transactions = this.transactionManager.transactionRepository.getNotFinalizedTransactions()
+        console.log("txMonitor handleNewBlock not finalized transactions", transactions.length)
 
         const promises = transactions.map(async (transaction) => {
             const inAirAttempts = transaction.getInAirAttempts()
-
+            console.log("txMonitor handleNewBlock inAirAttempts", inAirAttempts.length)
             // This could happen if, on the first try, the attempt to submit the transaction fails before flush
             if (inAirAttempts.length === 0) {
                 return this.handleNotAttemptedTransaction(transaction, block)
@@ -74,8 +79,10 @@ export class TxMonitor {
                         const receiptResult = await this.transactionManager.viemClient.safeGetTransactionReceipt({
                             hash: attempt.hash,
                         })
+                        console.log("txMonitor handleNewBlock receiptResult", receiptResult)
 
                         if (receiptResult.isOk()) {
+                            console.log("txMonitor handleNewBlock receiptResult isOk")
                             const attemptWithReceipt = { attempt, receipt: receiptResult.value }
                             if (!isResolved) {
                                 isResolved = true
@@ -109,6 +116,7 @@ export class TxMonitor {
             const { attempt, receipt } = attemptOrResults
 
             if (receipt.status === "success") {
+                console.log(`Transaction ${transaction.intentId} was successful`)
                 if (attempt.type === AttemptType.Cancellation) {
                     console.error(`Transaction ${transaction.intentId} was cancelled`)
                     return transaction.changeStatus(TransactionStatus.Cancelled)

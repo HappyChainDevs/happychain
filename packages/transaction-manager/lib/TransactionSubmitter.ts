@@ -56,6 +56,8 @@ export class TransactionSubmitter {
     ): Promise<AttemptSubmissionResult> {
         const { nonce, maxFeePerGas, maxPriorityFeePerGas, type } = payload
 
+        console.log("txm::submitter attempting submission", transaction.intentId, "with nonce ", payload.nonce)
+
         let transactionRequest: TransactionRequestEIP1559 & { gas: bigint }
         if (type === AttemptType.Cancellation) {
             transactionRequest = {
@@ -135,7 +137,7 @@ export class TransactionSubmitter {
         if (sendRawTransactionResult.isErr()) {
             return err({ cause: AttemptSubmissionErrorCause.FailedToSendRawTransaction, flushed: true })
         }
-
+        console.log("txm::tx submitter transaction sent", sendRawTransactionResult.value)
         return ok(undefined)
     }
 }

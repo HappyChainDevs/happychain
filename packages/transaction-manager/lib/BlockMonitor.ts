@@ -14,16 +14,22 @@ export type LatestBlock = Block<bigint, false, "latest">
  */
 export class BlockMonitor {
     private txmgr: TransactionManager
+    private unwatchBlocks: () => void
 
     constructor(_transactionManager: TransactionManager) {
         this.txmgr = _transactionManager
 
-        this.txmgr.viemClient.watchBlocks({
+        this.unwatchBlocks = this.txmgr.viemClient.watchBlocks({
             onBlock: this.onNewBlock.bind(this),
         })
     }
 
+    public stop() {
+        this.unwatchBlocks()
+    }
+
     private onNewBlock(block: LatestBlock) {
+        console.log("txm blockmonitor new block ", block.number)
         eventBus.emit(Topics.NewBlock, block)
     }
 }
