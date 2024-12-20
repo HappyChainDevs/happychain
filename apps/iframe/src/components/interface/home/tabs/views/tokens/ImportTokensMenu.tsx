@@ -1,9 +1,9 @@
 import { Dialog, Field } from "@ark-ui/react"
 import { Plus } from "@phosphor-icons/react"
 import { useAtom, useAtomValue } from "jotai"
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { type Address, isAddress } from "viem"
-// import { useWatchAsset } from "wagmi"
+import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
 import { FieldInput } from "#src/components/primitives/input/FieldInput"
 import { Input } from "#src/components/primitives/input/Input"
@@ -32,6 +32,8 @@ export const TriggerImportTokensMenu = () => {
     )
 }
 
+// 0xc80629fE33747288AaFb97684F86f7eD2D1aBF69
+
 /**
  * Menu
  */
@@ -40,19 +42,47 @@ export const ImportTokensDialog = () => {
     const user = useAtomValue(userAtom)
 
     const [inputAdd, setInputAdd] = useState("")
+    const isEmpty = inputAdd === "" // no inputted address, user has deleted their input
+    const isValid = isAddress(inputAdd, { strict: true })
+    const invalidAddressInputCondition = isEmpty || isValid
 
-    const invalidAddressInputCondition = isAddress(inputAdd) === false
+    const {
+        data: { decimals, symbol } = {},
+    } = useERC20Balance(inputAdd as Address, user?.address as Address)
 
-    console.log({ invalidAddressInputCondition })
+    const { status, watchAssetAsync } = useWatchAsset()
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target
         setInputAdd(value)
     }
 
-    const {
-        data: { decimals, symbol } = {},
-    } = useERC20Balance(inputAdd as Address, user?.address as Address)
+    const submit = useCallback(
+        async (e: React.FormEvent<HTMLFormElement>) => {
+            e.preventDefault()
+
+            const formData = new FormData(e.currentTarget)
+            const address = formData.get("address") as Address
+            const symbol = formData.get("symbol") as string
+            const decimals = formData.get("decimals") as string
+
+            if (address && symbol && decimals) {
+                // we use the async function so that we can keep the
+                // dialog open while the user is approving / rejecting the request
+                const watch = await watchAssetAsync({
+                    type: "ERC20",
+                    options: {
+                        address: address,
+                        symbol: symbol,
+                        decimals: Number(decimals),
+                    },
+                })
+
+                if (watch && status === "success") setIsImportTokensDialogVisible(false)
+            }
+        },
+        [setIsImportTokensDialogVisible, status, watchAssetAsync],
+    )
 
     return (
         <Dialog.Root
@@ -76,59 +106,63 @@ export const ImportTokensDialog = () => {
                             Enter Token Specifications (ERC-20)
                         </Dialog.Description>
                     </div>
-                    <form className="flex flex-col w-full h-full items-center justify-center py-2">
+                    <form
+                        className="flex flex-col w-full h-full items-center justify-center py-2 space-y-4"
+                        onSubmit={submit}
+                    >
                         <FieldInput
                             helperLabel="Token Contract Address"
                             errorLabel="Invalid address"
-                            invalid={invalidAddressInputCondition}
+                            invalid={!invalidAddressInputCondition}
                         >
-                            <Field.Label>Address</Field.Label>
+                            <Field.Label className="text-md text-base-content">Address</Field.Label>
                             <Input
-                                className="bg-slate-300 opacity-50 text-[20px] px-2 w-full text-slate-600 box-border placeholder:text-[20px] placeholder:text-slate-600"
+                                className="bg-base-content text-info-content w-full opacity-50 text-[20px] px-2 gap-2  box-border placeholder:text-[20px] placeholder:text-neutral/40 rounded-md"
                                 readOnly={false}
-                                aria-invalid={invalidAddressInputCondition}
+                                aria-invalid={!invalidAddressInputCondition}
                                 name="address"
                                 id="import-token-address"
                                 type="string"
                                 onChange={handleInputChange}
                                 value={inputAdd}
+                                placeholder="0x123..."
                             />
                         </FieldInput>
-                        {isAddress(inputAdd) && (
+
+                        {isValid && (
                             <>
-                                <FieldInput
-                                    helperLabel="Symbol"
-                                    errorLabel="Invalid address"
-                                    invalid={invalidAddressInputCondition}
-                                >
-                                    <Field.Label>Symbol</Field.Label>
+                                <FieldInput helperLabel="Symbol" errorLabel="Symbol not found">
+                                    <Field.Label className="text-md text-base-content">Symbol</Field.Label>
                                     <Input
-                                        className="bg-slate-300 opacity-50 text-[20px] px-2 w-full text-slate-600 box-border placeholder:text-[20px] placeholder:text-slate-600"
+                                        className="bg-base-content text-info-content w-full opacity-50 text-[20px] px-2 gap-2 box-border placeholder:text-[20px] placeholder:text-neutral/40 rounded-md"
                                         readOnly={true}
                                         name="symbol"
                                         id="import-token-symbol"
                                         type="string"
-                                        onChange={handleInputChange}
                                         value={symbol}
                                     />
                                 </FieldInput>
-                                <FieldInput
-                                    helperLabel="Decimals"
-                                    errorLabel="Invalid address"
-                                    invalid={invalidAddressInputCondition}
-                                >
-                                    <Field.Label>Decimals</Field.Label>
+
+                                <FieldInput helperLabel="Decimals" errorLabel="Decimals data not found">
+                                    <Field.Label className="text-md text-base-content">Decimals</Field.Label>
                                     <Input
-                                        className="bg-slate-300 opacity-50 text-[20px] px-2 w-full text-slate-600 box-border placeholder:text-[20px] placeholder:text-slate-600"
-                                        readOnly={true}
+                                        className="bg-base-content text-info-content w-full opacity-50 text-[20px] px-2 gap-2 box-border placeholder:text-[20px] placeholder:text-neutral/40 rounded-md"
+                                        readOnly
                                         name="decimals"
                                         id="import-token-decimal"
                                         type="string"
-                                        onChange={handleInputChange}
                                         value={decimals}
                                     />
                                 </FieldInput>
-                                <Button>submit</Button> {/* todo */}
+
+                                <Button
+                                    type="submit"
+                                    intent="primary"
+                                    className="text-neutral-content justify-center"
+                                    isLoading={status === "pending"}
+                                >
+                                    Submit
+                                </Button>
                             </>
                         )}
                     </form>
