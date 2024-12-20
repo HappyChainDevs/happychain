@@ -1,7 +1,7 @@
 import { formatUserBalance } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 import { useBalance } from "wagmi"
-import { userAtom } from "../../../state/user"
+import { userAtom } from "#src/state/user"
 
 const HappyBalance = () => {
     const user = useAtomValue(userAtom)
