@@ -1,5 +1,5 @@
 import { hexSchema } from "@happychain/common"
-import { bigint, z } from "zod"
+import { z } from "zod"
 
 const envSchema = z.object({
     PRIVATE_KEY: hexSchema,

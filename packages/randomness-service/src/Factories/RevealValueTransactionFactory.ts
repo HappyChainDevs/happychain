@@ -18,7 +18,8 @@ export class RevealValueTransactionFactory {
             functionName: "revealValue",
             contractName: "Random",
             args: [randomness.blockNumber, randomness.value],
-            deadline: Number(randomness.blockNumber) * Number(env.TIME_BLOCK) + Number(env.HAPPY_GENESIS_TIMESTAMP_SECONDS),
+            deadline:
+                Number(randomness.blockNumber) * Number(env.TIME_BLOCK) + Number(env.HAPPY_GENESIS_TIMESTAMP_SECONDS),
         })
     }
 }
