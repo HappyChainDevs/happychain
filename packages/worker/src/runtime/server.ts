@@ -15,6 +15,28 @@ type Fn = (...rest: unknown[]) => unknown
 const genName = () => `SharedWorker-${crypto.randomUUID()}`
 
 /**
+ * remove port.onmessage from stack trace. This runs on the assumption that the stack will have 10
+ * or fewer frames. If there are more frames than this we are dropping them anyways, as 10 is the
+ * current (default)limit, so the risk of dropping one extra frame here is low.
+ */
+function parseAndFormatStack(stack: string | undefined): string {
+    const split = stack?.split("\n") ?? []
+
+    // if the last frame is not 'port.onmessage' then frames have been missed
+    const framesAreMissing = split.length && !split[split.length - 1].includes("port.onmessage")
+
+    if (framesAreMissing) {
+        // An unknown amount of frames are missing.
+        split.push("\n    --- <frames omitted> ---\n")
+    } else if (split.length) {
+        // no frames are missed. remove port.onmessage as it isn't helpful
+        split.splice(split.length - 1, 1)
+    }
+
+    return split.join("\n")
+}
+
+/**
  * See README.md for general context on the shared worker architecture.
  *
  * An instance of this class is made available as a global `worker` variable in your
@@ -112,11 +134,8 @@ export class SharedWorkerServer implements ServerInterface {
 
                             if (func?.name) {
                                 const err = e instanceof Error ? e : new Error(e?.toString())
-                                // remove port.onmessage from stack trace. This runs on the assumption that
-                                // the stack will have 10 or fewer frames. If there are more frames than this
-                                // we are dropping them anyways, as 10 is the current (default) limit,
-                                // so the risk of dropping one extra frame here is low.
-                                err.stack = err.stack?.split("\n").slice(0, -1).join("\n")
+
+                                err.stack = parseAndFormatStack(err.stack)
 
                                 if (e instanceof Error) {
                                     port.postMessage(
