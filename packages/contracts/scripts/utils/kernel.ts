@@ -47,16 +47,23 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x", // Only needed if we need to pass extra context to validatePaymasterUserOp
+                    /**
+                     * Gas limits are determined by deployment state:
+                     * - Non-empty factory and factoryData indicate SCA deployment in this userOp
+                     * - Deployment requires 45k gas due to uninitialized user's budget storage slots (HappyPaymaster benchmark)
+                     * - Regular operations use 25k gas (HappyPaymaster benchmark)
+                     */
                     paymasterVerificationGasLimit: parameters.factory && parameters.factory !== "0x" ? 45000n : 25000n,
                     paymasterPostOpGasLimit: 1n, // Set to 1 since the postOp function is never called
                 }
             },
 
-            // Using stub values from the docs for paymaster-related fields in unsigned user operations for gas estimation.
+            // Paymaster stub data for gas estimation in unsigned userOps
             async getPaymasterStubData(parameters: GetPaymasterStubDataParameters) {
                 return {
                     paymaster: paymasterAddress,
                     paymasterData: "0x",
+                    // Using the actual hardcoded gas limits for more accurate gas estimation.
                     paymasterVerificationGasLimit: parameters.factory && parameters.factory !== "0x" ? 45000n : 25000n,
                     paymasterPostOpGasLimit: 1n,
                 }
