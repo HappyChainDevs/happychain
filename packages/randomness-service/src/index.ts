@@ -3,7 +3,7 @@ import { TransactionManager, TransactionStatus, TxmHookType } from "@happychain/
 import type { LatestBlock, Transaction } from "@happychain/transaction-manager"
 import { abis } from "./ABI/random.js"
 import { CustomGasEstimator } from "./CustomGasEstimator.js"
-import { Drand, DrandStatus } from "./Drand"
+import { Drand } from "./Drand"
 import { DrandRepository } from "./DrandRepository"
 import { DrandError, DrandService } from "./DrandService"
 import { CommitmentTransactionFactory } from "./Factories/CommitmentTransactionFactory.js"

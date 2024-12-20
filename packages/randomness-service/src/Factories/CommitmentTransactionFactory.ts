@@ -20,7 +20,9 @@ export class CommitmentTransactionFactory {
             functionName: "postCommitment",
             contractName: "Random",
             args: [randomness.blockNumber, randomness.hashedValue],
-            deadline: Number(randomness.blockNumber - this.precommitDelay) * Number(env.TIME_BLOCK) + Number(env.HAPPY_GENESIS_TIMESTAMP_SECONDS),
+            deadline:
+                Number(randomness.blockNumber - this.precommitDelay) * Number(env.TIME_BLOCK) +
+                Number(env.HAPPY_GENESIS_TIMESTAMP_SECONDS),
         })
     }
 }
