@@ -80,9 +80,10 @@ clean: ts.clean docs.clean contracts.clean ## Removes build artifacts
 build: node_modules ts.build  ## Creates production builds
 .PHONY: build
 
-nuke: remove-modules clean ## Removes build artifacts and dependencies
+nuke: clean ## Removes build artifacts and dependencies 
 	cd packages/contracts && make nuke
 	cd packages/bundler && make nuke
+	$(MAKE) remove-modules
 .PHONY: nuke
 
 test: sdk.test iframe.test ## Run tests
