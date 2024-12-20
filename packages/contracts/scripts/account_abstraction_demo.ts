@@ -215,13 +215,11 @@ async function main() {
     const kernelAccount: SmartAccount = await getKernelAccount(publicClient, account)
     const kernelClient = getKernelClient(kernelAccount)
 
-    const prefundRes = await fundSmartAccount(kernelAccount.address)
-    if (prefundRes !== "success") {
+    if ((await fundSmartAccount(kernelAccount.address)) === "reverted") {
         throw new Error("Funding SmartAccount failed")
     }
 
-    const depositRes = await depositPaymaster()
-    if (depositRes !== "success") {
+    if ((await depositPaymaster()) === "reverted") {
         throw new Error("Paymaster Deposit failed")
     }
 
