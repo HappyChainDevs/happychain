@@ -445,8 +445,7 @@ async function initializePaymasterState() {
 }
 
 async function main() {
-    const pmDepositRes = await depositPaymaster()
-    if (pmDepositRes !== "success") {
+    if ((await depositPaymaster()) === "reverted") {
         throw new Error("Paymaster Deposit failed")
     }
 
