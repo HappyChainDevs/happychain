@@ -11,7 +11,10 @@
     "devDependencies": {
         "@biomejs/biome": "^1.9.3",
         "husky": "^9.1.6",
-        "typescript": "^5.6.2"
+        "typescript": "^5.6.2",
+        "bun": "^1.1.41",
+        "else": "^0.0.1",
+        "install": "^0.13.0"
     },
     "dependencies": {
         "concurrently": "^8.2.2"
