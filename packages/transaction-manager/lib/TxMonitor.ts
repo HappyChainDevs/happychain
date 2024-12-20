@@ -38,6 +38,10 @@ export class TxMonitor {
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
+    public stop() {
+        eventBus.off(Topics.NewBlock)
+    }
+
     private async onNewBlock(block: LatestBlock) {
         if (this.locked) {
             const pending = promiseWithResolvers<void>()
