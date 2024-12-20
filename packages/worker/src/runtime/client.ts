@@ -112,6 +112,7 @@ export class SharedWorkerClient {
                 const split = e.stack?.split("\n") || []
                 split.splice(0, 1, "")
                 _e.stack += split.join("\n")
+                console.error(_e)
                 throw _e
             }
         }

@@ -5,16 +5,15 @@ import { atom } from "jotai"
 import { getAddress } from "viem"
 import { StorageKey, storage } from "../services/storage.ts"
 
-type OptionalUser = HappyUser | undefined
-const userCompare = (a: OptionalUser, b: OptionalUser) => a?.uid === b?.uid
+const userCompare = (a: HappyUser | undefined, b: HappyUser | undefined) => a?.uid === b?.uid
 const initialUserValue = undefined
 
 // Base atom for the user, wrapped by `userAtom` to provide a custom setter.
-const baseUserAtom = atomWithCompare<OptionalUser>(initialUserValue, userCompare)
+const baseUserAtom = atomWithCompare<HappyUser | undefined>(initialUserValue, userCompare)
 
 export const userAtom = atom(
     (get) => get(baseUserAtom),
-    (_get, set, newUser: OptionalUser) => {
+    (_get, set, newUser: HappyUser | undefined) => {
         if (newUser?.address) {
             const formattedUser = formatUser(newUser)
             set(baseUserAtom, formattedUser)
