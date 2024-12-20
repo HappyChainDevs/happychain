@@ -1,4 +1,4 @@
-import { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
+import { HappyMethodNames } from "@happychain/common"
 import type { EIP1193Parameters } from "viem"
 
 // https://eips.ethereum.org/EIPS/eip-1474
@@ -11,7 +11,7 @@ import type { EIP1193Parameters } from "viem"
  */
 const safeList = new Set([
     // happychain methods
-    "happy_user", // => returns the current connected user if permissions are granted and user is connected
+    HappyMethodNames.HAPPY_USER_RPC_METHOD, // => returns the current connected user if permissions are granted and user is connected
     // standard methods
     "eth_accounts",
     "eth_blobBaseFee",
@@ -89,7 +89,7 @@ const interactiveList = new Set([
  */
 const unsafeList = new Set([
     // happychain methods
-    WALLET_USE_ABI_RPC_METHOD, // eip-xxxx :)
+    HappyMethodNames.WALLET_USE_ABI_RPC_METHOD, // eip-xxxx :)
     // permissions
     "eth_requestAccounts", // https://eips.ethereum.org/EIPS/eip-1102
     "wallet_requestPermissions", // https://eips.ethereum.org/EIPS/eip-2255

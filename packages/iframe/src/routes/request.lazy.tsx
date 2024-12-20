@@ -1,4 +1,4 @@
-import { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
+import { HappyMethodNames } from "@happychain/common"
 import { Msgs, type PopupMsgs } from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
@@ -69,7 +69,7 @@ function Request() {
             return <EthRequestAccounts method={req.method} params={req.params} reject={reject} accept={accept} />
         case "wallet_watchAsset":
             return <WalletWatchAsset method={req.method} params={req.params} reject={reject} accept={accept} />
-        case WALLET_USE_ABI_RPC_METHOD:
+        case HappyMethodNames.WALLET_USE_ABI_RPC_METHOD:
             return <HappyWalletUseAbi method={req.method} params={req.params} reject={reject} accept={accept} />
         default:
             return (

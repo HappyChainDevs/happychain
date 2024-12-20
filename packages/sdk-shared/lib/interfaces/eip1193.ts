@@ -1,4 +1,4 @@
-import type { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
+import type { HappyMethodNames } from "@happychain/common"
 import type { Abi, Address, EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
 import type { HappyUser } from "./happyUser"
 
@@ -10,12 +10,12 @@ export type RecordAbiPayload = {
 // === HAPPY METHODS =============================================================================
 export type HappyMethods = [
     {
-        Method: "happy_user"
+        Method: HappyMethodNames.HAPPY_USER_RPC_METHOD
         Parameters?: undefined
         ReturnType: HappyUser | undefined
     },
     {
-        Method: typeof WALLET_USE_ABI_RPC_METHOD
+        Method: typeof HappyMethodNames.WALLET_USE_ABI_RPC_METHOD
         Parameters: RecordAbiPayload
         ReturnType: undefined
     },

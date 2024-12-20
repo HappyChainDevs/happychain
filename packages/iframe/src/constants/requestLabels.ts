@@ -1,4 +1,4 @@
-import { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
+import { HappyMethodNames } from "@happychain/common"
 
 export const requestLabels = {
     eth_requestAccounts: "Permission Request",
@@ -8,7 +8,7 @@ export const requestLabels = {
     wallet_requestPermissions: "Permission Request",
     wallet_switchEthereumChain: "Switch Network",
     wallet_watchAsset: "Watch Asset",
-    [WALLET_USE_ABI_RPC_METHOD]: "Record ABI",
+    [HappyMethodNames.WALLET_USE_ABI_RPC_METHOD]: "Record ABI",
 } as const
 
 export const permissionDescriptions = {
