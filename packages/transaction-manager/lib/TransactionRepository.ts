@@ -86,7 +86,7 @@ export class TransactionRepository {
             this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
                 NotFinalizedStatuses.includes(transaction.status),
             )
-            transactions.forEach((t) => t.notifyFlush())
+            transactions.forEach((t) => t.markFlushed())
         }
 
         return result

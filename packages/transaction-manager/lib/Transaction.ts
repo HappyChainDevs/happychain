@@ -99,10 +99,12 @@ export class Transaction {
 
     readonly attempts: Attempt[]
 
-    // Whether the transaction has been updated and needs to be flushed to the database. This field is not persisted in the database.
+    // Whether the transaction has been updated and needs to be flushed to the database.
+    // This field is not persisted in the database.
     pendingFlush: boolean
 
-    // Whether the transaction has not been persisted in the database yet. This field is not persisted in the database.
+    // This is true if the transaction has never been persisted to the database yet.
+    // This field is not persisted in the database.
     notPersisted: boolean
 
     createdAt: Date
@@ -116,25 +118,25 @@ export class Transaction {
     readonly metadata: Record<string, unknown>
 
     constructor({
-        intentId,
-        from,
-        chainId,
         address,
         functionName,
         contractName,
         args,
         deadline,
+        metadata,
+        intentId,
+        from,
+        chainId,
         status,
         attempts,
         createdAt,
         updatedAt,
         pendingFlush,
         notPersisted,
-        metadata,
     }: TransactionConstructorConfig & {
+        intentId?: UUID
         from: Address
         chainId: number
-        intentId?: UUID
         status?: TransactionStatus
         attempts?: Attempt[]
         createdAt?: Date
@@ -198,20 +200,12 @@ export class Transaction {
         return this.attempts[this.attempts.length - 1]
     }
 
-    notifyFlush(): void {
+    markFlushed(): void {
         this.pendingFlush = false
 
         if (this.notPersisted) {
             this.notPersisted = false
         }
-    }
-
-    notifyFlushFailed(): void {
-        this.pendingFlush = true
-    }
-
-    notifyNotPersisted(): void {
-        this.notPersisted = true
     }
 
     private markUpdated(): void {
