@@ -15,7 +15,7 @@ import { importTokensDialogVisibilityAtom } from "./state"
 /**
  * Trigger
  */
-export const TriggerImportTokensMenu = () => {
+export const TriggerImportTokensDialog = () => {
     const [isVisible, setVisibility] = useAtom(importTokensDialogVisibilityAtom)
 
     return (
@@ -42,13 +42,14 @@ export const ImportTokensDialog = () => {
     const user = useAtomValue(userAtom)
 
     const [inputAdd, setInputAdd] = useState("")
-    const isEmpty = inputAdd === "" // no inputted address, user has deleted their input
-    const isValid = isAddress(inputAdd, { strict: true })
-    const invalidAddressInputCondition = isEmpty || isValid
 
     const {
         data: { decimals, symbol } = {},
     } = useERC20Balance(inputAdd as Address, user?.address as Address)
+
+    const isEmpty = inputAdd === "" // no inputted address, user has deleted their input
+    const isValid = isAddress(inputAdd, { strict: true })
+    const invalidAddressInputCondition = isEmpty || isValid
 
     const { status, watchAssetAsync } = useWatchAsset()
 
@@ -57,7 +58,7 @@ export const ImportTokensDialog = () => {
         setInputAdd(value)
     }
 
-    const submit = useCallback(
+    const submitAssetData = useCallback(
         async (e: React.FormEvent<HTMLFormElement>) => {
             e.preventDefault()
 
@@ -99,7 +100,7 @@ export const ImportTokensDialog = () => {
                     originY: "bottom",
                 })}
             >
-                <Dialog.Content className="text-center bg-base-100 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
+                <Dialog.Content className="text-center overflow-y-auto bg-base-100 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
                     <div className="my-auto grid gap-1 items-start">
                         <Dialog.Title className="text-start font-bold text-base-content">Import Token</Dialog.Title>
                         <Dialog.Description className="text-start text-content text-xs">
@@ -108,7 +109,7 @@ export const ImportTokensDialog = () => {
                     </div>
                     <form
                         className="flex flex-col w-full h-full items-center justify-center py-2 space-y-4"
-                        onSubmit={submit}
+                        onSubmit={submitAssetData}
                     >
                         <FieldInput
                             helperLabel="Token Contract Address"
@@ -117,15 +118,14 @@ export const ImportTokensDialog = () => {
                         >
                             <Field.Label className="text-md text-base-content">Address</Field.Label>
                             <Input
-                                className="bg-base-content text-info-content w-full opacity-50 text-[20px] px-2 gap-2  box-border placeholder:text-[20px] placeholder:text-neutral/40 rounded-md"
-                                readOnly={false}
                                 aria-invalid={!invalidAddressInputCondition}
                                 name="address"
-                                id="import-token-address"
+                                id="token-address"
                                 type="string"
                                 onChange={handleInputChange}
                                 value={inputAdd}
                                 placeholder="0x123..."
+                                inputClass="w-full"
                             />
                         </FieldInput>
 
@@ -134,24 +134,24 @@ export const ImportTokensDialog = () => {
                                 <FieldInput helperLabel="Symbol" errorLabel="Symbol not found">
                                     <Field.Label className="text-md text-base-content">Symbol</Field.Label>
                                     <Input
-                                        className="bg-base-content text-info-content w-full opacity-50 text-[20px] px-2 gap-2 box-border placeholder:text-[20px] placeholder:text-neutral/40 rounded-md"
-                                        readOnly={true}
                                         name="symbol"
-                                        id="import-token-symbol"
+                                        id="token-symbol"
                                         type="string"
                                         value={symbol}
+                                        inputClass="w-full"
+                                        readOnly
                                     />
                                 </FieldInput>
 
                                 <FieldInput helperLabel="Decimals" errorLabel="Decimals data not found">
                                     <Field.Label className="text-md text-base-content">Decimals</Field.Label>
                                     <Input
-                                        className="bg-base-content text-info-content w-full opacity-50 text-[20px] px-2 gap-2 box-border placeholder:text-[20px] placeholder:text-neutral/40 rounded-md"
-                                        readOnly
                                         name="decimals"
-                                        id="import-token-decimal"
+                                        id="token-decimal"
                                         type="string"
                                         value={decimals}
+                                        inputClass="w-full"
+                                        readOnly
                                     />
                                 </FieldInput>
 
@@ -160,6 +160,7 @@ export const ImportTokensDialog = () => {
                                     intent="primary"
                                     className="text-neutral-content justify-center"
                                     isLoading={status === "pending"}
+                                    disabled={symbol === undefined || decimals === undefined}
                                 >
                                     Submit
                                 </Button>

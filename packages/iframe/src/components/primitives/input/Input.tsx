@@ -1,9 +1,33 @@
 import { type HTMLArkProps, ark } from "@ark-ui/react"
+import type { VariantProps } from "class-variance-authority"
 import { forwardRef } from "react"
-interface InputProps extends HTMLArkProps<"input"> {}
+import { recipeTextInput } from "./variants"
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(({ className, children, ...rest }, ref) => {
-    return <ark.input className={className} ref={ref} {...rest} />
+type InputVariantsProps = VariantProps<typeof recipeTextInput>
+interface InputProps extends InputVariantsProps, HTMLArkProps<"input"> {
+    inputClass?: string
+    wrapperClass?: string
+}
+
+/**
+ * A one-line field that allows user to enter information by typing.
+ */
+export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+    const { scale, intent, inputClass, wrapperClass, ...rest } = props
+
+    return (
+        <div className={`relative w-full ${wrapperClass ?? ""}`}>
+            <ark.input
+                className={`${recipeTextInput({ scale: scale, intent: intent })}`}
+                placeholder={rest?.placeholder ?? ""}
+                type={rest?.type ?? "text"}
+                ref={ref}
+                {...rest}
+            />
+        </div>
+    )
 })
+
+Input.displayName = "Input"
 
 Input.displayName = "Input"
