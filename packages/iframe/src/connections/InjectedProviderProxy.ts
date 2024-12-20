@@ -63,17 +63,21 @@ export class InjectedProviderProxy extends SafeEventEmitter {
 
     private async executeLocal(req: ProviderEventPayload<EIP1193RequestParameters>) {
         const provider = getInjectedProvider()
-        if (!provider) throw new Error("Failed for find injected provider")
+        if (!provider) throw new Error("Failed for find injected provider in HappyWallet")
         return await provider.request(req.payload as Parameters<typeof provider.request>[number])
     }
 
-    private async executeRemote(req: ProviderEventPayload<EIP1193RequestParameters>) {
+    private async executeRemote(request: ProviderEventPayload<EIP1193RequestParameters>) {
         const { promise, resolve, reject } = promiseWithResolvers()
-        happyProviderBus.emit(Msgs.ExecuteInjectedRequest, req)
-        this.inFlight.set(req.key, { resolve, reject, request: req })
+        happyProviderBus.emit(Msgs.ExecuteInjectedRequest, request)
+        this.inFlight.set(request.key, { resolve, reject, request })
         return promise
     }
 
+    /**
+     * Called in response to {@link Msgs.ExecuteInjectedResponse} or by the injected request handler
+     * in direct (non-embedded) mode.
+     */
     public handleRequestResolution(
         resp: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>,
     ): void {

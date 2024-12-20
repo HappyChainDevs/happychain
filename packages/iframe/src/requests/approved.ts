@@ -1,15 +1,15 @@
+import { HappyMethodNames } from "@happychain/common"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
+    type EIP1193RequestResult,
     EIP1193UnsupportedMethodError,
     type Msgs,
     type PopupMsgs,
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
-
-import { HappyMethodNames } from "@happychain/common"
+import { type Client, type Hex, hexToBigInt } from "viem"
 import { addPendingTx } from "#src/services/transactionHistory"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
@@ -43,14 +43,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     switch (request.payload.method) {
         case "eth_sendTransaction": {
             if (!user) return false
-
-            const hash = (await sendToWalletClient(request)) as Hash
-
+            const hash = await sendToWalletClient({ ...request, payload: request.payload })
             const value = request.payload.params[0].value ? hexToBigInt(request.payload.params[0].value as Hex) : 0n
-
             const payload: PendingTxDetails = { hash, value }
             addPendingTx(user.address, payload)
-
             return hash
         }
 
@@ -74,7 +70,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             if (params.chainId in chains)
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Chain already exists")
 
-            const response = await sendToWalletClient(request)
+            const response = await sendToWalletClient({ ...request, payload: request.payload })
             // Only add chain if the request is successful.
             setChains((prev) => ({ ...prev, [params.chainId]: params }))
             return response
@@ -94,7 +90,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             if (chainId === getCurrentChain()?.chainId) return null // correct response for a successful request
 
-            const response = await sendToWalletClient(request)
+            const response = await sendToWalletClient({ ...request, payload: request.payload })
             // Currently this fails: web3Auth is hardcoded to the default intial chain.
             setCurrentChain(chains[chainId])
             return response
@@ -113,7 +109,9 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     }
 }
 
-async function sendToWalletClient(request: PopupMsgs[Msgs.PopupApprove]) {
+async function sendToWalletClient<T extends PopupMsgs[Msgs.PopupApprove]>(
+    request: T,
+): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
     const client: Client | undefined = getWalletClient()
     if (!client) throw new EIP1193DisconnectedError()
 

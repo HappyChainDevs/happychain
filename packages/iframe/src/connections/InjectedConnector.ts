@@ -7,7 +7,7 @@ import type {
     MsgsFromIframe,
 } from "@happychain/sdk-shared"
 import { EIP1193UserRejectedRequestError, Msgs, WalletType, chains } from "@happychain/sdk-shared"
-import { connect, disconnect } from "@wagmi/core"
+import { connect as connectWagmi, disconnect as disconnectWagmi } from "@wagmi/core"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
 import { setInjectedProvider } from "#src/state/injectedProvider.ts"
@@ -21,10 +21,6 @@ import { getAppURL, isStandaloneIframe } from "../utils/appURL"
 import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"
 import { InjectedProviderProxy } from "./InjectedProviderProxy"
 
-/**
- * InjectedConnector is instantiated with a EIP-6963 ProviderDetail , and is capable of "logging in"
- * a user via an injected wallet such as metamask.
- */
 /**
  * A connector for interacting with browser-injected wallets through EIP-6963.
  * ({@link https://eips.ethereum.org/EIPS/eip-6963}).
@@ -78,17 +74,17 @@ export class InjectedConnector implements ConnectionProvider {
     public async onConnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connect(config, { connector: happyConnector })
+        await connectWagmi(config, { connector: happyConnector })
     }
 
     public async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connect(config, { connector: happyConnector })
+        await connectWagmi(config, { connector: happyConnector })
     }
 
     public async onDisconnect() {
-        await disconnect(config)
+        await disconnectWagmi(config)
         setUserWithProvider(undefined, undefined)
     }
 
@@ -100,6 +96,7 @@ export class InjectedConnector implements ConnectionProvider {
     }
 
     public async disconnect() {
+        // see note at GoogleConnector.onDisconnect on why storage access vs atom usage here.
         const past = storage.get(StorageKey.HappyUser)
 
         // ensure we clear the right one
@@ -114,7 +111,7 @@ export class InjectedConnector implements ConnectionProvider {
         if (past?.provider !== this.id) return
 
         const reconnectRequest = {
-            key: createUUID(), // its ok, theres no pending promise to be resolved by this
+            key: createUUID(), // it's ok, there are no pending promises to be resolved by this
             windowId: iframeID(), // reconnect was initialized internally, so the request can be from iframe
             payload: { method: "eth_requestAccounts" },
             error: null,
@@ -156,7 +153,7 @@ export class InjectedConnector implements ConnectionProvider {
                     : await this.detail.provider.request({ method: "eth_accounts" })
 
             const user = createHappyUserFromWallet(this.id, address)
-            await this.connectToHappyChain()
+            await this.switchInjectedWalletToHappyChain()
             return { user, request, response }
         }
 
@@ -180,7 +177,7 @@ export class InjectedConnector implements ConnectionProvider {
 
                     const user = createHappyUserFromWallet(this.id, address)
 
-                    return this.connectToHappyChain().then(() => {
+                    return this.switchInjectedWalletToHappyChain().then(() => {
                         return resolve({ user, request, response })
                     })
                 },
@@ -188,7 +185,7 @@ export class InjectedConnector implements ConnectionProvider {
         })
     }
 
-    private async connectToHappyChain() {
+    private async switchInjectedWalletToHappyChain() {
         try {
             // Ensures the chain has been added to the injected wallet
             await this.provider.request({

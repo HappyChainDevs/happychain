@@ -15,29 +15,31 @@ const store = createStore()
  * A wrapper for executing wallet operations through browser-injected providers like Metamask.
  * It acts as a bridge between the iframe and app contexts for wallet interactions. It is to be
  * initiated once by the happyProvider in injectedWalletHandler, but is never interacted with
- * directly from the app side.
+ * directly from the app side, only servicing messages sent by the iframe.
  *
  * Request flow for app-initiated requests with injected wallet:
  * - App initiates request
  * - Request is forwarded to iframe for middleware processing
- * - Final execution occurs through this wrapper
- * - Response is returned to iframe, then to original caller
+ * - Iframe potentially returns a request to this wrapper, to be forwarded to the injected wallet
+ * - In that case, the injected wallet's response is returned to the iframe
+ * - The iframe returns this answer back to the original caller on the app side
  *
- * Request flow for wallet-initiated requests with injected wallet:
+ * Request flow for wallet-initiated (iframe side) requests with injected wallet:
  * - Wallet initiates request
  * - Request is passed through middleware processing
- * - Final execution occurs through this wrapper
- * - Response is returned to iframe, then to original caller
+ * - Iframe potentially send a request to this wrapper, to be forwarded to the injected wallet
+ * - In that case, the injected wallet's response is returned to the iframe
  */
 export class InjectedWalletWrapper {
     public provider: EIP6963ProviderDetail["provider"] | undefined
     private info: EIP6963ProviderDetail["info"] | undefined
 
     constructor(protected config: HappyProviderConfig) {
-        // This manages internal connection state, and tracks which injected wallet is connected
+        // Called when the user tries to log in with an injected wallet.
+        // This manages internal connection state, and tracks which injected wallet is connected.
         config.msgBus.on(Msgs.InjectedWalletRequestConnect, this.handleProviderConnectionRequest.bind(this))
 
-        // when iframe requests a new request to be executed, it is handled here
+        // When the iframe requests a new request to be executed, it is handled here.
         config.providerBus.on(Msgs.ExecuteInjectedRequest, async (request) => {
             try {
                 const resp = await this.executeRequest(request.payload)
@@ -61,18 +63,12 @@ export class InjectedWalletWrapper {
     }
 
     /**
-     * This will actually execute the request using the users chosen local EIP1193 provider
-     *
+     * This will actually execute the request using the users chosen injected wallet EIP1193 provider.
      */
-    private async executeRequest(args: EIP1193RequestParameters) {
+    private async executeRequest(args: EIP1193RequestParameters): Promise<EIP1193RequestResult<EIP1193RequestMethods>> {
         if (!this.provider) throw new Error("Failed to resolve local provider")
-
-        const response: EIP1193RequestResult<EIP1193RequestMethods> = await this.provider.request(
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            args as any,
-        )
-
-        return response
+        // biome-ignore lint/suspicious/noExplicitAny: we support custom request types
+        return await this.provider.request(args as any)
     }
 
     /**

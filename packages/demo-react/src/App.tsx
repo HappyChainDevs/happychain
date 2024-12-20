@@ -166,7 +166,7 @@ function App() {
             </button>
 
             <button type="button" onClick={addConflictedChain} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Add "Gnosis 2"
+                Add "Gnosis 2 (creates conflict)"
             </button>
 
             <button

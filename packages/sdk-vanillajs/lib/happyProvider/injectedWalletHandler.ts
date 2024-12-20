@@ -17,7 +17,7 @@ import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 export class InjectedWalletHandler extends BasePopupProvider implements EIP1193ConnectionHandler {
     private wrapper: InjectedWalletWrapper
 
-    /** InjectedWalletHandler does not require popup */
+    /** InjectedWalletHandler does not require popups. */
     protected popupBaseUrl = ""
 
     constructor(protected config: HappyProviderConfig) {
@@ -43,13 +43,12 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
     }
 
     protected override async requiresUserApproval(_args: EIP1193RequestParameters): Promise<boolean> {
-        // checks will be handled by injected wallet if needed. We can safely bypass here
-        // and rely on the users wallet to handle this.
+        // Checks will be handled by the injected wallet if needed.
         return false
     }
 
     protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
-        // permissions are handled by the users injected wallet
+        // Approvals are handled by the injected wallet, no need to request any extra here.
         return true
     }
 }

@@ -1,6 +1,7 @@
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
+    type EIP1193RequestResult,
     EIP1193UnsupportedMethodError,
     type Msgs,
     type ProviderMsgsFromApp,
@@ -13,6 +14,7 @@ import { getChains, setChains, setCurrentChain } from "#src/state/chains.ts"
 import { getInjectedClient } from "#src/state/injectedClient.ts"
 import { grantPermissions, revokePermissions } from "#src/state/permissions.ts"
 import type { PendingTxDetails } from "#src/state/txHistory.ts"
+import { addWatchedAsset } from "#src/state/watchedAssets.ts"
 import { isAddChainParams } from "#src/utils/isAddChainParam.ts"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
@@ -31,27 +33,25 @@ export function handleInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestI
 async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
     const user = getUser()
-    const client = getInjectedClient()
-    if (!client) throw new EIP1193DisconnectedError()
 
     switch (request.payload.method) {
         case "happy_user": {
-            const acc = await client.request({ method: "eth_accounts" })
+            // const acc = await client.request({ method: "eth_accounts" })
+            const acc = await sendToInjectedClient(app, { ...request, payload: { method: "eth_accounts" } })
             return acc.length ? user : undefined
         }
 
         case "eth_sendTransaction": {
             if (!user) return false
-            const hash = await client.request(request.payload)
+            const hash = await sendToInjectedClient(app, { ...request, payload: request.payload })
             const value = hexToBigInt(request.payload.params[0].value as Hex)
             const payload: PendingTxDetails = { hash, value }
             addPendingTx(user.address, payload)
-
             return hash
         }
 
         case "eth_requestAccounts": {
-            const resp = await client.request(request.payload)
+            const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
             if (resp.length) {
                 grantPermissions(app, "eth_accounts")
             }
@@ -59,7 +59,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         }
 
         case "wallet_requestPermissions": {
-            const resp = await client.request(request.payload)
+            const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
             if (resp.length) {
                 grantPermissions(app, "eth_accounts")
             }
@@ -67,7 +67,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         }
 
         case "wallet_revokePermissions": {
-            const resp = await client.request(request.payload)
+            const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
             revokePermissions(app, request.payload.params[0])
             return resp
         }
@@ -78,7 +78,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             if (!isValid)
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Invalid request body")
 
-            const resp = await client.request(request.payload)
+            const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
 
             // the response is null if chain is added https://eips.ethereum.org/EIPS/eip-3085
             // we can't detect if user changed details in metamask UI for example
@@ -93,10 +93,15 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             // successful for not.
             // Note: this will _not_ prompt for a second confirmation unless the original chain
             // switch was declined
-            await client.request({
-                method: "wallet_switchEthereumChain",
-                params: [{ chainId: params.chainId }],
+
+            await sendToInjectedClient(app, {
+                ...request,
+                payload: {
+                    method: "wallet_switchEthereumChain",
+                    params: [{ chainId: params.chainId }],
+                },
             })
+
             setCurrentChain(params)
 
             return resp
@@ -114,17 +119,24 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                 )
             }
 
-            const resp = await client.request(request.payload)
+            const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
             setCurrentChain(chains[chainId])
             return resp
         }
 
+        case "wallet_watchAsset": {
+            return user ? addWatchedAsset(user.address, request.payload.params) : false
+        }
+
         default:
-            return sendToInjectedClient(app, request)
+            return await sendToInjectedClient(app, request)
     }
 }
 
-async function sendToInjectedClient(_app: AppURL, request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
+async function sendToInjectedClient<T extends ProviderMsgsFromApp[Msgs.RequestInjected]>(
+    _app: AppURL,
+    request: T,
+): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
     const client: Client | undefined = getInjectedClient()
 
     if (!client) throw new EIP1193DisconnectedError()
