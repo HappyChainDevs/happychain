@@ -75,11 +75,11 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                  * 1. First layer (execute function) :
                  *    The outer wrapper is a call to the `execute()` function (selector: `0xe9ae5c53`)
                  *    We decode this to get :
-                 *    - `execMode`: how to execute the transaction
-                 *    - `executeParamsData`: the actual transaction details (wrapped)
+                 *    - `execMode`: how to execute the wrapped call
+                 *    - `executeParamsData`: parameters for the wrapped call
                  *
-                 * 2. Second layer (transaction details) :
-                 *    Inside `executeParamsData`, we find the real transaction information (to, value, data).
+                 * 2. Second layer (target call) :
+                 *    Inside `executeParamsData`, we find the information of the wrapped call (to, value, data).
                  *
                  * @see {@link https://docs.stackup.sh/docs/useroperation-calldata} for additional explanation
                  * @see {@link https://eips.ethereum.org/EIPS/eip-4337#definitions} for the EIP-4337 specification
@@ -125,8 +125,8 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     to,
 
                     // Not to be confused with `txReceipt.transactionHash`
-                    // `hash` is the hash of the userop transaction
-                    //  `txReceipt.transactionHash` is the hash of the bundled transaction that includes this userop
+                    // -`hash` is the hash of the userop
+                    // - `txReceipt.transactionHash` is the hash of the bundler transaction that includes this userop
                     transactionHash: hash,
                     transactionIndex,
                     type,
