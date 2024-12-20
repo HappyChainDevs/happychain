@@ -16,5 +16,5 @@
     "dependencies": {
         "concurrently": "^8.2.2"
     },
-    "trustedDependencies": ["@biomejs/biome", "protobufjs"]
+    "trustedDependencies": ["@biomejs/biome", "protobufjs", "better-sqlite3"]
 }
