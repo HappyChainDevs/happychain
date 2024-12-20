@@ -1,4 +1,4 @@
-import type { WALLET_USE_ABI_RPC_METHOD } from "@happychain/common"
+import type { HappyMethodNames } from "@happychain/common"
 import { useAtomValue } from "jotai"
 import { currentChainAtom } from "#src/state/chains"
 import { Button } from "../primitives/button/Button"
@@ -12,18 +12,16 @@ export function HappyWalletUseAbi({
     params,
     reject,
     accept,
-}: RequestConfirmationProps<typeof WALLET_USE_ABI_RPC_METHOD>) {
+}: RequestConfirmationProps<typeof HappyMethodNames.WALLET_USE_ABI_RPC_METHOD>) {
     const chain = useAtomValue(currentChainAtom)
 
     return (
         <RequestLayout method={method}>
             <RequestContent>
-                <div className="flex flex-col w-full h-full gap-4 bg-zinc-100 rounded-xl p-4">
-                    <div className="border-b border-zinc-300 pb-2 text-center text-sm font-bold text-blue-600">
-                        Details
-                    </div>
+                <div className="flex flex-col w-full h-full gap-4 rounded-xl p-4">
+                    <div className="border-b pb-2 text-center text-sm font-bold text-primary">Details</div>
                     <div className="flex flex-col gap-2">
-                        <span className="text-sm font-bold text-gray-600">Address:</span>
+                        <span className="text-sm font-bold text-neutral">Address:</span>
                         <a
                             href={`${chain.blockExplorerUrls?.[0]}/address/${params.address}`}
                             target="_blank"
@@ -34,7 +32,7 @@ export function HappyWalletUseAbi({
                         </a>
                     </div>
                     <div className="flex flex-col grow gap-2">
-                        <span className="text-sm font-bold text-gray-600">ABI:</span>
+                        <span className="text-sm font-bold text-neutral">ABI:</span>
                         <pre className="grow w-full p-2 rounded-lg bg-neutral text-sm font-mono break-all overflow-auto h-[300px]">
                             <code>{JSON.stringify(params?.abi, null, 2)}</code>
                         </pre>

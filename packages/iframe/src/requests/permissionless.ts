@@ -1,3 +1,4 @@
+import { HappyMethodNames } from "@happychain/common"
 import {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
@@ -39,7 +40,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return user && hasPermissions(app, "eth_accounts") ? user.addresses : []
         }
 
-        case "happy_user": {
+        case HappyMethodNames.HAPPY_USER_RPC_METHOD: {
             const user = getUser()
             return user && hasPermissions(app, "eth_accounts") ? getUser() : undefined
         }

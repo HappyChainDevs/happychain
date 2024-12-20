@@ -45,4 +45,4 @@ export { convertToSafeViemWalletClient, convertToSafeViemPublicClient } from "./
 
 export { hexSchema } from "./utils/zod.js"
 
-export { WALLET_USE_ABI_RPC_METHOD } from "./utils/constants"
+export { HappyMethodNames } from "./utils/constants"

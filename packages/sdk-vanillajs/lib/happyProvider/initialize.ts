@@ -1,4 +1,4 @@
-import { type UUID, WALLET_USE_ABI_RPC_METHOD, createUUID } from "@happychain/common"
+import { HappyMethodNames, type UUID, createUUID } from "@happychain/common"
 import type {
     HappyUser,
     MsgsFromApp,
@@ -122,7 +122,7 @@ export const preloadAbi = async (contractAddress: Address, abi: Abi): Promise<vo
     if (!_provider) return
 
     await _provider.request({
-        method: WALLET_USE_ABI_RPC_METHOD,
+        method: HappyMethodNames.WALLET_USE_ABI_RPC_METHOD,
         params: {
             address: contractAddress,
             abi: abi,
