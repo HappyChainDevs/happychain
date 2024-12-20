@@ -9,12 +9,19 @@ interface FieldInputProps extends FieldRootProps, PropsWithChildren {
 export const FieldInput = (props: FieldInputProps) => {
     const { helperLabel, errorLabel, children, ...rootProps } = props
     return (
-        <Field.Root className="flex flex-col items-start">
+        <Field.Root
+            className="flex flex-col items-start gap-1 w-full rounded-md"
+            invalid={!rootProps.invalid}
+            {...rootProps}
+        >
             {children}
-            {rootProps.invalid === true ? (
-                <Field.ErrorText>{errorLabel}</Field.ErrorText>
-            ) : (
-                <Field.HelperText className="text-start text-content text-xs">{props.helperLabel}</Field.HelperText>
+            {rootProps.invalid && (
+                <Field.ErrorText className="text-start text-error text-xs">{errorLabel}</Field.ErrorText>
+            )}
+            {!rootProps.invalid && (
+                <Field.HelperText className="text-start text-neutral-content/70 text-xs">
+                    {props.helperLabel}
+                </Field.HelperText>
             )}
         </Field.Root>
     )

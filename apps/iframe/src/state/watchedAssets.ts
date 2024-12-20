@@ -39,10 +39,9 @@ export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters
         return false
     }
 
-    let assetExists = false
     store.set(watchedAssetsAtom, (prevAssets) => {
         const assetsForAddress = prevAssets[address] || []
-        assetExists = assetsForAddress.some((asset) => asset.options.address === newAsset.options.address)
+        const assetExists = assetsForAddress.some((asset) => asset.options.address === newAsset.options.address)
 
         return assetExists
             ? prevAssets
@@ -51,7 +50,7 @@ export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters
                   [address]: [...assetsForAddress, newAsset],
               }
     })
-    return !assetExists
+    return true
 }
 
 /**
