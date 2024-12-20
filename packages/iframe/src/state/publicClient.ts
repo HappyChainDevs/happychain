@@ -9,6 +9,8 @@ import { transportAtom } from "./transport"
 
 export const publicClientAtom: Atom<PublicClient<CustomTransport | HttpTransport>> = atom((get) => {
     const chain = get(currentChainAtom)
+
+    // The fallback to the public RPC URL only triggers whenever the user is not logged in.
     const transport = get(transportAtom) ?? http(chain.rpcUrls[0], { batch: true })
 
     const publicClient = createPublicClient({ transport, chain: convertToViemChain(chain) })
