@@ -14,7 +14,7 @@ function getRandomAddress() {
     return privateKeyToAddress(generatePrivateKey()).toString() as Address
 }
 
-async function fundSmartAccount(accountAddress: Address): Promise<'success' | 'reverted'> {
+async function fundSmartAccount(accountAddress: Address): Promise<"success" | "reverted"> {
     const txHash = await walletClient.sendTransaction({
         account: account,
         to: accountAddress,
@@ -30,7 +30,7 @@ async function fundSmartAccount(accountAddress: Address): Promise<'success' | 'r
     return receipt.status
 }
 
-async function depositPaymaster(): Promise<'success' | 'reverted'> {
+async function depositPaymaster(): Promise<"success" | "reverted"> {
     const txHash = await walletClient.writeContract({
         address: entryPoint07Address,
         abi: abis.EntryPointV7,
@@ -47,7 +47,7 @@ async function depositPaymaster(): Promise<'success' | 'reverted'> {
     return receipt.status
 }
 
-async function initializeTokenSupply(accountAddress: Address): Promise<'success' | 'reverted'> {
+async function initializeTokenSupply(accountAddress: Address): Promise<"success" | "reverted"> {
     const hash = await walletClient.writeContract({
         address: mockDeployment.MockTokenA,
         abi: mockAbis.MockTokenA,
