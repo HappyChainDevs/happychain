@@ -1,6 +1,4 @@
-import { http, type Abi, createPublicClient } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
-import { localhost } from "viem/chains"
+import type { Abi } from "viem"
 import { describe, expect, it } from "vitest"
 import {
     type LatestBlock,
@@ -26,11 +24,6 @@ const testConfig: TransactionManagerConfig = {
     },
 }
 
-const client = createPublicClient({
-    chain: localhost,
-    transport: http("http://127.0.0.1:8545"),
-})
-
 describe("TransactionManager", () => {
     const transactionManager = new TransactionManager(testConfig)
 
@@ -52,7 +45,6 @@ describe("TransactionManager", () => {
             contractName: "Counter",
             args: [],
         })
-        
 
         const demoOriginator = async (_block: LatestBlock) => {
             return [tx]

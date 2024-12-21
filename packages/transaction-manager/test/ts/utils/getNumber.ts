@@ -1,6 +1,6 @@
-import { http, type Abi, type Address, decodeFunctionResult, encodeFunctionData, createPublicClient } from "viem"
-import CounterAbi from "../../contracts/abi/Counter.json"
+import { http, type Address, createPublicClient, decodeFunctionResult, encodeFunctionData } from "viem"
 import { localhost } from "viem/chains"
+import CounterAbi from "../../contracts/abi/Counter.json"
 
 const client = createPublicClient({
     chain: localhost,
