@@ -50,7 +50,7 @@ setup:
 # Build
 
 build:
-	forge build
+	forge build $(METADATA_FLAG)
 .PHONY: build
 
 watch:
@@ -93,26 +93,9 @@ test-fork:
 	forge test --gas-report --fork-url $(RPC_$(CONFIG))
 .PHONY: test-fork
 
-# Run the complete AA demo with all prerequisites
-aa-demo-complete:
-	@lsof -ti :8545 | xargs kill -9 2>/dev/null || true
-	@lsof -ti :3000 | xargs kill -9 2>/dev/null || true
-	@make anvil > /dev/null 2>&1 &
-	@sleep 5
-	@cast send 0x4BC8e81Ad3BE83276837f184138FC96770C14297 --value 100ether --private-key 2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
-	@make deploy-aa CONFIG=LOCAL
-	@make save-deployment DEPLOY_SCRIPT=DeployAA.s.sol DEPLOYMENT_NAME=anvil/testing CONFIG=LOCAL
-	@cd ../bundler && make run > /dev/null 2>&1 &
-	@sleep 5
-	@clear
-	@make aa-demo
-	@lsof -ti :8545 | xargs kill -9 2>/dev/null || true
-	@lsof -ti :3000 | xargs kill -9 2>/dev/null || true
-.PHONY: aa-demo-complete
-
 # Please, ensure that all Account Abstraction (AA) contracts are deployed before running the demo.
 aa-demo:
-	@tsx ./scripts/account_abstraction_demo.ts;
+	@tsx ./scripts/aa_demo.ts;
 .PHONY: aa-demo
 
 # Run the complete AA demo with all prerequisites
@@ -191,6 +174,7 @@ anvil:
 ####################################################################################################
 # Deployment
 
+METADATA_FLAG := $(if $(findstring false,$(APPEND_METADATA_$(CONFIG))),--no-metadata,)
 VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
 VERIFIER_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_FLAG_$(CONFIG)),)
 VERIFIER_URL := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_URL_$(CONFIG)),)
@@ -221,7 +205,7 @@ deploy:
 # Performs checks related to contract upgradeability.
 # cf. https://docs.openzeppelin.com/upgrades-plugins/1.x/api-core
 validate-upgrade:
-	forge clean && forge build # doesn't work with incremental builds
+	forge clean && forge build $(METADATA_FLAG) # doesn't work with incremental builds
 	openzeppelin-upgrades-core validate --contract HappyERC20Upgradeable;
 	openzeppelin-upgrades-core validate --contract HappyERC20Upgraded;
 .PHONY: validate-upgrade
@@ -338,14 +322,25 @@ deploy-l1up:
 .PHONY: deploy-l1up
 
 # Deploy both AA and Mock contracts with a single validation step
+# Only for deploying to anvil before running demo scripts - do not use for actual deployments
 deploy-demo-contracts:
 	make validate-upgrade
 	$(call run-deploy-script,src/deploy/DeployAA.s.sol)
 	$(call post-deploy)
-	make save-local-aa-deployment
+	@if ! cmp -s out/abis.ts deployments/anvil/testing/abis.ts; then \
+		echo "ABI changes detected in AA contracts, saving local deployment..."; \
+		make save-local-aa-deployment; \
+	else \
+		echo "No ABI changes detected in AA contracts, skipping local deployment save"; \
+	fi
 	$(call run-deploy-script,src/deploy/mocks/DeployMocks.s.sol)
 	$(call post-deploy)
-	make save-local-mock-deployment
+	@if ! cmp -s out/abis.ts deployments/anvil/mockTokens/abis.ts; then \
+		echo "ABI changes detected in Mock contracts, saving local deployment..."; \
+		make save-local-mock-deployment; \
+	else \
+		echo "No ABI changes detected in Mock contracts, skipping local deployment save"; \
+	fi
 .PHONY: deploy-demo-contracts
 
 deploy-aa:

@@ -17,9 +17,9 @@ import { bundlerRpc, rpcURL } from "./config"
 
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { deployment } from "../../deployments/anvil/testing/abis"
-import { fundSmartAccount, initializeTokenSupply } from "./accounts.ts"
+import { fundSmartAccount, initializeTokenBalance } from "./accounts.ts"
 
-async function getKernelAccount(publicClient: PublicClient, account: PrivateKeyAccount): Promise<SmartAccount> {
+export async function getKernelAccount(publicClient: PublicClient, account: PrivateKeyAccount): Promise<SmartAccount> {
     return toEcdsaKernelSmartAccount({
         client: publicClient,
         entryPoint: {
@@ -35,7 +35,7 @@ async function getKernelAccount(publicClient: PublicClient, account: PrivateKeyA
     })
 }
 
-function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7579Actions<SmartAccount> {
+export function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7579Actions<SmartAccount> {
     const paymasterAddress = deployment.HappyPaymaster
 
     const kernelClientBase = createSmartAccountClient({
@@ -80,7 +80,7 @@ function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7
     return extendedClient as typeof kernelClientBase & typeof extendedClient
 }
 
-async function generatePrefundedKernelClients(count: number): Promise<SmartAccountClient[]> {
+export async function generatePrefundedKernelClients(count: number): Promise<SmartAccountClient[]> {
     const kernelClients = []
     for (let i = 0; i < count; i++) {
         const kernelClient = await generatePrefundedKernelClient()
@@ -90,7 +90,7 @@ async function generatePrefundedKernelClients(count: number): Promise<SmartAccou
     return kernelClients
 }
 
-async function generatePrefundedKernelClient(): Promise<SmartAccountClient> {
+export async function generatePrefundedKernelClient(): Promise<SmartAccountClient> {
     const account = privateKeyToAccount(generatePrivateKey())
 
     const publicClient = createPublicClient({
@@ -106,12 +106,10 @@ async function generatePrefundedKernelClient(): Promise<SmartAccountClient> {
         throw new Error("Funding SmartAccount 1 failed")
     }
 
-    const mintTokenRes = await initializeTokenSupply(kernelAccount.address)
+    const mintTokenRes = await initializeTokenBalance(kernelAccount.address)
     if (mintTokenRes !== "success") {
         throw new Error("Minting tokens to SmartAccount failed")
     }
 
     return kernelClient
 }
-
-export { getKernelAccount, getKernelClient, generatePrefundedKernelClient, generatePrefundedKernelClients }

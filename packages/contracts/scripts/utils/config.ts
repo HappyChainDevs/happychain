@@ -21,4 +21,8 @@ if (!parsedEnv.success) {
     throw new Error("Missing or invalid environment variables")
 }
 
-export const { PRIVATE_KEY_LOCAL: privateKey, BUNDLER_LOCAL: bundlerRpc, RPC_LOCAL: rpcURL } = parsedEnv.data
+const { PRIVATE_KEY_LOCAL, BUNDLER_LOCAL, RPC_LOCAL } = parsedEnv.data
+
+export const privateKey = PRIVATE_KEY_LOCAL
+export const bundlerRpc = BUNDLER_LOCAL
+export const rpcURL = RPC_LOCAL
