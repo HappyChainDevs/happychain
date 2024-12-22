@@ -6,20 +6,20 @@ import { localhost } from "viem/chains"
 import { type PimlicoClient, createPimlicoClient } from "permissionless/clients/pimlico"
 import { bundlerRpc, privateKey, rpcURL } from "./config"
 
-const account = privateKeyToAccount(privateKey)
+export const account = privateKeyToAccount(privateKey)
 
-const walletClient = createWalletClient({
+export const walletClient = createWalletClient({
     account,
     chain: localhost,
     transport: http(rpcURL),
 })
 
-const publicClient = createPublicClient({
+export const publicClient = createPublicClient({
     chain: localhost,
     transport: http(rpcURL),
 })
 
-const pimlicoClient: PimlicoClient = createPimlicoClient({
+export const pimlicoClient: PimlicoClient = createPimlicoClient({
     chain: localhost,
     transport: http(bundlerRpc),
     entryPoint: {
@@ -27,5 +27,3 @@ const pimlicoClient: PimlicoClient = createPimlicoClient({
         version: "0.7",
     },
 })
-
-export { walletClient, publicClient, pimlicoClient, account }

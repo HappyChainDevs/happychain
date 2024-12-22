@@ -4,12 +4,11 @@ import { localhost } from "viem/chains"
 import type { SmartAccountClient } from "permissionless"
 import { deployment } from "../deployments/anvil/testing/abis"
 
-import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./getNonce"
-
 import type { Hex } from "viem"
-import { createMintCall, depositPaymaster, initializeTokenSupply } from "./utils/accounts"
+import { createMintCall, depositPaymaster, initializeTokenBalance } from "./utils/accounts"
 import { account, pimlicoClient, publicClient, walletClient } from "./utils/clients"
 import { generatePrefundedKernelClient, generatePrefundedKernelClients } from "./utils/kernel"
+import { VALIDATOR_MODE, VALIDATOR_TYPE, getCustomNonce } from "./utils/nonce"
 
 interface GasDetails {
     directTxGas: bigint
@@ -65,8 +64,6 @@ async function processSingleUserOp(kernelClient: SmartAccountClient, calls: User
         account: kernelClient.account!,
         calls,
     })
-    userOp.preVerificationGas = 60000n
-    userOp.verificationGasLimit += 3000n
     const prepEndTime = performance.now()
     console.log(`UserOp preparation time: ${(prepEndTime - prepStartTime).toFixed(2)}ms`)
 
@@ -145,8 +142,6 @@ async function sendUserOps(kernelClients: SmartAccountClient[]) {
                 account: kernelClient.account!,
                 calls: [createMintCall(kernelClient.account!.address)],
             })
-            userOp.preVerificationGas = 60000n
-            userOp.verificationGasLimit += 3000n
             const prepEnd = performance.now()
             console.log(`UserOp ${index}: Preparation time: ${(prepEnd - prepStart).toFixed(2)}ms`)
 
@@ -345,8 +340,7 @@ async function batchedUserOpsSameSenderGasResult(kernelClient: SmartAccountClien
                 calls: [createMintCall(kernelClient.account!.address)],
                 nonce: nonce,
             })
-            userOp.preVerificationGas = 60000n
-            userOp.verificationGasLimit += 3000n
+
             userOp.signature = await kernelClient.account!.signUserOperation({
                 ...userOp,
                 chainId: localhost.id,
@@ -452,7 +446,7 @@ async function main() {
     await initializePaymasterState()
 
     // Initialize Total Supply of mockToken, to get accurate and consistent gas results in further operations.
-    const res = await initializeTokenSupply(account.address)
+    const res = await initializeTokenBalance(account.address)
     if (res !== "success") {
         throw new Error("Mock Token totalSupply initialization failed")
     }
