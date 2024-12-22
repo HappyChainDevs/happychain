@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-/* solhint-disable custom-errors, gas-custom-errors */
-
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
