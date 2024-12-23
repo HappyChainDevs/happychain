@@ -11,7 +11,7 @@ contract HappyFactory {
     error InitializeError();
 
     /// @dev The implementation contract that all proxies will delegate to
-    address public immutable implementation;
+    address public immutable IMPLEMENTATION;
 
     /**
      * @dev Emitted when a new HappyAccount is created
@@ -21,7 +21,7 @@ contract HappyFactory {
     event HappyAccountCreated(address indexed account, bytes32 salt);
 
     constructor(address _implementation) {
-        implementation = _implementation;
+        IMPLEMENTATION = _implementation;
     }
 
     /**
@@ -34,7 +34,7 @@ contract HappyFactory {
         bytes32 actualSalt = keccak256(abi.encodePacked(initData, salt));
 
         (bool alreadyDeployed, address account) =
-            LibClone.createDeterministicERC1967(msg.value, implementation, actualSalt);
+            LibClone.createDeterministicERC1967(msg.value, IMPLEMENTATION, actualSalt);
 
         if (!alreadyDeployed) {
             // solhint-disable-next-line avoid-low-level-calls
@@ -56,6 +56,6 @@ contract HappyFactory {
      */
     function getAddress(bytes calldata initData, bytes32 salt) public view returns (address) {
         bytes32 actualSalt = keccak256(abi.encodePacked(initData, salt));
-        return LibClone.predictDeterministicAddressERC1967(implementation, actualSalt, address(this));
+        return LibClone.predictDeterministicAddressERC1967(IMPLEMENTATION, actualSalt, address(this));
     }
 }
