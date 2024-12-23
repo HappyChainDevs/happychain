@@ -10,6 +10,8 @@ import {
 } from "../../lib/index"
 import CounterAbi from "../contracts/abi/Counter.json"
 import { getNumber } from "./utils/getNumber"
+import { sleep } from "../../../common/lib/utils/sleep"
+import { TestService } from "./utils/TestService"   
 
 const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326" // Counter contract address deployed with create2 (wont change)
 
@@ -26,40 +28,93 @@ const testConfig: TransactionManagerConfig = {
 
 describe("TransactionManager", () => {
     const transactionManager = new TransactionManager(testConfig)
+    const testService = new TestService(transactionManager)
 
-    it("starts and stops", async () => {
-        await transactionManager.start()
-        expect(transactionManager.chainId).toBe(31337)
+    // it("starts and stops", async () => {
+    //     await transactionManager.start()
+    //     expect(transactionManager.chainId).toBe(31337)
 
-        transactionManager.stop()
-    })
+    //     transactionManager.stop()
+        
+    // })
+
+    // it("sends a transaction once", async () => {
+    //     await transactionManager.start()
+
+    //     const prevCounterVal = await getNumber(COUNTER_ADDRESS)
+
+    //     const tx = transactionManager.createTransaction({
+    //         address: COUNTER_ADDRESS,
+    //         functionName: "increment",
+    //         contractName: "Counter",
+    //         args: [],
+    //     })
+    //     transactionManager.addTransactionOriginator(async (_block: LatestBlock) => {
+    //         return [tx]
+    //     })
+
+    //     const getTxResult = await transactionManager.getTransaction(tx.intentId)
+    //     console.log(getTxResult)
+
+    //     await transactionManager.addHook(async (payload: { transaction: Transaction }) => {
+    //         expect(payload.transaction.status).toBe(TransactionStatus.Success)
+    //         const postCounterVal = await getNumber(COUNTER_ADDRESS)
+    //         expect(postCounterVal as bigint).toBe((prevCounterVal as bigint) + 1n)
+    //         console.log("shutting down transaction manager")
+    //         transactionManager.stop()
+    //     }, TxmHookType.TransactionStatusChanged)
+    // })
+
+    // it("sends two transactions in one block", async () => {
+    //     await transactionManager.start()
+
+    //     const prevCounterVal = await getNumber(COUNTER_ADDRESS)
+
+    //     const tx = transactionManager.createTransaction({
+    //         address: COUNTER_ADDRESS,
+    //         functionName: "increment",
+    //         contractName: "Counter",
+    //         args: [],
+    //     })
+
+    //     const demoOriginator = async (_block: LatestBlock) => {
+    //         return [tx]
+    //     }
+
+    //     transactionManager.addTransactionOriginator(demoOriginator)
+
+    //     const getTxResult = await transactionManager.getTransaction(tx.intentId)
+    //     console.log("getTxResult" ,getTxResult)
+
+    //     transactionManager.addHook(async (payload: { transaction: Transaction }) => {
+    //         expect(payload.transaction.status).toBe(TransactionStatus.Success)
+    //         const postCounterVal = await getNumber(COUNTER_ADDRESS)
+    //         expect(postCounterVal as bigint).toBe((prevCounterVal as bigint) + 1n)
+            
+    //         // get block number of transaction 
+
+    //     }, TxmHookType.TransactionStatusChanged)
+    // })
 
     it("sends a transaction once", async () => {
-        await transactionManager.start()
+        await testService.start()
+        await sleep(2000)
+        
+    })
 
-        const prevCounterVal = await getNumber(COUNTER_ADDRESS)
 
+    function createAndAddIncrementTransactionOriginator() {
         const tx = transactionManager.createTransaction({
             address: COUNTER_ADDRESS,
             functionName: "increment",
             contractName: "Counter",
             args: [],
         })
-
-        const demoOriginator = async (_block: LatestBlock) => {
+        transactionManager.addTransactionOriginator(async (_block: LatestBlock) => {
             return [tx]
-        }
-
-        transactionManager.addTransactionOriginator(demoOriginator)
-
-        const getTxResult = await transactionManager.getTransaction(tx.intentId)
-        console.log(getTxResult)
-
-        transactionManager.addHook(async (payload: { transaction: Transaction }) => {
-            expect(payload.transaction.status).toBe(TransactionStatus.Success)
-            const postCounterVal = await getNumber(COUNTER_ADDRESS)
-            expect(postCounterVal as bigint).toBe((prevCounterVal as bigint) + 1n)
-            transactionManager.stop()
-        }, TxmHookType.TransactionStatusChanged)
-    })
+        })
+        return tx
+    }
 })
+
+

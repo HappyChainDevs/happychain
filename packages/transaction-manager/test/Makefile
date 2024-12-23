@@ -30,3 +30,9 @@ test: anvil setup-test-db
 	bunx vitest ./ts/
 
 .phony: test
+
+run: anvil setup-test-db
+	export TXM_DB_PATH=/Users/aodhgan/happychain-clone/packages/transaction-manager/test/test.db; \
+	tsx ./ts/run.ts
+
+.phony: run
