@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title  HappyEvents
- * @dev    Centralized event definitions for the Happy Account system
+ * @dev    Event definitions for the Happy Account system
  */
 library HappyEvents {
     // Account Events
