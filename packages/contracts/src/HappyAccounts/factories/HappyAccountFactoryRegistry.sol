@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.20;
 
-import {HappyFactory} from "./HappyFactory.sol";
+import {HappyAccountFactory} from "./HappyAccountFactory.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 
 /**
- * @title HappyDeployer
+ * @title HappyAccountFactoryRegistry
  * @notice Controls deployment of HappyAccounts through approved factories
  * @dev Ensures accounts are only deployed through verified factory contracts
  */
-contract HappyDeployer is Ownable {
+contract HappyAccountFactoryRegistry is Ownable {
     /// @notice Mapping of factory addresses to their approval status
-    mapping(HappyFactory => bool) public approvedFactories;
+    mapping(HappyAccountFactory => bool) public approvedFactories;
 
     error NotApprovedFactory();
 
-    event FactoryApproved(HappyFactory indexed factory, bool approved);
-    event AccountDeployed(address indexed account, HappyFactory indexed factory);
+    event FactoryApproved(HappyAccountFactory indexed factory, bool approved);
+    event AccountDeployed(address indexed account, HappyAccountFactory indexed factory);
 
     constructor(address _owner) {
         _initializeOwner(_owner);
@@ -29,7 +29,7 @@ contract HappyDeployer is Ownable {
      * @param salt The salt for deterministic address generation
      * @return The address of the deployed account
      */
-    function deployWithFactory(HappyFactory factory, bytes calldata createData, bytes32 salt)
+    function deployWithFactory(HappyAccountFactory factory, bytes calldata createData, bytes32 salt)
         external
         payable
         returns (address)
@@ -47,7 +47,7 @@ contract HappyDeployer is Ownable {
      * @param factory The factory contract address
      * @param approval The approval status to set
      */
-    function setFactoryApproval(HappyFactory factory, bool approval) external onlyOwner {
+    function setFactoryApproval(HappyAccountFactory factory, bool approval) external onlyOwner {
         approvedFactories[factory] = approval;
         emit FactoryApproved(factory, approval);
     }
