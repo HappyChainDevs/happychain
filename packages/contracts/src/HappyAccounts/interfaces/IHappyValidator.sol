@@ -21,10 +21,10 @@ interface IHappyValidator {
 
     /**
      * @dev Validates whether the happyTx is valid according to validator rules
-     * @param happyTx The transaction to validate
+     * @param encodedHappyTx The transaction to validate
      * @param hash The hash of the transaction data that was signed
      * @return validationResult A bytes4 selector: 0 for success, error selector for failure
      *         For signature validation: return SignatureValidationFailed.selector on failure
      */
-    function validate(HappyTx calldata happyTx, bytes32 hash) external returns (bytes4 validationResult);
+    function validate(HappyTx calldata encodedHappyTx, bytes32 hash) external returns (bytes4 validationResult);
 }
