@@ -135,7 +135,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
                 revert PaymasterBalanceInsufficient();
             }
 
-            try IHappyPaymaster(happyTx.paymaster).validate(happyTx) returns (bytes4 _result) {
+            try IHappyPaymaster(happyTx.paymaster).validatePaymaster(happyTx) returns (bytes4 _result) {
                 if (!isSimulation && _result != 0) {
                     revert PaymasterValidationFailed(_result);
                 }

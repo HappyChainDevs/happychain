@@ -27,12 +27,9 @@ interface IHappyPaymaster {
     /**
      * @dev Validates whether the paymaster will sponsor the happyTx
      * @param happyTx The transaction to validate
-     * @param validationData Optional data for validation (e.g., signatures, proofs)
      * @return validationResult A bytes4 selector: 0 for success, error selector for failure
      */
-    function validatePaymaster(HappyTx calldata happyTx, bytes calldata validationData)
-        external
-        returns (bytes4 validationResult);
+    function validatePaymaster(HappyTx calldata happyTx) external returns (bytes4 validationResult);
 
     /**
      * @dev Pays out the gas costs for the transaction
