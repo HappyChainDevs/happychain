@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import "./interfaces/INonceManager.sol";
+import {INonceManager} from "./interfaces/INonceManager.sol";
 
 /**
  * @title NonceManager
