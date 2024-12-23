@@ -16,12 +16,6 @@ abstract contract NonceManager is INonceManager {
         return _nonces[track];
     }
 
-    /// @inheritdoc INonceManager
-    function incrementNonce(uint64 track) external override {
-        _nonces[track]++;
-        emit NonceUsed(track, _nonces[track]);
-    }
-
     /**
      * @dev Internal function to validate and update nonce
      * @param track The track number
