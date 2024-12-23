@@ -19,11 +19,4 @@ interface INonceManager {
      * @return The next valid nonce
      */
     function getNonce(uint64 track) external view returns (uint64);
-
-    /**
-     * @dev Allows incrementing nonce in a track
-     * Useful during account initialization to absorb first-time gas costs
-     * @param track The track to increment nonce for
-     */
-    function incrementNonce(uint64 track) external;
 }
