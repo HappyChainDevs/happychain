@@ -83,6 +83,16 @@ error AccountPaymentFailed();
 error PaymasterPaymentFailed();
 
 /**
+ * @dev When the validator address provided is zero.
+ */
+error InvalidValidator();
+
+/**
+ * @dev When the validator is neither the root validator nor in the approved list.
+ */
+error ValidatorNotApproved();
+
+/**
  * @dev When payment for the happyTx from the account is short.
  * @param amountShort The amount by which the payment was short
  */
@@ -93,6 +103,37 @@ event AccountPaymentCameShort(uint256 amountShort);
  * @param amountShort The amount by which the payment was short
  */
 event PaymasterPaymentCameShort(uint256 amountShort);
+
+/**
+ * @dev Emitted when the implementation of the proxy is upgraded.
+ * @param implementation Address of the new implementation
+ */
+event Upgraded(address indexed implementation);
+
+/**
+ * @dev Emitted when the account receives ETH.
+ * @param sender Address that sent ETH
+ * @param amount Amount of ETH received
+ */
+event Received(address sender, uint256 amount);
+
+/**
+ * @dev Emitted when the root validator is changed.
+ * @param validator Address of the new root validator
+ */
+event RootValidatorChanged(address indexed validator);
+
+/**
+ * @dev Emitted when a validator is added to the approved list.
+ * @param validator Address of the added validator
+ */
+event ValidatorAdded(address indexed validator);
+
+/**
+ * @dev Emitted when a validator is removed from the approved list.
+ * @param validator Address of the removed validator
+ */
+event ValidatorRemoved(address indexed validator);
 
 /**
  * @dev When a call reverts during execution.
