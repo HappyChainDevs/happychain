@@ -32,7 +32,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
     address private _factory;
 
     /// @dev The owner who can upgrade the implementation
-    address public owner;
+    address private _owner;
 
     error GasPriceTooHigh();
     error InvalidNonce();
@@ -102,24 +102,24 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
      *    - The implementation's owner (address(1)) is never used
      */
     constructor() {
-        owner = address(1);
+        _owner = address(1);
     }
 
     /**
      * @dev Initializer for proxy instances
      *      Called by factory during proxy deployment
-     * @param _owner The owner who can upgrade the implementation
+     * @param _newOwner The owner who can upgrade the implementation
      */
-    function initialize(address _owner) external payable {
+    function initialize(address _newOwner) external payable {
         // Ensure we're a proxy and not the implementation
-        if (owner != address(0)) revert AlreadyInitialized();
-        if (_owner == address(0)) revert InvalidOwner();
+        if (_owner != address(0)) revert AlreadyInitialized();
+        if (_newOwner == address(0)) revert InvalidOwner();
 
         // Set the factory to the caller (must be called by factory)
         _factory = msg.sender;
         if (_factory == address(0)) revert InvalidFactory();
 
-        owner = _owner;
+        _owner = _newOwner;
     }
 
     function _domainNameAndVersion() internal pure returns (string memory name, string memory version) {
@@ -132,7 +132,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
      * @param _newImplementation Address of the new implementation
      */
     function upgradeTo(address _newImplementation) external payable {
-        if (msg.sender != owner) revert NotAuthorized();
+        if (msg.sender != _owner) revert NotAuthorized();
         if (_newImplementation == address(0)) revert ImplementationInvalid();
 
         // solhint-disable-next-line no-inline-assembly
@@ -145,6 +145,10 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
 
     function factory() external view override returns (address) {
         return _factory;
+    }
+
+    function owner() external view override returns (address) {
+        return _owner;
     }
 
     receive() external payable {
@@ -161,7 +165,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
      */
     function setRootValidator(address _validator) external {
         if (_validator == address(0)) revert InvalidValidator();
-        if (msg.sender != owner) revert NotAuthorized();
+        if (msg.sender != _owner) revert NotAuthorized();
 
         rootValidator = _validator;
         emit RootValidatorChanged(_validator);
@@ -173,7 +177,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
      */
     function addValidator(address _validator) external {
         if (_validator == address(0)) revert InvalidValidator();
-        if (msg.sender != owner) revert NotAuthorized();
+        if (msg.sender != _owner) revert NotAuthorized();
 
         approvedValidators[_validator] = true;
         emit ValidatorAdded(_validator);
@@ -184,7 +188,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
      * @param _validator Address of the validator to remove
      */
     function removeValidator(address _validator) external {
-        if (msg.sender != owner) revert NotAuthorized();
+        if (msg.sender != _owner) revert NotAuthorized();
 
         approvedValidators[_validator] = false;
         emit ValidatorRemoved(_validator);
