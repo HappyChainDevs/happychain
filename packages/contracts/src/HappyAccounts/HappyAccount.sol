@@ -4,9 +4,12 @@ pragma solidity ^0.8.20;
 import {IHappyAccount} from "./interfaces/IHappyAccount.sol";
 import {IHappyValidator} from "./interfaces/IHappyValidator.sol";
 import {IHappyPaymaster} from "./interfaces/IHappyPaymaster.sol";
+
+import {HappyTxLib} from "./libs/HappyTxLib.sol";
+
 import {HappyTx} from "./HappyTx.sol";
-import {HappyTxLib} from "./HappyTxLib.sol";
 import {NonceManager} from "./NonceManager.sol";
+
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
 
 /**
@@ -47,6 +50,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
     error PaymasterPaymentCameShort(uint256);
 
     event Upgraded(address indexed implementation);
+    event Received(address sender, uint256 amount);
     event CallReverted(bytes returnData);
 
     /**
@@ -85,6 +89,11 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
         owner = _owner;
     }
 
+    function _domainNameAndVersion() internal pure returns (string memory name, string memory version) {
+        name = "HappyAccount";
+        version = "0.1.0";
+    }
+
     /**
      * @dev Upgrades the implementation of the proxy
      * @param _newImplementation Address of the new implementation
@@ -105,7 +114,61 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
         return _factory;
     }
 
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    fallback() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    /**
+     * @dev Implementation of validateHappyTx from IHappyAccount
+     * Validates the transaction before execution
+     */
+    function validateHappyTx(bytes calldata encodedHappyTx) public override returns (bytes4) {
+        HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
+
+        // If external validator is specified, use it
+        if (happyTx.validator != address(0)) {
+            // Hash the transaction data for signature validation
+            bytes32 hash = keccak256(
+                abi.encodePacked(
+                    happyTx.account,
+                    happyTx.dest,
+                    happyTx.value,
+                    keccak256(happyTx.callData),
+                    happyTx.nonceTrack,
+                    happyTx.nonce,
+                    happyTx.maxFeePerGas,
+                    happyTx.gasLimit,
+                    block.chainid
+                )
+            );
+
+            try IHappyValidator(happyTx.validator).validate(happyTx, hash) returns (bytes4 result) {
+                return result;
+            } catch (bytes memory revertData) {
+                revert AccountValidationReverted(revertData);
+            }
+        }
+
+        // Otherwise use internal validation
+        return _internalValidate(happyTx.validationData);
+    }
+
+    /**
+     * @dev Internal validation function to be overridden by derived contracts
+     * @param validationData The data to validate against
+     * @return A bytes4 selector: 0 for success, error selector for failure
+     */
+    function _internalValidate(bytes memory validationData) internal virtual returns (bytes4) {
+        validationData; // Do remove "unused-param" warning (temp)
+        return bytes4(0);
+    }
+
     function execute(bytes calldata encodedHappyTx) external override nonReentrant returns (uint256) {
+        // TODO: Implement this function properly, placeholder for now
         uint256 startGas = gasleft();
 
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
@@ -181,51 +244,4 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
 
         return startGas - gasleft() + 100;
     }
-
-    /**
-     * @dev Implementation of validateHappyTx from IHappyAccount
-     * Validates the transaction before execution
-     */
-    function validateHappyTx(bytes calldata encodedHappyTx) public override returns (bytes4) {
-        HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
-
-        // If external validator is specified, use it
-        if (happyTx.validator != address(0)) {
-            // Hash the transaction data for signature validation
-            bytes32 hash = keccak256(
-                abi.encodePacked(
-                    happyTx.account,
-                    happyTx.dest,
-                    happyTx.value,
-                    keccak256(happyTx.callData),
-                    happyTx.nonceTrack,
-                    happyTx.nonce,
-                    happyTx.maxFeePerGas,
-                    happyTx.gasLimit,
-                    block.chainid
-                )
-            );
-
-            try IHappyValidator(happyTx.validator).validate(happyTx, hash) returns (bytes4 result) {
-                return result;
-            } catch (bytes memory revertData) {
-                revert AccountValidationReverted(revertData);
-            }
-        }
-
-        // Otherwise use internal validation
-        return _internalValidate(happyTx.validationData);
-    }
-
-    /**
-     * @dev Internal validation function to be overridden by derived contracts
-     * @param validationData The data to validate against
-     * @return A bytes4 selector: 0 for success, error selector for failure
-     */
-    function _internalValidate(bytes memory validationData) internal virtual returns (bytes4) {
-        validationData; // Do remove "unused-param" warning (temp)
-        return bytes4(0);
-    }
-
-    receive() external payable {}
 }
