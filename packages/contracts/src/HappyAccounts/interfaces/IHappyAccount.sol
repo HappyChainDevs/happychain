@@ -187,7 +187,7 @@ interface IHappyAccount is INonceManager {
      * @param encodedHappyTx The encoded happy transaction data
      * @return gasUsed The amount of gas consumed by the execution
      */
-    function execute(bytes calldata encodedHappyTx) external returns (uint256 gasUsed);
+    function execute(bytes calldata encodedHappyTx) external payable returns (uint256 gasUsed);
 
     /**
      * @dev Returns the address of the factory that deployed this account.

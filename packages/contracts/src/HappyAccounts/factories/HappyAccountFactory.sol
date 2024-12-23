@@ -4,10 +4,10 @@ pragma solidity ^0.8.20;
 import {LibClone} from "solady/utils/LibClone.sol";
 
 /**
- * @title  HappyFactory
+ * @title  HappyAccountFactory
  * @dev    Factory contract for deploying deterministic ERC1967 proxies for HappyAccounts
  */
-contract HappyFactory {
+contract HappyAccountFactory {
     error InitializeError();
 
     /// @dev The implementation contract that all proxies will delegate to
