@@ -42,7 +42,7 @@ export function addPendingUserOp(address: Address, payload: PendingUserOpDetails
             return existingEntries
         }
 
-        void monitorUserOp(address, payload)
+        void monitorPendingUserOp(address, payload)
         return {
             ...existingEntries,
             [address]: [payload, { ...pendingUserOps, status: "pending" }],
@@ -62,7 +62,7 @@ export function flagUserOpAsFailed(address: Address, payload: PendingUserOpDetai
     })
 }
 
-export function removeUserOp(address: Address, payload: PendingUserOpDetails) {
+export function removePendingUserOp(address: Address, payload: PendingUserOpDetails) {
     store.set(pendingUserOpsAtom, (existingEntries) => {
         const updatedOps = (existingEntries[address] || []).filter((op) => op.userOpHash !== payload.userOpHash)
 
@@ -87,7 +87,7 @@ export function removeUserOp(address: Address, payload: PendingUserOpDetails) {
  * @param address - Smart account address of the user
  * @param payload - The UserOperation details to monitor
  */
-async function monitorUserOp(address: Address, payload: PendingUserOpDetails) {
+async function monitorPendingUserOp(address: Address, payload: PendingUserOpDetails) {
     try {
         const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
         const receipt = await smartAccountClient.waitForUserOperationReceipt({
@@ -95,7 +95,7 @@ async function monitorUserOp(address: Address, payload: PendingUserOpDetails) {
         })
 
         if (receipt) {
-            removeUserOp(address, payload)
+            removePendingUserOp(address, payload)
             addConfirmedUserOp(address, {
                 receipt,
                 value: payload.value,
