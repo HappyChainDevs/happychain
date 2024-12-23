@@ -38,7 +38,6 @@ export function addPendingUserOp(address: Address, payload: PendingUserOpDetails
 
         if (isAlreadyPending) {
             console.warn(`Already tracking UserOperation ${payload.userOpHash}`)
-
             return existingEntries
         }
 
