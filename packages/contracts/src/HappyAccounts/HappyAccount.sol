@@ -4,28 +4,31 @@ pragma solidity ^0.8.20;
 import {IHappyAccount} from "./interfaces/IHappyAccount.sol";
 import {IHappyValidator} from "./interfaces/IHappyValidator.sol";
 import {IHappyPaymaster} from "./interfaces/IHappyPaymaster.sol";
-
 import {HappyTxLib} from "./libs/HappyTxLib.sol";
-
 import {HappyTx} from "./HappyTx.sol";
 import {NonceManager} from "./NonceManager.sol";
-
-import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
+import {ReentrancyGuardTransient} from "@openzeppelin/utils/ReentrancyGuardTransient.sol";
 
 /**
  * @title  HappyAccount
  * @dev    Base implementation of a Happy Account with nonce management, reentrancy protection,
  *         and proxy upgrade capability
  */
-contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
-    // ERC1967 implementation slot
+contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuardTransient {
+    //* //////////////////////////////////////
+    //* Type declarations ////////////////////
+    //* //////////////////////////////////////
+
+    //* //////////////////////////////////////
+    //* State variables //////////////////////
+    //* //////////////////////////////////////
+
     bytes32 internal constant ERC1967_IMPLEMENTATION_SLOT =
         0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
 
-    // Gas constants
-    uint256 private constant INTRINSIC_GAS = 22000; // Base gas cost
-    uint256 private constant CALLDATA_GAS_PER_BYTE = 16; // Gas per byte of calldata
+    uint256 private constant INTRINSIC_GAS = 22_000; // Base gas cost
     uint256 private constant GAS_OVERHEAD_BUFFER = 100; // Additional gas buffer
+    uint256 private constant CALLDATA_GAS_PER_BYTE = 16; // Gas per byte of calldata
     uint256 private constant CALLDATA_LENGTH_ADJUSTMENT = 4; // Adjustment for function selector
 
     /// @dev The factory that deployed this proxy
@@ -33,6 +36,27 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
 
     /// @dev The owner who can upgrade the implementation
     address private _owner;
+
+    /// @dev The root validator address that has administrative privileges (optional)
+    address public rootValidator;
+
+    /// @dev Mapping to track approved validators who can validate transactions
+    mapping(address => bool) public approvedValidators;
+
+    //* //////////////////////////////////////
+    //* Events ///////////////////////////////
+    //* //////////////////////////////////////
+
+    event Upgraded(address indexed implementation);
+    event Received(address sender, uint256 amount);
+    event CallReverted(bytes returnData);
+    event RootValidatorChanged(address indexed validator);
+    event ValidatorAdded(address indexed validator);
+    event ValidatorRemoved(address indexed validator);
+
+    //* //////////////////////////////////////
+    //* Errors ///////////////////////////////
+    //* //////////////////////////////////////
 
     error GasPriceTooHigh();
     error InvalidNonce();
@@ -55,37 +79,20 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
     error InvalidValidator();
     error ValidatorNotApproved();
 
-    event Upgraded(address indexed implementation);
-    event Received(address sender, uint256 amount);
-    event CallReverted(bytes returnData);
-    event RootValidatorChanged(address indexed validator);
-    event ValidatorAdded(address indexed validator);
-    event ValidatorRemoved(address indexed validator);
+    //* //////////////////////////////////////
+    //* Modifiers ////////////////////////////
+    //* //////////////////////////////////////
 
-    address public rootValidator;
-    mapping(address => bool) public approvedValidators;
-
-    /**
-     * @dev Computes the hash for transaction validation
-     * @param happyTx The transaction to compute hash for
-     * @return Hash of the transaction data
-     */
-    function _computeValidationHash(HappyTx memory happyTx) internal view returns (bytes32) {
-        return keccak256(
-            abi.encodePacked(
-                happyTx.account,
-                happyTx.dest,
-                happyTx.value,
-                keccak256(happyTx.callData),
-                happyTx.nonceTrack,
-                happyTx.nonce,
-                happyTx.maxFeePerGas,
-                happyTx.gasLimit,
-                block.chainid
-            )
-        );
+    /// @dev Checks if the validator address is valid and if the caller is authorized
+    modifier validatorCheck(address _validator) {
+        if (_validator == address(0)) revert InvalidValidator();
+        if (msg.sender != _owner) revert NotAuthorized();
+        _;
     }
 
+    //* //////////////////////////////////////
+    //* Constructor //////////////////////////
+    //* //////////////////////////////////////
     /**
      * @dev Constructor for the implementation contract.
      *      This will only be called once when deploying the implementation.
@@ -105,6 +112,9 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
         _owner = address(1);
     }
 
+    //* //////////////////////////////////////
+    //* External functions - payable /////////
+    //* //////////////////////////////////////
     /**
      * @dev Initializer for proxy instances
      *      Called by factory during proxy deployment
@@ -117,14 +127,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
 
         // Set the factory to the caller (must be called by factory)
         _factory = msg.sender;
-        if (_factory == address(0)) revert InvalidFactory();
-
         _owner = _newOwner;
-    }
-
-    function _domainNameAndVersion() internal pure returns (string memory name, string memory version) {
-        name = "HappyAccount";
-        version = "0.1.0";
     }
 
     /**
@@ -143,101 +146,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
         emit Upgraded(_newImplementation);
     }
 
-    function factory() external view override returns (address) {
-        return _factory;
-    }
-
-    function owner() external view override returns (address) {
-        return _owner;
-    }
-
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
-    }
-
-    fallback() external payable {
-        emit Received(msg.sender, msg.value);
-    }
-
-    /**
-     * @dev Sets the root validator for this account
-     * @param _validator Address of the validator
-     */
-    function setRootValidator(address _validator) external {
-        if (_validator == address(0)) revert InvalidValidator();
-        if (msg.sender != _owner) revert NotAuthorized();
-
-        rootValidator = _validator;
-        emit RootValidatorChanged(_validator);
-    }
-
-    /**
-     * @dev Adds a validator to the approved list
-     * @param _validator Address of the validator to add
-     */
-    function addValidator(address _validator) external {
-        if (_validator == address(0)) revert InvalidValidator();
-        if (msg.sender != _owner) revert NotAuthorized();
-
-        approvedValidators[_validator] = true;
-        emit ValidatorAdded(_validator);
-    }
-
-    /**
-     * @dev Removes a validator from the approved list
-     * @param _validator Address of the validator to remove
-     */
-    function removeValidator(address _validator) external {
-        if (msg.sender != _owner) revert NotAuthorized();
-
-        approvedValidators[_validator] = false;
-        emit ValidatorRemoved(_validator);
-    }
-
-    /**
-     * @dev Implementation of validateHappyTx from IHappyAccount
-     * Validates the transaction before execution
-     */
-    function validateHappyTx(bytes calldata encodedHappyTx) public override returns (bytes4) {
-        HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
-
-        // Check if validator is approved
-        address validator = happyTx.validator;
-        if (validator != address(0)) {
-            if (validator != rootValidator && !approvedValidators[validator]) {
-                revert ValidatorNotApproved();
-            }
-
-            bytes32 hash = HappyTxLib.getHappyTxHash(happyTx);
-
-            try IHappyValidator(validator).validate(happyTx, hash) returns (bytes4 result) {
-                return result;
-            } catch (bytes memory revertData) {
-                revert AccountValidationReverted(revertData);
-            }
-        }
-
-        // If no validator specified, use root validator if set
-        if (rootValidator != address(0)) {
-            bytes32 hash = HappyTxLib.getHappyTxHash(happyTx);
-            return IHappyValidator(rootValidator).validate(happyTx, hash);
-        }
-
-        // Fallback to internal validation
-        return _internalValidate(happyTx.validationData);
-    }
-
-    /**
-     * @dev Internal validation function to be overridden by derived contracts
-     * @param validationData The data to validate against
-     * @return A bytes4 selector: 0 for success, error selector for failure
-     */
-    function _internalValidate(bytes memory validationData) internal virtual returns (bytes4) {
-        (validationData);
-        return bytes4(0);
-    }
-
-    function execute(bytes calldata encodedHappyTx) external override nonReentrant returns (uint256) {
+    function execute(bytes calldata encodedHappyTx) external payable override nonReentrant returns (uint256) {
         uint256 startGas = gasleft();
 
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
@@ -316,5 +225,114 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
         }
 
         return startGas - gasleft() + GAS_OVERHEAD_BUFFER;
+    }
+
+    //* //////////////////////////////////////
+    //* Special functions ////////////////////
+    //* //////////////////////////////////////
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    fallback() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    //* //////////////////////////////////////
+    //* External functions ///////////////////
+    //* //////////////////////////////////////
+
+    function setRootValidator(address _validator) external {
+        if (_validator == address(0)) revert InvalidValidator();
+        if (msg.sender != _owner) revert NotAuthorized();
+
+        rootValidator = _validator;
+        emit RootValidatorChanged(_validator);
+    }
+
+    function addValidator(address _validator) external validatorCheck(_validator) {
+        approvedValidators[_validator] = true;
+        emit ValidatorAdded(_validator);
+    }
+
+    function removeValidator(address _validator) external validatorCheck(_validator) {
+        approvedValidators[_validator] = false;
+        emit ValidatorRemoved(_validator);
+    }
+
+    //* //////////////////////////////////////
+    //* External functions - view ////////////
+    //* //////////////////////////////////////
+
+    function factory() external view override returns (address) {
+        return _factory;
+    }
+
+    function owner() external view override returns (address) {
+        return _owner;
+    }
+
+    //* //////////////////////////////////////
+    //* Public functions /////////////////////
+    //* //////////////////////////////////////
+
+    function validateHappyTx(bytes calldata encodedHappyTx) public override returns (bytes4) {
+        HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
+
+        // Check if validator is approved
+        address validator = happyTx.validator;
+        if (validator != address(0)) {
+            if (validator != rootValidator && !approvedValidators[validator]) {
+                revert ValidatorNotApproved();
+            }
+
+            bytes32 hash = HappyTxLib.getHappyTxHash(happyTx);
+
+            try IHappyValidator(validator).validate(happyTx, hash) returns (bytes4 result) {
+                return result;
+            } catch (bytes memory revertData) {
+                revert AccountValidationReverted(revertData);
+            }
+        }
+
+        // If no validator specified, use root validator if set
+        if (rootValidator != address(0)) {
+            bytes32 hash = HappyTxLib.getHappyTxHash(happyTx);
+            return IHappyValidator(rootValidator).validate(happyTx, hash);
+        }
+
+        // Fallback to internal validation
+        return _internalValidate(happyTx.validationData);
+    }
+
+    //* //////////////////////////////////////
+    //* Internal functions ///////////////////
+    //* //////////////////////////////////////
+
+    function _domainNameAndVersion() internal pure returns (string memory name, string memory version) {
+        name = "HappyAccount";
+        version = "0.1.0";
+    }
+
+    function _internalValidate(bytes memory validationData) internal virtual returns (bytes4) {
+        (validationData);
+        return bytes4(0);
+    }
+
+    function _computeValidationHash(HappyTx memory happyTx) internal view returns (bytes32) {
+        return keccak256(
+            abi.encodePacked(
+                happyTx.account,
+                happyTx.dest,
+                happyTx.value,
+                keccak256(happyTx.callData),
+                happyTx.nonceTrack,
+                happyTx.nonce,
+                happyTx.maxFeePerGas,
+                happyTx.gasLimit,
+                block.chainid
+            )
+        );
     }
 }
