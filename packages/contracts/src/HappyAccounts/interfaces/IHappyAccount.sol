@@ -194,4 +194,10 @@ interface IHappyAccount is INonceManager {
      * @return The factory address
      */
     function factory() external view returns (address);
+
+    /**
+     * @dev Returns the address of the owner of the Happy Account.
+     * @return The owner address
+     */
+    function owner() external view returns (address);
 }
