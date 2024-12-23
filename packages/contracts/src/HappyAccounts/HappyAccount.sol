@@ -22,7 +22,11 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
     bytes32 internal constant ERC1967_IMPLEMENTATION_SLOT =
         0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
 
-    uint256 private constant INTRINSIC_GAS = 22000; // 21000 + 1000 for overhead
+    // Gas constants
+    uint256 private constant INTRINSIC_GAS = 22000; // Base gas cost
+    uint256 private constant CALLDATA_GAS_PER_BYTE = 16; // Gas per byte of calldata
+    uint256 private constant GAS_OVERHEAD_BUFFER = 100; // Additional gas buffer
+    uint256 private constant CALLDATA_LENGTH_ADJUSTMENT = 4; // Adjustment for function selector
 
     /// @dev The factory that deployed this proxy
     address private _factory;
@@ -60,6 +64,27 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
 
     address public rootValidator;
     mapping(address => bool) public approvedValidators;
+
+    /**
+     * @dev Computes the hash for transaction validation
+     * @param happyTx The transaction to compute hash for
+     * @return Hash of the transaction data
+     */
+    function _computeValidationHash(HappyTx memory happyTx) internal view returns (bytes32) {
+        return keccak256(
+            abi.encodePacked(
+                happyTx.account,
+                happyTx.dest,
+                happyTx.value,
+                keccak256(happyTx.callData),
+                happyTx.nonceTrack,
+                happyTx.nonce,
+                happyTx.maxFeePerGas,
+                happyTx.gasLimit,
+                block.chainid
+            )
+        );
+    }
 
     /**
      * @dev Constructor for the implementation contract.
@@ -179,19 +204,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
                 revert ValidatorNotApproved();
             }
 
-            bytes32 hash = keccak256(
-                abi.encodePacked(
-                    happyTx.account,
-                    happyTx.dest,
-                    happyTx.value,
-                    keccak256(happyTx.callData),
-                    happyTx.nonceTrack,
-                    happyTx.nonce,
-                    happyTx.maxFeePerGas,
-                    happyTx.gasLimit,
-                    block.chainid
-                )
-            );
+            bytes32 hash = HappyTxLib.getHappyTxHash(happyTx);
 
             try IHappyValidator(validator).validate(happyTx, hash) returns (bytes4 result) {
                 return result;
@@ -202,19 +215,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
 
         // If no validator specified, use root validator if set
         if (rootValidator != address(0)) {
-            bytes32 hash = keccak256(
-                abi.encodePacked(
-                    happyTx.account,
-                    happyTx.dest,
-                    happyTx.value,
-                    keccak256(happyTx.callData),
-                    happyTx.nonceTrack,
-                    happyTx.nonce,
-                    happyTx.maxFeePerGas,
-                    happyTx.gasLimit,
-                    block.chainid
-                )
-            );
+            bytes32 hash = HappyTxLib.getHappyTxHash(happyTx);
             return IHappyValidator(rootValidator).validate(happyTx, hash);
         }
 
@@ -253,12 +254,15 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
 
         // Balance check
         uint256 maxCost = happyTx.gasLimit * block.basefee;
+        uint256 currentBalance = address(this).balance;
+
         if (happyTx.paymaster == address(0)) {
-            if (address(this).balance < maxCost) {
+            if (currentBalance < maxCost) {
                 revert AccountBalanceInsufficient();
             }
         } else {
-            if (address(happyTx.paymaster).balance < maxCost) {
+            uint256 paymasterBalance = address(happyTx.paymaster).balance;
+            if (paymasterBalance < maxCost) {
                 revert PaymasterBalanceInsufficient();
             }
 
@@ -279,13 +283,14 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
         }
 
         // Gas payment handling
-        uint256 actualCost = startGas - gasleft() + INTRINSIC_GAS + 16 * (encodedHappyTx.length + 4);
+        uint256 actualCost = startGas - gasleft() + INTRINSIC_GAS
+            + CALLDATA_GAS_PER_BYTE * (encodedHappyTx.length + CALLDATA_LENGTH_ADJUSTMENT);
 
         if (actualCost > happyTx.gasLimit) actualCost = happyTx.gasLimit;
 
         if (happyTx.paymaster == address(0)) {
-            uint256 balance = address(this).balance;
-            uint256 available = balance > actualCost ? actualCost : balance;
+            currentBalance = address(this).balance; // Re-read balance after execution
+            uint256 available = currentBalance > actualCost ? actualCost : currentBalance;
             (bool paySuccess,) = payable(tx.origin).call{value: available}(""); // solhint-disable-line avoid-tx-origin
             if (!paySuccess) revert AccountPaymentFailed();
             if (available < actualCost) {
@@ -306,6 +311,6 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuard {
             }
         }
 
-        return startGas - gasleft() + 100;
+        return startGas - gasleft() + GAS_OVERHEAD_BUFFER;
     }
 }
