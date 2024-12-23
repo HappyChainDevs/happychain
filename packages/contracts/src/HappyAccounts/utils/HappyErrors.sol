@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title  HappyErrors
- * @dev    Centralized error definitions for the Happy Account system
+ * @dev    Error definitions for the Happy Account system
  */
 library HappyErrors {
     // Account Errors
