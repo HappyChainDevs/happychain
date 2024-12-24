@@ -117,7 +117,7 @@ export const disconnect = async (): Promise<void> => {
  * Add a contract address and its corresponding ABI to be tracked (in browser)
  * to translate tx calldata using existing recorded ABI info.
  */
-export const preloadAbi = async (contractAddress: Address, abi: Abi): Promise<void> => {
+export const loadAbi = async (contractAddress: Address, abi: Abi): Promise<void> => {
     const _provider = getInitializedProvider()
     if (!_provider) return
 
@@ -128,8 +128,6 @@ export const preloadAbi = async (contractAddress: Address, abi: Abi): Promise<vo
             abi: abi,
         },
     })
-
-    console.log("ABI recorded successfully.")
 }
 
 /**

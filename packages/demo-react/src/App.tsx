@@ -11,7 +11,7 @@ function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { provider, user, connect, disconnect, showSendScreen, preloadAbi } = useHappyChain()
+    const { provider, user, connect, disconnect, showSendScreen, loadAbi } = useHappyChain()
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider!) }), [provider])
     const walletClient = useMemo(
@@ -84,8 +84,10 @@ function App() {
         }
     }
 
-    async function recordAbiStub() {
-        preloadAbi(zeroAddress, erc20Abi) // dummy values
+    async function loadAbiStub() {
+        loadAbi(zeroAddress, erc20Abi) // dummy values
+
+        console.log("ABI recorded successfully.")
     }
 
     /** mints 1 MTA token to the connected account */
@@ -193,7 +195,7 @@ function App() {
                 Mint Token
             </button>
 
-            <button type="button" onClick={recordAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+            <button type="button" onClick={loadAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Record ABI
             </button>
         </main>
