@@ -20,7 +20,7 @@ export async function getNumber(COUNTER_ADDRESS: Address) {
         throw new Error("Failed to get the number from the contract")
     }
 
-    const decodeResult =  decodeFunctionResult({
+    const decodeResult = decodeFunctionResult({
         abi: CounterAbi,
         functionName: "number",
         data: result!.data,

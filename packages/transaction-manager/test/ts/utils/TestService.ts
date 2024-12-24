@@ -1,19 +1,17 @@
 import {
     type LatestBlock,
     type Transaction,
-    TransactionManager,
-    type TransactionManagerConfig,
-    TransactionStatus,
+    type TransactionManager,
     TxmHookType,
 } from "../../../lib/index"
 import { getNumber } from "./getNumber"
-const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326" // Counter contract address deployed with create2 (wont change)
+const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326" // Counter contract address deployed with create2
 
 export class TestService {
     public readonly txm: TransactionManager
     public counterVal: bigint
 
-    constructor(_txm: TransactionManager) {  
+    constructor(_txm: TransactionManager) {
         this.txm = _txm
     }
 
@@ -32,7 +30,7 @@ export class TestService {
         console.log("onNewBlock:: block.number: ", block.number)
     }
 
-    public addTransactionOriginator(oringinator: () => Promise<Transaction[]>) {    
+    public addTransactionOriginator(oringinator: () => Promise<Transaction[]>) {
         this.txm.addTransactionOriginator(oringinator.bind(this))
     }
 }

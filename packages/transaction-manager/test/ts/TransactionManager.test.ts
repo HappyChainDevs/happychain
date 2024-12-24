@@ -1,17 +1,14 @@
 import type { Abi } from "viem"
 import { describe, expect, it } from "vitest"
+import { sleep } from "../../../common/lib/utils/sleep"
 import {
-    type LatestBlock,
     type Transaction,
     TransactionManager,
     type TransactionManagerConfig,
-    TransactionStatus,
-    TxmHookType,
 } from "../../lib/index"
 import CounterAbi from "../contracts/abi/Counter.json"
+import { TestService } from "./utils/TestService"
 import { getNumber } from "./utils/getNumber"
-import { sleep } from "../../../common/lib/utils/sleep"
-import { TestService } from "./utils/TestService"   
 
 const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326"
 
@@ -27,9 +24,8 @@ const testConfig: TransactionManagerConfig = {
 }
 
 describe("TransactionManager", async () => {
-
     const single = async (): Promise<Transaction[]> => {
-        if(await getNumber(COUNTER_ADDRESS) === testService.counterVal) {
+        if ((await getNumber(COUNTER_ADDRESS)) === testService.counterVal) {
             return [createIncrementTransaction()]
         }
         return []
@@ -41,19 +37,17 @@ describe("TransactionManager", async () => {
 
     const transactionManager = new TransactionManager(testConfig)
     const testService = new TestService(transactionManager)
-    
 
     it("sends a transaction at least once", async () => {
         const counterValue1 = await getNumber(COUNTER_ADDRESS)
 
         // set single transaction originator
         testService.addTransactionOriginator(single)
-        await testService.start()    
+        await testService.start()
 
         await sleep(10000)
         expect(await getNumber(COUNTER_ADDRESS)).toBeGreaterThanOrEqual(counterValue1 + 1n)
     })
-
 
     it("continuously sends transactions", async () => {
         const counterValue1 = await getNumber(COUNTER_ADDRESS)
@@ -75,5 +69,3 @@ describe("TransactionManager", async () => {
         })
     }
 })
-
-
