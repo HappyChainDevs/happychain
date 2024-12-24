@@ -21,6 +21,8 @@ export class BlockMonitor {
 
         this.unwatchBlocks = this.txmgr.viemClient.watchBlocks({
             onBlock: this.onNewBlock.bind(this),
+            pollingInterval: 500,
+            poll: true,
         })
     }
 
