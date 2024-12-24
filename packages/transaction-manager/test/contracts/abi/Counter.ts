@@ -4,38 +4,38 @@ import type { MapTuple, ObjectFromTuples, UnionToTuple } from "@happychain/commo
 const contractToAbi = {
     Counter: [
         {
-            "type": "function",
-            "name": "increment",
-            "inputs": [],
-            "outputs": [],
-            "stateMutability": "nonpayable"
+            type: "function",
+            name: "increment",
+            inputs: [],
+            outputs: [],
+            stateMutability: "nonpayable",
         },
         {
-            "type": "function",
-            "name": "number",
-            "inputs": [],
-            "outputs": [
+            type: "function",
+            name: "number",
+            inputs: [],
+            outputs: [
                 {
-                    "name": "",
-                    "type": "uint256",
-                    "internalType": "uint256"
-                }
+                    name: "",
+                    type: "uint256",
+                    internalType: "uint256",
+                },
             ],
-            "stateMutability": "view"
+            stateMutability: "view",
         },
         {
-            "type": "function",
-            "name": "setNumber",
-            "inputs": [
+            type: "function",
+            name: "setNumber",
+            inputs: [
                 {
-                    "name": "newNumber",
-                    "type": "uint256",
-                    "internalType": "uint256"
-                }
+                    name: "newNumber",
+                    type: "uint256",
+                    internalType: "uint256",
+                },
             ],
-            "outputs": [],
-            "stateMutability": "nonpayable"
-        }
+            outputs: [],
+            stateMutability: "nonpayable",
+        },
     ],
 } as const
 
