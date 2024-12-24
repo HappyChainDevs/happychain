@@ -4,9 +4,12 @@ pragma solidity ^0.8.20;
 import {IHappyAccount} from "./interfaces/IHappyAccount.sol";
 import {IHappyValidator} from "./interfaces/IHappyValidator.sol";
 import {IHappyPaymaster} from "./interfaces/IHappyPaymaster.sol";
+
 import {HappyTxLib} from "./libs/HappyTxLib.sol";
+
 import {HappyTx} from "./HappyTx.sol";
 import {NonceManager} from "./NonceManager.sol";
+
 import {ReentrancyGuardTransient} from "@openzeppelin/utils/ReentrancyGuardTransient.sol";
 
 /**
@@ -318,21 +321,5 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuardTransient {
     function _internalValidate(bytes memory validationData) internal virtual returns (bytes4) {
         (validationData);
         return bytes4(0);
-    }
-
-    function _computeValidationHash(HappyTx memory happyTx) internal view returns (bytes32) {
-        return keccak256(
-            abi.encodePacked(
-                happyTx.account,
-                happyTx.dest,
-                happyTx.value,
-                keccak256(happyTx.callData),
-                happyTx.nonceTrack,
-                happyTx.nonce,
-                happyTx.maxFeePerGas,
-                happyTx.gasLimit,
-                block.chainid
-            )
-        );
     }
 }
