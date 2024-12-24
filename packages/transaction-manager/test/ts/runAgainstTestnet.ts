@@ -1,8 +1,4 @@
-import {
-    type Transaction,
-    TransactionManager,
-    type TransactionManagerConfig,
-} from "../../lib/index"
+import { type Transaction, TransactionManager, type TransactionManagerConfig } from "../../lib/index"
 import { abis } from "../contracts/abi/Counter.ts"
 import { TestService } from "./utils/TestService"
 

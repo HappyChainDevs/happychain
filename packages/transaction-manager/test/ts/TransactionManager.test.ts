@@ -1,11 +1,7 @@
 import type { Abi } from "viem"
 import { describe, expect, it } from "vitest"
 import { sleep } from "../../../common/lib/utils/sleep"
-import {
-    type Transaction,
-    TransactionManager,
-    type TransactionManagerConfig,
-} from "../../lib/index"
+import { type Transaction, TransactionManager, type TransactionManagerConfig } from "../../lib/index"
 import CounterAbi from "../contracts/abi/Counter.json"
 import { TestService } from "./utils/TestService"
 import { getNumber } from "./utils/getNumber"
