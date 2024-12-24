@@ -1,4 +1,4 @@
-import { type LatestBlock, type Transaction, TransactionManager, type TransactionManagerConfig } from "../../../lib/index"
+import { type LatestBlock, type Transaction, TxmHookType, TransactionManager } from "../../../lib/index"
 import { getNumber } from "./getNumber"
 const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326" // Counter contract address deployed with create2
 
