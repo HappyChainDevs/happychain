@@ -5,12 +5,12 @@ import type { Abi, Address } from "viem"
 import { StorageKey } from "#src/services/storage"
 
 type AbiStorageRecord = Record<Address, Abi>
-type AbisRecordedForUser = Record<Address, AbiStorageRecord[]>
+type AbisLoadedForUser = Record<Address, AbiStorageRecord[]>
 
 /**
  * Atom to record contract address <-> ABI pairs, scoped by user.
  */
-export const abiContractMappingAtom = atomWithStorage<AbisRecordedForUser>(StorageKey.RecordedAbis, {}, undefined, {
+export const abiContractMappingAtom = atomWithStorage<AbisLoadedForUser>(StorageKey.LoadedAbis, {}, undefined, {
     getOnInit: true,
 })
 
@@ -18,7 +18,7 @@ const store = getDefaultStore()
 
 // === State Accessors ==================================================================================
 
-export function getRecordedAbis(): AbisRecordedForUser {
+export function getLoadedAbis(): AbisLoadedForUser {
     return store.get(abiContractMappingAtom)
 }
 
@@ -29,16 +29,16 @@ export function getRecordedAbis(): AbisRecordedForUser {
  * Allows for overwriting if an ABI already exists under an
  * address (eg. proxies).
  */
-export function addAbiForUser(userAddress: Address, payload?: RecordAbiPayload): boolean {
+export function loadAbiForUser(userAddress: Address, payload?: RecordAbiPayload): boolean {
     if (!payload) return false
 
     store.set(abiContractMappingAtom, (prevAbis) => {
-        const recordedAbisForUser = prevAbis[userAddress] || []
+        const loadedAbisForUser = prevAbis[userAddress] || []
 
         return {
             ...prevAbis,
             [userAddress]: [
-                ...recordedAbisForUser.filter((record) => !record[payload.address]),
+                ...loadedAbisForUser.filter((record) => !record[payload.address]),
                 { [payload.address]: payload.abi },
             ],
         }
