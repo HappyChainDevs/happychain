@@ -10,22 +10,17 @@ import { getNumber } from "./getNumber"
 const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326" // Counter contract address deployed with create2 (wont change)
 
 export class TestService {
-    private readonly txm: TransactionManager
-    private counterVal: bigint
+    public readonly txm: TransactionManager
+    public counterVal: bigint
 
-    constructor(_txm: TransactionManager) {
+    constructor(_txm: TransactionManager) {  
         this.txm = _txm
-        this.txm.addTransactionOriginator(this.onCollectTransactionsSendOnce.bind(this))
-    }
-
-    public addTransactionOriginator() {
-        this.txm.addTransactionOriginator(this.onCollectTransactionsSendOnce.bind(this))
     }
 
     async start() {
         this.counterVal = await getNumber(COUNTER_ADDRESS)
         await this.txm.start()
-        await this.txm.addHook(this.onTransactionStatusChange.bind(this), TxmHookType.TransactionStatusChanged)
+        // await this.txm.addHook(this.onTransactionStatusChange.bind(this), TxmHookType.TransactionStatusChanged)
         await this.txm.addHook(this.onNewBlock.bind(this), TxmHookType.NewBlock)
     }
 
@@ -34,19 +29,10 @@ export class TestService {
     }
 
     private async onNewBlock(block: LatestBlock) {
-        console.log("onNewBlock:: block: ", block)
+        console.log("onNewBlock:: block.number: ", block.number)
     }
 
-
-    private async onCollectTransactionsSendOnce(block: LatestBlock): Promise<Transaction[]> {
-        if(await getNumber(COUNTER_ADDRESS) === this.counterVal) {
-            return [this.txm.createTransaction({
-                address: COUNTER_ADDRESS,
-                functionName: "increment",
-                contractName: "Counter",
-                args: [],
-            })]
-        }
-        return []
+    public addTransactionOriginator(oringinator: () => Promise<Transaction[]>) {    
+        this.txm.addTransactionOriginator(oringinator.bind(this))
     }
 }

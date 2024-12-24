@@ -27,7 +27,7 @@ setup-test-db:
 test: anvil setup-test-db
 	
 	export TXM_DB_PATH=/Users/aodhgan/happychain-clone/packages/transaction-manager/test/test.db; \
-	bunx vitest ./ts/
+	bunx vitest --config ./ts/vite.config.ts ./ts/
 
 .phony: test
 
@@ -36,3 +36,9 @@ run: anvil setup-test-db
 	tsx ./ts/run.ts
 
 .phony: run
+
+run-happy-testnet: setup-test-db
+	export TXM_DB_PATH=/Users/aodhgan/happychain-clone/packages/transaction-manager/test/test.db; \
+	tsx ./ts/runAgainstTestnet.ts
+
+.phony: run-happy-testnet

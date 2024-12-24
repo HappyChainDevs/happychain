@@ -13,7 +13,7 @@ import { getNumber } from "./utils/getNumber"
 import { sleep } from "../../../common/lib/utils/sleep"
 import { TestService } from "./utils/TestService"   
 
-const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326" // Counter contract address deployed with create2 (wont change)
+const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326"
 
 const testConfig: TransactionManagerConfig = {
     rpc: {
@@ -26,94 +26,53 @@ const testConfig: TransactionManagerConfig = {
     },
 }
 
-describe("TransactionManager", () => {
+describe("TransactionManager", async () => {
+
+    const single = async (): Promise<Transaction[]> => {
+        if(await getNumber(COUNTER_ADDRESS) === testService.counterVal) {
+            return [createIncrementTransaction()]
+        }
+        return []
+    }
+
+    const multiple = async (): Promise<Transaction[]> => {
+        return [createIncrementTransaction()]
+    }
+
     const transactionManager = new TransactionManager(testConfig)
     const testService = new TestService(transactionManager)
+    
 
-    // it("starts and stops", async () => {
-    //     await transactionManager.start()
-    //     expect(transactionManager.chainId).toBe(31337)
+    it("sends a transaction at least once", async () => {
+        const counterValue1 = await getNumber(COUNTER_ADDRESS)
 
-    //     transactionManager.stop()
-        
-    // })
+        // set single transaction originator
+        testService.addTransactionOriginator(single)
+        await testService.start()    
 
-    // it("sends a transaction once", async () => {
-    //     await transactionManager.start()
-
-    //     const prevCounterVal = await getNumber(COUNTER_ADDRESS)
-
-    //     const tx = transactionManager.createTransaction({
-    //         address: COUNTER_ADDRESS,
-    //         functionName: "increment",
-    //         contractName: "Counter",
-    //         args: [],
-    //     })
-    //     transactionManager.addTransactionOriginator(async (_block: LatestBlock) => {
-    //         return [tx]
-    //     })
-
-    //     const getTxResult = await transactionManager.getTransaction(tx.intentId)
-    //     console.log(getTxResult)
-
-    //     await transactionManager.addHook(async (payload: { transaction: Transaction }) => {
-    //         expect(payload.transaction.status).toBe(TransactionStatus.Success)
-    //         const postCounterVal = await getNumber(COUNTER_ADDRESS)
-    //         expect(postCounterVal as bigint).toBe((prevCounterVal as bigint) + 1n)
-    //         console.log("shutting down transaction manager")
-    //         transactionManager.stop()
-    //     }, TxmHookType.TransactionStatusChanged)
-    // })
-
-    // it("sends two transactions in one block", async () => {
-    //     await transactionManager.start()
-
-    //     const prevCounterVal = await getNumber(COUNTER_ADDRESS)
-
-    //     const tx = transactionManager.createTransaction({
-    //         address: COUNTER_ADDRESS,
-    //         functionName: "increment",
-    //         contractName: "Counter",
-    //         args: [],
-    //     })
-
-    //     const demoOriginator = async (_block: LatestBlock) => {
-    //         return [tx]
-    //     }
-
-    //     transactionManager.addTransactionOriginator(demoOriginator)
-
-    //     const getTxResult = await transactionManager.getTransaction(tx.intentId)
-    //     console.log("getTxResult" ,getTxResult)
-
-    //     transactionManager.addHook(async (payload: { transaction: Transaction }) => {
-    //         expect(payload.transaction.status).toBe(TransactionStatus.Success)
-    //         const postCounterVal = await getNumber(COUNTER_ADDRESS)
-    //         expect(postCounterVal as bigint).toBe((prevCounterVal as bigint) + 1n)
-            
-    //         // get block number of transaction 
-
-    //     }, TxmHookType.TransactionStatusChanged)
-    // })
-
-    it("sends a transaction once", async () => {
-        await testService.start()
-        await sleep(2000)
-        
+        await sleep(10000)
+        expect(await getNumber(COUNTER_ADDRESS)).toBeGreaterThanOrEqual(counterValue1 + 1n)
     })
 
 
-    function createAndAddIncrementTransactionOriginator() {
-        const tx = transactionManager.createTransaction({
+    it("continuously sends transactions", async () => {
+        const counterValue1 = await getNumber(COUNTER_ADDRESS)
+
+        // set single transaction originator
+        testService.addTransactionOriginator(multiple)
+        await testService.start()
+
+        await sleep(10000)
+        expect(await getNumber(COUNTER_ADDRESS)).toBeGreaterThan(counterValue1 + 1n)
+    })
+
+    function createIncrementTransaction(): Transaction {
+        return testService.txm.createTransaction({
             address: COUNTER_ADDRESS,
             functionName: "increment",
             contractName: "Counter",
             args: [],
         })
-        transactionManager.addTransactionOriginator(async (_block: LatestBlock) => {
-            return [tx]
-        })
-        return tx
     }
 })
 
