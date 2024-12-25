@@ -19,6 +19,7 @@
         "@wagmi/core": "^2.15.2",
         "@web3auth/ethereum-mpc-provider": "^9.2.3",
         "@web3auth/mpc-core-kit": "^3.2.4",
+        "abitype": "^1.0.7",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
         "firebase": "^10.14.1",
