@@ -1,7 +1,9 @@
 import type { HappyMethodNames } from "@happychain/common"
 import { useAtomValue } from "jotai"
+import { useClassifyAbi } from "#src/hooks/useClassifyAbiSections"
 import { currentChainAtom } from "#src/state/chains"
 import { Button } from "../primitives/button/Button"
+import AbiSection from "./common/AbiSection"
 import RawRequestDetails from "./common/RawRequestDetails"
 import RequestContent from "./common/RequestContent"
 import RequestLayout from "./common/RequestLayout"
@@ -14,6 +16,7 @@ export function HappyWalletUseAbi({
     accept,
 }: RequestConfirmationProps<typeof HappyMethodNames.WALLET_USE_ABI_RPC_METHOD>) {
     const chain = useAtomValue(currentChainAtom)
+    const classifiedAbi = useClassifyAbi(params.abi)
 
     return (
         <RequestLayout method={method}>
@@ -21,21 +24,21 @@ export function HappyWalletUseAbi({
                 <div className="flex flex-col w-full h-full gap-4 rounded-xl p-4">
                     <div className="border-b pb-2 text-center text-sm font-bold text-primary">Details</div>
                     <div className="flex flex-col gap-2">
-                        <span className="text-sm font-bold text-neutral">Address:</span>
+                        <span className="text-sm font-bold text-neutral-content">Address:</span>
                         <a
                             href={`${chain.blockExplorerUrls?.[0]}/address/${params.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 rounded-lg bg-neutral text-sm font-mono break-all text-content underline hover:text-blue-800"
+                            className="p-2 rounded-lg bg-neutral-content text-sm font-mono break-all text-neutral underline hover:text-blue-800"
                         >
                             {params.address}
                         </a>
                     </div>
                     <div className="flex flex-col grow gap-2">
-                        <span className="text-sm font-bold text-neutral">ABI:</span>
-                        <pre className="grow w-full p-2 rounded-lg bg-neutral text-sm font-mono break-all overflow-auto h-[300px]">
-                            <code>{JSON.stringify(params?.abi, null, 2)}</code>
-                        </pre>
+                        <span className="text-sm font-bold text-neutral-content uppercase">abi:</span>
+                        {classifiedAbi.map(({ label, items }) => (
+                            <AbiSection key={label} label={label} abiSection={items} />
+                        ))}
                     </div>
 
                     <RawRequestDetails params={params} />
