@@ -18,9 +18,9 @@ contract DeployRandom is BaseDeployScript {
     // Drand evmnet public key
     uint256[4] public drandPublicKey;
     // Drand evmnet genesis time (2024-01-29 00:11:15 UTC)
-    uint256 public constant DRAND_GENESIS_TIMESTAMP = 1727521075;
+    uint256 public constant DRAND_GENESIS_TIMESTAMP_SECONDS = 1727521075;
     // Drand evmnet period (3 seconds)
-    uint256 public constant DRAND_PERIOD = 3;
+    uint256 public constant DRAND_PERIOD_SECONDS = 3;
 
     constructor() {
         drandPublicKey = [
@@ -32,10 +32,14 @@ contract DeployRandom is BaseDeployScript {
     }
 
     function deploy() internal override {
+        uint256 precommitDelayBlocks = vm.envUint("PRECOMMIT_DELAY_BLOCKS");
+        address owner = vm.envAddress("RANDOM_OWNER");
         (address _random,) = deployDeterministic(
             "Random",
             type(Random).creationCode,
-            abi.encode(drandPublicKey, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD),
+            abi.encode(
+                owner, drandPublicKey, DRAND_GENESIS_TIMESTAMP_SECONDS, DRAND_PERIOD_SECONDS, precommitDelayBlocks
+            ),
             DEPLOYMENT_SALT
         );
         random = Random(_random);
