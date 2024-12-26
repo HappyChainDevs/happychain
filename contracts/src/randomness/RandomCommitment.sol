@@ -16,7 +16,7 @@ contract RandomCommitment is Ownable {
      * For more details, please refer to:
      * https://specs.optimism.io/protocol/configurability.html#sequencing-window-size
      */
-    uint256 public immutable PRECOMMIT_DELAY = 21600;
+    uint256 public immutable PRECOMMIT_DELAY_BLOCKS;
 
     CurrentReveal private currentReveal;
     mapping(uint128 blockNumber => bytes32) private commitments;
@@ -31,13 +31,15 @@ contract RandomCommitment is Ownable {
     error InvalidReveal();
     error RevealedValueNotAvailable();
 
-    constructor() Ownable(msg.sender) {}
+    constructor(address _owner, uint256 _precommit_delay_blocks) Ownable(_owner) {
+        PRECOMMIT_DELAY_BLOCKS = _precommit_delay_blocks;
+    }
 
     /**
      * @notice Posts a commitment for a specific block number.
      */
     function postCommitment(uint128 blockNumber, bytes32 commitmentHash) external onlyOwner {
-        if (block.number + PRECOMMIT_DELAY > blockNumber) {
+        if (block.number + PRECOMMIT_DELAY_BLOCKS > blockNumber) {
             revert CommitmentTooLate();
         }
 
