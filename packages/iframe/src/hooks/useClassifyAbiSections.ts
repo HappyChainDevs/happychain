@@ -1,5 +1,3 @@
-// src/hooks/useClassifyAbi.ts
-
 import type { Abi, AbiConstructor, AbiError, AbiEvent, AbiFallback, AbiFunction, AbiReceive } from "abitype"
 import { useMemo } from "react"
 import type { AbiItem } from "viem"
@@ -19,46 +17,76 @@ interface ClassifiedAbiSection {
     items: AbiItem[]
 }
 
-const isAbiConstructor = (item: AbiItem): item is AbiConstructor => item.type === "constructor"
-const isAbiError = (item: AbiItem): item is AbiError => item.type === "error"
-const isAbiEvent = (item: AbiItem): item is AbiEvent => item.type === "event"
-const isAbiFallback = (item: AbiItem): item is AbiFallback => item.type === "fallback"
-const isAbiReceive = (item: AbiItem): item is AbiReceive => item.type === "receive"
-const isAbiFunction = (item: AbiItem): item is AbiFunction => item.type === "function"
+type SectionMap = {
+    [AbiSectionLabel.Events]: AbiEvent[]
+    [AbiSectionLabel.Errors]: AbiError[]
+    [AbiSectionLabel.Constructor]: AbiConstructor[]
+    [AbiSectionLabel.Receive]: AbiReceive[]
+    [AbiSectionLabel.Fallback]: AbiFallback[]
+    [AbiSectionLabel.ReadFunctions]: AbiFunction[]
+    [AbiSectionLabel.WriteFunctions]: AbiFunction[]
+}
 
+/**
+ * Hook that classifies different sections of a user-inputted ABI
+ * into distinct categories such as events, errors, constructors,
+ * receive functions, fallback functions, and read/write functions.
+ * This is used in the popup for the custom `happy_walletUseAbi` RPC call.
+ *
+ * The classifications are returned as an array of objects, each
+ * containing a label and the corresponding items, allowing for
+ * easier identification and organization of ABI components in
+ * the UI. This design is inspired by the UI [here](https://viem-playground.netlify.app/).
+ */
 export const useClassifyAbi = (abi: Abi): ClassifiedAbiSection[] => {
     return useMemo(() => {
-        const sections: ClassifiedAbiSection[] = [
-            { label: AbiSectionLabel.Events, items: [] },
-            { label: AbiSectionLabel.Errors, items: [] },
-            { label: AbiSectionLabel.Constructor, items: [] },
-            { label: AbiSectionLabel.Receive, items: [] },
-            { label: AbiSectionLabel.Fallback, items: [] },
-            { label: AbiSectionLabel.ReadFunctions, items: [] },
-            { label: AbiSectionLabel.WriteFunctions, items: [] },
-        ]
+        const sectionMap: SectionMap = {
+            [AbiSectionLabel.Events]: [],
+            [AbiSectionLabel.Errors]: [],
+            [AbiSectionLabel.Constructor]: [],
+            [AbiSectionLabel.Receive]: [],
+            [AbiSectionLabel.Fallback]: [],
+            [AbiSectionLabel.ReadFunctions]: [],
+            [AbiSectionLabel.WriteFunctions]: [],
+        }
 
-        abi.forEach((item) => {
-            if (isAbiEvent(item)) {
-                sections.find((section) => section.label === AbiSectionLabel.Events)?.items.push(item)
-            } else if (isAbiError(item)) {
-                sections.find((section) => section.label === AbiSectionLabel.Errors)?.items.push(item)
-            } else if (isAbiConstructor(item)) {
-                sections.find((section) => section.label === AbiSectionLabel.Constructor)?.items.push(item)
-            } else if (isAbiReceive(item)) {
-                sections.find((section) => section.label === AbiSectionLabel.Receive)?.items.push(item)
-            } else if (isAbiFallback(item)) {
-                sections.find((section) => section.label === AbiSectionLabel.Fallback)?.items.push(item)
-            } else if (isAbiFunction(item)) {
-                const func = item as AbiFunction
-                if (func.stateMutability === "view" || func.stateMutability === "pure") {
-                    sections.find((section) => section.label === AbiSectionLabel.ReadFunctions)?.items.push(func)
-                } else {
-                    sections.find((section) => section.label === AbiSectionLabel.WriteFunctions)?.items.push(func)
+        for (const item of abi) {
+            switch (item.type) {
+                case "event":
+                    sectionMap[AbiSectionLabel.Events].push(item as AbiEvent)
+                    break
+                case "error":
+                    sectionMap[AbiSectionLabel.Errors].push(item as AbiError)
+                    break
+                case "constructor":
+                    sectionMap[AbiSectionLabel.Constructor].push(item as AbiConstructor)
+                    break
+                case "receive":
+                    sectionMap[AbiSectionLabel.Receive].push(item as AbiReceive)
+                    break
+                case "fallback":
+                    sectionMap[AbiSectionLabel.Fallback].push(item as AbiFallback)
+                    break
+                case "function": {
+                    const func = item as AbiFunction
+                    if (func.stateMutability === "view" || func.stateMutability === "pure") {
+                        sectionMap[AbiSectionLabel.ReadFunctions].push(func)
+                    } else {
+                        sectionMap[AbiSectionLabel.WriteFunctions].push(func)
+                    }
+                    break
                 }
+                default:
+                    console.log("Unknown ABI section:", item)
+                    break
             }
-        })
+        }
 
-        return sections.filter((section) => section.items.length > 0)
+        return Object.entries(sectionMap)
+            .map(([label, items]) => ({
+                label: label as AbiSectionLabel,
+                items: items as AbiItem[],
+            }))
+            .filter((section) => section.items.length > 0)
     }, [abi])
 }
