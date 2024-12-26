@@ -16,9 +16,9 @@ export type UseERC20BalanceReturnType = UseReadContractsReturnType<
 
 /**
  * Hook that uses [useReadContracts](https://wagmi.sh/react/api/hooks/useReadContracts)
- * to read the ERC-20 token's `decimals` and `balanceOf` methods.
+ * to read the ERC-20 token's `decimals`, `balanceOf`, `symbols` methods.
  *
- * The returned value is an object that has the held value, decimals of the token,
+ * The returned value is an object that has the decimals, held value, symbol of the token,
  * and a `formatted` value - using the obtained decimals value to format the balance,
  * to be used in the UI.
  */
