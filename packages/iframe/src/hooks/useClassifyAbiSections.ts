@@ -14,7 +14,7 @@ export enum AbiSectionLabel {
 
 interface ClassifiedAbiSection {
     label: AbiSectionLabel
-    items: AbiItem[]
+    items: Abi
 }
 
 type SectionMap = {
