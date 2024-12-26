@@ -37,7 +37,7 @@ export function HappyWalletUseAbi({
                     <div className="flex flex-col grow gap-2">
                         <span className="text-sm font-bold text-neutral-content uppercase">abi:</span>
                         {classifiedAbi.map(({ label, items }) => (
-                            <AbiSection key={label} label={label} abiSection={items} />
+                            <AbiSection key={`ABI-${label}`} label={label} abiSection={items} />
                         ))}
                     </div>
 
