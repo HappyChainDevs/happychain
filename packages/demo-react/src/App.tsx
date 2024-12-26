@@ -194,7 +194,7 @@ function App() {
             </button>
 
             <button type="button" onClick={loadAbiStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Record ABI
+                Load ABI
             </button>
         </main>
     )
