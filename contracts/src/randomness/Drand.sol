@@ -48,6 +48,7 @@ contract Drand {
         uint256[2] memory message = BLS.hashToPoint(DST, hashedRoundBytes);
         // NB: Always check that the signature is a valid signature (a valid G1 point on the curve)!
         if (!BLS.isValidSignature(signature)) {
+<<<<<<< HEAD
             revert InvalidSignature([DRAND_PK_0, DRAND_PK_1, DRAND_PK_2, DRAND_PK_3], message, signature);
         }
 
@@ -56,6 +57,15 @@ contract Drand {
             BLS.verifySingle(signature, [DRAND_PK_0, DRAND_PK_1, DRAND_PK_2, DRAND_PK_3], message);
         if (!pairingSuccess || !callSuccess) {
             revert InvalidSignature([DRAND_PK_0, DRAND_PK_1, DRAND_PK_2, DRAND_PK_3], message, signature);
+=======
+            revert InvalidSignature(drandPublicKey, message, signature);
+        }
+
+        // Verify the signature over the message using the public key
+        (bool pairingSuccess, bool callSuccess) = BLS.verifySingle(signature, drandPublicKey, message);
+        if (!pairingSuccess || !callSuccess) {
+            revert InvalidSignature(drandPublicKey, message, signature);
+>>>>>>> 47ad2a07 (feat(randomnness-service): script to launch randomnness service)
         }
         bytes32 roundRandomness = keccak256(abi.encode(signature));
 
