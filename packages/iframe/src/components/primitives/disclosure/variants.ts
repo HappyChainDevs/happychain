@@ -8,7 +8,7 @@ const recipeDisclosureDetails = cva(
             intent: {
                 default: "bg-base-100",
                 gradient: "bg-gradient-to-br from-[rgb(56,189,248)] to-[rgb(109,40,217)] text-white shadow-lg",
-                neutral: "bg-base-content text-gray-800 shadow border border-gray-200 rounded-lg",
+                neutral: "bg-base-content text-neutral shadow border border-neutral rounded-lg",
                 developerInfo: "",
             },
         },
@@ -37,7 +37,7 @@ const recipeDisclosureContent = cva("px-4 py-2 text-xs overflow-x-auto group-ope
         intent: {
             default: "",
             gradient: "",
-            neutral: "bg-base-content text-gray-800 border-t border-gray-200 shadow-sm rounded-b-lg",
+            neutral: "bg-base-content text-neutral border-t border-neutral shadow-sm rounded-b-lg",
         },
     },
     defaultVariants: {
