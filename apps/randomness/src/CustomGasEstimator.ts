@@ -12,7 +12,7 @@ export class CustomGasEstimator extends DefaultGasLimitEstimator {
         transaction: Transaction,
     ): Promise<Result<bigint, EstimateGasErrorCause>> {
         if (transaction.functionName === "postCommitment") {
-            return ok(50000n)
+            return ok(75000n)
         }
         if (transaction.functionName === "revealValue") {
             return ok(100000n)
