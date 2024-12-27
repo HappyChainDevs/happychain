@@ -81,7 +81,7 @@ contract Drand {
      * @notice Returns the latest drand value at the given timestamp.
      */
     function _getDrandAtTimestamp(uint256 timestamp) internal view returns (bytes32) {
-        uint64 round = uint64((timestamp - DRAND_GENESIS_TIMESTAMP_SECONDS) / DRAND_PERIOD_SECONDS);
+        uint64 round = uint64((timestamp - DRAND_GENESIS_TIMESTAMP_SECONDS) / DRAND_PERIOD_SECONDS) + 1;
         return getDrand(round);
     }
 
