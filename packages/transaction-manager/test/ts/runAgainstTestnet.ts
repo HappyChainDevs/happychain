@@ -6,12 +6,12 @@ const testConfig: TransactionManagerConfig = {
     rpc: {
         url: "https://happy-testnet-sepolia.rpc.caldera.xyz/http",
     },
-    privateKey: "0x49cbb0e24c219da3308ba392c639eded95cbb57cd544d18dfb46d01022388606", //address 0x95aF8bab1833719120e3D3e10B35eC6ed4a858bf
+    privateKey: "0x", //address 0x95aF8bab1833719120e3D3e10B35eC6ed4a858bf
     chainId: 216,
     abis: abis,
 }
 
-async function run() {
+async function run(key) {
     const multiple = async (): Promise<Transaction[]> => {
         return [createIncrementTransaction()]
     }
@@ -24,9 +24,12 @@ async function run() {
         })
     }
 
-    const transactionManager = new TransactionManager(testConfig)
+    const { privateKey, ...configWithoutPrivateKey } = testConfig
+    const transactionManager = new TransactionManager({ privateKey: key, ...configWithoutPrivateKey })
     const testService = new TestService(transactionManager)
     testService.addTransactionOriginator(multiple)
     await testService.start()
 }
-await run()
+// await run("0x49cbb0e24c219da3308ba392c639eded95cbb57cd544d18dfb46d01022388606")
+
+await run("0x1d70d33ba4fe1e0e09ababa465700eaf9c4f8f31be9aaa9aca1b35637e2e8451")

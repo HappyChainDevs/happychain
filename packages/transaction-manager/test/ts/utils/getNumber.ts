@@ -1,13 +1,27 @@
 import { http, type Address, createPublicClient, decodeFunctionResult, encodeFunctionData } from "viem"
 import { localhost } from "viem/chains"
+import { happyChainTestnetChain } from "../../../../common/lib"
 import CounterAbi from "../../contracts/abi/Counter.json"
 
-const client = createPublicClient({
-    chain: localhost,
-    transport: http("http://127.0.0.1:8545"),
-})
+function getPublicClient(chainId: number) {
+    switch (chainId) {
+        case 31337:
+            return createPublicClient({
+                chain: localhost,
+                transport: http("http://127.0.0.1:8545"),
+            })
+        case 216:
+            return createPublicClient({
+                chain: happyChainTestnetChain,
+                transport: http("https://happy-testnet-sepolia.rpc.caldera.xyz/http"),
+            })
+        default:
+            throw new Error(`Unsupported chainId: ${chainId}`)
+    }
+}
 
-export async function getNumber(COUNTER_ADDRESS: Address) {
+export async function getNumber(COUNTER_ADDRESS: Address, chainId = 31337): Promise<bigint> {
+    const client = getPublicClient(chainId)
     const result = await client.call({
         to: COUNTER_ADDRESS,
         data: encodeFunctionData({
@@ -26,6 +40,5 @@ export async function getNumber(COUNTER_ADDRESS: Address) {
         data: result!.data,
     })
 
-    console.log("counter is now ", decodeResult)
     return decodeResult as bigint
 }

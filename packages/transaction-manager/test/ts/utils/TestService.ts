@@ -11,7 +11,7 @@ export class TestService {
     }
 
     async start() {
-        this.counterVal = await getNumber(COUNTER_ADDRESS)
+        this.counterVal = await getNumber(COUNTER_ADDRESS, this.txm.chainId)
         await this.txm.start()
         // await this.txm.addHook(this.onTransactionStatusChange.bind(this), TxmHookType.TransactionStatusChanged)
         await this.txm.addHook(this.onNewBlock.bind(this), TxmHookType.NewBlock)
@@ -22,7 +22,8 @@ export class TestService {
     }
 
     private async onNewBlock(block: LatestBlock) {
-        console.log("onNewBlock:: block.number: ", block.number)
+        // biome-ignore lint/suspicious/noExplicitAny: todo fix
+        console.log((block as any).block.number, ",", await getNumber(COUNTER_ADDRESS, this.txm.chainId))
     }
 
     public addTransactionOriginator(oringinator: () => Promise<Transaction[]>) {
