@@ -1,5 +1,5 @@
 import { Dialog, Field } from "@ark-ui/react"
-import { Plus } from "@phosphor-icons/react"
+import { Plus, X } from "@phosphor-icons/react"
 import { useAtom, useAtomValue } from "jotai"
 import { useCallback, useState } from "react"
 import { type Address, isAddress } from "viem"
@@ -103,6 +103,12 @@ export const ImportTokensDialog = () => {
             unmountOnExit
             onOpenChange={(details) => {
                 setIsImportTokensDialogVisible(details.open)
+                if (!details.open) {
+                    // reset state variables when the dialog is closed
+                    setInputAddress("")
+                    setCustomTokenSymbol("")
+                    setCustomTokenDecimals("")
+                }
             }}
             open={isImportTokensDialogVisible}
         >
@@ -113,11 +119,17 @@ export const ImportTokensDialog = () => {
                 })}
             >
                 <Dialog.Content className="text-center overflow-y-auto bg-base-100 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
-                    <div className="my-auto grid gap-1 items-start">
-                        <Dialog.Title className="text-start font-bold text-base-content">Import Token</Dialog.Title>
-                        <Dialog.Description className="text-start text-content text-xs italic">
-                            Enter Token Specifications (ERC-20)
-                        </Dialog.Description>
+                    <div className="flex flex-row my-auto gap-1 items-start">
+                        <div className="flex flex-col w-full items-start justify-start">
+                            <Dialog.Title className="text-start font-bold text-base-content">Import Token</Dialog.Title>
+                            <Dialog.Description className="text-start text-content text-xs italic">
+                                Enter Token Specifications (ERC-20)
+                            </Dialog.Description>
+                        </div>
+
+                        <Dialog.CloseTrigger>
+                            <X size={"1.25em"} />
+                        </Dialog.CloseTrigger>
                     </div>
                     <form
                         className="flex flex-col w-full h-full items-center justify-center py-2 space-y-4"
