@@ -3,12 +3,12 @@ import { Msgs } from "@happy.tech/wallet-common"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
+import { ImportTokensDialog } from "#src/components/interface/home/tabs/views/tokens/ImportTokensDialog"
 import {
     dialogLogOutConfirmationVisibilityAtom,
     secondaryMenuVisibilityAtom,
 } from "#src/components/interface/menu-secondary-actions/state"
-import { signalClosed, signalOpen } from "#src/utils/walletState"
-import { ImportTokensDialog } from "#src/components/interface/home/tabs/views/tokens/ImportTokensMenu"
+import { signalClosed, signalOpen } from "#src/utils/walletState.ts"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
@@ -52,8 +52,8 @@ function Embed() {
             }
         })
 
-        // If we initialized before the above listener is created, then and RequestWalletDisplay
-        // calls will be silently lost
+        // If we initialized before the above listener is created, then
+        // RequestWalletDisplay calls will be silently lost
         void appMessageBus.emit(Msgs.IframeInit, true)
         return unsubscribe
     }, [navigate, setSecondaryMenuVisibility, setDialogLogoutVisibility])
