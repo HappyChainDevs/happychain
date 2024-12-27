@@ -33,7 +33,7 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
             {
                 ...tokenContract,
                 functionName: "balanceOf",
-                args: [userAddr!],
+                args: userAddr ? [userAddr] : undefined,
             },
             {
                 ...tokenContract,
@@ -45,11 +45,23 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
             },
         ],
         query: {
+            enabled: !!assetAddr && !!userAddr,
+            retry: 3,
+            retryDelay: (attempt) => Math.min(attempt > 1 ? 2 ** attempt * 1000 : 1000, 30 * 1000), // exponential backoff
+            // check when retry is underway, show spinner in UI
             select(data): ERC20BalanceQueryData {
                 const [balanceResult, decimalsResult, symbolResult] = data
                 const value = balanceResult.result
                 const decimals = decimalsResult.result
-                const symbol = symbolResult.result
+                const symbol = symbolResult.result as string | undefined
+
+                // token symbol must be 11 characters or lesser
+                // https://docs.metamask.io/wallet/reference/json-rpc-methods/wallet_watchasset/
+                if (symbol && symbol.length > 11) {
+                    console.warn(`Token symbol "${symbol}" exceeds 11 characters and will be truncated.`)
+                }
+
+                const formatted = value && decimals ? formatUnits(value, decimals) : undefined
 
                 return {
                     value,
@@ -57,7 +69,7 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
                     symbol,
                     // compute formatted value only if both values are read from the contract,
                     // else indicate error to user
-                    formatted: value && decimals ? formatUnits(value, decimals) : undefined,
+                    formatted,
                 }
             },
         },
