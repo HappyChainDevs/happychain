@@ -1,4 +1,4 @@
-import { CaretDown } from "@phosphor-icons/react"
+import { CaretDown, WarningCircle } from "@phosphor-icons/react"
 import { cx } from "class-variance-authority"
 import { useMemo } from "react"
 import {
@@ -31,10 +31,14 @@ const DecodedData = ({ data }: DecodedDataProps) => {
             </summary>
             <div
                 className={cx(
-                    ["flex flex-col size-full items-start justify-center"],
+                    ["flex flex-col gap-y-2 size-full items-start justify-center"],
                     recipeDisclosureContent({ intent: "neutral" }),
                 )}
             >
+                <div className="flex w-full justify-start items-center gap-[1ex]">
+                    <WarningCircle size={"1.25em"} />
+                    <span className="italic text-neutral">This ABI is not verified.</span>
+                </div>
                 <div className="flex w-full justify-between items-baseline gap-[1ex]">
                     <span className="text-sm opacity-75">Function Name:</span>
                     <span className="font-mono text-sm truncate px-2 py-1 bg-primary rounded-md">{functionName}</span>
