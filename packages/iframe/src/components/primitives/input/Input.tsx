@@ -18,7 +18,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     return (
         <div className={`relative w-full ${wrapperClass ?? ""}`}>
             <ark.input
-                className={`${recipeTextInput({ scale: scale, intent: intent })}`}
+                className={`${recipeTextInput({ scale: scale, intent: intent, className: inputClass })}`}
                 placeholder={rest?.placeholder ?? ""}
                 type={rest?.type ?? "text"}
                 ref={ref}
