@@ -19,6 +19,8 @@ export const TriggerImportTokensDialog = () => {
         <button
             type="button"
             className="flex flex-row items-center justify-center gap-2 hover:text-blue-600 hover:underline"
+            title={"Open this dialog"}
+            aria-label={"Open Import Tokens Dialog"}
             onClick={() => {
                 setVisibility(!isVisible)
             }}
@@ -38,23 +40,30 @@ export const ImportTokensDialog = () => {
     const [customTokenSymbol, setCustomTokenSymbol] = useState("")
     const [customTokenDecimals, setCustomTokenDecimals] = useState("")
 
-    const isEmpty = inputAddress === "" // no inputted address, user has deleted their input
-    const isValidAddress = isAddress(inputAddress, { strict: true })
-    const invalidAddressInputCondition = isEmpty || isValidAddress
+    const { watchAssetAsync, status } = useWatchAsset()
 
     const {
         data: { decimals, symbol } = {},
         isRefetching,
     } = useERC20Balance(inputAddress as Address, user?.address as Address)
 
-    // conditions for elements being disabled / readOnly
+    // --- conditions for elements being disabled / readOnly ---
+
+    // no inputted address (or) user has deleted their input
+    const isEmpty = inputAddress === ""
+    const isValidAddress = isAddress(inputAddress, { strict: true })
+    const invalidAddressInputCondition = isEmpty || isValidAddress
+    // symbol / decimals data is not available from contract read _and_ there is no user input.
     const buttonDisabledCondition =
         (symbol === undefined && customTokenSymbol === "") || (decimals === undefined && customTokenDecimals === "")
+    // There is an inputted address, but no data present from contract read or user input.
     const symbolInputInvalidCondition = isValidAddress && symbol === undefined && customTokenSymbol === ""
     const decimalsInputInvalidCondition = isValidAddress && decimals === undefined && customTokenDecimals === ""
+    // There a valid inputted address (and) data from contract read has been successfully retrieved.
+    const decimalsInputReadOnlyCondition = isValidAddress && decimals !== undefined
+    const symbolsInputReadOnlyCondition = isValidAddress && symbol !== undefined
 
-    const { watchAssetAsync, status } = useWatchAsset()
-
+    // Input field change handlers
     const handleAddressInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target
         setInputAddress(value)
@@ -69,6 +78,15 @@ export const ImportTokensDialog = () => {
         const { value } = e.target
         setCustomTokenDecimals(value)
     }
+
+    /**
+     * Handles the submission of the watch asset form.
+     *
+     * This function processes the form data to add a new ERC20 asset to the user's watch list.
+     * It initiates an asynchronous request to watch the specified asset, maintaining the dialog
+     * open while awaiting user approval or rejection. If the operation succeeds, it closes the
+     * import tokens dialog to reflect the successful addition.
+     */
 
     const submitWatchAssetData = useCallback(
         async (e: React.FormEvent<HTMLFormElement>) => {
@@ -171,7 +189,7 @@ export const ImportTokensDialog = () => {
                                         inputClass="w-full"
                                         scale={"default"}
                                         onChange={handleCustomSymbolInputChange}
-                                        readOnly={isValidAddress && symbol !== undefined}
+                                        readOnly={symbolsInputReadOnlyCondition}
                                     />
                                 </FieldInput>
 
@@ -190,7 +208,7 @@ export const ImportTokensDialog = () => {
                                         inputClass="w-full"
                                         scale={"default"}
                                         onChange={handleCustomDecimalsInputChange}
-                                        readOnly={isValidAddress && decimals !== undefined}
+                                        readOnly={decimalsInputReadOnlyCondition}
                                     />
                                 </FieldInput>
 
