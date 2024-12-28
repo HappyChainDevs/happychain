@@ -9,9 +9,6 @@ interface InputProps extends InputVariantsProps, HTMLArkProps<"input"> {
     wrapperClass?: string
 }
 
-/**
- * A one-line field that allows user to enter information by typing.
- */
 export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     const { scale, intent, inputClass, wrapperClass, ...rest } = props
 
