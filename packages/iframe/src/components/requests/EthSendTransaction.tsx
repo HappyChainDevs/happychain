@@ -115,9 +115,7 @@ export const EthSendTransaction = ({
         if (!user?.address || !targetContractAddress) return undefined
 
         const abis = recordedAbisForUser[user.address]
-        if (!abis) return undefined
-
-        const specificAbiRecord = abis.find((record) => targetContractAddress in record)
+        const specificAbiRecord = abis && abis.length > 0 && abis.find((record) => targetContractAddress in record)
         if (!specificAbiRecord) return undefined
 
         return specificAbiRecord[targetContractAddress]
