@@ -22,11 +22,21 @@ export class TestService {
     }
 
     private async onNewBlock(block: LatestBlock) {
+        const counterVal = await getNumber(COUNTER_ADDRESS, this.txm.chainId)
+        this.counterVal = counterVal
         // biome-ignore lint/suspicious/noExplicitAny: todo fix
-        console.log((block as any).block.number, ",", await getNumber(COUNTER_ADDRESS, this.txm.chainId))
+        console.log(getTimestamp(),",",(block as any).block.number, ",", counterVal)
     }
 
     public addTransactionOriginator(oringinator: () => Promise<Transaction[]>) {
         this.txm.addTransactionOriginator(oringinator.bind(this))
     }
 }
+
+
+const getTimestamp = (): string => {
+    const now = new Date();
+    return now.toISOString(); // ISO 8601 format (e.g., 2024-12-29T14:20:00.000Z)
+};
+
+
