@@ -25,7 +25,7 @@ export class TestService {
         const counterVal = await getNumber(COUNTER_ADDRESS, this.txm.chainId)
         this.counterVal = counterVal
         // biome-ignore lint/suspicious/noExplicitAny: todo fix
-        console.log(getTimestamp(),",",(block as any).block.number, ",", counterVal)
+        console.log(getTimestamp(), ",", (block as any).block.number, ",", counterVal)
     }
 
     public addTransactionOriginator(oringinator: () => Promise<Transaction[]>) {
@@ -33,10 +33,7 @@ export class TestService {
     }
 }
 
-
 const getTimestamp = (): string => {
-    const now = new Date();
-    return now.toISOString(); // ISO 8601 format (e.g., 2024-12-29T14:20:00.000Z)
-};
-
-
+    const now = new Date()
+    return now.toISOString() // ISO 8601 format (e.g., 2024-12-29T14:20:00.000Z)
+}

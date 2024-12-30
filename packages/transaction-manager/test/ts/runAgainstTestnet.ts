@@ -1,7 +1,7 @@
 import { type Transaction, TransactionManager, type TransactionManagerConfig } from "../../lib/index"
 import { abis } from "../contracts/abi/Counter.ts"
-import { getNumber } from "./utils/getNumber"
 import { TestService } from "./utils/TestService"
+import { getNumber } from "./utils/getNumber"
 
 const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326"
 const CHAIN_ID = 216
@@ -15,12 +15,7 @@ const testConfig: TransactionManagerConfig = {
     abis: abis,
 }
 
-
-
 async function run(key) {
-    const multiple = async (): Promise<Transaction[]> => {
-        return [createIncrementTransaction()]
-    }
     const single = async (): Promise<Transaction[]> => {
         if ((await getNumber(COUNTER_ADDRESS, CHAIN_ID)) === testService.counterVal) {
             return [createIncrementTransaction()]
