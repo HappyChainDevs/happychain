@@ -25,6 +25,9 @@ DEPLOY_SCRIPT ?= DeployL1Upgradeable.s.sol
 
 LN_FLAGS := $(if $(findstring Darwin,$(shell uname)),-shF,-sfT)
 
+# Flag to include or exclude metadata based on configuration
+METADATA_FLAG := $(if $(findstring false,$(APPEND_METADATA_$(CONFIG))),--no-metadata,)
+
 # See README.md for more documentation.
 
 # Location of top-level node_modules relative to the contracts package.
@@ -174,7 +177,6 @@ anvil:
 ####################################################################################################
 # Deployment
 
-METADATA_FLAG := $(if $(findstring false,$(APPEND_METADATA_$(CONFIG))),--no-metadata,)
 VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
 VERIFIER_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_FLAG_$(CONFIG)),)
 VERIFIER_URL := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_URL_$(CONFIG)),)
