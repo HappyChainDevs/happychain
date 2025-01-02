@@ -8,11 +8,13 @@ const CHAIN_ID = 216
 
 const testConfig: TransactionManagerConfig = {
     rpc: {
-        url: "https://happy-testnet-sepolia.rpc.caldera.xyz/http",
+        url: "wss://happy-testnet-sepolia.rpc.caldera.xyz/ws",
+        retries: 0,
     },
     privateKey: "0x",
     chainId: CHAIN_ID,
     abis: abis,
+    finalizedTransactionPurgeTime: 0
 }
 
 async function run(key) {
