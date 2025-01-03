@@ -1,6 +1,13 @@
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
-import { type Address, type RpcTransactionRequest, decodeFunctionData, formatEther, formatGwei } from "viem"
+import {
+    type AbiFunction,
+    type Address,
+    type RpcTransactionRequest,
+    decodeFunctionData,
+    formatEther,
+    formatGwei,
+} from "viem"
 import { useEstimateFeesPerGas } from "wagmi"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { userAtom } from "#src/state/user"
@@ -124,6 +131,9 @@ export const EthSendTransaction = ({
     /**
      * Decodes the function call data for a given contract ABI and transaction data
      * using viem's {@link decodeFunctionData | decodeFunctionData }.
+     * 
+     * The decoded function name is used to find the section of the ABI 
+     * the function is defined in which gives us the expected inputs, their types. 
      */
     const decodedData = useMemo(() => {
         if (!abiForContract || !tx.data) return undefined
@@ -133,7 +143,11 @@ export const EthSendTransaction = ({
             data: tx.data,
         })
 
-        return { functionName, args }
+        const abiFuncDef = abiForContract.find(
+            (item) => item.type === "function" && item.name === functionName,
+        ) as AbiFunction
+
+        return { args, abiFuncDef }
     }, [abiForContract, tx.data])
 
     // memo-ed values formatted for display
