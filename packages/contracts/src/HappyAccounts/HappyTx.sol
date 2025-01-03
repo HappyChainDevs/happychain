@@ -3,56 +3,61 @@ pragma solidity ^0.8.20;
 
 /**
  * @title HappyTx
- * @dev Represents a Happy Transaction - our equivalent of an ERC-4337 UserOperation,
- * optimized for low-latency use cases. This struct uses MUD's encoding scheme for
- * efficient calldata transmission (see: https://mud.dev/store/encoding#schema).
+ * @dev Represents a Happy Transaction - a transaction made by a Happy Smart Account
+ * that can be submitted to the chain by a permissionless submitter.
+ * The struct is arranged to optimize gas usage by ensuring efficient packing in storage.
  *
  * Core Transaction Fields:
- * @param account             - The smart account initiating (sending) the transaction
- * @param dest                - The destination address for the transaction
+ * @param account             - Account sending the transaction
+ * @param gasLimit            - Gas limit for the transaction made by the submitter
+ * @param executeGasLimit     - Gas limit for the IHappyAccount.execute function
+ * @param dest                - Destination address for the transaction
+ * @param paymaster           - Fee payer: This can be the
+ *                                 1. account (if it implements IHappyPaymaster),
+ *                                 2. external paymaster (implementing IHappyPaymaster),
+ *                                 3. the submitter (an EOA, `tx.origin`)
+ *
  * @param value               - Amount of native tokens (in gas token wei) to transfer
- * @param callData            - The encoded function call data to be executed
+ * @param callData            - Transaction calldata to be executed
+ * @param nonce               - Account nonce, interpreted at the account's leisure
  *
- * Nonce Management:
- * @param nonceTrack          - Identifier for parallel nonce tracking (default: 0). Enables concurrent
- *                              app usage by providing separate nonce spaces
- * @param nonce               - Sequential number within the track to prevent replay and ensure ordering
+ * Gas and Fee Parameters:
+ * @param maxFeePerGas        - Maximum total fee per gas unit (inclusive basefee and priority fee)
+ * @param submitterFee        - Flat fee in gas token wei for submitter (can be negative for rebates)
+ *                               - Submitter asks for this on top of payment of gas. This can be used to pay
+ *                                 for extra costs (e.g. DA costs on rollups, server costs), and for profit.
+ *                               - Acts as rebate when negative (e.g. to refund part of the intrinsic transaction
+ *                                 cost if the submitter batches multiple happyTxs together), but in no case does
+ *                                 this lead to the submitter transferring funds to accounts.
  *
- * Gas Parameters:
- * @param maxFeePerGas        - Maximum total fee per gas unit (base fee + priority fee)
- * @param gasLimit            - Maximum gas allowed for execute(encodedHappyTx) call
- *
- * Validation:
- * @param validator           - Address of the validation contract
- * @param validationData      - Arbitrary data for validation (e.g., signatures)
- *
- * Payment:
- * @param paymaster           - Address of the paymaster contract (0x0 for self-paying)
- * @param paymasterData       - Additional data for paymaster operations
- *
- * Extensions:
+ * Payment and Validation:
+ * @param paymasterData       - Extra data passed to the paymaster
+ * @param validatorData       - Extra data for validation (e.g., signatures)
  * @param extraData           - Reserved for future extensions and custom implementations
- *
- * Memory Layout:
- * The struct is carefully arranged to optimize gas usage:
- * Slot 0: account (20 bytes) + nonceTrack (8 bytes) + gasLimit (4 bytes)
- * Slot 1: dest (20 bytes) + nonce (8 bytes) + padding
- * Slot 2: validator (20 bytes) + padding
- * Slot 3: paymaster (20 bytes) + padding
- * Following slots: value, maxFeePerGas, and dynamic bytes fields
  */
+
+// Storage Layout Visualization:
+// Slot 0: |--execGasLimit(4)--|--gasLimit(4)--|-------------account(20)--------------|
+// Slot 1: |-------------pad(12)---------------|-------------dest(20)-----------------|
+// Slot 2: |-------------pad(12)---------------|------------paymaster(20)-------------|
+// Slot 3: |-------------------------------value(32)----------------------------------|
+// Slot 4: |-------------------------------nonce(32)----------------------------------|
+// Slot 5: |---------------------------maxFeePerGas(32)-------------------------------|
+// Slot 6: |---------------------------submitterFee(32)-------------------------------|
+// Slot 7+: Dynamic length fields (callData, paymasterData, validatorData, extraData)
+
 struct HappyTx {
     address account;
-    uint64 nonceTrack;
     uint32 gasLimit;
+    uint32 executeGasLimit;
     address dest;
-    uint64 nonce;
-    address validator;
     address paymaster;
     uint256 value;
+    uint256 nonce;
     uint256 maxFeePerGas;
+    int256 submitterFee;
     bytes callData;
-    bytes validationData;
     bytes paymasterData;
+    bytes validatorData;
     bytes extraData;
 }
