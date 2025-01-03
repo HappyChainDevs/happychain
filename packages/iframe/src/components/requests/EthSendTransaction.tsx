@@ -131,9 +131,9 @@ export const EthSendTransaction = ({
     /**
      * Decodes the function call data for a given contract ABI and transaction data
      * using viem's {@link decodeFunctionData | decodeFunctionData }.
-     * 
-     * The decoded function name is used to find the section of the ABI 
-     * the function is defined in which gives us the expected inputs, their types. 
+     *
+     * The decoded function name is used to find the section of the ABI
+     * the function is defined in which gives us the expected inputs, their types.
      */
     const decodedData = useMemo(() => {
         if (!abiForContract || !tx.data) return undefined

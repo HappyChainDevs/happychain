@@ -36,7 +36,9 @@ const DecodedData = ({ data }: DecodedDataProps) => {
                 </div>
                 <div className="flex w-full justify-between items-baseline gap-[1ex]">
                     <span className="text-sm opacity-75">Function Name:</span>
-                    <span className="font-mono text-sm truncate px-2 py-1 bg-primary rounded-md">{abiFuncDef.name}</span>
+                    <span className="font-mono text-sm truncate px-2 py-1 bg-primary rounded-md">
+                        {abiFuncDef.name}
+                    </span>
                 </div>
 
                 {args.length > 0 && <ArgsList args={args} fnInputs={abiFuncDef.inputs} />}
