@@ -19,8 +19,8 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     const sentTxValue = `-${formatEther(value)} HAPPY`
 
     return (
-        <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
-            <div className="flex flex-row items-center justify-center space-x-1">
+        <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-primary-content bg-base-200">
+            <div className="flex flex-row items-center justify-center gap-x-2">
                 <ArrowUpRight
                     className={`${cx({
                         "bg-success": receipt.status === "success",
