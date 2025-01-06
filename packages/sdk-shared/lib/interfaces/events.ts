@@ -108,6 +108,7 @@ export enum Msgs {
     /** Informs the iframe that the user has rejected a request in the popup. */
     PopupReject = "popup:reject",
 
+    /** Informs the popup that it is time for it to close itself. */
     PopupClose = "popup:close",
 }
 
