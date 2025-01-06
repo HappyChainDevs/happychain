@@ -121,11 +121,10 @@ export const EthSendTransaction = ({
     const abiForContract = useMemo(() => {
         if (!user?.address || !targetContractAddress) return undefined
 
-        const abis = recordedAbisForUser[user.address]
-        const specificAbiRecord = abis && abis.length > 0 && abis.find((record) => targetContractAddress in record)
-        if (!specificAbiRecord) return undefined
+        const abisForUser = recordedAbisForUser[user.address]
+        if (!abisForUser) return undefined
 
-        return specificAbiRecord[targetContractAddress]
+        return abisForUser[targetContractAddress]
     }, [recordedAbisForUser, user?.address, targetContractAddress])
 
     /**
