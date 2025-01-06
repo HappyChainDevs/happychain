@@ -86,6 +86,7 @@ function App() {
 
     async function loadAbiStub() {
         await loadAbi(zeroAddress, erc721Abi) // dummy values
+        console.log("ABI loaded!")
     }
 
     /** mints 1 MTA token to the connected account */
