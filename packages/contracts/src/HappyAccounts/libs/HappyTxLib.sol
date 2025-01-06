@@ -285,7 +285,8 @@ library HappyTxLib {
             // Copy packed dynamic fields to result
             let destPtr := add(result, 224) // Offset after static fields and lengths
             let srcPtr := ptr
-            for {} lt(srcPtr, add(ptr, dynamicDataLength)) { srcPtr := add(srcPtr, 32) } {
+            let length := mload(happyTx)
+            for {} lt(srcPtr, add(ptr, length)) { srcPtr := add(srcPtr, 32) } {
                 mstore(destPtr, mload(srcPtr))
                 destPtr := add(destPtr, 32)
             }
@@ -359,54 +360,87 @@ library HappyTxLib {
         // solhint-disable-next-line no-inline-assembly
         assembly {
             ptr := mload(0x40) // Get free memory pointer
-            // Update the pointer and round it up to beginning of the next free 32 byte slot.
-            mstore(0x40, and(add(add(ptr, length), 31), not(31))) // (ptr + length + 31) & ~31
+            // Update the free memory pointer and round it up to beginning of the next 32 byte slot
+            mstore(0x40, and(add(add(ptr, length), 0x1F), not(0x1F))) // round up to multiple of 32
 
-            let writePtr := ptr // Current write position
+            let writePtr := ptr
+            let readPtr := add(callData, 32)
+            let remaining := mload(callData)
 
-            // Array of pointers to dynamic fields
-            let dynamicField1 := callData
-            let dynamicField2 := paymasterData
-            let dynamicField3 := validatorData
-            let dynamicField4 := extraData
+            // First copy all full 32-byte words from calldata
+            for {} gt(remaining, 32) { remaining := sub(remaining, 32) } {
+                mstore(writePtr, mload(readPtr))
+                writePtr := add(writePtr, 32)
+                readPtr := add(readPtr, 32)
+            }
 
-            // Process each dynamic field
-            for { let i := 0 } lt(i, 4) { i := add(i, 1) } {
-                // Select current field based on index
-                let currentField := dynamicField1
-                if eq(i, 1) { currentField := dynamicField2 }
-                if eq(i, 2) { currentField := dynamicField3 }
-                if eq(i, 3) { currentField := dynamicField4 }
+            // Handle remaining calldata bytes and store the offset
+            let currentWordOffset := 0
+            if gt(remaining, 0) {
+                let currentWord := 0
+                let bytesProcessed := 0
+                let value := mload(readPtr)
 
-                // Copy the current field
-                let readPtr := add(currentField, 32) // Skip length word
-                let remaining := mload(currentField) // Get length
-
-                // First copy all full 32-byte words
-                for {} gt(remaining, 32) { remaining := sub(remaining, 32) } {
-                    // Copy full word directly
-                    mstore(writePtr, mload(readPtr))
-                    writePtr := add(writePtr, 32)
-                    readPtr := add(readPtr, 32)
+                for {} lt(bytesProcessed, remaining) { bytesProcessed := add(bytesProcessed, 1) } {
+                    // Mask the leftmost byte and shift it to the right position
+                    let maskedByte := and(value, mask)
+                    let positionedByte := shr(mul(bytesProcessed, 8), maskedByte)
+                    currentWord := or(currentWord, positionedByte)
+                    // Shift value left by 8 bits to bring next byte into position
+                    value := shl(8, value)
                 }
+                mstore(writePtr, currentWord)
+                currentWordOffset := remaining // Will be in range [1, 31] since remaining < 32
+                    // Don't increment writePtr as we'll continue writing to this word
+            }
 
-                // Handle remaining bytes
-                if gt(remaining, 0) {
-                    let currentWord := 0
-                    let bytesProcessed := 0
-                    let value := mload(readPtr)
+            // Now handle paymasterData
+            readPtr := add(paymasterData, 32) // Reset readPtr to start of paymasterData
+            remaining := mload(paymasterData)
 
-                    for {} lt(bytesProcessed, remaining) { bytesProcessed := add(bytesProcessed, 1) } {
-                        // Mask the leftmost byte and shift it to the right position
-                        let maskedByte := and(value, mask)
-                        let positionedByte := shr(mul(bytesProcessed, 8), maskedByte)
-                        // OR it into our word
-                        currentWord := or(currentWord, positionedByte)
-                        // Shift value left by 8 bits to bring next byte into position
-                        value := shl(8, value)
-                    }
-                    mstore(writePtr, currentWord)
+            // Process full words from paymasterData
+            for {} gt(remaining, 32) { remaining := sub(remaining, 32) } {
+                let currentWord := mload(readPtr)
+
+                // Split current word into two parts based on offset
+                // First (32-offset) bytes go in current slot
+                mstore(
+                    writePtr,
+                    or(
+                        mload(writePtr), // existing content
+                        shr(mul(currentWordOffset, 8), currentWord)
+                    )
+                )
+                writePtr := add(writePtr, 32)
+
+                // Last 'offset' bytes go in next slot
+                mstore(writePtr, shl(mul(sub(32, currentWordOffset), 8), currentWord))
+
+                readPtr := add(readPtr, 32)
+            }
+
+            // Handle remaining bytes (if any)
+            if gt(remaining, 0) {
+                // Start with existing content in the current slot
+                let currentWord := mload(writePtr)
+                let bytesProcessed := 0
+                let value := mload(readPtr)
+
+                for {} lt(bytesProcessed, remaining) { bytesProcessed := add(bytesProcessed, 1) } {
+                    let maskedByte := and(value, mask)
+                    // Position byte accounting for existing offset
+                    let positionedByte := shr(mul(add(bytesProcessed, currentWordOffset), 8), maskedByte)
+                    currentWord := or(currentWord, positionedByte)
+                    value := shl(8, value)
+                }
+                mstore(writePtr, currentWord)
+
+                // Update offset for next field
+                currentWordOffset := add(currentWordOffset, remaining)
+                // Only move writePtr if we filled the word
+                if gt(currentWordOffset, 31) {
                     writePtr := add(writePtr, 32)
+                    currentWordOffset := mod(currentWordOffset, 32)
                 }
             }
         }
@@ -507,18 +541,5 @@ library HappyTxLib {
      */
     function _unpackExecGasLimit(bytes32 packedValue) internal pure returns (uint32) {
         return uint32(uint256(packedValue) & ((1 << 32) - 1));
-    }
-
-    /**
-     * @notice Computes a right-aligned byte mask based on the provided byte length.
-     * @dev The mask is used to extract a specified number of rightmost bytes.
-     *
-     * @param byteLength The number of rightmost bytes to be masked.
-     * @return mask A right-aligned byte mask corresponding to the specified byte length.
-     */
-    function _rightMask(uint256 byteLength) internal pure returns (uint256) {
-        unchecked {
-            return type(uint256).max >> (byteLength * BYTE_TO_BITS);
-        }
     }
 }
