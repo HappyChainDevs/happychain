@@ -8,7 +8,31 @@ export enum EstimateGasErrorCause {
     ClientError = "ClientError",
 }
 
-export interface IGasEstimator {
+/**
+ * This is the interface that you have to implement if you want to provide a custom gas estimator.
+ * The default implementation is {@link DefaultGasLimitEstimator}.
+ *
+ * You have to implement this interface if the standard gas estimation method does not work. That's because the standard method
+ * simulates the transaction against the current blockchain state, which can change when the transaction is actually executed onchain.
+ * This can lead to inaccurate gas estimations that cause transactions to revert onchain. It can also lead happen that some transactions fail
+ * at the estimation stage when they would have succeeded on chain. For instance, this can happen to transactions
+ * who have a strict requirement on the block number or timestamp on or after which they should land.
+ *
+ * For example, in the randomness service, we need to emit the reveal transaction at precisely the right block.
+ * This transaction would fail if executed before the correct block, so when you try to simulate it, you'll receive a failure.
+ *
+ * By avoiding transaction simulation, you can also improve the performance of the transaction manager.
+ * You eliminate an RPC call, increasing the likelihood that your transaction will be included in the next block.
+ * Furthermore, if you're always executing the same type of transaction, it typically consumes a similar amount of gas.
+ * In those cases, an upper bound of the gas limit can be computed in advance and injected by a custom gas estimator.
+ *
+ * In some cases, you may want to hardcode the gas limit anyway (if at all possible). Doing so avoids an extra round-trip to the RPC server,
+ * which might help your transaction land in an earlier block and will save on RPC costs.
+ *
+ * Because the extra gas gets refunded, this is both safe and doesn't incur extra cost,
+ * though it increases your gas capital requirement if you have a lot of transactions in flight.
+ */
+export interface GasEstimator {
     estimateGas(
         transactionManager: TransactionManager,
         transaction: Transaction,
@@ -17,24 +41,12 @@ export interface IGasEstimator {
 
 /**
  * This is the default module used to estimate the gas for a transaction. When creating a new transaction manager,
- * you can pass a custom gas estimator. The custom GasEstimator should implement the interface `IGasEstimator`.
- * The best approach would be to extend the default GasEstimator to make it capable of using the protected method `simulateTransactionForGas`
- * in specific cases, without the need to reimplement it.
- * Sometimes, the standard process of simulating a transaction to estimate gas is not feasible.
- * When you simulate a transaction, you're doing so in a different block with a different
- * blockchain state than when the transaction will actually be executed.
- * This can lead to two issues: the transaction might fail in the estimation but not in reality, and the gas estimation might be inaccurate.
- * For example, in the randomness service, we need to emit the reveal transaction at precisely the right block.
- * This transaction would fail if executed before the correct block, so when you try to simulate it, you'll receive a failure.
- * By avoiding transaction simulation, you can also improve the performance of the transaction manager.
- * You eliminate an RPC call, increasing the likelihood that your transaction will be included in the next block.
- * Furthermore, if you're always executing the same type of transaction, it typically consumes a similar amount of gas.
- * In this case, even if transaction simulation is an option, it's good practice to skip it.
- * Instead, you can hardcode an upper bound of the gas amount, rather than calculating it each time.
- * Because the extra gas gets refunded, this is both safe and doesn't incur extra cost,
- * though it increases your gas capital requirement if you have a lot of transaction in flight.
+ * you can instead pass a custom gas estimator implementing {@link GasEstimator}.
+ * Whenever applicable, you should extend this class to reuse the protected {@link simulateTransactionForGas} method.
+ *
+ * This class estimates the gas by simulating the transaction against the current blockchain state.
  */
-export class GasEstimator implements IGasEstimator {
+export class DefaultGasLimitEstimator implements GasEstimator {
     public async estimateGas(
         transactionManager: TransactionManager,
         transaction: Transaction,

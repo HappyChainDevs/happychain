@@ -11,11 +11,11 @@ export enum TransactionStatus {
      */
     Pending = "Pending",
     /**
-     * The transaction have been executed but the execution failed
+     * The transaction has been included in a block but its execution reverted.
      */
     Failed = "Failed",
     /**
-     * The transaction has expired
+     * The transaction has expired. This indicates that the deadline has passed without the transaction being included in a block.
      */
     Expired = "Expired",
     /**
@@ -23,11 +23,11 @@ export enum TransactionStatus {
      */
     Cancelling = "Cancelling",
     /**
-     * The transaction have expired and we have successfully cancelled it
+     * The transaction expired in the mempool and we successfully cancelled it.
      */
     Cancelled = "Cancelled",
     /**
-     * The transaction has been successfully executed
+     * The transaction has been included onchain and its execution was successful.
      */
     Success = "Success",
 }

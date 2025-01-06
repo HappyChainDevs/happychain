@@ -29,13 +29,11 @@ export type AttemptSubmissionResult = Result<undefined, AttemptSubmissionError>
 
 /**
  * This module is responsible for submitting a new attempt to the blockchain.
- * It coordinates the process using a transaction and an `AttemptSubmissionParameters` type, defined as follows:
- *
- * type AttemptSubmissionParameters = Omit<Attempt, "hash" | "gas">
+ * It coordinates the process using a transaction and an {@link AttemptSubmissionParameters}.
  *
  * This module given that information is in charge of:
  * - Requesting a nonce
- * - Estimating the gas
+ * - Estimating the gas limit and pulling the gas price
  * - Signing the transaction
  * - Adding the attempt to the transaction attempts list.
  * - Flushing the transaction. We do this **before** sending the transaction, to avoid the case where the transaction is
