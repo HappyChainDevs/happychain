@@ -1,6 +1,6 @@
 export { Transaction, TransactionStatus, type TransactionConstructorConfig } from "./Transaction.js"
 export { TransactionManager, type TransactionManagerConfig, type TransactionOriginator } from "./TransactionManager.js"
 export type { Abi } from "viem"
-export { GasEstimator, EstimateGasErrorCause, type IGasEstimator } from "./GasEstimator.js"
+export { DefaultGasLimitEstimator, EstimateGasErrorCause, type GasEstimator } from "./GasEstimator.js"
 export type { LatestBlock } from "./BlockMonitor.js"
 export { TxmHookType, type TxmHookHandler } from "./HookManager.js"

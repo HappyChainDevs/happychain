@@ -8,7 +8,7 @@ import {
 import { type Abi, type Account, type Chain, type Transport, createPublicClient, createWalletClient } from "viem"
 import { ABIManager } from "./AbiManager.js"
 import { BlockMonitor, type LatestBlock } from "./BlockMonitor.js"
-import { GasEstimator } from "./GasEstimator.js"
+import { DefaultGasLimitEstimator, type GasEstimator } from "./GasEstimator.js"
 import { GasPriceOracle } from "./GasPriceOracle.js"
 import { HookManager, type TxmHookHandler, type TxmHookType } from "./HookManager.js"
 import { NonceManager } from "./NonceManager.js"
@@ -78,7 +78,7 @@ export type TransactionManagerConfig = {
     /**
      * The gas estimator to use for estimating the gas limit of a transaction.
      * You can provide your own implementation to override the default one.
-     * Default: {@link GasEstimator}
+     * Default: {@link DefaultGasLimitEstimator}
      */
     gasEstimator?: GasEstimator
 }
@@ -86,10 +86,11 @@ export type TransactionManagerConfig = {
 export type TransactionOriginator = (block: LatestBlock) => Promise<Transaction[]>
 
 /**
- * This is the core module. As a user of the transaction manager, this is the module you need to import and instantiate.
- * It maintains public references to all other modules, allowing seamless access between them.
- * While it doesn’t contain much logic itself, as most functionality is distributed across other modules, it serves as the main
- * public interface, acting as a bridge between the library and the user.
+ * The TransactionManager is the core module of the transaction manager.
+ * To use the transaction manager, you must instantiate this class.
+ * Before using the transaction manager, call the {@link TransactionManager.start} method to start it.
+ * Once started, use the {@link TransactionManager.addTransactionOriginator} method
+ * to add a transaction originator and begin sending transactions to the blockchain.
  */
 export class TransactionManager {
     public readonly collectors: TransactionOriginator[]
@@ -133,7 +134,7 @@ export class TransactionManager {
 
         this.nonceManager = new NonceManager(this)
         this.gasPriceOracle = new GasPriceOracle(this)
-        this.gasEstimator = _config.gasEstimator || new GasEstimator()
+        this.gasEstimator = _config.gasEstimator || new DefaultGasLimitEstimator()
         this.blockMonitor = new BlockMonitor(this)
         this.pendingTxReporter = new TxMonitor(this)
         this.transactionRepository = new TransactionRepository(this)
@@ -154,8 +155,8 @@ export class TransactionManager {
     }
 
     /**
-     * Adds a originator to the transaction manager.
-     * A originator is a function that returns a list of transactions to be sent in the next block.
+     * Adds an originator to the transaction manager.
+     * An originator is a function that returns a list of transactions to be sent in the next block.
      * It is important that the originator function is as fast as possible to avoid delays when sending transactions to the blockchain
      * @param originator - The originator to add.
      */
