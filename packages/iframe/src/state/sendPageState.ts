@@ -14,7 +14,7 @@ const targetAddress = atom<Address | string | undefined>(undefined)
 // `<SendInput />` input value - $HAPPY amount to be sent
 const sendValue = atom<string | undefined>(undefined)
 
-// boolean to check if inputted send amount is higher than user's balance
+// boolean to check if input send amount is higher than user's balance
 const balanceExceeded = atom<boolean>(false)
 
 export { targetAddress, sendValue, balanceExceeded }
