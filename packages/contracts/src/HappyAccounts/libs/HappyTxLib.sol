@@ -100,9 +100,17 @@ library HappyTxLib {
      * @return executeGasLimit The gas limit for the execute function
      */
     function getExecuteGasLimit(bytes calldata happyTx) external pure returns (uint32 executeGasLimit) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
+        // Require minimum length for static fields + dynamic lengths word
+        if (happyTx.length < 224) revert MalformedHappyTx();
+        
+        // The dynamic lengths word is at offset 192 (after static fields)
+        bytes32 packedLengths;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            packedLengths := calldataload(add(happyTx.offset, 192))
+        }
+        
+        return _unpackExecGasLimit(packedLengths);
     }
 
     /**
