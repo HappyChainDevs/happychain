@@ -233,16 +233,17 @@ library HappyTxLib {
      * [static fields (192 bytes)][dynamic lengths (32 bytes)][dynamic data (varies)]
      * Each dynamic field is tightly packed without padding
      * @param happyTx The HappyTx struct to encode
-     * @return The encoded bytes
+     * @return result The encoded bytes
      */
-    function encode(HappyTx memory happyTx) public pure returns (bytes memory) {
+    function encode(HappyTx memory happyTx) internal pure returns (bytes memory result) {
         uint256 dynamicDataLength = happyTx.callData.length + happyTx.paymasterData.length
             + happyTx.validatorData.length + happyTx.extraData.length;
-        bytes memory result = new bytes(160 + dynamicDataLength); // Total Len = static fields + dynamic fields
-
+        result = new bytes(160 + dynamicDataLength); // Total Len = static fields + dynamic fields
+        uint256 dynamicPtr;
         // solhint-disable-next-line no-inline-assembly
         assembly {
             let ptr := add(result, 32) // Skip length prefix
+            dynamicPtr := add(result, 0xE0) // Offset after static fields and lengths
 
             // Pack first slot: account (20) + first 12 bytes of dest
             let dest := mload(add(happyTx, 96)) // Load dest
@@ -295,21 +296,10 @@ library HappyTxLib {
             mstore(add(result, 192), packedLengths)
         }
 
-        // Pack dynamic fields
-        uint256 ptr =
-            _packDynamicFields(happyTx.callData, happyTx.paymasterData, happyTx.validatorData, happyTx.extraData);
-
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            // Copy packed dynamic fields to result
-            let destPtr := add(result, 224) // Offset after static fields and lengths
-            let srcPtr := ptr
-            let length := mload(happyTx)
-            for {} lt(srcPtr, add(ptr, length)) { srcPtr := add(srcPtr, 32) } {
-                mstore(destPtr, mload(srcPtr))
-                destPtr := add(destPtr, 32)
-            }
-        }
+        // Pack dynamic fields directly to result after static fields
+        _packDynamicFields(
+            happyTx.callData, happyTx.paymasterData, happyTx.validatorData, happyTx.extraData, dynamicPtr
+        );
 
         return result;
     }
@@ -364,25 +354,16 @@ library HappyTxLib {
      * Word4: [4 bytes of callData][28 bytes of paymasterData]
      * Word5: [remaining 12 bytes of paymasterData][20 bytes of next field]
      * And so on...
-     *
-     * @return ptr Pointer to the start of packed data in memory
      */
     function _packDynamicFields(
         bytes memory callData,
         bytes memory paymasterData,
         bytes memory validatorData,
-        bytes memory extraData
-    ) internal pure returns (uint256 ptr) {
-        uint256 length = callData.length + paymasterData.length + validatorData.length + extraData.length;
-        // bytes32 mask = 0xff00000000000000000000000000000000000000000000000000000000000000;
-
+        bytes memory extraData,
+        uint256 writePtr
+    ) internal pure {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            ptr := mload(0x40) // Get free memory pointer
-            // Update the free memory pointer and round it up to beginning of the next 32 byte slot
-            mstore(0x40, and(add(add(ptr, length), 0x1F), not(0x1F))) // round up to multiple of 32
-
-            let writePtr := ptr
             let currentWordOffset := 0
 
             // Define function to pack a dynamic field with offset
