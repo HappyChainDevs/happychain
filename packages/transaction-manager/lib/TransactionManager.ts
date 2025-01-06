@@ -240,7 +240,8 @@ export class TransactionManager {
         this.blockTime = _config.blockTime || 2n
         this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
 
-        if ((timeout + retryDelay) * retries > this.blockTime * 1000n) {
+        const timePerRetry = timeout + retryDelay
+        if (timePerRetry * retries > this.blockTime * 1000n) {
             console.warn(
                 "The value of (timeout + retryDelay) * retries is greater than the time block. This could slow down the transaction manager.",
             )
