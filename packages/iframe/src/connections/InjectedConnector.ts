@@ -110,9 +110,18 @@ export class InjectedConnector implements ConnectionProvider {
         const past = storage.get(StorageKey.HappyUser)
         if (past?.provider !== this.id) return
 
+        /**
+         * Here for re-connect we will use eth_requestAccounts instead of the simpler eth_accounts.
+         * This causes Metamask to popup and confirm connection on page load. Denying this will cause
+         * the user to be logged out and. `eth_accounts` in theory almost would avoid this, however
+         * after page load Wagmi is connected on the wallet-side and this requires an active
+         * connection. This is not possible in app-mode as the injected wallet lives on the app side
+         * and is only accessible when connected, and so in injected mode there can be no
+         * authentication without connection.
+         */
         const reconnectRequest = {
             key: createUUID(), // it's ok, there are no pending promises to be resolved by this
-            windowId: iframeID(), // reconnect was initialized internally, so the request can be from iframe
+            windowId: iframeID(), // reconnect was initialized internally, so the request is from iframe
             payload: { method: "eth_requestAccounts" },
             error: null,
         } as const
