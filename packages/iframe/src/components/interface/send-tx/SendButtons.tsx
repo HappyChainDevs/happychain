@@ -40,10 +40,7 @@ const SendButtons = () => {
             {
                 // don't show the button if tx is in pending status (popup window is open)
                 !isPending && (
-                    <Link
-                        to={"/embed"}
-                        className="flex justify-center rounded-xl w-[50%] h-10 text-white disabled:opacity-50"
-                    >
+                    <Link to={"/embed"} className="w-[50%]">
                         <Button
                             className="flex justify-center rounded-xl w-full h-10 text-white disabled:opacity-50"
                             intent={"primary"}
