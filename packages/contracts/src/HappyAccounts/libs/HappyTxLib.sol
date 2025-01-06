@@ -35,6 +35,9 @@ import {MalformedHappyTx} from "../utils/HappyErrors.sol";
  * Each dynamic field is tightly packed without padding
  */
 
+/// @dev Maximum length for dynamic fields (2^40 - 1)
+uint256 constant MAX_LENGTH = type(uint40).max;
+
 /// @dev Represents the conversion constant from byte to bits.
 uint256 constant BYTE_TO_BITS = 8;
 
@@ -147,6 +150,45 @@ library HappyTxLib {
         }
 
         return result;
+    }
+
+    /**
+     * @dev Internal utility to pack dynamic field lengths into a single word.
+     * Layout (32 bytes total):
+     * |-totalLen(8)-|-dynamicLengths(20)-|-execGasLimit(4)-|
+     * Most significant bits (left) to least significant bits (right)
+     * @param callDataLength Length of callData field
+     * @param paymasterDataLength Length of paymasterData field
+     * @param validatorDataLength Length of validatorData field
+     * @param extraDataLength Length of extraData field
+     * @param execGasLimit Gas limit for execute function
+     * @return Packed lengths in a single bytes32
+     */
+    function _packLengths(
+        uint256 callDataLength,
+        uint256 paymasterDataLength,
+        uint256 validatorDataLength,
+        uint256 extraDataLength,
+        uint32 execGasLimit
+    ) internal pure returns (bytes32) {
+        // Validate all lengths are within 40 bits
+        uint256 maxLengthValue = callDataLength | paymasterDataLength | validatorDataLength | extraDataLength;
+        if (maxLengthValue > MAX_LENGTH) revert MalformedHappyTx();
+
+        uint256 encodedLengths;
+        unchecked {
+            uint256 totalLen = callDataLength + paymasterDataLength + validatorDataLength + extraDataLength;
+
+            // Pack from left to right (most significant to least significant)
+            encodedLengths = totalLen << 192;                  // First 8 bytes (MSB)
+            encodedLengths |= (callDataLength << 152);       // 5 bytes after totalLen
+            encodedLengths |= (paymasterDataLength << 112);  // 5 bytes after len1
+            encodedLengths |= (validatorDataLength << 72);   // 5 bytes after len2
+            encodedLengths |= (extraDataLength << 32);       // 5 bytes after len3
+            encodedLengths |= uint256(execGasLimit);         // Last 4 bytes (LSB)
+        }
+
+        return bytes32(encodedLengths);
     }
 
     /**
