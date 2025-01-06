@@ -1,6 +1,6 @@
 /**
- * Creates a debounced function which is will not be called until <delay> milliseconds have passed
- * since the last call.
+ * Creates a debounced function which is will not be called until specified \<delay\>
+ * milliseconds have passed since the last call.
  *
  * For more info: {@link https://css-tricks.com/debouncing-throttling-explained-examples/}
  */
