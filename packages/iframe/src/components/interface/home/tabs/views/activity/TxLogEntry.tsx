@@ -1,8 +1,8 @@
 import { shortenAddress } from "@happychain/sdk-shared"
 import { ArrowUpRight } from "@phosphor-icons/react"
-import clsx from "clsx"
 import { formatEther } from "viem"
 
+import { cx } from "class-variance-authority"
 import { useAtomValue } from "jotai"
 import { currentChainAtom } from "#src/state/chains"
 import type { TxInfo } from "#src/state/txHistory"
@@ -22,10 +22,10 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
             <div className="flex flex-row items-center justify-center space-x-1">
                 <ArrowUpRight
-                    className={clsx({
-                        "bg-green-600 rounded-sm": receipt.status === "success",
-                        "bg-red-600 rounded-sm": receipt.status === "reverted",
-                    })}
+                    className={`${cx({
+                        "bg-success": receipt.status === "success",
+                        "bg-error": receipt.status === "reverted",
+                    })} rounded-sm`}
                 />
                 <div className="flex flex-col items-start justify-center">
                     <span>Send</span>
