@@ -23,7 +23,7 @@ const ActivityView = () => {
     }
 
     return (
-        <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 space-y-1">
+        <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 bg-base-200 rounded-lg space-y-1">
             {txs.pending.map((tx) => (
                 <TxLoadingSkeleton key={`tx_pending_${tx.hash}`} tx={tx.hash} />
             ))}
