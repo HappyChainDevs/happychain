@@ -1,7 +1,7 @@
 import { type UUID, createUUID } from "@happychain/common"
 import { abis } from "@happychain/contracts/account-abstraction/sepolia"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
-import { type Address, type TransactionRequest, encodeFunctionData } from "viem"
+import { type Address, type TransactionRequest, concat, encodeFunctionData, fromHex, toHex } from "viem"
 import type { EstimateUserOperationGasReturnType, UserOperation } from "viem/account-abstraction"
 import { getAuthState } from "../state/authState"
 import { type AppURL, getAppURL, getIframeURL, isIframe } from "../utils/appURL"
@@ -55,7 +55,7 @@ export const ACCOUNT_DEPLOYMENT_COST = 190_000n
  * Execution mode for standard transactions
  * @see https://github.com/zerodevapp/kernel/blob/737db3123165d6009c9261dc98e149a3fdd82f97/src/types/Constants.sol#L4-L23
  */
-const CALL_MODE = "0x0000000000000000000000000000000000000000000000000000000000000000" as const
+const CALLTYPE_SINGLE = "0x0000000000000000000000000000000000000000000000000000000000000000" as const
 
 /**
  * Format a standard transaction into a UserOperation structure.
@@ -76,10 +76,18 @@ const CALL_MODE = "0x00000000000000000000000000000000000000000000000000000000000
  * const userOp = convertTxToUserOp(tx, sender)
  */
 export function convertTxToUserOp(tx: TransactionRequest, sender: Address): Partial<UserOperation<"0.7">> {
+    if (!tx.to) {
+        throw new Error("Missing destination address")
+    }
+    const executionData = concat([
+        toHex(fromHex(tx.to, "bigint"), { size: 20 }), // extends to 20 bytes if smaller
+        toHex(tx.value ?? 0n, { size: 32 }),
+        tx.data ?? "0x",
+    ])
     const callData = encodeFunctionData({
         abi: KERNEL_ABI,
         functionName: "execute",
-        args: [CALL_MODE, tx?.data ?? "0x"],
+        args: [CALLTYPE_SINGLE, executionData],
     })
 
     return {
