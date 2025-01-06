@@ -355,7 +355,7 @@ library HappyTxLib {
         bytes memory extraData
     ) internal pure returns (uint256 ptr) {
         uint256 length = callData.length + paymasterData.length + validatorData.length + extraData.length;
-        bytes32 mask = 0xff00000000000000000000000000000000000000000000000000000000000000;
+        // bytes32 mask = 0xff00000000000000000000000000000000000000000000000000000000000000;
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -382,11 +382,9 @@ library HappyTxLib {
                 let value := mload(readPtr)
 
                 for {} lt(bytesProcessed, remaining) { bytesProcessed := add(bytesProcessed, 1) } {
-                    // Mask the leftmost byte and shift it to the right position
-                    let maskedByte := and(value, mask)
+                    let maskedByte := and(value, 0xff00000000000000000000000000000000000000000000000000000000000000)
                     let positionedByte := shr(mul(bytesProcessed, 8), maskedByte)
                     currentWord := or(currentWord, positionedByte)
-                    // Shift value left by 8 bits to bring next byte into position
                     value := shl(8, value)
                 }
                 mstore(writePtr, currentWord)
@@ -394,55 +392,62 @@ library HappyTxLib {
                     // Don't increment writePtr as we'll continue writing to this word
             }
 
-            // Now handle paymasterData
-            readPtr := add(paymasterData, 32) // Reset readPtr to start of paymasterData
-            remaining := mload(paymasterData)
+            // Define function to pack a dynamic field with offset
+            function packDynamicFieldWithOffset(dynamicField, currentPtr, wordOffset) -> newWritePtr, newOffset {
+                let mask := 0xff00000000000000000000000000000000000000000000000000000000000000
 
-            // Process full words from paymasterData
-            for {} gt(remaining, 32) { remaining := sub(remaining, 32) } {
-                let currentWord := mload(readPtr)
+                let fieldReadPtr := add(dynamicField, 32)
+                let fieldRemaining := mload(dynamicField)
+                newWritePtr := currentPtr
+                newOffset := wordOffset
 
-                // Split current word into two parts based on offset
-                // First (32-offset) bytes go in current slot
-                mstore(
-                    writePtr,
-                    or(
-                        mload(writePtr), // existing content
-                        shr(mul(currentWordOffset, 8), currentWord)
+                // Process full words
+                for {} gt(fieldRemaining, 32) { fieldRemaining := sub(fieldRemaining, 32) } {
+                    let currentWord := mload(fieldReadPtr)
+
+                    // First (32-offset) bytes go in current slot
+                    mstore(
+                        newWritePtr,
+                        or(
+                            mload(newWritePtr), // existing content
+                            shr(mul(newOffset, 8), currentWord)
+                        )
                     )
-                )
-                writePtr := add(writePtr, 32)
+                    newWritePtr := add(newWritePtr, 32)
 
-                // Last 'offset' bytes go in next slot
-                mstore(writePtr, shl(mul(sub(32, currentWordOffset), 8), currentWord))
+                    // Last 'offset' bytes go in next slot
+                    mstore(newWritePtr, shl(mul(sub(32, newOffset), 8), currentWord))
 
-                readPtr := add(readPtr, 32)
-            }
-
-            // Handle remaining bytes (if any)
-            if gt(remaining, 0) {
-                // Start with existing content in the current slot
-                let currentWord := mload(writePtr)
-                let bytesProcessed := 0
-                let value := mload(readPtr)
-
-                for {} lt(bytesProcessed, remaining) { bytesProcessed := add(bytesProcessed, 1) } {
-                    let maskedByte := and(value, mask)
-                    // Position byte accounting for existing offset
-                    let positionedByte := shr(mul(add(bytesProcessed, currentWordOffset), 8), maskedByte)
-                    currentWord := or(currentWord, positionedByte)
-                    value := shl(8, value)
+                    fieldReadPtr := add(fieldReadPtr, 32)
                 }
-                mstore(writePtr, currentWord)
 
-                // Update offset for next field
-                currentWordOffset := add(currentWordOffset, remaining)
-                // Only move writePtr if we filled the word
-                if gt(currentWordOffset, 31) {
-                    writePtr := add(writePtr, 32)
-                    currentWordOffset := mod(currentWordOffset, 32)
+                // Handle remaining bytes (if any)
+                if gt(fieldRemaining, 0) {
+                    let currentWord := mload(newWritePtr)
+                    let bytesProcessed := 0
+                    let value := mload(fieldReadPtr)
+
+                    for {} lt(bytesProcessed, fieldRemaining) { bytesProcessed := add(bytesProcessed, 1) } {
+                        let maskedByte := and(value, mask)
+                        let positionedByte := shr(mul(add(bytesProcessed, newOffset), 8), maskedByte)
+                        currentWord := or(currentWord, positionedByte)
+                        value := shl(8, value)
+                    }
+                    mstore(newWritePtr, currentWord)
+
+                    // Update offset
+                    newOffset := add(newOffset, fieldRemaining)
+                    if gt(newOffset, 31) {
+                        newWritePtr := add(newWritePtr, 32)
+                        newOffset := mod(newOffset, 32)
+                    }
                 }
             }
+
+            // Pack each dynamic field
+            writePtr, currentWordOffset := packDynamicFieldWithOffset(paymasterData, writePtr, currentWordOffset)
+            writePtr, currentWordOffset := packDynamicFieldWithOffset(validatorData, writePtr, currentWordOffset)
+            writePtr, currentWordOffset := packDynamicFieldWithOffset(extraData, writePtr, currentWordOffset)
         }
     }
 
