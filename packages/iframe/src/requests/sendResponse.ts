@@ -67,8 +67,15 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
             payload: null,
         }
 
-        isIframe(app)
-            ? iframeProvider.handleRequestResolution(response)
-            : void happyProviderBus.emit(Msgs.RequestResponse, response)
+        const _isIframe = isIframe(app)
+        const _isInjected = getUser()?.type === WalletType.Injected
+
+        if (_isIframe && _isInjected) {
+            new InjectedProviderProxy().handleRequestResolution(response)
+        } else if (_isIframe) {
+            iframeProvider.handleRequestResolution(response)
+        } else {
+            void happyProviderBus.emit(Msgs.RequestResponse, response)
+        }
     }
 }
