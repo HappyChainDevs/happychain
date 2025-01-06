@@ -1,8 +1,6 @@
 import { type UUID, createUUID } from "@happychain/common"
-import { abis } from "@happychain/contracts/account-abstraction/sepolia"
 import { AuthState, EIP1193UnauthorizedError } from "@happychain/sdk-shared"
-import { type Address, type TransactionRequest, concat, encodeFunctionData, fromHex, toHex } from "viem"
-import type { EstimateUserOperationGasReturnType, UserOperation } from "viem/account-abstraction"
+import type { EstimateUserOperationGasReturnType } from "viem/account-abstraction"
 import { getAuthState } from "../state/authState"
 import { type AppURL, getAppURL, getIframeURL, isIframe } from "../utils/appURL"
 
@@ -42,64 +40,12 @@ export function checkAuthenticated() {
     }
 }
 
-const KERNEL_ABI = abis.Kernel
-
 /**
  * Gas cost for deploying a smart account (Kernel).
  * Based on our observations: a single UserOperation in a bundle had a deployment overhead of 187K gas.
  * The value is adjusted to a safe upper limit to account for potential variations.
  */
 export const ACCOUNT_DEPLOYMENT_COST = 190_000n
-
-/**
- * Execution mode for standard transactions
- * @see https://github.com/zerodevapp/kernel/blob/737db3123165d6009c9261dc98e149a3fdd82f97/src/types/Constants.sol#L4-L23
- */
-const CALLTYPE_SINGLE = "0x0000000000000000000000000000000000000000000000000000000000000000" as const
-
-/**
- * Format a standard transaction into a UserOperation structure.
- * Gas-related fields and signature will need to be computed separately
- * with `prepareUserOperation()` to avoid expensive operations.
- *
- * @param tx - A standard transaction request from the app
- * @param sender - Address of the account sending the UserOperation
- * @returns Partially filled UserOperation, missing gas estimation, to, signature
- * @example
- * const tx = {
- *   to: aValidEthereumAddress,
- *   data: aValidHexValue,
- *   value: aValidBigInt,
- *   nonce: aValidNumber,
- * }
- * const sender = "0x123..."
- * const userOp = convertTxToUserOp(tx, sender)
- */
-export function convertTxToUserOp(tx: TransactionRequest, sender: Address): Partial<UserOperation<"0.7">> {
-    if (!tx.to) {
-        throw new Error("Missing destination address")
-    }
-    const executionData = concat([
-        toHex(fromHex(tx.to, "bigint"), { size: 20 }), // extends to 20 bytes if smaller
-        toHex(tx.value ?? 0n, { size: 32 }),
-        tx.data ?? "0x",
-    ])
-    const callData = encodeFunctionData({
-        abi: KERNEL_ABI,
-        functionName: "execute",
-        args: [CALLTYPE_SINGLE, executionData],
-    })
-
-    return {
-        sender,
-        nonce: tx.nonce !== undefined ? BigInt(tx.nonce) : undefined,
-        callData,
-        callGasLimit: tx.gas !== undefined ? BigInt(tx.gas) : undefined,
-        maxFeePerGas: tx.maxFeePerGas,
-        maxPriorityFeePerGas: tx.maxPriorityFeePerGas,
-        // The rest will be filled by `prepareUserOperation()`
-    }
-}
 
 /**
  * Calculates the complete gas breakdown  for a userop.
