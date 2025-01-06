@@ -20,6 +20,8 @@ import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
  * Used by wagmi to handle all transactions when in standalone mode,
  * as well as internal transactions such as sending via the Send screen
  * wether or not in stand alone mode.
+ * Also used by `InjectedProviderProxy` when a user is connected via an injected
+ * wallet while in direct-access mode, and the provider is used directly (not wagmi)
  *
  * The provider routes the call to our logic in the `requests` directory.
  */
