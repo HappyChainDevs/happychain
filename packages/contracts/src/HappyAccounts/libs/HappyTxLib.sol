@@ -364,33 +364,7 @@ library HappyTxLib {
             mstore(0x40, and(add(add(ptr, length), 0x1F), not(0x1F))) // round up to multiple of 32
 
             let writePtr := ptr
-            let readPtr := add(callData, 32)
-            let remaining := mload(callData)
-
-            // First copy all full 32-byte words from calldata
-            for {} gt(remaining, 32) { remaining := sub(remaining, 32) } {
-                mstore(writePtr, mload(readPtr))
-                writePtr := add(writePtr, 32)
-                readPtr := add(readPtr, 32)
-            }
-
-            // Handle remaining calldata bytes and store the offset
             let currentWordOffset := 0
-            if gt(remaining, 0) {
-                let currentWord := 0
-                let bytesProcessed := 0
-                let value := mload(readPtr)
-
-                for {} lt(bytesProcessed, remaining) { bytesProcessed := add(bytesProcessed, 1) } {
-                    let maskedByte := and(value, 0xff00000000000000000000000000000000000000000000000000000000000000)
-                    let positionedByte := shr(mul(bytesProcessed, 8), maskedByte)
-                    currentWord := or(currentWord, positionedByte)
-                    value := shl(8, value)
-                }
-                mstore(writePtr, currentWord)
-                currentWordOffset := remaining // Will be in range [1, 31] since remaining < 32
-                    // Don't increment writePtr as we'll continue writing to this word
-            }
 
             // Define function to pack a dynamic field with offset
             function packDynamicFieldWithOffset(dynamicField, currentPtr, wordOffset) -> newWritePtr, newOffset {
@@ -444,7 +418,8 @@ library HappyTxLib {
                 }
             }
 
-            // Pack each dynamic field
+            // Pack all dynamic fields starting with callData
+            writePtr, currentWordOffset := packDynamicFieldWithOffset(callData, writePtr, currentWordOffset)
             writePtr, currentWordOffset := packDynamicFieldWithOffset(paymasterData, writePtr, currentWordOffset)
             writePtr, currentWordOffset := packDynamicFieldWithOffset(validatorData, writePtr, currentWordOffset)
             writePtr, currentWordOffset := packDynamicFieldWithOffset(extraData, writePtr, currentWordOffset)
