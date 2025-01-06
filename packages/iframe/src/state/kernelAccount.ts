@@ -1,7 +1,7 @@
 import { accessorsFromAtom } from "@happychain/common"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
-import { type EcdsaKernelSmartAccountImplementation, toKernelSmartAccount } from "permissionless/accounts"
+import { type EcdsaKernelSmartAccountImplementation, toEcdsaKernelSmartAccount } from "permissionless/accounts"
 import { http, type Address, createPublicClient, createWalletClient } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
@@ -28,7 +28,7 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
             account: walletAddress,
         })
 
-        const account = await toKernelSmartAccount({
+        return await toEcdsaKernelSmartAccount({
             client: publicClient,
             entryPoint: {
                 address: entryPoint07Address,
@@ -36,12 +36,11 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
             },
             owners: [owner],
             version: "0.3.1",
-            validatorAddress: contracts.ECDSAValidator,
+            ecdsaValidatorAddress: contracts.ECDSAValidator,
             accountLogicAddress: contracts.Kernel,
             factoryAddress: contracts.KernelFactory,
             metaFactoryAddress: contracts.FactoryStaker,
         })
-        return account
     } catch (error) {
         console.error("Kernel account could not be created:", error)
         return undefined
