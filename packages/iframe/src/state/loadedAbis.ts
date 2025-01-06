@@ -5,7 +5,7 @@ import type { Abi, Address } from "viem"
 import { StorageKey } from "#src/services/storage"
 
 type AbiStorageRecord = Record<Address, Abi>
-type AbisLoadedForUser = Record<Address, AbiStorageRecord[]>
+type AbisLoadedForUser = Record<Address, AbiStorageRecord>
 
 /**
  * Atom to record contract address <-> ABI pairs, scoped by user.
@@ -37,10 +37,10 @@ export function loadAbiForUser(userAddress: Address, payload?: RecordAbiPayload)
 
         return {
             ...prevAbis,
-            [userAddress]: [
-                ...loadedAbisForUser.filter((record) => !record[payload.address]),
-                { [payload.address]: payload.abi },
-            ],
+            [userAddress]: {
+                ...loadedAbisForUser,
+                [payload.address]: payload.abi,
+            },
         }
     })
 
