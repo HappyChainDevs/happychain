@@ -1,21 +1,18 @@
 import { debounce, validateNumericInput } from "@happychain/common"
-import { useAtomValue } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import type React from "react"
-import { useCallback, useState } from "react"
+import { useCallback } from "react"
 import { formatEther, parseEther } from "viem"
 import { useBalance } from "wagmi"
-import { userAtom } from "../../../state/user"
+import { balanceExceeded, sendValue } from "#src/state/sendPageState"
+import { userAtom } from "#src/state/user"
 
-interface SendInputProps {
-    sendValue: string | undefined
-    setSendValue: React.Dispatch<React.SetStateAction<string | undefined>>
-}
-
-const SendInput = ({ sendValue, setSendValue }: SendInputProps) => {
+const SendInput = () => {
     const user = useAtomValue(userAtom)
+    const [sendVal, setSendVal] = useAtom(sendValue)
     const { data: balance } = useBalance({ address: user?.address })
 
-    const [isExceedingBalance, setIsExceedingBalance] = useState<boolean>(false)
+    const [exceededFlag, setExceededFlag] = useAtom(balanceExceeded)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
@@ -44,7 +41,7 @@ const SendInput = ({ sendValue, setSendValue }: SendInputProps) => {
             inputValue = `0.${inputValue.substring(1)}`
         }
 
-        setSendValue(inputValue)
+        setSendVal(inputValue)
         debounceValidationAndBalance(inputValue)
     }
 
@@ -55,16 +52,16 @@ const SendInput = ({ sendValue, setSendValue }: SendInputProps) => {
         // Perform validation and balance checking
         if (validateNumericInput(formattedValue) || formattedValue === "") {
             // Check if the input value exceeds the balance
-            setIsExceedingBalance(formattedValue && balance ? parseEther(formattedValue) > balance.value : false)
+            setExceededFlag(formattedValue && balance ? parseEther(formattedValue) > balance.value : false)
         }
     }, 500)
 
     const handleMaxButtonClick = useCallback(() => {
         if (balance) {
-            setSendValue(formatEther(balance.value))
-            setIsExceedingBalance(false)
+            setSendVal(formatEther(balance.value))
+            setExceededFlag(false)
         }
-    }, [balance, setSendValue])
+    }, [balance, setSendVal, setExceededFlag])
 
     return (
         <div className="flex flex-col items-center justify-start h-[110px] w-full border-slate-700 border-t border-b my-3 px-3">
@@ -78,10 +75,10 @@ const SendInput = ({ sendValue, setSendValue }: SendInputProps) => {
                     <div className="flex flex-row grow items-center justify-end space-x-2">
                         <input
                             className={`w-[100px] h-[30px] text-[20px] px-2 text-slate-600 text-right placeholder:text-[20px] placeholder:text-slate-600 placeholder:opacity-50 ${
-                                isExceedingBalance ? "border-red-500" : ""
+                                exceededFlag ? "border-red-500" : ""
                             }`}
                             placeholder={"0.0"}
-                            value={sendValue || ""}
+                            value={sendVal || ""}
                             onChange={handleTokenBalanceChange}
                             disabled={!balance}
                         />
@@ -99,7 +96,7 @@ const SendInput = ({ sendValue, setSendValue }: SendInputProps) => {
                 </div>
             </div>
 
-            {isExceedingBalance && (
+            {exceededFlag && (
                 <div className="flex w-full items-center justify-center text-red-500">Not enough $HAPPY</div>
             )}
         </div>

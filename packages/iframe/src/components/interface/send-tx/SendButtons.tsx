@@ -1,15 +1,16 @@
-import { CircleNotch } from "@phosphor-icons/react"
 import { Link, useNavigate } from "@tanstack/react-router"
+import { useAtom } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
 import { useSendTransaction } from "wagmi"
+import { Button } from "#src/components/primitives/button/Button"
+import { balanceExceeded, sendValue, targetAddress } from "#src/state/sendPageState"
 
-interface SendButtonsInterface {
-    sendValue: string | undefined
-    targetAddress: Address | string | undefined
-}
+const SendButtons = () => {
+    const [sendVal] = useAtom(sendValue)
+    const [inputAddress] = useAtom(targetAddress)
+    const [exceededFlag] = useAtom(balanceExceeded)
 
-const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     const navigate = useNavigate()
     const { sendTransaction, isPending, isSuccess, isError } = useSendTransaction()
 
@@ -26,13 +27,13 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
     }, [isSuccess, navigate, isError])
 
     const submitSend = useCallback(() => {
-        if (targetAddress && sendValue) {
+        if (inputAddress && sendVal) {
             void sendTransaction({
-                to: targetAddress as Address,
-                value: parseEther(sendValue),
+                to: inputAddress as Address,
+                value: parseEther(sendVal),
             })
         }
-    }, [sendTransaction, sendValue, targetAddress])
+    }, [sendTransaction, sendVal, inputAddress])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">
@@ -40,27 +41,27 @@ const SendButtons = ({ sendValue, targetAddress }: SendButtonsInterface) => {
                 // don't show the button if tx is in pending status (popup window is open)
                 !isPending && (
                     <Link
-                        className="flex items-center justify-center rounded-lg w-full h-10 bg-blue-500 text-center text-white disabled:opacity-50"
                         to={"/embed"}
+                        className="flex justify-center rounded-xl w-[50%] h-10 text-white disabled:opacity-50"
                     >
-                        Cancel
+                        <Button
+                            className="flex justify-center rounded-xl w-full h-10 text-white disabled:opacity-50"
+                            intent={"primary"}
+                        >
+                            Cancel
+                        </Button>
                     </Link>
                 )
             }
-            <button
-                className="flex items-center justify-center rounded-lg w-full h-10 bg-blue-500 text-center text-white disabled:opacity-50"
-                type="button"
+            <Button
+                className="flex items-center justify-center rounded-xl w-[50%] h-10 text-white disabled:opacity-50"
+                intent={"primary"}
                 onClick={submitSend}
-                disabled={!targetAddress || !sendValue || isPending}
+                disabled={!inputAddress || !sendValue || isPending || exceededFlag}
+                isLoading={isPending}
             >
-                {!isPending ? (
-                    "Continue"
-                ) : (
-                    <div className="animate-spin">
-                        <CircleNotch />
-                    </div>
-                )}
-            </button>
+                Continue
+            </Button>
         </div>
     )
 }
