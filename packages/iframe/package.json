@@ -20,7 +20,6 @@
         "@web3auth/ethereum-mpc-provider": "^9.2.3",
         "@web3auth/mpc-core-kit": "^3.2.4",
         "class-variance-authority": "^0.7.0",
-        "clsx": "^2.1.1",
         "firebase": "^10.14.1",
         "jotai": "^2.9.3",
         "lodash": "^4.17.21",

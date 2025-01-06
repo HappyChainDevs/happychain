@@ -1,7 +1,7 @@
 {
     "typescript.tsdk": "node_modules/typescript/lib",
     "cSpell.words": [
-        "clsx",
+        "JWKS",
         "corepack",
         "daisyui",
         "endregion",
