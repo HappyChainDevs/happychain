@@ -102,14 +102,14 @@ library HappyTxLib {
     function getExecuteGasLimit(bytes calldata happyTx) external pure returns (uint32 executeGasLimit) {
         // Require minimum length for static fields + dynamic lengths word
         if (happyTx.length < 224) revert MalformedHappyTx();
-        
+
         // The dynamic lengths word is at offset 192 (after static fields)
         bytes32 packedLengths;
         // solhint-disable-next-line no-inline-assembly
         assembly {
             packedLengths := calldataload(add(happyTx.offset, 192))
         }
-        
+
         return _unpackExecGasLimit(packedLengths);
     }
 
@@ -262,55 +262,7 @@ library HappyTxLib {
             mstore(add(ptr, 96), mload(add(happyTx, 192))) // nonce
             mstore(add(ptr, 128), mload(add(happyTx, 224))) // maxFeePerGas
             mstore(add(ptr, 160), mload(add(happyTx, 256))) // submitterFee
-
-            // Pack dynamic field lengths and execGasLimit into a single word
-            let dynamicLengths := 0
-            let callDataLength := mload(add(happyTx, 288)) // Length of callData
-            let paymasterDataLength := mload(add(happyTx, 320)) // Length of paymasterData
-            let validatorDataLength := mload(add(happyTx, 352)) // Length of validatorData
-            let extraDataLength := mload(add(happyTx, 384)) // Length of extraData
-
-            // Total length in first byte (uint8)
-            let totalDynamicLength :=
-                add(add(add(callDataLength, paymasterDataLength), validatorDataLength), extraDataLength)
-            dynamicLengths := or(dynamicLengths, and(totalDynamicLength, 0xFF))
-
-            // Pack individual lengths (5 bytes each) and execGasLimit
-            dynamicLengths := or(dynamicLengths, shl(8, and(callDataLength, MASK_DYNAMIC_FIELD_LENGTH)))
-            dynamicLengths := or(dynamicLengths, shl(48, and(paymasterDataLength, MASK_DYNAMIC_FIELD_LENGTH)))
-            dynamicLengths := or(dynamicLengths, shl(88, and(validatorDataLength, MASK_DYNAMIC_FIELD_LENGTH)))
-            dynamicLengths := or(dynamicLengths, shl(128, and(extraDataLength, MASK_DYNAMIC_FIELD_LENGTH)))
-            dynamicLengths := or(dynamicLengths, shl(168, and(mload(add(happyTx, 416)), 0xFFFFFFFF))) // execGasLimit
-
-            mstore(add(ptr, 192), dynamicLengths)
-
-            // Copy dynamic data
-            let dynamicPtr := add(ptr, 224)
-
-            // Copy callData
-            let srcPtr := add(mload(add(happyTx, 288)), 32) // Skip length word
-            let size := callDataLength
-            for { let i := 0 } lt(i, size) { i := add(i, 32) } { mstore(add(dynamicPtr, i), mload(add(srcPtr, i))) }
-            dynamicPtr := add(dynamicPtr, size)
-
-            // Copy paymasterData
-            srcPtr := add(mload(add(happyTx, 320)), 32)
-            size := paymasterDataLength
-            for { let i := 0 } lt(i, size) { i := add(i, 32) } { mstore(add(dynamicPtr, i), mload(add(srcPtr, i))) }
-            dynamicPtr := add(dynamicPtr, size)
-
-            // Copy validatorData
-            srcPtr := add(mload(add(happyTx, 352)), 32)
-            size := validatorDataLength
-            for { let i := 0 } lt(i, size) { i := add(i, 32) } { mstore(add(dynamicPtr, i), mload(add(srcPtr, i))) }
-            dynamicPtr := add(dynamicPtr, size)
-
-            // Copy extraData
-            srcPtr := add(mload(add(happyTx, 384)), 32)
-            size := extraDataLength
-            for { let i := 0 } lt(i, size) { i := add(i, 32) } { mstore(add(dynamicPtr, i), mload(add(srcPtr, i))) }
         }
-
         return result;
     }
 
@@ -352,6 +304,71 @@ library HappyTxLib {
         // - `TODO` is a constant overestimating the Solidity function dispatch
         //    overhead as well as the few opcodes not covered by a `gasLeft()`
         //    computation.
+    }
+
+    /**
+     * @dev Tightly packs multiple dynamic byte arrays into raw memory.
+     * The fields are packed in sequence without any padding, crossing word boundaries:
+     * For example, if callData is 100 bytes (3 full words + 4 bytes):
+     * Word1: [32 bytes of callData]
+     * Word2: [32 bytes of callData]
+     * Word3: [32 bytes of callData]
+     * Word4: [4 bytes of callData][28 bytes of paymasterData]
+     * Word5: [remaining 12 bytes of paymasterData][20 bytes of next field]
+     * And so on...
+     *
+     * @return ptr Pointer to the start of packed data in memory
+     * @return length Total length of packed data
+     */
+    function _packDynamicFields(
+        bytes memory callData,
+        bytes memory paymasterData,
+        bytes memory validatorData,
+        bytes memory extraData
+    ) internal pure returns (uint256 ptr, uint256 length) {
+        length = callData.length + paymasterData.length + validatorData.length + extraData.length;
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            ptr := mload(0x40) // Get free memory pointer
+            // Update the free memory pointer and round it up to the next free 32 byte slot
+            mstore(0x40, and(add(add(ptr, length), 31), not(31))) // (ptr + length + 31) & ~31
+
+            let writePtr := ptr // Current write position
+            // let currentSlotOffset := 0 // Tracks position within current 32-byte slot
+
+            // Copy callData
+            let readPtr := add(callData, 32) // Skip length word
+            let remaining := mload(callData) // Get length
+
+            // First copy all full 32-byte words
+            for {} gt(remaining, 32) { remaining := sub(remaining, 32) } {
+                // Copy full word directly
+                mstore(writePtr, mload(readPtr))
+                writePtr := add(writePtr, 32)
+                readPtr := add(readPtr, 32)
+            }
+
+            // Handle remaining bytes
+            if gt(remaining, 0) {
+                let currentWord := 0
+                let bytesProcessed := 0
+                let mask := shl(248, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) // 0xFF0000...
+                let value := mload(readPtr)
+
+                for {} lt(bytesProcessed, remaining) { bytesProcessed := add(bytesProcessed, 1) } {
+                    // Mask the leftmost byte and shift it to the right position
+                    let maskedByte := and(value, mask)
+                    let positionedByte := shr(mul(bytesProcessed, 8), maskedByte)
+                    // OR it into our word
+                    currentWord := or(currentWord, positionedByte)
+                    // Shift value left by 8 bits to bring next byte into position
+                    value := shl(8, value)
+                }
+                mstore(writePtr, currentWord)
+                writePtr := add(writePtr, 32)
+            }
+        }
     }
 
     /*//////////////////////////////////////////////////////////////
