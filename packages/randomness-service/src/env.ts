@@ -17,6 +17,7 @@ const envSchema = z.object({
         .trim()
         .transform((s) => BigInt(s)),
     RPC_URL: z.string().trim(),
+    CHAIN_ID: z.number().int().positive(),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)

@@ -16,7 +16,7 @@ class RandomnessService {
         this.commitmentManager = new CommitmentManager()
         this.txm = new TransactionManager({
             privateKey: env.PRIVATE_KEY,
-            chainId: 31337,
+            chainId: env.CHAIN_ID,
             abis: abis,
             gasEstimator: new CustomGasEstimator(),
             rpc: {
