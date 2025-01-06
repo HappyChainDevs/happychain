@@ -21,7 +21,7 @@ import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendResponse } from "./sendResponse"
-import { appForSourceID, convertTxToUserOp } from "./utils"
+import { appForSourceID } from "./utils"
 
 /**
  * Processes requests approved by the user in the pop-up,
@@ -46,42 +46,36 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_sendTransaction": {
             if (!user) return false
 
-            const tx = request.payload.params[0]
-            const partialUserOp = await convertTxToUserOp(
-                {
-                    to: tx.to as `0x${string}`,
-                    data: tx.data || "0x",
-                    value: tx.value ? hexToBigInt(tx.value) : 0n,
-                },
-                smartAccountClient.account.address,
-            )
-            const preparedUserOp = await smartAccountClient.prepareUserOperation({
-                account: smartAccountClient.account,
-                calls: [
-                    {
-                        ...partialUserOp,
-                        // Optional gas parameters from the transaction
-                        ...(tx.gas && {
-                            callGasLimit: BigInt(tx.gas),
-                        }),
-                        ...(tx.maxFeePerGas && {
-                            maxFeePerGas: BigInt(tx.maxFeePerGas),
-                        }),
-                        ...(tx.maxPriorityFeePerGas && {
-                            maxPriorityFeePerGas: BigInt(tx.maxPriorityFeePerGas),
-                        }),
-                    },
-                ],
-            })
+            // TODO This try statement should go away, it's only here to surface errors
+            //      that occured in the old convertToUserOp call and were being swallowed.
+            //      We need to make sure all errors are correctly surfaced!
+            try {
+                const tx = request.payload.params[0]
 
-            const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
+                const preparedUserOp = await smartAccountClient.prepareUserOperation({
+                    account: smartAccountClient.account,
+                    calls: [
+                        {
+                            to: tx.to,
+                            data: tx.data,
+                            value: tx.value,
+                        },
+                    ],
+                })
 
-            addPendingUserOp(user.address, {
-                userOpHash: userOpHash as Hash,
-                value: hexToBigInt(tx.value as Hex),
-            })
+                const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
+                console.log(userOpHash)
 
-            return userOpHash
+                addPendingUserOp(user.address, {
+                    userOpHash: userOpHash as Hash,
+                    value: hexToBigInt(tx.value as Hex),
+                })
+
+                return userOpHash
+            } catch (error) {
+                console.error("prep errored", error)
+                throw error
+            }
         }
 
         case "eth_requestAccounts": {
