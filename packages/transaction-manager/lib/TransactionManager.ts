@@ -23,7 +23,7 @@ import { DefaultGasLimitEstimator, type GasEstimator } from "./GasEstimator.js"
 import { GasPriceOracle } from "./GasPriceOracle.js"
 import { HookManager, type TxmHookHandler, type TxmHookType } from "./HookManager.js"
 import { NonceManager } from "./NonceManager.js"
-import { RetryPolicyManager } from "./RetryPolicyManager"
+import { DefaultRetryPolicyManager, type RetryPolicyManager } from "./RetryPolicyManager.js"
 import { Transaction, type TransactionConstructorConfig } from "./Transaction.js"
 import { TransactionCollector } from "./TransactionCollector.js"
 import { TransactionRepository } from "./TransactionRepository.js"
@@ -125,7 +125,7 @@ export type TransactionManagerConfig = {
      * The retry policy manager to use for retrying failed transactions.
      * You can provide your own implementation to override the default one.
      * This is used to determine if a transaction should be retried based on the receipt of the transaction when it reverts.
-     * Default: {@link RetryPolicyManager}
+     * Default: {@link DefaultRetryPolicyManager}
      */
     retryPolicyManager?: RetryPolicyManager
 }
@@ -238,7 +238,7 @@ export class TransactionManager {
         this.transactionCollector = new TransactionCollector(this)
         this.transactionSubmitter = new TransactionSubmitter(this)
         this.hookManager = new HookManager()
-        this.retryPolicyManager = _config.retryPolicyManager || new RetryPolicyManager()
+        this.retryPolicyManager = _config.retryPolicyManager || new DefaultRetryPolicyManager()
 
         this.chainId = _config.chainId
         this.eip1559 = _config.eip1559 || opStackDefaultEIP1559Parameters

@@ -9,7 +9,12 @@ export type RevertedTransactionReceipt<Status extends "success" | "reverted"> = 
     "eip1559"
 >
 
-export interface IRetryPolicyManager {
+/**
+ * Implement this interface and provide it in the {@link TransactionManager} constructor to define your custom retry policy.
+ * The default implementation is {@link DefaultRetryPolicyManager}.
+ * The default implementation will only retry if the transaction runs out of gas.
+ **/
+export interface RetryPolicyManager {
     shouldRetry(
         transactionManager: TransactionManager,
         transaction: Transaction,
@@ -18,7 +23,7 @@ export interface IRetryPolicyManager {
     ): Promise<boolean>
 }
 
-export class RetryPolicyManager implements IRetryPolicyManager {
+export class DefaultRetryPolicyManager implements RetryPolicyManager {
     public async shouldRetry(
         transactionManager: TransactionManager,
         _: Transaction,
@@ -29,7 +34,8 @@ export class RetryPolicyManager implements IRetryPolicyManager {
     }
 
     /**
-     * Get the revert reason from the transaction trace
+     * Retrieves the reason for transaction reversion by utilizing the debug_traceTransaction RPC method.
+     * Returns undefined if the request fails or if the transaction has not been reverted.
      * @param transactionManager - The transaction manager
      * @param attempt - The attempt
      * @returns The revert reason or undefined if it cannot be retrieved or the rpc does not allow debug
