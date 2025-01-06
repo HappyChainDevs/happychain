@@ -3,7 +3,7 @@ import { chains, useHappyChain } from "@happychain/react"
 import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { useEffect, useMemo, useState } from "react"
-import { type Hex, createPublicClient, createWalletClient, custom, erc721Abi, hexToNumber, zeroAddress } from "viem"
+import { type Hex, createPublicClient, createWalletClient, custom, hexToNumber } from "viem"
 import { gnosis } from "viem/chains"
 import { ConnectButton } from "./BadgeComponent"
 
@@ -85,7 +85,7 @@ function App() {
     }
 
     async function loadAbiStub() {
-        await loadAbi(zeroAddress, erc721Abi) // dummy values
+        await loadAbi(contractsAddresses.MockTokenA, abis.MockTokenA)
         console.log("ABI loaded!")
     }
 
