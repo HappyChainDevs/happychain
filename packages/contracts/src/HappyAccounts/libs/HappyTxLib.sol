@@ -247,12 +247,31 @@ library HappyTxLib {
             // Pack first slot: account (20) + first 12 bytes of dest
             let dest := mload(add(happyTx, 96)) // Load dest
             mstore(ptr, shl(96, mload(add(happyTx, 32)))) // account
-            mstore(add(ptr, 20), shr(64, dest)) // first 12 bytes of dest
+            mstore(
+                ptr,
+                or(
+                    mload(ptr), // keep existing content
+                    shl(96, shr(64, dest)) // shift 12 bytes of dest to position 20-31
+                )
+            ) // first 12 bytes of dest
 
             // Pack second slot: paymaster (20) + remaining 8 bytes of dest + gasLimit (4)
-            mstore(add(ptr, 32), shl(96, mload(add(happyTx, 128)))) // paymaster
-            mstore(add(ptr, 52), shl(32, and(dest, 0xFFFFFFFFFFFFFFFF))) // last 8 bytes of dest
-            mstore(add(ptr, 60), mload(add(happyTx, 64))) // gasLimit
+            mstore(
+                add(ptr, 32),
+                or(
+                    shl(96, mload(add(happyTx, 128))),
+                    or(
+                        shl(160, and(dest, 0x000000000000000000000000000000000000000000000000FFFFFFFFFFFFFFFF)),
+                        shl(
+                            224,
+                            and(
+                                mload(add(happyTx, 64)),
+                                0x00000000000000000000000000000000000000000000000000000000FFFFFFFF
+                            )
+                        )
+                    )
+                )
+            )
 
             // Store value fields (32 bytes each)
             mstore(add(ptr, 64), mload(add(happyTx, 160))) // value
