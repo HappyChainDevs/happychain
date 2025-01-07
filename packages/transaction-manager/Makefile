@@ -3,6 +3,6 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
-migrate:
+migrate: ## Runs pending migrations
 	node dist/migrate.es.js
 .PHONY: migrate
