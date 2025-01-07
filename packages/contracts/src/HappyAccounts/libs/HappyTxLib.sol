@@ -87,9 +87,15 @@ library HappyTxLib {
      * @return account The account address
      */
     function getAccount(bytes calldata happyTx) external pure returns (address account) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
+        if (happyTx.length < 224) revert MalformedHappyTx();
+
+        // First slot: account (20) + first 12 bytes of dest
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let ptr := add(happyTx.offset, 32)
+            let slot1 := calldataload(ptr)
+            account := shr(96, slot1)
+        }
     }
 
     /**
@@ -98,9 +104,48 @@ library HappyTxLib {
      * @return gasLimit The gas limit for the transaction
      */
     function getGasLimit(bytes calldata happyTx) external pure returns (uint32 gasLimit) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
+        if (happyTx.length < 224) revert MalformedHappyTx();
+
+        // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let ptr := add(happyTx.offset, 32)
+            let slot2 := calldataload(add(ptr, 32))
+            gasLimit := and(slot2, 0x00000000000000000000000000000000000000000000000000000000FFFFFFFF)
+        }
+    }
+
+    /**
+     * @dev Gets the paymaster address from an encoded HappyTx
+     * @param happyTx The encoded happy transaction bytes
+     * @return paymaster The paymaster address
+     */
+    function getPaymaster(bytes calldata happyTx) external pure returns (address paymaster) {
+        if (happyTx.length < 224) revert MalformedHappyTx();
+
+        // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let ptr := add(happyTx.offset, 32)
+            let slot2 := calldataload(add(ptr, 32))
+            paymaster := shr(96, slot2)
+        }
+    }
+
+    /**
+     * @dev Gets the value from an encoded HappyTx
+     * @param happyTx The encoded happy transaction bytes
+     * @return value The native token value in wei
+     */
+    function getValue(bytes calldata happyTx) external pure returns (uint256 value) {
+        if (happyTx.length < 224) revert MalformedHappyTx();
+
+        // Value is in slot 3
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let ptr := add(happyTx.offset, 32)
+            value := calldataload(add(ptr, 64))
+        }
     }
 
     /**
@@ -128,28 +173,6 @@ library HappyTxLib {
      * @return dest The destination address
      */
     function getDest(bytes calldata happyTx) external pure returns (address dest) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
-    }
-
-    /**
-     * @dev Gets the paymaster address from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return paymaster The paymaster address
-     */
-    function getPaymaster(bytes calldata happyTx) external pure returns (address paymaster) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
-    }
-
-    /**
-     * @dev Gets the value from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return value The native token value in wei
-     */
-    function getValue(bytes calldata happyTx) external pure returns (uint256 value) {
         (happyTx);
         // TODO: Implement decoding logic
         revert MalformedHappyTx();
