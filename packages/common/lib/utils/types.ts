@@ -2,6 +2,8 @@
 
 export type HTTPString = `http://${string}` | `https://${string}`
 
+export type Hex = `0x${string}`
+
 // === TYPE ASSERTIONS =============================================================================
 
 /**
