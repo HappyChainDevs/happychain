@@ -23,7 +23,7 @@ const ArgsList = ({ args, fnInputs }: ArgsListProps) => {
                         className="flex justify-between items-baseline gap-[1ex]"
                     >
                         <span className="font-mono text-sm opacity-75">{fnInputs[idx].name}</span>
-                        <span className="font-mono text-sm truncate break-words hover:whitespace-normal hover:overflow-visible hover:text-overflow-clip hover:bg-neutral-100 hover:break rounded-lg p-1">
+                        <span className="font-mono text-sm max-w-[60%] truncate group-hover:text-wrap hover:break-all hover:whitespace-normal hover:bg-neutral-100 rounded-lg p-1">
                             {formatDisplayValue(arg)} <span className="opacity-50">{fnInputs[idx].type}</span>
                         </span>
                     </div>
