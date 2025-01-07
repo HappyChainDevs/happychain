@@ -1,17 +1,17 @@
 import { unknownToError } from "@happychain/common"
 import type { UUID } from "@happychain/common"
-import { type Result, ResultAsync, err } from "neverthrow"
+import { type Result, ResultAsync } from "neverthrow"
 import { Topics, eventBus } from "./EventBus.js"
 import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { db } from "./db/driver.js"
 
 /**
- * This module act as intermediate layer between the library and the database.
- * Its maintains an in memory copy of all the not finalized transaction to avoid to access to database and
- * improving the latency of get transactions. In addition it contains other methods helpful methods like getHighestNonce
+ * This module acts as intermediate layer between the library and the database.
+ * Its maintains an in-memory copy of all the not finalized transactions to avoid access to database and thus
+ * improving the latency of _get_ transactions. In addition, it contains other helpful methods like `getHighestNonce`
  * that returns the biggest nonce of all the not finalized transactions that exist in the database or the flush function
- * that is used to commit all the changes that have occurred in tracked entities by the ORM in the database
+ * that is used to commit all the changes that have occurred in tracked entities by the ORM in the database.
  */
 export class TransactionRepository {
     private readonly transactionManager: TransactionManager
