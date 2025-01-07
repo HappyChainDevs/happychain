@@ -13,7 +13,7 @@ export interface CommitmentInfo {
     transactionIntentId: UUID
 }
 
-const COMMITMENT_PRUNE_INTERVAL_SECONDS = 60 * 2 // 2 minutes
+const COMMITMENT_PRUNE_INTERVAL_SECONDS = 120n // 2 minutes
 
 export class CommitmentManager {
     private readonly map = new Map<bigint, CommitmentInfo>()
@@ -53,7 +53,7 @@ export class CommitmentManager {
         return ResultAsync.fromPromise(
             db
                 .deleteFrom("commitments")
-                .where("timestamp", "<", Number(latestBlockTimestamp) - COMMITMENT_PRUNE_INTERVAL_SECONDS)
+                .where("timestamp", "<", latestBlockTimestamp - COMMITMENT_PRUNE_INTERVAL_SECONDS)
                 .execute(),
             unknownToError,
         ).map(() => undefined)
