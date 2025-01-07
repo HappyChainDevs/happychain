@@ -18,9 +18,6 @@ export enum EstimateGasErrorCause {
  * at the estimation stage when they would have succeeded on chain. For instance, this can happen to transactions
  * who have a strict requirement on the block number or timestamp on or after which they should land.
  *
- * For example, in the randomness service, we need to emit the reveal transaction at precisely the right block.
- * This transaction would fail if executed before the correct block, so when you try to simulate it, you'll receive a failure.
- *
  * By avoiding transaction simulation, you can also improve the performance of the transaction manager.
  * You eliminate an RPC call, increasing the likelihood that your transaction will be included in the next block.
  * Furthermore, if you're always executing the same type of transaction, it typically consumes a similar amount of gas.
