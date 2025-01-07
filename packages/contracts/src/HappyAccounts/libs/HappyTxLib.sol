@@ -164,7 +164,7 @@ library HappyTxLib {
             packedLengths := calldataload(add(happyTx.offset, 192))
         }
 
-        return _unpackExecGasLimit(packedLengths);
+        return uint32(uint256(packedLengths) & ((1 << 32) - 1));
     }
 
     /**
@@ -173,20 +173,23 @@ library HappyTxLib {
      * @return dest The destination address
      */
     function getDest(bytes calldata happyTx) external pure returns (address dest) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
-    }
+        if (happyTx.length < 224) revert MalformedHappyTx();
 
-    /**
-     * @dev Gets the calldata from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return callData The transaction calldata
-     */
-    function getCallData(bytes calldata happyTx) external pure returns (bytes calldata callData) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let ptr := add(happyTx.offset, 32)
+            let slot1 := calldataload(ptr) // First slot: account (20) + first 12 bytes of dest
+            let slot2 := calldataload(add(ptr, 32)) // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
+
+            // Get first 12 bytes of dest by bit masking, then shift left by 20 bytes
+            let destFirst12 := shl(160, and(slot1, 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF))
+
+            // Get last 8 bytes of dest by bit masking, then shift left by 8 bytes
+            let destLast8 := shl(64, and(slot2, 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFF00000000))
+
+            // Combine dest parts (both parts are now in correct position, just OR them)
+            dest := or(destFirst12, destLast8)
+        }
     }
 
     /**
@@ -195,64 +198,13 @@ library HappyTxLib {
      * @return nonce The account nonce
      */
     function getNonce(bytes calldata happyTx) external pure returns (uint256 nonce) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
-    }
+        if (happyTx.length < 224) revert MalformedHappyTx();
 
-    /**
-     * @dev Gets the max fee per gas from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return maxFeePerGas The maximum fee per gas unit
-     */
-    function getMaxFeePerGas(bytes calldata happyTx) external pure returns (uint256 maxFeePerGas) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
-    }
-
-    /**
-     * @dev Gets the submitter fee from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return submitterFee The fee for the submitter (can be negative)
-     */
-    function getSubmitterFee(bytes calldata happyTx) external pure returns (int256 submitterFee) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
-    }
-
-    /**
-     * @dev Gets the paymaster data from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return paymasterData The extra data for the paymaster
-     */
-    function getPaymasterData(bytes calldata happyTx) external pure returns (bytes calldata paymasterData) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
-    }
-
-    /**
-     * @dev Gets the validator data from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return validatorData The validation data
-     */
-    function getValidatorData(bytes calldata happyTx) external pure returns (bytes calldata validatorData) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
-    }
-
-    /**
-     * @dev Gets the extra data from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return extraData The extra data field
-     */
-    function getExtraData(bytes calldata happyTx) external pure returns (bytes calldata extraData) {
-        (happyTx);
-        // TODO: Implement decoding logic
-        revert MalformedHappyTx();
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let ptr := add(happyTx.offset, 32) // Nonce is in slot 4
+            nonce := calldataload(add(ptr, 96)) // 96 = 32 * 3 (skip first 3 slots)
+        }
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -356,20 +308,6 @@ library HappyTxLib {
      * Slot 10 (0x140): paymasterData (ptr)
      * Slot 11 (0x160): validatorData (ptr)
      * Slot 12 (0x180): extraData (ptr)
-     *
-     *  TEMP below, delete after finalizing
-     * [Static Fields - Slot 0: 32 bytes]
-     * |-----------------account(20)---------------|-------dest-part1(12)---------|
-     *
-     * [Static Fields - Slot 1: 32 bytes]
-     * |--------------paymaster(20)-------------|--dest-part2(8)--|--gasLimit(4)--|
-     *
-     * [Static Fields - Value Fields: 96 bytes]
-     * |-------------------------------value(32)----------------------------------|
-     * |-------------------------------nonce(32)----------------------------------|
-     * |---------------------------maxFeePerGas(32)-------------------------------|
-     * |---------------------------submitterFee(32)-------------------------------|
-     *
      */
     function decode(bytes calldata happyTx) public pure returns (HappyTx memory result) {
         // First validate minimum length (192 static + 32 encoded dynamic lengths = 224 bytes)
@@ -448,7 +386,7 @@ library HappyTxLib {
     }
 
     /*//////////////////////////////////////////////////////////////
-                            INTERNAL FUNCTIONS
+                        INTERNAL VIEW/PURE HELPERS
     //////////////////////////////////////////////////////////////*/
 
     /**
@@ -559,55 +497,6 @@ library HappyTxLib {
     }
 
     /**
-     * @dev Utility function to unpack dynamic field lengths from a single word.
-     * Layout (32 bytes total):
-     * |-totalLen(8)-|-dynamicLengths(20)-|-execGasLimit(4)-|
-     * Most significant bits (left) to least significant bits (right)
-     * @param encodedLengths Packed lengths in a single bytes32
-     * @return totalLength Total length of all dynamic fields combined
-     * @return callDataLength Length of callData field
-     * @return paymasterDataLength Length of paymasterData field
-     * @return validatorDataLength Length of validatorData field
-     * @return extraDataLength Length of extraData field
-     * @return execGasLimit Gas limit for execute function
-     */
-    function _unpackLengths(bytes32 encodedLengths)
-        internal
-        pure
-        returns (
-            uint256 totalLength,
-            uint256 callDataLength,
-            uint256 paymasterDataLength,
-            uint256 validatorDataLength,
-            uint256 extraDataLength,
-            uint32 execGasLimit
-        )
-    {
-        unchecked {
-            uint256 encoded = uint256(encodedLengths);
-            totalLength = encoded >> 192;
-            callDataLength = (encoded >> 152) & ((1 << 40) - 1);
-            paymasterDataLength = (encoded >> 112) & ((1 << 40) - 1);
-            validatorDataLength = (encoded >> 72) & ((1 << 40) - 1);
-            extraDataLength = (encoded >> 32) & ((1 << 40) - 1);
-            execGasLimit = uint32(encoded & 0x00000000000000000000000000000000000000000000000000000000FFFFFFFF);
-
-            // Validate all lengths are within 40 bits
-            uint256 maxLengthValue = callDataLength | paymasterDataLength | validatorDataLength | extraDataLength;
-            if (maxLengthValue > MAX_LENGTH) revert MalformedHappyTx();
-
-            // Validate total length matches sum of individual lengths
-            if (totalLength != callDataLength + paymasterDataLength + validatorDataLength + extraDataLength) {
-                revert MalformedHappyTx();
-            }
-        }
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                        INTERNAL VIEW/PURE HELPERS
-    //////////////////////////////////////////////////////////////*/
-
-    /**
      * @dev Utility function to pack dynamic field lengths into a single word.
      * Layout (32 bytes total):
      * |-totalLen(8)-|-dynamicLengths(20)-|-execGasLimit(4)-|
@@ -647,56 +536,47 @@ library HappyTxLib {
     }
 
     /**
-     * @dev Extract total length from packed bytes32
-     * @param packedValue The packed bytes32 value
-     * @return Total length (first 8 bytes)
+     * @dev Utility function to unpack dynamic field lengths from a single word.
+     * Layout (32 bytes total):
+     * |-totalLen(8)-|-dynamicLengths(20)-|-execGasLimit(4)-|
+     * Most significant bits (left) to least significant bits (right)
+     * @param encodedLengths Packed lengths in a single bytes32
+     * @return totalLength Total length of all dynamic fields combined
+     * @return callDataLength Length of callData field
+     * @return paymasterDataLength Length of paymasterData field
+     * @return validatorDataLength Length of validatorData field
+     * @return extraDataLength Length of extraData field
+     * @return execGasLimit Gas limit for execute function
      */
-    function _unpackTotalLength(bytes32 packedValue) internal pure returns (uint256) {
-        return uint256(packedValue) >> 192;
-    }
+    function _unpackLengths(bytes32 encodedLengths)
+        internal
+        pure
+        returns (
+            uint256 totalLength,
+            uint256 callDataLength,
+            uint256 paymasterDataLength,
+            uint256 validatorDataLength,
+            uint256 extraDataLength,
+            uint32 execGasLimit
+        )
+    {
+        unchecked {
+            uint256 encoded = uint256(encodedLengths);
+            totalLength = encoded >> 192;
+            callDataLength = (encoded >> 152) & ((1 << 40) - 1);
+            paymasterDataLength = (encoded >> 112) & ((1 << 40) - 1);
+            validatorDataLength = (encoded >> 72) & ((1 << 40) - 1);
+            extraDataLength = (encoded >> 32) & ((1 << 40) - 1);
+            execGasLimit = uint32(encoded & ((1 << 32) - 1));
 
-    /**
-     * @dev Extract callData length from packed bytes32
-     * @param packedValue The packed bytes32 value
-     * @return CallData length (5 bytes after totalLen)
-     */
-    function _unpackCallDataLength(bytes32 packedValue) internal pure returns (uint256) {
-        return (uint256(packedValue) >> 152) & ((1 << 40) - 1);
-    }
+            // Validate all lengths are within 40 bits
+            uint256 maxLengthValue = callDataLength | paymasterDataLength | validatorDataLength | extraDataLength;
+            if (maxLengthValue > MAX_LENGTH) revert MalformedHappyTx();
 
-    /**
-     * @dev Extract paymaster data length from packed bytes32
-     * @param packedValue The packed bytes32 value
-     * @return PaymasterData length (5 bytes after callDataLength)
-     */
-    function _unpackPaymasterDataLength(bytes32 packedValue) internal pure returns (uint256) {
-        return (uint256(packedValue) >> 112) & ((1 << 40) - 1);
-    }
-
-    /**
-     * @dev Extract validator data length from packed bytes32
-     * @param packedValue The packed bytes32 value
-     * @return ValidatorData length (5 bytes after paymasterDataLength)
-     */
-    function _unpackValidatorDataLength(bytes32 packedValue) internal pure returns (uint256) {
-        return (uint256(packedValue) >> 72) & ((1 << 40) - 1);
-    }
-
-    /**
-     * @dev Extract extra data length from packed bytes32
-     * @param packedValue The packed bytes32 value
-     * @return ExtraData length (5 bytes after validatorDataLength)
-     */
-    function _unpackExtraDataLength(bytes32 packedValue) internal pure returns (uint256) {
-        return (uint256(packedValue) >> 32) & ((1 << 40) - 1);
-    }
-
-    /**
-     * @dev Extract execution gas limit from packed bytes32
-     * @param packedValue The packed bytes32 value
-     * @return Execution gas limit (last 4 bytes)
-     */
-    function _unpackExecGasLimit(bytes32 packedValue) internal pure returns (uint32) {
-        return uint32(uint256(packedValue) & ((1 << 32) - 1));
+            // Validate total length matches sum of individual lengths
+            if (totalLength != callDataLength + paymasterDataLength + validatorDataLength + extraDataLength) {
+                revert MalformedHappyTx();
+            }
+        }
     }
 }
