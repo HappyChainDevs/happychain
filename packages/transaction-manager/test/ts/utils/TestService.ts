@@ -1,6 +1,6 @@
 import { type LatestBlock, type Transaction, type TransactionManager, TxmHookType } from "../../../lib/index"
 import { getNumber } from "./getNumber"
-const COUNTER_ADDRESS = "0xea7a81bacbac93afdc603902fe64ea3d361ba326" // Counter contract address deployed with create2
+import { COUNTER_ADDRESS } from "./constants"
 
 export class TestService {
     public readonly txm: TransactionManager

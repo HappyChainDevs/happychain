@@ -1,7 +1,7 @@
 import { http, type Address, createPublicClient, decodeFunctionResult, encodeFunctionData } from "viem"
 import { localhost } from "viem/chains"
 import { happyChainTestnetChain } from "../../../../common/lib"
-import CounterAbi from "../../contracts/abi/Counter.json"
+import { abis } from "../../contracts/abi/Counter.ts"
 
 function getPublicClient(chainId: number) {
     switch (chainId) {
@@ -25,7 +25,7 @@ export async function getNumber(COUNTER_ADDRESS: Address, chainId = 31337): Prom
     const result = await client.call({
         to: COUNTER_ADDRESS,
         data: encodeFunctionData({
-            abi: CounterAbi,
+            abi: abis.Counter,
             functionName: "number",
         }),
     })
@@ -35,7 +35,7 @@ export async function getNumber(COUNTER_ADDRESS: Address, chainId = 31337): Prom
     }
 
     const decodeResult = decodeFunctionResult({
-        abi: CounterAbi,
+        abi: abis.Counter,
         functionName: "number",
         data: result!.data,
     })
