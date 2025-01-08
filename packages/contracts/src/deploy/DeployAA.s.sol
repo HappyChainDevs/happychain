@@ -19,7 +19,7 @@ import {EntryPoint} from "account-abstraction/contracts/core/EntryPoint.sol"; /*
 import {EntryPointSimulations} from "account-abstraction/contracts/core/EntryPointSimulations.sol"; /* solhint-disable-line */
 
 contract DeployAAContracts is BaseDeployScript {
-    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(3));
+    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(567342));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address public constant EXPECTED_ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
     address public constant EXPECTED_ENTRYPOINT_SIMULATIONS = 0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47;
@@ -67,11 +67,7 @@ contract DeployAAContracts is BaseDeployScript {
 
         staker.approveFactory(factory, true);
 
-        string memory key = "ALLOWED_BUNDLERS";
-        string memory delimiter = ",";
-        address[] memory allowedBundlers = vm.envAddress(key, delimiter);
-
-        paymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(EXPECTED_ENTRYPOINT_V7, allowedBundlers);
+        paymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(EXPECTED_ENTRYPOINT_V7, msg.sender);
         deployed("HappyPaymaster", address(paymaster));
 
         sessionKeyValidator = new SessionKeyValidator{salt: DEPLOYMENT_SALT}();
