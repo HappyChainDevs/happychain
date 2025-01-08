@@ -18,7 +18,7 @@ contract GasEstimator is Test {
     bytes32 private constant DEPLOYMENT_SALT = 0;
     address private constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address private constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-    address private constant ALLOWED_BUNDLER = 0x0000000000000000000000000000000000000001;
+    address private constant TEST_BUNDLER = 0x0000000000000000000000000000000000000001;
     uint256 private constant DUMMY_REQUIRED_PREFUND = 1e18;
 
     IPaymaster private happyPaymaster;
@@ -29,9 +29,7 @@ contract GasEstimator is Test {
             require(success, "Failed to deploy EntryPointV7"); // solhint-disable-line
         }
 
-        address[] memory allowedBundlers = new address[](1);
-        allowedBundlers[0] = ALLOWED_BUNDLER;
-        happyPaymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(ENTRYPOINT_V7, allowedBundlers);
+        happyPaymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(ENTRYPOINT_V7, TEST_BUNDLER);
     }
 
     /**
@@ -129,7 +127,7 @@ contract GasEstimator is Test {
             PackedUserOperation memory userOp = userOps[i];
             bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
-            vm.prank(ENTRYPOINT_V7, ALLOWED_BUNDLER);
+            vm.prank(ENTRYPOINT_V7);
             uint256 gasBefore = gasleft();
             happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
             uint256 gasAfter = gasleft();
@@ -147,7 +145,7 @@ contract GasEstimator is Test {
     function _estimatePaymasterValidateUserOpGas(PackedUserOperation memory userOp) external returns (uint256) {
         bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
-        vm.prank(ENTRYPOINT_V7, ALLOWED_BUNDLER);
+        vm.prank(ENTRYPOINT_V7);
         uint256 gasBefore = gasleft();
         happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
         uint256 gasAfter = gasleft();

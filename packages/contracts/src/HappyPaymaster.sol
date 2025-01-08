@@ -3,9 +3,9 @@ pragma solidity ^0.8.20;
 
 import {IEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
-import {BasePaymaster} from "account-abstraction/contracts/core/BasePaymaster.sol";
 import {UserOperationLib} from "account-abstraction/contracts/core/UserOperationLib.sol";
 import {SIG_VALIDATION_SUCCESS} from "account-abstraction/contracts/core/Helpers.sol";
+import {BasePaymaster} from "./BasePaymaster.sol";
 
 /**
  * @notice A simple paymaster contract that approves all incoming user operations while managing
@@ -20,7 +20,6 @@ contract HappyPaymaster is BasePaymaster {
     using UserOperationLib for PackedUserOperation;
 
     error InsufficientGasBudget();
-    error InvalidBundler();
 
     uint256 public constant MAX_GAS_BUDGET = 50_000_000;
     uint256 public constant REFILL_PERIOD = 24 * 60 * 60;
@@ -32,32 +31,14 @@ contract HappyPaymaster is BasePaymaster {
     }
 
     mapping(address => UserInfo) public userInfo;
-    mapping(address => bool) public allowedBundlers;
 
-    constructor(address _entryPoint, address[] memory initialAllowedBundlers) BasePaymaster(IEntryPoint(_entryPoint)) {
-        for (uint256 i = 0; i < initialAllowedBundlers.length; i++) {
-            allowedBundlers[initialAllowedBundlers[i]] = true;
-        }
-    }
-
-    function addAllowedBundler(address bundler) external onlyOwner {
-        allowedBundlers[bundler] = true;
-    }
-
-    function removeAllowedBundler(address bundler) external onlyOwner {
-        allowedBundlers[bundler] = false;
-    }
+    constructor(address _entryPoint, address owner) BasePaymaster(IEntryPoint(_entryPoint), owner) {}
 
     function _validatePaymasterUserOp(
         PackedUserOperation calldata userOp,
         bytes32, /*userOpHash*/
         uint256 /*requiredPreFund*/
     ) internal override returns (bytes memory context, uint256 validationData) {
-        // solhint-disable-next-line avoid-tx-origin
-        if (!allowedBundlers[tx.origin]) {
-            revert InvalidBundler();
-        }
-
         address user = userOp.getSender();
         uint256 requestedGas = _requiredGas(userOp);
         UserInfo memory info = userInfo[user];
@@ -85,10 +66,13 @@ contract HappyPaymaster is BasePaymaster {
             return uint32(MAX_GAS_BUDGET);
         } else {
             uint256 timeElapsed = currentTime - info.lastUpdated;
+            if (timeElapsed > 24 hours) {
+                return uint32(MAX_GAS_BUDGET);
+            }
             uint256 gasToRefill = timeElapsed * REFILL_RATE;
-
             uint256 newGasBudget = info.userGasBudget + gasToRefill;
-            return uint32(newGasBudget > MAX_GAS_BUDGET ? MAX_GAS_BUDGET : newGasBudget);
+
+            return uint32(newGasBudget);
         }
     }
 
