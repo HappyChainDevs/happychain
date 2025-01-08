@@ -1,0 +1,28 @@
+{
+    "name": "@happychain/wagmi",
+    "version": "1.0.0",
+    "private": false,
+    "type": "module",
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.es.d.ts",
+    "files": ["dist"],
+    "exports": {
+        ".": {
+            "default": "./dist/index.es.js",
+            "types": "./dist/index.es.d.ts"
+        }
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "@happychain/configs": "workspace:^",
+        "@happychain/build": "workspace:^"
+    },
+    "peerDependencies": {
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "wagmi": "^2.14.6",
+        "@happychain/js": "workspace:^"
+    }
+}
