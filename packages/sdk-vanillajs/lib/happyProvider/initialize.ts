@@ -150,7 +150,7 @@ export const happyProvider = (
 ) as HappyProvider & EIP1193Provider
 
 /**
- * HappyProvider is a EIP1193 Ethereum Provider {@link https://eips.ethereum.org/EIPS/eip-1193}
+ * HappyProvider is an [EIP1193](https://eips.ethereum.org/EIPS/eip-1193) Ethereum Provider.
  *
  * @example
  * ### Setting up viem client
