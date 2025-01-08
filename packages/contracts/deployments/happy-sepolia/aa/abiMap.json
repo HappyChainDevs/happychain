@@ -3,7 +3,8 @@
   "EntryPointSimulations": "EntryPointSimulations",
   "EntryPointV7": "EntryPoint",
   "FactoryStaker": "FactoryStaker",
-  "HappyPaymaster": "HappyPaymaster",
+  "HappyPaymasterImpl": "HappyPaymaster",
+  "HappyPaymasterProxy": "ERC1967Proxy",
   "Kernel": "Kernel",
   "KernelFactory": "KernelFactory",
   "SessionKeyValidator": "SessionKeyValidator"
