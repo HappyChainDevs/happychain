@@ -26,6 +26,7 @@ contract DeployAAContracts is BaseDeployScript {
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address public constant EXPECTED_ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
     address public constant EXPECTED_ENTRYPOINT_SIMULATIONS = 0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47;
+    uint256 public constant PAYMASTER_DEPOSIT = 10 ether;
 
     error EntryPointDeploymentFailed();
     error EntryPointSimulationsDeploymentFailed();
@@ -94,6 +95,8 @@ contract DeployAAContracts is BaseDeployScript {
 
         paymaster = HappyPaymaster(proxy);
         deployed("HappyPaymasterProxy", "ERC1967Proxy", address(paymaster));
+
+        paymaster.deposit{value: PAYMASTER_DEPOSIT}();
 
         sessionKeyValidator = new SessionKeyValidator{salt: DEPLOYMENT_SALT}();
         deployed("SessionKeyValidator", address(sessionKeyValidator));
