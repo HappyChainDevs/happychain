@@ -54,9 +54,9 @@ contract HappyPaymaster is BasePaymaster {
         uint256 /*requiredPreFund*/
     ) internal override returns (bytes memory context, uint256 validationData) {
         // solhint-disable-next-line avoid-tx-origin
-        if (!allowedBundlers[tx.origin]) {
-            revert InvalidBundler();
-        }
+        // if (!allowedBundlers[tx.origin]) {
+        //     revert InvalidBundler();
+        // }
 
         address user = userOp.getSender();
         uint256 requestedGas = _requiredGas(userOp);

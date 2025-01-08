@@ -81,6 +81,7 @@ export async function calculateUserOpGasBreakdown(
     userOpGasEstimate: EstimateUserOperationGasReturnType,
     isAccountDeployed: boolean,
 ) {
+    console.log("calculateUserOpGasBreakdown", userOpGasEstimate, isAccountDeployed)
     const additionalDeploymentCost = isAccountDeployed ? 0n : ACCOUNT_DEPLOYMENT_COST
     const totalGasLimit =
         userOpGasEstimate.callGasLimit + userOpGasEstimate.preVerificationGas + additionalDeploymentCost

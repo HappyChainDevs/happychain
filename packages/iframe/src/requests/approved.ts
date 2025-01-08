@@ -42,6 +42,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
+            console.log("eth_sendTransaction")
             if (!user) return false
 
             // TODO This try statement should go away, it's only here to surface errors
@@ -60,6 +61,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                         },
                     ],
                 })
+                console.log(preparedUserOp)
 
                 const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
                 console.log(userOpHash)

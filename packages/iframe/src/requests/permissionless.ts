@@ -140,6 +140,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         }
 
         case "eth_getTransactionCount": {
+            console.log("eth_getTransactionCount")
             const [address] = request.payload.params
 
             if (smartAccountClient && address.toLowerCase() === smartAccountClient.account.address.toLowerCase()) {

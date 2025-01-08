@@ -71,7 +71,7 @@ contract DeployAAContracts is BaseDeployScript {
         string memory delimiter = ",";
         address[] memory allowedBundlers = vm.envAddress(key, delimiter);
 
-        paymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(EXPECTED_ENTRYPOINT_V7, allowedBundlers);
+        paymaster = new HappyPaymaster(EXPECTED_ENTRYPOINT_V7, allowedBundlers);
         deployed("HappyPaymaster", address(paymaster));
 
         sessionKeyValidator = new SessionKeyValidator{salt: DEPLOYMENT_SALT}();
