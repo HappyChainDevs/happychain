@@ -64,11 +64,6 @@ export function register(opts: WalletRegisterOptions = {}) {
     iframe.title = "happy-iframe-slot"
     iframe.src = makeIframeUrl({ windowId, chainId, rpcUrl: "" })
     iframe.style.display = "none"
-    // iframe.style.width = "100%"
-    // iframe.style.height = "100%"
-    iframe.allow = isFirefox
-        ? "" // Avoid warning in Firefox (safe: permissions inherited by default)
-        : "; clipboard-write 'src'" // Explicit grant needed at least for Chrome
 
     document.body.appendChild(iframe)
 

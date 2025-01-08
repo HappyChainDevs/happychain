@@ -28,7 +28,8 @@ function Request() {
     const req = JSON.parse(atob(args))
 
     function reject() {
-        void window.opener.frames[iframeIndex].postMessage({
+        const frame = iframeIndex >= 0 ? window.opener.frames[iframeIndex] : window.opener
+        void frame.postMessage({
             scope: "server:popup",
             type: Msgs.PopupReject,
             payload: {
@@ -46,7 +47,8 @@ function Request() {
 
     function accept(payload: PopupMsgs[Msgs.PopupApprove]["payload"]) {
         setIsLoading(true)
-        void window.opener.frames[iframeIndex].postMessage({
+        const frame = iframeIndex >= 0 ? window.opener.frames[iframeIndex] : window.opener
+        void frame.postMessage({
             scope: "server:popup",
             type: Msgs.PopupApprove,
             payload: {
