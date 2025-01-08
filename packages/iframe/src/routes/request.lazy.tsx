@@ -12,7 +12,11 @@ import { WalletRequestPermissions } from "../components/requests/WalletRequestPe
 import { WalletSwitchEthereumChain } from "../components/requests/WalletSwitchEthereumChain"
 import { WalletWatchAsset } from "../components/requests/WalletWatchAsset"
 import type { requestLabels } from "../constants/requestLabels"
-import { popupEmitBus } from "../services/eventBus"
+
+window.addEventListener("message", (msg) => {
+    if (msg.origin !== window.location.origin) return
+    if (msg.data === "request-close") window.close()
+})
 
 export const Route = createLazyFileRoute("/request")({
     component: Request,
@@ -20,29 +24,37 @@ export const Route = createLazyFileRoute("/request")({
 
 function Request() {
     const [isLoading, setIsLoading] = useState(false)
-    const { args, key, windowId } = Route.useSearch()
+    const { args, key, windowId, iframeIndex } = Route.useSearch()
     const req = JSON.parse(atob(args))
 
     function reject() {
-        void popupEmitBus.emit(Msgs.PopupReject, {
-            error: {
-                code: 4001,
-                message: "User rejected request",
-                data: "User rejected request",
+        void window.opener.frames[iframeIndex].postMessage({
+            scope: "server:popup",
+            type: Msgs.PopupReject,
+            payload: {
+                error: {
+                    code: 4001,
+                    message: "User rejected request",
+                    data: "User rejected request",
+                },
+                windowId,
+                key,
+                payload: null,
             },
-            windowId,
-            key,
-            payload: null,
         })
     }
 
     function accept(payload: PopupMsgs[Msgs.PopupApprove]["payload"]) {
         setIsLoading(true)
-        void popupEmitBus.emit(Msgs.PopupApprove, {
-            error: null,
-            windowId,
-            key,
-            payload: payload,
+        void window.opener.frames[iframeIndex].postMessage({
+            scope: "server:popup",
+            type: Msgs.PopupApprove,
+            payload: {
+                error: null,
+                windowId,
+                key,
+                payload: payload,
+            },
         })
     }
 
