@@ -3,7 +3,6 @@ import { WalletFrame } from "./WalletFrame"
 import { IsOpenContext, useSetupIsOpenContext } from "./context/IsOpenContext"
 import { useWalletDragger } from "./hooks/useWalletDragger"
 import cssStyles from "./styles.css?inline"
-import { makeIframeUrl } from "./utils"
 
 export interface HappyWalletProps {
     windowId: string
@@ -17,10 +16,9 @@ export interface HappyWalletProps {
  * window-id = windowId
  * chain-id = chainId
  */
-export const HappyWallet = ({ windowId, chainId, rpcUrl }: HappyWalletProps) => {
+export const HappyWallet = ({ windowId, chainId }: HappyWalletProps) => {
     const { isOpen, setIsOpen } = useSetupIsOpenContext()
     const { handleOffset, walletOffset, dragging, dragProps } = useWalletDragger()
-    const iframeSrc = makeIframeUrl({ windowId, chainId, rpcUrl })
 
     if (!chainId || !windowId) {
         throw new Error("Misconfigured HappyWallet. ")
@@ -41,7 +39,7 @@ export const HappyWallet = ({ windowId, chainId, rpcUrl }: HappyWalletProps) => 
                         style={{ "--wallet-offset-y": walletOffset }}
                         {...dragProps}
                     >
-                        <WalletFrame dragging={dragging} iframeSrc={iframeSrc} />
+                        <WalletFrame dragging={dragging} />
                     </div>
                 </IsOpenContext.Provider>
             </div>
