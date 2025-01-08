@@ -35,10 +35,6 @@ contract RandomCommitment is Ownable {
 
     /**
      * @notice Posts a commitment for a specific block number.
-     * @dev This function allows the owner to set a commitment for a future block number with
-     * at least PRECOMMIT_DELAY blocks of delay.
-     * @param blockNumber The block number for which to set the commitment.
-     * @param commitmentHash The hash of the commitment to be stored.
      */
     function postCommitment(uint128 blockNumber, bytes32 commitmentHash) external onlyOwner {
         if (block.number > blockNumber - PRECOMMIT_DELAY) {
@@ -55,10 +51,6 @@ contract RandomCommitment is Ownable {
 
     /**
      * @notice Reveals the value for a specific block number.
-     * @dev This function allows the owner to reveal the value for a block number that has a commitment.
-     * The reveal must be on the exact block number that the commitment was posted for.
-     * @param blockNumber The block number for which to reveal the value.
-     * @param revealedValue The value to be revealed.
      */
     function revealValue(uint128 blockNumber, uint128 revealedValue) external onlyOwner {
         bytes32 storedCommitment = commitments[blockNumber];
@@ -83,9 +75,7 @@ contract RandomCommitment is Ownable {
 
     /**
      * @notice Retrieves the revealed value for a specific block number.
-     * @dev This function does not revert if the reveal is unavailable. Instead, it returns 0.
-     * @param blockNumber The block number for which to retrieve the revealed value.
-     * @return revealedValue The revealed value for the specified block number, or 0 if the reveal is not available.
+     * This function does not revert if the reveal is unavailable. Instead, it returns 0.
      */
     function unsafeGetRevealedValue(uint128 blockNumber) public view returns (uint128) {
         if (currentReveal.blockNumber != blockNumber) {
@@ -97,10 +87,8 @@ contract RandomCommitment is Ownable {
 
     /**
      * @notice Retrieves the revealed value for a specific block number.
-     * @dev This function verifies that a reveal exists for the given block number before returning the value.
-     *      It reverts with `RevealedValueNotAvailable` if no valid reveal is found.
-     * @param blockNumber The block number for which to retrieve the revealed value.
-     * @return revealedValue The revealed value associated with the specified block number.
+     * This function verifies that a reveal exists for the given block number before returning the value.
+     * It reverts with `RevealedValueNotAvailable` if no valid reveal is found.
      */
     function getRevealedValue(uint128 blockNumber) public view returns (uint128) {
         if (currentReveal.blockNumber != blockNumber) {
