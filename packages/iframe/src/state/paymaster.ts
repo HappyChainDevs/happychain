@@ -52,9 +52,9 @@ export type PaymasterConfig = {
  * 1. The paymaster implementation changes
  * 2. Significant changes in gas usage patterns are observed
  */
-const PAYMASTER_VERIFICATION_GAS_LIMIT_WITH_FACTORY = 45000n
-const PAYMASTER_VERIFICATION_GAS_LIMIT_WITHOUT_FACTORY = 25000n
-const PAYMASTER_POST_OP_GAS_LIMIT = 1n // Set to 1 since the postOp function is never called
+const PAYMASTER_VERIFICATION_GAS_LIMIT_WITH_FACTORY = 1000000n
+const PAYMASTER_VERIFICATION_GAS_LIMIT_WITHOUT_FACTORY = 1000000n
+const PAYMASTER_POST_OP_GAS_LIMIT =  1000000n // Set to 1 since the postOp function is never called
 
 const PAYMASTER_DATA = "0x" as const
 const getPaymasterVerificationGasLimit = (factory?: Hex) =>
@@ -65,7 +65,7 @@ const getPaymasterVerificationGasLimit = (factory?: Hex) =>
 export const paymasterAtom = atom(async (get) => {
     const currentChain = get(currentChainAtom)
     const contracts = getAccountAbstractionContracts(currentChain.chainId)
-    const paymasterAddress = contracts.HappyPaymaster
+    const paymasterAddress = contracts.HappyPaymasterProxy
 
     return {
         /**

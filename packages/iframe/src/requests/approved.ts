@@ -9,13 +9,8 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-<<<<<<< HEAD
 import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
 import { addPendingUserOp } from "#src/services/userOpsHistory.ts"
-=======
-import { type Client, type Hex, hexToBigInt } from "viem"
-import { addPendingTx } from "#src/services/transactionHistory"
->>>>>>> aryan/make-paymaster-proxy
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
@@ -57,18 +52,30 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             //      We need to make sure all errors are correctly surfaced!
             try {
                 const tx = request.payload.params[0]
+                console.log(request)
+                console.log(tx)
+                
 
                 const preparedUserOp = await smartAccountClient.prepareUserOperation({
                     account: smartAccountClient.account,
-                    calls: [
-                        {
-                            to: tx.to,
-                            data: tx.data,
-                            value: tx.value,
-                        },
-                    ],
+                    calls: [{
+                        to: tx.to,
+                        value: hexToBigInt(tx.value as Hex),
+                      }]
                 })
                 console.log(preparedUserOp)
+                // strip signature field from preparedUserOp
+                const { signature, ...updatedUserOp } = preparedUserOp;
+
+                console.log(updatedUserOp);
+
+                const userOpDirect = {
+                    account: smartAccountClient.account,
+                    calls: [{
+                        to: tx.to!,
+                        value: hexToBigInt(tx.value as Hex),
+                      }]
+                }
 
                 const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
                 console.log(userOpHash)

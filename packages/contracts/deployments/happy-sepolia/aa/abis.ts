@@ -4975,20 +4975,12 @@ export const deployment = ({
   "ECDSAValidator": "0xE381F2e50BCF828Cd441155Cb72533D1cAC31c3b",
   "EntryPointSimulations": "0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47",
   "EntryPointV7": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
-<<<<<<< HEAD
-  "FactoryStaker": "0xe8c1FA97cd39736727c9EDdC0f41858E59CCC295",
-  "HappyPaymaster": "0x0c4fDa43765F54d9244Bec3aCE549d7D09590667",
-  "Kernel": "0xFDF2A37a68365741275eD40876f0D0A9244fB596",
-  "KernelFactory": "0xa05BE7a057ed5DE9E41e0B0db9C3aac613BcCFa6",
-  "SessionKeyValidator": "0x24640a43EEBED990E1823cD3C80d759C9Ad99D22"
-=======
   "FactoryStaker": "0x5122Da4E809C0DbaE831d718D116Dd93eD40B18D",
   "HappyPaymasterImpl": "0xa69622E90aef01B137a6FeF5222A72f65222B6Bc",
   "HappyPaymasterProxy": "0xb2a961de53D9e9493d4921b9e36300775F4AF508",
   "Kernel": "0xCC75e2B671ddBff3413921EF20531BE6Fe4e4149",
   "KernelFactory": "0x6A780409766a691Be9b94dEB0A38F151fc55E1cb",
   "SessionKeyValidator": "0x0B35cA9c4fc159e1466F81E076d553B7dd07d810"
->>>>>>> aryan/make-paymaster-proxy
 }) as const
 
 export type ContractToAbi = typeof contractToAbi

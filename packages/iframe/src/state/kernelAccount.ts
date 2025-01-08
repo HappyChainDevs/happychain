@@ -24,13 +24,14 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
         // 1. `publicClientAtom` uses `transportAtom` for its `transport` value, which can be either `custom()` or `http()`
         // 2. `toKernelSmartAccount()` expects a simple client with direct RPC access
         const publicClient = createPublicClient(clientOptions)
+        console.log("createKernelAccount", walletAddress)
         const owner = createWalletClient({
             ...clientOptions,
             account: walletAddress,
         })
 
         return await toEcdsaKernelSmartAccount({
-            client: publicClient,
+            client: owner,
             entryPoint: {
                 address: entryPoint07Address,
                 version: "0.7",

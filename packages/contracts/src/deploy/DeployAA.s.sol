@@ -75,10 +75,6 @@ contract DeployAAContracts is BaseDeployScript {
         HappyPaymaster implementation = new HappyPaymaster{salt: DEPLOYMENT_SALT}();
         deployed("HappyPaymasterImpl", "HappyPaymaster", address(implementation));
 
-<<<<<<< HEAD
-        paymaster = new HappyPaymaster(EXPECTED_ENTRYPOINT_V7, allowedBundlers);
-        deployed("HappyPaymaster", address(paymaster));
-=======
         // Prepare initialization data
         bytes memory initData = abi.encodeCall(HappyPaymaster.initialize, (EXPECTED_ENTRYPOINT_V7, msg.sender));
 
@@ -88,7 +84,6 @@ contract DeployAAContracts is BaseDeployScript {
 
         paymaster = HappyPaymaster(proxy);
         paymaster.deposit{value: PAYMASTER_DEPOSIT}();
->>>>>>> aryan/make-paymaster-proxy
 
         sessionKeyValidator = new SessionKeyValidator{salt: DEPLOYMENT_SALT}();
         deployed("SessionKeyValidator", address(sessionKeyValidator));
