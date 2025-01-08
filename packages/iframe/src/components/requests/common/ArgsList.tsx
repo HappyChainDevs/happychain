@@ -12,10 +12,10 @@ function formatDisplayValue(arg: unknown) {
 
 const ArgsList = ({ args, fnInputs }: ArgsListProps) => {
     return (
-        <div className="flex flex-col gap-2 w-full mt-2">
+        <ul className="flex flex-col gap-2 w-full mt-2">
             {args.map((arg, idx) => {
                 return (
-                    <div
+                    <li
                         key={`idx-${
                             // biome-ignore lint/suspicious/noArrayIndexKey: arg types are too varied
                             idx
@@ -26,10 +26,10 @@ const ArgsList = ({ args, fnInputs }: ArgsListProps) => {
                         <span className="font-mono text-sm max-w-[60%] truncate group-hover:text-wrap hover:break-all hover:whitespace-normal hover:bg-neutral-100 rounded-lg p-1">
                             {formatDisplayValue(arg)} <span className="opacity-50">{fnInputs[idx].type}</span>
                         </span>
-                    </div>
+                    </li>
                 )
             })}
-        </div>
+        </ul>
     )
 }
 
