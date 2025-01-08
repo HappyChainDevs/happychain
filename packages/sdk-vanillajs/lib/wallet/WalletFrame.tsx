@@ -9,10 +9,6 @@ const iframePermissions = isFirefox
     ? "" // Avoid warning in Firefox (safe: permissions inherited by default)
     : "; clipboard-write 'src'" // Explicit grant needed at least for Chrome
 
-function onErrorHandler() {
-    console.error("HappyChain SDK failed to initialize")
-}
-
 export interface WalletFrameProps {
     iframeSrc: string
     dragging: boolean
@@ -47,14 +43,15 @@ export const WalletFrame = ({ iframeSrc, dragging }: WalletFrameProps) => {
             <img src={icon64x64} alt="HappyChain Logo" className="wallet-logo" inert={true} />
 
             <div className="wallet-iframe-wrapper" inert={!isOpen}>
-                <iframe
-                    ref={iframe}
-                    title="happy-iframe"
-                    onError={onErrorHandler}
-                    src={iframeSrc}
-                    className="wallet-iframe"
-                    allow={iframePermissions}
-                />
+                <slot name="frame">
+                    <iframe
+                        ref={iframe}
+                        title="happy-iframe"
+                        src={iframeSrc}
+                        className="wallet-iframe"
+                        allow={iframePermissions}
+                    />
+                </slot>
             </div>
         </div>
     )

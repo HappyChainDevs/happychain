@@ -1,6 +1,5 @@
 import { Msgs } from "@happychain/sdk-shared"
 import { handleApprovedRequest, handleRejectedRequest } from "../requests"
-import { popupListenBus } from "../services/eventBus"
 
 /**
  * PopUp RPC requests sent from request popup. Approved requests
@@ -8,5 +7,21 @@ import { popupListenBus } from "../services/eventBus"
  * before being executed. Rejected requests will simple be forwarded to
  * the requesting app to be handled by the developer.
  */
-popupListenBus.on(Msgs.PopupApprove, handleApprovedRequest)
-popupListenBus.on(Msgs.PopupReject, handleRejectedRequest)
+window.addEventListener("message", (msg) => {
+    // only trust same origin requests
+    if (msg.origin !== window.location.origin) return
+    if (msg.data.scope !== "server:popup") return
+
+    switch (msg.data.type) {
+        case Msgs.PopupApprove: {
+            handleApprovedRequest(msg.data.payload).then(() => {
+                msg.source?.postMessage("request-close")
+            })
+            return
+        }
+        case Msgs.PopupReject: {
+            handleRejectedRequest(msg.data.payload)
+            return
+        }
+    }
+})

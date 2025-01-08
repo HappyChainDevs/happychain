@@ -2,6 +2,7 @@ import { chains } from "@happychain/sdk-shared"
 import define from "preact-custom-element"
 import { windowId } from "./happyProvider/initialize"
 import { HappyWallet } from "./wallet/HappyWallet"
+import { isFirefox, makeIframeUrl } from "./wallet/utils"
 
 /**
  * Options for the {@link register} function.
@@ -57,6 +58,19 @@ export function register(opts: WalletRegisterOptions = {}) {
     const chainId = opts.chainId || chains.defaultChain.chainId
     wallet.setAttribute("chain-id", chainId)
     wallet.setAttribute("window-id", windowId)
+
+    const iframe = document.createElement("iframe")
+    iframe.slot = "frame"
+    iframe.title = "happy-iframe-slot"
+    iframe.src = makeIframeUrl({ windowId, chainId, rpcUrl: "" })
+    iframe.style.display = "none"
+    // iframe.style.width = "100%"
+    // iframe.style.height = "100%"
+    iframe.allow = isFirefox
+        ? "" // Avoid warning in Firefox (safe: permissions inherited by default)
+        : "; clipboard-write 'src'" // Explicit grant needed at least for Chrome
+
+    document.body.appendChild(iframe)
 
     document.body.appendChild(wallet)
 }

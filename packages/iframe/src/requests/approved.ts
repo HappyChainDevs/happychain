@@ -27,8 +27,8 @@ import { appForSourceID } from "./utils"
  * Processes requests approved by the user in the pop-up,
  * running them through a series of middleware.
  */
-export function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): void {
-    void sendResponse(request, dispatchHandlers)
+export async function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): Promise<void> {
+    return await sendResponse(request, dispatchHandlers)
 }
 
 // exported for testing
