@@ -28,9 +28,6 @@ contract Drand {
 
     /**
      * @notice Posts a new Drand signature for a given drand round.
-     * @dev This function is used to submit a new signature for a specific drand round.
-     * @param round The drand round number
-     * @param signature The signature of the drand round
      */
     function postDrand(uint64 round, uint256[2] memory signature) external {
         // Encode round for hash-to-point
@@ -41,7 +38,6 @@ contract Drand {
             mstore(add(0x20, hashedRoundBytes), hashedRound)
         }
         uint256[2] memory message = BLS.hashToPoint(DST, hashedRoundBytes);
-
         // NB: Always check that the signature is a valid signature (a valid G1 point on the curve)!
         if (!BLS.isValidSignature(signature)) {
             revert InvalidSignature(drandPublicKey, message, signature);
@@ -61,10 +57,7 @@ contract Drand {
 
     /**
      * @notice Retrieves the randomness value for a specific drand round.
-     * @dev This function does not revert if the randomness value is not available. Instead, it returns 0.
-     * @param round The drand round number
-     * @return randomness The randomness value for the specified drand round, or 0
-     * if the randomness value is not available.
+     * This function does not revert if the randomness value is not available. Instead, it returns 0.
      */
     function unsafeGetDrand(uint64 round) public view returns (bytes32) {
         return drandRandomness[round];
@@ -72,9 +65,7 @@ contract Drand {
 
     /**
      * @notice Retrieves the randomness value for a specific drand round.
-     * @dev This function reverts if the randomness value is not available.
-     * @param round The drand round number
-     * @return randomness The randomness value for the specified drand round.
+     * This function reverts if the randomness value is not available.
      */
     function getDrand(uint64 round) public view returns (bytes32) {
         if (drandRandomness[round] == 0) {
@@ -84,12 +75,18 @@ contract Drand {
         return drandRandomness[round];
     }
 
+    /**
+     * @notice Returns the latest drand value at the given timestamp.
+     */
     function _getDrandAtTimestamp(uint256 timestamp) internal view returns (bytes32) {
         uint64 round = uint64((timestamp - DRAND_GENESIS_TIMESTAMP) / DRAND_PERIOD);
         return getDrand(round);
     }
 
-    function _nextValidTimestamp(uint256 timestamp) internal view returns (uint256) {
+    /**
+     * @notice Returns the timestamp in which a new drand value will be available after the given timestamp.
+     */
+    function _nextValidDrandTimestamp(uint256 timestamp) internal view returns (uint256) {
         return timestamp + (DRAND_PERIOD - (timestamp % DRAND_PERIOD));
     }
 }
