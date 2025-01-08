@@ -62,10 +62,15 @@ export function register(opts: WalletRegisterOptions = {}) {
     const iframe = document.createElement("iframe")
     iframe.slot = "frame"
     iframe.title = "happy-iframe-slot"
-    iframe.src = makeIframeUrl({ windowId, chainId, rpcUrl: "" })
-    iframe.style.display = "none"
+    iframe.src = makeIframeUrl({ windowId, chainId })
+    iframe.allow = isFirefox
+        ? "" // Avoid warning in Firefox (safe: permissions inherited by default)
+        : "; clipboard-write 'src'" // Explicit grant needed at least for Chrome
 
-    document.body.appendChild(iframe)
+    iframe.style.width = "100%"
+    iframe.style.border = "none"
+    iframe.style.height = "100%"
+    wallet.appendChild(iframe)
 
     document.body.appendChild(wallet)
 }

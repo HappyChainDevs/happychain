@@ -5,13 +5,11 @@ function filterUndefinedValues(obj: { [k: string]: string | undefined }): { [k: 
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v)) as { [k: string]: string }
 }
 
-type IframeSrcOptions = { windowId: string; chainId: string; rpcUrl: string }
-export function makeIframeUrl({ windowId, chainId, rpcUrl }: IframeSrcOptions) {
+type IframeSrcOptions = { windowId: string; chainId: string }
+export function makeIframeUrl({ windowId, chainId }: IframeSrcOptions) {
     const urlBase = new URL("embed", config.iframePath)
 
-    const searchParams = new URLSearchParams(
-        filterUndefinedValues({ windowId: windowId, chainId: chainId, "rpc-urls": rpcUrl }),
-    ).toString()
+    const searchParams = new URLSearchParams(filterUndefinedValues({ windowId: windowId, chainId: chainId })).toString()
     return `${urlBase.href}?${searchParams}`
 }
 
