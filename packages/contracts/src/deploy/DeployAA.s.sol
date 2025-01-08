@@ -14,7 +14,6 @@ import {FactoryStaker} from "kernel/factory/FactoryStaker.sol";
 import {ECDSAValidator} from "kernel/validator/ECDSAValidator.sol";
 import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
 
-import {LibClone} from "solady/utils/LibClone.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 // To ensure ABI generation.
@@ -72,30 +71,18 @@ contract DeployAAContracts is BaseDeployScript {
 
         staker.approveFactory(factory, true);
 
-        // Deploy implementation
+        // Deploy HappyPaymaster implementation
         HappyPaymaster implementation = new HappyPaymaster{salt: DEPLOYMENT_SALT}();
         deployed("HappyPaymasterImpl", "HappyPaymaster", address(implementation));
 
         // Prepare initialization data
         bytes memory initData = abi.encodeCall(HappyPaymaster.initialize, (EXPECTED_ENTRYPOINT_V7, msg.sender));
 
-        // Deploy and initialize proxy using LibClone
-        (bool alreadyDeployed, address proxy) = LibClone.createDeterministicERC1967(
-            0, // No ETH value needed
-            address(implementation),
-            DEPLOYMENT_SALT
-        );
-
-        if (!alreadyDeployed) {
-            // solhint-disable-next-line avoid-low-level-calls
-            (bool success,) = proxy.call(initData);
-            // solhint-disable-next-line gas-custom-errors
-            require(success, "Initialization of HappyPaymaster implementation failed");
-        }
+        // Deploy and initialize the proxy
+        address proxy = _deployImplementationAndProxy(address(implementation), initData, DEPLOYMENT_SALT);
+        deployed("HappyPaymasterProxy", "ERC1967Proxy", proxy);
 
         paymaster = HappyPaymaster(proxy);
-        deployed("HappyPaymasterProxy", "ERC1967Proxy", address(paymaster));
-
         paymaster.deposit{value: PAYMASTER_DEPOSIT}();
 
         sessionKeyValidator = new SessionKeyValidator{salt: DEPLOYMENT_SALT}();
