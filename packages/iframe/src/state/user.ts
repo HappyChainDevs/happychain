@@ -17,7 +17,6 @@ export const userAtom = atom(
         if (newUser?.address) {
             const formattedUser = formatUser(newUser)
             set(baseUserAtom, formattedUser)
-            // share the user with the popup
             storage.set(StorageKey.HappyUser, formattedUser)
         } else {
             set(baseUserAtom, undefined)

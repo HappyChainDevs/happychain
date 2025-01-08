@@ -8,6 +8,25 @@ import type { TransactionManager } from "./TransactionManager.js"
 
 type AttemptWithReceipt = { attempt: Attempt; receipt: TransactionReceipt }
 
+/**
+ * This module is responsible for monitoring in-flight transactions. It handles scenarios where a transaction completes successfully, fails, or becomes stuck.
+ * This module requests all receipts for all attempts made on a transaction.
+ * All the checked attempts share the same nonce, so only one of them could have been executed, and the expected response for the rest will always be "no receipt found."
+ * For this reason, we consider different scenarios based on the responses received from the requests:
+ *
+ * - The RPC responds to all requests, but all are in the "no receipt found" state. In this case, we act as if the transaction is stuck
+ * due to insufficient gas price and initiate a new attempt with gas priced at the current market rate and sufficient
+ * gas to overwrite the last attempt.
+ *
+ * - The RPC responds that one of the attempts has been executed. In this case, we act accordingly depending on whether
+ * the execution was successful or failed. If the successfully executed attempt was a transaction execution attempt,
+ * the transaction transitions to the {@link TransactionStatus.Success} state. If the successfully executed attempt was a cancellation attempt,
+ * the transaction moves to the {@link TransactionStatus.Cancelled} state. If the executed attempt failed, the transaction is moved to the {@link TransactionStatus.Failed} state
+ * unless the retry policy class indicates that the transaction should be retried. In that case, the transaction is retried with a new nonce and continues to be in {@link TransactionStatus.Pending} state.
+ *
+ * - If the execution receipt is not received and at least one of the RPC queries does not respond. In that case, we do nothing,
+ * as it is possible that the unanswered RPC query corresponds to a transaction that has been executed, which could lead to potential issues.
+ */
 export class TxMonitor {
     private readonly transactionManager: TransactionManager
     private locked = false
@@ -131,7 +150,7 @@ export class TxMonitor {
         await Promise.all(promises)
 
         const result = await ResultAsync.fromPromise(
-            this.transactionManager.transactionRepository.updateTransactions(transactions),
+            this.transactionManager.transactionRepository.saveTransactions(transactions),
             unknownToError,
         )
 

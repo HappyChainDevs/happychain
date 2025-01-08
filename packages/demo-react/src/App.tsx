@@ -1,9 +1,8 @@
-import { chains, useHappyChain } from "@happychain/react"
-
 import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
+import { chains, useHappyChain } from "@happychain/react"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { useEffect, useMemo, useState } from "react"
-import { type Hex, createPublicClient, createWalletClient, custom, hexToNumber } from "viem"
+import { createPublicClient, createWalletClient, custom } from "viem"
 import { gnosis } from "viem/chains"
 import { ConnectButton } from "./BadgeComponent"
 
@@ -58,12 +57,8 @@ function App() {
         console.error("successfully added conflicting chain")
     }
 
-    async function switchChain() {
-        await walletClient?.switchChain({ id: gnosis.id })
-    }
-
-    async function switchBack() {
-        await walletClient?.switchChain({ id: hexToNumber(chains.testnet.chainId as Hex) })
+    async function switchChain(chainId: string | number) {
+        await walletClient?.switchChain({ id: Number(chainId) })
     }
 
     async function addNewToken() {
@@ -167,19 +162,27 @@ function App() {
             </div>
 
             <button type="button" onClick={addChain} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Add Chain
+                Add Gnosis
             </button>
 
             <button type="button" onClick={addConflictedChain} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Add Conflicted Chain
+                Add "Gnosis 2 (creates conflict)"
             </button>
 
-            <button type="button" onClick={switchChain} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Switch to New Chain
+            <button
+                type="button"
+                onClick={() => switchChain(gnosis.id)}
+                className="rounded-lg bg-sky-300 p-2 shadow-xl"
+            >
+                Switch to Gnosis
             </button>
 
-            <button type="button" onClick={switchBack} className="rounded-lg bg-sky-300 p-2 shadow-xl">
-                Switch Back
+            <button
+                type="button"
+                onClick={() => switchChain(chains.testnet.chainId)}
+                className="rounded-lg bg-sky-300 p-2 shadow-xl"
+            >
+                Switch to HappyChain Sepolia
             </button>
 
             <button type="button" onClick={sendStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">

@@ -1,9 +1,4 @@
-import type {
-    EIP1193EventName,
-    EIP1193PermissionsRequest,
-    EIP1193RequestParameters,
-    EIP1193RequestResult,
-} from "./eip1193.ts"
+import type { EIP1193EventName, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193.ts"
 import type { EIP1193ErrorObject } from "./errors.ts"
 import type { AuthState, HappyUser } from "./happyUser"
 import type { ProviderEventError, ProviderEventPayload } from "./payloads.ts"
@@ -73,8 +68,14 @@ export enum Msgs {
     /** Sends a request that does not require user approval. */
     RequestPermissionless = "request:permissionless",
 
+    /** Sends a request that will be routed through the injected wallet. */
+    RequestInjected = "request:injected",
+
     /** Sent to check if a request requires user approval. */
     PermissionCheckRequest = "permission-check:request",
+
+    /** Injected Response from the InjectedWalletWrapper to the InjectedProviderProxy*/
+    ExecuteInjectedResponse = "execute-injected-response",
 
     // --- ProviderBusEventsFromIframe -------------------------------------------------------------
 
@@ -95,6 +96,9 @@ export enum Msgs {
      * Sends an EIP-1193 event to the app.
      */
     ProviderEvent = "provider:event",
+
+    /** Injected Request between the InjectedProviderProxy and InjectedWalletWrapper app-side */
+    ExecuteInjectedRequest = "execute-injected-request",
 
     // --- PopupBusEvents --------------------------------------------------------------------------
 
@@ -139,7 +143,6 @@ export type MsgsFromApp = {
               request?: MsgsFromApp[Msgs.ConnectRequest] | undefined
               response?: undefined
           }
-    [Msgs.MirrorPermissions]: { rdns: string; request: EIP1193PermissionsRequest; response: unknown }
     [Msgs.RequestWalletDisplay]: WalletDisplayAction
 }
 
@@ -172,7 +175,9 @@ export type MsgsFromIframe = {
  */
 export type ProviderMsgsFromApp = {
     [Msgs.RequestPermissionless]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.RequestInjected]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.ExecuteInjectedResponse]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
 }
 
 // =================================================================================================
@@ -185,6 +190,7 @@ export type ProviderEvent = ProviderEventError<EIP1193ErrorObject> | ProviderEve
 export type ProviderMsgsFromIframe = {
     [Msgs.RequestResponse]: ProviderEvent
     [Msgs.PermissionCheckResponse]: ProviderEventPayload<boolean> | ProviderEventError
+    [Msgs.ExecuteInjectedRequest]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.ProviderEvent]: {
         payload: { event: EIP1193EventName; args: unknown }
     }

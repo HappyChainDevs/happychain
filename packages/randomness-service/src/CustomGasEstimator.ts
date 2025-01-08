@@ -1,12 +1,12 @@
 import {
+    DefaultGasLimitEstimator,
     type EstimateGasErrorCause,
-    GasEstimator,
     type Transaction,
     type TransactionManager,
 } from "@happychain/transaction-manager"
 import { type Result, ok } from "neverthrow"
 
-export class CustomGasEstimator extends GasEstimator {
+export class CustomGasEstimator extends DefaultGasLimitEstimator {
     override async estimateGas(
         transactionManager: TransactionManager,
         transaction: Transaction,

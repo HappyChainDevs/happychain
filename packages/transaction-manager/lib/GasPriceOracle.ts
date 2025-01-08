@@ -3,6 +3,24 @@ import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
+/**
+ * This module estimates the gas price for transaction execution. It updates with each new block, basing its calculations on EIP-1559.
+ *
+ * The estimation considers the expected gas usage target per block, adjusting the next block's base fee
+ * by incrementing or decrementing it by a certain percentage.
+ *
+ * Other parts of the application use the `suggestGasForNextBlock` function to get a gas recommendation at a given moment.
+ *
+ * This module adds a safety margin to the base gas, called `baseFeeMargin`, to prevent transactions from getting stuck in the mempool.
+ * It's configurable in the `TransactionManager` constructor. The default value is 20%. The parameter is called `baseFeePercentageMargin`.
+ *
+ * This margin is necessary because a transaction must meet at least the base fee to be valid.
+ *
+ * If you only use the expected base fee for the next block and your transaction isn't included immediately,
+ * it might become invalid if the base fee increases in subsequent blocks.
+ *
+ * Including a safety margin is prudent — if the base fee doesn't increase, the excess fee is refunded, so there's no loss.
+ */
 export class GasPriceOracle {
     private txmgr: TransactionManager
     private expectedNextBaseFeePerGas!: bigint

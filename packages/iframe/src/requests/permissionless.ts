@@ -1,5 +1,6 @@
 import { HappyMethodNames } from "@happychain/common"
 import {
+    type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
@@ -35,7 +36,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
     switch (request.payload.method) {
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
-            return currChain ?? (await sendToPublicClient(app, request))
+            return currChain ?? (await sendToPublicClient(app, { ...request, payload: request.payload }))
         }
 
         case "eth_accounts": {
@@ -203,11 +204,14 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return null
 
         default:
-            return sendToPublicClient(app, request)
+            return await sendToPublicClient(app, request)
     }
 }
 
-async function sendToPublicClient(app: AppURL, request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
+async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPermissionless]>(
+    app: AppURL,
+    request: T,
+): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
     if (checkIfRequestRequiresConfirmation(app, request.payload)) {
         throw new EIP1193UnauthorizedError()
     }

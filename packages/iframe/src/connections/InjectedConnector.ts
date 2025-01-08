@@ -6,21 +6,42 @@ import type {
     MsgsFromApp,
     MsgsFromIframe,
 } from "@happychain/sdk-shared"
-import { EIP1193UserRejectedRequestError, Msgs, WalletType } from "@happychain/sdk-shared"
-import { connect, disconnect } from "@wagmi/core"
+import { EIP1193UserRejectedRequestError, Msgs, WalletType, chains } from "@happychain/sdk-shared"
+import { connect as connectWagmi, disconnect as disconnectWagmi } from "@wagmi/core"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
+import { setInjectedProvider } from "#src/state/injectedProvider.ts"
 import { config } from "#src/wagmi/config.ts"
 import { happyConnector } from "#src/wagmi/connector.ts"
 import { iframeID } from "../requests/utils"
 import { appMessageBus } from "../services/eventBus"
 import { StorageKey, storage } from "../services/storage"
-import { grantPermissions, revokePermissions } from "../state/permissions"
-import { getAppURL } from "../utils/appURL"
+import { grantPermissions } from "../state/permissions"
+import { getAppURL, isStandaloneIframe } from "../utils/appURL"
 import { createHappyUserFromWallet } from "../utils/createHappyUserFromWallet"
+import { InjectedProviderProxy } from "./InjectedProviderProxy"
 
-const IsInIframe = window.parent !== window
+/**
+ * A connector for interacting with browser-injected wallets through EIP-6963.
+ * ({@link https://eips.ethereum.org/EIPS/eip-6963}).
+ * Manages wallet connections, permissions, and state synchronization between
+ * the application and iframe contexts.
+ *
+ * @implements {ConnectionProvider}
+ * @example
+ * ```ts
+ * // find details
+ * import { createStore } from 'mipd'
+ * const store = createStore()
+ * const metamaskDetails = store.findProvider({ rdns: 'io.metamask' }
 
+ * const connector = new InjectedConnector(metamaskDetails)
+ * await connector.connect({ method: 'eth_requestAccounts' })
+ * // user is now authenticated & connected via metamask
+ * await connector.disconnect()
+ * // user is now un-authenticated & RPC calls will fallback to the default public provider
+ * ```
+ */
 export class InjectedConnector implements ConnectionProvider {
     public readonly type: string
     public readonly id: string
@@ -46,98 +67,93 @@ export class InjectedConnector implements ConnectionProvider {
 
         // reconnect logic
         if (opts.autoConnect) {
-            this.attemptReconnect()
+            void this.attemptReconnect()
         }
-
-        this.setupPermissionMirror()
     }
 
     public async onConnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connect(config, { connector: happyConnector })
+        await connectWagmi(config, { connector: happyConnector })
     }
 
     public async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connect(config, { connector: happyConnector })
+        await connectWagmi(config, { connector: happyConnector })
     }
 
     public async onDisconnect() {
-        await disconnect(config)
+        await disconnectWagmi(config)
         setUserWithProvider(undefined, undefined)
     }
 
     public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {
         const { user, request, response } = await this.connectToInjectedWallet(req)
-        await this.onConnect(user, this.detail.provider)
+        this.setProvider()
+        await this.onConnect(user, new InjectedProviderProxy() as EIP1193Provider)
         return { request, response }
     }
 
     public async disconnect() {
+        // see note at GoogleConnector.onDisconnect on why storage access vs atom usage here.
         const past = storage.get(StorageKey.HappyUser)
 
         // ensure we clear the right one
         if (past?.provider === this.id) {
+            this.clearProvider()
             this.onDisconnect()
         }
     }
 
-    private attemptReconnect() {
+    private async attemptReconnect() {
         const past = storage.get(StorageKey.HappyUser)
-        if (past?.type === WalletType.Injected && past?.provider === this.id) {
-            const reconnectRequest = {
-                key: createUUID(), // its ok, theres no pending promise to be resolved by this
-                windowId: iframeID(), // reconnect was initialized internally, so the request can be from iframe
-                payload: { method: "eth_requestAccounts" },
-                error: null,
-            } as const
+        if (past?.provider !== this.id) return
 
-            this.connectToInjectedWallet(reconnectRequest).then(({ user }: { user: HappyUser }) => {
-                this.onReconnect(user, this.detail.provider)
-            })
-        }
+        /**
+         * Here for re-connect we will use eth_requestAccounts instead of the simpler eth_accounts.
+         * This causes Metamask to popup and confirm connection on page load. Denying this will cause
+         * the user to be logged out and. `eth_accounts` in theory almost would avoid this, however
+         * after page load Wagmi is connected on the wallet-side and this requires an active
+         * connection. This is not possible in app-mode as the injected wallet lives on the app side
+         * and is only accessible when connected, and so in injected mode there can be no
+         * authentication without connection.
+         */
+        const reconnectRequest = {
+            key: createUUID(), // it's ok, there are no pending promises to be resolved by this
+            windowId: iframeID(), // reconnect was initialized internally, so the request is from iframe
+            payload: { method: "eth_requestAccounts" },
+            error: null,
+        } as const
+
+        const { user } = await this.connectToInjectedWallet(reconnectRequest)
+        this.setProvider()
+        this.onReconnect(user, new InjectedProviderProxy() as EIP1193Provider)
     }
 
-    private setupPermissionMirror() {
-        // permission mirroring
-        // Whenever the app makes a permissions request to the injected wallet, it will also
-        // forward the request and response to the iframe so that we can mirror the permission.
-        appMessageBus.on(Msgs.MirrorPermissions, ({ request, response, rdns }) => {
-            if (rdns !== this.detail.info.rdns) return
-            const hasResponse = Array.isArray(response) && response.length
-            const app = getAppURL()
-            switch (request.method) {
-                case "eth_accounts":
-                case "eth_requestAccounts":
-                    // Revoke the eth_accounts permission if the response is empty.
-                    // biome-ignore format: readability
-                    hasResponse
-                      ? grantPermissions(app, "eth_accounts")
-                      : revokePermissions(app, "eth_accounts")
-                    return
+    /**
+     * Sets the current provider as the connected injected provider
+     */
+    private setProvider() {
+        setInjectedProvider(this.detail.provider)
+    }
 
-                case "wallet_requestPermissions":
-                    // We only handle the eth_accounts permission for now, but there is no harm in
-                    // setting the permissions that the user has authorized, since we either will be
-                    // more permissive (e.g. allow methods only on the basis of eth_accounts and
-                    // user approval) or do not support the capability the permission relates to.
-                    hasResponse && grantPermissions(app, request.params[0])
-                    return
+    private clearProvider() {
+        setInjectedProvider(undefined)
+    }
 
-                case "wallet_revokePermissions":
-                    request.params && revokePermissions(app, request.params[0])
-                    return
-            }
-        })
+    /**
+     * Returns the active provider to execute requests, dependant on context.
+     */
+    private get provider() {
+        return isStandaloneIframe() ? this.detail.provider : new InjectedProviderProxy()
     }
 
     private async connectToInjectedWallet(
         request: MsgsFromApp[Msgs.ConnectRequest],
     ): Promise<{ user: HappyUser } & MsgsFromIframe[Msgs.ConnectResponse]> {
         // not in iframe (direct access)
-        if (!IsInIframe) {
+        if (isStandaloneIframe()) {
             const response = await this.detail.provider.request(request.payload)
             // get user accounts
             const [address] =
@@ -146,27 +162,61 @@ export class InjectedConnector implements ConnectionProvider {
                     : await this.detail.provider.request({ method: "eth_accounts" })
 
             const user = createHappyUserFromWallet(this.id, address)
+            await this.switchInjectedWalletToHappyChain()
             return { user, request, response }
         }
 
         // in iframe
+        // we can't execute new InjectedProviderProxy().request(request.payload) yet, as the app-side
+        // may have multiple injected providers available, and we have not yet selected one.
+        // This will ensure the correct one is selected, connected, and executed. It will prepare
+        // the app for all subsequent requests to be executed against the same injected provider
         void appMessageBus.emit(Msgs.InjectedWalletRequestConnect, { rdns: this.detail.info.rdns, request })
         return await new Promise((resolve, reject) => {
-            const unsub = appMessageBus.on(
+            const unsubscribe = appMessageBus.on(
                 Msgs.InjectedWalletConnected,
                 ({ rdns, address, request: _request, response }) => {
                     if (request.key !== _request?.key) return
 
-                    unsub()
+                    unsubscribe()
 
                     if (!address || !rdns || rdns !== this.detail.info.rdns) {
                         return reject(new EIP1193UserRejectedRequestError())
                     }
 
                     const user = createHappyUserFromWallet(this.id, address)
-                    return resolve({ user, request, response })
+
+                    return this.switchInjectedWalletToHappyChain().then(() => {
+                        return resolve({ user, request, response })
+                    })
                 },
             )
         })
+    }
+
+    private async switchInjectedWalletToHappyChain() {
+        try {
+            // Ensures the chain has been added to the injected wallet
+            await this.provider.request({
+                method: "wallet_addEthereumChain",
+                params: [
+                    {
+                        chainId: chains.defaultChain.chainId,
+                        chainName: chains.defaultChain.chainName,
+                        rpcUrls: chains.defaultChain.rpcUrls,
+                        iconUrls: [],
+                        nativeCurrency: chains.defaultChain.nativeCurrency,
+                        blockExplorerUrls: chains.defaultChain.blockExplorerUrls,
+                    },
+                ],
+            })
+            // Ensures the chain has been selected (will not prompt)
+            await this.provider.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: chains.defaultChain.chainId }],
+            })
+        } catch (e) {
+            console.error(e)
+        }
     }
 }

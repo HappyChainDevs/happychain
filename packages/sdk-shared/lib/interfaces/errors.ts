@@ -213,7 +213,9 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
                 ? error.shortMessage
                 : ""
 
-    return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.Unknown, data)
+    // biome-ignore lint/suspicious/noExplicitAny: error can be anything
+    const errorCode = (error as any)?.code ?? EIP1193ErrorCodes.Unknown
+    return getEIP1193ErrorObjectFromCode(errorCode, data)
 }
 
 /**

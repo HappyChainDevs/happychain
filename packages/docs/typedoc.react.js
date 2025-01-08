@@ -10,8 +10,8 @@ export default {
     entryPoints: ["../sdk-react/lib/index.ts"],
 
     // https://typedoc.org/options/output
-    out: "docs/pages/react/api",
+    out: "docs/pages/sdk/react/api",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
-    publicPath: "/react/api/",
+    publicPath: "/sdk/react/api/",
 }

@@ -4,6 +4,7 @@ import type { TransactionStatus } from "../Transaction"
 
 export interface TransactionTable {
     intentId: UUID
+    from: Address
     chainId: number
     address: Address
     functionName: string

@@ -1,6 +1,14 @@
-import { EIP1193ErrorCodes, Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happychain/sdk-shared"
+import {
+    EIP1193ErrorCodes,
+    Msgs,
+    type PopupMsgs,
+    WalletType,
+    getEIP1193ErrorObjectFromCode,
+} from "@happychain/sdk-shared"
+import { InjectedProviderProxy } from "#src/connections/InjectedProviderProxy.ts"
+import { getUser } from "#src/state/user.ts"
 import { happyProviderBus } from "../services/eventBus"
-import { isApp, isIframe } from "../utils/appURL"
+import { isIframe } from "../utils/appURL"
 import { iframeProvider } from "../wagmi/provider"
 import { appForSourceID } from "./utils"
 
@@ -19,11 +27,19 @@ export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): 
 
     const app = appForSourceID(data.windowId)
 
-    if (app && isIframe(app)) {
-        void iframeProvider.handleRequestResolution(response)
-    } else if (app && isApp(app)) {
-        void happyProviderBus.emit(Msgs.RequestResponse, response)
-    } else {
+    if (!app) {
         console.warn("Unsupported source app, abandoning rejected request", app, data)
+        return
+    }
+
+    const _isIframe = isIframe(app)
+    const _isInjected = getUser()?.type === WalletType.Injected
+
+    if (_isIframe && _isInjected) {
+        new InjectedProviderProxy().handleRequestResolution(response)
+    } else if (_isIframe) {
+        iframeProvider.handleRequestResolution(response)
+    } else {
+        void happyProviderBus.emit(Msgs.RequestResponse, response)
     }
 }

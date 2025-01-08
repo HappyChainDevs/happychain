@@ -10,8 +10,8 @@ export default {
     entryPoints: ["../sdk-vanillajs/lib/index.ts"],
 
     // https://typedoc.org/options/output
-    out: "docs/pages/js/api",
+    out: "docs/pages/sdk/js/api",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
-    publicPath: "/js/api/",
+    publicPath: "/sdk/js/api/",
 }

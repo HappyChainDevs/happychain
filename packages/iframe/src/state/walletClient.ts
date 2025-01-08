@@ -6,7 +6,6 @@ import { providerAtom } from "./provider"
 import { transportAtom } from "./transport"
 import { userAtom } from "./user"
 
-// utils
 export type AccountWalletClient = WalletClient<CustomTransport, undefined, ParseAccount<`0x${string}`>>
 
 export const walletClientAtom: Atom<AccountWalletClient | undefined> = atom<AccountWalletClient | undefined>((get) => {

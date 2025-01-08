@@ -3,6 +3,13 @@ import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
+/**
+ * This module is responsible for retrieving transactions from the originators when a new block is received.
+ * It also sorts the transactions by deadline, prioritizing those that will expire sooner.
+ * Additionally, this module handles submitting the first attempt of every transaction and saves
+ * the initial version of the Transaction object to the database (including its first attempt).
+ */
+
 export class TransactionCollector {
     private readonly txmgr: TransactionManager
 
@@ -21,9 +28,12 @@ export class TransactionCollector {
 
         const saveResult = await this.txmgr.transactionRepository.saveTransactions(transactionsBatch)
 
-        // TODO: If flush fails, we should notify the user
         if (saveResult.isErr()) {
-            throw saveResult.error
+            for (const transaction of transactionsBatch) {
+                eventBus.emit(Topics.TransactionSaveFailed, { transaction })
+            }
+            console.error("Error saving transactions", saveResult.error)
+            return
         }
 
         await Promise.all(

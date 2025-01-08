@@ -5,11 +5,11 @@ import {Test} from "forge-std/Test.sol";
 import {console} from "forge-std/Script.sol";
 
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
-import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
 
-import {UserOpLib} from "./UserOpLib.sol";
-import {HappyPaymaster} from "../HappyPaymaster.sol";
 import {ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
+import {HappyPaymaster} from "../HappyPaymaster.sol";
+import {UserOpLib} from "./UserOpLib.sol";
 
 /* solhint-disable no-console*/
 contract GasEstimator is Test {
@@ -18,20 +18,37 @@ contract GasEstimator is Test {
     bytes32 private constant DEPLOYMENT_SALT = 0;
     address private constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     address private constant ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-    address private constant ALLOWED_BUNDLER = 0x0000000000000000000000000000000000000001;
+    address private constant TEST_BUNDLER = 0x0000000000000000000000000000000000000001;
     uint256 private constant DUMMY_REQUIRED_PREFUND = 1e18;
 
-    IPaymaster private happyPaymaster;
+    HappyPaymaster private happyPaymaster;
 
     function setUp() public {
         if (ENTRYPOINT_V7.code.length == 0) {
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE); // solhint-disable-line
-            require(success, "Failed to deploy EntryPointV7"); // solhint-disable-line
+            // solhint-disable-next-line avoid-low-level-calls
+            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
+            // solhint-disable-next-line gas-custom-errors
+            require(success, "Failed to deploy EntryPointV7");
         }
 
-        address[] memory allowedBundlers = new address[](1);
-        allowedBundlers[0] = ALLOWED_BUNDLER;
-        happyPaymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(ENTRYPOINT_V7, allowedBundlers);
+        // Deploy implementation
+        HappyPaymaster implementation = new HappyPaymaster{salt: DEPLOYMENT_SALT}();
+
+        // Prepare initialization data
+        bytes memory initData = abi.encodeCall(HappyPaymaster.initialize, (ENTRYPOINT_V7, TEST_BUNDLER));
+
+        // Deploy and initialize proxy
+        (bool alreadyDeployed, address proxy) =
+            LibClone.createDeterministicERC1967(0, address(implementation), DEPLOYMENT_SALT);
+
+        if (!alreadyDeployed) {
+            // solhint-disable-next-line avoid-low-level-calls
+            (bool success,) = proxy.call(initData);
+            // solhint-disable-next-line gas-custom-errors
+            require(success, "Initialization failed");
+        }
+
+        happyPaymaster = HappyPaymaster(proxy);
     }
 
     /**
@@ -129,7 +146,7 @@ contract GasEstimator is Test {
             PackedUserOperation memory userOp = userOps[i];
             bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
-            vm.prank(ENTRYPOINT_V7, ALLOWED_BUNDLER);
+            vm.prank(ENTRYPOINT_V7);
             uint256 gasBefore = gasleft();
             happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
             uint256 gasAfter = gasleft();
@@ -147,7 +164,7 @@ contract GasEstimator is Test {
     function _estimatePaymasterValidateUserOpGas(PackedUserOperation memory userOp) external returns (uint256) {
         bytes32 userOpHash = userOp.getEncodedUserOpHash();
 
-        vm.prank(ENTRYPOINT_V7, ALLOWED_BUNDLER);
+        vm.prank(ENTRYPOINT_V7);
         uint256 gasBefore = gasleft();
         happyPaymaster.validatePaymasterUserOp(userOp, userOpHash, DUMMY_REQUIRED_PREFUND);
         uint256 gasAfter = gasleft();

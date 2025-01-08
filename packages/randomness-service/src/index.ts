@@ -1,8 +1,5 @@
 import { TransactionManager, TransactionStatus } from "@happychain/transaction-manager"
 import type { LatestBlock, Transaction } from "@happychain/transaction-manager"
-import { webSocket } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
-import { anvil } from "viem/chains"
 import { abis } from "./ABI/random.js"
 import { CommitmentManager } from "./CommitmentManager.js"
 import { CustomGasEstimator } from "./CustomGasEstimator.js"
@@ -17,29 +14,29 @@ class RandomnessService {
     private readonly revealValueTransactionFactory: RevealValueTransactionFactory
     constructor() {
         this.commitmentManager = new CommitmentManager()
+        this.txm = new TransactionManager({
+            privateKey: env.PRIVATE_KEY,
+            chainId: env.CHAIN_ID,
+            abis: abis,
+            gasEstimator: new CustomGasEstimator(),
+            rpc: {
+                url: env.RPC_URL,
+            },
+        })
         this.commitmentTransactionFactory = new CommitmentTransactionFactory(
-            anvil.id,
+            this.txm,
             env.RANDOM_CONTRACT_ADDRESS,
             env.PRECOMMIT_DELAY,
         )
-        this.revealValueTransactionFactory = new RevealValueTransactionFactory(anvil.id, env.RANDOM_CONTRACT_ADDRESS)
-        this.txm = new TransactionManager({
-            account: privateKeyToAccount(env.PRIVATE_KEY),
-            transport: webSocket(),
-            chain: anvil,
-            id: "randomness-service",
-            abis: abis,
-            gasEstimator: new CustomGasEstimator(),
-        })
-
+        this.revealValueTransactionFactory = new RevealValueTransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS)
         this.txm.start()
-        this.txm.addTransactionCollector(this.onCollectTransactions.bind(this))
+        this.txm.addTransactionOriginator(this.onCollectTransactions.bind(this))
     }
 
     private async onCollectTransactions(block: LatestBlock): Promise<Transaction[]> {
         const transactions: Transaction[] = []
 
-        // We try to commit the ramdomness POST_COMMIT_MARGIN to be safe that the transaction is included before the PRECOMMIT_DELAY
+        // We try to commit the randomness POST_COMMIT_MARGIN to be safe that the transaction is included before the PRECOMMIT_DELAY
         const commitmentTimestamp = block.timestamp + env.PRECOMMIT_DELAY + env.POST_COMMIT_MARGIN
         const commitment = this.commitmentManager.generateCommitment()
 

@@ -14,6 +14,7 @@ dev: ## Serves the docs in watch mode
 		--names "doc-js,doc-react,vocs" \
 		'make typedoc-js.watch'\
 		'make typedoc-react.watch'\
+		'make typedoc-txm.watch'\
 		'make vocs.watch';
 .PHONY: dev
 
@@ -21,9 +22,8 @@ dev: ## Serves the docs in watch mode
 build: typedoc vocs ## Generates the latest docs from source code
 .PHONY: build
 
-clean: ## Removes build artifacts
+clean: typedoc.clean ## Removes build artifacts
 	rm -rf docs/dist
-	rm -rf docs/pages/{js,react}/api
 	rm -rf vocs.config.ts.timestamp-*
 	rm -rf node_modules/.tmp
 .PHONY: clean
@@ -45,13 +45,15 @@ vocs.watch:
 
 # generate all markdown API reference
 typedoc: ## Generates the markdown files from package source code
-	concurrently --names "js,react"\
+	concurrently --names "js,react,txm"\
 		'make typedoc-js'\
-		'make typedoc-react';
+		'make typedoc-react'\
+		'make typedoc-txm';
 .PHONY: typedoc
 
 typedoc.clean:
-	rm -rf docs/pages/{js,react}/api
+	rm -rf docs/pages/sdk/{js,react}/api
+	rm -rf docs/pages/transaction-manager/api
 .PHONY: typedoc
 
 # generate JS markdown API reference
@@ -78,3 +80,14 @@ typedoc-react.watch:
 		--options ./typedoc.react.js;
 .PHONY: typedoc-react.watch
 
+# generate Transaction Manager markdown API reference
+typedoc-txm:
+	typedoc --options ./typedoc.txm.js;
+.PHONY: typedoc-txm
+
+# generate Transaction Manager markdown API reference in watch mode
+typedoc-txm.watch:
+	typedoc\
+		--watch\
+		--options ./typedoc.txm.js;
+.PHONY: typedoc-txm.watch

@@ -6,11 +6,29 @@ import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionTable } from "./db/types.js"
 
 export enum TransactionStatus {
+    /**
+     * Default state for new transaction: the transaction is awaiting processing by TXM or has been submitted in the mempool and is waiting to be included in a block.
+     */
     Pending = "Pending",
+    /**
+     * The transaction has been included in a block but its execution reverted.
+     */
     Failed = "Failed",
+    /**
+     * The transaction has expired. This indicates that the deadline has passed without the transaction being included in a block.
+     */
     Expired = "Expired",
+    /**
+     * The transaction has expired and we are trying to cancel it to save gas
+     */
     Cancelling = "Cancelling",
+    /**
+     * The transaction has expired, and we are attempting to cancel it to save gas, preventing it from being included on-chain and potentially reverting or executing actions that are no longer relevant.
+     */
     Cancelled = "Cancelled",
+    /**
+     * The transaction has been included onchain and its execution was successful.
+     */
     Success = "Success",
 }
 
@@ -30,8 +48,39 @@ export interface Attempt {
 
 export const NotFinalizedStatuses = [TransactionStatus.Pending, TransactionStatus.Cancelling]
 
+export interface TransactionConstructorConfig {
+    /**
+     * The address of the contract that will be called
+     */
+    address: Address
+    /**
+     * The function name of the contract that will be called
+     */
+    functionName: string
+    /**
+     * This doesn't need to match the Solidity contract name but must match the contract alias of one of the contracts
+     * that you have provided when initializing the transaction manager with the ABI Manager
+     */
+    contractName: string
+    /**
+     * The arguments of the function that will be called
+     */
+    args: ContractFunctionArgs
+    /**
+     * The deadline of the transaction in seconds (optional)
+     * This is used to try to cancel the transaction if it is not included in a block after the deadline to save gas
+     */
+    deadline?: number
+    /**
+     * Additional metadata for the transaction that can be used by your custom GasEstimator
+     */
+    metadata?: Record<string, unknown>
+}
+
 export class Transaction {
     readonly intentId: UUID
+
+    readonly from: Address
 
     readonly chainId: number
 
@@ -41,7 +90,7 @@ export class Transaction {
 
     readonly args: ContractFunctionArgs
 
-    // This doesn't need to match the Solidity contract name but must match the alias specified in the ABI Manager
+    // This doesn't need to match the Solidity contract name but must match the contract alias of one of the contracts that you have provided when initializing the transaction manager with the ABI Manager
     readonly contractName: string
 
     readonly deadline: number | undefined
@@ -49,6 +98,14 @@ export class Transaction {
     status: TransactionStatus
 
     readonly attempts: Attempt[]
+
+    // Whether the transaction has been updated and needs to be flushed to the database.
+    // This field is not persisted in the database.
+    pendingFlush: boolean
+
+    // This is true if the transaction has never been persisted to the database yet.
+    // This field is not persisted in the database.
+    notPersisted: boolean
 
     createdAt: Date
 
@@ -58,36 +115,37 @@ export class Transaction {
      * Stores additional information for the transaction.
      * Enables originators to provide extra details, such as gas limits, which can be leveraged by customizable services.
      */
-    metadata: Record<string, unknown> | undefined
+    readonly metadata: Record<string, unknown>
 
     constructor({
-        intentId,
-        chainId,
         address,
         functionName,
         contractName,
         args,
         deadline,
+        metadata,
+        intentId,
+        from,
+        chainId,
         status,
         attempts,
         createdAt,
         updatedAt,
-        metadata,
-    }: {
+        pendingFlush,
+        notPersisted,
+    }: TransactionConstructorConfig & {
         intentId?: UUID
+        from: Address
         chainId: number
-        address: Address
-        functionName: string
-        contractName: string
-        args: ContractFunctionArgs
-        deadline?: number
         status?: TransactionStatus
         attempts?: Attempt[]
         createdAt?: Date
         updatedAt?: Date
-        metadata?: Record<string, unknown>
+        pendingFlush?: boolean
+        notPersisted?: boolean
     }) {
         this.intentId = intentId ?? createUUID()
+        this.from = from
         this.chainId = chainId
         this.address = address
         this.functionName = functionName
@@ -98,12 +156,14 @@ export class Transaction {
         this.attempts = attempts ?? []
         this.createdAt = createdAt ?? new Date()
         this.updatedAt = updatedAt ?? new Date()
-        this.metadata = metadata
+        this.metadata = metadata ?? {}
+        this.pendingFlush = pendingFlush === undefined ? true : pendingFlush
+        this.notPersisted = notPersisted === undefined ? true : notPersisted
     }
 
     addAttempt(attempt: Attempt): void {
         this.attempts.push(attempt)
-        this.updatedAt = new Date()
+        this.markUpdated()
     }
 
     removeAttempt(hash: Hash): void {
@@ -111,7 +171,7 @@ export class Transaction {
         if (index > -1) {
             this.attempts.splice(index, 1)
         }
-        this.updatedAt = new Date()
+        this.markUpdated()
     }
 
     getInAirAttempts(): Attempt[] {
@@ -126,7 +186,7 @@ export class Transaction {
 
     changeStatus(status: TransactionStatus): void {
         this.status = status
-        this.updatedAt = new Date()
+        this.markUpdated()
         eventBus.emit(Topics.TransactionStatusChanged, {
             transaction: this,
         })
@@ -140,9 +200,26 @@ export class Transaction {
         return this.attempts[this.attempts.length - 1]
     }
 
+    markFlushed(): void {
+        this.pendingFlush = false
+
+        if (this.notPersisted) {
+            this.notPersisted = false
+        }
+    }
+
+    private markUpdated(): void {
+        this.updatedAt = new Date()
+
+        if (this.pendingFlush === false) {
+            this.pendingFlush = true
+        }
+    }
+
     toDbRow(): Insertable<TransactionTable> {
         return {
             intentId: this.intentId,
+            from: this.from,
             chainId: this.chainId,
             address: this.address,
             functionName: this.functionName,
@@ -165,6 +242,8 @@ export class Transaction {
             metadata: row.metadata ? JSON.parse(row.metadata, bigIntReviver) : undefined,
             createdAt: new Date(row.createdAt),
             updatedAt: new Date(row.updatedAt),
+            notPersisted: false,
+            pendingFlush: false,
         })
     }
 }

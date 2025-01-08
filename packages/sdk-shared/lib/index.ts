@@ -4,9 +4,7 @@ import SafeEventEmitter from "@metamask/safe-event-emitter"
 
 export * as chains from "./chains"
 export { getChainFromSearchParams, convertToViemChain } from "./chains/utils"
-
 export { AuthState, WalletType } from "./interfaces/happyUser"
-export { isPermissionsRequest } from "./interfaces/eip1193"
 export {
     GenericProviderRpcError,
     EIP1193ChainDisconnectedError,

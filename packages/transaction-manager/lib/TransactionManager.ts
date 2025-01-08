@@ -4,15 +4,26 @@ import {
     type UUID,
     convertToSafeViemPublicClient,
     convertToSafeViemWalletClient,
+    getUrlProtocol,
 } from "@happychain/common"
-import { type Abi, type Account, type Chain, type Transport, createPublicClient, createWalletClient } from "viem"
+import {
+    type Abi,
+    type Hex,
+    type Transport as ViemTransport,
+    createPublicClient,
+    createWalletClient,
+    defineChain,
+    http as viemHttpTransport,
+    webSocket as viemWebSocketTransport,
+} from "viem"
+import { privateKeyToAccount } from "viem/accounts"
 import { ABIManager } from "./AbiManager.js"
 import { BlockMonitor, type LatestBlock } from "./BlockMonitor.js"
-import { GasEstimator } from "./GasEstimator.js"
+import { DefaultGasLimitEstimator, type GasEstimator } from "./GasEstimator.js"
 import { GasPriceOracle } from "./GasPriceOracle.js"
 import { HookManager, type TxmHookHandler, type TxmHookType } from "./HookManager.js"
 import { NonceManager } from "./NonceManager.js"
-import type { Transaction } from "./Transaction.js"
+import { Transaction, type TransactionConstructorConfig } from "./Transaction.js"
 import { TransactionCollector } from "./TransactionCollector.js"
 import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
@@ -20,14 +31,44 @@ import { TxMonitor } from "./TxMonitor.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
 
 export type TransactionManagerConfig = {
-    /** The transport protocol used for the client. See {@link Transport} from viem for more details. */
-    transport: Transport
-    /** The account used for transactions. See {@link Account} from viem for more details. */
-    account: Account
-    /** The blockchain network configuration. See {@link Chain} from viem for more details. */
-    chain: Chain
-    /** A unique identifier for this TransactionManager instance. */
-    id: string
+    /**
+     * The RPC node configuration
+     */
+    rpc: {
+        /**
+         * The url of the RPC node.
+         * It can be a http or websocket url.
+         */
+        url: string
+        /**
+         * The timeout for the RPC node.
+         * It is very important that the value of (timeout + retryDelay) * retries be less than the time block to avoid slowing down the transaction manager.
+         * Defaults to 500 milliseconds.
+         */
+        timeout?: number
+        /**
+         * The number of retries for the RPC node.
+         * It is very important that the value of (timeout + retryDelay) * retries be less than the time block to avoid slowing down the transaction manager.
+         * Defaults to 2.
+         */
+        retries?: number
+        /**
+         * The delay between retries.
+         * It is very important that the value of (timeout + retryDelay) * retries be less than the time block to avoid slowing down the transaction manager.
+         * Defaults to 50 milliseconds.
+         */
+        retryDelay?: number
+        /**
+         * Enables debug methods on the RPC node.
+         * This is necessary for retrieving revert reasons for failed transactions
+         * and for increasing precision in managing transactions that fail due to out-of-gas errors
+         * Defaults to false.
+         */
+        allowDebug?: boolean
+    }
+    /** The private key of the account used for signing transactions. */
+    privateKey: Hex
+
     /** Optional EIP-1559 parameters. If not provided, defaults to the OP stack's stock parameters. */
     eip1559?: EIP1559Parameters
     /**
@@ -55,18 +96,15 @@ export type TransactionManagerConfig = {
     abis: Record<string, Abi>
 
     /**
-     * Enables debug methods on the RPC node.
-     * This is necessary for retrieving revert reasons for failed transactions
-     * and for increasing precision in managing transactions that fail due to out-of-gas errors
-     * Defaults to false.
-     */
-    rpcAllowDebug?: boolean
-
-    /**
      * The expected interval (in seconds) for the creation of a new block on the blockchain.
      * Defaults to 2 seconds.
      */
     blockTime?: bigint
+
+    /**
+     * The chain ID of the blockchain.
+     */
+    chainId: number
 
     /**
      * The time (in milliseconds) after which finalized transactions are purged from the database.
@@ -78,13 +116,20 @@ export type TransactionManagerConfig = {
     /**
      * The gas estimator to use for estimating the gas limit of a transaction.
      * You can provide your own implementation to override the default one.
-     * Default: {@link GasEstimator}
+     * Default: {@link DefaultGasLimitEstimator}
      */
     gasEstimator?: GasEstimator
 }
 
 export type TransactionOriginator = (block: LatestBlock) => Promise<Transaction[]>
 
+/**
+ * The TransactionManager is the core module of the transaction manager.
+ * To use the transaction manager, you must instantiate this class.
+ * Before using the transaction manager, call the {@link TransactionManager.start} method to start it.
+ * Once started, use the {@link TransactionManager.addTransactionOriginator} method
+ * to add a transaction originator and begin sending transactions to the blockchain.
+ */
 export class TransactionManager {
     public readonly collectors: TransactionOriginator[]
     public readonly blockMonitor: BlockMonitor
@@ -100,7 +145,7 @@ export class TransactionManager {
     public readonly transactionSubmitter: TransactionSubmitter
     public readonly hookManager: HookManager
 
-    public readonly id: string
+    public readonly chainId: number
     public readonly eip1559: EIP1559Parameters
     public readonly baseFeeMargin: bigint
     public readonly maxPriorityFeePerGas: bigint
@@ -110,24 +155,73 @@ export class TransactionManager {
 
     constructor(_config: TransactionManagerConfig) {
         this.collectors = []
+
+        const protocol = getUrlProtocol(_config.rpc.url)
+
+        if (protocol.isErr()) {
+            throw protocol.error
+        }
+
+        const retries = _config.rpc.retries || 2
+        const retryDelay = _config.rpc.retryDelay || 50
+        const timeout = _config.rpc.timeout || 500
+
+        let transport: ViemTransport
+        if (protocol.value === "http") {
+            transport = viemHttpTransport(_config.rpc.url, {
+                timeout,
+                retryCount: retries,
+                retryDelay,
+            })
+        } else {
+            transport = viemWebSocketTransport(_config.rpc.url, {
+                timeout,
+                retryCount: retries,
+                retryDelay,
+            })
+        }
+
+        const account = privateKeyToAccount(_config.privateKey)
+
+        /**
+         * Define the viem chain object.
+         * Certain properties required by viem are set to "Unknown" because they are not relevant to our library.
+         * This approach eliminates the need for users to provide unnecessary properties when configuring the library.
+         */
+        const chain = defineChain({
+            id: _config.chainId,
+            name: "Unknown",
+            rpcUrls: {
+                default: {
+                    http: protocol.value === "http" ? [_config.rpc.url] : [],
+                    webSocket: protocol.value === "websocket" ? [_config.rpc.url] : [],
+                },
+            },
+            nativeCurrency: {
+                name: "Unknown",
+                symbol: "UNKNOWN",
+                decimals: 18,
+            },
+        })
+
         this.viemWallet = convertToSafeViemWalletClient(
             createWalletClient({
-                account: _config.account,
-                transport: _config.transport,
-                chain: _config.chain,
+                account,
+                transport,
+                chain,
             }),
         )
 
         this.viemClient = convertToSafeViemPublicClient(
             createPublicClient({
-                transport: _config.transport,
-                chain: _config.chain,
+                transport,
+                chain,
             }),
         )
 
         this.nonceManager = new NonceManager(this)
         this.gasPriceOracle = new GasPriceOracle(this)
-        this.gasEstimator = _config.gasEstimator || new GasEstimator()
+        this.gasEstimator = _config.gasEstimator || new DefaultGasLimitEstimator()
         this.blockMonitor = new BlockMonitor(this)
         this.pendingTxReporter = new TxMonitor(this)
         this.transactionRepository = new TransactionRepository(this)
@@ -135,26 +229,33 @@ export class TransactionManager {
         this.transactionSubmitter = new TransactionSubmitter(this)
         this.hookManager = new HookManager()
 
-        this.id = _config.id
+        this.chainId = _config.chainId
         this.eip1559 = _config.eip1559 || opStackDefaultEIP1559Parameters
         this.abiManager = new ABIManager(_config.abis)
 
         this.baseFeeMargin = _config.baseFeePercentageMargin || 20n
         this.maxPriorityFeePerGas = _config.maxPriorityFeePerGas || 0n
 
-        this.rpcAllowDebug = _config.rpcAllowDebug || false
+        this.rpcAllowDebug = _config.rpc.allowDebug || false
         this.blockTime = _config.blockTime || 2n
         this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
+
+        const timePerRetry = timeout + retryDelay
+        if (timePerRetry * retries > this.blockTime * 1000n) {
+            console.warn(
+                "The value of (timeout + retryDelay) * retries is greater than the time block. This could slow down the transaction manager.",
+            )
+        }
     }
 
     /**
-     * Adds a collector to the transaction manager.
-     * A collector is a function that returns a list of transactions to be sent in the next block.
-     * It is important that the collector function is as fast as possible to avoid delays when sending transactions to the blockchain
-     * @param collector - The collector to add.
+     * Adds an originator to the transaction manager.
+     * An originator is a function that returns a list of transactions to be sent in the next block.
+     * It is important that the originator function is as fast as possible to avoid delays when sending transactions to the blockchain
+     * @param originator - The originator to add.
      */
-    public addTransactionCollector(collector: TransactionOriginator): void {
-        this.collectors.push(collector)
+    public addTransactionOriginator(originator: TransactionOriginator): void {
+        this.collectors.push(originator)
     }
 
     /**
@@ -170,15 +271,43 @@ export class TransactionManager {
         return this.transactionRepository.getTransaction(txIntentId)
     }
 
+    /**
+     * Creates a new transaction.
+     * @param params - {@link TransactionConstructorConfig}.
+     * @returns A new transaction.
+     */
+    public createTransaction(params: TransactionConstructorConfig): Transaction {
+        return new Transaction({
+            ...params,
+            from: this.viemWallet.account.address,
+            chainId: this.viemWallet.chain.id,
+        })
+    }
+
     public async start(): Promise<void> {
         // Start the gas price oracle to prevent other parts of the application from calling `suggestGasForNextBlock` before the gas price oracle has initialized the gas price after processing the first block
         const priceOraclePromise = this.gasPriceOracle.start()
+
+        // Get the chain ID of the RPC node
+        const rpcChainIdPromise = this.viemClient.safeGetChainId()
 
         // Start the transaction repository
         await this.transactionRepository.start()
 
         // Start the nonce manager, which depends on the transaction repository
         await this.nonceManager.start()
+
+        const rpcChainId = await rpcChainIdPromise
+
+        if (rpcChainId.isErr()) {
+            throw rpcChainId.error
+        }
+
+        if (rpcChainId.value !== this.chainId) {
+            const errorMessage = `The chain ID of the RPC node (${rpcChainId.value}) does not match the chain ID of the transaction manager (${this.chainId}).`
+            console.error(errorMessage)
+            throw new Error(errorMessage)
+        }
 
         // Await the completion of the gas price oracle startup before marking the TransactionManager as started
         await priceOraclePromise
