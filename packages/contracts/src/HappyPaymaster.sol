@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {IEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {UserOperationLib} from "account-abstraction/contracts/core/UserOperationLib.sol";
+import {IEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {SIG_VALIDATION_SUCCESS} from "account-abstraction/contracts/core/Helpers.sol";
+
 import {BasePaymaster} from "./BasePaymaster.sol";
 
 /**
@@ -32,7 +33,13 @@ contract HappyPaymaster is BasePaymaster {
 
     mapping(address => UserInfo) public userInfo;
 
-    constructor(address _entryPoint, address owner) BasePaymaster(IEntryPoint(_entryPoint), owner) {}
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _entryPoint, address _owner) external initializer {
+        initBasePaymaster(IEntryPoint(_entryPoint), _owner);
+    }
 
     function _validatePaymasterUserOp(
         PackedUserOperation calldata userOp,
