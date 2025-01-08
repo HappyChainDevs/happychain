@@ -20,7 +20,7 @@ anvil: ## Runs Anvil (local EVM node)
 setup-test-db:
 	rm -f test.db
 	sqlite3 test.db "CREATE TABLE IF NOT EXISTS test_table (id INTEGER PRIMARY KEY, name TEXT);"
-	TXM_DB_PATH=/Users/aodhgan/happychain-clone/packages/transaction-manager/test/test.db node ../dist/migrate.es.js
+	TXM_DB_PATH=/Users/aodhgan/happychain-clone/packages/transaction-manager/test/test.db tsx ../lib/migrate.ts
 	sqlite3 test.db "SELECT name FROM sqlite_master WHERE type='table' AND name='transaction';"  
 
 .PHONY: setup-test-db

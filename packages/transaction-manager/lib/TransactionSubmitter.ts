@@ -118,7 +118,7 @@ export class TransactionSubmitter {
             maxPriorityFeePerGas: maxPriorityFeePerGas,
             gas: transactionRequest.gas,
         })
-
+        console.log("intentId", transaction.intentId, "nonce", nonce) 
         const updateResult = await this.txmgr.transactionRepository.saveTransactions([transaction])
 
         if (updateResult.isErr()) {
@@ -129,8 +129,10 @@ export class TransactionSubmitter {
         const sendRawTransactionResult = await this.txmgr.viemWallet.safeSendRawTransaction({
             serializedTransaction: signedTransaction,
         })
+        
 
         if (sendRawTransactionResult.isErr()) {
+            console.log("intentId", transaction.intentId, "sendRawTransactionResult", sendRawTransactionResult)
             return err({ cause: AttemptSubmissionErrorCause.FailedToSendRawTransaction, flushed: true })
         }
 

@@ -42,6 +42,7 @@ export class NonceManager {
         const blockchainNonce = await this.txmgr.viemClient.getTransactionCount({
             address: address,
         })
+        console.log("blockchainNonce: ", blockchainNonce)
 
         const highestDbNonce = this.txmgr.transactionRepository.getHighestNonce()
 

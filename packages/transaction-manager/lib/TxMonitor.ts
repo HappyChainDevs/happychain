@@ -177,8 +177,8 @@ export class TxMonitor {
         const { maxFeePerGas: marketMaxFeePerGas, maxPriorityFeePerGas: marketMaxPriorityFeePerGas } =
             this.transactionManager.gasPriceOracle.suggestGasForNextBlock()
 
-        const replacementMaxFeePerGas = (maxFeePerGas * 110n) / 100n
-        const replacementMaxPriorityFeePerGas = (maxPriorityFeePerGas * 110n) / 100n
+        const replacementMaxFeePerGas = (maxFeePerGas * 130n) / 100n
+        const replacementMaxPriorityFeePerGas = (maxPriorityFeePerGas * 130n) / 100n
 
         return {
             replacementMaxFeePerGas: bigIntMax(replacementMaxFeePerGas, marketMaxFeePerGas),
@@ -212,6 +212,8 @@ export class TxMonitor {
     }
 
     private async handleStuckTransaction(transaction: Transaction): Promise<void> {
+        console.log(`Transaction ${transaction.intentId} is stuck`)
+        
         const attempt = transaction.lastAttempt
 
         if (!attempt) {
