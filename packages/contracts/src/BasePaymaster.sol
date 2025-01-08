@@ -27,7 +27,7 @@ abstract contract BasePaymaster is IPaymaster, OwnableUpgradeable, UUPSUpgradeab
     /// @dev Current version of the contract
     uint8 public version;
 
-    function initBasePaymaster(IEntryPoint _entryPoint, address _owner) internal onlyInitializing {
+    function _initBasePaymaster(IEntryPoint _entryPoint, address _owner) internal onlyInitializing {
         _validateEntryPointInterface(_entryPoint);
         entryPoint = _entryPoint;
         __Ownable_init(_owner);

@@ -38,7 +38,7 @@ contract HappyPaymaster is BasePaymaster {
     }
 
     function initialize(address _entryPoint, address _owner) external initializer {
-        initBasePaymaster(IEntryPoint(_entryPoint), _owner);
+        _initBasePaymaster(IEntryPoint(_entryPoint), _owner);
     }
 
     function _validatePaymasterUserOp(
