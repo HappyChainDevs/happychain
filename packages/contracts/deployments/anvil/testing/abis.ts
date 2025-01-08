@@ -4976,8 +4976,8 @@ export const deployment = ({
   "EntryPointSimulations": "0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47",
   "EntryPointV7": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
   "FactoryStaker": "0x5122Da4E809C0DbaE831d718D116Dd93eD40B18D",
-  "HappyPaymasterImpl": "0x3E92B5Ad3bAB1C8Ad138b3C2B2C4D454B5097195",
-  "HappyPaymasterProxy": "0xaF6995Ee6DBbEc009913700b201C208061e146Bc",
+  "HappyPaymasterImpl": "0xa69622E90aef01B137a6FeF5222A72f65222B6Bc",
+  "HappyPaymasterProxy": "0xb2a961de53D9e9493d4921b9e36300775F4AF508",
   "Kernel": "0xCC75e2B671ddBff3413921EF20531BE6Fe4e4149",
   "KernelFactory": "0x6A780409766a691Be9b94dEB0A38F151fc55E1cb",
   "SessionKeyValidator": "0x0B35cA9c4fc159e1466F81E076d553B7dd07d810"
