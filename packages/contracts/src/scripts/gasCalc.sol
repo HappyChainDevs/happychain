@@ -5,11 +5,11 @@ import {Test} from "forge-std/Test.sol";
 import {console} from "forge-std/Script.sol";
 
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
-import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
 
-import {UserOpLib} from "./UserOpLib.sol";
-import {HappyPaymaster} from "../HappyPaymaster.sol";
 import {ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
+import {HappyPaymaster} from "../HappyPaymaster.sol";
+import {UserOpLib} from "./UserOpLib.sol";
 
 /* solhint-disable no-console*/
 contract GasEstimator is Test {
@@ -21,15 +21,34 @@ contract GasEstimator is Test {
     address private constant TEST_BUNDLER = 0x0000000000000000000000000000000000000001;
     uint256 private constant DUMMY_REQUIRED_PREFUND = 1e18;
 
-    IPaymaster private happyPaymaster;
+    HappyPaymaster private happyPaymaster;
 
     function setUp() public {
         if (ENTRYPOINT_V7.code.length == 0) {
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE); // solhint-disable-line
-            require(success, "Failed to deploy EntryPointV7"); // solhint-disable-line
+            // solhint-disable-next-line avoid-low-level-calls
+            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
+            // solhint-disable-next-line gas-custom-errors
+            require(success, "Failed to deploy EntryPointV7");
         }
 
-        happyPaymaster = new HappyPaymaster{salt: DEPLOYMENT_SALT}(ENTRYPOINT_V7, TEST_BUNDLER);
+        // Deploy implementation
+        HappyPaymaster implementation = new HappyPaymaster{salt: DEPLOYMENT_SALT}();
+
+        // Prepare initialization data
+        bytes memory initData = abi.encodeCall(HappyPaymaster.initialize, (ENTRYPOINT_V7, TEST_BUNDLER));
+
+        // Deploy and initialize proxy
+        (bool alreadyDeployed, address proxy) =
+            LibClone.createDeterministicERC1967(0, address(implementation), DEPLOYMENT_SALT);
+
+        if (!alreadyDeployed) {
+            // solhint-disable-next-line avoid-low-level-calls
+            (bool success,) = proxy.call(initData);
+            // solhint-disable-next-line gas-custom-errors
+            require(success, "Initialization failed");
+        }
+
+        happyPaymaster = HappyPaymaster(proxy);
     }
 
     /**
