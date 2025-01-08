@@ -6,12 +6,13 @@
     "dependencies": {
         "@happychain/js": "workspace:^",
         "@tanstack/vue-query": "^5.62.0",
-        "@wagmi/vue": "^0.0.55",
+        "@wagmi/vue": "^0.1.6",
         "viem": "^2.21.53",
         "vue": "^3.4.37"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
+        "@happychain/wagmi": "workspace:^",
         "@types/bun": "^1.1.8",
         "@vitejs/plugin-vue": "^5.1.2",
         "autoprefixer": "^10.4.20",
