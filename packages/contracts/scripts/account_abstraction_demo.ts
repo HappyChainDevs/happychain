@@ -91,7 +91,7 @@ async function getKernelAccount(client: WalletClient, account: PrivateKeyAccount
 }
 
 function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7579Actions<SmartAccount> {
-    const paymasterAddress = deployment.HappyPaymaster
+    const paymasterAddress = deployment.HappyPaymasterProxy
 
     const kernelClientBase = createSmartAccountClient({
         account: kernelAccount,
@@ -151,7 +151,7 @@ async function deposit_paymaster(): Promise<string> {
         address: entryPoint07Address,
         abi: abis.EntryPointV7,
         functionName: "depositTo",
-        args: [deployment.HappyPaymaster],
+        args: [deployment.HappyPaymasterProxy],
         value: parseEther("10"),
     })
 

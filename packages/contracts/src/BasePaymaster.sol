@@ -3,8 +3,10 @@ pragma solidity ^0.8.20;
 
 /* solhint-disable gas-custom-errors */
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IPaymaster} from "account-abstraction/contracts/interfaces/IPaymaster.sol";
 import {IEntryPoint} from "account-abstraction/contracts/interfaces/IEntryPoint.sol";
@@ -15,17 +17,35 @@ import {PackedUserOperation, UserOperationLib} from "account-abstraction/contrac
  * provides helper methods for staking.
  * Validates that the postOp is called only by the entryPoint.
  */
-abstract contract BasePaymaster is IPaymaster, Ownable {
-    IEntryPoint public immutable ENTRYPOINT;
+abstract contract BasePaymaster is IPaymaster, OwnableUpgradeable, UUPSUpgradeable {
+    IEntryPoint public entryPoint;
 
     uint256 internal constant PAYMASTER_VALIDATION_GAS_OFFSET = UserOperationLib.PAYMASTER_VALIDATION_GAS_OFFSET;
     uint256 internal constant PAYMASTER_POSTOP_GAS_OFFSET = UserOperationLib.PAYMASTER_POSTOP_GAS_OFFSET;
     uint256 internal constant PAYMASTER_DATA_OFFSET = UserOperationLib.PAYMASTER_DATA_OFFSET;
 
-    constructor(IEntryPoint _entryPoint, address owner) Ownable(owner) {
+    /// @dev Current version of the contract
+    uint8 public version;
+
+    function initBasePaymaster(IEntryPoint _entryPoint, address _owner) internal onlyInitializing {
         _validateEntryPointInterface(_entryPoint);
-        ENTRYPOINT = _entryPoint;
+        entryPoint = _entryPoint;
+        __Ownable_init(_owner);
+        __UUPSUpgradeable_init();
+        version = 1;
     }
+
+    /// @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
+    /// @param newImplementation The address of the new implementation contract
+    /// @dev Only callable by the owner
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[50] private __gap;
 
     //sanity check: make sure this EntryPoint was compiled against the same
     // IEntryPoint of this paymaster
@@ -94,7 +114,7 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
      * Add a deposit for this paymaster, used for paying for transaction fees.
      */
     function deposit() public payable {
-        ENTRYPOINT.depositTo{value: msg.value}(address(this));
+        entryPoint.depositTo{value: msg.value}(address(this));
     }
 
     /**
@@ -103,7 +123,7 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
      * @param amount          - Amount to withdraw.
      */
     function withdrawTo(address payable withdrawAddress, uint256 amount) public onlyOwner {
-        ENTRYPOINT.withdrawTo(withdrawAddress, amount);
+        entryPoint.withdrawTo(withdrawAddress, amount);
     }
 
     /**
@@ -112,14 +132,14 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
      * @param unstakeDelaySec - The unstake delay for this paymaster. Can only be increased.
      */
     function addStake(uint32 unstakeDelaySec) external payable onlyOwner {
-        ENTRYPOINT.addStake{value: msg.value}(unstakeDelaySec);
+        entryPoint.addStake{value: msg.value}(unstakeDelaySec);
     }
 
     /**
      * Return current paymaster's deposit on the entryPoint.
      */
     function getDeposit() public view returns (uint256) {
-        return ENTRYPOINT.balanceOf(address(this));
+        return entryPoint.balanceOf(address(this));
     }
 
     /**
@@ -127,7 +147,7 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
      * The paymaster can't serve requests once unlocked, until it calls addStake again
      */
     function unlockStake() external onlyOwner {
-        ENTRYPOINT.unlockStake();
+        entryPoint.unlockStake();
     }
 
     /**
@@ -136,13 +156,13 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
      * @param withdrawAddress - The address to send withdrawn value.
      */
     function withdrawStake(address payable withdrawAddress) external onlyOwner {
-        ENTRYPOINT.withdrawStake(withdrawAddress);
+        entryPoint.withdrawStake(withdrawAddress);
     }
 
     /**
      * Validate the call is made from a valid entrypoint
      */
     function _requireFromEntryPoint() internal virtual {
-        require(msg.sender == address(ENTRYPOINT), "Sender not EntryPoint");
+        require(msg.sender == address(entryPoint), "Sender not EntryPoint");
     }
 }
