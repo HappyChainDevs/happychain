@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
 
 /**
  * @dev Base script to be inherited by other deploy scripts, providing functionality to record
@@ -80,6 +81,35 @@ abstract contract BaseDeployScript is Script {
      * vm.startBroadcast() and vm.stopBroadcast() are called before and after this.
      */
     function deploy() internal virtual {}
+
+    /**
+     * @dev Deploys a deterministic ERC1967 proxy for an implementation contract.
+     * Uses LibClone to create the proxy with the same address across different networks.
+     * @param implementation The address of the implementation contract
+     * @param initData The initialization data to be called on the proxy after deployment
+     * @param salt The salt used for deterministic address generation
+     * @return proxy The address of the deployed proxy contract
+     */
+    function _deployImplementationAndProxy(address implementation, bytes memory initData, bytes32 salt)
+        internal
+        returns (address proxy)
+    {
+        // Deploy and initialize proxy using LibClone
+        (bool alreadyDeployed, address _proxy) = LibClone.createDeterministicERC1967(
+            0, // No ETH value needed
+            implementation,
+            salt
+        );
+
+        if (!alreadyDeployed) {
+            // solhint-disable-next-line avoid-low-level-calls
+            (bool success,) = _proxy.call(initData);
+            // solhint-disable-next-line gas-custom-errors
+            require(success, string.concat("Initialization of proxy contract failed"));
+        }
+
+        proxy = _proxy;
+    }
 
     /**
      * @dev Runs the deploy logic — called by Foundry.
