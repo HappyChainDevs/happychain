@@ -1,143 +1,63 @@
-import Fastify, { type FastifyInstance } from "fastify"
-import cors from "@fastify/cors"
-import { fromZodError } from "zod-validation-error"
-import { type JSONRPCResponse, RpcError, jsonRpcSchema } from "./types/rpc"
-import type { IRpcHandler } from "./rpc/handler"
-import { Logger } from "./logger"
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { prettyJSON } from 'hono/pretty-json'
+import { createPublicClient, createWalletClient } from 'viem'
+import type { HappyTx } from './types'
 
-declare module "fastify" {
-    interface FastifyRequest {
-        rpcMethod: string
+const app = new Hono()
+
+// Middleware
+app.use('*', cors())
+app.use('*', prettyJSON())
+
+// Error handling
+app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404))
+
+// Health check
+app.get('/health', (c) => c.text('OK'))
+
+// Submit endpoint
+app.post('/submit', async (c) => {
+  try {
+    const happyTx = await c.req.json<HappyTx>()
+    const entrypointAddress = process.env.HAPPY_ENTRYPOINT_ADDRESS as `0x${string}`
+    const rpcUrl = process.env.RPC_URL
+
+    if (!rpcUrl) {
+      return c.json({ ok: false, error: 'RPC_URL not set' }, 500)
     }
-}
-
-export class Server {
-    private fastify: FastifyInstance
-    private rpcHandler: IRpcHandler
-    private logger: Logger
-
-    constructor({
-        rpcHandler,
-        logger,
-        port = 3000
-    }: {
-        rpcHandler: IRpcHandler
-        logger: Logger
-        port?: number
-    }) {
-        this.rpcHandler = rpcHandler
-        this.logger = logger
-
-        this.fastify = Fastify({
-            logger: logger as any,
-            requestTimeout: 30_000,
-            disableRequestLogging: true
-        })
-
-        this.fastify.register(cors, {
-            origin: "*",
-            methods: ["POST", "GET", "OPTIONS"]
-        })
-
-        this.fastify.decorateRequest("rpcMethod", null)
-
-        this.fastify.post("/", this.handleRpc.bind(this))
-        this.fastify.get("/health", async (_, reply) => {
-            await reply.status(200).send("OK")
-        })
+    if (!entrypointAddress) {
+      return c.json({ ok: false, error: 'HAPPY_ENTRYPOINT_ADDRESS not set' }, 500)
     }
 
-    public start(): void {
-        this.fastify.listen({ port: 3000, host: "0.0.0.0" })
-    }
+    // Initialize viem clients with default http transport
+    const publicClient = createPublicClient()
+    const walletClient = createWalletClient({ rpcUrl })
 
-    public async stop(): Promise<void> {
-        await this.fastify.close()
-    }
+    // Submit transaction
+    const hash = await walletClient.writeContract({
+      address: entrypointAddress,
+      abi: [
+        'function handleOps(tuple(address account, uint32 gasLimit, uint32 executeGasLimit, address dest, address paymaster, uint256 value, uint256 nonce, uint256 maxFeePerGas, int256 submitterFee, bytes callData, bytes paymasterData, bytes validatorData, bytes extraData)[] ops) external'
+      ],
+      functionName: 'handleOps',
+      args: [[happyTx]]
+    })
 
-    private async handleRpc(request: any, reply: any): Promise<void> {
-        let requestId: number | null = null
+    const receipt = await publicClient.waitForTransactionReceipt({ hash })
 
-        try {
-            const contentTypeHeader = request.headers["content-type"]
-            if (contentTypeHeader !== "application/json") {
-                throw new RpcError(
-                    "invalid content-type, must be application/json",
-                    -32700
-                )
-            }
+    return c.json({
+      ok: true,
+      txHash: receipt.transactionHash
+    })
 
-            const jsonRpcParsing = jsonRpcSchema.safeParse(request.body)
-            if (!jsonRpcParsing.success) {
-                const validationError = fromZodError(jsonRpcParsing.error)
-                throw new RpcError(
-                    `invalid JSON-RPC request: ${validationError.message}`,
-                    -32700
-                )
-            }
+  } catch (error) {
+    console.error('Error submitting transaction:', error)
+    return c.json({
+      ok: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, 500)
+  }
+})
 
-            const jsonRpcRequest = jsonRpcParsing.data
-            requestId = jsonRpcRequest.id
-
-            request.rpcMethod = jsonRpcRequest.method
-            this.logger.info(
-                {
-                    method: jsonRpcRequest.method,
-                    params: jsonRpcRequest.params
-                },
-                "incoming request"
-            )
-
-            const result = await this.rpcHandler.handleMethod(
-                jsonRpcRequest.method,
-                jsonRpcRequest.params || []
-            )
-
-            const response: JSONRPCResponse = {
-                jsonrpc: "2.0",
-                id: requestId,
-                result: result.result
-            }
-
-            await reply.status(200).send(response)
-            this.logger.info({ response }, "sent reply")
-
-        } catch (err) {
-            if (err instanceof RpcError) {
-                const rpcError = {
-                    jsonrpc: "2.0",
-                    id: requestId,
-                    error: {
-                        message: err.message,
-                        code: err.code,
-                        data: err.data
-                    }
-                }
-                await reply.status(200).send(rpcError)
-                this.logger.info({ error: rpcError }, "error reply")
-            } else if (err instanceof Error) {
-                const rpcError = {
-                    jsonrpc: "2.0",
-                    id: requestId,
-                    error: {
-                        message: err.message,
-                        code: -32603
-                    }
-                }
-                await reply.status(500).send(rpcError)
-                this.logger.error({ error: err }, "error reply (non-rpc)")
-            } else {
-                const rpcError = {
-                    jsonrpc: "2.0",
-                    id: requestId,
-                    error: {
-                        message: "Unknown error",
-                        code: -32603
-                    }
-                }
-                await reply.status(500).send(rpcError)
-                this.logger.error({ error: err }, "error reply (unknown)")
-            }
-        }
-    }
-}
+export default app
