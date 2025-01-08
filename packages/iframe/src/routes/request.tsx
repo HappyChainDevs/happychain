@@ -15,7 +15,7 @@ export const Route = createFileRoute("/request")({
             args: search.args || "",
             key: search.key || "",
             windowId: search.windowId || "",
-            iframeIndex: Number(search.iframeIndex) || 0,
+            iframeIndex: Number(search.iframeIndex),
         } as RequestArgs
     },
 })
