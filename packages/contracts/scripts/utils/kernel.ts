@@ -36,7 +36,7 @@ export async function getKernelAccount(publicClient: PublicClient, account: Priv
 }
 
 export function getKernelClient(kernelAccount: SmartAccount): SmartAccountClient & Erc7579Actions<SmartAccount> {
-    const paymasterAddress = deployment.HappyPaymaster
+    const paymasterAddress = deployment.HappyPaymasterProxy
 
     const kernelClientBase = createSmartAccountClient({
         account: kernelAccount,
