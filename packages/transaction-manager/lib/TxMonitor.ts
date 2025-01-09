@@ -213,7 +213,7 @@ export class TxMonitor {
 
     private async handleStuckTransaction(transaction: Transaction): Promise<void> {
         console.log(`Transaction ${transaction.intentId} is stuck`)
-        
+
         const attempt = transaction.lastAttempt
 
         if (!attempt) {

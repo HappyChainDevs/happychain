@@ -1,6 +1,6 @@
 import { type LatestBlock, type Transaction, type TransactionManager, TxmHookType } from "../../../lib/index"
-import { getNumber } from "./getNumber"
 import { COUNTER_ADDRESS } from "./constants"
+import { getNumber } from "./getNumber"
 
 export class TestService {
     public readonly txm: TransactionManager

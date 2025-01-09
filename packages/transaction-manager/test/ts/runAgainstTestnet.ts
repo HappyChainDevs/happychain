@@ -1,9 +1,9 @@
 import { type Transaction, TransactionManager, type TransactionManagerConfig } from "../../lib/index"
 import { abis } from "../contracts/abi/Counter.ts"
 import { TestService } from "./utils/TestService"
-import { getNumber } from "./utils/getNumber"
-import { createIncrementTransaction } from "./utils/createIncrementTransaction"
 import { COUNTER_ADDRESS } from "./utils/constants"
+import { createIncrementTransaction } from "./utils/createIncrementTransaction"
+import { getNumber } from "./utils/getNumber"
 
 const CHAIN_ID = 216
 
@@ -20,13 +20,8 @@ const testConfig: TransactionManagerConfig = {
 
 async function run(key) {
     const single = async (): Promise<Transaction[]> => {
-        if ((await getNumber(COUNTER_ADDRESS, CHAIN_ID)) === testService.counterVal) {
-            return [createIncrementTransaction(testService)]
-        }
-        return []
+        return [createIncrementTransaction(testService)]
     }
-
-
 
     const { privateKey, ...configWithoutPrivateKey } = testConfig
     const transactionManager = new TransactionManager({ privateKey: key, ...configWithoutPrivateKey })

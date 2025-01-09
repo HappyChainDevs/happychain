@@ -1,4 +1,4 @@
-import { type Transaction} from "../../../lib/index"
+import type { Transaction } from "../../../lib/index"
 import { COUNTER_ADDRESS } from "./constants"
 
 export function createIncrementTransaction(testService): Transaction {
