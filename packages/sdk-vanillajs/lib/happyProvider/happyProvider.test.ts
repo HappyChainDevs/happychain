@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test"
-import { createUUID } from "@happychain/common"
+import { type UUID, createUUID } from "@happychain/common"
 import {
     AuthState,
+    EIP1193ErrorCodes,
+    type EIP1193RequestParameters,
     EventBus,
     EventBusMode,
     type EventBusOptions,
@@ -11,6 +13,7 @@ import {
     type MsgsFromIframe,
     type ProviderMsgsFromApp,
     type ProviderMsgsFromIframe,
+    getEIP1193ErrorObjectFromCode,
 } from "@happychain/sdk-shared"
 import type { RpcBlock } from "viem"
 import { config } from "../config"
@@ -48,51 +51,89 @@ function newIframeProviderBus(options: EventBusOptions) {
     return new EventBus<ProviderMsgsFromApp, ProviderMsgsFromIframe>(options)
 }
 
-function newAppProviderBus(options: EventBusOptions) {
-    return new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>(options)
-}
-
 function newIframeMessageBus(options: EventBusOptions) {
     return new EventBus<MsgsFromApp, MsgsFromIframe>(options)
+}
+
+function newAppProviderBus(options: EventBusOptions) {
+    return new EventBus<ProviderMsgsFromIframe, ProviderMsgsFromApp>(options)
 }
 
 function newAppMessageBus(options: EventBusOptions) {
     return new EventBus<MsgsFromIframe, MsgsFromApp>(options)
 }
 
-describe("HappyProvider", () => {
-    let providerBusConfig: EventBusOptions
-    let appBusConfig: EventBusOptions
-    beforeEach(() => {
-        providerBusConfig = {
-            scope: createUUID(),
+function createTestBusPair() {
+    const mc1 = new MessageChannel()
+    const scope = createUUID()
+    return [
+        {
+            scope,
             logger: { log: mock(), warn: mock(), error: mock() },
-            port: new BroadcastChannel("test-channel"),
             mode: EventBusMode.Forced,
-        } satisfies EventBusOptions
+            port: mc1.port1,
+        },
+        {
+            scope,
+            logger: { log: mock(), warn: mock(), error: mock() },
+            mode: EventBusMode.Forced,
+            port: mc1.port2,
+        },
+    ] as [EventBusOptions, EventBusOptions]
+}
 
-        appBusConfig = {
-            scope: createUUID(),
-            logger: { log: mock(), warn: mock(), error: mock() },
-            port: new BroadcastChannel("test-channel"),
-            mode: EventBusMode.Forced,
-        } satisfies EventBusOptions
+describe("HappyProvider", () => {
+    let iframeProviderBus: ReturnType<typeof newIframeProviderBus>
+    let iframeMessageBus: ReturnType<typeof newIframeMessageBus>
+    let appProviderBus: ReturnType<typeof newAppProviderBus>
+    let appMessageBus: ReturnType<typeof newAppMessageBus>
+
+    let windowId: UUID
+
+    let provider: HappyProvider
+
+    function test_autoApprovePermissionCheck() {
+        // auto approve permissions (no popup)
+        iframeProviderBus.on(Msgs.PermissionCheckRequest, ({ key, windowId: uuid }) => {
+            iframeProviderBus.emit(Msgs.PermissionCheckResponse, {
+                key,
+                windowId: uuid,
+                error: null,
+                payload: false,
+            })
+        })
+    }
+    beforeEach(() => {
+        // busses
+
+        const [iframeProviderBusConfig, appProviderBusConfig] = createTestBusPair()
+        const [iframeMessageBusConfig, appMessageBusConfig] = createTestBusPair()
+
+        iframeProviderBus = newIframeProviderBus(iframeProviderBusConfig)
+        iframeMessageBus = newIframeMessageBus(iframeMessageBusConfig)
+
+        appProviderBus = newAppProviderBus(appProviderBusConfig)
+        appMessageBus = newAppMessageBus(appMessageBusConfig)
+
+        windowId = createUUID()
+
+        provider = new HappyProvider({
+            iframePath: config.iframePath,
+            windowId: windowId,
+            providerBus: appProviderBus,
+            msgBus: appMessageBus,
+        })
     })
 
     it("transmits payload using bus", async () => {
-        const happyProviderBusIframe = newIframeProviderBus(providerBusConfig)
-        const appBusIframe = newIframeMessageBus(appBusConfig)
-        const uuid = createUUID()
+        // provider setup
+        void iframeMessageBus.emit(Msgs.IframeInit, true)
+        test_autoApprovePermissionCheck()
+        void iframeMessageBus.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
 
-        const provider = new SocialWalletHandler({
-            iframePath: config.iframePath,
-            windowId: uuid,
-            providerBus: newAppProviderBus(providerBusConfig),
-            msgBus: newAppMessageBus(appBusConfig),
-        })
-
+        // auto approve & respond to request from iframe
         const callback = mock(({ key, windowId, error: _error, payload: _payload }) => {
-            happyProviderBusIframe.emit(Msgs.RequestResponse, {
+            iframeProviderBus.emit(Msgs.RequestResponse, {
                 key,
                 windowId,
                 error: null,
@@ -100,29 +141,13 @@ describe("HappyProvider", () => {
             })
         })
 
-        const payload = {
+        const payload: EIP1193RequestParameters = {
             method: "eth_getBlockByNumber",
             params: ["latest", false],
-        } as {
-            // make viem happy
-            method: "eth_getBlockByNumber"
-            params: ["latest", false]
         }
 
-        void appBusIframe.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
-
-        // auto approve permissions (no popup)
-        happyProviderBusIframe.on(Msgs.PermissionCheckRequest, ({ key, windowId: uuid }) => {
-            happyProviderBusIframe.emit(Msgs.PermissionCheckResponse, {
-                key,
-                windowId: uuid,
-                error: null,
-                payload: false,
-            })
-        })
-
         // within iframe
-        happyProviderBusIframe.on(Msgs.RequestPermissionless, callback)
+        iframeProviderBus.on(Msgs.RequestPermissionless, callback)
 
         // provider request, unanswered so don't await
         expect(provider.request(payload)).resolves.toStrictEqual(emptyRpcBlock)
@@ -134,40 +159,20 @@ describe("HappyProvider", () => {
     })
 
     it("resolves on success", async () => {
-        const happyProviderBusIframe = newIframeProviderBus(providerBusConfig)
-        const appBusIframe = newIframeMessageBus(appBusConfig)
-        const uuid = createUUID()
-
-        const provider = new HappyProvider({
-            iframePath: config.iframePath,
-            windowId: uuid,
-            providerBus: new EventBus(providerBusConfig),
-            msgBus: newAppMessageBus(appBusConfig),
-        })
-
-        void appBusIframe.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
-
-        // auto approve permissions (no popup)
-        happyProviderBusIframe.on(Msgs.PermissionCheckRequest, ({ key, windowId: uuid }) => {
-            happyProviderBusIframe.emit(Msgs.PermissionCheckResponse, {
-                key,
-                windowId: uuid,
-                error: null,
-                payload: false,
-            })
-        })
+        // provider setup
+        void iframeMessageBus.emit(Msgs.IframeInit, true)
+        test_autoApprovePermissionCheck()
+        void iframeMessageBus.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
 
         // within iframe
-        happyProviderBusIframe.on(Msgs.RequestPermissionless, ({ key }) => {
-            happyProviderBusIframe.emit(Msgs.RequestResponse, {
+        iframeProviderBus.on(Msgs.RequestPermissionless, ({ key, windowId: uuid }) => {
+            iframeProviderBus.emit(Msgs.RequestResponse, {
                 key,
                 windowId: uuid,
                 error: null,
                 payload: emptyRpcBlock,
             })
         })
-
-        await appBusIframe.emit(Msgs.IframeInit, true)
 
         const resultBlock = provider.request({
             method: "eth_getBlockByNumber",
@@ -178,63 +183,32 @@ describe("HappyProvider", () => {
     })
 
     it("rejects on error", async () => {
-        const happyProviderBusIframe = newIframeProviderBus(providerBusConfig)
-        const appBusIframe = newIframeMessageBus(appBusConfig)
-        const uuid = createUUID()
+        // provider setup
+        void iframeMessageBus.emit(Msgs.IframeInit, true)
+        test_autoApprovePermissionCheck()
+        void iframeMessageBus.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
 
-        const provider = new HappyProvider({
-            iframePath: config.iframePath,
-            windowId: uuid,
-            providerBus: newAppProviderBus(providerBusConfig),
-            msgBus: newAppMessageBus(appBusConfig),
-        })
-
-        await appBusIframe.emit(Msgs.AuthStateChanged, AuthState.Disconnected)
-
-        // auto approve permissions (no popup)
-        happyProviderBusIframe.on(Msgs.PermissionCheckRequest, ({ key, windowId: uuid }) => {
-            happyProviderBusIframe.emit(Msgs.PermissionCheckResponse, {
+        // user rejects the request
+        iframeProviderBus.on(Msgs.RequestPermissionless, ({ key, windowId: uuid }) => {
+            iframeProviderBus.emit(Msgs.RequestResponse, {
                 key,
                 windowId: uuid,
-                error: null,
-                payload: false,
-            })
-        })
-
-        // within iframe
-        happyProviderBusIframe.on(Msgs.RequestPermissionless, ({ key }) => {
-            happyProviderBusIframe.emit(Msgs.RequestResponse, {
-                key,
-                windowId: uuid,
-                error: {
-                    code: 4001,
-                    message: "User Rejected",
-                    data: "User Rejected ",
-                },
+                error: getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest),
                 payload: null,
             })
         })
 
-        await appBusIframe.emit(Msgs.IframeInit, true)
-
         // provider request
-        expect(
-            provider.request({
-                method: "eth_getBlockByNumber",
-                params: ["latest", false],
-            }),
-        ).rejects.toThrowError(GenericProviderRpcError)
+        const request = provider.request({
+            method: "eth_getBlockByNumber",
+            params: ["latest", false],
+        })
+        expect(request).rejects.toThrowError(GenericProviderRpcError)
     })
 
     it("subscribes and unsubscribes to native eip1193 events", async () => {
-        const provider = new HappyProvider({
-            iframePath: config.iframePath,
-            windowId: createUUID(),
-            providerBus: newAppProviderBus(providerBusConfig),
-            msgBus: newAppMessageBus(appBusConfig),
-        })
-
         const callback = mock(() => {})
+
         provider.on("connect", callback)
 
         provider.emit("connect")

@@ -37,7 +37,7 @@ export type EventHandler<S, K extends keyof S = keyof S> = (payload: S[K]) => vo
 
 // Type-safe references to browser message port types. Union in order to get only common
 // overlap 'safe' methods between implementations
-type SafeMessagePort = globalThis.MessagePort | globalThis.BroadcastChannel
+type SafeMessagePort = globalThis.MessagePort
 
 /**
  * Defines name, logger, error handler, and mode for the event bus.
