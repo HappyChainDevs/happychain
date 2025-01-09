@@ -5,7 +5,7 @@ TSC_BIN ?= tsc
 # Like build.watch but also serves the page on localhost if applicable
 dev: node_modules ## Serves or bundles the package in watch mode
 	@if [[ -r index.html ]]; then \
-	  concurrently --prefix=none "make build.watch" "bunx --bun vite --host"; \
+	  concurrently --prefix=none "make build.watch" "bunx --bun vite"; \
 	else \
 		make build.watch; \
 	fi
