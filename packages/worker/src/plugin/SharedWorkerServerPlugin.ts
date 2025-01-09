@@ -1,7 +1,5 @@
-import type { Plugin } from "vite"
-import pkg from "../../package.json" with { type: "json" }
 import { workerCodeGen } from "./codegen.ts"
-import { filter } from "./utils.ts"
+import { createPlugin } from "./common.ts"
 
 /**
  * Plugin runs during the 'build' command, i.e. 'bun vite build'
@@ -12,14 +10,6 @@ import { filter } from "./utils.ts"
  * and handles the RPC functionality, managing requests and responses between
  * server and clients
  */
-export function SharedWorkerServerPlugin(): Plugin {
-    return {
-        name: `${pkg.name}:worker`,
-        apply: "build",
-        enforce: "pre",
-        transform(code: string, id: string) {
-            if (!filter(id)) return
-            return { code: workerCodeGen(code, id) }
-        },
-    }
+export function SharedWorkerServerPlugin() {
+    return createPlugin("worker", "build", workerCodeGen)
 }
