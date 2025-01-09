@@ -42,7 +42,6 @@ export type { EIP6963ProviderInfo, EIP6963ProviderDetail, EIP6963AnnounceProvide
 export type {
     MsgsFromApp,
     MsgsFromIframe,
-    NoEvents,
     PopupMsgs,
     ProviderMsgsFromIframe,
     ProviderMsgsFromApp,
