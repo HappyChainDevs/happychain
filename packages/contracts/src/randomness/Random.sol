@@ -13,6 +13,7 @@ contract Random is RandomCommitment, Drand {
     * we would read the last Drand value generated before timestamp 6 - DRAND_DELAY.
     */
     uint256 public constant DRAND_DELAY = 2;
+    uint256 public constant MIN_PRECOMMIT_TIME = 3;
     uint256 public immutable HAPPY_GENESIS_TIMESTAMP;
     uint256 public immutable HAPPY_BLOCK_TIME;
 
@@ -57,6 +58,6 @@ contract Random is RandomCommitment, Drand {
      * @return nextValidTimestamp The next timestamp where the drand randomness remains unrevealed.
      */
     function nextValidTimestamp(uint256 timestamp) public view returns (uint256) {
-        return _nextValidDrandTimestamp(timestamp - DRAND_DELAY) + DRAND_DELAY + 2 * DRAND_PERIOD;
+        return _nextValidDrandTimestamp(timestamp + MIN_PRECOMMIT_TIME - 1) + DRAND_DELAY;
     }
 }
