@@ -9,70 +9,35 @@ import {HappyTx} from "../HappyTx.sol";
  *         Each user has a gas budget that refills over time, with a maximum cap.
  */
 interface IHappyPaymaster {
-    /**
-     * @dev Error when user has insufficient budget for the transaction
-     * @param user The user address
-     * @param available The user's available budget
-     * @param required The required budget
+    /*
+     * This function validates whether the passed happyTx is eligible for sponsorship
+     * by this paymaster ("validation"), and if so pays out to the submitter the
+     * submitter tx cost + happyTx.submitterFee.
+     *
+     * The submitter tx gas usage is the the minimum amount of gas between:
+     * (a) consumedGas + the cost of payout's own execution (including the call overhead) or,
+     * (b) happyTx.gasLimit.
+     * The gas should be priced according to tx.gasPrice.
+     *
+     * This is also allowed to conduct extra operations (e.g. swap an ERC20
+     * from the user to the gas token).
+     *
+     * The function must return 0 iff it accepted to sponsor the transaction and
+     * successfully paid the submitter. Otherwise it returns the selector of a
+     * custom error to indicate the reason for failure.
+     *
+     * It can also return {@link UnknownDuringSimulation} in simulation mode
+     * to indicate that validity cannot be ascertained during simulation
+     * (e.g. we can't verify a signature over the gas limit during simulation,
+     * as simulation is used to estimate the gas).
+     *
+     * If validation fails with {@link UnknownDuringSimulation} during simulation,
+     * the function must carry on with the payment, and ensure that as much gas is
+     * consume by this function as would be in case of successful validation.
+     *
+     * The function must revert with {@link NotFromEntryPoint} if not called from
+     * the EntryPoint contract (otherwise its funds will be at risk). This function
+     * is otherwise not allowed to revert (even if validation fails).
      */
-    error InsufficientUserBudget(address user, uint256 available, uint256 required);
-
-    /**
-     * @dev Error when paymaster validation fails with custom reason
-     * @param reason The reason for validation failure
-     */
-    error ValidationFailed(bytes reason);
-
-    /**
-     * @dev Error when validation data format is invalid
-     */
-    error InvalidPaymasterData();
-
-    /**
-     * @dev Emitted when a user's budget is updated
-     * @param user The user address
-     * @param oldBudget Previous budget amount
-     * @param newBudget New budget amount
-     * @param timestamp Time of the update
-     */
-    event UserBudgetUpdated(address indexed user, uint256 oldBudget, uint256 newBudget, uint256 timestamp);
-
-    /**
-     * @dev Emitted when gas is paid out for a transaction
-     * @param user The user address
-     * @param amount Amount of gas paid
-     */
-    event GasPaidOut(address indexed user, uint256 amount);
-
-    /**
-     * @dev Validates whether the paymaster will sponsor this specific transaction
-     * @param happyTx The transaction to validate
-     * @return validationResult A bytes4 selector: 0 for success, error selector for failure
-     * @notice Validates user's budget and permissions for this specific transaction
-     */
-    function validatePaymaster(HappyTx calldata happyTx) external returns (bytes4 validationResult);
-
-    /**
-     * @dev Pays out the gas costs for the transaction
-     * @param happyTx The transaction that was executed
-     * @param actualCost The actual gas cost to reimburse
-     * @return success Whether the payout was successful
-     * @notice This function should:
-     * 1. Verify the user has sufficient budget
-     * 2. Deduct from user's budget
-     * 3. Handle payment to tx.origin
-     */
-    function payout(HappyTx calldata happyTx, uint256 actualCost) external returns (bool success);
-
-    /**
-     * @dev Returns the current gas budget for a user
-     * @param user The user address to check budget for
-     * @return budget The user's current gas budget
-     * @return maxBudget The maximum possible budget
-     * @return lastUpdated The last time the budget was updated
-     */
-    function getUserBudget(address user)
-        external
-        view
-        returns (uint256 budget, uint256 maxBudget, uint256 lastUpdated);
+    function payout(HappyTx memory happyTx, uint256 consumedGas) external returns (bytes4);
 }
