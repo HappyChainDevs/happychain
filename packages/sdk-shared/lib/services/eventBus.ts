@@ -6,9 +6,6 @@ type BrowserGlobal = typeof globalThis & {
     MessageChannel?: {
         new (): MessageChannel
     }
-    BroadcastChannel?: {
-        new (scope: string): BroadcastChannel
-    }
 }
 
 /**
@@ -20,9 +17,6 @@ export enum EventBusMode {
 
     /** Opened on the app, to communicate with the iframe. */
     AppPort = "messagechannel:port2",
-
-    /** Enables broadcast messages to all browsing contexts within the same URL domain. */
-    Broadcast = "broadcastchannel",
 
     /**
      * Testing-only mode which enables initializing the bus with a specific MessageChannel or
@@ -41,10 +35,9 @@ export type EventKey = string | number | symbol
  */
 export type EventHandler<S, K extends keyof S = keyof S> = (payload: S[K]) => void
 
-// Type-safe references to browser message port types
-type SafeMessagePort = globalThis.MessagePort
-type SafeBroadcastChannel = globalThis.BroadcastChannel
-type SafePort = SafeMessagePort | SafeBroadcastChannel
+// Type-safe references to browser message port types. Union in order to get only common
+// overlap 'safe' methods between implementations
+type SafeMessagePort = globalThis.MessagePort | globalThis.BroadcastChannel
 
 /**
  * Defines name, logger, error handler, and mode for the event bus.
@@ -57,23 +50,22 @@ export type EventBusOptions = {
 } & (
     | { mode: EventBusMode.IframePort; target: Window }
     | { mode: EventBusMode.AppPort }
-    | { mode: EventBusMode.Broadcast }
-    | { mode: EventBusMode.Forced; port: SafePort }
+    | { mode: EventBusMode.Forced; port: SafeMessagePort }
 )
 
 /**
  * An event bus that enables sending/receiving messages to/from other browsing contexts (windows,
  * iframes, etc).
  *
- * This must be instantiated on both sides with the correct mode (both {@link
- * EventBusMode.Broadcast}, or {@link EventBusMode.IframePort}) and {@link EventBusMode.AppPort}.
+ * This must be instantiated on both sides with the correct mode
+ * ({@link EventBusMode.IframePort}) and {@link EventBusMode.AppPort}.
  *
  * @typeParam SL - Schema for the listening side of the bus.
  * @typeParam SE - Schema for the emitting side of the bus.
  */
 export class EventBus<SL, SE = SL> {
     private handlerMap: Map<keyof SL, Set<EventHandler<SL>>> = new Map()
-    private port: SafePort | null = null
+    private port: SafeMessagePort | null = null
     private isServer: boolean
 
     constructor(private config: EventBusOptions) {
@@ -91,11 +83,6 @@ export class EventBus<SL, SE = SL> {
         switch (this.config.mode) {
             case EventBusMode.Forced:
                 this.registerPortListener(this.config.port)
-                break
-            case EventBusMode.Broadcast:
-                if (browserGlobal.BroadcastChannel) {
-                    this.registerPortListener(new browserGlobal.BroadcastChannel(this.config.scope))
-                }
                 break
             case EventBusMode.IframePort: {
                 if (browserGlobal.MessageChannel) {
@@ -118,7 +105,7 @@ export class EventBus<SL, SE = SL> {
         }
     }
 
-    private registerPortListener(_port: SafePort): void {
+    private registerPortListener(_port: SafeMessagePort): void {
         if (this.isServer) return
 
         this.port = _port

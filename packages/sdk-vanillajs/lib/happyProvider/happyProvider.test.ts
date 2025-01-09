@@ -67,13 +67,15 @@ describe("HappyProvider", () => {
         providerBusConfig = {
             scope: createUUID(),
             logger: { log: mock(), warn: mock(), error: mock() },
-            mode: EventBusMode.Broadcast,
+            port: new BroadcastChannel("test-channel"),
+            mode: EventBusMode.Forced,
         } satisfies EventBusOptions
 
         appBusConfig = {
             scope: createUUID(),
             logger: { log: mock(), warn: mock(), error: mock() },
-            mode: EventBusMode.Broadcast,
+            port: new BroadcastChannel("test-channel"),
+            mode: EventBusMode.Forced,
         } satisfies EventBusOptions
     })
 
