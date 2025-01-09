@@ -1,5 +1,11 @@
 import { HappyMethodNames } from "@happychain/common"
-import { Msgs, type PopupMsgs } from "@happychain/sdk-shared"
+import {
+    EIP1193ErrorCodes,
+    EIP1193UnauthorizedError,
+    Msgs,
+    type PopupMsgs,
+    getEIP1193ErrorObjectFromCode,
+} from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
 import { HappyWalletUseAbi } from "#src/components/requests/HappyWalletUseAbi"
@@ -22,50 +28,57 @@ export const Route = createLazyFileRoute("/request")({
     component: Request,
 })
 
+// Iframe and popup are on the same domain
+const { origin: targetOrigin } = window.location
+const { opener } = window
+
+function getFrameByIndex(index: number) {
+    if (index === -1) return opener
+    if (index >= 0 && index < opener.frames.length) return opener.frames[index]
+    throw new Error("Failed to validate frame index")
+}
+
+function makeMessage(type: string, payload: unknown) {
+    return {
+        scope: "server:popup",
+        type,
+        payload,
+    }
+}
+
 function Request() {
     const [isLoading, setIsLoading] = useState(false)
     const { args, key, windowId, iframeIndex } = Route.useSearch()
     const req = JSON.parse(atob(args))
 
     function reject() {
-        // Iframe and popup are on the same domain
-        const targetOrigin = window.location.origin
-
-        // -1 for not embedded/direct access
-        const frame = iframeIndex >= 0 ? window.opener.frames[iframeIndex] : window.opener
+        const frame = getFrameByIndex(iframeIndex)
 
         void frame.postMessage(
-            {
-                scope: "server:popup",
-                type: Msgs.PopupReject,
-                payload: {
-                    error: {
-                        code: 4001,
-                        message: "User rejected request",
-                        data: "User rejected request",
-                    },
-                    windowId,
-                    key,
-                    payload: null,
-                },
-            },
+            makeMessage(Msgs.PopupReject, {
+                error: getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest),
+                windowId,
+                key,
+                payload: null,
+            }),
             targetOrigin,
         )
     }
 
     function accept(payload: PopupMsgs[Msgs.PopupApprove]["payload"]) {
         setIsLoading(true)
-        const frame = iframeIndex >= 0 ? window.opener.frames[iframeIndex] : window.opener
-        void frame.postMessage({
-            scope: "server:popup",
-            type: Msgs.PopupApprove,
-            payload: {
+
+        const frame = getFrameByIndex(iframeIndex)
+
+        void frame.postMessage(
+            makeMessage(Msgs.PopupApprove, {
                 error: null,
                 windowId,
                 key,
                 payload: payload,
-            },
-        })
+            }),
+            targetOrigin,
+        )
     }
 
     if (isLoading) {
