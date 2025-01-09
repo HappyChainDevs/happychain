@@ -28,21 +28,29 @@ function Request() {
     const req = JSON.parse(atob(args))
 
     function reject() {
+        // Iframe and popup are on the same domain
+        const targetOrigin = window.location.origin
+
+        // -1 for not embedded/direct access
         const frame = iframeIndex >= 0 ? window.opener.frames[iframeIndex] : window.opener
-        void frame.postMessage({
-            scope: "server:popup",
-            type: Msgs.PopupReject,
-            payload: {
-                error: {
-                    code: 4001,
-                    message: "User rejected request",
-                    data: "User rejected request",
+
+        void frame.postMessage(
+            {
+                scope: "server:popup",
+                type: Msgs.PopupReject,
+                payload: {
+                    error: {
+                        code: 4001,
+                        message: "User rejected request",
+                        data: "User rejected request",
+                    },
+                    windowId,
+                    key,
+                    payload: null,
                 },
-                windowId,
-                key,
-                payload: null,
             },
-        })
+            targetOrigin,
+        )
     }
 
     function accept(payload: PopupMsgs[Msgs.PopupApprove]["payload"]) {
