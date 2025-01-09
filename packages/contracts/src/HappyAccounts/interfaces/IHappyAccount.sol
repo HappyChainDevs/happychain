@@ -1,203 +1,114 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {INonceManager} from "./INonceManager.sol";
+import {HappyTx} from "../HappyTx.sol";
 
-/**
- * @title  IHappyAccount
- * @dev    Interface for Happy Accounts - our simplified smart account implementation
- *         optimized for low-latency use cases.
- *
- * ==================
- * Transaction Flow:
- * ==================
- *
- *     Submitter calls
- *   ┌─────────────────┐
- *   │ execute(happyTx)│
- *   └────────┬────────┘
- *            │
- *            ▼
- *   ┌─────────────────┐
- *   │ validateHappyTx │ Internal validation (nonce, etc.)
- *   └────────┬────────┘
- *            │
- *            ▼
- *   ┌─────────────────┐
- *   │  [If validator  │ External validation
- *   │  != address(0)] │ via IHappyValidator
- *   └────────┬────────┘
- *            │
- *            ▼
- *    Execute if valid
- *
+/*
+ * Execution Output struct
+ * @param gas         - The amount of gas used by the {@link execute} function.
+ * @param revertData  - The associated revert data if the call specified by the happyTx reverts; otherwise, it is empty.
  */
+struct ExecutionOutput {
+    bytes32 gas;
+    bytes revertData;
+}
 
-/**
- * @dev When sending a happyTx to the wrong account.
+/*
+ * @dev Selector returned from {@link IHappyAccount.validate} when targeting the wrong account, and
+ *      optionally from {@link IHappyPaymaster.payout} (typically when implemented as part of an account).
  */
 error WrongAccount();
 
-/**
- * @dev When the account validation of the happyTx fails.
- * @param reason The custom error selector returned by the validation function
+/*
+ * @dev Selector returned when the gas price is too high compared to {@link HappyTx.maxFeePerGas}.
  */
-error AccountValidationFailed(bytes4 reason);
+error GasPriceTooHigh();
 
-/**
- * @dev When the account validation reverts (in violation of the spec).
- * @param revertData The revert data for off-chain parsing
+/*
+ * @dev Selector returned by {@link IHappyAccount.validate} if the nonce fails to validate.
+ * 
+ *      In simulation mode, that call should return {@link FutureNonceDuringSimulation} if
+ *      the nonce can be valid in the future instead.
  */
-error AccountValidationReverted(bytes revertData);
+error InvalidNonce();
 
-/**
- * @dev When the account does not have enough funds to pay for the happyTx.
+/*
+ * @title IHappyAccount
+ * @dev   Interface to be implemented by smart contract accounts conforming to the Happy Account standard.
+ * 
+ *        Accounts can optionally implement the {@link IHappyPaymaster} interface if they wish to support
+ *        paying submitters themselves without relying on external paymasters.
  */
-error AccountBalanceInsufficient();
-
-/**
- * @dev When the paymaster does not have enough funds to pay for the happyTx.
- */
-error PaymasterBalanceInsufficient();
-
-/**
- * @dev When the paymaster validation of the happyTx fails.
- * @param reason The custom error selector returned by the validation function
- */
-error PaymasterValidationFailed(bytes4 reason);
-
-/**
- * @dev When the paymaster validation reverts (in violation of the spec).
- * @param revertData The revert data for off-chain parsing
- */
-error PaymasterValidationReverted(bytes revertData);
-
-/**
- * @dev When payment for the happyTx from the account fails.
- */
-error AccountPaymentFailed();
-
-/**
- * @dev When payment for the happyTx from the paymaster fails.
- */
-error PaymasterPaymentFailed();
-
-/**
- * @dev When the validator address provided is zero.
- */
-error InvalidValidator();
-
-/**
- * @dev When the validator is neither the root validator nor in the approved list.
- */
-error ValidatorNotApproved();
-
-/**
- * @dev When payment for the happyTx from the account is short.
- * @param amountShort The amount by which the payment was short
- */
-event AccountPaymentCameShort(uint256 amountShort);
-
-/**
- * @dev When payment for the happyTx from the paymaster is short.
- * @param amountShort The amount by which the payment was short
- */
-event PaymasterPaymentCameShort(uint256 amountShort);
-
-/**
- * @dev Emitted when the implementation of the proxy is upgraded.
- * @param implementation Address of the new implementation
- */
-event Upgraded(address indexed implementation);
-
-/**
- * @dev Emitted when the account receives ETH.
- * @param sender Address that sent ETH
- * @param amount Amount of ETH received
- */
-event Received(address sender, uint256 amount);
-
-/**
- * @dev Emitted when the root validator is changed.
- * @param validator Address of the new root validator
- */
-event RootValidatorChanged(address indexed validator);
-
-/**
- * @dev Emitted when a validator is added to the approved list.
- * @param validator Address of the added validator
- */
-event ValidatorAdded(address indexed validator);
-
-/**
- * @dev Emitted when a validator is removed from the approved list.
- * @param validator Address of the removed validator
- */
-event ValidatorRemoved(address indexed validator);
-
-/**
- * @dev When a call reverts during execution.
- * @param revertData The revert data from the failed call
- */
-event CallReverted(bytes revertData);
-
-interface IHappyAccount is INonceManager {
-    /**
-     * @dev Validate a Happy Transaction.
-     *
-     * This function validates the happyTx before execution. It must:
-     * 1. Perform basic validation (nonce, signature if internal validation)
-     * 2. If external validator is specified (validator != address(0)),
-     *    delegate to IHappyValidator.validate()
-     *
-     * Must return 0 for success, or appropriate error selector for failure.
-     * For simulation calls (tx.origin == address(0)), validation failures
-     * should return error selector but not revert.
-     *
-     * @param encodedHappyTx The encoded happy transaction data
-     * @return validationResult 0 for success, error selector for failure
-     */
-    function validateHappyTx(bytes calldata encodedHappyTx) external returns (bytes4);
-
-    /**
-     * @dev Execute a Happy Transaction.
-     *
-     * This function immediately revert or emits the errors and events defined
-     * in this file whenever the associated condition is hit.
-     *
-     * This function must, in this order:
-     * 1. Validate the happyTx with the specified validator.
-     *    The validator must implement IHappyValidator interface for compliant behavior.
-     *
-     * 2. Validate the balance of either the paymaster (if paymaster != address(0)) or
-     *    the account itself against the gas limit and baseFee.
-     *
-     * 3. Execute the call specified in the happyTx.
-     *    The account may customize the call or perform additional pre/post operations.
-     *
-     * Gas Estimation:
-     * - Must ignore failed (but not reverted) validations if tx.origin == address(0)
-     * - Gas estimation possible via eth_call with zero address as sender
-     *
-     * Gas Reporting:
-     * - Returns actual gas consumed (excluding call cost)
-     * - Calculated as difference between gasLeft() at start/end
-     * - Adds ~100 gas to account for unavoidable discrepancy
-     *
-     * @param encodedHappyTx The encoded happy transaction data
-     * @return gasUsed The amount of gas consumed by the execution
-     */
-    function execute(bytes calldata encodedHappyTx) external payable returns (uint256 gasUsed);
-
-    /**
-     * @dev Returns the address of the factory that deployed this account.
-     * @return The factory address
+interface IHappyAccount {
+    /*
+     * Returns the address of the factory that deployed this account.
+     * Or addres(0), if this account was not deployed from a factory.
      */
     function factory() external view returns (address);
 
-    /**
-     * @dev Returns the address of the owner of the Happy Account.
-     * @return The owner address
+    /*
+     * Validates a Happy Transaction.
+     *
+     * This function returns 0 if the account validates the happyTx according
+     * to its own rules, and a custom error selector otherwise to indicate
+     * the reason for rejection.
+     *
+     * The function should return {@link WrongAccount} and
+     * {@link GasPriceTooHigh} if the associated conditions are hit.
+     *
+     * If the validity cannot be ascertained at simulation time (`tx.origin == 0`),
+     * then the function should return {@link UnknownDuringSimulation}.
+     * 
+     * If the nonce is valid in the future during simulation, the function should return
+     * {@link FutureNonceDuringSimulation}. If both this and the previous paragraph
+     * apply, the function should return {@link UnknnownDuringSimulation}.
+     *
+     * In those two cases, the function should consume at least as much gas as it would
+     * if the validation was successful, to allow for accurate gas estimation.
+     *
+     * The function should consume a deterministic amount of gas for a given happyTx
+     * -— more precisely, it is not allowed to consume more gas than it does when
+     * simulated via `eth_call`.
+     *
+     * This function is not allowed to revert except from lack of gas (which,
+     * if satisfying the condition above, indicates a disfunctional submitter).
+     *
+     * This function is called directly by {@link EntryPoint.submit}.
      */
-    function owner() external view returns (address);
+    function validate(HappyTx memory happyTx) external returns (bytes4);
+
+    /*
+     * Executes the call specified by a Happy Transaction.
+     *
+     * The account is allowed to customize the call, or to perform additional
+     * pre and post operations.
+     *
+     * If the call fails, this function must set {@link ExecutionOutput.revertData}
+     * to the call's revert data.
+     *
+     * Otherwise it sets {@link ExecutionOutput.gas} to the gas consumed by
+     * its entire execution (not only the call), and returns.
+     *
+     * This function is never allowed to revert if passed enough gas (according to
+     * {@link HappyTx.executeGasLimit}).
+     *
+     * This function is called directly by {@link EntryPoint.submit} and should
+     * revert with {@link NotFromEntryPoint} if not called from the entrypoint.
+     */
+    function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory);
+
+    /*
+     * This enables the account to recognize the EOA signatures as authoritative in the
+     * context of the account, as per per https://eips.ethereum.org/EIPS/eip-1271.
+     *
+     * This returns the EIP-1271 magic value (0x1626ba7e) iff the provided signature is a valid
+     * signature of the provided hash, AND the smart account recognizes the signature as authoritative.
+     */
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4 magicValue);
+
+    /*
+     * Returns true iff the contract supports the interface identified by the provided ID,
+     * and the provided ID if not 0xffffffff, as per https://eips.ethereum.org/EIPS/eip-165.
+     */
+    function supportsInterface(bytes4 interfaceID) external view returns (bool);
 }
