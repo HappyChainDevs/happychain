@@ -1,7 +1,7 @@
 import type { Plugin } from "vite"
-import pkg from "../../package.json" with { type: "json" }
 import { SharedWorkerServerPlugin } from "./SharedWorkerServerPlugin.ts"
 import { clientCodeGen } from "./codegen.ts"
+import { createPlugin } from "./common"
 import { filter } from "./utils.ts"
 
 /**
@@ -16,26 +16,27 @@ import { filter } from "./utils.ts"
  */
 export function SharedWorkerClientPlugin({ chunks }: { chunks?: (id: string) => string | undefined }): Plugin {
     return {
-        name: `${pkg.name}:client`,
-        apply: "build",
-        enforce: "pre",
-        config(_config) {
-            return {
-                // inject production worker plugin
-                worker: {
-                    format: "es",
-                    plugins: () => [SharedWorkerServerPlugin()],
-                    rollupOptions: {
-                        output: {
-                            manualChunks: chunks,
-                        },
-                    },
-                },
-            }
-        },
-        transform(code: string, id: string) {
-            if (!filter(id)) return
-            return { code: clientCodeGen(code, id) }
-        },
+        ...createPlugin("client", "build", clientTransform),
+        config: () => clientConfig(chunks),
     }
+}
+
+function clientTransform(code: string, id: string): string {
+    if (!filter(id)) return code
+    return clientCodeGen(code, id)
+}
+
+function clientConfig(chunks?: (id: string) => string | undefined) {
+    return {
+        // inject production worker plugin
+        worker: {
+            format: "es",
+            plugins: () => [SharedWorkerServerPlugin()],
+            rollupOptions: {
+                output: {
+                    manualChunks: chunks,
+                },
+            },
+        },
+    } as const
 }
