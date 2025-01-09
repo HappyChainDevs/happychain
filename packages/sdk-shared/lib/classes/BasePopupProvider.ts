@@ -128,7 +128,9 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      */
     private openPopupAndAwaitResponse(key: UUID, args: EIP1193RequestParameters, windowId: UUID): Window | undefined {
         const url = new URL("request", this.popupBaseUrl)
-        const DOMframe = document.querySelector("iframe[slot=frame][title=happy-iframe-slot]") as HTMLIFrameElement
+        const DOMframe = document.querySelector(
+            `iframe[slot=frame][title=happy-iframe-slot][src^='${this.popupBaseUrl}']`,
+        ) as HTMLIFrameElement
         const iframeIndex = Array.from(window.frames).findIndex((frame) => frame === DOMframe.contentWindow)
         const opts = {
             windowId: windowId,
