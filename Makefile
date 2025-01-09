@@ -13,7 +13,7 @@ include makefiles/help.mk
 SHARED_PKGS := common,sdk-shared
 
 # packages only used in the SDK
-SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components,worker
+SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components,worker,sdk-wagmi
 
 # packages needed to build the sdk
 SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
