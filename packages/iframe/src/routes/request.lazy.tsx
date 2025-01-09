@@ -1,11 +1,5 @@
 import { HappyMethodNames } from "@happychain/common"
-import {
-    EIP1193ErrorCodes,
-    EIP1193UnauthorizedError,
-    Msgs,
-    type PopupMsgs,
-    getEIP1193ErrorObjectFromCode,
-} from "@happychain/sdk-shared"
+import { EIP1193ErrorCodes, Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
 import { HappyWalletUseAbi } from "#src/components/requests/HappyWalletUseAbi"
@@ -38,7 +32,7 @@ function getFrameByIndex(index: number) {
     throw new Error("Failed to validate frame index")
 }
 
-function makeMessage(type: string, payload: unknown) {
+function makeMessage(type: string, payload: PopupMsgs[Msgs.PopupApprove | Msgs.PopupReject]) {
     return {
         scope: "server:popup",
         type,

@@ -209,12 +209,3 @@ export type PopupMsgs = {
     [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.PopupReject]: ProviderEventError<EIP1193ErrorObject>
 }
-
-// =================================================================================================
-// === EMPTY EVENTS SCHEMA =========================================================================
-
-/**
- * Empty event schema.
- */
-// biome-ignore lint/complexity/noBannedTypes: <explanation>
-export type NoEvents = {}

@@ -1,5 +1,5 @@
 import { EventBus, EventBusMode, type ProviderMsgsFromIframe } from "@happychain/sdk-shared"
-import type { NoEvents, PopupMsgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
+import type { ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import type { MsgsFromApp, MsgsFromIframe } from "@happychain/sdk-shared"
 
 /**
