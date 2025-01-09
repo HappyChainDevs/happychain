@@ -16,13 +16,14 @@
     "devDependencies": {
         "@types/bun": "latest",
         "@happychain/configs": "workspace:^",
+        "@happychain/sdk-shared": "workspace:^",
         "@happychain/build": "workspace:^"
     },
     "peerDependencies": {
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "wagmi": "^2.14.6",
-        "@happychain/js": "workspace:^"
+        "@happychain/js": "workspace:^",
+        "@wagmi/core": "^2.16.3"
     }
 }
