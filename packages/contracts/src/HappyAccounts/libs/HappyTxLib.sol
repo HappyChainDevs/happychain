@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {HappyTx} from "../HappyTx.sol";
-import {MalformedHappyTx} from "../utils/HappyErrors.sol";
 
 /**
  * @title  HappyTxLib
@@ -34,41 +33,34 @@ import {MalformedHappyTx} from "../utils/HappyErrors.sol";
  * [callData][paymasterData][validatorData][extraData]
  * Each dynamic field is tightly packed without padding
  */
-
-/// @dev Maximum length for dynamic fields (2^40 - 1)
-uint256 constant MAX_LENGTH = type(uint40).max;
-
-/// @dev Represents the conversion constant from byte to bits.
-uint256 constant BYTE_TO_BITS = 8;
-
-/// @dev Represents the total byte length of an EVM word.
-uint256 constant WORD_SIZE = 32;
-
-/// @dev Represents the index of the last byte in an EVM word.
-uint256 constant WORD_LAST_INDEX = 31;
-
-/// @dev Represents the total length offset within the EVM word.
-uint256 constant TOTAL_LENGTH = (WORD_SIZE - 2) * BYTE_TO_BITS;
-
 library HappyTxLib {
-    // Constants for dynamic field encoding
-    uint256 private constant DYNAMIC_FIELDS = 4; // Number of dynamic fields in HappyTx
-    uint256 private constant DYNAMIC_FIELD_LENGTH_BITS = 40; // Each length limited to 2^40
-    uint256 private constant MASK_DYNAMIC_FIELD_LENGTH = (1 << 40) - 1;
+    /// @dev Number of dynamic fields in HappyTx.
+    uint256 private constant NUM_DYNAMIC_FIELDS = 4;
+    /// @dev Number of bits used to store the length of any dynamic field in HappyTx.
+    uint256 private constant DYNAMIC_FIELD_LENGTH_BITS = 40;
+    /// @dev Number of bits used to store the total lengh of dynamic fields in HappyTx.
+    uint256 private constant TOTAL_LENGTH_FIELD_BITS = 32;
+    /// @dev Mask for dynamic field length (2^40 - 1)
+    uint256 private constant MASK_DYNAMIC_FIELD_LENGTH = (1 << DYNAMIC_FIELD_LENGTH_BITS) - 1;
+    /// @dev Mask for total length (2^40 - 1)
+    uint256 private constant MASK_TOTAL_LENGTH_FIELD = (1 << TOTAL_LENGTH_FIELD_BITS) - 1;
+    /// @dev Maximum length for dynamic fields (2^40 - 1)
+    uint256 private constant MAX_DYNAMIC_FIELD_LENGTH = type(uint40).max;
+
+    /*
+    * When unable to decode a happyTx in {@link decodeHappyTx}.
+    */
+    error MalformedHappyTx();
 
     // Custom errors
     error InvalidEncodedLength();
-
-    /*//////////////////////////////////////////////////////////////
-                            EXTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Computes the hash of a pre-encoded HappyTx.
      * @param encodedHappyTx The pre-encoded transaction bytes
      * @return The hash of the encoded transaction
      */
-    function getEncodedHappyTxHash(bytes calldata encodedHappyTx) external pure returns (bytes32) {
+    function getEncodedHappyTxHash(bytes calldata encodedHappyTx) internal pure returns (bytes32) {
         return keccak256(encodedHappyTx);
     }
 
@@ -77,7 +69,7 @@ library HappyTxLib {
      * @param happyTx The transaction to hash
      * @return The hash to sign
      */
-    function getHappyTxHash(HappyTx memory happyTx) external pure returns (bytes32) {
+    function getHappyTxHash(HappyTx memory happyTx) internal pure returns (bytes32) {
         return keccak256(encode(happyTx));
     }
 
@@ -86,7 +78,7 @@ library HappyTxLib {
      * @param happyTx The encoded happy transaction bytes
      * @return account The account address
      */
-    function getAccount(bytes calldata happyTx) external pure returns (address account) {
+    function getAccount(bytes calldata happyTx) internal pure returns (address account) {
         if (happyTx.length < 224) revert MalformedHappyTx();
 
         // First slot: account (20) + first 12 bytes of dest
@@ -103,7 +95,7 @@ library HappyTxLib {
      * @param happyTx The encoded happy transaction bytes
      * @return gasLimit The gas limit for the transaction
      */
-    function getGasLimit(bytes calldata happyTx) external pure returns (uint32 gasLimit) {
+    function getGasLimit(bytes calldata happyTx) internal pure returns (uint32 gasLimit) {
         if (happyTx.length < 224) revert MalformedHappyTx();
 
         // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
@@ -120,7 +112,7 @@ library HappyTxLib {
      * @param happyTx The encoded happy transaction bytes
      * @return paymaster The paymaster address
      */
-    function getPaymaster(bytes calldata happyTx) external pure returns (address paymaster) {
+    function getPaymaster(bytes calldata happyTx) internal pure returns (address paymaster) {
         if (happyTx.length < 224) revert MalformedHappyTx();
 
         // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
@@ -137,7 +129,7 @@ library HappyTxLib {
      * @param happyTx The encoded happy transaction bytes
      * @return value The native token value in wei
      */
-    function getValue(bytes calldata happyTx) external pure returns (uint256 value) {
+    function getValue(bytes calldata happyTx) internal pure returns (uint256 value) {
         if (happyTx.length < 224) revert MalformedHappyTx();
 
         // Value is in slot 3
@@ -153,7 +145,7 @@ library HappyTxLib {
      * @param happyTx The encoded happy transaction bytes
      * @return executeGasLimit The gas limit for the execute function
      */
-    function getExecuteGasLimit(bytes calldata happyTx) external pure returns (uint32 executeGasLimit) {
+    function getExecuteGasLimit(bytes calldata happyTx) internal pure returns (uint32 executeGasLimit) {
         // Require minimum length for static fields + dynamic lengths word
         if (happyTx.length < 224) revert MalformedHappyTx();
 
@@ -172,7 +164,7 @@ library HappyTxLib {
      * @param happyTx The encoded happy transaction bytes
      * @return dest The destination address
      */
-    function getDest(bytes calldata happyTx) external pure returns (address dest) {
+    function getDest(bytes calldata happyTx) internal pure returns (address dest) {
         if (happyTx.length < 224) revert MalformedHappyTx();
 
         // solhint-disable-next-line no-inline-assembly
@@ -197,7 +189,7 @@ library HappyTxLib {
      * @param happyTx The encoded happy transaction bytes
      * @return nonce The account nonce
      */
-    function getNonce(bytes calldata happyTx) external pure returns (uint256 nonce) {
+    function getNonce(bytes calldata happyTx) internal pure returns (uint256 nonce) {
         if (happyTx.length < 224) revert MalformedHappyTx();
 
         // solhint-disable-next-line no-inline-assembly
@@ -206,10 +198,6 @@ library HappyTxLib {
             nonce := calldataload(add(ptr, 96)) // 96 = 32 * 3 (skip first 3 slots)
         }
     }
-
-    /*//////////////////////////////////////////////////////////////
-                            PUBLIC FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Encodes a HappyTx struct into bytes for hashing.
@@ -434,8 +422,6 @@ library HappyTxLib {
     ) internal pure {
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            let currentWordOffset := 0
-
             // Define function to pack a dynamic field with offset
             function packDynamicFieldWithOffset(dynamicField, currentPtr, wordOffset) -> newWritePtr, newOffset {
                 let mask := 0xff00000000000000000000000000000000000000000000000000000000000000
@@ -489,6 +475,7 @@ library HappyTxLib {
             }
 
             // Pack all dynamic fields starting with callData
+            let currentWordOffset := 0
             writePtr, currentWordOffset := packDynamicFieldWithOffset(callData, writePtr, currentWordOffset)
             writePtr, currentWordOffset := packDynamicFieldWithOffset(paymasterData, writePtr, currentWordOffset)
             writePtr, currentWordOffset := packDynamicFieldWithOffset(validatorData, writePtr, currentWordOffset)
@@ -517,7 +504,7 @@ library HappyTxLib {
     ) internal pure returns (bytes32) {
         // Validate all lengths are within 40 bits
         uint256 maxLengthValue = callDataLength | paymasterDataLength | validatorDataLength | extraDataLength;
-        if (maxLengthValue > MAX_LENGTH) revert MalformedHappyTx();
+        if (maxLengthValue > MAX_DYNAMIC_FIELD_LENGTH) revert MalformedHappyTx();
 
         uint256 encodedLengths;
         unchecked {
@@ -563,15 +550,15 @@ library HappyTxLib {
         unchecked {
             uint256 encoded = uint256(encodedLengths);
             totalLength = encoded >> 192;
-            callDataLength = (encoded >> 152) & ((1 << 40) - 1);
-            paymasterDataLength = (encoded >> 112) & ((1 << 40) - 1);
-            validatorDataLength = (encoded >> 72) & ((1 << 40) - 1);
-            extraDataLength = (encoded >> 32) & ((1 << 40) - 1);
-            execGasLimit = uint32(encoded & ((1 << 32) - 1));
+            callDataLength = (encoded >> 152) & MASK_DYNAMIC_FIELD_LENGTH;
+            paymasterDataLength = (encoded >> 112) & MASK_DYNAMIC_FIELD_LENGTH;
+            validatorDataLength = (encoded >> 72) & MASK_DYNAMIC_FIELD_LENGTH;
+            extraDataLength = (encoded >> 32) & MASK_DYNAMIC_FIELD_LENGTH;
+            execGasLimit = uint32(encoded & MASK_TOTAL_LENGTH_FIELD);
 
             // Validate all lengths are within 40 bits
             uint256 maxLengthValue = callDataLength | paymasterDataLength | validatorDataLength | extraDataLength;
-            if (maxLengthValue > MAX_LENGTH) revert MalformedHappyTx();
+            if (maxLengthValue > MAX_DYNAMIC_FIELD_LENGTH) revert MalformedHappyTx();
 
             // Validate total length matches sum of individual lengths
             if (totalLength != callDataLength + paymasterDataLength + validatorDataLength + extraDataLength) {
