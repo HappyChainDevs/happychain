@@ -18,7 +18,6 @@ import {
 import type { RpcBlock } from "viem"
 import { config } from "../config"
 import { HappyProvider } from "./happyProvider"
-import { SocialWalletHandler } from "./socialWalletHandler"
 
 const emptyRpcBlock = {
     baseFeePerGas: null,
@@ -103,6 +102,7 @@ describe("HappyProvider", () => {
             })
         })
     }
+
     beforeEach(() => {
         // busses
 
