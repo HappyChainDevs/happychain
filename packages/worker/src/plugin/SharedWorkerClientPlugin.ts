@@ -1,7 +1,7 @@
 import type { Plugin } from "vite"
 import { SharedWorkerServerPlugin } from "./SharedWorkerServerPlugin.ts"
 import { clientCodeGen } from "./codegen.ts"
-import { createPlugin } from "./common"
+import { createPlugin } from "./common.ts"
 import { filter } from "./utils.ts"
 
 /**

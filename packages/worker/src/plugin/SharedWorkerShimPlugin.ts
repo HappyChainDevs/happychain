@@ -1,5 +1,5 @@
 import { shimCodeGen } from "./codegen.ts"
-import { createPlugin } from "./common"
+import { createPlugin } from "./common.ts"
 
 /**
  * Plugin can run during both the 'build' or 'serve' commands, i.e. 'bun vite build' and 'bun vite'

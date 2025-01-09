@@ -1,4 +1,3 @@
-import type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
 import {
     ChainDisconnectedError,
     ProviderDisconnectedError,
@@ -7,146 +6,17 @@ import {
     UnsupportedProviderMethodError,
     UserRejectedRequestError,
 } from "viem"
-
-/**
- * Standard EIP 1193 Error Codes
- */
-export enum EIP1193ErrorCodes {
-    UserRejectedRequest = 4001,
-    Unauthorized = 4100,
-    UnsupportedMethod = 4200,
-    Disconnected = 4900,
-    ChainDisconnected = 4901,
-    SwitchChainError = 4902, // non-standard, supported by viem
-    Unknown = -1,
-}
-
-/**
- * We will use -1 to signify unknown error types.
- */
-export type ProviderRpcErrorCode = ViemProviderRpcErrorCode | -1
-
-/**
- * Error Object is used to transmit error messages
- * across MessageChannel and BroadcastChannels.
- * This requires the data to be JSON serializable
- * so we can't send the raw Error class
- */
-export type EIP1193ErrorObject = {
-    code: ProviderRpcErrorCode
-    message: string
-    data?: unknown
-}
-
-/**
- * Interface from EIP1193
- * https://eips.ethereum.org/EIPS/eip-1193#errors
- */
-export interface IProviderRpcError extends Error {
-    message: string
-    code: ProviderRpcErrorCode
-    data?: unknown
-}
-
-/**
- * General Purpose Provider RPC error.
- * Can be instantiated from the deserialized ErrorObject
- */
-export class GenericProviderRpcError extends Error {
-    code: ProviderRpcErrorCode
-    data?: unknown
-    constructor(errObj: EIP1193ErrorObject) {
-        super(errObj.message)
-        this.code = errObj.code
-        this.data = errObj.data
-
-        // as the iframe error is thrown from within the iframe
-        // the stack trace is not particularly helpful here.
-        // and just exposes the workings of the internal
-        // events system.
-        this.stack = undefined
-    }
-}
-
-// === EIP1193 Specific Errors =========================================================================
-
-/**
- * Error: 4001 User Rejected Request
- */
-export class EIP1193UserRejectedRequestError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.UserRejectedRequest,
-            message: errObj?.message || "User Rejected Request",
-            data: errObj?.data || "User Rejected Request",
-        })
-    }
-}
-
-/**
- * Error: 4100 Unauthorized
- */
-export class EIP1193UnauthorizedError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.Unauthorized,
-            message: errObj?.message || "Unauthorized",
-            data: errObj?.data || "Unauthorized",
-        })
-    }
-}
-
-/**
- * Error: 4200 Unsupported Method
- */
-export class EIP1193UnsupportedMethodError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.UnsupportedMethod,
-            message: errObj?.message || "Unsupported Method",
-            data: errObj?.data || "Unsupported Method",
-        })
-    }
-}
-
-/**
- * Error: 4900 Provider Disconnected
- */
-export class EIP1193DisconnectedError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.Disconnected,
-            message: errObj?.message || "Disconnected",
-            data: errObj?.data || "Disconnected",
-        })
-    }
-}
-
-/**
- * Error: 4901 Chain Disconnected
- */
-export class EIP1193ChainDisconnectedError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.ChainDisconnected,
-            message: errObj?.message || "Chain Disconnected",
-            data: errObj?.data || "Chain Disconnected",
-        })
-    }
-}
-
-/**
- * Error: 4902 Chain Not Recognized
- */
-export class EIP1193ChainNotRecognizedError extends GenericProviderRpcError {
-    constructor(errObj?: EIP1193ErrorObject) {
-        super({
-            code: EIP1193ErrorCodes.SwitchChainError,
-            message: errObj?.message || "Chain Not Recognized",
-            data: errObj?.data || "Chain Not Recognized",
-        })
-    }
-}
+import { EIP1193ErrorCodes } from "./codes"
+import {
+    EIP1193ChainDisconnectedError,
+    EIP1193ChainNotRecognizedError,
+    EIP1193DisconnectedError,
+    EIP1193UnauthorizedError,
+    EIP1193UnsupportedMethodError,
+    EIP1193UserRejectedRequestError,
+    GenericProviderRpcError,
+} from "./errors"
+import type { EIP1193ErrorObject } from "./interfaces"
 
 /**
  * given (at minimum) the error code, this creates an error object with a standard description

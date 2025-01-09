@@ -1,5 +1,5 @@
 import { clientCodeGen, workerCodeGen } from "./codegen.ts"
-import { createPlugin } from "./common"
+import { createPlugin } from "./common.ts"
 
 function developmentTransform(code: string, id: string): string {
     const isClient = !id.includes("worker_file")
