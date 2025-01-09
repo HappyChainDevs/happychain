@@ -1,5 +1,5 @@
-import pkg from "../../package.json"
-import { findExports, getWorkerName } from "./utils"
+import pkg from "../../package.json" with { type: "json" }
+import { findExports, getWorkerName } from "./utils.ts"
 
 export function clientCodeGen(code: string, id: string) {
     const workerName = getWorkerName(id)

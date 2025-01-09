@@ -1,7 +1,7 @@
 import type { Plugin } from "vite"
-import { DevelopmentPlugin } from "./plugin/DevelopmentPlugin"
-import { SharedWorkerClientPlugin } from "./plugin/SharedWorkerClientPlugin"
-import { SharedWorkerShimPlugin } from "./plugin/SharedWorkerShimPlugin"
+import { DevelopmentPlugin } from "./plugin/DevelopmentPlugin.ts"
+import { SharedWorkerClientPlugin } from "./plugin/SharedWorkerClientPlugin.ts"
+import { SharedWorkerShimPlugin } from "./plugin/SharedWorkerShimPlugin.ts"
 
 type Options = {
     /**

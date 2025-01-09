@@ -1,7 +1,7 @@
 import type { Plugin } from "vite"
-import pkg from "../../package.json"
-import { shimCodeGen } from "./codegen"
-import { filter } from "./utils"
+import pkg from "../../package.json" with { type: "json" }
+import { shimCodeGen } from "./codegen.ts"
+import { filter } from "./utils.ts"
 
 /**
  * Plugin can run during both the 'build' or 'serve' commands, i.e. 'bun vite build' and 'bun vite'
