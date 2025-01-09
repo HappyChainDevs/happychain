@@ -1,7 +1,7 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happychain/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
+import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "../errors"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
-import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "../interfaces/errors"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
 
 type Timer = ReturnType<typeof setInterval>
