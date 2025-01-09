@@ -44,7 +44,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
-            console.log("eth_sendTransaction")
             if (!user) return false
 
             // TODO This try statement should go away, it's only here to surface errors
@@ -52,34 +51,19 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             //      We need to make sure all errors are correctly surfaced!
             try {
                 const tx = request.payload.params[0]
-                console.log(request)
-                console.log(tx)
-                
-
                 const preparedUserOp = await smartAccountClient.prepareUserOperation({
                     account: smartAccountClient.account,
                     calls: [{
                         to: tx.to,
                         value: hexToBigInt(tx.value as Hex),
-                      }]
+                      }
+                    ]
                 })
-                console.log(preparedUserOp)
+                
                 // strip signature field from preparedUserOp
                 const { signature, ...updatedUserOp } = preparedUserOp;
 
-                console.log(updatedUserOp);
-
-                const userOpDirect = {
-                    account: smartAccountClient.account,
-                    calls: [{
-                        to: tx.to!,
-                        value: hexToBigInt(tx.value as Hex),
-                      }]
-                }
-
-                const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
-                console.log(userOpHash)
-
+                const userOpHash = await smartAccountClient.sendUserOperation(updatedUserOp)
                 addPendingUserOp(user.address, {
                     userOpHash: userOpHash as Hash,
                     value: hexToBigInt(tx.value as Hex),
@@ -87,7 +71,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
                 return userOpHash
             } catch (error) {
-                console.error("prep errored", error)
+                console.error("Sending UserOp errored", error)
                 throw error
             }
         }
