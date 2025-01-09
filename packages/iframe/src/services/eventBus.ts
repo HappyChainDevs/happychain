@@ -27,24 +27,3 @@ export const appMessageBus = new EventBus<MsgsFromApp, MsgsFromIframe>({
     mode: EventBusMode.IframePort,
     scope: "happy-chain-dapp-bus",
 })
-
-const popupBus = new EventBus<PopupMsgs>({
-    mode: EventBusMode.Broadcast,
-    scope: "server:popup",
-})
-
-/**
- * Iframe side of the app <> popup bus.
- * Will be used by the popup to send user approvals/rejections to the iframe.
- *
- * Note that within a single browsers, there could be multiple iframes and multiple popups,
- * hence the messages will identify the originating context (windowId).
- */
-export const popupListenBus = popupBus as EventBus<PopupMsgs, NoEvents>
-
-/**
- * Popup side of the app <> popup bus.
- * See {@link popupListenBus} for more details.
- */
-// The cast is safe: we won't use this to listen to events.
-export const popupEmitBus = popupBus as unknown as EventBus<NoEvents, PopupMsgs>
