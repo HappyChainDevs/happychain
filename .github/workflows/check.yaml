@@ -13,6 +13,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 23
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
@@ -28,11 +31,13 @@ jobs:
           version: nightly
       - name: Fake contract deployment
         run: mkdir -p packages/contracts/out && echo "{}" > packages/contracts/out/deployment.json
-      - run: make setup
-      - run: make check
-      - name: Build
+      - name: Setup
+        run: make setup
+      - name: Check
+        run: make check
+      - name: Test
+        run: make test
         env:
-          IFRAME_URL: "https://iframe.happy.tech"
           VITE_FIREBASE_API_KEY: "-"
           VITE_FIREBASE_AUTH_DOMAIN: "-"
           VITE_FIREBASE_PROJECT_ID: "-"
@@ -42,9 +47,10 @@ jobs:
           VITE_WEB3AUTH_CLIENT_ID: "-"
           VITE_WEB3AUTH_NETWORK: "-"
           VITE_WEB3AUTH_VERIFIER: "-"
+      - name: Build
         run: make build
-      - run: make test
         env:
+          IFRAME_URL: "https://iframe.happy.tech"
           VITE_FIREBASE_API_KEY: "-"
           VITE_FIREBASE_AUTH_DOMAIN: "-"
           VITE_FIREBASE_PROJECT_ID: "-"

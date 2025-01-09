@@ -1,8 +1,8 @@
 import type { Plugin } from "vite"
-import pkg from "../../package.json"
-import { SharedWorkerServerPlugin } from "./SharedWorkerServerPlugin"
-import { clientCodeGen } from "./codegen"
-import { filter } from "./utils"
+import pkg from "../../package.json" with { type: "json" }
+import { SharedWorkerServerPlugin } from "./SharedWorkerServerPlugin.ts"
+import { clientCodeGen } from "./codegen.ts"
+import { filter } from "./utils.ts"
 
 /**
  * Plugin runs during the 'build' command, i.e. 'bun vite build'
