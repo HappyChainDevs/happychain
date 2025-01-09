@@ -69,6 +69,7 @@ export class GoogleConnector extends FirebaseConnector {
 
     async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         let happyUser = user
+        console.log("google connector onReconnect", happyUser.controllingAddress)
         const kernelAccount = await createKernelAccount(happyUser.controllingAddress)
         if (kernelAccount?.address) {
             // Update user with smart account

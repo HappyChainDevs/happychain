@@ -143,6 +143,8 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             try {
                 // have to refresh JWT since web3auth fails if duplicate token is found
                 const addresses = await web3AuthConnect(token)
+                console.log("Connected to web3Auth", addresses)
+                console.log("calling createKernelAccount with ", addresses[0])  
                 const account = await createKernelAccount(addresses[0])
                 if (!account) {
                     throw new AccountNotFoundError()

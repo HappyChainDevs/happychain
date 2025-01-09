@@ -2,7 +2,7 @@ import { accessorsFromAtom } from "@happychain/common"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import { type EcdsaKernelSmartAccountImplementation, toEcdsaKernelSmartAccount } from "permissionless/accounts"
-import { http, type Address, createPublicClient } from "viem"
+import { http, type Address, createPublicClient, createWalletClient } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 import { getCurrentChain } from "./chains"
@@ -19,6 +19,7 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
         transport: http(currentChain.rpcUrls[0]),
         chain: currentChain,
     }
+    console.log("createKernelAcocount called with ", walletAddress)
 
     try {
         // We can't use `publicClientAtom` and need to recreate a public client since :
@@ -26,8 +27,15 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
         // 2. `toKernelSmartAccount()` expects a simple client with direct RPC access
         const publicClient = createPublicClient(clientOptions)
         
-        const owner = getWalletClient()
-        
+        let owner: any = getWalletClient()
+        if(!owner){
+            console.log("Owner is undefined", walletAddress)
+            owner = createWalletClient({
+                ...clientOptions,
+                account: walletAddress,
+            })
+            console.log("Owner:", owner)
+        }
         return await toEcdsaKernelSmartAccount({
             client: publicClient,
             entryPoint: {
@@ -48,7 +56,7 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
 }
 
 export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = atom(async (get) => {
-    const wallet = await get(walletClientAtom)
+    const wallet = get(walletClientAtom)
     if (!wallet?.account) return undefined
     return await createKernelAccount(wallet.account.address)
 })
