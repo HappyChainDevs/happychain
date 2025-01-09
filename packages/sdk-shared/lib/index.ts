@@ -5,6 +5,7 @@ export { SafeEventEmitter }
 // === VALUES ======================================================================================
 
 export * as chains from "./chains"
+export { happyChainSepoliaViemChain } from "./chains/definitions/happyChainSepolia"
 export { getChainFromSearchParams, convertToViemChain } from "./chains/utils"
 export { AuthState, WalletType } from "./interfaces/happyUser"
 
