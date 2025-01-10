@@ -1,17 +1,16 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { useAtom } from "jotai"
 import { isAddress } from "viem"
 import AddressSelector from "#src/components/interface/send-tx/AddressSelector"
 import SendButtons from "#src/components/interface/send-tx/SendButtons"
 import SendInput from "#src/components/interface/send-tx/SendInput"
-import { targetAddressAtom } from "#src/state/sendPageState.js"
+import { useHappySendOptions } from "#src/hooks/useHappySendOptions"
 
 export const Route = createLazyFileRoute("/embed/send")({
     component: Send,
 })
 
 function Send() {
-    const [targetAddress] = useAtom(targetAddressAtom)
+    const { targetAddress } = useHappySendOptions()
 
     return (
         <div className="relative flex flex-col size-full items-center justify-between">

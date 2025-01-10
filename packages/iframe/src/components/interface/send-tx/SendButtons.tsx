@@ -1,15 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router"
-import { useAtomValue } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
 import { useSendTransaction } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
-import { balanceExceededAtom, sendValueAtom, targetAddressAtom } from "#src/state/sendPageState"
+import { useHappySendOptions } from "#src/hooks/useHappySendOptions"
 
 const SendButtons = () => {
-    const sendVal = useAtomValue(sendValueAtom)
-    const targetAddress = useAtomValue(targetAddressAtom)
-    const balanceExceeded = useAtomValue(balanceExceededAtom)
+    const { sendValue, targetAddress, balanceExceeded } = useHappySendOptions()
 
     const navigate = useNavigate()
     const { sendTransaction, isPending, isSuccess, isError } = useSendTransaction()
@@ -27,13 +24,13 @@ const SendButtons = () => {
     }, [isSuccess, navigate, isError])
 
     const submitSend = useCallback(() => {
-        if (targetAddress && sendVal) {
+        if (targetAddress && sendValue) {
             void sendTransaction({
                 to: targetAddress as Address,
-                value: parseEther(sendVal),
+                value: parseEther(sendValue),
             })
         }
-    }, [sendTransaction, sendVal, targetAddress])
+    }, [sendTransaction, sendValue, targetAddress])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">
@@ -54,7 +51,7 @@ const SendButtons = () => {
                 className="flex items-center justify-center rounded-xl w-1/2 h-10 text-white disabled:opacity-50"
                 intent={"primary"}
                 onClick={submitSend}
-                disabled={!targetAddress || !sendVal || isPending || balanceExceeded}
+                disabled={!targetAddress || !sendValue || isPending || balanceExceeded}
                 isLoading={isPending}
             >
                 Continue

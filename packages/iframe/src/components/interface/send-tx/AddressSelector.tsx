@@ -1,22 +1,21 @@
-import { useAtom } from "jotai"
 import type React from "react"
 import { useEffect, useState } from "react"
 import { isAddress } from "viem"
-import { targetAddressAtom } from "#src/state/sendPageState"
+import { useHappySendOptions } from "#src/hooks/useHappySendOptions"
 
 const AddressSelector = () => {
-    const [inputAddress, setInputAddress] = useAtom(targetAddressAtom)
+    const { targetAddress, setTargetAddress } = useHappySendOptions()
     const [isValidAddr, setIsValidAddr] = useState(true)
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value
-        setInputAddress(value)
+        setTargetAddress(value)
     }
 
     useEffect(() => {
         // also checks if the address checksum (capitalization) is valid
-        setIsValidAddr(!inputAddress || isAddress(inputAddress, { strict: true }))
-    }, [inputAddress])
+        setIsValidAddr(!targetAddress || isAddress(targetAddress, { strict: true }))
+    }, [targetAddress])
 
     return (
         <div className="flex flex-col items-start justify-start w-full min-h-[50px] px-4 py-2">
@@ -26,7 +25,7 @@ const AddressSelector = () => {
                     !isValidAddr ? "border-red-500" : ""
                 }`}
                 placeholder="Enter EVM address"
-                value={inputAddress || ""}
+                value={targetAddress || ""}
                 onChange={handleChange}
             />
 

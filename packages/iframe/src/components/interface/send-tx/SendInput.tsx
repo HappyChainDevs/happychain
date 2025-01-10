@@ -1,18 +1,16 @@
 import { debounce, validateNumericInput } from "@happychain/common"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtomValue } from "jotai"
 import type React from "react"
 import { useCallback } from "react"
 import { formatEther, parseEther } from "viem"
 import { useBalance } from "wagmi"
-import { balanceExceededAtom, sendValueAtom } from "#src/state/sendPageState"
+import { useHappySendOptions } from "#src/hooks/useHappySendOptions"
 import { userAtom } from "#src/state/user"
 
 const SendInput = () => {
     const user = useAtomValue(userAtom)
-    const [sendVal, setSendVal] = useAtom(sendValueAtom)
+    const { sendValue, setSendValue, balanceExceeded, setBalanceExceeded } = useHappySendOptions()
     const { data: balance } = useBalance({ address: user?.address })
-
-    const [balanceExceeded, setBalanceExceeded] = useAtom(balanceExceededAtom)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
@@ -41,7 +39,7 @@ const SendInput = () => {
             inputValue = `0.${inputValue.substring(1)}`
         }
 
-        setSendVal(inputValue)
+        setSendValue(inputValue)
         debounceValidationAndBalance(inputValue)
     }
 
@@ -58,10 +56,10 @@ const SendInput = () => {
 
     const handleMaxButtonClick = useCallback(() => {
         if (balance) {
-            setSendVal(formatEther(balance.value))
+            setSendValue(formatEther(balance.value))
             setBalanceExceeded(false)
         }
-    }, [balance, setSendVal, setBalanceExceeded])
+    }, [balance, setSendValue, setBalanceExceeded])
 
     return (
         <div className="flex flex-col items-center justify-start h-[110px] w-full border-slate-700 border-t border-b my-3 px-3">
@@ -78,7 +76,7 @@ const SendInput = () => {
                                 balanceExceeded ? "border-red-500" : ""
                             }`}
                             placeholder={"0.0"}
-                            value={sendVal}
+                            value={sendValue}
                             onChange={handleTokenBalanceChange}
                             disabled={!balance}
                         />
