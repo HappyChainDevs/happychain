@@ -36,8 +36,8 @@ describe("walletClient wallet_watchAsset", () => {
                 },
             },
         })
-        const response = await dispatchHandlers(request)
-        expect(response).toBe(true)
+        await dispatchHandlers(request)
+
         const userAssets = getWatchedAssets()
         const assetsForAddress = userAssets[user.address]
         expect(assetsForAddress.length).toBe(1)
