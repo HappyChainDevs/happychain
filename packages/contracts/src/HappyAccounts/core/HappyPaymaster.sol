@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {IHappyPaymaster} from "./interfaces/IHappyPaymaster.sol";
+import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {HappyTx} from "./HappyTx.sol";
 
 /**
