@@ -16,6 +16,16 @@ import {PackedUserOperation, UserOperationLib} from "account-abstraction/contrac
  * Helper class for creating a paymaster.
  * provides helper methods for staking.
  * Validates that the postOp is called only by the entryPoint.
+ *
+ * Copied from BasePaymaster contract in eth-infinitism:
+ * [Source](https://github.com/eth-infinitism/account-abstraction/blob/releases/v0.7/contracts/core/BasePaymaster.sol)
+ * Modified to be an upgradeable proxy UUPS.
+ *
+ * The following changes were made to the original code:
+ * - upgraded from Ownable to OwnableUpgradeable.
+ * - implemented Openzeppelin's UUPSUPgradeable module.
+ * - added reserve space of 50 * 256 byte slots for future upgrades.
+ * - added an _initBasePaymaster (initializer) function instead of using a constructor.
  */
 abstract contract BasePaymaster is IPaymaster, OwnableUpgradeable, UUPSUpgradeable {
     IEntryPoint public entryPoint;
