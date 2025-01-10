@@ -91,7 +91,7 @@ export class InjectedConnector implements ConnectionProvider {
     public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {
         const { user, request, response } = await this.connectToInjectedWallet(req)
         this.setProvider()
-        await this.onConnect(user, new InjectedProviderProxy() as EIP1193Provider)
+        await this.onConnect(user, InjectedProviderProxy.getInstance() as EIP1193Provider)
         return { request, response }
     }
 
@@ -128,7 +128,7 @@ export class InjectedConnector implements ConnectionProvider {
 
         const { user } = await this.connectToInjectedWallet(reconnectRequest)
         this.setProvider()
-        this.onReconnect(user, new InjectedProviderProxy() as EIP1193Provider)
+        this.onReconnect(user, InjectedProviderProxy.getInstance() as EIP1193Provider)
     }
 
     /**
@@ -146,7 +146,7 @@ export class InjectedConnector implements ConnectionProvider {
      * Returns the active provider to execute requests, dependant on context.
      */
     private get provider() {
-        return isStandaloneIframe() ? this.detail.provider : new InjectedProviderProxy()
+        return isStandaloneIframe() ? this.detail.provider : InjectedProviderProxy.getInstance()
     }
 
     private async connectToInjectedWallet(
@@ -166,8 +166,8 @@ export class InjectedConnector implements ConnectionProvider {
             return { user, request, response }
         }
 
-        // in iframe
-        // we can't execute new InjectedProviderProxy().request(request.payload) yet, as the app-side
+        // (in iframe)
+        // we can't execute InjectedProviderProxy.getInstance().request(request.payload) yet, as the app-side
         // may have multiple injected providers available, and we have not yet selected one.
         // This will ensure the correct one is selected, connected, and executed. It will prepare
         // the app for all subsequent requests to be executed against the same injected provider

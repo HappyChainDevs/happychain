@@ -72,6 +72,9 @@ export enum Msgs {
     /** Injected Response from the InjectedWalletWrapper to the InjectedProviderProxy*/
     ExecuteInjectedResponse = "execute-injected-response",
 
+    /** Listens to the connected injected wallet, and forwards all events to the iframe */
+    ForwardInjectedEvent = "forward-injected-event",
+
     // --- ProviderBusEventsFromIframe -------------------------------------------------------------
 
     /**
@@ -131,12 +134,14 @@ export type MsgsFromApp = {
     >
     [Msgs.InjectedWalletConnected]:
         | {
+              // Standard Connection Request
               rdns: string
               address: `0x${string}`
               request: MsgsFromApp[Msgs.ConnectRequest]
               response: MsgsFromIframe[Msgs.ConnectResponse]["response"]
           }
         | {
+              // everything undefined means a disconnect
               rdns?: undefined
               address?: undefined
               request?: MsgsFromApp[Msgs.ConnectRequest] | undefined
@@ -173,6 +178,7 @@ export type MsgsFromIframe = {
  * Schema for messages that can be sent from the app to the iframe.
  */
 export type ProviderMsgsFromApp = {
+    [Msgs.ForwardInjectedEvent]: ProviderEventPayload<{ event: string; params: unknown }>
     [Msgs.RequestPermissionless]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.RequestInjected]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>

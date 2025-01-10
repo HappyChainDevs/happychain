@@ -8,6 +8,7 @@ import { isStandaloneIframe } from "#src/utils/appURL.ts"
 import { userAtom } from "../state/user"
 import { GoogleConnector } from "./GoogleConnector"
 import { InjectedConnector } from "./InjectedConnector"
+import { InjectedProviderProxy } from "./InjectedProviderProxy"
 
 const store = getDefaultStore()
 
@@ -76,19 +77,7 @@ if (isStandaloneIframe()) {
         addProvider(
             new InjectedConnector({
                 info: provider.info,
-                provider: {
-                    // The following TODO: s are left to be upgraded after
-                    // https://github.com/HappyChainDevs/happychain/pull/233 is merged.
-                    // This connection receiver will likely need to be re-worked, however this is the
-                    // path forward for wiring up injected browser events
-
-                    // TODO:
-                    removeListener: () => {},
-                    /** TODO: */
-                    on: () => {},
-                    /** TODO: */
-                    request: () => {},
-                } as unknown as EIP6963ProviderDetail["provider"],
+                provider: InjectedProviderProxy.getInstance() as EIP6963ProviderDetail["provider"],
                 autoConnect: true,
             }),
         )

@@ -8,7 +8,7 @@ import {
     WalletType,
     waitForCondition,
 } from "@happychain/sdk-shared"
-import type { EIP1193RequestParameters, EIP1193RequestResult } from "@happychain/sdk-shared"
+import type { EIP1193RequestParameters, EIP1193RequestResult, ProviderMsgsFromIframe } from "@happychain/sdk-shared"
 import { InjectedWalletHandler } from "./injectedWalletHandler"
 import type { EIP1193ConnectionHandler, HappyProviderConfig, HappyProviderPublic } from "./interface"
 import { SocialWalletHandler } from "./socialWalletHandler"
@@ -42,11 +42,19 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
             }
         })
 
+        config.providerBus.on(Msgs.ProviderEvent, this.handleProviderNativeEvent.bind(this))
+
         this.injectedWalletHandler = new InjectedWalletHandler(config)
-        this.registerConnectionHandlerEvents(this.injectedWalletHandler)
 
         this.socialWalletHandler = new SocialWalletHandler(config)
-        this.registerConnectionHandlerEvents(this.socialWalletHandler)
+    }
+
+    /**
+     * All events are received from iframe. social wallet events originate their,
+     * injected wallet events are proxied through the iframe.
+     */
+    private handleProviderNativeEvent(data: ProviderMsgsFromIframe[Msgs.ProviderEvent]) {
+        this.emit(data.payload.event, data.payload.args)
     }
 
     private get activeHandler() {
@@ -88,15 +96,6 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
 
             throw e
         }
-    }
-
-    /** Simply forward all provider events transparently */
-    private registerConnectionHandlerEvents(handler: EIP1193ConnectionHandler) {
-        handler.on("accountsChanged", (accounts) => this.emit("accountsChanged", accounts))
-        handler.on("chainChanged", (chainId) => this.emit("chainChanged", chainId))
-        handler.on("connect", (connectInfo) => this.emit("connect", connectInfo))
-        handler.on("disconnect", (error) => this.emit("disconnect", error))
-        handler.on("message", (message) => this.emit("message", message))
     }
 
     private async requestLogin(args: EIP1193RequestParameters): Promise<ReturnType<typeof this.request>> {

@@ -36,7 +36,7 @@ export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): 
     const _isInjected = getUser()?.type === WalletType.Injected
 
     if (_isIframe && _isInjected) {
-        new InjectedProviderProxy().handleRequestResolution(response)
+        InjectedProviderProxy.getInstance().handleRequestResolution(response)
     } else if (_isIframe) {
         iframeProvider.handleRequestResolution(response)
     } else {
