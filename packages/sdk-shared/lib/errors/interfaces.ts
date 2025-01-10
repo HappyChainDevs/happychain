@@ -18,8 +18,7 @@ export type EIP1193ErrorObject = {
 }
 
 /**
- * Interface from EIP1193
- * https://eips.ethereum.org/EIPS/eip-1193#errors
+ * Error interface from {@link https://eips.ethereum.org/EIPS/eip-1193#errors}.
  */
 export interface IProviderRpcError extends Error {
     message: string
