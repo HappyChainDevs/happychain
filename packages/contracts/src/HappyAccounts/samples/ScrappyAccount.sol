@@ -4,6 +4,9 @@ pragma solidity ^0.8.20;
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
+import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
+
 import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {IHappyAccount, ExecutionOutput, GasPriceTooHigh, WrongAccount} from "../interfaces/IHappyAccount.sol";
 
@@ -17,7 +20,14 @@ import {UnknownDuringSimulation, NotFromEntryPoint} from "../utils/Common.sol";
  * @dev    Example implementation of a Happy Account with nonce management, reentrancy protection,
  *         and proxy upgrade capability.
  */
-contract ScrappyAccount is IHappyAccount, IHappyPaymaster, BasicNonceManager, ReentrancyGuardTransient {
+contract ScrappyAccount is
+    IHappyAccount,
+    IHappyPaymaster,
+    BasicNonceManager,
+    ReentrancyGuardTransient,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
     using ECDSA for bytes32;
 
     //* //////////////////////////////////////
@@ -36,8 +46,12 @@ contract ScrappyAccount is IHappyAccount, IHappyPaymaster, BasicNonceManager, Re
     /// @dev The deterministic EntryPoint contract
     address private immutable ENTRYPOINT;
 
-    /// @dev The owner of the smart account
-    address private owner;
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[50] private __gap;
 
     //* //////////////////////////////////////
     //* Events ///////////////////////////////
@@ -72,10 +86,9 @@ contract ScrappyAccount is IHappyAccount, IHappyPaymaster, BasicNonceManager, Re
     //* //////////////////////////////////////
     //* Constructor //////////////////////////
     //* //////////////////////////////////////
+
     constructor(address _entryPoint, address _owner) {
-        ENTRYPOINT = _entryPoint;
-        FACTORY = msg.sender;
-        owner = _owner;
+        _disableInitializers();
     }
 
     /**
@@ -83,17 +96,17 @@ contract ScrappyAccount is IHappyAccount, IHappyPaymaster, BasicNonceManager, Re
      *      Called by factory during proxy deployment
      * @param _newOwner The owner who can upgrade the implementation
      */
-    function initialize(address _newOwner) external payable {
-        // TODO
-    }
-
-    function setOwner(address _owner) external {
-        if (msg.sender != address(this)) {
-            revert NotFromAccount();
-        }
-
+    function initialize(address _entryPoint, address _owner) external initializer {
+        ENTRYPOINT = _entryPoint;
         owner = _owner;
+        __Ownable_init(_owner);
+        __UUPSUpgradeable_init();
     }
+
+    /// @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
+    /// @param newImplementation The address of the new implementation contract
+    /// @dev Only callable by the owner
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     //* //////////////////////////////////////
     //* External functions ///////////////////
