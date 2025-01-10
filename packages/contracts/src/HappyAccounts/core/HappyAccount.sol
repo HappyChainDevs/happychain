@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {IHappyAccount} from "./interfaces/IHappyAccount.sol";
-import {IHappyValidator} from "./interfaces/IHappyValidator.sol";
-import {IHappyPaymaster} from "./interfaces/IHappyPaymaster.sol";
-
-import {HappyTxLib} from "./libs/HappyTxLib.sol";
+import {IHappyAccount} from "../interfaces/IHappyAccount.sol";
+import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 
 import {HappyTx} from "./HappyTx.sol";
-import {NonceManager} from "./NonceManager.sol";
+import {HappyTxLib} from "../libs/HappyTxLib.sol";
+import {NonceManager} from "../utils/NonceManager.sol";
 
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
