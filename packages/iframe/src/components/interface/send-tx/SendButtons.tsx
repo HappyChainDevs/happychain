@@ -1,15 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router"
-import { useAtom } from "jotai"
+import { useAtomValue } from "jotai"
 import { useCallback, useEffect } from "react"
 import { type Address, parseEther } from "viem"
 import { useSendTransaction } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
-import { balanceExceeded, sendValue, targetAddress } from "#src/state/sendPageState"
+import { balanceExceededAtom, sendValueAtom, targetAddressAtom } from "#src/state/sendPageState"
 
 const SendButtons = () => {
-    const [sendVal] = useAtom(sendValue)
-    const [inputAddress] = useAtom(targetAddress)
-    const [exceededFlag] = useAtom(balanceExceeded)
+    const sendVal = useAtomValue(sendValueAtom)
+    const targetAddress = useAtomValue(targetAddressAtom)
+    const balanceExceeded = useAtomValue(balanceExceededAtom)
 
     const navigate = useNavigate()
     const { sendTransaction, isPending, isSuccess, isError } = useSendTransaction()
@@ -27,20 +27,20 @@ const SendButtons = () => {
     }, [isSuccess, navigate, isError])
 
     const submitSend = useCallback(() => {
-        if (inputAddress && sendVal) {
+        if (targetAddress && sendVal) {
             void sendTransaction({
-                to: inputAddress as Address,
+                to: targetAddress as Address,
                 value: parseEther(sendVal),
             })
         }
-    }, [sendTransaction, sendVal, inputAddress])
+    }, [sendTransaction, sendVal, targetAddress])
 
     return (
         <div className="flex flex-row w-full h-10 items-center justify-center m-3 gap-3 px-2">
             {
                 // don't show the button if tx is in pending status (popup window is open)
                 !isPending && (
-                    <Link to={"/embed"} className="w-[50%]">
+                    <Link to={"/embed"} className="w-1/2">
                         <Button
                             className="flex justify-center rounded-xl w-full h-10 text-white disabled:opacity-50"
                             intent={"primary"}
@@ -51,10 +51,10 @@ const SendButtons = () => {
                 )
             }
             <Button
-                className="flex items-center justify-center rounded-xl w-[50%] h-10 text-white disabled:opacity-50"
+                className="flex items-center justify-center rounded-xl w-1/2 h-10 text-white disabled:opacity-50"
                 intent={"primary"}
                 onClick={submitSend}
-                disabled={!inputAddress || !sendValue || isPending || exceededFlag}
+                disabled={!targetAddress || !sendVal || isPending || balanceExceeded}
                 isLoading={isPending}
             >
                 Continue

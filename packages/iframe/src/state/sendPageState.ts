@@ -9,12 +9,10 @@ import { atom } from "jotai"
  */
 
 // `<AddressSelector />` input value - address to send $HAPPY to
-const targetAddress = atom<Address | string | undefined>(undefined)
+export const targetAddressAtom = atom<Address | string | undefined>(undefined)
 
 // `<SendInput />` input value - $HAPPY amount to be sent
-const sendValue = atom<string | undefined>(undefined)
+export const sendValueAtom = atom<string>("")
 
 // boolean to check if input send amount is higher than user's balance
-const balanceExceeded = atom<boolean>(false)
-
-export { targetAddress, sendValue, balanceExceeded }
+export const balanceExceededAtom = atom<boolean>(false)
