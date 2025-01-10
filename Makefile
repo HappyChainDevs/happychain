@@ -412,11 +412,11 @@ install-frozen:
 
 # NOTES:
 #  Below "version specifier" refers to the version strings (e.g. "^1.2.3") in package.json.
-#  You can safely use bun commands inside the packages, and things will behave like your expect
+#  You can safely use bun commands inside the packages, and things will behave like you expect
 #  (i.e. update only the package, but use the bun monorepo architecture).
 
 # Like npm install: if a version matching version specifier is installed, does nothing, otherwise
-# install the most up-to-date version matching the specifier.
+# installs the most up-to-date version matching the specifier.
 install:
 	@bun install
 .PHONY: install
@@ -425,7 +425,7 @@ node_modules: package.json $(wildcard {apps,demos,packages,support}/*/package.js
 	@bun install
 
 # Shows packages for which new versions are available (compared to the installed version).
-# This will also show new version that do not match the version specifiers!
+# This will also show new versions that do not match the version specifiers!
 outdated:
 	@bun outdated
 	$(call forall , $(NPM_PKGS) , bun outdated)
