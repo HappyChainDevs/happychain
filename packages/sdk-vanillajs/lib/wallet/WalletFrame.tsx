@@ -1,5 +1,5 @@
 /** @jsxImportSource preact */
-import { icon64x64 } from "../happyProvider/icons"
+import { icon64x64 } from "@happychain/common"
 import { useAnimatedStateTransitions } from "./hooks/useAnimatedStateTransitions"
 import { useAuthState } from "./hooks/useAuthState"
 import { useWalletActions } from "./hooks/useWalletActions"

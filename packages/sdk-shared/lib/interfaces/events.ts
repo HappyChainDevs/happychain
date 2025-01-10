@@ -1,5 +1,6 @@
 import type { EIP1193ErrorObject } from "../errors"
 import type { EIP1193EventName, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193.ts"
+import type { EIP6963ProviderInfo } from "./eip6963"
 import type { AuthState, HappyUser } from "./happyUser"
 import type { ProviderEventError, ProviderEventPayload } from "./payloads.ts"
 
@@ -31,14 +32,8 @@ export enum Msgs {
      */
     InjectedWalletConnected = "injected-wallet:connected",
 
-    /**
-     * Instructs the iframe to mirror a permission that has been granted to the user by the
-     * injected wallet.
-     *
-     * This is required because we depend on permissions to establish that the user is connected
-     * to the wallet.
-     */
-    MirrorPermissions = "injected-wallet:mirror-permissions",
+    /** Loosely follows EIP-6963 to provide iframe with context of available browsers */
+    EIP6963RequestProvider = "eip6963:requestProvider",
 
     // --- EventsFromIframe ------------------------------------------------------------------------
 
@@ -127,6 +122,10 @@ export enum WalletDisplayAction {
 }
 
 export type MsgsFromApp = {
+    // stub provider since its not serializable and we wont use this anyways.
+    // Instead of passing to the iframe, then back here again, we will refetch the provider
+    // by looking up the rdns of the selected provider when needed
+    [Msgs.EIP6963RequestProvider]: { info: EIP6963ProviderInfo; provider?: never }
     [Msgs.ConnectRequest]: ProviderEventPayload<
         EIP1193RequestParameters<"eth_requestAccounts" | "wallet_requestPermissions">
     >
