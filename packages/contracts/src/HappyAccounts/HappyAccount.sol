@@ -10,7 +10,7 @@ import {HappyTxLib} from "./libs/HappyTxLib.sol";
 import {HappyTx} from "./HappyTx.sol";
 import {NonceManager} from "./NonceManager.sol";
 
-import {ReentrancyGuardTransient} from "@openzeppelin/utils/ReentrancyGuardTransient.sol";
+import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 /**
  * @title  HappyAccount
@@ -18,10 +18,6 @@ import {ReentrancyGuardTransient} from "@openzeppelin/utils/ReentrancyGuardTrans
  *         and proxy upgrade capability
  */
 contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuardTransient {
-    //* //////////////////////////////////////
-    //* Type declarations ////////////////////
-    //* //////////////////////////////////////
-
     //* //////////////////////////////////////
     //* State variables //////////////////////
     //* //////////////////////////////////////
@@ -149,86 +145,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuardTransient {
         emit Upgraded(_newImplementation);
     }
 
-    function execute(bytes calldata encodedHappyTx) external payable override nonReentrant returns (uint256) {
-        uint256 startGas = gasleft();
-
-        HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
-
-        // Basic validation
-        if (tx.gasprice > happyTx.maxFeePerGas) revert GasPriceTooHigh();
-        if (happyTx.account != address(this)) revert WrongAccount();
-
-        // Nonce validation
-        if (!_validateAndUpdateNonce(happyTx.nonceTrack, happyTx.nonce)) {
-            revert InvalidNonce();
-        }
-
-        // Validation phase
-        bytes4 result = validateHappyTx(encodedHappyTx);
-        bool isSimulation = tx.origin == address(0); // solhint-disable-line avoid-tx-origin
-        if (!isSimulation && result != 0) revert AccountValidationFailed(result);
-
-        // Balance check
-        uint256 maxCost = happyTx.gasLimit * block.basefee;
-        uint256 currentBalance = address(this).balance;
-
-        if (happyTx.paymaster == address(0)) {
-            if (currentBalance < maxCost) {
-                revert AccountBalanceInsufficient();
-            }
-        } else {
-            uint256 paymasterBalance = address(happyTx.paymaster).balance;
-            if (paymasterBalance < maxCost) {
-                revert PaymasterBalanceInsufficient();
-            }
-
-            try IHappyPaymaster(happyTx.paymaster).validatePaymaster(happyTx) returns (bytes4 _result) {
-                if (!isSimulation && _result != 0) {
-                    revert PaymasterValidationFailed(_result);
-                }
-            } catch (bytes memory revertData) {
-                revert PaymasterValidationReverted(revertData);
-            }
-        }
-
-        // Execute the call
-        (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
-
-        if (!success) {
-            emit CallReverted(returnData);
-        }
-
-        // Gas payment handling
-        uint256 actualCost = startGas - gasleft() + INTRINSIC_GAS
-            + CALLDATA_GAS_PER_BYTE * (encodedHappyTx.length + CALLDATA_LENGTH_ADJUSTMENT);
-
-        if (actualCost > happyTx.gasLimit) actualCost = happyTx.gasLimit;
-
-        if (happyTx.paymaster == address(0)) {
-            currentBalance = address(this).balance; // Re-read balance after execution
-            uint256 available = currentBalance > actualCost ? actualCost : currentBalance;
-            (bool paySuccess,) = payable(tx.origin).call{value: available}(""); // solhint-disable-line avoid-tx-origin
-            if (!paySuccess) revert AccountPaymentFailed();
-            if (available < actualCost) {
-                revert AccountPaymentCameShort(actualCost - available);
-            }
-        } else {
-            uint256 balance = address(tx.origin).balance; // solhint-disable-line avoid-tx-origin
-            uint256 gasBeforePayout = gasleft();
-            try IHappyPaymaster(happyTx.paymaster).payout(happyTx, actualCost) returns (bool paySuccess) {
-                if (!paySuccess) revert PaymasterPaymentFailed();
-                uint256 payoutGasCost = gasBeforePayout - gasleft();
-                uint256 balance2 = address(tx.origin).balance; // solhint-disable-line avoid-tx-origin
-                if (balance2 < balance + actualCost + payoutGasCost) {
-                    revert PaymasterPaymentCameShort(balance + actualCost - balance2);
-                }
-            } catch (bytes memory revertData) {
-                revert PaymasterValidationReverted(revertData);
-            }
-        }
-
-        return startGas - gasleft() + GAS_OVERHEAD_BUFFER;
-    }
+    function execute(bytes calldata encodedHappyTx) external payable override nonReentrant returns (uint256) {}
 
     //* //////////////////////////////////////
     //* Special functions ////////////////////
@@ -280,34 +197,7 @@ contract HappyAccount is IHappyAccount, NonceManager, ReentrancyGuardTransient {
     //* Public functions /////////////////////
     //* //////////////////////////////////////
 
-    function validateHappyTx(bytes calldata encodedHappyTx) public override returns (bytes4) {
-        HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
-
-        // Check if validator is approved
-        address validator = happyTx.validator;
-        if (validator != address(0)) {
-            if (validator != rootValidator && !approvedValidators[validator]) {
-                revert ValidatorNotApproved();
-            }
-
-            bytes32 hash = HappyTxLib.getHappyTxHash(happyTx);
-
-            try IHappyValidator(validator).validate(happyTx, hash) returns (bytes4 result) {
-                return result;
-            } catch (bytes memory revertData) {
-                revert AccountValidationReverted(revertData);
-            }
-        }
-
-        // If no validator specified, use root validator if set
-        if (rootValidator != address(0)) {
-            bytes32 hash = HappyTxLib.getHappyTxHash(happyTx);
-            return IHappyValidator(rootValidator).validate(happyTx, hash);
-        }
-
-        // Fallback to internal validation
-        return _internalValidate(happyTx.validationData);
-    }
+    function validateHappyTx(bytes calldata encodedHappyTx) public override returns (bytes4) {}
 
     //* //////////////////////////////////////
     //* Internal functions ///////////////////
