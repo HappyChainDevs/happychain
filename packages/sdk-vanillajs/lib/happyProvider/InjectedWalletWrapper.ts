@@ -1,3 +1,4 @@
+import { injectedProviderInfo } from "@happychain/common"
 import {
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
@@ -10,6 +11,18 @@ import { type EIP6963ProviderDetail, createStore } from "mipd"
 import type { HappyProviderConfig } from "./interface"
 
 const store = createStore()
+
+/**
+ * Small wrapper over mipd store.findProvider to handle the special case of replacing
+ * browser.injected with window.ethereum as  the provider
+ */
+function findProvider(rdns: string) {
+    if (rdns === "browser.injected" && "ethereum" in window) {
+        return { provider: window.ethereum, info: injectedProviderInfo } as EIP6963ProviderDetail
+    }
+
+    return store.findProvider({ rdns })
+}
 
 /**
  * A wrapper for executing wallet operations through browser-injected providers like Metamask.
@@ -83,7 +96,8 @@ export class InjectedWalletWrapper {
             return this.handleProviderDisconnectionRequest()
         }
         try {
-            const providerDetails = store.findProvider({ rdns })
+            const providerDetails = findProvider(rdns)
+
             if (!providerDetails) {
                 // cant find extension, disconnect
                 return this.handleProviderDisconnectionRequest()

@@ -1,4 +1,4 @@
-import { happyProviderInfo } from "@happychain/common"
+import { happyProviderInfo, injectedProviderInfo } from "@happychain/common"
 import { type ConnectionProvider, type EIP6963ProviderDetail, Msgs } from "@happychain/sdk-shared"
 import { atom, getDefaultStore, useAtomValue } from "jotai"
 import { createStore } from "mipd"
@@ -58,6 +58,16 @@ if (isStandaloneIframe()) {
             }
         }
     })
+
+    if (window.ethereum) {
+        addProvider(
+            new InjectedConnector({
+                info: injectedProviderInfo,
+                provider: window.ethereum,
+                autoConnect: true,
+            }),
+        )
+    }
 } else {
     // listen to message bus instead of window here because when embedded, in many situations, the
     // providers will not be detected. Duplicates are fine as we use the provider.id as the unique key
