@@ -157,7 +157,7 @@ export const ImportTokensDialog = () => {
 
                         <FieldInput
                             helperLabel="Symbol"
-                            errorLabel="Symbol not found (inputted address might not be a token!)"
+                            errorLabel="Invalid Token Address"
                             invalid={symbolInputInvalidCondition}
                             isLoading={isRefetching}
                         >
@@ -183,7 +183,7 @@ export const ImportTokensDialog = () => {
                          */}
                         <FieldInput
                             helperLabel="Decimals"
-                            errorLabel="Decimals data not found (inputted address might not be a token!)"
+                            errorLabel="Invalid Token Address"
                             invalid={decimalsInputInvalidCondition}
                             isLoading={isRefetching}
                         >
@@ -204,7 +204,7 @@ export const ImportTokensDialog = () => {
 
                         <Button
                             type="submit"
-                            intent="primary"
+                            intent="secondary"
                             className="text-neutral-content justify-center"
                             isLoading={status === "pending"}
                             disabled={submitButtonDisabledCondition}
