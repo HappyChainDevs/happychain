@@ -2,10 +2,10 @@ import { useAtom } from "jotai"
 import type React from "react"
 import { useEffect, useState } from "react"
 import { isAddress } from "viem"
-import { targetAddress } from "#src/state/sendPageState"
+import { targetAddressAtom } from "#src/state/sendPageState"
 
 const AddressSelector = () => {
-    const [inputAddress, setInputAddress] = useAtom(targetAddress)
+    const [inputAddress, setInputAddress] = useAtom(targetAddressAtom)
     const [isValidAddr, setIsValidAddr] = useState(true)
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -4,15 +4,15 @@ import type React from "react"
 import { useCallback } from "react"
 import { formatEther, parseEther } from "viem"
 import { useBalance } from "wagmi"
-import { balanceExceeded, sendValue } from "#src/state/sendPageState"
+import { balanceExceededAtom, sendValueAtom } from "#src/state/sendPageState"
 import { userAtom } from "#src/state/user"
 
 const SendInput = () => {
     const user = useAtomValue(userAtom)
-    const [sendVal, setSendVal] = useAtom(sendValue)
+    const [sendVal, setSendVal] = useAtom(sendValueAtom)
     const { data: balance } = useBalance({ address: user?.address })
 
-    const [exceededFlag, setExceededFlag] = useAtom(balanceExceeded)
+    const [balanceExceeded, setbalanceExceeded] = useAtom(balanceExceededAtom)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
@@ -52,16 +52,16 @@ const SendInput = () => {
         // Perform validation and balance checking
         if (validateNumericInput(formattedValue) || formattedValue === "") {
             // Check if the input value exceeds the balance
-            setExceededFlag(formattedValue && balance ? parseEther(formattedValue) > balance.value : false)
+            setbalanceExceeded(formattedValue && balance ? parseEther(formattedValue) > balance.value : false)
         }
     }, 500)
 
     const handleMaxButtonClick = useCallback(() => {
         if (balance) {
             setSendVal(formatEther(balance.value))
-            setExceededFlag(false)
+            setbalanceExceeded(false)
         }
-    }, [balance, setSendVal, setExceededFlag])
+    }, [balance, setSendVal, setbalanceExceeded])
 
     return (
         <div className="flex flex-col items-center justify-start h-[110px] w-full border-slate-700 border-t border-b my-3 px-3">
@@ -75,10 +75,10 @@ const SendInput = () => {
                     <div className="flex flex-row grow items-center justify-end space-x-2">
                         <input
                             className={`w-[100px] h-[30px] text-[20px] px-2 text-slate-600 text-right placeholder:text-[20px] placeholder:text-slate-600 placeholder:opacity-50 ${
-                                exceededFlag ? "border-red-500" : ""
+                                balanceExceeded ? "border-red-500" : ""
                             }`}
                             placeholder={"0.0"}
-                            value={sendVal || ""}
+                            value={sendVal}
                             onChange={handleTokenBalanceChange}
                             disabled={!balance}
                         />
@@ -96,7 +96,7 @@ const SendInput = () => {
                 </div>
             </div>
 
-            {exceededFlag && (
+            {balanceExceeded && (
                 <div className="flex w-full items-center justify-center text-red-500">Not enough $HAPPY</div>
             )}
         </div>
