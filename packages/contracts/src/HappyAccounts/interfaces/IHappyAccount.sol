@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTx} from "../HappyTx.sol";
+import {HappyTx} from "../core/HappyTx.sol";
 
 /*
  * Execution Output struct
@@ -31,6 +31,8 @@ error GasPriceTooHigh();
  *      the nonce can be valid in the future instead.
  */
 error InvalidNonce();
+
+error FutureNonceDuringSimulation();
 
 /*
  * @title IHappyAccount
