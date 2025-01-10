@@ -47,7 +47,7 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
         query: {
             enabled: !!assetAddr && !!userAddr,
             retry: 3,
-            retryDelay: (attempt) => Math.min(attempt > 1 ? 2 ** attempt * 1000 : 1000, 30 * 1000), // exponential backoff
+            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
             // check when retry is underway, show spinner in UI
             select(data): ERC20BalanceQueryData {
                 const [balanceResult, decimalsResult, symbolResult] = data

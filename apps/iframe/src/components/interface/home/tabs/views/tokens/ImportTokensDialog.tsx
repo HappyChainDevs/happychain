@@ -9,8 +9,8 @@ import { FieldInput } from "#src/components/primitives/input/FieldInput"
 import { Input } from "#src/components/primitives/input/Input"
 import { recipePositioner } from "#src/components/primitives/popover/variants"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
+import { importTokensDialogVisibilityAtom } from "#src/state/interfaceState"
 import { userAtom } from "#src/state/user"
-import { importTokensDialogVisibilityAtom } from "./state"
 
 export const TriggerImportTokensDialog = () => {
     const [isVisible, setVisibility] = useAtom(importTokensDialogVisibilityAtom)
@@ -18,8 +18,7 @@ export const TriggerImportTokensDialog = () => {
     return (
         <button
             type="button"
-            className="flex flex-row items-center justify-center gap-2 hover:text-blue-600 hover:underline"
-            title={"Open this dialog"}
+            className="flex flex-row items-center justify-center gap-3 hover:underline"
             aria-label={"Open Import Tokens Dialog"}
             onClick={() => {
                 setVisibility(!isVisible)
@@ -32,7 +31,7 @@ export const TriggerImportTokensDialog = () => {
 }
 
 export const ImportTokensDialog = () => {
-    const [isImportTokensDialogVisible, setIsImportTokensDialogVisible] = useAtom(importTokensDialogVisibilityAtom)
+    const [isVisible, setVisibility] = useAtom(importTokensDialogVisibilityAtom)
     const user = useAtomValue(userAtom)
 
     const [inputAddress, setInputAddress] = useState("")
@@ -51,7 +50,7 @@ export const ImportTokensDialog = () => {
 
     // no inputted address (or) user has deleted their input
     const isEmpty = inputAddress === ""
-    const isValidAddress = isAddress(inputAddress, { strict: true })
+    const isValidAddress = isAddress(inputAddress)
     const invalidAddressInputCondition = isEmpty || isValidAddress
     // symbol / decimals data is not available from contract read _and_ there is no user input.
     const buttonDisabledCondition =
@@ -109,10 +108,10 @@ export const ImportTokensDialog = () => {
                     },
                 })
 
-                if (watchOp && status === "success") setIsImportTokensDialogVisible(false)
+                if (watchOp && status === "success") setVisibility(false)
             }
         },
-        [setIsImportTokensDialogVisible, status, watchAssetAsync],
+        [setVisibility, status, watchAssetAsync],
     )
 
     return (
@@ -120,7 +119,7 @@ export const ImportTokensDialog = () => {
             lazyMount
             unmountOnExit
             onOpenChange={(details) => {
-                setIsImportTokensDialogVisible(details.open)
+                setVisibility(details.open)
                 if (!details.open) {
                     // reset state variables when the dialog is closed
                     setInputAddress("")
@@ -128,7 +127,7 @@ export const ImportTokensDialog = () => {
                     setCustomTokenDecimals("")
                 }
             }}
-            open={isImportTokensDialogVisible}
+            open={isVisible}
         >
             <Dialog.Positioner
                 className={recipePositioner({
@@ -176,7 +175,7 @@ export const ImportTokensDialog = () => {
                             <>
                                 <FieldInput
                                     helperLabel="Symbol"
-                                    errorLabel="Symbol not found - please enter manually"
+                                    errorLabel="Symbol not found - please enter manually (inputted address might not be a token!)"
                                     invalid={symbolInputInvalidCondition}
                                     isLoading={isRefetching}
                                 >
