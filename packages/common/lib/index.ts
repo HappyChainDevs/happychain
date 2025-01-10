@@ -1,6 +1,12 @@
+// === SERVICES ====================================================================================
+
 export { createStorage } from "./services/storage"
 
+// === HOOKS =======================================================================================
+
 export { useIsHydrated } from "./hooks/isHydrated"
+
+// === UTILS =======================================================================================
 
 export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai"
 
@@ -55,3 +61,9 @@ export { getOrSet, getOrSetAsync, HappyMap } from "./collections/map"
 export { Map2 } from "./collections/map2"
 
 export { FIFOCache } from "./collections/fifo-cache"
+
+// === DATA ========================================================================================
+
+export { happyProviderInfo } from "./data/providers"
+
+export { icon64x64, blankIcon } from "./data/icons"

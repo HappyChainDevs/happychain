@@ -1,4 +1,4 @@
-import { HappyMethodNames, type UUID, createUUID } from "@happychain/common"
+import { HappyMethodNames, type UUID, createUUID, icon64x64 } from "@happychain/common"
 import type {
     HappyUser,
     MsgsFromApp,
@@ -7,13 +7,14 @@ import type {
     ProviderMsgsFromIframe,
 } from "@happychain/sdk-shared"
 import { EventBus, EventBusMode, Msgs, WalletDisplayAction } from "@happychain/sdk-shared"
-import { announceProvider } from "mipd"
+import { announceProvider, createStore } from "mipd"
 import type { Abi, Address, EIP1193Provider } from "viem"
 import { config } from "../config"
 import { HappyProvider, HappyProviderSSRSafe } from "./happyProvider"
-import { icon64x64 } from "./icons"
 import type { HappyProviderPublic } from "./interface"
 import { registerListeners } from "./listeners"
+
+const mipdStore = createStore()
 
 /**
  * Unique Window UUID.
@@ -44,6 +45,13 @@ function initializeProvider() {
 
     _onIframeInit((ready: boolean) => {
         iframeReady = ready
+
+        mipdStore.getProviders().forEach((detail) => {
+            // don't bother forwarding ourselves to the iframe
+            if (detail.info.rdns === "tech.happy") return
+
+            iframeMessageBus?.emit(Msgs.EIP6963RequestProvider, { info: detail.info })
+        })
     })
 
     _onUserUpdate((_user?: HappyUser) => {
