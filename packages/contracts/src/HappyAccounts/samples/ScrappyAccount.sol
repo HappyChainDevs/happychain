@@ -13,12 +13,16 @@ import {BasicNonceManager} from "./BasicNonceManager.sol";
 import {UnknownDuringSimulation, NotFromEntryPoint} from "../utils/Common.sol";
 
 /**
- * @title  HappyAccount
+ * @title  ScrappyAccount
  * @dev    Example implementation of a Happy Account with nonce management, reentrancy protection,
  *         and proxy upgrade capability.
  */
 contract ScrappyAccount is IHappyAccount, IHappyPaymaster, BasicNonceManager, ReentrancyGuardTransient {
     using ECDSA for bytes32;
+
+    //* //////////////////////////////////////
+    //* Constants ////////////////////////////
+    //* //////////////////////////////////////
 
     bytes4 private constant INTERFACE_ID = 0x01ffc9a7; // ERC-165
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
@@ -147,7 +151,9 @@ contract ScrappyAccount is IHappyAccount, IHappyPaymaster, BasicNonceManager, Re
     function payout(HappyTx memory happyTx) external onlyFromEntryPoint onlyForThisAccount(happyTx) returns (bytes4) {
         uint256 owed = (consumedGas + INTRINSIC_GAS + GAS_OVERHEAD_BUFFER + HappyTxLib.txGasFromCallGas()) // TODO
             * happyTx.maxFeePerGas + happyTx.submitterFee;
-        payable(tx.origin).call{value: owed}(""); // solhint-disable-line avoid-tx-origin
+
+        // solhint-disable-next-line avoid-tx-origin
+        payable(tx.origin).call{value: owed}("");
         return 0;
     }
 
