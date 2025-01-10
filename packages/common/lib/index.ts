@@ -64,6 +64,6 @@ export { FIFOCache } from "./collections/fifo-cache"
 
 // === DATA ========================================================================================
 
-export { happyProviderInfo } from "./data/providers"
+export { injectedProviderInfo, happyProviderInfo } from "./data/providers"
 
 export { icon64x64, blankIcon } from "./data/icons"

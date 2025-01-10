@@ -1,4 +1,4 @@
-import { HappyMethodNames, type UUID, createUUID, icon64x64 } from "@happychain/common"
+import { HappyMethodNames, type UUID, createUUID, happyProviderInfo, injectedProviderInfo } from "@happychain/common"
 import type {
     HappyUser,
     MsgsFromApp,
@@ -46,6 +46,14 @@ function initializeProvider() {
     _onIframeInit((ready: boolean) => {
         iframeReady = ready
 
+        if ("ethereum" in window) {
+            // listen to message bus instead of window here because when embedded, in many situations, the
+            // providers will not be detected. Duplicates are fine as we use the provider.id as the unique key
+            iframeMessageBus?.emit(Msgs.EIP6963RequestProvider, {
+                info: injectedProviderInfo,
+            })
+        }
+
         mipdStore.getProviders().forEach((detail) => {
             // don't bother forwarding ourselves to the iframe
             if (detail.info.rdns === "tech.happy") return
@@ -69,12 +77,7 @@ function initializeProvider() {
     }) as HappyProvider & EIP1193Provider
 
     announceProvider({
-        info: {
-            icon: icon64x64,
-            name: "HappyWallet",
-            rdns: "tech.happy",
-            uuid: createUUID(),
-        },
+        info: happyProviderInfo,
         provider: provider,
     })
 
