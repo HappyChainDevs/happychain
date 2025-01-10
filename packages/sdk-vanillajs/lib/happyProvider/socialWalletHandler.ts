@@ -44,7 +44,6 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
             this.authState = _authState
         })
 
-        config.providerBus.on(Msgs.ProviderEvent, this.handleProviderNativeEvent.bind(this))
         config.providerBus.on(Msgs.RequestResponse, this.handleRequestResolution.bind(this))
         config.providerBus.on(Msgs.PermissionCheckResponse, this.handlePermissionCheck.bind(this))
     }
@@ -58,10 +57,6 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
             inFlight.reject(data.error)
         }
         this.inFlightChecks.delete(data.key)
-    }
-
-    private handleProviderNativeEvent(data: ProviderMsgsFromIframe[Msgs.ProviderEvent]) {
-        this.emit(data.payload.event, data.payload.args)
     }
 
     // === ABSTRACT METHOD IMPLEMENTATION ==========================================================

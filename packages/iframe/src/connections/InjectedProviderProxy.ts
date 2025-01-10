@@ -9,10 +9,14 @@ import {
     type ProviderEventPayload,
 } from "@happychain/sdk-shared"
 import { SafeEventEmitter } from "@happychain/sdk-shared"
+import type { EIP1193Provider } from "viem"
+import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
 import { iframeID } from "#src/requests/utils.ts"
 import { happyProviderBus } from "#src/services/eventBus.ts"
 import { getInjectedProvider } from "#src/state/injectedProvider.ts"
+import { getUser } from "#src/state/user.ts"
 import { isStandaloneIframe } from "#src/utils/appURL.ts"
+import { createHappyUserFromWallet } from "#src/utils/createHappyUserFromWallet.ts"
 import { iframeProvider } from "#src/wagmi/provider.ts"
 
 /**
@@ -31,18 +35,30 @@ import { iframeProvider } from "#src/wagmi/provider.ts"
  *
  * @extends SafeEventEmitter
  *
- * @see https://eips.ethereum.org/EIPS/eip-6963 - EIP-6963 Multi Injected Provider Discovery
+ * @see {@link https://eips.ethereum.org/EIPS/eip-6963} - EIP-6963 Multi Injected Provider Discovery
  */
 export class InjectedProviderProxy extends SafeEventEmitter {
+    private static instance: InjectedProviderProxy
+
+    static getInstance() {
+        if (!InjectedProviderProxy.instance) {
+            InjectedProviderProxy.instance = new InjectedProviderProxy()
+        }
+        return InjectedProviderProxy.instance
+    }
+
     private inFlight = new Map()
 
     private isStandalone = isStandaloneIframe()
 
-    constructor() {
+    private constructor() {
         super()
 
         if (!this.isStandalone) {
             happyProviderBus.on(Msgs.ExecuteInjectedResponse, this.handleRequestResolution.bind(this))
+            happyProviderBus.on(Msgs.ForwardInjectedEvent, this.forwardInjectedEventRemote.bind(this))
+        } else {
+            this.forwardInjectedEventLocal()
         }
     }
 
@@ -86,5 +102,57 @@ export class InjectedProviderProxy extends SafeEventEmitter {
         if (!pending && iframeRequest) iframeProvider.handleRequestResolution(resp)
         else if (pending?.reject && resp.error) pending.reject(new GenericProviderRpcError(resp.error))
         else if (pending?.resolve) pending.resolve(resp.payload)
+    }
+
+    /**
+     * Direct-Mode
+     */
+    private forwardInjectedEventLocal() {
+        const provider = getInjectedProvider()
+        provider?.on("accountsChanged", (accounts) => {
+            // Forward the event back to the front end
+            this.emit("accountsChanged", accounts)
+            // Emit events to wagmi
+            iframeProvider.emit("accountsChanged", accounts)
+
+            const user = getUser()
+            if (!accounts.length) {
+                // on disconnect, logout. alternatively could revoke permissions, but not much
+                // point in that for injected wallets
+                setUserWithProvider(undefined, undefined)
+            } else if (user) {
+                const [address] = accounts
+                const _user = createHappyUserFromWallet(user.provider, address)
+                setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
+            }
+        })
+    }
+
+    /**
+     * App-Mode: Forward injected events to the parent application
+     * handling any internal events as needed.
+     */
+    private forwardInjectedEventRemote(req: ProviderEventPayload<{ event: string; params: unknown }>) {
+        // Forward the event back to the front end
+        this.emit(req.payload.event, req.payload.params)
+
+        // Emit events to wagmi
+        iframeProvider.emit(req.payload.event, req.payload.params)
+
+        // handle any required internal changes
+        switch (req.payload.event) {
+            case "accountsChanged": {
+                const user = getUser()
+                if (Array.isArray(req.payload.params) && !req.payload.params.length) {
+                    // on disconnect, logout. alternatively could revoke permissions, but not much
+                    // point in that for injected wallets
+                    setUserWithProvider(undefined, undefined)
+                } else if (Array.isArray(req.payload.params) && user) {
+                    const [address] = req.payload.params
+                    const _user = createHappyUserFromWallet(user.provider, address)
+                    setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
+                }
+            }
+        }
     }
 }

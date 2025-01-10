@@ -9,7 +9,7 @@ export const injectedClientAtom: Atom<AccountWalletClient | undefined> = atom<Ac
     (get) => {
         const user = get(userAtom)
         if (!user?.address) return
-        const provider = new InjectedProviderProxy()
+        const provider = InjectedProviderProxy.getInstance()
         return createWalletClient({ account: user.address, transport: custom(provider) })
     },
 )

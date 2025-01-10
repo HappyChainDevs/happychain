@@ -1,4 +1,4 @@
-import { injectedProviderInfo } from "@happychain/common"
+import { createUUID, injectedProviderInfo } from "@happychain/common"
 import {
     type EIP1193RequestMethods,
     type EIP1193RequestParameters,
@@ -8,13 +8,14 @@ import {
     getEIP1193ErrorObjectFromUnknown,
 } from "@happychain/sdk-shared"
 import { type EIP6963ProviderDetail, createStore } from "mipd"
+import type { ProviderConnectInfo, ProviderMessage, ProviderRpcError } from "viem"
 import type { HappyProviderConfig } from "./interface"
 
 const store = createStore()
 
 /**
- * Small wrapper over mipd store.findProvider to handle the special case of replacing
- * browser.injected with window.ethereum as  the provider
+ * Small wrapper over mipd's `store.findProvider` to handle the special case of replacing
+ * `browser.injected` with `window.ethereum` as the provider
  */
 function findProvider(rdns: string) {
     if (rdns === "browser.injected" && "ethereum" in window) {
@@ -45,7 +46,7 @@ function findProvider(rdns: string) {
  */
 export class InjectedWalletWrapper {
     public provider: EIP6963ProviderDetail["provider"] | undefined
-    private info: EIP6963ProviderDetail["info"] | undefined
+    public info: EIP6963ProviderDetail["info"] | undefined
 
     constructor(protected config: HappyProviderConfig) {
         // Called when the user tries to log in with an injected wallet.
@@ -113,6 +114,7 @@ export class InjectedWalletWrapper {
             this.provider = providerDetails.provider
 
             void this.config.msgBus.emit(Msgs.InjectedWalletConnected, { rdns, address, request, response })
+            this.addProviderListeners()
         } catch {
             // Reached if eth_requestAccounts fails, meaning the user declined to give permission.
             // We just clear the existing provider in that case.
@@ -124,7 +126,57 @@ export class InjectedWalletWrapper {
      * User is disconnected. Clear previously used providers
      */
     private async handleProviderDisconnectionRequest() {
+        this.removeProviderListeners()
         this.provider = undefined
         this.info = undefined
+    }
+
+    private forwardEvent(event: string, params: unknown) {
+        void this.config.providerBus.emit(Msgs.ForwardInjectedEvent, {
+            key: createUUID(),
+            windowId: this.config.windowId,
+            error: null,
+            payload: {
+                event: event,
+                params: params,
+            },
+        })
+    }
+
+    private onAccountsChange(accounts: `0x${string}`[]) {
+        this.forwardEvent("accountsChanged", accounts)
+    }
+
+    private onChainChanged(chainId: string) {
+        this.forwardEvent("chainChanged", chainId)
+    }
+
+    private onConnect(connectInfo: ProviderConnectInfo) {
+        this.forwardEvent("connect", connectInfo)
+    }
+
+    private onDisconnect(error: ProviderRpcError) {
+        this.forwardEvent("disconnect", error)
+    }
+
+    private onMessage(message: ProviderMessage) {
+        this.forwardEvent("message", message)
+    }
+
+    private addProviderListeners() {
+        // setup event proxying to base eip1193 provider
+        this.provider?.on("accountsChanged", this.onAccountsChange.bind(this))
+        this.provider?.on("chainChanged", this.onChainChanged.bind(this))
+        this.provider?.on("connect", this.onConnect.bind(this))
+        this.provider?.on("disconnect", this.onDisconnect.bind(this))
+        this.provider?.on("message", this.onMessage.bind(this))
+    }
+
+    private removeProviderListeners() {
+        this.provider?.removeListener("accountsChanged", this.onAccountsChange.bind(this))
+        this.provider?.removeListener("chainChanged", this.onChainChanged.bind(this))
+        this.provider?.removeListener("connect", this.onConnect.bind(this))
+        this.provider?.removeListener("disconnect", this.onDisconnect.bind(this))
+        this.provider?.removeListener("message", this.onMessage.bind(this))
     }
 }

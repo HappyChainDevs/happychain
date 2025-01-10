@@ -53,7 +53,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
         const _isInjected = getUser()?.type === WalletType.Injected
 
         if (_isIframe && _isInjected) {
-            new InjectedProviderProxy().handleRequestResolution(response)
+            InjectedProviderProxy.getInstance().handleRequestResolution(response)
         } else if (_isIframe) {
             iframeProvider.handleRequestResolution(response)
         } else {
@@ -71,7 +71,7 @@ export async function sendResponse<Request extends ProviderEventPayload<EIP1193R
         const _isInjected = getUser()?.type === WalletType.Injected
 
         if (_isIframe && _isInjected) {
-            new InjectedProviderProxy().handleRequestResolution(response)
+            InjectedProviderProxy.getInstance().handleRequestResolution(response)
         } else if (_isIframe) {
             iframeProvider.handleRequestResolution(response)
         } else {
