@@ -41,6 +41,7 @@ export const config: Config = createConfig({
 ## API Reference
 
 ### createHappyChainWagmiConfig
+
 ```ts
 function createHappyChainWagmiConfig(
     chain: Chain, 
@@ -51,4 +52,5 @@ function createHappyChainWagmiConfig(
 Creates a Wagmi configuration optimized for HappyWallet integration with the specified chain.
 
 ### happyWagmiConnector
+
 A custom Wagmi [Connector](https://wagmi.sh/react/api/connectors/injected) initialized with HappyProvider. Used internally by `createHappyChainWagmiConfig` but also available for advanced use cases.
