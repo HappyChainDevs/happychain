@@ -54,7 +54,8 @@ jobs:
               rm -rf /home/bundler/happy-bundler
               cp -r /tmp/happy-bundler /home/bundler/happy-bundler
               cd /home/bundler/happy-bundler
-              pm2 restart ${{ env.PM2_PROCESS_NAME }} || pm2 start ./alto/src/lib/cli/alto.js \
+              pm2 delete ${{ env.PM2_PROCESS_NAME }}
+              pm2 start ./alto/src/lib/cli/alto.js \
                   --name ${{ env.PM2_PROCESS_NAME }} \
                   -- run \
                   --config ./configs/config.happySepolia.json \
