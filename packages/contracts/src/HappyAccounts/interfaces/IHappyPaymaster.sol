@@ -3,6 +3,9 @@ pragma solidity ^0.8.20;
 
 import {HappyTx} from "../HappyTx.sol";
 
+error WrongTarget();
+error SubmitterFeeTooHigh();
+
 /**
  * @title  IHappyPaymaster
  * @dev    Interface for paymasters that can sponsor gas fees for HappyTx transactions.
