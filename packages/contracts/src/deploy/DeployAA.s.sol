@@ -15,77 +15,130 @@ import {ECDSAValidator} from "kernel/validator/ECDSAValidator.sol";
 import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {stdJson} from "forge-std/StdJson.sol";
 
 // To ensure ABI generation.
 import {EntryPoint} from "account-abstraction/contracts/core/EntryPoint.sol"; /* solhint-disable-line */
 import {EntryPointSimulations} from "account-abstraction/contracts/core/EntryPointSimulations.sol"; /* solhint-disable-line */
 
 contract DeployAAContracts is BaseDeployScript {
+    using stdJson for string;
+
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(3));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
-    address public constant EXPECTED_ENTRYPOINT_V7 = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-    address public constant EXPECTED_ENTRYPOINT_SIMULATIONS = 0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47;
     uint256 public constant PAYMASTER_DEPOSIT = 10 ether;
+
+    struct DeploymentAddresses {
+        address ecdsaValidator;
+        address entryPointSimulations;
+        address entryPointV7;
+        address factoryStaker;
+        address happyPaymaster;
+        address happyPaymasterImpl;
+        address kernel;
+        address kernelFactory;
+        address sessionKeyValidator;
+    }
+
+    // Expected addresses will be loaded from deployment.json
+    DeploymentAddresses public expected;
+    ERC1967Proxy public erc1967Proxy;
 
     error EntryPointDeploymentFailed();
     error EntryPointSimulationsDeploymentFailed();
+    error ConfigNotSet();
+    error InvalidConfig(string config);
+    error DeploymentJsonReadError();
 
-    ECDSAValidator public validator;
-    Kernel public kernel;
-    KernelFactory public factory;
-    FactoryStaker public staker;
-    HappyPaymaster public paymaster;
-    SessionKeyValidator public sessionKeyValidator;
-    ERC1967Proxy public erc1967Proxy;
+    function _loadExpectedAddresses() internal {
+        string memory config = vm.envOr("CONFIG", string(""));
+        if (bytes(config).length == 0) revert ConfigNotSet();
+
+        string memory deploymentPath;
+        if (keccak256(bytes(config)) == keccak256(bytes("LOCAL"))) {
+            deploymentPath = "deployments/anvil/testing/deployment.json";
+        } else if (keccak256(bytes(config)) == keccak256(bytes("TEST"))) {
+            deploymentPath = "deployments/happy-sepolia/aa/deployment.json";
+        } else {
+            revert InvalidConfig(config);
+        }
+
+        string memory json = vm.readFile(deploymentPath);
+        bytes memory data = vm.parseJson(json);
+        expected = abi.decode(data, (DeploymentAddresses));
+    }
 
     function deploy() internal override {
-        if (EXPECTED_ENTRYPOINT_SIMULATIONS.code.length == 0) {
+        _loadExpectedAddresses();
+
+        if (expected.entryPointSimulations.code.length == 0) {
             // solhint-disable-next-line
             (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_SIMULATIONS_CODE);
             if (!success) {
                 revert EntryPointSimulationsDeploymentFailed();
             }
         }
-        deployed("EntryPointSimulations", EXPECTED_ENTRYPOINT_SIMULATIONS);
 
-        if (EXPECTED_ENTRYPOINT_V7.code.length == 0) {
+        deployed("EntryPointSimulations", expected.entryPointSimulations);
+
+        if (expected.entryPointV7.code.length == 0) {
             // solhint-disable-next-line
             (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
             if (!success) {
                 revert EntryPointDeploymentFailed();
             }
         }
-        deployed("EntryPointV7", "EntryPoint", EXPECTED_ENTRYPOINT_V7);
 
-        validator = new ECDSAValidator{salt: DEPLOYMENT_SALT}();
-        deployed("ECDSAValidator", address(validator));
+        deployed("EntryPointV7", "EntryPoint", expected.entryPointV7);
 
-        kernel = new Kernel{salt: DEPLOYMENT_SALT}(IEntryPoint(EXPECTED_ENTRYPOINT_V7));
-        deployed("Kernel", address(kernel));
+        if (expected.ecdsaValidator.code.length == 0) {
+            expected.ecdsaValidator = address(new ECDSAValidator{salt: DEPLOYMENT_SALT}());
+        }
 
-        factory = new KernelFactory{salt: DEPLOYMENT_SALT}(address(kernel));
-        deployed("KernelFactory", address(factory));
+        deployed("ECDSAValidator", expected.ecdsaValidator);
 
-        staker = new FactoryStaker{salt: DEPLOYMENT_SALT}(msg.sender);
-        deployed("FactoryStaker", address(staker));
+        if (expected.kernel.code.length == 0) {
+            expected.kernel = address(new Kernel{salt: DEPLOYMENT_SALT}(IEntryPoint(expected.entryPointV7)));
+        }
 
-        staker.approveFactory(factory, true);
+        deployed("Kernel", expected.kernel);
 
-        // Deploy HappyPaymaster implementation
-        HappyPaymaster implementation = new HappyPaymaster{salt: DEPLOYMENT_SALT}();
-        deployed("HappyPaymasterImpl", "HappyPaymaster", address(implementation));
+        if (expected.kernelFactory.code.length == 0) {
+            expected.kernelFactory = address(new KernelFactory{salt: DEPLOYMENT_SALT}(expected.kernel));
+        }
 
-        // Prepare initialization data
-        bytes memory initData = abi.encodeCall(HappyPaymaster.initialize, (EXPECTED_ENTRYPOINT_V7, msg.sender));
+        deployed("KernelFactory", expected.kernelFactory);
 
-        // Deploy and initialize the proxy
-        address proxy = _deployImplementationAndProxy(address(implementation), initData, DEPLOYMENT_SALT);
-        deployed("HappyPaymasterProxy", "ERC1967Proxy", proxy);
+        if (expected.factoryStaker.code.length == 0) {
+            expected.factoryStaker = address(new FactoryStaker{salt: DEPLOYMENT_SALT}(msg.sender));
+        }
 
-        paymaster = HappyPaymaster(proxy);
+        deployed("FactoryStaker", expected.factoryStaker);
+
+        if (expected.happyPaymasterImpl.code.length == 0) {
+            expected.happyPaymasterImpl = address(new HappyPaymaster{salt: DEPLOYMENT_SALT}());
+        }
+
+        deployed("HappyPaymasterImpl", "HappyPaymaster", expected.happyPaymasterImpl);
+
+        if (expected.happyPaymaster.code.length == 0) {
+            // Prepare initialization data
+            bytes memory initData = abi.encodeCall(HappyPaymaster.initialize, (expected.entryPointV7, msg.sender));
+
+            // Deploy and initialize the proxy
+            expected.happyPaymaster =
+                _deployImplementationAndProxy(expected.happyPaymasterImpl, initData, DEPLOYMENT_SALT);
+        }
+
+        deployed("HappyPaymaster", "ERC1967Proxy", expected.happyPaymaster);
+
+        HappyPaymaster paymaster = HappyPaymaster(expected.happyPaymaster);
         paymaster.deposit{value: PAYMASTER_DEPOSIT}();
 
-        sessionKeyValidator = new SessionKeyValidator{salt: DEPLOYMENT_SALT}();
-        deployed("SessionKeyValidator", address(sessionKeyValidator));
+        if (expected.sessionKeyValidator.code.length == 0) {
+            expected.sessionKeyValidator = address(new SessionKeyValidator{salt: DEPLOYMENT_SALT}());
+        }
+
+        deployed("SessionKeyValidator", expected.sessionKeyValidator);
     }
 }
