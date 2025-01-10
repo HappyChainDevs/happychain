@@ -33,7 +33,7 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
             {
                 ...tokenContract,
                 functionName: "balanceOf",
-                args: userAddr ? [userAddr] : undefined,
+                args: [userAddr],
             },
             {
                 ...tokenContract,
@@ -61,14 +61,13 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
                     console.warn(`Token symbol "${symbol}" exceeds 11 characters and will be truncated.`)
                 }
 
+                // compute formatted value only if both values are read from the contract
                 const formatted = value && decimals ? formatUnits(value, decimals) : undefined
 
                 return {
                     value,
                     decimals,
                     symbol,
-                    // compute formatted value only if both values are read from the contract,
-                    // else indicate error to user
                     formatted,
                 }
             },

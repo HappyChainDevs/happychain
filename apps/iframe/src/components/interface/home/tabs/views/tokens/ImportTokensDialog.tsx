@@ -37,7 +37,6 @@ export const ImportTokensDialog = () => {
     const [inputAddress, setInputAddress] = useState("")
     // optional fields, used only if contract reads fail
     const [customTokenSymbol, setCustomTokenSymbol] = useState("")
-    const [customTokenDecimals, setCustomTokenDecimals] = useState("")
 
     const { watchAssetAsync, status } = useWatchAsset()
 
@@ -48,19 +47,22 @@ export const ImportTokensDialog = () => {
 
     // --- conditions for elements being disabled / readOnly ---
 
-    // no inputted address (or) user has deleted their input
+    // Check if address is valid
     const isEmpty = inputAddress === ""
     const isValidAddress = isAddress(inputAddress)
-    const invalidAddressInputCondition = isEmpty || isValidAddress
-    // symbol / decimals data is not available from contract read _and_ there is no user input.
-    const buttonDisabledCondition =
-        (symbol === undefined && customTokenSymbol === "") || (decimals === undefined && customTokenDecimals === "")
-    // There is an inputted address, but no data present from contract read or user input.
+
+    // Show error and allow manual entry if we have a valid address but no contract data
     const symbolInputInvalidCondition = isValidAddress && symbol === undefined && customTokenSymbol === ""
-    const decimalsInputInvalidCondition = isValidAddress && decimals === undefined && customTokenDecimals === ""
-    // There a valid inputted address (and) data from contract read has been successfully retrieved.
-    const decimalsInputReadOnlyCondition = isValidAddress && decimals !== undefined
-    const symbolsInputReadOnlyCondition = isValidAddress && symbol !== undefined
+    const decimalsInputInvalidCondition = isValidAddress && decimals === undefined
+
+    // Fields should be readonly if contract data was successfully fetched
+    const symbolInputReadOnly = isValidAddress && symbol !== undefined
+
+    // Button should be disabled if:
+    // 1. Address is invalid OR
+    // 2. We don't have either contract data or user input for both symbol and decimals
+    const submitButtonDisabledCondition =
+        !isValidAddress || (symbol === undefined && customTokenSymbol === "") || decimals === undefined
 
     // Input field change handlers
     const handleAddressInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,20 +75,6 @@ export const ImportTokensDialog = () => {
         setCustomTokenSymbol(value)
     }
 
-    const handleCustomDecimalsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { value } = e.target
-        setCustomTokenDecimals(value)
-    }
-
-    /**
-     * Handles the submission of the watch asset form.
-     *
-     * This function processes the form data to add a new ERC20 asset to the user's watch list.
-     * It initiates an asynchronous request to watch the specified asset, maintaining the dialog
-     * open while awaiting user approval or rejection. If the operation succeeds, it closes the
-     * import tokens dialog to reflect the successful addition.
-     */
-
     const submitWatchAssetData = useCallback(
         async (e: React.FormEvent<HTMLFormElement>) => {
             e.preventDefault()
@@ -97,8 +85,6 @@ export const ImportTokensDialog = () => {
             const decimals = formData.get("decimals") as string
 
             if (address && symbol && decimals) {
-                // we use the async function so that we can keep the
-                // dialog open while the user is approving / rejecting the request
                 const watchOp = await watchAssetAsync({
                     type: "ERC20",
                     options: {
@@ -121,10 +107,8 @@ export const ImportTokensDialog = () => {
             onOpenChange={(details) => {
                 setVisibility(details.open)
                 if (!details.open) {
-                    // reset state variables when the dialog is closed
                     setInputAddress("")
                     setCustomTokenSymbol("")
-                    setCustomTokenDecimals("")
                 }
             }}
             open={isVisible}
@@ -155,12 +139,12 @@ export const ImportTokensDialog = () => {
                         <FieldInput
                             helperLabel="Token Contract Address"
                             errorLabel="Invalid Address"
-                            invalid={!invalidAddressInputCondition}
+                            invalid={!isEmpty && !isValidAddress}
                         >
                             <Field.Label className="text-md text-base-content">Address</Field.Label>
                             <Input
                                 scale={"default"}
-                                aria-invalid={!invalidAddressInputCondition}
+                                aria-invalid={!isEmpty && !isValidAddress}
                                 name="address"
                                 id="token-address"
                                 type="string"
@@ -171,57 +155,62 @@ export const ImportTokensDialog = () => {
                             />
                         </FieldInput>
 
-                        {isValidAddress && (
-                            <>
-                                <FieldInput
-                                    helperLabel="Symbol"
-                                    errorLabel="Symbol not found - please enter manually (inputted address might not be a token!)"
-                                    invalid={symbolInputInvalidCondition}
-                                    isLoading={isRefetching}
-                                >
-                                    <Field.Label className="text-md text-base-content ">Token Symbol</Field.Label>
-                                    <Input
-                                        name="symbol"
-                                        id="token-symbol"
-                                        type="string"
-                                        value={symbol ? symbol : customTokenSymbol}
-                                        inputClass="w-full"
-                                        scale={"default"}
-                                        onChange={handleCustomSymbolInputChange}
-                                        readOnly={symbolsInputReadOnlyCondition}
-                                    />
-                                </FieldInput>
+                        <FieldInput
+                            helperLabel="Symbol"
+                            errorLabel="Symbol not found (inputted address might not be a token!)"
+                            invalid={symbolInputInvalidCondition}
+                            isLoading={isRefetching}
+                        >
+                            <Field.Label className="text-md text-base-content">Token Symbol</Field.Label>
+                            <Input
+                                name="symbol"
+                                id="token-symbol"
+                                type="string"
+                                value={symbol ? symbol : customTokenSymbol}
+                                inputClass="w-full"
+                                scale={"default"}
+                                onChange={handleCustomSymbolInputChange}
+                                disabled={!isValidAddress}
+                                readOnly={symbolInputReadOnly}
+                            />
+                        </FieldInput>
 
-                                <FieldInput
-                                    helperLabel="Decimals"
-                                    errorLabel="Decimals data not found - please enter manually"
-                                    invalid={decimalsInputInvalidCondition}
-                                    isLoading={isRefetching}
-                                >
-                                    <Field.Label className="text-md text-base-content">Token Decimals</Field.Label>
-                                    <Input
-                                        name="decimals"
-                                        id="token-decimal"
-                                        type="string"
-                                        value={decimals ? decimals : customTokenDecimals}
-                                        inputClass="w-full"
-                                        scale={"default"}
-                                        onChange={handleCustomDecimalsInputChange}
-                                        readOnly={decimalsInputReadOnlyCondition}
-                                    />
-                                </FieldInput>
+                        {/*
+                         * Decimals field value behavior:
+                         * - Empty if no valid address is entered
+                         * - Shows decimals from contract if available
+                         * - Defaults to "18" if contract read fails (most tokens use 18 decimals)
+                         */}
+                        <FieldInput
+                            helperLabel="Decimals"
+                            errorLabel="Decimals data not found (inputted address might not be a token!)"
+                            invalid={decimalsInputInvalidCondition}
+                            isLoading={isRefetching}
+                        >
+                            <Field.Label className="text-md text-base-content disabled:opacity-50">
+                                Token Decimals
+                            </Field.Label>
+                            <Input
+                                name="decimals"
+                                id="token-decimal"
+                                type="string"
+                                value={!isValidAddress ? "" : decimals !== undefined ? decimals : "18"}
+                                inputClass="w-full"
+                                scale={"default"}
+                                disabled={!isValidAddress}
+                                readOnly={true}
+                            />
+                        </FieldInput>
 
-                                <Button
-                                    type="submit"
-                                    intent="primary"
-                                    className="text-neutral-content justify-center"
-                                    isLoading={status === "pending"}
-                                    disabled={buttonDisabledCondition}
-                                >
-                                    Submit
-                                </Button>
-                            </>
-                        )}
+                        <Button
+                            type="submit"
+                            intent="primary"
+                            className="text-neutral-content justify-center"
+                            isLoading={status === "pending"}
+                            disabled={submitButtonDisabledCondition}
+                        >
+                            Submit
+                        </Button>
                     </form>
                 </Dialog.Content>
             </Dialog.Positioner>
