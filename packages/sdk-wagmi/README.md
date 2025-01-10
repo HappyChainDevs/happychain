@@ -1,6 +1,6 @@
 # @happychain/wagmi
 
-Simple integration of HappyWallet with [wagmi](https://wagmi.sh/`) for your dApp.
+Simple integration of HappyWallet with [wagmi](https://wagmi.sh/) for your dApp.
 
 ## Quick Start
 
@@ -16,7 +16,6 @@ That's it! This creates a complete Wagmi configuration tailored for HappyWallet,
 - Single-chain configuration (works with any Viem chain)
 - Custom HappyWallet connector
 - Optimized transport layer with HappyProvider
-- Disabled multi-injected provider discovery
 
 ## Advanced Setup
 
