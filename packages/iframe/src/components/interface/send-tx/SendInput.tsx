@@ -12,7 +12,7 @@ const SendInput = () => {
     const [sendVal, setSendVal] = useAtom(sendValueAtom)
     const { data: balance } = useBalance({ address: user?.address })
 
-    const [balanceExceeded, setbalanceExceeded] = useAtom(balanceExceededAtom)
+    const [balanceExceeded, setBalanceExceeded] = useAtom(balanceExceededAtom)
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value.trim()
@@ -52,16 +52,16 @@ const SendInput = () => {
         // Perform validation and balance checking
         if (validateNumericInput(formattedValue) || formattedValue === "") {
             // Check if the input value exceeds the balance
-            setbalanceExceeded(formattedValue && balance ? parseEther(formattedValue) > balance.value : false)
+            setBalanceExceeded(formattedValue && balance ? parseEther(formattedValue) > balance.value : false)
         }
     }, 500)
 
     const handleMaxButtonClick = useCallback(() => {
         if (balance) {
             setSendVal(formatEther(balance.value))
-            setbalanceExceeded(false)
+            setBalanceExceeded(false)
         }
-    }, [balance, setSendVal, setbalanceExceeded])
+    }, [balance, setSendVal, setBalanceExceeded])
 
     return (
         <div className="flex flex-col items-center justify-start h-[110px] w-full border-slate-700 border-t border-b my-3 px-3">
