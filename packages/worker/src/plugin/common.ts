@@ -1,4 +1,3 @@
-// packages/worker/src/plugin/common.ts
 import type { Plugin } from "vite"
 import pkg from "../../package.json" with { type: "json" }
 import { filter } from "./utils.ts"

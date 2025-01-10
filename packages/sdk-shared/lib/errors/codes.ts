@@ -1,3 +1,6 @@
+/**
+ * Error Codes {@link https://eips.ethereum.org/EIPS/eip-1193#provider-errors}
+ */
 export enum EIP1193ErrorCodes {
     UserRejectedRequest = 4001,
     Unauthorized = 4100,
