@@ -18,9 +18,12 @@ setup: alto build
 
 # Clone or update Alto repository based on alto.version
 alto: alto.version
+	echo "Clone/update Alto repository based on alto.version"
 	@if [ -d alto ]; then \
+		echo "Updating Alto repository..."; \
 		cd alto && git pull && git switch $(ALTO_BRANCH); \
 	else \
+		echo "Cloning Alto repository..."; \
 		git clone $(ALTO_REPO) --branch $(ALTO_BRANCH) alto; \
 	fi
 	@rm -rf alto/.git alto/.gitmodules alto/.gitignore
