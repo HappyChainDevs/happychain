@@ -33,10 +33,9 @@ export function getWatchedAssets(): UserWatchedAssetsRecord {
  * If the asset does not already exist for the address, it's added.
  * Returns `true` if the asset was successfully added, or `false` if the asset was already in the list.
  */
-export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters): boolean {
+export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters): void {
     if (!isAddress(newAsset.options.address)) {
-        console.log("[wallet_watchAsset: addWatchedAsset]: address format incorrect; request failed")
-        return false
+        throw new Error("Invalid asset address format")
     }
 
     store.set(watchedAssetsAtom, (prevAssets) => {
@@ -50,7 +49,6 @@ export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters
                   [address]: [...assetsForAddress, newAsset],
               }
     })
-    return true
 }
 
 /**
