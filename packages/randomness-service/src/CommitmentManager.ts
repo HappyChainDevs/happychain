@@ -4,7 +4,7 @@ import { type Result, ResultAsync } from "neverthrow"
 import type { Hex } from "viem"
 import { encodePacked, keccak256 } from "viem"
 import { db } from "./db/driver"
-import { commitmentInfoToDb, dbToCommitmentInfo, DIGITS_MAX_UINT256 } from "./db/types"
+import { DIGITS_MAX_UINT256, commitmentInfoToDb, dbToCommitmentInfo } from "./db/types"
 
 export interface CommitmentInfo {
     timestamp: bigint
