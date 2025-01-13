@@ -2,7 +2,9 @@ import { createUUID } from "@happy.tech/common"
 import {
     AuthState,
     EIP1193UserRejectedRequestError,
+    LoginRequiredError,
     Msgs,
+    PopupBlockedError,
     SafeEventEmitter,
     WalletDisplayAction,
     WalletType,
@@ -82,7 +84,13 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
         } catch (e) {
             const isConnectionRequest = this.isConnectionRequest(args)
 
-            if (e instanceof Error && e.name === "LoginRequired") {
+            if (e instanceof PopupBlockedError) {
+                // TODO: display 'popup block' error in wallet, or toast.
+                // for now we just throw the error
+                throw e
+            }
+
+            if (e instanceof LoginRequiredError) {
                 const resp = await this.requestLogin(args)
 
                 // If it was already a 'connection' request, we can simply return the results here.

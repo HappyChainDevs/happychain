@@ -1,7 +1,7 @@
 export {
     getEIP1193ErrorObjectFromCode,
     getEIP1193ErrorObjectFromUnknown,
-} from "./utils"
+} from "./eip-1193-utils"
 
 export {
     GenericProviderRpcError,
@@ -11,8 +11,10 @@ export {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
-} from "./errors"
+} from "./eip-1193-errors"
 
-export { EIP1193ErrorCodes } from "./codes"
+export { EIP1193ErrorCodes } from "./eip-1193-codes"
 
-export type { EIP1193ErrorObject, IProviderRpcError, ProviderRpcErrorCode } from "./interfaces"
+export type { EIP1193ErrorObject, IProviderRpcError, ProviderRpcErrorCode } from "./eip-1193-interfaces"
+
+export { LoginRequiredError, PopupBlockedError } from "./happy-provider-errors"
