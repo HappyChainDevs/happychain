@@ -3,14 +3,14 @@ import { isAddress } from "viem"
 import AddressSelector from "#src/components/interface/send-tx/AddressSelector"
 import SendButtons from "#src/components/interface/send-tx/SendButtons"
 import SendInput from "#src/components/interface/send-tx/SendInput"
-import { useHappySendOptions } from "#src/hooks/useHappySendOptions"
+import { useHappySend } from "#src/hooks/useHappySend"
 
 export const Route = createLazyFileRoute("/embed/send")({
     component: Send,
 })
 
 function Send() {
-    const { targetAddress } = useHappySendOptions()
+    const { targetAddress } = useHappySend()
 
     return (
         <div className="relative flex flex-col size-full items-center justify-between">

@@ -1,10 +1,10 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { isAddress } from "viem"
-import { useHappySendOptions } from "#src/hooks/useHappySendOptions"
+import { useHappySend } from "#src/hooks/useHappySend"
 
 const AddressSelector = () => {
-    const { targetAddress, setTargetAddress } = useHappySendOptions()
+    const { targetAddress, setTargetAddress } = useHappySend()
     const [isValidAddr, setIsValidAddr] = useState(true)
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
