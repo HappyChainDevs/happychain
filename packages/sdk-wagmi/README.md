@@ -5,17 +5,11 @@ Simple integration of HappyWallet with [wagmi](https://wagmi.sh/) for your dApp.
 ## Quick Start
 
 ```ts
-import { createHappyChainWagmiConfig } from "@happychain/wagmi"
+import { createHappyChainWagmiConfig, happyChainSepolia } from "@happychain/wagmi"
 import { sepolia } from "viem/chains"
 
-const wagmiConfig = createHappyChainWagmiConfig(sepolia)
+const wagmiConfig = createHappyChainWagmiConfig(happyChainSepolia)
 ```
-
-That's it! This creates a complete Wagmi configuration tailored for HappyWallet, including:
-
-- Single-chain configuration (works with any Viem chain)
-- Custom HappyWallet connector
-- Optimized transport layer with HappyProvider
 
 ## Advanced Setup
 
