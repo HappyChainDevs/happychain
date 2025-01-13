@@ -1,20 +1,18 @@
-import { config } from 'dotenv'
-import app from './server'
+import { Hono } from "hono"
+import { serveStatic } from "hono/bun"
 
-config()
+const app = new Hono()
 
-const port = Number(process.env.PORT) || 3000
-console.log(`Server is running on port ${port}`)
+app.use("/static/*", serveStatic({ root: "./" }))
+app.use("/favicon.ico", serveStatic({ path: "./favicon.ico" }))
+app.get("/", (c) => c.text("You can access: /static/hello.txt"))
+app.get("*", serveStatic({ path: "./static/fallback.txt" }))
 
-app.listen(port)
+// app.get('/', (c) => {
+//   return c.text('Hello Honooo!')
+// })
 
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('Received SIGTERM signal, shutting down gracefully')
-  process.exit(0)
-})
-
-process.on('SIGINT', () => {
-  console.log('Received SIGINT signal, shutting down gracefully')
-  process.exit(0)
-})
+export default {
+    port: 3000,
+    fetch: app.fetch,
+}

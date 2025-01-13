@@ -1,23 +1,19 @@
-.PHONY: install build start clean lint test
+include ../../makefiles/lib.mk
+include ../../makefiles/help.mk
 
-install:
-	npm install
+# include .env file and export its env vars
+# (-include to ignore error if it does not exist)
+-include .env
 
-build:
-	npm run build
+####################################################################################################
+# Code Quality
 
-start:
-	npm start
+check: lint format-check
+	biome check ./;
+.PHONY: check
 
-dev:
-	npm run dev
+format:
+	biome check ./ --write;
+.PHONY: format
 
-clean:
-	rm -rf dist
-	rm -rf node_modules
-
-lint:
-	npm run lint
-
-test:
-	npm run test
+####################################################################################################
