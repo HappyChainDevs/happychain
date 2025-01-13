@@ -2,7 +2,6 @@ import type { Plugin } from "vite"
 import { SharedWorkerServerPlugin } from "./SharedWorkerServerPlugin.ts"
 import { clientCodeGen } from "./codegen.ts"
 import { createPlugin } from "./common.ts"
-import { filter } from "./utils.ts"
 
 /**
  * Plugin runs during the 'build' command, i.e. 'bun vite build'
@@ -22,7 +21,6 @@ export function SharedWorkerClientPlugin({ chunks }: { chunks?: (id: string) => 
 }
 
 function clientTransform(code: string, id: string): string {
-    if (!filter(id)) return code
     return clientCodeGen(code, id)
 }
 
