@@ -5,11 +5,6 @@ interface ArgsListProps {
     fnInputs: readonly AbiParameter[]
 }
 
-function formatDisplayValue(arg: unknown) {
-    const rawType = typeof arg
-    return rawType === "bigint" ? (arg as bigint).toString() : String(arg)
-}
-
 const ArgsList = ({ args, fnInputs }: ArgsListProps) => {
     return (
         <ul className="flex flex-col gap-2 w-full mt-2">
@@ -24,7 +19,7 @@ const ArgsList = ({ args, fnInputs }: ArgsListProps) => {
                     >
                         <span className="font-mono text-sm opacity-75">{fnInputs[idx].name}</span>
                         <span className="font-mono text-sm max-w-[60%] truncate group-hover:text-wrap hover:break-all hover:whitespace-normal hover:bg-neutral-100 rounded-lg p-1">
-                            {formatDisplayValue(arg)} <span className="opacity-50">{fnInputs[idx].type}</span>
+                            {String(arg)} <span className="opacity-50">{fnInputs[idx].type}</span>
                         </span>
                     </li>
                 )
