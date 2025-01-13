@@ -20,7 +20,7 @@ export function ConnectModal() {
                     <p className="text-2xl font-bold">HappyChain</p>
                 </div>
             </div>
-            <div className="flex flex-col gap-4 max-w-md mx-auto max-h-3/4 w-full overflow-auto">
+            <div className="flex flex-col justify-center gap-4 max-w-md mx-auto max-h-3/4 w-full overflow-y-auto grow">
                 <ConnectContent />
             </div>
         </main>
