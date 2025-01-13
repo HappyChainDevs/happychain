@@ -13,8 +13,6 @@ import {KernelFactory} from "kernel/factory/KernelFactory.sol";
 import {FactoryStaker} from "kernel/factory/FactoryStaker.sol";
 import {ECDSAValidator} from "kernel/validator/ECDSAValidator.sol";
 import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
-
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
 // To ensure ABI generation.
@@ -42,7 +40,6 @@ contract DeployAAContracts is BaseDeployScript {
 
     // Expected addresses will be loaded from deployment.json
     DeploymentAddresses public expected;
-    ERC1967Proxy public erc1967Proxy;
 
     error EntryPointDeploymentFailed();
     error EntryPointSimulationsDeploymentFailed();
@@ -126,11 +123,10 @@ contract DeployAAContracts is BaseDeployScript {
             bytes memory initData = abi.encodeCall(HappyPaymaster.initialize, (expected.entryPointV7, msg.sender));
 
             // Deploy and initialize the proxy
-            expected.happyPaymaster =
-                _deployImplementationAndProxy(expected.happyPaymasterImpl, initData, DEPLOYMENT_SALT);
+            expected.happyPaymaster = _deployProxy(expected.happyPaymasterImpl, initData, DEPLOYMENT_SALT);
         }
 
-        deployed("HappyPaymaster", "ERC1967Proxy", expected.happyPaymaster);
+        deployed("HappyPaymaster", expected.happyPaymaster);
 
         HappyPaymaster paymaster = HappyPaymaster(expected.happyPaymaster);
         paymaster.deposit{value: PAYMASTER_DEPOSIT}();

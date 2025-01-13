@@ -90,7 +90,7 @@ abstract contract BaseDeployScript is Script {
      * @param salt The salt used for deterministic address generation
      * @return proxy The address of the deployed proxy contract
      */
-    function _deployImplementationAndProxy(address implementation, bytes memory initData, bytes32 salt)
+    function _deployProxy(address implementation, bytes memory initData, bytes32 salt)
         internal
         returns (address proxy)
     {

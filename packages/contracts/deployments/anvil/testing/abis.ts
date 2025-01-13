@@ -281,73 +281,6 @@ const contractToAbi = ({
       ]
     }
   ],
-  "ERC1967Proxy": [
-    {
-      "type": "constructor",
-      "inputs": [
-        {
-          "name": "implementation",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "_data",
-          "type": "bytes",
-          "internalType": "bytes"
-        }
-      ],
-      "stateMutability": "payable"
-    },
-    {
-      "type": "fallback",
-      "stateMutability": "payable"
-    },
-    {
-      "type": "event",
-      "name": "Upgraded",
-      "inputs": [
-        {
-          "name": "implementation",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "error",
-      "name": "AddressEmptyCode",
-      "inputs": [
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ERC1967InvalidImplementation",
-      "inputs": [
-        {
-          "name": "implementation",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ERC1967NonPayable",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "FailedCall",
-      "inputs": []
-    }
-  ],
   "EntryPoint": [
     {
       "type": "receive",
@@ -4963,7 +4896,7 @@ const aliasToContract = ({
   "EntryPointSimulations": "EntryPointSimulations",
   "EntryPointV7": "EntryPoint",
   "FactoryStaker": "FactoryStaker",
-  "HappyPaymaster": "ERC1967Proxy",
+  "HappyPaymaster": "HappyPaymaster",
   "HappyPaymasterImpl": "HappyPaymaster",
   "Kernel": "Kernel",
   "KernelFactory": "KernelFactory",
