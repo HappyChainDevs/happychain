@@ -1,4 +1,4 @@
 {
     "extends": ["@happychain/configs/tsconfig.base.json"],
-    "include": ["bin", "lib"]
+    "include": ["*.ts", "lib"]
 }

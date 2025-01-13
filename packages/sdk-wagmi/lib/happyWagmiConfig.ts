@@ -34,34 +34,19 @@ export const happyWagmiConnector: CreateConnectorFn = injected({
 })
 
 /**
- * Creates a Wagmi configuration optimized for HappyWallet integration.
- *
- * This function generates a customized Wagmi configuration that enables seamless
- * integration with HappyWallet in your decentralized application. It sets up
- * a single-chain configuration with a custom transport layer using HappyProvider.
- *
- * @param chain - The blockchain network configuration object following the Chain
- *                interface from Viem. Defines the network parameters and settings.
- * @param connector - Optional HappyWallet connector instance. Defaults to
- *                   happyWagmiConnector if not specified.
- *
- * @returns A Wagmi Config object configured for HappyWallet integration, including:
- *          - Single-chain support for the specified network
- *          - Custom HappyWallet connector
- *          - Disabled multi-injected provider discovery
- *          - Custom transport layer using HappyProvider
+ * Creates a single-chain Wagmi configuration for use with the HappyWallet.
  *
  * @example
  * ```ts twoslash
- * import { createHappyChainWagmiConfig, happyChainSepoliaViemChain } from "@happychain/wagmi"
+ * import { createHappyChainWagmiConfig, happyChainSepolia } from "@happychain/wagmi"
  * // ---cut---
- * const config = createHappyChainWagmiConfig(mainnet)
+ * const config = createHappyChainWagmiConfig(happyChainSepolia)
  * ```
  *
  * @see {@link https://wagmi.sh/react/api/createConfig#config Wagmi Config Documentation}
  * @see {@link https://viem.sh/docs/glossary/types#chain Viem Chain Type}
  */
-export function createHappyChainWagmiConfig(chain: Chain, connector = happyWagmiConnector): Config {
+export function createHappyChainWagmiConfig(chain: Chain, connector: CreateConnectorFn = happyWagmiConnector): Config {
     return createConfig({
         chains: [chain],
         connectors: [connector],

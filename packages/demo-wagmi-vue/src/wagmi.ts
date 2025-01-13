@@ -1,5 +1,6 @@
 import type { Config } from "@wagmi/vue"
 import { happyProvider } from "./sdk"
+
 export { WagmiPlugin } from "@wagmi/vue"
 
 import { createHappyChainWagmiConfig, happyChainSepoliaViemChain } from "@happychain/wagmi"
