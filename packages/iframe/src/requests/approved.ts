@@ -63,17 +63,17 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 
                 // strip signature field from preparedUserOp
                 const { signature, ...updatedUserOp } = preparedUserOp;
-                const userOpHash = await smartAccountClient.sendUserOperation(updatedUserOp)
+                // const userOpHash = await smartAccountClient.sendUserOperation(updatedUserOp)
 
                 // sign with SmartAccountClient
-                // const client = await getSmartAccountClient() as any
-                // console.log("client:", client.account)
-                // const _signature = await client.account.signUserOperation(updatedUserOp)
-                // console.log("signature:", _signature)   
-                // // console.log(client.signUserOperation(preparedUserOp))  
+                const client = await getSmartAccountClient() as any
+                console.log("client:", client.account)
+                const _signature = await client.account.signUserOperation(updatedUserOp)
+                console.log("signature:", _signature)   
+                // console.log(client.signUserOperation(preparedUserOp))  
 
-                // const userOpWithSig = {...updatedUserOp, signature: _signature}
-                // const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
+                const userOpWithSig = {...updatedUserOp, signature: _signature}
+                const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
                 
                 
                 
