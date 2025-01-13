@@ -50,6 +50,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             //      that occured in the old convertToUserOp call and were being swallowed.
             //      We need to make sure all errors are correctly surfaced!
             try {
+                console.log("eth_sendTransaction request:", request)
                 const tx = request.payload.params[0]
                 const preparedUserOp = await smartAccountClient.prepareUserOperation({
                     account: smartAccountClient.account,
@@ -62,8 +63,21 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 
                 // strip signature field from preparedUserOp
                 const { signature, ...updatedUserOp } = preparedUserOp;
-
                 const userOpHash = await smartAccountClient.sendUserOperation(updatedUserOp)
+
+                // sign with SmartAccountClient
+                // const client = await getSmartAccountClient() as any
+                // console.log("client:", client.account)
+                // const _signature = await client.account.signUserOperation(updatedUserOp)
+                // console.log("signature:", _signature)   
+                // // console.log(client.signUserOperation(preparedUserOp))  
+
+                // const userOpWithSig = {...updatedUserOp, signature: _signature}
+                // const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
+                
+                
+                
+                console.log("userOpHash:", userOpHash)
                 addPendingUserOp(user.address, {
                     userOpHash: userOpHash as Hash,
                     value: hexToBigInt(tx.value as Hex),
