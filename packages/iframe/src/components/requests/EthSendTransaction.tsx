@@ -2,11 +2,11 @@ import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import {
     type AbiFunction,
-    type Address,
     type RpcTransactionRequest,
     decodeFunctionData,
     formatEther,
     formatGwei,
+    isAddress,
 } from "viem"
 import { useEstimateFeesPerGas } from "wagmi"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
@@ -72,7 +72,7 @@ export const EthSendTransaction = ({
 
     const user = useAtomValue(userAtom)
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
-    const targetContractAddress = (tx.to ?? undefined) as Address | undefined
+    const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
 
     const {
         data: { maxFeePerGas, maxPriorityFeePerGas } = {},
@@ -107,33 +107,10 @@ export const EthSendTransaction = ({
         })
     }, [maxFeePerGas, maxPriorityFeePerGas, isError])
 
-    /**
-     * Retrieves the ABI for a given contract address associated with the current user's recorded ABIs.
-     *
-     * The memoized value returns `undefined` if:
-     * - The user address is not available.
-     * - The target contract address is not provided.
-     * - No ABIs are found for the user.
-     * - No matching ABI record for the given contract address is found.
-     *
-     * Otherwise, it returns the ABI object for the specified contract address.
-     */
-    const abiForContract = useMemo(() => {
-        if (!user?.address || !targetContractAddress) return undefined
+    const abiForContract =
+        user?.address && targetContractAddress && recordedAbisForUser[user.address][targetContractAddress]
 
-        const abisForUser = recordedAbisForUser[user.address]
-        if (!abisForUser) return undefined
-
-        return abisForUser[targetContractAddress]
-    }, [recordedAbisForUser, user?.address, targetContractAddress])
-
-    /**
-     * Decodes the function call data for a given contract ABI and transaction data
-     * using viem's {@link decodeFunctionData | decodeFunctionData }.
-     *
-     * The decoded function name is used to find the section of the ABI
-     * the function is defined in which gives us the expected inputs, their types.
-     */
+    // Decodes the function call data for the given contract ABI and transaction data.
     const decodedData = useMemo(() => {
         if (!abiForContract || !tx.data) return undefined
 
