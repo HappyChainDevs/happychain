@@ -24,7 +24,7 @@ export function commitmentInfoToDb(commitmentInfo: CommitmentInfo): CommitmentIn
 
 export function dbToCommitmentInfo(db: CommitmentInfoTable): CommitmentInfo {
     return {
-        timestamp: BigInt(db.timestamp),
+        timestamp: db.timestamp,
         value: BigInt(db.value),
         commitment: db.commitment,
         transactionIntentId: db.transactionIntentId,
