@@ -1,5 +1,6 @@
 import crypto from "node:crypto"
 import { type UUID, unknownToError } from "@happychain/common"
+import { sql } from "kysely"
 import { type Result, ResultAsync } from "neverthrow"
 import type { Hex } from "viem"
 import { encodePacked, keccak256 } from "viem"
@@ -53,7 +54,11 @@ export class CommitmentManager {
         return ResultAsync.fromPromise(
             db
                 .deleteFrom("commitments")
-                .where("timestamp", "<", latestBlockTimestamp - COMMITMENT_PRUNE_INTERVAL_SECONDS)
+                .where(
+                    sql<number>`CAST("timestamp" AS INTEGER)`,
+                    "<",
+                    Number(latestBlockTimestamp - COMMITMENT_PRUNE_INTERVAL_SECONDS),
+                )
                 .execute(),
             unknownToError,
         ).map(() => undefined)
