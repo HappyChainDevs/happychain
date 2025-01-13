@@ -1,6 +1,7 @@
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 // Re-export class for use in other package(s)
 export { SafeEventEmitter }
+
 // === VALUES ======================================================================================
 
 export * as chains from "./chains"
