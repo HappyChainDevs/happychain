@@ -83,6 +83,7 @@ async function checkInitialization() {
 }
 
 export async function request({ method, params }: { method: string; params?: unknown[] }) {
+    console.log({ method, params })
     await checkInitialization()
     return await ethereumSigningProvider.request({ method, params })
 }

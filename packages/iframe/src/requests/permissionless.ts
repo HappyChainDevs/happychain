@@ -31,7 +31,9 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 // exported for testing
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
-    const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
+
+    console.log({ before: request.key, request, permissionless: true })
+    console.log({ after: request.key, request, permissionless: true })
 
     switch (request.payload.method) {
         case "eth_chainId": {
@@ -62,6 +64,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             // Attempt to retrieve UserOperation details first.
             // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
             try {
+                const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
                 const promiseUserOpInfo = smartAccountClient.getUserOperation({ hash })
                 const promiseUserOpReceipt = smartAccountClient.getUserOperationReceipt({ hash })
 
@@ -143,7 +146,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         case "eth_getTransactionCount": {
             console.log("eth_getTransactionCount")
             const [address] = request.payload.params
-
+            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             if (smartAccountClient && address.toLowerCase() === smartAccountClient.account.address.toLowerCase()) {
                 /**
                  * For smart accounts, nonces combine :
@@ -166,6 +169,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_estimateGas": {
             const [tx] = request.payload.params
+            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             const gasEstimation = await smartAccountClient.estimateUserOperationGas({
                 calls: [
                     {

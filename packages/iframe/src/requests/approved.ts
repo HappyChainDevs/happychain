@@ -36,7 +36,9 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
     const user = getUser()
-    const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
+    console.log({ before: request.key, request, approved: true })
+    // const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
+    console.log({ after: request.key, request })
 
     if (!user) {
         console.warn("Request approved, but no user found")
@@ -51,17 +53,20 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             //      We need to make sure all errors are correctly surfaced!
             try {
                 const tx = request.payload.params[0]
+
+                const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
                 const preparedUserOp = await smartAccountClient.prepareUserOperation({
                     account: smartAccountClient.account,
-                    calls: [{
-                        to: tx.to,
-                        value: hexToBigInt(tx.value as Hex),
-                      }
-                    ]
+                    calls: [
+                        {
+                            to: tx.to,
+                            value: hexToBigInt(tx.value as Hex),
+                        },
+                    ],
                 })
-                
+
                 // strip signature field from preparedUserOp
-                const { signature, ...updatedUserOp } = preparedUserOp;
+                const { signature, ...updatedUserOp } = preparedUserOp
 
                 const userOpHash = await smartAccountClient.sendUserOperation(updatedUserOp)
                 addPendingUserOp(user.address, {
