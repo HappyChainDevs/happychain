@@ -52,7 +52,7 @@ export async function depositPaymaster(): Promise<"success" | "reverted"> {
         address: entryPoint07Address,
         abi: abis.EntryPointV7,
         functionName: "depositTo",
-        args: [deployment.HappyPaymasterProxy],
+        args: [deployment.HappyPaymaster],
         value: DEPOSIT,
     })
 
