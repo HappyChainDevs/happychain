@@ -30,6 +30,7 @@ extra_output = ["storageLayout"]
 # Needed to write from the deploy scripts.
 fs_permissions = [
     { access = "read", path = "./deployments/anvil/testing/deployment.json" },
+    { access = "read", path = "./deployments/happy-sepolia/aa/deployment.json" },
     { access = "read", path = "./out/deployment.json" },
     { access = "write", path = "./out/deployment.json" },
     { access = "write", path = "./out/abiMap.json" },
