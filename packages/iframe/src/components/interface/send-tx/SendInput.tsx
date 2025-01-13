@@ -4,12 +4,13 @@ import type React from "react"
 import { useCallback } from "react"
 import { formatEther, parseEther } from "viem"
 import { useBalance } from "wagmi"
-import { useHappySendOptions } from "#src/hooks/useHappySendOptions"
+
+import { useHappySend } from "#src/hooks/useHappySend"
 import { userAtom } from "#src/state/user"
 
 const SendInput = () => {
     const user = useAtomValue(userAtom)
-    const { sendValue, setSendValue, balanceExceeded, setBalanceExceeded } = useHappySendOptions()
+    const { sendValue, setSendValue, balanceExceeded, setBalanceExceeded } = useHappySend()
     const { data: balance } = useBalance({ address: user?.address })
 
     const handleTokenBalanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
