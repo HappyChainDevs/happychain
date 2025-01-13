@@ -1,5 +1,6 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
+import { PopupBlockedError } from "../errors"
 import { convertErrorObjectToEIP1193ErrorInstance } from "../errors/utils"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
@@ -69,11 +70,16 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         const { promise, resolve, reject } = promiseWithResolvers<EIP1193RequestResult>()
         const requiresApproval = (await this.requiresUserApproval(args)) && (await this.requestExtraPermissions(args))
 
-        // noinspection JSVoidFunctionReturnValueUsed
-        const popup = requiresApproval
-            ? this.openPopupAndAwaitResponse(key, args, this.windowId as UUID)
-            : this.handlePermissionless(key, args)
+        if (!requiresApproval) {
+            this.handlePermissionless(key, args)
+            this.trackRequest(key, { resolve, reject })
+            return promise
+        }
+
+        const popup = this.openPopupAndAwaitResponse(key, args, this.windowId as UUID)
+
         this.trackRequest(key, { resolve, reject, popup: popup })
+
         return promise
     }
 
@@ -141,7 +147,8 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         }
         const searchParams = new URLSearchParams(opts).toString()
         const popup = window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
-        return popup ?? undefined
+        if (!popup) throw new PopupBlockedError()
+        return popup
     }
 
     /**

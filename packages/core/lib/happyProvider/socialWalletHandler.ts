@@ -5,6 +5,7 @@ import {
     BasePopupProvider,
     type EIP1193RequestParameters,
     type HappyUser,
+    LoginRequiredError,
     Msgs,
     type ProviderMsgsFromIframe,
 } from "@happy.tech/wallet-common"
@@ -115,9 +116,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
             // throw an error, so that login can be handled at the root HappyProvider
             // this is required so that if the user logs in with the injected wallet
             // we can continue the request there instead of here with the social wallet
-            throw new (class extends Error {
-                name = "LoginRequired"
-            })()
+            throw new LoginRequiredError()
         }
 
         // biome-ignore format: readability
