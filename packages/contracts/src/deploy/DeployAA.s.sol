@@ -16,8 +16,9 @@ import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
 // To ensure ABI generation.
-import {EntryPoint} from "account-abstraction/contracts/core/EntryPoint.sol"; /* solhint-disable-line */
-import {EntryPointSimulations} from "account-abstraction/contracts/core/EntryPointSimulations.sol"; /* solhint-disable-line */
+/* solhint-disable no-unused-import */
+import {EntryPoint} from "account-abstraction/contracts/core/EntryPoint.sol";
+import {EntryPointSimulations} from "account-abstraction/contracts/core/EntryPointSimulations.sol";
 
 contract DeployAAContracts is BaseDeployScript {
     using stdJson for string;
@@ -39,7 +40,10 @@ contract DeployAAContracts is BaseDeployScript {
     }
 
     // Expected addresses will be loaded from deployment.json
-    DeploymentAddresses public expected;
+    DeploymentAddresses private expected;
+    KernelFactory private factory;
+    FactoryStaker private staker;
+    HappyPaymaster private paymaster;
 
     error EntryPointDeploymentFailed();
     error EntryPointSimulationsDeploymentFailed();
@@ -101,13 +105,16 @@ contract DeployAAContracts is BaseDeployScript {
         deployed("Kernel", expected.kernel);
 
         if (expected.kernelFactory.code.length == 0) {
-            expected.kernelFactory = address(new KernelFactory{salt: DEPLOYMENT_SALT}(expected.kernel));
+            factory = new KernelFactory{salt: DEPLOYMENT_SALT}(expected.kernel);
+            expected.kernelFactory = address(factory);
         }
 
         deployed("KernelFactory", expected.kernelFactory);
 
         if (expected.factoryStaker.code.length == 0) {
-            expected.factoryStaker = address(new FactoryStaker{salt: DEPLOYMENT_SALT}(msg.sender));
+            staker = new FactoryStaker{salt: DEPLOYMENT_SALT}(msg.sender);
+            expected.factoryStaker = address(staker);
+            staker.approveFactory(factory, true);
         }
 
         deployed("FactoryStaker", expected.factoryStaker);
@@ -128,7 +135,7 @@ contract DeployAAContracts is BaseDeployScript {
 
         deployed("HappyPaymaster", expected.happyPaymaster);
 
-        HappyPaymaster paymaster = HappyPaymaster(expected.happyPaymaster);
+        paymaster = HappyPaymaster(expected.happyPaymaster);
         paymaster.deposit{value: PAYMASTER_DEPOSIT}();
 
         if (expected.sessionKeyValidator.code.length == 0) {

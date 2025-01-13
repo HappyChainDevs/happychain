@@ -104,7 +104,7 @@ abstract contract BaseDeployScript is Script {
         if (!alreadyDeployed) {
             // solhint-disable-next-line avoid-low-level-calls
             (bool success,) = _proxy.call(initData);
-            // solhint-disable-next-line gas-custom-errors
+            // solhint-disable-next-line custom-errors, gas-custom-errors
             require(success, "Initialization of proxy contract failed");
         }
 
