@@ -157,8 +157,8 @@ export class Transaction {
         this.createdAt = createdAt ?? new Date()
         this.updatedAt = updatedAt ?? new Date()
         this.metadata = metadata ?? {}
-        this.pendingFlush = pendingFlush === undefined ? true : pendingFlush
-        this.notPersisted = notPersisted === undefined ? true : notPersisted
+        this.pendingFlush = pendingFlush ?? true
+        this.notPersisted = notPersisted ?? true
     }
 
     addAttempt(attempt: Attempt): void {

@@ -2,12 +2,7 @@ import type { TransactionReceipt } from "viem"
 import type { Attempt, Transaction } from "./Transaction"
 import type { TransactionManager } from "./TransactionManager"
 
-export type RevertedTransactionReceipt<Status extends "success" | "reverted"> = TransactionReceipt<
-    bigint,
-    number,
-    Status,
-    "eip1559"
->
+export type RevertedTransactionReceipt = TransactionReceipt<bigint, number, "reverted", "eip1559">
 
 /**
  * Implement this interface and provide it in the {@link TransactionManager} constructor to define your custom retry policy.
@@ -19,7 +14,7 @@ export interface RetryPolicyManager {
         transactionManager: TransactionManager,
         transaction: Transaction,
         attempt: Attempt,
-        receipt: RevertedTransactionReceipt<"reverted">,
+        receipt: RevertedTransactionReceipt,
     ): Promise<boolean>
 }
 
@@ -28,7 +23,7 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
         transactionManager: TransactionManager,
         _: Transaction,
         attempt: Attempt,
-        receipt: RevertedTransactionReceipt<"reverted">,
+        receipt: RevertedTransactionReceipt,
     ): Promise<boolean> {
         return this.isOutOfGas(transactionManager, attempt, receipt)
     }
@@ -60,7 +55,7 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
     protected async isOutOfGas(
         transactionManager: TransactionManager,
         attempt: Attempt,
-        receipt: RevertedTransactionReceipt<"reverted">,
+        receipt: RevertedTransactionReceipt,
     ): Promise<boolean> {
         const revertReason = await this.getRevertReason(transactionManager, attempt)
 

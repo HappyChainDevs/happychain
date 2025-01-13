@@ -43,19 +43,16 @@ export type TransactionManagerConfig = {
         url: string
         /**
          * The timeout for the RPC node.
-         * It is very important that the value of (timeout + retryDelay) * retries be less than the time block to avoid slowing down the transaction manager.
          * Defaults to 500 milliseconds.
          */
         timeout?: number
         /**
          * The number of retries for the RPC node.
-         * It is very important that the value of (timeout + retryDelay) * retries be less than the time block to avoid slowing down the transaction manager.
          * Defaults to 2.
          */
         retries?: number
         /**
          * The delay between retries.
-         * It is very important that the value of (timeout + retryDelay) * retries be less than the time block to avoid slowing down the transaction manager.
          * Defaults to 50 milliseconds.
          */
         retryDelay?: number
@@ -250,13 +247,6 @@ export class TransactionManager {
         this.rpcAllowDebug = _config.rpc.allowDebug || false
         this.blockTime = _config.blockTime || 2n
         this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
-
-        const timePerRetry = timeout + retryDelay
-        if (timePerRetry * retries > this.blockTime * 1000n) {
-            console.warn(
-                "The value of (timeout + retryDelay) * retries is greater than the time block. This could slow down the transaction manager.",
-            )
-        }
     }
 
     /**
@@ -316,7 +306,6 @@ export class TransactionManager {
 
         if (rpcChainId.value !== this.chainId) {
             const errorMessage = `The chain ID of the RPC node (${rpcChainId.value}) does not match the chain ID of the transaction manager (${this.chainId}).`
-            console.error(errorMessage)
             throw new Error(errorMessage)
         }
 
