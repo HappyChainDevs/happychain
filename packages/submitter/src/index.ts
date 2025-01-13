@@ -1,18 +1,34 @@
 import { Hono } from "hono"
-import { serveStatic } from "hono/bun"
+import { zValidator } from '@hono/zod-validator'
+
+import type { Hex } from "viem"
+
+import { walletClient } from './utils/config'
+import { DeployAccountSchema, HappyTxSchema } from './utils/schema'
 
 const app = new Hono()
 
-app.use("/static/*", serveStatic({ root: "./" }))
-app.use("/favicon.ico", serveStatic({ path: "./favicon.ico" }))
-app.get("/", (c) => c.text("You can access: /static/hello.txt"))
-app.get("*", serveStatic({ path: "./static/fallback.txt" }))
+// Routes
+app.post('/deployAccount', zValidator('json', DeployAccountSchema), async (c) => {
+  const { factoryAddress, salt } = c.req.valid('json')
+  // Implementation will be added later
+  return c.json({ 
+    success: true, 
+    message: `Deployment initiated with factory ${factoryAddress} and salt ${salt}` 
+  })
+})
 
-// app.get('/', (c) => {
-//   return c.text('Hello Honooo!')
-// })
+app.post('/submitHappyTx', zValidator('json', HappyTxSchema), async (c) => {
+  const { encodedTx } = c.req.valid('json')
+  const hash = await walletClient.sendTransaction({
+    to: '0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd',
+    value: 0n,
+    data: encodedTx as Hex,
+  })
+  return c.json({ 
+    success: true, 
+    txHash: hash 
+  })
+})
 
-export default {
-    port: 3000,
-    fetch: app.fetch,
-}
+export default app

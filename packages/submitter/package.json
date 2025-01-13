@@ -1,12 +1,17 @@
 {
     "name": "submitter",
+    "version": "1.0.0",
     "scripts": {
         "dev": "bun run --hot src/index.ts"
     },
     "dependencies": {
-        "hono": "^4.6.16"
+        "hono": "^3.0.0",
+        "@hono/zod-validator": "^0.1.11",
+        "viem": "^2.21.18",
+        "zod": "^3.22.4"
     },
     "devDependencies": {
+        "@happychain/configs": "workspace:^",
         "@types/bun": "latest"
     }
 }
