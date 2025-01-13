@@ -27,3 +27,11 @@ export const bigIntReplacer = (_key: string, value: unknown): unknown => {
 export const bigIntReviver = (_key: string, value: unknown): unknown => {
     return typeof value === "string" && value.startsWith("#bigint.") ? BigInt(value.slice(8)).valueOf() : value
 }
+
+/**
+ * Converts a bigint to a zero-padded string
+ */
+export function bigIntToZeroPadded(value: bigint, totalDigits: number): string {
+    const str = value.toString()
+    return str.padStart(totalDigits, "0")
+}

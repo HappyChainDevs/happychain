@@ -16,7 +16,7 @@ export type {
     Hex,
 } from "./utils/types.js"
 
-export { bigIntMax, bigIntReplacer, bigIntReviver } from "./utils/bigint.js"
+export { bigIntMax, bigIntReplacer, bigIntReviver, bigIntToZeroPadded } from "./utils/bigint.js"
 
 export { validateNumericInput } from "./utils/regexChecks.js"
 

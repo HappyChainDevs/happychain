@@ -1,11 +1,10 @@
 import crypto from "node:crypto"
-import { type UUID, unknownToError } from "@happychain/common"
-import { sql } from "kysely"
+import { type UUID, bigIntToZeroPadded, unknownToError } from "@happychain/common"
 import { type Result, ResultAsync } from "neverthrow"
 import type { Hex } from "viem"
 import { encodePacked, keccak256 } from "viem"
 import { db } from "./db/driver"
-import { commitmentInfoToDb, dbToCommitmentInfo } from "./db/types"
+import { commitmentInfoToDb, dbToCommitmentInfo, DIGITS_MAX_UINT256 } from "./db/types"
 
 export interface CommitmentInfo {
     timestamp: bigint
@@ -55,9 +54,9 @@ export class CommitmentManager {
             db
                 .deleteFrom("commitments")
                 .where(
-                    sql<number>`CAST("timestamp" AS INTEGER)`,
+                    "timestamp",
                     "<",
-                    Number(latestBlockTimestamp - COMMITMENT_PRUNE_INTERVAL_SECONDS),
+                    bigIntToZeroPadded(latestBlockTimestamp - COMMITMENT_PRUNE_INTERVAL_SECONDS, DIGITS_MAX_UINT256),
                 )
                 .execute(),
             unknownToError,
