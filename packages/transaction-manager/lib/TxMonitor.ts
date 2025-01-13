@@ -76,10 +76,12 @@ export class TxMonitor {
             let isResolved = false
             const { promise: receiptPromise, resolve, reject: _reject } = promiseWithResolvers<AttemptWithReceipt>()
 
-            /*
-                We request receipts for all attempts in parallel. Since only one attempt can have a receipt due to they have the same nonce,
-                we can terminate the process as soon as a receipt is obtained. This is why we use a promise race.
-            */
+            /**
+             *   We request receipts for all attempts in parallel. Since only one attempt can have a receipt due to all of them sharing the same nonce,
+             *   we can terminate the process as soon as a receipt is obtained. This is why we use a {@link Promise.race}
+             *   between a promise that resolves on the receipt and all individual promises that resolve when
+             *   the call returns (with {@link TransactionReceiptNotFoundError}).
+             */
             const promises: Promise<Result<AttemptWithReceipt | null, GetTransactionReceiptErrorType>>[] =
                 inAirAttempts.map(
                     async (attempt): Promise<Result<AttemptWithReceipt | null, GetTransactionReceiptErrorType>> => {
@@ -132,7 +134,7 @@ export class TxMonitor {
                 this.transactionManager,
                 transaction,
                 attempt,
-                receipt as RevertedTransactionReceipt<"reverted">,
+                receipt as RevertedTransactionReceipt,
             )
 
             if (!shouldRetry) {
