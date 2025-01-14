@@ -108,7 +108,7 @@ export const EthSendTransaction = ({
     }, [maxFeePerGas, maxPriorityFeePerGas, isError])
 
     const abiForContract =
-        user?.address && targetContractAddress && recordedAbisForUser[user.address][targetContractAddress]
+        user?.address && targetContractAddress && recordedAbisForUser[user.address]?.[targetContractAddress]
 
     // Decodes the function call data for the given contract ABI and transaction data.
     const decodedData = useMemo(() => {
