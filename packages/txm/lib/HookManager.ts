@@ -24,7 +24,10 @@ export type TxmTransactionSaveFailedHookPayload = {
     transaction: Transaction
 }
 
-export type TxmHookPayload = TxmTransactionStatusChangedHookPayload | TxmNewBlockHookPayload | TxmTransactionSaveFailedHookPayload
+export type TxmHookPayload =
+    | TxmTransactionStatusChangedHookPayload
+    | TxmNewBlockHookPayload
+    | TxmTransactionSaveFailedHookPayload
 
 export type TxmHookHandler<T extends TxmHookType = TxmHookType> = (
     event: Extract<TxmHookPayload, { type: T }> extends never ? TxmHookPayload : Extract<TxmHookPayload, { type: T }>,
@@ -83,7 +86,7 @@ export class HookManager {
             }),
         )
     }
-    
+
     private async onNewBlock(block: LatestBlock): Promise<void> {
         ;[...this.hooks[TxmHookType.NewBlock], ...this.hooks[TxmHookType.All]].forEach((h) =>
             h({
