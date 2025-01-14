@@ -86,19 +86,23 @@ export const ImportTokensDialog = () => {
             const decimals = formData.get("decimals") as string
 
             if (address && symbol && decimals) {
-                const watchOp = await watchAssetAsync({
-                    type: "ERC20",
-                    options: {
-                        address: address,
-                        symbol: symbol,
-                        decimals: Number(decimals),
-                    },
-                })
-
-                if (watchOp && status === "success") setVisibility(false)
+                try {
+                    await watchAssetAsync({
+                        type: "ERC20",
+                        options: {
+                            address: address,
+                            symbol: symbol,
+                            decimals: Number(decimals),
+                        },
+                    })
+                    setVisibility(false)
+                } catch (error) {
+                    // Handle error if needed
+                    console.error("Error adding token:", error)
+                }
             }
         },
-        [setVisibility, status, watchAssetAsync],
+        [setVisibility, watchAssetAsync],
     )
 
     return (
