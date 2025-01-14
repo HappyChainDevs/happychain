@@ -36,7 +36,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     ///      Given RLP encoding, this should be significantly less.
     uint256 private constant MAX_TX_SIZE = 100; // TODO
 
-    /// @dev Theis spaymaster sponsors all calls to this contract.
+    /// @dev This spaymaster sponsors all calls to this contract.
     address private immutable TARGET;
 
     /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte
@@ -45,7 +45,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
 
     // TODO namespace these fields for easier account upgrades (think on this when turning this into a proxy)
     /// @dev The deterministic EntryPoint contract
-    address private immutable ENTRYPOINT;
+    address public immutable ENTRYPOINT;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
