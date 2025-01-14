@@ -2,13 +2,14 @@
 pragma solidity ^0.8.20;
 
 import {IHappyPaymaster, SubmitterFeeTooHigh, WrongTarget} from "../interfaces/IHappyPaymaster.sol";
+import {NotFromEntryPoint} from "../utils/Common.sol";
 import {HappyTx} from "../core/HappyTx.sol";
 
 /**
  * @title ScrappyPaymaster
  * @notice An example paymaster contract implementing the IHappyPaymaster interface.
  */
-contract HappyPaymaster is IHappyPaymaster {
+contract ScrappyPaymaster is IHappyPaymaster {
     //* //////////////////////////////////////
     //* Constants ////////////////////////////
     //* //////////////////////////////////////
@@ -52,7 +53,7 @@ contract HappyPaymaster is IHappyPaymaster {
 
     /// @dev Checks if the the call was made from the EntryPoint contract
     modifier onlyFromEntryPoint() {
-        if (msg.sender != ENTRYPOINT) revert NotFromEntrypoint();
+        if (msg.sender != ENTRYPOINT) revert NotFromEntryPoint();
         _;
     }
 
