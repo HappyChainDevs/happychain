@@ -1,0 +1,53 @@
+name: Deploy staging react demo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build code
+        env:
+          IFRAME_URL: "https://iframe.happy.tech"
+        run: |
+          make setup
+          make demo-react.build
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "packages/demo-react/dist"
+          target: /home/deployer/staging-react-demo
+          strip_components: 3 # Remove the first 3 levels of directories from the source path to copy only the files inside dist
+          rm: true
+
+      - name: Deploy staging react demo to server
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            chmod -R o+rX /home/deployer/staging-react-demo
+            mv /home/deployer/staging-react-demo /tmp
+            sudo -u staging_react_demo bash -c '
+              rm -rf /var/www/staging-react-demo/*
+              cp -r /tmp/staging-react-demo/* /var/www/staging-react-demo
+            '
+            rm -rf /tmp/staging-react-demo

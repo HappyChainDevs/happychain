@@ -272,6 +272,11 @@ demo-js.build: setup shared.build
 	cd packages/demo-vanillajs && make build
 .PHONY: demo-js.build
 
+demo-react.build: setup shared.build
+	cd packages/sdk-react && make build
+	cd packages/demo-react && make build
+.PHONY: demo-react.build
+
 demos.build:
 	$(call forall_make , $(DEMOS_PKGS) , build)
 .PHONY: apps.build
