@@ -65,8 +65,8 @@ export class HookManager {
     }
 
     private async onTransactionStatusChanged(payload: { transaction: Transaction }): Promise<void> {
-        ;[...this.hooks[TxmHookType.TransactionStatusChanged], ...this.hooks[TxmHookType.All]].forEach((h) =>
-            h({
+        ;[...this.hooks[TxmHookType.TransactionStatusChanged], ...this.hooks[TxmHookType.All]].forEach((hook) =>
+            hook({
                 type: TxmHookType.TransactionStatusChanged,
                 transaction: payload.transaction,
             }),
