@@ -8,7 +8,7 @@ pragma solidity ^0.8.20;
 contract BasicNonceManager {
     event NonceUsed(uint256 indexed nonce);
 
-    uint256 private _nonce;
+    uint256 internal _nonce;
 
     function getNonce() external view returns (uint256) {
         return _nonce;
