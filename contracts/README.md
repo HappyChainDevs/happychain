@@ -13,6 +13,7 @@ Tooling required:
 Run `make setup` and customize `.env` if necessary.
 
 By default:
+
 - `PRIVATE_KEY_LOCAL` is set the to the first Anvil devnet account (seeded by ETH)
 
 ## Makefile Commands
@@ -42,7 +43,9 @@ By default:
 
 - `make anvil` — run local Anvil devnet on port 1337
 - `make validate-upgrades` — uses OpenZeppelin Upgrades to perform checks related to upgradeability (automatically called by `make deploy`)
+
 ----
+
 - `make deploy` — executes a deploy script to deploy contracts to the chain, with many options (env variables):
   - `$CONFIG` — the configuration to use (one of `LOCAL` (default), `TEST`, `MAIN`)
   - `$(RPC_($CONFIG))` (e.g. `$RPC_LOCAL`) — the RPC endpoint to use in the given config
@@ -59,7 +62,9 @@ By default:
   - `$DEPLOY_SCRIPT` — the basename of the deploy script to use from the deployment (looked in up `src/deploy`, defaults to `DeployL1Upgradeable.s.sol`)
   - `$(VERIFY_$(CONFIG))` — whether to verify the contracts on Etherscan in the given config
     - `$ETHERSCAN_API_KEY` — the Etherscan API key to use for verification
+
 ----
+
 - `make save-deployment` — saves information related to the latest deployment to `deployment/$DEPLOYMENT_NAME`:
   - a mapping of contract aliases to addresses in `deployment.json`
     - The aliases are specified in the deploy script, they're necessary because we could deploy multiple copy of the same contract.
@@ -74,6 +79,7 @@ requires knowing the constructor arguments, and these are not saved automaticall
 log them from the deploy script.
 
 To use Foundry accounts, run:
+
 ```sh
 cast wallet import <account-name> --interactive
 ```
@@ -83,6 +89,7 @@ Then copy your private key in, set a password (don't reuse), and save the passwo
 name in `$(ACCOUNT_$(CONFIG))`.
 
 Full example for the `LOCAL` config with the first Anvil key:
+
 ```sh
 cast wallet import test-account-0 --interactive
 echo "password" > .password.local
