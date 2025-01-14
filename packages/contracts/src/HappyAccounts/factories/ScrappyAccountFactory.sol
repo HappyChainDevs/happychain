@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {LibClone} from "solady/utils/LibClone.sol";
-import {ScrappyAccount} from "../core/ScrappyAccount.sol";
 import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
 
 /**

@@ -2,18 +2,31 @@
 pragma solidity ^0.8.20;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
-import {IHappyAccount, ExecutionOutput, GasPriceTooHigh, WrongAccount} from "../interfaces/IHappyAccount.sol";
+import {
+    IHappyAccount,
+    ExecutionOutput,
+    GasPriceTooHigh,
+    InvalidNonce,
+    WrongAccount
+} from "../interfaces/IHappyAccount.sol";
 
 import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {BasicNonceManager} from "./BasicNonceManager.sol";
-import {UnknownDuringSimulation, NotFromEntryPoint} from "../utils/Common.sol";
+import {
+    FutureNonceDuringSimulation,
+    InvalidOwnerSignature,
+    NotFromEntryPoint,
+    UnknownDuringSimulation
+} from "../utils/Common.sol";
 
 /**
  * @title  ScrappyAccount
@@ -29,6 +42,7 @@ contract ScrappyAccount is
     UUPSUpgradeable
 {
     using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
 
     //* //////////////////////////////////////
     //* Constants ////////////////////////////
@@ -40,11 +54,11 @@ contract ScrappyAccount is
     uint256 private constant GAS_OVERHEAD_BUFFER = 100; // TODO
 
     // TODO namespace these fields for easier account upgrades (think on this when turning this into a proxy)
-    /// @dev The factory that deployed this proxy
-    address private immutable FACTORY;
-
     /// @dev The deterministic EntryPoint contract
     address private immutable ENTRYPOINT;
+
+    /// @dev The factory that deployed this proxy
+    address private _factory;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
@@ -72,14 +86,7 @@ contract ScrappyAccount is
 
     /// @dev Checks if the the call was made from the EntryPoint contract
     modifier onlyFromEntryPoint() {
-        if (msg.sender != ENTRYPOINT) revert NotFromEntrypoint();
-        _;
-    }
-
-    modifier onlyForThisAccount(HappyTx memory happyTx) {
-        if (happyTx.account != address(this)) {
-            return WrongAccount.selector;
-        }
+        if (msg.sender != ENTRYPOINT) revert NotFromEntryPoint();
         _;
     }
 
@@ -87,18 +94,18 @@ contract ScrappyAccount is
     //* Constructor //////////////////////////
     //* //////////////////////////////////////
 
-    constructor(address _entryPoint, address _owner) {
+    constructor(address _entrypoint) {
+        ENTRYPOINT = _entrypoint;
         _disableInitializers();
     }
 
     /**
      * @dev Initializer for proxy instances
      *      Called by factory during proxy deployment
-     * @param _newOwner The owner who can upgrade the implementation
+     * @param _owner The owner who can upgrade the implementation
      */
-    function initialize(address _entryPoint, address _owner) external initializer {
-        ENTRYPOINT = _entryPoint;
-        owner = _owner;
+    function initialize(address _owner) external initializer {
+        _factory = msg.sender;
         __Ownable_init(_owner);
         __UUPSUpgradeable_init();
     }
@@ -112,12 +119,16 @@ contract ScrappyAccount is
     //* External functions ///////////////////
     //* //////////////////////////////////////
 
-    function validate(HappyTx memory happyTx) external onlyForThisAccount(happyTx) returns (bytes4) {
+    function validate(HappyTx memory happyTx) external returns (bytes4) {
+        if (happyTx.account != address(this)) {
+            return WrongAccount.selector;
+        }
+
         if (tx.gasprice > happyTx.maxFeePerGas) {
             return GasPriceTooHigh.selector;
         }
 
-        int256 nonceAhead = nonce - int256(_nonce);
+        int256 nonceAhead = int256(happyTx.nonce) - int256(_nonce);
         bool isSimulation = tx.origin == address(0); // solhint-disable-line avoid-tx-origin
         if (!_validateAndUpdateNonce(nonceAhead, isSimulation)) {
             return InvalidNonce.selector;
@@ -141,29 +152,33 @@ contract ScrappyAccount is
 
         // NOTE: This function may consume slightly more gas during simulation, in accordance to the spec.
         return isSimulation
-            ? signer == this.owner
-                ? nonceAhead == 0 ? 0 : FutureNonceDuringSimulation.selector
+            ? signer == owner()
+                ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
                 : UnknownDuringSimulation.selector
-            : signer == this.owner ? 0 : InvalidOwnerSignature.selector;
+            : signer == owner() ? bytes4(0) : InvalidOwnerSignature.selector;
     }
 
-    function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput output) {
+    function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
         uint256 startGas = gasleft();
 
         (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
         if (!success) {
             output.revertData = returnData;
-            return;
+            return output;
         }
 
         // TODO: get upper limit of gas costs that can't be metered via gasleft()
         // (Solidity gas overhead + gas math and assignment)
-        output.gas = startGas - gasLeft() + GAS_OVERHEAD_BUFFER;
+        output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
     }
 
-    function payout(HappyTx memory happyTx) external onlyFromEntryPoint onlyForThisAccount(happyTx) returns (bytes4) {
-        uint256 owed = (consumedGas + INTRINSIC_GAS + GAS_OVERHEAD_BUFFER + HappyTxLib.txGasFromCallGas()) // TODO
-            * happyTx.maxFeePerGas + happyTx.submitterFee;
+    function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
+        if (happyTx.account != address(this)) {
+            return WrongAccount.selector;
+        }
+
+        uint256 owed = (consumedGas + INTRINSIC_GAS + GAS_OVERHEAD_BUFFER) // TODO
+            * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
 
         // solhint-disable-next-line avoid-tx-origin
         payable(tx.origin).call{value: owed}("");
@@ -174,8 +189,8 @@ contract ScrappyAccount is
     //* Special functions ////////////////////
     //* //////////////////////////////////////
 
-    function isValidSignature(bytes32 hash, bytes memory signature) external pure returns (bytes4) {
-        return hash.recover(signature) == owner ? MAGIC_VALUE : 0;
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
+        return hash.recover(signature) == owner() ? MAGIC_VALUE : bytes4(0);
     }
 
     receive() external payable {
@@ -190,19 +205,15 @@ contract ScrappyAccount is
     //* View functions ///////////////////////
     //* //////////////////////////////////////
 
-    function entryPoint() external view override returns (address) {
+    function entryPoint() external view returns (address) {
         return ENTRYPOINT;
     }
 
     function factory() external view override returns (address) {
-        return FACTORY;
+        return _factory;
     }
 
-    function getOwner() external view override returns (address) {
-        return owner;
-    }
-
-    function supportsInterface(bytes4 interfaceId) external view returns (bool) {
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         return interfaceId == INTERFACE_ID;
     }
 }
