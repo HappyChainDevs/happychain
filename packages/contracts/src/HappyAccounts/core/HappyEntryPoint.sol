@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
-import {ReentrancyGuardTransient} from "@openzeppelin/utils/ReentrancyGuardTransient.sol";
+import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {FutureNonceDuringSimulation, UnknownDuringSimulation} from "../utils/Common.sol";
 import {IHappyAccount, ExecutionOutput} from "../interfaces/IHappyAccount.sol";
@@ -99,7 +99,7 @@ event CallReverted(bytes revertData);
  */
 event ExecutionReverted(bytes revertData);
 
-contract EntryPoint is ReentrancyGuardTransient {
+contract HappyEntryPoint is ReentrancyGuardTransient {
     // Must use to avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
 
