@@ -43,7 +43,8 @@ export const ImportTokensDialog = () => {
     const {
         data: { decimals, symbol } = {},
         isRefetching,
-    } = useERC20Balance(inputAddress as Address, user?.address as Address)
+        isLoading,
+    } = useERC20Balance(inputAddress as Address, user?.address as Address, true)
 
     // --- conditions for elements being disabled / readOnly ---
 
@@ -52,8 +53,8 @@ export const ImportTokensDialog = () => {
     const isValidAddress = isAddress(inputAddress)
 
     // Show error and allow manual entry if we have a valid address but no contract data
-    const symbolInputInvalidCondition = isValidAddress && symbol === undefined && customTokenSymbol === ""
-    const decimalsInputInvalidCondition = isValidAddress && decimals === undefined
+    const symbolInputInvalidCondition = !isLoading && isValidAddress && symbol === undefined && customTokenSymbol === ""
+    const decimalsInputInvalidCondition = !isLoading && isValidAddress && decimals === undefined
 
     // Fields should be readonly if contract data was successfully fetched
     const symbolInputReadOnly = isValidAddress && symbol !== undefined
@@ -119,13 +120,12 @@ export const ImportTokensDialog = () => {
                     originY: "bottom",
                 })}
             >
-                <Dialog.Content className="text-center overflow-y-auto bg-base-100 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
+                <Dialog.Content className="text-center overflow-y-auto bg-base-300 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
                     <div className="flex flex-row my-auto gap-1 items-start">
                         <div className="flex flex-col w-full items-start justify-start">
-                            <Dialog.Title className="text-start font-bold text-base-content">Import Token</Dialog.Title>
-                            <Dialog.Description className="text-start text-content text-xs italic">
-                                Enter Token Specifications (ERC-20)
-                            </Dialog.Description>
+                            <Dialog.Title className="text-start font-bold text-base-content">
+                                Import ERC-20 Token
+                            </Dialog.Title>
                         </div>
 
                         <Dialog.CloseTrigger>
@@ -156,7 +156,6 @@ export const ImportTokensDialog = () => {
                         </FieldInput>
 
                         <FieldInput
-                            helperLabel="Symbol"
                             errorLabel="Invalid Token Address"
                             invalid={symbolInputInvalidCondition}
                             isLoading={isRefetching}
@@ -176,13 +175,12 @@ export const ImportTokensDialog = () => {
                         </FieldInput>
 
                         {/*
-                         * Decimals field value behavior:
+                         * `Decimals` field value behavior:
                          * - Empty if no valid address is entered
                          * - Shows decimals from contract if available
                          * - Defaults to "18" if contract read fails (most tokens use 18 decimals)
                          */}
                         <FieldInput
-                            helperLabel="Decimals"
                             errorLabel="Invalid Token Address"
                             invalid={decimalsInputInvalidCondition}
                             isLoading={isRefetching}
@@ -204,7 +202,7 @@ export const ImportTokensDialog = () => {
 
                         <Button
                             type="submit"
-                            intent="secondary"
+                            intent={"primary"}
                             className="text-neutral-content justify-center"
                             isLoading={status === "pending"}
                             disabled={submitButtonDisabledCondition}

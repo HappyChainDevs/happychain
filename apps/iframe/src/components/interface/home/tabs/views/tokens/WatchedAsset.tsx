@@ -1,4 +1,3 @@
-import { Warning } from "@phosphor-icons/react"
 import { useMemo, useState } from "react"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
 
@@ -26,7 +25,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
 
     // type assertion(s) as Address here valid since before adding a token
     // we check that the input string is an Address using the viem helper
-    const { data: balanceData } = useERC20Balance(tokenAddress as Address, userAddress)
+    const { data: balanceData } = useERC20Balance(tokenAddress as Address, userAddress, true)
 
     // shortened fields for UI visibility
     const tokenSymbol = useMemo(
@@ -69,10 +68,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
                 {truncatedBalance ? (
                     <span className="font-semibold text-sm truncate">{truncatedBalance}</span>
                 ) : (
-                    <span className="flex items-center gap-1 ml-2">
-                        <span className="sr-only">Read Failure</span>
-                        <Warning size="1em" />
-                    </span>
+                    <span>⚠️</span>
                 )}
                 <RemoveTokenMenu tokenAddress={tokenAddress as Address} userAddress={userAddress} />
             </div>

@@ -22,7 +22,11 @@ export type UseERC20BalanceReturnType = UseReadContractsReturnType<
  * and a `formatted` value - using the obtained decimals value to format the balance,
  * to be used in the UI.
  */
-export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20BalanceReturnType {
+export function useERC20Balance(
+    assetAddr: Address,
+    userAddr: Address,
+    disableRefetch = false,
+): UseERC20BalanceReturnType {
     const tokenContract = {
         address: assetAddr,
         abi: erc20Abi,
@@ -48,7 +52,10 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
             enabled: !!assetAddr && !!userAddr,
             retry: 3,
             retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-            // check when retry is underway, show spinner in UI
+            // disable automatic refetching on refocus / remount
+            refetchOnWindowFocus: !disableRefetch,
+            refetchOnMount: !disableRefetch,
+            // format fetched data
             select(data): ERC20BalanceQueryData {
                 const [balanceResult, decimalsResult, symbolResult] = data
                 const value = balanceResult.result
@@ -62,7 +69,8 @@ export function useERC20Balance(assetAddr: Address, userAddr: Address): UseERC20
                 }
 
                 // compute formatted value only if both values are read from the contract
-                const formatted = value && decimals ? formatUnits(value, decimals) : undefined
+                const formatted =
+                    value !== undefined && decimals !== undefined ? formatUnits(value, decimals) : undefined
 
                 return {
                     value,
