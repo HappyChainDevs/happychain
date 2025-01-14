@@ -11,6 +11,9 @@
         "./mocks/sepolia": "./deployments/happy-sepolia/mocks/abis.ts",
         "./random/anvil": "./deployments/anvil/random/abis.ts"
     },
+    "scripts": {
+        "test": "vitest happyTx"
+    },
     "dependencies": {
         "@kevincharm/bls-bn254": "^2.0.0",
         "@openzeppelin/contracts": "^5.0.2",
@@ -29,6 +32,7 @@
         "node-jq": "^6.0.1",
         "permissionless": "^0.2.0",
         "solhint": "^5.0.5",
-        "viem": "^2.21.18"
+        "viem": "^2.21.18",
+        "vitest": "^2.1.8"
     }
 }

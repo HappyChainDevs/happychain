@@ -1,4 +1,4 @@
-import type { Address, Hex } from "viem";
+import type { Address, Hex } from "viem"
 
 /**
  * @title HappyTx
@@ -32,21 +32,17 @@ import type { Address, Hex } from "viem";
  * @param extraData          - Reserved for future extensions and custom implementations
  */
 export interface HappyTx {
-    account: Address;
-    gasLimit: bigint;
-    executeGasLimit: bigint;
-    dest: Address;
-    paymaster: Address;
-    value: bigint;
-    nonce: bigint;
-    maxFeePerGas: bigint;
-    submitterFee: bigint;
-    callData: Hex;
-    paymasterData: Hex;
-    validatorData: Hex;
-    extraData: Hex;
-}
-
-export interface SubmitHappyTxRequest {
-    happyTx: HappyTx;
+    account: Address
+    gasLimit: bigint
+    executeGasLimit: bigint
+    dest: Address
+    paymaster: Address
+    value: bigint
+    nonce: bigint
+    maxFeePerGas: bigint
+    submitterFee: bigint
+    callData: Hex
+    paymasterData: Hex
+    validatorData: Hex
+    extraData: Hex
 }
