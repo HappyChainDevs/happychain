@@ -56,11 +56,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                     account: smartAccountClient.account,
                     calls: [{
                         to: tx.to,
-                        value: hexToBigInt(tx.value as Hex),
+                        data: tx.data,
+                        value: tx.value? hexToBigInt(tx.value as Hex) :0n,
                       }
                     ]
                 })
-                
+                console.log("preparedUserOp:", preparedUserOp)
                 // strip signature field from preparedUserOp
                 const { signature, ...updatedUserOp } = preparedUserOp;
                 // const userOpHash = await smartAccountClient.sendUserOperation(updatedUserOp)
@@ -80,7 +81,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 console.log("userOpHash:", userOpHash)
                 addPendingUserOp(user.address, {
                     userOpHash: userOpHash as Hash,
-                    value: hexToBigInt(tx.value as Hex),
+                    value: tx.value? hexToBigInt(tx.value as Hex) :0n,
                 })
 
                 return userOpHash
