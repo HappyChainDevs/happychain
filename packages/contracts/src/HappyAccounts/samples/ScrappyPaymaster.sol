@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
+import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+
+import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
+
 import {IHappyPaymaster, SubmitterFeeTooHigh, WrongTarget} from "../interfaces/IHappyPaymaster.sol";
 import {NotFromEntryPoint} from "../utils/Common.sol";
 import {HappyTx} from "../core/HappyTx.sol";
@@ -9,10 +16,15 @@ import {HappyTx} from "../core/HappyTx.sol";
  * @title ScrappyPaymaster
  * @notice An example paymaster contract implementing the IHappyPaymaster interface.
  */
-contract ScrappyPaymaster is IHappyPaymaster {
+contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
+    using ECDSA for bytes32;
+
     //* //////////////////////////////////////
     //* Constants ////////////////////////////
     //* //////////////////////////////////////
+
+    /// @dev ERC-1271
+    bytes4 private constant MAGIC_VALUE = 0x1626ba7e;
 
     /// @dev TODO is the fixed siz of the MUD-encoded happyTx
     uint256 private constant TODO_VAR_1 = 224; // TODO Finalize
@@ -31,8 +43,16 @@ contract ScrappyPaymaster is IHappyPaymaster {
     ///      of data in the submitter tx.
     uint256 private immutable MAX_SUBMITTER_FEE_PER_BYTE;
 
-    /// @dev The owner of the smart account
-    address private owner;
+    // TODO namespace these fields for easier account upgrades (think on this when turning this into a proxy)
+    /// @dev The deterministic EntryPoint contract
+    address private immutable ENTRYPOINT;
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[50] private __gap;
 
     //* //////////////////////////////////////
     //* Events ///////////////////////////////
@@ -57,58 +77,47 @@ contract ScrappyPaymaster is IHappyPaymaster {
         _;
     }
 
-    modifier onlyForThisDest(HappyTx memory happyTx) {
-        if (happyTx.dest != TARGET) {
-            return WrongTarget.selector;
-        }
-        _;
-    }
-
     //* //////////////////////////////////////
     //* Constructor //////////////////////////
     //* //////////////////////////////////////
-    constructor(address _target, uint256 _maxSubmitterFeePerByte, address _owner) {
-        TARGET = _target;
-        MAX_SUBMITTER_FEE_PER_BYTE = _maxSubmitterFeePerByte;
-        owner = _owner;
+    constructor(address _entrypoint) {
+        ENTRYPOINT = _entrypoint;
+        _disableInitializers();
     }
 
     /**
      * @dev Initializer for proxy instances
      *      Called by factory during proxy deployment
-     * @param _newOwner The owner who can upgrade the implementation
+     * @param _owner The owner who can upgrade the implementation
      */
-    function initialize(address _newOwner) external payable {
-        // TODO
+    function initialize(address _owner) external initializer {
+        __Ownable_init(_owner);
+        __UUPSUpgradeable_init();
     }
 
-    function setOwner(address _owner) external {
-        if (msg.sender != address(this)) {
-            revert NotFromAccount();
-        }
-
-        owner = _owner;
-    }
+    /// @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
+    /// @param newImplementation The address of the new implementation contract
+    /// @dev Only callable by the owner
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     //* //////////////////////////////////////
     //* External functions ///////////////////
     //* //////////////////////////////////////
 
-    function payout(HappyTx memory happyTx, uint256 consumedGas)
-        external
-        onlyFromEntryPoint
-        onlyForThisDest
-        returns (bytes4)
-    {
+    function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
+        if (happyTx.dest != TARGET) {
+            return WrongTarget.selector;
+        }
+
         uint256 maxSubmitterFee = (
-            MAX_TX_SIZE + TODO_VAR + happyTx.callData.length + happyTx.validatorData.length + happyTx.extraData.length
+            MAX_TX_SIZE + TODO_VAR_1 + happyTx.callData.length + happyTx.validatorData.length + happyTx.extraData.length
         ) * MAX_SUBMITTER_FEE_PER_BYTE;
 
-        if (happyTx.submitterFee > maxSubmitterFee) {
+        if (uint256(happyTx.submitterFee) > maxSubmitterFee) {
             return SubmitterFeeTooHigh.selector;
         }
 
-        uint256 owed = (consumedGas + TODO_VAR_2) * happyTx.maxFeePerGas + happyTx.submitterFee;
+        uint256 owed = (consumedGas + TODO_VAR_2) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
 
         // solhint-disable-next-line avoid-tx-origin
         payable(tx.origin).call{value: owed}("");
@@ -118,6 +127,10 @@ contract ScrappyPaymaster is IHappyPaymaster {
     //* //////////////////////////////////////
     //* Special functions ////////////////////
     //* //////////////////////////////////////
+
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
+        return hash.recover(signature) == owner() ? MAGIC_VALUE : bytes4(0);
+    }
 
     receive() external payable {
         emit Received(msg.sender, msg.value);
