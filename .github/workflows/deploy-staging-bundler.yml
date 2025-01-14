@@ -1,0 +1,66 @@
+name: Deploy ERC-4337 staging bundler
+
+on:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  ORGANIZATION: happychaindevs
+  PM2_PROCESS_NAME: happy-staging-bundler
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+      
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build code
+        run: |
+          cd packages/bundler
+          make setup
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "packages/bundler/alto/*,packages/bundler/configs/config.happySepolia.json"
+          target: /home/deployer/happy-staging-bundler
+          strip_components: 2   
+          rm: true
+
+      - name: Deploy bundler to server
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            chmod -R o+rX /home/deployer/happy-staging-bundler
+            mv /home/deployer/happy-staging-bundler /tmp
+            sudo -u staging_bundler bash -c '
+              rm -rf /home/staging_bundler/happy-staging-bundler
+              cp -r /tmp/happy-staging-bundler /home/staging_bundler/happy-staging-bundler
+              cd /home/staging_bundler/happy-staging-bundler
+              pm2 delete ${{ env.PM2_PROCESS_NAME }}
+              pm2 start ./alto/src/lib/cli/alto.js \
+                  --name ${{ env.PM2_PROCESS_NAME }} \
+                  -- run \
+                  --config ./configs/config.happySepolia.json \
+                  --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} \
+                  --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }}
+              pm2 save
+            '
+            rm -rf /tmp/happy-staging-bundler
