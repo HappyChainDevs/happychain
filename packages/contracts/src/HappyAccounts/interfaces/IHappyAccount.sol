@@ -9,7 +9,7 @@ import {HappyTx} from "../core/HappyTx.sol";
  * @param revertData  - The associated revert data if the call specified by the happyTx reverts; otherwise, it is empty.
  */
 struct ExecutionOutput {
-    bytes32 gas;
+    uint256 gas;
     bytes revertData;
 }
 

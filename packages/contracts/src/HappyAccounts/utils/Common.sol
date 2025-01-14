@@ -27,4 +27,9 @@ error UnknownDuringSimulation();
  * Functions that are supposed to be called from the EntryPoint contract but are not
  * should *revert* with this error.
  */
-error NotFromEntrypoint();
+error NotFromEntryPoint();
+
+/*
+ * Selector returned by {@link IHappyAccount.validte} when the happyTx's signature is invalid.
+ */
+error InvalidOwnerSignature();
