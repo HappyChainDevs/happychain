@@ -3,7 +3,7 @@ import { Spinner } from "@phosphor-icons/react"
 import type { PropsWithChildren } from "react"
 
 interface FieldInputProps extends FieldRootProps, PropsWithChildren {
-    helperLabel: React.ReactNode
+    helperLabel?: React.ReactNode
     errorLabel: React.ReactNode
     isLoading?: boolean
 }
@@ -17,18 +17,19 @@ export const FieldInput = (props: FieldInputProps) => {
             {...rootProps}
         >
             {children}
-            <div className="flex flex-row w-full items-center justify-start">
+            <div className="flex flex-row h-3.5 w-full items-center justify-start">
                 {rootProps.invalid && (
                     <Field.ErrorText className="text-start text-error/80 text-xs">{errorLabel}</Field.ErrorText>
                 )}
                 {!rootProps.invalid && (
-                    <Field.HelperText className="text-start text-neutral-content/70 text-xs">
+                    <Field.HelperText className="text-start text-content/70 text-xs">
                         {props.helperLabel}
                     </Field.HelperText>
                 )}
+
                 {isLoading && (
                     <span data-loader className="pe-1">
-                        <Spinner className="animate-spin text-[1.25em]" />
+                        <Spinner className="animate-spin text-[0.875em]" />
                     </span>
                 )}
             </div>
