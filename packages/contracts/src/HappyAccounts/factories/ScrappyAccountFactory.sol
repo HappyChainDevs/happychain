@@ -13,7 +13,10 @@ contract ScrappyAccountFactory {
     error AlreadyDeployed();
 
     /// @dev The implementation contract that all proxies will delegate to {@link ScrappyAccount}.
-    address public immutable IMPLEMENTATION;
+    address public immutable ACCOUNT_IMPLEMENTATION;
+
+    /// @dev The deterministic EntryPoint contract
+    address private immutable ENTRYPOINT;
 
     /**
      * @dev Emitted when a new HappyAccount is created
@@ -22,8 +25,9 @@ contract ScrappyAccountFactory {
      */
     event HappyAccountCreated(address indexed account, bytes32 salt);
 
-    constructor(address _implementation) {
-        IMPLEMENTATION = _implementation;
+    constructor(address _accountImplementation, address _entryPoint) {
+        ACCOUNT_IMPLEMENTATION = _accountImplementation;
+        ENTRYPOINT = _entryPoint;
     }
 
     /**
@@ -32,20 +36,16 @@ contract ScrappyAccountFactory {
      * @param salt A unique salt for deterministic deployment
      * @return The address of the created account
      */
-    function createAccount(bytes calldata initData, address entryPoint, address owner)
-        public
-        payable
-        returns (address)
-    {
+    function createAccount(bytes calldata initData, bytes32 salt, address owner) public payable returns (address) {
         bytes32 actualSalt = keccak256(abi.encodePacked(initData, salt));
         (bool alreadyDeployed, address account) =
-            LibClone.createDeterministicERC1967(msg.value, IMPLEMENTATION, actualSalt);
+            LibClone.createDeterministicERC1967(msg.value, ACCOUNT_IMPLEMENTATION, actualSalt);
 
         if (alreadyDeployed) {
             revert AlreadyDeployed();
         }
 
-        ScrappyAccount(account).initialize(entryPoint, owner);
+        ScrappyAccount(payable(account)).initialize(owner);
         emit HappyAccountCreated(account, salt);
         return account;
     }
@@ -58,6 +58,6 @@ contract ScrappyAccountFactory {
      */
     function getAddress(bytes calldata initData, bytes32 salt) public view returns (address) {
         bytes32 actualSalt = keccak256(abi.encodePacked(initData, salt));
-        return LibClone.predictDeterministicAddressERC1967(IMPLEMENTATION, actualSalt, address(this));
+        return LibClone.predictDeterministicAddressERC1967(ACCOUNT_IMPLEMENTATION, actualSalt, address(this));
     }
 }
