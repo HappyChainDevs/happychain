@@ -32,14 +32,12 @@ contract ScrappyAccountFactory {
 
     /**
      * @dev Creates a new HappyAccount proxy
-     * @param initData The initialization data for the account
      * @param salt A unique salt for deterministic deployment
      * @return The address of the created account
      */
-    function createAccount(bytes calldata initData, bytes32 salt, address owner) public payable returns (address) {
-        bytes32 actualSalt = keccak256(abi.encodePacked(initData, salt));
+    function createAccount(bytes32 salt, address owner) public payable returns (address) {
         (bool alreadyDeployed, address account) =
-            LibClone.createDeterministicERC1967(msg.value, ACCOUNT_IMPLEMENTATION, actualSalt);
+            LibClone.createDeterministicERC1967(msg.value, ACCOUNT_IMPLEMENTATION, salt);
 
         if (alreadyDeployed) {
             revert AlreadyDeployed();
