@@ -25,6 +25,7 @@
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
+        "@happychain/contracts": "workspace:^",
         "tsx": "^4.19.0",
         "typescript": "^5.3.3",
         "vitest": "^2.1.8"

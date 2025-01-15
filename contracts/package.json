@@ -9,7 +9,11 @@
     "exports": {
         "./account-abstraction/sepolia": "./deployments/happy-sepolia/aa/abis.ts",
         "./mocks/sepolia": "./deployments/happy-sepolia/mocks/abis.ts",
-        "./random/anvil": "./deployments/anvil/random/abis.ts"
+        "./random/anvil": "./deployments/anvil/random/abis.ts",
+        "": "",
+        "./happyAccount/anvil": "./deployments/anvil/happyAccount/abis.ts",
+        "./happyAccount/sepolia": "./deployments/happy-sepolia/happyAccount/abis.ts",
+        "./mockTokens/sepolia": "./deployments/happy-sepolia/mockTokens/abis.ts"
     },
     "scripts": {
         "test": "vitest happyTx"
