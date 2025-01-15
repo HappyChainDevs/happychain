@@ -1,27 +1,26 @@
-import { createPublicClient, createWalletClient, http } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
-import { localhost } from 'viem/chains'
+import type { Hex } from "viem"
+import { z } from "zod"
 
-if (!process.env.PRIVATE_KEY) {
-    throw new Error('PRIVATE_KEY environment variable is required')
-}
-
-if (!process.env.RPC_URL) {
-    throw new Error('RPC_URL environment variable is required')
-}
-
-const privateKey = process.env.PRIVATE_KEY as `0x${string}`
-const rpcURL = process.env.RPC_URL
-
-export const account = privateKeyToAccount(privateKey)
-
-export const walletClient = createWalletClient({
-    account,
-    chain: localhost,
-    transport: http(rpcURL)
+const envSchema = z.object({
+    PRIVATE_KEY: z
+        .string()
+        .trim()
+        .transform((val) => val as Hex),
+    RPC_URL: z.string().trim().url(),
 })
 
-export const publicClient = createPublicClient({
-    chain: localhost,
-    transport: http(rpcURL)
+const parsedEnv = envSchema.safeParse({
+    PRIVATE_KEY_LOCAL: process.env.PRIVATE_KEY_LOCAL,
+    BUNDLER_LOCAL: process.env.BUNDLER_LOCAL,
+    RPC_LOCAL: process.env.RPC_LOCAL,
 })
+
+if (!parsedEnv.success) {
+    console.error(parsedEnv.error.issues)
+    throw new Error("Missing or invalid environment variables")
+}
+
+const { PRIVATE_KEY, RPC_URL } = parsedEnv.data
+
+export const privateKey = PRIVATE_KEY
+export const rpcURL = RPC_URL

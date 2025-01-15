@@ -1,17 +1,32 @@
 {
-    "name": "submitter",
+    "name": "@happychain/submitter",
+    "author": "Norswap",
+    "license": "BSD-3-Clause-Clear",
     "version": "1.0.0",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        "./utils/requestSchema": "./src/utils/requestSchema.ts",
+        "./utils/responseSchema": "./src/utils/responseSchema.ts"
+    },
     "scripts": {
-        "dev": "bun run --hot src/index.ts"
+        "build": "tsc",
+        "test": "vitest",
+        "test:coverage": "vitest run --coverage",
+        "dev": "tsx watch src/index.ts"
     },
     "dependencies": {
         "hono": "^3.0.0",
+        "@hono/node-server": "^1.3.3",
         "@hono/zod-validator": "^0.1.11",
         "viem": "^2.21.18",
         "zod": "^3.22.4"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
-        "@types/bun": "latest"
+        "tsx": "^4.19.0",
+        "typescript": "^5.3.3",
+        "vitest": "^2.1.8"
     }
 }
