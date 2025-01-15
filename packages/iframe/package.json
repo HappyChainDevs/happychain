@@ -27,7 +27,7 @@
         "lodash": "^4.17.21",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "permissionless": "^0.2.0",
+        "permissionless": "0.2.25",
         "viem": "^2.21.53",
         "wagmi": "^2.13.3",
         "zod": "^3.23.8"

@@ -36,7 +36,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
     const user = getUser()
-    const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
+    
 
     if (!user) {
         console.warn("Request approved, but no user found")
@@ -50,6 +50,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             //      that occured in the old convertToUserOp call and were being swallowed.
             //      We need to make sure all errors are correctly surfaced!
             try {
+                const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
                 console.log("eth_sendTransaction request:", request)
                 const tx = request.payload.params[0]
                 const preparedUserOp = await smartAccountClient.prepareUserOperation({
@@ -74,17 +75,19 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 // console.log(client.signUserOperation(preparedUserOp))  
 
                 const userOpWithSig = {...updatedUserOp, signature: _signature}
-                const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
+                
+                return "0x"
+                // const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
                 
                 
                 
-                console.log("userOpHash:", userOpHash)
-                addPendingUserOp(user.address, {
-                    userOpHash: userOpHash as Hash,
-                    value: tx.value? hexToBigInt(tx.value as Hex) :0n,
-                })
+                // console.log("userOpHash:", userOpHash)
+                // addPendingUserOp(user.address, {
+                //     userOpHash: userOpHash as Hash,
+                //     value: tx.value? hexToBigInt(tx.value as Hex) :0n,
+                // })
 
-                return userOpHash
+                // return userOpHash
             } catch (error) {
                 console.error("Sending UserOp errored", error)
                 throw error
