@@ -8,6 +8,7 @@ env:
   REGISTRY: ghcr.io
   ORGANIZATION: happychaindevs
   PM2_PROCESS_NAME: happy-staging-bundler
+  PORT: 49533
 
 jobs:
   deploy:
@@ -61,7 +62,8 @@ jobs:
                   -- run \
                   --config ./configs/config.happySepolia.json \
                   --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} \
-                  --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }}
+                  --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }} \
+                  --port ${{ env.PORT }}
               pm2 save
             '
             rm -rf /tmp/happy-staging-bundler
