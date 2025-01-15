@@ -1,6 +1,6 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { EIP1193ErrorCodes, GenericProviderRpcError } from "../errors"
+import { EIP1193ErrorCodes, GenericProviderRpcError, LoginRequiredError } from "../errors"
 import { convertErrorObjectToEIP1193ErrorInstance } from "../errors/utils"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
@@ -86,7 +86,10 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
 
             return promise
         } catch (e) {
-            // all errors must be some form of the standard eip1193 error...
+            // forward login required errors to be handled elsewhere
+            if (e instanceof LoginRequiredError) throw e
+
+            // all other errors must be some form of the standard eip1193 error...
             // This normalizes for use with libraries such as viem & ethers
             if (e instanceof GenericProviderRpcError) throw e
 
