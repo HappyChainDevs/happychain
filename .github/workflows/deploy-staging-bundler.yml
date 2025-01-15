@@ -61,8 +61,8 @@ jobs:
                   --name ${{ env.PM2_PROCESS_NAME }} \
                   -- run \
                   --config ./configs/config.happySepolia.json \
-                  --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} \
-                  --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }} \
+                  --executor-private-keys ${{ secrets.STAGING_BUNDLER_EXECUTOR_WALLET }} \
+                  --utility-private-key ${{ secrets.STAGING_BUNDLER_UTILITY_WALLET }} \
                   --port ${{ env.PORT }}
               pm2 save
             '
