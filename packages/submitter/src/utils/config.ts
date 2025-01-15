@@ -7,12 +7,13 @@ const envSchema = z.object({
         .trim()
         .transform((val) => val as Hex),
     RPC_URL: z.string().trim().url(),
+    PORT: z.string().transform((val) => Number.parseInt(val, 10)),
 })
 
 const parsedEnv = envSchema.safeParse({
-    PRIVATE_KEY_LOCAL: process.env.PRIVATE_KEY_LOCAL,
-    BUNDLER_LOCAL: process.env.BUNDLER_LOCAL,
-    RPC_LOCAL: process.env.RPC_LOCAL,
+    PRIVATE_KEY: process.env.PRIVATE_KEY,
+    RPC_URL: process.env.RPC_URL,
+    PORT: process.env.PORT,
 })
 
 if (!parsedEnv.success) {
@@ -20,7 +21,8 @@ if (!parsedEnv.success) {
     throw new Error("Missing or invalid environment variables")
 }
 
-const { PRIVATE_KEY, RPC_URL } = parsedEnv.data
+const { PRIVATE_KEY, RPC_URL, PORT } = parsedEnv.data
 
 export const privateKey = PRIVATE_KEY
 export const rpcURL = RPC_URL
+export const port = PORT

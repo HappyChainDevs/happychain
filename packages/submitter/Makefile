@@ -17,3 +17,8 @@ format:
 .PHONY: format
 
 ####################################################################################################
+# Server
+
+server:
+	@tsx --env-file=.env ./src/cmd/index.ts
+.PHONY: server

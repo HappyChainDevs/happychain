@@ -1,7 +1,7 @@
 import type { Hex } from "viem"
 import { z } from "zod"
 
-export const CreateAccountResponseSchema = z.object({
+export const DeployAccountResponseSchema = z.object({
     accountAddress: z
         .string()
         .regex(/^0x[0-9a-fA-F]{40}$/)
@@ -21,8 +21,8 @@ export const SubmitHappyTxResponseSchema = z.object({
     success: z.boolean(),
 })
 
-export type CreateAccountResponse = {
-    accountAddress: Hex
+export type DeployAccountResponse = {
+    owner: Hex
     factoryAddress: Hex
     success: boolean
 }

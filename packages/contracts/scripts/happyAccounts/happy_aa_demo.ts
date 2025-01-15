@@ -1,7 +1,8 @@
-import { type Address, parseEther } from "viem"
+import type { Address, Hex } from "viem"
 import { account } from "../utils/clients"
 
-import type { CreateAccountResponse, SubmitHappyTxResponse } from "@happychain/submitter/utils/responseSchema"
+import { type DeployAccountRequest, DeployAccountSchema } from "@happychain/submitter/utils/requestSchema"
+import type { DeployAccountResponse, SubmitHappyTxResponse } from "@happychain/submitter/utils/responseSchema"
 
 // interface CreateAccountResponse {
 //   accountAddress: Address
@@ -20,21 +21,31 @@ import type { CreateAccountResponse, SubmitHappyTxResponse } from "@happychain/s
  * @param salt A unique value to determine the account address
  * @returns The response containing the new account address
  */
-async function createAccount(owner: Address, salt: string): Promise<CreateAccountResponse> {
+async function createAccount(owner: Address, salt: Hex): Promise<DeployAccountResponse> {
     try {
-        const response = await fetch("http://localhost:3000/create-account", {
+        // Create the request body
+        const requestBody: DeployAccountRequest = {
+            owner,
+            salt,
+        }
+
+        // Validate the request body against the schema
+        const validationResult = DeployAccountSchema.safeParse(requestBody)
+        if (!validationResult.success) {
+            console.error("Invalid request body:", validationResult.error)
+            throw new Error("Invalid request data")
+        }
+
+        const response = await fetch("http://localhost:3000/deployAccount", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                owner,
-                salt,
-                initData: "0x", // Add any initialization data if needed
-            }),
+            body: JSON.stringify(validationResult.data),
         })
 
         if (!response.ok) {
+            console.log("Create account response: ", response)
             throw new Error(`HTTP error! status: ${response.status}`)
         }
 
@@ -96,23 +107,9 @@ async function submitHappyTx(
 async function main() {
     try {
         // Create a new account
-        const salt = "0x" + "00".repeat(32) // Example salt
+        const salt = "0x0000000000000000000000000000000000000000000000000000000000000000"
         const createAccountResult = await createAccount(account.address, salt)
-        console.log("Created account:", createAccountResult)
-
-        if (createAccountResult.success) {
-            // Submit a transaction from the new account
-            const submitTxResult = await submitHappyTx(
-                createAccountResult.accountAddress,
-                "0x1234567890123456789012345678901234567890", // Example target address
-                parseEther("0.1"), // Example value
-                "0x", // Example calldata
-                BigInt(30000000000), // maxFeePerGas (30 gwei)
-                BigInt(2000000000), // maxPriorityFeePerGas (2 gwei)
-                BigInt(1000000000), // submitterFee (1 gwei)
-            )
-            console.log("Submitted transaction:", submitTxResult)
-        }
+        console.log("Created account: ", createAccountResult)
     } catch (error) {
         console.error("Error in demo:", error)
     }

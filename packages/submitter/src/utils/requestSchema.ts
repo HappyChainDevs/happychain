@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const DeployAccountSchema = z.object({
-    factoryAddress: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
+    owner: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
     salt: z.string().regex(/^0x[0-9a-fA-F]+$/),
 })
 
