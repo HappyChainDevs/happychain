@@ -3,6 +3,7 @@ import type {
     HappyUser,
     MsgsFromApp,
     MsgsFromIframe,
+    OverlayErrorCode,
     ProviderMsgsFromApp,
     ProviderMsgsFromIframe,
 } from "@happy.tech/wallet-common"
@@ -160,6 +161,9 @@ export const showSendScreen = (): void => {
 export function emitWalletDisplayAction(open: boolean) {
     void iframeMessageBus?.emit(Msgs.RequestWalletDisplay, open ? WalletDisplayAction.Open : WalletDisplayAction.Closed)
 }
+export function emitSetDisplayError(errorCode: OverlayErrorCode) {
+    void iframeMessageBus?.emit(Msgs.SetOverlayError, errorCode)
+}
 
 export function openWallet() {
     return emitWalletDisplayAction(true)
@@ -198,7 +202,9 @@ const getListeners = () => {
               onWalletVisibilityUpdate: () => () => {},
               onAuthStateUpdate: () => () => {},
               onIframeInit: () => () => {},
+              onDisplayOverlayError: () => () => {},
           }
 }
 
-export const { onUserUpdate, onWalletVisibilityUpdate, onAuthStateUpdate, onIframeInit } = getListeners()
+export const { onUserUpdate, onWalletVisibilityUpdate, onAuthStateUpdate, onIframeInit, onDisplayOverlayError } =
+    getListeners()

@@ -4,7 +4,6 @@ import {
     EIP1193UserRejectedRequestError,
     LoginRequiredError,
     Msgs,
-    PopupBlockedError,
     SafeEventEmitter,
     WalletDisplayAction,
     WalletType,
@@ -83,12 +82,6 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
             return await this.activeHandler.request(args)
         } catch (e) {
             const isConnectionRequest = this.isConnectionRequest(args)
-
-            if (e instanceof PopupBlockedError) {
-                // TODO: display 'popup block' error in wallet, or toast.
-                // for now we just throw the error
-                throw e
-            }
 
             if (e instanceof LoginRequiredError) {
                 const resp = await this.requestLogin(args)

@@ -7,6 +7,7 @@ import {
     type HappyUser,
     LoginRequiredError,
     Msgs,
+    OverlayErrorCode,
     type ProviderMsgsFromIframe,
 } from "@happy.tech/wallet-common"
 import { config } from "../config"
@@ -66,6 +67,10 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         // The social provider is always connected: it can always access the iframe's provider
         // for public calls.
         return true
+    }
+
+    protected onPopupBlocked() {
+        this.config.msgBus.emit(Msgs.SetOverlayError, OverlayErrorCode.PopupBlocked)
     }
 
     protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {

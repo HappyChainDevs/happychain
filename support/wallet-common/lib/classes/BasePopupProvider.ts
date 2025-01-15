@@ -1,6 +1,6 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { PopupBlockedError } from "../errors"
+import { EIP1193ErrorCodes, GenericProviderRpcError } from "../errors"
 import { convertErrorObjectToEIP1193ErrorInstance } from "../errors/utils"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
@@ -52,6 +52,8 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     protected abstract popupBaseUrl: string
 
     private readonly inFlightRequests: Map<string, InFlightRequest>
+    protected abstract onPopupBlocked(): void
+
     private timer: Timer | null = null
 
     protected constructor(private windowId: UUID) {
@@ -66,21 +68,35 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      * Sends an EIP-1193 request to the provider.
      */
     public async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
-        const key = createUUID()
-        const { promise, resolve, reject } = promiseWithResolvers<EIP1193RequestResult>()
-        const requiresApproval = (await this.requiresUserApproval(args)) && (await this.requestExtraPermissions(args))
+        try {
+            const key = createUUID()
+            const { promise, resolve, reject } = promiseWithResolvers<EIP1193RequestResult>()
+            const requiresApproval =
+                (await this.requiresUserApproval(args)) && (await this.requestExtraPermissions(args))
 
-        if (!requiresApproval) {
-            this.handlePermissionless(key, args)
-            this.trackRequest(key, { resolve, reject })
+            if (!requiresApproval) {
+                this.handlePermissionless(key, args)
+                this.trackRequest(key, { resolve, reject })
+                return promise
+            }
+
+            const popup = this.openPopupAndAwaitResponse(key, args, this.windowId as UUID)
+
+            this.trackRequest(key, { resolve, reject, popup: popup })
+
             return promise
+        } catch (e) {
+            // all errors must be some form of the standard eip1193 error...
+            // This normalizes for use with libraries such as viem & ethers
+            if (e instanceof GenericProviderRpcError) throw e
+
+            const code =
+                (e as GenericProviderRpcError)?.code in EIP1193ErrorCodes
+                    ? (e as GenericProviderRpcError).code
+                    : EIP1193ErrorCodes.Unknown
+            const message: string = (e as Error)?.message || "An unknown error occurred"
+            throw new GenericProviderRpcError({ code, message, data: message })
         }
-
-        const popup = this.openPopupAndAwaitResponse(key, args, this.windowId as UUID)
-
-        this.trackRequest(key, { resolve, reject, popup: popup })
-
-        return promise
     }
 
     /**
@@ -146,9 +162,10 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
             iframeIndex: iframeIndex.toString(),
         }
         const searchParams = new URLSearchParams(opts).toString()
+
         const popup = window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
-        if (!popup) throw new PopupBlockedError()
-        return popup
+        if (!popup) this.onPopupBlocked()
+        return popup ?? undefined
     }
 
     /**

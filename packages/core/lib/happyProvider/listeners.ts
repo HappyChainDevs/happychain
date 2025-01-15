@@ -6,6 +6,7 @@ import {
     Msgs,
     type MsgsFromApp,
     type MsgsFromIframe,
+    type OverlayErrorCode,
 } from "@happy.tech/wallet-common"
 
 /**
@@ -18,6 +19,8 @@ export type UserUpdateCallback = (user?: HappyUser) => void
 export type WalletVisibilityCallback = (state: { isOpen: boolean }) => void
 
 export type AuthStateUpdateCallback = (state: AuthState) => void
+
+export type DisplayOverlayErrorCallback = (state: OverlayErrorCode) => void
 
 export type IframeInitCallback = (isInit: boolean) => void
 
@@ -34,35 +37,31 @@ export type IframeInitCallback = (isInit: boolean) => void
  */
 export type ListenerUnsubscribeFn = () => void
 
+function executeCallbacks<T>(callbacks: Set<(_args: T) => void>, args: T) {
+    for (const call of callbacks) {
+        call(args)
+    }
+}
+
+function createListener<T>(callbacks: Set<T>, callback: T): ListenerUnsubscribeFn {
+    callbacks.add(callback)
+    return () => {
+        callbacks.delete(callback)
+    }
+}
+
 export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromApp>) {
     const onUserUpdateCallbacks = new Set<UserUpdateCallback>()
     const onWalletVisibilityCallbacks = new Set<WalletVisibilityCallback>()
     const onIframeInitCallbacks = new Set<IframeInitCallback>()
     const onAuthStateUpdateCallbacks = new Set<AuthStateUpdateCallback>()
+    const onDisplayOverlayErrorCallbacks = new Set<DisplayOverlayErrorCallback>()
 
-    messageBus.on(Msgs.UserChanged, (user) => {
-        for (const call of onUserUpdateCallbacks) {
-            call(user)
-        }
-    })
-
-    messageBus.on(Msgs.AuthStateChanged, (state) => {
-        for (const call of onAuthStateUpdateCallbacks) {
-            call(state)
-        }
-    })
-
-    messageBus.on(Msgs.WalletVisibility, ({ isOpen }) => {
-        for (const call of onWalletVisibilityCallbacks) {
-            call({ isOpen })
-        }
-    })
-
-    messageBus.on(Msgs.IframeInit, (isInit) => {
-        for (const call of onIframeInitCallbacks) {
-            call(isInit)
-        }
-    })
+    messageBus.on(Msgs.UserChanged, (user) => executeCallbacks(onUserUpdateCallbacks, user))
+    messageBus.on(Msgs.AuthStateChanged, (state) => executeCallbacks(onAuthStateUpdateCallbacks, state))
+    messageBus.on(Msgs.WalletVisibility, (isOpen) => executeCallbacks(onWalletVisibilityCallbacks, isOpen))
+    messageBus.on(Msgs.IframeInit, (isInit) => executeCallbacks(onIframeInitCallbacks, isInit))
+    messageBus.on(Msgs.DisplayOverlayError, (errorCode) => executeCallbacks(onDisplayOverlayErrorCallbacks, errorCode))
 
     /**
      * Register a new callback which will be triggered
@@ -78,16 +77,9 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * @param callback
      */
     const onUserUpdate = (callback: UserUpdateCallback): ListenerUnsubscribeFn => {
-        onUserUpdateCallbacks.add(callback)
         const currentUser = getUser()
-        if (currentUser) {
-            void Promise.resolve().then(() => {
-                callback(currentUser)
-            })
-        }
-        return () => {
-            onUserUpdateCallbacks.delete(callback)
-        }
+        if (currentUser) void Promise.resolve().then(() => callback(currentUser))
+        return createListener(onUserUpdateCallbacks, callback)
     }
 
     /**
@@ -98,10 +90,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * @returns Unsubscribe function
      */
     const onWalletVisibilityUpdate = (callback: WalletVisibilityCallback): ListenerUnsubscribeFn => {
-        onWalletVisibilityCallbacks.add(callback)
-        return () => {
-            onWalletVisibilityCallbacks.delete(callback)
-        }
+        return createListener(onWalletVisibilityCallbacks, callback)
     }
 
     /**
@@ -112,10 +101,7 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * @returns Unsubscribe function
      */
     const onAuthStateUpdate = (callback: AuthStateUpdateCallback): ListenerUnsubscribeFn => {
-        onAuthStateUpdateCallbacks.add(callback)
-        return () => {
-            onAuthStateUpdateCallbacks.delete(callback)
-        }
+        return createListener(onAuthStateUpdateCallbacks, callback)
     }
 
     /**
@@ -126,10 +112,18 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      * @returns Unsubscribe function
      */
     const onIframeInit = (callback: IframeInitCallback): ListenerUnsubscribeFn => {
-        onIframeInitCallbacks.add(callback)
-        return () => {
-            onIframeInitCallbacks.delete(callback)
-        }
+        return createListener(onIframeInitCallbacks, callback)
+    }
+
+    /**
+     * Called when the iframe finishes initializing and web3 connection is confirmed
+     *
+     * @internal
+     * @param IframeInitCallback
+     * @returns Unsubscribe function
+     */
+    const onDisplayOverlayError = (callback: DisplayOverlayErrorCallback): ListenerUnsubscribeFn => {
+        return createListener(onDisplayOverlayErrorCallbacks, callback)
     }
 
     return {
@@ -137,5 +131,6 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
         onWalletVisibilityUpdate,
         onAuthStateUpdate,
         onIframeInit,
+        onDisplayOverlayError,
     }
 }

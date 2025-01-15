@@ -1,0 +1,83 @@
+:host {
+    --warning-red: #dc2626;
+    --success-green: #fed7aa;
+}
+
+.dialog-background {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999999999999999;
+    display: none; /* animated updates to display: flex */
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: center;
+
+    /* From https://css.glass */
+    background: rgba(69, 69, 69, 0.2);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(4px);
+}
+
+.dialog {
+    border-radius: 8px;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: 0.25rem solid var(--warning-red);
+
+    display: flex;
+    align-items: center;
+    text-align: left;
+
+    /* From https://www.cssmatic.com/box-shadow */
+    box-shadow: 10px 10px 43px 5px rgba(0, 0, 0, 0.5);
+
+    .dialog-close {
+        border: none;
+        margin: 0;
+        background: transparent;
+        padding: 0rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 0;
+        cursor: pointer;
+        right: 0;
+    }
+
+    .dialog-sidebar {
+        height: 100%;
+        padding: 1rem;
+        font-size: 5rem;
+
+        display: none;
+        align-items: center;
+        justify-content: center;
+
+        @media (min-width: 768px) {
+            display: flex;
+        }
+    }
+
+    .dialog-title {
+        font-size: 1.25rem;
+        font-style: italic;
+        font-weight: 800;
+        color: #000000;
+        margin-bottom: 0.5rem;
+    }
+
+    .dialog-content {
+        max-width: 400px;
+        padding: 1rem;
+        font-size: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0rem;
+        color: #00000069;
+    }
+}
