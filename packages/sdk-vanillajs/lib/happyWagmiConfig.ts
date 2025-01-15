@@ -1,6 +1,7 @@
-import { type HappyProvider, happyProvider } from "@happychain/js"
 import { type Config, type CreateConnectorFn, createConfig, custom, injected } from "@wagmi/core"
 import type { Chain } from "@wagmi/core/chains"
+import type { HappyProvider } from "./happyProvider/happyProvider"
+import { happyProvider } from "./happyProvider/initialize"
 
 /**
  * A custom wagmi [Connector](https://wagmi.sh/react/api/connectors/injected) that is 
