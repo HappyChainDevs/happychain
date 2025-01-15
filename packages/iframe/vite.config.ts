@@ -6,7 +6,7 @@ import { defineConfig, loadEnv } from "vite"
 import z from "zod"
 
 const envConfigSchema = z.object({
-    VITE_BUNDLER_RPC_URL:  z.string().refine((url) => url.startsWith('http'), {
+    VITE_BUNDLER_RPC_URL: z.string().refine((url) => url.startsWith('http'), {
         message: 'VITE_BUNDLER_RPC_URL must start with "http"',
     }),
     VITE_FIREBASE_API_KEY: z.string(),
