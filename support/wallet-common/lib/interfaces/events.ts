@@ -1,4 +1,5 @@
 import type { EIP1193ErrorObject } from "../errors"
+import type { OverlayErrorCode } from "../errors/overlay-errors"
 import type { EIP1193EventName, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193.ts"
 import type { EIP6963ProviderInfo } from "./eip6963"
 import type { AuthState, HappyUser } from "./happyUser"
@@ -35,10 +36,16 @@ export enum Msgs {
     /** Announces injected wallets to the iframe following EIP-6963 'detail.info' format. */
     AnnounceInjectedProvider = "announce-injected-provider",
 
+    /** Informs the iframe to request the overlay to display an error message */
+    SetOverlayError = "set-overlay-error",
+
     // --- EventsFromIframe ------------------------------------------------------------------------
 
     /** Informs the SDK that the iframe has loaded and initialized. */
     IframeInit = "iframe-init",
+
+    /** Informs the overlay to display an error message */
+    DisplayOverlayError = "display-overlay-error",
 
     /** Instructs the SDK to resize the resize the iframe to toggle the wallet modal. */
     WalletVisibility = "wallet-visibility",
@@ -147,6 +154,7 @@ export type MsgsFromApp = {
               response?: undefined
           }
     [Msgs.RequestWalletDisplay]: WalletDisplayAction
+    [Msgs.SetOverlayError]: OverlayErrorCode
 }
 
 // =================================================================================================
@@ -163,6 +171,7 @@ interface AuthResponse<
  */
 export type MsgsFromIframe = {
     [Msgs.IframeInit]: boolean
+    [Msgs.DisplayOverlayError]: OverlayErrorCode
     [Msgs.ConnectResponse]: AuthResponse
     [Msgs.WalletVisibility]: { isOpen: boolean }
     [Msgs.UserChanged]: HappyUser | undefined

@@ -2,6 +2,7 @@ import { defaultChain } from "@happy.tech/wallet-common"
 import define from "preact-custom-element"
 import { defineBadgeComponent } from "./badge/define"
 import { windowId } from "./happyProvider/initialize"
+import { HappyOverlay } from "./overlay/HappyOverlay"
 import { HappyWallet } from "./wallet/HappyWallet"
 import { isFirefox, makeIframeUrl } from "./wallet/utils"
 
@@ -52,6 +53,11 @@ export type WalletRegisterOptions = {
  * ```
  */
 export function register(opts: WalletRegisterOptions = {}) {
+    registerWallet(opts)
+    registerOverlay(opts)
+}
+
+function registerWallet(opts: WalletRegisterOptions) {
     // don't register if already exists on page
     if (customElements.get("happy-wallet") || document.querySelector("happy-wallet")) {
         return
@@ -60,12 +66,30 @@ export function register(opts: WalletRegisterOptions = {}) {
     define(HappyWallet, "happy-wallet", [], { shadow: true })
     defineBadgeComponent("happychain-connect-button", opts.overrideBadgeStyles)
 
-    const wallet = document.createElement("happy-wallet")
-
     const chainId = (opts.chainId || defaultChain.id).toString()
+
+    const iframe = createIframeSlot(chainId)
+
+    const wallet = document.createElement("happy-wallet")
     wallet.setAttribute("chain-id", chainId)
     wallet.setAttribute("window-id", windowId)
+    wallet.appendChild(iframe)
 
+    document.body.appendChild(wallet)
+}
+
+function registerOverlay(_opts: WalletRegisterOptions) {
+    if (customElements.get("happy-overlay") || document.querySelector("happy-overlay")) {
+        return
+    }
+
+    define(HappyOverlay, "happy-overlay", [], { shadow: true })
+
+    const overlay = document.createElement("happy-overlay")
+    document.body.appendChild(overlay)
+}
+
+function createIframeSlot(chainId: string) {
     const iframe = document.createElement("iframe")
     iframe.slot = "frame"
     iframe.title = "happy-iframe-slot"
@@ -77,7 +101,6 @@ export function register(opts: WalletRegisterOptions = {}) {
     iframe.style.width = "100%"
     iframe.style.border = "none"
     iframe.style.height = "100%"
-    wallet.appendChild(iframe)
 
-    document.body.appendChild(wallet)
+    return iframe
 }

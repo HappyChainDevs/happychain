@@ -1,3 +1,5 @@
+export { OverlayErrorCode } from "./overlay-errors"
+
 export {
     getEIP1193ErrorObjectFromCode,
     getEIP1193ErrorObjectFromUnknown,
