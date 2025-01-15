@@ -12,7 +12,7 @@ export const walletClientAtom: Atom<AccountWalletClient | undefined> = atom<Acco
     const user = get(userAtom)
     const provider = get(providerAtom)
     const transport = get(transportAtom)
-    if (!user?.address || !provider || !transport) return
+    if (!user?.controllingAddress || !provider || !transport) return
 
     return createWalletClient({ account: user.controllingAddress, transport })
 })

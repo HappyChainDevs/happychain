@@ -68,7 +68,6 @@ export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = 
 export const { getValue: getKernelAccount } = accessorsFromAtom(kernelAccountAtom)
 
 export async function getKernelAccountAddress(owner: Address): Promise<Address> {
-    console.log("getKernelAccountAddress for ", owner)
     const chain = getCurrentChain()
     const currentChain = convertToViemChain(chain)
     const contracts = getAccountAbstractionContracts(currentChain.chainId)
@@ -78,22 +77,19 @@ export async function getKernelAccountAddress(owner: Address): Promise<Address> 
     }
     const publicClient = createPublicClient(clientOptions)
     const initCode = getInitCode(contracts.ECDSAValidator, owner, contracts.KernelFactory)
-    const formattedInitCode = concat([contracts.FactoryStaker as Hex, initCode as Hex])
+    
+    // account init code is the concatenation of factory staker and account init code
+    const accountInitCode = concat([contracts.FactoryStaker as Hex, initCode as Hex])
     const senderFromFactory = await getSenderAddress(publicClient, {
-        initCode: formattedInitCode,
+        initCode: accountInitCode,
         entryPointAddress: entryPoint07Address,
     })
-    console.log("senderFromInitCode", senderFromFactory) 
-
-    
     return senderFromFactory
 }
 
 
 function getInitCode(ecdsaValidatorAddress: Address, owner: Address, factoryAddress: Address): Hex {
-    const initData = getInitializationData(ecdsaValidatorAddress, owner)
-    const accountInitCode = getAccountInitCode(factoryAddress, initData, 0)
-    return accountInitCode 
+    return getAccountInitCode(factoryAddress, getInitializationData(ecdsaValidatorAddress, owner), 0)
 }   
 
 function getAccountInitCode(factoryAddress: Address, initializationData: Hex, index: number): Hex {
@@ -118,27 +114,19 @@ function getInitializationData(ecdsaValidatorAddress: Address, owner: Address): 
     })
 }
 
-export const VALIDATOR_TYPE = {
+const VALIDATOR_TYPE = {
     ROOT: "0x00",
     VALIDATOR: "0x01",
     PERMISSION: "0x02"
 } as const
-export enum VALIDATOR_MODE {
-    DEFAULT = "0x00",
-    ENABLE = "0x01"
-}
 
-
-export const getEcdsaRootIdentifierForKernelV3 = (
+const getEcdsaRootIdentifierForKernelV3 = (
     validatorAddress: Address
-) => {
-    const ecdsaRoot = concatHex([VALIDATOR_TYPE.VALIDATOR, validatorAddress])
-    console.log("ecdsaRoot", ecdsaRoot)
-    return ecdsaRoot    
-}
+) => {return concatHex([VALIDATOR_TYPE.VALIDATOR, validatorAddress])}
 
 
-export const KernelV3MetaFactoryDeployWithFactoryAbi = [
+
+const KernelV3MetaFactoryDeployWithFactoryAbi = [
     {
         type: "function",
         name: "deployWithFactory",
@@ -156,7 +144,7 @@ export const KernelV3MetaFactoryDeployWithFactoryAbi = [
     }
 ] as const
 
-export const KernelV3_1AccountAbi = [
+const KernelV3_1AccountAbi = [
     {
         type: "function",
         name: "initialize",

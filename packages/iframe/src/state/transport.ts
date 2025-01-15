@@ -7,7 +7,6 @@ import { providerAtom } from "./provider"
 
 export const transportAtom = atom<CustomTransport | undefined>((get) => {
     const provider = get(providerAtom)
-    console.log("transportAtom called with provider", provider)
     return provider ? custom(provider) : undefined
 })
 

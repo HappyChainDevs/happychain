@@ -67,16 +67,16 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 // strip signature field from preparedUserOp
                 const _signature = await smartAccountClient.account.signUserOperation(preparedUserOp)
                 const userOpWithSig = {...preparedUserOp, signature: _signature}
+                
+                
                 const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
-                // console.log("userOpHash:", userOpHash)
+                console.log("userOpHash:", userOpHash)
                 
                 addPendingUserOp(user.address, {
                     userOpHash: userOpHash as Hash,
                     value: tx.value? hexToBigInt(tx.value as Hex) :0n,
                 })
                 return userOpHash
-
-                // return userOpHash
             } catch (error) {
                 console.error("Sending UserOp errored", error)
                 throw error
