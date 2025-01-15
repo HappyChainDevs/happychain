@@ -2,6 +2,7 @@ name: Deploy staging iframe
 
 on:
   workflow_dispatch:
+  pull_request:
 
 jobs:
   deploy:
