@@ -13,6 +13,14 @@
             "default": "./dist/index.es.js"
         }
     },
+    "peerDependencies": {
+        "@wagmi/core": ""
+    },
+    "peerDependenciesMeta": {
+        "@wagmi/core": {
+            "optional": true
+        }
+    },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
         "@happychain/build": "workspace:^",

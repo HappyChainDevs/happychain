@@ -43,3 +43,5 @@ export type {
 } from "@happychain/sdk-shared"
 
 export type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
+
+export { happyWagmiConnector, createHappyChainWagmiConfig } from "./happyWagmiConfig"
