@@ -74,7 +74,7 @@ setup: install-frozen enable-hooks enable-bun-lockfile-diffs ## To be run when f
 	$(call forall_make , $(ALL_PKGS) , setup)
 .PHONY: setup
 
-clean: ts.clean docs.clean contracts.clean ## Removes build artifacts
+clean: ts.clean sdk.clean docs.clean contracts.clean ## Removes build artifacts
 .PHONY: clean
 
 build: node_modules ts.build  ## Creates production builds
@@ -273,6 +273,7 @@ demo-js.build: setup shared.build
 .PHONY: demo-js.build
 
 demo-react.build: setup shared.build
+	cd packages/sdk-vanillajs && make build
 	cd packages/sdk-react && make build
 	cd packages/demo-react && make build
 .PHONY: demo-react.build
