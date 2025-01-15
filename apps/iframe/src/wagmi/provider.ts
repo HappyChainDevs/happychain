@@ -32,9 +32,8 @@ export class IframeProvider extends BasePopupProvider {
         super(iframeID())
     }
 
-    protected onPopupBlocked() {
-        // TODO: iframe side popup-block handling
-    }
+    // can't trigger popup block locally, so we have no handler here...
+    protected onPopupBlocked() {}
 
     protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
         // We're logging in or out, wait for the auth state to settle.
