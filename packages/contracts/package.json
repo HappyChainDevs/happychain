@@ -11,11 +11,11 @@
     "dependencies": {
         "@openzeppelin/contracts": "^5.0.2",
         "@openzeppelin/contracts-upgradeable": "^5.0.2",
+        "ExcessivelySafeCall": "git@github.com:nomad-xyz/ExcessivelySafeCall#release/0.0.1",
         "account-abstraction": "git@github.com:eth-infinitism/account-abstraction#v0.7.0",
         "forge-std": "git@github.com:foundry-rs/forge-std#v1.9.1",
         "kernel": "git@github.com:zerodevapp/kernel#v3.1",
-        "solady": "0.0.237",
-        "ExcessivelySafeCall": "git@github.com:nomad-xyz/ExcessivelySafeCall#release/0.0.1"
+        "solady": "0.0.237"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",
