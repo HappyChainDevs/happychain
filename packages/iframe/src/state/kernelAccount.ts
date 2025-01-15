@@ -3,13 +3,12 @@ import { convertToViemChain } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import { type EcdsaKernelSmartAccountImplementation, toEcdsaKernelSmartAccount} from "permissionless/accounts"
 import { getSenderAddress } from "permissionless/actions"
-import { http, type Address, createPublicClient, createWalletClient, custom, encodeFunctionData, type Hex, zeroAddress, concatHex, toHex, concat } from "viem"
+import { http, type Address, createPublicClient, encodeFunctionData, type Hex, zeroAddress, concatHex, toHex, concat } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 import { getCurrentChain } from "./chains"
 import { walletClientAtom } from "./walletClient"
 import { getWalletClient } from "#src/state/walletClient"
-import { getSmartAccountClient } from "./smartAccountClient"
 
 
 export type KernelSmartAccount = SmartAccount & EcdsaKernelSmartAccountImplementation<"0.7">
@@ -28,15 +27,10 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
         // 1. `publicClientAtom` uses `transportAtom` for its `transport` value, which can be either `custom()` or `http()`
         // 2. `toKernelSmartAccount()` expects a simple client with direct RPC access
         const publicClient = createPublicClient(clientOptions)
-
-        // const factoryData = getFactoryData(contracts.ECDSAValidator, walletAddress, contracts.FactoryStaker)
-        // console.log("factoryData", factoryData)
-
         const walletClient = getWalletClient()
         
         const owner = {
             async request({ method, params }: any) {
-                // console.log({ walletAddress, method, params })
                 if (["eth_accounts", "eth_requestAccounts"].includes(method)) {
                     return [walletAddress]
                 }
@@ -46,12 +40,6 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
                 return r
             },
         }
-        // original flow
-        // const owner = createWalletClient({
-        //     ...clientOptions,
-        //     account: walletAddress,
-        // })
-
         return await toEcdsaKernelSmartAccount({
             client: publicClient,
             entryPoint: {
