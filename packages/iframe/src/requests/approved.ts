@@ -63,29 +63,18 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                     ]
                 })
                 console.log("preparedUserOp:", preparedUserOp)
+                
                 // strip signature field from preparedUserOp
-                const { signature, ...updatedUserOp } = preparedUserOp;
-                // const userOpHash = await smartAccountClient.sendUserOperation(updatedUserOp)
-
-                // sign with SmartAccountClient
-                const client = await getSmartAccountClient() as any
-                console.log("client:", client.account)
-                const _signature = await client.account.signUserOperation(updatedUserOp)
-                console.log("signature:", _signature)   
-                // console.log(client.signUserOperation(preparedUserOp))  
-
-                const userOpWithSig = {...updatedUserOp, signature: _signature}
-                
-                return "0x"
-                // const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
-                
-                
-                
+                const _signature = await smartAccountClient.account.signUserOperation(preparedUserOp)
+                const userOpWithSig = {...preparedUserOp, signature: _signature}
+                const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
                 // console.log("userOpHash:", userOpHash)
-                // addPendingUserOp(user.address, {
-                //     userOpHash: userOpHash as Hash,
-                //     value: tx.value? hexToBigInt(tx.value as Hex) :0n,
-                // })
+                
+                addPendingUserOp(user.address, {
+                    userOpHash: userOpHash as Hash,
+                    value: tx.value? hexToBigInt(tx.value as Hex) :0n,
+                })
+                return userOpHash
 
                 // return userOpHash
             } catch (error) {

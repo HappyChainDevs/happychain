@@ -68,6 +68,7 @@ export const kernelAccountAtom: Atom<Promise<KernelSmartAccount | undefined>> = 
 export const { getValue: getKernelAccount } = accessorsFromAtom(kernelAccountAtom)
 
 export async function getKernelAccountAddress(owner: Address): Promise<Address> {
+    console.log("getKernelAccountAddress for ", owner)
     const chain = getCurrentChain()
     const currentChain = convertToViemChain(chain)
     const contracts = getAccountAbstractionContracts(currentChain.chainId)
