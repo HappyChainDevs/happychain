@@ -3,10 +3,10 @@ import { Msgs } from "@happy.tech/wallet-common"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
-
+import { BannerList } from "#src/components/interface/banners/BannerList.tsx"
 import { ImportTokensDialog } from "#src/components/interface/home/tabs/views/tokens/ImportTokensDialog"
 import { dialogLogOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
-import { signalClosed, signalOpen } from "#src/utils/walletState.ts"
+import { signalClosed, signalOpen } from "#src/utils/walletState"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
@@ -67,31 +67,30 @@ function Embed() {
         return <ConnectModal />
     }
     return (
-        <>
-            <main className="h-dvh w-screen rounded-3xl overflow-hidden flex flex-col">
-                <div className="flex flex-col gap-2 size-full">
-                    <GlobalHeader />
-                    {!location.pathname.includes("permissions") && (
-                        <section className="w-full max-w-prose mx-auto">
-                            <div className="hidden relative h-fit lg:flex w-fit mx-auto gap-2">
-                                <div className="text-[0.825rem] flex px-2 max-w-prose mx-auto gap-2">
-                                    <UserInfo />
-                                </div>
+        <main className="h-dvh w-screen rounded-3xl overflow-hidden flex flex-col">
+            <div className="flex flex-col gap-2 size-full">
+                <GlobalHeader />
+                {!location.pathname.includes("permissions") && (
+                    <section className="w-full max-w-prose mx-auto">
+                        <div className="hidden relative h-fit lg:flex w-fit mx-auto gap-2">
+                            <div className="text-[0.825rem] flex px-2 max-w-prose mx-auto gap-2">
+                                <UserInfo />
                             </div>
-                        </section>
-                    )}
-                    <section className="relative grid min-h-0 h-full gap-4 overflow-y-auto auto-rows-[1fr]">
-                        <Outlet />
-                        {!location.pathname.includes("permissions") && (
-                            <>
-                                <ImportTokensDialog />
-                                <SecondaryActionsMenu />
-                                <DialogConfirmLogOut handleDisconnect={logout} />
-                            </>
-                        )}
+                        </div>
                     </section>
-                </div>
-            </main>
-        </>
+                )}
+                <BannerList />
+                <section className="relative grid min-h-0 h-full gap-4 overflow-y-auto auto-rows-[1fr]">
+                    <Outlet />
+                    {!location.pathname.includes("permissions") && (
+                        <>
+                            <ImportTokensDialog />
+                            <SecondaryActionsMenu />
+                            <DialogConfirmLogOut handleDisconnect={logout} />
+                        </>
+                    )}
+                </section>
+            </div>
+        </main>
     )
 }

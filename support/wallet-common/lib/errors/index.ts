@@ -19,4 +19,4 @@ export { EIP1193ErrorCodes } from "./eip-1193-codes"
 
 export type { EIP1193ErrorObject, IProviderRpcError, ProviderRpcErrorCode } from "./eip-1193-interfaces"
 
-export { LoginRequiredError, PopupBlockedError } from "./happy-provider-errors"
+export { LoginRequiredError } from "./happy-provider-errors"
