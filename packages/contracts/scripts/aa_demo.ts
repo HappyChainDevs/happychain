@@ -1,4 +1,4 @@
-import { http, createPublicClient } from "viem"
+import { http, createPublicClient, type Hex, concat } from "viem"
 import type { SmartAccount, UserOperation } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
@@ -6,7 +6,8 @@ import { localhost } from "viem/chains"
 import type { SmartAccountClient } from "permissionless"
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
 
-import { deployment } from "../deployments/anvil/testing/abis"
+import { abis, deployment } from "../deployments/anvil/testing/abis"
+import { deployment as mockDeployment } from "../deployments/anvil/mockTokens/abis.ts"
 import {
     AMOUNT,
     createMintCall,
@@ -20,6 +21,7 @@ import { rpcURL } from "./utils/config"
 import { getKernelAccount, getKernelClient } from "./utils/kernel"
 import { installCustomModule, uninstallCustomModule } from "./utils/moduleHelpers"
 import { getCustomNonce } from "./utils/nonce"
+
 
 const sessionKey = generatePrivateKey()
 const sessionAccount = privateKeyToAccount(sessionKey)
@@ -58,28 +60,33 @@ async function testRootValidator(kernelClient: SmartAccountClient) {
 }
 
 async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>) {
-    const receiverAddress = getRandomAddress()
     const sessionSigner = await getKernelAccount(sessionPublicClient, sessionAccount)
     const customNonce = await getCustomNonce(
         kernelClient.account!.client,
         kernelClient.account!.address,
         deployment.SessionKeyValidator,
     )
-
-    await installCustomModule(kernelClient, sessionAccount.address)
-
+    // construct onInstallData: first 20 bytes of sessionAccount.address + targetContract
+    const targetContract: Hex = mockDeployment.MockTokenA
+    const onInstallData = concat([sessionAccount.address, targetContract])
+    console.log("onInstallData: ", onInstallData)
+    
+    await installCustomModule(kernelClient, onInstallData)
+    console.log("Custom Module Installed")
+    
+    const mintReceiverAddress = getRandomAddress()
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelClient.account!,
-        calls: [createMintCall(receiverAddress)],
+        calls: [createMintCall(mintReceiverAddress)],
         nonce: customNonce,
     })
-
+    
     userOp.signature = await sessionSigner.signUserOperation({
         ...userOp,
         chainId: localhost.id,
         signature: EMPTY_SIGNATURE, // The signature field must be empty when hashing and signing the user operation.
     })
-
+    
     const userOpHash = await kernelClient.sendUserOperation({
         ...userOp,
     })
@@ -92,7 +99,7 @@ async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Act
         throw new Error("Validation using custom validator module failed")
     }
 
-    const balance = await getFormattedTokenBalance(receiverAddress)
+    const balance = await getFormattedTokenBalance(mintReceiverAddress)
     if (balance === AMOUNT) {
         console.log(`Using CustomValidator: Balance is correct: ${balance} ETH`)
     } else {

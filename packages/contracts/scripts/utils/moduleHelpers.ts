@@ -1,9 +1,9 @@
 import type { SmartAccountClient } from "permissionless"
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
-import type { Hex } from "viem"
+import type { Hex, PublicClient } from "viem"
 import type { Address } from "viem"
 import type { SmartAccount } from "viem/account-abstraction"
-import { deployment } from "../../deployments/anvil/testing/abis"
+import { abis, deployment } from "../../deployments/anvil/testing/abis"
 import { toHexDigits } from "./accounts"
 
 // The address used when installing a validator module to signify that the module has no hooks.
@@ -79,10 +79,9 @@ async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccoun
 
 export async function installCustomModule(
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
-    sessionKey: Address,
+    onInstallData: Address,
 ) {
-    console.log("installing custom module...")
-    const moduleInitData = getModuleInitData(NO_HOOKS_ADDRESS, sessionKey, "0x", EXECUTE_FUNCTION_SELECTOR)
+    const moduleInitData = getModuleInitData(NO_HOOKS_ADDRESS, onInstallData, "0x", EXECUTE_FUNCTION_SELECTOR)
     const opHash = await kernelClient.installModule({
         type: "validator",
         address: deployment.SessionKeyValidator,
@@ -124,4 +123,22 @@ export async function uninstallCustomModule(kernelClient: SmartAccountClient & E
     if (isInstalled) {
         throw new Error("Module is not uninstalled")
     }
+}
+
+export async function readStorageKey(publicClient: PublicClient, smartAccountAddress: Address, targetContract: Address) {
+    // get key hash (could also do this locally)
+    const keyHash = await publicClient.readContract({
+        abi: abis.SessionKeyValidator,
+        address: deployment.SessionKeyValidator,
+        functionName: "getStorageKey",
+        args: [smartAccountAddress, targetContract],
+    })
+    
+    // get from mapping
+    return await publicClient.readContract({
+        abi: abis.SessionKeyValidator,
+        address: deployment.SessionKeyValidator,
+        functionName: "sessionKeyValidatorStorage",
+        args: [keyHash],
+    })
 }
