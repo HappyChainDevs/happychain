@@ -8,9 +8,9 @@ import { abis, deployment } from "@happychain/contracts/happyAccounts/anvil"
 import { account, publicClient, walletClient } from "./utils/clients"
 import { isContractDeployed } from "./utils/helpers"
 import { DeployAccountSchema, HappyTxSchema } from "./utils/requestSchema"
+import { DeployAccountResponseSchema } from "./utils/responseSchema"
 
 const app = new Hono()
-
 app.use(prettyJSON())
 app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
 
@@ -32,16 +32,14 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
 
         // Check if code already exists at the predicted address
         const alreadyDeployed = await isContractDeployed(predictedAddress)
-
         if (alreadyDeployed) {
             console.log("Account already deployed at:", predictedAddress)
-            return c.json({
-                success: true,
-                message: "Account already exists at this address",
-                accountAddress: predictedAddress,
-                owner,
-                alreadyDeployed: true,
-            })
+            const response = {
+                success: false,
+                error: `Account already exists at address ${predictedAddress}`,
+            }
+            const validatedResponse = DeployAccountResponseSchema.parse(response)
+            return c.json(validatedResponse)
         }
 
         // If not deployed, simulate the deployment
@@ -57,15 +55,12 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
         // Check if the predicted address matches the result
         if (result !== predictedAddress) {
             console.error("Address mismatch during simulation")
-            return c.json(
-                {
-                    success: false,
-                    message: "Address mismatch",
-                    predictedAddress,
-                    result,
-                },
-                400,
-            )
+            const response = {
+                success: false,
+                error: `Failed during simulation: Predicted address ${predictedAddress} does not match simulated address ${result}`,
+            }
+            const validatedResponse = DeployAccountResponseSchema.parse(response)
+            return c.json(validatedResponse, 400)
         }
 
         // Then, actually deploy
@@ -79,27 +74,24 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
 
         if (receipt.status !== "success") {
             console.error("Deployment failed with receipt:", receipt)
-            return c.json(
-                {
-                    success: false,
-                    message: "Transaction failed on-chain",
-                    receipt,
-                },
-                400,
-            )
+            const response = {
+                success: false,
+                transactionHash: receipt.transactionHash,
+                error: "Transaction failed on-chain.",
+            }
+            const validatedResponse = DeployAccountResponseSchema.parse(response)
+            return c.json(validatedResponse, 400)
         }
 
         if (result !== predictedAddress) {
             console.error("Address mismatch")
-            return c.json(
-                {
-                    success: false,
-                    message: "Address mismatch",
-                    predictedAddress,
-                    result,
-                },
-                400,
-            )
+            const response = {
+                success: false,
+                transactionHash: receipt.transactionHash,
+                error: `Predicted address ${predictedAddress} does not match deployed address ${result}`,
+            }
+            const validatedResponse = DeployAccountResponseSchema.parse(response)
+            return c.json(validatedResponse, 400)
         }
 
         // Verify deployment
@@ -108,34 +100,33 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
 
         if (!isDeployed) {
             console.error("No code found at predicted address")
-            return c.json(
-                {
-                    success: false,
-                    message: "No code found at predicted address",
-                    predictedAddress,
-                },
-                400,
-            )
+            const response = {
+                success: false,
+                transactionHash: receipt.transactionHash,
+                error: `Contract deployment failed: No code found at ${predictedAddress}`,
+            }
+            const validatedResponse = DeployAccountResponseSchema.parse(response)
+            return c.json(validatedResponse, 400)
         }
         console.log("Deployment successful for owner:", owner)
 
-        return c.json({
+        const response = {
             success: true,
             message: "Account deployed successfully",
             accountAddress: predictedAddress,
             owner,
             transactionHash: hash,
-        })
+        }
+        const validatedResponse = DeployAccountResponseSchema.parse(response)
+        return c.json(validatedResponse)
     } catch (error) {
         console.error("Error during account deployment:", error)
-        return c.json(
-            {
-                success: false,
-                message: "Deployment failed",
-                error: error instanceof Error ? error.message : "Unknown error",
-            },
-            500,
-        )
+        const response = {
+            success: false,
+            error: error instanceof Error ? error.message : `Unknown error: ${error}`,
+        }
+        const validatedResponse = DeployAccountResponseSchema.parse(response)
+        return c.json(validatedResponse, 500)
     }
 })
 

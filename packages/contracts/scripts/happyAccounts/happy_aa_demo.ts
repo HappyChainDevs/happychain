@@ -1,4 +1,4 @@
-import type { Address, Hex } from "viem"
+import { type Address, type Hex, keccak256 } from "viem"
 import { account } from "../utils/clients"
 
 import { type DeployAccountRequest, DeployAccountSchema } from "@happychain/submitter/utils/requestSchema"
@@ -62,7 +62,7 @@ async function createAccount(owner: Address, salt: Hex): Promise<DeployAccountRe
  * @param happyTx The transaction to submit
  * @returns The response containing the transaction hash
  */
-async function _submitHappyTx(
+async function submitHappyTx(
     sender: Address,
     target: Address,
     value: bigint,
@@ -105,13 +105,45 @@ async function _submitHappyTx(
 }
 
 async function main() {
+    let deployedAccountAddress: Address | undefined
+
+    console.log("\n=== Deploying Account ===")
     try {
-        // Create a new account
-        const salt = "0x0000000000000000000000000000000000000000000000000000000000000005"
-        const createAccountResult = await createAccount(account.address, salt)
-        console.log("Created account: ", createAccountResult)
+        const salt: Hex = keccak256(Uint8Array.from(Buffer.from(Date.now().toString())))
+        const result: DeployAccountResponse = await createAccount(account.address, salt)
+
+        if (result.success) {
+            deployedAccountAddress = result.accountAddress
+            console.log("✅ Account deployed successfully")
+            console.log(`   Owner: ${result.owner}`)
+            console.log(`   Account Address: ${result.accountAddress}`)
+            console.log(`   Transaction Hash: ${result.transactionHash}`)
+        } else {
+            console.log("❌ Account deployment failed")
+            console.log(`   Error: ${result.error}`)
+            if (result.transactionHash) {
+                console.log(`   Failed Transaction: ${result.transactionHash}`)
+            }
+            process.exit(1)
+        }
     } catch (error) {
-        console.error("Error in demo:", error)
+        console.log("❌ Unexpected error during account deployment")
+        console.log(`   ${error instanceof Error ? error.message : String(error)}`)
+        process.exit(1)
+    }
+
+    console.log("\n=== Preparing Happy Transaction ===")
+    try {
+        if (!deployedAccountAddress) {
+            throw new Error("No deployed account address available")
+        }
+
+        // TODO: Implement happy tx submission using deployedAccountAddress
+        console.log("⏳ Preparing transaction from account:", deployedAccountAddress)
+    } catch (error) {
+        console.log("❌ Error preparing happy transaction")
+        console.log(`   ${error instanceof Error ? error.message : String(error)}`)
+        process.exit(1)
     }
 }
 
