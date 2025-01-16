@@ -41,10 +41,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
     private static instance: InjectedProviderProxy
 
     static getInstance() {
-        if (!InjectedProviderProxy.instance) {
-            InjectedProviderProxy.instance = new InjectedProviderProxy()
-        }
-        return InjectedProviderProxy.instance
+        return InjectedProviderProxy.instance ??= new InjectedProviderProxy()
     }
 
     private inFlight = new Map()
@@ -117,8 +114,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
 
             const user = getUser()
             if (!accounts.length) {
-                // on disconnect, logout. alternatively could revoke permissions, but not much
-                // point in that for injected wallets
+                 // Logout from the wallet when the user disconnects the injected wallet from the standalone wallet.
                 setUserWithProvider(undefined, undefined)
             } else if (user) {
                 const [address] = accounts

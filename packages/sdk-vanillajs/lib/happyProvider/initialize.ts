@@ -55,7 +55,7 @@ function initializeProvider() {
         }
 
         mipdStore.getProviders().forEach((detail) => {
-            // don't bother forwarding ourselves to the iframe
+            // don't forward ourselves to the iframe
             if (detail.info.rdns === "tech.happy") return
 
             iframeMessageBus?.emit(Msgs.EIP6963RequestProvider, { info: detail.info })
