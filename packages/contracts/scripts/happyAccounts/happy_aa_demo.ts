@@ -107,7 +107,7 @@ async function _submitHappyTx(
 async function main() {
     try {
         // Create a new account
-        const salt = "0x0000000000000000000000000000000000000000000000000000000000000000"
+        const salt = "0x0000000000000000000000000000000000000000000000000000000000000005"
         const createAccountResult = await createAccount(account.address, salt)
         console.log("Created account: ", createAccountResult)
     } catch (error) {
