@@ -845,11 +845,6 @@ const contractToAbi = ({
       "name": "createAccount",
       "inputs": [
         {
-          "name": "initData",
-          "type": "bytes",
-          "internalType": "bytes"
-        },
-        {
           "name": "salt",
           "type": "bytes32",
           "internalType": "bytes32"
@@ -873,11 +868,6 @@ const contractToAbi = ({
       "type": "function",
       "name": "getAddress",
       "inputs": [
-        {
-          "name": "initData",
-          "type": "bytes",
-          "internalType": "bytes"
-        },
         {
           "name": "salt",
           "type": "bytes32",
@@ -1374,10 +1364,10 @@ const aliasToContract = ({
 
 export const deployment = ({
   "HappyEntryPoint": "0xe63EBaf6cdA59bA57D9B71D681d1473D66105A87",
-  "ScrappyAccount": "0x62F07Fd6345a1d059F22fB56bA35198487C4f460",
-  "ScrappyAccountFactory": "0x883fA5bB2B9D2Fa8400732c396034BCbc104e70D",
-  "ScrappyPaymaster": "0xd48b09808F10268FA634B541B4EedA336fb06e6e",
-  "ScrappyPaymasterImpl": "0x9404F955eefA625e806B86ba5Af1643a21B2176E"
+  "ScrappyAccount": "0xb51A3d71E7bf1c75648DB45492B213c4D4A09571",
+  "ScrappyAccountFactory": "0xF8A5e8268472E07588530F68e672119027193Ae1",
+  "ScrappyPaymaster": "0x399D53E6Bf74BDBe3aD3FC76Dc9aAF6Fe5F45863",
+  "ScrappyPaymasterImpl": "0x1FFC43ab68239244A80dE47D7eE6B452Cf13D24C"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
