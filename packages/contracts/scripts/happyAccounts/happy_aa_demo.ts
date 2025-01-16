@@ -62,7 +62,7 @@ async function createAccount(owner: Address, salt: Hex): Promise<DeployAccountRe
  * @param happyTx The transaction to submit
  * @returns The response containing the transaction hash
  */
-async function submitHappyTx(
+async function _submitHappyTx(
     sender: Address,
     target: Address,
     value: bigint,
