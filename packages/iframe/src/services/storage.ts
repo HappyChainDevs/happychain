@@ -1,5 +1,7 @@
 import { createStorage } from "@happychain/common"
 import type { HappyUser } from "@happychain/sdk-shared"
+import type { Address } from "abitype"
+import type { Hex } from "viem"
 
 export enum StorageKey {
     HappyUser = "happychain:user:v1",
@@ -11,11 +13,16 @@ export enum StorageKey {
     ConfirmedUserOps = "happychain:confirmed_userops:v1",
     WatchedAssets = "happychain:watched_assets:v1",
     LoadedAbis = "happychain:loaded_abis:v1",
+    SessionKeys = "happychain:session_keys:v1",
 }
+
+export type SessionKeysByTargetContract = Record<Address, Hex>
+export type SessionKeysByHappyUser = Record<Address, SessionKeysByTargetContract>
 
 // cache user within iframe to manage auto-reconnect
 type StorageSchema = {
     [StorageKey.HappyUser]: HappyUser | undefined
+    [StorageKey.SessionKeys]: SessionKeysByHappyUser | undefined
 }
 
 export const storage = createStorage<StorageSchema>()
