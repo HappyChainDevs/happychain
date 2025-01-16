@@ -20,11 +20,11 @@ struct SessionKeyValidatorStorage {
 contract SessionKeyValidator is IValidator {
     ///@dev keccak256(account, targetContract) => SessionKeyValidatorStorage
     mapping(bytes32 => SessionKeyValidatorStorage) public sessionKeyValidatorStorage;
-    
+
     mapping(address => bool) public initialized;
 
     function onInstall(bytes calldata _data) external payable override {
-        if(initialized[msg.sender]) {
+        if (initialized[msg.sender]) {
             revert AlreadyInitialized(msg.sender);
         }
         address sessionKey = address(bytes20(_data[0:20]));
