@@ -90,6 +90,18 @@ function Request() {
         [unloadHandler, windowId, key, iframeIndex],
     )
 
+    // This can occur if sending a transaction from within the wallet (such as the send page)
+    // and the user has popups blocked. If instead of allowing popups, they choose to just open this
+    // one popup, but leave the rest blocked, window.opener is null and we can't post the response
+    // back to the wallet to finalize the transaction.
+    if (!opener) {
+        return (
+            <div className="flex h-dvh w-full items-center justify-center p-8 text-xl">
+                Failed to load request. Please make sure to allow all popups, then close this window and try again.
+            </div>
+        )
+    }
+
     if (isLoading) {
         return (
             <div className="flex h-dvh w-full items-center justify-center">

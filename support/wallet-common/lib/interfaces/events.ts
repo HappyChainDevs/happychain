@@ -36,7 +36,11 @@ export enum Msgs {
     /** Announces injected wallets to the iframe following EIP-6963 'detail.info' format. */
     AnnounceInjectedProvider = "announce-injected-provider",
 
-    /** Informs the iframe to request the overlay to display an error message */
+    /**
+     * Informs the iframe to request the overlay to display an error message.
+     * When the iframe receives this, it emits {@link Msgs.DisplayOverlayError}
+     * back to the app to display the overlay.
+     */
     SetOverlayError = "set-overlay-error",
 
     // --- EventsFromIframe ------------------------------------------------------------------------
@@ -44,7 +48,9 @@ export enum Msgs {
     /** Informs the SDK that the iframe has loaded and initialized. */
     IframeInit = "iframe-init",
 
-    /** Informs the overlay to display an error message */
+    /**
+     * When sent from the iframe, this is received by the app and the overlay is displayed.
+     */
     DisplayOverlayError = "display-overlay-error",
 
     /** Instructs the SDK to resize the resize the iframe to toggle the wallet modal. */

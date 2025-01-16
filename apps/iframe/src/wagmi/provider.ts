@@ -3,11 +3,13 @@ import {
     AuthState,
     BasePopupProvider,
     type EIP1193RequestParameters,
+    EIP1193UserRejectedRequestError,
     WalletType,
     waitForCondition,
 } from "@happy.tech/wallet-common"
 import type { EIP1193Provider } from "viem"
 import { handleInjectedRequest } from "#src/requests/injected.ts"
+import { addBanner } from "#src/state/banner.ts"
 import { getUser } from "#src/state/user.ts"
 import { handlePermissionlessRequest } from "../requests"
 import { iframeID } from "../requests/utils"
@@ -32,8 +34,12 @@ export class IframeProvider extends BasePopupProvider {
         super(iframeID())
     }
 
-    // can't trigger popup block locally, so we have no handler here...
-    protected onPopupBlocked() {}
+    // I trigger popup block locally, so we have no handler here...
+    protected onPopupBlocked() {
+        addBanner("popup-blocked")
+        // user reject on popup block, to force wagmi to recognize the request termination
+        throw new EIP1193UserRejectedRequestError()
+    }
 
     protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
         // We're logging in or out, wait for the auth state to settle.

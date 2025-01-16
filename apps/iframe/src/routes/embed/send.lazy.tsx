@@ -13,8 +13,8 @@ function Send() {
     const { targetAddress } = useHappySend()
 
     return (
-        <div className="relative flex flex-col size-full items-center justify-between">
-            <div className="flex flex-col size-full items-center justify-start">
+        <div className="relative flex flex-col w-full items-center justify-between overflow-y-auto overflow-x-hidden">
+            <div className="flex flex-col w-full items-center justify-start">
                 <AddressSelector />
                 {/* appears when target address has been confirmed */}
                 {targetAddress !== undefined && isAddress(targetAddress) && <SendInput />}

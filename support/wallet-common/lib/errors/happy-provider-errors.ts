@@ -7,4 +7,3 @@ class BaseError extends Error {
 }
 
 export class LoginRequiredError extends BaseError {}
-export class PopupBlockedError extends BaseError {}
