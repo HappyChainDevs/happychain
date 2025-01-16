@@ -18,15 +18,21 @@ struct SessionKeyValidatorStorage {
 }
 
 contract SessionKeyValidator is IValidator {
-    mapping(address => SessionKeyValidatorStorage) public sessionKeyValidatorStorage;
+    mapping(bytes32 => SessionKeyValidatorStorage) public sessionKeyValidatorStorage; // key is now (accountAddress, targetAddress)
+    mapping(address => bool) public initialized;
 
     function onInstall(bytes calldata _data) external payable override {
         address sessionKey = address(bytes20(_data[0:20]));
-        sessionKeyValidatorStorage[msg.sender].sessionKey = sessionKey;
+        bytes20 targetContract = bytes20(_data[20:40]);
+        
+        sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)].sessionKey = sessionKey;
+        initialized[msg.sender] = true;
     }
 
-    function onUninstall(bytes calldata) external payable override {
-        delete sessionKeyValidatorStorage[msg.sender];
+    function onUninstall(bytes calldata _data) external payable override {
+        bytes20 targetContract = bytes20(_data[0:20]);
+        
+        delete sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)];
     }
 
     function isModuleType(uint256 typeID) external pure override returns (bool) {
@@ -34,7 +40,7 @@ contract SessionKeyValidator is IValidator {
     }
 
     function isInitialized(address smartAccount) external view override returns (bool) {
-        return sessionKeyValidatorStorage[smartAccount].sessionKey != address(0);
+        return initialized[smartAccount];
     }
 
     function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash)
@@ -43,7 +49,8 @@ contract SessionKeyValidator is IValidator {
         override
         returns (uint256)
     {
-        address sessionKey = sessionKeyValidatorStorage[msg.sender].sessionKey;
+        bytes20 targetContract = bytes20(userOp.callData[4:24]);
+        address sessionKey = sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)].sessionKey;
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(userOpHash);
 
         /**
@@ -58,18 +65,32 @@ contract SessionKeyValidator is IValidator {
         return SIG_VALIDATION_FAILED_UINT;
     }
 
-    function isValidSignatureWithSender(address, bytes32 hash, bytes calldata sig)
+    function addSessionKey(address account, address targetContract, address sessionKey) external {
+        sessionKeyValidatorStorage[_getStorageKey(account, bytes20(targetContract))].sessionKey = sessionKey;
+    }
+
+    function removeSessionKey(address account, address targetContract) external {
+        delete sessionKeyValidatorStorage[_getStorageKey(account, bytes20(targetContract))];
+    }
+
+    function isValidSignatureWithSender(address to, bytes32 hash, bytes calldata sig)
         external
         view
         override
         returns (bytes4)
     {
-        address sessionKey = sessionKeyValidatorStorage[msg.sender].sessionKey;
+        address sessionKey = sessionKeyValidatorStorage[_getStorageKey(msg.sender, bytes20(to))].sessionKey;
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(hash);
         if (sessionKey != ECDSA.recover(ethHash, sig)) {
             return ERC1271_INVALID;
         }
 
         return ERC1271_MAGICVALUE;
+    }
+
+    // Internal functions
+
+    function _getStorageKey(address account, bytes20 target) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(account, target));
     }
 }
