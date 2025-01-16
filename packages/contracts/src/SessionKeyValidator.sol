@@ -29,14 +29,12 @@ contract SessionKeyValidator is IValidator {
         }
         address sessionKey = address(bytes20(_data[0:20]));
         bytes20 targetContract = bytes20(_data[20:40]);
-        
         sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)].sessionKey = sessionKey;
         initialized[msg.sender] = true;
     }
 
     function onUninstall(bytes calldata _data) external payable override {
         bytes20 targetContract = bytes20(_data[0:20]);
-        
         delete sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)];
         delete initialized[msg.sender];
     }
