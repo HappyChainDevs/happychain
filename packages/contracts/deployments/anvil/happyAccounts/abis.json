@@ -842,11 +842,6 @@
       "name": "createAccount",
       "inputs": [
         {
-          "name": "initData",
-          "type": "bytes",
-          "internalType": "bytes"
-        },
-        {
           "name": "salt",
           "type": "bytes32",
           "internalType": "bytes32"
@@ -870,11 +865,6 @@
       "type": "function",
       "name": "getAddress",
       "inputs": [
-        {
-          "name": "initData",
-          "type": "bytes",
-          "internalType": "bytes"
-        },
         {
           "name": "salt",
           "type": "bytes32",
