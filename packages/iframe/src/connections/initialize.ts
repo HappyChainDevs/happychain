@@ -70,8 +70,8 @@ if (isStandaloneIframe()) {
         )
     }
 } else {
-    // listen to message bus instead of window here because when embedded, in many situations, the
-    // providers will not be detected. Duplicates are fine as we use the provider.id as the unique key
+    // Instead of listening to the EIP-6963 events inside the iframe, the app listens to them and forwards them 
+    // to us, as not every wallet will inject itself into iframes.
     appMessageBus.on(Msgs.EIP6963RequestProvider, (provider) => {
         if (provider.info.rdns === happyProviderInfo.rdns) return
         addProvider(

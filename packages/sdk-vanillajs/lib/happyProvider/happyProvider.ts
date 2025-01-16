@@ -50,8 +50,9 @@ export class HappyProvider extends SafeEventEmitter implements HappyProviderPubl
     }
 
     /**
-     * All events are received from iframe. social wallet events originate their,
-     * injected wallet events are proxied through the iframe.
+     * All events are received from iframe: social wallet events originate there;
+     * injected wallet events are proxied through the iframe (which needs to learn of them),
+     * then sent back.
      */
     private handleProviderNativeEvent(data: ProviderMsgsFromIframe[Msgs.ProviderEvent]) {
         this.emit(data.payload.event, data.payload.args)

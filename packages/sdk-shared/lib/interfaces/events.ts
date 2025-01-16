@@ -32,7 +32,7 @@ export enum Msgs {
      */
     InjectedWalletConnected = "injected-wallet:connected",
 
-    /** Loosely follows EIP-6963 to provide iframe with context of available browsers */
+    /** Announces injected wallets to the iframe following EIP-6963 'detail.info' format. */
     EIP6963RequestProvider = "eip6963:requestProvider",
 
     // --- EventsFromIframe ------------------------------------------------------------------------
@@ -72,7 +72,7 @@ export enum Msgs {
     /** Injected Response from the InjectedWalletWrapper to the InjectedProviderProxy*/
     ExecuteInjectedResponse = "execute-injected-response",
 
-    /** Listens to the connected injected wallet, and forwards all events to the iframe */
+    /** Forwards an event form the connected injected wallet to the iframe. */
     ForwardInjectedEvent = "forward-injected-event",
 
     // --- ProviderBusEventsFromIframe -------------------------------------------------------------
@@ -125,16 +125,15 @@ export enum WalletDisplayAction {
 }
 
 export type MsgsFromApp = {
-    // stub provider since its not serializable and we wont use this anyways.
-    // Instead of passing to the iframe, then back here again, we will refetch the provider
-    // by looking up the rdns of the selected provider when needed
+    // We don't supply the provider — it is not serializable. Instead, the iframe will send
+    // {@link Msgs.InjectedWalletRequestConnect} to request that the app connects to a given injected wallet.
     [Msgs.EIP6963RequestProvider]: { info: EIP6963ProviderInfo; provider?: never }
     [Msgs.ConnectRequest]: ProviderEventPayload<
         EIP1193RequestParameters<"eth_requestAccounts" | "wallet_requestPermissions">
     >
     [Msgs.InjectedWalletConnected]:
         | {
-              // Standard Connection Request
+              // standard connection request
               rdns: string
               address: `0x${string}`
               request: MsgsFromApp[Msgs.ConnectRequest]
