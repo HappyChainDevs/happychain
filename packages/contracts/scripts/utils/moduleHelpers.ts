@@ -81,10 +81,12 @@ export async function installCustomModule(
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
     sessionKey: Address,
 ) {
+    console.log("installing custom module...")
+    const moduleInitData = getModuleInitData(NO_HOOKS_ADDRESS, sessionKey, "0x", EXECUTE_FUNCTION_SELECTOR)
     const opHash = await kernelClient.installModule({
         type: "validator",
         address: deployment.SessionKeyValidator,
-        context: getModuleInitData(NO_HOOKS_ADDRESS, sessionKey, "0x", EXECUTE_FUNCTION_SELECTOR),
+        context: moduleInitData,
         nonce: await kernelClient.account!.getNonce(),
     })
 
