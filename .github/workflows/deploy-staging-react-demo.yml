@@ -23,7 +23,6 @@ jobs:
         env:
           IFRAME_URL: "https://iframe.happy.tech"
         run: |
-          make setup
           make demo-react.build
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7

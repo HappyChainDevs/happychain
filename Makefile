@@ -129,12 +129,12 @@ demo-js.prod: setup  ## builds & run the prod version of the JS demo
 	$(MULTIRUN) --names "iframe.demo-js" "cd packages/iframe && make preview" "cd packages/demo-vanillajs && make preview"
 .PHONY: demo-js.prod
 
-demo-react.prod: setup  ## builds & run the prod version of the React demo
+demo-react.prod: setup sdk.build  ## builds & run the prod version of the React demo
 	IFRAME_URL=http://localhost:4160 make demo-react.build
 	$(MULTIRUN) --names "iframe.demo-react" "cd packages/iframe && make preview" "cd packages/demo-react && make preview"
 .PHONY: demo-react.prod
 
-demo-vue.prod: setup  ## builds & run the prod version of the Vue demo
+demo-vue.prod: setup sdk.build  ## builds & run the prod version of the Vue demo
 	IFRAME_URL=http://localhost:4160 make demo-vue.build
 	$(MULTIRUN) --names "iframe.demo-vue" "cd packages/iframe && make preview" "cd packages/demo-wagmi-vue && make preview"
 .PHONY: demo-vue.prod
@@ -272,9 +272,7 @@ demo-js.build: setup shared.build
 	cd packages/demo-vanillajs && make build
 .PHONY: demo-js.build
 
-demo-react.build: setup shared.build
-	cd packages/sdk-vanillajs && make build
-	cd packages/sdk-react && make build
+demo-react.build: setup sdk.build
 	cd packages/demo-react && make build
 .PHONY: demo-react.build
 
