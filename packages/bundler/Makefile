@@ -30,7 +30,7 @@ alto: alto.version
 	@git rm --cached alto/pnpm-lock.yaml 2>/dev/null || true
 
 # Target to build the bundler
-build: install-deps
+build: alto install-deps 
 	cd alto && bunx pnpm run build
 .PHONY: build
 
