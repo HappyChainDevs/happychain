@@ -9,7 +9,17 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { decodeNonce } from "permissionless"
-import { type Client, InvalidAddressError, decodeAbiParameters, hexToBigInt, isAddress, parseAbiParameters } from "viem"
+import {
+    type Address,
+    type Client,
+    InvalidAddressError,
+    decodeAbiParameters,
+    hexToBigInt,
+    isAddress,
+    parseAbiParameters,
+} from "viem"
+import { privateKeyToAccount } from "viem/accounts"
+import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage.ts"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
@@ -201,6 +211,32 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             // If this is permissionless, we're already on the right chain so we simply succeed.
             // The app may have bypassed the permission check, but this doesn't do anything.
             return null
+
+        case HappyMethodNames.REQUEST_SESSION_KEY: {
+            const user = getUser()
+            const targetContractAddress = request.payload.params[0] as Address
+
+            if (
+                !hasPermissions(app, {
+                    happy_sessionKey: {
+                        target: targetContractAddress,
+                    },
+                })
+            ) {
+                throw new EIP1193UnauthorizedError()
+            }
+
+            // Retrieve the stored session key for this user and target contract
+            const storedSessionKeys = storage.get(StorageKey.SessionKeys) as SessionKeysByHappyUser
+            const sessionKey = storedSessionKeys?.[user!.address]?.[targetContractAddress]
+
+            if (!sessionKey) {
+                throw new Error("Session key not found")
+            }
+
+            // Return the public address associated with this session key
+            return privateKeyToAccount(sessionKey).address
+        }
 
         default:
             return await sendToPublicClient(app, request)
