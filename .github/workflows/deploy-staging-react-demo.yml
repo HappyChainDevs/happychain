@@ -21,7 +21,7 @@ jobs:
 
       - name: Build code
         env:
-          IFRAME_URL: "https://iframe.happy.tech"
+          IFRAME_URL: "https://iframe-staging.happy.tech"
         run: |
           make setup
           make demo-react.build
