@@ -9,8 +9,13 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
+import type { SmartAccountClient } from "permissionless"
+import type { Erc7579Actions } from "permissionless/actions/erc7579"
 import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
-import { addPendingUserOp } from "#src/services/userOpsHistory.ts"
+import type { SmartAccount } from "viem/account-abstraction"
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { StorageKey, storage } from "#src/services/storage"
+import { addPendingUserOp } from "#src/services/userOpsHistory"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
@@ -20,6 +25,7 @@ import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
+import { checkIsSessionKeyModuleInstalled, installSessionKeyModule } from "./modules/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
 
@@ -130,6 +136,45 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
         case HappyMethodNames.WALLET_USE_ABI_RPC_METHOD: {
             return user ? loadAbiForUser(user.address, request.payload.params) : false
+        }
+
+        case HappyMethodNames.REQUEST_SESSION_KEY: {
+            // address of contract the session key will be authorized to interact with
+            const targetAddress = request.payload.params[0]
+
+            // Generate a new session key
+            const sessionKey = generatePrivateKey()
+            const accountSessionKey = privateKeyToAccount(sessionKey)
+
+            // Check and install the SessionKeyValidator module if needed
+            // This module validates transactions signed by session keys
+            const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
+            if (!isSessionKeyValidatorInstalled) {
+                await installSessionKeyModule(
+                    smartAccountClient as unknown as SmartAccountClient & Erc7579Actions<SmartAccount>,
+                    accountSessionKey.address,
+                )
+            }
+
+            // @todo - call `addSessionKey` once implemented ...
+            // this seems to be on the smart contract side of the stack ?
+
+            grantPermissions(app, {
+                happy_sessionKey: {
+                    target: targetAddress,
+                },
+            })
+
+            const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+            storage.set(StorageKey.SessionKeys, {
+                ...storedSessionKeys,
+                [user!.address]: {
+                    ...(storedSessionKeys[user!.address] || {}),
+                    [targetAddress]: sessionKey,
+                },
+            })
+
+            return accountSessionKey.address
         }
 
         default:
