@@ -125,7 +125,11 @@ export async function uninstallCustomModule(kernelClient: SmartAccountClient & E
     }
 }
 
-export async function readStorageKey(publicClient: PublicClient, smartAccountAddress: Address, targetContract: Address) {
+export async function readStorageKey(
+    publicClient: PublicClient,
+    smartAccountAddress: Address,
+    targetContract: Address,
+) {
     // get key hash (could also do this locally)
     const keyHash = await publicClient.readContract({
         abi: abis.SessionKeyValidator,
@@ -133,7 +137,7 @@ export async function readStorageKey(publicClient: PublicClient, smartAccountAdd
         functionName: "getStorageKey",
         args: [smartAccountAddress, targetContract],
     })
-    
+
     // get from mapping
     return await publicClient.readContract({
         abi: abis.SessionKeyValidator,

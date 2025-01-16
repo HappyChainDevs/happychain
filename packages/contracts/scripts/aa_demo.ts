@@ -1,4 +1,4 @@
-import { http, createPublicClient, type Hex, concat } from "viem"
+import { http, type Hex, concat, createPublicClient } from "viem"
 import type { SmartAccount, UserOperation } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
@@ -6,8 +6,8 @@ import { localhost } from "viem/chains"
 import type { SmartAccountClient } from "permissionless"
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
 
-import { abis, deployment } from "../deployments/anvil/testing/abis"
 import { deployment as mockDeployment } from "../deployments/anvil/mockTokens/abis.ts"
+import { deployment } from "../deployments/anvil/testing/abis"
 import {
     AMOUNT,
     createMintCall,
@@ -21,7 +21,6 @@ import { rpcURL } from "./utils/config"
 import { getKernelAccount, getKernelClient } from "./utils/kernel"
 import { installCustomModule, uninstallCustomModule } from "./utils/moduleHelpers"
 import { getCustomNonce } from "./utils/nonce"
-
 
 const sessionKey = generatePrivateKey()
 const sessionAccount = privateKeyToAccount(sessionKey)
@@ -70,23 +69,23 @@ async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Act
     const targetContract: Hex = mockDeployment.MockTokenA
     const onInstallData = concat([sessionAccount.address, targetContract])
     console.log("onInstallData: ", onInstallData)
-    
+
     await installCustomModule(kernelClient, onInstallData)
     console.log("Custom Module Installed")
-    
+
     const mintReceiverAddress = getRandomAddress()
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelClient.account!,
         calls: [createMintCall(mintReceiverAddress)],
         nonce: customNonce,
     })
-    
+
     userOp.signature = await sessionSigner.signUserOperation({
         ...userOp,
         chainId: localhost.id,
         signature: EMPTY_SIGNATURE, // The signature field must be empty when hashing and signing the user operation.
     })
-    
+
     const userOpHash = await kernelClient.sendUserOperation({
         ...userOp,
     })
