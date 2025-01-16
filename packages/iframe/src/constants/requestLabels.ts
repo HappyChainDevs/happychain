@@ -9,6 +9,7 @@ export const requestLabels = {
     wallet_switchEthereumChain: "Switch Network",
     wallet_watchAsset: "Watch Asset",
     [HappyMethodNames.WALLET_USE_ABI_RPC_METHOD]: "Record ABI",
+    [HappyMethodNames.HAPPY_SESSION_KEY_RPC_METHOD]: "Use Session Key",
 } as const
 
 export const permissionDescriptions = {
