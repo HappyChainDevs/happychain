@@ -50,12 +50,10 @@ contract ScrappyAccountFactory {
 
     /**
      * @dev Predicts the address where a HappyAccount would be deployed
-     * @param initData The initialization data that would be used
      * @param salt The salt that would be used
      * @return The predicted address
      */
-    function getAddress(bytes calldata initData, bytes32 salt) public view returns (address) {
-        bytes32 actualSalt = keccak256(abi.encodePacked(initData, salt));
-        return LibClone.predictDeterministicAddressERC1967(ACCOUNT_IMPLEMENTATION, actualSalt, address(this));
+    function getAddress(bytes32 salt) public view returns (address) {
+        return LibClone.predictDeterministicAddressERC1967(ACCOUNT_IMPLEMENTATION, salt, address(this));
     }
 }
