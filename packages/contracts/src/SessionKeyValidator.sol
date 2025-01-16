@@ -18,8 +18,9 @@ struct SessionKeyValidatorStorage {
 }
 
 contract SessionKeyValidator is IValidator {
+    ///@dev keccak256(account, targetContract) => SessionKeyValidatorStorage
+    mapping(bytes32 => SessionKeyValidatorStorage) public sessionKeyValidatorStorage;
     
-    mapping(bytes32 => SessionKeyValidatorStorage) public sessionKeyValidatorStorage; // keccak256(account, targetContract) => SessionKeyValidatorStorage
     mapping(address => bool) public initialized;
 
     function onInstall(bytes calldata _data) external payable override {
