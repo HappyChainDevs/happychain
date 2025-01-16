@@ -19,6 +19,11 @@ export type HappyMethods = [
         Parameters: RecordAbiPayload
         ReturnType: undefined
     },
+    {
+        Method: typeof HappyMethodNames.REQUEST_SESSION_KEY
+        Parameters: [Address]
+        ReturnType: Address
+    },
 ]
 
 // === RPC METHODS =============================================================================
