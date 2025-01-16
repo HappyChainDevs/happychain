@@ -63,7 +63,7 @@ contract SessionKeyValidator is IValidator {
         override
         returns (uint256)
     {
-        bytes20 targetContract = bytes20(_getTargetContract(userOp.callData)); 
+        bytes20 targetContract = bytes20(_getTargetContract(userOp.callData));
         address sessionKey = sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)].sessionKey;
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(userOpHash);
 
