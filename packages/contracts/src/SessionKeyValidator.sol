@@ -18,10 +18,14 @@ struct SessionKeyValidatorStorage {
 }
 
 contract SessionKeyValidator is IValidator {
-    mapping(bytes32 => SessionKeyValidatorStorage) public sessionKeyValidatorStorage; // key is now (accountAddress, targetAddress)
+    
+    mapping(bytes32 => SessionKeyValidatorStorage) public sessionKeyValidatorStorage; // keccak256(account, targetContract) => SessionKeyValidatorStorage
     mapping(address => bool) public initialized;
 
     function onInstall(bytes calldata _data) external payable override {
+        if(initialized[msg.sender]) {
+            revert AlreadyInitialized(msg.sender);
+        }
         address sessionKey = address(bytes20(_data[0:20]));
         bytes20 targetContract = bytes20(_data[20:40]);
         
@@ -33,6 +37,15 @@ contract SessionKeyValidator is IValidator {
         bytes20 targetContract = bytes20(_data[0:20]);
         
         delete sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)];
+        delete initialized[msg.sender];
+    }
+
+    function addSessionKey(address targetContract, address sessionKey) external payable {
+        sessionKeyValidatorStorage[_getStorageKey(msg.sender, bytes20(targetContract))].sessionKey = sessionKey;
+    }
+
+    function removeSessionKey(address targetContract) external payable {
+        delete sessionKeyValidatorStorage[_getStorageKey(msg.sender, bytes20(targetContract))];
     }
 
     function isModuleType(uint256 typeID) external pure override returns (bool) {
@@ -49,7 +62,7 @@ contract SessionKeyValidator is IValidator {
         override
         returns (uint256)
     {
-        bytes20 targetContract = bytes20(userOp.callData[4:24]);
+        bytes20 targetContract = bytes20(_getTargetContract(userOp.callData)); 
         address sessionKey = sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)].sessionKey;
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(userOpHash);
 
@@ -63,14 +76,6 @@ contract SessionKeyValidator is IValidator {
         }
 
         return SIG_VALIDATION_FAILED_UINT;
-    }
-
-    function addSessionKey(address account, address targetContract, address sessionKey) external {
-        sessionKeyValidatorStorage[_getStorageKey(account, bytes20(targetContract))].sessionKey = sessionKey;
-    }
-
-    function removeSessionKey(address account, address targetContract) external {
-        delete sessionKeyValidatorStorage[_getStorageKey(account, bytes20(targetContract))];
     }
 
     function isValidSignatureWithSender(address to, bytes32 hash, bytes calldata sig)
@@ -88,9 +93,16 @@ contract SessionKeyValidator is IValidator {
         return ERC1271_MAGICVALUE;
     }
 
-    // Internal functions
+    function getStorageKey(address account, bytes20 target) public pure returns (bytes32) {
+        return _getStorageKey(account, target);
+    }
 
+    // Internal functions
     function _getStorageKey(address account, bytes20 target) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(account, target));
+        return keccak256(abi.encodePacked(account, target)); // do we want a salt? chainId?
+    }
+
+    function _getTargetContract(bytes calldata _data) internal pure returns (bytes20) {
+        return bytes20(_data[100:120]); // todo: dynamically get target contract
     }
 }
