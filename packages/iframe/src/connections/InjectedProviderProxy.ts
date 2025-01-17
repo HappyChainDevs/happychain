@@ -107,11 +107,9 @@ export class InjectedProviderProxy extends SafeEventEmitter {
      */
     private forwardInjectedEventLocal() {
         const provider = getInjectedProvider()
-        provider?.on("accountsChanged", (accounts) => {
-            // Forward the event back to the front end
+        provider?.on("accountsChanged", async (accounts) => {
+            // Forward the event to the front end
             this.emit("accountsChanged", accounts)
-            // Emit events to wagmi
-            iframeProvider.emit("accountsChanged", accounts)
 
             const user = getUser()
             if (!accounts.length) {
@@ -119,7 +117,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
                 setUserWithProvider(undefined, undefined)
             } else if (user) {
                 const [address] = accounts
-                const _user = createHappyUserFromWallet(user.provider, address)
+                const _user = await createHappyUserFromWallet(user.provider, address)
                 setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
             }
         })
@@ -129,12 +127,9 @@ export class InjectedProviderProxy extends SafeEventEmitter {
      * App-Mode: Forward injected events to the parent application
      * handling any internal events as needed.
      */
-    private forwardInjectedEventRemote(req: ProviderEventPayload<{ event: string; params: unknown }>) {
+    private async forwardInjectedEventRemote(req: ProviderEventPayload<{ event: string; params: unknown }>) {
         // Forward the event back to the front end
         this.emit(req.payload.event, req.payload.params)
-
-        // Emit events to wagmi
-        iframeProvider.emit(req.payload.event, req.payload.params)
 
         // handle any required internal changes
         switch (req.payload.event) {
@@ -146,7 +141,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
                     setUserWithProvider(undefined, undefined)
                 } else if (Array.isArray(req.payload.params) && user) {
                     const [address] = req.payload.params
-                    const _user = createHappyUserFromWallet(user.provider, address)
+                    const _user = await createHappyUserFromWallet(user.provider, address)
                     setUserWithProvider(_user, InjectedProviderProxy.getInstance() as EIP1193Provider)
                 }
             }

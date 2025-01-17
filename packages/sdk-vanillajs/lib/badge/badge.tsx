@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
+import { icon64x64 } from "@happychain/common"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { useEffect, useState } from "preact/hooks"
-import { icon64x64 } from "../happyProvider/icons"
 import { onUserUpdate } from "../happyProvider/initialize"
 import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"

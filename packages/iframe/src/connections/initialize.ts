@@ -72,7 +72,7 @@ if (isStandaloneIframe()) {
 } else {
     // Instead of listening to the EIP-6963 events inside the iframe, the app listens to them and forwards them
     // to us, as not every wallet will inject itself into iframes.
-    appMessageBus.on(Msgs.EIP6963RequestProvider, (provider) => {
+    appMessageBus.on(Msgs.AnnounceInjectedProvider, (provider) => {
         if (provider.info.rdns === happyProviderInfo.rdns) return
         addProvider(
             new InjectedConnector({

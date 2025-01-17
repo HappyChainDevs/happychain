@@ -49,7 +49,7 @@ function initializeProvider() {
         if ("ethereum" in window) {
             // listen to message bus instead of window here because when embedded, in many situations, the
             // providers will not be detected. Duplicates are fine as we use the provider.id as the unique key
-            iframeMessageBus?.emit(Msgs.EIP6963RequestProvider, {
+            iframeMessageBus?.emit(Msgs.AnnounceInjectedProvider, {
                 info: injectedProviderInfo,
             })
         }
@@ -58,7 +58,7 @@ function initializeProvider() {
             // don't forward ourselves to the iframe
             if (detail.info.rdns === "tech.happy") return
 
-            iframeMessageBus?.emit(Msgs.EIP6963RequestProvider, { info: detail.info })
+            iframeMessageBus?.emit(Msgs.AnnounceInjectedProvider, { info: detail.info })
         })
     })
 

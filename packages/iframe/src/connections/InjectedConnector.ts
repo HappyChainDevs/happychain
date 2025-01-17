@@ -84,8 +84,8 @@ export class InjectedConnector implements ConnectionProvider {
     }
 
     public async onDisconnect() {
-        await disconnectWagmi(config)
         setUserWithProvider(undefined, undefined)
+        await disconnectWagmi(config)
     }
 
     public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {

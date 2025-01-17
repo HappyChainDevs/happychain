@@ -1,6 +1,7 @@
 import { type EIP1193EventName, Msgs } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
+import { iframeProvider } from "#src/wagmi/provider.js"
 import { happyProviderBus } from "../services/eventBus"
 import { providerAtom } from "../state/provider"
 
@@ -14,6 +15,8 @@ export function useProviderEventsProxy(events: EIP1193EventName[]) {
 
     useEffect(() => {
         const proxyEvent = (name: EIP1193EventName) => (event: unknown) => {
+            void iframeProvider.emit(name, event)
+
             void happyProviderBus.emit(Msgs.ProviderEvent, {
                 payload: { event: name, args: event },
             })

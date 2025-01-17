@@ -7,12 +7,10 @@ export function HappyAccountProvider({ children }: PropsWithChildren) {
      * to the front end dapp
      */
     useProviderEventsProxy([
-        "connect",
+        "connect", //
         "disconnect",
         "chainChanged",
-        // accountsChanged will not be proxied to the front end
-        // as user data is exposed or withheld based on the permissions system
-        // 'accountsChanged'
+        "accountsChanged",
     ])
 
     return children
