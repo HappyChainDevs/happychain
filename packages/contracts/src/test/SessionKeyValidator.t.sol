@@ -29,6 +29,7 @@ contract SessionValidatorTest is Test {
         bytes paymasterAndData;
     }
     
+    
     function testValidateUserOp() public {
         // create user
         (address alice,) = makeAddrAndKey("alice");
