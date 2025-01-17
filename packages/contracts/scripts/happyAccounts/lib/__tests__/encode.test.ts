@@ -1,4 +1,4 @@
-import type { Address, Hex } from "viem"
+import type { Hex } from "viem"
 import { describe, expect, test } from "vitest"
 
 import type { HappyTx } from "../../types/happyTx"
@@ -8,11 +8,11 @@ import { encode } from "../../lib/happyTxLib"
 describe("encode", () => {
     test("should correctly encode tx with empty dynamic data", () => {
         const tx: HappyTx = {
-            account: "0x1234567890123456789012345678901234567890" as Address,
+            account: "0x1234567890123456789012345678901234567890",
             gasLimit: 1000000n,
             executeGasLimit: 800000n,
-            dest: "0x2345678901234567890123456789012345678901" as Address,
-            paymaster: "0x3456789012345678901234567890123456789012" as Address,
+            dest: "0x2345678901234567890123456789012345678901",
+            paymaster: "0x3456789012345678901234567890123456789012",
             value: 1000000000000000000n, // 1 ETH (10^19 in wei)
             nonce: 1n,
             maxFeePerGas: 2000000000n, // (2 * 10^9) wei
@@ -30,11 +30,11 @@ describe("encode", () => {
 
     test("should correctly encode tx with only extraData empty", () => {
         const tx: HappyTx = {
-            account: "0x1234567890123456789012345678901234567890" as Address,
+            account: "0x1234567890123456789012345678901234567890",
             gasLimit: 1000000n,
             executeGasLimit: 800000n,
-            dest: "0x2345678901234567890123456789012345678901" as Address,
-            paymaster: "0x3456789012345678901234567890123456789012" as Address,
+            dest: "0x2345678901234567890123456789012345678901",
+            paymaster: "0x3456789012345678901234567890123456789012",
             value: 1000000000000000000n,
             nonce: 1n,
             maxFeePerGas: 2000000000n,
@@ -52,11 +52,11 @@ describe("encode", () => {
 
     test("should correctly encode tx with all fields", () => {
         const tx: HappyTx = {
-            account: "0x1234567890123456789012345678901234567890" as Address,
+            account: "0x1234567890123456789012345678901234567890",
             gasLimit: 1000000n,
             executeGasLimit: 800000n,
-            dest: "0x2345678901234567890123456789012345678901" as Address,
-            paymaster: "0x3456789012345678901234567890123456789012" as Address,
+            dest: "0x2345678901234567890123456789012345678901",
+            paymaster: "0x3456789012345678901234567890123456789012",
             value: 1000000000000000000n,
             nonce: 1n,
             maxFeePerGas: 2000000000n,
