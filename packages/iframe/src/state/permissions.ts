@@ -307,14 +307,47 @@ export function revokePermissions(
 // === QUERY PERMISSIONS (BOOLEAN) =================================================================
 
 /**
- * Check if user has (all of) the given permission(s).
+ * Checks if a user has all of the requested permissions for a given app.
+ *
+ * This supports two types of permission checks :
+ * 1. "Simple" permissions (e.g., "eth_accounts"), passed as a `string`
+ * 2. Permissions with caveats (e.g., `{happy_sessionKey: { target: "0x..." }}`)
+ *
+ *
+ * @example Simple permission
+ * ```
+ * hasPermissions(app, "eth_accounts")
+ * ```
+ *
+ * @example Permission with caveats
+ * ```
+ * hasPermissions(app, {
+ *   "happy_sessionKey": {
+ *     "target": "0x..."
+ *   }
+ * })
+ * ```
+ *
+ * @param app - The URL of the application requesting permissions.
+ * @param permissionsRequest - Either a permission string or an object containing permissions with caveats.
+ * @returns `true` if all requested permissions (and their caveats) are granted.
  */
-export function hasPermissions(
-    app: AppURL, //
-    permissionsRequest: PermissionsRequest,
-): boolean {
+export function hasPermissions(app: AppURL, permissionsRequest: PermissionsRequest): boolean {
     const appPermissions = getAppPermissions(app)
-    return permissionRequestEntries(permissionsRequest).every(({ name }) => name in appPermissions)
+
+    return permissionRequestEntries(permissionsRequest).every(({ name, caveats }) => {
+        const permission = appPermissions[name]
+        if (!permission) return false
+        if (!caveats.length) return true
+
+        // Verify each requested caveat matches the stored permission
+        return caveats.every((requestedCaveat) =>
+            permission.caveats.some(
+                (existingCaveat) =>
+                    existingCaveat.type === requestedCaveat.type && existingCaveat.value === requestedCaveat.value,
+            ),
+        )
+    })
 }
 
 /**

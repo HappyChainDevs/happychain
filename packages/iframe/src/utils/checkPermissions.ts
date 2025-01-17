@@ -1,6 +1,8 @@
+import { HappyMethodNames } from "@happychain/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared"
-import { hasPermissions } from "#src/state/permissions.ts"
+import type { Address } from "viem/accounts"
+import { hasPermissions } from "#src/state/permissions"
 import { getChains, getCurrentChain } from "../state/chains"
 import { getUser } from "../state/user"
 import type { AppURL } from "./appURL.ts"
@@ -40,6 +42,16 @@ export function checkIfRequestRequiresConfirmation(
             const existingChainJSON = JSON.stringify(getChains()[payload.params[0].chainId])
             const newChainJSON = JSON.stringify(payload.params[0])
             return existingChainJSON !== newChainJSON
+        }
+
+        case HappyMethodNames.REQUEST_SESSION_KEY: {
+            const targetAddress = payload.params[0] as Address
+
+            return !hasPermissions(app, {
+                happy_sessionKey: {
+                    target: targetAddress,
+                },
+            })
         }
     }
 
