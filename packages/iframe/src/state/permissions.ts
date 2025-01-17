@@ -256,7 +256,6 @@ function permissionRequestEntries(permissions: PermissionsRequest): PermissionRe
  * granted permissions.
  */
 export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequest): WalletPermission[] {
-    console.log("granting permissions fn...")
     const grantedPermissions = []
     const appPermissions = getAppPermissions(app)
 
@@ -281,7 +280,6 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
     }
 
     setAppPermissions(app, appPermissions)
-    console.log("finished granting permissions")
     return grantedPermissions
 }
 
