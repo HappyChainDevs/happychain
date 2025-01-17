@@ -51,6 +51,12 @@ store.sub(userAtom, () => {
 })
 
 /**
+ * If a user exists in the atom at page load, lets emit this to the front end immediately
+ * while the web3 components get wired up
+ */
+if (store.get(userAtom)) emitUserUpdate(store.get(userAtom))
+
+/**
  * Emits user updates to the app if permitted and needed.
  *
  * @listens permissionsMapAtom

@@ -1,5 +1,5 @@
 import { type HappyUser, WalletType } from "@happychain/sdk-shared"
-import { connect, disconnect } from "@wagmi/core"
+import { connect as connectWagmi, disconnect as disconnectWagmi } from "@wagmi/core"
 import { type AuthProvider, GoogleAuthProvider } from "firebase/auth"
 import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
@@ -62,13 +62,13 @@ export class GoogleConnector extends FirebaseConnector {
          * to repeat on the next page refresh.
          */
         if (storage.get(StorageKey.HappyUser)?.type !== WalletType.Social) return
-        await disconnect(config)
+        await disconnectWagmi(config)
         setUserWithProvider(undefined, undefined)
     }
 
     async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         setUserWithProvider(user, provider)
-        await connect(config, { connector: happyConnector })
+        await connectWagmi(config, { connector: happyConnector })
     }
 
     async onConnect(user: HappyUser, provider: EIP1193Provider) {
@@ -81,6 +81,6 @@ export class GoogleConnector extends FirebaseConnector {
         }
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
-        await connect(config, { connector: happyConnector })
+        await connectWagmi(config, { connector: happyConnector })
     }
 }

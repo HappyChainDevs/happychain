@@ -6,7 +6,7 @@ import { getAddress } from "viem"
 import { StorageKey, storage } from "../services/storage.ts"
 
 const userCompare = (a: HappyUser | undefined, b: HappyUser | undefined) => a?.uid === b?.uid
-const initialUserValue = undefined
+const initialUserValue = storage.get(StorageKey.HappyUser)
 
 // Base atom for the user, wrapped by `userAtom` to provide a custom setter.
 const baseUserAtom = atomWithCompare<HappyUser | undefined>(initialUserValue, userCompare)

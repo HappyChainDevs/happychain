@@ -139,10 +139,6 @@
         transition-duration: 0;
     }
 
-    &[data-auth-state="initializing"] {
-        background-color: rgb(252 211 77 / 1);
-    }
-
     &[data-auth-state="authenticated"] {
         background-color: rgb(14 165 233 / 1);
     }
