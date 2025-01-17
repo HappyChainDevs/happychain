@@ -13,7 +13,10 @@ export const DeployAccountSchema = z.object({
 })
 
 export const HappyTxSchema = z.object({
-    encodedTx: z.string().regex(/^0x[0-9a-fA-F]+$/),
+    encodedHappyTx: z
+        .string()
+        .regex(/^0x[0-9a-fA-F]+$/)
+        .transform((val) => val as Hex),
 })
 
 export type DeployAccountRequest = z.infer<typeof DeployAccountSchema>

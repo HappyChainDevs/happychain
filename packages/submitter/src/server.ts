@@ -1,4 +1,4 @@
-import type { Address } from "viem"
+import { type Address, type Hex, zeroAddress } from "viem"
 
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
@@ -8,13 +8,38 @@ import { abis, deployment } from "@happychain/contracts/happyAccounts/anvil"
 import { account, publicClient, walletClient } from "./utils/clients"
 import { isContractDeployed } from "./utils/helpers"
 import { DeployAccountSchema, HappyTxSchema } from "./utils/requestSchema"
-import { DeployAccountResponseSchema } from "./utils/responseSchema"
+import { DeployAccountResponseSchema, SubmitHappyTxResponseSchema } from "./utils/responseSchema"
 
 const app = new Hono()
 app.use(prettyJSON())
 app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
 
 // Routes
+app.get("/getAddress", async (c) => {
+    const { salt } = c.req.query as { salt?: Hex }
+
+    if (!salt) {
+        return c.json({ success: false, message: "Salt is required" }, 400)
+    }
+
+    try {
+        const predictedAddress: Address = await publicClient.readContract({
+            address: deployment.ScrappyAccountFactory,
+            abi: abis.ScrappyAccountFactory,
+            functionName: "getAddress",
+            args: [salt],
+        })
+
+        return c.json({ success: true, accountAddress: predictedAddress, message: "SCA fetched successfully" })
+    } catch (error) {
+        console.error("Error fetching predicted address:", error)
+        return c.json(
+            { success: false, accountAddress: zeroAddress, message: "Failed to fetch predicted address" },
+            500,
+        )
+    }
+})
+
 app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) => {
     const { owner, salt } = c.req.valid("json")
     console.log("\n###########################################\n")
@@ -131,12 +156,44 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
 })
 
 app.post("/submitHappyTx", zValidator("json", HappyTxSchema), async (c) => {
-    const hash = "0xabcdabcd"
+    try {
+        const { encodedHappyTx } = c.req.valid("json")
+        console.log("\n###########################################\n")
+        console.log(`/submitHappyTx\nencodedHappyTx: ${encodedHappyTx}`)
 
-    return c.json({
-        success: true,
-        txHash: hash,
-    })
+        console.log("⏳ Simulating the transaction...")
+        // Simulate the transaction first
+        const { request } = await publicClient.simulateContract({
+            address: deployment.HappyEntryPoint,
+            abi: abis.HappyEntryPoint,
+            functionName: "submit",
+            args: [encodedHappyTx],
+            account,
+        })
+
+        console.log("✅ Transaction simulation successful.")
+
+        console.log("⏳ Sending the transaction...")
+        // Send the transaction
+        const hash = await walletClient.writeContract(request)
+        console.log("Submitted happyTx: ", hash)
+
+        const response = {
+            success: true,
+            message: "Tx submitted successfully",
+            txHash: hash,
+        }
+        const validatedResponse = SubmitHappyTxResponseSchema.parse(response)
+        return c.json(validatedResponse)
+    } catch (error) {
+        console.error("❌ Error submitting happy transaction:", error)
+        const response = {
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error during transaction submission",
+        }
+        const validatedResponse = SubmitHappyTxResponseSchema.parse(response)
+        return c.json(validatedResponse, 500)
+    }
 })
 
 export default app

@@ -37,13 +37,33 @@ export const DeployAccountResponseSchema = z.discriminatedUnion("success", [
     DeployAccountErrorSchema,
 ])
 
-export const SubmitHappyTxResponseSchema = z.object({
+export const BaseSubmitHappyTxResponseSchema = z.object({
+    success: z.boolean(),
+})
+
+export const SubmitHappyTxSuccessSchema = BaseSubmitHappyTxResponseSchema.extend({
+    success: z.literal(true),
+    message: z.string(),
     txHash: z
         .string()
         .regex(/^0x[0-9a-fA-F]{64}$/)
         .transform((val) => val as Hex),
-    success: z.boolean(),
 })
+
+export const SubmitHappyTxErrorSchema = BaseSubmitHappyTxResponseSchema.extend({
+    success: z.literal(false),
+    error: z.string(),
+    txHash: z
+        .string()
+        .regex(/^0x[0-9a-fA-F]{64}$/)
+        .transform((val) => val as Hex)
+        .optional(),
+})
+
+export const SubmitHappyTxResponseSchema = z.discriminatedUnion("success", [
+    SubmitHappyTxSuccessSchema,
+    SubmitHappyTxErrorSchema,
+])
 
 export type DeployAccountResponse = z.infer<typeof DeployAccountResponseSchema>
 export type SubmitHappyTxResponse = z.infer<typeof SubmitHappyTxResponseSchema>
