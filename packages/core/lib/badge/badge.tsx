@@ -14,7 +14,7 @@ export function Badge({ disableStyles = false }: BadgeProps) {
 
     const { connecting, connect, open } = useConnection()
 
-    useEffect(() => onUserUpdate((user) => setUser(user)), [])
+    useEffect(() => onUserUpdate((user: StateUpdater<HappyUser | undefined>) => setUser(user)), [])
 
     const connected = !!user?.address
     const onClick = connecting ? undefined : connected ? open : connect
