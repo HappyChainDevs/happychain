@@ -2,15 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {SessionKeyValidator} from "../../src/SessionKeyValidator.sol";
-import {ECDSA} from "solady/utils/ECDSA.sol";  
-import {MockERC20Token} from "../mocks/MockERC20.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
 import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
+import {SIG_VALIDATION_SUCCESS_UINT, SIG_VALIDATION_FAILED_UINT} from "kernel/types/Constants.sol";
 
-import {
-    SIG_VALIDATION_SUCCESS_UINT,
-    SIG_VALIDATION_FAILED_UINT
-} from "kernel/types/Constants.sol";
+import {MockERC20Token} from "../mocks/MockERC20.sol";
+import {SessionKeyValidator} from "../../src/SessionKeyValidator.sol";
 
 contract SessionValidatorTest is Test {
     SessionKeyValidator public sessionKeyValidator;
@@ -51,7 +48,7 @@ contract SessionValidatorTest is Test {
         
         // prefix calldata with handleUserOp()
         // ExecMode execMode (=0), bytes calldata executionCalldata
-        bytes memory executeCalldata = abi.encodeWithSignature("execute(bytes32,bytes)", 0, mintCallData); 
+        bytes memory executeCalldata = abi.encodeWithSignature("execute(bytes32,bytes)", 0, mintCallData);
         
         // create packed userOp without signature
         PartialPackedUserOperation memory partialUserOp = PartialPackedUserOperation({
@@ -80,7 +77,7 @@ contract SessionValidatorTest is Test {
             preVerificationGas: partialUserOp.preVerificationGas,
             gasFees: partialUserOp.gasFees,
             paymasterAndData: partialUserOp.paymasterAndData,
-            signature: abi.encodePacked(r,s,v) // note: ordering
+            signature: abi.encodePacked(r, s, v) // note: ordering
         });
         assertEq(sessionKeyValidator.validateUserOp(userOpWithSignature, userOpHash), SIG_VALIDATION_SUCCESS_UINT);
 
@@ -96,7 +93,7 @@ contract SessionValidatorTest is Test {
             preVerificationGas: partialUserOp.preVerificationGas,
             gasFees: partialUserOp.gasFees,
             paymasterAndData: partialUserOp.paymasterAndData,
-            signature: abi.encodePacked(r,s,v) // note: ordering
+            signature: abi.encodePacked(r, s, v) // note: ordering
         });
         assertEq(sessionKeyValidator.validateUserOp(userOpWithBogusSignature, userOpHash), SIG_VALIDATION_FAILED_UINT);
     }
