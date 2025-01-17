@@ -23,13 +23,17 @@ contract SessionKeyValidator is IValidator {
 
     mapping(address => bool) public initialized;
 
+    event SessionKeyAdded(address indexed account, address indexed targetContract, address sessionKey);
+    event SessionKeyRemoved(address indexed account, address indexed targetContract);
+
     function onInstall(bytes calldata _data) external payable override {
         if (initialized[msg.sender]) {
             revert AlreadyInitialized(msg.sender);
         }
         address sessionKey = address(bytes20(_data[0:20]));
         bytes20 targetContract = bytes20(_data[20:40]);
-        sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)].sessionKey = sessionKey;
+        _addSessionKey(msg.sender, address(targetContract), sessionKey);
+        
         initialized[msg.sender] = true;
     }
 
@@ -40,11 +44,11 @@ contract SessionKeyValidator is IValidator {
     }
 
     function addSessionKey(address targetContract, address sessionKey) external payable {
-        sessionKeyValidatorStorage[_getStorageKey(msg.sender, bytes20(targetContract))].sessionKey = sessionKey;
+        _addSessionKey(msg.sender, targetContract, sessionKey);
     }
 
     function removeSessionKey(address targetContract) external payable {
-        delete sessionKeyValidatorStorage[_getStorageKey(msg.sender, bytes20(targetContract))];
+        _removeSessionKey(msg.sender, targetContract);
     }
 
     function isModuleType(uint256 typeID) external pure override returns (bool) {
@@ -103,5 +107,15 @@ contract SessionKeyValidator is IValidator {
 
     function _getTargetContract(bytes calldata _data) internal pure returns (bytes20) {
         return bytes20(_data[100:120]); // todo: dynamically get target contract
+    }
+
+    function _addSessionKey(address account, address targetContract, address sessionKey) internal {
+        sessionKeyValidatorStorage[_getStorageKey(account, bytes20(targetContract))].sessionKey = sessionKey;
+        emit SessionKeyAdded(account, targetContract, sessionKey);
+    }
+
+    function _removeSessionKey(address account, address targetContract) internal {
+        delete sessionKeyValidatorStorage[_getStorageKey(account, bytes20(targetContract))];
+        emit SessionKeyRemoved(account, targetContract);
     }
 }
