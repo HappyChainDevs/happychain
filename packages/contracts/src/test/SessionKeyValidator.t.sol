@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {SessionKeyValidator} from "../../src/SessionKeyValidator.sol";
-import {MockERC20} from "forge-std/mocks/MockERC20.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";  
 import {MockERC20Token} from "../mocks/MockERC20.sol";
 import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
@@ -51,7 +50,8 @@ contract SessionValidatorTest is Test {
         mintCallData = abi.encodePacked(token, mintCallData);
         
         // prefix calldata with handleUserOp()
-        bytes memory executeCalldata = abi.encodeWithSignature("execute(bytes32,bytes)", 0, mintCallData); // ExecMode execMode (=0), bytes calldata executionCalldata
+        // ExecMode execMode (=0), bytes calldata executionCalldata
+        bytes memory executeCalldata = abi.encodeWithSignature("execute(bytes32,bytes)", 0, mintCallData); 
         
         // create packed userOp without signature
         PartialPackedUserOperation memory partialUserOp = PartialPackedUserOperation({

@@ -86,6 +86,9 @@ async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Act
         signature: EMPTY_SIGNATURE, // The signature field must be empty when hashing and signing the user operation.
     })
 
+    console.log("UserOperation: ", userOp)
+    console.log(sessionSigner)
+
     const userOpHash = await kernelClient.sendUserOperation({
         ...userOp,
     })
