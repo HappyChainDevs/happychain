@@ -41,7 +41,6 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 // exported for testing
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
-    const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
 
     switch (request.payload.method) {
         case "eth_chainId": {
@@ -68,7 +67,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
-
+            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             // Attempt to retrieve UserOperation details first.
             // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
             try {
@@ -152,6 +151,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_getTransactionCount": {
             const [address] = request.payload.params
+            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
 
             if (smartAccountClient && address.toLowerCase() === smartAccountClient.account.address.toLowerCase()) {
                 /**
@@ -175,6 +175,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_estimateGas": {
             const [tx] = request.payload.params
+            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             const gasEstimation = await smartAccountClient.estimateUserOperationGas({
                 calls: [
                     {
