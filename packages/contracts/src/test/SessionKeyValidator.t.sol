@@ -28,8 +28,7 @@ contract SessionValidatorTest is Test {
         bytes32 gasFees; //maxPriorityFee and maxFeePerGas;
         bytes paymasterAndData;
     }
-    
-    
+
     function testValidateUserOp() public {
         // create user
         (address alice,) = makeAddrAndKey("alice");
@@ -43,14 +42,14 @@ contract SessionValidatorTest is Test {
 
         // construct calldata for MockToken.mint()
         bytes memory mintCallData = abi.encodeWithSignature("mint(address,uint256)", alice, 0.01 ether);
-        
+
         // prefix with mockToken address
         mintCallData = abi.encodePacked(token, mintCallData);
-        
+
         // prefix calldata with handleUserOp()
         // ExecMode execMode (=0), bytes calldata executionCalldata
         bytes memory executeCalldata = abi.encodeWithSignature("execute(bytes32,bytes)", 0, mintCallData);
-        
+
         // create packed userOp without signature
         PartialPackedUserOperation memory partialUserOp = PartialPackedUserOperation({
             sender: alice,
@@ -124,5 +123,4 @@ contract SessionValidatorTest is Test {
         }
         return id;
     }
-
 }
