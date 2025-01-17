@@ -62,7 +62,7 @@ contract SessionValidatorTest is Test {
             paymasterAndData: hex""
         });
         // sign userOp
-        bytes32 userOpHash = getPackedUserOpHash(partialUserOp);
+        bytes32 userOpHash = _getPackedUserOpHash(partialUserOp);
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(userOpHash);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(sessionKeyPk, ethHash);
@@ -98,9 +98,38 @@ contract SessionValidatorTest is Test {
         assertEq(sessionKeyValidator.validateUserOp(userOpWithBogusSignature, userOpHash), SIG_VALIDATION_FAILED_UINT);
     }
 
+    function testAddSessionKey() public {
+        (address sessionKey,) = makeAddrAndKey("sessionKey");
+        _addSessionKey(address(token), sessionKey);
+        address sessionKeyLookup = sessionKeyValidator.sessionKeyValidatorStorage(
+            sessionKeyValidator.getStorageKey(address(this), bytes20(address(token)))
+        );
+
+        assertEq(sessionKeyLookup, sessionKey);
+    }
+
+    function testRemoveSessionKey() public {
+        (address sessionKey,) = makeAddrAndKey("sessionKey");
+        _addSessionKey(address(token), sessionKey);
+        address sessionKeyLookup = sessionKeyValidator.sessionKeyValidatorStorage(
+            sessionKeyValidator.getStorageKey(address(this), bytes20(address(token)))
+        );
+        assertEq(sessionKeyLookup, sessionKey);
+        // now remove
+        sessionKeyValidator.removeSessionKey(address(token));
+        sessionKeyLookup = sessionKeyValidator.sessionKeyValidatorStorage(
+            sessionKeyValidator.getStorageKey(address(this), bytes20(address(token)))
+        );
+        assertEq(sessionKeyLookup, address(0));
+    }
+
     // helper functions
 
-    function getPackedUserOpHash(PartialPackedUserOperation memory userOp) public view returns (bytes32) {
+    function _addSessionKey(address targetContract, address sessionKey) public {
+        sessionKeyValidator.addSessionKey(targetContract, sessionKey);
+    }
+
+    function _getPackedUserOpHash(PartialPackedUserOperation memory userOp) private view returns (bytes32) {
         return keccak256(
             abi.encodePacked(
                 userOp.sender,
@@ -111,12 +140,12 @@ contract SessionValidatorTest is Test {
                 userOp.preVerificationGas,
                 userOp.gasFees,
                 userOp.paymasterAndData,
-                getChainId()
+                _getChainId()
             )
         );
     }
 
-    function getChainId() public view returns (uint256) {
+    function _getChainId() private view returns (uint256) {
         uint256 id;
         assembly {
             id := chainid()
