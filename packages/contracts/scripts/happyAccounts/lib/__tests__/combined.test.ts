@@ -1,10 +1,11 @@
 import type { Address } from "viem"
 import { describe, expect, test } from "vitest"
 
-import { decode, encode } from "../lib/happyTxLib"
-import type { HappyTx } from "../types/happyTx"
+import type { HappyTx } from "../../types/happyTx"
+import { decode, encode } from "../../lib/happyTxLib"
 
-describe("HappyTxLib", () => {
+// Original encode-decode test suite
+describe("encode-decode", () => {
     const sampleTx: HappyTx = {
         account: "0x1234567890123456789012345678901234567890" as Address,
         gasLimit: 1000000n,

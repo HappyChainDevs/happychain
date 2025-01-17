@@ -13,7 +13,10 @@
         "./happyAccounts/anvil": "./deployments/anvil/happyAccounts/abis.ts"
     },
     "scripts": {
-        "test": "vitest happyTx"
+        "test": "vitest",
+        "encodeTests": "vitest encode.test.ts",
+        "decodeTests": "vitest decode.test.ts",
+        "combinedTests": "vitest combined.test.ts"
     },
     "dependencies": {
         "@kevincharm/bls-bn254": "^2.0.0",
