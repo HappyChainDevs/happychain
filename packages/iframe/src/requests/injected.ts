@@ -75,10 +75,9 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             if (!user) return false
             const target = request.payload.params[0].to
 
-            const hasSession =
-                getPermissions(app, {
-                    [PermissionNames.SESSION_KEY]: { target },
-                }).length > 0
+            const hasSession = getPermissions(app, {
+                [PermissionNames.SESSION_KEY]: { target },
+            }).some((a) => a.caveats.some((c) => c.type === "target" && c.value === target))
 
             if (hasSession) {
                 const user = getUser()

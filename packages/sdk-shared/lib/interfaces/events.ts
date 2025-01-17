@@ -33,7 +33,7 @@ export enum Msgs {
     InjectedWalletConnected = "injected-wallet:connected",
 
     /** Announces injected wallets to the iframe following EIP-6963 'detail.info' format. */
-    EIP6963RequestProvider = "eip6963:requestProvider",
+    AnnounceInjectedProvider = "announce-injected-provider",
 
     // --- EventsFromIframe ------------------------------------------------------------------------
 
@@ -127,7 +127,7 @@ export enum WalletDisplayAction {
 export type MsgsFromApp = {
     // We don't supply the provider — it is not serializable. Instead, the iframe will send
     // {@link Msgs.InjectedWalletRequestConnect} to request that the app connects to a given injected wallet.
-    [Msgs.EIP6963RequestProvider]: { info: EIP6963ProviderInfo; provider?: never }
+    [Msgs.AnnounceInjectedProvider]: { info: EIP6963ProviderInfo; provider?: never }
     [Msgs.ConnectRequest]: ProviderEventPayload<
         EIP1193RequestParameters<"eth_requestAccounts" | "wallet_requestPermissions">
     >

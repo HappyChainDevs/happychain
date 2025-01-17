@@ -19,17 +19,16 @@ const UserInfo = () => {
         return
     }
 
-    if (!activeProvider) {
-        // This should never occur
-        console.warn("Failed to find active provider")
-        return
-    }
-
     if (!account.address) {
         return <UserInfoLoader />
     }
 
-    if (account.address !== user.address) {
+    if (!activeProvider) {
+        // This should never occur
+        return
+    }
+
+    if (account.address !== user.controllingAddress) {
         // this is expected to happen when userAtom changes, but wagmi has not yet updated
         // these changes will happen quickly, but not at the exact same time.
         return <UserInfoLoader />

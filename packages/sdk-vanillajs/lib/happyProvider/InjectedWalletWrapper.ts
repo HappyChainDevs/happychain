@@ -15,10 +15,10 @@ const store = createStore()
 
 /**
  * Small wrapper over mipd's `store.findProvider` to handle the special case of replacing
- * `browser.injected` with `window.ethereum` as the provider
+ * `wallet.injected` with `window.ethereum` as the provider
  */
 function findProvider(rdns: string) {
-    if (rdns === "browser.injected" && "ethereum" in window) {
+    if (rdns === injectedProviderInfo.rdns && "ethereum" in window) {
         return { provider: window.ethereum, info: injectedProviderInfo } as EIP6963ProviderDetail
     }
 
