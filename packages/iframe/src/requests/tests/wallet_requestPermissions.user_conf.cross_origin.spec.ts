@@ -24,7 +24,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
         setAuthState(AuthState.Connected)
     })
 
-    test("adds eth_account permissions", async () => {
+    test("adds eth_account permissions (no caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(0)
         expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] })
@@ -43,14 +43,34 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
         ])
     })
 
-    test("throws error on caveat use", async () => {
+    test("adds eth_account permissions (with caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(0)
-        expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, {
             method: "wallet_requestPermissions",
-            params: [{ eth_accounts: { requiredMethods: ["signTypedData_v3"] } }],
+            params: [
+                {
+                    eth_accounts: {
+                        requiredMethods: ["signTypedData_v3"],
+                    },
+                },
+            ],
         })
-        expect(dispatchHandlers(request)).rejects.toThrow("Wallet permission caveats not yet supported")
+        const response = await dispatchHandlers(request)
+        expect(getAllPermissions(appURL).length).toBe(1)
+        expect(response).toStrictEqual([
+            {
+                caveats: [
+                    {
+                        type: "requiredMethods",
+                        value: ["signTypedData_v3"],
+                    },
+                ],
+                id: expect.any(String),
+                date: expect.any(Number),
+                invoker: appURL,
+                parentCapability: "eth_accounts",
+            },
+        ])
     })
 
     test("only adds permissions once", async () => {
