@@ -1,9 +1,8 @@
-import { AuthState, WalletDisplayAction, waitForCondition } from "@happychain/sdk-shared"
+import { WalletDisplayAction } from "@happychain/sdk-shared"
 import { Msgs } from "@happychain/sdk-shared"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
-import { getAuthState } from "#src/state/authState.ts"
 import { signalClosed, signalOpen } from "#src/utils/walletState.ts"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
@@ -29,7 +28,6 @@ function Embed() {
 
     useEffect(() => {
         const unsubscribe = appMessageBus.on(Msgs.RequestWalletDisplay, async (screen) => {
-            await waitForCondition(() => getAuthState() !== AuthState.Initializing)
             switch (screen) {
                 case WalletDisplayAction.Home:
                     void navigate({ to: "/embed" })

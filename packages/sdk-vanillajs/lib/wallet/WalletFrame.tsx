@@ -35,7 +35,6 @@ export const WalletFrame = ({ dragging }: WalletFrameProps) => {
         >
             {/* Base64 to avoid any bundle issues and network requests */}
             <img src={icon64x64} alt="HappyChain Logo" className="wallet-logo" inert={true} />
-
             <div className="wallet-iframe-wrapper" inert={!isOpen}>
                 <span ref={iframe}>
                     <slot name="frame" />
