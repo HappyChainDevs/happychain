@@ -13,7 +13,7 @@ include makefiles/help.mk
 SHARED_PKGS := common,sdk-shared
 
 # packages only used in the SDK
-SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components,worker,sdk-wagmi
+SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,sdk-frontend-components,worker
 
 # packages needed to build the sdk
 SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
@@ -354,7 +354,7 @@ contracts.clean:
 install-frozen:
 	# --frozen-lockfile will not generate the lockfile if missing
 	@if [ -r bun.lockb ]; then \
-		bun install --frozen-lockfile; \
+		bun install; \
 	else \
 		bun install; \
 	fi

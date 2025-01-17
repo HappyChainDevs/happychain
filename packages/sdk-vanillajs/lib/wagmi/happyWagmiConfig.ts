@@ -1,6 +1,7 @@
-import { type HappyProvider, happyProvider } from "@happychain/js"
 import { type Config, type CreateConnectorFn, createConfig, custom, injected } from "@wagmi/core"
 import type { Chain } from "@wagmi/core/chains"
+import type { HappyProvider } from "../happyProvider/happyProvider"
+import { happyProvider } from "../happyProvider/initialize"
 
 /**
  * A custom wagmi [Connector](https://wagmi.sh/react/api/connectors/injected) that is 
@@ -9,8 +10,7 @@ import type { Chain } from "@wagmi/core/chains"
  * @example
  * ### Setting up a wagmi config with our custom connector
  * ```ts twoslash
- * import { happyProvider } from "@happychain/js"
- * import { happyWagmiConnector } from "@happychain/wagmi"
+ * import { happyProvider, happyWagmiConnector } from "@happychain/core"
  * import { createConfig, type Config } from "@wagmi/core"
  * 
  * export const config: Config = createConfig({
@@ -38,7 +38,7 @@ export const happyWagmiConnector: CreateConnectorFn = injected({
  *
  * @example
  * ```ts twoslash
- * import { createHappyChainWagmiConfig, happyChainSepolia } from "@happychain/wagmi"
+ * import { createHappyChainWagmiConfig, happyChainSepolia } from "@happychain/core"
  * // ---cut---
  * const config = createHappyChainWagmiConfig(happyChainSepolia)
  * ```

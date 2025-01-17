@@ -3,7 +3,8 @@ import { happyProvider } from "./sdk"
 
 export { WagmiPlugin } from "@wagmi/vue"
 
-import { createHappyChainWagmiConfig, happyChainSepoliaViemChain } from "@happychain/wagmi"
+import { createHappyChainWagmiConfig } from "@happychain/js"
+import { happyChainSepoliaViemChain } from "@happychain/sdk-shared"
 
 /**
  * Console demo. to prompt for connection, or login, in the console try typing
