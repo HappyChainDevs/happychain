@@ -4,7 +4,7 @@ import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { type Hex, isHex } from "viem"
 import { publicClientAtom } from "#src/state/publicClient"
-import { getAppURL } from "#src/utils/appURL.js"
+import { getAppURL } from "#src/utils/appURL"
 import { Button } from "../primitives/button/Button"
 import RequestContent from "./common/RequestContent"
 import RequestLayout from "./common/RequestLayout"
@@ -15,7 +15,7 @@ export function HappyRequestSessionKey({
     params,
     reject,
     accept,
-}: RequestConfirmationProps<typeof HappyMethodNames.HAPPY_SESSION_KEY_RPC_METHOD>) {
+}: RequestConfirmationProps<typeof HappyMethodNames.REQUEST_SESSION_KEY>) {
     const publicClient = useAtomValue(publicClientAtom)
     const appURL = getAppURL()
 
@@ -24,7 +24,7 @@ export function HappyRequestSessionKey({
     useEffect(() => {
         const fetchBytecode = async () => {
             try {
-                const code = await publicClient.getCode({ address: params.address })
+                const code = await publicClient.getCode({ address: params[0] })
                 setBytecode(code)
             } catch (error) {
                 console.error("Error fetching bytecode:", error)
@@ -32,7 +32,7 @@ export function HappyRequestSessionKey({
         }
 
         fetchBytecode()
-    }, [publicClient, params.address])
+    }, [publicClient, params])
 
     return (
         <RequestLayout method={method}>
@@ -40,10 +40,10 @@ export function HappyRequestSessionKey({
                 <div className="flex flex-col items-center justify-between size-full">
                     <div className="flex flex-col grow size-full gap-4 rounded-xl p-4">
                         <div className="flex flex-col items-start justify-start text-content">
-                            <span className="text-blue-500 hover:text-purple-500 hover:underline">{appURL}</span>{" "}
+                            <span className="text-content hover:text-content/50 hover:underline">{appURL}</span>{" "}
                             <span className="italic">
                                 requests permission to automatically approve transactions to{" "}
-                                <span className="font-medium text-blue-600">{shortenAddress(params.address)}</span>
+                                <span className="font-medium text-content">{shortenAddress(params[0])}</span>
                             </span>
                         </div>
 

@@ -101,7 +101,7 @@ function Request() {
             return <WalletWatchAsset method={req.method} params={req.params} reject={reject} accept={accept} />
         case HappyMethodNames.WALLET_USE_ABI_RPC_METHOD:
             return <HappyWalletUseAbi method={req.method} params={req.params} reject={reject} accept={accept} />
-        case HappyMethodNames.HAPPY_SESSION_KEY_RPC_METHOD:
+        case HappyMethodNames.REQUEST_SESSION_KEY:
             return <HappyRequestSessionKey method={req.method} params={req.params} reject={reject} accept={accept} />
         default:
             return (
