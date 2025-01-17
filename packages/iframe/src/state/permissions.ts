@@ -57,7 +57,6 @@ export type WalletPermission = {
 
 /**
  * A caveat is a specific specific restrictions applied to the permitted request.
- * We do not support any caveats at the moment.
  */
 type WalletPermissionCaveat = {
     type: string
@@ -241,10 +240,6 @@ function permissionRequestEntries(permissions: PermissionsRequest): PermissionRe
             : Object.entries(permissions)
 
     return entries.map(([name, caveatsRequest]) => {
-        if (typeof caveatsRequest === "object" && Object.keys(caveatsRequest).length) {
-            throw new Error("Wallet permission caveats not yet supported")
-        }
-
         // Proper caveat transposition logic — though never used in practice.
         const caveats: WalletPermissionCaveat[] = //
             Object.entries(caveatsRequest) //
@@ -261,6 +256,7 @@ function permissionRequestEntries(permissions: PermissionsRequest): PermissionRe
  * granted permissions.
  */
 export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequest): WalletPermission[] {
+    console.log("granting permissions fn...")
     const grantedPermissions = []
     const appPermissions = getAppPermissions(app)
 
@@ -285,6 +281,7 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
     }
 
     setAppPermissions(app, appPermissions)
+    console.log("finished granting permissions")
     return grantedPermissions
 }
 
