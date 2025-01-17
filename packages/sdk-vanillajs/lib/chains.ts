@@ -1,4 +1,4 @@
-import { chains, happyChainSepoliaViemChain } from "@happychain/sdk-shared"
+import { chains } from "@happychain/sdk-shared"
 
 /**
  * Localhost Anvil chain for local development.
@@ -15,8 +15,3 @@ export const testnet = chains.happyChainSepolia
  * {@link testnet HappyChain Sepolia}.
  */
 export const defaultChain = chains.defaultChain
-
-/**
- * Viem [Chain](https://github.com/wevm/viem/blob/main/src/types/chain.ts) definition of HappyChain Sepolia.
- */
-export const happyChainSepolia = happyChainSepoliaViemChain

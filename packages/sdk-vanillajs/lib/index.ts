@@ -27,6 +27,7 @@ export type {
  */
 import * as _chains from "./chains"
 export const chains = { ..._chains }
+export { happyChainSepoliaViemChain as happyChainSepolia } from "@happychain/sdk-shared"
 
 export type {
     HappyUser,
