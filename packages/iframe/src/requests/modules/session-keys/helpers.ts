@@ -1,6 +1,6 @@
 import type { SmartAccountClient } from "permissionless"
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
-import { type Address, type Hex, numberToHex } from "viem"
+import { type Address, type Hex, concat, numberToHex } from "viem"
 import type { SmartAccount } from "viem/account-abstraction"
 import { getCurrentChain } from "#src/state/chains"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
@@ -88,22 +88,37 @@ export async function checkIsSessionKeyModuleInstalled(client: Erc7579Actions<Sm
  * Installs the SessionKeyValidator module for the smart account.
  * This module will validate transactions signed by session keys.
  *
- * @param client - The smart account client.
- * @param sessionKey - The address associated with the session key to be authorized.
- * @throws Error if module installation fails or cannot be verified.
+ * @param client - The smart account client with ERC-7579 actions support.
+ * @param sessionKey - Address of the session key (account) that will be authorized to sign transactions.
+ * @param targetContract - Address of the contract this session key will be authorized to interact with.
+ *
+ * @throws {Error} If the module installation fails.
+ * @example
+ * ```
+ * const sessionKey = generatePrivateKey()
+ * const accountSessionKey = privateKeyToAccount(sessionKey)
+ *
+ * await installSessionKeyModule(
+ *   smartAccountClient,
+ *   accountSessionKey.address,
+ *   "0x1234567890123456789012345678901234567890" // Target contract address
+ * )
+ * ```
  */
 export async function installSessionKeyModule(
     client: SmartAccountClient & Erc7579Actions<SmartAccount>,
     sessionKey: Address,
+    targetContract: Address,
 ) {
     const currentChain = getCurrentChain()?.chainId
     const contracts = getAccountAbstractionContracts(currentChain)
+    const onInstallData = concat([sessionKey, targetContract])
 
     // Install the module with initial session key
     const opHash = await client.installModule({
         type: "validator",
         address: contracts.SessionKeyValidator,
-        context: getModuleInitData(NO_HOOKS_ADDRESS, sessionKey, "0x", EXECUTE_FUNCTION_SELECTOR),
+        context: getModuleInitData(NO_HOOKS_ADDRESS, onInstallData, "0x", EXECUTE_FUNCTION_SELECTOR),
         nonce: await client.account!.getNonce(),
     })
 

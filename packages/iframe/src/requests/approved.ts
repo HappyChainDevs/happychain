@@ -140,10 +140,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             // address of contract the session key will be authorized to interact with
-            const targetAddress = request.payload.params[0]
+            const targetContract = request.payload.params[0]
 
-            if (!isAddress(targetAddress)) {
-                throw new InvalidAddressError({ address: targetAddress })
+            if (!isAddress(targetContract)) {
+                throw new InvalidAddressError({ address: targetContract })
             }
 
             // Generate a new session key
@@ -157,6 +157,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 await installSessionKeyModule(
                     smartAccountClient as unknown as SmartAccountClient & Erc7579Actions<SmartAccount>,
                     accountSessionKey.address,
+                    targetContract,
                 )
             }
 
@@ -165,7 +166,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             grantPermissions(app, {
                 happy_sessionKey: {
-                    target: targetAddress,
+                    target: targetContract,
                 },
             })
 
@@ -174,7 +175,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 ...storedSessionKeys,
                 [user!.address]: {
                     ...(storedSessionKeys[user!.address] || {}),
-                    [targetAddress]: sessionKey,
+                    [targetContract]: sessionKey,
                 },
             })
 
