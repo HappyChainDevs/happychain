@@ -33,7 +33,7 @@ contract SessionKeyValidator is IValidator {
         address sessionKey = address(bytes20(_data[0:20]));
         bytes20 targetContract = bytes20(_data[20:40]);
         _addSessionKey(msg.sender, address(targetContract), sessionKey);
-        
+
         initialized[msg.sender] = true;
     }
 
