@@ -216,6 +216,10 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             const user = getUser()
             const targetContractAddress = request.payload.params[0] as Address
 
+            if (!isAddress(targetContractAddress)) {
+                throw new InvalidAddressError({ address: targetContractAddress })
+            }
+
             if (
                 !hasPermissions(app, {
                     happy_sessionKey: {

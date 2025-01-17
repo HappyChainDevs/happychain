@@ -11,7 +11,7 @@ import {
 } from "@happychain/sdk-shared"
 import type { SmartAccountClient } from "permissionless"
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
-import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
+import { type Client, type Hash, type Hex, InvalidAddressError, hexToBigInt, isAddress } from "viem"
 import type { SmartAccount } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { StorageKey, storage } from "#src/services/storage"
@@ -141,6 +141,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             // address of contract the session key will be authorized to interact with
             const targetAddress = request.payload.params[0]
+
+            if (!isAddress(targetAddress)) {
+                throw new InvalidAddressError({ address: targetAddress })
+            }
 
             // Generate a new session key
             const sessionKey = generatePrivateKey()
