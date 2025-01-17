@@ -5,7 +5,7 @@ import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
 import { StorageKey, storage } from "#src/services/storage.ts"
 import { getChains } from "#src/state/chains.ts"
-import { createKernelAccount } from "#src/state/kernelAccount.ts"
+import { getKernelAccountAddress } from "#src/state/kernelAccount.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
 import { getAppURL } from "#src/utils/appURL.ts"
 import { config } from "#src/wagmi/config.ts"
@@ -69,13 +69,13 @@ export class GoogleConnector extends FirebaseConnector {
 
     async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         let happyUser = user
-        const kernelAccount = await createKernelAccount(happyUser.controllingAddress)
-        if (kernelAccount?.address) {
+        const kernelAccountAddress = await getKernelAccountAddress(user.controllingAddress)
+        if (kernelAccountAddress) {
             // Update user with smart account
             happyUser = {
                 ...happyUser,
                 controllingAddress: happyUser.controllingAddress,
-                address: kernelAccount.address,
+                address: kernelAccountAddress,
             }
         }
         setUserWithProvider(happyUser, provider)

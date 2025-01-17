@@ -39,8 +39,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
     const user = getUser()
-    const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
-
     if (!user) {
         console.warn("Request approved, but no user found")
     }
@@ -53,30 +51,30 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             //      that occured in the old convertToUserOp call and were being swallowed.
             //      We need to make sure all errors are correctly surfaced!
             try {
+                const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
                 const tx = request.payload.params[0]
-
                 const preparedUserOp = await smartAccountClient.prepareUserOperation({
                     account: smartAccountClient.account,
                     calls: [
                         {
                             to: tx.to,
                             data: tx.data,
-                            value: tx.value,
+                            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
                         },
                     ],
                 })
 
-                const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
-                console.log(userOpHash)
+                const userOpSignature = await smartAccountClient.account.signUserOperation(preparedUserOp)
+                const userOpWithSig = { ...preparedUserOp, signature: userOpSignature }
+                const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
 
                 addPendingUserOp(user.address, {
                     userOpHash: userOpHash as Hash,
-                    value: hexToBigInt(tx.value as Hex),
+                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
                 })
-
                 return userOpHash
             } catch (error) {
-                console.error("prep errored", error)
+                console.error("Sending UserOp errored", error)
                 throw error
             }
         }
