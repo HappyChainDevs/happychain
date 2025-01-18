@@ -39,6 +39,7 @@ contract SessionValidatorTest is Test {
         // call onInstall
         bytes memory onInstallData = abi.encodePacked(sessionKey, token);
         sessionKeyValidator.onInstall(onInstallData);
+        assert(sessionKeyValidator.initialized(address(this)));
 
         // construct calldata for MockToken.mint()
         bytes memory mintCallData = abi.encodeWithSignature("mint(address,uint256)", alice, 0.01 ether);
