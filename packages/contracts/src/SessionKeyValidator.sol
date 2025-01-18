@@ -100,9 +100,9 @@ contract SessionKeyValidator is IValidator {
         return _getStorageKey(account, target);
     }
 
-    // Internal functions
+    // Internal helper functions
     function _getStorageKey(address account, bytes20 target) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(account, target)); // do we want a salt? chainId?
+        return keccak256(abi.encodePacked(account, target));
     }
 
     function _getTargetContract(bytes calldata _data) internal pure returns (bytes20) {
