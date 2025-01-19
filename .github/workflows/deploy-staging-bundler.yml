@@ -24,10 +24,8 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install foundry
-        run: |
-          curl -L https://foundry.paradigm.xyz | bash
-          source $HOME/.bashrc
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
       
       - name: Show wallets address
         run: |
