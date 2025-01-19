@@ -27,6 +27,7 @@ jobs:
       - name: Install foundry
         run: |
           curl -L https://foundry.paradigm.xyz | bash
+          source $HOME/.bashrc
       
       - name: Show wallets address
         run: |
@@ -34,6 +35,7 @@ jobs:
           UTILITY_WALLET_ADDRESS=$(cast wallet address ${{ secrets.STAGING_BUNDLER_UTILITY_WALLET }})
           echo "Executor wallet: $EXECUTOR_WALLET_ADDRESS"
           echo "Utility wallet: $UTILITY_WALLET_ADDRESS"
+        
 
       - name: Build code
         run: |
