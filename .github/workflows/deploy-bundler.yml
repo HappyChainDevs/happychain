@@ -24,6 +24,17 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install foundry
+        run: |
+          curl -L https://foundry.paradigm.xyz | bash
+      
+      - name: Show wallets address
+        run: |
+          EXECUTOR_WALLET_ADDRESS=$(cast wallet address ${{ secrets.BUNDLER_EXECUTOR_WALLET }})
+          UTILITY_WALLET_ADDRESS=$(cast wallet address ${{ secrets.BUNDLER_UTILITY_WALLET }})
+          echo "Executor wallet: $EXECUTOR_WALLET_ADDRESS"
+          echo "Utility wallet: $UTILITY_WALLET_ADDRESS"
+  
       - name: Build code
         run: |
           cd packages/bundler
