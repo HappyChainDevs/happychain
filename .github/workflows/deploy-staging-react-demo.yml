@@ -33,7 +33,7 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           source: "packages/demo-react/dist"
-          target: /home/deployer/staging-react-demo
+          target: /home/deployer/staging-demo-react
           strip_components: 3 # Remove the first 3 levels of directories from the source path to copy only the files inside dist
           rm: true
 
@@ -45,10 +45,10 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            chmod -R o+rX /home/deployer/staging-react-demo
-            mv /home/deployer/staging-react-demo /tmp
-            sudo -u staging_react_demo bash -c '
-              rm -rf /var/www/staging-react-demo/*
-              cp -r /tmp/staging-react-demo/* /var/www/staging-react-demo
+            chmod -R o+rX /home/deployer/staging-demo-react
+            mv /home/deployer/staging-demo-react /tmp
+            sudo -u staging_demo_react bash -c '
+              rm -rf /var/www/staging-demo-react/*
+              cp -r /tmp/staging-demo-react/* /var/www/staging-demo-react
             '
-            rm -rf /tmp/staging-react-demo
+            rm -rf /tmp/staging-demo-react
