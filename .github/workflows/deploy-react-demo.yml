@@ -1,7 +1,8 @@
-name: Deploy js demo
+name: Deploy react demo
 
 on:
   workflow_dispatch:
+  pull_request:
 
 jobs:
   deploy:
@@ -21,9 +22,9 @@ jobs:
       - name: Build code
         env:
           IFRAME_URL: "https://iframe.happy.tech"
+          NODE_ENV: "production"
         run: |
-          make setup
-          make demo-js.build
+          make demo-react.build
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -31,12 +32,12 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "packages/demo-vanillajs/dist"
-          target: /home/deployer/demo-js
+          source: "packages/demo-react/dist"
+          target: /home/deployer/demo-react
           strip_components: 3 # Remove the first 3 levels of directories from the source path to copy only the files inside dist
           rm: true
 
-      - name: Deploy js demo to server
+      - name: Deploy react demo to server
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -44,10 +45,10 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            chmod -R o+rX /home/deployer/demo-js
-            mv /home/deployer/demo-js /tmp
-            sudo -u demo_js bash -c '
-              rm -rf /var/www/demo-js/*
-              cp -r /tmp/demo-js/* /var/www/demo-js
+            chmod -R o+rX /home/deployer/demo-react
+            mv /home/deployer/demo-react /tmp
+            sudo -u demo_react bash -c '
+              rm -rf /var/www/demo-react/*
+              cp -r /tmp/demo-react/* /var/www/demo-react
             '
-            rm -rf /tmp/demo-js
+            rm -rf /tmp/demo-react
