@@ -27,6 +27,7 @@ jobs:
       - name: Install foundry
         run: |
           curl -L https://foundry.paradigm.xyz | bash
+          source $HOME/.bashrc
       
       - name: Show wallets address
         run: |
