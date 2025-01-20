@@ -13,7 +13,7 @@ ALTO_BRANCH := $(shell cat alto.version)
 ALTO_CONFIG_FILE = configs/config.$(TARGET).json
 
 # Target to set up the repository initially (install dependencies and build)
-setup: alto build
+setup: build
 .PHONY: setup
 
 # Clone or update Alto repository based on alto.version
