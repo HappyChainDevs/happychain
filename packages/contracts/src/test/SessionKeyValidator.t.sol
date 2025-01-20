@@ -11,11 +11,11 @@ import {SessionKeyValidator} from "../../src/SessionKeyValidator.sol";
 
 contract SessionValidatorTest is Test {
     SessionKeyValidator public sessionKeyValidator;
-    MockERC20Token public token;
+    MockERC20Token public mockToken;
 
     function setUp() public {
         sessionKeyValidator = new SessionKeyValidator();
-        token = new MockERC20Token("MockToken", "MTK", 18);
+        mockToken = new MockERC20Token("MockToken", "MTK", 18);
     }
 
     struct PartialPackedUserOperation {
@@ -37,7 +37,7 @@ contract SessionValidatorTest is Test {
         (address sessionKey, uint256 sessionKeyPk) = makeAddrAndKey("sessionKey");
 
         // call onInstall
-        bytes memory onInstallData = abi.encodePacked(sessionKey, token);
+        bytes memory onInstallData = abi.encodePacked(sessionKey, mockToken);
         sessionKeyValidator.onInstall(onInstallData);
         assert(sessionKeyValidator.initialized(address(this)));
 
@@ -45,7 +45,7 @@ contract SessionValidatorTest is Test {
         bytes memory mintCallData = abi.encodeWithSignature("mint(address,uint256)", alice, 0.01 ether);
 
         // prefix with mockToken address
-        mintCallData = abi.encodePacked(token, mintCallData);
+        mintCallData = abi.encodePacked(mockToken, mintCallData);
 
         // prefix calldata with handleUserOp()
         // ExecMode execMode (=0), bytes calldata executionCalldata
@@ -101,9 +101,9 @@ contract SessionValidatorTest is Test {
 
     function testAddSessionKey() public {
         (address sessionKey,) = makeAddrAndKey("sessionKey");
-        _addSessionKey(address(token), sessionKey);
+        _addSessionKey(address(mockToken), sessionKey);
         address sessionKeyLookup = sessionKeyValidator.sessionKeyValidatorStorage(
-            sessionKeyValidator.getStorageKey(address(this), bytes20(address(token)))
+            sessionKeyValidator.getStorageKey(address(this), bytes20(address(mockToken)))
         );
 
         assertEq(sessionKeyLookup, sessionKey);
@@ -111,15 +111,15 @@ contract SessionValidatorTest is Test {
 
     function testRemoveSessionKey() public {
         (address sessionKey,) = makeAddrAndKey("sessionKey");
-        _addSessionKey(address(token), sessionKey);
+        _addSessionKey(address(mockToken), sessionKey);
         address sessionKeyLookup = sessionKeyValidator.sessionKeyValidatorStorage(
-            sessionKeyValidator.getStorageKey(address(this), bytes20(address(token)))
+            sessionKeyValidator.getStorageKey(address(this), bytes20(address(mockToken)))
         );
         assertEq(sessionKeyLookup, sessionKey);
         // now remove
-        _removeSessionKey(address(token));
+        _removeSessionKey(address(mockToken));
         sessionKeyLookup = sessionKeyValidator.sessionKeyValidatorStorage(
-            sessionKeyValidator.getStorageKey(address(this), bytes20(address(token)))
+            sessionKeyValidator.getStorageKey(address(this), bytes20(address(mockToken)))
         );
         assertEq(sessionKeyLookup, address(0));
     }
@@ -131,16 +131,16 @@ contract SessionValidatorTest is Test {
         sessionKeys[0] = address(sessionKey);
         address[] memory targetContracts = new address[](1);
         targetContracts[0] = targetContract;
-        sessionKeyValidator.addSessionKey(targetContracts, sessionKeys);
+        sessionKeyValidator.addSessionKeys(targetContracts, sessionKeys);
     }
 
     function _removeSessionKey(address targetContract) public {
         address[] memory targetContracts = new address[](1);
         targetContracts[0] = address(targetContract);
-        sessionKeyValidator.removeSessionKey(targetContracts);
+        sessionKeyValidator.removeSessionKeys(targetContracts);
     }
 
-    function _getPackedUserOpHash(PartialPackedUserOperation memory userOp) private view returns (bytes32) {
+    function _getPackedUserOpHash(PartialPackedUserOperation memory userOp) private pure returns (bytes32) {
         return keccak256(
             abi.encodePacked(
                 userOp.sender,
