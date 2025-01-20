@@ -37,16 +37,21 @@ function getModuleInitData(hookAddress: Address, validatorData: Hex, hookData: H
     const hexHookDataLength = toHexDigits(BigInt(hookDataLen), 32)
     const hexSelectorDataLength = toHexDigits(BigInt(selectorDataLen), 32)
 
+    /**
+     * Calculate offsets for each data section.
+     * Each offset is relative to 0x34 in the final layout (but why? maybe backwards compat)
+     */
+
     // validatorDataOffset = HookDataOffset.length + SelectorDataOffset.length + ValidatorDataLength.length
-    const validatorDataOffset = 32 + 32 + 32
+    const validatorDataOffset = 32 + 32 + 32 // skip hookDataOffset, selectorDataOffset, and validatorDataLength
     const hexValidatorDataOffset = toHexDigits(BigInt(validatorDataOffset), 32)
 
     // hookDataOffset = validatorDataOffset + validatorData.length + hookDataLength.length
-    const hookDataOffset = validatorDataOffset + validatorDataLen
+    const hookDataOffset = validatorDataOffset + validatorDataLen + 32 // 32 = hookDataLength
     const hexHookDataOffset = toHexDigits(BigInt(hookDataOffset), 32)
 
     // selectorDataOffset = hookDataOffset + hookData.length + selectorDataLength.length
-    const selectorDataOffset = hookDataOffset + 32 + hookDataLen + 32
+    const selectorDataOffset = hookDataOffset + hookDataLen + 32 // 32 = selectorDataLength
     const hexSelectorDataOffset = toHexDigits(BigInt(selectorDataOffset), 32)
 
     // biome-ignore format: readability
