@@ -14,7 +14,7 @@ export function HappyWalletUseAbi({
     params,
     reject,
     accept,
-}: RequestConfirmationProps<typeof HappyMethodNames.WALLET_USE_ABI_RPC_METHOD>) {
+}: RequestConfirmationProps<typeof HappyMethodNames.USE_ABI>) {
     const chain = useAtomValue(currentChainAtom)
     const classifiedAbi = useClassifyAbi(params.abi)
 

@@ -8,7 +8,7 @@ export const requestLabels = {
     wallet_requestPermissions: "Permission Request",
     wallet_switchEthereumChain: "Switch Network",
     wallet_watchAsset: "Watch Asset",
-    [HappyMethodNames.WALLET_USE_ABI_RPC_METHOD]: "Record ABI",
+    [HappyMethodNames.USE_ABI]: "Record ABI",
 } as const
 
 export const permissionDescriptions = {

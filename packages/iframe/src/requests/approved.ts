@@ -134,7 +134,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             return user ? addWatchedAsset(user.address, request.payload.params) : false
         }
 
-        case HappyMethodNames.WALLET_USE_ABI_RPC_METHOD: {
+        case HappyMethodNames.USE_ABI: {
             return user ? loadAbiForUser(user.address, request.payload.params) : false
         }
 
