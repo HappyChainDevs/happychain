@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import useClients from "../useClients"
 
 const WalletCallsDemo = () => {
+    const [signDelayCountdown, setSignDelayCountdown] = useState(0)
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
@@ -17,25 +18,41 @@ const WalletCallsDemo = () => {
 
     async function signMessage(message: string) {
         if (!user || !walletClient) {
-            alert("no user connected")
+            toast.error("no user connected")
             return
         }
 
         setSignatureResult("")
 
-        const signature = await walletClient.signMessage({ account: user.address, message })
+        const signature = await walletClient.signMessage({ message })
 
         const valid = await publicClient!.verifyMessage({
-            address: user.controllingAddress,
+            address: user?.controllingAddress,
             message,
             signature,
         })
 
-        toast.success(`Message Signed by Wallet: ${message}`)
-
-        if (valid) {
-            setSignatureResult(signature)
+        if (!valid) {
+            toast.error("Invalid Signature")
+            return
         }
+
+        toast.success(`Message Signed by Wallet: ${message}`)
+        setSignatureResult(signature)
+    }
+
+    async function signMessageWithDelay(message: string) {
+        if (!user || !walletClient) {
+            toast.error("no user connected")
+            return
+        }
+        for (let i = 6; i > 0; i--) {
+            setSignDelayCountdown(i)
+            await new Promise((resolve) => setTimeout(resolve, 1_000))
+        }
+
+        setSignDelayCountdown(0)
+        return await signMessage(message)
     }
 
     useEffect(() => {
@@ -49,13 +66,21 @@ const WalletCallsDemo = () => {
         <div className=" rounded-lg flex flex-col gap-4 p-4 backdrop-blur-sm bg-gray-200/35 col-span-2">
             <div className="text-lg font-bold">RPC Calls</div>
             <div className="flex gap-4">
-                <div className="h-full">
+                <div className="h-full flex flex-col gap-4">
                     <button
                         type="button"
                         onClick={() => signMessage("Hello, World!")}
                         className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36"
                     >
                         Sign Message
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => signMessageWithDelay("Hello, World!")}
+                        className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36"
+                    >
+                        {signDelayCountdown || "Sign with Delay"}
+                        <small className="block text-sm text-gray-700">(for popup blocking)</small>
                     </button>
                 </div>
                 <div className="w-full overflow-auto">

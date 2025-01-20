@@ -34,7 +34,6 @@ export class IframeProvider extends BasePopupProvider {
         super(iframeID())
     }
 
-    // I trigger popup block locally, so we have no handler here...
     protected onPopupBlocked() {
         addBanner("popup-blocked")
         // user reject on popup block, to force wagmi to recognize the request termination

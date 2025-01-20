@@ -6,10 +6,10 @@ const ConnectionDemo = () => {
 
     async function toggleUserConnection() {
         if (user) {
-            disconnect()
+            await disconnect()
             toast.info("User Disconnected from HappyWallet.")
         } else {
-            connect()
+            await connect()
             toast.info("User Connected to HappyWallet!")
         }
     }

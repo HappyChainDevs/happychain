@@ -1,13 +1,21 @@
 import { useHappyChain } from "@happy.tech/react"
 import { useMemo } from "react"
-import { type PublicClient, type WalletClient, createPublicClient, createWalletClient, custom } from "viem"
+import {
+    type Account,
+    type CustomTransport,
+    type PublicClient,
+    type WalletClient,
+    createPublicClient,
+    createWalletClient,
+    custom,
+} from "viem"
 
 /**
  * Creates custom public + wallet clients using the HappyProvider.
  */
 export default function useClients(): {
     publicClient: PublicClient
-    walletClient: WalletClient | null
+    walletClient: WalletClient<CustomTransport, undefined, Account> | null
 } {
     const { provider, user } = useHappyChain()
 
