@@ -155,12 +155,13 @@
 }
 
 @keyframes bg-pulse {
-  0%, 100% {
-    background-color: rgb(var(--bg-color) / 1);
-  }
-  50% {
-    background-color: rgb(var(--bg-color) / 0.5);
-  }
+    0%,
+    100% {
+        background-color: rgb(var(--bg-color) / 1);
+    }
+    50% {
+        background-color: rgb(var(--bg-color) / 0.5);
+    }
 }
 
 .wallet-logo {
