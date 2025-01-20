@@ -140,6 +140,11 @@
         transition-duration: 0;
     }
 
+    &[data-auth-state="initializing"] {
+        --bg-color: 13 148 136;
+        animation: bg-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
     &[data-auth-state="authenticated"] {
         background-color: rgb(14 165 233 / 1);
     }
@@ -147,6 +152,18 @@
     &[data-auth-state="unauthenticated"] {
         background-color: rgb(251 113 133 / 1);
     }
+}
+
+@keyframes bg-pulse {
+  0%, 100% {
+    /* --opacity: 1; */
+
+    background-color: rgb(var(--bg-color) / 1);
+  }
+  50% {
+    /* --opacity: .5; */
+    background-color: rgb(var(--bg-color) / 0.5);
+  }
 }
 
 .wallet-logo {
