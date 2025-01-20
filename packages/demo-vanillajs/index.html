@@ -17,34 +17,77 @@
 
     <h1 class="text-white text-4xl font-bold mt-20 sm:mt-0 sm:p-16 text-center">HappyChain + JS + Ethers</h1>
 
-    <!-- Persistent Badge from @happychain/ui -->
-    <connect-button disable-styles></connect-button>
-    
-    <button id="connect-btn" type="button" class="rounded-lg bg-sky-300 p-2 shadow-xl">
-      Connect
-    </button>
 
 
-    <div class="max-w-96 md:max-w-screen-lg w-full overflow-auto bg-gray-200 p-4">
-      <p class="text-lg font-bold">User Details</p>
-      <pre id="user-dump"></pre>
-    </div>
 
-    <button type="button" id="sign-message-btn" class="rounded-lg bg-sky-300 p-2 shadow-xl">
-      Sign Message
-    </button>
+    <div class="flex flex-col md:grid grid-cols-2 gap-4 w-full md:max-w-screen-lg">
 
-    <div class="max-w-96 md:max-w-screen-lg w-full overflow-auto bg-gray-200 p-4">
-      <p class="text-lg font-bold">Results:</p>
-      <pre id="signature-dump"></pre>
-    </div>
+      <div class="rounded-lg flex flex-col gap-4 p-4 backdrop-blur-sm bg-gray-200/35 col-span-2">
+        <div class="text-lg font-bold">Connection Methods</div>
 
-    <button type="button" id="get-block-btn" class="rounded-lg bg-sky-300 p-2 shadow-xl">
-      Get Block
-    </button>
-    <div class="max-w-96 md:max-w-screen-lg w-full overflow-auto bg-gray-200 p-4">
-      <p class="text-lg font-bold">Results:</p>
-      <pre id="block-dump"></pre>
+        <div class="flex gap-4">
+          <div class="flex flex-col h-full justify-between">
+            <button id="connect-btn" type="button" class="rounded-lg bg-sky-300 p-2 shadow-xl">
+              Connect
+            </button>
+            <small>Customized Badge</small>
+          </div>
+
+          <span class="border border-gray-200/35"></span>
+
+          <div class="flex flex-col h-full justify-between">
+            <!-- Persistent Badge from @happychain/ui -->
+            <connect-button disable-styles></connect-button>
+            <small>Custom Button</small>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="overflow-auto backdrop-blur-sm bg-gray-200/35 col-span-2 p-4 flex flex-col gap-4 rounded-lg">
+        <p class="text-lg font-bold">User Details</p>
+        <pre id="user-dump"></pre>
+      </div>
+
+      <div class="rounded-lg flex flex-col gap-4 p-4 backdrop-blur-sm bg-gray-200/35 col-span-2">
+        <div class="text-lg font-bold">RPC Calls</div>
+
+        <div class="flex gap-4">
+          <div class="h-full">
+            <button type="button" id="sign-message-btn"
+              class="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36">
+              Sign Message
+            </button>
+          </div>
+
+          <div class="w-full overflow-auto">
+            <div class="text-lg flex gap-2 whitespace-nowrap">
+              <p class="font-bold">Raw Message: </p>
+              <pre>Hello, World!</pre>
+            </div>
+
+            <div class="text-lg flex gap-2 whitespace-nowrap">
+              <p class="font-bold">Signed Message:</p>
+              <pre class="overflow-auto" id="signature-dump"></pre>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="flex gap-4 ">
+          <div class="h-full">
+            <button type="button" id="get-block-btn" class="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap w-36">
+              Get Block
+            </button>
+          </div>
+
+          <div class="w-full overflow-auto">
+            <p class="text-lg font-bold">Results:</p>
+            <pre class="max-h-48 overflow-auto w-full" id="block-dump"></pre>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
