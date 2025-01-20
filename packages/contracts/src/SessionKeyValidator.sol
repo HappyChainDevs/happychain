@@ -43,12 +43,16 @@ contract SessionKeyValidator is IValidator {
         delete initialized[msg.sender];
     }
 
-    function addSessionKey(address targetContract, address sessionKey) external payable {
-        _addSessionKey(msg.sender, targetContract, sessionKey);
+    function addSessionKey(address[] calldata targetContract, address[] calldata sessionKey) external payable {
+        for (uint256 i = 0; i < targetContract.length; i++) {
+            _addSessionKey(msg.sender, targetContract[i], sessionKey[i]);
+        }
     }
 
-    function removeSessionKey(address targetContract) external payable {
-        _removeSessionKey(msg.sender, targetContract);
+    function removeSessionKey(address[] calldata targetContract) external payable {
+        for(uint256 i = 0; i < targetContract.length; i++) {
+            _removeSessionKey(msg.sender, targetContract[i]);
+        }
     }
 
     function isModuleType(uint256 typeID) external pure override returns (bool) {
