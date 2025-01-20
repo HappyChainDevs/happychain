@@ -23,6 +23,7 @@
     display: flex;
     align-items: center;
     padding: 0rem 0.25rem;
+    z-index: 1234567890; /* display on top of everything */
 
     @media (min-width: 768px) {
         padding-block: 0.25rem;
