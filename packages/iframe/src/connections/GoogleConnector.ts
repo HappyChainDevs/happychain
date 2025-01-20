@@ -68,16 +68,15 @@ export class GoogleConnector extends FirebaseConnector {
     }
 
     async onReconnect(user: HappyUser, provider: EIP1193Provider) {
-        let happyUser = user
         const kernelAccountAddress = await getKernelAccountAddress(user.controllingAddress)
-        if (kernelAccountAddress) {
-            // Update user with smart account
-            happyUser = {
-                ...happyUser,
-                controllingAddress: happyUser.controllingAddress,
-                address: kernelAccountAddress,
-            }
-        }
+        
+        const happyUser = kernelAccountAddress
+            ? {
+                  ...user,
+                  controllingAddress: user.controllingAddress,
+                  address: kernelAccountAddress,
+              }
+            : user
         setUserWithProvider(happyUser, provider)
         await connectWagmi(config, { connector: happyConnector })
     }
