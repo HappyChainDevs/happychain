@@ -7,21 +7,21 @@ import { getSenderAddress } from "permissionless/actions"
 import {
     http,
     type Address,
+    type EIP1193Parameters,
     type Hex,
+    type WalletRpcSchema,
     concat,
     concatHex,
     createPublicClient,
     encodeFunctionData,
     toHex,
     zeroAddress,
-    type EIP1193Parameters,
-    type WalletRpcSchema,
 } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { getWalletClient } from "#src/state/walletClient"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 import { getCurrentChain } from "./chains"
-import { walletClientAtom, type AccountWalletClient } from "./walletClient"
+import { type AccountWalletClient, walletClientAtom } from "./walletClient"
 
 export type KernelSmartAccount = SmartAccount & EcdsaKernelSmartAccountImplementation<"0.7">
 

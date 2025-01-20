@@ -1,7 +1,7 @@
 import { accessorsFromAtom } from "@happychain/common"
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, ParseAccount, WalletClient } from "viem"
-import { createWalletClient, type WalletRpcSchema, type PublicRpcSchema } from "viem"
+import { type PublicRpcSchema, type WalletRpcSchema, createWalletClient } from "viem"
 import { providerAtom } from "./provider"
 import { transportAtom } from "./transport"
 import { userAtom } from "./user"
