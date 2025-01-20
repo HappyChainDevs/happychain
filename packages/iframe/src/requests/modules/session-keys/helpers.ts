@@ -130,10 +130,4 @@ export async function installSessionKeyModule(
     if (!receipt.success) {
         throw new Error("Module installation failed")
     }
-
-    // Verify the module was properly installed
-    const isInstalled = await checkIsSessionKeyModuleInstalled(client)
-    if (!isInstalled) {
-        throw new Error("Module not installed")
-    }
 }
