@@ -1,8 +1,8 @@
-import type { SmartAccountClient } from "permissionless"
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
 import { type Address, type Hex, concat, numberToHex } from "viem"
 import type { SmartAccount } from "viem/account-abstraction"
 import { getCurrentChain } from "#src/state/chains"
+import type { ExtendedSmartAccountClient } from "#src/state/smartAccountClient.ts"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 
 // The address used when installing a validator module to signify that the module has no hooks.
@@ -106,7 +106,7 @@ export async function checkIsSessionKeyModuleInstalled(client: Erc7579Actions<Sm
  * ```
  */
 export async function installSessionKeyModule(
-    client: SmartAccountClient & Erc7579Actions<SmartAccount>,
+    client: ExtendedSmartAccountClient,
     sessionKey: Address,
     targetContract: Address,
 ) {

@@ -9,10 +9,7 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import type { SmartAccountClient } from "permissionless"
-import type { Erc7579Actions } from "permissionless/actions/erc7579"
 import { type Client, type Hash, type Hex, InvalidAddressError, hexToBigInt, isAddress } from "viem"
-import type { SmartAccount } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { StorageKey, storage } from "#src/services/storage"
 import { addPendingUserOp } from "#src/services/userOpsHistory"
@@ -154,11 +151,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             // This module validates transactions signed by session keys
             const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
             if (!isSessionKeyValidatorInstalled) {
-                await installSessionKeyModule(
-                    smartAccountClient as unknown as SmartAccountClient & Erc7579Actions<SmartAccount>,
-                    accountSessionKey.address,
-                    targetContract,
-                )
+                await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
             }
 
             // @todo - call `addSessionKey` once implemented ...
