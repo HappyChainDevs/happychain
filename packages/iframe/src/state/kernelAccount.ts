@@ -8,19 +8,20 @@ import {
     http,
     type Address,
     type Hex,
-    type WalletClient,
     concat,
     concatHex,
     createPublicClient,
     encodeFunctionData,
     toHex,
     zeroAddress,
+    type EIP1193Parameters,
+    type WalletRpcSchema,
 } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { getWalletClient } from "#src/state/walletClient"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 import { getCurrentChain } from "./chains"
-import { walletClientAtom } from "./walletClient"
+import { walletClientAtom, type AccountWalletClient } from "./walletClient"
 
 export type KernelSmartAccount = SmartAccount & EcdsaKernelSmartAccountImplementation<"0.7">
 
@@ -41,15 +42,15 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
         const walletClient = getWalletClient()
 
         const owner = {
-            // biome-ignore lint/suspicious/noExplicitAny: todo
-            async request({ method, params }: any) {
+            async request({ method, params }: EIP1193Parameters<WalletRpcSchema>) {
                 //
                 if (["eth_accounts", "eth_requestAccounts"].includes(method)) {
                     return [walletAddress]
                 }
-                return await walletClient?.request({ method, params })
+                // biome-ignore lint/suspicious/noExplicitAny: correct but Typescript is broken
+                return await walletClient?.request({ method, params } as any)
             },
-        } as WalletClient
+        } as AccountWalletClient
 
         return await toEcdsaKernelSmartAccount({
             client: publicClient,
@@ -57,8 +58,7 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
                 address: entryPoint07Address,
                 version: "0.7",
             },
-            // biome-ignore lint/suspicious/noExplicitAny: todo same as above
-            owners: [owner as any],
+            owners: [owner],
             version: "0.3.1",
             ecdsaValidatorAddress: contracts.ECDSAValidator,
             accountLogicAddress: contracts.Kernel,
