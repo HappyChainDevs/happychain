@@ -79,7 +79,7 @@ async function isCustomModuleInstalled(actionsClient: Erc7579Actions<SmartAccoun
 
 export async function installCustomModule(
     kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>,
-    onInstallData: Address,
+    onInstallData: Hex,
 ) {
     const moduleInitData = getModuleInitData(NO_HOOKS_ADDRESS, onInstallData, "0x", EXECUTE_FUNCTION_SELECTOR)
     const opHash = await kernelClient.installModule({
