@@ -65,7 +65,7 @@ async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Act
         kernelClient.account!.address,
         deployment.SessionKeyValidator,
     )
-    // construct onInstallData: first 20 bytes of sessionAccount.address + targetContract
+    // construct onInstallData: first 20 bytes: sessionKey, second 20 bytes: targetContract
     const targetContract: Hex = mockDeployment.MockTokenA
     const onInstallData = concat([sessionAccount.address, targetContract])
     console.log("onInstallData: ", onInstallData)
