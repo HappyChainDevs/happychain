@@ -1,8 +1,9 @@
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
-import { type Address, type Hex, concat, numberToHex } from "viem"
+import { type Address, type Hex, concat, encodeFunctionData, numberToHex } from "viem"
 import type { SmartAccount } from "viem/account-abstraction"
 import { getCurrentChain } from "#src/state/chains"
 import type { ExtendedSmartAccountClient } from "#src/state/smartAccountClient"
+import { getAccountAbstractionAbis } from "#src/utils/getAccountAbstractionAbis"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 
 // The address used when installing a validator module to signify that the module has no hooks.
@@ -139,35 +140,42 @@ export async function installSessionKeyModule(
  * @param client - The smart account client with user operation support.
  * @param sessionKey - Address of the session key (account) that will be authorized to sign transactions.
  * @param targetContract - Address of the contract this session key will be authorized to interact with.
+ * @returns {Promise<`0x${string}`>} Hash of the user operation
  *
  * @example
  * ```
  * const sessionKey = generatePrivateKey()
  * const accountSessionKey = privateKeyToAccount(sessionKey)
  *
- * await registerSessionKey(
+ * const userOpHash = await registerSessionKey(
  *   smartAccountClient,
  *   accountSessionKey.address,
- *   "0x1234567890123456789012345678901234567890" // Valid target contract address
+ *   "0x1234567890123456789012345678901234567890" // Target contract address
  * )
+ *
+ * await smartAccountClient.waitForUserOperationReceipt({ hash: userOpHash })
  * ```
  */
 export async function registerSessionKey(
-    // biome-ignore lint/correctness/noUnusedVariables: temporary, only until we can complete the implementation of this function
     client: ExtendedSmartAccountClient,
-    // biome-ignore lint/correctness/noUnusedVariables: temporary, only until we can complete the implementation of this function
     sessionKey: Address,
-    // biome-ignore lint/correctness/noUnusedVariables: temporary, only until we can complete the implementation of this function
     targetContract: Address,
 ) {
-    // @todo - uncomment and complete implementation once work on `addSessionKey()` is done
-    // const currentChain = getCurrentChain()?.chainId
-    // const abis = getAccountAbstractionAbis(currentChain)
-    // const addSessionKeyCalldata = encodeFunctionData({
-    //     abi: abis.SessionKeyValidator,
-    //     functionName: 'addSessionKey',
-    //     args: [targetContract, sessionKey]
-    // })
-    //
-    // ... send userop logic
+    const currentChain = getCurrentChain()?.chainId
+    const abis = getAccountAbstractionAbis(currentChain)
+    const contracts = getAccountAbstractionContracts(currentChain)
+    const calldata = encodeFunctionData({
+        abi: abis.SessionKeyValidator,
+        functionName: "addSessionKey",
+        args: [targetContract, sessionKey],
+    })
+    return await client.sendUserOperation({
+        calls: [
+            {
+                to: contracts.SessionKeyValidator,
+                data: calldata,
+                value: 0n,
+            },
+        ],
+    })
 }
