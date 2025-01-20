@@ -50,7 +50,7 @@ contract SessionKeyValidator is IValidator {
     }
 
     function removeSessionKey(address[] calldata targetContract) external payable {
-        for(uint256 i = 0; i < targetContract.length; i++) {
+        for (uint256 i = 0; i < targetContract.length; i++) {
             _removeSessionKey(msg.sender, targetContract[i]);
         }
     }
