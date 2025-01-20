@@ -19,8 +19,8 @@ export enum StorageKey {
 export type SessionKeysByTargetContract = Record<Address, Hex>
 export type SessionKeysByHappyUser = Record<Address, SessionKeysByTargetContract>
 
-// cache user within iframe to manage auto-reconnect
 type StorageSchema = {
+    // cache user within iframe to manage auto-reconnect
     [StorageKey.HappyUser]: HappyUser | undefined
     [StorageKey.SessionKeys]: SessionKeysByHappyUser | undefined
 }
