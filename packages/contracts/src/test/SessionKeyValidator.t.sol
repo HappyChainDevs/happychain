@@ -117,7 +117,7 @@ contract SessionValidatorTest is Test {
         );
         assertEq(sessionKeyLookup, sessionKey);
         // now remove
-        sessionKeyValidator.removeSessionKey(address(token));
+        _removeSessionKey(address(token));
         sessionKeyLookup = sessionKeyValidator.sessionKeyValidatorStorage(
             sessionKeyValidator.getStorageKey(address(this), bytes20(address(token)))
         );
@@ -127,7 +127,17 @@ contract SessionValidatorTest is Test {
     // helper functions
 
     function _addSessionKey(address targetContract, address sessionKey) public {
-        sessionKeyValidator.addSessionKey(targetContract, sessionKey);
+        address[] memory sessionKeys = new address[](1);
+        sessionKeys[0] = address(sessionKey);
+        address[] memory targetContracts = new address[](1);
+        targetContracts[0] = targetContract;
+        sessionKeyValidator.addSessionKey(targetContracts, sessionKeys);
+    }
+
+    function _removeSessionKey(address targetContract) public {
+        address[] memory targetContracts = new address[](1);
+        targetContracts[0] = address(targetContract);
+        sessionKeyValidator.removeSessionKey(targetContracts);
     }
 
     function _getPackedUserOpHash(PartialPackedUserOperation memory userOp) private view returns (bytes32) {
@@ -140,17 +150,8 @@ contract SessionValidatorTest is Test {
                 userOp.accountGasLimits,
                 userOp.preVerificationGas,
                 userOp.gasFees,
-                userOp.paymasterAndData,
-                _getChainId()
+                userOp.paymasterAndData
             )
         );
-    }
-
-    function _getChainId() private view returns (uint256) {
-        uint256 id;
-        assembly {
-            id := chainid()
-        }
-        return id;
     }
 }
