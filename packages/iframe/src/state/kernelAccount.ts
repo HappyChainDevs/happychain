@@ -96,6 +96,9 @@ export async function getKernelAccountAddress(owner: Address): Promise<Address> 
         initCode: accountInitCode,
         entryPointAddress: entryPoint07Address,
     })
+    if (senderFromFactory === zeroAddress) {
+        throw new Error("Kernel account address could not be determined")
+    }
     return senderFromFactory
 }
 
