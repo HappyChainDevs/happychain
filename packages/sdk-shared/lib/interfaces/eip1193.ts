@@ -1,5 +1,5 @@
 import type { HappyMethodNames } from "@happychain/common"
-import type { Abi, Address, EIP1193EventMap, EIP1193Parameters, EIP1474Methods } from "viem"
+import type { Abi, Address, EIP1193EventMap, EIP1193Parameters, PublicRpcSchema, WalletRpcSchema } from "viem"
 import type { HappyUser } from "./happyUser"
 
 export type RecordAbiPayload = {
@@ -28,7 +28,7 @@ export type HappyMethods = [
 
 // === RPC METHODS =============================================================================
 
-export type RPCMethods = [...HappyMethods, ...EIP1474Methods]
+export type RPCMethods = [...HappyMethods, ...PublicRpcSchema, ...WalletRpcSchema]
 
 // === EIP1193 METHODS =============================================================================
 
