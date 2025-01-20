@@ -65,7 +65,7 @@ contract SessionKeyValidator is IValidator {
         override
         returns (uint256)
     {
-        bytes20 targetContract = bytes20(_getTargetContract(userOp.callData));
+        bytes20 targetContract = bytes20(userOp.callData[100:120]);
         address sessionKey = sessionKeyValidatorStorage[_getStorageKey(msg.sender, targetContract)].sessionKey;
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(userOpHash);
 
@@ -103,10 +103,6 @@ contract SessionKeyValidator is IValidator {
     // Internal helper functions
     function _getStorageKey(address account, bytes20 target) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(account, target));
-    }
-
-    function _getTargetContract(bytes calldata _data) internal pure returns (bytes20) {
-        return bytes20(_data[100:120]); // todo: dynamically get target contract
     }
 
     function _addSessionKey(address account, address targetContract, address sessionKey) internal {
