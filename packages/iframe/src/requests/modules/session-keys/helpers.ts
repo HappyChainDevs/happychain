@@ -2,7 +2,7 @@ import type { Erc7579Actions } from "permissionless/actions/erc7579"
 import { type Address, type Hex, concat, numberToHex } from "viem"
 import type { SmartAccount } from "viem/account-abstraction"
 import { getCurrentChain } from "#src/state/chains"
-import type { ExtendedSmartAccountClient } from "#src/state/smartAccountClient.ts"
+import type { ExtendedSmartAccountClient } from "#src/state/smartAccountClient"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 
 // The address used when installing a validator module to signify that the module has no hooks.
@@ -130,4 +130,44 @@ export async function installSessionKeyModule(
     if (!receipt.success) {
         throw new Error("Module installation failed")
     }
+}
+
+/**
+ * Registers a new session key with the SessionKeyValidator module.
+ * This should be called when the module is already installed and we want to add a new session key.
+ *
+ * @param client - The smart account client with user operation support.
+ * @param sessionKey - Address of the session key (account) that will be authorized to sign transactions.
+ * @param targetContract - Address of the contract this session key will be authorized to interact with.
+ *
+ * @example
+ * ```
+ * const sessionKey = generatePrivateKey()
+ * const accountSessionKey = privateKeyToAccount(sessionKey)
+ *
+ * await registerSessionKey(
+ *   smartAccountClient,
+ *   accountSessionKey.address,
+ *   "0x1234567890123456789012345678901234567890" // Valid target contract address
+ * )
+ * ```
+ */
+export async function registerSessionKey(
+    // biome-ignore lint/correctness/noUnusedVariables: temporary, only until we can complete the implementation of this function
+    client: ExtendedSmartAccountClient,
+    // biome-ignore lint/correctness/noUnusedVariables: temporary, only until we can complete the implementation of this function
+    sessionKey: Address,
+    // biome-ignore lint/correctness/noUnusedVariables: temporary, only until we can complete the implementation of this function
+    targetContract: Address,
+) {
+    // @todo - uncomment and complete implementation once work on `addSessionKey()` is done
+    // const currentChain = getCurrentChain()?.chainId
+    // const abis = getAccountAbstractionAbis(currentChain)
+    // const addSessionKeyCalldata = encodeFunctionData({
+    //     abi: abis.SessionKeyValidator,
+    //     functionName: 'addSessionKey',
+    //     args: [targetContract, sessionKey]
+    // })
+    //
+    // ... send userop logic
 }
