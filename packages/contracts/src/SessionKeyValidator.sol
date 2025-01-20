@@ -81,6 +81,7 @@ contract SessionKeyValidator is IValidator {
         return SIG_VALIDATION_FAILED_UINT;
     }
 
+    ///@dev called by the smart account to validate the signature of a call destined for the `to` address
     function isValidSignatureWithSender(address to, bytes32 hash, bytes calldata sig)
         external
         view
