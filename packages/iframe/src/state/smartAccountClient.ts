@@ -13,14 +13,13 @@ import { type KernelSmartAccount, kernelAccountAtom } from "./kernelAccount"
 import { paymasterAtom } from "./paymaster"
 import { publicClientAtom } from "./publicClient"
 
-type BaseSmartAccountClient = Client<
+export type ExtendedSmartAccountClient = Client<
     Transport,
     Chain | undefined,
     KernelSmartAccount,
     BundlerRpcSchema,
-    BundlerActions & SmartAccountActions
+    BundlerActions & SmartAccountActions & Erc7579Actions<KernelSmartAccount>
 >
-export type ExtendedSmartAccountClient = BaseSmartAccountClient & Erc7579Actions<KernelSmartAccount>
 
 export const smartAccountClientAtom: Atom<Promise<ExtendedSmartAccountClient | undefined>> = atom(async (get) => {
     const smartAccount = await get(kernelAccountAtom)
