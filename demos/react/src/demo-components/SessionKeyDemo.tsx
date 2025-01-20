@@ -23,10 +23,7 @@ const SessionKeyDemo = () => {
 
     async function submitIncrement() {
         if (!walletClient || !user?.address) throw new Error("Wallet not connected")
-
-        const [account] = await walletClient.getAddresses()
         return await walletClient.writeContract({
-            account,
             address: deployment.HappyCounter,
             abi: abis.HappyCounter,
             functionName: "increment",

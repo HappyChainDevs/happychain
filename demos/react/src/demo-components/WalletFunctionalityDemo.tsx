@@ -31,10 +31,8 @@ const WalletFunctionalityDemo = () => {
     async function mintTokens() {
         try {
             if (!walletClient || !user?.address) return
-            const [account] = await walletClient.getAddresses()
 
             const writeCall = await walletClient.writeContract({
-                account,
                 address: deployment.MockTokenA,
                 abi: abis.MockTokenA,
                 functionName: "mint",
