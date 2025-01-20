@@ -140,6 +140,10 @@ export function emitWalletDisplayAction(open: boolean) {
     void iframeMessageBus?.emit(Msgs.RequestWalletDisplay, open ? WalletDisplayAction.Open : WalletDisplayAction.Closed)
 }
 
+export function openWallet() {
+    return emitWalletDisplayAction(true)
+}
+
 /**
  * This is an {@link https://eips.ethereum.org/EIPS/eip-1193 | EIP1193 Ethereum Provider}
  */

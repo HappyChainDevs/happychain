@@ -1,4 +1,4 @@
-import { connect as hcConnect, disconnect as hcDisconnect } from "@happychain/js"
+import { connect as hcConnect, disconnect as hcDisconnect, openWallet } from "@happychain/js"
 import { useCallback, useState } from "preact/hooks"
 
 const userRejectionErrorCode = 4001
@@ -31,5 +31,9 @@ export function useConnection() {
         }
     }, [])
 
-    return { connect, disconnect, connecting }
+    const open = useCallback(() => {
+        openWallet()
+    }, [])
+
+    return { connect, disconnect, connecting, open }
 }

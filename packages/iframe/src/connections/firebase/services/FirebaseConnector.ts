@@ -162,6 +162,9 @@ export abstract class FirebaseConnector implements ConnectionProvider {
                 await new Promise((resolve) => setTimeout(resolve, 3_000))
             }
         }
+
+        // if it fails to connect, we should fully disconnect so the user can try again
+        return this.disconnect()
     }
 
     private async fetchLoginTokenForUser(user: User) {

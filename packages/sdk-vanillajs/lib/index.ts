@@ -22,6 +22,7 @@ export {
     connect,
     disconnect,
     showSendScreen,
+    openWallet,
     loadAbi,
 } from "./happyProvider/initialize"
 

@@ -11,12 +11,12 @@ export type BadgeProps = { disableStyles?: boolean | string }
 export function Badge({ disableStyles = false }: BadgeProps) {
     const [user, setUser] = useState<HappyUser | undefined>(undefined)
 
-    const { connecting, connect, disconnect } = useConnection()
+    const { connecting, connect, open } = useConnection()
 
     useEffect(() => onUserUpdate((user: HappyUser | undefined) => setUser(user)), [])
 
     const connected = !!user?.address
-    const onClick = connecting ? undefined : connected ? disconnect : connect
+    const onClick = connecting ? undefined : connected ? open : connect
     const state = connecting ? "connecting" : connected ? "connected" : "disconnected"
 
     return (
