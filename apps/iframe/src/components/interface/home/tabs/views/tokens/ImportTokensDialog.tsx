@@ -44,7 +44,7 @@ export const ImportTokensDialog = () => {
         data: { decimals, symbol } = {},
         isRefetching,
         isLoading,
-    } = useERC20Balance(inputAddress as Address, user?.address as Address, true)
+    } = useERC20Balance(inputAddress as Address, user?.address as Address, false)
 
     // --- conditions for elements being disabled / readOnly ---
 
@@ -97,7 +97,6 @@ export const ImportTokensDialog = () => {
                     })
                     setVisibility(false)
                 } catch (error) {
-                    // Handle error if needed
                     console.error("Error adding token:", error)
                 }
             }

@@ -25,7 +25,7 @@ export type UseERC20BalanceReturnType = UseReadContractsReturnType<
 export function useERC20Balance(
     assetAddr: Address,
     userAddr: Address,
-    disableRefetch = false,
+    enableRefetch = false,
 ): UseERC20BalanceReturnType {
     const tokenContract = {
         address: assetAddr,
@@ -53,8 +53,8 @@ export function useERC20Balance(
             retry: 3,
             retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
             // disable automatic refetching on refocus / remount
-            refetchOnWindowFocus: !disableRefetch,
-            refetchOnMount: !disableRefetch,
+            refetchOnWindowFocus: enableRefetch,
+            refetchOnMount: enableRefetch,
             // format fetched data
             select(data): ERC20BalanceQueryData {
                 const [balanceResult, decimalsResult, symbolResult] = data
