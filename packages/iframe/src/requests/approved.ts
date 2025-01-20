@@ -22,7 +22,11 @@ import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
-import { checkIsSessionKeyModuleInstalled, installSessionKeyModule } from "./modules/session-keys/helpers"
+import {
+    checkIsSessionKeyModuleInstalled,
+    installSessionKeyModule,
+    registerSessionKey,
+} from "./modules/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
 
@@ -156,10 +160,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
                 if (!isSessionKeyValidatorInstalled) {
                     await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
+                } else {
+                    await registerSessionKey(smartAccountClient, accountSessionKey.address, targetContract)
                 }
             }
-
-            // @todo - call `addSessionKey` once implemented ...
 
             grantPermissions(app, {
                 happy_sessionKey: {
