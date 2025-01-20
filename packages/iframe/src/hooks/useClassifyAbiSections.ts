@@ -31,7 +31,7 @@ type SectionMap = {
  * Hook that classifies different sections of a user-inputted ABI
  * into distinct categories such as events, errors, constructors,
  * receive functions, fallback functions, and read/write functions.
- * This is used in the popup for the custom `happy_walletUseAbi` RPC call.
+ * This is used in the popup for the custom `happy_useAbi` RPC call.
  *
  * The classifications are returned as an array of objects, each
  * containing a label and the corresponding items, allowing for

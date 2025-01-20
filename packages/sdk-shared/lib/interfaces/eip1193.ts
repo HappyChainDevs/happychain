@@ -10,12 +10,12 @@ export type RecordAbiPayload = {
 // === HAPPY METHODS =============================================================================
 export type HappyMethods = [
     {
-        Method: HappyMethodNames.HAPPY_USER_RPC_METHOD
+        Method: HappyMethodNames.USER
         Parameters?: undefined
         ReturnType: HappyUser | undefined
     },
     {
-        Method: typeof HappyMethodNames.WALLET_USE_ABI_RPC_METHOD
+        Method: typeof HappyMethodNames.USE_ABI
         Parameters: RecordAbiPayload
         ReturnType: undefined
     },

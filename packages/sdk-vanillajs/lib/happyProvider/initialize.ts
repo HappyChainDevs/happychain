@@ -122,7 +122,7 @@ export const loadAbi = async (contractAddress: Address, abi: Abi): Promise<void>
     if (!_provider) return
 
     await _provider.request({
-        method: HappyMethodNames.WALLET_USE_ABI_RPC_METHOD,
+        method: HappyMethodNames.USE_ABI,
         params: {
             address: contractAddress,
             abi: abi,

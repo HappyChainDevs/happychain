@@ -54,7 +54,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return user && hasPermissions(app, "eth_accounts") ? [user.address] : []
         }
 
-        case HappyMethodNames.HAPPY_USER_RPC_METHOD: {
+        case HappyMethodNames.USER: {
             const user = getUser()
             return user && hasPermissions(app, "eth_accounts") ? getUser() : undefined
         }

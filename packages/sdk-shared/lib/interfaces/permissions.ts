@@ -11,7 +11,7 @@ import type { EIP1193Parameters } from "viem"
  */
 const safeList = new Set([
     // happychain methods
-    HappyMethodNames.HAPPY_USER_RPC_METHOD, // => returns the current connected user if permissions are granted and user is connected
+    HappyMethodNames.USER, // => returns the current connected user if permissions are granted and user is connected
 
     // standard methods
     "eth_accounts",
@@ -90,7 +90,7 @@ const interactiveList = new Set([
  */
 const unsafeList = new Set([
     // happychain methods
-    HappyMethodNames.WALLET_USE_ABI_RPC_METHOD, // eip-xxxx :)
+    HappyMethodNames.USE_ABI, // eip-xxxx :)
     HappyMethodNames.REQUEST_SESSION_KEY,
 
     // permissions

@@ -98,7 +98,7 @@ function Request() {
             return <EthRequestAccounts method={req.method} params={req.params} reject={reject} accept={accept} />
         case "wallet_watchAsset":
             return <WalletWatchAsset method={req.method} params={req.params} reject={reject} accept={accept} />
-        case HappyMethodNames.WALLET_USE_ABI_RPC_METHOD:
+        case HappyMethodNames.USE_ABI:
             return <HappyWalletUseAbi method={req.method} params={req.params} reject={reject} accept={accept} />
         default:
             return (
