@@ -39,7 +39,7 @@ export function Badge({ disableStyles = false }: BadgeProps) {
                 <span>
                     <UserAvatar user={user} />
                     <div className="happychain-status">
-                        <UserLabel user={user} />
+                        <UserLabel user={user} connecting={connecting} />
                     </div>
                 </span>
             </button>
@@ -48,11 +48,11 @@ export function Badge({ disableStyles = false }: BadgeProps) {
 }
 
 const UserLabel = ({ user, connecting }: { user: HappyUser | undefined; connecting: boolean }) => {
-    if (connecting) return "Connecting"
-    if (!user) return "Connect"
+    if (connecting) return <>Connecting</>
+    if (!user) return <>Connect</>
 
     const label = user.ens || user.email || user.name
-    return label.length > 12 ? `${label.slice(0, 9)}...` : label
+    return <>{label.length > 12 ? `${label.slice(0, 9)}...` : label}</>
 }
 
 const UserAvatar = ({ user }: { user: HappyUser | undefined }) => {
