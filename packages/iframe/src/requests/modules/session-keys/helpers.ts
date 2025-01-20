@@ -161,21 +161,21 @@ export async function registerSessionKey(
     sessionKey: Address,
     targetContract: Address,
 ) {
+    // @todo - uncomment and test implementation once work on `addSessionKey()` is done
+    /*
     const currentChain = getCurrentChain()?.chainId
     const abis = getAccountAbstractionAbis(currentChain)
-    const contracts = getAccountAbstractionContracts(currentChain)
     const calldata = encodeFunctionData({
         abi: abis.SessionKeyValidator,
-        functionName: "addSessionKey",
-        args: [targetContract, sessionKey],
+        functionName: 'addSessionKey',
+        args: [targetContract, sessionKey]
     })
     return await client.sendUserOperation({
-        calls: [
-            {
-                to: contracts.SessionKeyValidator,
-                data: calldata,
-                value: 0n,
-            },
-        ],
+        calls: [{
+            to: contracts.SessionKeyValidator,
+            data: addSessionKeyCalldata,
+            value: 0n,
+        }]
     })
+    */
 }

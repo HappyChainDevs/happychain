@@ -161,8 +161,9 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 if (!isSessionKeyValidatorInstalled) {
                     await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
                 } else {
-                    const hash = await registerSessionKey(smartAccountClient, accountSessionKey.address, targetContract)
-                    await smartAccountClient.waitForUserOperationReceipt({ hash })
+                    // @todo - uncomment once `addSessionKey` can be tested
+                    // const hash = await registerSessionKey(smartAccountClient, accountSessionKey.address, targetContract)
+                    // await smartAccountClient.waitForUserOperationReceipt({ hash })
                 }
             }
 
