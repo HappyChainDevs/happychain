@@ -15,7 +15,7 @@ export async function createKernelAccount(walletAddress: Address): Promise<Kerne
     const currentChain = convertToViemChain(chain)
     const contracts = getAccountAbstractionContracts(currentChain.chainId)
     const clientOptions = {
-        transport: http(currentChain.rpcUrls[0]),
+        transport: http(currentChain.rpcUrls.default.http[0]),
         chain: currentChain,
     }
 
