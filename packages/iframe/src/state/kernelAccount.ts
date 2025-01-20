@@ -1,4 +1,5 @@
 import { accessorsFromAtom } from "@happychain/common"
+import { abis } from "@happychain/contracts/account-abstraction/sepolia"
 import { convertToViemChain } from "@happychain/sdk-shared"
 import { type Atom, atom } from "jotai"
 import { type EcdsaKernelSmartAccountImplementation, toEcdsaKernelSmartAccount } from "permissionless/accounts"
@@ -104,7 +105,7 @@ function getInitCode(ecdsaValidatorAddress: Address, owner: Address, factoryAddr
 
 function getAccountInitCode(factoryAddress: Address, initializationData: Hex, index: number): Hex {
     return encodeFunctionData({
-        abi: KernelV3MetaFactoryDeployWithFactoryAbi,
+        abi: abis.FactoryStaker,
         functionName: "deployWithFactory",
         args: [factoryAddress, initializationData, toHex(index, { size: 32 })],
     })
@@ -112,7 +113,7 @@ function getAccountInitCode(factoryAddress: Address, initializationData: Hex, in
 
 function getInitializationData(ecdsaValidatorAddress: Address, owner: Address): Hex {
     return encodeFunctionData({
-        abi: KernelV3_1AccountAbi,
+        abi: abis.Kernel,
         functionName: "initialize",
         args: [getEcdsaRootIdentifierForKernelV3(ecdsaValidatorAddress), zeroAddress, owner, "0x", []],
     })
@@ -127,41 +128,3 @@ const VALIDATOR_TYPE = {
 const getEcdsaRootIdentifierForKernelV3 = (validatorAddress: Address) => {
     return concatHex([VALIDATOR_TYPE.VALIDATOR, validatorAddress])
 }
-
-const KernelV3MetaFactoryDeployWithFactoryAbi = [
-    {
-        type: "function",
-        name: "deployWithFactory",
-        inputs: [
-            {
-                name: "factory",
-                type: "address",
-                internalType: "contract KernelFactory",
-            },
-            { name: "createData", type: "bytes", internalType: "bytes" },
-            { name: "salt", type: "bytes32", internalType: "bytes32" },
-        ],
-        outputs: [{ name: "", type: "address", internalType: "address" }],
-        stateMutability: "payable",
-    },
-] as const
-
-const KernelV3_1AccountAbi = [
-    {
-        type: "function",
-        name: "initialize",
-        inputs: [
-            {
-                name: "_rootValidator",
-                type: "bytes21",
-                internalType: "ValidationId",
-            },
-            { name: "hook", type: "address", internalType: "contract IHook" },
-            { name: "validatorData", type: "bytes", internalType: "bytes" },
-            { name: "hookData", type: "bytes", internalType: "bytes" },
-            { name: "initConfig", type: "bytes[]", internalType: "bytes[]" },
-        ],
-        outputs: [],
-        stateMutability: "nonpayable",
-    },
-] as const
