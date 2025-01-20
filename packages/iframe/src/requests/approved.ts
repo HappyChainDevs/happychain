@@ -63,7 +63,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                         },
                     ],
                 })
-
+                // need to manually call signUserOp here since the permissionless.js and Web3Auth combination
+                // doesn't support automatic signing
                 const userOpSignature = await smartAccountClient.account.signUserOperation(preparedUserOp)
                 const userOpWithSig = { ...preparedUserOp, signature: userOpSignature }
                 const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
