@@ -156,12 +156,9 @@
 
 @keyframes bg-pulse {
   0%, 100% {
-    /* --opacity: 1; */
-
     background-color: rgb(var(--bg-color) / 1);
   }
   50% {
-    /* --opacity: .5; */
     background-color: rgb(var(--bg-color) / 0.5);
   }
 }

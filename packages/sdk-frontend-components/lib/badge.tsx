@@ -37,16 +37,33 @@ export function Badge({ disableStyles = false }: BadgeProps) {
                 disabled={connecting}
             >
                 <span>
-                    {/*
-                    TODO: This works for our demos because they all have this file at the root.
-                          Later, we need to replace this with a happy.tech URL.
-                    */}
-                    <img src="/happychain.png" alt="HappyChain logo" className="happychain-icon" />
+                    <UserAvatar user={user} />
                     <div className="happychain-status">
-                        {connecting ? "Connecting" : user ? user.email || user.name : "Connect"}
+                        <UserLabel user={user} />
                     </div>
                 </span>
             </button>
         </div>
+    )
+}
+
+const UserLabel = ({ user, connecting }: { user: HappyUser | undefined; connecting: boolean }) => {
+    if (connecting) return "Connecting"
+    if (!user) return "Connect"
+
+    const label = user.ens || user.email || user.name
+    return label.length > 12 ? `${label.slice(0, 9)}...` : label
+}
+
+const UserAvatar = ({ user }: { user: HappyUser | undefined }) => {
+    const [loadFailed, setLoadFailed] = useState(false)
+    if (!user?.avatar || loadFailed) {
+        // TODO: This works for our demos because they all have this file at the root.
+        // Later, we need to replace this with a happy.tech URL.
+        return <img src="/happychain.png" alt="HappyChain logo" className="happychain-icon" />
+    }
+
+    return (
+        <img src={user?.avatar} alt="HappyChain logo" className="happychain-icon" onError={() => setLoadFailed(true)} />
     )
 }
