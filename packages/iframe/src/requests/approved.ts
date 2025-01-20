@@ -147,15 +147,19 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             const sessionKey = generatePrivateKey()
             const accountSessionKey = privateKeyToAccount(sessionKey)
 
-            // Check and install the SessionKeyValidator module if needed
-            // This module validates transactions signed by session keys
-            const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
-            if (!isSessionKeyValidatorInstalled) {
-                await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
+            // Check if we have any session keys stored for this account
+            const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+            const hasExistingSessionKeys = Boolean(storedSessionKeys[user!.address])
+
+            // Only check module installation if we don't have any session keys stored
+            if (!hasExistingSessionKeys) {
+                const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
+                if (!isSessionKeyValidatorInstalled) {
+                    await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
+                }
             }
 
             // @todo - call `addSessionKey` once implemented ...
-            // this seems to be on the smart contract side of the stack ?
 
             grantPermissions(app, {
                 happy_sessionKey: {
@@ -163,7 +167,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 },
             })
 
-            const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
             storage.set(StorageKey.SessionKeys, {
                 ...storedSessionKeys,
                 [user!.address]: {
