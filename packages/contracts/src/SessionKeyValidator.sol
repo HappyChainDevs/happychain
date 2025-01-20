@@ -43,13 +43,13 @@ contract SessionKeyValidator is IValidator {
         delete initialized[msg.sender];
     }
 
-    function addSessionKey(address[] calldata targetContract, address[] calldata sessionKey) external payable {
+    function addSessionKeys(address[] calldata targetContract, address[] calldata sessionKey) external payable {
         for (uint256 i = 0; i < targetContract.length; i++) {
             _addSessionKey(msg.sender, targetContract[i], sessionKey[i]);
         }
     }
 
-    function removeSessionKey(address[] calldata targetContract) external payable {
+    function removeSessionKeys(address[] calldata targetContract) external payable {
         for (uint256 i = 0; i < targetContract.length; i++) {
             _removeSessionKey(msg.sender, targetContract[i]);
         }
