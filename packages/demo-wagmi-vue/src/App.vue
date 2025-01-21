@@ -19,6 +19,7 @@ import WagmiStatus from "./components/WagmiStatus.vue"
       <!-- User Details -->
       <UserStatus />
 
+      <!-- Connected Chain Details -->
       <ChainStatus />
 
     </Container>
