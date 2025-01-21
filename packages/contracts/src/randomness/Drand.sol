@@ -32,6 +32,8 @@ contract Drand {
     function postDrand(uint64 round, uint256[2] memory signature) external {
         // Encode round for hash-to-point
         bytes memory hashedRoundBytes = new bytes(32);
+
+        // hashedRoundBytes = keccak256(abi.encodePacked(round)) — not valid solidity syntax
         assembly {
             mstore(0x00, round)
             let hashedRound := keccak256(0x18, 0x08) // hash the last 8 bytes (uint64) of `round`
