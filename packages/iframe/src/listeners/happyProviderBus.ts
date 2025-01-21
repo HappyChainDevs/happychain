@@ -3,7 +3,7 @@ import { handleInjectedRequest } from "#src/requests/injected"
 import { handlePermissionlessRequest } from "../requests"
 import { happyProviderBus } from "../services/eventBus"
 import { getAppURL } from "../utils/appURL"
-import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
+import { checkIfRequestRequiresConfirmation } from "../utils/checkIfRequestRequiresConfirmation"
 
 /**
  * Process direct-from-app RPC requests using the public client and publicClient middleware stack

@@ -26,7 +26,7 @@ import { getPublicClient } from "#src/state/publicClient"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 import { getUser } from "#src/state/user"
 import type { AppURL } from "#src/utils/appURL"
-import { checkIfRequestRequiresConfirmation } from "#src/utils/checkPermissions"
+import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
 
