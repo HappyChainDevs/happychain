@@ -62,7 +62,9 @@ export class TxMonitor {
     }
 
     private async handleNewBlock(block: LatestBlock) {
-        const transactions = this.transactionManager.transactionRepository.getNotFinalizedTransactions()
+        const transactions = this.transactionManager.transactionRepository.getNotFinalizedTransactionsOlderThan(
+            block.number,
+        )
 
         const promises = transactions.map(async (transaction) => {
             const inAirAttempts = transaction.getInAirAttempts()
