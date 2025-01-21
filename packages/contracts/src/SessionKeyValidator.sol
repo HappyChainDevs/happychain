@@ -4,7 +4,8 @@ pragma solidity ^0.8.20;
 import {ECDSA} from "solady/utils/ECDSA.sol";
 import {IValidator} from "kernel/interfaces/IERC7579Modules.sol";
 import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
-
+import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {
     ERC1271_MAGICVALUE,
     ERC1271_INVALID,
@@ -17,7 +18,7 @@ struct SessionKeyValidatorStorage {
     address sessionKey;
 }
 
-contract SessionKeyValidator is IValidator {
+contract SessionKeyValidator is IValidator, OwnableUpgradeable, UUPSUpgradeable {
     ///@dev keccak256(account, targetContract) => SessionKeyValidatorStorage
     mapping(bytes32 => SessionKeyValidatorStorage) public sessionKeyValidatorStorage;
 
@@ -25,6 +26,15 @@ contract SessionKeyValidator is IValidator {
 
     event SessionKeyAdded(address indexed account, address indexed targetContract, address sessionKey);
     event SessionKeyRemoved(address indexed account, address indexed targetContract);
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _owner) external initializer {
+        __Ownable_init(_owner);
+        __UUPSUpgradeable_init();
+    }
 
     function onInstall(bytes calldata _data) external payable override {
         if (initialized[msg.sender]) {
@@ -117,4 +127,6 @@ contract SessionKeyValidator is IValidator {
         delete sessionKeyValidatorStorage[_getStorageKey(account, bytes20(targetContract))];
         emit SessionKeyRemoved(account, targetContract);
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
