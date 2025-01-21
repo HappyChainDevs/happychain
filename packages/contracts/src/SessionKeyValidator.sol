@@ -27,6 +27,8 @@ contract SessionKeyValidator is IValidator, OwnableUpgradeable, UUPSUpgradeable 
     event SessionKeyAdded(address indexed account, address indexed targetContract, address sessionKey);
     event SessionKeyRemoved(address indexed account, address indexed targetContract);
 
+    uint256[50] private __gap; // reserve space for upgradeability
+
     constructor() {
         _disableInitializers();
     }
