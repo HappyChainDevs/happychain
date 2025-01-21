@@ -18,6 +18,10 @@ export interface RetryPolicyManager {
     ): Promise<boolean>
 }
 
+/**
+ * This is the default retry policy manager that will we used if no custom retry policy manager is provided.
+ * It will only retry if the transaction runs out of gas.
+ */
 export class DefaultRetryPolicyManager implements RetryPolicyManager {
     public async shouldRetry(
         transactionManager: TransactionManager,
