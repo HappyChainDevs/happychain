@@ -26,8 +26,9 @@ async function run(key) {
     const { privateKey, ...configWithoutPrivateKey } = testConfig
     const transactionManager = new TransactionManager({ privateKey: key, ...configWithoutPrivateKey })
     const testService = new TestService(transactionManager)
-    testService.addTransactionOriginator(single)
     await testService.start()
+    testService.addTransactionOriginator(single)
+
 }
 // await run("0x49cbb0e24c219da3308ba392c639eded95cbb57cd544d18dfb46d01022388606")
 
