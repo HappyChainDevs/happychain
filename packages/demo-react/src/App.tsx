@@ -1,9 +1,8 @@
 import { abis, deployment } from "@happychain/contracts/mocks/sepolia"
-import { happyChainSepolia, useHappyChain } from "@happychain/react"
+import { ConnectButton, happyChainSepolia, useHappyChain } from "@happychain/react"
 import { useEffect, useMemo, useState } from "react"
 import { createPublicClient, createWalletClient, custom } from "viem"
 import { gnosis } from "viem/chains"
-import { ConnectButton } from "./BadgeComponent"
 
 function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
