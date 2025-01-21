@@ -25,6 +25,10 @@ export class TransactionCollector {
         const transactionsBatch = transactionUnsorted
             .flat()
             .sort((a, b) => (a.deadline ?? Number.POSITIVE_INFINITY) - (b.deadline ?? Number.POSITIVE_INFINITY))
+            .map((transaction) => {
+                transaction.addCollectionBlock(block.number)
+                return transaction
+            })
 
         const saveResult = await this.txmgr.transactionRepository.saveTransactions(transactionsBatch)
 

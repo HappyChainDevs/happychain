@@ -37,8 +37,8 @@ export class TransactionRepository {
         }
     }
 
-    getNotFinalizedTransactions(): Transaction[] {
-        return [...this.notFinalizedTransactions]
+    getNotFinalizedTransactionsOlderThan(blockNumber: bigint): Transaction[] {
+        return this.notFinalizedTransactions.filter((t) => t.collectionBlock && t.collectionBlock < blockNumber)
     }
 
     async getTransaction(intentId: UUID): Promise<Transaction | undefined> {
