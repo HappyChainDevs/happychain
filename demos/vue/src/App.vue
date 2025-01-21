@@ -7,6 +7,10 @@ import WagmiStatus from "./components/WagmiStatus.vue"
 </script>
 
 <template>
+
+
+  <connect-button />
+
   <div class="flex items-center justify-center min-h-dvh">
     <Container title="HappyChain" class="min-w-96 p-8" :shadow="true">
 

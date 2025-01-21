@@ -1,9 +1,9 @@
-import { createHappyChainWagmiConfig, happyProvider } from "@happy.tech/core"
+import { createHappyChainWagmiConfig, happyChainSepolia, happyProvider } from "@happy.tech/core"
+import { HappyChainPlugin } from "@happy.tech/vue"
 import { type Config as WagmiConfig, WagmiPlugin } from "@wagmi/vue"
 import { createApp } from "vue"
 import App from "./App.vue"
 import { VueQueryPlugin, queryClient } from "./query"
-import { HappyChainPlugin, happyChainSepolia } from "./sdk"
 
 /**
  * Console demo. to prompt for connection, or login, in the console try typing
