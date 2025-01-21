@@ -45,4 +45,4 @@ export type {
 
 export type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
 
-// export { happyWagmiConnector, createHappyChainWagmiConfig } from "./wagmi/happyWagmiConfig"
+export { happyWagmiConnector, createHappyChainWagmiConfig } from "./wagmi/happyWagmiConfig"
