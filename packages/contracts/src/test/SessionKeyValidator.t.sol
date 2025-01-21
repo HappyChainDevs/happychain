@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
 import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
 import {SIG_VALIDATION_SUCCESS_UINT, SIG_VALIDATION_FAILED_UINT} from "kernel/types/Constants.sol";
 
@@ -124,8 +125,53 @@ contract SessionValidatorTest is Test {
         assertEq(sessionKeyLookup, address(0));
     }
 
-    // helper functions
+    function testUpgrade() public {
+        address sessionKeyValidatorProxy = _deployProxy(
+            address(new SessionKeyValidator()),
+            abi.encodeWithSelector(SessionKeyValidator.initialize.selector, address(this)),
+            bytes32(0)
+        );
+        address sessionKeyValidatorUpgraded = address(new SessionKeyValidatorUpgraded());
 
+        address sessionKey = address(0x123);
+        address[] memory sessionKeys = new address[](1);
+        sessionKeys[0] = sessionKey;
+
+        address targetContract = address(0x456);
+        address[] memory targetContracts = new address[](1);
+        targetContracts[0] = address(targetContract);
+
+        // add session key
+        SessionKeyValidator(sessionKeyValidatorProxy).addSessionKeys(targetContracts, sessionKeys);
+
+        SessionKeyValidator(sessionKeyValidatorProxy).upgradeToAndCall(
+            sessionKeyValidatorUpgraded,
+            abi.encodeWithSelector(SessionKeyValidatorUpgraded.reinitialize.selector, address(this))
+        );
+        assertEq(
+            SessionKeyValidatorUpgraded(address(sessionKeyValidatorProxy)).addedField(), "SessionKeyValidatorUpgraded"
+        );
+
+        // old methods still present + work (old storage still present, new storage persists)
+        address sessionKeyLookup = SessionKeyValidator(sessionKeyValidatorProxy).sessionKeyValidatorStorage(
+            SessionKeyValidator(sessionKeyValidatorProxy).getStorageKey(address(this), bytes20(targetContract))
+        );
+        assertEq(sessionKeyLookup, sessionKey);
+
+        // now add new session key
+        sessionKey = address(0x987);
+        sessionKeys[0] = sessionKey;
+        targetContract = address(0x678);
+        targetContracts[0] = address(targetContract);
+        SessionKeyValidator(sessionKeyValidatorProxy).addSessionKeys(targetContracts, sessionKeys);
+
+        sessionKeyLookup = SessionKeyValidator(sessionKeyValidatorProxy).sessionKeyValidatorStorage(
+            SessionKeyValidator(sessionKeyValidatorProxy).getStorageKey(address(this), bytes20(targetContract))
+        );
+        assertEq(sessionKeyLookup, sessionKey);
+    }
+
+    // helper functions
     function _addSessionKey(address targetContract, address sessionKey) public {
         address[] memory sessionKeys = new address[](1);
         sessionKeys[0] = address(sessionKey);
@@ -153,5 +199,39 @@ contract SessionValidatorTest is Test {
                 userOp.paymasterAndData
             )
         );
+    }
+
+    function _deployProxy(address implementation, bytes memory initData, bytes32 salt)
+        internal
+        returns (address proxy)
+    {
+        // Deploy and initialize proxy using LibClone
+        (bool alreadyDeployed, address _proxy) = LibClone.createDeterministicERC1967(
+            0, // No ETH value needed
+            implementation,
+            salt
+        );
+
+        if (!alreadyDeployed) {
+            // solhint-disable-next-line avoid-low-level-calls
+            (bool success,) = _proxy.call(initData);
+            // solhint-disable-next-line custom-errors, gas-custom-errors
+            require(success, "Initialization of proxy contract failed");
+        }
+
+        proxy = _proxy;
+    }
+}
+
+contract SessionKeyValidatorUpgraded is SessionKeyValidator {
+    string public addedField;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    function reinitialize() external reinitializer(2) {
+        addedField = "SessionKeyValidatorUpgraded";
     }
 }
