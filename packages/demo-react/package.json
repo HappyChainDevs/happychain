@@ -5,7 +5,6 @@
     "type": "module",
     "dependencies": {
         "@happychain/react": "workspace:^",
-        "@happychain/ui": "workspace:^",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "viem": "^2.21.53"

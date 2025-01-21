@@ -1,5 +1,6 @@
 import { defaultChain } from "@happychain/sdk-shared"
 import define from "preact-custom-element"
+import { defineBadgeComponent } from "./badge/define"
 import { windowId } from "./happyProvider/initialize"
 import { HappyWallet } from "./wallet/HappyWallet"
 import { isFirefox, makeIframeUrl } from "./wallet/utils"
@@ -15,6 +16,11 @@ export type WalletRegisterOptions = {
      * ignored, and you must add and switch to chain once the user is connected
      */
     chainId?: string | number
+
+    /**
+     * Disable default styles on the connect badge
+     */
+    overrideBadgeStyles?: boolean
 }
 
 /**
@@ -52,6 +58,7 @@ export function register(opts: WalletRegisterOptions = {}) {
     }
 
     define(HappyWallet, "happy-wallet", [], { shadow: true })
+    defineBadgeComponent("connect-button", opts.overrideBadgeStyles)
 
     const wallet = document.createElement("happy-wallet")
 

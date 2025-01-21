@@ -1,5 +1,0 @@
-{
-    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
-    "extends": "../../packages/configs/api-extractor.jsonc",
-    "mainEntryPointFilePath": "build/types/lib/index.d.ts"
-}
