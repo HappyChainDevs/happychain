@@ -49,11 +49,11 @@ function getModuleInitData(hookAddress: Address, validatorData: Hex, hookData: H
     // Calculate offsets for each data section
     // Each offset is relative to 0x34 in the final layout (but why? maybe backwards compat)
 
-    const validatorDataOffset = 32 + 32 + 32 // skip hookDataOffset, selectorDataOffset, and validatorDataLength
+    const validatorDataOffset = 32 + 32 + 32 // skip hookDataOffset, selectorDataOffset, and validatorDataLength.length
     const hexValidatorDataOffset = toHexDigits(BigInt(validatorDataOffset), 32)
-    const hookDataOffset = validatorDataOffset + validatorDataLen + 32 // 32 = hookDataLength
+    const hookDataOffset = validatorDataOffset + validatorDataLen + 32 // 32 = hookDataLength.length
     const hexHookDataOffset = toHexDigits(BigInt(hookDataOffset), 32)
-    const selectorDataOffset = hookDataOffset + hookDataLen + 32 // 32 = selectorDataLength
+    const selectorDataOffset = hookDataOffset + hookDataLen + 32 // 32 = selectorDataLength.length
     const hexSelectorDataOffset = toHexDigits(BigInt(selectorDataOffset), 32)
 
     // Concatenate all parts following the specified layout
