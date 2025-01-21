@@ -257,7 +257,7 @@ define post-deploy
 	@cat out/deployment.json && printf "\n"
 
 	@# Extract ABIs from the deployed contracts and save to out/abis.json.
-	@export CONTRACTS=$$(bun node-jq '[.[]] | unique' out/abiMap.json) && \
+	@export CONTRACTS=$$(node-jq '[.[]] | unique' out/abiMap.json) && \
 	node-jq '[.[]] | unique[]' out/abiMap.json \
 		| xargs -L1 -I'{}' forge inspect {} abi \
 		| node-jq --slurp --argjson contracts "$$CONTRACTS" '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
