@@ -14,6 +14,7 @@ import {FactoryStaker} from "kernel/factory/FactoryStaker.sol";
 import {ECDSAValidator} from "kernel/validator/ECDSAValidator.sol";
 import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
 import {stdJson} from "forge-std/StdJson.sol";
+import {console} from "forge-std/Test.sol";
 
 // To ensure ABI generation.
 /* solhint-disable no-unused-import */
@@ -67,6 +68,7 @@ contract DeployAAContracts is BaseDeployScript {
 
         string memory json = vm.readFile(deploymentPath);
         bytes memory data = vm.parseJson(json);
+        console.log(string(data));
         expected = abi.decode(data, (DeploymentAddresses));
     }
 

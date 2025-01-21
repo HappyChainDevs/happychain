@@ -7,5 +7,6 @@
   "HappyPaymasterImpl": "0x9Ad60Da994320C4319d6b1BC3E33BBAED1412581",
   "Kernel": "0xCC75e2B671ddBff3413921EF20531BE6Fe4e4149",
   "KernelFactory": "0x6A780409766a691Be9b94dEB0A38F151fc55E1cb",
-  "SessionKeyValidator": "0x0B35cA9c4fc159e1466F81E076d553B7dd07d810"
+  "SessionKeyValidator": "0x0B35cA9c4fc159e1466F81E076d553B7dd07d810",
+  "SessionKeyValidatorImpl": "0x"
 }
