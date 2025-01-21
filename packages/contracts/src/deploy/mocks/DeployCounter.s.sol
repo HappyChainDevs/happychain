@@ -11,6 +11,6 @@ contract DeployHappyCounter is BaseDeployScript {
 
     function deploy() internal override {
         counter = new HappyCounter();
-        deployed("++:)", "HappyCounter", address(counter));
+        deployed("HappyCounter", "HappyCounter", address(counter));
     }
 }
