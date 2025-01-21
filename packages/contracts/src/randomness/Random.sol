@@ -6,27 +6,28 @@ import {Drand} from "./Drand.sol";
 
 contract Random is RandomCommitment, Drand {
     /*
-    * This is the amount of time by which we delay reading the values from the Drand network. 
-    * This approach is implemented to avoid issues when posting Drand values to the network 
-    * in blocks where the Drand network period coincides with the Happy Chain period. 
-    * For example, if there is a block at timestamp 6 and a new Drand value is also generated at timestamp 6,
-    * we would read the last Drand value generated before timestamp 6 - DRAND_DELAY.
+    * The amount of time in seconds by which we delay reading the values from the Drand network.
+    * 
+    * This is necessary, because whenever a Drand value is generated at time T, it is not possible to guarantee it 
+    * will be posted on a block with timestamp T (even if such a block exists) because of network delays.
     */
     uint256 public constant DRAND_DELAY = 2;
+    /**
+     * The minimum amount of time (in seconds) that commitments to future Drand randomness must be made
+     * in advance. This delay is relative to Drand timestamp (so DRAND_DELAY must also be added).
+     *
+     * This is used in the computation of nextValidTimestamp — always use that function to get a
+     * lower bound on the timestamp to commit to.
+     *
+     * This is necessary to enable independent detection of sequencer delays which could signify that the
+     * sequencer is waiting to know the Drand randomness before including a commitment to future Drand randomness.
+     */
     uint256 public constant MIN_PRECOMMIT_TIME = 3;
-    uint256 public immutable HAPPY_GENESIS_TIMESTAMP;
-    uint256 public immutable HAPPY_BLOCK_TIME;
 
-    constructor(
-        uint256[4] memory _drandPublicKey,
-        uint256 _drandGenesisTimestamp,
-        uint256 _drandPeriod,
-        uint256 _happyGenesisTimestamp,
-        uint256 _happyBlockTime
-    ) RandomCommitment() Drand(_drandPublicKey, _drandGenesisTimestamp, _drandPeriod) {
-        HAPPY_GENESIS_TIMESTAMP = _happyGenesisTimestamp;
-        HAPPY_BLOCK_TIME = _happyBlockTime;
-    }
+    constructor(uint256[4] memory _drandPublicKey, uint256 _drandGenesisTimestamp, uint256 _drandPeriod)
+        RandomCommitment()
+        Drand(_drandPublicKey, _drandGenesisTimestamp, _drandPeriod)
+    {}
 
     /**
      * @notice Returns a safe random bytes32 value that changes every block
@@ -54,8 +55,6 @@ contract Random is RandomCommitment, Drand {
      * @notice Returns the next timestamp where the drand randomness is guaranteed to be unknown.
      * This ensures that at the returned timestamp, no one can have prior knowledge of the drand randomness,
      * maintaining its unpredictability.
-     * @param timestamp The timestamp from which to calculate the next valid timestamp.
-     * @return nextValidTimestamp The next timestamp where the drand randomness remains unrevealed.
      */
     function nextValidTimestamp(uint256 timestamp) public view returns (uint256) {
         return _nextValidDrandTimestamp(timestamp + MIN_PRECOMMIT_TIME - 1) + DRAND_DELAY;
