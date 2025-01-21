@@ -1,4 +1,4 @@
-import { getUser } from "@happychain/iframe/src/state/user.ts"
+import { getUser } from "@happychain/iframe/src/state/user"
 import {
     type AuthState,
     type EventBus,

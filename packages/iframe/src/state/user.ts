@@ -3,7 +3,7 @@ import { accessorsFromAtom } from "@happychain/common"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { atom } from "jotai"
 import { getAddress } from "viem"
-import { StorageKey, storage } from "../services/storage.ts"
+import { StorageKey, storage } from "../services/storage"
 
 const userCompare = (a: HappyUser | undefined, b: HappyUser | undefined) => a?.uid === b?.uid
 const initialUserValue = undefined
