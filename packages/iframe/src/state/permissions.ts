@@ -250,29 +250,56 @@ function permissionRequestEntries(permissions: PermissionsRequest): PermissionRe
 }
 
 // === GRANT PERMISSIONS ===========================================================================
-
 /**
- * Grants the given permission(s) for the current user and the given app, and returns the list of
- * granted permissions.
+ * Grants permissions for the current user and the given app.
+ *
+ * @param app - The URL of the application requesting permissions
+ * @param permissionRequest - Permission request object or string
+ *
+ * @example Grant simple permission
+ *```
+ * grantPermissions(app, "eth_accounts")
+ * ```
+ *
+ * @example Grant permission with caveat
+ *```
+ * grantPermissions(app, {
+ *   happy_sessionKey: {
+ *     target: contractAddress
+ *   }
+ * })
+ * ```
  */
 export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequest): WalletPermission[] {
     const grantedPermissions = []
     const appPermissions = getAppPermissions(app)
 
     for (const { name, caveats } of permissionRequestEntries(permissionRequest)) {
-        const grantedPermission = {
-            caveats: caveats,
-            invoker: app,
-            parentCapability: name,
-            date: Date.now(),
-            id: createUUID(),
+        // If permission exists, merge new caveats with existing ones
+        if (appPermissions[name]) {
+            const existingCaveats = appPermissions[name].caveats
+            const newCaveats = caveats
+
+            appPermissions[name] = {
+                ...appPermissions[name],
+                caveats: [...existingCaveats, ...newCaveats],
+            }
+
+            grantedPermissions.push(appPermissions[name])
+        } else {
+            const grantedPermission = {
+                caveats,
+                invoker: app,
+                parentCapability: name,
+                date: Date.now(),
+                id: createUUID(),
+            }
+            grantedPermissions.push(grantedPermission)
+
+            // Ok to update in place: setAppPermissions` will construct a new object for
+            // permissionsMapAtom.
+            appPermissions[name] = grantedPermission
         }
-        grantedPermissions.push(grantedPermission)
-
-        // Ok to update in place: `setAppPermissions` will construct a new object for
-        // permissionsMapAtom.
-        appPermissions[name] = grantedPermission
-
         // Accounts permission granted, which lets the app access the user object.
         if (name === "eth_accounts" && isApp(app) && !isStandaloneIframe()) {
             emitUserUpdate(getUser())
@@ -286,18 +313,57 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
 // === REVOKE PERMISSIONS ==========================================================================
 
 /**
- * Revokes the given permission(s) of the user.
+ * Revokes permissions or specific caveats for an app.
+ * @param app - The app URL
+ * @param permissionsRequest - The permission(s) to revoke, including specific caveats to remove
+ *
+ * @example Revoke entire permission
+ * ```
+ * revokePermissions(app, "eth_accounts")
+ * ```
+ *
+ * @example Revoke specific caveat
+ * ```
+ * revokePermissions(app, {
+ *   happy_sessionKey: {
+ *     target: "0xSpecificTargetAddress"
+ *   }
+ * })
+ * ```
  */
-export function revokePermissions(
-    app: AppURL, //
-    permissionsRequest: PermissionsRequest,
-): void {
+export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRequest): void {
     const appPermissions = getAppPermissions(app)
 
-    for (const { name } of permissionRequestEntries(permissionsRequest)) {
-        delete appPermissions[name]
-        if (name === "eth_accounts") {
-            emitUserUpdate(undefined)
+    for (const { name, caveats } of permissionRequestEntries(permissionsRequest)) {
+        // If no specific caveats provided, remove entire permission
+        if (!caveats.length) {
+            delete appPermissions[name]
+            if (name === "eth_accounts") {
+                emitUserUpdate(undefined)
+            }
+            continue
+        }
+
+        if (!appPermissions[name]) continue
+
+        // Remove specific caveats
+        const existingPermission = appPermissions[name]
+        const remainingCaveats = existingPermission.caveats.filter(
+            (existingCaveat) =>
+                !caveats.some(
+                    (caveatToRemove) =>
+                        existingCaveat.type === caveatToRemove.type && existingCaveat.value === caveatToRemove.value,
+                ),
+        )
+
+        // If no caveats left, remove entire permission
+        if (remainingCaveats.length === 0) {
+            delete appPermissions[name]
+        } else {
+            appPermissions[name] = {
+                ...existingPermission,
+                caveats: remainingCaveats,
+            }
         }
     }
 
