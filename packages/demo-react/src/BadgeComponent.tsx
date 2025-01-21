@@ -1,6 +1,4 @@
-import { type BadgeProps, defineBadgeComponent } from "@happychain/ui"
-
-void defineBadgeComponent("connect-button")
+import type { BadgeProps } from "@happychain/js"
 
 declare global {
     // biome-ignore lint/style/noNamespace:

@@ -14,7 +14,7 @@ function setStyles(stylesId: string, css: string) {
     }
 }
 
-export async function defineBadgeComponent(componentName = "connect-button", strictStyles = true) {
+export async function defineBadgeComponent(componentName = "connect-button", overrideStyles = true) {
     const [{ Badge }, { default: register }, { default: css }] = await Promise.all([
         import("./badge"),
         import("preact-custom-element"),
@@ -23,11 +23,11 @@ export async function defineBadgeComponent(componentName = "connect-button", str
 
     // we can't create custom properties within the shadow dom,
     // so we will create outside here and append
-    if (strictStyles) {
+    if (!overrideStyles) {
         setStyles("happychain-inline-styles", css)
     }
 
     if (!customElements.get(componentName)) {
-        register(Badge, componentName, ["disable-styles"], { shadow: strictStyles })
+        register(Badge, componentName, ["disable-styles"], { shadow: !overrideStyles })
     }
 }

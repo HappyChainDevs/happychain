@@ -4,8 +4,7 @@
     "version": "0.0.0",
     "type": "module",
     "dependencies": {
-        "@happychain/js": "workspace:^",
-        "@happychain/ui": "workspace:^"
+        "@happychain/js": "workspace:^"
     },
     "devDependencies": {
         "@happychain/configs": "workspace:^",

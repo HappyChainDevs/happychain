@@ -1,7 +1,0 @@
-{
-    "extends": "@happychain/configs/tsconfig.base.json",
-    "compilerOptions": {
-        "jsxImportSource": "preact"
-    },
-    "include": ["*.ts", "package.json", "lib"]
-}
