@@ -37,6 +37,7 @@ contract DeployAAContracts is BaseDeployScript {
         address kernel;
         address kernelFactory;
         address sessionKeyValidator;
+        address sessionKeyValidatorImpl;
     }
 
     // Expected addresses will be loaded from deployment.json
@@ -138,8 +139,12 @@ contract DeployAAContracts is BaseDeployScript {
         paymaster = HappyPaymaster(expected.happyPaymaster);
         paymaster.deposit{value: PAYMASTER_DEPOSIT}();
 
+        if (expected.sessionKeyValidatorImpl.code.length == 0) {
+            expected.sessionKeyValidatorImpl = address(new SessionKeyValidator{salt: DEPLOYMENT_SALT}());
+        }
         if (expected.sessionKeyValidator.code.length == 0) {
-            expected.sessionKeyValidator = address(new SessionKeyValidator{salt: DEPLOYMENT_SALT}());
+            // Deploy and initialize the proxy
+            expected.sessionKeyValidator = _deployProxy(expected.sessionKeyValidatorImpl, "0x", DEPLOYMENT_SALT);
         }
 
         deployed("SessionKeyValidator", expected.sessionKeyValidator);
