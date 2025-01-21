@@ -13,6 +13,7 @@ export interface TransactionTable {
     deadline: number | undefined
     status: TransactionStatus
     attempts: string
+    collectionBlock: number | undefined
     metadata: string | undefined
     createdAt: number
     updatedAt: number
