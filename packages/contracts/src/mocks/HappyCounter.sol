@@ -30,10 +30,6 @@ contract HappyCounter {
         assembly {
             // Store 0 in slot 0
             sstore(0, 0)
-
-            // Emit event (optional)
-            let signature := 0x1cd42bad4a1e27f7583ce4b32742e6d0671f85763c9f3580318653012d52bba2
-            log1(0, 0, signature)
         }
     }
 }
