@@ -13,7 +13,7 @@ ALTO_BRANCH := $(shell cat alto.version)
 ALTO_CONFIG_FILE = configs/config.$(TARGET).json
 
 # Target to set up the repository initially (install dependencies and build)
-setup: build
+setup: alto build
 .PHONY: setup
 
 # Clone or update Alto repository based on alto.version
@@ -30,7 +30,7 @@ alto: alto.version
 	@git rm --cached alto/pnpm-lock.yaml 2>/dev/null || true
 
 # Target to build the bundler
-build: alto install-deps 
+build: install-deps 
 	cd alto && bunx pnpm run build
 .PHONY: build
 
