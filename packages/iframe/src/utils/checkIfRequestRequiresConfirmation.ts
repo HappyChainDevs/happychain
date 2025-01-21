@@ -3,8 +3,8 @@ import type { Msgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared"
 import type { Address } from "viem/accounts"
 import { hasPermissions } from "#src/state/permissions"
-import { getChains, getCurrentChain } from "../state/chains"
-import { getUser } from "../state/user"
+import { getChains, getCurrentChain } from "../state/chains.ts"
+import { getUser } from "../state/user.ts"
 import type { AppURL } from "./appURL.ts"
 
 export function checkIfRequestRequiresConfirmation(

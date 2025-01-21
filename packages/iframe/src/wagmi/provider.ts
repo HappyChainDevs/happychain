@@ -13,7 +13,7 @@ import { handlePermissionlessRequest } from "../requests"
 import { iframeID } from "../requests/utils"
 import { getAuthState } from "../state/authState"
 import { getIframeURL } from "../utils/appURL"
-import { checkIfRequestRequiresConfirmation } from "../utils/checkPermissions"
+import { checkIfRequestRequiresConfirmation } from "../utils/checkIfRequestRequiresConfirmation"
 
 /**
  * EIP-1193 provider for transactions initiated from the wallet.
