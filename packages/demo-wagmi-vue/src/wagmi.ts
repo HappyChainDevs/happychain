@@ -1,9 +1,6 @@
 import type { Config as VueConfig } from "@wagmi/vue"
-import { sepolia } from "@wagmi/vue/chains"
-import { createHappyChainWagmiConfig, happyProvider } from "./sdk"
+import { createHappyChainWagmiConfig, happyChainSepolia, happyProvider } from "./sdk"
 export { WagmiPlugin } from "@wagmi/vue"
-
-import { happyWagmiConnector } from "@happychain/js"
 
 /**
  * Console demo. to prompt for connection, or login, in the console try typing
@@ -17,4 +14,4 @@ import { happyWagmiConnector } from "@happychain/js"
 // biome-ignore lint/suspicious/noExplicitAny: demo purposes only. not needed under regular usage
 ;(window as any).happyProvider = happyProvider
 
-export const config = createHappyChainWagmiConfig(sepolia) as VueConfig
+export const config = createHappyChainWagmiConfig(happyChainSepolia) as VueConfig
