@@ -1,3 +1,4 @@
+import { abis as CounterAbi, deployment as CounterAddress } from "@happychain/contracts/happyCounter/sepolia"
 import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
 import { happyChainSepolia, happyProvider, useHappyChain } from "@happychain/react"
 import { useEffect, useMemo, useState } from "react"
@@ -79,7 +80,7 @@ function App() {
     }
 
     async function loadAbiStub() {
-        await loadAbi(contractsAddresses.MockTokenA, abis.MockTokenA)
+        await loadAbi(CounterAddress.HappyCounter, CounterAbi.HappyCounter)
         console.log("ABI loaded!")
     }
 
@@ -114,14 +115,39 @@ function App() {
         try {
             await happyProvider.request({
                 method: "happy_requestSessionKey",
-                params: ["0x4F683b24031573AB305ac425c5A7Eb774e5E13DD"],
+                params: [CounterAddress.HappyCounter],
             })
         } catch (error) {
             console.log(error)
         }
     }
 
-    async function incrementCounter() {}
+    async function incrementCounter() {
+        try {
+            if (!walletClient || !user?.address) return
+
+            const [account] = await walletClient.getAddresses()
+            // cf: https://viem.sh/docs/contract/writeContract.html#usage
+            const { request } = await publicClient.simulateContract({
+                account,
+                address: CounterAddress.HappyCounter,
+                abi: CounterAbi.HappyCounter,
+                functionName: "increment",
+                chain: convertToViemChain(chains.defaultChain),
+            })
+
+            console.log({ request })
+            const writeCall = await walletClient.writeContract(request)
+
+            if (writeCall) {
+                console.log("[count +] success:", writeCall)
+            } else {
+                console.log("[count ~] failed; please try again!")
+            }
+        } catch (error) {
+            console.log("[count :(] error caught:", error)
+        }
+    }
 
     useEffect(() => {
         if (!user) {

@@ -7,7 +7,8 @@
     "files": ["*.sol", "deployments/**/*"],
     "exports": {
         "./account-abstraction/sepolia": "./deployments/happy-sepolia/aa/abis.ts",
-        "./mockTokens/sepolia": "./deployments/happy-sepolia/mockTokens/abis.ts"
+        "./mockTokens/sepolia": "./deployments/happy-sepolia/mockTokens/abis.ts",
+        "./happyCounter/sepolia": "./deployments/happy-sepolia/mockCounter/abis.ts"
     },
     "dependencies": {
         "@openzeppelin/contracts": "^5.0.2",
@@ -22,11 +23,11 @@
         "@happychain/build": "workspace:^",
         "@happychain/configs": "workspace:^",
         "@openzeppelin/upgrades-core": "^1.36.0",
-        "node-jq": "^6.0.1",
-        "solhint": "^5.0.4",
-        "permissionless": "^0.2.0",
-        "viem": "^2.21.18",
         "@types/node": "^22.0.2",
-        "tsx": "^4.19.0"
+        "node-jq": "^6.0.1",
+        "permissionless": "^0.2.0",
+        "solhint": "^5.0.4",
+        "tsx": "^4.19.0",
+        "viem": "^2.21.18"
     }
 }

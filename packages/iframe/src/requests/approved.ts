@@ -156,6 +156,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             // Only check module installation if we don't have any session keys stored
             if (!hasExistingSessionKeys) {
                 const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
+                console.log({isSessionKeyValidatorInstalled})
                 if (!isSessionKeyValidatorInstalled) {
                     await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
                     keyRegistered = true
