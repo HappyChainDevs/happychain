@@ -33,7 +33,7 @@ contract SessionKeyValidator is IValidator, OwnableUpgradeable, UUPSUpgradeable 
         _disableInitializers();
     }
 
-    function initialize(address _owner) external initializer {
+    function initialize(address _owner) public initializer {
         __Ownable_init(_owner);
         __UUPSUpgradeable_init();
     }
