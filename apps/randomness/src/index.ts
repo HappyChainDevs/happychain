@@ -29,31 +29,31 @@ class RandomnessService {
 
     async start() {
         await Promise.all([this.txm.start(), this.randomnessRepository.start()])
-        this.txm.addHook(this.onTransactionStatusChange.bind(this), TxmHookType.TransactionStatusChanged)
-        this.txm.addHook(this.onNewBlock.bind(this), TxmHookType.NewBlock)
+        this.txm.addHook(TxmHookType.TransactionStatusChanged, this.onTransactionStatusChange.bind(this))
+        this.txm.addHook(TxmHookType.NewBlock, this.onNewBlock.bind(this))
     }
 
-    private onTransactionStatusChange(payload: { transaction: Transaction }) {
-        const randomness = this.randomnessRepository.getRandomnessForIntentId(payload.transaction.intentId)
+    private onTransactionStatusChange(transaction: Transaction) {
+        const randomness = this.randomnessRepository.getRandomnessForIntentId(transaction.intentId)
 
         if (!randomness) {
-            console.warn("Couldn't find randomness with intentId", payload.transaction.intentId)
+            console.warn("Couldn't find randomness with intentId", transaction.intentId)
             return
         }
 
-        if (payload.transaction.status === TransactionStatus.Success) {
-            if (randomness.commitmentTransactionIntentId === payload.transaction.intentId) {
+        if (transaction.status === TransactionStatus.Success) {
+            if (randomness.commitmentTransactionIntentId === transaction.intentId) {
                 randomness.commitmentExecuted()
-            } else if (randomness.revealTransactionIntentId === payload.transaction.intentId) {
+            } else if (randomness.revealTransactionIntentId === transaction.intentId) {
                 randomness.revealExecuted()
             }
         } else if (
-            payload.transaction.status === TransactionStatus.Failed ||
-            payload.transaction.status === TransactionStatus.Expired
+            transaction.status === TransactionStatus.Failed ||
+            transaction.status === TransactionStatus.Expired
         ) {
-            if (randomness.commitmentTransactionIntentId === payload.transaction.intentId) {
+            if (randomness.commitmentTransactionIntentId === transaction.intentId) {
                 randomness.commitmentFailed()
-            } else if (randomness.revealTransactionIntentId === payload.transaction.intentId) {
+            } else if (randomness.revealTransactionIntentId === transaction.intentId) {
                 randomness.revealFailed()
             }
         }
@@ -65,9 +65,9 @@ class RandomnessService {
         })
     }
 
-    private async onNewBlock(payload: { block: LatestBlock }) {
-        this.handleRevealNotSubmittedOnTime(payload.block)
-        this.randomnessRepository.pruneRandomnesses(payload.block.timestamp).then((result) => {
+    private async onNewBlock(block: LatestBlock) {
+        this.handleRevealNotSubmittedOnTime(block)
+        this.randomnessRepository.pruneRandomnesses(block.timestamp).then((result) => {
             if (result.isErr()) {
                 console.error("Failed to prune commitments", result.error)
             }
