@@ -82,10 +82,10 @@ export class TransactionRepository {
         )
 
         if (result.isOk()) {
-            this.notFinalizedTransactions.push(...notPersistedTransactions)
             this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
                 NotFinalizedStatuses.includes(transaction.status),
             )
+            this.notFinalizedTransactions.push(...notPersistedTransactions)
             transactions.forEach((t) => t.markFlushed())
         }
 
