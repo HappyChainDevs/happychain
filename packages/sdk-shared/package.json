@@ -13,6 +13,9 @@
             "types": "./dist/index.es.d.ts"
         }
     },
+    "dependencies": {
+        "viem": "^2.21.53"
+    },
     "peerDependencies": {
         "viem": "^2.21.53"
     },
