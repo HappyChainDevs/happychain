@@ -22,11 +22,7 @@ import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
-import {
-    checkIsSessionKeyModuleInstalled,
-    installSessionKeyModule,
-    registerSessionKey,
-} from "./modules/session-keys/helpers"
+import { checkIsSessionKeyModuleInstalled, installSessionKeyModule } from "./modules/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
 

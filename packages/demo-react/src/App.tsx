@@ -1,5 +1,5 @@
 import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
-import { happyChainSepolia, useHappyChain } from "@happychain/react"
+import { happyChainSepolia, happyProvider, useHappyChain } from "@happychain/react"
 import { useEffect, useMemo, useState } from "react"
 import { createPublicClient, createWalletClient, custom } from "viem"
 import { gnosis } from "viem/chains"
@@ -109,6 +109,19 @@ function App() {
             console.log("[mintTokens] error caught:", error)
         }
     }
+
+    async function addSessionKeyToCounterContract() {
+        try {
+            await happyProvider.request({
+                method: "happy_requestSessionKey",
+                params: ["0x4F683b24031573AB305ac425c5A7Eb774e5E13DD"],
+            })
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    async function incrementCounter() {}
 
     useEffect(() => {
         if (!user) {
