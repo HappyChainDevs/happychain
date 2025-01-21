@@ -4,7 +4,7 @@ import Container from "./Container.vue"
 import SelectArrow from "./SelectArrow.vue"
 
 // SDK
-import { useHappyChain } from "../sdk"
+import { useHappyChain } from "@happy.tech/vue"
 const { user } = useHappyChain()
 
 // wagmi

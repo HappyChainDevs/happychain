@@ -8,7 +8,7 @@
         "@tanstack/vue-query": "^5.62.0",
         "@wagmi/vue": "^0.1.7",
         "viem": "^2.21.53",
-        "vue": "^3.4.37"
+        "vue": "^3.5.13"
     },
     "devDependencies": {
         "@happy.tech/configs": "workspace:0.1.0",
