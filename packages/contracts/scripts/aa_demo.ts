@@ -68,11 +68,8 @@ async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Act
     // construct onInstallData: first 20 bytes: sessionKey, second 20 bytes: targetContract
     const targetContract: Hex = mockDeployment.MockTokenA
     const onInstallData = concat([sessionAccount.address, targetContract])
-    console.log("onInstallData: ", onInstallData)
-
     await installCustomModule(kernelClient, onInstallData)
-    console.log("Custom Module Installed")
-
+    
     const mintReceiverAddress = getRandomAddress()
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelClient.account!,
@@ -85,9 +82,6 @@ async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Act
         chainId: localhost.id,
         signature: EMPTY_SIGNATURE, // The signature field must be empty when hashing and signing the user operation.
     })
-
-    console.log("UserOperation: ", userOp)
-    console.log(sessionSigner)
 
     const userOpHash = await kernelClient.sendUserOperation({
         ...userOp,
