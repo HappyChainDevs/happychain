@@ -143,8 +143,10 @@ contract DeployAAContracts is BaseDeployScript {
             expected.sessionKeyValidatorImpl = address(new SessionKeyValidator{salt: DEPLOYMENT_SALT}());
         }
         if (expected.sessionKeyValidator.code.length == 0) {
+            // Prepare initialization data
+            bytes memory initData = abi.encodeCall(SessionKeyValidator.initialize, (msg.sender));
             // Deploy and initialize the proxy
-            expected.sessionKeyValidator = _deployProxy(expected.sessionKeyValidatorImpl, "0x", DEPLOYMENT_SALT);
+            expected.sessionKeyValidator = _deployProxy(expected.sessionKeyValidatorImpl, initData, DEPLOYMENT_SALT);
         }
 
         deployed("SessionKeyValidator", expected.sessionKeyValidator);
