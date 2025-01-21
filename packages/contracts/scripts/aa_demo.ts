@@ -69,7 +69,7 @@ async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Act
     const targetContract: Hex = mockDeployment.MockTokenA
     const onInstallData = concat([sessionAccount.address, targetContract])
     await installCustomModule(kernelClient, onInstallData)
-    
+
     const mintReceiverAddress = getRandomAddress()
     const userOp: UserOperation<"0.7"> = await kernelClient.prepareUserOperation({
         account: kernelClient.account!,
