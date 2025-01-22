@@ -20,6 +20,13 @@ export class BlockMonitor {
 
         this.txmgr.viemClient.watchBlocks({
             onBlock: this.onNewBlock.bind(this),
+            ...(this.txmgr.transportProtocol === "http"
+                ? {
+                      pollingInterval: Math.floor(
+                          (Number(this.txmgr.blockTime) * 1000) / this.txmgr.pollingIntervalFraction,
+                      ),
+                  }
+                : {}),
         })
     }
 
