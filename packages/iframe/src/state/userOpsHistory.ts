@@ -49,7 +49,7 @@ export const userOpsAtom = atom((get) => {
     const confirmed = get(confirmedUserOpsAtom)
     const pending = get(pendingUserOpsAtom)
 
-    if (!user) return { history: [], pending: [] }
+    if (!user) return { pendingOps: [], confirmedOps: [] }
 
     return {
         pendingOps: pending[user.address] ?? [],
