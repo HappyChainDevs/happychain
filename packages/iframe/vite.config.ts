@@ -2,7 +2,7 @@
 import { SharedWorkerPlugin } from "@happychain/worker"
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv } from "vite"
 import z from "zod"
 
 // Quick build time env checks
@@ -20,7 +20,8 @@ const config = z
         VITE_WEB3AUTH_VERIFIER: z.string(),
     })
     .safeParse(import.meta.env ?? process.env) // import.meta.env is unavailable in tests
-if (config.error) {
+if (config.error && process.env.VITEST === undefined) {
+    // Vitest does not load the environment by default.
     console.log(config.error.errors)
     process.exit(1)
 }
@@ -61,6 +62,7 @@ export default defineConfig(({ command }) => ({
     },
     test: {
         environment: "happy-dom",
+        env: loadEnv("", process.cwd(), ""),
     },
 }))
 
