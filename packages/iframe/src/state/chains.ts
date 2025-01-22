@@ -1,5 +1,5 @@
 import { accessorsFromAtom } from "@happychain/common"
-import { chains as defaultChains } from "@happychain/sdk-shared"
+import { chainDefinitions as defaultChains } from "@happychain/sdk-shared"
 import type { ChainParameters } from "@happychain/sdk-shared"
 import { type WritableAtom, atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"

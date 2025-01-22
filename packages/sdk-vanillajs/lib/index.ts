@@ -4,6 +4,21 @@ export type { AddEthereumChainParameter } from "viem"
 
 export type { HappyProviderPublic as HappyProvider } from "./happyProvider/interface"
 
+import {
+    chains as _chains,
+    chainsById as _chainsById,
+    defaultChain as _defaultChain,
+    devnet as _devnet,
+    happyChainSepolia as _happyChainSepolia,
+} from "@happychain/sdk-shared"
+import type { Chain } from "viem"
+
+export const chains: Chain[] = _chains
+export const chainsById: Map<number, Chain> = _chainsById
+export const defaultChain: Chain = _defaultChain
+export const devnet: Chain = _devnet
+export const happyChainSepolia: Chain = _happyChainSepolia
+
 export {
     onWalletVisibilityUpdate,
     onUserUpdate,
@@ -20,19 +35,6 @@ export type {
     WalletVisibilityCallback,
     ListenerUnsubscribeFn,
 } from "./happyProvider/listeners"
-
-/**
- * Repository of supported chains.
- * re-export as const instead of namespaced module
- */
-import * as _chains from "./chains"
-export const chains = { ..._chains }
-
-import { happyChainSepoliaViemChain } from "@happychain/sdk-shared"
-// retyped
-import type { Chain } from "viem"
-
-export const happyChainSepolia: Chain = happyChainSepoliaViemChain
 
 export type {
     HappyUser,

@@ -1,0 +1,1 @@
+This directory contains chains in a format suitable to be passed to Viem.

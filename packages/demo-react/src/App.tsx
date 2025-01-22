@@ -1,6 +1,5 @@
 import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
-import { chains, useHappyChain } from "@happychain/react"
-import { convertToViemChain } from "@happychain/sdk-shared"
+import { happyChainSepolia, useHappyChain } from "@happychain/react"
 import { useEffect, useMemo, useState } from "react"
 import { createPublicClient, createWalletClient, custom } from "viem"
 import { gnosis } from "viem/chains"
@@ -73,7 +72,7 @@ function App() {
         })
 
         if (watchAssetCall) {
-            console.log("[addNewToken]: (•̀•́) asset being watched (•̀•́)")
+            console.log("[addNewToken]: (••) asset being watched (••)")
         } else {
             console.log("[addNewToken]: Error adding asset ")
         }
@@ -97,7 +96,7 @@ function App() {
                 abi: abis.MockTokenA,
                 functionName: "mint",
                 args: [user.address, BigInt(1000000000000000000n)],
-                chain: convertToViemChain(chains.defaultChain),
+                chain: happyChainSepolia,
             })
             const writeCall = await walletClient.writeContract(request)
 
@@ -179,7 +178,7 @@ function App() {
 
             <button
                 type="button"
-                onClick={() => switchChain(chains.testnet.chainId)}
+                onClick={() => switchChain(happyChainSepolia.id)}
                 className="rounded-lg bg-sky-300 p-2 shadow-xl"
             >
                 Switch to HappyChain Sepolia

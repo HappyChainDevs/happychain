@@ -1,4 +1,4 @@
-import { chains } from "@happychain/sdk-shared"
+import { defaultChain } from "@happychain/sdk-shared"
 import define from "preact-custom-element"
 import { windowId } from "./happyProvider/initialize"
 import { HappyWallet } from "./wallet/HappyWallet"
@@ -55,7 +55,7 @@ export function register(opts: WalletRegisterOptions = {}) {
 
     const wallet = document.createElement("happy-wallet")
 
-    const chainId = opts.chainId || chains.defaultChain.chainId
+    const chainId = opts.chainId || defaultChain.id.toString()
     wallet.setAttribute("chain-id", chainId)
     wallet.setAttribute("window-id", windowId)
 
