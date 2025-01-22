@@ -33,7 +33,7 @@ export function addConfirmedUserOp(address: Address, userOpInfo: UserOpInfo) {
     })
 }
 
-export function addPendingUserOp(address: Address, payload: PendingUserOpDetails) {
+export function addPendingUserOp(address: Address, payload: Omit<PendingUserOpDetails, "status">) {
     store.set(pendingUserOpsAtom, (existingEntries) => {
         const pendingUserOps = existingEntries[address] || []
         const isAlreadyPending = pendingUserOps.some((op) => op.userOpHash === payload.userOpHash)
@@ -43,12 +43,10 @@ export function addPendingUserOp(address: Address, payload: PendingUserOpDetails
             return existingEntries
         }
 
-        console.log({ payload })
-
-        void monitorPendingUserOp(address, payload)
+        void monitorPendingUserOp(address, { ...payload, status: "pending" })
         return {
             ...existingEntries,
-            [address]: [payload, { ...pendingUserOps, status: "pending" }],
+            [address]: [{ ...payload, status: "pending" }, ...pendingUserOps],
         }
     })
 }
@@ -56,15 +54,22 @@ export function addPendingUserOp(address: Address, payload: PendingUserOpDetails
 export function flagUserOpAsFailed(address: Address, payload: PendingUserOpDetails) {
     store.set(pendingUserOpsAtom, (existingEntries) => {
         const pendingUserOps = existingEntries[address] || []
+        const updatedOps = pendingUserOps.map((op) =>
+            op.userOpHash === payload.userOpHash ? { ...op, status: "failed" as const } : op,
+        )
+
+        // If this was the only operation for this address, clean up the entry
+        if (updatedOps.every((op) => op.status === "failed")) {
+            const { [address]: _, ...remainingEntries } = existingEntries
+            return remainingEntries
+        }
+
         return {
             ...existingEntries,
-            [address]: pendingUserOps.map((op) =>
-                op.userOpHash === payload.userOpHash ? { ...op, status: "failed" } : op,
-            ),
+            [address]: updatedOps,
         }
     })
 }
-
 export function removePendingUserOp(address: Address, payload: PendingUserOpDetails) {
     store.set(pendingUserOpsAtom, (existingEntries) => {
         const updatedOps = (existingEntries[address] || []).filter((op) => op.userOpHash !== payload.userOpHash)
@@ -104,7 +109,7 @@ async function monitorPendingUserOp(address: Address, payload: PendingUserOpDeta
                 receipt,
                 value: payload.value,
             })
-            // Because of this, we can refetch the balances for associated assets.
+            // Refetch balances for associated assets
             queryClient.invalidateQueries({
                 queryKey: getBalanceQueryKey({
                     address: getUser()?.address,
