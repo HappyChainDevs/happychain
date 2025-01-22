@@ -18,11 +18,13 @@ contract SessionValidatorTest is Test, DeployAAContracts {
     MockERC20Token public mockToken;
 
     function setUp() public {
-        sessionKeyValidator = SessionKeyValidator(_deployProxy(
-            address(new SessionKeyValidator()),
-            abi.encodeWithSelector(SessionKeyValidator.initialize.selector, address(this)),
-            bytes32(0)
-        ));
+        sessionKeyValidator = SessionKeyValidator(
+            _deployProxy(
+                address(new SessionKeyValidator()),
+                abi.encodeWithSelector(SessionKeyValidator.initialize.selector, address(this)),
+                bytes32(0)
+            )
+        );
         mockToken = new MockERC20Token("MockToken", "MTK", 18);
     }
 
