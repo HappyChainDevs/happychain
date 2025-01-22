@@ -32,10 +32,17 @@ dist-ssr
 # Contract outputs
 packages/contracts/cache/
 packages/contracts/out/
-
 packages/contracts/lib
 packages/contracts/broadcast/
-packages/frontend/src/generated.ts
+# Local deployments
+packages/contracts/deployments/LOCAL/
+
+# Typedoc generated api reference.
+# Ignored to discourage manual editing
+apps/docs/docs/pages/**/api
+
+# Cloned Repositories
+packages/bundler/alto
 
 # Editor configs and files
 .idea
@@ -52,19 +59,5 @@ packages/frontend/src/generated.ts
 # Vocs bunild artifacts
 *.config.ts.timestamp-*
 
-# Typedoc generated api reference.
-# Ignored to discourage manual editing
-packages/docs/docs/pages/**/api
-
-# Cloned Repositories
-packages/bundler/alto
-
-# Local deployments
-packages/contracts/deployments/LOCAL/
-
 # SQLite files
 *.sqlite
-
-# Graphql
-packages/dex-magicswap/.graphclient/
-packages/dex-magicswap/app/generated.ts

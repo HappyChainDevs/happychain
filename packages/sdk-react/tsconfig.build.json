@@ -1,4 +1,0 @@
-{
-    "extends": ["./tsconfig.json", "@happychain/configs/tsconfig.types.json"],
-    "include": ["lib"]
-}

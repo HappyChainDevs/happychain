@@ -1,0 +1,47 @@
+# Interface: GasEstimator
+
+Defined in: [packages/txm/lib/GasEstimator.ts:32](https://github.com/HappyChainDevs/happychain/blob/99d9c499d60929c60f5b0529191c07ec6adb3faa/packages/txm/lib/GasEstimator.ts#L32)
+
+This is the interface that you have to implement if you want to provide a custom gas estimator.
+The default implementation is [DefaultGasLimitEstimator](/txm/api/classes/DefaultGasLimitEstimator).
+
+You have to implement this interface if the standard gas estimation method does not work. That's because the standard method
+simulates the transaction against the current blockchain state, which can change when the transaction is actually executed onchain.
+This can lead to inaccurate gas estimations that cause transactions to revert onchain. It can also lead happen that some transactions fail
+at the estimation stage when they would have succeeded on chain. For instance, this can happen to transactions
+who have a strict requirement on the block number or timestamp on or after which they should land.
+
+By avoiding transaction simulation, you can also improve the performance of the transaction manager.
+You eliminate an RPC call, increasing the likelihood that your transaction will be included in the next block.
+Furthermore, if you're always executing the same type of transaction, it typically consumes a similar amount of gas.
+In those cases, an upper bound of the gas limit can be computed in advance and injected by a custom gas estimator.
+
+In some cases, you may want to hardcode the gas limit anyway (if at all possible). Doing so avoids an extra round-trip to the RPC server,
+which might help your transaction land in an earlier block and will save on RPC costs.
+
+Because the extra gas gets refunded, this is both safe and doesn't incur extra cost,
+though it increases your gas capital requirement if you have a lot of transactions in flight.
+
+## Methods
+
+### estimateGas()
+
+```ts
+estimateGas(transactionManager: TransactionManager, transaction: Transaction): Promise<Result<bigint, EstimateGasErrorCause>>
+```
+
+Defined in: [packages/txm/lib/GasEstimator.ts:33](https://github.com/HappyChainDevs/happychain/blob/99d9c499d60929c60f5b0529191c07ec6adb3faa/packages/txm/lib/GasEstimator.ts#L33)
+
+#### Parameters
+
+##### transactionManager
+
+[`TransactionManager`](/txm/api/classes/TransactionManager)
+
+##### transaction
+
+[`Transaction`](/txm/api/classes/Transaction)
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`Result`\<`bigint`, [`EstimateGasErrorCause`](/txm/api/enumerations/EstimateGasErrorCause)>>

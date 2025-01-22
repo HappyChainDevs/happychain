@@ -1,0 +1,13 @@
+{
+    "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["../../support/configs/biome.jsonc"],
+    "linter": {
+        "rules": {
+            "correctness": {
+                // Otherwise tries to remove all imports from .vue files as unused.
+                // https://biomejs.dev/internals/language-support/
+                "noUnusedImports": "off"
+            }
+        }
+    }
+}

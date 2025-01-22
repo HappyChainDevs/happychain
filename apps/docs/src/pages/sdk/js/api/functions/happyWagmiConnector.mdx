@@ -1,0 +1,319 @@
+# Function: happyWagmiConnector()
+
+```ts
+function happyWagmiConnector(config: {
+  chains: readonly [Chain, Chain];
+  emitter: Emitter<ConnectorEventMap>;
+  storage:   | null
+     | {
+     key: string;
+     getItem:   | defaultValue extends null ? null | value : value
+        | Promise<defaultValue extends null ? null | value : value>;
+     removeItem:   | void
+        | Promise<void>;
+     setItem:   | void
+        | Promise<void>;
+    };
+  transports: Record<number, Transport>;
+ }): {
+[key: string]: unknown;   icon: string;
+  id: string;
+  name: string;
+  rdns: string | readonly string[];
+  supportsSimulation: boolean;
+  type: string;
+  connect: Promise<{
+     accounts: readonly `0x${string}`[];
+     chainId: number;
+    }>;
+  disconnect: Promise<void>;
+  getAccounts: Promise<readonly `0x${string}`[]>;
+  getChainId: Promise<number>;
+  getClient: Promise<Client>;
+  getProvider: Promise<unknown>;
+  isAuthorized: Promise<boolean>;
+  onAccountsChanged: void;
+  onChainChanged: void;
+  onConnect: void;
+  onDisconnect: void;
+  onMessage: void;
+  setup: Promise<void>;
+  switchChain: Promise<Chain>;
+}
+```
+
+Defined in: [packages/core/lib/wagmi/happyWagmiConfig.ts:25](https://github.com/HappyChainDevs/happychain/blob/99d9c499d60929c60f5b0529191c07ec6adb3faa/packages/core/lib/wagmi/happyWagmiConfig.ts#L25)
+
+A custom wagmi [Connector](https://wagmi.sh/react/api/connectors/injected) that is
+initialized using the HappyProvider.
+
+## Parameters
+
+### config
+
+#### chains
+
+readonly \[`Chain`, `Chain`]
+
+#### emitter
+
+`Emitter`\<`ConnectorEventMap`>
+
+#### storage
+
+\| `null`
+\| \{
+`key`: `string`;
+`getItem`:   | `defaultValue` *extends* `null` ? `null` | `value` : `value`
+\| [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`defaultValue` *extends* `null` ? `null` | `value` : `value`>;
+`removeItem`:   | `void`
+\| [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`void`>;
+`setItem`:   | `void`
+\| [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`void`>;
+}
+
+#### transports
+
+[`Record`](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type)\<`number`, `Transport`>
+
+## Returns
+
+```ts
+{
+[key: string]: unknown;   icon: string;
+  id: string;
+  name: string;
+  rdns: string | readonly string[];
+  supportsSimulation: boolean;
+  type: string;
+  connect: Promise<{
+     accounts: readonly `0x${string}`[];
+     chainId: number;
+    }>;
+  disconnect: Promise<void>;
+  getAccounts: Promise<readonly `0x${string}`[]>;
+  getChainId: Promise<number>;
+  getClient: Promise<Client>;
+  getProvider: Promise<unknown>;
+  isAuthorized: Promise<boolean>;
+  onAccountsChanged: void;
+  onChainChanged: void;
+  onConnect: void;
+  onDisconnect: void;
+  onMessage: void;
+  setup: Promise<void>;
+  switchChain: Promise<Chain>;
+}
+```
+
+### icon?
+
+```ts
+readonly optional icon: string;
+```
+
+### id
+
+```ts
+readonly id: string;
+```
+
+### name
+
+```ts
+readonly name: string;
+```
+
+### rdns?
+
+```ts
+readonly optional rdns: string | readonly string[];
+```
+
+### ~~supportsSimulation?~~
+
+```ts
+readonly optional supportsSimulation: boolean;
+```
+
+#### Deprecated
+
+### type
+
+```ts
+readonly type: string;
+```
+
+### connect()
+
+#### Parameters
+
+##### parameters?
+
+###### chainId
+
+`number`
+
+###### isReconnecting
+
+`boolean`
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<\{
+`accounts`: readonly `` `0x${string}` ``\[];
+`chainId`: `number`;
+}>
+
+### disconnect()
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`void`>
+
+### getAccounts()
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<readonly `` `0x${string}` ``\[]>
+
+### getChainId()
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`number`>
+
+### getClient()?
+
+#### Parameters
+
+##### parameters?
+
+###### chainId
+
+`number`
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`Client`>
+
+### getProvider()
+
+#### Parameters
+
+##### parameters?
+
+###### chainId
+
+`number`
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`unknown`>
+
+### isAuthorized()
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`boolean`>
+
+### onAccountsChanged()
+
+#### Parameters
+
+##### accounts
+
+`string`\[]
+
+#### Returns
+
+`void`
+
+### onChainChanged()
+
+#### Parameters
+
+##### chainId
+
+`string`
+
+#### Returns
+
+`void`
+
+### onConnect()?
+
+#### Parameters
+
+##### connectInfo
+
+`ProviderConnectInfo`
+
+#### Returns
+
+`void`
+
+### onDisconnect()
+
+#### Parameters
+
+##### error?
+
+[`Error`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)
+
+#### Returns
+
+`void`
+
+### onMessage()?
+
+#### Parameters
+
+##### message
+
+`ProviderMessage`
+
+#### Returns
+
+`void`
+
+### setup()?
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`void`>
+
+### switchChain()?
+
+#### Parameters
+
+##### parameters
+
+###### addEthereumChainParameter
+
+`ExactPartial`\<`StrictOmit`\<[`AddEthereumChainParameter`](/sdk/js/api/type-aliases/AddEthereumChainParameter), `"chainId"`>>
+
+###### chainId
+
+`number`
+
+#### Returns
+
+[`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`Chain`>
+
+## Example
+
+### Setting up a wagmi config with our custom connector
+
+```ts twoslash
+import { happyProvider, happyWagmiConnector, happyChainSepolia } from "@happy.tech/core"
+import { type Config, createConfig, custom } from "@wagmi/core"
+
+export const config: Config = createConfig({
+ chains: [happyChainSepolia],
+ connectors: [happyWagmiConnector], // voila!
+ transports: {
+     [happyChainSepolia.id]: custom(happyProvider),
+ },
+})
+```

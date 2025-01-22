@@ -1,0 +1,6 @@
+{
+    "extends": ["../../packages/txm/tsconfig.json"],
+    "compilerOptions": {
+        "rootDir": "../../"
+    }
+}

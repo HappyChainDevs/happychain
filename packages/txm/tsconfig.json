@@ -1,0 +1,13 @@
+{
+    "extends": ["../../support/configs/tsconfig.base.json"],
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "paths": {
+            // Overrides ts-node to version 11 because mikro-orm requires this version for
+            // compatibility with multiple files in the tsconfig extends field.
+            "ts-node": ["./node_modules/ts-node/dist/bin.js"]
+        }
+    },
+    "include": ["lib", "*.ts", "package.json", "migrations"]
+}

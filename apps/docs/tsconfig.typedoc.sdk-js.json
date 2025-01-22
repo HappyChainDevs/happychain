@@ -1,0 +1,7 @@
+{
+    "extends": ["../../packages/core/tsconfig.json"],
+    "compilerOptions": {
+        "rootDir": "../../"
+    },
+    "include": ["../../packages/core/lib", "../../support/wallet-common/lib"]
+}

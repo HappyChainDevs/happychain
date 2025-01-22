@@ -1,0 +1,22 @@
+{
+    "name": "@happy.tech/random",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "dependencies": {
+        "@happy.tech/contracts": "workspace:^",
+        "@happy.tech/common": "workspace:^",
+        "@happy.tech/txm": "workspace:^",
+        "better-sqlite3": "^11.7.0",
+        "kysely": "^0.27.5",
+        "neverthrow": "^8.1.0",
+        "viem": "^2.21.53",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@happy.tech/configs": "workspace:^",
+        "typescript": "^5.6.2"
+    }
+}
