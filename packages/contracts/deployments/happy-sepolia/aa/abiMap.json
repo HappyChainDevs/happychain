@@ -7,5 +7,6 @@
   "HappyPaymasterImpl": "HappyPaymaster",
   "Kernel": "Kernel",
   "KernelFactory": "KernelFactory",
-  "SessionKeyValidator": "SessionKeyValidator"
+  "SessionKeyValidator": "SessionKeyValidator",
+  "SessionKeyValidatorImpl": "SessionKeyValidator"
 }
