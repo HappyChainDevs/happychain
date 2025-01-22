@@ -3,7 +3,7 @@ import { type Ref, ref } from "vue"
 
 const user = ref<HappyUser | undefined>(undefined)
 
-onUserUpdate((_user) => {
+onUserUpdate((_user: HappyUser | undefined) => {
     user.value = _user
 })
 
