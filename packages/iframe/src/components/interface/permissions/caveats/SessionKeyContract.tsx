@@ -21,7 +21,7 @@ export const SessionKeyContract = ({ contract, dappUrl, showControl }: SessionKe
 
     useEffect(() => {
         if (!showControl && checked) setChecked(false)
-    }, [showControl])
+    }, [showControl, checked])
 
     return (
         <Checkbox.Root
