@@ -32,9 +32,9 @@ export type WalletRegisterOptions = {
  * Connect to a pre-defined chain
  * ```ts twoslash
  * import { register } from '@happychain/js'
- * import { chains } from '@happychain/js'
+ * import { happyChainSepolia } from '@happychain/js'
  * // ---cut---
- * register({ chainId: chains.testnet.chainId })
+ * register({ chainId: happyChainSepolia.id.toString() })
  * ```
  *
  * @example
