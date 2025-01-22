@@ -12,20 +12,6 @@ export {
     chainsById,
 } from "./chains/viem"
 
-// export {
-//     baseSepolia,
-//     base,
-//     op,
-//     opSepolia,
-//     ethereumSepolia,
-//     ethereum,
-//     happyChainSepolia as _happyChainSepolia,
-//     devnet as _devnet,
-//     defaultChain as _defaultChain,
-// } from "./chains/definitions"
-
-export * as chainDefinitions from "./chains/definitions"
-
 export { convertToViemChain } from "./chains/utils"
 export { AuthState, WalletType } from "./interfaces/happyUser"
 
