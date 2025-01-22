@@ -4,9 +4,9 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/help.mk
 
 test: ## Runs tests
-	vitest run
+	@vitest run;
 .PHONY: test
 
 test.watch: ## Runs tests in watch mode
-	vitest watch
+	@vitest watch;
 .PHONY: test.watch

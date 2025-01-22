@@ -25,8 +25,7 @@ dev: node_modules ## Symlinks source code entries into 'dist'
 	@make clean
 .PHONY: dev
 
-# Sets up the symlink necessary for vite dev to work across the monorepo, but only if they
-# a build is not present.
+# Sets up the symlink necessary for vite dev to work across the monorepo, but only if a build is not present.
 # This is a :: rule that can be repeated to be extended with more commands.
 setup-symlinks::
 	@mkdir -p dist
