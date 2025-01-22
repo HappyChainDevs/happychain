@@ -52,6 +52,10 @@ export class TransactionCollector {
                 })
 
                 if (submissionResult.isErr() && !submissionResult.error.flushed) {
+                    eventBus.emit(Topics.TransactionSubmissionFailed, {
+                        transaction,
+                        description: submissionResult.error.description,
+                    })
                     this.txmgr.nonceManager.returnNonce(nonce)
                 }
             }),

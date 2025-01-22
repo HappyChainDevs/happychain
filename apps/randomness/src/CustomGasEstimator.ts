@@ -1,6 +1,6 @@
 import {
     DefaultGasLimitEstimator,
-    type EstimateGasErrorCause,
+    type EstimateGasError,
     type Transaction,
     type TransactionManager,
 } from "@happy.tech/txm"
@@ -10,7 +10,7 @@ export class CustomGasEstimator extends DefaultGasLimitEstimator {
     override async estimateGas(
         transactionManager: TransactionManager,
         transaction: Transaction,
-    ): Promise<Result<bigint, EstimateGasErrorCause>> {
+    ): Promise<Result<bigint, EstimateGasError>> {
         // These values are based on benchmarks from Anvil.
         // An extra margin is added to prevent errors in the randomness service due to minor contract changes.
 

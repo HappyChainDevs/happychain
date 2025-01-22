@@ -45,6 +45,9 @@ class RandomnessService {
         this.txm.addTransactionOriginator(this.onCollectTransactions.bind(this))
         this.txm.addHook(TxmHookType.TransactionStatusChanged, this.onTransactionStatusChange.bind(this))
         this.txm.addHook(TxmHookType.NewBlock, this.onNewBlock.bind(this))
+        this.txm.addHook(TxmHookType.TransactionSubmissionFailed, (_, description) => {
+            console.error(description)
+        })
 
         // Synchronize the retrieval of new Drand beacons with the Drand network to request them as soon as they become available.
         const periodMs = Number(env.EVM_DRAND_PERIOD_SECONDS) * MS_IN_SECOND

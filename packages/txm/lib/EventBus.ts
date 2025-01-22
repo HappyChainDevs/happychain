@@ -4,6 +4,7 @@ export enum Topics {
     NewBlock = "NewBlock",
     TransactionStatusChanged = "TransactionStatusChanged",
     TransactionSaveFailed = "TransactionSaveFailed",
+    TransactionSubmissionFailed = "TransactionSubmissionFailed",
 }
 
 export type EventBus = EventEmitter<Topics>
