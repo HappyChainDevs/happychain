@@ -8,8 +8,8 @@ interface RequestLayoutProps extends PropsWithChildren {
 
 const RequestLayout = ({ children, method }: RequestLayoutProps) => {
     return (
-        <main className="flex min-h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
-            <div className="flex w-full grow flex-col gap-4">
+        <main className="flex h-dvh flex-col items-start justify-between gap-4 bg-base-300 p-4">
+            <div className="flex size-full flex-col gap-4">
                 <RequestDisplayHeader method={method} />
                 {children}
             </div>
