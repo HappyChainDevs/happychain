@@ -9,8 +9,9 @@ import {SIG_VALIDATION_SUCCESS_UINT, SIG_VALIDATION_FAILED_UINT} from "kernel/ty
 
 import {MockERC20Token} from "../mocks/MockERC20.sol";
 import {SessionKeyValidator} from "../../src/SessionKeyValidator.sol";
+import {BaseDeployScript} from "../../src/deploy/BaseDeployScript.sol"; // imported for _deployProxy, todo: use DeployAA.s.sol in entirety for tests
 
-contract SessionValidatorTest is Test {
+contract SessionValidatorTest is Test, BaseDeployScript {
     SessionKeyValidator public sessionKeyValidator;
     MockERC20Token public mockToken;
 
@@ -199,27 +200,6 @@ contract SessionValidatorTest is Test {
                 userOp.paymasterAndData
             )
         );
-    }
-
-    function _deployProxy(address implementation, bytes memory initData, bytes32 salt)
-        internal
-        returns (address proxy)
-    {
-        // Deploy and initialize proxy using LibClone
-        (bool alreadyDeployed, address _proxy) = LibClone.createDeterministicERC1967(
-            0, // No ETH value needed
-            implementation,
-            salt
-        );
-
-        if (!alreadyDeployed) {
-            // solhint-disable-next-line avoid-low-level-calls
-            (bool success,) = _proxy.call(initData);
-            // solhint-disable-next-line custom-errors, gas-custom-errors
-            require(success, "Initialization of proxy contract failed");
-        }
-
-        proxy = _proxy;
     }
 }
 
