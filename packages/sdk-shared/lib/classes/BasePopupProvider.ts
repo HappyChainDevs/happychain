@@ -12,6 +12,8 @@ type InFlightRequest = {
     popup?: Window
 }
 
+const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
+
 /**
  * This class serves as a base for EIP-1193 providers that sometimes need to create popups to
  * collect user approval. In particular, we have one such provider living on the app that relays
@@ -48,13 +50,13 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     // === FIELDS ==================================================================================
     protected abstract popupBaseUrl: string
 
-    private inFlightRequests = new Map<string, InFlightRequest>()
+    private readonly inFlightRequests: Map<string, InFlightRequest>
     private timer: Timer | null = null
-    private static readonly POPUP_FEATURES = //
-        ["width=400", "height=800", "popup=true", "toolbar=0", "menubar=0"].join(",")
 
     protected constructor(private windowId: UUID) {
         super()
+        // must be initialized here for tree-shaking
+        this.inFlightRequests = new Map()
     }
 
     // === PUBLIC INTERFACE ========================================================================
@@ -138,7 +140,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
             iframeIndex: iframeIndex.toString(),
         }
         const searchParams = new URLSearchParams(opts).toString()
-        const popup = window.open(`${url}?${searchParams}`, "_blank", BasePopupProvider.POPUP_FEATURES)
+        const popup = window.open(`${url}?${searchParams}`, "_blank", POPUP_FEATURES)
         return popup ?? undefined
     }
 
