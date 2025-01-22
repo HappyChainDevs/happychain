@@ -21,7 +21,7 @@ import { HappyChainPlugin, happyChainSepolia } from "./sdk"
 export const config = createHappyChainWagmiConfig(happyChainSepolia) as WagmiConfig
 
 createApp(App)
-    .use(HappyChainPlugin, { chainId: happyChainSepolia.id.toString() })
+    .use(HappyChainPlugin, { chainId: happyChainSepolia.id })
     .use(WagmiPlugin, { config })
     .use(VueQueryPlugin, { queryClient })
     .mount("#app")

@@ -18,7 +18,7 @@ import { BrowserProvider } from "ethers"
 // expose on window for demo purposes
 window.happyProvider = happyProvider
 
-register({ chainId: happyChainSepolia.id.toString() })
+register({ chainId: happyChainSepolia.id })
 
 void defineBadgeComponent("connect-button", false)
 
