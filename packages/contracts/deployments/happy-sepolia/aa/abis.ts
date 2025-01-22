@@ -4673,6 +4673,98 @@ const contractToAbi = ({
   ],
   "SessionKeyValidator": [
     {
+      "type": "constructor",
+      "inputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "UPGRADE_INTERFACE_VERSION",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "string",
+          "internalType": "string"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "addSessionKeys",
+      "inputs": [
+        {
+          "name": "targetContract",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address[]",
+          "internalType": "address[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "getStorageKey",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "bytes20",
+          "internalType": "bytes20"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "initialize",
+      "inputs": [
+        {
+          "name": "_owner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "initialized",
+      "inputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
       "type": "function",
       "name": "isInitialized",
       "inputs": [
@@ -4715,7 +4807,7 @@ const contractToAbi = ({
       "name": "isValidSignatureWithSender",
       "inputs": [
         {
-          "name": "",
+          "name": "to",
           "type": "address",
           "internalType": "address"
         },
@@ -4767,12 +4859,58 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "sessionKeyValidatorStorage",
-      "inputs": [
+      "name": "owner",
+      "inputs": [],
+      "outputs": [
         {
           "name": "",
           "type": "address",
           "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "proxiableUUID",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "removeSessionKeys",
+      "inputs": [
+        {
+          "name": "targetContract",
+          "type": "address[]",
+          "internalType": "address[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "renounceOwnership",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "sessionKeyValidatorStorage",
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
         }
       ],
       "outputs": [
@@ -4783,6 +4921,37 @@ const contractToAbi = ({
         }
       ],
       "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "transferOwnership",
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "upgradeToAndCall",
+      "inputs": [
+        {
+          "name": "newImplementation",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "data",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
     },
     {
       "type": "function",
@@ -4856,6 +5025,106 @@ const contractToAbi = ({
       "stateMutability": "payable"
     },
     {
+      "type": "event",
+      "name": "Initialized",
+      "inputs": [
+        {
+          "name": "version",
+          "type": "uint64",
+          "indexed": false,
+          "internalType": "uint64"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "OwnershipTransferred",
+      "inputs": [
+        {
+          "name": "previousOwner",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "newOwner",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "SessionKeyAdded",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "targetContract",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "SessionKeyRemoved",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "targetContract",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Upgraded",
+      "inputs": [
+        {
+          "name": "implementation",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "AddressEmptyCode",
+      "inputs": [
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
       "type": "error",
       "name": "AlreadyInitialized",
       "inputs": [
@@ -4865,6 +5134,32 @@ const contractToAbi = ({
           "internalType": "address"
         }
       ]
+    },
+    {
+      "type": "error",
+      "name": "ERC1967InvalidImplementation",
+      "inputs": [
+        {
+          "name": "implementation",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ERC1967NonPayable",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "FailedCall",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidInitialization",
+      "inputs": []
     },
     {
       "type": "error",
@@ -4887,6 +5182,49 @@ const contractToAbi = ({
           "internalType": "address"
         }
       ]
+    },
+    {
+      "type": "error",
+      "name": "NotInitializing",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "OwnableInvalidOwner",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "OwnableUnauthorizedAccount",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "UUPSUnauthorizedCallContext",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "UUPSUnsupportedProxiableUUID",
+      "inputs": [
+        {
+          "name": "slot",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ]
     }
   ]
 }
@@ -4901,7 +5239,8 @@ const aliasToContract = ({
   "HappyPaymasterImpl": "HappyPaymaster",
   "Kernel": "Kernel",
   "KernelFactory": "KernelFactory",
-  "SessionKeyValidator": "SessionKeyValidator"
+  "SessionKeyValidator": "SessionKeyValidator",
+  "SessionKeyValidatorImpl": "SessionKeyValidator"
 }) as const
 
 export const deployment = ({
@@ -4913,7 +5252,8 @@ export const deployment = ({
   "HappyPaymasterImpl": "0xa69622E90aef01B137a6FeF5222A72f65222B6Bc",
   "Kernel": "0xCC75e2B671ddBff3413921EF20531BE6Fe4e4149",
   "KernelFactory": "0x6A780409766a691Be9b94dEB0A38F151fc55E1cb",
-  "SessionKeyValidator": "0x0B35cA9c4fc159e1466F81E076d553B7dd07d810"
+  "SessionKeyValidator": "0x849A9362C4076Bbe72F4F8ce74D163736da37b63",
+  "SessionKeyValidatorImpl": "0x6Cd7364Af367A261ff444Cf70539D39132BDe9A0"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
