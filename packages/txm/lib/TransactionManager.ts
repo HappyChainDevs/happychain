@@ -63,6 +63,13 @@ export type TransactionManagerConfig = {
          * Defaults to false.
          */
         allowDebug?: boolean
+
+        /**
+         * Specifies the fraction of the block time to be used as the polling interval.
+         * This setting is applicable only when the RPC protocol is HTTP.
+         * By default, the polling interval is set to 1/8 of the block time, meaning the system will poll every 1/8th of the block time.
+         */
+        pollingIntervalFraction?: number
     }
     /** The private key of the account used for signing transactions. */
     privateKey: Hex
@@ -159,6 +166,8 @@ export class TransactionManager {
     public readonly rpcAllowDebug: boolean
     public readonly blockTime: bigint
     public readonly finalizedTransactionPurgeTime: number
+    public readonly pollingIntervalFraction: number
+    public readonly transportProtocol: "http" | "websocket"
 
     public started: boolean
 
@@ -171,12 +180,14 @@ export class TransactionManager {
             throw protocol.error
         }
 
+        this.transportProtocol = protocol.value
+
         const retries = _config.rpc.retries || 2
         const retryDelay = _config.rpc.retryDelay || 50
         const timeout = _config.rpc.timeout || 500
 
         let transport: ViemTransport
-        if (protocol.value === "http") {
+        if (this.transportProtocol === "http") {
             transport = viemHttpTransport(_config.rpc.url, {
                 timeout,
                 retryCount: retries,
@@ -249,6 +260,8 @@ export class TransactionManager {
         this.rpcAllowDebug = _config.rpc.allowDebug || false
         this.blockTime = _config.blockTime || 2n
         this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
+
+        this.pollingIntervalFraction = _config.rpc.pollingIntervalFraction || 8
 
         this.started = false
     }
