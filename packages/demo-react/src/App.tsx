@@ -32,7 +32,7 @@ function App() {
         const signature = await walletClient.signMessage({ message })
 
         const valid = await publicClient.verifyMessage({
-            address: user.address,
+            address: user.controllingAddress,
             message,
             signature,
         })

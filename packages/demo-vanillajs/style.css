@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* Custom Connect Badge Styling */
-connect-button {
+happychain-connect-button {
     .happychain-badge {
         @apply flex items-center justify-center;
         & > span {

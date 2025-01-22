@@ -17,14 +17,6 @@
 
     <h1 class="text-white text-4xl font-bold mt-20 sm:mt-0 sm:p-16 text-center">HappyChain + JS + Ethers</h1>
 
-    <connect-button disable-styles></connect-button>
-
-    <button id="connect-btn" type="button" class="rounded-lg bg-sky-300 p-2 shadow-xl">
-      Connect
-    </button>
-
-
-
     <div class="flex flex-col md:grid grid-cols-2 gap-4 w-full md:max-w-screen-lg">
 
       <div class="rounded-lg flex flex-col gap-4 p-4 backdrop-blur-sm bg-gray-200/35 col-span-2">
@@ -41,8 +33,7 @@
           <span class="border border-gray-200/35"></span>
 
           <div class="flex flex-col h-full justify-between">
-            <!-- Persistent Badge from @happychain/ui -->
-            <connect-button disable-styles></connect-button>
+            <happychain-connect-button disable-styles></happychain-connect-button>
             <small>Custom Button</small>
           </div>
         </div>
