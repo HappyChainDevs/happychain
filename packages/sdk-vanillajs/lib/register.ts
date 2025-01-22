@@ -58,7 +58,7 @@ export function register(opts: WalletRegisterOptions = {}) {
     }
 
     define(HappyWallet, "happy-wallet", [], { shadow: true })
-    defineBadgeComponent("connect-button", opts.overrideBadgeStyles)
+    defineBadgeComponent("happychain-connect-button", opts.overrideBadgeStyles)
 
     const wallet = document.createElement("happy-wallet")
 

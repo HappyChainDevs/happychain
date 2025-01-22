@@ -14,7 +14,7 @@ function setStyles(stylesId: string, css: string) {
     }
 }
 
-export async function defineBadgeComponent(componentName = "connect-button", overrideStyles = true) {
+export async function defineBadgeComponent(componentName = "happychain-connect-button", overrideStyles = true) {
     const [{ Badge }, { default: register }, { default: css }] = await Promise.all([
         import("./badge"),
         import("preact-custom-element"),

@@ -4,7 +4,7 @@ declare global {
     // biome-ignore lint/style/noNamespace:
     namespace JSX {
         interface IntrinsicElements {
-            "connect-button": BadgeProps
+            "happychain-connect-button": BadgeProps
         }
     }
 }
@@ -14,5 +14,5 @@ declare global {
  */
 
 export function ConnectButton({ disableStyles }: BadgeProps) {
-    return <connect-button disable-styles={disableStyles} />
+    return <happychain-connect-button disable-styles={disableStyles} />
 }

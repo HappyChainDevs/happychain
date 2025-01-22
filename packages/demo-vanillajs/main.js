@@ -1,5 +1,13 @@
 // register web-component & import useful functions
-import { chains, connect, disconnect, getCurrentUser, happyProvider, onUserUpdate, register } from "@happychain/js"
+import {
+    connect,
+    disconnect,
+    getCurrentUser,
+    happyChainSepolia,
+    happyProvider,
+    onUserUpdate,
+    register,
+} from "@happychain/js"
 import { BrowserProvider } from "ethers"
 
 // If included via a script tag through a CDN, then exports will be made available
@@ -9,7 +17,7 @@ import { BrowserProvider } from "ethers"
 // expose on window for demo purposes
 window.happyProvider = happyProvider
 
-register({ chainId: chains.testnet.chainId, overrideBadgeStyles: true })
+register({ chainId: happyChainSepolia.id, overrideBadgeStyles: true })
 
 const ethersProvider = new BrowserProvider(happyProvider)
 
