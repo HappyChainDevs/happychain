@@ -24,6 +24,8 @@ export class BlockMonitor {
     }
 
     private onNewBlock(block: LatestBlock) {
-        eventBus.emit(Topics.NewBlock, block)
+        if (this.txmgr.started) {
+            eventBus.emit(Topics.NewBlock, block)
+        }
     }
 }
