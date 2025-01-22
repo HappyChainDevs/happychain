@@ -181,7 +181,7 @@ export class TransactionManager {
 
         const retries = _config.rpc.retries || 2
         const retryDelay = _config.rpc.retryDelay || 50
-        const timeout = _config.rpc.timeout || 2000
+        const timeout = _config.rpc.timeout || 500
 
         let transport: ViemTransport
         if (this.transportProtocol === "http") {

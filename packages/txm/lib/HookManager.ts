@@ -7,6 +7,7 @@ export enum TxmHookType {
     TransactionStatusChanged = "TransactionStatusChanged",
     TransactionSaveFailed = "TransactionSaveFailed",
     NewBlock = "NewBlock",
+    TransactionSubmissionFailed = "TransactionSubmissionFailed",
 }
 
 export type TxmTransactionStatusChangedHookPayload = {
@@ -24,11 +25,24 @@ export type TxmTransactionSaveFailedHookPayload = {
     transaction: Transaction
 }
 
+export type TxmTransactionSubmissionFailedHookPayload = {
+    type: TxmHookType.TransactionSubmissionFailed
+    transaction: Transaction
+    description: string
+}
+
+export type TxmHookPayload =
+    | TxmTransactionStatusChangedHookPayload
+    | TxmNewBlockHookPayload
+    | TxmTransactionSaveFailedHookPayload
+    | TxmTransactionSubmissionFailedHookPayload
+
 export type TxmHooksRecord = {
-    [TxmHookType.All]: ((event: { payload: LatestBlock | Transaction; type: TxmHookType }) => void)[]
+    [TxmHookType.All]: ((event: TxmHookPayload) => void)[]
     [TxmHookType.TransactionStatusChanged]: ((transaction: Transaction) => void)[]
     [TxmHookType.TransactionSaveFailed]: ((transaction: Transaction) => void)[]
     [TxmHookType.NewBlock]: ((block: LatestBlock) => void)[]
+    [TxmHookType.TransactionSubmissionFailed]: ((transaction: Transaction, description: string) => void)[]
 }
 
 export type TxmHookHandler<T extends TxmHookType = TxmHookType.All> = TxmHooksRecord[T][number]
@@ -53,10 +67,12 @@ export class HookManager {
             [TxmHookType.TransactionStatusChanged]: [],
             [TxmHookType.TransactionSaveFailed]: [],
             [TxmHookType.NewBlock]: [],
+            [TxmHookType.TransactionSubmissionFailed]: [],
         }
         eventBus.on(Topics.TransactionStatusChanged, this.onTransactionStatusChanged.bind(this))
         eventBus.on(Topics.TransactionSaveFailed, this.onTransactionSaveFailed.bind(this))
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
+        eventBus.on(Topics.TransactionSubmissionFailed, this.onTransactionSubmissionFailed.bind(this))
     }
 
     public async addHook<T extends TxmHookType>(type: T, handler: TxmHookHandler<T>): Promise<void> {
@@ -72,7 +88,7 @@ export class HookManager {
         this.hooks[TxmHookType.All].forEach((handler) =>
             handler({
                 type: TxmHookType.TransactionStatusChanged,
-                payload: payload.transaction,
+                transaction: payload.transaction,
             }),
         )
     }
@@ -85,7 +101,7 @@ export class HookManager {
         this.hooks[TxmHookType.All].forEach((handler) =>
             handler({
                 type: TxmHookType.TransactionSaveFailed,
-                payload: payload.transaction,
+                transaction: payload.transaction,
             }),
         )
     }
@@ -96,7 +112,24 @@ export class HookManager {
         this.hooks[TxmHookType.All].forEach((handler) =>
             handler({
                 type: TxmHookType.NewBlock,
-                payload: block,
+                block,
+            }),
+        )
+    }
+
+    private async onTransactionSubmissionFailed(payload: {
+        transaction: Transaction
+        description: string
+    }): Promise<void> {
+        this.hooks[TxmHookType.TransactionSubmissionFailed].forEach((handler) =>
+            handler(payload.transaction, payload.description),
+        )
+
+        this.hooks[TxmHookType.All].forEach((handler) =>
+            handler({
+                type: TxmHookType.TransactionSubmissionFailed,
+                transaction: payload.transaction,
+                description: payload.description,
             }),
         )
     }
