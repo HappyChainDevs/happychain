@@ -14,7 +14,7 @@ export type WalletRegisterOptions = {
      * If the chain with the given ID hasn't been added to the Happy Wallet yet, this will be
      * ignored, and you must add and switch to chain once the user is connected
      */
-    chainId?: string
+    chainId?: string | number
 }
 
 /**
@@ -34,7 +34,7 @@ export type WalletRegisterOptions = {
  * import { register } from '@happychain/js'
  * import { happyChainSepolia } from '@happychain/js'
  * // ---cut---
- * register({ chainId: happyChainSepolia.id.toString() })
+ * register({ chainId: happyChainSepolia.id })
  * ```
  *
  * @example
@@ -55,7 +55,7 @@ export function register(opts: WalletRegisterOptions = {}) {
 
     const wallet = document.createElement("happy-wallet")
 
-    const chainId = opts.chainId || defaultChain.id.toString()
+    const chainId = (opts.chainId || defaultChain.id).toString()
     wallet.setAttribute("chain-id", chainId)
     wallet.setAttribute("window-id", windowId)
 
