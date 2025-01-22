@@ -1,5 +1,13 @@
 // register web-component & import useful functions
-import { chains, connect, disconnect, getCurrentUser, happyProvider, onUserUpdate, register } from "@happychain/js"
+import {
+    connect,
+    disconnect,
+    getCurrentUser,
+    happyChainSepolia,
+    happyProvider,
+    onUserUpdate,
+    register,
+} from "@happychain/js"
 import { defineBadgeComponent } from "@happychain/ui"
 import { BrowserProvider } from "ethers"
 
@@ -10,7 +18,7 @@ import { BrowserProvider } from "ethers"
 // expose on window for demo purposes
 window.happyProvider = happyProvider
 
-register({ chainId: chains.testnet.chainId })
+register({ chainId: happyChainSepolia.id.toString() })
 
 void defineBadgeComponent("connect-button", false)
 

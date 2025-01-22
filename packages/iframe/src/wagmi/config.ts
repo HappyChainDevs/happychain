@@ -1,5 +1,6 @@
 import { onlyUnique } from "@happychain/common"
-import { chains as _chains, convertToViemChain } from "@happychain/sdk-shared"
+import { chains as defaultChains } from "@happychain/js"
+import { convertToViemChain } from "@happychain/sdk-shared"
 import { createConfig } from "@wagmi/core"
 import { type Chain, createClient, custom } from "viem"
 import { getCurrentChain } from "../state/chains"
@@ -14,8 +15,7 @@ declare module "wagmi" {
 }
 
 const currentChain: Chain = convertToViemChain(getCurrentChain())
-const allChains = Object.values(_chains).map(convertToViemChain)
-const chains = [currentChain, ...allChains].filter(onlyUnique)
+const chains = [currentChain, ...defaultChains].filter(onlyUnique)
 
 /**
  * Create Wagmi Config with custom connector to support HappyChain Sepolia.

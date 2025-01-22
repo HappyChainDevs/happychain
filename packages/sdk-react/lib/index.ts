@@ -5,9 +5,13 @@ export {
     onWalletVisibilityUpdate,
     onUserUpdate,
     getCurrentUser,
-    chains,
     connect,
     disconnect,
+    chains,
+    chainsById,
+    defaultChain,
+    devnet,
+    happyChainSepolia,
 } from "@happychain/js"
 
 export type {
