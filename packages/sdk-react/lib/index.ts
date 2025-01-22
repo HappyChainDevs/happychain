@@ -1,21 +1,10 @@
 export { HappyWalletProvider, useHappyChain } from "./components/HappyWalletProvider"
 
-export {
-    happyProvider,
-    onWalletVisibilityUpdate,
-    onUserUpdate,
-    getCurrentUser,
-    connect,
-    disconnect,
-    chains,
-    chainsById,
-    defaultChain,
-    devnet,
-    happyChainSepolia,
-} from "@happychain/js"
+export * from "@happychain/js"
 
 export type {
     HappyUser,
+    Chain,
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
     EIP1193DisconnectedError,
