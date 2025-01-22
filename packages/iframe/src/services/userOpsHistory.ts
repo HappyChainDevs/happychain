@@ -24,8 +24,6 @@ export function addConfirmedUserOp(address: Address, userOpInfo: UserOpInfo) {
             return existingEntries
         }
 
-        console.log("confirmed op:", userOpInfo)
-
         return {
             ...existingEntries,
             [address]: [userOpInfo, ...userHistory],
@@ -54,22 +52,15 @@ export function addPendingUserOp(address: Address, payload: Omit<PendingUserOpDe
 export function flagUserOpAsFailed(address: Address, payload: PendingUserOpDetails) {
     store.set(pendingUserOpsAtom, (existingEntries) => {
         const pendingUserOps = existingEntries[address] || []
-        const updatedOps = pendingUserOps.map((op) =>
-            op.userOpHash === payload.userOpHash ? { ...op, status: "failed" as const } : op,
-        )
-
-        // If this was the only operation for this address, clean up the entry
-        if (updatedOps.every((op) => op.status === "failed")) {
-            const { [address]: _, ...remainingEntries } = existingEntries
-            return remainingEntries
-        }
-
         return {
             ...existingEntries,
-            [address]: updatedOps,
+            [address]: pendingUserOps.map((op) =>
+                op.userOpHash === payload.userOpHash ? { ...op, status: "failed" as const } : op,
+            ),
         }
     })
 }
+
 export function removePendingUserOp(address: Address, payload: PendingUserOpDetails) {
     store.set(pendingUserOpsAtom, (existingEntries) => {
         const updatedOps = (existingEntries[address] || []).filter((op) => op.userOpHash !== payload.userOpHash)
@@ -103,7 +94,6 @@ async function monitorPendingUserOp(address: Address, payload: PendingUserOpDeta
         })
 
         if (receipt) {
-            console.log("pending -> confirmed:", receipt)
             removePendingUserOp(address, payload)
             addConfirmedUserOp(address, {
                 receipt,

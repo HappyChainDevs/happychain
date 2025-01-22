@@ -9,7 +9,7 @@ import { userAtom } from "./user"
 export type PendingUserOpDetails = {
     userOpHash: Hash
     value: bigint
-    status?: "pending" | "failed"
+    status: "pending" | "failed"
 }
 
 export type UserOpInfo = {
