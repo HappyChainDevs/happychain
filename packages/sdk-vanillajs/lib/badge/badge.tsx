@@ -3,6 +3,7 @@ import { type HappyUser, onUserUpdate } from "@happychain/js"
 import { useEffect, useState } from "preact/hooks"
 import { useConnection } from "./useConnection"
 
+import { icon64x64 } from "../happyProvider/icons"
 import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"
 
@@ -58,9 +59,7 @@ const UserLabel = ({ user, connecting }: { user: HappyUser | undefined; connecti
 const UserAvatar = ({ user }: { user: HappyUser | undefined }) => {
     const [loadFailed, setLoadFailed] = useState(false)
     if (!user?.avatar || loadFailed) {
-        // TODO: This works for our demos because they all have this file at the root.
-        // Later, we need to replace this with a happy.tech URL.
-        return <img src="/happychain.png" alt="HappyChain logo" className="happychain-icon" />
+        return <img src={icon64x64} alt="HappyChain logo" className="happychain-icon" />
     }
 
     return (
