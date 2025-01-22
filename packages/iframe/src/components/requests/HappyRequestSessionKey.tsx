@@ -2,7 +2,7 @@ import type { HappyMethodNames } from "@happychain/common"
 import { shortenAddress } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
-import { type Address, type Hex } from "viem"
+import type { Address, Hex } from "viem"
 import { currentChainAtom } from "#src/state/chains"
 import { publicClientAtom } from "#src/state/publicClient"
 import { getAppURL } from "#src/utils/appURL.js"
@@ -47,20 +47,23 @@ export function HappyRequestSessionKey({
                         <span className="text-content italic">
                             <span className="text-primary not-italic">{appURL}</span> requests permission to
                             automatically approve transactions to{" "}
-                            <div className="tooltip" data-tip={targetAddress}>
-                                <a
-                                    href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-primary p-1 text-[15px] hover:underline rounded-lg border border-dashed hover:bg-primary/40"
-                                >
-                                    {shortenAddress(targetAddress)}
-                                </a>
-                            </div>
+                            <a
+                                href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary p-1 text-[15px] hover:underline rounded-lg border border-dashed hover:bg-primary/40"
+                            >
+                                {shortenAddress(targetAddress)}
+                            </a>
                         </span>
                         <span className="text-sm text-neutral-content/70">
                             This allows {appURL.split(".")[0]} to sign and send transactions on your behalf without
                             additional confirmation prompts. <br /> <br /> You can revoke this permission at any time.
+                        </span>
+
+                        <span className="text-sm text-error/70 p-1 rounded-lg bg-error/30 mt-4 w-full text-center">
+                            This could result in loss of funds if the contract can access your assets and the app is
+                            malicious. <br /> Please verify the same before proceeding.
                         </span>
                     </div>
                     <div className="flex flex-col w-full gap-2">
