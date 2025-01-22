@@ -43,7 +43,7 @@ export type TransactionManagerConfig = {
         url: string
         /**
          * The timeout for the RPC node.
-         * Defaults to 500 milliseconds.
+         * Defaults to 2000 milliseconds.
          */
         timeout?: number
         /**
@@ -181,7 +181,7 @@ export class TransactionManager {
 
         const retries = _config.rpc.retries || 2
         const retryDelay = _config.rpc.retryDelay || 50
-        const timeout = _config.rpc.timeout || 500
+        const timeout = _config.rpc.timeout || 2000
 
         let transport: ViemTransport
         if (this.transportProtocol === "http") {
