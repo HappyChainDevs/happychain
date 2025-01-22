@@ -11,14 +11,18 @@ import {SessionKeyValidator} from "../../src/SessionKeyValidator.sol";
 import {SessionKeyValidatorUpgraded} from "./mocks/SessionKeyValidatorUpgraded.sol";
 
 // imported for _deployProxy, todo: use DeployAA.s.sol in entirety for tests
-import {BaseDeployScript} from "../../src/deploy/BaseDeployScript.sol";
+import {DeployAAContracts} from "../../src/deploy/DeployAA.s.sol";
 
-contract SessionValidatorTest is Test, BaseDeployScript {
+contract SessionValidatorTest is Test, DeployAAContracts {
     SessionKeyValidator public sessionKeyValidator;
     MockERC20Token public mockToken;
 
     function setUp() public {
-        sessionKeyValidator = new SessionKeyValidator();
+        sessionKeyValidator = SessionKeyValidator(_deployProxy(
+            address(new SessionKeyValidator()),
+            abi.encodeWithSelector(SessionKeyValidator.initialize.selector, address(this)),
+            bytes32(0)
+        ));
         mockToken = new MockERC20Token("MockToken", "MTK", 18);
     }
 
