@@ -1,5 +1,5 @@
+import { type ChainParameters, chainDefinitions } from "@happychain/sdk-shared"
 import { z } from "zod"
-import { getChainFromSearchParams } from "#src/state/chains"
 
 const configSchema = z.object({
     // that has a name property that's a string
@@ -22,7 +22,8 @@ const configSchema = z.object({
     rpcUrls: z.string().trim().url().array().min(1),
 })
 
-const chain = getChainFromSearchParams()
+// TODO get this from the iframe instead (which gets id from getChainIdFromSearchParams)
+const chain = chainDefinitions.defaultChain as ChainParameters
 
 // url search params with web3Auth specific .env fallbacks
 const parsedConfig = configSchema.safeParse({
