@@ -104,7 +104,7 @@ export class SharedWorkerClient {
                     this.port.postMessage(payload)
                 })
             } catch (_e) {
-                if (!(_e instanceof Error)) throw _e
+                if (!(_e instanceof Error) || !Error.captureStackTrace) throw _e
 
                 // leave original message, merge the stacks.
                 const e: Pick<Error, "stack" | "cause"> = { stack: undefined, cause: undefined }
