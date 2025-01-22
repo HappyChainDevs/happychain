@@ -6,7 +6,7 @@ const RequestContent = ({ children }: PropsWithChildren) => {
         // Fragment element since the parent `RequestLayout` aligns
         // the first div and the <UserDetails /> component
         <>
-            <div className="flex grow flex-col gap-4 overflow-y-auto rounded-lg bg-base-200 p-4">
+            <div className="flex size-full flex-col gap-4 overflow-y-auto rounded-lg bg-base-200 p-4">
                 <div className="flex flex-col gap-6">{children}</div>
             </div>
             <UserDetails />

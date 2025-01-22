@@ -2,7 +2,8 @@ import type { HappyMethodNames } from "@happychain/common"
 import { shortenAddress } from "@happychain/sdk-shared"
 import { useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
-import { type Address, type Hex, isHex } from "viem"
+import { type Address, type Hex } from "viem"
+import { currentChainAtom } from "#src/state/chains"
 import { publicClientAtom } from "#src/state/publicClient"
 import { getAppURL } from "#src/utils/appURL.js"
 import { Button } from "../primitives/button/Button"
@@ -18,9 +19,12 @@ export function HappyRequestSessionKey({
 }: RequestConfirmationProps<typeof HappyMethodNames.REQUEST_SESSION_KEY>) {
     const targetAddress: Address = params[0]
     const publicClient = useAtomValue(publicClientAtom)
+    const currentChain = useAtomValue(currentChainAtom)
+    const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
+
     const appURL = getAppURL()
 
-    const [bytecode, setBytecode] = useState<Hex | undefined>(undefined)
+    const [_bytecode, setBytecode] = useState<Hex | undefined>(undefined)
 
     useEffect(() => {
         const fetchBytecode = async () => {
@@ -38,31 +42,27 @@ export function HappyRequestSessionKey({
     return (
         <RequestLayout method={method}>
             <RequestContent>
-                <div className="flex flex-col items-center justify-between size-full">
-                    <div className="flex flex-col grow size-full gap-4 rounded-xl p-4">
-                        <div className="flex flex-col items-start justify-start text-content">
-                            <span className="text-blue-500 hover:text-purple-500 hover:underline">{appURL}</span>{" "}
-                            <span className="italic">
-                                requests permission to automatically approve transactions to{" "}
-                                <span className="font-medium text-blue-600">{shortenAddress(targetAddress)}</span>
-                            </span>
-                        </div>
-
-                        <div className="flex flex-col items-start justify-start text-sm text-neutral-content/70">
-                            <span>
-                                This allows {appURL.split(".")[0]} to sign and send transactions on your behalf without
-                                additional confirmation prompts. <br /> <br /> You can revoke this permission at any
-                                time.
-                            </span>
-                        </div>
-
-                        <div className="flex flex-row w-full h-4 items-center justify-start gap-x-3 mb-8">
-                            <span className="h-4">
-                                {bytecode && isHex(bytecode) ? "✅ Contract deployed" : "⚠️ Contract code not found."}
-                            </span>
-                        </div>
+                <div className="flex flex-col size-full items-center justify-center">
+                    <div className="flex flex-col size-full items-start justify-start py-4 gap-y-3">
+                        <span className="text-content italic">
+                            <span className="text-primary not-italic">{appURL}</span> requests permission to
+                            automatically approve transactions to{" "}
+                            <div className="tooltip" data-tip={targetAddress}>
+                                <a
+                                    href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary p-1 text-[15px] hover:underline rounded-lg border border-dashed hover:bg-primary/40"
+                                >
+                                    {shortenAddress(targetAddress)}
+                                </a>
+                            </div>
+                        </span>
+                        <span className="text-sm text-neutral-content/70">
+                            This allows {appURL.split(".")[0]} to sign and send transactions on your behalf without
+                            additional confirmation prompts. <br /> <br /> You can revoke this permission at any time.
+                        </span>
                     </div>
-
                     <div className="flex flex-col w-full gap-2">
                         <Button
                             intent="primary"
