@@ -160,6 +160,8 @@ export class TransactionManager {
     public readonly blockTime: bigint
     public readonly finalizedTransactionPurgeTime: number
 
+    public started: boolean
+
     constructor(_config: TransactionManagerConfig) {
         this.collectors = []
 
@@ -247,6 +249,8 @@ export class TransactionManager {
         this.rpcAllowDebug = _config.rpc.allowDebug || false
         this.blockTime = _config.blockTime || 2n
         this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
+
+        this.started = false
     }
 
     /**
@@ -256,6 +260,12 @@ export class TransactionManager {
      * @param originator - The originator to add.
      */
     public addTransactionOriginator(originator: TransactionOriginator): void {
+        if (!this.started) {
+            console.warn(
+                "TransactionManager is not started. You must call `start()` before using the transaction manager.",
+            )
+        }
+
         this.collectors.push(originator)
     }
 
@@ -265,10 +275,22 @@ export class TransactionManager {
      * @param handler - The handler function to add.
      */
     public async addHook<T extends TxmHookType>(type: T, handler: TxmHookHandler<T>): Promise<void> {
+        if (!this.started) {
+            console.warn(
+                "TransactionManager is not started. You must call `start()` before using the transaction manager.",
+            )
+        }
+
         await this.hookManager.addHook(type, handler)
     }
 
     public async getTransaction(txIntentId: UUID): Promise<Transaction | undefined> {
+        if (!this.started) {
+            console.warn(
+                "TransactionManager is not started. You must call `start()` before using the transaction manager.",
+            )
+        }
+
         return this.transactionRepository.getTransaction(txIntentId)
     }
 
@@ -278,6 +300,12 @@ export class TransactionManager {
      * @returns A new transaction.
      */
     public createTransaction(params: TransactionConstructorConfig): Transaction {
+        if (!this.started) {
+            console.warn(
+                "TransactionManager is not started. You must call `start()` before using the transaction manager.",
+            )
+        }
+
         return new Transaction({
             ...params,
             from: this.viemWallet.account.address,
@@ -311,5 +339,7 @@ export class TransactionManager {
 
         // Await the completion of the gas price oracle startup before marking the TransactionManager as started
         await priceOraclePromise
+
+        this.started = true
     }
 }
