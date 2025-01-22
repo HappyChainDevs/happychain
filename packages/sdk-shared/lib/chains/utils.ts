@@ -5,11 +5,6 @@ import { happyChainSepolia } from "./viem"
 
 export type ChainParameters = Readonly<AddEthereumChainParameter & { opStack?: boolean }>
 
-// TODO delete this function after the web3auth logic is migrated to the iframe package
-export function getChainFromSearchParams(): ChainParameters {
-    return happyChainSepoliaAddDef
-}
-
 export function convertToViemChain(chain: ChainParameters): ReturnType<typeof defineChain> {
     if (chain.chainId === happyChainSepoliaAddDef.chainId) {
         return happyChainSepolia

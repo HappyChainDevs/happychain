@@ -26,7 +26,7 @@ export {
 
 export * as chainDefinitions from "./chains/definitions"
 
-export { getChainFromSearchParams, convertToViemChain } from "./chains/utils"
+export { convertToViemChain } from "./chains/utils"
 export { AuthState, WalletType } from "./interfaces/happyUser"
 
 export * from "./errors"

@@ -6,7 +6,7 @@ import { atomWithStorage } from "jotai/utils"
 import type { AddEthereumChainParameter } from "viem"
 import { StorageKey } from "../services/storage"
 
-function getChainFromSearchParams(): ChainParameters {
+export function getChainFromSearchParams(): ChainParameters {
     const chainId = new URLSearchParams(window.location.search).get("chainId")
 
     const chains = getChains()

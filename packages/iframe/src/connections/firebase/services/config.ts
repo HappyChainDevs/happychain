@@ -1,5 +1,5 @@
-import { getChainFromSearchParams } from "@happychain/sdk-shared"
 import { z } from "zod"
+import { getChainFromSearchParams } from "#src/state/chains"
 
 const configSchema = z.object({
     // that has a name property that's a string
