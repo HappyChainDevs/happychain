@@ -10,15 +10,15 @@ import { happyProvider } from "../happyProvider/initialize"
  * @example
  * ### Setting up a wagmi config with our custom connector
  * ```ts twoslash
- * import { happyProvider, happyWagmiConnector } from "@happychain/core"
- * import { createConfig, type Config } from "@wagmi/core"
+ * import { happyProvider, happyWagmiConnector, happyChainSepolia } from "@happychain/js"
+ * import { type Config, createConfig, custom } from "@wagmi/core"
  *
  * export const config: Config = createConfig({
-    chains: [sepolia],
-    connectors: [happyWagmiConnector], // voila!
-    transports: {
-        [sepolia.id]: custom(happyProvider as HappyProvider),
-    },
+ *  chains: [happyChainSepolia],
+ *  connectors: [happyWagmiConnector], // voila!
+ *  transports: {
+ *      [happyChainSepolia.id]: custom(happyProvider),
+ *  },
 })
  *
  */
@@ -38,7 +38,7 @@ export const happyWagmiConnector: CreateConnectorFn = injected({
  *
  * @example
  * ```ts twoslash
- * import { createHappyChainWagmiConfig, happyChainSepolia } from "@happychain/core"
+ * import { createHappyChainWagmiConfig, happyChainSepolia } from "@happychain/js"
  * // ---cut---
  * const config = createHappyChainWagmiConfig(happyChainSepolia)
  * ```

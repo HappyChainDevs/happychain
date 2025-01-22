@@ -25,9 +25,8 @@ export default {
     // https://typedoc.org/options/output/
     cname: "docs.happychaindevs.com",
     titleLink: "https://docs.happychaindevs.org",
-    customFooterHtml: "Copyright <strong>HappyChain</strong> 2024",
+    customFooterHtml: "Copyright <strong>HappyChain</strong> 2025",
     hideGenerator: true,
-    hideParameterTypesInTitle: true,
     searchInComments: true,
     searchInDocuments: true,
     highlightLanguages: ["html", "javascript", "json", "jsonc", "json5", "jsx", "tsx", "typescript"],
@@ -68,6 +67,7 @@ export default {
     useCodeBlocks: true,
     expandObjects: true,
     expandParameters: true,
+    typeDeclarationVisibility: "compact",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
     navigationModel: {
