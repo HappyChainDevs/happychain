@@ -5,10 +5,10 @@ import { formatEther } from "viem"
 import { cx } from "class-variance-authority"
 import { useAtomValue } from "jotai"
 import { currentChainAtom } from "#src/state/chains"
-import type { TxInfo } from "#src/state/txHistory"
+import type { UserOpInfo } from "#src/state/userOpsHistory"
 
 interface TxLogEntryProps {
-    tx: TxInfo
+    tx: UserOpInfo
 }
 
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
@@ -23,20 +23,20 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
             <div className="flex flex-row items-center justify-center gap-x-2">
                 <ArrowUpRight
                     className={`${cx({
-                        "bg-success": receipt.status === "success",
-                        "bg-error": receipt.status === "reverted",
+                        "bg-success": receipt.success,
+                        "bg-error": !receipt.success,
                     })} rounded-sm`}
                 />
                 <div className="flex flex-col items-start justify-center">
                     <span>Send</span>
                     <span>
                         <a
-                            href={`${blockExplorerUrl}/tx/${receipt.transactionHash}`}
+                            href={`${blockExplorerUrl}/tx/${receipt.receipt.transactionHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 hover:text-purple-500 hover:underline"
                         >
-                            {shortenAddress(receipt.transactionHash)}
+                            {shortenAddress(receipt.receipt.transactionHash)}
                         </a>
                     </span>
                 </div>

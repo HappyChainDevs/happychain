@@ -24,6 +24,8 @@ export function addConfirmedUserOp(address: Address, userOpInfo: UserOpInfo) {
             return existingEntries
         }
 
+        console.log("confirmed op:", userOpInfo)
+
         return {
             ...existingEntries,
             [address]: [userOpInfo, ...userHistory],
@@ -40,6 +42,8 @@ export function addPendingUserOp(address: Address, payload: PendingUserOpDetails
             console.warn(`Already tracking UserOperation ${payload.userOpHash}`)
             return existingEntries
         }
+
+        console.log({ payload })
 
         void monitorPendingUserOp(address, payload)
         return {
@@ -94,6 +98,7 @@ async function monitorPendingUserOp(address: Address, payload: PendingUserOpDeta
         })
 
         if (receipt) {
+            console.log("pending -> confirmed:", receipt)
             removePendingUserOp(address, payload)
             addConfirmedUserOp(address, {
                 receipt,
