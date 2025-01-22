@@ -7,14 +7,17 @@ import { spinner } from "../utils/spinner"
  */
 export async function bundle(config: Config) {
     spinner.setText(`${config.fullName} — Bundling JS...`)
-    const results = await Bun.build(config.bunConfig)
-    if (!results?.success) {
-        if (results?.logs) {
-            for (const log of results.logs) {
-                console.error(log)
-                errorExit("Bundling with bun failed.")
+    for (const _export of config.exports) {
+        const bunConfig = { ...config.bunConfig, entrypoints: [_export.entrypoint] }
+        const results = await Bun.build(bunConfig)
+        if (!results?.success) {
+            if (results?.logs) {
+                for (const log of results.logs) {
+                    console.error(log)
+                    errorExit("Bundling with bun failed.")
+                }
             }
+            errorExit("Bundling with bun failed without error messages.")
         }
-        errorExit("Bundling with bun failed without error messages.")
     }
 }
