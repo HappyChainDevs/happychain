@@ -14,6 +14,8 @@ export const requestLabels = {
 
 export const permissionDescriptions = {
     eth_accounts: "Connection: the app can see your information and suggest transactions.",
+    happy_sessionKey:
+        "Automatic approval: skip confirmation prompts when this app interacts with specific contracts you've approved.",
 }
 
 export type PermissionDescriptionIndex = keyof typeof permissionDescriptions
