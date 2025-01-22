@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {LibClone} from "solady/utils/LibClone.sol";
 import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
 import {SIG_VALIDATION_SUCCESS_UINT, SIG_VALIDATION_FAILED_UINT} from "kernel/types/Constants.sol";
 
 import {MockERC20Token} from "../mocks/MockERC20.sol";
 import {SessionKeyValidator} from "../../src/SessionKeyValidator.sol";
-import {BaseDeployScript} from "../../src/deploy/BaseDeployScript.sol"; // imported for _deployProxy, todo: use DeployAA.s.sol in entirety for tests
+import {SessionKeyValidatorUpgraded} from "./mocks/SessionKeyValidatorUpgraded.sol";
+
+// imported for _deployProxy, todo: use DeployAA.s.sol in entirety for tests
+import {BaseDeployScript} from "../../src/deploy/BaseDeployScript.sol";
 
 contract SessionValidatorTest is Test, BaseDeployScript {
     SessionKeyValidator public sessionKeyValidator;
@@ -200,18 +202,5 @@ contract SessionValidatorTest is Test, BaseDeployScript {
                 userOp.paymasterAndData
             )
         );
-    }
-}
-
-contract SessionKeyValidatorUpgraded is SessionKeyValidator {
-    string public addedField;
-    /// @custom:oz-upgrades-unsafe-allow constructor
-
-    constructor() {
-        _disableInitializers();
-    }
-
-    function reinitialize() external reinitializer(2) {
-        addedField = "SessionKeyValidatorUpgraded";
     }
 }
