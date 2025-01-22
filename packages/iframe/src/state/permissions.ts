@@ -3,9 +3,10 @@ import { logger } from "@happychain/sdk-shared"
 import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address } from "viem"
-import { emitUserUpdate } from "#src/utils/emitUserUpdate.ts"
 import { StorageKey } from "../services/storage"
 import { type AppURL, getAppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
+import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
+import { emitUserUpdate } from "../utils/emitUserUpdate"
 import { getUser, userAtom } from "./user"
 
 // STORE INSTANTIATION
@@ -348,12 +349,9 @@ export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRe
 
         // Remove specific caveats
         const existingPermission = appPermissions[name]
+
         const remainingCaveats = existingPermission.caveats.filter(
-            (existingCaveat) =>
-                !caveats.some(
-                    (caveatToRemove) =>
-                        existingCaveat.type === caveatToRemove.type && existingCaveat.value === caveatToRemove.value,
-                ),
+            (existingCaveat) => !caveats.some((caveatToRemove) => checkIfCaveatsMatch(existingCaveat, caveatToRemove)),
         )
 
         // If no caveats left, remove entire permission
@@ -407,11 +405,8 @@ export function hasPermissions(app: AppURL, permissionsRequest: PermissionsReque
         if (!caveats.length) return true
 
         // Verify each requested caveat matches the stored permission
-        return caveats.every((requestedCaveat) =>
-            permission.caveats.some(
-                (existingCaveat) =>
-                    existingCaveat.type === requestedCaveat.type && existingCaveat.value === requestedCaveat.value,
-            ),
+        return caveats.every((caveat) =>
+            permission.caveats.some((storedPermission) => checkIfCaveatsMatch(storedPermission, caveat)),
         )
     })
 }
