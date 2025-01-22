@@ -2,10 +2,11 @@ import { HappyMethodNames } from "@happychain/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared"
 import type { Address } from "viem/accounts"
+import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage"
 import { hasPermissions } from "#src/state/permissions"
-import { getChains, getCurrentChain } from "../state/chains.ts"
-import { getUser } from "../state/user.ts"
-import type { AppURL } from "./appURL.ts"
+import { getChains, getCurrentChain } from "../state/chains"
+import { getUser } from "../state/user"
+import type { AppURL } from "./appURL"
 
 export function checkIfRequestRequiresConfirmation(
     app: AppURL,
@@ -46,12 +47,19 @@ export function checkIfRequestRequiresConfirmation(
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             const targetAddress = payload.params[0] as Address
+            const storedSessionKeys = storage.get(StorageKey.SessionKeys) as SessionKeysByHappyUser
+            const user = getUser()
 
-            return !hasPermissions(app, {
-                happy_sessionKey: {
-                    target: targetAddress,
-                },
-            })
+            // Needs approval if either :
+            // 1. No permission exists for this contract
+            // 2. No session key exists for this contract
+            return (
+                !hasPermissions(app, {
+                    happy_sessionKey: {
+                        target: targetAddress,
+                    },
+                }) || !storedSessionKeys?.[user!.address]?.[targetAddress]
+            )
         }
     }
 
