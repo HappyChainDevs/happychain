@@ -28,7 +28,7 @@ interface ListItemProps {
 }
 
 const ListItem = ({ permission }: ListItemProps) => {
-    const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker)
+    const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker as AppURL)
     return (
         <div className="w-full">
             <Switch
@@ -36,8 +36,8 @@ const ListItem = ({ permission }: ListItemProps) => {
                 checked={hasPermission}
                 onCheckedChange={(e) => {
                     !e.checked
-                        ? revokePermissions(permission.invoker, permission.parentCapability)
-                        : grantPermissions(permission.invoker, permission.parentCapability)
+                        ? revokePermissions(permission.invoker as AppURL, permission.parentCapability)
+                        : grantPermissions(permission.invoker as AppURL, permission.parentCapability)
                 }}
                 className="justify-between w-full [&_[data-part=label]]:w-3/4 flex-row-reverse text-base-content dark:text-neutral-content"
                 switchLabel={
@@ -52,7 +52,7 @@ const ListItem = ({ permission }: ListItemProps) => {
                     {permission.caveats.map((caveat, index) => (
                         <CaveatControl
                             permissionKey={permission.parentCapability}
-                            dappUrl={permission.invoker}
+                            dappUrl={permission.invoker as AppURL}
                             caveat={caveat}
                             key={`${permission.invoker}-${permission.parentCapability}-caveat-${caveat.value}-${index}`}
                         />

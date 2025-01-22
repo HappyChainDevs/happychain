@@ -22,6 +22,7 @@ const recipeToggle = cva(
                 default: [
                     // Toggle body
                     "[&_[data-part=control]]:border-neutral-content/50",
+                    "dark:[&_[data-part=control]]:border-neutral-content/20",
                     "[&[data-state=unchecked]_[data-part=control]]:bg-base-300 hover:[&[data-state=unchecked]_[data-part=control]]:bg-base-300/75",
                     // Value: checked (toggle body)
                     "[&[data-state=checked]_[data-part=control]]:bg-primary hover:[&[data-state=checked]_[data-part=control]]:bg-primary/75",
@@ -29,6 +30,7 @@ const recipeToggle = cva(
                     "focus-within:[data-part=control]]:ring-info/50",
                     // Toggle thumb
                     "[&_[data-part=control]_[data-part=thumb]]:bg-base-100 &_[data-part=control]_[data-part=thumb]]:border-base-100",
+                    "dark:[&[data-state=unchecked]_[data-part=control]_[data-part=thumb]]:bg-neutral",
                     // Label
                     "text-base-content/75",
                 ],

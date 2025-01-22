@@ -49,7 +49,7 @@ interface ListDappsWithPermissionsProps {
 const ListDappsWithPermissions = ({ items }: ListDappsWithPermissionsProps) => {
     if (items.length === 0)
         return (
-            <p className="text-sm italic px-2 text-center py-24 w-10/12 mx-auto text-neutral/50">
+            <p className="text-sm italic px-2 text-center py-24 w-10/12 mx-auto text-base-content/50">
                 {" "}
                 It seems there aren't any apps you gave permissions to.
             </p>
