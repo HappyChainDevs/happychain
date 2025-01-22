@@ -1,12 +1,12 @@
 import { useAtomValue } from "jotai"
-import { userTxsAtom } from "#src/state/txHistory"
 import { userAtom } from "#src/state/user"
+import { userOpsAtom } from "#src/state/userOpsHistory.js"
 import UserNotFoundWarning from "../UserNotFoundWarning"
 import TxLoadingSkeleton from "./TxLoadingSkeleton"
 import TxLogEntry from "./TxLogEntry"
 
 /**
- * Displays HappyUser's recent transaction history.
+ * Displays HappyUser's recent 4337 transaction history.
  * TxReceipts are fetched from the atom, and user specific
  * receipt information is fed into the child component.
  *
@@ -14,21 +14,21 @@ import TxLogEntry from "./TxLogEntry"
  */
 const ActivityView = () => {
     const user = useAtomValue(userAtom)
-    const txs = useAtomValue(userTxsAtom)
+    const txs = useAtomValue(userOpsAtom)
 
     if (!user) return <UserNotFoundWarning />
 
-    if (!txs.history.length && !txs.pending.length) {
+    if (!txs.confirmedOps?.length && !txs.pendingOps?.length) {
         return <div className="size-full p-2">No transactions to display.</div>
     }
 
     return (
         <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 bg-base-200 rounded-lg space-y-1">
-            {txs.pending.map((tx) => (
-                <TxLoadingSkeleton key={`tx_pending_${tx.hash}`} tx={tx.hash} />
+            {txs.pendingOps.map((tx) => (
+                <TxLoadingSkeleton key={`tx_pending_${tx.userOpHash}`} tx={tx.userOpHash} />
             ))}
-            {txs.history.map((tx) => (
-                <TxLogEntry key={`tx_history_${tx.receipt.transactionHash}`} tx={tx} />
+            {txs.confirmedOps.map((tx) => (
+                <TxLogEntry key={`tx_history_${tx.receipt.receipt.transactionHash}`} tx={tx} />
             ))}
         </div>
     )

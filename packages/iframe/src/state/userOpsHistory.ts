@@ -1,8 +1,10 @@
 import { createBigIntStorage } from "@happychain/common"
+import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import type { Address, Hash } from "viem"
 import type { UserOperationReceipt } from "viem/account-abstraction"
 import { StorageKey } from "../services/storage"
+import { userAtom } from "./user"
 
 export type PendingUserOpDetails = {
     userOpHash: Hash
@@ -41,3 +43,16 @@ export const confirmedUserOpsAtom = atomWithStorage<Record<Address, UserOpInfo[]
     {},
     createBigIntStorage(),
 )
+
+export const userOpsAtom = atom((get) => {
+    const user = get(userAtom)
+    const confirmed = get(confirmedUserOpsAtom)
+    const pending = get(pendingUserOpsAtom)
+
+    if (!user) return { history: [], pending: [] }
+
+    return {
+        pendingOps: pending[user.address] ?? [],
+        confirmedOps: confirmed[user.address] ?? [],
+    }
+})
