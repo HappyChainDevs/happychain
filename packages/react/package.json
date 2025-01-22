@@ -1,9 +1,9 @@
 {
     "name": "@happy.tech/react",
-    "private": true,
-    "version": "0.0.0",
+    "private": false,
+    "version": "0.0.1",
     "type": "module",
-    "files": ["dist"],
+    "files": ["dist", "build"],
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.es.d.ts",
