@@ -1,4 +1,0 @@
-{
-    "extends": ["../configs/tsconfig.base.json"],
-    "include": ["*.ts", "src", "migrations"]
-}

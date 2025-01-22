@@ -1,5 +1,0 @@
-{
-    "extends": "@happychain/configs/tsconfig.base.json",
-    "include": ["**/*.ts", "**/*.tsx"],
-    "exclude": ["vocs.config.ts"]
-}

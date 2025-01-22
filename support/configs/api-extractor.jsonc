@@ -1,0 +1,74 @@
+/**
+ * Config file for API Extractor.  For more info, please visit: https://api-extractor.com
+ */
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+
+    // must be here to respect the schema
+    "mainEntryPointFilePath": "OVERRIDE THIS IN YOUR CONFIG",
+
+    "compiler": {
+        "tsconfigFilePath": "./tsconfig.build.json",
+        "overrideTsconfig": {
+            "extends": ["./tsconfig.build.json"],
+            "compilerOptions": {
+                "paths": {
+                    "@happy.tech/react": ["../../packages/react"],
+                    "@happy.tech/core": ["../../packages/core"],
+                    "@happy.tech/wallet-common": ["../wallet-common"],
+                    "@happy.tech/common": ["../common"]
+                }
+            }
+        }
+    },
+
+    "tsdocMetadata": { "enabled": false },
+    "apiReport": { "enabled": false },
+    "docModel": { "enabled": false },
+    "dtsRollup": { "enabled": true },
+
+    "messages": {
+        "compilerMessageReporting": {
+            /**
+             * Configures the default routing for messages that don't match an explicit rule in this table.
+             */
+            "default": {
+                "logLevel": "warning"
+            }
+
+            // "TS2551": {
+            //   "logLevel": "warning",
+            //   "addToApiReportFile": true
+            // },
+            //
+            // . . .
+        },
+
+        "extractorMessageReporting": {
+            "default": {
+                "logLevel": "warning"
+            },
+            "ae-missing-release-tag": {
+                "logLevel": "none"
+            }
+            // "ae-extra-release-tag": {
+            //   "logLevel": "warning",
+            //   "addToApiReportFile": true
+            // },
+            //
+            // . . .
+        },
+
+        "tsdocMessageReporting": {
+            "default": {
+                "logLevel": "none"
+            }
+            // "tsdoc-link-tag-unescaped-text": {
+            //   "logLevel": "warning",
+            //   "addToApiReportFile": true
+            // },
+            //
+            // . . .
+        }
+    }
+}

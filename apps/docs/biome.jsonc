@@ -1,0 +1,19 @@
+{
+    "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["../../support/configs/biome.jsonc"],
+    "overrides": [
+        {
+            "include": ["docs/snippets"],
+            "linter": {
+                "rules": {
+                    "suspicious": {
+                        "noConsoleLog": "off"
+                    },
+                    "correctness": {
+                        "noUnusedVariables": "off"
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,7 @@
+{
+    "extends": ["../../packages/react/tsconfig.json"],
+    "compilerOptions": {
+        "rootDir": "../../"
+    },
+    "include": ["../../packages/react/lib", "../../packages/core/lib", "../../support/wallet-common/lib"]
+}

@@ -30,8 +30,8 @@ native apps (Android, iOS, Unity, ...) is planned for the future.
 
 Our SDK currently has two entrypoints:
 
-- `@happychain/react` for applications built with React
-- `@happychain/js` for any other web application (can be made to work with any framework)
+- `@happy.tech/react` for applications built with React
+- `@happy.tech/core` for any other web application (can be made to work with any framework)
 
 <!-- TODO provide links to the NPM packages once deployed to the registry -->
 
@@ -190,13 +190,13 @@ various buses).
 
 The implementation of this provider system is split between the following packages
 
-- `@happychain/sdk-shared` — logic shared between the `@happychain/iframe` and
-  `@happychain/js` packages.
-- `@happychain/iframe` code that runs in the iframe as well as in the popup.
-- `@happychain/js` or `@happychain/react` — code that runs in the application.
+- `@happy.tech/wallet-common` — logic shared between the `@happy.tech/iframe` and
+  `@happy.tech/core` packages.
+- `@happy.tech/iframe` code that runs in the iframe as well as in the popup.
+- `@happy.tech/core` or `@happy.tech/react` — code that runs in the application.
 
 The communication buses are implemented using the [BroadcastChannel API]. Their implementation
-lives in `@happychain/sdk-shared`.
+lives in `@happy.tech/wallet-common`.
 
 [BroadcastChannel API]: https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API
 

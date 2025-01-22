@@ -1,9 +1,9 @@
 {
-    "name": "@happychain/monorepo",
+    "name": "@happy.tech/monorepo",
     "author": "Happy Devs",
     "license": "BSD-3-Clause-Clear",
-    "version": "1.0.0",
-    "workspaces": ["packages/*"],
+    "version": "0.0.1",
+    "workspaces": ["apps/*", "demos/*", "packages/*", "support/*"],
     "private": true,
     "scripts": {
         "help": "make help"

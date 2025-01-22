@@ -1,4 +1,4 @@
 {
-    "extends": "@happychain/configs/tsconfig.base.json",
+    "extends": "@happy.tech/configs/tsconfig.base.json",
     "include": ["scripts", "deployments"]
 }

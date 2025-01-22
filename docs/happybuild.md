@@ -21,24 +21,24 @@ A reference of the configuration options can be found in the
 [define.ts](/packages/happybuild/lib/config/define.ts) and
 [types.ts](/packages/happybuild/lib/config/types.ts) files of the `happybuild` package.
 
-Here is an example of a complex `build.config.ts` (from the `@happychain/worker` package):
+Here is an example of a complex `build.config.ts` (from the `@happy.tech/worker` package):
 
 ```typescript
-import { defineConfig } from "@happychain/build"
+import { defineConfig } from "@happy.tech/happybuild"
 
 export default defineConfig([
         {
         exports: ["."],
         bunConfig: {
-            sourcemap: "inline",
-            target: "bun",
-            packages: "external",
+            external: ["@happy.tech/core"],
+            plugins: [inlineCssPlugin],
         },
     },
     {
         exports: [{ name: "./runtime", entrypoint: "./src/runtime/index.ts" }],
         bunConfig: {
-            sourcemap: "inline",
+            external: ["@happy.tech/core", "preact"],
+            plugins: [inlineCssPlugin],
         },
     },
 ])

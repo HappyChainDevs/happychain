@@ -1,5 +1,5 @@
 {
-    "name": "@happychain/contracts",
+    "name": "@happy.tech/contracts",
     "author": "Norswap",
     "license": "BSD-3-Clause-Clear",
     "version": "1.0.0",
@@ -20,8 +20,8 @@
         "solady": "0.0.237"
     },
     "devDependencies": {
-        "@happychain/build": "workspace:^",
-        "@happychain/configs": "workspace:^",
+        "@happy.tech/happybuild": "workspace:^",
+        "@happy.tech/configs": "workspace:^",
         "@openzeppelin/upgrades-core": "^1.36.0",
         "@types/node": "^22.0.2",
         "node-jq": "^6.0.1",

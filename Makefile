@@ -10,37 +10,37 @@ include makefiles/help.mk
 # Packages
 
 # packages shared between SDK & iframe (order matters)
-SHARED_PKGS := common,sdk-shared
+SHARED_PKGS := support/common,support/wallet-common
 
 # packages only used in the SDK
-SDK_ONLY_PKGS := sdk-vanillajs,sdk-react,worker
+SDK_ONLY_PKGS := packages/core,packages/react,support/worker
 
 # packages needed to build the sdk
 SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
 
 # packages needed to build the iframe
-IFRAME_PKGS := $(SHARED_PKGS),iframe
+IFRAME_PKGS := $(SHARED_PKGS),apps/iframe
 
 # packages needed to build the sdk and iframe
-ACCOUNT_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS),iframe
+ACCOUNT_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS),apps/iframe
 
 # demo packages (not including dependencies)
-DEMOS_PKGS := demo-vanillajs,demo-react,demo-wagmi-vue
+DEMOS_PKGS := demos/js,demos/react,demos/vue
 
 # packages only used in the backend services (order matters)
-BACKEND_ONLY_PKGS := transaction-manager,randomness-service
+BACKEND_ONLY_PKGS := packages/txm,apps/random
 
 # packages needed to build the backend services (order matters)
-BACKEND_PKGS := common,$(BACKEND_ONLY_PKGS)
+BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
 # all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
 
 # all packages that have a package.json
-NPM_PKGS := $(TS_PKGS),docs,contracts,configs
+NPM_PKGS := $(TS_PKGS),apps/docs,packages/contracts,support/configs
 
 # all packages
-ALL_PKGS := $(NPM_PKGS),bundler
+ALL_PKGS := $(NPM_PKGS),packages/bundler
 
 # ==================================================================================================
 # CMDS
@@ -54,7 +54,7 @@ MULTIRUN ?= concurrently
 define forall
 	$(eval PKGS := $(strip $(1)))
 	$(eval CMD := $(2))
-	for name in packages/{$(PKGS)}; do\
+	for name in ./{$(PKGS)}; do\
 		echo "Running $(CMD) in $${name}";\
 		cd $${name} && $(CMD) && cd ../.. || (cd ../.. && exit 1);\
 	done
@@ -63,7 +63,7 @@ endef
 define forall_make
 	$(eval PKGS := $(strip $(1)))
 	$(eval TARGET := $(2))
-	for name in packages/{$(PKGS)}; do\
+	for name in ./{$(PKGS)}; do\
 		echo "Running make $(TARGET) in $${name}";\
 		make $(TARGET) --directory=$${name} || exit 1;\
 	done
@@ -98,7 +98,7 @@ test: sdk.test iframe.test ## Run tests
 .PHONY: test
 
 docs: node_modules docs.contained ## Builds latest docs and starts dev server http://localhost:4173
-	cd packages/docs && make preview
+	cd apps/docs && make preview
 .PHONY: docs
 
 # ==================================================================================================
@@ -117,34 +117,34 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 ##@ Demos & Apps
 
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
-	cd packages/iframe && make dev
+	cd apps/iframe && make dev
 .PHONY: iframe.dev
 
 demo-js.dev: setup.ts shared.dev sdk.dev ## Serves the VanillaJS demo application as http://localhost:5173
-	$(MULTIRUN) --names "iframe,demo-js" "cd packages/iframe && make dev" "cd packages/demo-vanillajs && make dev"
+	$(MULTIRUN) --names "iframe,demo-js" "cd apps/iframe && make dev" "cd demos/demo-vanillajs && make dev"
 .PHONY: demo-js.dev
 
 demo-react.dev: setup.ts shared.dev sdk.dev ## Serves the React demo application as http://localhost:5173
-	$(MULTIRUN) --names "iframe,demo-react" "cd packages/iframe && make dev" "cd packages/demo-react && make dev"
+	$(MULTIRUN) --names "iframe,demo-react" "cd apps/iframe && make dev" "cd demos/react && make dev"
 .PHONY: demo-react.dev
 
 demo-vue.dev: setup.ts shared.dev sdk.dev ## Serves the VueJS demo application as http://localhost:5173
-	$(MULTIRUN) --names "iframe,demo-vue" "cd packages/iframe && make dev" "cd packages/demo-wagmi-vue && make dev"
+	$(MULTIRUN) --names "iframe,demo-vue" "cd apps/iframe && make dev" "cd demos/vue && make dev"
 .PHONY: demo-vue.dev
 
 demo-js.prod: setup.ts  ## builds & run the prod version of the JS demo
 	IFRAME_URL=http://localhost:4160 make demo-js.build
-	$(MULTIRUN) --names "iframe.demo-js" "cd packages/iframe && make preview" "cd packages/demo-vanillajs && make preview"
+	$(MULTIRUN) --names "iframe.demo-js" "cd apps/iframe && make preview" "cd packages/js && make preview"
 .PHONY: demo-js.prod
 
 demo-react.prod: setup.ts ## builds & run the prod version of the React demo
 	IFRAME_URL=http://localhost:4160 make demo-react.build
-	$(MULTIRUN) --names "iframe.demo-react" "cd packages/iframe && make preview" "cd packages/demo-react && make preview"
+	$(MULTIRUN) --names "iframe.demo-react" "cd apps/iframe && make preview" "cd packages/react && make preview"
 .PHONY: demo-react.prod
 
 demo-vue.prod: setup.ts sdk.build  ## builds & run the prod version of the Vue demo
 	IFRAME_URL=http://localhost:4160 make demo-vue.build
-	$(MULTIRUN) --names "iframe.demo-vue" "cd packages/iframe && make preview" "cd packages/demo-wagmi-vue && make preview"
+	$(MULTIRUN) --names "iframe.demo-vue" "cd apps/iframe && make preview" "cd packages/vue && make preview"
 .PHONY: demo-vue.prod
 
 # ==================================================================================================
@@ -171,7 +171,7 @@ sdk.dev:
 
 # start docs in watch mode (can crash, see packages/docs/Makefile for more info)
 docs.dev: setup.ts shared.dev sdk.dev
-	cd packages/docs && make dev
+	cd apps/docs && make dev
 .PHONY: docs.dev
 
 # ==================================================================================================
@@ -205,8 +205,8 @@ demos.check:
 .PHONY: apps.check
 
 docs.check:
-	echo "Running make check in packages/docs"
-	cd packages/docs && make check
+	echo "Running make check in apps/docs"
+	cd apps/docs && make check
 .PHONY: docs.check
 
 backend.check:
@@ -240,7 +240,7 @@ demos.format:
 .PHONY: apps.format
 
 docs.format:
-	cd packages/docs && make format
+	cd apps/docs && make format
 .PHONY: docs.format
 
 backend.format:
@@ -276,15 +276,14 @@ account.build:
 .PHONY: account.build
 
 demo-js.build: setup.ts shared.build
-	cd packages/sdk-vanillajs && make build
-	cd packages/demo-vanillajs && make build
+	cd packages/core && make build
+	cd demos/js && make build
 .PHONY: demo-js.build
 
 demo-react.build: setup.ts shared.build
-	cd packages/sdk-vanillajs && make build
-	cd packages/sdk-shared && make build
-	cd packages/sdk-react && make build
-	cd packages/demo-react && make build
+	cd packages/core && make build
+	cd packages/react && make build
+	cd demos/react && make build
 .PHONY: demo-react.build
 
 demos.build:
@@ -307,7 +306,7 @@ contracts.build:
 # DOCS
 
 docs.build:
-	cd packages/docs && make build
+	cd apps/docs && make build
 .PHONY: docs.build
 
 # Fully self-contained target to build docs, to be used by docs page host.
@@ -316,7 +315,7 @@ docs.contained: setup.ts shared.dev sdk.dev docs.build
 
 # Serve already-built docs
 docs.preview: docs.contained
-	cd packages/docs && make preview
+	cd apps/docs && make preview
 .PHONY: docs.preview
 
 # ==================================================================================================
@@ -339,7 +338,7 @@ demos.clean:
 .PHONY: apps.clean
 
 docs.clean:
-	cd packages/docs && make clean
+	cd apps/docs && make clean
 .PHONY: docs.clean
 
 backend.clean:
@@ -379,7 +378,7 @@ install:
 	@bun install
 .PHONY: install
 
-node_modules: package.json $(wildcard packages/*/package.json)
+node_modules: package.json $(wildcard {apps,demos,packages,support}/*/package.json)
 	@bun install
 
 # Shows packages for which new versions are available (compared to the installed version).
@@ -406,7 +405,7 @@ update-latest:
 
 remove-modules:
 	@echo "Removing all node_modules"
-	rm -rf node_modules packages/*/node_modules
+	rm -rf node_modules apps/*/node_modules demos/*/node_modules packages/*/node_modules support/*/node_modules
 .PHONY: remove-modules
 
 # ==================================================================================================

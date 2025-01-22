@@ -1,0 +1,10 @@
+{
+    "name": "@happy.tech/testing",
+    "module": "index.ts",
+    "version": "0.0.0",
+    "type": "module",
+    "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.6.2"
+    }
+}

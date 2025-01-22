@@ -1,6 +1,0 @@
-{
-    "extends": ["../transaction-manager/tsconfig.json"],
-    "compilerOptions": {
-        "rootDir": ".."
-    }
-}

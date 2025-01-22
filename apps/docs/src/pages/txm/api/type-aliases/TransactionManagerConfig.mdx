@@ -1,0 +1,140 @@
+# Type Alias: TransactionManagerConfig
+
+```ts
+type TransactionManagerConfig = {
+  abis: Record<string, Abi>;
+  baseFeePercentageMargin: bigint;
+  blockTime: bigint;
+  chainId: number;
+  eip1559: EIP1559Parameters;
+  finalizedTransactionPurgeTime: number;
+  gasEstimator: GasEstimator;
+  maxPriorityFeePerGas: bigint;
+  privateKey: Hex;
+  retryPolicyManager: RetryPolicyManager;
+  rpc: {
+     allowDebug: boolean;
+     retries: number;
+     retryDelay: number;
+     timeout: number;
+     url: string;
+    };
+};
+```
+
+Defined in: [packages/txm/lib/TransactionManager.ts:34](https://github.com/HappyChainDevs/happychain/blob/99d9c499d60929c60f5b0529191c07ec6adb3faa/packages/txm/lib/TransactionManager.ts#L34)
+
+## Type declaration
+
+### abis
+
+```ts
+abis: Record<string, Abi>;
+```
+
+The ABIs used by the TransactionManager.
+This is a record of aliases to ABIs. The aliases are used to reference the ABIs in the
+transactions.
+
+### baseFeePercentageMargin?
+
+```ts
+optional baseFeePercentageMargin: bigint;
+```
+
+Safety margin for transaction base fees, expressed as a percentage.
+For example, a 20% increase should be represented as 20n.
+
+This is used to calculate the maximum fee per gas and safeguard from unanticipated or
+unpredictable gas price increases, in particular when the transaction cannot be included in
+the very next block.
+
+If not provided, defaults to 20n (20% increase).
+
+### blockTime?
+
+```ts
+optional blockTime: bigint;
+```
+
+The expected interval (in seconds) for the creation of a new block on the blockchain.
+Defaults to 2 seconds.
+
+### chainId
+
+```ts
+chainId: number;
+```
+
+The chain ID of the blockchain.
+
+### eip1559?
+
+```ts
+optional eip1559: EIP1559Parameters;
+```
+
+Optional EIP-1559 parameters. If not provided, defaults to the OP stack's stock parameters.
+
+### finalizedTransactionPurgeTime?
+
+```ts
+optional finalizedTransactionPurgeTime: number;
+```
+
+The time (in milliseconds) after which finalized transactions are purged from the database.
+If finalizedTransactionPurgeTime is 0, finalized transactions are not purged from the database.
+Defaults to 2 minutes.
+
+### gasEstimator?
+
+```ts
+optional gasEstimator: GasEstimator;
+```
+
+The gas estimator to use for estimating the gas limit of a transaction.
+You can provide your own implementation to override the default one.
+Default: [DefaultGasLimitEstimator](/txm/api/classes/DefaultGasLimitEstimator)
+
+### maxPriorityFeePerGas?
+
+```ts
+optional maxPriorityFeePerGas: bigint;
+```
+
+Optional maximum priority fee per gas.
+This is the maximum amount of wei per gas the transaction is willing to pay as a tip to miners.
+If not provided, defaults to 0n.
+
+### privateKey
+
+```ts
+privateKey: Hex;
+```
+
+The private key of the account used for signing transactions.
+
+### retryPolicyManager?
+
+```ts
+optional retryPolicyManager: RetryPolicyManager;
+```
+
+The retry policy manager to use for retrying failed transactions.
+You can provide your own implementation to override the default one.
+This is used to determine if a transaction should be retried based on the receipt of the transaction when it reverts.
+Default: DefaultRetryPolicyManager
+
+### rpc
+
+```ts
+{
+  allowDebug: boolean;
+  retries: number;
+  retryDelay: number;
+  timeout: number;
+  url: string;
+}
+```
+
+The RPC node configuration

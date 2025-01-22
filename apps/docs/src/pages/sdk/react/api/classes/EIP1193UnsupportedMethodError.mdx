@@ -1,0 +1,225 @@
+# Class: EIP1193UnsupportedMethodError
+
+Defined in: [support/wallet-common/lib/errors/errors.ts:55](https://github.com/HappyChainDevs/happychain/blob/99d9c499d60929c60f5b0529191c07ec6adb3faa/support/wallet-common/lib/errors/errors.ts#L55)
+
+Error: 4200 Unsupported Method
+
+## Extends
+
+* [`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError)
+
+## Constructors
+
+### new EIP1193UnsupportedMethodError()
+
+```ts
+new EIP1193UnsupportedMethodError(errObj?: EIP1193ErrorObject): EIP1193UnsupportedMethodError
+```
+
+Defined in: [support/wallet-common/lib/errors/errors.ts:56](https://github.com/HappyChainDevs/happychain/blob/99d9c499d60929c60f5b0529191c07ec6adb3faa/support/wallet-common/lib/errors/errors.ts#L56)
+
+#### Parameters
+
+##### errObj?
+
+[`EIP1193ErrorObject`](/sdk/react/api/type-aliases/EIP1193ErrorObject)
+
+#### Returns
+
+[`EIP1193UnsupportedMethodError`](/sdk/react/api/classes/EIP1193UnsupportedMethodError)
+
+#### Overrides
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`constructor`](/sdk/react/api/classes/GenericProviderRpcError.mdx#constructors)
+
+## Methods
+
+### captureStackTrace()
+
+#### Call Signature
+
+```ts
+static captureStackTrace(targetObject: object, constructorOpt?: Function): void
+```
+
+Defined in: node\_modules/@types/node/globals.d.ts:136
+
+Create .stack property on a target object
+
+##### Parameters
+
+###### targetObject
+
+`object`
+
+###### constructorOpt?
+
+[`Function`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function)
+
+##### Returns
+
+`void`
+
+##### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`captureStackTrace`](/sdk/react/api/classes/GenericProviderRpcError.mdx#capturestacktrace)
+
+#### Call Signature
+
+```ts
+static captureStackTrace(targetObject: object, constructorOpt?: Function): void
+```
+
+Defined in: node\_modules/bun-types/globals.d.ts:1632
+
+Create .stack property on a target object
+
+##### Parameters
+
+###### targetObject
+
+`object`
+
+###### constructorOpt?
+
+[`Function`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function)
+
+##### Returns
+
+`void`
+
+##### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`captureStackTrace`](/sdk/react/api/classes/GenericProviderRpcError.mdx#capturestacktrace)
+
+## Properties
+
+### cause?
+
+```ts
+optional cause: unknown;
+```
+
+Defined in: node\_modules/typescript/lib/lib.es2022.error.d.ts:24
+
+#### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`cause`](/sdk/react/api/classes/GenericProviderRpcError.mdx#cause)
+
+***
+
+### code
+
+```ts
+code: ProviderRpcErrorCode;
+```
+
+Defined in: [support/wallet-common/lib/errors/errors.ts:9](https://github.com/HappyChainDevs/happychain/blob/99d9c499d60929c60f5b0529191c07ec6adb3faa/support/wallet-common/lib/errors/errors.ts#L9)
+
+#### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`code`](/sdk/react/api/classes/GenericProviderRpcError.mdx#code)
+
+***
+
+### data?
+
+```ts
+optional data: unknown;
+```
+
+Defined in: [support/wallet-common/lib/errors/errors.ts:10](https://github.com/HappyChainDevs/happychain/blob/99d9c499d60929c60f5b0529191c07ec6adb3faa/support/wallet-common/lib/errors/errors.ts#L10)
+
+#### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`data`](/sdk/react/api/classes/GenericProviderRpcError.mdx#data)
+
+***
+
+### message
+
+```ts
+message: string;
+```
+
+Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1077
+
+#### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`message`](/sdk/react/api/classes/GenericProviderRpcError.mdx#message)
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1076
+
+#### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`name`](/sdk/react/api/classes/GenericProviderRpcError.mdx#name)
+
+***
+
+### stack?
+
+```ts
+optional stack: string;
+```
+
+Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1078
+
+#### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`stack`](/sdk/react/api/classes/GenericProviderRpcError.mdx#stack)
+
+***
+
+### prepareStackTrace()?
+
+```ts
+static optional prepareStackTrace: (err: Error, stackTraces: CallSite[]) => any;
+```
+
+Defined in: node\_modules/@types/node/globals.d.ts:143
+
+Optional override for formatting stack traces
+
+#### Parameters
+
+##### err
+
+[`Error`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)
+
+##### stackTraces
+
+`CallSite`\[]
+
+#### Returns
+
+`any`
+
+#### See
+
+[https://v8.dev/docs/stack-trace-api#customizing-stack-traces](https://v8.dev/docs/stack-trace-api#customizing-stack-traces)
+
+#### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`prepareStackTrace`](/sdk/react/api/classes/GenericProviderRpcError.mdx#preparestacktrace)
+
+***
+
+### stackTraceLimit
+
+```ts
+static stackTraceLimit: number;
+```
+
+Defined in: node\_modules/@types/node/globals.d.ts:145
+
+#### Inherited from
+
+[`GenericProviderRpcError`](/sdk/react/api/classes/GenericProviderRpcError).[`stackTraceLimit`](/sdk/react/api/classes/GenericProviderRpcError.mdx#stacktracelimit)

@@ -1,0 +1,91 @@
+# Type Alias: HappyUser
+
+```ts
+type HappyUser = {
+  address: `0x${string}`;
+  avatar: string;
+  controllingAddress: `0x${string}`;
+  email: string;
+  ens: string;
+  name: string;
+  provider: string;
+  type: WalletType;
+  uid: string;
+};
+```
+
+Defined in: [support/wallet-common/lib/interfaces/happyUser.ts:1](https://github.com/HappyChainDevs/happychain/blob/99d9c499d60929c60f5b0529191c07ec6adb3faa/support/wallet-common/lib/interfaces/happyUser.ts#L1)
+
+## Type declaration
+
+### address
+
+```ts
+address: `0x${string}`;
+```
+
+Happy account address
+
+### avatar
+
+```ts
+avatar: string;
+```
+
+Avatar URL (if available, or placeholder avatar)
+
+### controllingAddress
+
+```ts
+controllingAddress: `0x${string}`;
+```
+
+EOA controlling the account
+
+### email
+
+```ts
+email: string;
+```
+
+Email (if available, or empty)
+
+### ens
+
+```ts
+ens: string;
+```
+
+Active Address's ENS (if available, or empty)
+
+### name
+
+```ts
+name: string;
+```
+
+Display name (abbreviated address for Injected)
+
+### provider
+
+```ts
+provider: string;
+```
+
+Connection provider ("rabby", "metamask", "google", ...)
+
+### type
+
+```ts
+type: WalletType;
+```
+
+Type of the controlling EOA (Social, Injected)
+
+### uid
+
+```ts
+uid: string;
+```
+
+Unique identifier (Firebase user ID)

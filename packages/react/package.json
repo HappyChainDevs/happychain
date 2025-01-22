@@ -1,0 +1,34 @@
+{
+    "name": "@happy.tech/react",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "files": ["dist"],
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.es.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.es.d.ts",
+            "default": "./dist/index.es.js"
+        }
+    },
+    "devDependencies": {
+        "@happy.tech/configs": "workspace:^",
+        "@happy.tech/happybuild": "workspace:^",
+        "@metamask/safe-event-emitter": "^3.1.1",
+        "@types/bun": "^1.1.8",
+        "@types/node": "^22.5.0",
+        "@types/react": "^18.3.4",
+        "@types/react-dom": "^18.3.0",
+        "@vitejs/plugin-react-swc": "^3.7.0",
+        "typescript": "^5.6.2",
+        "vite": "^5.4.2",
+        "vite-plugin-dts": "4.0.3"
+    },
+    "peerDependencies": {
+        "@happy.tech/core": "workspace:^",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    }
+}

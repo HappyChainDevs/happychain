@@ -1,7 +1,0 @@
-{
-    "extends": ["../sdk-react/tsconfig.json"],
-    "compilerOptions": {
-        "rootDir": ".."
-    },
-    "include": ["../sdk-react/lib", "../sdk-vanillajs/lib", "../sdk-shared/lib"]
-}

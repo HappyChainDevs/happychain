@@ -1,0 +1,8 @@
+{
+    "extends": "@happy.tech/configs/tsconfig.base.json",
+    "compilerOptions": {
+        "types": ["./vite-env.d.ts"]
+    },
+    // Okay to include config files: they are not reachable from entrypoints, won't be picked up by rollup.
+    "include": ["main.js"]
+}
