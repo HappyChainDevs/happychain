@@ -4,13 +4,8 @@ export { SafeEventEmitter }
 
 // === VALUES ======================================================================================
 
-export {
-    devnet,
-    happyChainSepolia,
-    defaultChain,
-    chains,
-    chainsById,
-} from "./chains/viem"
+export * from "./chains/viem"
+export * as chainDefinitions from "./chains/definitions"
 
 export { convertToViemChain } from "./chains/utils"
 export { AuthState, WalletType } from "./interfaces/happyUser"
@@ -31,6 +26,7 @@ export { formatUserBalance } from "./utils/balanceFormatter"
 
 // === TYPES =======================================================================================
 
+export type { Chain, ChainBlockExplorer, ChainContract, ChainRpcUrls, ChainNativeCurrency } from "./chains/viem"
 export { Msgs, WalletDisplayAction } from "./interfaces/events"
 export type { RecordAbiPayload } from "./interfaces/eip1193"
 export type { ChainParameters } from "./chains/utils"
