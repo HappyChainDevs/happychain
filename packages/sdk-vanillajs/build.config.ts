@@ -6,5 +6,6 @@ export default defineConfig({
         define: {
             "import.meta.env.IFRAME_URL": process.env.IFRAME_URL as string,
         },
+        external: ["@wagmi/core", "viem"],
     },
 })
