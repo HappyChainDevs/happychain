@@ -76,6 +76,17 @@ export class SharedWorkerClient {
                 // actually accepts all console functions, but keyof console yells
                 const fn = console[payload.key as "log" | "warn" | "error"]
 
+                // Temporary filtering of very noisy web3auth logs.
+                // TODO: make this filtering generic
+                if (
+                    payload.data.length === 2 &&
+                    payload.data[0] === "[web3auth.sw.ts]" &&
+                    typeof payload.data[1] === "string"
+                ) {
+                    const msg = payload.data[1]
+                    if (msg.startsWith("sending msg, ") || msg.startsWith("reading msg, ")) break
+                }
+
                 if (fn && typeof fn === "function") {
                     fn(...payload.data)
                 }
