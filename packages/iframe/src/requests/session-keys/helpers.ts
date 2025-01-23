@@ -168,6 +168,7 @@ export async function registerSessionKey(
         functionName: "addSessionKey",
         args: [targetContract, sessionKey],
     })
+
     return await client.sendUserOperation({
         calls: [
             {
