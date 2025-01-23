@@ -5,7 +5,6 @@ import type { EIP1193Provider } from "viem"
 import { setUserWithProvider } from "#src/actions/setUserWithProvider.ts"
 import { StorageKey, storage } from "#src/services/storage.ts"
 import { getChains } from "#src/state/chains.ts"
-import { getKernelAccountAddress } from "#src/state/kernelAccount.ts"
 import { grantPermissions } from "#src/state/permissions.ts"
 import { getAppURL } from "#src/utils/appURL.ts"
 import { config } from "#src/wagmi/config.ts"
@@ -68,29 +67,23 @@ export class GoogleConnector extends FirebaseConnector {
     }
 
     async onReconnect(user: HappyUser, provider: EIP1193Provider) {
-        const kernelAccountAddress = await getKernelAccountAddress(user.controllingAddress)
-
-        const happyUser = kernelAccountAddress
-            ? {
-                  ...user,
-                  controllingAddress: user.controllingAddress,
-                  address: kernelAccountAddress,
-              }
-            : user
-        setUserWithProvider(happyUser, provider)
+        await this.addSupportedChains(provider)
+        setUserWithProvider(user, provider)
         await connectWagmi(config, { connector: happyConnector })
     }
 
     async onConnect(user: HappyUser, provider: EIP1193Provider) {
-        if (user && provider) {
-            await Promise.allSettled(
-                Object.values(getChains()).map((chain) => {
-                    provider.request({ method: "wallet_addEthereumChain", params: [chain] })
-                }),
-            )
-        }
+        await this.addSupportedChains(provider)
         setUserWithProvider(user, provider)
         grantPermissions(getAppURL(), "eth_accounts")
         await connectWagmi(config, { connector: happyConnector })
+    }
+
+    private async addSupportedChains(provider: EIP1193Provider) {
+        await Promise.allSettled(
+            Object.values(getChains()).map((chain) => {
+                provider.request({ method: "wallet_addEthereumChain", params: [chain] })
+            }),
+        )
     }
 }

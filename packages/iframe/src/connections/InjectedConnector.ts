@@ -161,7 +161,7 @@ export class InjectedConnector implements ConnectionProvider {
                     ? (response as `0x${string}`[])
                     : await this.detail.provider.request({ method: "eth_accounts" })
 
-            const user = createHappyUserFromWallet(this.id, address)
+            const user = await createHappyUserFromWallet(this.id, address)
             await this.switchInjectedWalletToHappyChain()
             return { user, request, response }
         }
@@ -175,7 +175,7 @@ export class InjectedConnector implements ConnectionProvider {
         return await new Promise((resolve, reject) => {
             const unsubscribe = appMessageBus.on(
                 Msgs.InjectedWalletConnected,
-                ({ rdns, address, request: _request, response }) => {
+                async ({ rdns, address, request: _request, response }) => {
                     if (request.key !== _request?.key) return
 
                     unsubscribe()
@@ -184,7 +184,7 @@ export class InjectedConnector implements ConnectionProvider {
                         return reject(new EIP1193UserRejectedRequestError())
                     }
 
-                    const user = createHappyUserFromWallet(this.id, address)
+                    const user = await createHappyUserFromWallet(this.id, address)
 
                     return this.switchInjectedWalletToHappyChain().then(() => {
                         return resolve({ user, request, response })

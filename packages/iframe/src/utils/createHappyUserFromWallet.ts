@@ -1,18 +1,22 @@
 import { type HappyUser, WalletType } from "@happychain/sdk-shared"
+import { getKernelAccountAddress } from "#src/state/kernelAccount.ts"
 
-export function createHappyUserFromWallet(providerId: string, address: `0x${string}`): HappyUser {
+export async function createHappyUserFromWallet(providerId: string, address: `0x${string}`): Promise<HappyUser> {
+    const accountAddress = await getKernelAccountAddress(address)
     return {
         // connection type
-        type: WalletType.Injected,
         provider: providerId,
+        type: WalletType.Injected,
+
         // social details
-        uid: address,
-        email: "",
-        name: `${address.slice(0, 6)}...${address.slice(-4)}`,
-        ens: "",
         avatar: `https://avatar.vercel.sh/${address}?size=400`,
+        email: "",
+        ens: "",
+        name: `${address.slice(0, 6)}...${address.slice(-4)}`,
+        uid: address,
+
         // web3 details
+        address: accountAddress,
         controllingAddress: address,
-        address,
     }
 }

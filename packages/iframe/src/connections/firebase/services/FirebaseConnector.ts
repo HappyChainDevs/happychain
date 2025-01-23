@@ -106,14 +106,15 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     private static makeHappyUserPartial(user: User, id: string) {
         return {
             // connection type
-            type: WalletType.Social,
             provider: id,
+            type: WalletType.Social,
+
             // social details
-            uid: user.uid,
-            email: user.email || "",
-            name: user.displayName || "",
-            ens: "", // filled in later, async, using a jotai atom subscription
             avatar: user.photoURL || "",
+            email: user.email || "",
+            ens: "", // filled in later, async, using a jotai atom subscription
+            name: user.displayName || "",
+            uid: user.uid,
         } satisfies HappyUserDetails
     }
 
@@ -122,16 +123,12 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         addresses: `0x${string}`[],
         smartAccountAddress: `0x${string}`,
     ) {
-        const happyUser = {
+        return {
             ...user,
             // web3 details
-            address: addresses[0],
+            address: smartAccountAddress || addresses[0],
             controllingAddress: addresses[0],
         }
-
-        if (smartAccountAddress) happyUser.address = smartAccountAddress
-
-        return happyUser satisfies HappyUser
     }
 
     private async connectWithWeb3Auth(
