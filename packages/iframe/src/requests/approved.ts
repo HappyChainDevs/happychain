@@ -11,6 +11,11 @@ import {
 } from "@happychain/sdk-shared"
 import { type Client, type Hash, type Hex, InvalidAddressError, hexToBigInt, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import {
+    checkIsSessionKeyModuleInstalled,
+    installSessionKeyModule,
+    registerSessionKey,
+} from "#src/requests/session-keys/helpers"
 import { StorageKey, storage } from "#src/services/storage"
 import { addPendingUserOp } from "#src/services/userOpsHistory"
 import { getChains, setChains } from "#src/state/chains"
@@ -22,11 +27,6 @@ import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
-import {
-    checkIsSessionKeyModuleInstalled,
-    installSessionKeyModule,
-    registerSessionKey,
-} from "./modules/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
 
