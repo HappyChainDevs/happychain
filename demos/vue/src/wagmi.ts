@@ -1,4 +1,4 @@
-import { type HappyProvider, happyProvider } from "@happy.tech/vue"
+import { type HappyProvider, happyProvider } from "@happy.tech/core"
 import { createConfig, custom } from "@wagmi/vue"
 import { sepolia } from "@wagmi/vue/chains"
 export { WagmiPlugin } from "@wagmi/vue"

@@ -4,14 +4,14 @@ import base from "./typedoc.base.js"
 export default {
     ...base,
     // https://typedoc.org/options/configuration/
-    tsconfig: "./tsconfig.typedoc.sdk-js.json",
+    tsconfig: "./tsconfig.typedoc.vue.json",
     // https://typedoc.org/options/input/
-    name: "@happy.tech/core",
-    entryPoints: ["../../packages/core/lib/index.ts"],
+    name: "@happy.tech/vue",
+    entryPoints: ["../../packages/vue/lib/index.ts"],
 
     // https://typedoc.org/options/output
-    out: "src/pages/sdk/js/api",
+    out: "src/pages/sdk/vue/api",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
-    publicPath: "/sdk/js/api/",
+    publicPath: "/sdk/vue/api/",
 }

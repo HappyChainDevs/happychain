@@ -48,6 +48,19 @@ export default defineConfig({
                         },
                     ],
                 },
+                {
+                    text: "Vue",
+                    items: [
+                        {
+                            text: "Getting Started",
+                            link: "/sdk/vue/getting-started",
+                        },
+                        {
+                            text: "API Reference",
+                            link: "/sdk/vue/api",
+                        },
+                    ],
+                },
             ],
         },
         {
