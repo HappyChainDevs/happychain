@@ -17,12 +17,16 @@ import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { grantPermissions } from "#src/state/permissions"
-import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
+import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
-import { checkIsSessionKeyModuleInstalled, installSessionKeyModule } from "./modules/session-keys/helpers"
+import {
+    checkIsSessionKeyModuleInstalled,
+    installSessionKeyModule,
+    registerSessionKey,
+} from "./modules/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
 
@@ -51,7 +55,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             //      that occured in the old convertToUserOp call and were being swallowed.
             //      We need to make sure all errors are correctly surfaced!
             try {
-                const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
+                const smartAccountClient = (await getSmartAccountClient())!
                 const tx = request.payload.params[0]
                 const preparedUserOp = await smartAccountClient.prepareUserOperation({
                     account: smartAccountClient.account,
@@ -150,17 +154,26 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
             const hasExistingSessionKeys = Boolean(storedSessionKeys[user!.address])
 
+            const smartAccountClient = (await getSmartAccountClient())!
+            let keyRegistered = false
+
             // Only check module installation if we don't have any session keys stored
             if (!hasExistingSessionKeys) {
                 const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
                 if (!isSessionKeyValidatorInstalled) {
                     await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
+                    keyRegistered = true
                 }
             }
 
-            // @todo - uncomment once `addSessionKey` can be tested
-            // const hash = await registerSessionKey(smartAccountClient, accountSessionKey.address, targetContract)
-            // await smartAccountClient.waitForUserOperationReceipt({ hash })
+            // It's theoreticaly possible to have the validator uninstalled when there are local
+            // session keys, but if you're doing that you're looking for trouble.
+
+            if (!keyRegistered) {
+                const hash = await registerSessionKey(smartAccountClient, accountSessionKey.address, targetContract)
+                await smartAccountClient.waitForUserOperationReceipt({ hash })
+                keyRegistered = true
+            }
 
             grantPermissions(app, {
                 happy_sessionKey: {

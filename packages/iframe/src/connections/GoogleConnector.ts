@@ -69,7 +69,7 @@ export class GoogleConnector extends FirebaseConnector {
 
     async onReconnect(user: HappyUser, provider: EIP1193Provider) {
         const kernelAccountAddress = await getKernelAccountAddress(user.controllingAddress)
-        
+
         const happyUser = kernelAccountAddress
             ? {
                   ...user,

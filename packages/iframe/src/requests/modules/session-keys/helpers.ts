@@ -1,8 +1,9 @@
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
-import { type Address, type Hex, concat, numberToHex } from "viem"
+import { type Address, type Hash, type Hex, concat, encodeFunctionData, numberToHex } from "viem"
 import type { SmartAccount } from "viem/account-abstraction"
 import { getCurrentChain } from "#src/state/chains"
 import type { ExtendedSmartAccountClient } from "#src/state/smartAccountClient"
+import { getAccountAbstractionAbis } from "#src/utils/getAccountAbstractionAbis"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
 
 // The address used when installing a validator module to signify that the module has no hooks.
@@ -136,9 +137,9 @@ export async function installSessionKeyModule(
  * Registers a new session key with the SessionKeyValidator module.
  * This should be called when the module is already installed and we want to add a new session key.
  *
- * @param _client - The smart account client with user operation support.
- * @param _sessionKey - Address of the session key (account) that will be authorized to sign transactions.
- * @param _targetContract - Address of the contract this session key will be authorized to interact with.
+ * @param client - The smart account client with user operation support.
+ * @param sessionKey - Address of the session key (account) that will be authorized to sign transactions.
+ * @param targetContract - Address of the contract this session key will be authorized to interact with.
  * @returns {Promise<`0x${string}`>} Hash of the user operation
  *
  * @example
@@ -156,25 +157,24 @@ export async function installSessionKeyModule(
  * ```
  */
 export async function registerSessionKey(
-    _client: ExtendedSmartAccountClient,
-    _sessionKey: Address,
-    _targetContract: Address,
-) {
-    // @todo - uncomment and test implementation once work on `addSessionKey()` is done
-    /*
+    client: ExtendedSmartAccountClient,
+    sessionKey: Address,
+    targetContract: Address,
+): Promise<Hash> {
     const currentChain = getCurrentChain()?.chainId
-    const abis = getAccountAbstractionAbis(currentChain)
-    const calldata = encodeFunctionData({
-        abi: abis.SessionKeyValidator,
-        functionName: 'addSessionKey',
-        args: [targetContract, sessionKey]
+    const abi = getAccountAbstractionAbis(currentChain).SessionKeyValidator
+    const data = encodeFunctionData({
+        abi,
+        functionName: "addSessionKey",
+        args: [targetContract, sessionKey],
     })
     return await client.sendUserOperation({
-        calls: [{
-            to: contracts.SessionKeyValidator,
-            data: addSessionKeyCalldata,
-            value: 0n,
-        }]
+        calls: [
+            {
+                to: getAccountAbstractionContracts(getCurrentChain()?.chainId)?.SessionKeyValidator,
+                data,
+                value: 0n,
+            },
+        ],
     })
-    */
 }

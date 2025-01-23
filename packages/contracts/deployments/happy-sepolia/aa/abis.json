@@ -4688,6 +4688,24 @@
     },
     {
       "type": "function",
+      "name": "addSessionKey",
+      "inputs": [
+        {
+          "name": "targetContract",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "sessionKey",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
       "name": "addSessionKeys",
       "inputs": [
         {
@@ -4702,7 +4720,7 @@
         }
       ],
       "outputs": [],
-      "stateMutability": "payable"
+      "stateMutability": "nonpayable"
     },
     {
       "type": "function",
@@ -4890,7 +4908,7 @@
         }
       ],
       "outputs": [],
-      "stateMutability": "payable"
+      "stateMutability": "nonpayable"
     },
     {
       "type": "function",

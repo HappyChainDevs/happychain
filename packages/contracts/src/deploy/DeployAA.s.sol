@@ -23,7 +23,7 @@ import {EntryPointSimulations} from "account-abstraction/contracts/core/EntryPoi
 contract DeployAAContracts is BaseDeployScript {
     using stdJson for string;
 
-    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(3));
+    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(4));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     uint256 public constant PAYMASTER_DEPOSIT = 10 ether;
 
@@ -55,6 +55,9 @@ contract DeployAAContracts is BaseDeployScript {
     function _loadExpectedAddresses() internal {
         string memory config = vm.envOr("CONFIG", string(""));
         if (bytes(config).length == 0) revert ConfigNotSet();
+
+        // TODO Use a library to predict the deployment address, and skip only if it is the same
+        //      as the expected address and has code.
 
         string memory deploymentPath;
         if (keccak256(bytes(config)) == keccak256(bytes("LOCAL"))) {
