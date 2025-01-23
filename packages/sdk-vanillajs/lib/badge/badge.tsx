@@ -1,11 +1,11 @@
-import { useEffect, useState } from "preact/hooks"
 /** @jsxImportSource preact */
-import { type HappyUser, onUserUpdate } from "../index"
-import { useConnection } from "./useConnection"
-
+import type { HappyUser } from "@happychain/sdk-shared"
+import { useEffect, useState } from "preact/hooks"
 import { icon64x64 } from "../happyProvider/icons"
+import { onUserUpdate } from "../happyProvider/initialize"
 import badgeStyles from "./styles/badge.css?inline"
 import propertyStyles from "./styles/property.css?inline"
+import { useConnection } from "./useConnection"
 
 export type BadgeProps = { disableStyles?: boolean | string }
 
@@ -14,7 +14,7 @@ export function Badge({ disableStyles = false }: BadgeProps) {
 
     const { connecting, connect, open } = useConnection()
 
-    useEffect(() => onUserUpdate((user: HappyUser | undefined) => setUser(user)), [])
+    useEffect(() => onUserUpdate((user) => setUser(user)), [])
 
     const connected = !!user?.address
     const onClick = connecting ? undefined : connected ? open : connect
