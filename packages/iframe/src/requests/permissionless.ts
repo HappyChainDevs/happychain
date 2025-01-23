@@ -103,7 +103,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             // Attempt to retrieve UserOperation details first.
             // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
             try {
-                const userOpReceipt = await smartAccountClient.waitForUserOperationReceipt({ hash })
+                const userOpReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
                 const userOpInfo = await smartAccountClient.getUserOperation({ hash })
 
                 const { callData, sender } = userOpInfo.userOperation
