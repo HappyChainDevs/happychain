@@ -65,16 +65,13 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             if (permissions.length === 0) throw new EIP1193UnauthorizedError()
 
             // TODO ensure null session key cannot be added
-            const sessionKey = storage.get(StorageKey.SessionKeys)?.[user.address]?.[target]
+            const sessionKey = storage.get(StorageKey.SessionKeys)?.[user.address][target]
             if (!sessionKey) throw new EIP1193UnauthorizedError()
 
             return await sendUserOp(user, tx, async (userOp, smartAccountClient) => {
-                console.log(userOp)
-                console.log(smartAccountClient.account)
                 const hash = getUserOperationHash({
                     userOperation: {
-                        // biome-ignore lint/suspicious/noExplicitAny: TODO
-                        ...(userOp as any),
+                        ...(userOp as UserOperation), // TODO acceptable?
                         sender: smartAccountClient.account.address,
                         signature: "0x",
                     } as UserOperation<"0.7">,

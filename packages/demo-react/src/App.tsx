@@ -135,8 +135,10 @@ function App() {
                 chain: happyChainSepolia,
             })
 
+            // succeeds - we get a UserOp hash
             const hash = await walletClient.writeContract(request)
-            const receipt = await publicClient.waitForTransactionReceipt({ hash })
+            // TODO debug `eth_getTransactionReceipt` - currently fails
+            const receipt = await publicClient.getTransactionReceipt({ hash })
 
             if (receipt.status === "reverted") {
                 console.log("[count --] transaction reverted", receipt)
