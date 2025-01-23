@@ -17,9 +17,9 @@ vi.mock(import("#src/requests/utils"), requestUtilsMock)
 describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
     let user: HappyUser
 
-    beforeEach(() => {
+    beforeEach(async () => {
         clearPermissions()
-        user = createHappyUserFromWallet("io.testing", addressFactory())
+        user = await createHappyUserFromWallet("io.testing", addressFactory())
         setUser(user)
         setAuthState(AuthState.Connected)
     })

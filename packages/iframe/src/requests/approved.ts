@@ -51,6 +51,9 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     }
 
     switch (request.payload.method) {
+        // This functionality is same as in injected.ts
+        // TODO: refactor once we have a better plan on how to maintain separation while reducing
+        // code duplication here
         case "eth_sendTransaction": {
             try {
                 if (!user) throw new EIP1193UnauthorizedError()

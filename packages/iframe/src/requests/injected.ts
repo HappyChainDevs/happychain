@@ -1,3 +1,4 @@
+import { HappyMethodNames } from "@happychain/common"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -8,12 +9,13 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import { type Client, type Hex, hexToBigInt } from "viem"
-import { addPendingTx } from "#src/services/transactionHistory.ts"
+import { type Client, type Hash, type Hex, hexToBigInt } from "viem"
+import { addPendingUserOp } from "#src/services/userOpsHistory.ts"
 import { getChains, setChains, setCurrentChain } from "#src/state/chains.ts"
 import { getInjectedClient } from "#src/state/injectedClient.ts"
+import { loadAbiForUser } from "#src/state/loadedAbis.ts"
 import { grantPermissions, revokePermissions } from "#src/state/permissions.ts"
-import type { PendingTxDetails } from "#src/state/txHistory.ts"
+import { getSmartAccountClient } from "#src/state/smartAccountClient.ts"
 import { addWatchedAsset } from "#src/state/watchedAssets.ts"
 import { isAddChainParams } from "#src/utils/isAddChainParam.ts"
 import { getUser } from "../state/user"
@@ -35,21 +37,54 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
     const user = getUser()
 
     switch (request.payload.method) {
-        case "happy_user": {
-            // const acc = await client.request({ method: "eth_accounts" })
+        // Different from permissionless.ts as this actually calls the provider
+        // to ensure we still have a connection with the extension wallet
+        case HappyMethodNames.USER: {
             const acc = await sendToInjectedClient(app, { ...request, payload: { method: "eth_accounts" } })
             return acc.length ? user : undefined
         }
 
+        // This is the same as approved.ts
         case "eth_sendTransaction": {
             if (!user) return false
-            const hash = await sendToInjectedClient(app, { ...request, payload: request.payload })
-            const value = hexToBigInt(request.payload.params[0].value as Hex)
-            const payload: PendingTxDetails = { hash, value }
-            addPendingTx(user.address, payload)
-            return hash
+
+            // TODO This try statement should go away, it's only here to surface errors
+            //      that occured in the old convertToUserOp call and were being swallowed.
+            //      We need to make sure all errors are correctly surfaced!
+            try {
+                const smartAccountClient = (await getSmartAccountClient())!
+                const tx = request.payload.params[0]
+                const preparedUserOp = await smartAccountClient.prepareUserOperation({
+                    account: smartAccountClient.account,
+                    calls: [
+                        {
+                            to: tx.to,
+                            data: tx.data,
+                            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                        },
+                    ],
+                })
+                // need to manually call signUserOp here since the permissionless.js and Web3Auth combination
+                // doesn't support automatic signing
+                const userOpSignature = await smartAccountClient.account.signUserOperation(preparedUserOp)
+                const userOpWithSig = { ...preparedUserOp, signature: userOpSignature }
+                const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
+
+                addPendingUserOp(user.address, {
+                    userOpHash: userOpHash as Hash,
+                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                })
+                return userOpHash
+            } catch (error) {
+                console.error("Sending UserOp errored", error)
+                throw error
+            }
         }
 
+        // different from approved.ts and permissionless as we don't checkAuthenticated here,
+        // instead relying on the extension wallet to handle the permission access.
+        // If the call is successful, we will grant (mirror) permissions here, otherwise we
+        // can safely assume it failed, and ignore.
         case "eth_requestAccounts": {
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
             if (resp.length) {
@@ -58,6 +93,8 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return resp
         }
 
+        // same explanation as 'eth_requestAccounts' above, we won't do any checks ourselves
+        // and instead rely on success/fail of the extension wallet call
         case "wallet_requestPermissions": {
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
             if (resp.length) {
@@ -66,12 +103,18 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return resp
         }
 
+        // same as above, however, 'wallet_revokePermissions' is only in permissionless.ts, not
+        // on approved.ts
         case "wallet_revokePermissions": {
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
             revokePermissions(app, request.payload.params[0])
             return resp
         }
 
+        // We can reduce the number of checks here compared to approved.ts and permissionless.ts
+        // as we can rely on the extension wallet response to determine how we should mirror
+        // accordingly. Some extensions automatically switch chain after adding, so we enforce this
+        // behavior to have a more standard experience regardless of the connecting wallet.
         case "wallet_addEthereumChain": {
             const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
@@ -124,8 +167,14 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return resp
         }
 
+        // same as approved.ts
         case "wallet_watchAsset": {
             return user ? addWatchedAsset(user.address, request.payload.params) : false
+        }
+
+        // same as approved.ts
+        case HappyMethodNames.USE_ABI: {
+            return user ? loadAbiForUser(user.address, request.payload.params) : false
         }
 
         default:

@@ -18,8 +18,8 @@ vi.mock(import("#src/requests/utils"), requestUtilsMock)
 describe("walletClient wallet_watchAsset", () => {
     let user: HappyUser
 
-    beforeEach(() => {
-        user = createHappyUserFromWallet("io.testing", addressFactory())
+    beforeEach(async () => {
+        user = await createHappyUserFromWallet("io.testing", addressFactory())
         setUser(user)
         setAuthState(AuthState.Connected)
     })

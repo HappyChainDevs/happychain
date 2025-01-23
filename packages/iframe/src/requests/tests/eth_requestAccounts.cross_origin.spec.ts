@@ -33,9 +33,9 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
     describe("connected user", () => {
         let user: HappyUser
 
-        beforeEach(() => {
+        beforeEach(async () => {
             clearPermissions()
-            user = createHappyUserFromWallet("io.testing", addressFactory())
+            user = await createHappyUserFromWallet("io.testing", addressFactory())
             setUser(user)
             setAuthState(AuthState.Connected)
         })
@@ -58,7 +58,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
         })
 
         test("does not add permissions", async () => {
-            const user = createHappyUserFromWallet("io.testing", addressFactory())
+            const user = await createHappyUserFromWallet("io.testing", addressFactory())
             setUser(user)
             expect(getAllPermissions(appURL).length).toBe(0)
             const request = makePayload(parentID, { method: "eth_requestAccounts" })

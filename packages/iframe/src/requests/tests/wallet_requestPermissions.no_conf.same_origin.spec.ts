@@ -36,9 +36,9 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
 
     describe("connected user", () => {
         let user: HappyUser
-        beforeEach(() => {
+        beforeEach(async () => {
             clearPermissions()
-            user = createHappyUserFromWallet("io.testing", addressFactory())
+            user = await createHappyUserFromWallet("io.testing", addressFactory())
             setUser(user)
             setAuthState(AuthState.Connected)
         })
