@@ -138,8 +138,8 @@ function App() {
             // succeeds - we get a UserOp hash
             const hash = await walletClient.writeContract(request)
             console.log({ hash })
-            // TODO debug `eth_getTransactionReceipt` - currently fails
-            const receipt = await publicClient.getTransactionReceipt({ hash })
+
+            const receipt = await publicClient.waitForTransactionReceipt({ hash })
             console.log({ receipt })
 
             if (receipt.status === "reverted") {

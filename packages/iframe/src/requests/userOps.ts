@@ -1,14 +1,24 @@
 import { deployment as contractAddresses } from "@happychain/contracts/account-abstraction/sepolia"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { getAccountNonce } from "permissionless/actions"
-import { type Address, type Hash, type Hex, type RpcTransactionRequest, concatHex, hexToBigInt, pad, toHex } from "viem"
-import type { PrepareUserOperationReturnType } from "viem/account-abstraction"
+import {
+    type Address,
+    type Hash,
+    type Hex,
+    type RpcTransactionRequest,
+    type UnionPartialBy,
+    concatHex,
+    hexToBigInt,
+    pad,
+    toHex,
+} from "viem"
+import type { UserOperation } from "viem/account-abstraction"
 import { addPendingUserOp } from "#src/services/userOpsHistory"
 import { getPublicClient } from "#src/state/publicClient.js"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 
 export type UserOpSigner = (
-    userOp: PrepareUserOperationReturnType,
+    userOp: UnionPartialBy<UserOperation, "sender"> & { chainId?: number },
     smartAccountClient: ExtendedSmartAccountClient,
 ) => Promise<Hex>
 
