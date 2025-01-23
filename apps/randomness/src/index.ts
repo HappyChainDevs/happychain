@@ -49,6 +49,10 @@ class RandomnessService {
             console.error(description)
         })
 
+        // Start fetching Drand beacons for past rounds. Subsequently, beacons will be fetched at regular intervals
+        // to maintain synchronization with the Drand network
+        this.handleNewDrandBeacons()
+
         // Synchronize the retrieval of new Drand beacons with the Drand network to request them as soon as they become available.
         const periodMs = Number(env.EVM_DRAND_PERIOD_SECONDS) * MS_IN_SECOND
         const drandGenesisTimestampMs = Number(env.EVM_DRAND_GENESIS_TIMESTAMP_SECONDS) * MS_IN_SECOND
@@ -260,22 +264,19 @@ class RandomnessService {
 
         const randomnessToReveal = this.randomnessRepository.getRandomnessForBlockNumber(nextBlockNumber)
 
-        if (!randomnessToReveal) {
-            console.warn("Not found randomness to reveal with block number", nextBlockNumber)
-            return transactions
+        if (randomnessToReveal) {
+            const revealValueTransaction = this.transactionFactory.createRevealValueTransaction(randomnessToReveal)
+
+            transactions.unshift(revealValueTransaction)
+
+            randomnessToReveal.addRevealTransactionIntentId(revealValueTransaction.intentId)
+
+            this.randomnessRepository.updateRandomness(randomnessToReveal).then((result) => {
+                if (result.isErr()) {
+                    console.error("Failed to update randomness", result.error)
+                }
+            })
         }
-
-        const revealValueTransaction = this.transactionFactory.createRevealValueTransaction(randomnessToReveal)
-
-        transactions.unshift(revealValueTransaction)
-
-        randomnessToReveal.addRevealTransactionIntentId(revealValueTransaction.intentId)
-
-        this.randomnessRepository.updateRandomness(randomnessToReveal).then((result) => {
-            if (result.isErr()) {
-                console.error("Failed to update randomness", result.error)
-            }
-        })
 
         transactions.push(...this.pendingPostDrandTransactions)
 
