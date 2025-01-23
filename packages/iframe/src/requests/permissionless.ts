@@ -9,15 +9,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { decodeNonce } from "permissionless"
-import {
-    type Address,
-    type Client,
-    InvalidAddressError,
-    decodeAbiParameters,
-    hexToBigInt,
-    isAddress,
-    parseAbiParameters,
-} from "viem"
+import { type Address, type Client, InvalidAddressError, decodeAbiParameters, hexToBigInt, isAddress } from "viem"
 import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
@@ -111,10 +103,8 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             // Attempt to retrieve UserOperation details first.
             // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
             try {
-                const promiseUserOpInfo = smartAccountClient.getUserOperation({ hash })
-                const promiseUserOpReceipt = smartAccountClient.getUserOperationReceipt({ hash })
-
-                const [userOpInfo, userOpReceipt] = await Promise.all([promiseUserOpInfo, promiseUserOpReceipt])
+                const userOpReceipt = await smartAccountClient.waitForUserOperationReceipt({ hash })
+                const userOpInfo = await smartAccountClient.getUserOperation({ hash })
 
                 const { callData, sender } = userOpInfo.userOperation
 
@@ -135,13 +125,16 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                  */
 
                 // 1. Decode the `execute()` function parameters
-                const [, executeParamsData] = decodeAbiParameters(
-                    parseAbiParameters("bytes32 execMode, bytes executeParamsData"),
-                    callData.slice(10) as `0x${string}`, // Skip execute selector (0xe9ae5c53 = 10 characters including 0x prefix)
+                const [, executionCalldata] = decodeAbiParameters(
+                    [
+                        { type: "bytes32", name: "execMode" },
+                        { type: "bytes", name: "executionCalldata" },
+                    ],
+                    `0x${callData.slice(10)}`, // Skip execute selector (0xe9ae5c53)
                 )
 
                 // 2. Decode the actual transaction parameters
-                const [to] = decodeAbiParameters(parseAbiParameters("address to"), executeParamsData)
+                const to = executionCalldata.slice(0, 40) as `0x${string}`
 
                 const {
                     success,
