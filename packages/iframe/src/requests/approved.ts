@@ -11,6 +11,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { type Client, InvalidAddressError, isAddress } from "viem"
+import type { UserOperation } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import {
     checkIsSessionKeyModuleInstalled,
@@ -54,8 +55,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             return await sendUserOp(
                 user,
                 request.payload.params[0],
-                // biome-ignore lint/suspicious/noExplicitAny: TODO
-                async (userOp, smartAccountClient) => await smartAccountClient.account.signUserOperation(userOp as any),
+                async (userOp, smartAccountClient) =>
+                    await smartAccountClient.account.signUserOperation(userOp as UserOperation),
             )
         }
 
