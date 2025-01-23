@@ -2,14 +2,15 @@ import { deployment as contractAddresses } from "@happychain/contracts/account-a
 import type { HappyUser } from "@happychain/sdk-shared"
 import { getAccountNonce } from "permissionless/actions"
 import { type Address, type Hash, type Hex, type RpcTransactionRequest, concatHex, hexToBigInt, pad, toHex } from "viem"
-import type { UserOperation } from "viem/account-abstraction"
+import type { PrepareUserOperationReturnType } from "viem/account-abstraction"
 import { addPendingUserOp } from "#src/services/userOpsHistory"
 import { getPublicClient } from "#src/state/publicClient.js"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 
-// TODO give this a proper type, based on actual returned results from Viem
-// EDIT updated with UserOperation
-export type UserOpSigner = (userOp: UserOperation, smartAccountClient: ExtendedSmartAccountClient) => Promise<Hex>
+export type UserOpSigner = (
+    userOp: PrepareUserOperationReturnType,
+    smartAccountClient: ExtendedSmartAccountClient,
+) => Promise<Hex>
 
 // TODO move to sdk-shared
 export enum VALIDATOR_MODE {
@@ -24,8 +25,7 @@ export enum VALIDATOR_TYPE {
 }
 
 /**
- * Returns the nonce from the EntryPoint-v7 contract
- * for the smart account.
+ * Returns the nonce from the EntryPoint-v7 contract for the smart account.
  */
 async function getCustomNonce(smartAccountAddress: Address, validatorAddress: Address) {
     const encoding = pad(
@@ -35,6 +35,9 @@ async function getCustomNonce(smartAccountAddress: Address, validatorAddress: Ad
 
     const nonceKeyWithEncoding = BigInt(encoding)
 
+    // under the hood, useAccountNonce performs an `eth_call` request
+    // so we need to pass the publicClient and not the smartAccountClient
+    // since it uses the alto bundler and that doesn't support `eth_call`
     return await getAccountNonce(getPublicClient(), {
         address: smartAccountAddress,
         entryPointAddress: contractAddresses.EntryPointV7,
@@ -43,42 +46,31 @@ async function getCustomNonce(smartAccountAddress: Address, validatorAddress: Ad
 }
 
 export async function sendUserOp(user: HappyUser, tx: RpcTransactionRequest, signer: UserOpSigner) {
-    // TODO This try statement should go away, it's only here to surface errors
-    //      that occured in the old convertToUserOp call and were being swallowed.
-    //      We need to make sure all errors are correctly surfaced!
-    try {
-        const smartAccountClient = (await getSmartAccountClient())!
-        const customNonce = await getCustomNonce(
-            smartAccountClient.account.address,
-            contractAddresses.SessionKeyValidator,
-        )
-        const preparedUserOp = await smartAccountClient.prepareUserOperation({
-            account: smartAccountClient.account,
-            calls: [
-                {
-                    to: tx.to,
-                    data: tx.data,
-                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                },
-            ],
-            nonce: customNonce,
+    const smartAccountClient = (await getSmartAccountClient())!
+    const customNonce = await getCustomNonce(smartAccountClient.account.address, contractAddresses.SessionKeyValidator)
+    const preparedUserOp = await smartAccountClient.prepareUserOperation({
+        account: smartAccountClient.account,
+        calls: [
+            {
+                to: tx.to,
+                data: tx.data,
+                value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+            },
+        ],
+        nonce: customNonce,
+    })
+
+    const signature = await signer(preparedUserOp, smartAccountClient)
+
+    if (signature) {
+        const userOpWithSig = { ...preparedUserOp, signature }
+        const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
+
+        void addPendingUserOp(user.address, {
+            userOpHash: userOpHash as Hash,
+            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
         })
 
-        const signature = await signer(preparedUserOp, smartAccountClient)
-
-        if (signature) {
-            const userOpWithSig = { ...preparedUserOp, signature }
-            const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
-
-            void addPendingUserOp(user.address, {
-                userOpHash: userOpHash as Hash,
-                value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-            })
-
-            return userOpHash
-        }
-    } catch (error) {
-        console.error("Sending UserOp errored", error)
-        throw error
+        return userOpHash
     }
 }
