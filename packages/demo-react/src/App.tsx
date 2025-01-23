@@ -88,7 +88,6 @@ function App() {
     async function mintTokens() {
         try {
             if (!walletClient || !user?.address) return
-
             const [account] = await walletClient.getAddresses()
             // cf: https://viem.sh/docs/contract/writeContract.html#usage
             const { request } = await publicClient.simulateContract({
@@ -133,17 +132,24 @@ function App() {
                 address: CounterAddress.HappyCounter,
                 abi: CounterAbi.HappyCounter,
                 functionName: "increment",
-                chain: convertToViemChain(chains.defaultChain),
+                chain: happyChainSepolia,
             })
 
-            console.log({ request })
-            const writeCall = await walletClient.writeContract(request)
+            const hash = await walletClient.writeContract(request)
+            const receipt = await publicClient.waitForTransactionReceipt({ hash })
 
-            if (writeCall) {
-                console.log("[count +] success:", writeCall)
-            } else {
-                console.log("[count ~] failed; please try again!")
+            if (receipt.status === "reverted") {
+                console.log("[count --] transaction reverted", receipt)
+                return
             }
+
+            const count = await publicClient.readContract({
+                address: CounterAddress.HappyCounter,
+                abi: CounterAbi.HappyCounter,
+                functionName: "getCount",
+            })
+
+            console.log("[count ++]", count)
         } catch (error) {
             console.log("[count :(] error caught:", error)
         }

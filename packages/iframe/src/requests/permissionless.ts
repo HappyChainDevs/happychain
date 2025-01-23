@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happychain/common"
+import { HappyMethodNames, PermissionNames } from "@happychain/common"
 import {
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
@@ -18,13 +18,17 @@ import {
     isAddress,
     parseAbiParameters,
 } from "viem"
+import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
+import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
+import { sendUserOp } from "#src/requests/userOps"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage.ts"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 import { getUser } from "#src/state/user"
+import { getWalletClient } from "#src/state/walletClient"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
 import { sendResponse } from "./sendResponse"
@@ -46,6 +50,43 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
             return currChain ?? (await sendToPublicClient(app, { ...request, payload: request.payload }))
+        }
+
+        case "eth_sendTransaction": {
+            const user = getUser()
+            if (!user) return false // TODO is this ok?
+            const tx = request.payload.params[0]
+            const target = request.payload.params[0].to
+            if (!tx || !target) return false
+
+            const permissions = getPermissions(app, {
+                [PermissionNames.SESSION_KEY]: { target },
+            })
+            if (permissions.length === 0) throw new EIP1193UnauthorizedError()
+
+            // TODO ensure null session key cannot be added
+            const sessionKey = storage.get(StorageKey.SessionKeys)?.[user.address]?.[target]
+            if (!sessionKey) throw new EIP1193UnauthorizedError()
+
+            return await sendUserOp(user, tx, async (userOp, smartAccountClient) => {
+                console.log(userOp)
+                console.log(smartAccountClient.account)
+                const hash = getUserOperationHash({
+                    userOperation: {
+                        // biome-ignore lint/suspicious/noExplicitAny: TODO
+                        ...(userOp as any),
+                        sender: smartAccountClient.account.address,
+                        signature: "0x",
+                    } as UserOperation<"0.7">,
+                    entryPointAddress: entryPoint07Address,
+                    entryPointVersion: "0.7",
+                    chainId: Number(getCurrentChain().chainId),
+                })
+                return await getWalletClient()!.signMessage({
+                    account: privateKeyToAccount(sessionKey),
+                    message: { raw: hash },
+                })
+            })
         }
 
         case "eth_accounts": {
