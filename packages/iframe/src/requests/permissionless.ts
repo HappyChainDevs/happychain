@@ -46,6 +46,11 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
+    const user = getUser()
+    if (!user) {
+        console.warn("Request approved, but no user found")
+    }
+
     switch (request.payload.method) {
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
@@ -53,7 +58,6 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         }
 
         case "eth_sendTransaction": {
-            const user = getUser()
             if (!user) return false // TODO is this ok?
             const tx = request.payload.params[0]
             const target = request.payload.params[0].to
@@ -71,7 +75,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return await sendUserOp(user, tx, async (userOp, smartAccountClient) => {
                 const hash = getUserOperationHash({
                     userOperation: {
-                        ...(userOp as UserOperation), // TODO acceptable?
+                        ...userOp,
                         sender: smartAccountClient.account.address,
                         signature: "0x",
                     } as UserOperation<"0.7">,
@@ -87,13 +91,11 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         }
 
         case "eth_accounts": {
-            const user = getUser()
             return user && hasPermissions(app, "eth_accounts") ? [user.address] : []
         }
 
         case HappyMethodNames.USER: {
-            const user = getUser()
-            return user && hasPermissions(app, "eth_accounts") ? getUser() : undefined
+            return user && hasPermissions(app, "eth_accounts") ? user : undefined
         }
 
         case "eth_requestAccounts":
@@ -101,7 +103,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             if (!hasPermissions(app, "eth_accounts")) {
                 throw new EIP1193UserRejectedRequestError()
             }
-            return isAddress(`${getUser()?.address}`) ? [getUser()?.address] : []
+            return isAddress(`${user?.address}`) ? [user?.address] : []
 
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
@@ -252,7 +254,6 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return null
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
-            const user = getUser()
             const targetContractAddress = request.payload.params[0] as Address
 
             if (!isAddress(targetContractAddress)) {
