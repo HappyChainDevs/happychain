@@ -223,7 +223,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
             if (
                 !hasPermissions(app, {
-                    happy_sessionKey: {
+                    [PermissionNames.SESSION_KEY]: {
                         target: targetContractAddress,
                     },
                 })
