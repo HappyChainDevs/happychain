@@ -29,12 +29,14 @@ const mipdStore = createStore()
 
 // load all initialized providers
 mipdStore.getProviders().forEach((detail) => {
+    if (detail.info.rdns === "tech.happy") return
     addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
 })
 
 // subscribe to any async changes
 mipdStore.subscribe((details, meta) => {
     for (const detail of details) {
+        if (detail.info.rdns === "tech.happy") continue
         if (meta?.added) {
             addProvider(new InjectedConnector({ ...detail, autoConnect: true }))
         } else if (meta?.removed) {
