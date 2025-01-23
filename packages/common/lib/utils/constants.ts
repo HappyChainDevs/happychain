@@ -3,3 +3,7 @@ export enum HappyMethodNames {
     USE_ABI = "happy_useAbi",
     REQUEST_SESSION_KEY = "happy_requestSessionKey",
 }
+
+export enum PermissionNames {
+    SESSION_KEY = "happy_sessionKey",
+}

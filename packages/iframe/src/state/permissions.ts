@@ -265,7 +265,7 @@ function permissionRequestEntries(permissions: PermissionsRequest): PermissionRe
  * @example Grant permission with caveat
  *```
  * grantPermissions(app, {
- *   happy_sessionKey: {
+ *   [PermissionNames.SESSION_KEY]: {
  *     target: contractAddress
  *   }
  * })
@@ -326,7 +326,7 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
  * @example Revoke specific caveat
  * ```
  * revokePermissions(app, {
- *   happy_sessionKey: {
+ *   [PermissionNames.SESSION_KEY]: {
  *     target: "0xSpecificTargetAddress"
  *   }
  * })
@@ -375,7 +375,7 @@ export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRe
  *
  * This supports two types of permission checks :
  * 1. "Simple" permissions (e.g., "eth_accounts"), passed as a `string`
- * 2. Permissions with caveats (e.g., `{happy_sessionKey: { target: "0x..." }}`)
+ * 2. Permissions with caveats (e.g., `{ [PermissionNames.SESSION_KEY]: { target: "0x..." } }`)
  *
  *
  * @example Simple permission
@@ -386,7 +386,7 @@ export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRe
  * @example Permission with caveats
  * ```
  * hasPermissions(app, {
- *   "happy_sessionKey": {
+ *   [PermissionNames.SESSION_KEY]: {
  *     "target": "0x..."
  *   }
  * })
