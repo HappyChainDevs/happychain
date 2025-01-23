@@ -1,4 +1,4 @@
-import { HappyMethodNames } from "@happychain/common"
+import { HappyMethodNames, PermissionNames } from "@happychain/common"
 import type { Msgs, ProviderMsgsFromApp } from "@happychain/sdk-shared"
 import { requiresApproval } from "@happychain/sdk-shared"
 import type { Address } from "viem/accounts"
@@ -26,6 +26,11 @@ export function checkIfRequestRequiresConfirmation(
 
     switch (payload.method) {
         // Users don't need to approve permissions that have already been granted.
+
+        case "eth_sendTransaction":
+            return !hasPermissions(app, {
+                [PermissionNames.SESSION_KEY]: { target: payload.params[0].to },
+            })
 
         case "wallet_requestPermissions":
             return !hasPermissions(app, payload.params[0])
@@ -55,7 +60,7 @@ export function checkIfRequestRequiresConfirmation(
             // 2. No session key exists for this contract
             return (
                 !hasPermissions(app, {
-                    happy_sessionKey: {
+                    [PermissionNames.SESSION_KEY]: {
                         target: targetAddress,
                     },
                 }) || !storedSessionKeys?.[user!.address]?.[targetAddress]
