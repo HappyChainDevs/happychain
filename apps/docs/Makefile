@@ -11,9 +11,10 @@ include ../../makefiles/help.mk
 dev: ## Serves the docs in watch mode
 	concurrently \
 		--restart-tries -1 \
-		--names "doc-js,doc-react,vocs" \
+		--names "doc-js,doc-react,docs-vue,vocs" \
 		'make typedoc-js.watch'\
 		'make typedoc-react.watch'\
+		'make typedoc-vue.watch'\
 		'make typedoc-txm.watch'\
 		'make vocs.watch';
 .PHONY: dev
@@ -45,27 +46,28 @@ vocs.watch:
 
 # generate all markdown API reference
 typedoc: ## Generates the markdown files from package source code
-	concurrently --names "js,react,txm"\
+	concurrently --names "js,react,vue,txm"\
 		'make typedoc-js'\
 		'make typedoc-react'\
+		'make typedoc-vue'\
 		'make typedoc-txm';
 .PHONY: typedoc
 
 typedoc.clean:
-	rm -rf src/pages/sdk/{js,react}/api
+	rm -rf src/pages/sdk/{js,react,vue}/api
 	rm -rf src/pages/txm/api
 .PHONY: typedoc
 
 # generate JS markdown API reference
 typedoc-js:
-	typedoc --options ./typedoc.vanilla.js;
+	typedoc --options ./typedoc.js.js;
 .PHONY: typedoc-js
 
 # generate JS markdown API reference in watch mode
 typedoc-js.watch:
 	typedoc\
 		--watch\
-		--options ./typedoc.vanilla.js;
+		--options ./typedoc.js.js;
 .PHONY: typedoc-js.watch
 
 # generate React markdown API reference
@@ -79,6 +81,18 @@ typedoc-react.watch:
 		--watch\
 		--options ./typedoc.react.js;
 .PHONY: typedoc-react.watch
+
+# generate Vue markdown API reference
+typedoc-vue:
+	typedoc --options ./typedoc.vue.js;
+.PHONY: typedoc-vue
+
+# generate Vue markdown API reference in watch mode
+typedoc-vue.watch:
+	typedoc\
+		--watch\
+		--options ./typedoc.vue.js;
+.PHONY: typedoc-vue.watch
 
 # generate Transaction Manager markdown API reference
 typedoc-txm:

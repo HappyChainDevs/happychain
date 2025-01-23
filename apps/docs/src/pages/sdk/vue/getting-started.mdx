@@ -1,0 +1,58 @@
+# Getting Started With Vue
+
+## Install 
+:::code-group
+
+```bash [npm]
+npm install @happy.tech/vue
+```
+
+```bash [pnpm]
+pnpm add @happy.tech/vue
+```
+
+```bash [yarn]
+yarn add @happy.tech/vue
+```
+
+```bash [bun]
+bun add @happy.tech/vue
+```
+
+:::
+
+## Setup
+
+After installing, you will need to initialize the `HappyChainPlugin`.
+
+```tsx
+import { HappyChainPlugin } from "@happy.tech/vue"
+import { createApp } from "vue"
+import App from "./App.vue"
+
+createApp(App)
+    .use(HappyChainPlugin)
+    .mount("#app")
+```
+
+## Usage
+
+### Getting the Active User with the Composition API
+
+The `useHappyChain` composable returns the current authenticated user's data as 
+[HappyUser](/sdk/js/api/type-aliases/HappyUser), or `undefined` when no user is connected.
+
+```vue twoslash
+<script setup lang="ts">
+import { useHappyChain } from '@happy.tech/vue'
+const { user } = useHappyChain()
+</script>
+
+<template>
+<div v-if="user"> 
+    <h1>{{ user.name }}</h1>
+    <h2>{{ user.address}}</h2>
+    <img :src="user.avatar" />
+</div>
+</template>
+```

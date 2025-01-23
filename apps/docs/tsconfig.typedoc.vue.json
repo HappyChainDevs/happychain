@@ -1,0 +1,7 @@
+{
+    "extends": ["../../packages/vue/tsconfig.json"],
+    "compilerOptions": {
+        "rootDir": "../../"
+    },
+    "include": ["../../packages/vue/lib", "../../packages/core/lib", "../../support/wallet-common/lib"]
+}
