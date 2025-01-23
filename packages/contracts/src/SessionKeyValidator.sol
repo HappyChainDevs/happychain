@@ -53,13 +53,17 @@ contract SessionKeyValidator is IValidator, OwnableUpgradeable, UUPSUpgradeable 
         delete initialized[msg.sender];
     }
 
-    function addSessionKeys(address[] calldata targetContract, address[] calldata sessionKey) external payable {
+    function addSessionKey(address targetContract, address sessionKey) external {
+        _addSessionKey(msg.sender, targetContract, sessionKey);
+    }
+
+    function addSessionKeys(address[] calldata targetContract, address[] calldata sessionKey) external {
         for (uint256 i = 0; i < targetContract.length; i++) {
             _addSessionKey(msg.sender, targetContract[i], sessionKey[i]);
         }
     }
 
-    function removeSessionKeys(address[] calldata targetContract) external payable {
+    function removeSessionKeys(address[] calldata targetContract) external {
         for (uint256 i = 0; i < targetContract.length; i++) {
             _removeSessionKey(msg.sender, targetContract[i]);
         }

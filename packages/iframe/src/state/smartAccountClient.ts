@@ -39,8 +39,7 @@ export const smartAccountClientAtom: Atom<Promise<ExtendedSmartAccountClient | u
         },
     })
 
-    const smartAccountClientWithExtensions = basicSmartAccountClient.extend(erc7579Actions())
-    return smartAccountClientWithExtensions as ExtendedSmartAccountClient
+    return basicSmartAccountClient.extend(erc7579Actions())
 })
 
 export const { getValue: getSmartAccountClient } = accessorsFromAtom(smartAccountClientAtom)
