@@ -28,10 +28,10 @@ const DialogConfirmLogOut = ({ handleDisconnect }: DialogConfirmLogOutProps) => 
                 <Dialog.Content className="text-center bg-base-100 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
                     <div className="my-auto grid gap-2">
                         <Dialog.Title className="font-bold text-base-content">
-                            Are you sure you want to log out ?
+                            Are you sure you want to logout ?
                         </Dialog.Title>
                         <Dialog.Description className="text-content text-center text-xs">
-                            You will have to log-in again to continue using this app.
+                            You will have to login again to continue using this app.
                         </Dialog.Description>
                     </div>
                     <div className="mt-auto py-4 grid gap-2">

@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router"
 import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
 import { recipeContent, recipePositioner } from "#src/components/primitives/popover/variants"
-import { dialogSignOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "./state"
+import { dialogLogOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "./state"
 
 const TriggerSecondaryActionsMenu = () => {
     const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
@@ -25,23 +25,23 @@ const TriggerSecondaryActionsMenu = () => {
 
 enum MenuActions {
     Permissions = "permissions",
-    Disconnect = "disconnect",
+    LogOut = "logout",
 }
 
 const SecondaryActionsMenu = () => {
     const [isSecondaryMenuVisible, setSecondaryMenuVisibility] = useAtom(secondaryMenuVisibilityAtom)
-    const [, setDialogSignOutConfirmationVisibility] = useAtom(dialogSignOutConfirmationVisibilityAtom)
+    const [, setDialogLogOutConfirmationVisibility] = useAtom(dialogLogOutConfirmationVisibilityAtom)
 
     return (
         <Menu.Root
             open={isSecondaryMenuVisible}
             onInteractOutside={() => {
-                setDialogSignOutConfirmationVisibility(false)
+                setDialogLogOutConfirmationVisibility(false)
             }}
             onSelect={(details: { value: string }) => {
                 switch (details.value) {
-                    case MenuActions.Disconnect:
-                        setDialogSignOutConfirmationVisibility(true)
+                    case MenuActions.LogOut:
+                        setDialogLogOutConfirmationVisibility(true)
                         break
                     default:
                         setSecondaryMenuVisibility(false)
@@ -68,7 +68,7 @@ const SecondaryActionsMenu = () => {
                             // Item: spacing, size
                             "[&_[data-part=item]]:min-h-10 [&_[data-part=item]]:p-2 [&_[data-part=item]]:gap-2",
                             // Item: cursor interactivity
-                            "[&_[data-part=item]]:not([data-disabled])]:cursor-pointer &_[data-part=item][data-disabled]]:cursor-not-allowed",
+                            "[&_[data-part=item]:not([data-disabled])]:cursor-pointer [&_[data-part=item][data-disabled]]:cursor-not-allowed",
                             // Item (highlighted)
                             "[&_[data-part=item][data-highlighted]]:bg-base-200",
                         ],
@@ -86,7 +86,7 @@ const SecondaryActionsMenu = () => {
                                 <CaretRight size="1em" />
                             </Link>
                         </Menu.Item>
-                        <Menu.Item value={MenuActions.Disconnect}>Disconnect</Menu.Item>
+                        <Menu.Item value={MenuActions.LogOut}>Logout</Menu.Item>
                     </div>
                 </Menu.Content>
             </div>

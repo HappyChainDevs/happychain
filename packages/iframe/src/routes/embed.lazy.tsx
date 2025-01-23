@@ -7,7 +7,7 @@ import { signalClosed, signalOpen } from "#src/utils/walletState.ts"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
-import { DialogConfirmSignOut } from "../components/interface/menu-secondary-actions/DialogConfirmSignOut"
+import { DialogConfirmLogOut } from "../components/interface/menu-secondary-actions/DialogConfirmLogOut"
 import {
     SecondaryActionsMenu,
     TriggerSecondaryActionsMenu,
@@ -80,7 +80,7 @@ function Embed() {
                             {!location.pathname.includes("permissions") && (
                                 <>
                                     <SecondaryActionsMenu />
-                                    <DialogConfirmSignOut handleDisconnect={logout} />
+                                    <DialogConfirmLogOut handleDisconnect={logout} />
                                 </>
                             )}
                         </div>
