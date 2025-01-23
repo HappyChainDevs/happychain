@@ -11,6 +11,9 @@ export class CustomGasEstimator extends DefaultGasLimitEstimator {
         transactionManager: TransactionManager,
         transaction: Transaction,
     ): Promise<Result<bigint, EstimateGasErrorCause>> {
+        // These values are based on benchmarks from Anvil.
+        // An extra margin is added to prevent errors in the randomness service due to minor contract changes.
+
         if (transaction.functionName === "postCommitment") {
             return ok(75000n)
         }

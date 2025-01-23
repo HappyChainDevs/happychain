@@ -1,14 +1,31 @@
-ANVIL_RPC_URL="http://127.0.0.1:8545"
+#!/bin/bash
+
+# -----------------------------------------------------------------------------
+# This script automates the setup and deployment of the Randomness Service on a local host environment.
+# It performs the following tasks:
+# 1. Verifies that all required tools are installed.
+# 2. Cleans up any existing Anvil process and randomness service processes.
+# 3. Starts the Anvil local blockchain with specified configurations.
+# 4. Retrieves the genesis block timestamp and updates the  HAPPY_GENESIS_ENV_VAR environment variable.
+# 5. Deploys necessary smart contracts and fetches the latest Drand round to set the DRAND_ROUND_ENV_VAR  environment variable.
+# 6. Prepares and migrates SQLite databases for transaction management and randomness.
+# 7. Builds and starts the Randomness Service
+# -----------------------------------------------------------------------------
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+
+ANVIL_RPC_PORT=8545
+ANVIL_RPC_URL="http://127.0.0.1:$ANVIL_RPC_PORT"
 BLOCK_TIME=2
 HAPPY_GENESIS_ENV_VAR="HAPPY_GENESIS_TIMESTAMP_SECONDS"
 DRAND_ROUND_ENV_VAR="EVM_DRAND_START_ROUND"
 DRAND_URL="https://api.drand.sh/v2/beacons/evmnet/rounds/latest"
-RANDOMNESS_DB_PATH="$(pwd)/randomness.sqlite"
-TXM_DB_PATH="$(pwd)/transaction-manager.sqlite"
+RANDOMNESS_DB_PATH="$SCRIPT_DIR/randomness.sqlite"
+TXM_DB_PATH="$SCRIPT_DIR/transaction-manager.sqlite"
 PM2_PROCESS_NAME="randomness-service"
+REQUIRED_TOOLS=("anvil" "curl" "jq" "sqlite3" "sed" "make" "nc" "cast" "pgrep" "pkill" "grep" "awk")
 
-
-mkdir -p logs
 
 # Function to add or update a variable in a .env file
 set_env_var() {
@@ -94,27 +111,67 @@ empty_sqlite_db() {
     fi
 }
 
-pkill anvil
-RANDOMNESS_PID=$(cat logs/randomness_service.pid)
+check_tools() {
+    local missing_tools=()
 
-if [[ -n "$RANDOMNESS_PID" ]]; then
-    kill "$RANDOMNESS_PID"
+    for tool in "${REQUIRED_TOOLS[@]}"; do
+        if ! command -v "$tool" > /dev/null 2>&1; then
+            missing_tools+=("$tool")
+        fi
+    done
+
+    if [ ${#missing_tools[@]} -ne 0 ]; then
+        echo "Error: The following tools are not installed:"
+        for tool in "${missing_tools[@]}"; do
+            echo "  - $tool"
+        done
+        echo "Please install the missing tools and re-run the script."
+        exit 1
+    fi
+}
+
+
+
+check_tools
+
+mkdir -p "$SCRIPT_DIR/logs"
+
+if pgrep anvil > /dev/null; then
+    pkill anvil
+fi
+
+if [[ -f "$SCRIPT_DIR/logs/randomness_service.pid" ]]; then
+    RANDOMNESS_PID=$(cat logs/randomness_service.pid)
+    if [[ -n "$RANDOMNESS_PID" ]] && kill -0 "$RANDOMNESS_PID" 2>/dev/null; then
+        kill "$RANDOMNESS_PID"
+        echo "Randomness service with PID $RANDOMNESS_PID has been stopped."
+    else
+        echo "No running process found for PID $RANDOMNESS_PID."
+    fi
+else
+    echo "PID file does not exist. No process to stop."
 fi
 
 rm -rf logs
 mkdir logs
 
-if ! nc -z localhost 8545; then
-        echo "Starting Anvil..."
-        anvil --block-time $BLOCK_TIME > logs/anvil.log 2>&1 &
-        ANVIL_PID=$!
-        while ! nc -z localhost 8545; do
-            sleep 1
-        done
-        echo "Anvil started with PID $ANVIL_PID."
-else
-        echo "Anvil is already running."
-fi
+echo "Starting Anvil..."
+anvil --block-time $BLOCK_TIME --port $ANVIL_RPC_PORT > "$SCRIPT_DIR/logs/anvil.log" 2>&1 &
+ANVIL_PID=$!
+
+# Limit the number of connection attempts to 5
+attempts=0
+max_attempts=5
+
+while ! nc -z localhost $ANVIL_RPC_PORT; do
+    if [[ $attempts -ge $max_attempts ]]; then
+        echo "Failed to connect to Anvil after $max_attempts attempts. Exiting."
+        exit 1
+    fi
+    sleep 1
+    attempts=$((attempts + 1))
+done
+    echo "Anvil started with PID $ANVIL_PID."
 
 genesis_block=$(cast block 0 --rpc-url $ANVIL_RPC_URL)
 
@@ -133,11 +190,10 @@ fi
 echo "Genesis timestamp: $genesis_timestamp"
 
 echo "Setting environment variable $HAPPY_GENESIS_ENV_VAR to $genesis_timestamp"
-set_env_var ../contracts/.env $HAPPY_GENESIS_ENV_VAR $genesis_timestamp true
 set_env_var .env $HAPPY_GENESIS_ENV_VAR $genesis_timestamp false
 
 echo "Deploying contracts..."
-make -C ../contracts deploy-random > logs/deploy-random.log 2>&1
+make -C $SCRIPT_DIR/../contracts deploy-random > $SCRIPT_DIR/logs/deploy-random.log 2>&1
 
 echo "Contracts deployed"
 
@@ -150,28 +206,28 @@ echo "Drand round: $round"
 echo "Setting environment variable $DRAND_ROUND_ENV_VAR to $round"
 set_env_var .env $DRAND_ROUND_ENV_VAR $round false
 
-make -C ../transaction-manager build
+make -C $SCRIPT_DIR/../transaction-manager build
 
 empty_sqlite_db $TXM_DB_PATH
 echo $TXM_DB_PATH
 export TXM_DB_PATH=$TXM_DB_PATH
-make -C ../transaction-manager migrate
+make -C $SCRIPT_DIR/../transaction-manager migrate
 
 echo "Transaction manager migrated"
 
-make build
+make -C $SCRIPT_DIR build
 
 empty_sqlite_db $RANDOMNESS_DB_PATH
 echo $RANDOMNESS_DB_PATH
 export RANDOMNESS_DB_PATH=$RANDOMNESS_DB_PATH
-make migrate
+make -C $SCRIPT_DIR migrate
 
 echo "Randomness service migrated"
 
 echo "Starting randomness service..."
-make start > logs/randomness-service.log 2>&1 &
+make -C $SCRIPT_DIR start > $SCRIPT_DIR/logs/randomness-service.log 2>&1 &
 
 RANDOMNESS_SERVICE_PID=$!
-echo "$RANDOMNESS_SERVICE_PID" > logs/randomness_service.pid
+echo "$RANDOMNESS_SERVICE_PID" > $SCRIPT_DIR/logs/randomness_service.pid
 
 echo "Randomness service started"
