@@ -1,4 +1,5 @@
 import { HappyMethodNames } from "@happychain/common"
+import { PermissionNames } from "@happychain/common"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -9,15 +10,15 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import { type Client, type Hash, type Hex, InvalidAddressError, hexToBigInt, isAddress } from "viem"
+import { type Client, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import {
     checkIsSessionKeyModuleInstalled,
     installSessionKeyModule,
     registerSessionKey,
 } from "#src/requests/session-keys/helpers"
+import { sendUserOp } from "#src/requests/userOps"
 import { StorageKey, storage } from "#src/services/storage"
-import { addPendingUserOp } from "#src/services/userOpsHistory"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
@@ -50,39 +51,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     switch (request.payload.method) {
         case "eth_sendTransaction": {
             if (!user) return false
-
-            // TODO This try statement should go away, it's only here to surface errors
-            //      that occured in the old convertToUserOp call and were being swallowed.
-            //      We need to make sure all errors are correctly surfaced!
-            try {
-                const smartAccountClient = (await getSmartAccountClient())!
-                const tx = request.payload.params[0]
-                const preparedUserOp = await smartAccountClient.prepareUserOperation({
-                    account: smartAccountClient.account,
-                    calls: [
-                        {
-                            to: tx.to,
-                            data: tx.data,
-                            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                        },
-                    ],
-                })
-
-                // need to manually call signUserOp here since the permissionless.js and Web3Auth combination
-                // doesn't support automatic signing
-                const userOpSignature = await smartAccountClient.account.signUserOperation(preparedUserOp)
-                const userOpWithSig = { ...preparedUserOp, signature: userOpSignature }
-                const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
-
-                addPendingUserOp(user.address, {
-                    userOpHash: userOpHash as Hash,
-                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                })
-                return userOpHash
-            } catch (error) {
-                console.error("Sending UserOp errored", error)
-                throw error
-            }
+            return await sendUserOp(
+                user,
+                request.payload.params[0],
+                // biome-ignore lint/suspicious/noExplicitAny: TODO
+                async (userOp, smartAccountClient) => await smartAccountClient.account.signUserOperation(userOp as any),
+            )
         }
 
         case "eth_requestAccounts": {
@@ -177,7 +151,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             }
 
             grantPermissions(app, {
-                happy_sessionKey: {
+                [PermissionNames.SESSION_KEY]: {
                     target: targetContract,
                 },
             })
