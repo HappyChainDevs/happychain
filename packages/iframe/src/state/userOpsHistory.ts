@@ -13,7 +13,7 @@ export type PendingUserOpDetails = {
 }
 
 export type UserOpInfo = {
-    receipt: UserOperationReceipt
+    userOpReceipt: UserOperationReceipt
     value: bigint
 }
 
