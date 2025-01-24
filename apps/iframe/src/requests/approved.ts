@@ -17,7 +17,7 @@ import {
     checkIsSessionKeyModuleInstalled,
     installSessionKeyModule,
     registerSessionKey,
-} from "#src/requests/session-keys/helpers"
+} from "#src/requests/modules/session-keys/helpers"
 import { sendUserOp } from "#src/requests/userOps"
 import { StorageKey, storage } from "#src/services/storage"
 import { getChains, setChains } from "#src/state/chains"
