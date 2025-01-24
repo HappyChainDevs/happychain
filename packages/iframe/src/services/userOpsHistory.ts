@@ -17,7 +17,9 @@ const store = getDefaultStore()
 export function addConfirmedUserOp(address: Address, userOpInfo: UserOpInfo) {
     store.set(confirmedUserOpsAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
-        const isReceiptAlreadyLogged = userHistory.some((op) => op.receipt.userOpHash === userOpInfo.receipt.userOpHash)
+        const isReceiptAlreadyLogged = userHistory.some(
+            (op) => op.userOpReceipt.userOpHash === userOpInfo.userOpReceipt.userOpHash,
+        )
 
         if (isReceiptAlreadyLogged) {
             console.warn("UserOperation already confirmed — this should never happen")
@@ -55,7 +57,7 @@ export function flagUserOpAsFailed(address: Address, payload: PendingUserOpDetai
         return {
             ...existingEntries,
             [address]: pendingUserOps.map((op) =>
-                op.userOpHash === payload.userOpHash ? { ...op, status: "failed" as const } : op,
+                op.userOpHash === payload.userOpHash ? { ...op, status: "failed" } satisfies PendingUserOpDetails : op,
             ),
         }
     })
@@ -96,7 +98,7 @@ async function monitorPendingUserOp(address: Address, payload: PendingUserOpDeta
         if (receipt) {
             removePendingUserOp(address, payload)
             addConfirmedUserOp(address, {
-                receipt,
+                userOpReceipt: receipt,
                 value: payload.value,
             })
             // Refetch balances for associated assets

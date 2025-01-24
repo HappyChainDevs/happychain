@@ -24,11 +24,11 @@ const ActivityView = () => {
 
     return (
         <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 bg-base-200 rounded-lg space-y-1">
-            {txs.pendingOps.map((tx) => (
-                <TxLoadingSkeleton key={`tx_pending_${tx.userOpHash}`} tx={tx.userOpHash} />
+            {txs.pendingOps.map((pendingOp) => (
+                <TxLoadingSkeleton key={`tx_pending_${pendingOp.userOpHash}`} tx={pendingOp.userOpHash} />
             ))}
-            {txs.confirmedOps.map((tx) => (
-                <TxLogEntry key={`tx_history_${tx.receipt.receipt.transactionHash}`} tx={tx} />
+            {txs.confirmedOps.map((confirmedOp) => (
+                <TxLogEntry key={`tx_history_${confirmedOp.userOpReceipt.receipt.transactionHash}`} tx={confirmedOp} />
             ))}
         </div>
     )

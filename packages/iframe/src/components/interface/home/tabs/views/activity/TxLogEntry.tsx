@@ -1,5 +1,4 @@
-import { shortenAddress } from "@happychain/sdk-shared"
-import { ArrowUpRight } from "@phosphor-icons/react"
+import { PaperPlaneRight } from "@phosphor-icons/react"
 import { formatEther } from "viem"
 
 import { cx } from "class-variance-authority"
@@ -14,35 +13,32 @@ interface TxLogEntryProps {
 const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
-    const { receipt, value } = tx
+    const { userOpReceipt, value: sendValue } = tx
 
-    const sentTxValue = `-${formatEther(value)} HAPPY`
+    const sentTxValue = `-${formatEther(sendValue)} HAPPY`
 
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-primary-content bg-base-200">
             <div className="flex flex-row items-center justify-center gap-x-2">
-                <ArrowUpRight
-                    className={`${cx({
-                        "bg-success": receipt.success,
-                        "bg-error": !receipt.success,
-                    })} rounded-sm`}
-                />
+                <div className={cx("p-2 rounded-full", userOpReceipt.success ? "bg-success/60" : "bg-error/60")}>
+                    <PaperPlaneRight className="size-4" />
+                </div>
                 <div className="flex flex-col items-start justify-center">
-                    <span>Send</span>
+                    <p className="font-light">Sent</p>
                     <span>
                         <a
-                            href={`${blockExplorerUrl}/tx/${receipt.receipt.transactionHash}`}
+                            href={`${blockExplorerUrl}/tx/${userOpReceipt.receipt.transactionHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-500 hover:text-purple-500 hover:underline"
+                            className="text-[12px] text-primary hover:text-primary/60 hover:underline px-2 py-1 bg-primary/20 rounded-lg"
                         >
-                            {shortenAddress(receipt.receipt.transactionHash)}
+                            View on Explorer
                         </a>
                     </span>
                 </div>
             </div>
 
-            <span className="font-semibold">{sentTxValue}</span>
+            <span className="font-light">{sentTxValue}</span>
         </div>
     )
 }
