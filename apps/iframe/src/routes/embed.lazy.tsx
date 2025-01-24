@@ -1,9 +1,13 @@
 import { WalletDisplayAction } from "@happy.tech/wallet-common"
 import { Msgs } from "@happy.tech/wallet-common"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
-import { useAtomValue } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
-import { signalClosed, signalOpen } from "#src/utils/walletState.ts"
+import {
+    dialogLogOutConfirmationVisibilityAtom,
+    secondaryMenuVisibilityAtom,
+} from "#src/components/interface/menu-secondary-actions/state"
+import { signalClosed, signalOpen } from "#src/utils/walletState"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
@@ -25,6 +29,8 @@ function Embed() {
     const user = useAtomValue(userAtom)
     const activeProvider = useActiveConnectionProvider()
     const navigate = useNavigate()
+    const [, setSecondaryMenuVisibility] = useAtom(secondaryMenuVisibilityAtom)
+    const [, setDialogLogoutVisibility] = useAtom(dialogLogOutConfirmationVisibilityAtom)
 
     useEffect(() => {
         const unsubscribe = appMessageBus.on(Msgs.RequestWalletDisplay, async (screen) => {
@@ -42,6 +48,8 @@ function Embed() {
                     break
                 case WalletDisplayAction.Closed:
                     signalClosed()
+                    setSecondaryMenuVisibility(false)
+                    setDialogLogoutVisibility(false)
                     break
             }
         })
@@ -50,9 +58,11 @@ function Embed() {
         // calls will be silently lost
         void appMessageBus.emit(Msgs.IframeInit, true)
         return unsubscribe
-    }, [navigate])
+    }, [navigate, setSecondaryMenuVisibility, setDialogLogoutVisibility])
 
     async function logout() {
+        setSecondaryMenuVisibility(false)
+        setDialogLogoutVisibility(false)
         void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
         await activeProvider?.disconnect()
     }
