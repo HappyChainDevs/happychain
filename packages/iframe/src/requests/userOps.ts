@@ -47,7 +47,7 @@ async function getCustomNonce(smartAccountAddress: Address, validatorAddress: Ad
 
     // under the hood, useAccountNonce performs an `eth_call` request
     // so we need to pass the publicClient and not the smartAccountClient
-    // since it uses the alto bundler and that doesn't support `eth_call`
+    // since it uses the alto bundler and that doesn't support the same
     return await getAccountNonce(getPublicClient(), {
         address: smartAccountAddress,
         entryPointAddress: contractAddresses.EntryPointV7,
@@ -72,15 +72,13 @@ export async function sendUserOp(user: HappyUser, tx: RpcTransactionRequest, sig
 
     const signature = await signer(preparedUserOp, smartAccountClient)
 
-    if (signature) {
-        const userOpWithSig = { ...preparedUserOp, signature }
-        const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
+    const userOpWithSig = { ...preparedUserOp, signature }
+    const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
 
-        void addPendingUserOp(user.address, {
-            userOpHash: userOpHash as Hash,
-            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-        })
+    void addPendingUserOp(user.address, {
+        userOpHash: userOpHash as Hash,
+        value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+    })
 
-        return userOpHash
-    }
+    return userOpHash
 }
