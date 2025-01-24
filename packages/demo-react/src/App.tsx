@@ -304,6 +304,20 @@ function App() {
                         Load ABI
                     </button>
                 </div>
+
+                <div className="flex flex-row w-full items-center justify-center space-x-6">
+                    <button
+                        type="button"
+                        onClick={addSessionKeyToCounterContract}
+                        className="rounded-lg bg-sky-300 p-2 shadow-xl"
+                    >
+                        Add Session Key
+                    </button>
+
+                    <button type="button" onClick={incrementCounter} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+                        Counter ++
+                    </button>
+                </div>
             </div>
         </main>
     )
