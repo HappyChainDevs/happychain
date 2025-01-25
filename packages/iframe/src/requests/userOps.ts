@@ -22,7 +22,6 @@ export type UserOpSigner = (
     smartAccountClient: ExtendedSmartAccountClient,
 ) => Promise<Hex>
 
-// TODO move to sdk-shared
 export enum VALIDATOR_MODE {
     DEFAULT = "0x00",
     ENABLE = "0x01",
@@ -38,20 +37,25 @@ export enum VALIDATOR_TYPE {
  * Returns the nonce from the EntryPoint-v7 contract for the smart account.
  */
 async function getCustomNonce(smartAccountAddress: Address, validatorAddress: Address) {
-    const encoding = pad(
-        concatHex([VALIDATOR_MODE.DEFAULT, VALIDATOR_TYPE.VALIDATOR, validatorAddress, toHex(0n, { size: 2 })]),
-        { size: 24 },
-    )
-
-    const nonceKeyWithEncoding = BigInt(encoding)
-
-    // under the hood, useAccountNonce performs an `eth_call` request
-    // so we need to pass the publicClient and not the smartAccountClient
-    // since it uses the alto bundler and that doesn't support the same
     return await getAccountNonce(getPublicClient(), {
         address: smartAccountAddress,
         entryPointAddress: contractAddresses.EntryPointV7,
-        key: nonceKeyWithEncoding,
+        key: BigInt(
+            pad(
+                concatHex([
+                    VALIDATOR_MODE.DEFAULT,
+                    VALIDATOR_TYPE.VALIDATOR,
+                    validatorAddress,
+                    toHex(
+                        0n, // Internal key to the Kernel smart account (unused for the root validator module)
+                        { size: 2 },
+                    ),
+                ]),
+                {
+                    size: 24,
+                },
+            ),
+        ),
     })
 }
 
