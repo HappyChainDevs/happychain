@@ -1,6 +1,6 @@
 import { abis as CounterAbi, deployment as CounterAddress } from "@happychain/contracts/happyCounter/sepolia"
 import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
-import { happyChainSepolia, happyProvider, useHappyChain } from "@happychain/react"
+import { happyChainSepolia, useHappyChain } from "@happychain/react"
 import { useEffect, useMemo, useState } from "react"
 import { createPublicClient, createWalletClient, custom } from "viem"
 import { gnosis } from "viem/chains"
@@ -10,7 +10,7 @@ function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { provider, user, connect, disconnect, showSendScreen, loadAbi } = useHappyChain()
+    const { provider, user, connect, disconnect, showSendScreen, loadAbi, addSessionKey } = useHappyChain()
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider!) }), [provider])
     const walletClient = useMemo(
@@ -111,14 +111,8 @@ function App() {
     }
 
     async function addSessionKeyToCounterContract() {
-        try {
-            await happyProvider.request({
-                method: "happy_requestSessionKey",
-                params: [CounterAddress.HappyCounter],
-            })
-        } catch (error) {
-            console.log(error)
-        }
+        await addSessionKey(CounterAddress.HappyCounter)
+        console.log("Session Ley Added!")
     }
 
     async function incrementCounter() {
@@ -126,8 +120,8 @@ function App() {
             if (!walletClient || !user?.address) return
 
             const [account] = await walletClient.getAddresses()
-            // cf: https://viem.sh/docs/contract/writeContract.html#usage
-            const { request } = await publicClient.simulateContract({
+
+            const hash = await walletClient.writeContract({
                 account,
                 address: CounterAddress.HappyCounter,
                 abi: CounterAbi.HappyCounter,
@@ -135,15 +129,10 @@ function App() {
                 chain: happyChainSepolia,
             })
 
-            // succeeds - we get a UserOp hash
-            const hash = await walletClient.writeContract(request)
-            console.log({ hash })
-
             const receipt = await publicClient.waitForTransactionReceipt({ hash })
-            console.log({ receipt })
 
             if (receipt.status === "reverted") {
-                console.log("[count --] transaction reverted", receipt)
+                console.log("[count ==] transaction reverted", receipt)
                 return
             }
 
@@ -262,7 +251,7 @@ function App() {
                     <button
                         type="button"
                         onClick={addConflictedChain}
-                        className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap"
+                        className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap truncate"
                     >
                         Add "Gnosis 2"
                         <small>(creates conflict)</small>
@@ -305,7 +294,8 @@ function App() {
                     </button>
                 </div>
 
-                <div className="flex flex-row w-full items-center justify-center space-x-6">
+                <div className="grid grid-cols-2 gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
+                    <div className="text-lg font-bold col-span-2">Session Keys Functionality</div>
                     <button
                         type="button"
                         onClick={addSessionKeyToCounterContract}
