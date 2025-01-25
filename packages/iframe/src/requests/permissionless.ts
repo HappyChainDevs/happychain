@@ -46,7 +46,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "eth_sendTransaction": {
             const user = getUser()
-            if (!user) return false // TODO is this ok?
+            if (!user) throw new EIP1193UnauthorizedError()
             const tx = request.payload.params[0]
             const target = request.payload.params[0].to
             if (!tx || !target) return false
@@ -56,8 +56,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             })
             if (permissions.length === 0) throw new EIP1193UnauthorizedError()
 
-            const storedSessionKeys = storage.get(StorageKey.SessionKeys) as SessionKeysByHappyUser
-            const sessionKey = storedSessionKeys?.[user.address][target]
+            const sessionKey = storage.get(StorageKey.SessionKeys)?.[user.address]?.[target]
             if (!sessionKey) throw new EIP1193UnauthorizedError()
 
             return await sendUserOp(user, tx, async (userOp, smartAccountClient) => {

@@ -4,6 +4,7 @@ import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
     type EIP1193RequestResult,
+    EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     type Msgs,
     type PopupMsgs,
@@ -50,7 +51,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
-            if (!user) return false
+            if (!user) throw new EIP1193UnauthorizedError()
             return await sendUserOp(
                 user,
                 request.payload.params[0],
