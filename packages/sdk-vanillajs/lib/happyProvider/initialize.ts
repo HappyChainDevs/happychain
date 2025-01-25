@@ -119,7 +119,7 @@ export const disconnect = async (): Promise<void> => {
  */
 export const loadAbi = async (contractAddress: Address, abi: Abi): Promise<void> => {
     const _provider = getInitializedProvider()
-    if (!_provider) return
+    if (!_provider) return undefined
 
     await _provider.request({
         method: HappyMethodNames.USE_ABI,
@@ -127,6 +127,16 @@ export const loadAbi = async (contractAddress: Address, abi: Abi): Promise<void>
             address: contractAddress,
             abi: abi,
         },
+    })
+}
+
+export const addSessionKey = async (contractAddress: Address): Promise<void> => {
+    const _provider = getInitializedProvider()
+    if (!_provider) return
+
+    await _provider.request({
+        method: HappyMethodNames.REQUEST_SESSION_KEY,
+        params: [contractAddress],
     })
 }
 

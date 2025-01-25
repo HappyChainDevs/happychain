@@ -24,6 +24,7 @@ export {
     showSendScreen,
     openWallet,
     loadAbi,
+    addSessionKey,
 } from "./happyProvider/initialize"
 
 export type {
