@@ -1,5 +1,14 @@
 import type { HappyUser } from "@happychain/js"
-import { connect, disconnect, happyProvider, loadAbi, onUserUpdate, register, showSendScreen } from "@happychain/js"
+import {
+    addSessionKey,
+    connect,
+    disconnect,
+    happyProvider,
+    loadAbi,
+    onUserUpdate,
+    register,
+    showSendScreen,
+} from "@happychain/js"
 import { createContext, useContext, useEffect, useState } from "react"
 
 type HappyWalletProviderProps = React.PropsWithChildren & {
@@ -44,5 +53,6 @@ export function useHappyChain() {
         user,
         showSendScreen,
         loadAbi,
+        addSessionKey,
     }
 }

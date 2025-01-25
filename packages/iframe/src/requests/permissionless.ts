@@ -38,7 +38,6 @@ export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.Re
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
-
     switch (request.payload.method) {
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
