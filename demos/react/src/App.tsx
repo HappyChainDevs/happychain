@@ -2,6 +2,7 @@ import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
 import { happyChainSepolia } from "@happy.tech/core"
 import { ConnectButton, useHappyChain } from "@happy.tech/react"
 import { useEffect, useMemo, useState } from "react"
+import { toast } from "sonner"
 import { createPublicClient, createWalletClient, custom } from "viem"
 import { gnosis } from "viem/chains"
 
@@ -54,6 +55,7 @@ function App() {
     async function addConflictedChain() {
         await walletClient?.addChain({ chain: { ...gnosis, name: "Gnosis 2" } })
         console.error("successfully added conflicting chain")
+        toast.error("(!!) Added conflicting chain (!!)")
     }
 
     async function switchChain(chainId: string | number) {
@@ -73,14 +75,15 @@ function App() {
 
         if (watchAssetCall) {
             console.log("[addNewToken]: (••) asset being watched (••)")
+            toast.success("(••) Asset added succesfully to watchlist! (••)")
         } else {
             console.log("[addNewToken]: Error adding asset ")
         }
     }
 
     async function loadAbiStub() {
-        await loadAbi(deployment.HappyCounter, abis.HappyCounter)
-        console.log("ABI loaded!")
+        await loadAbi(CounterAddress.HappyCounter, CounterAbi.HappyCounter)
+        toast.success(`ABI loaded for ${CounterAddress.HappyCounter}`)
     }
 
     /** mints 1 MTA token to the connected account */
@@ -100,17 +103,23 @@ function App() {
 
             if (writeCall) {
                 console.log("[mintTokens] success:", writeCall)
+                toast.success(`Tokens minted successfully! Tx hash: ${writeCall}`)
             } else {
                 console.log("[mintTokens] failed; please try again!")
+                toast.error("Something went wrong, please try again!")
             }
         } catch (error) {
             console.log("[mintTokens] error caught:", error)
+            toast.error("Something went wrong, please try again!")
         }
     }
 
     async function addSessionKeyToCounterContract() {
-        await requestSessionKey(deployment.HappyCounter)
-        console.log("Session key added!")
+        await addSessionKey(CounterAddress.HappyCounter)
+        toast.success(
+            `Session Key recorded succeffuly for ${CounterAddress.HappyCounter}. Try sending a transaction to the counter with the button below!`,
+        )
+        console.log("Session Key Added!")
     }
 
     async function incrementCounter() {
@@ -128,7 +137,6 @@ function App() {
             })
 
             const receipt = await publicClient.waitForTransactionReceipt({ hash })
-
             if (receipt.status === "reverted") {
                 console.log("[count ==] transaction reverted", receipt)
                 return
@@ -139,6 +147,8 @@ function App() {
                 abi: abis.HappyCounter,
                 functionName: "getCount",
             })
+
+            toast.success(`Current incremented to: ${count} :)`)
 
             console.log("[count ++]", count)
         } catch (error) {
