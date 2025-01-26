@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {MockERC20Token} from "../../mocks/MockERC20.sol";
-import {BaseDeployScript} from "../BaseDeployScript.sol";
+import {MockERC20Token} from "../mocks/MockERC20.sol";
+import {BaseDeployScript} from "./BaseDeployScript.sol";
 
 /**
  * @dev Deploys mock contracts for testing purposes.
