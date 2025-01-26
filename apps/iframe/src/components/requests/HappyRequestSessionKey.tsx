@@ -7,6 +7,9 @@ import { currentChainAtom } from "#src/state/chains"
 import { publicClientAtom } from "#src/state/publicClient"
 import { getAppURL } from "#src/utils/appURL.js"
 import { Button } from "../primitives/button/Button"
+import { recipeDisclosureContent } from "../primitives/disclosure/variants"
+import { recipeDisclosureDetails } from "../primitives/disclosure/variants"
+import { recipeDisclosureSummary } from "../primitives/disclosure/variants"
 import RequestContent from "./common/RequestContent"
 import RequestLayout from "./common/RequestLayout"
 import type { RequestConfirmationProps } from "./props"
@@ -24,7 +27,7 @@ export function HappyRequestSessionKey({
 
     const appURL = getAppURL()
 
-    const [_bytecode, setBytecode] = useState<Hex | undefined>(undefined)
+    const [bytecode, setBytecode] = useState<Hex | undefined>(undefined)
 
     useEffect(() => {
         const fetchBytecode = async () => {
@@ -53,19 +56,39 @@ export function HappyRequestSessionKey({
                                 rel="noopener noreferrer"
                                 className="text-primary border-b border-dashed hover:bg-primary/40"
                             >
-                                {shortenAddress(targetAddress)}
+                                {targetAddress}
                             </a>
                             .
                         </span>
                         <span className="text-sm text-neutral-content/70">
                             <p>You can revoke this permission at any time.</p>
                         </span>
-                        <span className="text-sm text-error/70 p-2 rounded-lg bg-error/30 mt-4 w-full">
-                            <p className="mb-1">
+
+                        <details className={recipeDisclosureDetails({ intent: "neutral" })} open>
+                            <summary className={recipeDisclosureSummary()}>
+                                Target Contract Details:
+                                <CaretDown size="1.25em" />
+                            </summary>
+                            <div
+                                className={cx(
+                                    ["flex flex-col gap-y-2 size-full items-start justify-center"],
+                                    recipeDisclosureContent({ intent: "neutral" }),
+                                )}
+                            >
+                                <ul className="flex flex-col w-full justify-start items-start gap-[1ex]">
+                                    <li className="text-neutral text-[15px]">
+                                        {bytecode
+                                            ? "✅  Contract deployment data found!"
+                                            : "🚩  Contract deployment data not found, please click on the contract address above to verify its details in the block explorer."}
+                                    </li>
+                                </ul>
+                            </div>
+                        </details>
+
+                        <p className="mb-1">
                                 This could result in loss of funds if the contract can access your assets.
                             </p>
                             <p>Only proceed if you trust the application.</p>
-                        </span>
                     </div>
                     <div className="flex flex-col w-full gap-2">
                         <Button

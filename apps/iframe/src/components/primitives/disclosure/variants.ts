@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority"
 
 /** Defines the container for a `<details>` element. */
 const recipeDisclosureDetails = cva(
-    "p-0 group cursor-pointer focus-within:ring-2 rounded-lg items-center [&_svg]:open:-rotate-180 [&_svg]:transition",
+    "p-0 group cursor-pointer w-full focus-within:ring-2 rounded-lg items-center [&_svg]:open:-rotate-180 [&_svg]:transition",
     {
         variants: {
             intent: {
