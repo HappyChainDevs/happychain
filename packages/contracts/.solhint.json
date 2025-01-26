@@ -6,11 +6,16 @@
         "const-name-snakecase": "off",
         "constructor-syntax": "error",
         "func-visibility": ["error", { "ignoreConstructors": true }],
-        "max-line-length": ["error", 120],
+        "max-line-length": "off",
         "not-rely-on-time": "off",
         "no-empty-blocks": "off",
         "payable-fallback": "off",
-        "reason-string": "off",
-        "code-complexity": "off"
+        "reason-string": { "maxLength": 100 },
+        "code-complexity": "off",
+        "no-inline-assembly": "off",
+        "avoid-low-level-calls": "off",
+
+        "no-console": "off",
+        "gas-custom-errors": "off"
     }
 }
