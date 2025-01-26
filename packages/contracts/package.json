@@ -26,7 +26,7 @@
         "@types/node": "^22.0.2",
         "node-jq": "^6.0.1",
         "permissionless": "^0.2.0",
-        "solhint": "^5.0.4",
+        "solhint": "^5.0.5",
         "tsx": "^4.19.0",
         "viem": "^2.21.18"
     }
