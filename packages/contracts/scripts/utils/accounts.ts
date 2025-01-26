@@ -3,8 +3,8 @@ import { type UserOperationCall, entryPoint07Address } from "viem/account-abstra
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts"
 import { localhost } from "viem/chains"
 
-import { abis as mockAbis, deployment as mockDeployment } from "../../deployments/anvil/mockTokens/abis.ts"
-import { abis, deployment } from "../../deployments/anvil/testing/abis"
+import { abis, deployment } from "../../deployments/anvil/aa/abis"
+import { abis as mockAbis, deployment as mockDeployment } from "../../deployments/anvil/mocks/abis"
 import { account, publicClient, walletClient } from "./clients"
 
 // Amount of ETH to mint/send in userOps in the demo.

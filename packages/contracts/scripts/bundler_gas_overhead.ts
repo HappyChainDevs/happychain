@@ -2,7 +2,7 @@ import type { UserOperation, UserOperationCall, UserOperationReceipt } from "vie
 import { localhost } from "viem/chains"
 
 import type { SmartAccountClient } from "permissionless"
-import { deployment } from "../deployments/anvil/testing/abis"
+import { deployment } from "../deployments/anvil/aa/abis"
 
 import type { Hex } from "viem"
 import { createMintCall, depositPaymaster, initializeTokenBalance } from "./utils/accounts"

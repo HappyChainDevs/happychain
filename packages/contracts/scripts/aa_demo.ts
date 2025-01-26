@@ -6,8 +6,8 @@ import { localhost } from "viem/chains"
 import type { SmartAccountClient } from "permissionless"
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
 
-import { deployment as mockDeployment } from "../deployments/anvil/mockTokens/abis.ts"
-import { deployment } from "../deployments/anvil/testing/abis"
+import { deployment } from "../deployments/anvil/aa/abis"
+import { deployment as mockDeployment } from "../deployments/anvil/mocks/abis.ts"
 import {
     AMOUNT,
     createMintCall,
