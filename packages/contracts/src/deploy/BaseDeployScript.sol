@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 
 /**
@@ -58,7 +58,7 @@ abstract contract BaseDeployScript is Script {
     }
 
     /**
-     * @dev Same as {@link deployed(string,string,address)} with the contract alias set to the
+     * @dev Same as `deployed(string,string,address)` with the contract alias set to the
      * contract name.
      */
     function deployed(string memory contractName, address deployedAddress) internal {
@@ -81,6 +81,88 @@ abstract contract BaseDeployScript is Script {
      * vm.startBroadcast() and vm.stopBroadcast() are called before and after this.
      */
     function deploy() internal virtual {}
+
+    /**
+     * Returns the predicted address of a CREATE2 contract deployment using the CREATE2
+     * deterministic deployer, given the creation code, the abi-encoded constructor arguments and a
+     * salt.
+     */
+    function create2Address(bytes memory creationCode, bytes memory constructorArgs, bytes32 salt)
+        internal
+        pure
+        returns (address)
+    {
+        return address(
+            uint160(
+                uint256(
+                    keccak256(
+                        abi.encodePacked(
+                            bytes1(0xff),
+                            // CREATE2 deterministic deployer (automatically used by Foundry)
+                            address(0x4e59b44847b379578588920cA78FbF26c0B4956C),
+                            salt,
+                            keccak256(abi.encodePacked(creationCode, constructorArgs))
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    /**
+     * @dev Deploys a contract deterministically given its creation code, abi-encoded arguments and a
+     * salt. This checks if the contract is already deployed, logs but succeeds if it is. This
+     * automatically calls `deployed` with the provided contract alias and name, even
+     * if the contract was already deployed.
+     *
+     * Example: `deployDeterministic("MockTokenA", "MockERC20", type(MockTokenA).creationCode, abi.encode("MockTokenA", "MTA", 18), 0)`
+     */
+    function deployDeterministic(
+        string memory contractAlias,
+        string memory contractName,
+        bytes memory creationCode,
+        bytes memory constructorArgs,
+        bytes32 salt
+    ) internal returns (address) {
+        // Calculate address before deployment
+        address predictedAddress = create2Address(creationCode, constructorArgs, salt);
+
+        // Check if contract is already deployed
+        uint256 size;
+        assembly {
+            size := extcodesize(predictedAddress)
+        }
+        if (size > 0) {
+            console.log("Contract already deployed", contractAlias, predictedAddress);
+            deployed(contractAlias, contractName, predictedAddress);
+            return predictedAddress;
+        }
+
+        bytes memory combinedBytes = abi.encodePacked(creationCode, constructorArgs);
+        address addr;
+        assembly {
+            addr := create2(0, add(combinedBytes, 0x20), mload(combinedBytes), salt)
+        }
+        if (addr == address(0)) {
+            console.log("Deploy failed", contractAlias);
+            revert("Deploy failed");
+        }
+        deployed(contractAlias, contractName, addr);
+        return addr;
+    }
+
+    /**
+     * @dev Same as `deployDeterministic(string, string, bytes, bytes, bytes)` but
+     * with the contract alias set to the contract name.
+     */
+    function deployDeterministic(
+        string memory contractName,
+        bytes memory creationCode,
+        bytes memory constructorArgs,
+        bytes32 salt
+    ) internal returns (address) {
+        return deployDeterministic(contractName, contractName, creationCode, constructorArgs, salt);
+    }
 
     /**
      * @dev Deploys a deterministic ERC1967 proxy for an implementation contract.
