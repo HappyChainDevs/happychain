@@ -51,14 +51,12 @@ async function testRootValidator(kernelClient: SmartAccountClient) {
     }
 
     const balance = await getFormattedTokenBalance(receiverAddress)
-    if (balance === AMOUNT) {
-        console.log(`Using RootValidator: Balance is correct: ${balance} ETH`)
-    } else {
+    if (balance !== AMOUNT) {
         throw new Error(`Using RootValidator: Balance is not correct: ${balance} ETH`)
     }
 }
 
-async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>) {
+async function testSessionKeyValidator(kernelClient: SmartAccountClient & Erc7579Actions<SmartAccount>) {
     const sessionSigner = await getKernelAccount(sessionPublicClient, sessionAccount)
     const customNonce = await getCustomNonce(
         kernelClient.account!.client,
@@ -96,9 +94,7 @@ async function testCustomValidator(kernelClient: SmartAccountClient & Erc7579Act
     }
 
     const balance = await getFormattedTokenBalance(mintReceiverAddress)
-    if (balance === AMOUNT) {
-        console.log(`Using CustomValidator: Balance is correct: ${balance} ETH`)
-    } else {
+    if (balance !== AMOUNT) {
         throw new Error(`Using CustomValidator: Balance is not correct: ${balance} ETH`)
     }
 
@@ -119,14 +115,16 @@ async function main() {
 
     try {
         await testRootValidator(kernelClient)
+        console.log("Root validator tests completed successfully ✅")
     } catch (error) {
-        console.error("Root Validator: ", error)
+        console.error("Root validator tests failed: ", error)
     }
 
     try {
-        await testCustomValidator(kernelClient)
+        await testSessionKeyValidator(kernelClient)
+        console.log("Session key validator tests completed successfully ✅")
     } catch (error) {
-        console.error("Custom Validator: ", error)
+        console.error("Session key validator tests failed: ", error)
     }
 }
 
