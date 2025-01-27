@@ -77,6 +77,11 @@ setup: install-frozen enable-hooks enable-bun-lockfile-diffs ## To be run when f
 	$(call forall_make , $(ALL_PKGS) , setup)
 .PHONY: setup
 
+# Internal, for docs.contained.
+setup.ts:
+	$(call forall_make , $(TS_PKGS) , setup)
+.PHONY: setup.ts
+
 clean: ts.clean sdk.clean docs.clean contracts.clean ## Removes build artifacts
 .PHONY: clean
 
@@ -306,7 +311,7 @@ docs.build:
 .PHONY: docs.build
 
 # Fully self-contained target to build docs, to be used by docs page host.
-docs.contained: setup shared.dev sdk.dev docs.build
+docs.contained: setup.ts shared.dev sdk.dev docs.build
 .PHONY: docs.contained
 
 # Serve already-built docs
