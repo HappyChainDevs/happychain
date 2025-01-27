@@ -21,7 +21,7 @@ const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
             <div className="flex flex-row w-full items-center justify-between">
                 <span>
                     <a
-                        href={`${blockExplorerUrl}/tx/${tx}`}
+                        href={`${blockExplorerUrl}/op/${tx}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:text-primary/50 hover:underline"

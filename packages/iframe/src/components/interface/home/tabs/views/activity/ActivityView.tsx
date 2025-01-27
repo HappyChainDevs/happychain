@@ -28,7 +28,7 @@ const ActivityView = () => {
                 <TxLoadingSkeleton key={`tx_pending_${pendingOp.userOpHash}`} tx={pendingOp.userOpHash} />
             ))}
             {txs.confirmedOps.map((confirmedOp) => (
-                <TxLogEntry key={`tx_history_${confirmedOp.userOpReceipt.receipt.transactionHash}`} tx={confirmedOp} />
+                <TxLogEntry key={`tx_history_${confirmedOp.userOpReceipt.userOpHash}`} tx={confirmedOp} />
             ))}
         </div>
     )

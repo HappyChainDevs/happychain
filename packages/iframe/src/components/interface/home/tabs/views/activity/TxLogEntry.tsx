@@ -27,7 +27,7 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                     <p className="font-light">Sent</p>
                     <span>
                         <a
-                            href={`${blockExplorerUrl}/tx/${userOpReceipt.receipt.transactionHash}`}
+                            href={`${blockExplorerUrl}/op/${userOpReceipt.userOpHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[12px] text-primary hover:text-primary/60 hover:underline px-2 py-1 bg-primary/20 rounded-lg"
