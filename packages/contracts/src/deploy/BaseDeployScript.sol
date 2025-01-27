@@ -33,13 +33,13 @@ abstract contract BaseDeployScript is Script {
     /// Can also be used by inheriting scripts for conditional logging.
     bool internal output = true;
 
-    /// @dev Disables ouptutting deployment info and possibly conditional logging.
+    /// Disables ouptutting deployment info and possibly conditional logging.
     function dontOutput() public {
         output = false;
     }
 
     /**
-     * @dev Logs information about a deployed contract given an alias, the contract name and the
+     * Logs information about a deployed contract given an alias, the contract name and the
      * deployed address.
      *
      * @param contractAlias The alias of the contract, which will be keys in the emitted JSON files.
@@ -58,7 +58,7 @@ abstract contract BaseDeployScript is Script {
     }
 
     /**
-     * @dev Same as `deployed(string,string,address)` with the contract alias set to the
+     * Same as `deployed(string,string,address)` with the contract alias set to the
      * contract name.
      */
     function deployed(string memory contractName, address deployedAddress) internal {
@@ -66,7 +66,7 @@ abstract contract BaseDeployScript is Script {
     }
 
     /**
-     * @dev Writes the deployment and abi map JSON to out/deployment.json.
+     * Writes the deployment and abi map JSON to out/deployment.json.
      * Automatically called by `run()`.
      */
     function writeDeploymentJson() internal {
@@ -77,7 +77,8 @@ abstract contract BaseDeployScript is Script {
     }
 
     /**
-     * @dev This is where the deploy logic goes.
+     * This is where the deploy logic goes.
+     *
      * vm.startBroadcast() and vm.stopBroadcast() are called before and after this.
      */
     function deploy() internal virtual {}
@@ -152,8 +153,8 @@ abstract contract BaseDeployScript is Script {
     }
 
     /**
-     * @dev Same as `deployDeterministic(string, string, bytes, bytes, bytes)` but
-     * with the contract alias set to the contract name.
+     * Same as `deployDeterministic(string, string, bytes, bytes, bytes)` but with the contract
+     * alias set to the contract name.
      */
     function deployDeterministic(
         string memory contractName,
