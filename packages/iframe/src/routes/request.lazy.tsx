@@ -84,25 +84,32 @@ function Request() {
         )
     }
 
+    const props = {
+        method: req.method,
+        params: req.params,
+        reject,
+        accept,
+    }
+
     switch (req.method as keyof typeof requestLabels) {
         case "personal_sign":
-            return <PersonalSign method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <PersonalSign {...props} />
         case "eth_sendTransaction":
-            return <EthSendTransaction method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <EthSendTransaction {...props} />
         case "wallet_switchEthereumChain":
-            return <WalletSwitchEthereumChain method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <WalletSwitchEthereumChain {...props} />
         case "wallet_addEthereumChain":
-            return <WalletAddEthereumChain method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <WalletAddEthereumChain {...props} />
         case "wallet_requestPermissions":
-            return <WalletRequestPermissions method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <WalletRequestPermissions {...props} />
         case "eth_requestAccounts":
-            return <EthRequestAccounts method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <EthRequestAccounts {...props} />
         case "wallet_watchAsset":
-            return <WalletWatchAsset method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <WalletWatchAsset {...props} />
         case HappyMethodNames.USE_ABI:
-            return <HappyUseAbi method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <HappyUseAbi {...props} />
         case HappyMethodNames.REQUEST_SESSION_KEY:
-            return <HappyRequestSessionKey method={req.method} params={req.params} reject={reject} accept={accept} />
+            return <HappyRequestSessionKey {...props} />
         default:
             return (
                 <main>
