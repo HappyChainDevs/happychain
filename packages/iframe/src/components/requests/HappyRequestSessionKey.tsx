@@ -44,26 +44,27 @@ export function HappyRequestSessionKey({
             <RequestContent>
                 <div className="flex flex-col size-full items-center justify-center">
                     <div className="flex flex-col size-full items-start justify-start py-4 gap-y-3">
-                        <span className="text-content italic">
-                            <span className="text-primary not-italic">{appURL}</span> requests permission to
-                            automatically approve transactions to{" "}
+                        <span className="text-content">
+                            <span className="text-primary">{appURL}</span> requests permission to automatically approve
+                            transactions to{" "}
                             <a
                                 href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-primary p-1 text-[15px] hover:underline rounded-lg border border-dashed hover:bg-primary/40"
+                                className="text-primary border-b border-dashed hover:bg-primary/40"
                             >
                                 {shortenAddress(targetAddress)}
                             </a>
+                            .
                         </span>
                         <span className="text-sm text-neutral-content/70">
-                            This allows {appURL.split(".")[0]} to sign and send transactions on your behalf without
-                            additional confirmation prompts. <br /> <br /> You can revoke this permission at any time.
+                            <p>You can revoke this permission at any time.</p>
                         </span>
-
-                        <span className="text-sm text-error/70 p-1 rounded-lg bg-error/30 mt-4 w-full text-center">
-                            This could result in loss of funds if the contract can access your assets and the app is
-                            malicious. <br /> Please verify the same before proceeding.
+                        <span className="text-sm text-error/70 p-2 rounded-lg bg-error/30 mt-4 w-full">
+                            <p className="mb-1">
+                                This could result in loss of funds if the contract can access your assets.
+                            </p>
+                            <p>Only proceed if you trust the application.</p>
                         </span>
                     </div>
                     <div className="flex flex-col w-full gap-2">
