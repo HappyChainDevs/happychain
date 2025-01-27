@@ -36,8 +36,11 @@ BACKEND_PKGS := common,$(BACKEND_ONLY_PKGS)
 # all typescript packages, excluding docs
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
 
-# all packages (that have a package.json)
-ALL_PKGS := $(TS_PKGS),docs,contracts,configs
+# all packages that have a package.json
+NPM_PKGS := $(TS_PKGS),docs,contracts,configs
+
+# all packages
+ALL_PKGS := $(NPM_PKGS),bundler
 
 # ==================================================================================================
 # CMDS
@@ -378,7 +381,7 @@ node_modules: package.json $(wildcard packages/*/package.json)
 # This will also show new version that do not match the version specifiers!
 outdated:
 	@bun outdated
-	$(call forall , $(ALL_PKGS) , bun outdated)
+	$(call forall , $(NPM_PKGS) , bun outdated)
 .PHONY: outdated
 
 # Updates all packages to their latest version that match the version specifier.
