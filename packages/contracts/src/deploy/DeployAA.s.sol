@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.0; // solhint-disable-line
 
-import {BaseDeployScript} from "./BaseDeployScript.sol";
+import {BaseDeployScript, console} from "./BaseDeployScript.sol";
 import {ENTRYPOINT_V7_CODE} from "./initcode/EntryPointV7Code.sol";
 import {ENTRYPOINT_SIMULATIONS_CODE} from "./initcode/EntryPointSimulationsCode.sol";
 
@@ -99,9 +99,8 @@ contract DeployAAContracts is BaseDeployScript {
         (expected.ecdsaValidator,) =
             deployDeterministic("ECDSAValidator", type(ECDSAValidator).creationCode, abi.encode(), DEPLOYMENT_SALT);
 
-        (expected.kernel,) = deployDeterministic(
-            "Kernel", type(Kernel).creationCode, abi.encode(expected.entryPointV7), DEPLOYMENT_SALT
-        );
+        (expected.kernel,) =
+            deployDeterministic("Kernel", type(Kernel).creationCode, abi.encode(expected.entryPointV7), DEPLOYMENT_SALT);
 
         bool factoryDeployed;
         (expected.kernelFactory, factoryDeployed) = deployDeterministic(
@@ -116,40 +115,31 @@ contract DeployAAContracts is BaseDeployScript {
             FactoryStaker(expected.factoryStaker).approveFactory(KernelFactory(expected.kernelFactory), true);
         }
 
-
-
-
         (expected.happyPaymasterImpl,) = deployDeterministic(
             "HappyPaymasterImpl", "HappyPaymaster", type(HappyPaymaster).creationCode, abi.encode(), DEPLOYMENT_SALT
         );
 
-        if (expected.happyPaymaster.code.length == 0) {
-            // Prepare initialization data
-            bytes memory initData = abi.encodeCall(HappyPaymaster.initialize, (expected.entryPointV7, msg.sender));
-
-            // Deploy and initialize the proxy
-            expected.happyPaymaster = _deployProxy(expected.happyPaymasterImpl, initData, DEPLOYMENT_SALT);
-        }
-
-        deployed("HappyPaymaster", expected.happyPaymaster);
-
+        bool paymasterDeployed;
+        (expected.happyPaymaster, paymasterDeployed) = deployDeterministicProxy(
+            "HappyPaymaster",
+            expected.happyPaymasterImpl,
+            abi.encodeCall(HappyPaymaster.initialize, (expected.entryPointV7, msg.sender)),
+            DEPLOYMENT_SALT
+        );
         paymaster = HappyPaymaster(expected.happyPaymaster);
-        paymaster.deposit{value: PAYMASTER_DEPOSIT}();
-
+        if (paymasterDeployed) {
+            paymaster.deposit{value: PAYMASTER_DEPOSIT}();
+        }
 
         (expected.sessionKeyValidatorImpl,) = deployDeterministic(
-            "SessionKeyValidatorImpl", type(SessionKeyValidator).creationCode, abi.encode(), DEPLOYMENT_SALT
+            "SessionKeyValidatorImpl", "SessionKeyValidator", type(SessionKeyValidator).creationCode, abi.encode(), DEPLOYMENT_SALT
         );
 
-        deployed("SessionKeyValidatorImpl", "SessionKeyValidator", expected.sessionKeyValidatorImpl);
-
-        if (expected.sessionKeyValidator.code.length == 0) {
-            // Prepare initialization data
-            bytes memory initData = abi.encodeCall(SessionKeyValidator.initialize, (msg.sender));
-            // Deploy and initialize the proxy
-            expected.sessionKeyValidator = _deployProxy(expected.sessionKeyValidatorImpl, initData, DEPLOYMENT_SALT);
-        }
-
-        deployed("SessionKeyValidator", expected.sessionKeyValidator);
+        (expected.sessionKeyValidator,) = deployDeterministicProxy(
+            "SessionKeyValidator",
+            expected.sessionKeyValidatorImpl,
+            abi.encodeCall(SessionKeyValidator.initialize, (msg.sender)),
+            DEPLOYMENT_SALT
+        );
     }
 }
