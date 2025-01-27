@@ -1,4 +1,4 @@
-import { HappyMethodNames, PermissionNames } from "@happychain/common"
+import { HappyMethodNames, PermissionNames, TransactionType } from "@happychain/common"
 import { deployment as contractAddresses } from "@happychain/contracts/account-abstraction/sepolia"
 import {
     type EIP1193RequestResult,
@@ -10,11 +10,20 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { decodeNonce } from "permissionless"
-import { type Address, type Client, InvalidAddressError, decodeAbiParameters, hexToBigInt, isAddress } from "viem"
+import {
+    type Address,
+    type Client,
+    InvalidAddressError,
+    type Transaction,
+    type TransactionReceipt,
+    hexToBigInt,
+    isAddress,
+    parseSignature,
+} from "viem"
 import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
-import { getCustomNonce, sendUserOp } from "#src/requests/userOps"
+import { getNonce, parseUserOpCalldata, sendUserOp } from "#src/requests/userOps"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage.ts"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
@@ -80,7 +89,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     })
                 },
                 nonceProvider: async (smartAccountClient) =>
-                    await getCustomNonce(smartAccountClient.account.address, contractAddresses.SessionKeyValidator),
+                    await getNonce(smartAccountClient.account.address, contractAddresses.SessionKeyValidator),
             })
         }
 
@@ -101,85 +110,87 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             }
             return isAddress(`${getUser()?.address}`) ? [getUser()?.address] : []
 
+        case "eth_getTransactionByHash": {
+            const [hash] = request.payload.params
+            const smartAccountClient = (await getSmartAccountClient())!
+
+            // Attempt to retrieve UserOperation details first.
+            // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
+            try {
+                const userOpInfo = await smartAccountClient.getUserOperation({ hash })
+                const { to, value } = parseUserOpCalldata(userOpInfo.userOperation.callData)
+                const { v, r, s, yParity } = parseSignature(userOpInfo.userOperation.signature)
+
+                return {
+                    // Standard transaction fields
+                    blockHash: userOpInfo.blockHash,
+                    blockNumber: userOpInfo.blockNumber,
+                    from: userOpInfo.userOperation.sender,
+                    gas: userOpInfo.userOperation.callGasLimit,
+                    maxFeePerGas: userOpInfo.userOperation.maxFeePerGas,
+                    maxPriorityFeePerGas: userOpInfo.userOperation.maxPriorityFeePerGas,
+                    nonce: Number(userOpInfo.userOperation.nonce),
+                    to,
+                    hash, // hash of the userop
+                    value,
+                    // Normally this is the tx index for regular transactions that have been
+                    // included, but is allowed to be null for pending transactions. Since we don't
+                    // get the userOp index, and returning the bundler tx index (1) wouldn't be
+                    // meaningfully useful and (2) would require an extra call to try to get the
+                    // userOp receipt, we always return null here.
+                    // If truly required, use `eth_getTransactionReceipt`.
+                    transactionIndex: null,
+                    accessList: [],
+                    type: "eip1559",
+                    typeHex: TransactionType.EIP1559,
+                    v: v!, // We're always under EIP-155
+                    r,
+                    s,
+                    yParity,
+                    chainId: Number(getCurrentChain().chainId),
+                    // Weird non-standard Viem extension: "Contract code or a hashed method call"
+                    // We just leave this empty.
+                    input: "0x",
+                    // Extra field for HappyWallet-aware users
+                    userOp: userOpInfo.userOperation,
+                } as Transaction // performs type-check, but allows extra fields
+            } catch (_err) {
+                // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
+                console.warn("UserOperation lookup failed, falling back to regular transaction lookup...")
+                return await sendToPublicClient(app, request)
+            }
+        }
+
         case "eth_getTransactionReceipt": {
             const [hash] = request.payload.params
             const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             // Attempt to retrieve UserOperation details first.
             // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
             try {
-                const userOpReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
-                const userOpInfo = await smartAccountClient.getUserOperation({ hash })
-
-                const { callData, sender } = userOpInfo.userOperation
-
-                /**
-                 * Smart account transactions have 2 nested layers of data that we need to decode :
-                 *
-                 * 1. First layer (execute function) :
-                 *    The outer wrapper is a call to the `execute()` function (selector: `0xe9ae5c53`)
-                 *    We decode this to get :
-                 *    - `execMode`: how to execute the wrapped call
-                 *    - `executeParamsData`: parameters for the wrapped call
-                 *
-                 * 2. Second layer (target call) :
-                 *    Inside `executeParamsData`, we find the information of the wrapped call (to, value, data).
-                 *
-                 * @see {@link https://docs.stackup.sh/docs/useroperation-calldata} for additional explanation
-                 * @see {@link https://eips.ethereum.org/EIPS/eip-4337#definitions} for the EIP-4337 specification
-                 */
-
-                // 1. Decode the `execute()` function parameters
-                const [, executionCalldata] = decodeAbiParameters(
-                    [
-                        { type: "bytes32", name: "execMode" },
-                        { type: "bytes", name: "executionCalldata" },
-                    ],
-                    `0x${callData.slice(10)}`, // Skip execute selector (0xe9ae5c53)
-                )
-
-                // 2. Decode the actual transaction parameters
-                const to = executionCalldata.slice(0, 40) as `0x${string}`
-
-                const {
-                    success,
-                    receipt: {
-                        gasUsed,
-                        blockHash,
-                        blockNumber,
-                        contractAddress,
-                        cumulativeGasUsed,
-                        effectiveGasPrice,
-                        logs,
-                        logsBloom,
-                        transactionIndex,
-                        type,
-                    },
-                } = userOpReceipt
-
+                const [userOpReceipt, userOpInfo] = await Promise.all([
+                    smartAccountClient.getUserOperationReceipt({ hash }),
+                    smartAccountClient.getUserOperation({ hash }),
+                ])
+                const { to, value } = parseUserOpCalldata(userOpInfo.userOperation.callData)
                 return {
                     // Standard transaction receipt fields
-                    blockHash,
-                    blockNumber,
-                    contractAddress,
-                    cumulativeGasUsed,
-                    effectiveGasPrice,
-                    from: sender,
-                    gasUsed,
-                    logs,
-                    logsBloom,
-                    status: success ? "success" : "reverted",
+                    blockHash: userOpInfo.blockHash,
+                    blockNumber: userOpInfo.blockNumber,
+                    contractAddress: userOpReceipt.receipt.contractAddress,
+                    cumulativeGasUsed: userOpReceipt.receipt.cumulativeGasUsed,
+                    effectiveGasPrice: userOpReceipt.receipt.effectiveGasPrice,
+                    from: userOpInfo.userOperation.sender,
+                    gasUsed: userOpReceipt.receipt.gasUsed,
+                    logs: userOpReceipt.receipt.logs,
+                    logsBloom: userOpReceipt.receipt.logsBloom,
+                    status: userOpReceipt.success ? "success" : "reverted",
                     to,
-
-                    // Not to be confused with `txReceipt.transactionHash`
-                    // -`hash` is the hash of the userop
-                    // - `txReceipt.transactionHash` is the hash of the bundler transaction that includes this userop
-                    transactionHash: hash,
-                    transactionIndex,
-                    type,
-
-                    // Original UserOp receipt for reference
-                    originalUserOpReceipt: userOpReceipt,
-                }
+                    transactionHash: hash, // userop hash
+                    transactionIndex: userOpReceipt.receipt.transactionIndex,
+                    type: userOpReceipt.receipt.type,
+                    userOpReceipt, // Extra field for HappyWallet-aware users
+                    value, // Extra field because why not?
+                } as TransactionReceipt // performs type-check, but allows extra fields
             } catch (_err) {
                 console.warn("UserOperation lookup failed, falling back to regular transaction receipt lookup...")
                 return sendToPublicClient(app, request)
