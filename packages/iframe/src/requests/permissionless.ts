@@ -9,7 +9,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { decodeNonce } from "permissionless"
-import { type Address, type Client, InvalidAddressError, decodeAbiParameters, hexToBigInt, isAddress } from "viem"
+import { type Address, type Client, InvalidAddressError, decodeAbiParameters, hexToBigInt, isAddress, parseSignature } from "viem"
 import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
@@ -31,6 +31,7 @@ import { appForSourceID, checkAuthenticated } from "./utils"
  * middleware.
  */
 export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
+    console.log("handlePermissionlessRequest: ", request.payload.method)
     void sendResponse(request, dispatchHandlers)
 }
 
@@ -94,7 +95,96 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             }
             return isAddress(`${getUser()?.address}`) ? [getUser()?.address] : []
 
+        case "eth_getTransactionByHash": {
+            // console.log("insid eth_getTransactionByHash")
+            const [hash] = request.payload.params
+            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
+
+            // Attempt to retrieve UserOperation details first.
+            // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
+            try {
+                const userOpReceipt = await smartAccountClient.getUserOperationReceipt({ hash })
+                const userOpInfo = await smartAccountClient.getUserOperation({ hash })
+
+                const { callData, sender } = userOpInfo.userOperation
+
+                /**
+                 * Smart account transactions have 2 nested layers of data that we need to decode :
+                 *
+                 * 1. First layer (execute function) :
+                 *    The outer wrapper is a call to the `execute()` function (selector: `0xe9ae5c53`)
+                 *    We decode this to get :
+                 *    - `execMode`: how to execute the wrapped call
+                 *    - `executeParamsData`: parameters for the wrapped call
+                 *
+                 * 2. Second layer (target call) :
+                 *    Inside `executeParamsData`, we find the information of the wrapped call (to, value, data).
+                 *
+                 * @see {@link https://docs.stackup.sh/docs/useroperation-calldata} for additional explanation
+                 * @see {@link https://eips.ethereum.org/EIPS/eip-4337#definitions} for the EIP-4337 specification
+                 */
+
+                // 1. Decode the `execute()` function parameters
+                const [, executionCalldata] = decodeAbiParameters(
+                    [
+                        { type: "bytes32", name: "execMode" },
+                        { type: "bytes", name: "executionCalldata" },
+                    ],
+                    `0x${callData.slice(10)}`, // Skip execute selector (0xe9ae5c53)
+                )
+
+                // 2. Decode the actual transaction parameters
+                const to = executionCalldata.slice(0, 40) as `0x${string}`
+
+                const {v,r,s} = parseSignature(userOpInfo.userOperation.signature)
+
+                const {
+                    receipt: {
+                        gasUsed,
+                        blockHash,
+                        blockNumber,
+                        effectiveGasPrice,
+                        transactionIndex,
+                        type,
+                    },
+                } = userOpReceipt
+
+                const ret = {
+                    // Standard transaction fields
+                    blockHash,
+                    blockNumber,
+                    from: sender,
+                    gas: gasUsed,
+                    gasPrice: effectiveGasPrice,
+                    maxFeePerGas: userOpInfo.userOperation.maxFeePerGas,
+                    maxPriorityFeePerGas: userOpInfo.userOperation.maxPriorityFeePerGas,
+                    nonce: userOpInfo.userOperation.nonce,
+                    to,
+                    // Not to be confused with `txReceipt.transactionHash`
+                    // -`hash` is the hash of the userop
+                    // - `txReceipt.transactionHash` is the hash of the bundler transaction that includes this userop
+                    hash,
+                    value: "0x", // TODO: parse from userOp.callData
+                    transactionIndex,
+                    accessList: ["0x"], // TODO: Check: Is there an access list in UserOps?
+                    type,
+                    v,
+                    r,
+                    s,
+                    // Original UserOp receipt for reference
+                    originalUserOp: userOpInfo.userOperation,
+                }
+                console.log("returning: ", ret, "\n")
+                return ret
+            } catch (_err) {
+                // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
+                console.warn("UserOperation lookup failed, falling back to regular transaction lookup...")
+                return await sendToPublicClient(app, request)
+            }
+        }
+
         case "eth_getTransactionReceipt": {
+            console.log("inside iframe:src:requests:permissionless eth_getTransactionReceipt")
             const [hash] = request.payload.params
             const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             // Attempt to retrieve UserOperation details first.
@@ -180,6 +270,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         }
 
         case "eth_getTransactionCount": {
+            console.log("inside iframe:src:requests:permissionless eth_getTransactionCount")
             const [address] = request.payload.params
             const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
 
@@ -282,6 +373,7 @@ async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPerm
     app: AppURL,
     request: T,
 ): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
+    console.log("inside sendToPublicClient: request=", request.payload.method)
     if (checkIfRequestRequiresConfirmation(app, request.payload)) {
         throw new EIP1193UnauthorizedError()
     }

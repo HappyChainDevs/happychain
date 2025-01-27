@@ -133,7 +133,6 @@ export const loadAbi = async (contractAddress: Address, abi: Abi): Promise<void>
 export const addSessionKey = async (contractAddress: Address): Promise<void> => {
     const _provider = getInitializedProvider()
     if (!_provider) return
-
     await _provider.request({
         method: HappyMethodNames.REQUEST_SESSION_KEY,
         params: [contractAddress],

@@ -112,7 +112,7 @@ function App() {
 
     async function addSessionKeyToCounterContract() {
         await addSessionKey(CounterAddress.HappyCounter)
-        console.log("Session Ley Added!")
+        console.log("Session Key Added!")
     }
 
     async function incrementCounter() {
@@ -129,7 +129,13 @@ function App() {
                 chain: happyChainSepolia,
             })
 
-            const receipt = await publicClient.waitForTransactionReceipt({ hash })
+            console.log("Calling waitForTransactionReceipt", hash)
+            // await new Promise((resolve) => setTimeout(resolve, 5000))
+            // const receipt = await publicClient.getTransactionReceipt({ hash })
+            const receipt = await publicClient.waitForTransactionReceipt({
+                 hash,
+                 timeout: 10_000
+                })
 
             if (receipt.status === "reverted") {
                 console.log("[count ==] transaction reverted", receipt)

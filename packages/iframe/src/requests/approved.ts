@@ -37,6 +37,7 @@ import { appForSourceID } from "./utils"
  * running them through a series of middleware.
  */
 export async function handleApprovedRequest(request: PopupMsgs[Msgs.PopupApprove]): Promise<void> {
+    console.log("iframe:src:requests:approved.ts handleApprovedRequest, received ")
     return await sendResponse(request, dispatchHandlers)
 }
 
@@ -51,6 +52,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
+            console.log("inside eth_sendTransaction: approved")
             if (!user) throw new EIP1193UnauthorizedError()
             return await sendUserOp(
                 user,

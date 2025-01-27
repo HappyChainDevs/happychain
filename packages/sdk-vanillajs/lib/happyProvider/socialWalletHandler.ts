@@ -88,6 +88,8 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
     }
 
     protected handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
+        console.log("inside SocialWalletHandler:handlePermissionless")
+        console.log("emitting RequestPermissionless, goes to happyProviderBus in iframe/listeners -> permissionless.ts")
         // Note that this always works regardless of log in or connection status.
         void this.config.providerBus.emit(Msgs.RequestPermissionless, {
             key,
