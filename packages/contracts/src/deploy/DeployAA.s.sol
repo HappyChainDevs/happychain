@@ -96,38 +96,32 @@ contract DeployAAContracts is BaseDeployScript {
 
         deployed("EntryPointV7", "EntryPoint", expected.entryPointV7);
 
-        if (expected.ecdsaValidator.code.length == 0) {
-            expected.ecdsaValidator = address(new ECDSAValidator{salt: DEPLOYMENT_SALT}());
+        (expected.ecdsaValidator,) =
+            deployDeterministic("ECDSAValidator", type(ECDSAValidator).creationCode, abi.encode(), DEPLOYMENT_SALT);
+
+        (expected.kernel,) = deployDeterministic(
+            "Kernel", type(Kernel).creationCode, abi.encode(expected.entryPointV7), DEPLOYMENT_SALT
+        );
+
+        bool factoryDeployed;
+        (expected.kernelFactory, factoryDeployed) = deployDeterministic(
+            "KernelFactory", type(KernelFactory).creationCode, abi.encode(expected.kernel), DEPLOYMENT_SALT
+        );
+
+        bool stakerDeployed;
+        (expected.factoryStaker, stakerDeployed) = deployDeterministic(
+            "FactoryStaker", type(FactoryStaker).creationCode, abi.encode(msg.sender), DEPLOYMENT_SALT
+        );
+        if (stakerDeployed || factoryDeployed) {
+            FactoryStaker(expected.factoryStaker).approveFactory(KernelFactory(expected.kernelFactory), true);
         }
 
-        deployed("ECDSAValidator", expected.ecdsaValidator);
 
-        if (expected.kernel.code.length == 0) {
-            expected.kernel = address(new Kernel{salt: DEPLOYMENT_SALT}(IEntryPoint(expected.entryPointV7)));
-        }
 
-        deployed("Kernel", expected.kernel);
 
-        if (expected.kernelFactory.code.length == 0) {
-            factory = new KernelFactory{salt: DEPLOYMENT_SALT}(expected.kernel);
-            expected.kernelFactory = address(factory);
-        }
-
-        deployed("KernelFactory", expected.kernelFactory);
-
-        if (expected.factoryStaker.code.length == 0) {
-            staker = new FactoryStaker{salt: DEPLOYMENT_SALT}(msg.sender);
-            expected.factoryStaker = address(staker);
-            staker.approveFactory(factory, true);
-        }
-
-        deployed("FactoryStaker", expected.factoryStaker);
-
-        if (expected.happyPaymasterImpl.code.length == 0) {
-            expected.happyPaymasterImpl = address(new HappyPaymaster{salt: DEPLOYMENT_SALT}());
-        }
-
-        deployed("HappyPaymasterImpl", "HappyPaymaster", expected.happyPaymasterImpl);
+        (expected.happyPaymasterImpl,) = deployDeterministic(
+            "HappyPaymasterImpl", "HappyPaymaster", type(HappyPaymaster).creationCode, abi.encode(), DEPLOYMENT_SALT
+        );
 
         if (expected.happyPaymaster.code.length == 0) {
             // Prepare initialization data
@@ -142,9 +136,10 @@ contract DeployAAContracts is BaseDeployScript {
         paymaster = HappyPaymaster(expected.happyPaymaster);
         paymaster.deposit{value: PAYMASTER_DEPOSIT}();
 
-        if (expected.sessionKeyValidatorImpl.code.length == 0) {
-            expected.sessionKeyValidatorImpl = address(new SessionKeyValidator{salt: DEPLOYMENT_SALT}());
-        }
+
+        (expected.sessionKeyValidatorImpl,) = deployDeterministic(
+            "SessionKeyValidatorImpl", type(SessionKeyValidator).creationCode, abi.encode(), DEPLOYMENT_SALT
+        );
 
         deployed("SessionKeyValidatorImpl", "SessionKeyValidator", expected.sessionKeyValidatorImpl);
 
