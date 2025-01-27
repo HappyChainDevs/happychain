@@ -47,8 +47,6 @@ export type {
     EIP1193UserRejectedRequestError,
 } from "@happy.tech/wallet-common"
 
-export type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
-
 export { happyWagmiConnector, createHappyChainWagmiConfig } from "./wagmi/happyWagmiConfig"
 
 export type { BadgeProps } from "./badge/define"
