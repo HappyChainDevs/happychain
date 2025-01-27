@@ -57,7 +57,9 @@ export function flagUserOpAsFailed(address: Address, payload: PendingUserOpDetai
         return {
             ...existingEntries,
             [address]: pendingUserOps.map((op) =>
-                op.userOpHash === payload.userOpHash ? { ...op, status: "failed" } satisfies PendingUserOpDetails : op,
+                op.userOpHash === payload.userOpHash
+                    ? ({ ...op, status: "failed" } satisfies PendingUserOpDetails)
+                    : op,
             ),
         }
     })
