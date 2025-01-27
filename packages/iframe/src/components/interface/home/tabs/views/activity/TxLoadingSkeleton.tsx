@@ -19,16 +19,14 @@ const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
     return (
         <div className="flex flex-col items-start w-full justify-between px-3 py-4 border rounded-md border-slate-700">
             <div className="flex flex-row w-full items-center justify-between">
-                <span>
-                    <a
-                        href={`${blockExplorerUrl}/op/${tx}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/50 hover:underline"
-                    >
-                        {shortenAddress(tx)}
-                    </a>
-                </span>
+                <a
+                    href={`${blockExplorerUrl}/op/${tx}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary/50 hover:underline"
+                >
+                    {shortenAddress(tx)}
+                </a>
 
                 <div className="animate-spin">
                     <CircleNotch />

@@ -20,8 +20,8 @@ const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     return (
         <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-primary-content bg-base-200">
             <div className="flex flex-row items-center justify-center gap-x-2">
-                <div className={cx("p-2 rounded-full", userOpReceipt.success ? "bg-success/60" : "bg-error/60")}>
-                    <PaperPlaneRight className="size-4" />
+                <div className={cx("p-1 rounded-full", userOpReceipt.success ? "bg-success/60" : "bg-error/60")}>
+                    <PaperPlaneRight size={"1.25em"} weight="thin" />
                 </div>
                 <div className="flex flex-col items-start justify-center">
                     <p className="font-light">Sent</p>
