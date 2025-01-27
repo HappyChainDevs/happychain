@@ -20,15 +20,21 @@ contract DeployMockERC20 is BaseDeployScript {
     HappyCounter public happyCounter;
 
     function deploy() internal override {
-        deployMockToken("MockTokenA", "MTA", SALT_TOKEN_A);
-        deployMockToken("MockTokenB", "MTB", SALT_TOKEN_B);
-        deployMockToken("MockTokenC", "MTC", SALT_TOKEN_C);
-        deployDeterministic("HappyCounter", type(HappyCounter).creationCode, abi.encode(), bytes32(uint256(0)));
+        mockTokenA = deployMockToken("MockTokenA", "MTA", SALT_TOKEN_A);
+        mockTokenB = deployMockToken("MockTokenB", "MTB", SALT_TOKEN_B);
+        mockTokenC = deployMockToken("MockTokenC", "MTC", SALT_TOKEN_C);
+        (address _happyCounter,) =
+            deployDeterministic("HappyCounter", type(HappyCounter).creationCode, abi.encode(), bytes32(uint256(0)));
+        happyCounter = HappyCounter(_happyCounter);
     }
 
-    function deployMockToken(string memory name, string memory symbol, bytes32 salt) internal {
-        deployDeterministic(
+    function deployMockToken(string memory name, string memory symbol, bytes32 salt)
+        internal
+        returns (MockERC20Token)
+    {
+        (address addr,) = deployDeterministic(
             name, "MockERC20Token", type(MockERC20Token).creationCode, abi.encode(name, symbol, uint8(18)), salt
         );
+        return MockERC20Token(addr);
     }
 }

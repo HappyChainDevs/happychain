@@ -122,12 +122,25 @@ abstract contract BaseDeployScript is Script {
         }
     }
 
-    /** Deploys a contract deterministically given its creation code, abi-encoded arguments and a
+    function _deployDeterministicCreationCode(bytes memory creationCode, bytes32 salt)
+        internal
+        returns (address payable addr)
+    {
+        assembly {
+            addr := create2(0, add(creationCode, 0x20), mload(creationCode), salt)
+        }
+    }
+
+    /**
+     * Deploys a contract deterministically given its creation code, abi-encoded arguments and a
      * salt. This checks if the contract is already deployed, logs but succeeds if it is. This
-     * automatically calls `deployed` with the provided contract alias and name, even
-     * if the contract was already deployed.
+     * automatically calls `deployed` with the provided contract alias and name, even if the
+     * contract was already deployed.
      *
      * Example: `deployDeterministic("MockTokenA", "MockERC20", type(MockTokenA).creationCode, abi.encode("MockTokenA", "MTA", 18), 0)`
+     *
+     * @return (addr, deployed) The address of the contract and a boolean indicating
+     *   if it is newly deployed by this call.
      */
     function deployDeterministic(
         string memory contractAlias,
@@ -135,26 +148,23 @@ abstract contract BaseDeployScript is Script {
         bytes memory creationCode,
         bytes memory constructorArgs,
         bytes32 salt
-    ) internal returns (address) {
+    ) internal returns (address payable, bool) {
         address payable predictedAddress = getCreate2Address(creationCode, constructorArgs, salt);
         uint256 size = getContractSize(predictedAddress);
         if (size > 0) {
-            console.log("Contract already deployed", contractAlias, predictedAddress);
+            if (output) console.log("Contract already deployed", contractAlias, predictedAddress);
             deployed(contractAlias, contractName, predictedAddress);
-            return predictedAddress;
+            return (predictedAddress, false);
         }
 
-        bytes memory combinedBytes = abi.encodePacked(creationCode, constructorArgs);
-        address addr;
-        assembly {
-            addr := create2(0, add(combinedBytes, 0x20), mload(combinedBytes), salt)
-        }
+        address payable addr = _deployDeterministicCreationCode(abi.encodePacked(creationCode, constructorArgs), salt);
         if (addr == address(0)) {
-            console.log("Deploy failed", contractAlias);
+            if (output) console.log("Deploy failed", contractAlias);
             revert("Deploy failed");
         }
+
         deployed(contractAlias, contractName, addr);
-        return addr;
+        return (addr, true);
     }
 
     /**
@@ -166,7 +176,7 @@ abstract contract BaseDeployScript is Script {
         bytes memory creationCode,
         bytes memory constructorArgs,
         bytes32 salt
-    ) internal returns (address) {
+    ) internal returns (address payable, bool) {
         return deployDeterministic(contractName, contractName, creationCode, constructorArgs, salt);
     }
 
