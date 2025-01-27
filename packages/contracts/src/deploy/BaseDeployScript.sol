@@ -17,6 +17,9 @@ import {LibClone} from "solady/utils/LibClone.sol";
  * name).
  */
 abstract contract BaseDeployScript is Script {
+    /// Address of the multichain CREATE2 deterministic deployer (used by Foundry).
+    address public constant CREATE2_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
+
     /// @dev Identifies the deployment JSON to vm.serializeXXX and vm.writeJson functions.
     string internal constant deploymentJsonKey = "deployment_key";
 
@@ -85,33 +88,41 @@ abstract contract BaseDeployScript is Script {
 
     /**
      * Returns the predicted address of a CREATE2 contract deployment using the CREATE2
-     * deterministic deployer, given the creation code, the abi-encoded constructor arguments and a
-     * salt.
+     * deterministic deployer, given the entire creation code and a salt.
      */
-    function create2Address(bytes memory creationCode, bytes memory constructorArgs, bytes32 salt)
-        internal
-        pure
-        returns (address)
-    {
-        return address(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            bytes1(0xff),
-                            // CREATE2 deterministic deployer (automatically used by Foundry)
-                            address(0x4e59b44847b379578588920cA78FbF26c0B4956C),
-                            salt,
-                            keccak256(abi.encodePacked(creationCode, constructorArgs))
-                        )
-                    )
+    function getCreate2Address(bytes memory creationCode, bytes32 salt) internal pure returns (address payable) {
+        return payable(
+            address(
+                uint160(
+                    uint256(keccak256(abi.encodePacked(bytes1(0xff), CREATE2_DEPLOYER, salt, keccak256(creationCode))))
                 )
             )
         );
     }
 
     /**
-     * @dev Deploys a contract deterministically given its creation code, abi-encoded arguments and a
+     * Returns the predicted address of a CREATE2 contract deployment using the CREATE2
+     * deterministic deployer, given the creation code, the abi-encoded constructor arguments and a
+     * salt.
+     */
+    function getCreate2Address(bytes memory creationCode, bytes memory constructorArgs, bytes32 salt)
+        internal
+        pure
+        returns (address payable)
+    {
+        return getCreate2Address(abi.encodePacked(creationCode, constructorArgs), salt);
+    }
+
+    /**
+     * Returns the size of the given contract.
+     */
+    function getContractSize(address addr) internal view returns (uint256 size) {
+        assembly {
+            size := extcodesize(addr)
+        }
+    }
+
+    /** Deploys a contract deterministically given its creation code, abi-encoded arguments and a
      * salt. This checks if the contract is already deployed, logs but succeeds if it is. This
      * automatically calls `deployed` with the provided contract alias and name, even
      * if the contract was already deployed.
@@ -125,14 +136,8 @@ abstract contract BaseDeployScript is Script {
         bytes memory constructorArgs,
         bytes32 salt
     ) internal returns (address) {
-        // Calculate address before deployment
-        address predictedAddress = create2Address(creationCode, constructorArgs, salt);
-
-        // Check if contract is already deployed
-        uint256 size;
-        assembly {
-            size := extcodesize(predictedAddress)
-        }
+        address payable predictedAddress = getCreate2Address(creationCode, constructorArgs, salt);
+        uint256 size = getContractSize(predictedAddress);
         if (size > 0) {
             console.log("Contract already deployed", contractAlias, predictedAddress);
             deployed(contractAlias, contractName, predictedAddress);
