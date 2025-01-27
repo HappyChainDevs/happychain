@@ -111,7 +111,7 @@ function App() {
 
     async function addSessionKeyToCounterContract() {
         await addSessionKey(CounterAddress.HappyCounter)
-        console.log("Session Ley Added!")
+        console.log("Session key added!")
     }
 
     async function incrementCounter() {
