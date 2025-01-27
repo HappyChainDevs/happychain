@@ -1,4 +1,4 @@
-import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
+import { abis, deployment as contractsAddresses } from "@happychain/contracts/mocks/sepolia"
 import { happyChainSepolia, useHappyChain } from "@happychain/react"
 import { useEffect, useMemo, useState } from "react"
 import { createPublicClient, createWalletClient, custom } from "viem"

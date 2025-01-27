@@ -7,7 +7,8 @@
     "files": ["*.sol", "deployments/**/*"],
     "exports": {
         "./account-abstraction/sepolia": "./deployments/happy-sepolia/aa/abis.ts",
-        "./mockTokens/sepolia": "./deployments/happy-sepolia/mockTokens/abis.ts"
+        "./mocks/sepolia": "./deployments/happy-sepolia/mocks/abis.ts",
+        "./random/anvil": "./deployments/anvil/random/abis.ts"
     },
     "dependencies": {
         "@openzeppelin/contracts": "^5.0.2",

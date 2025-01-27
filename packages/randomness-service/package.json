@@ -8,6 +8,7 @@
     "dependencies": {
         "@happychain/common": "workspace:^",
         "@happychain/transaction-manager": "workspace:^",
+        "@happychain/contracts": "workspace:^",
         "better-sqlite3": "^11.7.0",
         "kysely": "^0.27.5",
         "neverthrow": "^8.1.0",
