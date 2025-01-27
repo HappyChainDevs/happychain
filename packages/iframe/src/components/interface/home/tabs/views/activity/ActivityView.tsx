@@ -14,21 +14,21 @@ import TxLogEntry from "./TxLogEntry"
  */
 const ActivityView = () => {
     const user = useAtomValue(userAtom)
-    const txs = useAtomValue(userOpsAtom)
+    const userOps = useAtomValue(userOpsAtom)
 
     if (!user) return <UserNotFoundWarning />
 
-    if (!txs.confirmedOps?.length && !txs.pendingOps?.length) {
+    if (!userOps.confirmedOps?.length && !userOps.pendingOps?.length) {
         return <div className="size-full p-2">No transactions to display.</div>
     }
 
     return (
         <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 bg-base-200 rounded-lg space-y-1">
-            {txs.pendingOps.map((pendingOp) => (
-                <TxLoadingSkeleton key={`tx_pending_${pendingOp.userOpHash}`} tx={pendingOp.userOpHash} />
+            {userOps.pendingOps.map((pendingOp) => (
+                <TxLoadingSkeleton key={`op_pending_${pendingOp.userOpHash}`} tx={pendingOp.userOpHash} />
             ))}
-            {txs.confirmedOps.map((confirmedOp) => (
-                <TxLogEntry key={`tx_history_${confirmedOp.userOpReceipt.userOpHash}`} tx={confirmedOp} />
+            {userOps.confirmedOps.map((confirmedOp) => (
+                <TxLogEntry key={`op_history_${confirmedOp.userOpReceipt.userOpHash}`} tx={confirmedOp} />
             ))}
         </div>
     )
