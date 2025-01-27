@@ -129,12 +129,12 @@ function App() {
                 chain: happyChainSepolia,
             })
 
-            console.log("Calling waitForTransactionReceipt", hash)
             // await new Promise((resolve) => setTimeout(resolve, 5000))
             // const receipt = await publicClient.getTransactionReceipt({ hash })
+            console.log("Calling waitForTransactionReceipt", hash)
             const receipt = await publicClient.waitForTransactionReceipt({
                  hash,
-                 timeout: 10_000
+                 timeout: 20_000
                 })
 
             if (receipt.status === "reverted") {

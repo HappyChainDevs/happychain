@@ -9,7 +9,7 @@ import {
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
 import { decodeNonce } from "permissionless"
-import { type Address, type Client, InvalidAddressError, decodeAbiParameters, hexToBigInt, isAddress, parseSignature } from "viem"
+import { type AccessList, type Address, type Client, InvalidAddressError, type TransactionEIP1559, decodeAbiParameters, hexToBigInt, isAddress, parseSignature } from "viem"
 import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
@@ -25,6 +25,7 @@ import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
+import { localhost } from "viem/chains"
 
 /**
  * Processes requests that do not require user confirmation, running them through a series of
@@ -149,36 +150,49 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     },
                 } = userOpReceipt
 
-                const ret = {
+                console.log("Tx type = ", type)
+
+                const ret: TransactionEIP1559 = {
                     // Standard transaction fields
                     blockHash,
                     blockNumber,
                     from: sender,
                     gas: gasUsed,
-                    gasPrice: effectiveGasPrice,
+                    // gasPrice: effectiveGasPrice,
                     maxFeePerGas: userOpInfo.userOperation.maxFeePerGas,
                     maxPriorityFeePerGas: userOpInfo.userOperation.maxPriorityFeePerGas,
-                    nonce: userOpInfo.userOperation.nonce,
+                    nonce: Number(userOpInfo.userOperation.nonce),
                     to,
                     // Not to be confused with `txReceipt.transactionHash`
                     // -`hash` is the hash of the userop
                     // - `txReceipt.transactionHash` is the hash of the bundler transaction that includes this userop
                     hash,
-                    value: "0x", // TODO: parse from userOp.callData
+                    value: 0n, // TODO: parse from userOp.callData
                     transactionIndex,
-                    accessList: ["0x"], // TODO: Check: Is there an access list in UserOps?
-                    type,
-                    v,
+                    accessList: {
+                        address: sender,
+                        storageKeys: []
+                    } as unknown as AccessList, // TODO: Check: Is there an access list in UserOps?
+                    chainId: localhost.id,
+                    type: 'eip1559',
+                    v: 0n, // TODO: For type safety, for now
                     r,
                     s,
-                    // Original UserOp receipt for reference
-                    originalUserOp: userOpInfo.userOperation,
+                    yParity: 0,
+                    typeHex: '0xabcd',
+                    input: callData,
                 }
-                console.log("returning: ", ret, "\n")
+                console.log("returning from eth_getTransactionByHash: ", ret, "\n")
                 return ret
-            } catch (_err) {
+            } catch (err) {
+                // Check if the error is a UserOperationReceiptNotFoundError
+                if (err instanceof Error && err.message.includes('User Operation receipt with hash') && err.message.includes('could not be found')) {
+                    // Rethrow the error as this means the userOp isn't processed yet
+                    console.warn("userOpNotFound, throwing err")
+                    throw err;
+                }
                 // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
-                console.warn("UserOperation lookup failed, falling back to regular transaction lookup...")
+                console.warn("UserOperation EthGetTransactionByHash failed, falling back to regular transaction lookup...: \n", err, "\n###\n")
                 return await sendToPublicClient(app, request)
             }
         }
