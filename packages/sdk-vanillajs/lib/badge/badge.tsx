@@ -1,6 +1,6 @@
-/** @jsxImportSource preact */
-import { type HappyUser, onUserUpdate } from "@happychain/js"
 import { useEffect, useState } from "preact/hooks"
+/** @jsxImportSource preact */
+import { type HappyUser, onUserUpdate } from "../index"
 import { useConnection } from "./useConnection"
 
 import { icon64x64 } from "../happyProvider/icons"
