@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0; // solhint-disable-line
 
 import {BaseDeployScript} from "./BaseDeployScript.sol";
-import {ENTRYPOINT_V7_CODE} from "./initcode/EntryPointV7Code.sol";
-import {ENTRYPOINT_SIMULATIONS_CODE} from "./initcode/EntryPointSimulationsCode.sol";
+import {ENTRYPOINT_V7_CODE, ENTRYPOINT_V7_SALT} from "./initcode/EntryPointV7Code.sol";
+import {ENTRYPOINT_SIMULATIONS_CODE, ENTRYPOINT_SIMULATIONS_SALT} from "./initcode/EntryPointSimulationsCode.sol";
 
 import {HappyPaymaster} from "../HappyPaymaster.sol";
 import {SessionKeyValidator} from "../SessionKeyValidator.sol";
@@ -35,42 +35,26 @@ contract DeployAAContracts is BaseDeployScript {
     SessionKeyValidator public sessionKeyValidator;
 
     function deploy() internal override {
-        address simulationsExpected = 0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47;
+        // -----------------------------------------------------------------------------------------
 
-        if (simulationsExpected.code.length == 0) {
-            // solhint-disable-next-line
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_SIMULATIONS_CODE);
-            if (!success) {
-                revert("EntryPointSimulations deployment failed");
-            }
-        }
-        deployed("EntryPointSimulations", simulationsExpected);
-
-        //        (address payable _entryPointSimulations,) = deployDeterministicCalldata( //-
-        //            "EntrypointSimulations",
-        //            ENTRYPOINT_SIMULATIONS_CODE //-
-        //        );
-        //        entryPointSimulations = EntryPointSimulations(_entryPointSimulations);
+        (address payable _entryPointSimulations,) = deployDeterministic( //-
+            "EntryPointSimulations",
+            ENTRYPOINT_SIMULATIONS_CODE,
+            abi.encode(),
+            ENTRYPOINT_SIMULATIONS_SALT //-
+        );
+        entryPointSimulations = EntryPointSimulations(_entryPointSimulations);
 
         // -----------------------------------------------------------------------------------------
 
-        address entryPointExpected = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
-
-        if (entryPointExpected.code.length == 0) {
-            // solhint-disable-next-line
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
-            if (!success) {
-                revert("EntryPointV7 deployment failed");
-            }
-        }
-        address _entryPointV7 = entryPointExpected;
-        deployed("EntryPointV7", "EntryPoint", _entryPointV7);
-
-        //        (address payable _entryPointV7,) = deployDeterministicCalldata( //-
-        //            "EntrypointV7",
-        //            ENTRYPOINT_V7_CODE //-
-        //        );
-        //        entryPointV7 = EntryPoint(_entryPointV7);
+        (address payable _entryPointV7,) = deployDeterministic( //-
+            "EntryPointV7",
+            "EntryPoint",
+            ENTRYPOINT_V7_CODE,
+            abi.encode(),
+            ENTRYPOINT_V7_SALT //-
+        );
+        entryPointV7 = EntryPoint(_entryPointV7);
 
         // -----------------------------------------------------------------------------------------
 
