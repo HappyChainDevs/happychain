@@ -35,6 +35,19 @@ contract DeployAAContracts is BaseDeployScript {
     SessionKeyValidator public sessionKeyValidator;
 
     function deploy() internal override {
+        string memory config = vm.envOr("CONFIG", string(""));
+        bool isLocal = keccak256(bytes(config)) == keccak256(bytes("LOCAL"));
+
+        if (isLocal) {
+            require(
+                msg.sender == 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+                "In local mode, please deploy with Anvil Account 0 to keep the deployment files deterministic."
+            );
+        }
+
+        // The owner is anvil address 0 in local testing, and the HappyChain deployer otherwise.
+        address owner = isLocal ? msg.sender : 0xEe3aE13ed56E877874a6C5FBe7cdA7fc8573a7bE;
+
         // -----------------------------------------------------------------------------------------
 
         (address payable _entryPointSimulations,) = deployDeterministic( //-
@@ -91,7 +104,7 @@ contract DeployAAContracts is BaseDeployScript {
         (address _factoryStaker, bool stakerDeployed) = deployDeterministic( //-
             "FactoryStaker",
             type(FactoryStaker).creationCode,
-            abi.encode(msg.sender),
+            abi.encode(owner),
             DEPLOYMENT_SALT //-
         );
         factoryStaker = FactoryStaker(_factoryStaker);
@@ -116,13 +129,12 @@ contract DeployAAContracts is BaseDeployScript {
         (address _happyPaymaster, bool paymasterDeployed) = deployDeterministicProxy( //-
             "HappyPaymaster",
             _happyPaymasterImpl,
-            abi.encodeCall(happyPaymasterImpl.initialize, (_entryPointV7, msg.sender)),
+            abi.encodeCall(happyPaymasterImpl.initialize, (_entryPointV7, owner)),
             DEPLOYMENT_SALT //-
         );
         happyPaymaster = HappyPaymaster(_happyPaymaster);
 
-        string memory config = vm.envOr("CONFIG", string(""));
-        if (keccak256(bytes(config)) == keccak256(bytes("LOCAL")) && paymasterDeployed) {
+        if (isLocal && paymasterDeployed) {
             // In local mode, fund the paymaster with some gas tokens.
             happyPaymaster.deposit{value: PAYMASTER_DEPOSIT}();
         }
@@ -143,7 +155,7 @@ contract DeployAAContracts is BaseDeployScript {
         (address _sessionKeyValidator,) = deployDeterministicProxy( //-
             "SessionKeyValidator",
             _sessionKeyValidatorImpl,
-            abi.encodeCall(sessionKeyValidatorImpl.initialize, (msg.sender)),
+            abi.encodeCall(sessionKeyValidatorImpl.initialize, (owner)),
             DEPLOYMENT_SALT //-
         );
         sessionKeyValidator = SessionKeyValidator(_sessionKeyValidator);
