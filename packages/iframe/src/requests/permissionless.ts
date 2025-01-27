@@ -156,7 +156,6 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 } as Transaction // performs type-check, but allows extra fields
             } catch (_err) {
                 // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
-                console.warn("UserOperation lookup failed, falling back to regular transaction lookup...")
                 return await sendToPublicClient(app, request)
             }
         }
@@ -192,7 +191,6 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     value, // Extra field because why not?
                 } as TransactionReceipt // performs type-check, but allows extra fields
             } catch (_err) {
-                console.warn("UserOperation lookup failed, falling back to regular transaction receipt lookup...")
                 return sendToPublicClient(app, request)
             }
         }
