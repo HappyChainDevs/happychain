@@ -117,7 +117,7 @@ function App() {
     async function addSessionKeyToCounterContract() {
         await addSessionKey(CounterAddress.HappyCounter)
         toast.success(
-            `Session Key recorded succeffuly for ${CounterAddress.HappyCounter}. Try sending a transaction to the counter with the button below!`,
+            `Session Key recorded successfuly for ${CounterAddress.HappyCounter}. Try sending a transaction to the counter with the button below!`,
         )
         console.log("Session Key Added!")
     }
@@ -126,8 +126,16 @@ function App() {
         try {
             if (!walletClient || !user?.address) return
 
-            const [account] = await walletClient.getAddresses()
+            // Read initial count
+            const initialCount = await publicClient.readContract({
+                address: CounterAddress.HappyCounter,
+                abi: CounterAbi.HappyCounter,
+                functionName: "getCount",
+            })
+            console.log("[count before]", initialCount)
 
+            // Submit increment transaction
+            const [account] = await walletClient.getAddresses()
             const hash = await walletClient.writeContract({
                 account,
                 address: deployment.HappyCounter,
@@ -136,10 +144,41 @@ function App() {
                 chain: happyChainSepolia,
             })
 
-            const receipt = await publicClient.waitForTransactionReceipt({ hash })
-            if (receipt.status === "reverted") {
-                console.log("[count ==] transaction reverted", receipt)
-                return
+            if (hash) {
+                toast(
+                    () => (
+                        <>
+                            UserOp submitted successfully!{" "}
+                            <a
+                                className="text-info hover:text-primary/50 underline"
+                                href={
+                                    "https://happy-testnet-sepolia.explorer.caldera.xyz/address/0xc80629fE33747288AaFb97684F86f7eD2D1aBF69"
+                                }
+                            >
+                                (explorer)
+                            </a>{" "}
+                        </>
+                    ),
+                    { duration: Number.POSITIVE_INFINITY, closeButton: true },
+                )
+
+                // Wait for transaction to be mined
+                const receipt = await publicClient.waitForTransactionReceipt({ hash })
+                if (receipt.status === "reverted") {
+                    toast.error("UserOp reverted!")
+                    console.log("[count ==] transaction reverted", receipt)
+                    return
+                }
+
+                // Read final count after successful transaction
+                const newCount = await publicClient.readContract({
+                    address: CounterAddress.HappyCounter,
+                    abi: CounterAbi.HappyCounter,
+                    functionName: "getCount",
+                })
+
+                toast.success(`Counter incremented from ${initialCount} to ${newCount} :)`)
+                console.log("[count after]", newCount)
             }
 
             const count = await publicClient.readContract({
@@ -153,6 +192,7 @@ function App() {
             console.log("[count ++]", count)
         } catch (error) {
             console.log("[count :(] error caught:", error)
+            toast.error("Something went wrong!")
         }
     }
 
