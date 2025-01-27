@@ -44,6 +44,6 @@ export { convertToSafeViemWalletClient, convertToSafeViemPublicClient } from "./
 
 export { hexSchema } from "./utils/zod.js"
 
-export { HappyMethodNames, PermissionNames } from "./utils/constants"
+export { HappyMethodNames, PermissionNames, TransactionType } from "./utils/constants"
 
 export { getUrlProtocol } from "./utils/url.js"
