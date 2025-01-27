@@ -12,6 +12,9 @@
     "exports": {
         ".": "./lib/index.ts"
     },
+    "dependencies": {
+        "@happychain/common": "workspace:^"
+    },
     "devDependencies": {
         "@arethetypeswrong/cli": "^0.16.4",
         "@happychain/configs": "workspace:^",
