@@ -9,7 +9,7 @@ import RequestContent from "./common/RequestContent"
 import RequestLayout from "./common/RequestLayout"
 import type { RequestConfirmationProps } from "./props"
 
-export function HappyWalletUseAbi({
+export function HappyUseAbi({
     method,
     params,
     reject,
