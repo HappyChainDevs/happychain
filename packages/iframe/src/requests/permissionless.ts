@@ -1,4 +1,5 @@
 import { HappyMethodNames, PermissionNames } from "@happychain/common"
+import { deployment as contractAddresses } from "@happychain/contracts/account-abstraction/sepolia"
 import {
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
@@ -13,7 +14,7 @@ import { type Address, type Client, InvalidAddressError, decodeAbiParameters, he
 import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
-import { sendUserOp } from "#src/requests/userOps"
+import { getCustomNonce, sendUserOp } from "#src/requests/userOps"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage.ts"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
@@ -59,21 +60,27 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             const sessionKey = storage.get(StorageKey.SessionKeys)?.[user.address]?.[target]
             if (!sessionKey) throw new EIP1193UnauthorizedError()
 
-            return await sendUserOp(user, tx, async (userOp, smartAccountClient) => {
-                const hash = getUserOperationHash({
-                    userOperation: {
-                        ...userOp,
-                        sender: smartAccountClient.account.address,
-                        signature: "0x",
-                    } as UserOperation<"0.7">,
-                    entryPointAddress: entryPoint07Address,
-                    entryPointVersion: "0.7",
-                    chainId: Number(getCurrentChain().chainId),
-                })
-                return await getWalletClient()!.signMessage({
-                    account: privateKeyToAccount(sessionKey),
-                    message: { raw: hash },
-                })
+            return await sendUserOp({
+                user,
+                tx,
+                signer: async (userOp, smartAccountClient) => {
+                    const hash = getUserOperationHash({
+                        userOperation: {
+                            ...userOp,
+                            sender: smartAccountClient.account.address,
+                            signature: "0x",
+                        } as UserOperation<"0.7">,
+                        entryPointAddress: entryPoint07Address,
+                        entryPointVersion: "0.7",
+                        chainId: Number(getCurrentChain().chainId),
+                    })
+                    return await getWalletClient()!.signMessage({
+                        account: privateKeyToAccount(sessionKey),
+                        message: { raw: hash },
+                    })
+                },
+                nonceProvider: async (smartAccountClient) =>
+                    await getCustomNonce(smartAccountClient.account.address, contractAddresses.SessionKeyValidator),
             })
         }
 
