@@ -77,7 +77,7 @@ setup: install-frozen enable-hooks enable-bun-lockfile-diffs ## To be run when f
 	$(call forall_make , $(ALL_PKGS) , setup)
 .PHONY: setup
 
-# Internal, for docs.contained.
+# Internal, to avoid cloning / rebuilding alto.
 setup.ts:
 	$(call forall_make , $(TS_PKGS) , setup)
 .PHONY: setup.ts
@@ -120,29 +120,29 @@ iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5
 	cd packages/iframe && make dev
 .PHONY: iframe.dev
 
-demo-js.dev: setup shared.dev sdk.dev ## Serves the VanillaJS demo application as http://localhost:5173
+demo-js.dev: setup.ts shared.dev sdk.dev ## Serves the VanillaJS demo application as http://localhost:5173
 	$(MULTIRUN) --names "iframe,demo-js" "cd packages/iframe && make dev" "cd packages/demo-vanillajs && make dev"
 .PHONY: demo-js.dev
 
-demo-react.dev: setup shared.dev sdk.dev ## Serves the React demo application as http://localhost:5173
+demo-react.dev: setup.ts shared.dev sdk.dev ## Serves the React demo application as http://localhost:5173
 	$(MULTIRUN) --names "iframe,demo-react" "cd packages/iframe && make dev" "cd packages/demo-react && make dev"
 .PHONY: demo-react.dev
 
-demo-vue.dev: setup shared.dev sdk.dev ## Serves the VueJS demo application as http://localhost:5173
+demo-vue.dev: setup.ts shared.dev sdk.dev ## Serves the VueJS demo application as http://localhost:5173
 	$(MULTIRUN) --names "iframe,demo-vue" "cd packages/iframe && make dev" "cd packages/demo-wagmi-vue && make dev"
 .PHONY: demo-vue.dev
 
-demo-js.prod: setup  ## builds & run the prod version of the JS demo
+demo-js.prod: setup.ts  ## builds & run the prod version of the JS demo
 	IFRAME_URL=http://localhost:4160 make demo-js.build
 	$(MULTIRUN) --names "iframe.demo-js" "cd packages/iframe && make preview" "cd packages/demo-vanillajs && make preview"
 .PHONY: demo-js.prod
 
-demo-react.prod: setup ## builds & run the prod version of the React demo
+demo-react.prod: setup.ts ## builds & run the prod version of the React demo
 	IFRAME_URL=http://localhost:4160 make demo-react.build
 	$(MULTIRUN) --names "iframe.demo-react" "cd packages/iframe && make preview" "cd packages/demo-react && make preview"
 .PHONY: demo-react.prod
 
-demo-vue.prod: setup sdk.build  ## builds & run the prod version of the Vue demo
+demo-vue.prod: setup.ts sdk.build  ## builds & run the prod version of the Vue demo
 	IFRAME_URL=http://localhost:4160 make demo-vue.build
 	$(MULTIRUN) --names "iframe.demo-vue" "cd packages/iframe && make preview" "cd packages/demo-wagmi-vue && make preview"
 .PHONY: demo-vue.prod
@@ -170,7 +170,7 @@ sdk.dev:
 .PHONY: sdk-dev
 
 # start docs in watch mode (can crash, see packages/docs/Makefile for more info)
-docs.dev: setup shared.dev sdk.dev
+docs.dev: setup.ts shared.dev sdk.dev
 	cd packages/docs && make dev
 .PHONY: docs.dev
 
@@ -275,12 +275,12 @@ account.build:
 	make iframe.build
 .PHONY: account.build
 
-demo-js.build: setup shared.build
+demo-js.build: setup.ts shared.build
 	cd packages/sdk-vanillajs && make build
 	cd packages/demo-vanillajs && make build
 .PHONY: demo-js.build
 
-demo-react.build: setup shared.build
+demo-react.build: setup.ts shared.build
 	cd packages/sdk-vanillajs && make build
 	cd packages/sdk-shared && make build
 	cd packages/sdk-react && make build
