@@ -6,7 +6,8 @@ include ../../makefiles/help.mk
 -include .env
 
 # Set CONFIG to "LOCAL" by default. Other valid values: "TEST" or "MAIN".
-CONFIG ?= LOCAL
+# Must be exported as some deploy scripts depend on it.
+export CONFIG ?= LOCAL
 
 # Set the list of allowed bundlers based on the current deployment configuration (LOCAL, TEST, etc.)
 export ALLOWED_BUNDLERS = $(ALLOWED_BUNDLERS_$(CONFIG))
@@ -17,12 +18,7 @@ export ALLOWED_BUNDLERS = $(ALLOWED_BUNDLERS_$(CONFIG))
 # - "resume" — resumes the previous deployment
 DEPLOY ?= deploy
 
-# Deployment name, used by `make save-deployment` (will save under deployments/$DEPLOYMENT_NAME).
-DEPLOYMENT_NAME ?= $(CONFIG)
-
-# Script to run for deployments, or deployment to save for `make save-deployment`.
-DEPLOY_SCRIPT ?= DeployL1Upgradeable.s.sol
-
+# Flags for `ln` (symlink creation)
 LN_FLAGS := $(if $(findstring Darwin,$(shell uname)),-shF,-sfT)
 
 # Flag to include or exclude metadata based on configuration
@@ -52,57 +48,54 @@ setup:
 ####################################################################################################
 # Build
 
-build:
+build: ## Builds all contracts
 	forge build $(METADATA_FLAG)
 .PHONY: build
 
-watch:
+watch: ## Builds contracts & runs tests on contract change
 	forge test --watch src/
 .PHONY: watch
 
-clean:
+clean: ## Removes build output
 	forge clean
 	rm -rf node_modules/.tmp
 .PHONY: clean
 
-nuke: clean
+nuke: clean ## Removes build output and dependencies
 	rm -rf lib
 .PHONY: nuke
 
 ####################################################################################################
 # Testing
 
-test:
+test: ## Runs tests
 	forge test -vv
 .PHONY: test
 
-testv:
+testv: ## Runs test with max verbosity
 	forge test -vvvv
 .PHONY: testv
 
-test-gas:
-	forge test --gas-report
-.PHONY: test-gas
-
-gas-paymaster:
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
-.PHONY: gas-paymaster
-
-test-aa-gas-flamechart:
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart
-.PHONY: test-aa-gas-flamechart
-
-test-fork:
+test-fork: ## Runs test on a fork of the network (via RPC_$(CONFIG) env variable)
 	forge test --gas-report --fork-url $(RPC_$(CONFIG))
 .PHONY: test-fork
 
-# Please, ensure that all Account Abstraction (AA) contracts are deployed before running the demo.
-aa-demo:
-	@tsx ./scripts/aa_demo.ts;
-.PHONY: aa-demo
+test-gas: ## Runs test and generate a gas report
+	forge test --gas-report
+.PHONY: test-gas
 
-# Run the complete AA demo with all prerequisites
-aa-demo-auto:
+####################################################################################################
+# Demos & Reports
+
+paymaster-gas: ## Generates a gas report for the Paymaster contract.
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
+.PHONY: gas-paymaster
+
+paymaster-flamechart: ## Generates a flamechart for the gas usage of the Paymaster contract.
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart
+.PHONY: test-aa-gas-flamechart
+
+aa-demo: ## All-in-one run of the AA demo script, including Anvil & contract deployments.
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 	@make anvil > /dev/null 2>&1 &
@@ -122,13 +115,11 @@ aa-demo-auto:
 	@git restore -- deployments/anvil/testing deployments/anvil/mockTokens
 .PHONY: aa-demo-auto
 
-# Please, ensure that all Account Abstraction (AA) and Mock Token contracts are deployed before generating the gas report.
-gas-bundler:
-	@tsx ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Gas Usage for a Single UserOp/ {start=1} {if (start) print}' > bundler_gas_report.txt
-.PHONY: gas-bundler
+aa-demo-only: ## Runs the AA demo script only (requires Anvil, and AA & mocks deployments).
+	@tsx ./scripts/aa_demo.ts;
+.PHONY: aa-demo
 
-# Run the complete gas bundler test with all prerequisites
-gas-bundler-auto:
+bundler-gas: ## All-in-one generation of the gas breakdown for bundler transaction, including Anvil & contract deployments.
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 	@make anvil > /dev/null 2>&1 &
@@ -146,6 +137,10 @@ gas-bundler-auto:
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 	@git restore -- deployments/anvil/testing deployments/anvil/mockTokens
 .PHONY: gas-bundler-auto
+
+bundler-gas-only: ## Generates a gas report (breakdown) for bundler transactions (requires Anvil & contract deployments).
+	@tsx ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Gas Usage for a Single UserOp/ {start=1} {if (start) print}' > bundler_gas_report.txt
+.PHONY: gas-bundler
 
 ####################################################################################################
 # Code Quality
@@ -182,7 +177,7 @@ anvil:
 VERIFY_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),--verify,)
 VERIFIER_FLAG := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_FLAG_$(CONFIG)),)
 VERIFIER_URL := $(if $(findstring true,$(VERIFY_$(CONFIG))),$(VERIFIER_URL_$(CONFIG)),)
-CHECK_UPGRADE := make validate-upgrade
+CHECK_UPGRADE := true
 
 ifeq ($(DEPLOY),deploy)
 	BROADCAST_FLAG := --broadcast
@@ -195,24 +190,16 @@ endif
 
 ifeq ($(DEPLOY),resume)
 	BROADCAST_FLAG := --resume
-	CHECK_UPGRADE :=
+	CHECK_UPGRADE := false
 endif
 
 # Deploys contracts locally, to testnet or mainnet depending on the $CONFIG value.
 # You can also specify MODE=dry to not submit the tx, or MODE=resume to resume the last deployment.
 deploy:
-	$(CHECK_UPGRADE)
 	$(call run-deploy-script,src/deploy/$(DEPLOY_SCRIPT))
 	$(call post-deploy)
+	$(call save-deployment)
 .PHONY: deploy
-
-# Performs checks related to contract upgradeability.
-# cf. https://docs.openzeppelin.com/upgrades-plugins/1.x/api-core
-validate-upgrade:
-	forge clean && forge build $(METADATA_FLAG) # doesn't work with incremental builds
-	openzeppelin-upgrades-core validate --contract HappyERC20Upgradeable;
-	openzeppelin-upgrades-core validate --contract HappyERC20Upgraded;
-.PHONY: validate-upgrade
 
 # Defines run-deploy-script to use environment variable keys or Foundry accounts depending on the
 # value of USE_FOUNDRY_ACCOUNT.
@@ -231,7 +218,7 @@ define run-deploy-script-key
 		$(BROADCAST_FLAG) \
 		$(VERIFY_FLAG) \
 		$(VERIFIER_FLAG) \
-		$(VERIFIER_URL)
+		$(VERIFIER_URL) -vvvv
 endef
 
 # Deploys using a private key supplied by a Foundry account. The account name and password file
@@ -252,6 +239,7 @@ define run-deploy-script-account
 		$(VERIFIER_URL)
 endef
 
+# Post-processes the deployment output.
 define post-deploy
 	@# Print address logs from the deploy script.
 	@cat out/deployment.json && printf "\n"
@@ -267,23 +255,23 @@ define post-deploy
 	@# To use you will want to symlink this file from the deployments dir to the consuming package,
 	@# and .gitignore it.
 
-	cat scripts/abi_types_fragment_begin.ts.txt > out/abis.ts
-	printf "\n\n" >> out/abis.ts
+	@cat scripts/abi_types_fragment_begin.ts.txt > out/abis.ts
+	@printf "\n\n" >> out/abis.ts
 
-	printf "const contractToAbi = (" >> out/abis.ts
-	cat out/abis.json >> out/abis.ts
-	printf ") as const\n\n" >> out/abis.ts
+	@printf "const contractToAbi = (" >> out/abis.ts
+	@cat out/abis.json >> out/abis.ts
+	@printf ") as const\n\n" >> out/abis.ts
 
-	printf "const aliasToContract = (" >> out/abis.ts
-	cat out/abiMap.json >> out/abis.ts
-	printf ") as const\n\n" >> out/abis.ts
+	@printf "const aliasToContract = (" >> out/abis.ts
+	@cat out/abiMap.json >> out/abis.ts
+	@printf ") as const\n\n" >> out/abis.ts
 
-	printf "export const deployment = (" >> out/abis.ts
-	cat out/deployment.json >> out/abis.ts
-	printf ") as const\n\n" >> out/abis.ts
+	@printf "export const deployment = (" >> out/abis.ts
+	@cat out/deployment.json >> out/abis.ts
+	@printf ") as const\n\n" >> out/abis.ts
 
-	cat scripts/abi_types_fragment_end.ts.txt >> out/abis.ts
-	printf "\n" >> out/abis.ts
+	@cat scripts/abi_types_fragment_end.ts.txt >> out/abis.ts
+	@printf "\n" >> out/abis.ts
 endef
 
 # Explanation of the jq command;
@@ -294,81 +282,85 @@ endef
 #    Finally, it maps it to [{ "Contract1": ABI1 } , { "Contract2": ABI2 } , ... ]
 #    then joins alls of them in a single JSON dictionary.
 
-post-deploy:
-	$(call post-deploy)
-.PHONY: post-deploy
-
-####################################################################################################
-# Save Deployment Information
-
-# Saves all information pertaining to a deployment to deployments/$NAME.
-# The suggested $NAME format is "CHAIN/NAME", e.g. "happy-sepolia/aa".
+# Saves all information pertaining to a deployment to deployments/$DEPLOYMENT_NAME.
+# The suggested $DEPLOYMENT_NAME format is "CHAIN/NAME", e.g. "happy-sepolia/aa".
 # Will save the latest deployment from $DEPLOY_SCRIPT.
-save-deployment:
+define save-deployment
 	@mkdir -p deployments/$(DEPLOYMENT_NAME)
 	@cp -f out/deployment.json out/abiMap.json out/abis.json out/abis.ts deployments/$(DEPLOYMENT_NAME)
 	$(eval __CHAIN_ID := `cast chain-id --rpc-url $(RPC_$(CONFIG))`)
+	@mkdir -p deployments/$(DEPLOYMENT_NAME)
 	$(eval __RUN_FILE := broadcast/$(DEPLOY_SCRIPT)/$(__CHAIN_ID)/run-latest.json)
-	mkdir -p deployments/$(DEPLOYMENT_NAME)
-	@cp $(__RUN_FILE) deployments/$(DEPLOYMENT_NAME)/transactions.json
+	@if [ "$(CONFIG)" != "LOCAL" ]; then \
+		cp $(__RUN_FILE) deployments/$(DEPLOYMENT_NAME)/transactions.json; \
+	fi
 	@echo "Saved deployment to deployments/$(DEPLOYMENT_NAME)"
-.PHONY: save-deployment
+endef
 
 ####################################################################################################
 # Deploy Scripts
 
-deploy-l1:
+# Sets CHAIN_ID based on RPC.
+define set-chain-id
+	CHAIN_ID = $(shell cast chain-id --rpc-url $(RPC_$(CONFIG)))
+endef
+
+# Sets CHAIN_NAME based on CHAIN_ID when called.
+define set-chain-name
+	ifeq ($(CHAIN_ID),1337)
+		CHAIN_NAME = anvil
+	else ifeq ($(CHAIN_ID),216)
+		CHAIN_NAME = hapy-sepolia
+	else ifeq ($(CHAIN_ID),11155111)
+		CHAIN_NAME = sepolia
+	else ifeq ($(CHAIN_ID),1)
+		CHAIN_NAME = ethereum
+	else
+		CHAIN_NAME = unknown
+	endif
+endef
+
+# If DEPLOYMENT_NAME is not set, sets CHAIN_ID and CHAIN_NAME and defines DEPLOYMENT_NAME = CHAIN_NAME/$(1)
+# Call like this: $(eval $(call set-deployment-name,myDeployment))
+define set-deployment-name
+	ifeq ($(DEPLOYMENT_NAME),)
+		$(eval $(set-chain-id))
+        $(eval $(set-chain-name))
+        # Export for use in recursive make invocations.
+        export DEPLOYMENT_NAME := $(CHAIN_NAME)/$(1)
+	endif
+endef
+
+deploy-l1: ## Deploys the non-upgradeable L1 contracts
+	$(eval $(call set-deployment-name,l1))
 	make deploy DEPLOY_SCRIPT=DeployL1.s.sol
 .PHONY: deploy-l1
 
-deploy-l1up:
+deploy-l1-upgradeable: ## Deploys the upgradeable L1 contracts (only for reference)
+# Performs checks related to contract upgradeability.
+# cf. https://docs.openzeppelin.com/upgrades-plugins/1.x/api-core
+ifeq ($(CHECK_UPGRADE),true)
+	forge clean && forge build $(METADATA_FLAG) # doesn't work with incremental builds
+	openzeppelin-upgrades-core validate --contract HappyERC20Upgradeable;
+	openzeppelin-upgrades-core validate --contract HappyERC20Upgraded;
+endif
+	$(eval $(call set-deployment-name,l1-upgradeable))
 	make deploy DEPLOY_SCRIPT=DeployL1Upgradeable.s.sol
-.PHONY: deploy-l1up
+.PHONY: deploy-l1-upgradeable
 
-# Deploy both AA and Mock contracts with a single validation step
-# Only for deploying to anvil before running demo scripts - do not use for actual deployments
-deploy-demo-contracts:
-	make validate-upgrade
-	$(call run-deploy-script,src/deploy/DeployAA.s.sol)
-	$(call post-deploy)
-	@if ! cmp -s out/abis.ts deployments/anvil/testing/abis.ts; then \
-		echo "ABI changes detected in AA contracts, saving local deployment..."; \
-		make save-local-aa-deployment; \
-	else \
-		echo "No ABI changes detected in AA contracts, skipping local deployment save"; \
-	fi
-	$(call run-deploy-script,src/deploy/mocks/DeployMocks.s.sol)
-	$(call post-deploy)
-	@if ! cmp -s out/abis.ts deployments/anvil/mockTokens/abis.ts; then \
-		echo "ABI changes detected in Mock contracts, saving local deployment..."; \
-		make save-local-mock-deployment; \
-	else \
-		echo "No ABI changes detected in Mock contracts, skipping local deployment save"; \
-	fi
-.PHONY: deploy-demo-contracts
-
-deploy-aa:
+deploy-aa: ## Deploys the AA contracts.
+	$(eval $(call set-deployment-name,aa))
 	make deploy DEPLOY_SCRIPT=DeployAA.s.sol
 .PHONY: deploy-aa
 
-deploy-mocks:
-	make deploy DEPLOY_SCRIPT=mocks/DeployMocks.s.sol
+deploy-mocks: ## Deploys the mock contracts.
+	$(eval $(call set-deployment-name,mocks))
+	make deploy DEPLOY_SCRIPT=DeployMocks.s.sol
 .PHONY: deploy-mocks
 
-deploy-random:
+deploy-random: ## Deploys the randomness contracts and saves the deployment.
+	$(eval $(call set-deployment-name,random))
 	make deploy DEPLOY_SCRIPT=DeployRandom.s.sol
 .PHONY: deploy-random
-
-save-local-aa-deployment:
-	make save-deployment DEPLOY_SCRIPT=DeployAA.s.sol DEPLOYMENT_NAME=anvil/testing CONFIG=LOCAL
-.PHONY: save-local-aa-deployment
-
-save-local-mock-deployment:
-	make save-deployment DEPLOY_SCRIPT=DeployMocks.s.sol DEPLOYMENT_NAME=anvil/mockTokens CONFIG=LOCAL
-.PHONY: save-local-mock-deployment
-
-save-local-random-deployment:
-	make save-deployment DEPLOY_SCRIPT=DeployRandom.s.sol DEPLOYMENT_NAME=anvil/random CONFIG=LOCAL
-.PHONY: save-local-random-deployment
 
 ####################################################################################################
