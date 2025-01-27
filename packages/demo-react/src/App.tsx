@@ -89,8 +89,8 @@ function App() {
         try {
             if (!walletClient || !user?.address) return
             const [account] = await walletClient.getAddresses()
-            // cf: https://viem.sh/docs/contract/writeContract.html#usage
-            const { request } = await publicClient.simulateContract({
+
+            const writeCall = await walletClient.writeContract({
                 account,
                 address: contractsAddresses.MockTokenA,
                 abi: abis.MockTokenA,
@@ -98,7 +98,6 @@ function App() {
                 args: [user.address, BigInt(1000000000000000000n)],
                 chain: happyChainSepolia,
             })
-            const writeCall = await walletClient.writeContract(request)
 
             if (writeCall) {
                 console.log("[mintTokens] success:", writeCall)
