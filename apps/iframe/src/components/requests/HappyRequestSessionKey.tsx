@@ -86,9 +86,9 @@ export function HappyRequestSessionKey({
                         </details>
 
                         <p className="mb-1">
-                                This could result in loss of funds if the contract can access your assets.
-                            </p>
-                            <p>Only proceed if you trust the application.</p>
+                            This could result in loss of funds if the contract can access your assets.
+                        </p>
+                        <p>Only proceed if you trust the application.</p>
                     </div>
                     <div className="flex flex-col w-full gap-2">
                         <Button
