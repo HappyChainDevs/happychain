@@ -61,7 +61,7 @@ contract DeployAAContracts is BaseDeployScript {
 
         string memory deploymentPath;
         if (keccak256(bytes(config)) == keccak256(bytes("LOCAL"))) {
-            deploymentPath = "deployments/anvil/testing/deployment.json";
+            deploymentPath = "deployments/anvil/aa/deployment.json";
         } else if (keccak256(bytes(config)) == keccak256(bytes("TEST"))) {
             deploymentPath = "deployments/happy-sepolia/aa/deployment.json";
         } else {

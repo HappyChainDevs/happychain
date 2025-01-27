@@ -5265,13 +5265,13 @@ export const deployment = ({
   "ECDSAValidator": "0x94B1980766ba8f54219032d6015Db17503EcB3B3",
   "EntryPointSimulations": "0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47",
   "EntryPointV7": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
-  "FactoryStaker": "0x8eB916B0DD637DF7cDB0CF7dF13A60eDa35cDDf4",
-  "HappyPaymaster": "0xAF193D1Bc8f4a8F0c6E327C422D63DEe435e050F",
-  "HappyPaymasterImpl": "0x86e6F2eC2FBeF01449406b73E5cEB6EEa94079aB",
+  "FactoryStaker": "0x7320D07F22410F5c9C1B6a36e7A2EC98ea46c798",
+  "HappyPaymaster": "0xD03384C7fb92380d89448D913633913D16605cdD",
+  "HappyPaymasterImpl": "0xc127B69281577Ec72dCF9B13d9127485A601D5dB",
   "Kernel": "0xdd89F027AB0Fc0256239f8B51cE7C76F28Ad8401",
   "KernelFactory": "0x773A02bcED76c707Dd9FbBbA82E302e16Ee4d692",
-  "SessionKeyValidator": "0x005ba233F6058a7F3D0B372328998c877E8A69d6",
-  "SessionKeyValidatorImpl": "0x4E3F1140bC5B6109Ae42e774FEd88897Ef4e3655"
+  "SessionKeyValidator": "0x020ECB7FC22194aC277963F65256e0E170c32133",
+  "SessionKeyValidatorImpl": "0xDB1ff22b66c456b4e828f467C0F048196afE08e3"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
