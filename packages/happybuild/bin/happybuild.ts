@@ -26,7 +26,6 @@ if (!cliArgs.watch) {
     // rebuild (debounced)
     const subscription = await watcher.subscribe(process.cwd(), (_err, _events) => debounceBuild(), {
         ignore: outDirs,
-        backend: "watchman",
     })
 
     process.on("SIGINT", () => {
