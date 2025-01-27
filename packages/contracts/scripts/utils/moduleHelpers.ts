@@ -3,7 +3,7 @@ import type { Erc7579Actions } from "permissionless/actions/erc7579"
 import type { Hex, PublicClient } from "viem"
 import type { Address } from "viem"
 import type { SmartAccount } from "viem/account-abstraction"
-import { abis, deployment } from "../../deployments/anvil/testing/abis"
+import { abis, deployment } from "../../deployments/anvil/aa/abis"
 import { toHexDigits } from "./accounts"
 
 // The address used when installing a validator module to signify that the module has no hooks.

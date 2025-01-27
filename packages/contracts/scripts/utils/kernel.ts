@@ -16,7 +16,7 @@ import { publicClient } from "./clients"
 import { bundlerRpc, rpcURL } from "./config"
 
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { deployment } from "../../deployments/anvil/testing/abis"
+import { deployment } from "../../deployments/anvil/aa/abis"
 import { fundSmartAccount, initializeTokenBalance } from "./accounts.ts"
 
 export async function getKernelAccount(publicClient: PublicClient, account: PrivateKeyAccount): Promise<SmartAccount> {

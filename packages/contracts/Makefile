@@ -100,19 +100,16 @@ aa-demo: ## All-in-one run of the AA demo script, including Anvil & contract dep
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 	@make anvil > /dev/null 2>&1 &
 	@sleep 5
-	@cast wallet address --account test-account-0 --password-file .password.local | xargs -I {} cast send {} --value 100ether --private-key 2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
-	@make deploy-aa CONFIG=LOCAL
-	@make save-local-aa-deployment
-	@make deploy-mocks CONFIG=LOCAL
-	@make save-local-mock-deployment
-	@cd ../bundler && make build > /dev/null
+	@make deploy-aa
+	@make deploy-mocks
+	@cd ../bundler && make setup > /dev/null
 	@cd ../bundler && make run > /dev/null 2>&1 &
 	@sleep 5
 	@clear
-	@make aa-demo
+	@make aa-demo-only
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
-	@git restore -- deployments/anvil/testing deployments/anvil/mockTokens
+	@git restore -- deployments/anvil/aa deployments/anvil/mocks
 .PHONY: aa-demo-auto
 
 aa-demo-only: ## Runs the AA demo script only (requires Anvil, and AA & mocks deployments).
@@ -124,18 +121,16 @@ bundler-gas: ## All-in-one generation of the gas breakdown for bundler transacti
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
 	@make anvil > /dev/null 2>&1 &
 	@sleep 5
-	@cast wallet address --account test-account-0 --password-file .password.local | xargs -I {} cast send {} --value 100ether --private-key 2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
-	@make deploy-aa CONFIG=LOCAL
-	@make save-local-aa-deployment
-	@make deploy-mocks CONFIG=LOCAL
-	@make save-local-mock-deployment
-	@cd ../bundler && make build > /dev/null
+	@make deploy-aa
+	@make deploy-mocks
+	@cd ../bundler && make setup > /dev/null
 	@cd ../bundler && make run > /dev/null 2>&1 &
 	@sleep 5
-	@make gas-bundler
+	@clear
+	@make bundler-gas-only
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
 	@lsof -ti :$(BUNDLER_PORT) | xargs kill -9 2>/dev/null || true
-	@git restore -- deployments/anvil/testing deployments/anvil/mockTokens
+	@git restore -- deployments/anvil/aa deployments/anvil/mocks
 .PHONY: gas-bundler-auto
 
 bundler-gas-only: ## Generates a gas report (breakdown) for bundler transactions (requires Anvil & contract deployments).
