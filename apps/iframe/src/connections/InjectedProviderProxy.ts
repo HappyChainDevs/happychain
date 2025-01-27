@@ -97,6 +97,7 @@ export class InjectedProviderProxy extends SafeEventEmitter {
     ): void {
         const iframeRequest = resp.windowId === iframeID()
         const pending = this.inFlight.get(resp.key)
+        // @ts-ignore
         if (!pending && iframeRequest) iframeProvider.handleRequestResolution(resp)
         else if (pending?.reject && resp.error) pending.reject(new GenericProviderRpcError(resp.error))
         else if (pending?.resolve) pending.resolve(resp.payload)

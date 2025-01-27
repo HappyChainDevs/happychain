@@ -137,6 +137,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
     ) {
         const maxRetries = 3
         for (let i = 0; i < maxRetries; i++) {
+            console.log("trying...")
             try {
                 // have to refresh JWT since web3auth fails if duplicate token is found
                 const addresses = await web3AuthConnect(token)
@@ -151,15 +152,16 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             } catch (e) {
                 if (e instanceof Error && e.message.includes("not logged in yet")) {
                     // web3Auth can't connect, disconnect everything to allow user to retry
-                    console.warn("Failed to connect. Clearing user", await getFirebaseAuthState())
+                    console.warn("Failed to connect. Clearing user")
                     return await this.disconnect()
                 }
 
                 console.warn(`Failed to connect to web3Auth, Retrying ${i + 1}/${maxRetries}`, e)
                 await new Promise((resolve) => setTimeout(resolve, 3_000))
+                console.log("timeout done")
             }
         }
-
+        console.log("done...")
         // if it fails to connect, we should fully disconnect so the user can try again
         return this.disconnect()
     }
