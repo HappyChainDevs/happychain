@@ -22,6 +22,15 @@ export type UserOpSigner = (
     smartAccountClient: ExtendedSmartAccountClient,
 ) => Promise<Hex>
 
+export type NonceProvider = (smartAccountClient: ExtendedSmartAccountClient) => Promise<bigint | undefined>
+
+export type SendUserOpArgs = {
+    user: HappyUser
+    tx: RpcTransactionRequest
+    signer: UserOpSigner
+    nonceProvider?: NonceProvider
+}
+
 export enum VALIDATOR_MODE {
     DEFAULT = "0x00",
     ENABLE = "0x01",
@@ -34,9 +43,9 @@ export enum VALIDATOR_TYPE {
 }
 
 /**
- * Returns the nonce from the EntryPoint-v7 contract for the smart account.
+ * Returns the nonce from the EntryPoint-v7 contract for the given account and validator.
  */
-async function getCustomNonce(smartAccountAddress: Address, validatorAddress: Address) {
+export async function getCustomNonce(smartAccountAddress: Address, validatorAddress: Address) {
     return await getAccountNonce(getPublicClient(), {
         address: smartAccountAddress,
         entryPointAddress: contractAddresses.EntryPointV7,
@@ -59,9 +68,9 @@ async function getCustomNonce(smartAccountAddress: Address, validatorAddress: Ad
     })
 }
 
-export async function sendUserOp(user: HappyUser, tx: RpcTransactionRequest, signer: UserOpSigner) {
+export async function sendUserOp({ user, tx, signer, nonceProvider = async () => undefined }: SendUserOpArgs) {
     const smartAccountClient = (await getSmartAccountClient())!
-    const customNonce = await getCustomNonce(smartAccountClient.account.address, contractAddresses.SessionKeyValidator)
+    const customNonce = await nonceProvider(smartAccountClient)
     const preparedUserOp = await smartAccountClient.prepareUserOperation({
         account: smartAccountClient.account,
         calls: [

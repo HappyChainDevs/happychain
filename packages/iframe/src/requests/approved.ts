@@ -52,11 +52,12 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     switch (request.payload.method) {
         case "eth_sendTransaction": {
             if (!user) throw new EIP1193UnauthorizedError()
-            return await sendUserOp(
+            return await sendUserOp({
                 user,
-                request.payload.params[0],
-                async (userOp, smartAccountClient) => await smartAccountClient.account.signUserOperation(userOp),
-            )
+                tx: request.payload.params[0],
+                signer: async (userOp, smartAccountClient) =>
+                    await smartAccountClient.account.signUserOperation(userOp),
+            })
         }
 
         case "eth_requestAccounts": {
