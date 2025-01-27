@@ -17,21 +17,27 @@ const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls : ""
 
     return (
-        <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-slate-700">
-            <span>
-                <a
-                    href={`${blockExplorerUrl}/tx/${tx}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-purple-500 hover:underline"
-                >
-                    {shortenAddress(tx)}
-                </a>
-            </span>
+        <div className="flex flex-col items-start w-full justify-between px-3 py-4 border rounded-md border-slate-700">
+            <div className="flex flex-row w-full items-center justify-between">
+                <span>
+                    <a
+                        href={`${blockExplorerUrl}/tx/${tx}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/50 hover:underline"
+                    >
+                        {shortenAddress(tx)}
+                    </a>
+                </span>
 
-            <div className="animate-spin">
-                <CircleNotch />
+                <div className="animate-spin">
+                    <CircleNotch />
+                </div>
             </div>
+
+            <span className="text-[12px] text-warning hover:text-warning/80 hover:underline px-2 py-1 bg-warning/40 rounded-lg">
+                Pending
+            </span>
         </div>
     )
 }
