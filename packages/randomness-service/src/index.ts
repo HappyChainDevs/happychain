@@ -1,6 +1,6 @@
+import { abis } from "@happychain/contracts/random/anvil"
 import { TransactionManager, TransactionStatus } from "@happychain/transaction-manager"
 import type { LatestBlock, Transaction } from "@happychain/transaction-manager"
-import { abis } from "./ABI/random.js"
 import { CommitmentManager } from "./CommitmentManager.js"
 import { CustomGasEstimator } from "./CustomGasEstimator.js"
 import { CommitmentTransactionFactory } from "./Factories/CommitmentTransactionFactory.js"
