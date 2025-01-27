@@ -1,5 +1,4 @@
-import { abis as CounterAbi, deployment as CounterAddress } from "@happychain/contracts/happyCounter/sepolia"
-import { abis, deployment as contractsAddresses } from "@happychain/contracts/mockTokens/sepolia"
+import { abis, deployment } from "@happychain/contracts/mocks/sepolia"
 import { happyChainSepolia, useHappyChain } from "@happychain/react"
 import { useEffect, useMemo, useState } from "react"
 import { createPublicClient, createWalletClient, custom } from "viem"
@@ -80,7 +79,7 @@ function App() {
     }
 
     async function loadAbiStub() {
-        await loadAbi(CounterAddress.HappyCounter, CounterAbi.HappyCounter)
+        await loadAbi(deployment.HappyCounter, abis.HappyCounter)
         console.log("ABI loaded!")
     }
 
@@ -92,7 +91,7 @@ function App() {
 
             const writeCall = await walletClient.writeContract({
                 account,
-                address: contractsAddresses.MockTokenA,
+                address: deployment.MockTokenA,
                 abi: abis.MockTokenA,
                 functionName: "mint",
                 args: [user.address, BigInt(1000000000000000000n)],
@@ -110,7 +109,7 @@ function App() {
     }
 
     async function addSessionKeyToCounterContract() {
-        await addSessionKey(CounterAddress.HappyCounter)
+        await addSessionKey(deployment.HappyCounter)
         console.log("Session key added!")
     }
 
@@ -122,8 +121,8 @@ function App() {
 
             const hash = await walletClient.writeContract({
                 account,
-                address: CounterAddress.HappyCounter,
-                abi: CounterAbi.HappyCounter,
+                address: deployment.HappyCounter,
+                abi: abis.HappyCounter,
                 functionName: "increment",
                 chain: happyChainSepolia,
             })
@@ -136,8 +135,8 @@ function App() {
             }
 
             const count = await publicClient.readContract({
-                address: CounterAddress.HappyCounter,
-                abi: CounterAbi.HappyCounter,
+                address: deployment.HappyCounter,
+                abi: abis.HappyCounter,
                 functionName: "getCount",
             })
 

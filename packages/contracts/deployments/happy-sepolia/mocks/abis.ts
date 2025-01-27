@@ -3,6 +3,35 @@ import type { MapTuple, ObjectFromTuples, UnionToTuple } from "@happychain/commo
 import type { Address } from "viem"
 
 const contractToAbi = ({
+  "HappyCounter": [
+    {
+      "type": "function",
+      "name": "getCount",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "count",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "increment",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "reset",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    }
+  ],
   "MockERC20Token": [
     {
       "type": "constructor",
@@ -381,12 +410,14 @@ const contractToAbi = ({
 ) as const
 
 const aliasToContract = ({
+  "HappyCounter": "HappyCounter",
   "MockTokenA": "MockERC20Token",
   "MockTokenB": "MockERC20Token",
   "MockTokenC": "MockERC20Token"
 }) as const
 
 export const deployment = ({
+  "HappyCounter": "0xeAe5825cd598FD74ffa199b6849b2286eb8405Ca",
   "MockTokenA": "0xc80629fE33747288AaFb97684F86f7eD2D1aBF69",
   "MockTokenB": "0xe7b1987CE19C0824D03b8bcc5919DB9604096376",
   "MockTokenC": "0x901F67FCF4870453CE82eb2E986E4e68AFe7313F"
@@ -409,3 +440,5 @@ for (const [alias, contractName] of Object.entries(aliasToContract)) {
     // biome-ignore lint/suspicious/noExplicitAny: safe generated code
     abis[alias as ContractAlias] = contractToAbi[contractName as ContractName] as any
 }
+
+

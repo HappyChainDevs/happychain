@@ -291,7 +291,7 @@ define save-deployment
 	$(eval __CHAIN_ID := `cast chain-id --rpc-url $(RPC_$(CONFIG))`)
 	@mkdir -p deployments/$(DEPLOYMENT_NAME)
 	$(eval __RUN_FILE := broadcast/$(DEPLOY_SCRIPT)/$(__CHAIN_ID)/run-latest.json)
-	@if [ "$(CONFIG)" != "LOCAL" ]; then \
+	@if [ "$(CONFIG)" != "LOCAL" ] && [ -f "$(__RUN_FILE)" ]; then \
 		cp $(__RUN_FILE) deployments/$(DEPLOYMENT_NAME)/transactions.json; \
 	fi
 	@echo "Saved deployment to deployments/$(DEPLOYMENT_NAME)"
@@ -310,7 +310,7 @@ define set-chain-name
 	ifeq ($(CHAIN_ID),1337)
 		CHAIN_NAME = anvil
 	else ifeq ($(CHAIN_ID),216)
-		CHAIN_NAME = hapy-sepolia
+		CHAIN_NAME = happy-sepolia
 	else ifeq ($(CHAIN_ID),11155111)
 		CHAIN_NAME = sepolia
 	else ifeq ($(CHAIN_ID),1)
