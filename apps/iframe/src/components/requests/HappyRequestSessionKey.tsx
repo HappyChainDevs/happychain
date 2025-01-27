@@ -78,17 +78,19 @@ export function HappyRequestSessionKey({
                                 <ul className="flex flex-col w-full justify-start items-start gap-[1ex]">
                                     <li className="text-neutral text-[15px]">
                                         {bytecode
-                                            ? "✅  Contract deployment data found!"
-                                            : "🚩  Contract deployment data not found, please click on the contract address above to verify its details in the block explorer."}
+                                            ? "✅  Contract code found onchain!"
+                                            : "🚩  No contract code found at this address. This could indicate a scam or incorrect address."}
                                     </li>
                                 </ul>
                             </div>
                         </details>
 
-                        <p className="mb-1">
-                            This could result in loss of funds if the contract can access your assets.
-                        </p>
-                        <p>Only proceed if you trust the application.</p>
+                        <span className="text-sm text-error/70 p-2 rounded-lg bg-error/30 mt-4 w-full">
+                            <p className="mb-1">
+                                This could result in loss of funds if the contract can access your assets.
+                            </p>
+                            <p>Only proceed if you trust the application.</p>
+                        </span>
                     </div>
                     <div className="flex flex-col w-full gap-2">
                         <Button
