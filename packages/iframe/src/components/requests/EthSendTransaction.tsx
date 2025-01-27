@@ -1,3 +1,4 @@
+import { TransactionType } from "@happychain/common"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -21,14 +22,6 @@ import RequestContent from "./common/RequestContent"
 import RequestDetails from "./common/RequestDetails"
 import RequestLayout from "./common/RequestLayout"
 import type { RequestConfirmationProps } from "./props"
-
-enum TransactionType {
-    Legacy = "0x0",
-    EIP1559OptionalAccessList = "0x1",
-    EIP1559 = "0x2",
-    EIP4844 = "0x3",
-    EIP7702 = "0x4",
-}
 
 /**
  * This is used since specifying a type in a `useSendTransaction` call
