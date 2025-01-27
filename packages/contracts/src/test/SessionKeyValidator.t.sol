@@ -1,30 +1,28 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
+import {BaseDeployScript} from "../deploy/BaseDeployScript.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
-import {SIG_VALIDATION_SUCCESS_UINT, SIG_VALIDATION_FAILED_UINT} from "kernel/types/Constants.sol";
-
 import {MockERC20Token} from "../mocks/MockERC20.sol";
-import {SessionKeyValidator} from "../../src/SessionKeyValidator.sol";
+import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
+
+import {SIG_VALIDATION_SUCCESS_UINT, SIG_VALIDATION_FAILED_UINT} from "kernel/types/Constants.sol";
 import {SessionKeyValidatorUpgraded} from "./mocks/SessionKeyValidatorUpgraded.sol";
+import {SessionKeyValidator} from "../../src/SessionKeyValidator.sol";
+import {Test} from "forge-std/Test.sol";
 
-// imported for _deployProxy, todo: use DeployAA.s.sol in entirety for tests
-import {DeployAAContracts} from "../../src/deploy/DeployAA.s.sol";
-
-contract SessionValidatorTest is Test, DeployAAContracts {
+contract SessionValidatorTest is Test, BaseDeployScript {
     SessionKeyValidator public sessionKeyValidator;
     MockERC20Token public mockToken;
 
     function setUp() public {
-        sessionKeyValidator = SessionKeyValidator(
-            _deployProxy(
-                address(new SessionKeyValidator()),
-                abi.encodeWithSelector(SessionKeyValidator.initialize.selector, address(this)),
-                bytes32(0)
-            )
+        (address _sessionKeyValidator,) = deployDeterministicProxy(
+            "SessionKeyValidator",
+            address(new SessionKeyValidator()),
+            abi.encodeWithSelector(SessionKeyValidator.initialize.selector, address(this)),
+            bytes32(0)
         );
+        sessionKeyValidator = SessionKeyValidator(_sessionKeyValidator);
         mockToken = new MockERC20Token("MockToken", "MTK", 18);
     }
 
@@ -135,9 +133,10 @@ contract SessionValidatorTest is Test, DeployAAContracts {
     }
 
     function testUpgrade() public {
-        address sessionKeyValidatorProxy = _deployProxy(
+        (address sessionKeyValidatorProxy,) = deployDeterministicProxy(
+            "SessionKeyValidator",
             address(new SessionKeyValidator()),
-            abi.encodeWithSelector(SessionKeyValidator.initialize.selector, address(this)),
+            abi.encodeCall(SessionKeyValidator.initialize, (address(this))),
             bytes32(0)
         );
         address sessionKeyValidatorUpgraded = address(new SessionKeyValidatorUpgraded());

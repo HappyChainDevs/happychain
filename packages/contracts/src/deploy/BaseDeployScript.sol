@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
-import {LibClone} from "solady/utils/LibClone.sol";
+import {ERC1967Proxy} from "openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
 
 /**
  * @dev Base script to be inherited by other deploy scripts, providing functionality to record
@@ -150,8 +150,8 @@ abstract contract BaseDeployScript is Script {
         bytes32 salt
     ) internal returns (address payable, bool) {
         address payable predictedAddress = getCreate2Address(creationCode, constructorArgs, salt);
-        uint256 size = getContractSize(predictedAddress);
-        if (size > 0) {
+
+        if (getContractSize(predictedAddress) > 0) {
             if (output) console.log("Contract already deployed", contractAlias, predictedAddress);
             deployed(contractAlias, contractName, predictedAddress);
             return (predictedAddress, false);
@@ -168,7 +168,7 @@ abstract contract BaseDeployScript is Script {
     }
 
     /**
-     * Same as `deployDeterministic(string, string, bytes, bytes, bytes)` but with the contract
+     * Same as `deployDeterministic(string, string, bytes, bytes, bytes32)` but with the contract
      * alias set to the contract name.
      */
     function deployDeterministic(
@@ -181,36 +181,49 @@ abstract contract BaseDeployScript is Script {
     }
 
     /**
-     * @dev Deploys a deterministic ERC1967 proxy for an implementation contract.
+     * Deploys a deterministic ERC1967 proxy for an implementation contract.
      * Uses LibClone to create the proxy with the same address across different networks.
+     *
+     * This checks if the proxy is already deployed, logs but succeeds if it is. This
+     * automatically calls `deployed` with the provided contract alias and name, even if the
+     * contract was already deployed.
+     * Example: `deployProxy("Contract", "ContractImpl", implementation, abi.encodeCall(implementation.initialize, arg1, arg2), salt)`
+     *
      * @param implementation The address of the implementation contract
      * @param initData The initialization data to be called on the proxy after deployment
      * @param salt The salt used for deterministic address generation
-     * @return proxy The address of the deployed proxy contract
+     * @return (proxy, deployed) The address of the proxy contract and a boolean indicating
+     *   if it is newly deployed by this call.
      */
-    function _deployProxy(address implementation, bytes memory initData, bytes32 salt)
-        internal
-        returns (address proxy)
-    {
-        // Deploy and initialize proxy using LibClone
-        (bool alreadyDeployed, address _proxy) = LibClone.createDeterministicERC1967(
-            0, // No ETH value needed
-            implementation,
-            salt
+    function deployDeterministicProxy(
+        string memory contractAlias,
+        string memory contractName,
+        address implementation,
+        bytes memory initData,
+        bytes32 salt
+    ) internal returns (address, bool) {
+        return deployDeterministic(
+            contractAlias, contractName, type(ERC1967Proxy).creationCode, abi.encode(implementation, initData), salt
         );
-
-        if (!alreadyDeployed) {
-            // solhint-disable-next-line avoid-low-level-calls
-            (bool success,) = _proxy.call(initData);
-            // solhint-disable-next-line custom-errors, gas-custom-errors
-            require(success, "Initialization of proxy contract failed");
-        }
-
-        proxy = _proxy;
     }
 
     /**
-     * @dev Runs the deploy logic — called by Foundry.
+     * Same as `deployProxy(string, string, address, bytes, bytes32)` but with the contract
+     * alias set to the contract name.
+     */
+    function deployDeterministicProxy(
+        string memory contractAlias,
+        address implementation,
+        bytes memory initData,
+        bytes32 salt
+    ) internal returns (address, bool) {
+        return deployDeterministic(
+            contractAlias, contractAlias, type(ERC1967Proxy).creationCode, abi.encode(implementation, initData), salt
+        );
+    }
+
+    /**
+     * Runs the deploy logic — called by Foundry.
      * You can override this instead of `deploy` if you need to control the broadcast yourself.
      * Don't forget to call `writeDeploymentJson()`.
      */
