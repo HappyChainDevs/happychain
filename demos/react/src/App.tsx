@@ -82,8 +82,8 @@ function App() {
     }
 
     async function loadAbiStub() {
-        await loadAbi(CounterAddress.HappyCounter, CounterAbi.HappyCounter)
-        toast.success(`ABI loaded for ${CounterAddress.HappyCounter}`)
+        await loadAbi(deployment.HappyCounter, abis.HappyCounter)
+        toast.success(`ABI loaded for ${deployment.HappyCounter}`)
     }
 
     /** mints 1 MTA token to the connected account */
@@ -115,9 +115,9 @@ function App() {
     }
 
     async function addSessionKeyToCounterContract() {
-        await addSessionKey(CounterAddress.HappyCounter)
+        await requestSessionKey(deployment.HappyCounter)
         toast.success(
-            `Session Key recorded successfuly for ${CounterAddress.HappyCounter}. Try sending a transaction to the counter with the button below!`,
+            `Session Key recorded successfuly for ${deployment.HappyCounter}. Try sending a transaction to the counter with the button below!`,
         )
         console.log("Session Key Added!")
     }
@@ -128,8 +128,8 @@ function App() {
 
             // Read initial count
             const initialCount = await publicClient.readContract({
-                address: CounterAddress.HappyCounter,
-                abi: CounterAbi.HappyCounter,
+                address: deployment.HappyCounter,
+                abi: abis.HappyCounter,
                 functionName: "getCount",
             })
             console.log("[count before]", initialCount)
@@ -172,8 +172,8 @@ function App() {
 
                 // Read final count after successful transaction
                 const newCount = await publicClient.readContract({
-                    address: CounterAddress.HappyCounter,
-                    abi: CounterAbi.HappyCounter,
+                    address: deployment.HappyCounter,
+                    abi: abis.HappyCounter,
                     functionName: "getCount",
                 })
 
