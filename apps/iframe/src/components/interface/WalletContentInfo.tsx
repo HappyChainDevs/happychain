@@ -8,7 +8,7 @@ import TokenView from "./home/tabs/views/tokens/TokenView"
 const WalletContentInfo = () => {
     return (
         <Tabs.Root defaultValue={ContentType.TOKENS} className="size-full" lazyMount unmountOnExit>
-            <Tabs.List className="border-b sticky top-0 bg-base-200 border-neutral/10 dark:border-neutral/50">
+            <Tabs.List className="border-b z-10 sticky top-0 bg-base-200 border-neutral/10 dark:border-neutral/50">
                 <Tab title={ContentType.TOKENS} />
                 <Tab title={ContentType.GAMES} />
                 <Tab title={ContentType.ACTIVITY} />

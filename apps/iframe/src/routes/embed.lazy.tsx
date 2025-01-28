@@ -73,19 +73,18 @@ function Embed() {
 
     return (
         <>
-            <main className="flex h-screen w-screen items-stretch overflow-hidden bg-base-200">
+            <main className="grid h-full min-h-screen w-screen items-stretch">
                 <div className="flex flex-col size-full items-center justify-start">
                     <GlobalHeader />
 
                     <div className="relative flex flex-col grow w-full">
                         {!location.pathname.includes("permissions") && (
-                            <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-base-100 p-2 border-t border-b border-neutral">
+                            <div className="hidden relative h-fit lg:flex w-fit self-center justify-center items-center gap-2">
                                 <UserInfo />
-                                <TriggerSecondaryActionsMenu />
                             </div>
                         )}
 
-                        <div className="hidden relative lg:flex w-full grow overflow-y-auto">
+                        <div className="hidden relative lg:flex w-full grow">
                             <Outlet />
                             {!location.pathname.includes("permissions") && (
                                 <>

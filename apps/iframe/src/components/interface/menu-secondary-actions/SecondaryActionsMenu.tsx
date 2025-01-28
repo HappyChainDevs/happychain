@@ -11,6 +11,7 @@ const TriggerSecondaryActionsMenu = () => {
 
     return (
         <button
+            className="rounded-full p-0.5 aspect-square bg-neutral/5 focus-within:bg-neutral/10 dark:bg-neutral/50 dark:focus-within:bg-neutral/60"
             type="button"
             title={isVisible ? "Close this menu" : "Open this menu"}
             aria-label={isVisible ? "Close secondary actions menu" : "Open secondary actions menu"}
@@ -18,7 +19,7 @@ const TriggerSecondaryActionsMenu = () => {
                 setVisibility(!isVisible)
             }}
         >
-            {isVisible ? <CaretUp size="1.25em" /> : <CaretDown size="1.25em" />}
+            {isVisible ? <CaretUp size="1.15em" /> : <CaretDown size="1.15em" />}
         </button>
     )
 }
@@ -50,14 +51,18 @@ const SecondaryActionsMenu = () => {
             }}
         >
             <div
-                className={recipePositioner({
-                    originY: "bottom",
-                    mode: "modal",
-                })}
+                className={cx(
+                    "top-4 h-[calc(100%-1rem)]",
+                    recipePositioner({
+                        originY: "bottom",
+                        mode: "modal",
+                    }),
+                )}
             >
                 <Menu.Content
                     className={cx(
                         [
+                            "lock-parent-scroll",
                             // Animation
                             "motion-safe:data-[state=open]:animate-growIn",
                             "py-2 sm:pb-0",

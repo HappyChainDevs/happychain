@@ -9,11 +9,11 @@ const HappyBalance = () => {
     const formattedBalance = formatUserBalance(balance?.value)
 
     return (
-        <div className="flex flex-row w-full items-center justify-between">
-            <p className="text-lg">$HAPPY</p>
-            <div className="flex flex-col items-center">
-                <p className="text-2xl">{formattedBalance}</p>
-            </div>
+        <div className="flex flex-col gap-0.5 w-full items-center justify-between">
+            <p className="gap-[1ex] flex tabular-nums items-baseline">
+                <span className="text-3xl font-bold">{formattedBalance}</span>
+                <span className="text-sm font-medium">$HAPPY</span>
+            </p>
         </div>
     )
 }
