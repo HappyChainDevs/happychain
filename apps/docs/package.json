@@ -4,9 +4,9 @@
     "version": "0.0.0",
     "type": "module",
     "devDependencies": {
-        "@happy.tech/configs": "workspace:^",
-        "@happy.tech/core": "workspace:^",
-        "@happy.tech/react": "workspace:^",
+        "@happy.tech/configs": "workspace:^0.0.0",
+        "@happy.tech/core": "workspace:^0.0.0",
+        "@happy.tech/react": "workspace:^0.0.0",
         "@types/bun": "^1.1.8",
         "@types/react": "^18.3.4",
         "@types/react-dom": "^18.3.0",

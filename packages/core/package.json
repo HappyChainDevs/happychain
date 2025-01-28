@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/core",
     "private": false,
-    "version": "0.0.1",
+    "version": "0.0.0",
     "type": "module",
     "files": ["dist", "build"],
     "main": "./dist/index.es.js",
@@ -23,10 +23,10 @@
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
-        "@happy.tech/happybuild": "workspace:^",
-        "@happy.tech/configs": "workspace:^",
-        "@happy.tech/common": "workspace:^",
-        "@happy.tech/wallet-common": "workspace:^",
+        "@happy.tech/happybuild": "workspace:^0.0.0",
+        "@happy.tech/configs": "workspace:^0.0.0",
+        "@happy.tech/common": "workspace:^0.0.0",
+        "@happy.tech/wallet-common": "workspace:^0.0.0",
         "@types/bun": "^1.1.8",
         "@types/preact-custom-element": "^4.0.4",
         "happy-dom": "^15.0.0",

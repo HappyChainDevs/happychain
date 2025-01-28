@@ -1,8 +1,9 @@
 {
     "name": "@happy.tech/testing",
-    "module": "index.ts",
+    "private": true,
     "version": "0.0.0",
     "type": "module",
+    "module": "index.ts",
     "devDependencies": {
         "@types/bun": "latest",
         "typescript": "^5.6.2"

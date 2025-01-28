@@ -14,7 +14,7 @@
     },
     "devDependencies": {
         "@arethetypeswrong/cli": "^0.16.4",
-        "@happy.tech/configs": "workspace:^",
+        "@happy.tech/configs": "workspace:^0.0.0",
         "@microsoft/api-extractor": "^7.47.9",
         "@parcel/watcher": "^2.4.1",
         "@types/bun": "latest",

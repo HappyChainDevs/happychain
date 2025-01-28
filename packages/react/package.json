@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/react",
     "private": false,
-    "version": "0.0.1",
+    "version": "0.0.0",
     "type": "module",
     "files": ["dist", "build"],
     "main": "./dist/index.es.js",
@@ -14,8 +14,8 @@
         }
     },
     "devDependencies": {
-        "@happy.tech/configs": "workspace:^",
-        "@happy.tech/happybuild": "workspace:^",
+        "@happy.tech/configs": "workspace:^0.0.0",
+        "@happy.tech/happybuild": "workspace:^0.0.0",
         "@metamask/safe-event-emitter": "^3.1.1",
         "@types/bun": "^1.1.8",
         "@types/node": "^22.5.0",
@@ -27,7 +27,7 @@
         "vite-plugin-dts": "4.0.3"
     },
     "peerDependencies": {
-        "@happy.tech/core": "workspace:^",
+        "@happy.tech/core": "workspace:^0.0.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1"
     }
