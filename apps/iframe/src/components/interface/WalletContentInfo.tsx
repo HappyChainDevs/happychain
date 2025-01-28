@@ -7,27 +7,26 @@ import TokenView from "./home/tabs/views/tokens/TokenView"
 
 const WalletContentInfo = () => {
     return (
-        <div className="flex size-full items-start justify-center flex-col py-2">
-            <Tabs.Root defaultValue={ContentType.TOKENS} className="size-full" lazyMount unmountOnExit>
-                <Tabs.List className="gap-2 space-x-1">
-                    <Tab title={ContentType.TOKENS} />
-                    <Tab title={ContentType.GAMES} />
-                    <Tab title={ContentType.ACTIVITY} />
-                </Tabs.List>
+        <Tabs.Root defaultValue={ContentType.TOKENS} className="size-full" lazyMount unmountOnExit>
+            <Tabs.List className="border-b sticky top-0 bg-base-200 border-neutral/10 dark:border-neutral/50">
+                <Tab title={ContentType.TOKENS} />
+                <Tab title={ContentType.GAMES} />
+                <Tab title={ContentType.ACTIVITY} />
+                <Tabs.Indicator className="w-[var(--width)] bg-primary h-0.5" />
+            </Tabs.List>
 
-                <TabContent title={ContentType.TOKENS}>
-                    <TokenView />
-                </TabContent>
+            <TabContent title={ContentType.TOKENS}>
+                <TokenView />
+            </TabContent>
 
-                <TabContent title={ContentType.GAMES}>
-                    <GamesView />
-                </TabContent>
+            <TabContent title={ContentType.GAMES}>
+                <GamesView />
+            </TabContent>
 
-                <TabContent title={ContentType.ACTIVITY}>
-                    <ActivityView />
-                </TabContent>
-            </Tabs.Root>
-        </div>
+            <TabContent title={ContentType.ACTIVITY}>
+                <ActivityView />
+            </TabContent>
+        </Tabs.Root>
     )
 }
 
