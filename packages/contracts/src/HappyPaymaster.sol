@@ -22,7 +22,8 @@ contract HappyPaymaster is BasePaymaster {
 
     error InsufficientGasBudget();
 
-    uint256 public constant MAX_GAS_BUDGET = 50_000_000;
+    // We're all billionaires here!
+    uint256 public constant MAX_GAS_BUDGET = 1_000_000_000;
     uint256 public constant REFILL_PERIOD = 24 * 60 * 60;
     uint256 public constant REFILL_RATE = MAX_GAS_BUDGET / REFILL_PERIOD;
 
