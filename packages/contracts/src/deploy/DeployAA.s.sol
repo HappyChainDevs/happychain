@@ -134,8 +134,13 @@ contract DeployAAContracts is BaseDeployScript {
         );
         happyPaymaster = HappyPaymaster(_happyPaymaster);
 
-        if (isLocal && paymasterDeployed) {
-            // In local mode, fund the paymaster with some gas tokens.
+        if (msg.sender == owner) {
+            // Fund the paymaster with some gas tokens.
+            //
+            // On Anvil, this is always the case, elsewhere only when deployer from the deployer
+            // address. If you need to deploy & don't have access to the deployer, make sure the
+            // contracts are verified, then you can use the Blockscout interface to perform the
+            // deposit — alternatively use a custom script.
             happyPaymaster.deposit{value: PAYMASTER_DEPOSIT}();
         }
 
