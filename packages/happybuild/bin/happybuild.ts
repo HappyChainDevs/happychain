@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
 import { join } from "node:path"
-import { promiseWithResolvers } from "@happychain/common"
 import watcher from "@parcel/watcher"
-import { $ } from "bun"
 import { build } from "../lib/build"
 import { cliArgs } from "../lib/cli-args"
 import { getConfigs } from "../lib/config/getConfigs"
@@ -26,47 +24,29 @@ const outDirs = Array.from(new Set(_configs.flatMap((c) => [c.bunConfig.outdir, 
     "./*.tgz",
 ])
 
-let buildLock = promiseWithResolvers<void>()
-buildLock.resolve()
+let building = false
+let needsRebuild = true
 
-const queueBuild = debounceEvent(async () => {
-    // wait for lock
-    const lock = buildLock
-    await buildLock.promise
+// runs immediately and then every second
+setInterval(
+    () =>
+        (async function maybeRebuild() {
+            if (building || !needsRebuild) return
+            building = true
+            needsRebuild = false
+            await build({ configs, options: cliArgs })
+            building = false
+            return maybeRebuild
+        })(),
+    1000,
+)
 
-    if (lock !== buildLock) {
-        // another build took the lock
-        console.log("returning")
-        return
-    }
-
-    // take lock
-    buildLock = promiseWithResolvers<void>()
-
-    await build({ configs, options: cliArgs })
-
-    // release lock
-    buildLock.resolve()
-}, 1000)
-
-function debounceEvent(callback: (...args: unknown[]) => void, time: number) {
-    let interval: Timer | undefined = undefined
-    return (...args: unknown[]) => {
-        clearTimeout(interval)
-        interval = setTimeout(() => {
-            interval = undefined
-            callback(...args)
-        }, time)
-    }
+function setNeedsRebuild() {
+    needsRebuild = true
 }
 
-// build once at start
-await queueBuild()
-
-// rebuild (debounced)
-const subscription = await watcher.subscribe(process.cwd(), (_err, _events) => queueBuild(), {
-    ignore: outDirs,
-})
+// watch fs events to know when we need to rebuild
+const subscription = await watcher.subscribe(process.cwd(), setNeedsRebuild, { ignore: outDirs })
 
 let sigint = false
 process.prependListener("SIGINT", async () => {
