@@ -9,7 +9,7 @@ function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { provider, user, connect, disconnect, showSendScreen, loadAbi, addSessionKey } = useHappyChain()
+    const { provider, user, connect, disconnect, showSendScreen, loadAbi, requestSessionKey } = useHappyChain()
 
     const publicClient = useMemo(() => createPublicClient({ transport: custom(provider!) }), [provider])
     const walletClient = useMemo(
@@ -109,7 +109,7 @@ function App() {
     }
 
     async function addSessionKeyToCounterContract() {
-        await addSessionKey(deployment.HappyCounter)
+        await requestSessionKey(deployment.HappyCounter)
         console.log("Session key added!")
     }
 

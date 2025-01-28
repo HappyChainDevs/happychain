@@ -130,7 +130,7 @@ export const loadAbi = async (contractAddress: Address, abi: Abi): Promise<void>
     })
 }
 
-export const addSessionKey = async (contractAddress: Address): Promise<void> => {
+export const requestSessionKey = async (contractAddress: Address): Promise<void> => {
     const _provider = getInitializedProvider()
     if (!_provider) return
 
