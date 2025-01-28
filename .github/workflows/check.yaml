@@ -7,21 +7,41 @@ on:
     branches: [master]
   workflow_dispatch:
 
+env:
+  IFRAME_URL: "https://iframe.happy.tech"
+  VITE_BUNDLER_RPC_URL: "-"
+  VITE_FIREBASE_API_KEY: "-"
+  VITE_FIREBASE_AUTH_DOMAIN: "-"
+  VITE_FIREBASE_PROJECT_ID: "-"
+  VITE_FIREBASE_STORAGE_BUCKET: "-"
+  VITE_FIREBASE_MESSAGE_SENDER_ID: "-"
+  VITE_FIREBASE_APP_ID: "-"
+  VITE_WEB3AUTH_CLIENT_ID: "-"
+  VITE_WEB3AUTH_NETWORK: "-"
+  VITE_WEB3AUTH_VERIFIER: "-"
+
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/cache@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Bun Cache
+        uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-${{ matrix.bun }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.bun }}-bun-
-      - uses: oven-sh/setup-bun@v2
+      - name: Install Node23 (for tests)
+        uses: actions/setup-node@v4
         with:
-          bun-version: '1.1.29'
+          node-version: 23
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.42'
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
@@ -31,28 +51,4 @@ jobs:
       - run: make setup
       - run: make check
       - name: Build
-        env:
-          IFRAME_URL: "https://iframe.happy.tech"
-          VITE_BUNDLER_RPC_URL: "-"
-          VITE_FIREBASE_API_KEY: "-"
-          VITE_FIREBASE_AUTH_DOMAIN: "-"
-          VITE_FIREBASE_PROJECT_ID: "-"
-          VITE_FIREBASE_STORAGE_BUCKET: "-"
-          VITE_FIREBASE_MESSAGE_SENDER_ID: "-"
-          VITE_FIREBASE_APP_ID: "-"
-          VITE_WEB3AUTH_CLIENT_ID: "-"
-          VITE_WEB3AUTH_NETWORK: "-"
-          VITE_WEB3AUTH_VERIFIER: "-"
         run: make build
-      - run: make test
-        env:
-          VITE_BUNDLER_RPC_URL: "-"
-          VITE_FIREBASE_API_KEY: "-"
-          VITE_FIREBASE_AUTH_DOMAIN: "-"
-          VITE_FIREBASE_PROJECT_ID: "-"
-          VITE_FIREBASE_STORAGE_BUCKET: "-"
-          VITE_FIREBASE_MESSAGE_SENDER_ID: "-"
-          VITE_FIREBASE_APP_ID: "-"
-          VITE_WEB3AUTH_CLIENT_ID: "-"
-          VITE_WEB3AUTH_NETWORK: "-"
-          VITE_WEB3AUTH_VERIFIER: "-"
