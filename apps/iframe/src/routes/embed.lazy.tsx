@@ -79,7 +79,7 @@ function Embed() {
 
                     <div className="relative flex flex-col grow w-full">
                         {!location.pathname.includes("permissions") && (
-                            <div className="hidden relative h-fit lg:flex w-fit self-center justify-center items-center gap-2">
+                            <div className="hidden relative h-fit lg:flex w-fit self-center gap-2">
                                 <UserInfo />
                             </div>
                         )}

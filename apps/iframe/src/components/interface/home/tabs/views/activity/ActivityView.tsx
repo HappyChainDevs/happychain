@@ -1,7 +1,7 @@
 import { Swap } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { userAtom } from "#src/state/user"
-import { userOpsAtom } from "#src/state/userOpsHistory.js"
+import { userOpsAtom } from "#src/state/userOpsHistory"
 import UserNotFoundWarning from "../UserNotFoundWarning"
 import TxLoadingSkeleton from "./TxLoadingSkeleton"
 import TxLogEntry from "./TxLogEntry"
@@ -20,7 +20,14 @@ const ActivityView = () => {
     if (!user) return <UserNotFoundWarning />
 
     if (!userOps.confirmedOps?.length && !userOps.pendingOps?.length) {
-        return <div className="size-full p-2">No transactions to display.</div>
+        return (
+            <div className="flex flex-col gap-3 items-center justify-center pt-6">
+                <Swap className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
+                <p className="text-xs italic text-base-content/70 dark:text-base-content/80">
+                    Your recent transactions will appear here.
+                </p>
+            </div>
+        )
     }
 
     return (
