@@ -10,10 +10,10 @@ include makefiles/help.mk
 # Packages
 
 # packages shared between SDK & iframe (order matters)
-SHARED_PKGS := support/common,support/wallet-common
+SHARED_PKGS := support/common,support/wallet-common,support/worker
 
 # packages only used in the SDK
-SDK_ONLY_PKGS := packages/core,packages/react,support/worker
+SDK_ONLY_PKGS := packages/core,packages/react
 
 # packages needed to build the sdk
 SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)
@@ -407,6 +407,23 @@ remove-modules:
 	@echo "Removing all node_modules"
 	rm -rf node_modules apps/*/node_modules demos/*/node_modules packages/*/node_modules support/*/node_modules
 .PHONY: remove-modules
+
+# ==================================================================================================
+##@ Publishing
+
+changeset: ## Add a new changeset
+	changeset add
+.PHONY: changeset
+
+
+version: ## Bump all package dependencies according to staged changesets & generate changelogs
+	changeset version
+.PHONY: version
+
+publish: build test  ## Build, test, then publish current packages
+	$(call forall_make , $(SDK_ONLY_PKGS) , publish)
+	# changeset tag # disabled for now, creates new git tag after publishing. push with `git push --follow-tags`
+.PHONY: publish
 
 # ==================================================================================================
 # EXTRAS
