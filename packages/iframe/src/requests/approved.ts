@@ -1,5 +1,6 @@
 import { HappyMethodNames } from "@happychain/common"
 import { PermissionNames } from "@happychain/common"
+import { deployment as contractAddresses } from "@happychain/contracts/account-abstraction/sepolia"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -55,6 +56,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             return await sendUserOp({
                 user,
                 tx: request.payload.params[0],
+                validator: contractAddresses.ECDSAValidator,
                 signer: async (userOp, smartAccountClient) =>
                     await smartAccountClient.account.signUserOperation(userOp),
             })
