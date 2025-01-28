@@ -1,8 +1,25 @@
-import type { Address } from "viem"
+import { type Address, toHex } from "viem"
 import { getNonce } from "#src/requests/userOps"
 
 /** Maps from account to validator to nonce */
 export const nonces = new Map<Address, Map<Address, bigint>>()
+
+export function setNonce(account: Address, validator: Address, nonce: bigint) {
+    let noncesForValidator = nonces.get(account)
+    if (!noncesForValidator) {
+        noncesForValidator = new Map()
+        nonces.set(account, noncesForValidator)
+    }
+    noncesForValidator.set(validator, nonce)
+}
+
+export function deleteNonce(account: Address, validator: Address) {
+    const noncesForValidator = nonces.get(account)
+    noncesForValidator?.delete(validator)
+    if (noncesForValidator?.size === 0) {
+        nonces.delete(account)
+    }
+}
 
 /**
  * Returns the next nonce for the given account and validator, using a local view of the nonce
@@ -11,17 +28,11 @@ export const nonces = new Map<Address, Map<Address, bigint>>()
 export async function getNextNonce(account: Address, validator: Address): Promise<bigint> {
     const storedNonce = nonces.get(account)?.get(validator)
     if (storedNonce) {
-        nonces.get(account)!.set(validator, storedNonce + 1n)
+        setNonce(account, validator, storedNonce + 1n)
         return storedNonce
     }
 
-    let noncesForValidator = nonces.get(account)
-    if (!noncesForValidator) {
-        noncesForValidator = new Map()
-        nonces.set(account, noncesForValidator)
-    }
-
     const nonce = await getNonce(account, validator)
-    nonces.get(account)!.set(validator, nonce)
+    setNonce(account, validator, nonce + 1n)
     return nonce
 }

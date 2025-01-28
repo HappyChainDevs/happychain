@@ -12,7 +12,7 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happychain/sdk-shared"
-import { type Client, InvalidAddressError, isAddress } from "viem"
+import { type Client, InvalidAddressError, isAddress, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import {
     checkIsSessionKeyModuleInstalled,
@@ -52,14 +52,19 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
     switch (request.payload.method) {
         case "eth_sendTransaction": {
-            if (!user) throw new EIP1193UnauthorizedError()
-            return await sendUserOp({
-                user,
-                tx: request.payload.params[0],
-                validator: contractAddresses.ECDSAValidator,
-                signer: async (userOp, smartAccountClient) =>
-                    await smartAccountClient.account.signUserOperation(userOp),
-            })
+            try {
+                if (!user) throw new EIP1193UnauthorizedError()
+                return await sendUserOp({
+                    user,
+                    tx: request.payload.params[0],
+                    validator: contractAddresses.ECDSAValidator,
+                    signer: async (userOp, smartAccountClient) =>
+                        await smartAccountClient.account.signUserOperation(userOp),
+                })
+            } catch (error) {
+                console.error(error)
+                throw error
+            }
         }
 
         case "eth_requestAccounts": {

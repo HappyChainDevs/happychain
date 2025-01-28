@@ -12,10 +12,11 @@ import {
     hexToBigInt,
     pad,
     toHex,
+    zeroAddress,
 } from "viem"
 import type { UserOperation } from "viem/account-abstraction"
 import { addPendingUserOp } from "#src/services/userOpsHistory"
-import { getNextNonce } from "#src/state/nonces"
+import { deleteNonce, getNextNonce, setNonce } from "#src/state/nonces"
 import { getPublicClient } from "#src/state/publicClient.js"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 
@@ -48,38 +49,76 @@ export enum VALIDATOR_TYPE {
     PERMISSION = "0x02",
 }
 
-export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs) {
+export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs, retry = true) {
     const smartAccountClient = (await getSmartAccountClient())!
-    const customNonce = await getNextNonce(smartAccountClient.account.address, validator)
-    const preparedUserOp = await smartAccountClient.prepareUserOperation({
-        account: smartAccountClient.account,
-        calls: [
-            {
-                to: tx.to,
-                data: tx.data,
-                value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-            },
-        ],
-        nonce: customNonce,
-    })
+    const account = smartAccountClient.account.address
+    const customNonce = await getNextNonce(account, validator)
+    const isRoot = isRootValidator(validator)
 
-    const signature = await signer(preparedUserOp, smartAccountClient)
+    try {
+        const preparedUserOp = await smartAccountClient.prepareUserOperation({
+            account: smartAccountClient.account,
+            calls: [
+                {
+                    to: tx.to,
+                    data: tx.data,
+                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                },
+            ],
+        })
 
-    const userOpWithSig = { ...preparedUserOp, signature }
-    const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
+        // For some reason, this gets estimated to 25k in some scenarios, but it needs to be 40k
+        // to succeed for budget initialization (subsequent runs only need ~22k).
+        preparedUserOp.paymasterVerificationGasLimit = 400000n
 
-    void addPendingUserOp(user.address, {
-        userOpHash: userOpHash as Hash,
-        value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-    })
+        if (isRoot && preparedUserOp.nonce > customNonce) {
+            // Bundler nonce is fresher than our local nonce.
+            setNonce(account, validator, preparedUserOp.nonce + 1n)
+        } else {
+            preparedUserOp.nonce = customNonce
+        }
 
-    return userOpHash
+        const signature = await signer(preparedUserOp, smartAccountClient)
+
+        const userOpWithSig = { ...preparedUserOp, signature }
+        const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
+
+        console.log("hash", userOpHash, toHex(preparedUserOp.nonce))
+
+        void addPendingUserOp(user.address, {
+            userOpHash: userOpHash as Hash,
+            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+        })
+
+        return userOpHash
+    } catch (error) {
+        // TODO parse errors
+        //      "AA33 reverted" is "paymaster validation reverted or out of gas"
+        //      "AA25" is "invalid account nonce"
+        //      https://docs.stackup.sh/docs/entrypoint-errors
+        //      https://docs.pimlico.io/infra/bundler/entrypoint-errors
+        if (error instanceof Error && retry && error.message.includes("AA25")) {
+            deleteNonce(account, validator)
+            return sendUserOp({ user, tx, validator, signer }, false)
+        }
+        throw error
+    }
+}
+
+function isRootValidator(validatorAddress: Address) {
+    return validatorAddress === contractAddresses.ECDSAValidator || validatorAddress === zeroAddress
 }
 
 /**
  * Returns the nonce from the EntryPoint-v7 contract for the given account and validator.
  */
 export async function getNonce(smartAccountAddress: Address, validatorAddress: Address) {
+    const isRoot = isRootValidator(validatorAddress)
+    const validatorType = isRoot ? VALIDATOR_TYPE.ROOT : VALIDATOR_TYPE.VALIDATOR
+    // This matches the behavior of the bundler when a nonce is not provided.
+    // But in root mode, any key will work, include zero.
+    const _validatorAddress = isRoot ? contractAddresses.ECDSAValidator : validatorAddress
+
     return await getAccountNonce(getPublicClient(), {
         address: smartAccountAddress,
         entryPointAddress: contractAddresses.EntryPointV7,
@@ -87,8 +126,8 @@ export async function getNonce(smartAccountAddress: Address, validatorAddress: A
             pad(
                 concatHex([
                     VALIDATOR_MODE.DEFAULT,
-                    VALIDATOR_TYPE.VALIDATOR,
-                    validatorAddress,
+                    validatorType,
+                    _validatorAddress,
                     toHex(
                         0n, // Internal key to the Kernel smart account (unused for the root validator module)
                         { size: 2 },
