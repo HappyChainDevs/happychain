@@ -23,7 +23,7 @@ import {
 import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
-import { getNonce, parseUserOpCalldata, sendUserOp } from "#src/requests/userOps"
+import { parseUserOpCalldata, sendUserOp } from "#src/requests/userOps"
 import { type SessionKeysByHappyUser, StorageKey, storage } from "#src/services/storage.ts"
 import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
@@ -72,6 +72,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return await sendUserOp({
                 user,
                 tx,
+                validator: contractAddresses.SessionKeyValidator,
                 signer: async (userOp, smartAccountClient) => {
                     const hash = getUserOperationHash({
                         userOperation: {
@@ -88,8 +89,6 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                         message: { raw: hash },
                     })
                 },
-                nonceProvider: async (smartAccountClient) =>
-                    await getNonce(smartAccountClient.account.address, contractAddresses.SessionKeyValidator),
             })
         }
 

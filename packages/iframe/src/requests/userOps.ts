@@ -15,6 +15,7 @@ import {
 } from "viem"
 import type { UserOperation } from "viem/account-abstraction"
 import { addPendingUserOp } from "#src/services/userOpsHistory"
+import { getNextNonce } from "#src/state/nonces"
 import { getPublicClient } from "#src/state/publicClient.js"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 
@@ -23,13 +24,11 @@ export type UserOpSigner = (
     smartAccountClient: ExtendedSmartAccountClient,
 ) => Promise<Hex>
 
-export type NonceProvider = (smartAccountClient: ExtendedSmartAccountClient) => Promise<bigint | undefined>
-
 export type SendUserOpArgs = {
     user: HappyUser
     tx: RpcTransactionRequest
+    validator: Address
     signer: UserOpSigner
-    nonceProvider?: NonceProvider
 }
 
 export type UserOpWrappedCall = {
@@ -49,9 +48,9 @@ export enum VALIDATOR_TYPE {
     PERMISSION = "0x02",
 }
 
-export async function sendUserOp({ user, tx, signer, nonceProvider = async () => undefined }: SendUserOpArgs) {
+export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs) {
     const smartAccountClient = (await getSmartAccountClient())!
-    const customNonce = await nonceProvider(smartAccountClient)
+    const customNonce = await getNextNonce(smartAccountClient.account.address, validator)
     const preparedUserOp = await smartAccountClient.prepareUserOperation({
         account: smartAccountClient.account,
         calls: [
