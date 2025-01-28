@@ -121,29 +121,29 @@ iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5
 	cd apps/iframe && make dev
 .PHONY: iframe.dev
 
-demo-js.dev: setup.ts shared.dev sdk.dev ## Serves the VanillaJS demo application as http://localhost:5173
+demo-js.dev: setup.ts shared.dev sdk.dev ## Serves the Vanilla JS demo application at http://localhost:5173
 	$(MULTIRUN) --names "iframe,demo-js" "cd apps/iframe && make dev" "cd demos/js && make dev"
 .PHONY: demo-js.dev
 
-demo-react.dev: setup.ts shared.dev sdk.dev ## Serves the React demo application as http://localhost:5173
+demo-react.dev: setup.ts shared.dev sdk.dev ## Serves the React demo application at http://localhost:5173
 	$(MULTIRUN) --names "iframe,demo-react" "cd apps/iframe && make dev" "cd demos/react && make dev"
 .PHONY: demo-react.dev
 
-demo-vue.dev: setup.ts shared.dev sdk.dev ## Serves the VueJS demo application as http://localhost:5173
+demo-vue.dev: setup.ts shared.dev sdk.dev ## Serves the VueJS demo application at http://localhost:5173
 	$(MULTIRUN) --names "iframe,demo-vue" "cd apps/iframe && make dev" "cd demos/vue && make dev"
 .PHONY: demo-vue.dev
 
-demo-js.prod: setup.ts  ## builds & run the prod version of the JS demo
+demo-js.prod: setup.ts  ## Builds & runs the prod version of the JS demo at http://localhost:4173
 	IFRAME_URL=http://localhost:4160 make demo-js.build
 	$(MULTIRUN) --names "iframe,demo-js" "cd apps/iframe && make preview" "cd demos/js && make preview"
 .PHONY: demo-js.prod
 
-demo-react.prod: setup.ts ## builds & run the prod version of the React demo
+demo-react.prod: setup.ts ## Builds & runs the prod version of the React demo at http://localhost:4173
 	IFRAME_URL=http://localhost:4160 make demo-react.build
 	$(MULTIRUN) --names "iframe.demo-react" "cd apps/iframe && make preview" "cd demos/react && make preview"
 .PHONY: demo-react.prod
 
-demo-vue.prod: setup.ts sdk.build  ## builds & run the prod version of the Vue demo
+demo-vue.prod: setup.ts sdk.build  ## Builds & runs the prod version of the Vue demo at http://localhost:4173
 	IFRAME_URL=http://localhost:4160 make demo-vue.build
 	$(MULTIRUN) --names "iframe.demo-vue" "cd apps/iframe && make preview" "cd demos/vue && make preview"
 .PHONY: demo-vue.prod
