@@ -1,12 +1,12 @@
 import type { HappyUser } from "@happychain/js"
 import {
-    addSessionKey,
     connect,
     disconnect,
     happyProvider,
     loadAbi,
     onUserUpdate,
     register,
+    requestSessionKey,
     showSendScreen,
 } from "@happychain/js"
 import { createContext, useContext, useEffect, useState } from "react"
@@ -53,6 +53,6 @@ export function useHappyChain() {
         user,
         showSendScreen,
         loadAbi,
-        addSessionKey,
+        requestSessionKey,
     }
 }
