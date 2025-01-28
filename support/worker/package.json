@@ -20,8 +20,8 @@
         "@okikio/sharedworker": "^1.0.7"
     },
     "devDependencies": {
-        "@happy.tech/configs": "workspace:^",
-        "@happy.tech/happybuild": "workspace:^",
+        "@happy.tech/configs": "workspace:^0.0.0",
+        "@happy.tech/happybuild": "workspace:^0.0.0",
         "@types/bun": "latest",
         "@types/node": "^22.7.4",
         "mlly": "^1.7.1",
