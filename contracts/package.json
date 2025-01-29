@@ -10,7 +10,7 @@
         "./account-abstraction/sepolia": "./deployments/happy-sepolia/aa/abis.ts",
         "./mocks/sepolia": "./deployments/happy-sepolia/mocks/abis.ts",
         "./random/anvil": "./deployments/anvil/random/abis.ts",
-        "./happyAccounts/anvil": "./deployments/anvil/happyAccounts/abis.ts"
+        "./happy-aa/anvil": "./deployments/anvil/happy-aa/abis.ts"
     },
     "scripts": {
         "test": "vitest happyAccounts",

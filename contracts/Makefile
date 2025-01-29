@@ -172,7 +172,7 @@ aa-demo: ## All-in-one run of the AA demo script, including Anvil & contract dep
 
 aa-demo-only: ## Runs the AA demo script only (requires Anvil, and AA & mocks deployments).
 	@bun run ./scripts/aa_demo.ts;
-.PHONY: aa-demo
+.PHONY: aa-demo-only
 
 bundler-gas: ## All-in-one generation of the gas breakdown for bundler transaction, including Anvil & contract deployments.
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
@@ -193,6 +193,10 @@ bundler-gas-only: ## Generates a gas report (breakdown) for bundler transactions
 	@echo "Generating the bundler gas report — this takes a while..."
 	@bun run ./scripts/bundler_gas_overhead.ts | awk 'BEGIN {start=0} /Gas Usage for a Single UserOp/ {start=1} {if (start) print}' > bundler_gas_report.txt
 .PHONY: gas-bundler
+
+happy-aa-demo: ## Runs the AA demo script only (requires Anvil, and AA & mocks deployments).
+	@bun run ./scripts/happyAccounts/happy_aa_demo.ts;
+.PHONY: happy-aa-demo
 
 ####################################################################################################
 # Code Quality

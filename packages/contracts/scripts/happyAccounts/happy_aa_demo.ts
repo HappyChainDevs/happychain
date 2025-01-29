@@ -7,8 +7,8 @@ import type { DeployAccountResponse, SubmitHappyTxResponse } from "@happychain/s
 import { encode } from "./lib/happyTxLib"
 import type { HappyTx } from "./types/happyTx"
 
-import { abis } from "../../deployments/anvil/happyAccounts/abis"
-import { abis as mockAbis, deployment as mockDeployment } from "../../deployments/anvil/mockTokens/abis"
+import { abis } from "../../deployments/anvil/happy-aa/abis"
+import { abis as mockAbis, deployment as mockDeployment } from "../../deployments/anvil/mocks/abis"
 
 import { getRandomAddress } from "../utils/accounts"
 import { account, publicClient } from "../utils/clients"
