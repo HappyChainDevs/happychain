@@ -17,6 +17,7 @@ import {
     toHex,
     zeroAddress,
 } from "viem"
+import { InvalidInputRpcError } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { getWalletClient } from "#src/state/walletClient"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
@@ -88,22 +89,41 @@ export async function getKernelAccountAddress(owner: Address): Promise<Address> 
         chain: currentChain,
     }
     const publicClient = createPublicClient(clientOptions)
-    const initCode = getInitCode(contracts.ECDSAValidator, owner, contracts.KernelFactory)
 
-    // account init code is the concatenation of factory staker and account init code
-    const accountInitCode = concat([contracts.FactoryStaker as Hex, initCode as Hex])
-    const senderFromFactory = await getSenderAddress(publicClient, {
-        initCode: accountInitCode,
-        entryPointAddress: entryPoint07Address,
-    })
+    let senderFromFactory: Address
+    let index = 0
+    const maxRetries = 3
+    // if the generated account code has a "0xef" prefix which is disallowed by the EVM, getSenderAddress()
+    //  will throw so we try again with a different index value, which will produce different bytecode
+    while (index < maxRetries) {
+        try {
+            const initCode = getInitCode(contracts.ECDSAValidator, owner, contracts.KernelFactory, index)
+
+            // account init code is the concatenation of factory staker and account init code
+            const accountInitCode = concat([contracts.FactoryStaker as Hex, initCode as Hex])
+
+            senderFromFactory = await getSenderAddress(publicClient, {
+                initCode: accountInitCode,
+                entryPointAddress: entryPoint07Address,
+            })
+            break
+        } catch (error) {
+            if (error instanceof InvalidInputRpcError) {
+                console.error("code starting with 0xef")
+                index++
+            } else {
+                throw new Error("Error getting Kernel account address")
+            }
+        }
+    }
     if (senderFromFactory === zeroAddress) {
         throw new Error("Kernel account address could not be determined")
     }
-    return senderFromFactory
+    return senderFromFactory!
 }
 
-function getInitCode(ecdsaValidatorAddress: Address, owner: Address, factoryAddress: Address): Hex {
-    return getAccountInitCode(factoryAddress, getInitializationData(ecdsaValidatorAddress, owner), 0)
+function getInitCode(ecdsaValidatorAddress: Address, owner: Address, factoryAddress: Address, index: number): Hex {
+    return getAccountInitCode(factoryAddress, getInitializationData(ecdsaValidatorAddress, owner), index)
 }
 
 function getAccountInitCode(factoryAddress: Address, initializationData: Hex, index: number): Hex {
