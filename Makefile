@@ -28,7 +28,7 @@ ACCOUNT_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS),apps/iframe
 DEMOS_PKGS := demos/js,demos/react,demos/vue
 
 # packages only used in the backend services (order matters)
-BACKEND_ONLY_PKGS := packages/txm,apps/random
+BACKEND_ONLY_PKGS := packages/txm,apps/randomness
 
 # packages needed to build the backend services (order matters)
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
