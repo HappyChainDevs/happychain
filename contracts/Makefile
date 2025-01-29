@@ -350,6 +350,11 @@ endif
 	make deploy DEPLOY_SCRIPT=DeployL1Upgradeable.s.sol
 .PHONY: deploy-l1-upgradeable
 
+deploy-happy-aa: ## Deploys the Happy AA contracts.
+	$(eval $(call set-deployment-name,happy-aa))
+	make deploy DEPLOY_SCRIPT=DeployHappyAA.s.sol
+.PHONY: deploy-happy-aa
+
 deploy-aa: ## Deploys the AA contracts.
 	$(eval $(call set-deployment-name,aa))
 	make deploy DEPLOY_SCRIPT=DeployAA.s.sol
