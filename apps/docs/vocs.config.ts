@@ -3,6 +3,10 @@ import { defineConfig } from "vocs"
 export default defineConfig({
     rootDir: "src",
     title: "HappyChain Docs 🤠",
+    vite: {
+        server: { port: 4000, strictPort: true },
+        preview: { port: 4000, strictPort: true },
+    },
     socials: [
         {
             link: "https://x.com/HappyChainDevs",

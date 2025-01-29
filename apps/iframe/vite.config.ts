@@ -32,8 +32,8 @@ export default defineConfig(({ command, mode }) => {
             // between branches.
             exclude: command === "serve" ? ["@happy.tech/worker"] : [],
         },
-        server: { port: 5160 },
-        preview: { port: 4160 },
+        server: { port: 5160, strictPort: true },
+        preview: { port: 5160, strictPort: true },
         plugins: [
             TanStackRouterVite(),
             react({ babel: { presets: ["jotai/babel/preset"] } }),
