@@ -281,96 +281,51 @@ library HappyTxLib {
         // First validate minimum length (192 static + 32 encoded dynamic lengths = 224 bytes)
         if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
 
-        // Temporary variables to store values for logging
-        bytes32 tempPtr;
-        bytes32 tempSlot1;
-        address tempAccount;
-        bytes32 tempDestFirst12;
-        bytes32 tempSlot2;
-        address tempPaymaster;
-        bytes32 tempDestLast8;
-        address tempDest;
-        uint32 tempGasLimit;
-        uint256 tempValue;
-        uint256 tempNonce;
-        uint256 tempMaxFeePerGas;
-        uint256 tempSubmitterFee;
-
         // solhint-disable-next-line no-inline-assembly
         assembly {
             // Get pointer to the calldata bytes (don't skip 32 bytes as this is calldata not memory)
             let ptr := happyTx.offset
-            tempPtr := ptr
 
             // First slot: account (20) + first 12 bytes of dest
             let slot1 := calldataload(ptr)
-            tempSlot1 := slot1
 
             let account := shr(96, slot1)
-            tempAccount := account
             mstore(result, account) // account at 0x00
 
             // Get first 12 bytes of dest by bit masking
             let destFirst12 := shl(64, and(slot1, 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF))
-            tempDestFirst12 := destFirst12
 
             // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
             let slot2 := calldataload(add(ptr, 32))
-            tempSlot2 := slot2
 
             let paymaster := shr(96, slot2)
-            tempPaymaster := paymaster
             mstore(add(result, 0x80), paymaster) // paymaster at 0x80
 
             // Get last 8 bytes of dest
             let destLast8 := shr(32, and(slot2, 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFF00000000))
-            tempDestLast8 := destLast8
 
             // Combine dest parts
             let dest := or(destFirst12, destLast8)
-            tempDest := dest
             mstore(add(result, 0x60), dest) // dest at 0x60
 
             // Store gasLimit
             let gasLimit := and(slot2, 0x00000000000000000000000000000000000000000000000000000000FFFFFFFF)
             mstore(add(result, 0x20), gasLimit)
-            tempGasLimit := gasLimit
 
             // Load remaining static fields
-            tempValue := calldataload(add(ptr, 64))
-            mstore(add(result, 0xA0), tempValue)
+            let value := calldataload(add(ptr, 64))
+            mstore(add(result, 0xA0), value)
 
-            tempNonce := calldataload(add(ptr, 96))
-            mstore(add(result, 0xC0), tempNonce)
+            let nonce := calldataload(add(ptr, 96))
+            mstore(add(result, 0xC0), nonce)
 
-            tempMaxFeePerGas := calldataload(add(ptr, 128))
-            mstore(add(result, 0xE0), tempMaxFeePerGas)
+            let maxFeePerGas := calldataload(add(ptr, 128))
+            mstore(add(result, 0xE0), maxFeePerGas)
 
-            tempSubmitterFee := calldataload(add(ptr, 160))
-            mstore(add(result, 0x100), tempSubmitterFee)
+            let submitterFee := calldataload(add(ptr, 160))
+            mstore(add(result, 0x100), submitterFee)
         }
 
-        // Log all the values after assembly block
-        console.log("Calldata pointer:");
-        console.logBytes32(tempPtr);
-        console.log("Slot1 (hex):");
-        console.logBytes32(tempSlot1);
-        console.log("After setting account:", tempAccount);
-        console.log("destFirst12 (hex):");
-        console.logBytes32(tempDestFirst12);
-        console.log("Slot2 (hex):");
-        console.logBytes32(tempSlot2);
-        console.log("After setting paymaster:", tempPaymaster);
-        console.log("destLast8 (hex):");
-        console.logBytes32(tempDestLast8);
-        console.log("After setting dest:", tempDest);
-        console.log("After setting gasLimit:", tempGasLimit);
-        console.log("After setting value:", tempValue);
-        console.log("After setting nonce:", tempNonce);
-        console.log("After setting maxFeePerGas:", tempMaxFeePerGas);
-        console.log("After setting submitterFee:", tempSubmitterFee);
-
-        // Unpack lengths and validate
         (
             uint256 totalLength,
             uint256 callDataLength,
