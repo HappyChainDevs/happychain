@@ -148,12 +148,17 @@ async function main() {
             }),
             paymasterData: "0x",
             validatorData: "0x",
-            extraData: "0x",
+            extraData: "0x", // Keep this field empty
         }
 
         // Encode the happy transaction
+        const happyTxHash = keccak256(encode(dummyHappyTx))
+        dummyHappyTx.extraData = await account.signMessage({
+            message: {raw: happyTxHash},
+        })
         const encodedHappyTx: Hex = encode(dummyHappyTx)
-
+        
+        console.log("Happy Tx: ", dummyHappyTx)
         console.log("⏳ Submitting transaction...")
         const result: SubmitHappyTxResponse = await submitHappyTx(encodedHappyTx)
 

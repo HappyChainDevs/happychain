@@ -123,10 +123,13 @@ contract ScrappyAccount is
 
     function validate(HappyTx memory happyTx) external returns (bytes4) {
         if (happyTx.account != address(this)) {
+            console.log("wrong account selector");
             return WrongAccount.selector;
         }
 
         if (tx.gasprice > happyTx.maxFeePerGas) {
+            console.log("gasprice too high");
+            console.log(tx.gasprice, happyTx.maxFeePerGas);
             return GasPriceTooHigh.selector;
         }
 
