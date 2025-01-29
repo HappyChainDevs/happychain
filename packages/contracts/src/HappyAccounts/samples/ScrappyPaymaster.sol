@@ -45,7 +45,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
 
     // TODO namespace these fields for easier account upgrades (think on this when turning this into a proxy)
     /// @dev The deterministic EntryPoint contract
-    address public immutable ENTRYPOINT;
+    address public entryPoint;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
@@ -73,15 +73,14 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
 
     /// @dev Checks if the the call was made from the EntryPoint contract
     modifier onlyFromEntryPoint() {
-        if (msg.sender != ENTRYPOINT) revert NotFromEntryPoint();
+        if (msg.sender != entryPoint) revert NotFromEntryPoint();
         _;
     }
 
     //* //////////////////////////////////////
     //* Constructor //////////////////////////
     //* //////////////////////////////////////
-    constructor(address _entrypoint) {
-        ENTRYPOINT = _entrypoint;
+    constructor() {
         _disableInitializers();
     }
 
@@ -90,7 +89,8 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
      *      Called by factory during proxy deployment
      * @param _owner The owner who can upgrade the implementation
      */
-    function initialize(address _owner) external initializer {
+    function initialize(address _entryPoint, address _owner) external initializer {
+        entryPoint = _entryPoint;
         __Ownable_init(_owner);
         __UUPSUpgradeable_init();
     }
