@@ -8,6 +8,7 @@
             "build",
             "generated.ts",
             "node_modules",
+            "contracts/deployments",
             "routeTree.gen.ts",
             "*.config.ts.timestamp-*.mjs"
         ]
@@ -108,7 +109,7 @@
             }
         },
         {
-            "include": ["**/docs/snippets/*"],
+            "include": ["**/src/snippets/*"],
             "linter": {
                 "rules": {
                     "suspicious": {

@@ -10,8 +10,8 @@ export default {
     entryPoints: ["../../packages/txm/lib/index.ts"],
 
     // https://typedoc.org/options/output
-    out: "docs/pages/transaction-manager/api",
+    out: "src/pages/txm/api",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
-    publicPath: "/transaction-manager/api/",
+    publicPath: "/txm/api/",
 }

@@ -1,1 +1,1 @@
-../../../../packages/contracts/deployments/anvil/random/abis.ts
+../../../../contracts/deployments/anvil/random/abis.ts

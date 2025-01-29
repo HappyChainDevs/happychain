@@ -23,7 +23,7 @@ build: typedoc vocs ## Generates the latest docs from source code
 .PHONY: build
 
 clean: typedoc.clean ## Removes build artifacts
-	rm -rf docs/dist
+	rm -rf src/dist
 	rm -rf vocs.config.ts.timestamp-*
 	rm -rf node_modules/.tmp
 .PHONY: clean
@@ -52,8 +52,8 @@ typedoc: ## Generates the markdown files from package source code
 .PHONY: typedoc
 
 typedoc.clean:
-	rm -rf docs/pages/sdk/{js,react}/api
-	rm -rf docs/pages/transaction-manager/api
+	rm -rf src/pages/sdk/{js,react}/api
+	rm -rf src/pages/txm/api
 .PHONY: typedoc
 
 # generate JS markdown API reference

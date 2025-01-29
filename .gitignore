@@ -30,16 +30,16 @@ dist-ssr
 /.cache
 
 # Contract outputs
-packages/contracts/cache/
-packages/contracts/out/
-packages/contracts/lib
-packages/contracts/broadcast/
+contracts/cache/
+contracts/out/
+contracts/lib
+contracts/broadcast/
 # Local deployments
-packages/contracts/deployments/LOCAL/
+contracts/deployments/LOCAL/
 
 # Typedoc generated api reference.
 # Ignored to discourage manual editing
-apps/docs/docs/pages/**/api
+apps/docs/src/pages/**/api
 
 # Cloned Repositories
 packages/bundler/alto

@@ -27,7 +27,7 @@ jobs:
         with:
           version: nightly
       - name: Fake contract deployment
-        run: mkdir -p packages/contracts/out && echo "{}" > packages/contracts/out/deployment.json
+        run: mkdir -p contracts/out && echo "{}" > contracts/out/deployment.json
       - run: make setup
       - run: make check
       - name: Build

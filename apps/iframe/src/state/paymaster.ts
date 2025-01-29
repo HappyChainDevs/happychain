@@ -43,10 +43,10 @@ export type PaymasterConfig = {
 }
 
 /**
- * Gas limit constants derived and adjusted on actual usage measured in {@link https://github.com/HappyChainDevs/happychain/blob/master/packages/contracts/bundler_gas_report.txt | bundler_gas_report.txt}.
+ * Gas limit constants derived and adjusted on actual usage measured in {@link https://github.com/HappyChainDevs/happychain/blob/master/contracts/bundler_gas_report.txt | bundler_gas_report.txt}.
  * Some of these values are slightly higher than observed gas usage, for safety margin.
  *
- * @see {@link https://github.com/HappyChainDevs/happychain/blob/master/packages/contracts/bundler_gas_report.txt | Full gas measurements report}
+ * @see {@link https://github.com/HappyChainDevs/happychain/blob/master/contracts/bundler_gas_report.txt | Full gas measurements report}
  *
  * @todo - Adjust these values if :
  * 1. The paymaster implementation changes

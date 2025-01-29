@@ -26,6 +26,11 @@ import {
 import { entryPoint07Address } from "viem/account-abstraction"
 import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import {
+    checkIsSessionKeyModuleInstalled,
+    installSessionKeyModule,
+    registerSessionKey,
+} from "#src/requests/modules/session-keys/helpers"
 import { StorageKey, storage } from "#src/services/storage.ts"
 import { addPendingUserOp } from "#src/services/userOpsHistory.ts"
 import { getChains, getCurrentChain, setChains, setCurrentChain } from "#src/state/chains.ts"
@@ -41,7 +46,6 @@ import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
 import { receiptCache } from "./permissionless"
 import { sendResponse } from "./sendResponse"
-import { checkIsSessionKeyModuleInstalled, installSessionKeyModule, registerSessionKey } from "./session-keys/helpers"
 import { parseUserOpCalldata, sendUserOp } from "./userOps"
 import { appForSourceID } from "./utils"
 

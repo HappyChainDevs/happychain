@@ -10,7 +10,7 @@ export default {
     entryPoints: ["../../packages/core/lib/index.ts"],
 
     // https://typedoc.org/options/output
-    out: "docs/pages/sdk/js/api",
+    out: "src/pages/sdk/js/api",
 
     // https://typedoc-plugin-markdown.org/docs/options/utility-options
     publicPath: "/sdk/js/api/",
