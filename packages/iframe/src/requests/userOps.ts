@@ -4,7 +4,6 @@ import { deepHexlify } from "permissionless"
 import { getAccountNonce } from "permissionless/actions"
 import {
     type Address,
-    type Hash,
     type Hex,
     type RpcTransactionRequest,
     type UnionPartialBy,
@@ -16,7 +15,7 @@ import {
     zeroAddress,
 } from "viem"
 import type { PrepareUserOperationParameters, UserOperation, UserOperationReceipt } from "viem/account-abstraction"
-import { addPendingUserOp } from "#src/services/userOpsHistory"
+import { addConfirmedUserOp } from "#src/services/userOpsHistory"
 import { deleteNonce, getNextNonce } from "#src/state/nonces"
 import { getPublicClient } from "#src/state/publicClient.js"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
@@ -88,8 +87,8 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
             params: [deepHexlify(strippedUserOp), contractAddresses.EntryPointV7],
         })) as UserOperationReceipt
 
-        void addPendingUserOp(user.address, {
-            userOpHash: userOpReceipt.userOpHash as Hash,
+        void addConfirmedUserOp(user.address, {
+            userOpReceipt: userOpReceipt,
             value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
         })
 
