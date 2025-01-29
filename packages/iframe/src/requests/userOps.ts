@@ -79,6 +79,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         const preparedUserOp = { ..._preparedUserOp, nonce }
         preparedUserOp.signature = await signer(preparedUserOp, smartAccountClient)
+        // sendUserOperationNow does not want account included
         const { account: _, ...strippedUserOp } = preparedUserOp
 
         const userOpReceipt = (await smartAccountClient.request({
