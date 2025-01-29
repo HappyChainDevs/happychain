@@ -1,4 +1,4 @@
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { $ } from "bun"
 import { bundle } from "./buidl/bundle"
 import { checkExportedTypes } from "./buidl/checkExportedTypes"
@@ -92,6 +92,7 @@ async function buildConfig(config: Config, ctx: Context) {
     // or the entrypoint itself (if not bundling).
     for (const ex of config.exports) {
         const symlinkDest = config.bundle ? ex.bunOutputFile : ex.entrypoint
-        await $`ln -sf ../${symlinkDest} ${ex.exportedPath}`
+        await $`mkdir -p ./${dirname(ex.exportedPath)}`
+        await $`ln -sf ${join("../", symlinkDest)} ${ex.exportedPath}`
     }
 }

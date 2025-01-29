@@ -36,7 +36,7 @@ export function getExportPathInfo(exportSpec: ExportSpecifier, opts: GetExportPa
         exportedPath: exportPath,
         exportedTypesPath,
         entrypoint,
-        bunOutputFile: getBunOutputFile(entrypoint, opts.outDir),
+        bunOutputFile: getBunOutputFile(entrypoint.replace(opts.defaultSourceRoot, "."), opts.outDir),
         typesOutputFile: exportedTypesPath.replace(opts.exportDir, opts.outDir),
     }
 }
@@ -96,7 +96,6 @@ function getExportPath(exportSpec: ExportSpecifier, opts: GetExportPathInfoOpts)
 function getEntrypoint(exportSpec: ExportSpecifier, exportPath: string, opts: GetExportPathInfoOpts): string {
     let { exportName, entrypoint } = parseSpec(exportSpec)
     const { exportDir, defaultSourceRoot } = opts
-
     if (entrypoint) {
         entrypoint = normalizeRelativePath(entrypoint)
         if (!existsSync(entrypoint))

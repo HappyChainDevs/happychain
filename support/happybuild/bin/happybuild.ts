@@ -19,6 +19,7 @@ if (!cliArgs.watch) {
 process.env.CI = "true"
 
 const _configs = getConfigs(configs, cliArgs)
+
 const outDirs = Array.from(new Set(_configs.flatMap((c) => [c.bunConfig.outdir, c.exportDir]))).concat([
     "./node_modules",
     "./*.tgz",

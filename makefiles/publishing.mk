@@ -8,7 +8,16 @@ publish.dry-run: ## Dry Run publish to npm
 	bun publish --dry-run
 .PHONY: publish.dry-run
 
-publish:
+publish: prepare-dist
 	echo "DRY RUN, NOT PUBLISHING!"
 	bun publish --dry-run
 .PHONY: publish
+
+prepare-dist:
+	rm -rf dist
+	cp -R build dist
+.PHONY: prepare-dist
+
+pack: prepare-dist ## Package the tarball to be published manually
+	bun pm pack
+.PHONY: pack

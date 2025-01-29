@@ -11,7 +11,8 @@ export default defineConfig([
         },
     },
     {
-        exports: [{ name: "./runtime", entrypoint: "./src/runtime/index.ts" }],
+        exports: [{ name: "./runtime", entrypoint: "./src/runtime.ts" }],
+        name: "runtime",
         bunConfig: {
             sourcemap: "inline",
         },

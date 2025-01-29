@@ -5,8 +5,9 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/bundling.mk
 
 setup-symlinks::
+	mkdir -p dist/runtime;
 	@if ! [[ -r ./dist/runtime.es.js ]]; then \
-  		ln -s ../src/runtime/index.ts ./dist/runtime.es.js; \
-  		ln -s ../src/runtime/index.ts ./dist/runtime.es.d.ts; \
+  		ln -sf ../src/runtime.ts ./dist/runtime.es.js; \
+  		ln -sf ../src/runtime.ts ./dist/runtime.es.d.ts; \
 	fi
 .PHONY: setup-symlinks
