@@ -122,7 +122,7 @@ iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5
 .PHONY: iframe.dev
 
 demo-js.dev: setup.ts shared.dev sdk.dev ## Serves the VanillaJS demo application as http://localhost:5173
-	$(MULTIRUN) --names "iframe,demo-js" "cd apps/iframe && make dev" "cd demos/demo-vanillajs && make dev"
+	$(MULTIRUN) --names "iframe,demo-js" "cd apps/iframe && make dev" "cd demos/js && make dev"
 .PHONY: demo-js.dev
 
 demo-react.dev: setup.ts shared.dev sdk.dev ## Serves the React demo application as http://localhost:5173
@@ -135,17 +135,17 @@ demo-vue.dev: setup.ts shared.dev sdk.dev ## Serves the VueJS demo application a
 
 demo-js.prod: setup.ts  ## builds & run the prod version of the JS demo
 	IFRAME_URL=http://localhost:4160 make demo-js.build
-	$(MULTIRUN) --names "iframe.demo-js" "cd apps/iframe && make preview" "cd packages/js && make preview"
+	$(MULTIRUN) --names "iframe,demo-js" "cd apps/iframe && make preview" "cd demos/js && make preview"
 .PHONY: demo-js.prod
 
 demo-react.prod: setup.ts ## builds & run the prod version of the React demo
 	IFRAME_URL=http://localhost:4160 make demo-react.build
-	$(MULTIRUN) --names "iframe.demo-react" "cd apps/iframe && make preview" "cd packages/react && make preview"
+	$(MULTIRUN) --names "iframe.demo-react" "cd apps/iframe && make preview" "cd demos/react && make preview"
 .PHONY: demo-react.prod
 
 demo-vue.prod: setup.ts sdk.build  ## builds & run the prod version of the Vue demo
 	IFRAME_URL=http://localhost:4160 make demo-vue.build
-	$(MULTIRUN) --names "iframe.demo-vue" "cd apps/iframe && make preview" "cd packages/vue && make preview"
+	$(MULTIRUN) --names "iframe.demo-vue" "cd apps/iframe && make preview" "cd demos/vue && make preview"
 .PHONY: demo-vue.prod
 
 # ==================================================================================================
@@ -409,6 +409,10 @@ update-latest:
 remove-modules:
 	@echo "Removing all node_modules"
 	rm -rf node_modules apps/*/node_modules demos/*/node_modules packages/*/node_modules support/*/node_modules
+
+
+	@echo "Removing all dist/*"
+	rm -rf apps/*/dist demos/*/dist packages/*/dist support/*/dist
 .PHONY: remove-modules
 
 # ==================================================================================================

@@ -13,7 +13,6 @@ export function applyDefaults(config: InputConfig): Config {
     //
     const exportDir = normalizeRelativePath(config.exportDir) ?? "./dist"
     const outDir = normalizeRelativePath(config.outDir) ?? "./build"
-
     let defaultSourceRoot = normalizeRelativePath(config.defaultSourceRoot) ?? ""
     if (defaultSourceRoot === "") {
         const libExists = existsSync("lib")
@@ -114,7 +113,7 @@ export function applyDefaults(config: InputConfig): Config {
             naming: NAMING,
             entrypoints: exports.map((info) => info.entrypoint),
             outdir: outDir,
-            root: ".",
+            root: defaultSourceRoot,
         },
     }
 }
@@ -124,7 +123,6 @@ export function applyDefaults(config: InputConfig): Config {
  */
 const defaultConfig = {
     cleanOutDir: true,
-    cleanOutsideOutDir: true,
     reportSizes: !!process.env.CI,
     reportTime: !!process.env.CI,
     bunConfig: {
@@ -136,6 +134,8 @@ const defaultConfig = {
 
 /**
  * A naming string for Bun's {@link BuildConfig.naming}.
- * This uses the default value of "[dir]/[name].[ext]".
+ * This does not use the default bun value of "[dir]/[name].[ext]",
+ * but instead uses "[name].es.[ext]" for symmetry with the symlink paths
  */
-export const NAMING = "[dir]/[name].[ext]"
+export const NAMING = "[dir]/[name].es.[ext]"
+// export const NAMING = "[name].es.[ext]"

@@ -1,15 +1,15 @@
-import type { SharedWorkerServer } from "./server"
-import type { MessageCallback } from "./types"
+import type { SharedWorkerServer } from "./runtime/server"
+import type { MessageCallback } from "./runtime/types"
 
-export { SharedWorkerClient } from "./client"
+export { SharedWorkerClient } from "./runtime/client"
 
-export { SharedWorkerServer } from "./server"
+export { SharedWorkerServer } from "./runtime/server"
 
-export { SharedWorkerShim } from "./shim"
+export { SharedWorkerShim } from "./runtime/shim"
 
-export * from "./types"
+export * from "./runtime/types"
 
-export * from "./payload"
+export * from "./runtime/payload"
 
 type InjectedGlobal = typeof globalThis & {
     __is_shim_worker__?: boolean

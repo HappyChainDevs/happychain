@@ -30,8 +30,8 @@ dev: node_modules ## Symlinks source code entries into 'dist'
 setup-symlinks::
 	@mkdir -p dist
 	@if ! [[ -r ./dist/index.es.js ]]; then \
-  		ln -s ../$(SRC_ROOT_DIR)/index.ts ./dist/index.es.js; \
-  		ln -s ../$(SRC_ROOT_DIR)/index.ts ./dist/index.es.d.ts; \
+  		ln -sf ../$(SRC_ROOT_DIR)/index.ts ./dist/index.es.js; \
+  		ln -sf ../$(SRC_ROOT_DIR)/index.ts ./dist/index.es.d.ts; \
 		mkdir -p node_modules/.tmp; \
 		touch node_modules/.tmp/.dev; \
 	fi
