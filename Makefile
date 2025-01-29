@@ -410,7 +410,6 @@ remove-modules:
 	@echo "Removing all node_modules"
 	rm -rf node_modules apps/*/node_modules demos/*/node_modules packages/*/node_modules support/*/node_modules
 
-
 	@echo "Removing all dist/*"
 	rm -rf apps/*/dist demos/*/dist packages/*/dist support/*/dist
 .PHONY: remove-modules
@@ -421,7 +420,6 @@ remove-modules:
 changeset: ## Add a new changeset
 	changeset add
 .PHONY: changeset
-
 
 version: ## Bump all package dependencies according to staged changesets & generate changelogs
 	changeset version

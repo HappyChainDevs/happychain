@@ -135,7 +135,6 @@ const defaultConfig = {
 /**
  * A naming string for Bun's {@link BuildConfig.naming}.
  * This does not use the default bun value of "[dir]/[name].[ext]",
- * but instead uses "[name].es.[ext]" for symmetry with the symlink paths
+ * but instead uses "[dir]/[name].es.[ext]" for symmetry with the symlink paths
  */
 export const NAMING = "[dir]/[name].es.[ext]"
-// export const NAMING = "[name].es.[ext]"
