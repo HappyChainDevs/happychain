@@ -1,5 +1,6 @@
 import { deployment as contractAddresses } from "@happychain/contracts/account-abstraction/sepolia"
 import type { HappyUser } from "@happychain/sdk-shared"
+import { deepHexlify } from "permissionless"
 import { getAccountNonce } from "permissionless/actions"
 import {
     type Address,
@@ -14,7 +15,7 @@ import {
     toHex,
     zeroAddress,
 } from "viem"
-import type { PrepareUserOperationParameters, UserOperation } from "viem/account-abstraction"
+import type { PrepareUserOperationParameters, UserOperation, UserOperationReceipt } from "viem/account-abstraction"
 import { addPendingUserOp } from "#src/services/userOpsHistory"
 import { deleteNonce, getNextNonce } from "#src/state/nonces"
 import { getPublicClient } from "#src/state/publicClient.js"
@@ -49,7 +50,7 @@ export enum VALIDATOR_TYPE {
     PERMISSION = "0x02",
 }
 
-export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs, retry = true) {
+export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs, retry = 3) {
     const smartAccountClient = (await getSmartAccountClient())!
     const account = smartAccountClient.account.address
 
@@ -78,36 +79,36 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         const preparedUserOp = { ..._preparedUserOp, nonce }
         preparedUserOp.signature = await signer(preparedUserOp, smartAccountClient)
+        const { account: _, ...strippedUserOp } = preparedUserOp
 
-        const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
+        const userOpReceipt = (await smartAccountClient.request({
+            // @ts-ignore - the pimlico namespace is not supported by the Viem Smart Wallet types
+            method: "pimlico_sendUserOperationNow",
+            params: [deepHexlify(strippedUserOp), contractAddresses.EntryPointV7],
+        })) as UserOperationReceipt
 
         void addPendingUserOp(user.address, {
-            userOpHash: userOpHash as Hash,
+            userOpHash: userOpReceipt.userOpHash as Hash,
             value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
         })
 
-        return userOpHash
+        return userOpReceipt.userOpHash
     } catch (error) {
-        // TODO more parse errors
-        //      "AA33 reverted" is "paymaster validation reverted or out of gas"
-        //      https://docs.stackup.sh/docs/entrypoint-errors
-        //      https://docs.pimlico.io/infra/bundler/entrypoint-errors
+        // https://docs.stackup.sh/docs/entrypoint-errors
+        // https://docs.pimlico.io/infra/bundler/entrypoint-errors
 
-        if (error instanceof Error && retry) {
-            // This is AA25. This comes from `prepareUserOperation`.
-            // This should never happen since we don't specify the nonce in `prepareUserOperation`.
-            if (error.message.startsWith("Invalid Smart Account nonce used for User Operation.")) {
-                console.warn("Unexpected AA25 — invalid nonce. Retrying with fresh nonce.")
-                return sendUserOp({ user, tx, validator, signer }, false)
-            }
-
-            // Most likely: nonce validation failed in the bundler.
-            // This comes from `sendUserOperation`.
-            if (error.message.startsWith("Invalid fields set on User Operation.")) {
+        if (error instanceof Error && retry > 0) {
+            if (
+                // This is Entrypoint error AA25.
+                error.message.startsWith("Invalid Smart Account nonce used for User Operation.") ||
+                // Most likely: nonce validation failed in the bundler.
+                error.message.startsWith("Invalid fields set on User Operation.")
+            ) {
                 // Delete the nonce to force a refetch next time, & retry.
                 deleteNonce(account, validator)
-                return sendUserOp({ user, tx, validator, signer }, false)
             }
+
+            return sendUserOp({ user, tx, validator, signer }, retry - 1)
         }
 
         throw error
