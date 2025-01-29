@@ -1,7 +1,0 @@
-{
-    "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
-    "extends": ["../../support/configs/biome.jsonc"],
-    "files": {
-        "ignore": ["./cache", "./lib", "./out", "./deployments", "./broadcast"]
-    }
-}

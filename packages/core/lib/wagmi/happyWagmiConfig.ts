@@ -19,7 +19,7 @@ import { happyProvider } from "../happyProvider/initialize"
  *  transports: {
  *      [happyChainSepolia.id]: custom(happyProvider),
  *  },
-})
+ * })
  *
  */
 export const happyWagmiConnector: CreateConnectorFn = injected({

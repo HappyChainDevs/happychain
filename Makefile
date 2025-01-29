@@ -37,7 +37,7 @@ BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
 
 # all packages that have a package.json
-NPM_PKGS := $(TS_PKGS),apps/docs,packages/contracts,support/configs
+NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
 
 # all packages
 ALL_PKGS := $(NPM_PKGS),packages/bundler
@@ -89,7 +89,7 @@ build: node_modules ts.build  ## Creates production builds
 .PHONY: build
 
 nuke: clean ## Removes build artifacts and dependencies 
-	cd packages/contracts && make nuke
+	cd contracts && make nuke
 	cd packages/bundler && make nuke
 	$(MAKE) remove-modules
 .PHONY: nuke
@@ -151,11 +151,11 @@ demo-vue.prod: setup.ts sdk.build  ## builds & run the prod version of the Vue d
 ##@ Contracts
 
 anvil: ## Runs anvil (local EVM node)
-	cd packages/contracts && make anvil
+	cd contracts && make anvil
 .PHONY: anvil
 
 deploy: ## Deploys contracts to Anvil
-	cd packages/contracts && make deploy
+	cd contracts && make deploy
 .PHONY: deploy
 
 # ==================================================================================================
@@ -219,8 +219,8 @@ ts.check:
 .PHONY: ts.check
 
 contracts.check:
-	echo "Running make check in packages/contracts"
-	cd packages/contracts && make check
+	echo "Running make check in contracts"
+	cd contracts && make check
 .PHONY: contracts.check
 
 sdk.format:
@@ -252,7 +252,7 @@ ts.format:
 .PHONY: ts.format
 
 contracts.format:
-	cd packages/contracts && make format
+	cd contracts && make format
 .PHONY: contracts.format
 
 # ==================================================================================================
@@ -299,7 +299,7 @@ ts.build:
 .PHONY: ts.build
 
 contracts.build:
-	cd packages/contracts && make build
+	cd contracts && make build
 .PHONY: contracts.build
 
 # ==================================================================================================
@@ -350,7 +350,7 @@ ts.clean:
 .PHONY: ts.clean
 
 contracts.clean:
-	cd packages/contracts && make clean
+	cd contracts && make clean
 .PHONY: contracts.clean
 
 # ==================================================================================================

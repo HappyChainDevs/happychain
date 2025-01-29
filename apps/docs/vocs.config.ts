@@ -1,7 +1,7 @@
 import { defineConfig } from "vocs"
 
 export default defineConfig({
-    rootDir: "docs",
+    rootDir: "src",
     title: "HappyChain Docs",
     socials: [
         {
@@ -48,15 +48,15 @@ export default defineConfig({
         },
         {
             text: "Transaction Manager",
-            link: "/transaction-manager",
+            link: "/txm",
             items: [
                 {
                     text: "Getting Started",
-                    link: "/transaction-manager/getting-started",
+                    link: "/txm/getting-started",
                 },
                 {
                     text: "API Reference",
-                    link: "/transaction-manager/api",
+                    link: "/txm/api",
                 },
             ],
         },

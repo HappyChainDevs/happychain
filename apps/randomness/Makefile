@@ -11,10 +11,10 @@ migrate: ## Runs pending migrations
 
 link-anvil:
 	rm src/ABI/random.ts
-	ln -s ../../../../packages/contracts/deployments/anvil/random/abis.ts src/ABI/random.ts
+	ln -s ../../../../contracts/deployments/anvil/random/abis.ts src/ABI/random.ts
 .PHONY: link-anvil
 
 link-happy-sepolia:
 	rm src/ABI/random.ts
-	ln -s ../../../../packages/contracts/deployments/happy-sepolia/random/abis.ts src/ABI/random.ts
+	ln -s ../../../../contracts/deployments/happy-sepolia/random/abis.ts src/ABI/random.ts
 .PHONY: link-happy-sepolia

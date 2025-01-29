@@ -3,7 +3,7 @@
     "author": "Happy Devs",
     "license": "BSD-3-Clause-Clear",
     "version": "0.0.1",
-    "workspaces": ["apps/*", "demos/*", "packages/*", "support/*"],
+    "workspaces": ["apps/*", "demos/*", "packages/*", "support/*", "contracts"],
     "private": true,
     "scripts": {
         "help": "make help"

@@ -23,8 +23,8 @@ export default {
     readme: "none",
 
     // https://typedoc.org/options/output/
-    cname: "docs.happychaindevs.com",
-    titleLink: "https://docs.happychaindevs.org",
+    cname: "docs.happy.tech",
+    titleLink: "https://docs.happy.tech/",
     customFooterHtml: "Copyright <strong>HappyChain</strong> 2025",
     hideGenerator: true,
     searchInComments: true,
