@@ -72,6 +72,18 @@ define forall_make
 	done
 endef
 
+define with_optional_iframe
+	$(eval DEMO_NAME := $(strip $(1)))
+	$(eval DEMO_PATH := $(strip $(2)))
+	$(eval DEMO_CMD := $(strip $(3)))
+
+	@if lsof -t -i :5160 &> /dev/null; then \
+		$(MULTIRUN) --names $(DEMO_NAME) "cd $(DEMO_PATH) && make $(DEMO_CMD)";\
+	else \
+		$(MULTIRUN) --names "iframe,$(DEMO_NAME)" "cd apps/iframe && make $(DEMO_CMD)" "cd $(DEMO_PATH) && make $(DEMO_CMD)";\
+	fi
+endef
+
 # ==================================================================================================
 # BASICS COMMANDS
 #   To get the project running locally.
@@ -104,7 +116,7 @@ nuke: clean ## Removes build artifacts and dependencies
 test: sdk.test iframe.test ## Run tests
 .PHONY: test
 
-docs: node_modules docs.contained ## Builds latest docs and starts dev server http://localhost:4173
+docs: node_modules docs.contained ## Builds latest docs and starts dev server http://localhost:4000
 	cd apps/docs && make preview
 .PHONY: docs
 
@@ -127,31 +139,32 @@ iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5
 	cd apps/iframe && make dev
 .PHONY: iframe.dev
 
-demo-js.dev: setup.ts shared.dev sdk.dev ## Serves the Vanilla JS demo application at http://localhost:5173
-	$(MULTIRUN) --names "iframe,demo-js" "cd apps/iframe && make dev" "cd demos/js && make dev"
+
+demo-js.dev: setup.ts shared.dev sdk.dev ## Serves the VanillaJS demo application at http://localhost:6001
+	$(call with_optional_iframe, "demo-js", "demos/js", "dev")
 .PHONY: demo-js.dev
 
-demo-react.dev: setup.ts shared.dev sdk.dev ## Serves the React demo application at http://localhost:5173
-	$(MULTIRUN) --names "iframe,demo-react" "cd apps/iframe && make dev" "cd demos/react && make dev"
+demo-react.dev: setup.ts shared.dev sdk.dev ## Serves the React demo application at http://localhost:6002
+	$(call with_optional_iframe, "demo-react", "demos/react", "dev")
 .PHONY: demo-react.dev
 
-demo-vue.dev: setup.ts shared.dev sdk.dev ## Serves the VueJS demo application at http://localhost:5173
-	$(MULTIRUN) --names "iframe,demo-vue" "cd apps/iframe && make dev" "cd demos/vue && make dev"
+demo-vue.dev: setup.ts shared.dev sdk.dev ## Serves the VueJS demo application at http://localhost:6003
+	$(call with_optional_iframe, "demo-vue", "demos/vue", "dev")
 .PHONY: demo-vue.dev
 
-demo-js.prod: setup.ts  ## Builds & runs the prod version of the JS demo at http://localhost:4173
-	IFRAME_URL=http://localhost:4160 make demo-js.build
-	$(MULTIRUN) --names "iframe,demo-js" "cd apps/iframe && make preview" "cd demos/js && make preview"
+demo-js.prod: setup.ts  ## Builds & runs the prod version of the JS demo at http://localhost:6001
+	make demo-js.build;
+	$(call with_optional_iframe, "demo-js", "demos/js", "preview")
 .PHONY: demo-js.prod
 
-demo-react.prod: setup.ts ## Builds & runs the prod version of the React demo at http://localhost:4173
-	IFRAME_URL=http://localhost:4160 make demo-react.build
-	$(MULTIRUN) --names "iframe.demo-react" "cd apps/iframe && make preview" "cd demos/react && make preview"
+demo-react.prod: setup.ts ## Builds & runs the prod version of the React demo at http://localhost:6002
+	make demo-react.build;
+	$(call with_optional_iframe, "demo-react", "demos/react", "preview")
 .PHONY: demo-react.prod
 
-demo-vue.prod: setup.ts sdk.build  ## Builds & runs the prod version of the Vue demo at http://localhost:4173
-	IFRAME_URL=http://localhost:4160 make demo-vue.build
-	$(MULTIRUN) --names "iframe.demo-vue" "cd apps/iframe && make preview" "cd demos/vue && make preview"
+demo-vue.prod: setup.ts sdk.build  ## Builds & runs the prod version of the Vue demo at http://localhost:6003
+	make demo-vue.build;
+	$(call with_optional_iframe, "demo-vue", "demos/vue", "preview")
 .PHONY: demo-vue.prod
 
 
@@ -304,6 +317,11 @@ demo-react.build: setup.ts shared.build
 	cd packages/react && make build
 	cd demos/react && make build
 .PHONY: demo-react.build
+
+demo-vue.build: setup.ts shared.build
+	cd packages/core && make build
+	cd demos/vue && make build
+.PHONY: demo-vue.build
 
 demos.build:
 	$(call forall_make , $(DEMOS_PKGS) , build)

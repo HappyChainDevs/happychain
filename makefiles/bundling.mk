@@ -52,7 +52,7 @@ DIST_DEPS := $(shell find . \
 FORCE_UDPATE := $(shell test -f node_modules/.tmp/.dev && echo force_update)
 
 dist: $(DIST_DEPS) $(FORCE_UDPATE)
-	@happybuild --config build.config.ts;
+	@NODE_ENV=production happybuild --config build.config.ts;
 	@# force updates modified_at timestamp
 	@if [ -d $@ ]; then touch $@; else mkdir -p $@; fi;
 
