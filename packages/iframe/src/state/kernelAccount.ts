@@ -112,7 +112,7 @@ export async function getKernelAccountAddress(owner: Address): Promise<Address> 
             break
         } catch (error) {
             if ((error as InvalidInputRpcError).details === "invalid code: must not begin with 0xef") {
-                console.warn("Failed to get Kernal account address — code starting in 0xef, retrying")
+                console.warn("Failed to get Kernel account address — code starting in 0xef, retrying")
                 index++
             } else {
                 throw new Error("Failed to get Kernal account address")
