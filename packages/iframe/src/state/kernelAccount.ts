@@ -9,6 +9,7 @@ import {
     type Address,
     type EIP1193Parameters,
     type Hex,
+    type InvalidInputRpcError,
     type WalletRpcSchema,
     concat,
     concatHex,
@@ -89,11 +90,11 @@ export async function getKernelAccountAddress(owner: Address): Promise<Address> 
     }
     const publicClient = createPublicClient(clientOptions)
 
+    // if the generated account code has a "0xef" prefix which is disallowed by the EVM, getSenderAddress()
+    //  will throw so we try again with a different index value, which will produce different bytecode
     let senderFromFactory: Address
     let index = 0
     const maxRetries = 3
-    // if the generated account code has a "0xef" prefix which is disallowed by the EVM, getSenderAddress()
-    //  will throw so we try again with a different index value, which will produce different bytecode
     while (index < maxRetries) {
         try {
             const initCode = getInitCode(contracts.ECDSAValidator, owner, contracts.KernelFactory, index)
@@ -110,9 +111,12 @@ export async function getKernelAccountAddress(owner: Address): Promise<Address> 
             }
             break
         } catch (error) {
-            //todo: decode error type
-            console.error("code starting with 0xef", error)
-            index++
+            if ((error as InvalidInputRpcError).details === "invalid code: must not begin with 0xef") {
+                console.warn("Failed to get Kernal account address — code starting in 0xef, retrying")
+                index++
+            } else {
+                throw new Error("Failed to get Kernal account address")
+            }
         }
     }
 
