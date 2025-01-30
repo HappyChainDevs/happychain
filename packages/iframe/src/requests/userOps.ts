@@ -1,3 +1,4 @@
+import { Map2, Mutex } from "@happychain/common"
 import { deployment as contractAddresses } from "@happychain/contracts/account-abstraction/sepolia"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { deepHexlify } from "permissionless"
@@ -22,7 +23,6 @@ import {
 } from "viem/account-abstraction"
 import { addPendingUserOp, markUserOpAsConfirmed } from "#src/services/userOpsHistory"
 import { getCurrentChain } from "#src/state/chains"
-import { deleteNonce, getNextNonce } from "#src/state/nonces"
 import { getPublicClient } from "#src/state/publicClient.js"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 
@@ -131,10 +131,42 @@ function isRootValidator(validatorAddress: Address) {
     return validatorAddress === contractAddresses.ECDSAValidator || validatorAddress === zeroAddress
 }
 
+const nonces = new Map2<Address, Address, bigint>()
+const nonceMutexes = new Map2<Address, Address, Mutex>()
+
+/**
+ * Returns the next nonce for the given account and validator, using a local view of the nonce
+ * if possible, and fetching the nonce from the chain otherwise.
+ *
+ * This function sits besides a per-(validator,address) mutex, which avoids two userOps from
+ * simultaneously requesting the same nonce from the chain, resulting in a nonce clash.)
+ */
+async function getNextNonce(account: Address, validator: Address): Promise<bigint> {
+    const mutex = nonceMutexes.getOrSet(account, validator, () => new Mutex())
+    return mutex.locked(async () => {
+        const oldNonce = nonces.get(account, validator)
+        const nonce = await nonces.getOrSetAsync(account, validator, () => getOnchainNonce(account, validator))
+        if (oldNonce === nonce) {
+            console.log("stored nonce", nonce)
+        } else {
+            console.log("fetched nonce", nonce)
+        }
+        nonces.set(account, validator, nonce + 1n)
+        return nonce
+    })
+}
+
+/**
+ * Deletes the local nonce information for a the given account and validator.
+ */
+function deleteNonce(account: Address, validator: Address) {
+    nonces.delete(account, validator)
+}
+
 /**
  * Returns the nonce from the EntryPoint-v7 contract for the given account and validator.
  */
-export async function getNonce(smartAccountAddress: Address, validatorAddress: Address) {
+async function getOnchainNonce(smartAccountAddress: Address, validatorAddress: Address) {
     const isRoot = isRootValidator(validatorAddress)
     const validatorType = isRoot ? VALIDATOR_TYPE.ROOT : VALIDATOR_TYPE.VALIDATOR
     // This matches the behavior of the bundler when a nonce is not provided.
@@ -150,14 +182,10 @@ export async function getNonce(smartAccountAddress: Address, validatorAddress: A
                     VALIDATOR_MODE.DEFAULT,
                     validatorType,
                     _validatorAddress,
-                    toHex(
-                        0n, // Internal key to the Kernel smart account (unused for the root validator module)
-                        { size: 2 },
-                    ),
+                    // Inner Kernel-specific nonce key — enables parallel nonce tracks for given validator.
+                    toHex(0n, { size: 2 }),
                 ]),
-                {
-                    size: 24,
-                },
+                { size: 24 },
             ),
         ),
     })
