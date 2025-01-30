@@ -77,7 +77,7 @@ interface IHappyAccount {
      *
      * This function is called directly by {@link EntryPoint.submit}.
      */
-    function validate(HappyTx memory happyTx) external returns (bytes4);
+    function validate(HappyTx memory happyTx) external returns (bytes4); // TODO: temporarirly added happyTxHash param
 
     /*
      * Executes the call specified by a Happy Transaction.

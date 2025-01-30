@@ -171,22 +171,31 @@ contract ScrappyAccount is
         (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
         if (!success) {
             output.revertData = returnData;
+            console.log("happyTx.dest.call != success, revertData:");
+            console.logBytes(returnData);
             return output;
         }
+        console.log("happyTx.dest.call == success");
+        console.log("returnData:");
+        console.logBytes(returnData);
 
         // TODO: get upper limit of gas costs that can't be metered via gasleft()
         // (Solidity gas overhead + gas math and assignment)
         output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
+        console.log("output.gas:");
+        console.log(output.gas);
     }
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
         // [LOGGAS] uint256 initialGas = gasleft();
         if (happyTx.account != address(this)) {
+            console.log("wrong account selector");
             return WrongAccount.selector;
         }
 
         uint256 owed = (consumedGas + INTRINSIC_GAS + GAS_OVERHEAD_BUFFER) // TODO
             * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
+        console.log("owed: ", owed);
 
         payable(tx.origin).call{value: owed}("");
 

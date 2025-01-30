@@ -1,4 +1,4 @@
-import { type Address, type Hex, zeroAddress } from "viem"
+import { type Address, type Hex, parseEther, zeroAddress } from "viem"
 
 import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
@@ -9,6 +9,7 @@ import { account, publicClient, walletClient } from "./utils/clients"
 import { isContractDeployed } from "./utils/helpers"
 import { DeployAccountSchema, HappyTxSchema } from "./utils/requestSchema"
 import { DeployAccountResponseSchema, SubmitHappyTxResponseSchema } from "./utils/responseSchema"
+import { localhost } from "viem/chains"
 
 const app = new Hono()
 app.use(prettyJSON())
@@ -42,12 +43,10 @@ app.get("/getAddress", async (c) => {
 
 app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) => {
     const { owner, salt } = c.req.valid("json")
-    console.log("\n###########################################\n")
-    console.log(`/deployAccount\nOwner: ${owner},\nSalt: ${salt}`)
+    console.log(`\n\n/deployAccount\nOwner: ${owner},\nSalt: ${salt}`)
 
     try {
         // First predict the account address
-        console.log("\nPredicting account address...")
         const predictedAddress: Address = await publicClient.readContract({
             address: deployment.ScrappyAccountFactory,
             abi: abis.ScrappyAccountFactory,
@@ -68,7 +67,6 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
         }
 
         // If not deployed, simulate the deployment
-        console.log("\nSimulating deployment...")
         const { request, result } = await publicClient.simulateContract({
             address: deployment.ScrappyAccountFactory,
             abi: abis.ScrappyAccountFactory,
@@ -89,13 +87,11 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
         }
 
         // Then, actually deploy
-        console.log("\nCalling ScrappyAccountFactory...")
         const hash = await walletClient.writeContract(request)
-        console.log("Tx Hash:", hash)
+        console.log("Tx Hash:    ", hash)
 
-        console.log("\nWaiting for receipt...")
         const receipt = await publicClient.waitForTransactionReceipt({ hash })
-        console.log("Tx Receipt:", receipt.status)
+        console.log("Tx Receipt: ", receipt.status)
 
         if (receipt.status !== "success") {
             console.error("Deployment failed with receipt:", receipt)
@@ -120,7 +116,6 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
         }
 
         // Verify deployment
-        console.log("\nVerifying deployment at predicted address...")
         const isDeployed = await isContractDeployed(predictedAddress)
 
         if (!isDeployed) {
@@ -133,7 +128,18 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
             const validatedResponse = DeployAccountResponseSchema.parse(response)
             return c.json(validatedResponse, 400)
         }
-        console.log("Deployment successful for owner:", owner)
+
+        await publicClient.waitForTransactionReceipt({
+            hash: await walletClient.sendTransaction({
+                account,
+                to: predictedAddress,
+                value: parseEther("1"),
+                data: "0x",
+                chain: localhost,
+            }),
+        })
+        const balance = await publicClient.getBalance({ address: predictedAddress })
+        console.log("💸 Top up Balance:", balance)
 
         const response = {
             success: true,
@@ -158,8 +164,7 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
 app.post("/submitHappyTx", zValidator("json", HappyTxSchema), async (c) => {
     try {
         const { encodedHappyTx } = c.req.valid("json")
-        console.log("\n###########################################\n")
-        console.log(`/submitHappyTx\nencodedHappyTx: ${encodedHappyTx}`)
+        console.log(`\n\n/submitHappyTx\nencodedHappyTx: ${encodedHappyTx}`)
 
         console.log("⏳ Simulating the transaction...")
         // Simulate the transaction first
@@ -176,7 +181,29 @@ app.post("/submitHappyTx", zValidator("json", HappyTxSchema), async (c) => {
         console.log("⏳ Sending the transaction...")
         // Send the transaction
         const hash = await walletClient.writeContract(request)
-        console.log("Submitted happyTx: ", hash)
+        console.log("✅ Transaction submitted successfully: ", hash)
+        // console.log("⏳ Submitting the transaction...")
+        // const hash = await walletClient.writeContract({
+        //     address: deployment.HappyEntryPoint,
+        //     abi: abis.HappyEntryPoint,
+        //     functionName: "submit",
+        //     args: [encodedHappyTx],
+        //     account,
+        //     chain: localhost,
+        // })
+        // console.log("Submitted happyTx: ", hash)
+
+        const receipt = await publicClient.waitForTransactionReceipt({ hash })
+        if (receipt.status !== "success") {
+            console.error("Transaction failed with receipt:", receipt)
+            const response = {
+                success: false,
+                error: "Transaction failed on-chain.",
+                txHash: receipt.transactionHash,
+            }
+            const validatedResponse = SubmitHappyTxResponseSchema.parse(response)
+            return c.json(validatedResponse, 400)
+        }
 
         const response = {
             success: true,
@@ -186,7 +213,7 @@ app.post("/submitHappyTx", zValidator("json", HappyTxSchema), async (c) => {
         const validatedResponse = SubmitHappyTxResponseSchema.parse(response)
         return c.json(validatedResponse)
     } catch (error) {
-        console.error("❌ Error submitting happy transaction:", error)
+        console.error("❌ Error submitting happy transaction.\n")
         const response = {
             success: false,
             error: error instanceof Error ? error.message : "Unknown error during transaction submission",
