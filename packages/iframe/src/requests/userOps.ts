@@ -14,9 +14,9 @@ import {
     toHex,
     zeroAddress,
 } from "viem"
-import type { UserOperation } from "viem/account-abstraction"
+import type { PrepareUserOperationParameters, UserOperation } from "viem/account-abstraction"
 import { addPendingUserOp } from "#src/services/userOpsHistory"
-import { deleteNonce, getNextNonce, setNonce } from "#src/state/nonces"
+import { deleteNonce, getNextNonce } from "#src/state/nonces"
 import { getPublicClient } from "#src/state/publicClient.js"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 
@@ -52,38 +52,34 @@ export enum VALIDATOR_TYPE {
 export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs, retry = true) {
     const smartAccountClient = (await getSmartAccountClient())!
     const account = smartAccountClient.account.address
-    const customNonce = await getNextNonce(account, validator)
-    const isRoot = isRootValidator(validator)
 
     try {
-        const preparedUserOp = await smartAccountClient.prepareUserOperation({
-            account: smartAccountClient.account,
-            calls: [
-                {
-                    to: tx.to,
-                    data: tx.data,
-                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                },
-            ],
-        })
+        // We need the separate nonce lookup because:
+        // - we do local nonce management to be able to have multiple userOps in flight
+        // - prepareUserOperation cannot request nonces for custom nonceKeys (needed for session keys)
+        const [nonce, _preparedUserOp] = await Promise.all([
+            getNextNonce(account, validator),
+            smartAccountClient.prepareUserOperation({
+                account: smartAccountClient.account,
+                paymaster: contractAddresses.HappyPaymaster,
+                // Specify this array to avoid fetching the nonce from here too.
+                // We don't really need the dummy signature, but it does not incur an extra network
+                // call and it makes the type system happy.
+                parameters: ["factory", "fees", "gas", "signature"],
+                calls: [
+                    {
+                        to: tx.to,
+                        data: tx.data,
+                        value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                    },
+                ],
+            } satisfies PrepareUserOperationParameters), // TS too dumb without this
+        ])
 
-        // For some reason, this gets estimated to 25k in some scenarios, but it needs to be 40k
-        // to succeed for budget initialization (subsequent runs only need ~22k).
-        preparedUserOp.paymasterVerificationGasLimit = 400000n
+        const preparedUserOp = { ..._preparedUserOp, nonce }
+        preparedUserOp.signature = await signer(preparedUserOp, smartAccountClient)
 
-        if (isRoot && preparedUserOp.nonce > customNonce) {
-            // Bundler nonce is fresher than our local nonce.
-            setNonce(account, validator, preparedUserOp.nonce + 1n)
-        } else {
-            preparedUserOp.nonce = customNonce
-        }
-
-        const signature = await signer(preparedUserOp, smartAccountClient)
-
-        const userOpWithSig = { ...preparedUserOp, signature }
-        const userOpHash = await smartAccountClient.sendUserOperation(userOpWithSig)
-
-        console.log("hash", userOpHash, toHex(preparedUserOp.nonce))
+        const userOpHash = await smartAccountClient.sendUserOperation(preparedUserOp)
 
         void addPendingUserOp(user.address, {
             userOpHash: userOpHash as Hash,
@@ -92,15 +88,27 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         return userOpHash
     } catch (error) {
-        // TODO parse errors
+        // TODO more parse errors
         //      "AA33 reverted" is "paymaster validation reverted or out of gas"
-        //      "AA25" is "invalid account nonce"
         //      https://docs.stackup.sh/docs/entrypoint-errors
         //      https://docs.pimlico.io/infra/bundler/entrypoint-errors
-        if (error instanceof Error && retry && error.message.includes("AA25")) {
-            deleteNonce(account, validator)
-            return sendUserOp({ user, tx, validator, signer }, false)
+
+        if (error instanceof Error && retry) {
+            // This is AA25. This comes from `prepareUserOperation`.
+            // This should never happen since we don't specify the nonce in `prepareUserOperation`.
+            if (error.message.startsWith("Invalid Smart Account nonce used for User Operation.")) {
+                console.warn("Unexpected AA25 — invalid nonce. Retrying with custom nonce.")
+            }
+
+            // Most likely: nonce validation failed in the bundler.
+            // This comes from `sendUserOperation`.
+            if (error.message.startsWith("Invalid fields set on User Operation.")) {
+                // Delete the nonce to force a refetch next time, & retry.
+                deleteNonce(account, validator)
+                return sendUserOp({ user, tx, validator, signer }, false)
+            }
         }
+
         throw error
     }
 }
