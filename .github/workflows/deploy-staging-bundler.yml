@@ -27,13 +27,30 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       
-      - name: Show wallets address
+      - name: Show wallet addresses
         run: |
-          EXECUTOR_WALLET_ADDRESS=$(cast wallet address ${{ secrets.STAGING_BUNDLER_EXECUTOR_WALLET }})
-          UTILITY_WALLET_ADDRESS=$(cast wallet address ${{ secrets.STAGING_BUNDLER_UTILITY_WALLET }})
-          echo "Executor wallet: $EXECUTOR_WALLET_ADDRESS"
-          echo "Utility wallet: $UTILITY_WALLET_ADDRESS"
-        
+          EXECUTOR_WALLETS='${{ secrets.STAGING_BUNDLER_EXECUTOR_WALLET }}'
+          UTILITY_WALLETS='${{ secrets.STAGING_BUNDLER_UTILITY_WALLET }}'
+          echo "===== Executor wallet(s) ====="
+          if [[ "$EXECUTOR_WALLETS" =~ ^\[ ]]; then
+            for WALLET in $(echo "$EXECUTOR_WALLETS" | jq -r '.[]'); do
+              WALLET_ADDRESS=$(cast wallet address "$WALLET")
+              echo "Executor wallet: $WALLET_ADDRESS"
+            done
+          else
+            WALLET_ADDRESS=$(cast wallet address "$EXECUTOR_WALLETS")
+            echo "Executor wallet: $WALLET_ADDRESS"
+          fi
+          echo "===== Utility wallet(s) ====="
+          if [[ "$UTILITY_WALLETS" =~ ^\[ ]]; then
+            for WALLET in $(echo "$UTILITY_WALLETS" | jq -r '.[]'); do
+              WALLET_ADDRESS=$(cast wallet address "$WALLET")
+              echo "Utility wallet: $WALLET_ADDRESS"
+            done
+          else
+            WALLET_ADDRESS=$(cast wallet address "$UTILITY_WALLETS")
+            echo "Utility wallet: $WALLET_ADDRESS"
+          fi
 
       - name: Build code
         run: |
