@@ -119,15 +119,8 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
         // https://docs.stackup.sh/docs/entrypoint-errors
         // https://docs.pimlico.io/infra/bundler/entrypoint-errors
 
-        if (
-            error instanceof Error &&
-            "details" in error &&
-            typeof error.details === "string" &&
-            error.details.startsWith("userOperation reverted during simulation with reason: AA25 invalid account nonce")
-        ) {
-            // Delete the nonce to force a refetch next time.
-            deleteNonce(account, validator)
-        }
+        // Most likely the transaction didn't land, so need to resynchronize the nonce.
+        deleteNonce(account, validator)
 
         if (retry > 0) return sendUserOp({ user, tx, validator, signer }, retry - 1)
         throw error
