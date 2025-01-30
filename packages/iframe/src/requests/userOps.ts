@@ -97,7 +97,8 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
             // This is AA25. This comes from `prepareUserOperation`.
             // This should never happen since we don't specify the nonce in `prepareUserOperation`.
             if (error.message.startsWith("Invalid Smart Account nonce used for User Operation.")) {
-                console.warn("Unexpected AA25 — invalid nonce. Retrying with custom nonce.")
+                console.warn("Unexpected AA25 — invalid nonce. Retrying with fresh nonce.")
+                return sendUserOp({ user, tx, validator, signer }, false)
             }
 
             // Most likely: nonce validation failed in the bundler.
