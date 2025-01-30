@@ -17,7 +17,6 @@ import {
     toHex,
     zeroAddress,
 } from "viem"
-import { InvalidInputRpcError } from "viem"
 import { type SmartAccount, entryPoint07Address } from "viem/account-abstraction"
 import { getWalletClient } from "#src/state/walletClient"
 import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
@@ -111,12 +110,9 @@ export async function getKernelAccountAddress(owner: Address): Promise<Address> 
             }
             break
         } catch (error) {
-            if (error instanceof InvalidInputRpcError) {
-                console.error("code starting with 0xef")
-                index++
-            } else {
-                throw new Error("Error getting Kernel account address")
-            }
+            //todo: decode error type
+            console.error("code starting with 0xef", error)
+            index++
         }
     }
 
