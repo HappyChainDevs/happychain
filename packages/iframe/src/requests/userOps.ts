@@ -100,11 +100,17 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         addPendingUserOp(user.address, pendingUserOpDetails)
 
-        const userOpReceipt = (await smartAccountClient.request({
-            // @ts-ignore - the pimlico namespace is not supported by the Viem Smart Wallet types
-            method: "pimlico_sendUserOperationNow",
-            params: [deepHexlify(preparedUserOp), contractAddresses.EntryPointV7],
-        })) as UserOperationReceipt
+        const userOpReceipt = (await smartAccountClient.request(
+            {
+                // @ts-ignore - the pimlico namespace is not supported by the Viem Smart Wallet types
+                method: "pimlico_sendUserOperationNow",
+                params: [deepHexlify(preparedUserOp), contractAddresses.EntryPointV7],
+            },
+            {
+                // We'll handle retries at this level instead.
+                retryCount: 0,
+            },
+        )) as UserOperationReceipt
 
         markUserOpAsConfirmed(user.address, pendingUserOpDetails, userOpReceipt)
 
@@ -113,16 +119,14 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
         // https://docs.stackup.sh/docs/entrypoint-errors
         // https://docs.pimlico.io/infra/bundler/entrypoint-errors
 
-        if (error instanceof Error) {
-            if (
-                // This is Entrypoint error AA25.
-                error.message.startsWith("Invalid Smart Account nonce used for User Operation.") ||
-                // Most likely: nonce validation failed in the bundler.
-                error.message.startsWith("Invalid fields set on User Operation.")
-            ) {
-                // Delete the nonce to force a refetch next time.
-                deleteNonce(account, validator)
-            }
+        if (
+            error instanceof Error &&
+            "details" in error &&
+            typeof error.details === "string" &&
+            error.details.startsWith("userOperation reverted during simulation with reason: AA25 invalid account nonce")
+        ) {
+            // Delete the nonce to force a refetch next time.
+            deleteNonce(account, validator)
         }
 
         if (retry > 0) return sendUserOp({ user, tx, validator, signer }, retry - 1)
