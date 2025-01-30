@@ -14,8 +14,14 @@ import {
     toHex,
     zeroAddress,
 } from "viem"
-import type { PrepareUserOperationParameters, UserOperation, UserOperationReceipt } from "viem/account-abstraction"
-import { addConfirmedUserOp } from "#src/services/userOpsHistory"
+import {
+    type PrepareUserOperationParameters,
+    type UserOperation,
+    type UserOperationReceipt,
+    getUserOperationHash,
+} from "viem/account-abstraction"
+import { addPendingUserOp, markUserOpAsConfirmed } from "#src/services/userOpsHistory"
+import { getCurrentChain } from "#src/state/chains"
 import { deleteNonce, getNextNonce } from "#src/state/nonces"
 import { getPublicClient } from "#src/state/publicClient.js"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
@@ -49,7 +55,7 @@ export enum VALIDATOR_TYPE {
     PERMISSION = "0x02",
 }
 
-export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs, retry = 3) {
+export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs, retry = 2) {
     const smartAccountClient = (await getSmartAccountClient())!
     const account = smartAccountClient.account.address
 
@@ -76,41 +82,50 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
             } satisfies PrepareUserOperationParameters), // TS too dumb without this
         ])
 
-        const preparedUserOp = { ..._preparedUserOp, nonce }
-        preparedUserOp.signature = await signer(preparedUserOp, smartAccountClient)
         // sendUserOperationNow does not want account included
-        const { account: _, ...strippedUserOp } = preparedUserOp
+        const { account: _, ...preparedUserOp } = { ..._preparedUserOp, nonce }
+        preparedUserOp.signature = await signer(preparedUserOp, smartAccountClient)
+
+        const userOpHash = getUserOperationHash({
+            chainId: Number(getCurrentChain().chainId),
+            entryPointAddress: contractAddresses.EntryPointV7,
+            entryPointVersion: "0.7",
+            userOperation: preparedUserOp,
+        })
+
+        const pendingUserOpDetails = {
+            userOpHash,
+            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+        }
+
+        addPendingUserOp(user.address, pendingUserOpDetails)
 
         const userOpReceipt = (await smartAccountClient.request({
             // @ts-ignore - the pimlico namespace is not supported by the Viem Smart Wallet types
             method: "pimlico_sendUserOperationNow",
-            params: [deepHexlify(strippedUserOp), contractAddresses.EntryPointV7],
+            params: [deepHexlify(preparedUserOp), contractAddresses.EntryPointV7],
         })) as UserOperationReceipt
 
-        void addConfirmedUserOp(user.address, {
-            userOpReceipt: userOpReceipt,
-            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-        })
+        markUserOpAsConfirmed(user.address, pendingUserOpDetails, userOpReceipt)
 
         return userOpReceipt.userOpHash
     } catch (error) {
         // https://docs.stackup.sh/docs/entrypoint-errors
         // https://docs.pimlico.io/infra/bundler/entrypoint-errors
 
-        if (error instanceof Error && retry > 0) {
+        if (error instanceof Error) {
             if (
                 // This is Entrypoint error AA25.
                 error.message.startsWith("Invalid Smart Account nonce used for User Operation.") ||
                 // Most likely: nonce validation failed in the bundler.
                 error.message.startsWith("Invalid fields set on User Operation.")
             ) {
-                // Delete the nonce to force a refetch next time, & retry.
+                // Delete the nonce to force a refetch next time.
                 deleteNonce(account, validator)
             }
-
-            return sendUserOp({ user, tx, validator, signer }, retry - 1)
         }
 
+        if (retry > 0) return sendUserOp({ user, tx, validator, signer }, retry - 1)
         throw error
     }
 }

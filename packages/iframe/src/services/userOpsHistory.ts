@@ -1,5 +1,6 @@
 import { getDefaultStore } from "jotai"
-import { type Address, hexToNumber, stringToHex } from "viem"
+import { type Address, type Hash, hexToNumber, stringToHex } from "viem"
+import type { UserOperationReceipt } from "viem/account-abstraction"
 import { getBalanceQueryKey } from "wagmi/query"
 import { getCurrentChain } from "#src/state/chains"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
@@ -14,7 +15,52 @@ import { queryClient } from "#src/tanstack-query/config"
 
 const store = getDefaultStore()
 
-export function addConfirmedUserOp(address: Address, userOpInfo: UserOpInfo) {
+export function addPendingUserOp(address: Address, payload: Omit<PendingUserOpDetails, "status">, monitor = false) {
+    store.set(pendingUserOpsAtom, (existingEntries) => {
+        const pendingUserOps = existingEntries[address] || []
+        const isAlreadyPending = pendingUserOps.some((op) => op.userOpHash === payload.userOpHash)
+
+        if (isAlreadyPending) {
+            console.warn(`Already tracking UserOperation ${payload.userOpHash}`)
+            return existingEntries
+        }
+
+        if (monitor) void monitorPendingUserOp(address, { ...payload, status: "pending" })
+
+        return {
+            ...existingEntries,
+            [address]: [{ ...payload, status: "pending" }, ...pendingUserOps],
+        }
+    })
+}
+
+export function markUserOpAsFailed(address: Address, payload: PendingUserOpDetails) {
+    store.set(pendingUserOpsAtom, (existingEntries) => {
+        const pendingUserOps = existingEntries[address] || []
+        return {
+            ...existingEntries,
+            [address]: pendingUserOps.map((op) =>
+                op.userOpHash === payload.userOpHash
+                    ? ({ ...op, status: "failed" } satisfies PendingUserOpDetails)
+                    : op,
+            ),
+        }
+    })
+}
+
+export function markUserOpAsConfirmed(
+    address: Address,
+    payload: Omit<PendingUserOpDetails, "status">,
+    receipt: UserOperationReceipt,
+) {
+    removePendingUserOp(address, payload.userOpHash)
+    addConfirmedUserOp(address, {
+        userOpReceipt: receipt,
+        value: payload.value,
+    })
+}
+
+function addConfirmedUserOp(address: Address, userOpInfo: UserOpInfo) {
     store.set(confirmedUserOpsAtom, (existingEntries) => {
         const userHistory = existingEntries[address] || []
         const isReceiptAlreadyLogged = userHistory.some(
@@ -33,41 +79,9 @@ export function addConfirmedUserOp(address: Address, userOpInfo: UserOpInfo) {
     })
 }
 
-export function addPendingUserOp(address: Address, payload: Omit<PendingUserOpDetails, "status">) {
+function removePendingUserOp(address: Address, userOpHash: Hash) {
     store.set(pendingUserOpsAtom, (existingEntries) => {
-        const pendingUserOps = existingEntries[address] || []
-        const isAlreadyPending = pendingUserOps.some((op) => op.userOpHash === payload.userOpHash)
-
-        if (isAlreadyPending) {
-            console.warn(`Already tracking UserOperation ${payload.userOpHash}`)
-            return existingEntries
-        }
-
-        void monitorPendingUserOp(address, { ...payload, status: "pending" })
-        return {
-            ...existingEntries,
-            [address]: [{ ...payload, status: "pending" }, ...pendingUserOps],
-        }
-    })
-}
-
-export function flagUserOpAsFailed(address: Address, payload: PendingUserOpDetails) {
-    store.set(pendingUserOpsAtom, (existingEntries) => {
-        const pendingUserOps = existingEntries[address] || []
-        return {
-            ...existingEntries,
-            [address]: pendingUserOps.map((op) =>
-                op.userOpHash === payload.userOpHash
-                    ? ({ ...op, status: "failed" } satisfies PendingUserOpDetails)
-                    : op,
-            ),
-        }
-    })
-}
-
-export function removePendingUserOp(address: Address, payload: PendingUserOpDetails) {
-    store.set(pendingUserOpsAtom, (existingEntries) => {
-        const updatedOps = (existingEntries[address] || []).filter((op) => op.userOpHash !== payload.userOpHash)
+        const updatedOps = (existingEntries[address] || []).filter((op) => op.userOpHash !== userOpHash)
 
         if (updatedOps.length === 0) {
             const { [address]: _, ...remainingEntries } = existingEntries
@@ -98,7 +112,7 @@ async function monitorPendingUserOp(address: Address, payload: PendingUserOpDeta
         })
 
         if (receipt) {
-            removePendingUserOp(address, payload)
+            removePendingUserOp(address, payload.userOpHash)
             addConfirmedUserOp(address, {
                 userOpReceipt: receipt,
                 value: payload.value,
@@ -113,6 +127,6 @@ async function monitorPendingUserOp(address: Address, payload: PendingUserOpDeta
         }
     } catch (error) {
         console.warn(`UserOperation failed: ${payload.userOpHash}`, error)
-        flagUserOpAsFailed(address, payload)
+        markUserOpAsFailed(address, payload)
     }
 }
