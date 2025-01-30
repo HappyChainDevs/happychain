@@ -1,7 +1,7 @@
 import { HappyMethodNames } from "@happychain/common"
 import { EIP1193ErrorCodes, Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happychain/sdk-shared"
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { HappyRequestSessionKey } from "#src/components/requests/HappyRequestSessionKey.js"
 import { HappyUseAbi } from "#src/components/requests/HappyUseAbi"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
@@ -46,7 +46,7 @@ function Request() {
     const { args, key, windowId, iframeIndex } = Route.useSearch()
     const req = JSON.parse(atob(args))
 
-    function reject() {
+    const unloadHandler = useCallback(() => {
         const frame = getFrameByIndex(iframeIndex)
 
         void frame.postMessage(
@@ -58,23 +58,37 @@ function Request() {
             }),
             targetOrigin,
         )
-    }
+    }, [windowId, key, iframeIndex])
 
-    function accept(payload: PopupMsgs[Msgs.PopupApprove]["payload"]) {
-        setIsLoading(true)
+    useEffect(() => {
+        window.addEventListener("beforeunload", unloadHandler)
+        return () => window.removeEventListener("beforeunload", unloadHandler)
+    }, [unloadHandler])
 
-        const frame = getFrameByIndex(iframeIndex)
+    const reject = useCallback(() => {
+        window.close()
+    }, [])
 
-        void frame.postMessage(
-            makeMessage(Msgs.PopupApprove, {
-                error: null,
-                windowId,
-                key,
-                payload: payload,
-            }),
-            targetOrigin,
-        )
-    }
+    const accept = useCallback(
+        (payload: PopupMsgs[Msgs.PopupApprove]["payload"]) => {
+            window.removeEventListener("beforeunload", unloadHandler)
+
+            setIsLoading(true)
+
+            const frame = getFrameByIndex(iframeIndex)
+
+            void frame.postMessage(
+                makeMessage(Msgs.PopupApprove, {
+                    error: null,
+                    windowId,
+                    key,
+                    payload: payload,
+                }),
+                targetOrigin,
+            )
+        },
+        [unloadHandler, windowId, key, iframeIndex],
+    )
 
     if (isLoading) {
         return (

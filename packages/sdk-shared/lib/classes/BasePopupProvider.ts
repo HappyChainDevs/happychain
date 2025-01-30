@@ -1,6 +1,6 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happychain/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { EIP1193UserRejectedRequestError, GenericProviderRpcError } from "../errors"
+import { GenericProviderRpcError } from "../errors"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
 
@@ -159,13 +159,10 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         this.timer = setInterval(() => {
             let withPopups = 0
 
-            for (const [k, req] of this.inFlightRequests) {
+            for (const [_, req] of this.inFlightRequests) {
                 if (!req.popup) continue
 
-                if (req.popup.closed) {
-                    req.reject(new EIP1193UserRejectedRequestError())
-                    this.inFlightRequests.delete(k)
-                } else {
+                if (!req.popup.closed) {
                     withPopups++
                 }
             }
