@@ -1,38 +1,29 @@
-import { type Address, toHex } from "viem"
+import { Map2, Mutex } from "@happychain/common"
+import type { Address } from "viem"
 import { getNonce } from "#src/requests/userOps"
 
-/** Maps from account to validator to nonce */
-export const nonces = new Map<Address, Map<Address, bigint>>()
-
-export function setNonce(account: Address, validator: Address, nonce: bigint) {
-    let noncesForValidator = nonces.get(account)
-    if (!noncesForValidator) {
-        noncesForValidator = new Map()
-        nonces.set(account, noncesForValidator)
-    }
-    noncesForValidator.set(validator, nonce)
-}
-
-export function deleteNonce(account: Address, validator: Address) {
-    const noncesForValidator = nonces.get(account)
-    noncesForValidator?.delete(validator)
-    if (noncesForValidator?.size === 0) {
-        nonces.delete(account)
-    }
-}
+const nonces = new Map2<Address, Address, bigint>()
+const nonceMutexes = new Map2<Address, Address, Mutex>()
 
 /**
  * Returns the next nonce for the given account and validator, using a local view of the nonce
  * if possible, and fetching the nonce from the chain otherwise.
+ *
+ * This function sits besides a per-(validator,address) mutex, which avoids two userOps from
+ * simultaneously requesting the same nonce from the chain, resulting in a nonce clash.)
  */
 export async function getNextNonce(account: Address, validator: Address): Promise<bigint> {
-    const storedNonce = nonces.get(account)?.get(validator)
-    if (storedNonce) {
-        setNonce(account, validator, storedNonce + 1n)
-        return storedNonce
-    }
+    const mutex = nonceMutexes.getOrSet(account, validator, () => new Mutex())
+    return mutex.locked(async () => {
+        const nonce = await nonces.getOrSetAsync(account, validator, () => getNonce(account, validator))
+        nonces.set(account, validator, nonce + 1n)
+        return nonce
+    })
+}
 
-    const nonce = await getNonce(account, validator)
-    setNonce(account, validator, nonce + 1n)
-    return nonce
+/**
+ * Deletes the local nonce information for a the given account and validator.
+ */
+export function deleteNonce(account: Address, validator: Address) {
+    nonces.delete(account, validator)
 }
