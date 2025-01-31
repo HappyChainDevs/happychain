@@ -27,7 +27,7 @@ const TokenView = () => {
                 <div className="flex flex-col gap-3 items-center justify-center pt-6">
                     <Coins className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
                     <p className="text-xs italic text-base-content/70 dark:text-base-content/80">
-                        Your tracked assets will appear here.
+                        Your imported assets will appear here.
                     </p>
                 </div>
             )}
