@@ -1,4 +1,4 @@
-import { permissionDescriptions, type PermissionDescriptionIndex } from "#src/constants/requestLabels.ts"
+import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels.ts"
 import { getAppURL } from "#src/utils/appURL"
 import {
     FormattedDetailsLine,
@@ -58,7 +58,7 @@ export const WalletRequestPermissions = ({
                                         <>
                                             <SubsectionTitle key={`scope-${name}-title`}>{name}</SubsectionTitle>
                                             <FormattedDetailsLine key={`scope-${name}-description`}>
-                                                {permissionDescriptions[(name as PermissionDescriptionIndex)]}
+                                                {permissionDescriptions[name as PermissionDescriptionIndex]}
                                             </FormattedDetailsLine>
                                         </>
                                     )

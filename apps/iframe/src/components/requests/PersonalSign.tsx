@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { hexToString } from "viem"
-import { getAppURL } from "#src/utils/appURL.ts"
+import { getAppURL } from "#src/utils/appURL"
 import {
     FormattedDetailsLine,
     Layout,

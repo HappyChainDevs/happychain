@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address } from "viem"
 import { getAppURL } from "#src/utils/appURL"
 import {
     FormattedDetailsLine,
@@ -23,7 +23,7 @@ export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConf
                 <>
                     {options.image && (
                         <div className="h-12 w-12 rounded-full overflow-hidden">
-                            <img src={options.image} alt={options.symbol} className="object-cover w-full h-full" />
+                            <img src={options.image} alt={options.symbol} className="object-cover size-full" />
                         </div>
                     )}
                     This will allow <span className="font-bold text-primary">{appURL}</span> to add the{" "}
