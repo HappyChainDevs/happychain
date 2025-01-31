@@ -12,14 +12,17 @@ const recipeButton = cva(
     {
         variants: {
             intent: {
-                primary: "text-primary-content bg-primary focus:bg-error/95 border-transparent", // @todo - setup color-mix tailwind plugin and use it to improve variants
+                primary: "text-primary-content bg-primary focus:bg-primary/95 border-transparent", // @todo - setup color-mix tailwind plugin and use it to improve variants
                 secondary: "btn dark:bg-neutral hover:bg-primary/15 focus:bg-primary/25 border-transparent",
                 ghost: "text-base-content hover:bg-base-content/10 focus:bg-base-content/15 border-transparent",
                 "ghost-negative": "text-error hover:bg-error/10 focus:bg-error/15 border-transparent",
+                outline:
+                    "text-base-content hover:bg-base-content/5 focus:bg-base-content/10 border-neutral-content/50 dark:border-neutral-content/10 dark:focus:border-neutral-content/20",
                 "outline-negative": "text-error border-neutral/10 hover:bg-error/10 focus:bg-error/15",
             },
             scale: {
                 default: "py-[1.15ch] px-[2ex] border",
+                xs: "px-[1ex] border",
             },
             label: {
                 default: "font-bold",
@@ -33,6 +36,11 @@ const recipeButton = cva(
         compoundVariants: [
             {
                 scale: "default",
+                edge: "default",
+                class: "rounded-md",
+            },
+            {
+                scale: "xs",
                 edge: "default",
                 class: "rounded-md",
             },
