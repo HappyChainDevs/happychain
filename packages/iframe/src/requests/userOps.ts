@@ -59,7 +59,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
     const smartAccountClient = (await getSmartAccountClient())!
     const account = smartAccountClient.account.address
 
-    let nonceB = 0n
+    // [DEBUGLOG] // let debugNonce = 0n
     try {
         // We need the separate nonce lookup because:
         // - we do local nonce management to be able to have multiple userOps in flight
@@ -82,7 +82,8 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
                 ],
             } satisfies PrepareUserOperationParameters), // TS too dumb without this
         ])
-        nonceB = nonce
+
+        // [DEBUGLOG] // debugNonce = nonce
 
         // sendUserOperationNow does not want account included
         const { account: _, ...preparedUserOp } = { ..._preparedUserOp, nonce }
@@ -102,9 +103,9 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         addPendingUserOp(user.address, pendingUserOpDetails)
 
-        console.log("sending", userOpHash, retry)
+        // [DEBUGLOG] // console.log("sending", userOpHash, retry)
         const userOpReceipt = await submitUserOp(smartAccountClient, validator, preparedUserOp)
-        console.log("receipt", userOpHash, retry)
+        // [DEBUGLOG] // console.log("receipt", userOpHash, retry)
 
         markUserOpAsConfirmed(user.address, pendingUserOpDetails, userOpReceipt)
 
@@ -113,7 +114,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
         // https://docs.stackup.sh/docs/entrypoint-errors
         // https://docs.pimlico.io/infra/bundler/entrypoint-errors
 
-        console.log("error", nonceB, error.details || error, retry)
+        // [DEBUGLOG] // console.log("error", nonceB, error.details || error, retry)
 
         // Most likely the transaction didn't land, so need to resynchronize the nonce.
         deleteNonce(account, validator)
@@ -140,13 +141,13 @@ const nonceMutexes = new Map2<Address, Address, Mutex>()
 async function getNextNonce(account: Address, validator: Address): Promise<bigint> {
     const mutex = nonceMutexes.getOrSet(account, validator, () => new Mutex())
     return mutex.locked(async () => {
-        const oldNonce = nonces.get(account, validator)
+        // [DEBUGLOG] //const oldNonce = nonces.get(account, validator)
         const nonce = await nonces.getOrSetAsync(account, validator, () => getOnchainNonce(account, validator))
-        if (oldNonce === nonce) {
-            console.log("stored nonce", nonce)
-        } else {
-            console.log("fetched nonce", nonce)
-        }
+        // [DEBUGLOG] // if (oldNonce === nonce) {
+        // [DEBUGLOG] //     console.log("stored nonce", nonce)
+        // [DEBUGLOG] // } else {
+        // [DEBUGLOG] //     console.log("fetched nonce", nonce)
+        // [DEBUGLOG] // }
         nonces.set(account, validator, nonce + 1n)
         return nonce
     })
@@ -270,7 +271,7 @@ setInterval(() => {
 
 /** Performs a low-level `pimlico_sendUserOperationNow` with no retries. */
 async function requestSendUserOpNow(validator: Address, entry: UserOpQueueEntry) {
-    console.log("now", entry.userOp.nonce)
+    // [DEBUGLOG] // console.log("now", entry.userOp.nonce)
     try {
         lastNonces.set(validator, entry.userOp.nonce)
         const userOpReceipt = (await entry.smartAccountClient.request(
