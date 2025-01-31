@@ -1,8 +1,8 @@
-import { Money, PaperPlaneTilt, PiggyBank } from "@phosphor-icons/react"
+import { PaperPlaneTilt, PiggyBank, Swap } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import type { PropsWithChildren } from "react"
 
-type IconComponent = typeof PaperPlaneTilt | typeof Money | typeof PiggyBank
+type IconComponent = typeof PaperPlaneTilt | typeof Swap | typeof PiggyBank
 
 interface BaseAction {
     key: string
@@ -32,10 +32,10 @@ const ACTIONS: Action[] = [
         enabled: true,
     },
     {
-        key: "buy",
+        key: "trade",
         to: "/",
-        label: "Buy",
-        icon: Money,
+        label: "Trade",
+        icon: Swap,
         target: "_blank",
         enabled: false,
     },
