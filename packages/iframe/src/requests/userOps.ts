@@ -16,11 +16,13 @@ import {
     zeroAddress,
 } from "viem"
 import {
+    type GetUserOperationReturnType,
     type PrepareUserOperationParameters,
     type UserOperation,
     type UserOperationReceipt,
     getUserOperationHash,
 } from "viem/account-abstraction"
+import { receiptCache } from "#src/requests/permissionless"
 import { addPendingUserOp, markUserOpAsConfirmed } from "#src/services/userOpsHistory"
 import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient.js"
@@ -105,6 +107,18 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         // [DEBUGLOG] // console.log("sending", userOpHash, retry)
         const userOpReceipt = await submitUserOp(smartAccountClient, validator, preparedUserOp)
+
+        receiptCache.put(userOpHash, [
+            userOpReceipt,
+            {
+                blockHash: userOpReceipt.receipt.blockHash,
+                blockNumber: userOpReceipt.receipt.blockNumber,
+                entryPoint: contractAddresses.EntryPointV7,
+                transactionHash: userOpHash,
+                userOperation: preparedUserOp,
+            } as GetUserOperationReturnType,
+        ])
+
         // [DEBUGLOG] // console.log("receipt", userOpHash, retry)
 
         markUserOpAsConfirmed(user.address, pendingUserOpDetails, userOpReceipt)

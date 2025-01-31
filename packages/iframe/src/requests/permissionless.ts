@@ -1,4 +1,4 @@
-import { HappyMethodNames, PermissionNames, TransactionType } from "@happychain/common"
+import { FIFOCache, HappyMethodNames, PermissionNames, TransactionType } from "@happychain/common"
 import { deployment as contractAddresses } from "@happychain/contracts/account-abstraction/sepolia"
 import {
     type EIP1193RequestResult,
@@ -13,6 +13,7 @@ import { decodeNonce } from "permissionless"
 import {
     type Address,
     type Client,
+    type Hash,
     InvalidAddressError,
     type Transaction,
     type TransactionReceipt,
@@ -20,7 +21,12 @@ import {
     isAddress,
     parseSignature,
 } from "viem"
-import { type UserOperation, getUserOperationHash } from "viem/account-abstraction"
+import {
+    type GetUserOperationReturnType,
+    type UserOperation,
+    type UserOperationReceipt,
+    getUserOperationHash,
+} from "viem/account-abstraction"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
 import { parseUserOpCalldata, sendUserOp } from "#src/requests/userOps"
@@ -43,6 +49,9 @@ import { appForSourceID, checkAuthenticated } from "./utils"
 export function handlePermissionlessRequest(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     void sendResponse(request, dispatchHandlers)
 }
+
+/** Cache userOp receipts that we already have from pimlico_sendUserOperationNow. */
+export const receiptCache = new FIFOCache<Hash, [UserOperationReceipt, GetUserOperationReturnType]>(100)
 
 // exported for testing
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
@@ -165,10 +174,12 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             // Attempt to retrieve UserOperation details first.
             // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
             try {
-                const [userOpReceipt, userOpInfo] = await Promise.all([
-                    smartAccountClient.getUserOperationReceipt({ hash }),
-                    smartAccountClient.getUserOperation({ hash }),
-                ])
+                const [userOpReceipt, userOpInfo] =
+                    receiptCache.get(hash) ??
+                    (await Promise.all([
+                        smartAccountClient.getUserOperationReceipt({ hash }),
+                        smartAccountClient.getUserOperation({ hash }),
+                    ]))
                 const { to, value } = parseUserOpCalldata(userOpInfo.userOperation.callData)
                 return {
                     // Standard transaction receipt fields
