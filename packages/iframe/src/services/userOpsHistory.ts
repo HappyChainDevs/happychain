@@ -21,7 +21,6 @@ export function addPendingUserOp(address: Address, payload: Omit<PendingUserOpDe
         const isAlreadyPending = pendingUserOps.some((op) => op.userOpHash === payload.userOpHash)
 
         if (isAlreadyPending) {
-            console.warn(`Already tracking UserOperation ${payload.userOpHash}`)
             return existingEntries
         }
 
@@ -68,7 +67,6 @@ function addConfirmedUserOp(address: Address, userOpInfo: UserOpInfo) {
         )
 
         if (isReceiptAlreadyLogged) {
-            console.warn("UserOperation already confirmed — this should never happen")
             return existingEntries
         }
 
