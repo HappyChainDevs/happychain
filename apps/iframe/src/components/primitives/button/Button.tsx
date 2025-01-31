@@ -3,7 +3,7 @@ import { Spinner } from "@phosphor-icons/react"
 import { forwardRef } from "react"
 import { type ButtonVariantsProps, recipeButton } from "./variants"
 
-interface ButtonProps extends ButtonVariantsProps, HTMLArkProps<"button"> {
+export interface ButtonProps extends ButtonVariantsProps, HTMLArkProps<"button"> {
     isLoading?: boolean
 }
 
