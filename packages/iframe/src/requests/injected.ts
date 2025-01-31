@@ -32,8 +32,10 @@ import { getChains, getCurrentChain, setChains, setCurrentChain } from "#src/sta
 import { getInjectedClient } from "#src/state/injectedClient.ts"
 import { loadAbiForUser } from "#src/state/loadedAbis.ts"
 import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions.ts"
+import { getPublicClient } from "#src/state/publicClient.ts"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient.ts"
 import { addWatchedAsset } from "#src/state/watchedAssets.ts"
+import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation.ts"
 import { isAddChainParams } from "#src/utils/isAddChainParam.ts"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
@@ -62,6 +64,10 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         case HappyMethodNames.USER: {
             const acc = await sendToInjectedClient(app, { ...request, payload: { method: "eth_accounts" } })
             return acc.length ? user : undefined
+        }
+
+        case "eth_call": {
+            return await sendToPublicClient(app, request)
         }
 
         // This is the same as approved.ts
@@ -433,6 +439,22 @@ async function sendToInjectedClient<T extends ProviderMsgsFromApp[Msgs.RequestIn
     const client: Client | undefined = getInjectedClient()
 
     if (!client) throw new EIP1193DisconnectedError()
+
+    if (requestPayloadIsHappyMethod(request.payload)) {
+        throw new EIP1193UnsupportedMethodError()
+    }
+
+    return await client.request(request.payload)
+}
+
+async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPermissionless]>(
+    app: AppURL,
+    request: T,
+): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
+    if (checkIfRequestRequiresConfirmation(app, request.payload)) {
+        throw new EIP1193UnauthorizedError()
+    }
+    const client: Client = getPublicClient()
 
     if (requestPayloadIsHappyMethod(request.payload)) {
         throw new EIP1193UnsupportedMethodError()
