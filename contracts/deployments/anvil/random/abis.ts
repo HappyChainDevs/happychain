@@ -77,6 +77,58 @@ const contractToAbi = ({
     },
     {
       "type": "function",
+      "name": "DRAND_PK_0",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DRAND_PK_1",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DRAND_PK_2",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DRAND_PK_3",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "DST",
       "inputs": [],
       "outputs": [
@@ -104,58 +156,6 @@ const contractToAbi = ({
     {
       "type": "function",
       "name": "PRECOMMIT_DELAY_BLOCKS",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "drandPK0",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "drandPK1",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "drandPK2",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "drandPK3",
       "inputs": [],
       "outputs": [
         {
@@ -644,7 +644,7 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "Random": "0xEF648561456FEEa23B993747eB7B68d3B7332b6a"
+  "Random": "0xa3Eb22202dc131F4D40c9A7d5028BC2D4134A6bF"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
