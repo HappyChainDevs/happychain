@@ -53,3 +53,5 @@ export { Mutex } from "./utils/mutex.js"
 export { getOrSet, getOrSetAsync, HappyMap } from "./collections/map.js"
 
 export { Map2 } from "./collections/map2.js"
+
+export { FIFOCache } from "./collections/fifo-cache.js"
