@@ -74,14 +74,17 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
         return getEIP1193ErrorObjectFromCode(error.code, error.message)
     }
 
-    const data =
-        !error || typeof error !== "object"
-            ? ""
-            : "details" in error && typeof error.details === "string"
-              ? error.details
-              : "shortMessage" in error && typeof error.shortMessage === "string"
-                ? error.shortMessage
-                : ""
+    let data = ""
+    if (!error || typeof error !== "object") {
+    } else if ("details" in error && typeof error.details === "string") {
+        data = error.details
+    } else if ("shortMessage" in error && typeof error.shortMessage === "string") {
+        data = error.shortMessage
+    } else if ("message" in error && typeof error.message === "string") {
+        data = error.message
+    } else if ("toString" in error && typeof error.toString === "function") {
+        data = error.toString()
+    }
 
     // biome-ignore lint/suspicious/noExplicitAny: error can be anything
     const errorCode = (error as any)?.code ?? EIP1193ErrorCodes.Unknown
