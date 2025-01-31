@@ -1,7 +1,17 @@
-import { Button } from "../primitives/button/Button"
-import RawRequestDetails from "./common/RawRequestDetails"
-import RequestContent from "./common/RequestContent"
-import RequestLayout from "./common/RequestLayout"
+import { permissionDescriptions, type PermissionDescriptionIndex } from "#src/constants/requestLabels.ts"
+import { getAppURL } from "#src/utils/appURL"
+import {
+    FormattedDetailsLine,
+    Layout,
+    RequestTabsValues,
+    SectionBlock,
+    SectionTitle,
+    SubsectionBlock,
+    SubsectionContent,
+    SubsectionTitle,
+    TabContent,
+    Tabs,
+} from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const WalletRequestPermissions = ({
@@ -10,35 +20,66 @@ export const WalletRequestPermissions = ({
     reject,
     accept,
 }: RequestConfirmationProps<"wallet_requestPermissions">) => {
+    const appURL = getAppURL()
+
     return (
-        <RequestLayout method={method}>
-            <RequestContent>
-                <ul>
-                    {params.map((param) => {
-                        const [[name]] = Object.entries(param)
-                        return (
-                            <li className="italic font-mono" key={name}>
-                                {name}
-                            </li>
-                        )
-                    })}
-                </ul>
-
-                <RawRequestDetails params={params} />
-            </RequestContent>
-
-            <div className="flex flex-col w-full gap-4">
-                <Button
-                    intent="primary"
-                    className="grow text-neutral-content justify-center"
-                    onClick={() => accept({ method, params })}
-                >
-                    Sign
-                </Button>
-                <Button intent="outline-negative" className="text-base-content" onClick={reject}>
-                    Reject
-                </Button>
-            </div>
-        </RequestLayout>
+        <Layout
+            labelHeader="Grant permission"
+            headline={
+                <>
+                    <span className="text-primary">{appURL}</span> is requesting new permissions
+                </>
+            }
+            description={
+                <>
+                    <span className="font-medium text-primary">{appURL}</span> would like to :
+                </>
+            }
+            actions={{
+                accept: {
+                    children: "Grant permission",
+                    onClick: () => accept({ method, params }),
+                },
+                reject: {
+                    children: "Go back",
+                    onClick: reject,
+                },
+            }}
+        >
+            <Tabs defaultValue={RequestTabsValues.Details}>
+                <TabContent value={RequestTabsValues.Details}>
+                    <SectionBlock>
+                        <SectionTitle>Scopes</SectionTitle>
+                        <SubsectionBlock>
+                            <SubsectionContent>
+                                {params.map((param) => {
+                                    const [[name]] = Object.entries(param)
+                                    return (
+                                        <>
+                                            <SubsectionTitle key={`scope-${name}-title`}>{name}</SubsectionTitle>
+                                            <FormattedDetailsLine key={`scope-${name}-description`}>
+                                                {permissionDescriptions[(name as PermissionDescriptionIndex)]}
+                                            </FormattedDetailsLine>
+                                        </>
+                                    )
+                                })}
+                            </SubsectionContent>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+                <TabContent className="break-words" value={RequestTabsValues.Raw}>
+                    <SectionBlock>
+                        <SubsectionBlock>
+                            <FormattedDetailsLine>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+            </Tabs>
+            <SectionBlock>
+                <p className="font-bold pb-8 text-center text-sm">
+                    You can revoke granted permissions from your wallet whenever you want.
+                </p>
+            </SectionBlock>
+        </Layout>
     )
 }

@@ -1,64 +1,72 @@
-import { Button } from "../primitives/button/Button"
-import RawRequestDetails from "./common/RawRequestDetails"
-import RequestContent from "./common/RequestContent"
-import RequestLayout from "./common/RequestLayout"
+import type { Address } from 'viem'
+import { getAppURL } from "#src/utils/appURL"
+import {
+    FormattedDetailsLine,
+    Layout,
+    LinkToAddress,
+    SectionBlock,
+    SectionTitle,
+    SubsectionBlock,
+    SubsectionContent,
+    SubsectionTitle,
+} from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConfirmationProps<"wallet_watchAsset">) => {
     const { type, options } = params
-
+    const appURL = getAppURL()
     return (
-        <RequestLayout method={method}>
-            <RequestContent>
-                <div className="flex grow flex-col gap-4 overflow-y-auto rounded-lg bg-base-200 p-4">
-                    <div className="flex flex-col gap-6">
-                        <div className="flex flex-col items-center gap-2">
-                            <span className="text-2xl font-bold">Asset Details</span>
+        <Layout
+            labelHeader="Watch asset"
+            headline={`Add $${options.symbol} to your assets watch list`}
+            description={
+                <>
+                    {options.image && (
+                        <div className="h-12 w-12 rounded-full overflow-hidden">
+                            <img src={options.image} alt={options.symbol} className="object-cover w-full h-full" />
                         </div>
-                        <div className="flex flex-col gap-4 rounded-lg bg-base-100 p-4">
-                            <div className="flex justify-between items-baseline gap-[1ex]">
-                                <span className="text-sm text-content">Type:</span>
-                                <span className="font-mono text-sm">{type}</span>
-                            </div>
-                            <div className="flex justify-between items-baseline gap-[1ex]">
-                                <span className="text-sm text-content">Symbol:</span>
-                                <span className="font-mono text-sm">{options.symbol}</span>
-                            </div>
-                            <div className="flex justify-between items-baseline gap-[1ex]">
-                                <span className="text-sm text-neutral-content">Contract Address:</span>
-                                <span className="font-mono text-sm truncate" title={options.address}>
-                                    {options.address}
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-baseline gap-[1ex]">
-                                <span className="text-sm text-content">Decimals:</span>
-                                <span className="font-mono text-sm">{options.decimals}</span>
-                            </div>
-                            {options.image && (
-                                <div className="flex justify-between items-baseline gap-[1ex]">
-                                    <span className="text-sm text-content">Image URL:</span>
-                                    <img src={options.image} alt={"N/A"} className="h-12 w-12 rounded-xl" />
-                                </div>
-                            )}
-
-                            <RawRequestDetails params={params} />
-                        </div>
-                    </div>
-                </div>
-            </RequestContent>
-
-            <div className="flex flex-col w-full gap-2">
-                <Button
-                    intent="primary"
-                    className="text-neutral-content justify-center"
-                    onClick={() => accept({ method, params })}
-                >
-                    Add
-                </Button>
-                <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
-                    Reject
-                </Button>
-            </div>
-        </RequestLayout>
+                    )}
+                    This will allow <span className="font-bold text-primary">{appURL}</span> to add the{" "}
+                    <span className="font-bold">
+                        asset <span className="text-primary">${options.symbol}</span>
+                    </span>{" "}
+                    to your watch list. No funds will be moved or accessed.
+                </>
+            }
+            actions={{
+                accept: {
+                    children: "Watch asset",
+                    onClick: () => accept({ method, params }),
+                },
+                reject: {
+                    children: "Go back",
+                    onClick: reject,
+                },
+            }}
+        >
+            <SectionBlock>
+                <SectionTitle>Asset details</SectionTitle>
+                <SubsectionBlock>
+                    <SubsectionContent>
+                        <SubsectionTitle>Type</SubsectionTitle>
+                        <FormattedDetailsLine>{type}</FormattedDetailsLine>
+                    </SubsectionContent>
+                    <SubsectionContent>
+                        <SubsectionTitle>Contract address</SubsectionTitle>
+                        <FormattedDetailsLine>
+                            <LinkToAddress address={options.address as Address}>{options.address}</LinkToAddress>
+                        </FormattedDetailsLine>
+                    </SubsectionContent>
+                    <SubsectionContent>
+                        <SubsectionTitle>Symbol</SubsectionTitle>
+                        <FormattedDetailsLine>{options.symbol}</FormattedDetailsLine>
+                    </SubsectionContent>
+                    <SubsectionContent>
+                        <SubsectionTitle>Decimals</SubsectionTitle>
+                        <FormattedDetailsLine>{options.decimals}</FormattedDetailsLine>
+                    </SubsectionContent>
+                </SubsectionBlock>
+            </SectionBlock>
+        </Layout>
     )
 }

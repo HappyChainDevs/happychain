@@ -3,6 +3,7 @@ import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import {
     type AbiFunction,
+    type Address,
     type RpcTransactionRequest,
     decodeFunctionData,
     formatEther,
@@ -13,14 +14,23 @@ import { useEstimateFeesPerGas } from "wagmi"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
-import { Button } from "../primitives/button/Button"
+import { getAppURL } from "#src/utils/appURL.ts"
 import { BlobTxWarning } from "./BlobTxWarning"
 import DecodedData from "./common/DecodedData"
-import GasFieldDisplay, { GasFieldName } from "./common/GasFieldDisplay"
-import RawRequestDetails from "./common/RawRequestDetails"
-import RequestContent from "./common/RequestContent"
-import RequestDetails from "./common/RequestDetails"
-import RequestLayout from "./common/RequestLayout"
+import { GasFieldName } from "./common/GasFieldDisplay"
+import {
+    FormattedDetailsLine,
+    Layout,
+    LinkToAddress,
+    RequestTabsValues,
+    SectionBlock,
+    SectionTitle,
+    SubsectionBlock,
+    SubsectionContent,
+    SubsectionTitle,
+    TabContent,
+    Tabs,
+} from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 /**
@@ -59,6 +69,8 @@ export const EthSendTransaction = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
+    const appURL = getAppURL()
+
     // useState + useEffect paradigm works here (over useMemo) since we will have
     // user interactions for sliders / options for setting gas manually
     const [tx, setTx] = useState<RpcTransactionRequest>(params[0])
@@ -70,6 +82,7 @@ export const EthSendTransaction = ({
     const {
         data: { maxFeePerGas, maxPriorityFeePerGas } = {},
         isError,
+        status,
         queryKey,
     } = useEstimateFeesPerGas({ type: "eip1559" })
 
@@ -128,66 +141,97 @@ export const EthSendTransaction = ({
             type: classifyTxType(tx),
         }
     }, [tx])
-
     return (
-        <RequestLayout method={method}>
-            <RequestContent>
-                <div className="flex flex-col items-center gap-2">
-                    <span className="text-sm opacity-75 uppercase">sending</span>
-                    <span className="text-2xl font-bold uppercase">{formattedTxInfo.value} HAPPY</span>
-                </div>
-
-                <div className="flex flex-col gap-4 rounded-lg bg-base-100 p-4">
-                    <div className="flex justify-between items-baseline gap-[1ex]">
-                        <span className="text-sm opacity-75">From</span>
-                        <span className="font-mono text-sm truncate">{tx.from}</span>
-                    </div>
-                    <div className="flex justify-between items-baseline gap-[1ex]">
-                        <span className="text-sm opacity-75">To</span>
-                        <span className="font-mono text-sm truncate">{tx.to}</span>
-                    </div>
-                </div>
-
-                <RequestDetails>
-                    <div className="flex flex-col gap-4">
-                        {/* tx type */}
-                        <div className="flex justify-between items-baseline gap-[1ex]">
-                            <span className="text-sm font-mono">Type</span>
-                            <span className="font-mono text-sm">{formattedTxInfo.type}</span>
-                        </div>
-                        <div className="flex flex-col justify-between">
-                            <GasFieldDisplay name={GasFieldName.MaxFeePerGas} field={formattedTxInfo.maxFeePerGas} />
-                            <GasFieldDisplay
-                                name={GasFieldName.MaxPriorityFeePerGas}
-                                field={formattedTxInfo.maxPriorityFeePerGas}
-                            />
-                        </div>
-                    </div>
-                </RequestDetails>
-
-                {decodedData && <DecodedData data={decodedData} />}
-                <RawRequestDetails params={params} />
-            </RequestContent>
-
-            {tx.type === TransactionType.EIP4844 ? (
-                <BlobTxWarning onReject={reject} />
-            ) : (
-                <div className="flex flex-col w-full gap-2">
-                    <Button
-                        intent="primary"
-                        className="text-neutral-content justify-center"
-                        onClick={() => {
+        <>
+            <Layout
+                labelHeader="Confirm transaction"
+                headline={
+                    <>
+                        Confirm your interaction with {tx.to?.slice(0, 4)}...{tx.to?.slice(-4)}
+                    </>
+                }
+                description={
+                    <>
+                        <span className="font-bold text-primary">{appURL}</span> needs you to confirm this transaction.{" "}
+                        <span className="font-bold">
+                            This transaction will use {formattedTxInfo.value} of your HAPPY balance.
+                        </span>
+                    </>
+                }
+                hideActions={tx.type === TransactionType.EIP4844}
+                actions={{
+                    accept: {
+                        children: "Confirm",
+                        "aria-disabled": status === "pending",
+                        onClick: () => {
+                            if (status === "pending") return
                             accept({ method, params })
                             queryClient.invalidateQueries({ queryKey })
-                        }}
-                    >
-                        Sign
-                    </Button>
-                    <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
-                        Reject
-                    </Button>
-                </div>
-            )}
-        </RequestLayout>
+                        },
+                    },
+                    reject: {
+                        children: "Go back",
+                        onClick: reject,
+                    },
+                }}
+            >
+                <Tabs defaultValue={RequestTabsValues.Details}>
+                    <TabContent value={RequestTabsValues.Details}>
+                        <SectionBlock>
+                            <SectionTitle>Transaction summary</SectionTitle>
+                            <SubsectionBlock>
+                                <SubsectionContent>
+                                    <SubsectionTitle>Sender address</SubsectionTitle>
+                                    <FormattedDetailsLine>
+                                        <LinkToAddress address={tx.from as Address}>{tx.from}</LinkToAddress>
+                                    </FormattedDetailsLine>
+                                </SubsectionContent>
+                                <SubsectionContent>
+                                    <SubsectionTitle>Receiver address</SubsectionTitle>
+                                    <FormattedDetailsLine>
+                                        <LinkToAddress address={tx.to as Address}>{tx.to}</LinkToAddress>
+                                    </FormattedDetailsLine>
+                                </SubsectionContent>
+
+                                <SubsectionContent>
+                                    <SubsectionTitle>Amount</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo.value} HAPPY</FormattedDetailsLine>
+                                </SubsectionContent>
+                            </SubsectionBlock>
+                        </SectionBlock>
+                        <SectionBlock>
+                            <SectionTitle>Advanced details</SectionTitle>
+                            <SubsectionBlock>
+                                <SubsectionContent>
+                                    <SubsectionTitle>Transaction type</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo.type}</FormattedDetailsLine>
+                                </SubsectionContent>
+                                <SubsectionContent>
+                                    <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo.maxFeePerGas}</FormattedDetailsLine>
+                                </SubsectionContent>
+                                <SubsectionContent>
+                                    <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo.maxPriorityFeePerGas}</FormattedDetailsLine>
+                                </SubsectionContent>
+                            </SubsectionBlock>
+                        </SectionBlock>
+                    </TabContent>
+                    <TabContent value={RequestTabsValues.Raw}>
+                        <SectionBlock>
+                            <SubsectionBlock>
+                                {decodedData && <DecodedData data={decodedData} />}
+                                <FormattedDetailsLine>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                            </SubsectionBlock>
+                        </SectionBlock>
+                    </TabContent>
+                </Tabs>
+                {tx.type === TransactionType.EIP4844 && (
+                    <SectionBlock>
+                        <BlobTxWarning onReject={reject} />
+                    </SectionBlock>
+                )}
+            </Layout>
+        </>
     )
 }

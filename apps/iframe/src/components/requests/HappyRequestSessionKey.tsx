@@ -1,86 +1,113 @@
 import type { HappyMethodNames } from "@happy.tech/common"
 import { shortenAddress } from "@happy.tech/wallet-common"
+import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
-import { useEffect, useState } from "react"
-import type { Address, Hex } from "viem"
+import { type Address, isAddress } from "viem"
 import { currentChainAtom } from "#src/state/chains"
 import { publicClientAtom } from "#src/state/publicClient"
-import { getAppURL } from "#src/utils/appURL.js"
-import { Button } from "../primitives/button/Button"
-import RequestContent from "./common/RequestContent"
-import RequestLayout from "./common/RequestLayout"
+import { getAppURL } from "#src/utils/appURL"
+import {
+    FormattedDetailsLine,
+    Layout,
+    LinkToAddress,
+    RequestTabsValues,
+    SectionBlock,
+    SectionTitle,
+    SubsectionBlock,
+    SubsectionContent,
+    SubsectionTitle,
+    TabContent,
+    Tabs,
+} from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
-export function HappyRequestSessionKey({
+const KEY_QUERY_GET_BYTECODE = "get-bytecode"
+export function getKeyQueryGetBytecode(targetAddress: Address) {
+    return [KEY_QUERY_GET_BYTECODE, targetAddress]
+}
+export const HappyRequestSessionKey = ({
     method,
     params,
     reject,
     accept,
-}: RequestConfirmationProps<typeof HappyMethodNames.REQUEST_SESSION_KEY>) {
+}: RequestConfirmationProps<typeof HappyMethodNames.REQUEST_SESSION_KEY>) => {
     const targetAddress: Address = params[0]
     const publicClient = useAtomValue(publicClientAtom)
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
-
     const appURL = getAppURL()
 
-    const [_bytecode, setBytecode] = useState<Hex | undefined>(undefined)
-
-    useEffect(() => {
-        const fetchBytecode = async () => {
-            try {
-                const code = await publicClient.getCode({ address: targetAddress })
-                setBytecode(code)
-            } catch (error) {
-                console.error("Error fetching bytecode:", error)
-            }
-        }
-
-        fetchBytecode()
-    }, [publicClient, targetAddress])
+    const queryBytecode = useQuery({
+        queryKey: getKeyQueryGetBytecode(targetAddress),
+        queryFn: async () => {
+            return await publicClient.getCode({ address: targetAddress })
+        },
+        enabled: isAddress(targetAddress),
+    })
 
     return (
-        <RequestLayout method={method}>
-            <RequestContent>
-                <div className="flex flex-col size-full items-center justify-center">
-                    <div className="flex flex-col size-full items-start justify-start py-4 gap-y-3">
-                        <span className="text-content">
-                            <span className="text-primary">{appURL}</span> requests permission to automatically approve
-                            transactions to{" "}
-                            <a
-                                href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary border-b border-dashed hover:bg-primary/40"
-                            >
-                                {shortenAddress(targetAddress)}
-                            </a>
-                            .
-                        </span>
-                        <span className="text-sm text-neutral-content/70">
-                            <p>You can revoke this permission at any time.</p>
-                        </span>
-                        <span className="text-sm text-error/70 p-2 rounded-lg bg-error/30 mt-4 w-full">
-                            <p className="mb-1">
-                                This could result in loss of funds if the contract can access your assets.
-                            </p>
-                            <p>Only proceed if you trust the application.</p>
-                        </span>
-                    </div>
-                    <div className="flex flex-col w-full gap-2">
-                        <Button
-                            intent="primary"
-                            className="text-neutral-content justify-center"
-                            onClick={() => accept({ method, params })}
-                        >
-                            Approve
-                        </Button>
-                        <Button intent="ghost" className="text-base-content justify-center" onClick={reject}>
-                            Reject
-                        </Button>
-                    </div>
-                </div>
-            </RequestContent>
-        </RequestLayout>
+        <Layout
+            labelHeader="Enable automatic approvals"
+            headline={
+                <>
+                    <span className="text-primary">{appURL}</span> would like your permission to automatically approve
+                    transactions for contract {shortenAddress(targetAddress, 4)}
+                </>
+            }
+            description={
+                <>
+                    This will allow <span className="font-medium text-primary">{appURL}</span> to create a
+                    limited-access key for faster transactions with contract{" "}
+                    <a
+                        href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary border-b border-dashed hover:bg-primary/40"
+                    >
+                        {shortenAddress(targetAddress)}
+                    </a>
+                    . You can revoke this access at any time from your wallet settings.
+                    <SectionBlock>
+                        <div className="grid bg-warning/40 border-warning text-warning-content/90 dark:bg-warning/5 dark:border-warning/20 dark:text-warning gap-2 text-sm border py-[1em] px-[1.25em] rounded-lg w-full">
+                            <p>This could result in loss of funds if the contract can access your assets.</p>
+                            <p className="font-bold">Only proceed if you trust {appURL}.</p>
+                        </div>
+                    </SectionBlock>
+                </>
+            }
+            actions={{
+                accept: {
+                    children: "Approve",
+                    onClick: () => accept({ method, params }),
+                },
+                reject: {
+                    children: "Go back",
+                    onClick: reject,
+                },
+            }}
+        >
+            <Tabs defaultValue={RequestTabsValues.Details}>
+                <TabContent value={RequestTabsValues.Details}>
+                    <SectionBlock>
+                        <SectionTitle>Session key</SectionTitle>
+                        <SubsectionBlock>
+                            <SubsectionContent>
+                                <SubsectionTitle>Authorized contract address</SubsectionTitle>
+                                <FormattedDetailsLine>
+                                    <LinkToAddress address={targetAddress}> {targetAddress}</LinkToAddress>
+                                </FormattedDetailsLine>
+                            </SubsectionContent>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+                <TabContent className="break-words" value={RequestTabsValues.Raw}>
+                    <SectionBlock>
+                        <SubsectionBlock>
+                            <FormattedDetailsLine>{queryBytecode.data}</FormattedDetailsLine>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+            </Tabs>
+        </Layout>
     )
 }

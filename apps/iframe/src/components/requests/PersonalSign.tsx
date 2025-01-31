@@ -1,41 +1,72 @@
 import { useMemo } from "react"
 import { hexToString } from "viem"
-import { Button } from "../primitives/button/Button"
-import RawRequestDetails from "./common/RawRequestDetails"
-import RequestContent from "./common/RequestContent"
-import RequestLayout from "./common/RequestLayout"
+import { getAppURL } from "#src/utils/appURL.ts"
+import {
+    FormattedDetailsLine,
+    Layout,
+    RequestTabsValues,
+    SectionBlock,
+    SectionTitle,
+    SubsectionBlock,
+    SubsectionContent,
+    SubsectionTitle,
+    TabContent,
+    Tabs,
+} from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const PersonalSign = ({ method, params, reject, accept }: RequestConfirmationProps<"personal_sign">) => {
+    const appURL = getAppURL()
+
     const formattedSignPayload = useMemo(() => {
         return hexToString(params[0])
     }, [params])
 
     return (
-        <RequestLayout method={method}>
-            <RequestContent>
-                <div className="flex flex-col gap-6">
-                    <div className="flex flex-col items-center gap-2">
-                        <span className="text-sm text-neutral-content">Requested Text</span>
-                        <pre className="grow">{formattedSignPayload}</pre>
-                    </div>
-
-                    <RawRequestDetails params={params} />
-                </div>
-            </RequestContent>
-
-            <div className="flex flex-col w-full gap-2">
-                <Button
-                    intent="primary"
-                    className="text-neutral-content justify-center"
-                    onClick={() => accept({ method, params })}
-                >
-                    Sign
-                </Button>
-                <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
-                    Reject
-                </Button>
-            </div>
-        </RequestLayout>
+        <Layout
+            labelHeader="Your signature is requested."
+            headline={
+                <>
+                    <span className="text-primary">{appURL}</span> is requesting your signature
+                </>
+            }
+            description={
+                <>
+                    This will allow <span className="font-medium text-primary">{appURL}</span> to verify your wallet
+                    ownership through a signature. This won't allow any access to your funds.
+                </>
+            }
+            actions={{
+                accept: {
+                    children: "Sign",
+                    onClick: () => accept({ method, params }),
+                },
+                reject: {
+                    children: "Go back",
+                    onClick: reject,
+                },
+            }}
+        >
+            <Tabs defaultValue={RequestTabsValues.Details}>
+                <TabContent value={RequestTabsValues.Details}>
+                    <SectionBlock>
+                        <SectionTitle>Message</SectionTitle>
+                        <SubsectionBlock>
+                            <SubsectionContent>
+                                <SubsectionTitle>Content</SubsectionTitle>
+                                <FormattedDetailsLine>{formattedSignPayload}</FormattedDetailsLine>
+                            </SubsectionContent>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+                <TabContent value={RequestTabsValues.Raw}>
+                    <SectionBlock>
+                        <SubsectionBlock>
+                            <FormattedDetailsLine>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+            </Tabs>
+        </Layout>
     )
 }

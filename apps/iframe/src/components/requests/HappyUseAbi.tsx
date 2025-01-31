@@ -1,12 +1,20 @@
 import type { HappyMethodNames } from "@happy.tech/common"
-import { useAtomValue } from "jotai"
+import { formatAbiItem } from "abitype"
 import { useClassifyAbi } from "#src/hooks/useClassifyAbiSections"
-import { currentChainAtom } from "#src/state/chains"
-import { Button } from "../primitives/button/Button"
-import AbiSection from "./common/AbiSection"
-import RawRequestDetails from "./common/RawRequestDetails"
-import RequestContent from "./common/RequestContent"
-import RequestLayout from "./common/RequestLayout"
+import { getAppURL } from "#src/utils/appURL"
+import {
+    FormattedDetailsLine,
+    Layout,
+    LinkToAddress,
+    RequestTabsValues,
+    SectionBlock,
+    SectionTitle,
+    SubsectionBlock,
+    SubsectionContent,
+    SubsectionTitle,
+    TabContent,
+    Tabs,
+} from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export function HappyUseAbi({
@@ -15,48 +23,71 @@ export function HappyUseAbi({
     reject,
     accept,
 }: RequestConfirmationProps<typeof HappyMethodNames.USE_ABI>) {
-    const chain = useAtomValue(currentChainAtom)
     const classifiedAbi = useClassifyAbi(params.abi)
+    const appURL = getAppURL()
 
     return (
-        <RequestLayout method={method}>
-            <RequestContent>
-                <div className="flex flex-col w-full h-full gap-4 rounded-xl p-4">
-                    <div className="border-b pb-2 text-center text-sm font-bold text-primary">Details</div>
-                    <div className="flex flex-col gap-2">
-                        <span className="text-sm font-bold text-neutral-content">Address:</span>
-                        <a
-                            href={`${chain.blockExplorerUrls?.[0]}/address/${params.address}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-lg bg-neutral-content text-sm font-mono break-all text-neutral underline hover:text-blue-800"
-                        >
-                            {params.address}
-                        </a>
-                    </div>
-                    <div className="flex flex-col grow gap-2">
-                        <span className="text-sm font-bold text-neutral-content uppercase">abi:</span>
-                        {classifiedAbi.map(({ label, items }) => (
-                            <AbiSection key={`ABI-${label}`} label={label} abiSection={items} />
-                        ))}
-                    </div>
-
-                    <RawRequestDetails params={params} />
-                </div>
-            </RequestContent>
-
-            <div className="flex flex-col w-full gap-2">
-                <Button
-                    intent="primary"
-                    className="text-neutral-content justify-center"
-                    onClick={() => accept({ method, params })}
-                >
-                    Add ABI
-                </Button>
-                <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
-                    Reject
-                </Button>
-            </div>
-        </RequestLayout>
+        <Layout
+            labelHeader="Import new ABI"
+            headline={
+                <>
+                    <span className="text-primary">{appURL}</span> wants to import a contract interface
+                </>
+            }
+            description={
+                <>
+                    This will allow <span className="font-medium text-primary">{appURL}</span> to import this ABI to
+                    enable seamless interactions. An ABI defines how you can interact with a smart contract through your
+                    wallet.
+                </>
+            }
+            actions={{
+                accept: {
+                    children: "Import ABI",
+                    onClick: () => accept({ method, params }),
+                },
+                reject: {
+                    children: "Go back",
+                    onClick: reject,
+                },
+            }}
+        >
+            <Tabs defaultValue={RequestTabsValues.Details}>
+                <TabContent value={RequestTabsValues.Details}>
+                    <SectionBlock>
+                        <SectionTitle>Smart contract </SectionTitle>
+                        <SubsectionBlock>
+                            <SubsectionContent>
+                                <SubsectionTitle>Address</SubsectionTitle>
+                                <div className="grid relative">
+                                    <FormattedDetailsLine>
+                                        <LinkToAddress address={params.address}>{params.address}</LinkToAddress>
+                                    </FormattedDetailsLine>
+                                </div>
+                            </SubsectionContent>
+                            {classifiedAbi.map(({ label, items }) => (
+                                <SubsectionContent key={`ABI-${label}`}>
+                                    <SubsectionTitle>{label}</SubsectionTitle>
+                                    <ol className="divide-y grid divide-neutral/10 dark:divide-neutral/40 -mx-2.5">
+                                        {items.map((event) => (
+                                            <li className="p-2.5" key={`abi-item-${event}`}>
+                                                <FormattedDetailsLine>{formatAbiItem(event)}</FormattedDetailsLine>
+                                            </li>
+                                        ))}
+                                    </ol>
+                                </SubsectionContent>
+                            ))}
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+                <TabContent className="break-words" value={RequestTabsValues.Raw}>
+                    <SectionBlock>
+                        <SubsectionBlock>
+                            <FormattedDetailsLine>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+            </Tabs>
+        </Layout>
     )
 }

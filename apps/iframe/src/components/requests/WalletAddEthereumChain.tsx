@@ -1,8 +1,16 @@
 import { useState } from "react"
-import { Button } from "../primitives/button/Button"
-import RawRequestDetails from "./common/RawRequestDetails"
-import RequestContent from "./common/RequestContent"
-import RequestLayout from "./common/RequestLayout"
+import { getAppURL } from "#src/utils/appURL"
+import { FormField, FormFieldLabel } from "../primitives/form-field/FormField"
+import { Input } from "../primitives/input/Input"
+import {
+    FormattedDetailsLine,
+    Layout,
+    RequestTabsValues,
+    SectionBlock,
+    SubsectionBlock,
+    TabContent,
+    Tabs,
+} from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const WalletAddEthereumChain = ({
@@ -12,82 +20,119 @@ export const WalletAddEthereumChain = ({
     accept,
 }: RequestConfirmationProps<"wallet_addEthereumChain">) => {
     const [chain, setChain] = useState(params[0])
-
+    const appURL = getAppURL()
     return (
-        <RequestLayout method={method}>
-            <RequestContent>
-                {/* Chain Details Form */}
-                <div className="flex flex-col gap-4 rounded-lg bg-base-100 p-4">
-                    <label className="grid">
-                        Chain ID
-                        <input className="rounded px-4 py-2" disabled value={Number(chain.chainId)} />
-                    </label>
-                    <label className="grid">
-                        Network Name
-                        <input
-                            onChange={(e) => {
-                                setChain((old) => ({ ...old, chainName: e.target.value }))
-                            }}
-                            className="rounded px-4 py-2"
-                            value={chain.chainName}
-                        />
-                    </label>
-                    <label className="grid">
-                        RPC URL
-                        <input
-                            onChange={(e) => {
-                                setChain((old) => ({ ...old, rpcUrls: [e.target.value] }))
-                            }}
-                            className="rounded px-4 py-2"
-                            value={chain.rpcUrls[0] ?? ""}
-                        />
-                    </label>
-                    <label className="grid">
-                        Currency Symbol
-                        <input
-                            onChange={(e) => {
-                                setChain((old) => ({
-                                    ...old,
-                                    nativeCurrency: {
-                                        name: e.target.value ?? "",
-                                        symbol: e.target.value,
-                                        decimals: 18,
-                                    },
-                                }))
-                            }}
-                            className="rounded px-4 py-2"
-                            value={chain.nativeCurrency?.symbol ?? ""}
-                        />
-                    </label>
-                    <label className="grid">
-                        Block Explorer (optional)
-                        <input
-                            onChange={(e) => {
-                                setChain((old) => ({
-                                    ...old,
-                                    blockExplorerUrls: e.target.value ? [e.target.value] : undefined,
-                                }))
-                            }}
-                            className="rounded px-4 py-2"
-                            value={chain.blockExplorerUrls?.[0] ?? ""}
-                        />
-                    </label>
-                </div>
-                <RawRequestDetails params={[chain]} />
-            </RequestContent>
+        <Layout
+            labelHeader="Add custom network"
+            headline={
+                <>
+                    <span className="text-primary">{appURL}</span> would like to use {params[0].chainName}
+                </>
+            }
+            description={
+                <>
+                    <span className="font-medium text-primary">{appURL}</span> suggests adding{" "}
+                    <span className="font-bold">{params[0].chainName}</span> to your wallet. Default settings can be
+                    modified at your convenience. Make sure to{" "}
+                    <a href={`https://chainlist.org/chain/${Number(chain.chainId)}`} target="_blank" rel="noreferrer">
+                        verify network information
+                    </a>{" "}
+                    before adding it.
+                </>
+            }
+            actions={{
+                accept: {
+                    children: "Add network",
+                    onClick: () => accept({ method, params: [chain] }),
+                },
+                reject: {
+                    children: "Go back",
+                    onClick: reject,
+                },
+            }}
+        >
+            <Tabs defaultValue={RequestTabsValues.Details}>
+                <TabContent value={RequestTabsValues.Details}>
+                    <SectionBlock>
+                        <form>
+                            <fieldset className="grid gap-4">
+                                <legend className="pb-2 text-xs font-semibold">Customize network information</legend>
+                                <FormField>
+                                    <FormFieldLabel htmlFor="custom-network-name">Name</FormFieldLabel>
+                                    <Input
+                                        required
+                                        onChange={(e) => {
+                                            setChain((old) => ({ ...old, chainName: e.target.value }))
+                                        }}
+                                        type="text"
+                                        id="custom-network-name"
+                                        name="custom-network-name"
+                                        value={chain.chainName}
+                                    />
+                                </FormField>
+                                <FormField>
+                                    <FormFieldLabel htmlFor="custom-network-rpc-url">RPC URL</FormFieldLabel>
+                                    <Input
+                                        onChange={(e) => {
+                                            setChain((old) => ({ ...old, rpcUrls: [e.target.value] }))
+                                        }}
+                                        required
+                                        type="url"
+                                        value={chain.rpcUrls[0] ?? ""}
+                                        id="custom-network-rpc-url"
+                                        name="custom-network-rpc-url"
+                                    />
+                                </FormField>
+                                <FormField>
+                                    <FormFieldLabel htmlFor="custom-network-currency">Currency symbol</FormFieldLabel>
+                                    <Input
+                                        type="text"
+                                        onChange={(e) => {
+                                            setChain((old) => ({
+                                                ...old,
+                                                nativeCurrency: {
+                                                    name: e.target.value ?? "",
+                                                    symbol: e.target.value,
+                                                    decimals: 18,
+                                                },
+                                            }))
+                                        }}
+                                        required
+                                        value={chain.nativeCurrency?.symbol ?? ""}
+                                        id="custom-network-currency"
+                                        name="custom-network-currency"
+                                    />
+                                </FormField>
 
-            <div className="flex flex-col w-full gap-2">
-                <Button
-                    intent="primary"
-                    className="text-neutral-content justify-center"
-                    onClick={() => accept({ method, params: [chain] })}
-                >
-                    Add
-                </Button>
-                <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
-                    Reject
-                </Button>
-            </div>
-        </RequestLayout>
+                                <FormField>
+                                    <FormFieldLabel isOptional htmlFor="custom-network-block-explorer">
+                                        Block explorer
+                                    </FormFieldLabel>
+                                    <Input
+                                        type="url"
+                                        onChange={(e) => {
+                                            setChain((old) => ({
+                                                ...old,
+                                                blockExplorerUrls: e.target.value ? [e.target.value] : undefined,
+                                            }))
+                                        }}
+                                        value={chain.blockExplorerUrls?.[0] ?? ""}
+                                        id="custom-network-block-explorer"
+                                        name="custom-network-block-explorer"
+                                    />
+                                </FormField>
+                            </fieldset>
+                        </form>
+                    </SectionBlock>
+                </TabContent>
+                <TabContent value={RequestTabsValues.Raw}>
+                    <SectionBlock>
+                        <SubsectionBlock>
+                            <FormattedDetailsLine>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+            </Tabs>
+        </Layout>
     )
 }

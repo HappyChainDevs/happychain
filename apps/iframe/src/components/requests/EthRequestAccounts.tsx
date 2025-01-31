@@ -1,6 +1,18 @@
-import { Button } from "../primitives/button/Button"
-import RequestContent from "./common/RequestContent"
-import RequestLayout from "./common/RequestLayout"
+import type { Address } from 'viem'
+import { getAppURL } from "#src/utils/appURL"
+import {
+    FormattedDetailsLine,
+    Layout,
+    LinkToAddress,
+    RequestTabsValues,
+    SectionBlock,
+    SectionTitle,
+    SubsectionBlock,
+    SubsectionContent,
+    SubsectionTitle,
+    TabContent,
+    Tabs,
+} from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const EthRequestAccounts = ({
@@ -9,28 +21,61 @@ export const EthRequestAccounts = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_requestAccounts">) => {
+    const appURL = getAppURL()
     return (
-        <RequestLayout method={method}>
-            <RequestContent>
-                <div className="flex grow flex-col gap-4 overflow-x-auto bg-base-200 p-4">
-                    <div className="border-b border-neutral-content pb-2 text-center text-sm font-bold text-primary">
-                        Allow this app to view your address?
-                    </div>
-                </div>
-            </RequestContent>
+        <Layout
+            labelHeader="Access account info"
+            headline={
+                <>
+                    <span className="text-primary">{appURL}</span> would like to connect to your account
+                </>
+            }
+            description={
+                <>
+                    This will allow <span className="font-medium text-primary">{appURL}</span> to see your wallet
+                    address and account details. No transactions can be made without your approval.
+                </>
+            }
+            actions={{
+                accept: {
+                    children: "Allow",
+                    onClick: () => accept({ method, params }),
+                },
+                reject: {
+                    children: "Go back",
+                    onClick: reject,
+                },
+            }}
+        >
+            <Tabs defaultValue={RequestTabsValues.Details}>
+                <TabContent value={RequestTabsValues.Details}>
+                    <SectionBlock>
+                        <SectionTitle>Account</SectionTitle>
+                        <SubsectionBlock>
+                            <SubsectionContent>
+                                <SubsectionTitle>Address</SubsectionTitle>
 
-            <div className="flex flex-col w-full gap-2">
-                <Button
-                    intent="primary"
-                    className="text-neutral-content justify-center"
-                    onClick={() => accept({ method, params })}
-                >
-                    Sign
-                </Button>
-                <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
-                    Reject
-                </Button>
-            </div>
-        </RequestLayout>
+                                <FormattedDetailsLine>
+                                    <LinkToAddress address={params as unknown as Address}>{params}</LinkToAddress>
+                                    {params}
+                                </FormattedDetailsLine>
+                            </SubsectionContent>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+                <TabContent className="break-words" value={RequestTabsValues.Raw}>
+                    <SectionBlock>
+                        <SubsectionBlock>
+                            <FormattedDetailsLine>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                        </SubsectionBlock>
+                    </SectionBlock>
+                </TabContent>
+            </Tabs>
+            <SectionBlock>
+                <p className="font-bold pb-8 text-center text-sm">
+                    You can revoke granted permissions from your wallet whenever you want.
+                </p>
+            </SectionBlock>
+        </Layout>
     )
 }
