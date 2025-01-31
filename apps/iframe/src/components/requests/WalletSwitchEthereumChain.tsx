@@ -1,10 +1,7 @@
 import { useAtomValue } from "jotai"
-
-import { chainsAtom } from "#src/state/chains"
-import { Button } from "../primitives/button/Button"
-import RawRequestDetails from "./common/RawRequestDetails"
-import RequestContent from "./common/RequestContent"
-import RequestLayout from "./common/RequestLayout"
+import { chainsAtom, currentChainAtom } from "#src/state/chains"
+import { getAppURL } from "#src/utils/appURL"
+import { Layout } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const WalletSwitchEthereumChain = ({
@@ -14,54 +11,44 @@ export const WalletSwitchEthereumChain = ({
     accept,
 }: RequestConfirmationProps<"wallet_switchEthereumChain">) => {
     const chains = useAtomValue(chainsAtom)
+    const currentChain = useAtomValue(currentChainAtom)
     const chain = chains[params[0].chainId]
+    const appURL = getAppURL()
 
-    if (!chain) {
-        return (
-            <RequestLayout method={method}>
-                <span className="text-2xl font-bold">
-                    Failed to find details for chain ID: <span className="font-mono">{params[0].chainId}</span>
-                </span>
-
-                <Button intent="outline-negative" className="text-base-content w-full justify-center" onClick={reject}>
-                    Cancel
-                </Button>
-            </RequestLayout>
-        )
-    }
     return (
-        <RequestLayout method={method}>
-            <RequestContent>
-                <div className="flex flex-col items-center gap-2">
-                    <span className="text-2xl font-bold">Switch Chain</span>
-                </div>
-
-                <div className="flex flex-col gap-4 rounded-lg bg-base-100 p-4">
-                    <div className="flex justify-between">
-                        <span className="text-sm text-neutral-content">New Chain:</span>
-                        <span className="font-mono text-sm">{chain.chainName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-sm text-neutral-content">Chain ID:</span>
-                        <span className="font-mono text-sm">{chain.chainId}</span>
-                    </div>
-
-                    <RawRequestDetails params={params} />
-                </div>
-            </RequestContent>
-
-            <div className="flex flex-col w-full gap-4">
-                <Button
-                    intent="primary"
-                    className="grow text-neutral-content justify-center"
-                    onClick={() => accept({ method, params })}
-                >
-                    Switch
-                </Button>
-                <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
-                    Cancel
-                </Button>
-            </div>
-        </RequestLayout>
+        <Layout
+            labelHeader="Switch network"
+            headline={
+                <>
+                    <span className="text-primary">{appURL}</span> wants to switch to a different network
+                </>
+            }
+            description={
+                !chain ? (
+                    <>
+                        <span className="font-medium text-primary">{appURL}</span> would like to switch to an unknown
+                        network. <br /> Please add this new network first, then try switching network again.
+                    </>
+                ) : (
+                    <>
+                        This will allow <span className="font-medium text-primary">{appURL}</span> to switch from{" "}
+                        {currentChain.chainName} to {chain?.chainName}.
+                    </>
+                )
+            }
+            actions={{
+                accept: {
+                    children: "Switch network",
+                    "aria-disabled": !chain,
+                    onClick: () => {
+                        if (chain) accept({ method, params })
+                    },
+                },
+                reject: {
+                    children: "Go back",
+                    onClick: reject,
+                },
+            }}
+        />
     )
 }
