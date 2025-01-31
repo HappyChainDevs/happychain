@@ -30,11 +30,11 @@ export { debounce } from "./utils/debounce.js"
 
 export { throttle } from "./utils/throttle.js"
 
-export { promiseWithResolvers } from "./utils/promises.js"
-
-export { keys, entries } from "./utils/records.js"
+export { promiseWithResolvers, sleep } from "./utils/promises.js"
 
 export type { PromiseWithResolvers, ResolveInputType, ResolveType, RejectType } from "./utils/promises.js"
+
+export { keys, entries } from "./utils/records.js"
 
 export { unknownToError } from "./utils/error.js"
 
