@@ -43,7 +43,8 @@
             "style": {
                 "noNamespace": "error",
                 "noNonNullAssertion": "off",
-                "useTemplate": "off"
+                "useTemplate": "off",
+                "noUselessElse": "off"
             },
             "complexity": {
                 "noForEach": "off"
