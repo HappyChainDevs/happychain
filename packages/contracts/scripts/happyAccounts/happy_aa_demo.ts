@@ -1,4 +1,4 @@
-import { encodeAbiParameters, encodeFunctionData, keccak256, parseEther, zeroAddress } from "viem"
+import { encodeAbiParameters, encodeFunctionData, formatEther, keccak256, parseEther, zeroAddress } from "viem"
 import type { Address, Hex } from "viem"
 
 import { type DeployAccountRequest, DeployAccountSchema } from "@happychain/submitter/utils/requestSchema"
@@ -134,6 +134,7 @@ function getHappyTxHash(happyTx: HappyTx) {
 
     const abiEncoded = encodeAbiParameters(
         [
+            // TODO: Use the commented out fields when switching from encodeAbiParameters -> encodePacked
             // 'address', // account
             // 'uint256', // nonce
             // 'bytes32', // callData_hashed
@@ -175,14 +176,21 @@ function getHappyTxHash(happyTx: HappyTx) {
         ],
     )
 
-    const happyTxHash = keccak256(abiEncoded)
-    console.log("abiEncoded: ", abiEncoded)
-    console.log("Happy Tx Hash: ", happyTxHash)
-    return happyTxHash
+    return keccak256(abiEncoded)
 }
 
-async function signHappyTx(happyTx: HappyTx): Promise<Hex> {
-    const happyTxHash = getHappyTxHash(happyTx)
+async function signHappyTx(happyTx: HappyTx, usingPaymaster = false): Promise<Hex> {
+    // Create a copy of the HappyTx object
+    const txToSign = structuredClone(happyTx)
+
+    if (usingPaymaster) {
+        // paymaster handles gas
+        txToSign.gasLimit = 0n
+        txToSign.executeGasLimit = 0n
+        txToSign.maxFeePerGas = 0n
+        txToSign.submitterFee = 0n
+    }
+    const happyTxHash = getHappyTxHash(txToSign)
     return await account.signMessage({
         message: { raw: happyTxHash },
     })
@@ -203,7 +211,9 @@ async function main() {
             console.log(`   Transaction Hash: ${result.transactionHash}`)
 
             const initialBalance = await getTokenBalance(deployedAccountAddress)
-            console.log(`\n\n\x1b[32m\x1b[48;5;40m\x1b[38;5;82m💸 Initial Balance: ${initialBalance} 💸\x1b[0m\n`)
+            console.log(
+                `\n\n\x1b[32m\x1b[48;5;40m\x1b[38;5;82m💸 Initial Balance: ${formatEther(initialBalance)} 💸\x1b[0m\n`,
+            )
         } else {
             console.log("❌ Account deployment failed")
             console.log(`   Error: ${result.error}`)
@@ -226,7 +236,7 @@ async function main() {
         const encodedHappyTx: Hex = encode(dummyHappyTx)
 
         console.log("Happy Tx: ", dummyHappyTx)
-        console.log("\n⏳ Submitting transaction...")
+        console.log("\n⏳ Submitting transaction...\n")
         const result: SubmitHappyTxResponse = await submitHappyTx(encodedHappyTx)
 
         if (result.success) {
@@ -235,7 +245,7 @@ async function main() {
             console.log(`   Message: ${result.message}`)
 
             const newBalance = await getTokenBalance(deployedAccountAddress)
-            console.log(`\n\n\x1b[32m\x1b[48;5;40m\x1b[38;5;82m💸 New Balance: ${newBalance} 💸\x1b[0m\n`)
+            console.log(`\n\n\x1b[32m\x1b[48;5;40m\x1b[38;5;82m💸 New Balance: ${formatEther(newBalance)} 💸\x1b[0m\n`)
         } else {
             console.log("❌ Transaction submission failed")
             if (result.txHash) {
@@ -253,14 +263,10 @@ async function main() {
     console.log("\n\n\x1b[1m\x1b[48;5;160m\x1b[38;5;88m=== Submitting Happy Transaction (using paymaster) ===\x1b[0m\n")
     try {
         const dummyHappyTx = await createDummyHappyTx(deployedAccountAddress, await getNonce(deployedAccountAddress))
-        dummyHappyTx.gasLimit = 0n // paymaster handles gas
-        dummyHappyTx.executeGasLimit = 0n // paymaster handles gas
-        dummyHappyTx.maxFeePerGas = 0n // paymaster handles gas
-        dummyHappyTx.submitterFee = 0n // paymaster handles gas
-        dummyHappyTx.extraData = await signHappyTx(dummyHappyTx) // sign over the happyTx
+        dummyHappyTx.extraData = await signHappyTx(dummyHappyTx, true) // sign over the happyTx
 
         console.log("Happy Tx: ", dummyHappyTx)
-        console.log("\n⏳ Submitting transaction...")
+        console.log("\n⏳ Submitting transaction...\n")
         const encodedHappyTx: Hex = encode(dummyHappyTx)
         const result: SubmitHappyTxResponse = await submitHappyTx(encodedHappyTx)
 
@@ -270,7 +276,7 @@ async function main() {
             console.log(`   Message: ${result.message}`)
 
             const newBalance = await getTokenBalance(deployedAccountAddress)
-            console.log(`\n\n\x1b[32m\x1b[48;5;40m\x1b[38;5;82m💸 New Balance: ${newBalance} 💸\x1b[0m\n`)
+            console.log(`\n\n\x1b[32m\x1b[48;5;40m\x1b[38;5;82m💸 New Balance: ${formatEther(newBalance)} 💸\x1b[0m\n`)
         } else {
             console.log("❌ Transaction submission failed")
             if (result.txHash) {

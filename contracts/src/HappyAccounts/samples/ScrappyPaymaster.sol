@@ -11,11 +11,12 @@ import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {IHappyPaymaster, SubmitterFeeTooHigh, WrongTarget} from "../interfaces/IHappyPaymaster.sol";
 import {NotFromEntryPoint} from "../utils/Common.sol";
 import {HappyTx} from "../core/HappyTx.sol";
-
+import {console} from "forge-std/Script.sol";
 /**
  * @title ScrappyPaymaster
  * @notice An example paymaster contract implementing the IHappyPaymaster interface.
  */
+
 contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;
 

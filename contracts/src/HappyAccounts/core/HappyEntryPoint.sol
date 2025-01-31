@@ -203,8 +203,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         }
         output.validationStatus = result;
 
-        console.log("executing the call...");
-
         // 2. Execute the call
 
         (success, returnData) = happyTx.account.excessivelySafeCall(
@@ -233,8 +231,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             console.log("SUCCESS");
         }
 
-        console.log("execOutput.revertData:");
-        console.logBytes(execOutput.revertData);
         // 3. Collect payment
 
         // This is an overestimation of the actual gas cost of the submitter.

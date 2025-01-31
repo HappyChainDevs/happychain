@@ -123,7 +123,6 @@ contract ScrappyAccount is
 
     function validate(HappyTx memory happyTx) external returns (bytes4) {
         if (happyTx.account != address(this)) {
-            console.log("wrong account selector");
             return WrongAccount.selector;
         }
 
@@ -175,15 +174,10 @@ contract ScrappyAccount is
             console.logBytes(returnData);
             return output;
         }
-        console.log("happyTx.dest.call == success");
-        console.log("returnData:");
-        console.logBytes(returnData);
 
         // TODO: get upper limit of gas costs that can't be metered via gasleft()
         // (Solidity gas overhead + gas math and assignment)
         output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
-        console.log("output.gas:");
-        console.log(output.gas);
     }
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
