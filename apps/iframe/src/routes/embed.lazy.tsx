@@ -12,10 +12,7 @@ import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
 import { DialogConfirmLogOut } from "../components/interface/menu-secondary-actions/DialogConfirmLogOut"
-import {
-    SecondaryActionsMenu,
-    TriggerSecondaryActionsMenu,
-} from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
+import { SecondaryActionsMenu } from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
 import { useActiveConnectionProvider } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
 import { userAtom } from "../state/user"

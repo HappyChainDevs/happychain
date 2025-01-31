@@ -27,6 +27,7 @@ const TriggerSecondaryActionsMenu = () => {
 enum MenuActions {
     Permissions = "permissions",
     LogOut = "logout",
+    Back = "back",
 }
 
 const SecondaryActionsMenu = () => {
@@ -92,6 +93,7 @@ const SecondaryActionsMenu = () => {
                             </Link>
                         </Menu.Item>
                         <Menu.Item value={MenuActions.LogOut}>Logout</Menu.Item>
+                        <Menu.Item value={MenuActions.Back}>Go back</Menu.Item>
                     </div>
                 </Menu.Content>
             </div>
