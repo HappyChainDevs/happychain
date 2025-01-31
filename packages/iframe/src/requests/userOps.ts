@@ -1,4 +1,4 @@
-import { Map2, Mutex } from "@happychain/common"
+import { HappyMap, Map2, Mutex, promiseWithResolvers, sleep } from "@happychain/common"
 import { deployment as contractAddresses } from "@happychain/contracts/account-abstraction/sepolia"
 import type { HappyUser } from "@happychain/sdk-shared"
 import { deepHexlify } from "permissionless"
@@ -59,6 +59,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
     const smartAccountClient = (await getSmartAccountClient())!
     const account = smartAccountClient.account.address
 
+    let nonceB = 0n
     try {
         // We need the separate nonce lookup because:
         // - we do local nonce management to be able to have multiple userOps in flight
@@ -81,6 +82,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
                 ],
             } satisfies PrepareUserOperationParameters), // TS too dumb without this
         ])
+        nonceB = nonce
 
         // sendUserOperationNow does not want account included
         const { account: _, ...preparedUserOp } = { ..._preparedUserOp, nonce }
@@ -100,17 +102,9 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         addPendingUserOp(user.address, pendingUserOpDetails)
 
-        const userOpReceipt = (await smartAccountClient.request(
-            {
-                // @ts-ignore - the pimlico namespace is not supported by the Viem Smart Wallet types
-                method: "pimlico_sendUserOperationNow",
-                params: [deepHexlify(preparedUserOp), contractAddresses.EntryPointV7],
-            },
-            {
-                // We'll handle retries at this level instead.
-                retryCount: 0,
-            },
-        )) as UserOperationReceipt
+        console.log("sending", userOpHash, retry)
+        const userOpReceipt = await submitUserOp(smartAccountClient, validator, preparedUserOp)
+        console.log("receipt", userOpHash, retry)
 
         markUserOpAsConfirmed(user.address, pendingUserOpDetails, userOpReceipt)
 
@@ -118,6 +112,8 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
     } catch (error) {
         // https://docs.stackup.sh/docs/entrypoint-errors
         // https://docs.pimlico.io/infra/bundler/entrypoint-errors
+
+        console.log("error", nonceB, error.details || error, retry)
 
         // Most likely the transaction didn't land, so need to resynchronize the nonce.
         deleteNonce(account, validator)
@@ -189,6 +185,108 @@ async function getOnchainNonce(smartAccountAddress: Address, validatorAddress: A
             ),
         ),
     })
+}
+
+type UserOpQueueEntry = {
+    promise: Promise<UserOperationReceipt>
+    resolve: (receipt: UserOperationReceipt) => void
+    reject: (error: unknown) => void
+    userOp: UserOperation
+    // TODO: this and its dependencies should probably be constants, not atoms
+    smartAccountClient: ExtendedSmartAccountClient
+}
+
+/** Last submitted nonce per validator. */
+const lastNonces: HappyMap<Address, bigint> = new HappyMap()
+
+/** Queued user operations awaiting submission per validator. */
+const userOpQueues: HappyMap<Address, UserOpQueueEntry[]> = new HappyMap()
+
+/**
+ * Submits a userOp to the bundler, enforcing proper ordering of userOps by nonce, as well as
+ * enforcing a ~200ms delay between successive userOp submissions.
+ *
+ * These constraints work around problems with the bundler which will reject userOps whose nonce
+ * is higher than previously seen nonce, by maximizing the chance that the bundler sees nonces
+ * in the proper order.
+ */
+async function submitUserOp(
+    smartAccountClient: ExtendedSmartAccountClient,
+    validator: Address,
+    userOp: UserOperation,
+): Promise<UserOperationReceipt> {
+    // Ensure initialization
+    await lastNonces.getOrSetAsync(validator, async () => {
+        return (await getOnchainNonce(userOp.sender, validator)) - 1n
+    })
+
+    const queue = userOpQueues.getOrSet(validator, [])
+    const { promise, resolve, reject } = promiseWithResolvers<UserOperationReceipt>()
+    const entry = { promise, resolve, reject, userOp, smartAccountClient }
+
+    if (queue.length === 0 && userOp.nonce === lastNonces.get(validator)! + 1n) {
+        // Fast path: nothing in queue & next nonce, no need to wait for next interval to trigger.
+        void requestSendUserOpNow(validator, entry)
+        return await promise
+    }
+
+    queue.push(entry)
+    queue.sort((a, b) => Number(a.userOp.nonce - b.userOp.nonce))
+
+    // This accomodates for a burst of up to 10 userOps (submitted every 3s to account for the fact
+    // the bundler cannot manage the nonces whatsoever). In practice, with this timeout, the
+    // transaction can still succeed upon resubmit, but we avoid a fully "stuck" scenario where
+    // nothing goes through at all because a transaction failed to include without erroring — note
+    // that we haven't observed these scenarios in practice with `pimlico_sendUserOperationNow`.
+    const receiptOrUndefined = await Promise.race([promise, sleep(30_000)])
+
+    if (!receiptOrUndefined) {
+        // Timeout: resync the nonce, and remove this userOp all those with higher nonces
+        // from the queue.
+        const deleted = userOpQueues.get(validator)!.splice(queue.indexOf(entry))
+        deleted.slice(1).forEach((entry) => entry.reject(new Error("UserOp submission timeout")))
+        lastNonces.set(validator, await getOnchainNonce(userOp.sender, validator))
+        throw new Error("UserOp submission timeout (trigger userOp)")
+    }
+
+    return receiptOrUndefined
+}
+
+/**
+ * Every 3s (accomodate for time-to-inclusion, as bundler can't manage nonces), attempt to submit
+ * the next userOp in the queue for each validator. Resync the nonce if the submission fails.
+ */
+setInterval(() => {
+    userOpQueues.entries().forEach(async ([validator, queue]) => {
+        if (!queue || queue.length === 0) return
+        const nextNonce = lastNonces.get(validator)! + 1n
+        const nonce = queue[0].userOp.nonce
+        // We allow lower nonce, as this can result from a resync.
+        if (nonce > nextNonce) return
+        const entry = queue.shift()!
+        void requestSendUserOpNow(validator, entry)
+    })
+}, 3000)
+
+/** Performs a low-level `pimlico_sendUserOperationNow` with no retries. */
+async function requestSendUserOpNow(validator: Address, entry: UserOpQueueEntry) {
+    console.log("now", entry.userOp.nonce)
+    try {
+        lastNonces.set(validator, entry.userOp.nonce)
+        const userOpReceipt = (await entry.smartAccountClient.request(
+            {
+                // @ts-ignore - the pimlico namespace is not supported by the Viem Smart Wallet types
+                method: "pimlico_sendUserOperationNow",
+                params: [deepHexlify(entry.userOp), contractAddresses.EntryPointV7],
+            },
+            { retryCount: 0 }, // We handle retries at the `sendUserOp` level.
+        )) satisfies UserOperationReceipt
+        entry.resolve(userOpReceipt!)
+    } catch (e) {
+        // submission failed, resync nonce
+        lastNonces.set(validator, await getOnchainNonce(entry.userOp.sender, validator))
+        entry.reject(e)
+    }
 }
 
 export function parseUserOpCalldata(callData: Hex): UserOpWrappedCall {
