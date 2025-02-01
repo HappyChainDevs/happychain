@@ -13,21 +13,18 @@ ALTO_BRANCH := $(shell cat alto.version)
 ALTO_CONFIG_FILE = configs/config.$(TARGET).json
 
 # Target to set up the repository initially (install dependencies and build)
-setup: alto build
+setup: alto
 .PHONY: setup
 
 # Clone or update Alto repository based on alto.version
 alto: alto.version
-	echo "Clone/update Alto repository based on alto.version"
-	@if [ -d alto ]; then \
-		echo "Updating Alto repository..."; \
-		cd alto && git pull && git switch $(ALTO_BRANCH); \
-	else \
-		echo "Cloning Alto repository..."; \
-		git clone $(ALTO_REPO) --branch $(ALTO_BRANCH) alto; \
-	fi
+	@echo "Cloning Alto repository based on alto.version..."
+	@rm -rf alto
+	@git clone $(ALTO_REPO) --branch $(ALTO_BRANCH) alto
+	@# Avoid git-in-git confusion
 	@rm -rf alto/.git alto/.gitmodules alto/.gitignore
 	@git rm --cached alto/pnpm-lock.yaml 2>/dev/null || true
+	@make build
 
 # Target to build the bundler
 build: install-deps
