@@ -4,19 +4,19 @@
 :::code-group
 
 ```bash [npm]
-npm install @happy.tech/react
+npm install @happy.tech/core @happy.tech/react
 ```
 
 ```bash [pnpm]
-pnpm add @happy.tech/react
+pnpm add @happy.tech/core @happy.tech/react
 ```
 
 ```bash [yarn]
-yarn add @happy.tech/react
+yarn add @happy.tech/core @happy.tech/react
 ```
 
 ```bash [bun]
-bun add @happy.tech/react
+bun add @happy.tech/core @happy.tech/react
 ```
 
 :::
@@ -42,33 +42,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
 ### Web3 Integration
 
-Next you will want to setup your web3 integration using the `happyProvider`. 
-The HappyProvider is an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) EVM provider. 
-This means you can use it to initialize any standard web3 library as you normally would. 
-The most common examples are below, but it should be fully compatible with most libraries.
+To set up your web3 integration (via Viem, Wagmi, Ethers, web3.js, ...), see the [corresponding
+section][js-web3-integration] in the "Getting Started With JavaScript/TypeScript" page.
 
-:::code-group
-
-```ts [Viem] twoslash
-import { happyProvider } from '@happy.tech/react' 
-// [!include ~/snippets/createClients.ts:viem]
-```
-
-```ts [Ethers] twoslash
-import { happyProvider } from '@happy.tech/react'
-// [!include ~/snippets/createClients.ts:ethers]
-```
-
-```ts [Web3.js] twoslash
-import { happyProvider } from '@happy.tech/react'
-// [!include ~/snippets/createClients.ts:web3]
-```
-
-:::
+[js-web3-integration]: ../react/getting-started#web3-integration
 
 ### Getting the Active User
 
-The `useHappyChain` hook returns the current user as a [HappyUser](/sdk/react/api/type-aliases/HappyUser)
+The `useHappyChain` hook returns the current user as a [HappyUser](/sdk/js/api/type-aliases/HappyUser)
 if the user is connected, otherwise it returns undefined.
 
 ```tsx twoslash
@@ -86,30 +67,7 @@ function UserAddressComponent() {
 }
 ```
 
-### Getting the Active User from Outside of React Components
+To get the active user outside of React components, see [the corresponding section][js-active-user]
+in the "Getting Started With JavaScript/TypeScript" page.
 
-User changes, such as when a user logs in or out, can be subscribed to the `onUserUpdate` listener.
-If the `user` is undefined, then they are not currently logged in have or have logged out. 
-If the `user` is a [HappyUser](/sdk/react/api/type-aliases/HappyUser) then it will be populated with all their 
-shared info, such as wallet address and name.
-
-```ts twoslash
-import { onUserUpdate } from '@happy.tech/react'
-
-// [!include ~/snippets/listeners.ts:onUserUpdate]
-```
-
-Alternatively, the current user is always exposed via the `getCurrentUser` call.
-```ts twoslash
-import { getCurrentUser } from '@happy.tech/react'
-
-// [!include ~/snippets/listeners.ts:getCurrentUser]
-```
-
-`onUserUpdate` only fires whenever the user changes, so if you want to have something depend on the current user, you should write your code as follows:
-
-```ts twoslash
-import { type HappyUser, getCurrentUser, onUserUpdate } from '@happy.tech/react'
-
-// [!include ~/snippets/listeners.ts:getCurrentUserExample]
-```
+[js-active-user]: ../react/getting-started#getting-the-active-user
