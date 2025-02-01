@@ -75,6 +75,8 @@ endef
 
 setup: install-frozen enable-hooks enable-bun-lockfile-diffs ## To be run when first setting up the repository.
 	$(call forall_make , $(ALL_PKGS) , setup)
+	@echo "Running make setup in ./contracts"
+	@cd contracts && make setup
 .PHONY: setup
 
 # Internal, to avoid cloning / rebuilding alto.
