@@ -11,7 +11,7 @@ import {
 import type { HappyUser } from "@happy.tech/core"
 import { createContext, useContext, useEffect, useState } from "react"
 
-type HappyWalletProviderProps = React.PropsWithChildren & {
+export type HappyWalletProviderProps = React.PropsWithChildren & {
     init?: Parameters<typeof register>[0]
 }
 
