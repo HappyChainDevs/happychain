@@ -39,9 +39,6 @@ TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
 # all packages that have a package.json
 NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
 
-# all packages
-ALL_PKGS := $(NPM_PKGS),packages/bundler
-
 # ==================================================================================================
 # CMDS
 
@@ -74,7 +71,9 @@ endef
 #   To get the project running locally.
 
 setup: install-frozen enable-hooks enable-bun-lockfile-diffs ## To be run when first setting up the repository.
-	$(call forall_make , $(ALL_PKGS) , setup)
+	$(call forall_make , $(NPM_PKGS) , setup)
+	@echo "Running make setup in ./packages/bundler"
+	@cd packages/bundler && make setup
 	@echo "Running make setup in ./contracts"
 	@cd contracts && make setup
 .PHONY: setup
