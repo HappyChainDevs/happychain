@@ -2,7 +2,7 @@
     "name": "@happy.tech/monorepo",
     "author": "Happy Devs",
     "license": "BSD-3-Clause-Clear",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "workspaces": ["apps/*", "demos/*", "packages/*", "support/*", "contracts"],
     "private": true,
     "scripts": {

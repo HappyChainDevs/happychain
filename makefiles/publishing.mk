@@ -9,8 +9,7 @@ publish.dry-run: ## Dry Run publish to npm
 .PHONY: publish.dry-run
 
 publish: prepare-dist ## Publish the package to npm
-	echo "DRY RUN, NOT PUBLISHING!"
-	bun publish --dry-run
+	bun publish --access public
 .PHONY: publish
 
 prepare-dist:
