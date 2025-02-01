@@ -84,7 +84,7 @@ setup.ts:
 	$(call forall_make , $(TS_PKGS) , setup)
 .PHONY: setup.ts
 
-clean: ts.clean sdk.clean docs.clean contracts.clean ## Removes build artifacts
+clean: ts.clean docs.clean contracts.clean ## Removes build artifacts
 .PHONY: clean
 
 build: node_modules ts.build  ## Creates production builds
@@ -340,7 +340,8 @@ demos.clean:
 .PHONY: apps.clean
 
 docs.clean:
-	cd apps/docs && make clean
+	@echo "Running make clean in ./apps/docs"
+	@cd apps/docs && make clean
 .PHONY: docs.clean
 
 backend.clean:
@@ -352,7 +353,8 @@ ts.clean:
 .PHONY: ts.clean
 
 contracts.clean:
-	cd contracts && make clean
+	@echo "Running make clean in ./contracts"
+	@cd contracts && make clean
 .PHONY: contracts.clean
 
 # ==================================================================================================
