@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "type": "module",
     "dependencies": {
-        "@happy.tech/core": "workspace:0.1.1",
+        "@happy.tech/core": "workspace:0.1.2",
         "@tanstack/vue-query": "^5.62.0",
         "@wagmi/vue": "^0.1.7",
         "viem": "^2.21.53",
