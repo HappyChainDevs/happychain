@@ -314,8 +314,7 @@ docs.build:
 docs.contained: setup.ts shared.dev sdk.dev docs.build
 .PHONY: docs.contained
 
-# Serve already-built docs
-docs.preview: docs.contained
+docs.preview: ## Serve already-built docs
 	cd apps/docs && make preview
 .PHONY: docs.preview
 

@@ -4,70 +4,20 @@ layout: doc
 
 import { HomePage } from 'vocs/components'
 
-# HappyChain SDK
+# Happy Wallet SDK
 
-## JavaScript & TypeScript
+The Happy Wallet is an embedded wallet that lets user log in with their social accounts (web3 wallets are
+also supported), enables gas sponsorship (1), and allows apps to make transactions without the user having to confirm them
+via [session keys].
 
-<div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-  <HomePage.Description>
-    Integrate the Happy Wallet without a web framework or with an unsupported framework.
-  </HomePage.Description>
-</div>
+Please see the [Getting Started] page for a full overview of how to integrate and interact with the
+wallet.
 
-:::code-group
+[Getting Started]: /sdk/js/getting-started
+[session keys]: /sdk/js/getting-started#session-keys
 
-```bash [npm]
-npm install @happy.tech/core
-```
-
-```bash [pnpm]
-pnpm add @happy.tech/core
-```
-
-```bash [yarn]
-yarn add @happy.tech/core
-```
-
-```bash [bun]
-bun add @happy.tech/core
-```
-
-:::
-
-<HomePage.Buttons>
-    <HomePage.Button href="/sdk/js/getting-started" variant="accent">Get Started</HomePage.Button>
-    <HomePage.Button href="/sdk/js/api" variant="accent">Full API Reference</HomePage.Button>
-</HomePage.Buttons>
-
-## React
-
-<div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-  <HomePage.Description>Integrate the Happy Wallet with React</HomePage.Description>
-</div>
-
-:::code-group
-
-```bash [npm]
-npm install @happy.tech/react
-```
-
-```bash [pnpm]
-pnpm add @happy.tech/react
-```
-
-```bash [yarn]
-yarn add @happy.tech/react
-```
-
-```bash [bun]
-bun add @happy.tech/react
-```
-
-:::
-
-<HomePage.Buttons>
-    <HomePage.Button href="/sdk/react/getting-started" variant="accent">Get Started</HomePage.Button>
-    <HomePage.Button href="/sdk/react/api" variant="accent">Full API Reference</HomePage.Button>
-</HomePage.Buttons>
+(1) Each user gets a daily gas budget that streams back over time. On the HappyChain Sepolia
+testnet, this budget is quite large. Once the user runs out of budget, he must pay for the gas
+himself, or an app must sponsor (not implemented yet).
 
 
