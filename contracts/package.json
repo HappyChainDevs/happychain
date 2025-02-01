@@ -21,8 +21,8 @@
         "solady": "0.0.237"
     },
     "devDependencies": {
-        "@happy.tech/happybuild": "workspace:^0.1.0",
-        "@happy.tech/configs": "workspace:^0.1.0",
+        "@happy.tech/happybuild": "workspace:0.1.0",
+        "@happy.tech/configs": "workspace:0.1.0",
         "@openzeppelin/upgrades-core": "^1.36.0",
         "@types/node": "^22.0.2",
         "node-jq": "^6.0.1",
