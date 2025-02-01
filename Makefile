@@ -427,7 +427,7 @@ version: ## Bump all package dependencies according to staged changesets & gener
 
 publish: build test  ## Build, test, then publish current packages
 	$(call forall_make , $(SDK_ONLY_PKGS) , publish)
-	# changeset tag # disabled for now, creates new git tag after publishing. push with `git push --follow-tags`
+	changeset tag # push with `git push --follow-tags`
 .PHONY: publish
 
 # ==================================================================================================
