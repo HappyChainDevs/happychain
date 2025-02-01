@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/core",
     "private": false,
-    "version": "0.0.0",
+    "version": "0.1.0",
     "type": "module",
     "files": ["dist"],
     "main": "./dist/index.es.js",
@@ -18,15 +18,19 @@
         "viem": "^2.21.53"
     },
     "peerDependenciesMeta": {
-        "@wagmi/core": { "optional": true },
-        "viem": { "optional": true }
+        "@wagmi/core": {
+            "optional": true
+        },
+        "viem": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
-        "@happy.tech/happybuild": "workspace:^0.0.0",
-        "@happy.tech/configs": "workspace:^0.0.0",
-        "@happy.tech/common": "workspace:^0.0.0",
-        "@happy.tech/wallet-common": "workspace:^0.0.0",
+        "@happy.tech/happybuild": "workspace:^0.1.0",
+        "@happy.tech/configs": "workspace:^0.1.0",
+        "@happy.tech/common": "workspace:^0.1.0",
+        "@happy.tech/wallet-common": "workspace:^0.1.0",
         "@types/bun": "^1.1.8",
         "@types/preact-custom-element": "^4.0.4",
         "happy-dom": "^15.0.0",

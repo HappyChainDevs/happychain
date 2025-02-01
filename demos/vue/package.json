@@ -1,17 +1,17 @@
 {
     "name": "demo-vue",
     "private": true,
-    "version": "0.0.0",
+    "version": "0.1.0",
     "type": "module",
     "dependencies": {
-        "@happy.tech/core": "workspace:^0.0.0",
+        "@happy.tech/core": "workspace:^0.1.0",
         "@tanstack/vue-query": "^5.62.0",
         "@wagmi/vue": "^0.1.7",
         "viem": "^2.21.53",
         "vue": "^3.4.37"
     },
     "devDependencies": {
-        "@happy.tech/configs": "workspace:^0.0.0",
+        "@happy.tech/configs": "workspace:^0.1.0",
         "@types/bun": "^1.1.8",
         "@vitejs/plugin-vue": "^5.1.2",
         "autoprefixer": "^10.4.20",
