@@ -12,8 +12,6 @@ include ../makefiles/help.mk
 # (-include to ignore error if it does not exist)
 -include .env
 
-
-
 # Set CONFIG to "LOCAL" by default. Other valid values: "TEST" or "MAIN".
 # Must be exported as some deploy scripts depend on it.
 export CONFIG ?= LOCAL
@@ -37,7 +35,7 @@ METADATA_FLAG := $(if $(findstring false,$(APPEND_METADATA_$(CONFIG))),--no-meta
 
 # Location of top-level node_modules relative to the contracts package.
 # We need the top-level on with Bun, because it leaves the package-specific ones empty.
-NODE_MODULES := ../../node_modules
+NODE_MODULES := ../node_modules
 
 # The reason for this weird setup is that the IntelliJ solidity plugin will not resolve imports
 # if they're not in `lib` and do not have a `src` directory (the `remappings.txt` file is ignored).
