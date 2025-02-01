@@ -20,7 +20,7 @@ jobs:
 
       - name: Build code
         run: |
-          printf "${{ vars.IFRAME_ENV }}" > packages/iframe/.env
+          printf "${{ vars.IFRAME_ENV }}" > apps/iframe/.env
           make setup
           make iframe.build
 
@@ -31,7 +31,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "packages/iframe/dist"
+          source: "apps/iframe/dist"
           target: /home/deployer/iframe
           strip_components: 3 # Remove the first 3 levels of directories from the source path to copy only the files inside dist
           rm: true
