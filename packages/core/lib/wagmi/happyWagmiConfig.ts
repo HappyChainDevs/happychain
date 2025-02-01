@@ -15,23 +15,25 @@ import { happyProvider } from "../happyProvider/initialize"
  *
  * export const config: Config = createConfig({
  *  chains: [happyChainSepolia],
- *  connectors: [happyWagmiConnector], // voila!
+ *  connectors: [happyWagmiConnector()], // voila!
  *  transports: {
  *      [happyChainSepolia.id]: custom(happyProvider),
  *  },
  * })
  *
  */
-export const happyWagmiConnector: CreateConnectorFn = injected({
-    shimDisconnect: false,
-    target() {
-        return {
-            id: "happyProvider",
-            name: "HappyChain Wagmi Provider",
-            provider: happyProvider,
-        }
-    },
-})
+export function happyWagmiConnector(): CreateConnectorFn {
+    return injected({
+        shimDisconnect: false,
+        target() {
+            return {
+                id: "happyProvider",
+                name: "HappyChain Wagmi Provider",
+                provider: happyProvider,
+            }
+        },
+    })
+}
 
 /**
  * Creates a single-chain Wagmi configuration for use with the HappyWallet.
@@ -46,7 +48,10 @@ export const happyWagmiConnector: CreateConnectorFn = injected({
  * @see {@link https://wagmi.sh/react/api/createConfig#config Wagmi Config Documentation}
  * @see {@link https://viem.sh/docs/glossary/types#chain Viem Chain Type}
  */
-export function createHappyChainWagmiConfig(chain: Chain, connector: CreateConnectorFn = happyWagmiConnector): Config {
+export function createHappyChainWagmiConfig(
+    chain: Chain,
+    connector: CreateConnectorFn = happyWagmiConnector(),
+): Config {
     return createConfig({
         chains: [chain],
         connectors: [connector],
