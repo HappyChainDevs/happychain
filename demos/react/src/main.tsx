@@ -1,7 +1,8 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
 
-import { HappyWalletProvider, happyChainSepolia, happyProvider } from "@happy.tech/react"
+import { happyChainSepolia, happyProvider } from "@happy.tech/core"
+import { HappyWalletProvider } from "@happy.tech/react"
 
 import App from "./App.tsx"
 

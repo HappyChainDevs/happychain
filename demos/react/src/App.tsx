@@ -1,5 +1,6 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
-import { ConnectButton, happyChainSepolia, useHappyChain } from "@happy.tech/react"
+import { happyChainSepolia } from "@happy.tech/core"
+import { ConnectButton, useHappyChain } from "@happy.tech/react"
 import { useEffect, useMemo, useState } from "react"
 import { createPublicClient, createWalletClient, custom } from "viem"
 import { gnosis } from "viem/chains"
