@@ -2,7 +2,7 @@ import { defineConfig } from "vocs"
 
 export default defineConfig({
     rootDir: "src",
-    title: "HappyChain Docs",
+    title: "HappyChain Docs 🤠",
     socials: [
         {
             link: "https://x.com/HappyChainDevs",
@@ -15,7 +15,11 @@ export default defineConfig({
     ],
     sidebar: [
         {
-            text: "SDK",
+            text: "Chain Information",
+            link: "/chain",
+        },
+        {
+            text: "Happy Wallet SDK",
             link: "/sdk",
             items: [
                 {
@@ -47,8 +51,9 @@ export default defineConfig({
             ],
         },
         {
-            text: "Transaction Manager",
+            text: "TXM (Transaction Manager)",
             link: "/txm",
+            collapsed: true,
             items: [
                 {
                     text: "Getting Started",

@@ -1,4 +1,9 @@
-# Getting Started With React
+# Getting started with React
+
+The `@happy.tech/react` package provides React-specific functionality, to be used instead or in
+addition to those provided in [`@happy.tech/core`][js-getting-started].
+
+[js-getting-started]: /sdk/js/getting-started
 
 ## Install 
 :::code-group
@@ -23,34 +28,48 @@ bun add @happy.tech/core @happy.tech/react
 
 ## Setup
 
-After installing, the first thing you will need to do, is wrap your app in the `HappyWalletProvider`.
+After installing, the first thing you will need to do, is wrap your app in the [`HappyWalletProvider`].
+
+[`HappyWalletProvider`]: /sdk/react/api/functions/HappyWalletProvider
 
 ```tsx
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { HappyWalletProvider } from '@happy.tech/react' // [!code focus]
-import App from './App.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <HappyWalletProvider> // [!code focus]
-        <App />
+        {/* <YourApp /> */}
     </HappyWalletProvider> // [!code focus]
 )
 ```
+
+The `HappyWalletProvider` takes care of calling the [`register()`] function for you.
+
+[`register()`]: /sdk/js/api/functions/register
 
 ## Usage
 
 ### Web3 Integration
 
 To set up your web3 integration (via Viem, Wagmi, Ethers, web3.js, ...), see the [corresponding
-section][js-web3-integration] in the "Getting Started With JavaScript/TypeScript" page.
+section][js-web3-integration] in the "Getting started with JavaScript/TypeScript" page.
 
-[js-web3-integration]: ../react/getting-started#web3-integration
+Of particular relevance to React users, we provide an easy way to create a wagmi connector
+([`happyWagmiConnector`]) and a wagmi config ([`createHappyChainWagmiConfig`]).
+
+[`happyWagmiConnector`]: /sdk/js/api/functions/happyWagmiConnector
+[`createHappyChainWagmiConfig`]: /sdk/js/api/functions/createHappyChainWagmiConfig
+
+[js-web3-integration]: /sdk/js/getting-started#web3-integration
 
 ### Getting the Active User
 
-The `useHappyChain` hook returns the current user as a [HappyUser](/sdk/js/api/type-aliases/HappyUser)
+The [`useHappyChain`] hook returns the current user as a [`HappyUser`]
 if the user is connected, otherwise it returns undefined.
+
+[`userHappyChain`]: /sdk/react/api/functions/useHappyChain
+[`HappyUser`]: /sdk/js/api/type-aliases/HappyUser
 
 ```tsx twoslash
 import React from 'react'
@@ -68,6 +87,42 @@ function UserAddressComponent() {
 ```
 
 To get the active user outside of React components, see [the corresponding section][js-active-user]
-in the "Getting Started With JavaScript/TypeScript" page.
+in the "Getting started with JavaScript/TypeScript" page.
 
-[js-active-user]: ../react/getting-started#getting-the-active-user
+[js-active-user]: /sdk/js/getting-started#getting-the-active-user
+
+### UI Component
+
+The Happy Wallet component (the orb on the right side of the screen that opens up the wallet)
+is automatically added to the page by the `HappyWalletProvider`.
+
+To display a connection button, you can use the [`ConnectButton`] component.
+The button turns into a badge displaying the username and avatar after connecting.
+
+[`ConnectButton`]; /sdk/react/api/functions/ConnectButton
+
+The `ConnectButton` component wraps the `happychain-connect-button` webcomponent, allowing it to be
+used from JSX.
+
+You can disable the default styles by passing the `disableStyles` property. In this case, you
+probably want to specify your own style, for which you need to pass the `overrideBadgeStyles` option
+to the [`HappyWalletProvider`].
+
+[`HappyWalletProvider`]: /sdk/react/api/functions/HappyWalletProvider
+
+:::code-group
+
+```jsx [Default Style] twoslash
+<ConnectButton />
+```
+
+```jsx [Custom Style] twolash
+<ConnectButton disableStyles />
+```
+
+:::
+
+### More
+
+Don't forget to check the ["Getting started with Javascript/Typescript"][js-getting-started] page,
+as it includes other options that are relevant in React.

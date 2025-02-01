@@ -1,4 +1,4 @@
-# Getting Started With JavaScript/TypeScript
+# Getting started with JavaScript/TypeScript
 
 ## Install
 
@@ -32,15 +32,16 @@ bun add @happy.tech/core
 ```
 */}
 
-
 ## Setup 
 
 ### Wallet Component
 
 Once you have installed the SDK, you will need to register the wallet component on the page. 
-The easiest way to acomplish this is by using our provided `register` method.
+The easiest way to acomplish this is by using our provided [`register`] method.
 
-```ts
+[`register`]: /sdk/js/api/functions/register
+
+```ts twoslash
 import { register } from '@happy.tech/core'
 
 register()
@@ -56,16 +57,24 @@ window.HappyChain.register()
 
 ### Web3 Integration
 
-Next you will want to set up your web3 integration using the `happyProvider`.
+Next you will want to set up your web3 integration using the [`happyProvider`].
 The HappyProvider is an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) EVM provider. 
 This means you can use it to initialize any standard web3 library as you normally would. 
 The most common examples are below, but it should be fully compatible with most libraries.
+
+[`happyProvider`]: /sdk/js/api/variables/happyProvider
 
 :::code-group
 
 ```ts [Viem] twoslash
 import { happyProvider } from '@happy.tech/core' 
 // [!include ~/snippets/createClients.ts:viem]
+```
+
+```ts [Wagmi] twoslash
+import { createHappyChainWagmiConfig, happyChainSepolia } from "@happy.tech/core"
+
+const config = createHappyChainWagmiConfig(happyChainSepolia)
 ```
 
 ```ts [Ethers] twoslash
@@ -80,12 +89,14 @@ import { happyProvider } from '@happy.tech/core'
 
 :::
 
-### Getting the Active User
+### Getting the active user
 
-User changes, such as when a user logs in or out, can be subscribed to the `onUserUpdate` listener.
+User changes, such as when a user logs in or out, can be subscribed to the [`onUserUpdate`] listener.
 If the `user` is undefined, then they are not currently logged in have or have logged out. 
 If the `user` is a [HappyUser](/sdk/js/api/type-aliases/HappyUser) then it will be populated with all their 
 shared info, such as wallet address and name.
+
+[`onUserUpdate`]: /sdk/js/api/functions/onUserUpdate
 
 ```ts twoslash
 import { onUserUpdate } from '@happy.tech/core'
@@ -93,18 +104,115 @@ import { onUserUpdate } from '@happy.tech/core'
 // [!include ~/snippets/listeners.ts:onUserUpdate]
 ```
 
-Alternatively, the current user is always exposed via the `getCurrentUser` call.
+Alternatively, the current user is always exposed via the [`getCurrentUser`] call.
+
+[`getCurrentUser`]: /sdk/js/api/function/getCurrentUser
+
 ```ts twoslash
 import { getCurrentUser } from '@happy.tech/core'
 
 // [!include ~/snippets/listeners.ts:getCurrentUser]
 ```
 
-`onUserUpdate` only fires whenever the user changes, so if you want to have something depend on the
+[`onUserUpdate`] only fires whenever the user changes, so if you want to have something depend on the
 current user, you should write your code as follows:
 
 ```ts twoslash
 import { type HappyUser, getCurrentUser, onUserUpdate } from '@happy.tech/core'
 
 // [!include ~/snippets/listeners.ts:getCurrentUserExample]
+```
+
+### Interacting with the wallet
+
+The SDK makes the following functions available for wallet interaction:
+
+- [`connect()`] — Prompts the user to connect the wallet to the app.
+    - This will also prompt the user to log in to the wallet if he hasn't already.
+- [`disconnect()`] — Disconnects the wallet from the app.
+    - The user will stay logged in.
+- [`openWallet()`] — Pops the wallet open.
+- [`loadAbi(abi: Abi)`] — Prompts the user to approve the ABI, which is then used to decode
+  transactions in approval popups.
+
+[`connect()`]: /sdk/js/api/functions/connect
+[`disconnect()`]: /sdk/js/api/functions/disconnect
+[`openWallet()`]: /sdk/js/api/functions/openWallet
+[`loadAbi(abi: Abi)`]: /sdk/js/api/functions/loadAbi
+
+{/*
+NOTE — not documenting `showSendScreen` and `onWalletVisibilityUpdate` as we might want to
+deprecate these functions.
+*/}
+
+### Session Keys
+
+You can call [`requestSessionKey(contract: Address)`] to prompt the user to approve a session key
+authorizing the app to transact with the selected contract on the user's behalf.
+
+[`requestSessionKey(contract: Address)`]: /sdk/js/api/functions/requestSessionKey
+
+The session key is persisted between session, and further calls to the function simply return without
+prompting the user, so it is safe to always call this function before other actions.
+
+```ts twoslash
+import {
+    createHappyChainWagmiConfig,
+    happyChainSepolia,
+    requestSessionKey
+} from '@happy.tech/core'
+import { writeContract } from '@wagmi/core'
+import { parseAbi, type Hash } from "viem"
+
+const config = createHappyChainWagmiConfig(happyChainSepolia)
+
+async function noApproveTx(): Promise<Hash> {
+
+    await requestSessionKey("0xeAe5825cd598FD74ffa199b6849b2286eb8405Ca")
+
+    return await writeContract(config, {
+        address: "0xeAe5825cd598FD74ffa199b6849b2286eb8405Ca",
+        abi: parseAbi(["function increment()"]),
+        functionName: "increment",
+    })
+}
+```
+
+### UI Components
+
+The Happy Wallet component (the orb on the right side of the screen that opens up the wallet)
+is automatically added to the page when you call `register`.
+
+To display a connection button, you can use the `happychain-connect button` webcomponent.
+The button turns into a badge displaying the username and avatar after connecting.
+
+You can disable the default styles by passing the `disable-styles` property. In this case, you
+probably want to specify your own style, for which you need to pass the `overrideBadgeStyles` option
+to [`register`].
+
+[`register`]: /sdk/js/api/functions/register
+
+:::code-group
+
+```html [Default Style] twoslash
+<happychain-connect-button></happychain-connect-button>
+```
+
+```html [Custom Style] twolash
+<happychain-connect-button disable-styles></happychain-connect-button>
+```
+
+:::
+
+### Chain Information
+
+The package exports the HappyChain chain information in Viem format. This includes the chain ID, RPC
+& explorer URLs, addresses of key contracts, and more.
+
+- [`happychainSepolia](/sdk/js/api/variables/happyChainSepolia)
+
+```ts [twoslash]
+import { happyChainSepolia } from "@happy.tech/core"
+
+console.log(`HappyChain Sepolia's chain ID is ${happyChainSepolia.id}`)
 ```
