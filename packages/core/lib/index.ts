@@ -1,6 +1,5 @@
 export { register } from "./register"
 export type { WalletRegisterOptions } from "./register"
-export type { AddEthereumChainParameter } from "viem"
 
 export type { HappyProviderPublic as HappyProvider } from "./happyProvider/interface"
 
@@ -12,7 +11,13 @@ export {
     chainsById,
 } from "@happy.tech/wallet-common"
 
-export type { Chain } from "@happy.tech/wallet-common"
+export type {
+    Chain,
+    ChainBlockExplorer,
+    ChainContract,
+    ChainNativeCurrency,
+    ChainRpcUrls,
+} from "@happy.tech/wallet-common"
 
 export {
     onWalletVisibilityUpdate,
@@ -47,7 +52,7 @@ export type {
     EIP1193UserRejectedRequestError,
 } from "@happy.tech/wallet-common"
 
-export type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
+export type { AddEthereumChainParameter, Prettify, ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
 
 export { happyWagmiConnector, createHappyChainWagmiConfig } from "./wagmi/happyWagmiConfig"
 
