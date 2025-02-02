@@ -140,11 +140,7 @@ export const ImportTokensDialog = () => {
                         className="flex flex-col w-full h-full items-center justify-center py-2 space-y-4"
                         onSubmit={submitWatchAssetData}
                     >
-                        <FieldInput
-                            helperLabel="Token Contract Address"
-                            errorLabel="Invalid Address"
-                            invalid={!isEmpty && !isValidAddress}
-                        >
+                        <FieldInput errorLabel="Invalid Address" invalid={!isEmpty && !isValidAddress}>
                             <Field.Label className="text-md text-base-content">Address</Field.Label>
                             <Input
                                 scale={"default"}
