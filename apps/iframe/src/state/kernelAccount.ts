@@ -110,6 +110,7 @@ export async function getKernelAccountAddress(owner: Address): Promise<Address> 
                 initCode: accountInitCode,
                 entryPointAddress: entryPoint07Address,
             })
+            console.log("Kernel account address:", senderFromFactory)
             if (senderFromFactory === zeroAddress) {
                 throw new Error("Kernel account address could not be determined")
             }
@@ -119,7 +120,7 @@ export async function getKernelAccountAddress(owner: Address): Promise<Address> 
                 console.warn("Failed to get Kernel account address — code starting in 0xef, retrying")
                 index++
             } else {
-                throw new Error("Failed to get Kernal account address")
+                throw error
             }
         }
     }

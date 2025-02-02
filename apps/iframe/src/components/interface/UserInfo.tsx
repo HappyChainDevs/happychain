@@ -28,7 +28,7 @@ const UserInfo = () => {
         return
     }
 
-    if (account.address !== user.controllingAddress) {
+    if (account.address !== user.address) {
         // this is expected to happen when userAtom changes, but wagmi has not yet updated
         // these changes will happen quickly, but not at the exact same time.
         return <UserInfoLoader />
