@@ -1,6 +1,7 @@
 {
     "name": "@happy.tech/submitter",
     "author": "Norswap",
+    "private": true,
     "license": "BSD-3-Clause-Clear",
     "version": "0.1.0",
     "type": "module",
