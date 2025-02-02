@@ -1,8 +1,8 @@
 import { encodeAbiParameters, encodeFunctionData, formatEther, keccak256, parseEther, zeroAddress } from "viem"
 import type { Address, Hex } from "viem"
 
-import { type DeployAccountRequest, DeployAccountSchema } from "@happychain/submitter/utils/requestSchema"
-import type { DeployAccountResponse, SubmitHappyTxResponse } from "@happychain/submitter/utils/responseSchema"
+import { type DeployAccountRequest, DeployAccountSchema } from "@happy.tech/submitter/utils/requestSchema"
+import type { DeployAccountResponse, SubmitHappyTxResponse } from "@happy.tech/submitter/utils/responseSchema"
 
 import { encode } from "./lib/happyTxLib"
 import type { HappyTx } from "./types/happyTx"
