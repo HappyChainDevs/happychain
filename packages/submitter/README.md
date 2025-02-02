@@ -4,10 +4,10 @@
 bun install
 ```
 
-To run:
+## To run the server
 
 ```zsh
-bun run dev
+make server
 ```
 
 open <http://localhost:3000>

@@ -1,8 +1,8 @@
 {
-    "name": "@happychain/submitter",
+    "name": "@happy.tech/submitter",
     "author": "Norswap",
     "license": "BSD-3-Clause-Clear",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "type": "module",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -13,8 +13,7 @@
     "scripts": {
         "build": "tsc",
         "test": "vitest",
-        "test:coverage": "vitest run --coverage",
-        "dev": "tsx watch src/index.ts"
+        "test:coverage": "vitest run --coverage"
     },
     "dependencies": {
         "hono": "^3.0.0",
@@ -24,8 +23,8 @@
         "zod": "^3.22.4"
     },
     "devDependencies": {
-        "@happychain/configs": "workspace:^",
-        "@happychain/contracts": "workspace:^",
+        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/contracts": "workspace:0.1.0",
         "tsx": "^4.19.0",
         "typescript": "^5.3.3",
         "vitest": "^2.1.8"

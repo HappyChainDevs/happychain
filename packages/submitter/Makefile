@@ -21,5 +21,5 @@ format:
 # Server
 
 server:
-	@tsx --env-file=.env ./src/cmd/index.ts
+	@bun run ./src/cmd/index.ts
 .PHONY: server

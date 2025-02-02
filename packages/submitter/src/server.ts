@@ -4,7 +4,7 @@ import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
 import { prettyJSON } from "hono/pretty-json"
 
-import { abis, deployment } from "@happychain/contracts/happy-aa/anvil"
+import { abis, deployment } from "@happy.tech/contracts/happy-aa/anvil"
 import { account, publicClient, walletClient } from "./utils/clients"
 import { isContractDeployed } from "./utils/helpers"
 import { DeployAccountSchema, HappyTxSchema } from "./utils/requestSchema"
