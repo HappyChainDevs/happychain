@@ -1,7 +1,7 @@
 import { Dialog, Field } from "@ark-ui/react"
 import { Plus, X } from "@phosphor-icons/react"
 import { useAtom, useAtomValue } from "jotai"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { type Address, isAddress } from "viem"
 import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
@@ -58,7 +58,7 @@ export const ImportTokensDialog = () => {
     const decimalsInputInvalidCondition = !isLoading && isValidAddress && decimals === undefined
 
     // Fields should be readonly if contract data was successfully fetched
-    const symbolInputReadOnly = isValidAddress && symbol !== undefined
+    const symbolInputReadOnly = symbol === undefined
 
     // Button should be disabled if:
     // 1. Address is invalid OR
@@ -76,6 +76,13 @@ export const ImportTokensDialog = () => {
         const { value } = e.target
         setCustomTokenSymbol(value)
     }
+
+    // When symbol from contract changes, update the customTokenSymbol
+    useEffect(() => {
+        if (symbol) {
+            setCustomTokenSymbol(symbol)
+        }
+    }, [symbol])
 
     const submitWatchAssetData = useCallback(
         async (e: React.FormEvent<HTMLFormElement>) => {
@@ -156,7 +163,7 @@ export const ImportTokensDialog = () => {
                         </FieldInput>
 
                         <FieldInput
-                            errorLabel="Invalid Token Address"
+                            errorLabel="Invalid Token Contract"
                             invalid={symbolInputInvalidCondition}
                             isLoading={isRefetching}
                         >
@@ -165,12 +172,12 @@ export const ImportTokensDialog = () => {
                                 name="symbol"
                                 id="token-symbol"
                                 type="string"
-                                value={symbol ? symbol : customTokenSymbol}
+                                value={customTokenSymbol}
                                 inputClass="w-full"
                                 scale={"default"}
                                 onChange={handleCustomSymbolInputChange}
                                 disabled={!isValidAddress}
-                                readOnly={symbolInputReadOnly}
+                                readOnly={symbol === undefined}
                             />
                         </FieldInput>
 
@@ -181,7 +188,7 @@ export const ImportTokensDialog = () => {
                          * - Defaults to "18" if contract read fails (most tokens use 18 decimals)
                          */}
                         <FieldInput
-                            errorLabel="Invalid Token Address"
+                            errorLabel="Invalid Token Contract"
                             invalid={decimalsInputInvalidCondition}
                             isLoading={isRefetching}
                         >
