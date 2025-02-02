@@ -3,6 +3,7 @@ import { useERC20Balance } from "#src/hooks/useERC20Balance"
 
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Address, WatchAssetParameters } from "viem"
+import BalanceDisplay from "./BalanceDisplay"
 import { RemoveTokenMenu } from "./RemoveTokenMenu"
 
 interface WatchedAssetProps {
@@ -25,7 +26,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
 
     // type assertion(s) as Address here valid since before adding a token
     // we check that the input string is an Address using the viem helper
-    const { data: balanceData } = useERC20Balance(tokenAddress as Address, userAddress, true)
+    const { data: balanceData, isLoading } = useERC20Balance(tokenAddress as Address, userAddress)
 
     // shortened fields for UI visibility
     const tokenSymbol = useMemo(
@@ -65,11 +66,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
             </div>
 
             <div className="flex flex-row items-center w-1/2 justify-end min-w-0 space-x-1">
-                {truncatedBalance ? (
-                    <span className="font-semibold text-sm truncate">{truncatedBalance}</span>
-                ) : (
-                    <span>⚠️</span>
-                )}
+                <BalanceDisplay isLoading={isLoading} balance={truncatedBalance} />
                 <RemoveTokenMenu tokenAddress={tokenAddress as Address} userAddress={userAddress} />
             </div>
         </div>

@@ -13,7 +13,7 @@ export enum ContentType {
 export const walletInfoViewAtom = atom<ContentType>(ContentType.TOKENS)
 
 /**
- * Controls the visibility of the Import Tokens dialog
+ * Controls the visibility of the Import Tokens dialog.
  */
 export const importTokensDialogVisibilityAtom = atom(false)
 
