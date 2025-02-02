@@ -2,7 +2,7 @@ import { Dialog } from "@ark-ui/react/dialog"
 import { useAtom } from "jotai"
 import { recipeButton } from "#src/components/primitives/button/variants"
 import { recipePositioner } from "#src/components/primitives/popover/variants"
-import { dialogLogOutConfirmationVisibilityAtom } from "./state"
+import { dialogLogOutConfirmationVisibilityAtom } from "#src/state/interfaceState"
 
 interface DialogConfirmLogOutProps {
     handleDisconnect: () => Promise<void>

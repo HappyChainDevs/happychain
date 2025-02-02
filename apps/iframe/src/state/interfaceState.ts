@@ -13,12 +13,13 @@ export enum ContentType {
 export const walletInfoViewAtom = atom<ContentType>(ContentType.TOKENS)
 
 /**
- * Atom to help toggle visibility of the Import Tokens dialog.
+ * Controls the visibility of the Import Tokens dialog
  */
 export const importTokensDialogVisibilityAtom = atom(false)
 
 /**
- * Atoms to help toggle visibility of permissions + sign out views.
- * */
+ * Atoms to help toggle visibility of permissions + log out views.
+ */
 export const secondaryMenuVisibilityAtom = atom(false)
-export const dialogSignOutConfirmationVisibilityAtom = atom(false)
+export const dialogLogOutConfirmationVisibilityAtom = atom(false)
+export const removeTokensMenuVisibilityAtom = atom(false)

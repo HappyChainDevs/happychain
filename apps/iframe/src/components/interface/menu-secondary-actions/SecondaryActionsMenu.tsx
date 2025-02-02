@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router"
 import { cx } from "class-variance-authority"
 import { useAtom } from "jotai"
 import { recipeContent, recipePositioner } from "#src/components/primitives/popover/variants"
-import { dialogLogOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "./state"
+import { dialogLogOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
 
 const TriggerSecondaryActionsMenu = () => {
     const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
