@@ -2,7 +2,7 @@ import type { Hex } from "viem"
 import { describe, expect, test } from "vitest"
 
 import type { HappyTx } from "../../types/happyTx"
-import { encode } from "../../lib/happyTxLib"
+import { encode } from "../happyTxLib"
 
 // Test cases for encoding
 describe("encode", () => {

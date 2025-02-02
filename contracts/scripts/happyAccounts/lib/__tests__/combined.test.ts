@@ -1,6 +1,6 @@
 import { describe, test } from "vitest"
 
-import { decode, encode } from "../../lib/happyTxLib"
+import { decode, encode } from "../happyTxLib"
 import type { HappyTx } from "../../types/happyTx"
 import { assertHappyTxEqual } from "./utils"
 
