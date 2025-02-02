@@ -6,7 +6,7 @@ import {
     happyChainSepolia,
     happyProvider,
     onUserUpdate,
-    register,
+    loadHappyWallet,
 } from "@happy.tech/core"
 import { BrowserProvider } from "ethers"
 
@@ -17,7 +17,7 @@ import { BrowserProvider } from "ethers"
 // expose on window for demo purposes
 window.happyProvider = happyProvider
 
-register({ chainId: happyChainSepolia.id, overrideBadgeStyles: true })
+loadHappyWallet({ chainId: happyChainSepolia.id, overrideBadgeStyles: true })
 
 const ethersProvider = new BrowserProvider(happyProvider)
 

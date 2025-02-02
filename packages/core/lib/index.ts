@@ -1,4 +1,4 @@
-export { register } from "./register"
+export { loadHappyWallet } from "./register"
 export type { WalletRegisterOptions } from "./register"
 
 export type { HappyProviderPublic as HappyProvider } from "./happyProvider/interface"

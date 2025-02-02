@@ -6,7 +6,7 @@ import { HappyWallet } from "./wallet/HappyWallet"
 import { isFirefox, makeIframeUrl } from "./wallet/utils"
 
 /**
- * Options for the {@link register} function.
+ * Options for the {@link loadHappyWallet} function.
  */
 export type WalletRegisterOptions = {
     /**
@@ -29,29 +29,29 @@ export type WalletRegisterOptions = {
  * @example
  * Connect to HappyChain Sepolia
  * ```ts twoslash
- * import { register } from '@happy.tech/core'
+ * import { loadHappyWallet } from '@happy.tech/core'
  * // ---cut---
- * register()
+ * loadHappyWallet()
  * ```
  *
  * @example
  * Connect to a pre-defined chain
  * ```ts twoslash
- * import { register } from '@happy.tech/core'
+ * import { loadHappyWallet } from '@happy.tech/core'
  * import { happyChainSepolia } from '@happy.tech/core'
  * // ---cut---
- * register({ chainId: happyChainSepolia.id })
+ * loadHappyWallet({ chainId: happyChainSepolia.id })
  * ```
  *
  * @example
  * Connect to a custom chain
  * ```ts twoslash
- * import { register } from '@happy.tech/core'
+ * import { loadHappyWallet } from '@happy.tech/core'
  * // ---cut---
- * register({ chainId: "0x7a69" }) // in hex format
+ * loadHappyWallet({ chainId: "0x7a69" }) // in hex format
  * ```
  */
-export function register(opts: WalletRegisterOptions = {}) {
+export function loadHappyWallet(opts: WalletRegisterOptions = {}) {
     // don't register if already exists on page
     if (customElements.get("happy-wallet") || document.querySelector("happy-wallet")) {
         return

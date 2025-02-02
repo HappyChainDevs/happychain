@@ -36,20 +36,20 @@ bun add @happy.tech/core
 
 ### Wallet Component
 
-Once you have installed the SDK, you will need to register the wallet component on the page. 
-The easiest way to acomplish this is by using our provided [`register`] method.
+Once you have installed the SDK, you will need to initialize the wallet component on the page. 
+The easiest way to accomplish this is by using our provided [`loadHappyWallet`] method.
 
-[`register`]: /sdk/js/api/functions/register
+[`loadHappyWallet`]: /sdk/js/api/functions/loadHappyWallet
 
 ```ts twoslash
-import { register } from '@happy.tech/core'
+import { loadHappyWallet } from '@happy.tech/core'
 
-register()
+loadHappyWallet()
 ```
 
 {/*
 ```js [CDN]
-window.HappyChain.register()
+window.HappyChain.loadHappyWallet()
 ```
 */}
 
@@ -181,16 +181,16 @@ async function noApproveTx(): Promise<Hash> {
 ### UI Components
 
 The Happy Wallet component (the orb on the right side of the screen that opens up the wallet)
-is automatically added to the page when you call `register`.
+is automatically added to the page when you call `loadHappyWallet`.
 
 To display a connection button, you can use the `happychain-connect button` webcomponent.
 The button turns into a badge displaying the username and avatar after connecting.
 
 You can disable the default styles by passing the `disable-styles` property. In this case, you
 probably want to specify your own style, for which you need to pass the `overrideBadgeStyles` option
-to [`register`].
+to [`loadHappyWallet`].
 
-[`register`]: /sdk/js/api/functions/register
+[`loadHappyWallet`]: /sdk/js/api/functions/loadHappyWallet
 
 :::code-group
 

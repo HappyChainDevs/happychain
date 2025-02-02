@@ -4,15 +4,15 @@ import {
     happyProvider,
     loadAbi,
     onUserUpdate,
-    register,
     requestSessionKey,
     showSendScreen,
+    loadHappyWallet,
 } from "@happy.tech/core"
 import type { HappyUser } from "@happy.tech/core"
 import { createContext, useContext, useEffect, useState } from "react"
 
 export type HappyWalletProviderProps = React.PropsWithChildren & {
-    init?: Parameters<typeof register>[0]
+    init?: Parameters<typeof loadHappyWallet>[0]
 }
 
 type THappyContext = {
@@ -26,7 +26,7 @@ export function HappyWalletProvider({ init, children }: HappyWalletProviderProps
     const [user, setUser] = useState<HappyUser | undefined>()
 
     // register iframe component
-    useEffect(() => register(init), [init])
+    useEffect(() => loadHappyWallet(init), [init])
 
     // subscription to user changes
     useEffect(() => {
