@@ -3,6 +3,7 @@ import { Msgs } from "@happy.tech/wallet-common"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
+
 import { ImportTokensDialog } from "#src/components/interface/home/tabs/views/tokens/ImportTokensDialog"
 import {
     dialogLogOutConfirmationVisibilityAtom,
