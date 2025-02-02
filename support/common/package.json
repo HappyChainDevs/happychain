@@ -23,9 +23,6 @@
         "jotai": {
             "optional": true
         },
-        "react": {
-            "optional": true
-        },
         "viem": {
             "optional": true
         },
@@ -39,7 +36,6 @@
     "devDependencies": {
         "@happy.tech/configs": "workspace:0.1.0",
         "@happy.tech/happybuild": "workspace:0.1.0",
-        "@types/react": "^18.3.4",
         "vite-plugin-node-polyfills": "^0.22.0"
     }
 }

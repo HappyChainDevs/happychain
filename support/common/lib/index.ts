@@ -2,10 +2,6 @@
 
 export { createStorage } from "./services/storage"
 
-// === HOOKS =======================================================================================
-
-export { useIsHydrated } from "./hooks/isHydrated"
-
 // === UTILS =======================================================================================
 
 export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai"
