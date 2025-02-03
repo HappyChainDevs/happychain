@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
+// [LOGGAS] import {console} from "forge-std/Script.sol";
+
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
@@ -42,6 +44,7 @@ contract ScrappyAccount is
     UUPSUpgradeable
 {
     using ECDSA for bytes32;
+    using HappyTxLib for HappyTx;
     using MessageHashUtils for bytes32;
 
     //* //////////////////////////////////////
@@ -51,7 +54,7 @@ contract ScrappyAccount is
     bytes4 private constant INTERFACE_ID = 0x01ffc9a7; // ERC-165
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
     uint256 private constant INTRINSIC_GAS = 22_000; // TODO
-    uint256 private constant GAS_OVERHEAD_BUFFER = 100; // TODO
+    uint256 private constant GAS_OVERHEAD_BUFFER = 12345; // TODO
 
     // TODO namespace these fields for easier account upgrades (think on this when turning this into a proxy)
     /// @dev The deterministic EntryPoint contract
@@ -134,21 +137,17 @@ contract ScrappyAccount is
             return InvalidNonce.selector;
         }
 
-        bytes32 hash;
-        if (happyTx.paymaster == address(this)) {
-            // self-paying: sign over the gas fields.
-            hash = HappyTxLib.getHappyTxHash(happyTx);
-        } else {
+        if (happyTx.paymaster != address(this)) {
+            // The happyTx is not self-paying
             // The signer does not sign over these fields to avoid extra network roundtrips
             // validation policy falls to the paymaster or the sponsoring submitter.
             happyTx.gasLimit = 0;
             happyTx.executeGasLimit = 0;
             happyTx.maxFeePerGas = 0;
             happyTx.submitterFee = 0;
-            hash = HappyTxLib.getHappyTxHash(happyTx);
-        }
+        } // Else, self-paying txn
 
-        address signer = hash.toEthSignedMessageHash().recover(happyTx.extraData);
+        address signer = happyTx.getHappyTxHash().toEthSignedMessageHash().recover(happyTx.extraData);
 
         // NOTE: This function may consume slightly more gas during simulation, in accordance to the spec.
         return isSimulation
@@ -173,6 +172,8 @@ contract ScrappyAccount is
     }
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
+        // [LOGGAS] uint256 initialGas = gasleft();
+
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
         }
@@ -180,8 +181,11 @@ contract ScrappyAccount is
         uint256 owed = (consumedGas + INTRINSIC_GAS + GAS_OVERHEAD_BUFFER) // TODO
             * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
 
-        // solhint-disable-next-line avoid-tx-origin
         payable(tx.origin).call{value: owed}("");
+
+        // [LOGGAS] uint256 finalGas = gasleft();
+
+        // [LOGGAS] console.log("Gas used in payout:", initialGas - finalGas);
         return 0;
     }
 

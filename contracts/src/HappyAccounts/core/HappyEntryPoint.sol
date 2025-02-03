@@ -176,17 +176,16 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 gasStart = gasleft();
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
 
-        bool success;
-        bytes memory returnData;
         // 1. Validate happyTx with account
 
+        bool success;
+        bytes memory returnData;
         (success, returnData) = happyTx.account.excessivelySafeCall(
             happyTx.executeGasLimit,
             0,
             MAX_RETURN_DATA,
             abi.encodeWithSelector(IHappyAccount.validate.selector, happyTx)
         );
-
         if (!success) revert ValidationReverted(returnData);
 
         bytes4 result = abi.decode(returnData, (bytes4));
@@ -197,13 +196,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
             if (!shouldContinue) revert ValidationFailed(result);
         }
-
         output.validationStatus = result;
 
         // 2. Execute the call
+
         (success, returnData) = happyTx.account.excessivelySafeCall(
-            // Pass the max possible gas if we need to estimate the gas limit. // TODO: fix the logic here
-            // solhint-disable-next-line avoid-tx-origin
+            // Pass the max possible gas if we need to estimate the gas limit.
             tx.origin == address(0) && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0,
             // Allow the call revert data to take up the same size as the other revert data.
@@ -211,7 +209,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             abi.encodeWithSelector(IHappyAccount.execute.selector, happyTx)
         );
 
-        //! Don't revert, as we still want to get the payment for a reverted call.
+        // Don't revert, as we still want to get the payment for a reverted call.
         ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
         if (!success) {
             emit ExecutionReverted(returnData);
@@ -241,7 +239,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // solhint-disable-next-line avoid-tx-origin
         uint256 balance = tx.origin.balance;
         uint256 gasBeforePayout = gasleft();
-
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
             happyTx.executeGasLimit,
             0,
@@ -257,12 +254,10 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // It's okay if the payment is only for the agreed-upon gas limit.
         // This should never happen if happyTx.gasLimit matches the submitter's tx gas limit.
         consumedGas = consumedGas + payoutGas > happyTx.gasLimit ? happyTx.gasLimit : payoutGas;
-
         int256 _charged = int256(consumedGas * tx.gasprice) + happyTx.submitterFee;
         uint256 charged = _charged > 0 ? uint256(_charged) : 0;
 
         result = abi.decode(returnData, (bytes4));
-        // solhint-disable-next-line avoid-tx-origin
         if (tx.origin.balance < balance + charged) {
             revert PaymentFailed(result);
         }
