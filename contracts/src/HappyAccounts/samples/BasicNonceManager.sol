@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title NonceManager
- * @dev   Contract implementing nonce management for a HappyAccount
+ * @title BasicNonceManager
+ * @dev   Contract implementing simple nonce management for a HappyAccount
  */
 contract BasicNonceManager {
     event NonceUsed(uint256 indexed nonce);
