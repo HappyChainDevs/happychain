@@ -355,14 +355,9 @@ deploy-aa: ## Deploys the AA contracts.
 	make deploy DEPLOY_SCRIPT=DeployAA.s.sol
 .PHONY: deploy-aa
 
-<<<<<<< HEAD
 deploy-mocks: ## Deploys the mock contracts.
 	$(eval $(call set-deployment-name,mocks))
 	make deploy DEPLOY_SCRIPT=DeployMocks.s.sol
-=======
-deploy-mocks:
-	make deploy DEPLOY_SCRIPT=mocks/DeployMocks.s.sol
->>>>>>> ea3ee0e2 (chore(contract): pr review)
 .PHONY: deploy-mocks
 
 deploy-random: ## Deploys the randomness contracts and saves the deployment.
