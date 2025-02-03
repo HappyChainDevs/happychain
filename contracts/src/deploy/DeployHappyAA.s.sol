@@ -81,7 +81,7 @@ contract DeployHappyAAContracts is BaseDeployScript {
             _scrappyPaymasterImpl,
             abi.encodeCall(
                 scrappyPaymasterImpl.initialize,
-                (_happyEntryPoint, 0xc80629fE33747288AaFb97684F86f7eD2D1aBF69, 10 ^ 9 wei, owner)
+                (_happyEntryPoint, 0xc80629fE33747288AaFb97684F86f7eD2D1aBF69, 10 ^ 9 wei, owner) // TODO mocks.anvil.mockTokenA, should be imported properly
             ), // TODO, proper values?
             DEPLOYMENT_SALT //-
         );
