@@ -6,6 +6,7 @@ import { type Address, isAddress } from "viem"
 import { useWatchAsset } from "wagmi"
 import { Button } from "#src/components/primitives/button/Button"
 
+import { cx } from "class-variance-authority"
 import { FieldInput } from "#src/components/primitives/input/FieldInput"
 import { Input } from "#src/components/primitives/input/Input"
 import { recipePositioner } from "#src/components/primitives/popover/variants"
@@ -82,7 +83,11 @@ export const ImportTokensDialog = () => {
         if (symbol) {
             setCustomTokenSymbol(symbol)
         }
-    }, [symbol])
+
+        if (inputAddress === "") {
+            setCustomTokenSymbol("")
+        }
+    }, [inputAddress, symbol])
 
     const submitWatchAssetData = useCallback(
         async (e: React.FormEvent<HTMLFormElement>) => {
@@ -92,6 +97,8 @@ export const ImportTokensDialog = () => {
             const address = formData.get("address") as Address
             const symbol = formData.get("symbol") as string
             const decimals = formData.get("decimals") as string
+
+            console.log({ address, symbol, decimals })
 
             if (address && symbol && decimals) {
                 try {
@@ -165,7 +172,7 @@ export const ImportTokensDialog = () => {
                         <FieldInput
                             errorLabel="Invalid Token Contract"
                             invalid={symbolInputInvalidCondition}
-                            isLoading={isRefetching}
+                            isLoading={isRefetching || isLoading}
                         >
                             <Field.Label className="text-md text-base-content">Token Symbol</Field.Label>
                             <Input
@@ -177,7 +184,7 @@ export const ImportTokensDialog = () => {
                                 scale={"default"}
                                 onChange={handleCustomSymbolInputChange}
                                 disabled={!isValidAddress}
-                                readOnly={symbol === undefined}
+                                readOnly={symbolInputReadOnly}
                             />
                         </FieldInput>
 
@@ -190,20 +197,20 @@ export const ImportTokensDialog = () => {
                         <FieldInput
                             errorLabel="Invalid Token Contract"
                             invalid={decimalsInputInvalidCondition}
-                            isLoading={isRefetching}
+                            isLoading={isRefetching || isLoading}
                         >
                             <Field.Label className="text-md text-base-content disabled:opacity-50">
                                 Token Decimals
                             </Field.Label>
-                            <Input
-                                name="decimals"
+                            <textarea
                                 id="token-decimal"
-                                type="string"
-                                value={!isValidAddress ? "" : decimals !== undefined ? decimals : "18"}
-                                inputClass="w-full"
-                                scale={"default"}
-                                disabled={!isValidAddress}
-                                readOnly={true}
+                                name="decimals"
+                                readOnly
+                                className={cx(
+                                    "w-full h-[40px] text-left px-3 py-2 resize-none bg-base-100 border border-base-300 rounded-md text-base-content",
+                                    !isValidAddress && "opacity-50 cursor-not-allowed",
+                                )}
+                                defaultValue={!isValidAddress ? "" : decimals !== undefined ? decimals : ""}
                             />
                         </FieldInput>
 
