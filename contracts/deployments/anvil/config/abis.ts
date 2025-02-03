@@ -9,6 +9,11 @@ const contractToAbi = ({
       "type": "constructor",
       "inputs": [
         {
+          "name": "_owner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
           "name": "_random",
           "type": "address",
           "internalType": "address"
@@ -125,7 +130,7 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "Config": "0xc4be33470748e83e6d8e55589A9F5A728Ab394Ca"
+  "Config": "0x62957B5F237F0FD5B0af5B8F60111BBd69dccBFC"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi

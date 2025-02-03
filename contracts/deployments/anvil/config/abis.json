@@ -4,6 +4,11 @@
       "type": "constructor",
       "inputs": [
         {
+          "name": "_owner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
           "name": "_random",
           "type": "address",
           "internalType": "address"
