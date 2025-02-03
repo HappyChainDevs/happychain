@@ -14,7 +14,7 @@
         "code-complexity": "off",
         "no-inline-assembly": "off",
         "avoid-low-level-calls": "off",
-
+        "avoid-tx-origin": "off",
         "no-console": "off",
         "gas-custom-errors": "off"
     }

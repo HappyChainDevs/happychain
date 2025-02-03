@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-// solhint-disable no-console
-
 import {HappyTx} from "../core/HappyTx.sol";
-import {console} from "forge-std/console.sol";
+// [LOGGAS] import {console} from "forge-std/Script.sol";
 
 library HappyTxLib {
     /// @dev Number of dynamic fields in HappyTx.
@@ -45,7 +43,22 @@ library HappyTxLib {
      * @return The hash to sign
      */
     function getHappyTxHash(HappyTx memory happyTx) internal pure returns (bytes32) {
-        return keccak256(encode(happyTx));
+        return keccak256(
+            abi.encode(
+                happyTx.account,
+                happyTx.nonce,
+                keccak256(happyTx.callData),
+                happyTx.gasLimit,
+                happyTx.executeGasLimit,
+                happyTx.dest,
+                happyTx.paymaster,
+                happyTx.value,
+                happyTx.maxFeePerGas,
+                happyTx.submitterFee,
+                keccak256(happyTx.paymasterData),
+                keccak256(happyTx.validatorData)
+            )
+        );
     }
 
     /**
@@ -357,21 +370,21 @@ library HappyTxLib {
         result.extraData = happyTx[dynamicOffset:dynamicOffset + extraDataLength];
         if (result.extraData.length != extraDataLength) revert MalformedHappyTx();
 
-        console.log("\n=== Decoded Result ===");
-        console.log("Static Fields:");
-        console.log(" - account:", result.account);
-        console.log(" - dest:", result.dest);
-        console.log(" - paymaster:", result.paymaster);
-        console.log(" - gasLimit:", result.gasLimit);
-        console.log(" - executeGasLimit:", result.executeGasLimit);
-        console.log(" - value:", result.value);
-        console.log(" - nonce:", result.nonce);
-        console.log(" - maxFeePerGas:", result.maxFeePerGas);
-        console.log(" - submitterFee:", result.submitterFee);
-        console.logBytes(result.callData);
-        console.logBytes(result.paymasterData);
-        console.logBytes(result.validatorData);
-        console.logBytes(result.extraData);
+        // [LOGGAS] console.log("\n=== HappyTxLib.decode() ===\n");
+        // [LOGGAS] console.log(" - account:", result.account);
+        // [LOGGAS] console.log(" - dest:", result.dest);
+        // [LOGGAS] console.log(" - paymaster:", result.paymaster);
+        // [LOGGAS] console.log(" - gasLimit:", result.gasLimit);
+        // [LOGGAS] console.log(" - executeGasLimit:", result.executeGasLimit);
+        // [LOGGAS] console.log(" - value:", result.value);
+        // [LOGGAS] console.log(" - nonce:", result.nonce);
+        // [LOGGAS] console.log(" - maxFeePerGas:", result.maxFeePerGas);
+        // [LOGGAS] console.log(" - submitterFee:", result.submitterFee);
+        // [LOGGAS] console.logBytes(result.callData);
+        // [LOGGAS] console.logBytes(result.paymasterData);
+        // [LOGGAS] console.logBytes(result.validatorData);
+        // [LOGGAS] console.logBytes(result.extraData);
+        // [LOGGAS] console.log("\n=== HappyTxLib.decode() ===\n");
     }
 
     /*//////////////////////////////////////////////////////////////

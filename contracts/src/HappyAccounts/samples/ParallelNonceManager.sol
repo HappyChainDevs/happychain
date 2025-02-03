@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title ParallelNonceManager
- * @dev   Contract implementing nonce management for a HappyAccount
+ * @dev   Contract implementing parallel nonce management for a HappyAccount
  */
 contract ParallelNonceManager {
     /**
