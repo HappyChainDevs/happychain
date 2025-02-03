@@ -4,27 +4,27 @@
       "type": "constructor",
       "inputs": [
         {
-          "name": "_publicKey",
+          "name": "_owner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_drandPublicKey",
           "type": "uint256[4]",
           "internalType": "uint256[4]"
         },
         {
-          "name": "_genesisTimestamp",
+          "name": "_drandGenesisTimestampSeconds",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "_period",
+          "name": "_drandPeriodSeconds",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "_happyGenesisBlock",
-          "type": "uint256",
-          "internalType": "uint256"
-        },
-        {
-          "name": "_happyTimeBlock",
+          "name": "_precommitDelayBlocks",
           "type": "uint256",
           "internalType": "uint256"
         }
@@ -33,7 +33,7 @@
     },
     {
       "type": "function",
-      "name": "DRAND_DELAY",
+      "name": "DRAND_DELAY_SECONDS",
       "inputs": [],
       "outputs": [
         {
@@ -46,7 +46,7 @@
     },
     {
       "type": "function",
-      "name": "DRAND_GENESIS_TIMESTAMP",
+      "name": "DRAND_GENESIS_TIMESTAMP_SECONDS",
       "inputs": [],
       "outputs": [
         {
@@ -59,7 +59,7 @@
     },
     {
       "type": "function",
-      "name": "DRAND_PERIOD",
+      "name": "DRAND_PERIOD_SECONDS",
       "inputs": [],
       "outputs": [
         {
@@ -85,7 +85,7 @@
     },
     {
       "type": "function",
-      "name": "HAPPY_GENESIS_BLOCK",
+      "name": "MIN_PRECOMMIT_TIME_SECONDS",
       "inputs": [],
       "outputs": [
         {
@@ -98,20 +98,7 @@
     },
     {
       "type": "function",
-      "name": "HAPPY_TIME_BLOCK",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "PRECOMMIT_DELAY",
+      "name": "PRECOMMIT_DELAY_BLOCKS",
       "inputs": [],
       "outputs": [
         {
@@ -200,25 +187,6 @@
     },
     {
       "type": "function",
-      "name": "nextValidBlock",
-      "inputs": [
-        {
-          "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "nextValidTimestamp",
       "inputs": [
         {
@@ -292,25 +260,6 @@
       "outputs": [
         {
           "name": "randomValue",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "randomForBlock",
-      "inputs": [
-        {
-          "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
           "type": "bytes32",
           "internalType": "bytes32"
         }
