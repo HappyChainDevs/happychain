@@ -1,10 +1,10 @@
 import { Field, type FieldRootProps } from "@ark-ui/react"
 import { Spinner } from "@phosphor-icons/react"
-import type { PropsWithChildren } from "react"
+import type { PropsWithChildren, ReactNode } from "react"
 
 interface FieldInputProps extends FieldRootProps, PropsWithChildren {
-    helperLabel?: React.ReactNode
-    errorLabel: React.ReactNode
+    helperLabel?: ReactNode
+    errorLabel: ReactNode
     isLoading?: boolean
 }
 
