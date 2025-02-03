@@ -1,5 +1,6 @@
 import type { UUID } from "@happy.tech/common"
 import {
+    type ApprovedRequestPayload,
     AuthState,
     BasePopupProvider,
     type EIP1193RequestParameters,
@@ -54,7 +55,7 @@ export class IframeProvider extends BasePopupProvider {
         return getUser()?.type === WalletType.Injected
     }
 
-    protected override handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
+    protected override handlePermissionless(key: UUID, args: ApprovedRequestPayload): undefined {
         const req = { key, windowId: iframeID(), error: null, payload: args }
         if (this.isInjectedUser) {
             void handleInjectedRequest(req)
@@ -63,7 +64,7 @@ export class IframeProvider extends BasePopupProvider {
         }
     }
 
-    protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
+    protected override async requestExtraPermissions(_args: ApprovedRequestPayload): Promise<boolean> {
         // The iframe is auto-connected by default, there is never a need for extra permissions.
         return true
     }

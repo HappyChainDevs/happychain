@@ -12,7 +12,7 @@ export function checkIfRequestRequiresConfirmation(
     app: AppURL,
     payload: ProviderMsgsFromApp[Msgs.PermissionCheckRequest]["payload"],
 ) {
-    const neverRequiresApproval = !requiresApproval(payload)
+    const neverRequiresApproval = !requiresApproval(payload.eip1193params)
 
     // Never requires approval, no need to look at the permissions.
     if (neverRequiresApproval) {
@@ -24,34 +24,34 @@ export function checkIfRequestRequiresConfirmation(
         return true
     }
 
-    switch (payload.method) {
+    switch (payload.eip1193params.method) {
         // Users don't need to approve permissions that have already been granted.
 
         case "eth_sendTransaction":
             return !hasPermissions(app, {
-                [PermissionNames.SESSION_KEY]: { target: payload.params[0].to },
+                [PermissionNames.SESSION_KEY]: { target: payload.eip1193params.params[0].to },
             })
 
         case "wallet_requestPermissions":
-            return !hasPermissions(app, payload.params[0])
+            return !hasPermissions(app, payload.eip1193params.params[0])
 
         case "eth_requestAccounts":
             return !hasPermissions(app, "eth_accounts")
 
         case "wallet_switchEthereumChain":
             // Doesn't need permission to "switch" to the current chain. Request will be a no-op.
-            return getCurrentChain().chainId !== payload.params[0].chainId
+            return getCurrentChain().chainId !== payload.eip1193params.params[0].chainId
 
         case "wallet_addEthereumChain": {
             // Users don't need to approve adding a chain that has already been added.
             // Request will be a no-op.
-            const existingChainJSON = JSON.stringify(getChains()[payload.params[0].chainId])
-            const newChainJSON = JSON.stringify(payload.params[0])
+            const existingChainJSON = JSON.stringify(getChains()[payload.eip1193params.params[0].chainId])
+            const newChainJSON = JSON.stringify(payload.eip1193params.params[0])
             return existingChainJSON !== newChainJSON
         }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
-            const targetAddress = payload.params[0] as Address
+            const targetAddress = payload.eip1193params.params[0] as Address
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) as SessionKeysByHappyUser
             const user = getUser()
 

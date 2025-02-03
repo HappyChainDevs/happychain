@@ -27,8 +27,10 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
         test("skips wallet_requestPermissions permissions when no user", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
             const request = makePayload(iframeID, {
-                method: "wallet_requestPermissions",
-                params: [{ eth_accounts: {} }],
+                eip1193params: {
+                    method: "wallet_requestPermissions",
+                    params: [{ eth_accounts: {} }],
+                },
             })
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
@@ -46,8 +48,10 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
         test("does not add permissions", async () => {
             expect(getAllPermissions(appURL).length).toBe(1)
             const request = makePayload(iframeID, {
-                method: "wallet_requestPermissions",
-                params: [{ eth_accounts: {} }],
+                eip1193params: {
+                    method: "wallet_requestPermissions",
+                    params: [{ eth_accounts: {} }],
+                },
             })
             await dispatchHandlers(request)
             await dispatchHandlers(request)

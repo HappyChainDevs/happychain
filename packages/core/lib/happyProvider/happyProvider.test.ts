@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test"
 import { type UUID, createUUID } from "@happy.tech/common"
 import {
+    type ApprovedRequestPayload,
     AuthState,
     EIP1193ErrorCodes,
-    type EIP1193RequestParameters,
+    // type EIP1193RequestParameters,
     EventBus,
     EventBusMode,
     type EventBusOptions,
@@ -141,9 +142,11 @@ describe("HappyProvider", () => {
             })
         })
 
-        const payload: EIP1193RequestParameters = {
-            method: "eth_getBlockByNumber",
-            params: ["latest", false],
+        const payload: ApprovedRequestPayload = {
+            eip1193params: {
+                method: "eth_getBlockByNumber",
+                params: ["latest", false],
+            },
         }
 
         // within iframe
@@ -175,8 +178,10 @@ describe("HappyProvider", () => {
         })
 
         const resultBlock = provider.request({
-            method: "eth_getBlockByNumber",
-            params: ["latest", false],
+            eip1193params: {
+                method: "eth_getBlockByNumber",
+                params: ["latest", false],
+            },
         })
         // provider request
         expect(resultBlock).resolves.toStrictEqual(emptyRpcBlock)
@@ -200,8 +205,10 @@ describe("HappyProvider", () => {
 
         // provider request
         const request = provider.request({
-            method: "eth_getBlockByNumber",
-            params: ["latest", false],
+            eip1193params: {
+                method: "eth_getBlockByNumber",
+                params: ["latest", false],
+            },
         })
         expect(request).rejects.toThrowError(GenericProviderRpcError)
     })

@@ -1,5 +1,5 @@
 import {
-    type EIP1193RequestParameters,
+    type ApprovedRequestPayload,
     Msgs,
     type ProviderEventPayload,
     WalletType,
@@ -29,7 +29,7 @@ import { appForSourceID } from "./utils"
  *                            the appropriate channel (parent window - message bus, or iframe).
  * @throws {UnauthorizedProviderError} - If the user is not authenticated when the request is dispatched.
  */
-export async function sendResponse<Request extends ProviderEventPayload<EIP1193RequestParameters>, T>(
+export async function sendResponse<Request extends ProviderEventPayload<ApprovedRequestPayload>, T>(
     request: Request,
     dispatch: (request: Request) => Promise<T>,
 ): Promise<void> {

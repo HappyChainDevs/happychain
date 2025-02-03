@@ -3,7 +3,7 @@ import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { EIP1193ErrorCodes, GenericProviderRpcError, LoginRequiredError } from "../errors"
 import { convertEIP1193ErrorObjectToErrorInstance } from "../errors/eip-1193-utils"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
-import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
+import type { ApprovedRequestPayload, Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
 
 type Timer = ReturnType<typeof setInterval>
 
@@ -17,7 +17,7 @@ const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "m
 
 /**
  * This class serves as a base for EIP-1193 providers that sometimes need to create popups to
- * collect user approval. In particular, we have one such provider living on the app that relays
+ * collect user approal. In particular, we have one such provider living on the app that relays
  * requests to the iframe, and one such provider living in the iframe which is for requests
  * initiated from within the iframe.
  *
@@ -67,7 +67,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     /**
      * Sends an EIP-1193 request to the provider.
      */
-    public async request(args: EIP1193RequestParameters): Promise<EIP1193RequestResult> {
+    public async request(args: ApprovedRequestPayload): Promise<EIP1193RequestResult> {
         try {
             const key = createUUID()
             const { promise, resolve, reject } = promiseWithResolvers<EIP1193RequestResult>()
@@ -124,7 +124,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      * Returns true if a request requires user approval, if unable to determine, and/or if extra
      * permissions (beyond user approval) are required.
      */
-    protected abstract requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean>
+    protected abstract requiresUserApproval(args: ApprovedRequestPayload): Promise<boolean>
 
     /**
      * Whenever {@link requiresUserApproval} is true for a request, this is called to check if
@@ -140,13 +140,13 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      * {@link requiresUserApproval} must be conservative and return true, but we can correct things after
      * connection by returning false from this function.
      */
-    protected abstract requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean>
+    protected abstract requestExtraPermissions(args: ApprovedRequestPayload): Promise<boolean>
 
     /**
      * Handles a request that does not require user approval.
      */
     // Return type is undefined on purpose, avoid overrides returning anything.
-    protected abstract handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined
+    protected abstract handlePermissionless(key: UUID, args: ApprovedRequestPayload): undefined
 
     // === PRIVATE METHODS =========================================================================
 

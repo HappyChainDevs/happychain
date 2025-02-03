@@ -1,6 +1,7 @@
+import type { PrepareUserOperationReturnType } from "viem/account-abstraction"
 import type { EIP1193ErrorObject } from "../errors"
 import type { OverlayErrorCode } from "../errors/overlay-errors"
-import type { EIP1193EventName, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193"
+import type { EIP1193EventName, EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193.ts"
 import type { EIP6963ProviderInfo } from "./eip6963"
 import type { AuthState, HappyUser } from "./happyUser"
 import type { ProviderEventError, ProviderEventPayload } from "./payloads"
@@ -33,8 +34,14 @@ export enum Msgs {
      */
     InjectedWalletConnected = "injected-wallet:connected",
 
-    /** Announces injected wallets to the iframe following EIP-6963 'detail.info' format. */
-    AnnounceInjectedProvider = "announce-injected-provider",
+    /**
+     * Instructs the iframe to mirror a permission that has been granted to the user by the
+     * injected wallet.
+     *
+     * This is required because we depend on permissions to establish that the user is connected
+     * to the wallet.
+     */
+    MirrorPermissions = "injected-wallet:mirror-permissions",
 
     /**
      * Informs the iframe to request the overlay to display an error message.
@@ -83,7 +90,7 @@ export enum Msgs {
     /** Injected Response from the InjectedWalletWrapper to the InjectedProviderProxy*/
     ExecuteInjectedResponse = "execute-injected-response",
 
-    /** Forwards an event form the connected injected wallet to the iframe. */
+    /** Forwards an event from the connected injected wallet to the iframe. */
     ForwardInjectedEvent = "forward-injected-event",
 
     // --- ProviderBusEventsFromIframe -------------------------------------------------------------
@@ -116,6 +123,7 @@ export enum Msgs {
 
     /** Informs the iframe that the user has rejected a request in the popup. */
     PopupReject = "popup:reject",
+    AnnounceInjectedProvider = "AnnounceInjectedProvider",
 }
 
 // =================================================================================================
@@ -191,9 +199,9 @@ export type MsgsFromIframe = {
  */
 export type ProviderMsgsFromApp = {
     [Msgs.ForwardInjectedEvent]: ProviderEventPayload<{ event: string; params: unknown }>
-    [Msgs.RequestPermissionless]: ProviderEventPayload<EIP1193RequestParameters>
-    [Msgs.RequestInjected]: ProviderEventPayload<EIP1193RequestParameters>
-    [Msgs.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.RequestPermissionless]: ProviderEventPayload<ApprovedRequestPayload>
+    [Msgs.RequestInjected]: ProviderEventPayload<ApprovedRequestPayload>
+    [Msgs.PermissionCheckRequest]: ProviderEventPayload<ApprovedRequestPayload>
     [Msgs.ExecuteInjectedResponse]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
 }
 
@@ -222,7 +230,17 @@ export type ProviderMsgsFromIframe = {
  * This does not require being in the shared package (only used in the iframe package), but it's
  * simpler if all event definitions live in the same place.
  */
+type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> = Method extends "eth_sendTransaction"
+    ? PrepareUserOperationReturnType // this is actually the type we want!
+    : undefined
+
+export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP1193RequestMethods> = {
+    eip1193params: EIP1193RequestParameters<Method>
+    extraData?: ApprovedRequestExtraData<Method>
+}
+
 export type PopupMsgs = {
-    [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
+    // [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.PopupApprove]: ProviderEventPayload<ApprovedRequestPayload>
     [Msgs.PopupReject]: ProviderEventError<EIP1193ErrorObject>
 }

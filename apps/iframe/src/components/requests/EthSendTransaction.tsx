@@ -8,8 +8,10 @@ import {
     decodeFunctionData,
     formatEther,
     formatGwei,
+    // hexToBigInt,
     isAddress,
 } from "viem"
+// import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import { useEstimateFeesPerGas } from "wagmi"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { userAtom } from "#src/state/user"
@@ -28,6 +30,9 @@ import {
     SubsectionTitle,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
+// import { getSmartAccountClient } from "#src/state/smartAccountClient.js"
+// import type { PrepareUserOperationReturnType, SmartAccount } from "viem/account-abstraction"
+// import type { PrepareUserOperationParameters } from "viem/account-abstraction"
 
 /**
  * This is used since specifying a type in a `useSendTransaction` call
@@ -68,6 +73,7 @@ export const EthSendTransaction = ({
     // useState + useEffect paradigm works here (over useMemo) since we will have
     // user interactions for sliders / options for setting gas manually
     const [tx, setTx] = useState<RpcTransactionRequest>(params[0])
+    // const [preparedOp, setPreparedOp] = useState<PrepareUserOperationReturnType>()
 
     const user = useAtomValue(userAtom)
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
@@ -79,6 +85,35 @@ export const EthSendTransaction = ({
         status,
         queryKey,
     } = useEstimateFeesPerGas({ type: "eip1559" })
+
+    // const doTheDo: Promise<PrepareUserOperationReturnType> = useCallback(async () => {
+    //     const smartAccountClient = (await getSmartAccountClient())!
+    //     return await smartAccountClient.prepareUserOperation({
+    //         account: smartAccountClient.account,
+    //         paymaster: contractAddresses.HappyPaymaster,
+    //         parameters: ["factory", "fees", "gas", "signature"],
+    //             calls: [
+    //                 {
+    //                     to: tx.to,
+    //                     data: tx.data,
+    //                     value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+    //                 },
+    //             ],
+    //     } satisfies PrepareUserOperationParameters )
+    // }, [tx])
+
+    // Add useEffect to call doTheDo when transaction changes
+    //  useEffect(() => {
+    //     const prepareTx = async () => {
+    //         try {
+    //             const op = await doTheDo()
+    //             setPreparedOp(op)
+    //         } catch (err) {
+    //             console.error("Failed to prepare user operation:", err)
+    //         }
+    //     }
+    //     void prepareTx()
+    // }, [doTheDo])
 
     /**
      * If the maxFee/Gas and / or maxPriorityFee/Gas is not

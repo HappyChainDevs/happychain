@@ -1,7 +1,8 @@
 import { FIFOCache, HappyMethodNames, PermissionNames, TransactionType } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import {
-    type EIP1193RequestResult,
+    type ApprovedRequestPayload,
+    // type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
@@ -57,17 +58,29 @@ export const receiptCache = new FIFOCache<Hash, [UserOperationReceipt, GetUserOp
 export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestPermissionless]) {
     const app = appForSourceID(request.windowId)! // checked in sendResponse
 
-    switch (request.payload.method) {
+    switch (request.payload.eip1193params.method) {
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
-            return currChain ?? (await sendToPublicClient(app, { ...request, payload: request.payload }))
+            return (
+                currChain ??
+                (await sendToPublicClient(app, {
+                    ...request,
+                    eip1193params: request.payload.eip1193params,
+                    extraData: undefined,
+                }))
+            )
         }
 
         case "eth_sendTransaction": {
             const user = getUser()
             if (!user) throw new EIP1193UnauthorizedError()
-            const tx = request.payload.params[0]
-            const target = request.payload.params[0].to
+            const reqParams = request.payload.eip1193params.params[0]
+            const tx = reqParams
+            const target = reqParams.to
+
+            // prepared user op
+            const _userOpPrepData = request.payload.extraData
+
             if (!tx || !target) return false
 
             const permissions = getPermissions(app, {
@@ -119,7 +132,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return isAddress(`${getUser()?.address}`) ? [getUser()?.address] : []
 
         case "eth_getTransactionByHash": {
-            const [hash] = request.payload.params
+            const [hash] = request.payload.eip1193params.params
             const smartAccountClient = (await getSmartAccountClient())!
 
             // Attempt to retrieve UserOperation details first.
@@ -164,12 +177,12 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 } as Transaction // performs type-check, but allows extra fields
             } catch (_err) {
                 // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
-                return await sendToPublicClient(app, request)
+                return await sendToPublicClient(app, request.payload)
             }
         }
 
         case "eth_getTransactionReceipt": {
-            const [hash] = request.payload.params
+            const [hash] = request.payload.eip1193params.params
             const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             // Attempt to retrieve UserOperation details first.
             // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
@@ -201,12 +214,12 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     value, // Extra field because why not?
                 } as TransactionReceipt // performs type-check, but allows extra fields
             } catch (_err) {
-                return sendToPublicClient(app, request)
+                return sendToPublicClient(app, request.payload)
             }
         }
 
         case "eth_getTransactionCount": {
-            const [address] = request.payload.params
+            const [address] = request.payload.eip1193params.params
             const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
 
             if (smartAccountClient && address.toLowerCase() === smartAccountClient.account.address.toLowerCase()) {
@@ -230,7 +243,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         }
 
         case "eth_estimateGas": {
-            const [tx] = request.payload.params
+            const [tx] = request.payload.eip1193params.params
             const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             const gasEstimation = await smartAccountClient.estimateUserOperationGas({
                 calls: [
@@ -250,13 +263,13 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case "wallet_requestPermissions": {
             checkAuthenticated()
-            const permissions = request.payload.params[0]
+            const permissions = request.payload.eip1193params.params[0]
             return hasPermissions(app, permissions) ? getPermissions(app, permissions) : []
         }
 
         case "wallet_revokePermissions":
             checkAuthenticated()
-            revokePermissions(app, request.payload.params[0])
+            revokePermissions(app, request.payload.eip1193params.params[0])
             return []
 
         case "wallet_addEthereumChain":
@@ -271,7 +284,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             const user = getUser()
-            const targetContractAddress = request.payload.params[0] as Address
+            const targetContractAddress = request.payload.eip1193params.params[0] as Address
 
             if (!isAddress(targetContractAddress)) {
                 throw new InvalidAddressError({ address: targetContractAddress })
@@ -300,22 +313,22 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         }
 
         default:
-            return await sendToPublicClient(app, request)
+            return await sendToPublicClient(app, request.payload)
     }
 }
 
-async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPermissionless]>(
+async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPermissionless]["payload"]>(
     app: AppURL,
     request: T,
-): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
-    if (checkIfRequestRequiresConfirmation(app, request.payload)) {
+): Promise<ApprovedRequestPayload<T["eip1193params"]["method"]>> {
+    if (checkIfRequestRequiresConfirmation(app, request)) {
         throw new EIP1193UnauthorizedError()
     }
     const client: Client = getPublicClient()
 
-    if (requestPayloadIsHappyMethod(request.payload)) {
+    if (requestPayloadIsHappyMethod(request.eip1193params)) {
         throw new EIP1193UnsupportedMethodError()
     }
 
-    return await client.request(request.payload)
+    return await client.request(request.eip1193params)
 }
