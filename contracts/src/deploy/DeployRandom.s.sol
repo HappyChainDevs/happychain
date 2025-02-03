@@ -31,7 +31,12 @@ contract DeployRandom is BaseDeployScript {
     }
 
     function deploy() internal override {
-        (address _random,) = deployDeterministic("Random", type(Random).creationCode, abi.encode(drandPublicKey, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD), DEPLOYMENT_SALT);
+        (address _random,) = deployDeterministic(
+            "Random",
+            type(Random).creationCode,
+            abi.encode(drandPublicKey, DRAND_GENESIS_TIMESTAMP, DRAND_PERIOD),
+            DEPLOYMENT_SALT
+        );
         random = Random(_random);
         deployed("Random", address(random));
     }
