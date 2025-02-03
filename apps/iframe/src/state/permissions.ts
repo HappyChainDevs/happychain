@@ -422,14 +422,29 @@ export function getAllPermissions(app: AppURL): WalletPermission[] {
 
 /**
  * Returns the given permission(s). This only considers the keys of the permission object,
- * and returns an aray that contains the permission only if it is granted, along with its caveats.
+ * and returns an array that contains the permission only if it is granted, along with its caveats.
  */
 export function getPermissions(
     app: AppURL, //
     permissionsRequest: PermissionsRequest,
 ): WalletPermission[] {
     const appPermissions = getAppPermissions(app)
-    return permissionRequestEntries(permissionsRequest)
-        .map(({ name }) => appPermissions[name])
-        .filter(Boolean)
+    const requests = permissionRequestEntries(permissionsRequest)
+    const basicMatchedPermissions = requests.map(({ name }) => appPermissions[name]).filter(Boolean)
+    const filterCaveats = requests.some((req) => req.caveats.length)
+
+    if (!filterCaveats) return basicMatchedPermissions
+
+    const fulfillsFilter = basicMatchedPermissions.some((matchedPermission) => {
+        return matchedPermission.caveats.some((c) => {
+            // all matched permissions need to fully fulfill the requested restrictions
+            return requests.every((req) => {
+                return req.caveats.every((caveat) => {
+                    return c.type === caveat.type && c.value === caveat.value
+                })
+            })
+        })
+    })
+
+    return fulfillsFilter ? basicMatchedPermissions : []
 }
