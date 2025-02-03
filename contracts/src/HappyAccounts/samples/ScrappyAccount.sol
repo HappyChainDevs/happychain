@@ -127,8 +127,6 @@ contract ScrappyAccount is
         }
 
         if (tx.gasprice > happyTx.maxFeePerGas) {
-            console.log("gasprice too high");
-            console.log(tx.gasprice, happyTx.maxFeePerGas);
             return GasPriceTooHigh.selector;
         }
 
@@ -170,8 +168,6 @@ contract ScrappyAccount is
         (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
         if (!success) {
             output.revertData = returnData;
-            console.log("happyTx.dest.call != success, revertData:");
-            console.logBytes(returnData);
             return output;
         }
 
@@ -183,13 +179,11 @@ contract ScrappyAccount is
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
         // [LOGGAS] uint256 initialGas = gasleft();
         if (happyTx.account != address(this)) {
-            console.log("wrong account selector");
             return WrongAccount.selector;
         }
 
         uint256 owed = (consumedGas + INTRINSIC_GAS + GAS_OVERHEAD_BUFFER) // TODO
             * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
-        console.log("owed: ", owed);
 
         payable(tx.origin).call{value: owed}("");
 

@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {console} from "forge-std/Script.sol";
 /**
  * @title BasicNonceManager
  * @dev   Contract implementing simple nonce management for a HappyAccount
  */
-
 contract BasicNonceManager {
     /**
      * @dev Emitted when a nonce is used in a track

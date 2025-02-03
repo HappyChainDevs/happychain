@@ -220,15 +220,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             emit ExecutionReverted(returnData);
             output.callStatus = CallStatus.EXECUTION_REVERTED;
             output.revertData = returnData;
-            console.log("EXECUTION_REVERTED");
         } else if (execOutput.revertData.length != 0) {
             emit CallReverted(execOutput.revertData);
             output.callStatus = CallStatus.CALL_REVERTED;
             output.revertData = execOutput.revertData;
-            console.log("CALL_REVERTED");
         } else {
             output.callStatus = CallStatus.SUCCESS;
-            console.log("SUCCESS");
         }
 
         // 3. Collect payment
@@ -240,7 +237,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         if (happyTx.paymaster == address(0)) {
             // Sponsoring submitter, no need to charge anyone
-            console.log("Sponsoring submitter, no need to charge anyone");
             output.gas = uint32(consumedGas);
             return output;
         }
@@ -257,21 +253,15 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         uint256 payoutGas = gasBeforePayout - gasleft();
         output.gas = uint32(consumedGas + payoutGas);
-        console.log("payoutGas:", payoutGas, "output.gas:", output.gas);
 
         // It's okay if the payment is only for the agreed-upon gas limit.
         // This should never happen if happyTx.gasLimit matches the submitter's tx gas limit.
         consumedGas = consumedGas + payoutGas > happyTx.gasLimit ? happyTx.gasLimit : payoutGas;
         int256 _charged = int256(consumedGas * tx.gasprice) + happyTx.submitterFee;
-        console.log("_charged:", _charged);
         uint256 charged = _charged > 0 ? uint256(_charged) : 0;
-        console.log("charged:", charged);
 
         result = abi.decode(returnData, (bytes4));
         if (tx.origin.balance < balance + charged) {
-            console.log("tx.origin.balance < balance + charged");
-            console.log("tx.origin.balance:", tx.origin.balance); // solhint-disable-line avoid-tx-origin
-            console.log("balance + charged:", balance + charged);
             revert PaymentFailed(result);
         }
     }
