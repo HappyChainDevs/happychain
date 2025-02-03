@@ -285,7 +285,6 @@ define run-deploy-script-account
 		--password-file $(PASSFILE_$(CONFIG))`)
 	@# Command intentionally output.
 	forge script $(1) \
-		--slow \
 		--fork-url $(RPC_$(CONFIG)) \
 		--account $(ACCOUNT_$(CONFIG)) \
 		--password-file $(PASSFILE_$(CONFIG)) \
