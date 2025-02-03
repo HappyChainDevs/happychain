@@ -36,12 +36,12 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     ///      Given RLP encoding, this should be significantly less.
     uint256 private constant MAX_TX_SIZE = 100; // TODO
 
-    /// @dev This spaymaster sponsors all calls to this contract.
-    address private immutable TARGET;
-
     /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte
     ///      of data in the submitter tx.
-    uint256 private immutable MAX_SUBMITTER_FEE_PER_BYTE;
+    uint256 public maxSubmitterFeePerByte;
+
+    /// @dev This spaymaster sponsors all calls to this contract.
+    address public target;
 
     // TODO namespace these fields for easier account upgrades (think on this when turning this into a proxy)
     /// @dev The deterministic EntryPoint contract
@@ -89,8 +89,13 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
      *      Called by factory during proxy deployment
      * @param _owner The owner who can upgrade the implementation
      */
-    function initialize(address _entryPoint, address _owner) external initializer {
+    function initialize(address _entryPoint, address _target, uint256 _maxSubmitterFeePerByte, address _owner)
+        external
+        initializer
+    {
         entryPoint = _entryPoint;
+        target = _target;
+        maxSubmitterFeePerByte = _maxSubmitterFeePerByte;
         __Ownable_init(_owner);
         __UUPSUpgradeable_init();
     }
@@ -105,13 +110,13 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     //* //////////////////////////////////////
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
-        if (happyTx.dest != TARGET) {
+        if (happyTx.dest != target) {
             return WrongTarget.selector;
         }
 
         uint256 maxSubmitterFee = (
             MAX_TX_SIZE + TODO_VAR_1 + happyTx.callData.length + happyTx.validatorData.length + happyTx.extraData.length
-        ) * MAX_SUBMITTER_FEE_PER_BYTE;
+        ) * maxSubmitterFeePerByte;
 
         if (uint256(happyTx.submitterFee) > maxSubmitterFee) {
             return SubmitterFeeTooHigh.selector;
@@ -119,7 +124,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
 
         uint256 owed = (consumedGas + TODO_VAR_2) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
 
-        // solhint-disable-next-line avoid-tx-origin
         payable(tx.origin).call{value: owed}("");
         return 0;
     }
@@ -138,5 +142,17 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
 
     fallback() external payable {
         emit Received(msg.sender, msg.value);
+    }
+
+    //* //////////////////////////////////////
+    //* Setter functions //////////////////////
+    //* //////////////////////////////////////
+
+    function setTarget(address _target) external onlyOwner {
+        target = _target;
+    }
+
+    function setMaxSubmitterFeePerByte(uint256 _maxSubmitterFeePerByte) external onlyOwner {
+        maxSubmitterFeePerByte = _maxSubmitterFeePerByte;
     }
 }
