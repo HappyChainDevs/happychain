@@ -6,7 +6,7 @@ import {Ownable} from "openzeppelin/access/Ownable.sol";
 contract Config is Ownable {
     address public random;
 
-    constructor(address _random) Ownable(msg.sender) {
+    constructor(address _owner, address _random) Ownable(_owner) {
         random = _random;
     }
 

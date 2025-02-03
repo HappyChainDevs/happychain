@@ -9,12 +9,13 @@ import {Config} from "../Config.sol";
  */
 contract DeployConfig is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(8));
-    address public constant random = 0xd7D1be22f2d14327c07b6669C91773BB23aABa9c;
+    address public constant random = 0xF13b26BD65d4026818698d243195C0b2D09883c2;
     Config public config;
 
     function deploy() internal override {
+        address owner = vm.envAddress("CONFIG_OWNER");
         (address _config,) =
-            deployDeterministic("Config", type(Config).creationCode, abi.encode(random), DEPLOYMENT_SALT);
+            deployDeterministic("Config", type(Config).creationCode, abi.encode(owner, random), DEPLOYMENT_SALT);
         config = Config(_config);
         deployed("Config", address(config));
     }
