@@ -91,6 +91,43 @@ test-gas: ## Runs test and generate a gas report
 	forge test --gas-report
 .PHONY: test-gas
 
+test-happyTx-decode:
+	forge test --match-test testDecode -vvv
+.PHONY: test-happyTx-decode
+
+test-lib:
+	bun run test
+.PHONY: test-lib
+
+test-decode:
+	bun run decodeTests
+.PHONY: test-decode
+
+test-encode:
+	bun run encodeTests
+.PHONY: test-encode
+
+test-combined:
+	bun run combinedTests
+.PHONY: test-combined
+
+####################################################################################################
+# Gas Logging
+
+# Turn gas logging on by uncommenting the measurement statements
+gas-logging-on:
+	@echo "Turning gas logging ON..."
+	@find . -type f -name "*.sol" -exec sed -i '' 's|// \[LOGGAS\]|/* [LOGGAS] */|g' {} +
+	@echo "Gas logging is now ON"
+.PHONY: gas-logging-on
+
+# Turn gas logging off by commenting out the measurement statements
+gas-logging-off:
+	@echo "Turning gas logging OFF..."
+	@find . -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS\] \*/|// [LOGGAS]|g' {} +
+	@echo "Gas logging is now OFF"
+.PHONY: gas-logging-off
+
 ####################################################################################################
 # Demos & Reports
 
