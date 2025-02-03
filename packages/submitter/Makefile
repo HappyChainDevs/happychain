@@ -6,6 +6,10 @@ include ../../makefiles/help.mk
 # (-include to ignore error if it does not exist)
 -include .env
 
+# Set CONFIG to "LOCAL" by default. Other valid value "TENDERLY".
+# Must be exported as some deploy scripts depend on it.
+export CONFIG ?= LOCAL
+
 ####################################################################################################
 # Code Quality
 

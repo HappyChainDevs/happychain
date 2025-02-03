@@ -12,7 +12,7 @@ include ../makefiles/help.mk
 # (-include to ignore error if it does not exist)
 -include .env
 
-# Set CONFIG to "LOCAL" by default. Other valid values: "TEST" or "MAIN".
+# Set CONFIG to "LOCAL" by default. Other valid values: "TEST" or "MAIN", or "TENDERLY" (for testing).
 # Must be exported as some deploy scripts depend on it.
 export CONFIG ?= LOCAL
 
@@ -285,6 +285,7 @@ define run-deploy-script-account
 		--password-file $(PASSFILE_$(CONFIG))`)
 	@# Command intentionally output.
 	forge script $(1) \
+		--slow \
 		--fork-url $(RPC_$(CONFIG)) \
 		--account $(ACCOUNT_$(CONFIG)) \
 		--password-file $(PASSFILE_$(CONFIG)) \
@@ -371,6 +372,8 @@ define set-chain-name
 		CHAIN_NAME = sepolia
 	else ifeq ($(CHAIN_ID),1)
 		CHAIN_NAME = ethereum
+	else ifeq ($(CHAIN_ID),11155420)
+		CHAIN_NAME = tenderly
 	else
 		CHAIN_NAME = unknown
 	endif

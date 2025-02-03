@@ -1,4 +1,4 @@
-import { http, createPublicClient, createWalletClient } from "viem"
+import { http, type PublicClient, type WalletClient, createPublicClient, createWalletClient } from "viem"
 import { entryPoint07Address } from "viem/account-abstraction"
 import { privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
@@ -8,13 +8,13 @@ import { bundlerRpc, privateKey, rpcURL } from "./config"
 
 export const account = privateKeyToAccount(privateKey)
 
-export const walletClient = createWalletClient({
+export const walletClient: WalletClient = createWalletClient({
     account,
     chain: localhost,
     transport: http(rpcURL),
 })
 
-export const publicClient = createPublicClient({
+export const publicClient: PublicClient = createPublicClient({
     chain: localhost,
     transport: http(rpcURL),
 })

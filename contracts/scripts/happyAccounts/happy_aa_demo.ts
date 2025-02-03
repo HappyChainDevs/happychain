@@ -7,10 +7,15 @@ import type { DeployAccountResponse, SubmitHappyTxResponse } from "@happy.tech/s
 import { encode } from "./lib/happyTxLib"
 import type { HappyTx } from "./types/happyTx"
 
-import { abis } from "../../deployments/anvil/happy-aa/abis"
-import { abis as mockAbis, deployment as mockDeployment } from "../../deployments/anvil/mocks/abis"
+import { abis as abisAnvil } from "../../deployments/anvil/happy-aa/abis"
+import { abis as mockAbisAnvil, deployment as mockDeploymentAnvil } from "../../deployments/anvil/mocks/abis"
+import { abis as abisTenderly } from "../../deployments/tenderly/happy-aa/abis"
+import { abis as mockAbisTenderly, deployment as mockDeploymentTenderly } from "../../deployments/tenderly/mocks/abis"
 
 import { account, publicClient } from "../utils/clients"
+
+const isLocal = process.env.CONFG === "LOCAL"
+console.log("isLocal:", isLocal)
 
 /**
  * Creates a new HappyAccount through the submitter service
@@ -90,8 +95,8 @@ async function submitHappyTx(encodedHappyTx: Hex): Promise<SubmitHappyTxResponse
 
 async function getTokenBalance(address: Address) {
     return await publicClient.readContract({
-        address: mockDeployment.MockTokenA,
-        abi: mockAbis.MockTokenA,
+        address: isLocal ? mockDeploymentAnvil.MockTokenA : mockDeploymentTenderly.MockTokenA,
+        abi: isLocal ? mockAbisAnvil.MockTokenA : mockAbisTenderly.MockTokenA,
         functionName: "balanceOf",
         args: [address],
     })
@@ -100,7 +105,7 @@ async function getTokenBalance(address: Address) {
 async function createDummyHappyTx(account: Address, nonce: bigint): Promise<HappyTx> {
     return {
         account,
-        dest: mockDeployment.MockTokenA,
+        dest: isLocal ? mockDeploymentAnvil.MockTokenA : mockDeploymentTenderly.MockTokenA,
         nonce,
         value: 0n,
         paymaster: zeroAddress, // self funding
@@ -109,7 +114,7 @@ async function createDummyHappyTx(account: Address, nonce: bigint): Promise<Happ
         submitterFee: 100n,
         maxFeePerGas: ((await publicClient.estimateMaxPriorityFeePerGas()) * 120n) / 100n,
         callData: encodeFunctionData({
-            abi: mockAbis.MockTokenA,
+            abi: isLocal ? mockAbisAnvil.MockTokenA : mockAbisTenderly.MockTokenA,
             functionName: "mint",
             args: [account, parseEther("0.001")],
         }),
@@ -122,7 +127,7 @@ async function createDummyHappyTx(account: Address, nonce: bigint): Promise<Happ
 async function getNonce(account: Address): Promise<bigint> {
     return await publicClient.readContract({
         address: account,
-        abi: abis.ScrappyAccount,
+        abi: isLocal ? abisAnvil.ScrappyAccount : abisTenderly.ScrappyAccount,
         functionName: "getNonce",
     })
 }

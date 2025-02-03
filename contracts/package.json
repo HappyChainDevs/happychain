@@ -9,8 +9,10 @@
     "exports": {
         "./account-abstraction/sepolia": "./deployments/happy-sepolia/aa/abis.ts",
         "./mocks/sepolia": "./deployments/happy-sepolia/mocks/abis.ts",
+        "./mocks/tenderly": "./deployments/tenderly/mocks/abis.ts",
         "./random/anvil": "./deployments/anvil/random/abis.ts",
-        "./happy-aa/anvil": "./deployments/anvil/happy-aa/abis.ts"
+        "./happy-aa/anvil": "./deployments/anvil/happy-aa/abis.ts",
+        "./happy-aa/tenderly": "./deployments/tenderly/happy-aa/abis.ts"
     },
     "scripts": {
         "test": "vitest happyAccounts",

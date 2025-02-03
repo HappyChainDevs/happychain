@@ -10,9 +10,11 @@ const envSchema = z.object({
     PORT: z.string().transform((val) => Number.parseInt(val, 10)),
 })
 
+const config = process.env.CONFIG; // Get the CONFIG environment variable
+
 const parsedEnv = envSchema.safeParse({
-    PRIVATE_KEY: process.env.PRIVATE_KEY,
-    RPC_URL: process.env.RPC_URL,
+    PRIVATE_KEY: config === "LOCAL" ? process.env.PRIVATE_KEY_LOCAL : process.env.PRIVATE_KEY_TENDERLY,
+    RPC_URL: config === "LOCAL" ? process.env.RPC_URL_LOCAL : process.env.RPC_URL_TENDERLY,
     PORT: process.env.PORT,
 })
 

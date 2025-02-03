@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server"
-import app from "../server"
 import { port } from "../utils/config"
+import app from "../server"
 
 const main = async () => {
     try {

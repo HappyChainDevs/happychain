@@ -1,0 +1,7 @@
+{
+  "HappyEntryPoint": "0x04993D9ec30fc4163566a6aA7040Afa87a3e8294",
+  "ScrappyAccount": "0x676A6cBE95B0671dD6413b19357befE67e30fC69",
+  "ScrappyAccountFactory": "0xD9CeD06077f8618e97490dc96897c5d6c55cd922",
+  "ScrappyPaymaster": "0xD800F35e5c73B06F832430B0AeA5A59dB001638C",
+  "ScrappyPaymasterImpl": "0x1336bad26998515E64dF7452059c7e9778D9C4A8"
+}

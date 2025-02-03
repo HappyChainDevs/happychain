@@ -10,10 +10,12 @@ const envSchema = z.object({
     RPC_LOCAL: z.string().trim().url(),
 })
 
+const isLocal = process.env.CONFG === "LOCAL"
+
 const parsedEnv = envSchema.safeParse({
     PRIVATE_KEY_LOCAL: process.env.PRIVATE_KEY_LOCAL,
     BUNDLER_LOCAL: process.env.BUNDLER_LOCAL,
-    RPC_LOCAL: process.env.RPC_LOCAL,
+    RPC_LOCAL: isLocal ? process.env.RPC_LOCAL : process.env.RPC_TENDERLY,
 })
 
 if (!parsedEnv.success) {

@@ -4,14 +4,20 @@ import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
 import { prettyJSON } from "hono/pretty-json"
 
-import { abis, deployment } from "@happy.tech/contracts/happy-aa/anvil"
+import { abis as abisAnvil, deployment as deploymentAnvil } from "@happy.tech/contracts/happy-aa/anvil"
+import { abis as abisTenderly, deployment as deploymentTenderly } from "@happy.tech/contracts/happy-aa/tenderly"
 import { account, publicClient, walletClient } from "./utils/clients"
 import { isContractDeployed } from "./utils/helpers"
 import { DeployAccountSchema, HappyTxSchema } from "./utils/requestSchema"
 import { DeployAccountResponseSchema, SubmitHappyTxResponseSchema } from "./utils/responseSchema"
 import { localhost } from "viem/chains"
 
+const isLocal = process.env.CONFG === "LOCAL"
+const deployment = isLocal ? deploymentAnvil : deploymentTenderly
+const abis = isLocal ? abisAnvil : abisTenderly
+
 const app = new Hono()
+
 app.use(prettyJSON())
 app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
 
