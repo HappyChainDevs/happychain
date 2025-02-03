@@ -79,7 +79,10 @@ contract DeployHappyAAContracts is BaseDeployScript {
         (address _scrappyPaymaster, bool paymasterDeployed) = deployDeterministicProxy( //-
             "ScrappyPaymaster",
             _scrappyPaymasterImpl,
-            abi.encodeCall(scrappyPaymasterImpl.initialize, (_happyEntryPoint, owner)),
+            abi.encodeCall(
+                scrappyPaymasterImpl.initialize,
+                (_happyEntryPoint, 0xc80629fE33747288AaFb97684F86f7eD2D1aBF69, 10 ^ 9 wei, owner)
+            ), // TODO, proper values?
             DEPLOYMENT_SALT //-
         );
         scrappyPaymaster = ScrappyPaymaster(payable(_scrappyPaymaster));
