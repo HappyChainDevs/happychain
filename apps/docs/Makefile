@@ -60,14 +60,14 @@ typedoc.clean:
 
 # generate JS markdown API reference
 typedoc-js:
-	typedoc --options ./typedoc.js.js;
+	typedoc --options ./typedoc.core.js;
 .PHONY: typedoc-js
 
 # generate JS markdown API reference in watch mode
 typedoc-js.watch:
 	typedoc\
 		--watch\
-		--options ./typedoc.js.js;
+		--options ./typedoc.core.js;
 .PHONY: typedoc-js.watch
 
 # generate React markdown API reference
