@@ -8,6 +8,7 @@ import {Random} from "../randomness/Random.sol";
  * @dev Deploys the Randomness contract.
  */
 contract DeployRandom is BaseDeployScript {
+    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
     Random public random;
 
     /*
