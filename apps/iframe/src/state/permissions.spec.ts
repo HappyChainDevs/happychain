@@ -1,8 +1,10 @@
+import { PermissionNames } from "@happy.tech/common"
 import { generateTestUser } from "@happy.tech/testing"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
     clearPermissions,
     getAllPermissions,
+    getPermissions,
     grantPermissions,
     hasPermissions,
     revokePermissions,
@@ -229,6 +231,117 @@ describe("PermissionsService", () => {
         })
     })
 
+    describe("getPermissions", () => {
+        describe("same-origin", () => {
+            describe("with user", () => {
+                beforeEach(() => {
+                    clearPermissions()
+                    setUser(generateTestUser())
+                })
+
+                it("returns empty array when no permissions have been granted", () => {
+                    expect(getPermissions(appURL, "eth_accounts").length).toBe(0)
+                })
+
+                it("returns all permissions granted to app (without caveats)", () => {
+                    expect(getAllPermissions(appURL).length).toBe(0)
+
+                    grantPermissions(appURL, "eth_accounts")
+
+                    expect(getPermissions(appURL, "eth_accounts").length).toBe(1)
+                })
+
+                it("returns all permissions granted to app (all caveats)", () => {
+                    expect(getAllPermissions(appURL).length).toBe(0)
+
+                    grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x1234" } })
+                    grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x4567" } })
+
+                    expect(getPermissions(appURL, PermissionNames.SESSION_KEY).length).toBe(1)
+                    expect(getPermissions(appURL, PermissionNames.SESSION_KEY)[0].caveats.length).toBe(2)
+                })
+
+                it("returns all permissions granted to app (filtering caveats)", () => {
+                    expect(getAllPermissions(appURL).length).toBe(0)
+
+                    grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x1234" } })
+                    grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x4567" } })
+
+                    expect(getPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x1234" } }).length).toBe(
+                        1,
+                    )
+                    expect(getPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x4567" } }).length).toBe(
+                        1,
+                    )
+
+                    expect(
+                        getPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0xdeadbeef" } }).length,
+                    ).toBe(0)
+                })
+            })
+            describe("without user", () => {
+                beforeEach(() => {
+                    clearPermissions()
+                    setUser(undefined)
+                })
+
+                it("returns empty array when no permissions have been granted", () => {
+                    expect(getPermissions(appURL, "eth_accounts").length).toBe(0)
+                })
+            })
+        })
+        describe("cross-origin", () => {
+            describe("with user", () => {
+                beforeEach(() => {
+                    clearPermissions()
+                    setUser(generateTestUser())
+                })
+
+                it("returns empty array to app when no permissions have been granted ", () => {
+                    expect(getPermissions(appURL, "eth_accounts").length).toBe(0)
+                })
+
+                it("returns eth_accounts to iframe when no permissions have been granted", () => {
+                    expect(getPermissions(iframeURL, "eth_accounts").length).toBe(1)
+                })
+
+                it("returns all permissions granted to app (without caveats)", () => {
+                    grantPermissions(appURL, "test_permission_app")
+                    grantPermissions(iframeURL, "test_permission_iframe")
+
+                    expect(getPermissions(appURL, "test_permission_app").length).toBe(1)
+                    expect(getPermissions(appURL, "test_permission_iframe").length).toBe(0)
+
+                    expect(getPermissions(iframeURL, "test_permission_app").length).toBe(0)
+                    expect(getPermissions(iframeURL, "test_permission_iframe").length).toBe(1)
+                })
+
+                it("returns all permissions granted to app (all caveats)", () => {
+                    expect(getAllPermissions(appURL).length).toBe(0)
+
+                    grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x1234" } })
+                    grantPermissions(iframeURL, { [PermissionNames.SESSION_KEY]: { target: "0x4567" } })
+
+                    expect(getPermissions(appURL, PermissionNames.SESSION_KEY).length).toBe(1)
+                    expect(getPermissions(appURL, PermissionNames.SESSION_KEY)[0].caveats.length).toBe(1)
+                    expect(getPermissions(iframeURL, PermissionNames.SESSION_KEY)[0].caveats.length).toBe(1)
+                })
+            })
+
+            describe("without user", () => {
+                beforeEach(() => {
+                    clearPermissions()
+                    setUser(undefined)
+                })
+
+                it("returns empty array when no permissions have been granted", () => {
+                    expect(getPermissions(appURL, "eth_accounts").length).toBe(0)
+                    expect(getPermissions(iframeURL, "eth_accounts").length).toBe(0)
+                })
+            })
+        })
+    })
+
     describe("getAllPermissions", () => {
         describe("same-origin", () => {
             describe("with user", () => {
@@ -278,6 +391,7 @@ describe("PermissionsService", () => {
             })
         })
     })
+
     describe("clearPermissions", () => {
         describe("with user", () => {
             beforeEach(() => {
