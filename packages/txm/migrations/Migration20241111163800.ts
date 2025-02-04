@@ -1,4 +1,7 @@
-export async function up(db) {
+import type { Kysely } from "kysely"
+import type { Database } from "../lib/db/types"
+
+export async function up(db: Kysely<Database>) {
     await db.schema
         .createTable("transaction")
         .addColumn("intentId", "text", (col) => col.notNull())

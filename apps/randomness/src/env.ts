@@ -12,13 +12,14 @@ const envSchema = z.object({
         .string()
         .trim()
         .transform((s) => BigInt(s)),
-    TIME_BLOCK: z
+    BLOCK_TIME: z
         .string()
         .trim()
         .transform((s) => BigInt(s)),
     RPC_URL: z.string().trim(),
-    CHAIN_ID: z.number().int().positive(),
+    CHAIN_ID: z.string().transform((s) => Number(s)),
     RANDOMNESS_DB_PATH: z.string().trim(),
+    TXM_DB_PATH: z.string().trim(),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)

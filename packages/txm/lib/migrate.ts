@@ -1,7 +1,10 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 import { FileMigrationProvider, Migrator } from "kysely"
 import { db } from "./db/driver"
+
+const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 async function migrateToLatest() {
     const migrator = new Migrator({
@@ -9,7 +12,7 @@ async function migrateToLatest() {
         provider: new FileMigrationProvider({
             fs,
             path,
-            migrationFolder: path.join(__dirname, "../migrations"),
+            migrationFolder: path.join(dirname, "../migrations"),
         }),
     })
 
