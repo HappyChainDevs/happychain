@@ -88,7 +88,7 @@ error PaymentFailed(bytes4 result);
  * When the {@link IHappyAccount.execute} call succeeds but reports that the
  * attempted call reverted.
  *
- * The parameter contains the revert data (truncated to {@link MAX_RETURN_DATA_SIZE}
+ * The parameter contains the revert data (truncated to {@link MAX_EXECUTE_RETURN_DATA_SIZE}
  * bytes, so that it can be parsed offchain.
  */
 event CallReverted(bytes revertData);
@@ -96,39 +96,43 @@ event CallReverted(bytes revertData);
 /*
  * When the {@link IHappyAccount.execute} call reverts (in violation of the spec).
  *
- * The parameter contains the revert data (truncated to {@link MAX_RETURN_DATA_SIZE}
+ * The parameter contains the revert data (truncated to {@link MAX_EXECUTE_RETURN_DATA_SIZE}
  * bytes, so that it can be parsed offchain.
  */
 event ExecutionReverted(bytes revertData);
 
 contract HappyEntryPoint is ReentrancyGuardTransient {
-    // Must use to avoid gas exhaustion via return data.
+    // Must be used to avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
 
-    // TODO: does the ExcessivelySafeCall limit include the 32 bytes of length?
-    //  ANS: Yes, it does store the length of the returnData here.
-    /**
-     * ``` temp
-     *     bytes memory _returnData = new bytes(_maxCopy);
-     *     ...
-     *     // Store the length of the copied bytes
-     *     mstore(_returnData, _toCopy) // Uses first 32 bytes to store the length
-     *     ...
-     *     returndatacopy(add(_returnData, 0x20), 0, _toCopy) // Then copies the calldata from 0x20
-     * ```
+    /*
+     * Maximum amount of data allowed to be returned from {@link IHappyAccount.validate},
+     * and {@link IHappyPaymaster.payout} functions.
+     *
+     * The returned data is as follows:
+     * 1st slot: bytes4 selector (minimum 32 bytes are neded to decode the return data)
      */
+    uint16 private constant MAX_RETURN_DATA_SIZE = 32;
 
     /*
-     * Maximum amount of data allowed to be returned from {@link IHappyAccount}
-     * and {@link IHappyPaymaster} functions.
+     * Maximum amount of data allowed to be returned from the
+     * {@link IHappyAccount.execute} function.
+     * The encoding of the returned {@link ExecutionOutput} struct is as follows:
+     * 
+     * 1st slot: Offset for the struct
+     * 2nd slot: {@link ExecutionOutput.gas}
+     * 3rd slot: offset for reverData from where the struct begins
+     * 4th slot: {@link ExecutionOutput.revertData.Length}
+     * 5th slot: {@link ExecutionOutput.revertData}
+     * 6th slot: padding, in case revertData is 64 bytes (max size limit for revertData, for now)
      */
-    uint16 private constant MAX_RETURN_DATA_SIZE = 36; // TODO
+    uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 192;
 
     /*
      * Fixed max gas overhead for the logic around the {@link HappyPaymaster.payout}
      * call, that needs to be paid for by the payer.
      */
-    uint256 private constant PAYOUT_OVERHEAD = 1234; // TODO
+    uint256 private constant PAYOUT_OVERHEAD = 700; // TODO: Base 700 (CALL) + some buffer (??)
 
     /*
      * Execute a Happy Transaction, and tries to ensure that the submitter
@@ -192,7 +196,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         bytes4 result = abi.decode(returnData, (bytes4));
         if (result != 0) {
-            // solhint-disable-next-line avoid-tx-origin
             bool shouldContinue = tx.origin == address(0)
                 && (result == UnknownDuringSimulation.selector || result == FutureNonceDuringSimulation.selector);
 
@@ -207,7 +210,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             tx.origin == address(0) && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0,
             // Allow the call revert data to take up the same size as the other revert data.
-            MAX_RETURN_DATA_SIZE + 32,
+            MAX_EXECUTE_REVERT_DATA_SIZE,
             abi.encodeWithSelector(IHappyAccount.execute.selector, happyTx)
         );
 
@@ -246,7 +249,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             MAX_RETURN_DATA_SIZE,
             abi.encodeWithSelector(IHappyPaymaster.payout.selector, happyTx, consumedGas)
         );
-
         if (!success) revert PaymentReverted(returnData);
 
         uint256 payoutGas = gasBeforePayout - gasleft();
