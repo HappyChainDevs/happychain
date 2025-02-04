@@ -10,6 +10,8 @@ import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "./HappyTx.sol";
 
+// [LOGGAS] import {console} from "forge-std/Script.sol";
+
 enum CallStatus {
     SUCCESS, // The call succeeded.
     CALL_REVERTED, // The call reverted.
@@ -52,7 +54,7 @@ struct SubmitOutput {
 /*
  * When the account validation of the happyTx reverts (in violation of the spec).
  *
- * The parameter contains the revert data (truncated to {@link MAX_RETURN_DATA}
+ * The parameter contains the revert data (truncated to {@link MAX_RETURN_DATA_SIZE}
  * bytes, so that it can be parsed offchain.
  */
 error ValidationReverted(bytes revertData);
@@ -86,7 +88,7 @@ error PaymentFailed(bytes4 result);
  * When the {@link IHappyAccount.execute} call succeeds but reports that the
  * attempted call reverted.
  *
- * The parameter contains the revert data (truncated to {@link MAX_RETURN_DATA}
+ * The parameter contains the revert data (truncated to {@link MAX_RETURN_DATA_SIZE}
  * bytes, so that it can be parsed offchain.
  */
 event CallReverted(bytes revertData);
@@ -94,7 +96,7 @@ event CallReverted(bytes revertData);
 /*
  * When the {@link IHappyAccount.execute} call reverts (in violation of the spec).
  *
- * The parameter contains the revert data (truncated to {@link MAX_RETURN_DATA}
+ * The parameter contains the revert data (truncated to {@link MAX_RETURN_DATA_SIZE}
  * bytes, so that it can be parsed offchain.
  */
 event ExecutionReverted(bytes revertData);
@@ -120,7 +122,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * Maximum amount of data allowed to be returned from {@link IHappyAccount}
      * and {@link IHappyPaymaster} functions.
      */
-    uint16 private constant MAX_RETURN_DATA = 1234; // TODO
+    uint16 private constant MAX_RETURN_DATA_SIZE = 36; // TODO
 
     /*
      * Fixed max gas overhead for the logic around the {@link HappyPaymaster.payout}
@@ -183,7 +185,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         (success, returnData) = happyTx.account.excessivelySafeCall(
             happyTx.executeGasLimit,
             0,
-            MAX_RETURN_DATA,
+            MAX_RETURN_DATA_SIZE,
             abi.encodeWithSelector(IHappyAccount.validate.selector, happyTx)
         );
         if (!success) revert ValidationReverted(returnData);
@@ -205,7 +207,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             tx.origin == address(0) && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0,
             // Allow the call revert data to take up the same size as the other revert data.
-            MAX_RETURN_DATA + 32,
+            MAX_RETURN_DATA_SIZE + 32,
             abi.encodeWithSelector(IHappyAccount.execute.selector, happyTx)
         );
 
@@ -236,13 +238,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             return output;
         }
 
-        // solhint-disable-next-line avoid-tx-origin
         uint256 balance = tx.origin.balance;
         uint256 gasBeforePayout = gasleft();
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
             happyTx.executeGasLimit,
             0,
-            MAX_RETURN_DATA,
+            MAX_RETURN_DATA_SIZE,
             abi.encodeWithSelector(IHappyPaymaster.payout.selector, happyTx, consumedGas)
         );
 
