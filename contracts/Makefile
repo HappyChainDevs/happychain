@@ -97,22 +97,6 @@ test-happyTx-decode:
 	forge test --match-test testDecode -vvv
 .PHONY: test-happyTx-decode
 
-test-lib:
-	bun run test
-.PHONY: test-lib
-
-test-decode:
-	bun run decodeTests
-.PHONY: test-decode
-
-test-encode:
-	bun run encodeTests
-.PHONY: test-encode
-
-test-combined:
-	bun run combinedTests
-.PHONY: test-combined
-
 ####################################################################################################
 # Gas Logging
 
