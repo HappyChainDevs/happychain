@@ -172,9 +172,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * node implementations.
      *
      */
-    function submit(bytes calldata encodedHappyTx) external nonReentrant returns (SubmitOutput memory output) {
+    function submit(HappyTx memory happyTx) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
-        HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
+        // HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
 
         // 1. Validate happyTx with account
 
@@ -228,7 +228,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // This is an overestimation of the actual gas cost of the submitter.
         // WITHOUT the gas cost of the "payout" call (which is accounted for later).
         uint256 consumedGas =
-            HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_OVERHEAD;
+            HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4) + PAYOUT_OVERHEAD;
 
         if (happyTx.paymaster == address(0)) {
             // Sponsoring submitter, no need to charge anyone

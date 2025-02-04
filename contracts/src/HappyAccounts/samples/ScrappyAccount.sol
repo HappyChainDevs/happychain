@@ -11,6 +11,8 @@ import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/Reentrancy
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
+import {console} from "forge-std/console.sol";
+
 import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {
     IHappyAccount,
@@ -123,6 +125,7 @@ contract ScrappyAccount is
     //* //////////////////////////////////////
 
     function validate(HappyTx memory happyTx) external returns (bytes4) {
+        console.log("validating happyTx..");
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
         }
@@ -133,11 +136,13 @@ contract ScrappyAccount is
 
         int256 nonceAhead = int256(happyTx.nonce) - int256(_nonce);
         bool isSimulation = tx.origin == address(0); // solhint-disable-line avoid-tx-origin
+        console.log("doing nonce stuff..");
         if (!_validateAndUpdateNonce(nonceAhead, isSimulation)) {
             return InvalidNonce.selector;
         }
 
         if (happyTx.paymaster != address(this)) {
+            console.log("not self paying..");
             // The happyTx is not self-paying
             // The signer does not sign over these fields to avoid extra network roundtrips
             // validation policy falls to the paymaster or the sponsoring submitter.
@@ -147,14 +152,31 @@ contract ScrappyAccount is
             happyTx.submitterFee = 0;
         } // Else, self-paying txn
 
+        console.logBytes32(happyTx.getHappyTxHash());
+        console.logBytes32(happyTx.getHappyTxHash().toEthSignedMessageHash());
+        
         address signer = happyTx.getHappyTxHash().toEthSignedMessageHash().recover(happyTx.extraData);
+        console.log("signer:", signer);
 
         // NOTE: This function may consume slightly more gas during simulation, in accordance to the spec.
-        return isSimulation
-            ? signer == owner()
-                ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
-                : UnknownDuringSimulation.selector
-            : signer == owner() ? bytes4(0) : InvalidOwnerSignature.selector;
+        if (isSimulation) {
+            if (signer == owner()) {
+                if (nonceAhead == 0) {
+                    return bytes4(0);
+                } else {
+                    return FutureNonceDuringSimulation.selector;
+                }
+            } else {
+                return UnknownDuringSimulation.selector;
+            }
+        } else {
+            if (signer == owner()) {
+                return bytes4(0);
+            } else {
+                return InvalidOwnerSignature.selector; // todo: add submitter signature validation
+            }
+        }
+
     }
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
