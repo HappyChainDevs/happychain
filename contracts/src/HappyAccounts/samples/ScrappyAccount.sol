@@ -56,7 +56,6 @@ contract ScrappyAccount is
     uint256 private constant INTRINSIC_GAS = 22_000; // TODO
     uint256 private constant GAS_OVERHEAD_BUFFER = 12345; // TODO
 
-    // TODO namespace these fields for easier account upgrades (think on this when turning this into a proxy)
     /// @dev The deterministic EntryPoint contract
     address private immutable ENTRYPOINT;
 
