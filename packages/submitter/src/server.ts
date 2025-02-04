@@ -12,7 +12,7 @@ import { DeployAccountSchema, HappyTxSchema } from "./utils/requestSchema"
 import { DeployAccountResponseSchema, SubmitHappyTxResponseSchema } from "./utils/responseSchema"
 import { localhost } from "viem/chains"
 
-const isLocal = process.env.CONFG === "LOCAL"
+const isLocal = process.env.CONFIG === "LOCAL"
 const deployment = isLocal ? deploymentAnvil : deploymentTenderly
 const abis = isLocal ? abisAnvil : abisTenderly
 

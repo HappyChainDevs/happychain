@@ -14,8 +14,7 @@ import { abis as mockAbisTenderly, deployment as mockDeploymentTenderly } from "
 
 import { account, publicClient } from "../utils/clients"
 
-const isLocal = process.env.CONFG === "LOCAL"
-console.log("isLocal:", isLocal)
+const isLocal = process.env.CONFIG === "LOCAL"
 
 /**
  * Creates a new HappyAccount through the submitter service
