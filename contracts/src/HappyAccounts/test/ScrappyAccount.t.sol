@@ -150,7 +150,7 @@ contract ScrappyAccountTest is Test {
 
     function testCallReverted() public {
         //todo: test when call to dest reverts
-        // can be done by calling a function that reverts, 
+        // can be done by calling a function that reverts,
         // for example: calling Token.transfer with too large a balance
     }
 
@@ -161,7 +161,6 @@ contract ScrappyAccountTest is Test {
     function testParallelNonces() public {
         //todo: test sending transactions with keyed nonces
     }
-
 
     // Helper functions
 
