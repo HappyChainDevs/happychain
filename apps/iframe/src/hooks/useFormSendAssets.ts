@@ -29,14 +29,20 @@ const formSendAssetsAtom = atom<{
  * Send asset form validation schema
  */
 const schemaFormSendAsset = object({
-    [FieldFormSendAssets.Recipient]: string().refine((val) => isAddress(val), {
+    [FieldFormSendAssets.Recipient]: string({
+        message: "Ensure you provide a valid Ethereum address for the recipient.",
+    }).refine((val) => isAddress(val), {
         message: "Ensure you provide a valid Ethereum address for the recipient.",
     }),
-    [FieldFormSendAssets.Amount]: coerce.number().positive({ message: "Ensure you enter a positive amount number." }),
+    [FieldFormSendAssets.Amount]: coerce
+        .number({
+            message: "Ensure you enter a positive amount number.",
+        })
+        .positive({ message: "Ensure you enter a positive amount number." }),
 })
 
 /**
- * Custom hook for managing send assets form state and its operations.
+ * Custom hook for managing send assets form state and its operations
  */
 export function useFormSendAssets(asset?: Address) {
     const navigate = useNavigate()
@@ -47,7 +53,6 @@ export function useFormSendAssets(asset?: Address) {
     /**
      * Get user's native token balance.
      * Only enabled when user is connect and no asset address is provided
-     *
      */
     const queryBalanceNativeToken = useBalance({
         address: user?.address,
@@ -56,9 +61,6 @@ export function useFormSendAssets(asset?: Address) {
         },
     })
 
-    /**
-     * Send transaction.
-     */
     const mutationSendTransaction = useSendTransaction({
         mutation: {
             onSuccess() {
@@ -66,11 +68,15 @@ export function useFormSendAssets(asset?: Address) {
             },
         },
     })
+
     const maximumValueNativeToken = useMemo(() => {
         if (queryBalanceNativeToken?.data?.value) return +formatEther(queryBalanceNativeToken?.data?.value)
         return 0
     }, [queryBalanceNativeToken?.data?.value])
 
+    /**
+     * Run custom validation on form fields to refine form errors
+     */
     const formErrors = useMemo(() => {
         const validationSchema = schemaFormSendAsset.refine(
             (vals) => {
@@ -102,7 +108,6 @@ export function useFormSendAssets(asset?: Address) {
     }
 
     /**
-     * Form submission handler.
      * Ensures form data is valid befor initiating transaction
      */
     function handleOnSubmit(e: React.FormEvent<HTMLFormElement>) {
