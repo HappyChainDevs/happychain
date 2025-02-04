@@ -53,7 +53,7 @@ const UserLabel = ({ user, connecting }: { user: HappyUser | undefined; connecti
     if (!user) return <>Connect</>
 
     const label = user.ens || user.email || user.name
-    return <>{label.length > 12 ? `${label.slice(0, 9)}...` : label}</>
+    return <>{label.length > 15 ? `${label.slice(0, 12)}...` : label}</>
 }
 
 const UserAvatar = ({ user }: { user: HappyUser | undefined }) => {

@@ -1,4 +1,4 @@
-import { type HappyUser, WalletType } from "@happy.tech/wallet-common"
+import { type HappyUser, WalletType, shortenAddress } from "@happy.tech/wallet-common"
 import { getKernelAccountAddress } from "#src/state/kernelAccount.ts"
 
 export async function createHappyUserFromWallet(providerId: string, address: `0x${string}`): Promise<HappyUser> {
@@ -12,7 +12,7 @@ export async function createHappyUserFromWallet(providerId: string, address: `0x
         avatar: `https://avatar.vercel.sh/${accountAddress}?size=120`,
         email: "",
         ens: "",
-        name: accountAddress.slice(0, 8),
+        name: shortenAddress(accountAddress),
         uid: address,
 
         // web3 details

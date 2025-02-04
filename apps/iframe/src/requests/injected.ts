@@ -3,6 +3,7 @@ import { deployment as contractAddresses } from "@happy.tech/contracts/account-a
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
+    type EIP1193RequestParameters,
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
@@ -338,13 +339,25 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             // not logged in
             if (!user) return []
 
-            const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
+            let resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
 
-            // wallet not connected
-            if (!resp.length) return []
+            // wallet not connected, we will request permissions here
+            // This shouldn't happen however added as a precaution
+            if (!resp.length) {
+                resp = await sendToInjectedClient(app, {
+                    ...request,
+                    payload: {
+                        method: "eth_requestAccounts",
+                        params: undefined,
+                    } as EIP1193RequestParameters<"eth_requestAccounts">,
+                })
+                if (!resp.length) return []
+            }
 
             // wallet connected as wrong user somehow
             if (resp[0].toLowerCase() !== user.controllingAddress) return []
+
+            grantPermissions(app, "eth_accounts")
 
             // substitute smartAccount
             return [user.address]
@@ -354,8 +367,8 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         // instead relying on the extension wallet to handle the permission access.
         // If the call is successful, we will grant (mirror) permissions here, otherwise we
         // can safely assume it failed, and ignore. We can assume the user is logged in here, as
-        // we handle logging in elsewhere (InjectedConnector) so a logged out user will not be
-        // calling this method directly. Its first called in response to the Connect/Reconnect on
+        // we handle logging-in elsewhere (InjectedConnector) so a logged out user will not be
+        // calling this method directly. It is first called in response to the Connect/Reconnect on
         // page load by the iframes wagmi connector
         case "eth_requestAccounts": {
             if (!user) return []
@@ -379,7 +392,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         // and instead rely on success/fail of the extension wallet call
         case "wallet_requestPermissions": {
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
-            if (resp.length) grantPermissions(app, "eth_accounts")
+            if (resp.length) grantPermissions(app, request.payload.params[0])
             return resp
         }
 
