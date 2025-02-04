@@ -36,7 +36,7 @@ export function generateTestUser(): HappyUser {
         email: "fake@example.com",
         name: `${address.slice(0, 6)}...${address.slice(-4)}`,
         ens: "",
-        avatar: `https://avatar.vercel.sh/${address}?size=400`,
+        avatar: `https://avatar.vercel.sh/${address}?size=120`,
         // web3 details
         address: address,
         controllingAddress: address,

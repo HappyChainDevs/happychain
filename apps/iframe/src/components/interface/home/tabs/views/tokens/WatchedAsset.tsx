@@ -45,7 +45,7 @@ const WatchedAsset = ({ user, asset }: WatchedAssetProps) => {
     const imageSource =
         asset.options.image && !isImageSourceBroken
             ? asset.options.image
-            : `https://avatar.vercel.sh/${tokenAddress}?size=400`
+            : `https://avatar.vercel.sh/${tokenAddress}?size=120`
 
     return (
         <div

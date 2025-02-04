@@ -9,10 +9,10 @@ export async function createHappyUserFromWallet(providerId: string, address: `0x
         type: WalletType.Injected,
 
         // social details
-        avatar: `https://avatar.vercel.sh/${address}?size=400`,
+        avatar: `https://avatar.vercel.sh/${accountAddress}?size=120`,
         email: "",
         ens: "",
-        name: `${address.slice(0, 6)}...${address.slice(-4)}`,
+        name: accountAddress.slice(0, 8),
         uid: address,
 
         // web3 details
