@@ -1,5 +1,6 @@
 /** @jsxImportSource preact */
 import { icon64x64 } from "@happy.tech/common"
+import { AuthState } from "@happy.tech/wallet-common"
 import { useAnimatedStateTransitions } from "./hooks/useAnimatedStateTransitions"
 import { useAuthState } from "./hooks/useAuthState"
 import { useWalletActions } from "./hooks/useWalletActions"
@@ -33,8 +34,11 @@ export const WalletFrame = ({ dragging }: WalletFrameProps) => {
             data-drag-state={dragging}
             className="wallet-frame"
         >
+            {authState === AuthState.Initializing && <LoadingSpinner />}
+
             {/* Base64 to avoid any bundle issues and network requests */}
             <img src={icon64x64} alt="HappyChain Logo" className="wallet-logo" inert={true} />
+
             <div className="wallet-iframe-wrapper" inert={!isOpen}>
                 <div ref={iframe} style="width: 100%; height: 100%;">
                     <slot name="frame" />
@@ -43,3 +47,11 @@ export const WalletFrame = ({ dragging }: WalletFrameProps) => {
         </div>
     )
 }
+
+const LoadingSpinner = () => (
+    <div class="happy_loader_icon">
+        {Array.from({ length: 12 }, (_, i) => (
+            <div key={`dot_${i.toString()}`} />
+        ))}
+    </div>
+)
