@@ -1,60 +1,137 @@
-import { atom, useAtom } from "jotai"
-import { useCallback } from "react"
-import { type Address, parseEther } from "viem"
-import { useSendTransaction } from "wagmi"
-
-// `<AddressSelector />` input value - address to send $HAPPY to
-const targetAddressAtom = atom<Address | string | undefined>(undefined)
-
-// `<SendInput />` input value - $HAPPY amount to be sent
-const sendValueAtom = atom<string>("")
-
-// boolean to check if input send amount is higher than user's balance
-const balanceExceededAtom = atom<boolean>(false)
+import { useNavigate } from "@tanstack/react-router"
+import { atom, useAtom, useAtomValue } from "jotai"
+import { useMemo } from "react"
+import { type Address, formatEther, isAddress, parseEther } from "viem"
+import { useBalance, useSendTransaction } from "wagmi"
+import { coerce, object, string } from "zod"
+import { userAtom } from "#src/state/user"
 
 /**
- * Hook for managing token send functionality state across components.
- *
- * This hook provides access to and control over three key pieces of state
- * within the `send.lazy.tsx` page components:
- * - The recipient's address for the token transfer
- * - The amount of $HAPPY tokens to send
- * - A flag indicating whether the send amount exceeds the user's balance
+ * Form field names values
  */
-export const useHappySend = () => {
-    const [sendValue, setSendValue] = useAtom(sendValueAtom)
-    const [targetAddress, setTargetAddress] = useAtom(targetAddressAtom)
-    const [balanceExceeded, setBalanceExceeded] = useAtom(balanceExceededAtom)
+export enum FieldFormSendAssets {
+    Recipient = "send-asset-recipient",
+    Amount = "send-asset-amount",
+}
 
-    const {
-        sendTransaction,
-        isPending: isSendPending,
-        isSuccess: isSendSucess,
-        isError: isSendError,
-    } = useSendTransaction()
+/**
+ * Form inputs values
+ */
+const formSendAssetsAtom = atom<{
+    [FieldFormSendAssets.Recipient]?: Address
+    [FieldFormSendAssets.Amount]?: number
+}>({
+    [FieldFormSendAssets.Recipient]: undefined,
+    [FieldFormSendAssets.Amount]: 0,
+})
 
-    const submitSend = useCallback(() => {
-        if (targetAddress && sendValue) {
-            void sendTransaction({
-                to: targetAddress as Address,
-                value: parseEther(sendValue),
-            })
+/**
+ * Send asset form validation schema
+ */
+const schemaFormSendAsset = object({
+    [FieldFormSendAssets.Recipient]: string().refine((val) => isAddress(val), {
+        message: "Ensure you provide a valid Ethereum address for the recipient.",
+    }),
+    [FieldFormSendAssets.Amount]: coerce.number().positive({ message: "Ensure you enter a positive amount number." }),
+})
+
+/**
+ * Custom hook for managing send assets form state and its operations.
+ */
+export function useFormSendAssets(asset?: Address) {
+    const navigate = useNavigate()
+    const user = useAtomValue(userAtom)
+    const formAtom = useAtom(formSendAssetsAtom)
+    const [form, setForm] = formAtom
+
+    /**
+     * Get user's native token balance.
+     * Only enabled when user is connect and no asset address is provided
+     *
+     */
+    const queryBalanceNativeToken = useBalance({
+        address: user?.address,
+        query: {
+            enabled: user?.address && isAddress(user?.address) && !isAddress(`${asset}`),
+        },
+    })
+
+    /**
+     * Send transaction.
+     */
+    const mutationSendTransaction = useSendTransaction({
+        mutation: {
+            onSuccess() {
+                navigate({ to: "/embed" })
+            },
+        },
+    })
+    const maximumValueNativeToken = useMemo(() => {
+        if (queryBalanceNativeToken?.data?.value) return +formatEther(queryBalanceNativeToken?.data?.value)
+        return 0
+    }, [queryBalanceNativeToken?.data?.value])
+
+    const formErrors = useMemo(() => {
+        const validationSchema = schemaFormSendAsset.refine(
+            (vals) => {
+                return vals[FieldFormSendAssets.Amount] <= maximumValueNativeToken
+            },
+            {
+                message: "The amount exceeds your available balance",
+                path: [FieldFormSendAssets.Amount],
+            },
+        )
+
+        const result = validationSchema.safeParse(form)
+        if (!result.success) {
+            return result.error.flatten()
         }
-    }, [sendTransaction, sendValue, targetAddress])
+
+        return null
+    }, [form, maximumValueNativeToken])
+
+    /**
+     * Sets the native token amount to the maximum available balance
+     */
+    function handleOnClickMaxNativeTokenBalance() {
+        if (mutationSendTransaction.status === "pending" || maximumValueNativeToken === 0) return
+        setForm({
+            ...form,
+            [FieldFormSendAssets.Amount]: maximumValueNativeToken,
+        })
+    }
+
+    /**
+     * Form submission handler.
+     * Ensures form data is valid befor initiating transaction
+     */
+    function handleOnSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault()
+        if (mutationSendTransaction.status === "pending" || formErrors) return
+        mutationSendTransaction.sendTransaction({
+            to: form[FieldFormSendAssets.Recipient] as Address,
+            value: parseEther(`${form[FieldFormSendAssets.Amount]}`),
+        })
+    }
+
+    /**
+     * Updates form state when input value changes
+     */
+    function handleOnInput(e: React.ChangeEvent<HTMLInputElement>) {
+        setForm({
+            ...form,
+            [e.currentTarget.name]: e.currentTarget.value,
+        })
+    }
 
     return {
-        // state + setters
-        sendValue,
-        setSendValue,
-        targetAddress,
-        setTargetAddress,
-        balanceExceeded,
-        setBalanceExceeded,
-
-        // wagmi fn / fields
-        submitSend,
-        isSendPending,
-        isSendSucess,
-        isSendError,
+        formAtom,
+        formErrors,
+        queryBalanceNativeToken,
+        mutationSendTransaction,
+        handleOnInput,
+        handleOnSubmit,
+        handleOnClickMaxNativeTokenBalance,
+        maximumValueNativeToken,
     }
 }
