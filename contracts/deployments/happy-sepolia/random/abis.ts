@@ -23,7 +23,7 @@ const contractToAbi = {
                     internalType: "uint256",
                 },
                 {
-                    name: "_happyGenesisTimestamp",
+                    name: "_happyGenesisBlock",
                     type: "uint256",
                     internalType: "uint256",
                 },
@@ -50,6 +50,32 @@ const contractToAbi = {
         },
         {
             type: "function",
+            name: "DRAND_GENESIS_TIMESTAMP",
+            inputs: [],
+            outputs: [
+                {
+                    name: "",
+                    type: "uint256",
+                    internalType: "uint256",
+                },
+            ],
+            stateMutability: "view",
+        },
+        {
+            type: "function",
+            name: "DRAND_PERIOD",
+            inputs: [],
+            outputs: [
+                {
+                    name: "",
+                    type: "uint256",
+                    internalType: "uint256",
+                },
+            ],
+            stateMutability: "view",
+        },
+        {
+            type: "function",
             name: "DST",
             inputs: [],
             outputs: [
@@ -63,33 +89,33 @@ const contractToAbi = {
         },
         {
             type: "function",
+            name: "HAPPY_GENESIS_BLOCK",
+            inputs: [],
+            outputs: [
+                {
+                    name: "",
+                    type: "uint256",
+                    internalType: "uint256",
+                },
+            ],
+            stateMutability: "view",
+        },
+        {
+            type: "function",
+            name: "HAPPY_TIME_BLOCK",
+            inputs: [],
+            outputs: [
+                {
+                    name: "",
+                    type: "uint256",
+                    internalType: "uint256",
+                },
+            ],
+            stateMutability: "view",
+        },
+        {
+            type: "function",
             name: "PRECOMMIT_DELAY",
-            inputs: [],
-            outputs: [
-                {
-                    name: "",
-                    type: "uint256",
-                    internalType: "uint256",
-                },
-            ],
-            stateMutability: "view",
-        },
-        {
-            type: "function",
-            name: "drandGenesisTimestamp",
-            inputs: [],
-            outputs: [
-                {
-                    name: "",
-                    type: "uint256",
-                    internalType: "uint256",
-                },
-            ],
-            stateMutability: "view",
-        },
-        {
-            type: "function",
-            name: "drandPeriod",
             inputs: [],
             outputs: [
                 {
@@ -163,41 +189,15 @@ const contractToAbi = {
             inputs: [
                 {
                     name: "blockNumber",
-                    type: "uint256",
-                    internalType: "uint256",
+                    type: "uint128",
+                    internalType: "uint128",
                 },
             ],
             outputs: [
                 {
                     name: "",
-                    type: "uint256",
-                    internalType: "uint256",
-                },
-            ],
-            stateMutability: "view",
-        },
-        {
-            type: "function",
-            name: "happyGenesisTimestamp",
-            inputs: [],
-            outputs: [
-                {
-                    name: "",
-                    type: "uint256",
-                    internalType: "uint256",
-                },
-            ],
-            stateMutability: "view",
-        },
-        {
-            type: "function",
-            name: "happyTimeBlock",
-            inputs: [],
-            outputs: [
-                {
-                    name: "",
-                    type: "uint256",
-                    internalType: "uint256",
+                    type: "uint128",
+                    internalType: "uint128",
                 },
             ],
             stateMutability: "view",
@@ -259,8 +259,8 @@ const contractToAbi = {
             inputs: [
                 {
                     name: "blockNumber",
-                    type: "uint256",
-                    internalType: "uint256",
+                    type: "uint128",
+                    internalType: "uint128",
                 },
                 {
                     name: "commitmentHash",
@@ -295,7 +295,7 @@ const contractToAbi = {
             inputs: [],
             outputs: [
                 {
-                    name: "",
+                    name: "randomValue",
                     type: "bytes32",
                     internalType: "bytes32",
                 },
@@ -353,13 +353,13 @@ const contractToAbi = {
             inputs: [
                 {
                     name: "blockNumber",
-                    type: "uint256",
-                    internalType: "uint256",
+                    type: "uint128",
+                    internalType: "uint128",
                 },
                 {
                     name: "revealedValue",
-                    type: "uint256",
-                    internalType: "uint256",
+                    type: "uint128",
+                    internalType: "uint128",
                 },
             ],
             outputs: [],
@@ -403,15 +403,15 @@ const contractToAbi = {
             inputs: [
                 {
                     name: "blockNumber",
-                    type: "uint256",
-                    internalType: "uint256",
+                    type: "uint128",
+                    internalType: "uint128",
                 },
             ],
             outputs: [
                 {
                     name: "",
-                    type: "uint256",
-                    internalType: "uint256",
+                    type: "uint128",
+                    internalType: "uint128",
                 },
             ],
             stateMutability: "view",
@@ -422,9 +422,9 @@ const contractToAbi = {
             inputs: [
                 {
                     name: "blockNumber",
-                    type: "uint256",
+                    type: "uint128",
                     indexed: true,
-                    internalType: "uint256",
+                    internalType: "uint128",
                 },
                 {
                     name: "commitment",
@@ -479,15 +479,15 @@ const contractToAbi = {
             inputs: [
                 {
                     name: "blockNumber",
-                    type: "uint256",
+                    type: "uint128",
                     indexed: true,
-                    internalType: "uint256",
+                    internalType: "uint128",
                 },
                 {
                     name: "revealedValue",
-                    type: "uint256",
+                    type: "uint128",
                     indexed: false,
-                    internalType: "uint256",
+                    internalType: "uint128",
                 },
             ],
             anonymous: false,
