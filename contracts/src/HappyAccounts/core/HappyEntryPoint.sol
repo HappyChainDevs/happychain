@@ -172,7 +172,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * node implementations.
      *
      */
-    function submit(HappyTx memory happyTx) external nonReentrant returns (SubmitOutput memory output) {
+    function submit(HappyTx calldata happyTx) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
         // HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
 

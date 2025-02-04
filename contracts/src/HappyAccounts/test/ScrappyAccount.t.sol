@@ -105,7 +105,7 @@ contract ScrappyAccountTest is Test {
             gasLimit: 1000000,
             executeGasLimit: 800000,
             dest: address(token),
-            paymaster: address(paymaster), // self sponsor
+            paymaster: address(0),
             value: 0,
             nonce: 0,
             maxFeePerGas: 2000000000,
@@ -121,7 +121,49 @@ contract ScrappyAccountTest is Test {
         entryPoint.submit(_tx);
 
         assertEq(token.balanceOf(address(this)), initialBalance + AMOUNT);
+
+        //todo: ensure "early return" from submit() if (happyTx.paymaster == address(0)){
+        // output.gas = uint32(consumedGas);
+        // return output;}
     }
+
+    function testWrongAccount() public {
+        //todo: test when the account is not the sender (WrongAccount.selector;)
+    }
+
+    function testSimulationMode() public {
+        //todo: test simulation mode - this could be done by vm.prank(address(0))
+        // or whatever eth_call sets the tx.origin to
+    }
+
+    function testValidationReverted() public {
+        // todo: implement all expected ValidationReverted cases
+    }
+
+    function testValidationFailed() public {
+        //todo: implement all expected ValidationFailed cases
+    }
+
+    function testPaymentReverted() public {
+        // todo: test when payment to paymaster reverts
+    }
+
+    function testCallReverted() public {
+        //todo: test when call to dest reverts
+        // can be done by calling a function that reverts, 
+        // for example: calling Token.transfer with too large a balance
+    }
+
+    function testPaymentFailed() public {
+        //todo: test when payment to paymaster fails
+    }
+
+    function testParallelNonces() public {
+        //todo: test sending transactions with keyed nonces
+    }
+
+
+    // Helper functions
 
     function _submitterSign(HappyTx memory _tx) internal view returns (uint8, bytes32, bytes32) {
         HappyTx memory submitterTx = HappyTx({
