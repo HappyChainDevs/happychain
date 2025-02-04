@@ -1,14 +1,14 @@
 {
     "name": "@happy.tech/randomness",
     "private": true,
-    "version": "0.1.0",
+    "version": "0.0.0",
     "type": "module",
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
     "dependencies": {
-        "@happy.tech/contracts": "workspace:0.1.0",
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/txm": "workspace:0.1.0",
+        "@happy.tech/common": "workspace:^",
+        "@happy.tech/txm": "workspace:^",
+        "@happy.tech/contracts": "workspace:^",
         "better-sqlite3": "^11.7.0",
         "kysely": "^0.27.5",
         "neverthrow": "^8.1.0",
@@ -16,7 +16,8 @@
         "zod": "^3.23.8"
     },
     "devDependencies": {
-        "@happy.tech/configs": "workspace:",
+        "@happy.tech/configs": "workspace:^",
+        "@happy.tech/happybuild": "workspace:^",
         "typescript": "^5.6.2"
     }
 }

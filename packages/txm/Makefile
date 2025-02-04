@@ -4,5 +4,5 @@ include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
 migrate: ## Runs pending migrations
-	node dist/migrate.es.js
+	tsx lib/migrate.ts
 .PHONY: migrate

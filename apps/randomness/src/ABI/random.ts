@@ -1,1 +1,0 @@
-../../../../contracts/deployments/anvil/random/abis.ts

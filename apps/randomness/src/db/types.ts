@@ -1,36 +1,39 @@
-import type { Hex, UUID } from "@happy.tech/common"
-import { bigIntToZeroPadded } from "@happy.tech/common"
-import type { CommitmentInfo } from "../CommitmentManager"
+import { type Hex, type UUID, bigIntToZeroPadded } from "@happy.tech/common"
+import { Randomness, type RandomnessStatus } from "../Randomness"
+import { DIGITS_MAX_UINT256 } from "../RandomnessRepository"
 
 // Values are stored as strings because they can be large numbers bigger than the max value of an SQLite integer
-export interface CommitmentInfoTable {
+export interface RandomnessRow {
     timestamp: string
     value: string
-    commitment: Hex
-    transactionIntentId: UUID
+    hashedValue: Hex
+    commitmentTransactionIntentId: UUID | undefined
+    revealTransactionIntentId: UUID | undefined
+    status: RandomnessStatus
 }
 
 export interface Database {
-    commitments: CommitmentInfoTable
+    randomnesses: RandomnessRow
 }
 
-// Quantity of digits in the max uint256 value
-export const DIGITS_MAX_UINT256 = 78
-
-export function commitmentInfoToDb(commitmentInfo: CommitmentInfo): CommitmentInfoTable {
-    return {
-        timestamp: bigIntToZeroPadded(commitmentInfo.timestamp, DIGITS_MAX_UINT256),
-        value: bigIntToZeroPadded(commitmentInfo.value, DIGITS_MAX_UINT256),
-        commitment: commitmentInfo.commitment,
-        transactionIntentId: commitmentInfo.transactionIntentId,
-    }
+export function randomnessRowToEntity(row: RandomnessRow): Randomness {
+    return new Randomness({
+        timestamp: BigInt(row.timestamp),
+        value: BigInt(row.value),
+        hashedValue: row.hashedValue,
+        commitmentTransactionIntentId: row.commitmentTransactionIntentId,
+        revealTransactionIntentId: row.revealTransactionIntentId,
+        status: row.status,
+    })
 }
 
-export function dbToCommitmentInfo(db: CommitmentInfoTable): CommitmentInfo {
+export function randomnessEntityToRow(entity: Randomness): RandomnessRow {
     return {
-        timestamp: BigInt(db.timestamp),
-        value: BigInt(db.value),
-        commitment: db.commitment,
-        transactionIntentId: db.transactionIntentId,
+        timestamp: bigIntToZeroPadded(entity.timestamp, DIGITS_MAX_UINT256),
+        value: bigIntToZeroPadded(entity.value, DIGITS_MAX_UINT256),
+        hashedValue: entity.hashedValue,
+        commitmentTransactionIntentId: entity.commitmentTransactionIntentId,
+        revealTransactionIntentId: entity.revealTransactionIntentId,
+        status: entity.status,
     }
 }

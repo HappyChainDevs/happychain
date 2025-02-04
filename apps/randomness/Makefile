@@ -5,9 +5,14 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
+start: ## Starts the randomness service
+	node --env-file=.env dist/index.es.js
+PHONY: start
+
+
 migrate: ## Runs pending migrations
-	node --env-file .env dist/migrate.es.js
-.PHONY: migrate
+	tsx --env-file=.env src/migrate.ts
+PHONY: migrate
 
 link-anvil:
 	rm src/ABI/random.ts
