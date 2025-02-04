@@ -20,7 +20,7 @@ export const FINALIZED_STATUSES = [
 ]
 
 export class Randomness {
-    public timestamp: bigint
+    public blockNumber: bigint
     public value: bigint
     public hashedValue: Hex
     public commitmentTransactionIntentId: UUID | undefined
@@ -28,14 +28,14 @@ export class Randomness {
     public status: RandomnessStatus
 
     constructor(params: {
-        timestamp: bigint
+        blockNumber: bigint
         value: bigint
         hashedValue: Hex
         commitmentTransactionIntentId?: UUID
         revealTransactionIntentId?: UUID
         status: RandomnessStatus
     }) {
-        this.timestamp = params.timestamp
+        this.blockNumber = params.blockNumber
         this.value = params.value
         this.hashedValue = params.hashedValue
         this.commitmentTransactionIntentId = params.commitmentTransactionIntentId
@@ -73,11 +73,11 @@ export class Randomness {
         this.status = RandomnessStatus.REVEAL_NOT_SUBMITTED_ON_TIME
     }
 
-    static createRandomness(timestamp: bigint): Randomness {
+    static createRandomness(blockNumber: bigint): Randomness {
         const value = Randomness.generateValue()
         const hashedValue = Randomness.hashValue(value)
         return new Randomness({
-            timestamp,
+            blockNumber,
             value,
             hashedValue,
             commitmentTransactionIntentId: undefined,
@@ -87,12 +87,12 @@ export class Randomness {
     }
 
     private static generateValue(): bigint {
-        const bytes = crypto.randomBytes(32)
+        const bytes = crypto.randomBytes(16)
 
         return BigInt(bytesToHex(bytes))
     }
 
     private static hashValue(value: bigint): Hex {
-        return keccak256(encodePacked(["uint256"], [value]))
+        return keccak256(encodePacked(["uint128"], [value]))
     }
 }

@@ -249,9 +249,16 @@ define post-deploy
 	@# Extract ABIs from the deployed contracts and save to out/abis.json.
 	@export CONTRACTS=$$(bun node-jq '[.[]] | unique' out/abiMap.json) && \
 	node-jq '[.[]] | unique[]' out/abiMap.json \
-		| xargs -L1 -I'{}' forge inspect {} abi \
+		| xargs -L1 -I'{}' sh -c 'path=$$(find . -type f -iname "{}.sol" | head -n1); \
+							if [ -n "$$path" ]; then \
+								forge inspect "$$path:{}" abi; \
+							else \
+								echo "Error: File {}.sol not found" >&2; \
+								exit 1; \
+							fi' \
 		| node-jq --slurp --argjson contracts "$$CONTRACTS" '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
 		> out/abis.json;
+
 
 	@# Generate "as const" TypeScript ABI definitions for type usage.
 	@# To use you will want to symlink this file from the deployments dir to the consuming package,
