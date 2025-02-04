@@ -4,7 +4,7 @@ import { Button } from "#src/components/primitives/button/Button"
 import { FormField, FormFieldLabel } from "#src/components/primitives/form-field/FormField"
 import { Input } from "#src/components/primitives/input/Input"
 import { recipeInput } from "#src/components/primitives/input/variant"
-import { FieldFormSendAssets, useFormSendAssets } from "#src/hooks/useHappySend"
+import { FieldFormSendAssets, useFormSendAssets } from "#src/hooks/useFormSendAssets"
 
 export const FormSend = () => {
     const navigate = useNavigate()
@@ -37,7 +37,7 @@ export const FormSend = () => {
                         className=""
                     />
 
-                    <p className="sr-only indicator w-full text-xs font-medium" id="help-recipient-address">
+                    <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="help-recipient-address">
                         {formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
                     </p>
                 </div>
@@ -96,7 +96,7 @@ export const FormSend = () => {
                         </Button>
                     </div>
                     <div className="grid">
-                        <p className="sr-only indicator w-full text-xs font-medium" id="help-send-amount">
+                        <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="help-send-amount">
                             {formErrors?.fieldErrors[FieldFormSendAssets.Amount]}
                         </p>
                     </div>
