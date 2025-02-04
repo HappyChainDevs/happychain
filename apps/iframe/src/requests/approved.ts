@@ -54,6 +54,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "eth_sendTransaction": {
             try {
                 if (!user) throw new EIP1193UnauthorizedError()
+                console.log(request.payload)
                 return await sendUserOp({
                     user,
                     tx: request.payload.eip1193params.params[0],

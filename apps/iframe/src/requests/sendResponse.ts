@@ -1,5 +1,6 @@
 import {
     type ApprovedRequestPayload,
+    type EIP1193RequestParameters,
     Msgs,
     type ProviderEventPayload,
     WalletType,
@@ -29,10 +30,10 @@ import { appForSourceID } from "./utils"
  *                            the appropriate channel (parent window - message bus, or iframe).
  * @throws {UnauthorizedProviderError} - If the user is not authenticated when the request is dispatched.
  */
-export async function sendResponse<Request extends ProviderEventPayload<ApprovedRequestPayload>, T>(
-    request: Request,
-    dispatch: (request: Request) => Promise<T>,
-): Promise<void> {
+export async function sendResponse<
+    Request extends ProviderEventPayload<EIP1193RequestParameters | ApprovedRequestPayload>,
+    T,
+>(request: Request, dispatch: (request: Request) => Promise<T>): Promise<void> {
     const app = appForSourceID(request.windowId)
     if (!app) {
         console.warn("Unsupported source app, abandoning request", app, request)

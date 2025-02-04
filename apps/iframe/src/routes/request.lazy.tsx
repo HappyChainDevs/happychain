@@ -77,6 +77,7 @@ function Request() {
 
             const frame = getFrameByIndex(iframeIndex)
 
+            // todo bigints fail here with a DataCloneError
             void frame.postMessage(
                 makeMessage(Msgs.PopupApprove, {
                     error: null,

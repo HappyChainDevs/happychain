@@ -25,7 +25,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
 
         test("skips eth_requestAccounts permissions when no user", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(parentID, { eip1193params: { method: "eth_requestAccounts" } })
+            const request = makePayload(parentID, { method: "eth_requestAccounts" })
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
@@ -42,7 +42,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
 
         test("throws exception if not previously authorized via popup", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(parentID, { eip1193params: { method: "eth_requestAccounts" } })
+            const request = makePayload(parentID, { method: "eth_requestAccounts" })
             const response = dispatchHandlers(request)
             await expect(response).rejects.toThrow(EIP1193UserRejectedRequestError)
             expect(getAllPermissions(appURL).length).toBe(0)
@@ -51,7 +51,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
         test("returns user accounts if allowed", async () => {
             grantPermissions(appURL, "eth_accounts")
             expect(getAllPermissions(appURL).length).toBe(1)
-            const request = makePayload(parentID, { eip1193params: { method: "eth_requestAccounts" } })
+            const request = makePayload(parentID, { method: "eth_requestAccounts" })
             const response = await dispatchHandlers(request)
             expect(response).toStrictEqual([user.address])
             expect(getAllPermissions(appURL).length).toBe(1)
@@ -61,7 +61,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
             const user = await createHappyUserFromWallet("io.testing", addressFactory())
             setUser(user)
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(parentID, { eip1193params: { method: "eth_requestAccounts" } })
+            const request = makePayload(parentID, { method: "eth_requestAccounts" })
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UserRejectedRequestError)
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UserRejectedRequestError)
             expect(getAllPermissions(appURL).length).toBe(0)

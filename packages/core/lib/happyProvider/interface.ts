@@ -1,8 +1,7 @@
 import type { EventEmitter } from "node:events"
 import type {
-    ApprovedRequestPayload,
     EIP1193RequestMethods,
-    // EIP1193RequestParameters,
+    EIP1193RequestParameters,
     EIP1193RequestResult,
     HappyUser,
     OverlayErrorCode,
@@ -55,5 +54,5 @@ export interface HappyProviderInternal extends HappyProvider {
 export interface EIP1193ConnectionHandler<TString extends EIP1193RequestMethods = EIP1193RequestMethods>
     extends SafeEventEmitter {
     isConnected(): boolean
-    request(args: ApprovedRequestPayload<TString>): Promise<EIP1193RequestResult<TString>>
+    request(args: EIP1193RequestParameters<TString>): Promise<EIP1193RequestResult<TString>>
 }

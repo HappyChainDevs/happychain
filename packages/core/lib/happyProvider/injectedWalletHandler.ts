@@ -1,10 +1,5 @@
 import type { UUID } from "@happy.tech/common"
-import {
-    type ApprovedRequestPayload,
-    BasePopupProvider,
-    // type EIP1193RequestParameters,
-    Msgs,
-} from "@happy.tech/wallet-common"
+import { BasePopupProvider, type EIP1193RequestParameters, Msgs } from "@happy.tech/wallet-common"
 import { InjectedWalletWrapper } from "./InjectedWalletWrapper"
 import type { HappyProviderConfig } from "./happyProviderImplem"
 import type { EIP1193ConnectionHandler } from "./interface"
@@ -43,7 +38,7 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
         return Boolean(this.wrapper.provider)
     }
 
-    protected handlePermissionless(key: UUID, args: ApprovedRequestPayload): undefined {
+    protected handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
         // Note that this always works regardless of log in or connection status.
         void this.config.providerBus.emit(Msgs.RequestInjected, {
             key,
@@ -53,12 +48,12 @@ export class InjectedWalletHandler extends BasePopupProvider implements EIP1193C
         })
     }
 
-    protected override async requiresUserApproval(_args: ApprovedRequestPayload): Promise<boolean> {
+    protected override async requiresUserApproval(_args: EIP1193RequestParameters): Promise<boolean> {
         // Checks will be handled by the injected wallet if needed.
         return false
     }
 
-    protected override async requestExtraPermissions(_args: ApprovedRequestPayload): Promise<boolean> {
+    protected override async requestExtraPermissions(_args: EIP1193RequestParameters): Promise<boolean> {
         // Approvals are handled by the injected wallet, no need to request any extra here.
         return true
     }

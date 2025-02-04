@@ -52,7 +52,7 @@ import { appForSourceID } from "./utils"
 
 /**
  * Processes requests using the connected 'injected wallet' such as metamask. This will be the
- * locally injected wallet when in standalone-mode, or be the dapps injected wallet when embedded
+ * locally injected wallet when in standalone-mode, or be the dapps' injected wallet when embedded
  * into another application.
  */
 export function handleInjectedRequest(request: ProviderMsgsFromApp[Msgs.RequestInjected]) {
@@ -63,13 +63,13 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
     const app = appForSourceID(request.windowId)! // checked in sendResponse
     const user = getUser()
 
-    switch (request.payload.eip1193params.method) {
+    switch (request.payload.method) {
         // Different from permissionless.ts as this actually calls the provider
         // to ensure we still have a connection with the extension wallet
         case HappyMethodNames.USER: {
             const acc = await sendToInjectedClient(app, {
                 ...request,
-                payload: { eip1193params: { method: "eth_accounts" } },
+                payload: { method: "eth_accounts" },
             })
             return acc.length ? user : undefined
         }
@@ -81,15 +81,15 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         // This is the same as approved.ts
         case "eth_sendTransaction": {
             if (!user) return false
-            const target = request.payload.eip1193params.params[0].to
+            const target = request.payload.params[0].to
 
             const hasSession = getPermissions(app, { [PermissionNames.SESSION_KEY]: { target } }).length > 0
 
             if (hasSession) {
                 const user = getUser()
                 if (!user) throw new EIP1193UnauthorizedError()
-                const tx = request.payload.eip1193params.params[0]
-                const target = request.payload.eip1193params.params[0].to
+                const tx = request.payload.params[0]
+                const target = request.payload.params[0].to
                 if (!tx || !target) return false
 
                 const permissions = getPermissions(app, {
@@ -127,7 +127,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             //      We need to make sure all errors are correctly surfaced!
             try {
                 const smartAccountClient = (await getSmartAccountClient())!
-                const tx = request.payload.eip1193params.params[0]
+                const tx = request.payload.params[0]
                 const preparedUserOp = await smartAccountClient.prepareUserOperation({
                     account: smartAccountClient.account,
                     calls: [
@@ -156,7 +156,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         }
 
         case "eth_getTransactionByHash": {
-            const [hash] = request.payload.eip1193params.params
+            const [hash] = request.payload.params
             const smartAccountClient = (await getSmartAccountClient())!
 
             // Attempt to retrieve UserOperation details first.
@@ -206,7 +206,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         }
 
         case "eth_getTransactionReceipt": {
-            const [hash] = request.payload.eip1193params.params
+            const [hash] = request.payload.params
             const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             // Attempt to retrieve UserOperation details first.
             // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
@@ -243,7 +243,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         }
 
         case "eth_getTransactionCount": {
-            const [address] = request.payload.eip1193params.params
+            const [address] = request.payload.params
             const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
 
             if (smartAccountClient && address.toLowerCase() === smartAccountClient.account.address.toLowerCase()) {
@@ -267,7 +267,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         }
 
         case "eth_estimateGas": {
-            const [tx] = request.payload.eip1193params.params
+            const [tx] = request.payload.params
             const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
             const gasEstimation = await smartAccountClient.estimateUserOperationGas({
                 calls: [
@@ -284,7 +284,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             // address of contract the session key will be authorized to interact with
-            const targetContract = request.payload.eip1193params.params[0]
+            const targetContract = request.payload.params[0]
 
             if (!isAddress(targetContract)) {
                 throw new InvalidAddressError({ address: targetContract })
@@ -420,7 +420,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         // on approved.ts
         case "wallet_revokePermissions": {
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
-            revokePermissions(app, request.payload.eip1193params.params[0])
+            revokePermissions(app, request.payload.params[0])
             return resp
         }
 
@@ -429,8 +429,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         // accordingly. Some extensions automatically switch chain after adding, so we enforce this
         // behavior to have a more standard experience regardless of the connecting wallet.
         case "wallet_addEthereumChain": {
-            const params =
-                Array.isArray(request.payload.eip1193params.params) && request.payload.eip1193params.params[0]
+            const params = Array.isArray(request.payload.params) && request.payload.params[0]
             const isValid = isAddChainParams(params)
             if (!isValid)
                 throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Invalid request body")
@@ -454,10 +453,8 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             await sendToInjectedClient(app, {
                 ...request,
                 payload: {
-                    eip1193params: {
-                        method: "wallet_switchEthereumChain",
-                        params: [{ chainId: params.chainId }],
-                    },
+                    method: "wallet_switchEthereumChain",
+                    params: [{ chainId: params.chainId }],
                 },
             })
 
@@ -468,7 +465,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
         case "wallet_switchEthereumChain": {
             const chains = getChains()
-            const chainId = request.payload.eip1193params.params[0].chainId
+            const chainId = request.payload.params[0].chainId
 
             // ensure chain has already been added
             if (!(chainId in chains)) {
@@ -485,12 +482,12 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
         // same as approved.ts
         case "wallet_watchAsset": {
-            return user ? addWatchedAsset(user.address, request.payload.eip1193params.params) : false
+            return user ? addWatchedAsset(user.address, request.payload.params) : false
         }
 
         // same as approved.ts
         case HappyMethodNames.USE_ABI: {
-            return user ? loadAbiForUser(user.address, request.payload.eip1193params.params) : false
+            return user ? loadAbiForUser(user.address, request.payload.params) : false
         }
 
         default:
@@ -501,30 +498,30 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 async function sendToInjectedClient<T extends ProviderMsgsFromApp[Msgs.RequestInjected]>(
     _app: AppURL,
     request: T,
-): Promise<EIP1193RequestResult<T["payload"]["eip1193params"]["method"]>> {
+): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
     const client: Client | undefined = getInjectedClient()
 
     if (!client) throw new EIP1193DisconnectedError()
 
-    if (requestPayloadIsHappyMethod(request.payload.eip1193params)) {
+    if (requestPayloadIsHappyMethod(request.payload)) {
         throw new EIP1193UnsupportedMethodError()
     }
 
-    return await client.request(request.payload.eip1193params)
+    return await client.request(request.payload)
 }
 
 async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPermissionless]>(
     app: AppURL,
     request: T,
-): Promise<EIP1193RequestResult<T["payload"]["eip1193params"]["method"]>> {
+): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
     if (checkIfRequestRequiresConfirmation(app, request.payload)) {
         throw new EIP1193UnauthorizedError()
     }
     const client: Client = getPublicClient()
 
-    if (requestPayloadIsHappyMethod(request.payload.eip1193params)) {
+    if (requestPayloadIsHappyMethod(request.payload)) {
         throw new EIP1193UnsupportedMethodError()
     }
 
-    return await client.request(request.payload.eip1193params)
+    return await client.request(request.payload)
 }

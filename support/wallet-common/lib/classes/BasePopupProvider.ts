@@ -124,7 +124,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      * Returns true if a request requires user approval, if unable to determine, and/or if extra
      * permissions (beyond user approval) are required.
      */
-    protected abstract requiresUserApproval(args: ApprovedRequestPayload): Promise<boolean>
+    protected abstract requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean>
 
     /**
      * Whenever {@link requiresUserApproval} is true for a request, this is called to check if
@@ -140,13 +140,13 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
      * {@link requiresUserApproval} must be conservative and return true, but we can correct things after
      * connection by returning false from this function.
      */
-    protected abstract requestExtraPermissions(args: ApprovedRequestPayload): Promise<boolean>
+    protected abstract requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean>
 
     /**
      * Handles a request that does not require user approval.
      */
     // Return type is undefined on purpose, avoid overrides returning anything.
-    protected abstract handlePermissionless(key: UUID, args: ApprovedRequestPayload): undefined
+    protected abstract handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined
 
     // === PRIVATE METHODS =========================================================================
 

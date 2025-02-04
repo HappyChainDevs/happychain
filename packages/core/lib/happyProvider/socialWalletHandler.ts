@@ -4,7 +4,7 @@ import {
     type ApprovedRequestPayload,
     AuthState,
     BasePopupProvider,
-    // type EIP1193RequestParameters,
+    type EIP1193RequestParameters,
     type HappyUser,
     LoginRequiredError,
     Msgs,
@@ -90,7 +90,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         return promise
     }
 
-    protected handlePermissionless(key: UUID, args: ApprovedRequestPayload): undefined {
+    protected handlePermissionless(key: UUID, args: EIP1193RequestParameters): undefined {
         // Note that this always works regardless of log in or connection status.
         void this.config.providerBus.emit(Msgs.RequestPermissionless, {
             key,
@@ -111,7 +111,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
      * request was unrelated (ie. sendTransaction) or if it was already a connection request, we
      * can allow the flow to proceed as normal and the user will approve in the popup as usual.
      */
-    protected override async requestExtraPermissions(args: ApprovedRequestPayload): Promise<boolean> {
+    protected override async requestExtraPermissions(args: EIP1193RequestParameters): Promise<boolean> {
         // We are connected, no need for extra permissions, we needed approval before and still do.
         if (this.user) return true
 
@@ -128,23 +128,21 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
 
         // biome-ignore format: readability
         const isConnectionRequest
-            =  args.eip1193params.method === "eth_requestAccounts"
-            || args.eip1193params.method === "wallet_requestPermissions"
-                && args.eip1193params.params.some((p) => p.eth_accounts)
+            =  args.method === "eth_requestAccounts"
+            || args.method === "wallet_requestPermissions"
+                && args.params.some((p) => p.eth_accounts)
 
         // We are already logged in, but don't have the correct permissions. If this was not already
         // a connection request, we make an explicit connection request, before proceeding with the
         // original request. Otherwise, we can just proceed and execute the original request directly
         if (!isConnectionRequest) {
             await this.request({
-                eip1193params: {
-                    method: "wallet_requestPermissions",
-                    params: [{ eth_accounts: {} }],
-                },
+                method: "wallet_requestPermissions",
+                params: [{ eth_accounts: {} }],
             })
         }
 
-        if (args.eip1193params.method === "wallet_requestPermissions") {
+        if (args.method === "wallet_requestPermissions") {
             return await this.requiresUserApproval(args) // still requires approval?
         }
 

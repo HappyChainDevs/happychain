@@ -1,4 +1,4 @@
-import type { PrepareUserOperationReturnType } from "viem/account-abstraction"
+import type { PrepareUserOperationReturnType, SmartAccount } from "viem/account-abstraction"
 import type { EIP1193ErrorObject } from "../errors"
 import type { OverlayErrorCode } from "../errors/overlay-errors"
 import type { EIP1193EventName, EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193.ts"
@@ -199,9 +199,9 @@ export type MsgsFromIframe = {
  */
 export type ProviderMsgsFromApp = {
     [Msgs.ForwardInjectedEvent]: ProviderEventPayload<{ event: string; params: unknown }>
-    [Msgs.RequestPermissionless]: ProviderEventPayload<ApprovedRequestPayload>
-    [Msgs.RequestInjected]: ProviderEventPayload<ApprovedRequestPayload>
-    [Msgs.PermissionCheckRequest]: ProviderEventPayload<ApprovedRequestPayload>
+    [Msgs.RequestPermissionless]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.RequestInjected]: ProviderEventPayload<EIP1193RequestParameters>
+    [Msgs.PermissionCheckRequest]: ProviderEventPayload<EIP1193RequestParameters>
     [Msgs.ExecuteInjectedResponse]: ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
 }
 
@@ -230,9 +230,20 @@ export type ProviderMsgsFromIframe = {
  * This does not require being in the shared package (only used in the iframe package), but it's
  * simpler if all event definitions live in the same place.
  */
-type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> = Method extends "eth_sendTransaction"
-    ? PrepareUserOperationReturnType // this is actually the type we want!
+
+// this is not very extendable atm
+// think this requires some extra tooling but we can run w this for now
+export type ApprovedRequestExtraData<
+    Method extends EIP1193RequestMethods,
+    TAccount extends SmartAccount | undefined = SmartAccount | undefined,
+    TAccountOverride extends SmartAccount | undefined = SmartAccount | undefined,
+    TCalls extends readonly unknown[] = readonly unknown[],
+> = Method extends "eth_sendTransaction"
+    ? PrepareUserOperationReturnType<TAccount, TAccountOverride, TCalls>
     : undefined
+// type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> = Method extends "eth_sendTransaction"
+//     ? PrepareUserOperationReturnType // this is actually the type we want!
+//     : undefined
 
 export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP1193RequestMethods> = {
     eip1193params: EIP1193RequestParameters<Method>
@@ -241,6 +252,6 @@ export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP119
 
 export type PopupMsgs = {
     // [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
-    [Msgs.PopupApprove]: ProviderEventPayload<ApprovedRequestPayload>
+    [Msgs.PopupApprove]: ProviderEventPayload<ApprovedRequestPayload> // it should only be changed here!
     [Msgs.PopupReject]: ProviderEventError<EIP1193ErrorObject>
 }
