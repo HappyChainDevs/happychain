@@ -154,7 +154,7 @@ contract ScrappyAccount is
 
         console.logBytes32(happyTx.getHappyTxHash());
         console.logBytes32(happyTx.getHappyTxHash().toEthSignedMessageHash());
-        
+
         address signer = happyTx.getHappyTxHash().toEthSignedMessageHash().recover(happyTx.extraData);
         console.log("signer:", signer);
 
@@ -176,7 +176,6 @@ contract ScrappyAccount is
                 return InvalidOwnerSignature.selector; // todo: add submitter signature validation
             }
         }
-
     }
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {

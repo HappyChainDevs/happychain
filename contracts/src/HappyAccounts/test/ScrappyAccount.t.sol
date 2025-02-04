@@ -5,24 +5,23 @@ import {Test, console} from "forge-std/Test.sol";
 
 import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
-import {ScrappyAccount} from "../samples/ScrappyAccount.sol"; 
-import {ScrappyPaymaster} from "../samples/ScrappyPaymaster.sol"; 
+import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
+import {ScrappyPaymaster} from "../samples/ScrappyPaymaster.sol";
 import {ScrappyAccountFactory} from "../factories/ScrappyAccountFactory.sol";
 import {HappyEntryPoint} from "../core/HappyEntryPoint.sol";
-import {ScrappyAccountFactory} from "../factories/ScrappyAccountFactory.sol";  
+import {ScrappyAccountFactory} from "../factories/ScrappyAccountFactory.sol";
 import {MockERC20Token} from "../../mocks/MockERC20.sol";
-import {ECDSA} from "solady/utils/ECDSA.sol";   
+import {ECDSA} from "solady/utils/ECDSA.sol";
 
 contract ScrappyAccountTest is Test {
-
     using HappyTxLib for bytes;
 
-    ScrappyAccount  private testAccount;
+    ScrappyAccount private testAccount;
     HappyEntryPoint private entryPoint;
     ScrappyAccountFactory private factory;
-    ScrappyPaymaster private paymaster; 
+    ScrappyPaymaster private paymaster;
     MockERC20Token private token;
-    bytes32 private SALT = "0x";     
+    bytes32 private SALT = "0x";
 
     address sender;
     uint256 senderPrivateKey;
@@ -51,8 +50,8 @@ contract ScrappyAccountTest is Test {
         submitterPrivateKey = _submitterPrivateKey;
 
         entryPoint = new HappyEntryPoint();
-        paymaster = new ScrappyPaymaster(); 
-        
+        paymaster = new ScrappyPaymaster();
+
         ScrappyAccount accountImplementation = new ScrappyAccount(address(entryPoint));
         factory = new ScrappyAccountFactory(address(accountImplementation), address(entryPoint));
 
@@ -70,7 +69,7 @@ contract ScrappyAccountTest is Test {
         uint256 AMOUNT = 1000;
         uint256 initialBalance = token.balanceOf(address(this));
         vm.deal(address(testAccount), 1 ether); // fund the account since it sponsors itself
-        
+
         HappyTx memory _tx = HappyTx({
             account: address(testAccount),
             gasLimit: 1000000,
@@ -94,13 +93,13 @@ contract ScrappyAccountTest is Test {
         _tx.nonce = 1;
         entryPoint.submit(_createHappyTx(_tx));
         assertEq(token.balanceOf(address(this)), initialBalance + (2 * AMOUNT));
-    } 
+    }
 
     function testSubmitSubmitterPays() public {
         vm.skip(true);
         uint256 AMOUNT = 1000;
         uint256 initialBalance = token.balanceOf(address(this));
-        
+
         HappyTx memory _tx = HappyTx({
             account: address(testAccount),
             gasLimit: 1000000,
@@ -118,7 +117,7 @@ contract ScrappyAccountTest is Test {
         });
         // sign with submitter
         (uint8 v, bytes32 r, bytes32 s) = _submitterSign(_tx);
-        _tx.extraData = abi.encodePacked(r,s,v);
+        _tx.extraData = abi.encodePacked(r, s, v);
         entryPoint.submit(_tx);
 
         assertEq(token.balanceOf(address(this)), initialBalance + AMOUNT);
@@ -146,20 +145,18 @@ contract ScrappyAccountTest is Test {
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(hash);
         console.logBytes32(ethHash);
 
-        return vm.sign(submitterPrivateKey, ethHash);       
-    }   
+        return vm.sign(submitterPrivateKey, ethHash);
+    }
 
     function _createHappyTx(HappyTx memory _tx) internal view returns (HappyTx memory) {
         (uint8 v, bytes32 r, bytes32 s) = _signHappyTx(_tx);
-        _tx.extraData = abi.encodePacked(r,s,v);
+        _tx.extraData = abi.encodePacked(r, s, v);
         return _tx;
     }
 
     function _signHappyTx(HappyTx memory _tx) internal view returns (uint8, bytes32, bytes32) {
         bytes32 hash = HappyTxLib.getHappyTxHash(_tx);
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(hash);
-        return vm.sign(senderPrivateKey, ethHash);       
+        return vm.sign(senderPrivateKey, ethHash);
     }
-
-
 }
