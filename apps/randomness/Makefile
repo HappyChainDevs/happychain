@@ -5,14 +5,21 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
+setup-local: ## Sets up local environment and runs everything
+	./start-local-randomness.sh
+.PHONY: setup-local
+
+stop-local: ## Kills anvil and the randomness service
+	./stop-local-randomness.sh
+.PHONY: stop-local
+
 start: ## Starts the randomness service
 	node --env-file=.env dist/index.es.js
-PHONY: start
-
+.PHONY: start
 
 migrate: ## Runs pending migrations
 	tsx --env-file=.env src/migrate.ts
-PHONY: migrate
+.PHONY: migrate
 
 link-anvil:
 	rm src/ABI/random.ts
