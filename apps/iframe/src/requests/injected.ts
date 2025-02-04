@@ -334,25 +334,52 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return accountSessionKey.address
         }
 
+        case "eth_accounts": {
+            // not logged in
+            if (!user) return []
+
+            const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
+
+            // wallet not connected
+            if (!resp.length) return []
+
+            // wallet connected as wrong user somehow
+            if (resp[0].toLowerCase() !== user.controllingAddress) return []
+
+            // substitute smartAccount
+            return [user.address]
+        }
+
         // different from approved.ts and permissionless as we don't checkAuthenticated here,
         // instead relying on the extension wallet to handle the permission access.
         // If the call is successful, we will grant (mirror) permissions here, otherwise we
-        // can safely assume it failed, and ignore.
+        // can safely assume it failed, and ignore. We can assume the user is logged in here, as
+        // we handle logging in elsewhere (InjectedConnector) so a logged out user will not be
+        // calling this method directly. Its first called in response to the Connect/Reconnect on
+        // page load by the iframes wagmi connector
         case "eth_requestAccounts": {
+            if (!user) return []
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
-            if (resp.length) {
-                grantPermissions(app, "eth_accounts")
+
+            // wallet not connected, we will revoke permissions (they should already be revoked)
+            if (!resp.length) {
+                revokePermissions(app, "eth_accounts")
+                return []
             }
-            return resp
+
+            // Permissions are likely granted, but incase they are not, we can safely grant here
+            // since the injected wallet itself also has the permissions granted
+            grantPermissions(app, "eth_accounts")
+
+            // substitute smartAccount
+            return [user.address]
         }
 
         // same explanation as 'eth_requestAccounts' above, we won't do any checks ourselves
         // and instead rely on success/fail of the extension wallet call
         case "wallet_requestPermissions": {
             const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
-            if (resp.length) {
-                grantPermissions(app, "eth_accounts")
-            }
+            if (resp.length) grantPermissions(app, "eth_accounts")
             return resp
         }
 

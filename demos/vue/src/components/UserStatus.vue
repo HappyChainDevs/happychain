@@ -16,7 +16,7 @@ const { address } = useAccount()
             <div class="col-span-2 row-span-2 flex items-center cursor-default"
                 :class="{'hover:bg-theme-highlight hover:text-black': user?.address}">
                 <SelectArrow v-if="address" />
-                Adress (smart account): {{ user?.address }}
+                Address (smart account): {{ user?.address }}
             </div>
             <div class="col-span-2 row-span-2 flex items-center cursor-default"
                 :class="{'hover:bg-theme-highlight hover:text-black': user?.controllingAddress}">
