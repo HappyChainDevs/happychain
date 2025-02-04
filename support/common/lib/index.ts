@@ -62,6 +62,8 @@ export { Map2 } from "./collections/map2"
 
 export { FIFOCache } from "./collections/fifo-cache"
 
+export { fetchWithRetry } from "./utils/fetch"
+
 // === DATA ========================================================================================
 
 export { injectedProviderInfo, happyProviderInfo } from "./data/providers"

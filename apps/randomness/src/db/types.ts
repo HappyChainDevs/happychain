@@ -1,10 +1,11 @@
 import { type Hex, type UUID, bigIntToZeroPadded } from "@happy.tech/common"
+import type { DrandStatus } from "../Drand"
 import { Randomness, type RandomnessStatus } from "../Randomness"
 import { DIGITS_MAX_UINT256 } from "../RandomnessRepository"
 
 // Values are stored as strings because they can be large numbers bigger than the max value of an SQLite integer
 export interface RandomnessRow {
-    timestamp: string
+    blockNumber: string
     value: string
     hashedValue: Hex
     commitmentTransactionIntentId: UUID | undefined
@@ -12,13 +13,22 @@ export interface RandomnessRow {
     status: RandomnessStatus
 }
 
+export interface DrandRow {
+    // We store the round as a string because it can be a large number bigger than the max value of an SQLite integer
+    round: string
+    signature: string | undefined
+    status: DrandStatus
+    transactionIntentId: UUID | undefined
+}
+
 export interface Database {
     randomnesses: RandomnessRow
+    drands: DrandRow
 }
 
 export function randomnessRowToEntity(row: RandomnessRow): Randomness {
     return new Randomness({
-        timestamp: BigInt(row.timestamp),
+        blockNumber: BigInt(row.blockNumber),
         value: BigInt(row.value),
         hashedValue: row.hashedValue,
         commitmentTransactionIntentId: row.commitmentTransactionIntentId,
@@ -29,7 +39,7 @@ export function randomnessRowToEntity(row: RandomnessRow): Randomness {
 
 export function randomnessEntityToRow(entity: Randomness): RandomnessRow {
     return {
-        timestamp: bigIntToZeroPadded(entity.timestamp, DIGITS_MAX_UINT256),
+        blockNumber: bigIntToZeroPadded(entity.blockNumber, DIGITS_MAX_UINT256),
         value: bigIntToZeroPadded(entity.value, DIGITS_MAX_UINT256),
         hashedValue: entity.hashedValue,
         commitmentTransactionIntentId: entity.commitmentTransactionIntentId,
