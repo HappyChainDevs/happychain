@@ -41,7 +41,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "apps/randomness/build/*,apps/randomness/node_modules/better-sqlite3,apps/randomness/node_modules/bindings,apps/randomness/node_modules/file-uri-to-path"
+          source: "apps/randomness/build/*,apps/randomness/node_modules/better-sqlite3/**,apps/randomness/node_modules/bindings/**,apps/randomness/node_modules/file-uri-to-path/**"
           target: /home/deployer/randomness
           strip_components: 2   
           rm: true
