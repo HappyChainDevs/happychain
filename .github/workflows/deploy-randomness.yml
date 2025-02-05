@@ -76,8 +76,12 @@ jobs:
             RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
             ${{vars.RANDOMNESS_ENV}}
             EOF
+
+            npm rebuild
           
             pm2 delete ${{ env.PM2_PROCESS_NAME }}
+
+
 
             node --env-file .env ./build/migrate.es.js
 
