@@ -63,18 +63,18 @@ jobs:
               rm -f .env
 
               cat > .env <<-EOF
-              PRIVATE_KEY=${{ secrets.RANDOMNESS_PRIVATE_KEY }}
-              TXM_DB_PATH=${{ env.TXM_DB_PATH }}
-              RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
-              ${{vars.RANDOMNESS_ENV}}
-              EOF
-              
-              pm2 delete ${{ env.PM2_PROCESS_NAME }}
+            PRIVATE_KEY=${{ secrets.RANDOMNESS_PRIVATE_KEY }}
+            TXM_DB_PATH=${{ env.TXM_DB_PATH }}
+            RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
+            ${{vars.RANDOMNESS_ENV}}
+            EOF
+          
+            pm2 delete ${{ env.PM2_PROCESS_NAME }}
 
-              node --env-file .env ./randomness/migrate.es.js
+            node --env-file .env ./randomness/migrate.es.js
 
-              source .env && pm2 start ./dist/randomness/index.es.js \
+            source .env && pm2 start ./dist/randomness/index.es.js \
                   --name ${{ env.PM2_PROCESS_NAME }}
-              pm2 save
+            pm2 save
             '
             rm -rf /tmp/randomness
