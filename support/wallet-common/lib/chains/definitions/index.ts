@@ -1,6 +1,16 @@
 // Internal use only
-export { ethereum } from "./ethereum"
-export { devnet } from "./devnet"
-import { happyChainSepolia } from "./happyChainSepolia"
-export { happyChainSepolia }
-export const defaultChain = happyChainSepolia
+import { devnetDefinition } from "./devnet"
+import { ethereumDefinition } from "./ethereum"
+import { happyChainSepoliaDefinition } from "./happyChainSepolia"
+// export { happyChainSepoliaDefinition as happyChainSepolia }
+// export const defaultChain = happyChainSepoliaDefinition
+
+export const chainDefinitions = {
+    defaultChain: happyChainSepoliaDefinition,
+
+    // Internal use only
+    ethereum: ethereumDefinition,
+    devnet: devnetDefinition,
+    from: happyChainSepoliaDefinition,
+    happyChainSepolia: happyChainSepoliaDefinition,
+}

@@ -1,4 +1,7 @@
+import type { Prettify } from "@happy.tech/common"
 import {
+    type HappyUser,
+    type WalletRegisterOptions,
     connect,
     disconnect,
     happyProvider,
@@ -8,12 +11,15 @@ import {
     requestSessionKey,
     showSendScreen,
 } from "@happy.tech/core"
-import type { HappyUser } from "@happy.tech/core"
 import { createContext, useContext, useEffect, useState } from "react"
 
-export type HappyWalletProviderProps = React.PropsWithChildren & {
-    init?: Parameters<typeof register>[0]
-}
+export type { WalletRegisterOptions }
+
+export type HappyWalletProviderProps = Prettify<
+    React.PropsWithChildren & {
+        init?: WalletRegisterOptions
+    }
+>
 
 type THappyContext = {
     user: HappyUser | undefined

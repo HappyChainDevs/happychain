@@ -1,4 +1,4 @@
-import { devnet as addChainDefinition } from "../definitions/devnet"
+import { devnetDefinition as addChainDefinition } from "../definitions/devnet"
 import { convertToViemChain } from "../utils"
 import type { Chain } from "./type"
 

@@ -33,7 +33,7 @@ export async function createKernelAccount(
 ): Promise<KernelSmartAccount | undefined> {
     const chain = getCurrentChain()
     const currentChain = convertToViemChain(chain)
-    const contracts = getAccountAbstractionContracts(currentChain.chainId)
+    const contracts = getAccountAbstractionContracts(chain.chainId)
     const clientOptions = {
         transport: http(currentChain.rpcUrls.default.http[0]),
         chain: currentChain,
@@ -86,9 +86,9 @@ export const { getValue: getKernelAccount } = accessorsFromAtom(kernelAccountAto
 export async function getKernelAccountAddress(owner: Address): Promise<Address> {
     const chain = getCurrentChain()
     const currentChain = convertToViemChain(chain)
-    const contracts = getAccountAbstractionContracts(currentChain.chainId)
+    const contracts = getAccountAbstractionContracts(chain.chainId)
     const clientOptions = {
-        transport: http(currentChain.rpcUrls[0]),
+        transport: http(chain.rpcUrls[0]),
         chain: currentChain,
     }
     const publicClient = createPublicClient(clientOptions)
