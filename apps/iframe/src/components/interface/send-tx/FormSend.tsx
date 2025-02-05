@@ -34,12 +34,19 @@ export const FormSend = () => {
                         aria-describedby="help-recipient-address"
                         aria-invalid={!!formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
                         pattern="^$|^0x[a-fA-F0-9]{40}$"
-                        className=""
+                        {...(formErrors?.fieldErrors[FieldFormSendAssets.Recipient] && {
+                            "aria-errormessage": "error-recipient-address",
+                        })}
                     />
-
-                    <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="help-recipient-address">
-                        {formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
+                    <p className="sr-only" id="help-recipient-address">
+                        The Ethereum address you'll send the tokens to.
                     </p>
+
+                    {formErrors?.fieldErrors[FieldFormSendAssets.Recipient] && (
+                        <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="error-recipient-address">
+                            {formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
+                        </p>
+                    )}
                 </div>
             </FormField>
             <FormField>
@@ -80,6 +87,9 @@ export const FormSend = () => {
                             onInput={handleOnInput}
                             aria-describedby="help-send-amount"
                             aria-invalid={!!formErrors?.fieldErrors[FieldFormSendAssets.Amount]}
+                            {...(formErrors?.fieldErrors[FieldFormSendAssets.Amount] && {
+                                "aria-errormessage": "error-send-amount",
+                            })}
                         />
                         <Button
                             intent="ghost"
@@ -96,9 +106,15 @@ export const FormSend = () => {
                         </Button>
                     </div>
                     <div className="grid">
-                        <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="help-send-amount">
-                            {formErrors?.fieldErrors[FieldFormSendAssets.Amount]}
+                        <p className="sr-only" id="help-send-amount">
+                            The amount of tokens you want to send from your account.
                         </p>
+
+                        {formErrors?.fieldErrors[FieldFormSendAssets.Amount] && (
+                            <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="error-send-amount">
+                                {formErrors?.fieldErrors[FieldFormSendAssets.Amount]}
+                            </p>
+                        )}
                     </div>
                 </div>
             </FormField>
