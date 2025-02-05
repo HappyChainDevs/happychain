@@ -3,8 +3,10 @@ import { atom, useAtom, useAtomValue } from "jotai"
 import { useMemo } from "react"
 import { type Address, formatEther, isAddress, parseEther } from "viem"
 import { useBalance, useSendTransaction } from "wagmi"
+import { getBalanceQueryKey } from "wagmi/query"
 import { coerce, object, string } from "zod"
 import { userAtom } from "#src/state/user"
+import { queryClient } from "#src/tanstack-query/config"
 
 /**
  * Form field names values
@@ -14,16 +16,18 @@ export enum FieldFormSendAssets {
     Amount = "send-asset-amount",
 }
 
+const DEFAULT_FORM_STATE = {
+    [FieldFormSendAssets.Recipient]: undefined,
+    [FieldFormSendAssets.Amount]: 0,
+}
+
 /**
  * Form inputs values
  */
 const formSendAssetsAtom = atom<{
     [FieldFormSendAssets.Recipient]?: Address
     [FieldFormSendAssets.Amount]?: number
-}>({
-    [FieldFormSendAssets.Recipient]: undefined,
-    [FieldFormSendAssets.Amount]: 0,
-})
+}>(DEFAULT_FORM_STATE)
 
 /**
  * Send asset form validation schema
@@ -63,7 +67,15 @@ export function useFormSendAssets(asset?: Address) {
 
     const mutationSendTransaction = useSendTransaction({
         mutation: {
+            onSettled() {
+                queryClient.invalidateQueries({
+                    queryKey: getBalanceQueryKey({
+                        address: user?.address,
+                    }),
+                })
+            },
             onSuccess() {
+                setForm(DEFAULT_FORM_STATE)
                 navigate({ to: "/embed" })
             },
         },

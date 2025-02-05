@@ -85,7 +85,7 @@ function Embed() {
                             </div>
                         )}
 
-                        <div className="hidden relative lg:flex w-full grow overflow-y-auto">
+                        <div className="hidden relative lg:flex w-full grow overflow-x-hidden overflow-y-auto">
                             <Outlet />
                             {!location.pathname.includes("permissions") && (
                                 <>
