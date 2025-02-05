@@ -65,5 +65,28 @@ export const SubmitHappyTxResponseSchema = z.discriminatedUnion("success", [
     SubmitHappyTxErrorSchema,
 ])
 
-export type DeployAccountResponse = z.infer<typeof DeployAccountResponseSchema>
-export type SubmitHappyTxResponse = z.infer<typeof SubmitHappyTxResponseSchema>
+export type DeployAccountResponse =
+    | {
+          owner: Hex
+          message: string
+          success: true
+          accountAddress: Hex
+          transactionHash: Hex
+      }
+    | {
+          error: string
+          success: false
+          transactionHash?: Hex | undefined
+      }
+
+export type SubmitHappyTxResponse =
+    | {
+          success: true
+          message: string
+          txHash: Hex
+      }
+    | {
+          success: false
+          error: string
+          txHash?: Hex | undefined
+      }

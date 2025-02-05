@@ -19,5 +19,11 @@ export const HappyTxSchema = z.object({
         .transform((val) => val as Hex),
 })
 
-export type DeployAccountRequest = z.infer<typeof DeployAccountSchema>
-export type HappyTxRequest = z.infer<typeof HappyTxSchema>
+export type DeployAccountRequest = {
+    owner: Hex
+    salt: Hex
+}
+
+export type HappyTxRequest = {
+    encodedHappyTx: Hex
+}
