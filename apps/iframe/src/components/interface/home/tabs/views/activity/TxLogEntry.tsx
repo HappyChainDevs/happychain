@@ -1,5 +1,5 @@
-import { PaperPlaneRight } from "@phosphor-icons/react"
-import { cx } from "class-variance-authority"
+import { shortenAddress } from "@happy.tech/wallet-common"
+import { ArrowUp } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { formatEther } from "viem"
 import { currentChainAtom } from "#src/state/chains"
@@ -9,37 +9,38 @@ interface TxLogEntryProps {
     tx: UserOpInfo
 }
 
-const TxLogEntry = ({ tx }: TxLogEntryProps) => {
+export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     const { userOpReceipt, value: sendValue } = tx
 
-    const sentTxValue = `-${formatEther(sendValue)} HAPPY`
-
     return (
-        <div className="flex flex-row items-center w-full justify-between px-3 py-4 border rounded-md border-primary-content bg-base-200">
-            <div className="flex flex-row items-center justify-center gap-x-2">
-                <div className={cx("p-1 rounded-full", userOpReceipt.success ? "bg-success/60" : "bg-error/60")}>
-                    <PaperPlaneRight size={"1.25em"} weight="thin" />
+        <article className="focus-within:bg-primary/5 p-2 rounded-md grid gap-1 relative">
+            <div className="flex items-center text-xs gap-[1ex]">
+                <div
+                    className={`${userOpReceipt.success ? "text-success dark:text-success/50" : "text-error dark:text-error/50"} bg-base-content/5 dark:bg-base-content/20 p-1 aspect-square rounded-full flex items-center justify-center`}
+                >
+                    <ArrowUp weight="bold" size="0.795em" />
                 </div>
-                <div className="flex flex-col items-start justify-center">
-                    <p className="font-light">Sent</p>
-                    <span>
-                        <a
-                            href={`${blockExplorerUrl}/op/${userOpReceipt.userOpHash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[12px] text-primary hover:text-primary/60 hover:underline px-2 py-1 bg-primary/20 rounded-lg"
-                        >
-                            View on Explorer
-                        </a>
-                    </span>
+                <h1 className="font-medium text-base-content/80">Contract interaction</h1>
+                <div className="ms-auto text-[0.885em] font-semibold text-base-content/70 dark:text-base-content/25">
+                    {shortenAddress(userOpReceipt.userOpHash, 2)}
                 </div>
             </div>
+            <p className="flex px-0.5 gap-[0.75ex] items-baseline">
+                <span className="font-bold">- {formatEther(sendValue)}</span>{" "}
+                <span className="text-[0.785em] font-semibold">HAPPY</span>
+            </p>
 
-            <span className="font-light">{sentTxValue}</span>
-        </div>
+            <a
+                href={`${blockExplorerUrl}/op/${userOpReceipt.userOpHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View on explorer"
+                className="absolute size-full z-10 inset opacity-0"
+            >
+                {shortenAddress(userOpReceipt.userOpHash, 2)}
+            </a>
+        </article>
     )
 }
-
-export default TxLogEntry
