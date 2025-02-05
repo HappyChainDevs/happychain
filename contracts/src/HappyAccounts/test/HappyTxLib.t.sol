@@ -8,12 +8,88 @@ import {HappyTxLib} from "../libs/HappyTxLib.sol";
 
 contract HappyTxLibTest is Test {
     using HappyTxLib for bytes;
+    using HappyTxLib for HappyTx;
 
+    /// @dev Tests for {@link HappyTxLib.encode(happyTx);}
+    function testEncodeEmptyDynamicFields() public pure {
+        HappyTx memory inputTx = HappyTx({
+            account: 0x1234567890123456789012345678901234567890,
+            gasLimit: 1000000, // 0xF4240
+            executeGasLimit: 800000, // 0xC3500
+            dest: 0x2345678901234567890123456789012345678901,
+            paymaster: 0x3456789012345678901234567890123456789012,
+            value: 1000000000000000000, // 0xDE0B6B3A7640000
+            nonceTrack: 1234, // 0x4D2
+            nonceValue: 5678, // 0x162E
+            maxFeePerGas: 2000000000, // 0x77359400
+            submitterFee: 100000000, // 0x5F5E100
+            callData: hex"1234",
+            paymasterData: "",
+            validatorData: "",
+            extraData: ""
+        });
+
+        bytes memory expected = hex"1234567890123456789012345678901234567890000f4240000c3500234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e100000000021234000000000000000000000000"; // solhint-disable-line max-line-length
+
+        bytes memory encoded = inputTx.encode();
+        assertEq(encoded, expected);
+    }
+
+    function testEncodeSmallDynamicFields() public pure {
+        HappyTx memory inputTx = HappyTx({
+            account: 0x1234567890123456789012345678901234567890,
+            gasLimit: 1000000, // 0xF4240
+            executeGasLimit: 800000, // 0xC3500
+            dest: 0x2345678901234567890123456789012345678901,
+            paymaster: 0x3456789012345678901234567890123456789012,
+            value: 1000000000000000000, // 0xDE0B6B3A7640000
+            nonceTrack: 1234, // 0x4D2
+            nonceValue: 5678, // 0x162E
+            maxFeePerGas: 2000000000, // 0x77359400
+            submitterFee: 100000000, // 0x5F5E100
+            callData: hex"1234",
+            paymasterData: hex"5678",
+            validatorData: hex"9abc",
+            extraData: hex"def0"
+        });
+
+        bytes memory expected = hex"123456789012345678901234567890123456789023456789012345678901234534567890123456789012345678901234567890126789012345678901000f42400000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000080000000002000000000200000000020000000002000c3500123456789abcdef0"; // solhint-disable-line max-line-length
+
+        bytes memory encoded = inputTx.encode();
+        assertEq(encoded, expected);
+    }
+
+    function testEncodeLongDynamicFields() public pure {
+        HappyTx memory inputTx = HappyTx({
+            account: 0x1234567890123456789012345678901234567890,
+            gasLimit: 1000000, // 0xF4240
+            executeGasLimit: 800000, // 0xC3500
+            dest: 0x2345678901234567890123456789012345678901,
+            paymaster: 0x3456789012345678901234567890123456789012,
+            value: 1000000000000000000, // 0xDE0B6B3A7640000
+            nonceTrack: 1234, // 0x4D2
+            nonceValue: 5678, // 0x162E
+            maxFeePerGas: 2000000000, // 0x77359400
+            submitterFee: 100000000, // 0x5F5E100
+            callData: hex"abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456",
+            paymasterData: hex"789078907890789078907890789078907890789078907890789078907890789078907890789078907890789078907890",
+            validatorData: hex"9abc",
+            extraData: hex"def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0"
+        });
+
+        bytes memory expected = hex"123456789012345678901234567890123456789023456789012345678901234534567890123456789012345678901234567890126789012345678901000f42400000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000840000000030000000003000000000020000000022000c3500abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef1234567890789078907890789078907890789078907890789078907890789078907890789078907890789078907890789078909abcdef0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0"; // solhint-disable-line max-line-length
+
+        bytes memory encoded = inputTx.encode();
+        assertEq(encoded, expected);
+    }
+
+    /// @dev Tests for {@link HappyTxLib.decode(happyTx);}
     function testDecodeEmptyDynamicFields() public pure {
         bytes memory encoded =
             hex"123456789012345678901234567890123456789023456789012345678901234534567890123456789012345678901234567890126789012345678901000f42400000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000020000000002000000000000000000000000000000000c35001234"; // solhint-disable-line max-line-length
 
         HappyTx memory decoded = encoded.decode();
+        uint256 nonce = (decoded.nonceTrack << 192) | decoded.nonceValue;
 
         assertEq(decoded.account, address(0x1234567890123456789012345678901234567890));
         assertEq(decoded.gasLimit, 1000000);
@@ -21,7 +97,7 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.dest, address(0x2345678901234567890123456789012345678901));
         assertEq(decoded.paymaster, address(0x3456789012345678901234567890123456789012));
         assertEq(decoded.value, 1000000000000000000);
-        assertEq(decoded.nonce, 1);
+        assertEq(nonce, 1);
         assertEq(decoded.maxFeePerGas, 2000000000);
         assertEq(decoded.submitterFee, 100000000);
         assertEq(decoded.callData, hex"1234");
@@ -35,6 +111,7 @@ contract HappyTxLibTest is Test {
             hex"123456789012345678901234567890123456789023456789012345678901234534567890123456789012345678901234567890126789012345678901000f42400000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000080000000002000000000200000000020000000002000c3500123456789abcdef0"; // solhint-disable-line max-line-length
 
         HappyTx memory decoded = encoded.decode();
+        uint256 nonce = (decoded.nonceTrack << 192) | decoded.nonceValue;
 
         assertEq(decoded.account, address(0x1234567890123456789012345678901234567890));
         assertEq(decoded.gasLimit, 1000000);
@@ -42,7 +119,7 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.dest, address(0x2345678901234567890123456789012345678901));
         assertEq(decoded.paymaster, address(0x3456789012345678901234567890123456789012));
         assertEq(decoded.value, 1000000000000000000);
-        assertEq(decoded.nonce, 1);
+        assertEq(nonce, 1);
         assertEq(decoded.maxFeePerGas, 2000000000);
         assertEq(decoded.submitterFee, 100000000);
         assertEq(decoded.callData, hex"1234");
@@ -56,6 +133,7 @@ contract HappyTxLibTest is Test {
             hex"123456789012345678901234567890123456789023456789012345678901234534567890123456789012345678901234567890126789012345678901000f42400000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000840000000030000000003000000000020000000022000c3500abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef1234567890789078907890789078907890789078907890789078907890789078907890789078907890789078907890789078909abcdef0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0"; // solhint-disable-line max-line-length
 
         HappyTx memory decoded = encoded.decode();
+        uint256 nonce = (decoded.nonceTrack << 192) | decoded.nonceValue;
 
         assertEq(decoded.account, address(0x1234567890123456789012345678901234567890));
         assertEq(decoded.gasLimit, 1000000);
@@ -63,7 +141,7 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.dest, address(0x2345678901234567890123456789012345678901));
         assertEq(decoded.paymaster, address(0x3456789012345678901234567890123456789012));
         assertEq(decoded.value, 1000000000000000000);
-        assertEq(decoded.nonce, 1);
+        assertEq(nonce, 1);
         assertEq(decoded.maxFeePerGas, 2000000000);
         assertEq(decoded.submitterFee, 100000000);
         assertEq(
@@ -76,5 +154,117 @@ contract HappyTxLibTest is Test {
         );
         assertEq(decoded.validatorData, hex"9abc");
         assertEq(decoded.extraData, hex"def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0");
+    }
+
+    /// @dev Tests for {@link HappyTxLib.encode(happyTx)} <-> {@link HappyTxLib.decode(happyTx)}
+    function testCombinedEmpty() public pure {
+        HappyTx memory inputTx = HappyTx({
+            account: 0x1234567890123456789012345678901234567890,
+            gasLimit: 1000000, // 0xF4240
+            executeGasLimit: 800000, // 0xC3500
+            dest: 0x2345678901234567890123456789012345678901,
+            paymaster: 0x3456789012345678901234567890123456789012,
+            value: 1000000000000000000, // 0xDE0B6B3A7640000
+            nonceTrack: 1234, // 0x4D2
+            nonceValue: 5678, // 0x162E
+            maxFeePerGas: 2000000000, // 0x77359400
+            submitterFee: 100000000, // 0x5F5E100
+            callData: "",
+            paymasterData: "",
+            validatorData: "",
+            extraData: ""
+        });
+
+        bytes memory encoded = inputTx.encode();
+        HappyTx memory decoded = encoded.decode();
+
+        assertEq(decoded.account, inputTx.account);
+        assertEq(decoded.gasLimit, inputTx.gasLimit);
+        assertEq(decoded.executeGasLimit, inputTx.executeGasLimit);
+        assertEq(decoded.dest, inputTx.dest);
+        assertEq(decoded.paymaster, inputTx.paymaster);
+        assertEq(decoded.value, inputTx.value);
+        assertEq(decoded.nonceTrack, inputTx.nonceTrack);
+        assertEq(decoded.nonceValue, inputTx.nonceValue);
+        assertEq(decoded.maxFeePerGas, inputTx.maxFeePerGas);
+        assertEq(decoded.submitterFee, inputTx.submitterFee);
+        assertEq(decoded.callData, inputTx.callData);
+        assertEq(decoded.paymasterData, inputTx.paymasterData);
+        assertEq(decoded.validatorData, inputTx.validatorData);
+        assertEq(decoded.extraData, inputTx.extraData);
+    }
+
+    function testCombinedSmall() public pure {
+        HappyTx memory inputTx = HappyTx({
+            account: 0x1234567890123456789012345678901234567890,
+            gasLimit: 1000000, // 0xF4240
+            executeGasLimit: 800000, // 0xC3500
+            dest: 0x2345678901234567890123456789012345678901,
+            paymaster: 0x3456789012345678901234567890123456789012,
+            value: 1000000000000000000, // 0xDE0B6B3A7640000
+            nonceTrack: 1234, // 0x4D2
+            nonceValue: 5678, // 0x162E
+            maxFeePerGas: 2000000000, // 0x77359400
+            submitterFee: 100000000, // 0x5F5E100
+            callData: hex"1234",
+            paymasterData: hex"5678",
+            validatorData: hex"9abc",
+            extraData: hex"def0"
+        });
+
+        bytes memory encoded = inputTx.encode();
+        HappyTx memory decoded = encoded.decode();
+
+        assertEq(decoded.account, inputTx.account);
+        assertEq(decoded.gasLimit, inputTx.gasLimit);
+        assertEq(decoded.executeGasLimit, inputTx.executeGasLimit);
+        assertEq(decoded.dest, inputTx.dest);
+        assertEq(decoded.paymaster, inputTx.paymaster);
+        assertEq(decoded.value, inputTx.value);
+        assertEq(decoded.nonceTrack, inputTx.nonceTrack);
+        assertEq(decoded.nonceValue, inputTx.nonceValue);
+        assertEq(decoded.maxFeePerGas, inputTx.maxFeePerGas);
+        assertEq(decoded.submitterFee, inputTx.submitterFee);
+        assertEq(decoded.callData, inputTx.callData);
+        assertEq(decoded.paymasterData, inputTx.paymasterData);
+        assertEq(decoded.validatorData, inputTx.validatorData);
+        assertEq(decoded.extraData, inputTx.extraData);
+    }
+
+    function testCombinedLong() public pure {
+        HappyTx memory inputTx = HappyTx({
+            account: 0x1234567890123456789012345678901234567890,
+            gasLimit: 1000000, // 0xF4240
+            executeGasLimit: 800000, // 0xC3500
+            dest: 0x2345678901234567890123456789012345678901,
+            paymaster: 0x3456789012345678901234567890123456789012,
+            value: 1000000000000000000, // 0xDE0B6B3A7640000
+            nonceTrack: 1234, // 0x4D2
+            nonceValue: 5678, // 0x162E
+            maxFeePerGas: 2000000000, // 0x77359400
+            submitterFee: 100000000, // 0x5F5E100
+            callData: hex"abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456abcdef123456",
+            paymasterData: hex"789078907890789078907890789078907890789078907890789078907890789078907890789078907890789078907890",
+            validatorData: hex"9abc",
+            extraData: hex"def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0"
+        });
+
+        bytes memory encoded = inputTx.encode();
+        HappyTx memory decoded = encoded.decode();
+
+        assertEq(decoded.account, inputTx.account);
+        assertEq(decoded.gasLimit, inputTx.gasLimit);
+        assertEq(decoded.executeGasLimit, inputTx.executeGasLimit);
+        assertEq(decoded.dest, inputTx.dest);
+        assertEq(decoded.paymaster, inputTx.paymaster);
+        assertEq(decoded.value, inputTx.value);
+        assertEq(decoded.nonceTrack, inputTx.nonceTrack);
+        assertEq(decoded.nonceValue, inputTx.nonceValue);
+        assertEq(decoded.maxFeePerGas, inputTx.maxFeePerGas);
+        assertEq(decoded.submitterFee, inputTx.submitterFee);
+        assertEq(decoded.callData, inputTx.callData);
+        assertEq(decoded.paymasterData, inputTx.paymasterData);
+        assertEq(decoded.validatorData, inputTx.validatorData);
+        assertEq(decoded.extraData, inputTx.extraData);
     }
 }

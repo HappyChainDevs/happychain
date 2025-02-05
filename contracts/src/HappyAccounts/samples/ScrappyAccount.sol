@@ -130,8 +130,9 @@ contract ScrappyAccount is
             return GasPriceTooHigh.selector;
         }
 
-        int256 nonceAhead = int256(happyTx.nonce) - int256(_nonce);
-        bool isSimulation = tx.origin == address(0); // solhint-disable-line avoid-tx-origin
+        uint256 nonce = (happyTx.nonceTrack << 192) | happyTx.nonceValue;
+        int256 nonceAhead = int256(nonce) - int256(_nonce);
+        bool isSimulation = tx.origin == address(0);
         if (!_validateAndUpdateNonce(nonceAhead, isSimulation)) {
             return InvalidNonce.selector;
         }
