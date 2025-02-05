@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {HappyTx} from "../core/HappyTx.sol";
+
 // [LOGGAS] import {console} from "forge-std/Script.sol";
 
 library HappyTxLib {
@@ -21,26 +22,14 @@ library HappyTxLib {
     uint256 private constant DYNAMIC_FIELDS_OFFSET = 224;
 
     /*
-    * When unable to decode a happyTx in {@link decodeHappyTx}.
+    * Selector returned by {@link decodeHappyTx} when unable to properly decode a happyTx.
     */
     error MalformedHappyTx();
 
-    // Custom errors
-    error InvalidEncodedLength();
-
     /**
-     * @notice Computes the hash of a pre-encoded HappyTx.
-     * @param encodedHappyTx The pre-encoded transaction bytes
-     * @return The hash of the encoded transaction
-     */
-    function getEncodedHappyTxHash(bytes calldata encodedHappyTx) internal pure returns (bytes32) {
-        return keccak256(encodedHappyTx);
-    }
-
-    /**
-     * @notice Computes the hash of a HappyTx for signing.
+     * @notice Computes the hash of a HappyTx for signature verification.
      * @param happyTx The transaction to hash
-     * @return The hash to sign
+     * @return The abi encoded hash of the transaction
      */
     function getHappyTxHash(HappyTx memory happyTx) internal pure returns (bytes32) {
         return keccak256(
@@ -61,234 +50,19 @@ library HappyTxLib {
         );
     }
 
+    // TODO: Update to new encoding discussed in call
     /**
-     * @dev Gets the account address from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return account The account address
+     * @notice Encodes a HappyTx struct into a bytes array, packed end-to-end.
+     * @param happyTx The transaction to encode
+     * @return result The encoded transaction
      */
-    function getAccount(bytes calldata happyTx) internal pure returns (address account) {
-        if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
+    function encode(HappyTx memory happyTx) internal pure returns (bytes memory result) {}
 
-        // First slot: account (20) + first 12 bytes of dest
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let ptr := add(happyTx.offset, 32)
-            let slot1 := calldataload(ptr)
-            account := shr(96, slot1)
-        }
-    }
-
+    // TODO: Update to new encoding discussed in call
     /**
-     * @dev Gets the gas limit from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return gasLimit The gas limit for the transaction
-     */
-    function getGasLimit(bytes calldata happyTx) internal pure returns (uint32 gasLimit) {
-        if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
-
-        // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let ptr := add(happyTx.offset, 32)
-            let slot2 := calldataload(add(ptr, 32))
-            gasLimit := and(slot2, 0x00000000000000000000000000000000000000000000000000000000FFFFFFFF)
-        }
-    }
-
-    /**
-     * @dev Gets the paymaster address from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return paymaster The paymaster address
-     */
-    function getPaymaster(bytes calldata happyTx) internal pure returns (address paymaster) {
-        if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
-
-        // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let ptr := add(happyTx.offset, 32)
-            let slot2 := calldataload(add(ptr, 32))
-            paymaster := shr(96, slot2)
-        }
-    }
-
-    /**
-     * @dev Gets the value from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return value The native token value in wei
-     */
-    function getValue(bytes calldata happyTx) internal pure returns (uint256 value) {
-        if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
-
-        // Value is in slot 3
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let ptr := add(happyTx.offset, 32)
-            value := calldataload(add(ptr, 64))
-        }
-    }
-
-    /**
-     * @dev Gets the execute gas limit from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return executeGasLimit The gas limit for the execute function
-     */
-    function getExecuteGasLimit(bytes calldata happyTx) internal pure returns (uint32 executeGasLimit) {
-        // Require minimum length for static fields + dynamic lengths word
-        if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
-
-        // The dynamic lengths word is at offset 192 (after static fields)
-        bytes32 packedLengths;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            packedLengths := calldataload(add(happyTx.offset, 192))
-        }
-
-        return uint32(uint256(packedLengths) & ((1 << 32) - 1));
-    }
-
-    /**
-     * @dev Gets the destination address from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return dest The destination address
-     */
-    function getDest(bytes calldata happyTx) internal pure returns (address dest) {
-        if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
-
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let ptr := add(happyTx.offset, 32)
-            let slot1 := calldataload(ptr) // First slot: account (20) + first 12 bytes of dest
-            let slot2 := calldataload(add(ptr, 32)) // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
-
-            // Get first 12 bytes of dest by bit masking, then shift left by 20 bytes
-            let destFirst12 := shl(160, and(slot1, 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF))
-
-            // Get last 8 bytes of dest by bit masking, then shift left by 8 bytes
-            let destLast8 := shl(64, and(slot2, 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFF00000000))
-
-            // Combine dest parts (both parts are now in correct position, just OR them)
-            dest := or(destFirst12, destLast8)
-        }
-    }
-
-    /**
-     * @dev Gets the nonce from an encoded HappyTx
-     * @param happyTx The encoded happy transaction bytes
-     * @return nonce The account nonce
-     */
-    function getNonce(bytes calldata happyTx) internal pure returns (uint256 nonce) {
-        if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
-
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let ptr := add(happyTx.offset, 32) // Nonce is in slot 4
-            nonce := calldataload(add(ptr, 96)) // 96 = 32 * 3 (skip first 3 slots)
-        }
-    }
-
-    /**
-     * @notice Encodes a HappyTx struct into bytes for hashing.
-     * The encoding follows this format:
-     * [static fields (192 bytes)][dynamic lengths (32 bytes)][dynamic data (varies)]
-     * Each dynamic field is tightly packed without padding, crossing word boundaries:
-     * For example, if callData is 100 bytes (3 full words + 4 bytes):
-     * Word1: [32 bytes of callData]
-     * Word2: [32 bytes of callData]
-     * Word3: [32 bytes of callData]
-     * Word4: [4 bytes of callData][28 bytes of paymasterData]
-     * Word5: [remaining 12 bytes of paymasterData][20 bytes of next field]
-     * And so on...
-     */
-    function encode(HappyTx memory happyTx) internal pure returns (bytes memory result) {
-        uint256 dynamicDataLength = happyTx.callData.length + happyTx.paymasterData.length
-            + happyTx.validatorData.length + happyTx.extraData.length;
-        result = new bytes(192 + dynamicDataLength); // Total Len = static fields + dynamic fields
-        uint256 dynamicPtr;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            let ptr := result // Start directly at result
-            dynamicPtr := add(result, 0xE0) // 192 (static fields) + 32 (encodedLengths) = 224 (0xE0)
-
-            // Pack first slot: account (20) + first 12 bytes of dest
-            let dest := mload(add(happyTx, 96)) // Load dest
-            mstore(ptr, shl(96, mload(add(happyTx, 32)))) // account
-            mstore(
-                ptr,
-                or(
-                    mload(ptr), // keep existing content
-                    shl(96, shr(64, dest)) // shift 12 bytes of dest to position 20-31
-                )
-            ) // first 12 bytes of dest
-
-            // Pack second slot: paymaster (20) + remaining 8 bytes of dest + gasLimit (4)
-            mstore(
-                add(ptr, 32),
-                or(
-                    shl(96, mload(add(happyTx, 128))),
-                    or(
-                        shl(160, and(dest, 0x000000000000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF)),
-                        shl(
-                            224,
-                            and(
-                                mload(add(happyTx, 64)),
-                                0x00000000000000000000000000000000000000000000000000000000FFFFFFFF
-                            )
-                        )
-                    )
-                )
-            )
-
-            // Store value fields (32 bytes each)
-            mstore(add(ptr, 64), mload(add(happyTx, 160))) // value
-            mstore(add(ptr, 96), mload(add(happyTx, 192))) // nonce
-            mstore(add(ptr, 128), mload(add(happyTx, 224))) // maxFeePerGas
-            mstore(add(ptr, 160), mload(add(happyTx, 256))) // submitterFee
-        }
-
-        // Pack dynamic field lengths
-        bytes32 packedLengths = _packLengths(
-            happyTx.callData.length,
-            happyTx.paymasterData.length,
-            happyTx.validatorData.length,
-            happyTx.extraData.length,
-            happyTx.executeGasLimit
-        );
-
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            // Store packed lengths at offset 192
-            mstore(add(result, 192), packedLengths)
-        }
-
-        // Pack dynamic fields directly to result after static fields
-        _packDynamicFields(
-            happyTx.callData, happyTx.paymasterData, happyTx.validatorData, happyTx.extraData, dynamicPtr
-        );
-
-        return result;
-    }
-
-    /**
-     * @dev Decodes the tightly encoded happyTx.
+     * @dev Decodes the end-to-end encoded happyTx.
      * @param happyTx The encoded happyTx bytes
      * @return result The decoded HappyTx struct
-     *
-     * Memory layout of HappyTx struct (each field gets full 32-byte slot):
-     *
-     * Slot 0  (0x00): account
-     * Slot 1  (0x20): gasLimit
-     * Slot 2  (0x40): executeGasLimit
-     * Slot 3  (0x60): dest
-     * Slot 4  (0x80): paymaster
-     * Slot 5  (0xA0): value
-     * Slot 6  (0xC0): nonce
-     * Slot 7  (0xE0): maxFeePerGas
-     * Slot 8  (0x100): submitterFee
-     * Slot 9  (0x120): callData (ptr)
-     * Slot 10 (0x140): paymasterData (ptr)
-     * Slot 11 (0x160): validatorData (ptr)
-     * Slot 12 (0x180): extraData (ptr)
      */
     function decode(bytes calldata happyTx) public pure returns (HappyTx memory result) {
         // First validate minimum length (192 static + 32 encoded dynamic lengths = 224 bytes)
@@ -398,142 +172,17 @@ library HappyTxLib {
      * @return The estimated total gas consumption including:
      *         - 21000 fixed intrinsic gas
      *         - Calldata gas cost assuming all non-zero bytes
-     *         - Function call gas
+     *         - callGas
      *         - Function dispatch overhead (TODO)
      */
     function txGasFromCallGas(uint256 callGas, uint256 calldataLength) internal pure returns (uint256) {
         return 21000 + (200 + calldataLength) * 16 + callGas; // + TODO;
 
-        // - `21000` is the fixed of the intrinsic gas
         // - `(200 + calldataLength) * 16` is an overestimate of the calldata part of the
         //    intrinsic gas obtained by assuming every byte is non-zero in the tx data.
         //     - A transaction without calldata and access list is at most ~280 bytes
         //       but due to RLP encoding this should be lower. 200 is a good compromise,
         //       essentially since we already overcharge for the bytes whose value is 0.
-        // - `callGas` is the gas consumed by the call.
-        // - `TODO` is a constant overestimating the Solidity function dispatch
-        //    overhead as well as the few opcodes not covered by a `gasLeft()`
-        //    computation.
-    }
-
-    /**
-     * @dev Tightly packs multiple dynamic byte arrays into raw memory.
-     * The fields are packed in sequence without any padding, crossing word boundaries:
-     * For example, if callData is 100 bytes (3 full words + 4 bytes):
-     * Word1: [32 bytes of callData]
-     * Word2: [32 bytes of callData]
-     * Word3: [32 bytes of callData]
-     * Word4: [4 bytes of callData][28 bytes of paymasterData]
-     * Word5: [remaining 12 bytes of paymasterData][20 bytes of next field]
-     * And so on...
-     */
-    function _packDynamicFields(
-        bytes memory callData,
-        bytes memory paymasterData,
-        bytes memory validatorData,
-        bytes memory extraData,
-        uint256 writePtr
-    ) internal pure {
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            // Define function to pack a dynamic field with offset
-            function packDynamicFieldWithOffset(dynamicField, currentPtr, wordOffset) -> newWritePtr, newOffset {
-                let mask := 0xff00000000000000000000000000000000000000000000000000000000000000
-
-                let fieldReadPtr := add(dynamicField, 32)
-                let fieldRemaining := mload(dynamicField)
-                newWritePtr := currentPtr
-                newOffset := wordOffset
-
-                // Process full words
-                for {} gt(fieldRemaining, 32) { fieldRemaining := sub(fieldRemaining, 32) } {
-                    let currentWord := mload(fieldReadPtr)
-
-                    // First (32-offset) bytes go in current slot
-                    mstore(
-                        newWritePtr,
-                        or(
-                            mload(newWritePtr), // existing content
-                            shr(mul(newOffset, 8), currentWord)
-                        )
-                    )
-                    newWritePtr := add(newWritePtr, 32)
-
-                    // Last 'offset' bytes go in next slot
-                    mstore(newWritePtr, shl(mul(sub(32, newOffset), 8), currentWord))
-
-                    fieldReadPtr := add(fieldReadPtr, 32)
-                }
-
-                // Handle remaining bytes (if any)
-                if gt(fieldRemaining, 0) {
-                    let currentWord := mload(newWritePtr)
-                    let bytesProcessed := 0
-                    let value := mload(fieldReadPtr)
-
-                    for {} lt(bytesProcessed, fieldRemaining) { bytesProcessed := add(bytesProcessed, 1) } {
-                        let maskedByte := and(value, mask)
-                        let positionedByte := shr(mul(add(bytesProcessed, newOffset), 8), maskedByte)
-                        currentWord := or(currentWord, positionedByte)
-                        value := shl(8, value)
-                    }
-                    mstore(newWritePtr, currentWord)
-
-                    // Update offset
-                    newOffset := add(newOffset, fieldRemaining)
-                    if gt(newOffset, 31) {
-                        newWritePtr := add(newWritePtr, 32)
-                        newOffset := mod(newOffset, 32)
-                    }
-                }
-            }
-
-            // Pack all dynamic fields starting with callData
-            let currentWordOffset := 0
-            writePtr, currentWordOffset := packDynamicFieldWithOffset(callData, writePtr, currentWordOffset)
-            writePtr, currentWordOffset := packDynamicFieldWithOffset(paymasterData, writePtr, currentWordOffset)
-            writePtr, currentWordOffset := packDynamicFieldWithOffset(validatorData, writePtr, currentWordOffset)
-            writePtr, currentWordOffset := packDynamicFieldWithOffset(extraData, writePtr, currentWordOffset)
-        }
-    }
-
-    /**
-     * @dev Utility function to pack dynamic field lengths into a single word.
-     * Layout (32 bytes total):
-     * |-totalLen(8)-|-dynamicLengths(20)-|-execGasLimit(4)-|
-     * Most significant bits (left) to least significant bits (right)
-     * @param callDataLength Length of callData field
-     * @param paymasterDataLength Length of paymasterData field
-     * @param validatorDataLength Length of validatorData field
-     * @param extraDataLength Length of extraData field
-     * @param execGasLimit Gas limit for execute function
-     * @return Packed lengths in a single bytes32
-     */
-    function _packLengths(
-        uint256 callDataLength,
-        uint256 paymasterDataLength,
-        uint256 validatorDataLength,
-        uint256 extraDataLength,
-        uint32 execGasLimit
-    ) internal pure returns (bytes32) {
-        // Validate all lengths are within 40 bits
-        uint256 maxLengthValue = callDataLength | paymasterDataLength | validatorDataLength | extraDataLength;
-        if (maxLengthValue > MAX_DYNAMIC_FIELD_LENGTH) revert MalformedHappyTx();
-
-        uint256 encodedLengths;
-        unchecked {
-            uint256 totalLen = callDataLength + paymasterDataLength + validatorDataLength + extraDataLength;
-
-            // Pack from left to right (most significant to least significant)
-            encodedLengths = totalLen << 192; // First 8 bytes (MSB)
-            encodedLengths |= (callDataLength << 152); // 5 bytes after totalLen
-            encodedLengths |= (paymasterDataLength << 112); // 5 bytes after len1
-            encodedLengths |= (validatorDataLength << 72); // 5 bytes after len2
-            encodedLengths |= (extraDataLength << 32); // 5 bytes after len3
-            encodedLengths |= uint256(execGasLimit); // Last 4 bytes (LSB)
-        }
-
-        return bytes32(encodedLengths);
     }
 
     /**
