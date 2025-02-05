@@ -33,7 +33,7 @@ jobs:
       - name: Build code
         run: |
           cd apps/randomness
-          make setup
+          make 
 
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
@@ -63,7 +63,7 @@ jobs:
               cd /home/randomness/randomness
               rm -f .env
 
-              cat > .env <<EOF
+              cat > .env <<-EOF
               PRIVATE_KEY=${{ secrets.RANDOMNESS_PRIVATE_KEY }}
               TXM_DB_PATH=${{ env.TXM_DB_PATH }}
               RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
