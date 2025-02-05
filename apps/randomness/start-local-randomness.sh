@@ -193,7 +193,11 @@ echo "Setting environment variable $HAPPY_GENESIS_ENV_VAR to $genesis_timestamp"
 set_env_var .env $HAPPY_GENESIS_ENV_VAR $genesis_timestamp false
 
 echo "Deploying contracts..."
-make -C $SCRIPT_DIR/../contracts deploy-random > $SCRIPT_DIR/logs/deploy-random.log 2>&1
+make -C $SCRIPT_DIR/../../contracts deploy-random > $SCRIPT_DIR/logs/deploy-random.log 2>&1
+if [[ $? -ne 0 ]]; then
+    echo "Error: Failed to deploy contracts. Check the log file for details: $SCRIPT_DIR/logs/deploy-random.log"
+    exit 1
+fi
 
 echo "Contracts deployed"
 
@@ -206,12 +210,13 @@ echo "Drand round: $round"
 echo "Setting environment variable $DRAND_ROUND_ENV_VAR to $round"
 set_env_var .env $DRAND_ROUND_ENV_VAR $round false
 
-make -C $SCRIPT_DIR/../transaction-manager build
+make -C $SCRIPT_DIR/../../packages/txm build
+
 
 empty_sqlite_db $TXM_DB_PATH
 echo $TXM_DB_PATH
 export TXM_DB_PATH=$TXM_DB_PATH
-make -C $SCRIPT_DIR/../transaction-manager migrate
+make -C $SCRIPT_DIR/../../packages/txm migrate
 
 echo "Transaction manager migrated"
 
