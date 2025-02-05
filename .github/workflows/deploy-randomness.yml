@@ -62,9 +62,9 @@ jobs:
               cp -r /tmp/randomness/randomness/build /home/randomness/build
 
               mkdir -p /home/randomness/node_modules
-              cp -r /tmp/randomness/randomness/node_modules/better-sqlite3 /home/randomness/node_modules/better-sqlite3
-              cp -r /tmp/randomness/randomness/node_modules/bindings /home/randomness/node_modules/bindings
-              cp -r /tmp/randomness/randomness/node_modules/file-uri-to-path /home/randomness/node_modules/file-uri-to-path
+              cp -r /tmp/randomness/better-sqlite3 /home/randomness/node_modules/better-sqlite3
+              cp -r /tmp/randomness/bindings /home/randomness/node_modules/bindings
+              cp -r /tmp/randomness/file-uri-to-path /home/randomness/node_modules/file-uri-to-path
           
               cd /home/randomness
     
