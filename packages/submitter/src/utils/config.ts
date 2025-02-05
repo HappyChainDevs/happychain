@@ -10,7 +10,7 @@ const envSchema = z.object({
     PORT: z.string().transform((val) => Number.parseInt(val, 10)),
 })
 
-const config = process.env.CONFIG; // Get the CONFIG environment variable
+const config = process.env.CONFIG // Get the CONFIG environment variable
 
 const parsedEnv = envSchema.safeParse({
     PRIVATE_KEY: config === "LOCAL" ? process.env.PRIVATE_KEY_LOCAL : process.env.PRIVATE_KEY_TENDERLY,

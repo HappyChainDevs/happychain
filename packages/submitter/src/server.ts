@@ -6,20 +6,25 @@ import { prettyJSON } from "hono/pretty-json"
 
 import { abis as abisAnvil, deployment as deploymentAnvil } from "@happy.tech/contracts/happy-aa/anvil"
 import { abis as abisTenderly, deployment as deploymentTenderly } from "@happy.tech/contracts/happy-aa/tenderly"
+import { localhost } from "viem/chains"
 import { account, publicClient, walletClient } from "./utils/clients"
 import { isContractDeployed } from "./utils/helpers"
 import { DeployAccountSchema, HappyTxSchema } from "./utils/requestSchema"
 import { DeployAccountResponseSchema, SubmitHappyTxResponseSchema } from "./utils/responseSchema"
-import { localhost } from "viem/chains"
 
 const isLocal = process.env.CONFIG === "LOCAL"
-const deployment = isLocal ? deploymentAnvil : deploymentTenderly
 const abis = isLocal ? abisAnvil : abisTenderly
+const deployment = isLocal ? deploymentAnvil : deploymentTenderly
 
 const app = new Hono()
 
 app.use(prettyJSON())
 app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404))
+
+app.onError((err, c) => {
+    console.error("Request Error:", err)
+    return c.text("Internal Server Error", 500)
+})
 
 // Routes
 app.get("/getAddress", async (c) => {

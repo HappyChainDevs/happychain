@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server"
-import { port } from "../utils/config"
 import app from "../server"
+import { port } from "../utils/config"
 
 const main = async () => {
     try {
@@ -12,6 +12,11 @@ const main = async () => {
             console.log("\nShutting down gracefully...")
             server.close()
             process.exit(0)
+        })
+
+        process.on("uncaughtException", (error) => {
+            console.error("Uncaught Exception:", error)
+            // TODO Handle the error or exit the process as needed, leaving like this for now
         })
     } catch (error) {
         console.error("Error starting the server:", error)
