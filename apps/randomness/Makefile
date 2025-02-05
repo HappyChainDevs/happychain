@@ -18,8 +18,8 @@ start: ## Starts the randomness service
 .PHONY: start
 
 migrate: ## Runs pending migrations
-	tsx --env-file=.env src/migrate.ts
-.PHONY: migrate
+	node --env-file=.env dist/migrate.es.js
+PHONY: migrate
 
 link-anvil:
 	rm src/ABI/random.ts
