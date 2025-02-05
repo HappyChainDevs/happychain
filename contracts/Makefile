@@ -97,6 +97,18 @@ test-happyTx-decode:
 	forge test --match-test testDecode -vvv
 .PHONY: test-happyTx-decode
 
+test-happyTx-encode:
+	forge test --match-test testEncode -vvv
+.PHONY: test-happyTx-encode
+
+test-happyTx-combined:
+	forge test --match-test testCombined -vvv
+.PHONY: test-happyTx-combined
+
+test-happyTxLib:
+	forge test --match-contract HappyTxLibTest -vvv
+.PHONY: test-happyTxLib
+
 ####################################################################################################
 # Gas Logging
 
@@ -113,6 +125,23 @@ gas-logging-off:
 	@find . -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS\] \*/|// [LOGGAS]|g' {} +
 	@echo "Gas logging is now OFF"
 .PHONY: gas-logging-off
+
+####################################################################################################
+# Debug Logging
+
+# Turn debug logging on by uncommenting the debug statements
+debug-logging-on:
+	@echo "Turning debug logging ON..."
+	@find . -type f -name "*.sol" -exec sed -i '' 's|// \[LOGDEBUG\]|/* [LOGDEBUG] */|g' {} +
+	@echo "Debug logging is now ON"
+.PHONY: debug-logging-on
+
+# Turn debug logging off by commenting out the debug statements
+debug-logging-off:
+	@echo "Turning debug logging OFF..."
+	@find . -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGDEBUG\] \*/|// [LOGDEBUG]|g' {} +
+	@echo "Debug logging is now OFF"
+.PHONY: debug-logging-off
 
 ####################################################################################################
 # Demos & Reports
