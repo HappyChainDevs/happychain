@@ -6,20 +6,27 @@ export { createStorage } from "./services/storage"
 
 export { useIsHydrated } from "./hooks/isHydrated"
 
+// === DATATYPES ===================================================================================
+
+export { TransactionTypeName } from "./datatypes/chain"
+export type { Address, Hex, Hash, Log, Receipt, Bytes } from "./datatypes/chain"
+export type { UInt8, UInt16, UInt32, UInt64, UInt128, UInt256 } from "./datatypes/chain"
+export type { Int8, Int16, Int32, Int64, Int128, Int256 } from "./datatypes/chain"
+export type { HTTPString } from "./datatypes/url"
+
 // === UTILS =======================================================================================
 
 export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai"
 
 export type {
-    HTTPString,
     AssertAssignableTo,
     AssertCompatible,
     Prettify,
+    Optional,
     TupleUnion,
     UnionToTuple,
     MapTuple,
     ObjectFromTuples,
-    Hex,
 } from "./utils/types"
 
 export { bigIntMax, bigIntReplacer, bigIntReviver, bigIntToZeroPadded } from "./utils/bigint"
