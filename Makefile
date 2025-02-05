@@ -417,7 +417,7 @@ remove-modules:
 ##@ Publishing
 
 changeset: ## Add a new changeset
-	bunx changeset add
+	changeset add;
 .PHONY: changeset
 
 version: ## Bump all package dependencies according to staged changesets & generate changelogs
