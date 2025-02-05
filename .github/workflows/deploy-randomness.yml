@@ -71,9 +71,9 @@ jobs:
           
             pm2 delete ${{ env.PM2_PROCESS_NAME }}
 
-            node --env-file .env ./dist/migrate.es.js
+            node --env-file .env ./build/migrate.es.js
 
-            source .env && pm2 start ./dist/index.es.js \
+            source .env && pm2 start ./build/index.es.js \
                   --name ${{ env.PM2_PROCESS_NAME }}
             pm2 save
             '
