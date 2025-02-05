@@ -3,7 +3,7 @@ import { useAtomValue } from "jotai"
 import { useBalance } from "wagmi"
 import { userAtom } from "#src/state/user"
 
-const HappyBalance = () => {
+export const HappyBalance = () => {
     const user = useAtomValue(userAtom)
     const { data: balance } = useBalance({ address: user?.address })
     const formattedBalance = formatUserBalance(balance?.value)
@@ -17,5 +17,3 @@ const HappyBalance = () => {
         </div>
     )
 }
-
-export default HappyBalance

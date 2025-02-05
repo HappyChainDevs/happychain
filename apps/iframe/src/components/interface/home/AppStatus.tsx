@@ -4,7 +4,7 @@ import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { currentChainAtom } from "#src/state/chains.ts"
 import { getAppURL } from "#src/utils/appURL"
 
-const AppStatus = () => {
+export const AppStatus = () => {
     const hasPermission = useHasPermissions("eth_accounts")
     const chain = useAtomValue(currentChainAtom)
 
@@ -25,5 +25,3 @@ const AppStatus = () => {
         </div>
     )
 }
-
-export default AppStatus

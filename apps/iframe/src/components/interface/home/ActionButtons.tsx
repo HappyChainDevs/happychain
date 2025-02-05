@@ -93,7 +93,7 @@ const ActionButtonWrapper = ({ action }: ActionButtonWrapperProps) => {
     )
 }
 
-const ActionButtons = () => {
+export const ActionButtons = () => {
     return (
         <div className="w-full flex items-center justify-center gap-4 px-2">
             {ACTIONS.map((action) => (
@@ -102,4 +102,3 @@ const ActionButtons = () => {
         </div>
     )
 }
-export default ActionButtons

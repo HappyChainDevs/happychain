@@ -5,15 +5,17 @@ import GamesView from "./home/tabs/views/GamesView"
 import ActivityView from "./home/tabs/views/activity/ActivityView"
 import TokenView from "./home/tabs/views/tokens/TokenView"
 
-const WalletContentInfo = () => {
+export const WalletContentInfo = () => {
     return (
         <Tabs.Root defaultValue={ContentType.TOKENS} className="size-full" lazyMount unmountOnExit>
-            <Tabs.List className="border-b z-10 sticky top-0 bg-base-200 border-neutral/10 dark:border-neutral/50">
-                <Tab title={ContentType.TOKENS} />
-                <Tab title={ContentType.GAMES} />
-                <Tab title={ContentType.ACTIVITY} />
-                <Tabs.Indicator className="w-[var(--width)] bg-primary h-0.5" />
-            </Tabs.List>
+            <div className="border-b z-10 sticky top-0 bg-base-200 border-neutral/10 dark:border-neutral/50">
+                <Tabs.List className="max-w-prose mx-auto">
+                    <Tab title={ContentType.TOKENS} />
+                    <Tab title={ContentType.GAMES} />
+                    <Tab title={ContentType.ACTIVITY} />
+                    <Tabs.Indicator className="w-[var(--width)] bg-primary h-0.5" />
+                </Tabs.List>
+            </div>
 
             <TabContent title={ContentType.TOKENS}>
                 <TokenView />
@@ -29,5 +31,3 @@ const WalletContentInfo = () => {
         </Tabs.Root>
     )
 }
-
-export default WalletContentInfo

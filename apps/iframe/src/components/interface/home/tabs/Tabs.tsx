@@ -23,7 +23,7 @@ interface TabContentProps extends PropsWithChildren {
 
 export const TabContent = ({ title, children }: TabContentProps) => {
     return (
-        <Tabs.Content value={title} className="w-full pt-2 px-2">
+        <Tabs.Content value={title} className="w-full max-w-prose mx-auto pt-2 px-2">
             {children}
         </Tabs.Content>
     )
