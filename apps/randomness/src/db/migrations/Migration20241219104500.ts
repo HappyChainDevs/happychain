@@ -1,5 +1,5 @@
 import type { Kysely } from "kysely"
-import type { Database } from "../src/db/types"
+import type { Database } from "../types"
 
 export async function up(db: Kysely<Database>) {
     await db.schema
@@ -10,3 +10,5 @@ export async function up(db: Kysely<Database>) {
         .addColumn("transactionIntentId", "text")
         .execute()
 }
+
+export const migration20241219104500 = { up }
