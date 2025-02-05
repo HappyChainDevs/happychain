@@ -118,9 +118,14 @@
     aspect-ratio: 1 / 1;
     overflow: hidden;
     border-radius: var(--happy-border-radius);
-    transform: translateY(var(--wallet-offset-y));
+
     transition-property: background-color;
     transition-duration: 0.6s;
+
+    /* Overridden by @motionone, but provides initial defaults to avoid jank */
+    height: var(--happy-closed-size);
+    width: var(--happy-closed-size);
+    transform: translateY(0);
 
     &[data-open-state="true"] {
         --happy-border-radius: 0rem;
@@ -200,126 +205,31 @@
 
 /* ************************************************************** */
 
-/* https://www.loadership.com/loaders/dot_circular_pulse */
+/* https://www.loadership.com/loaders/stripe_circular_classic */
 .happy_loader_icon {
     display: flex;
     position: relative;
-    width: 48px;
-    height: 48px;
+    width: 30px;
+    height: 30px;
 
     div {
-        animation: happy_loader_icon_roller 1.2s infinite;
-        animation-timing-function: cubic-bezier(0.5, 0, 0.5, 1);
-        transform-origin: 24px 24px;
-    }
-    div:after {
-        content: " ";
-        display: block;
         position: absolute;
-        width: 8px;
-        height: 8px;
+        top: 0;
+        inset-inline-start: 0;
+        width: 30px;
+        height: 30px;
+        border: 10px solid #0ea5e933;
         border-radius: 50%;
-        background: #0ea5e9;
-    }
-
-    div:nth-child(1) {
-        animation-delay: 0.00s;
-    }
-    div:nth-child(1):after {
-        top: 40px;
-        left: 20px;
     }
 
     div:nth-child(2) {
-        animation-delay: -0.04s;
-    }
-    div:nth-child(2):after {
-        top: 37px;
-        left: 30px;
-    }
-
-    div:nth-child(3) {
-        animation-delay: -0.07s;
-    }
-    .happy_loader_icon div:nth-child(3):after {
-        top: 30px;
-        left: 37px;
-    }
-
-    div:nth-child(4) {
-        animation-delay: -0.11s;
-    }
-    div:nth-child(4):after {
-        top: 20px;
-        left: 40px;
-    }
-
-    div:nth-child(5) {
-        animation-delay: -0.14s;
-    }
-    div:nth-child(5):after {
-        top: 10px;
-        left: 37px;
-    }
-
-    div:nth-child(6) {
-        animation-delay: -0.18s;
-    }
-    div:nth-child(6):after {
-        top: 3px;
-        left: 30px;
-    }
-
-    div:nth-child(7) {
-        animation-delay: -0.22s;
-    }
-    div:nth-child(7):after {
-        top: 0px;
-        left: 20px;
-    }
-
-    div:nth-child(8) {
-        animation-delay: -0.25s;
-    }
-    div:nth-child(8):after {
-        top: 3px;
-        left: 10px;
-    }
-
-    div:nth-child(9) {
-        animation-delay: -0.29s;
-    }
-    div:nth-child(9):after {
-        top: 10px;
-        left: 3px;
-    }
-
-    div:nth-child(10) {
-        animation-delay: -0.32s;
-    }
-    div:nth-child(10):after {
-        top: 20px;
-        left: 0px;
-    }
-
-    div:nth-child(11) {
-        animation-delay: -0.36s;
-    }
-    div:nth-child(11):after {
-        top: 30px;
-        left: 3px;
-    }
-
-    div:nth-child(12) {
-        animation-delay: -0.40s;
-    }
-    div:nth-child(12):after {
-        top: 37px;
-        left: 10px;
+        clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 20%);
+        animation: happy_loader_spin 1.2s infinite;
+        animation-timing-function: linear;
+        border: 10px solid #0ea5e9;
     }
 }
-
-@keyframes happy_loader_icon_roller {
+@keyframes happy_loader_spin {
     0% {
         transform: rotate(0deg);
     }

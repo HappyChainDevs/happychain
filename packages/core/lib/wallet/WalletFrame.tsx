@@ -35,7 +35,6 @@ export const WalletFrame = ({ dragging }: WalletFrameProps) => {
             className="wallet-frame"
         >
             {authState === AuthState.Initializing && <LoadingSpinner />}
-
             {/* Base64 to avoid any bundle issues and network requests */}
             <img src={icon64x64} alt="HappyChain Logo" className="wallet-logo" inert={true} />
 
@@ -50,7 +49,7 @@ export const WalletFrame = ({ dragging }: WalletFrameProps) => {
 
 const LoadingSpinner = () => (
     <div class="happy_loader_icon">
-        {Array.from({ length: 12 }, (_, i) => (
+        {Array.from({ length: 2 }, (_, i) => (
             <div key={`dot_${i.toString()}`} />
         ))}
     </div>
