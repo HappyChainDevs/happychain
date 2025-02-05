@@ -41,7 +41,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "apps/randomness/dist/*"
+          source: "apps/randomness/build/*"
           target: /home/deployer/randomness
           strip_components: 2   
           rm: true
