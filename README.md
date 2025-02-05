@@ -18,7 +18,7 @@ Discord, ...) + seamless 2FA, or via a traditional wallet extension (Metamask, R
     - Node.js 23.6+
         - We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
     - [pnpm](https://pnpm.io/)
-        - This is only needed to build the bundler. 
+        - This is only needed to build the bundler.
 
 2. **Run `make setup`**
 
