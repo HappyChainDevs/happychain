@@ -1,19 +1,19 @@
-import { promises as fs } from "node:fs"
-import path from "node:path"
-import { fileURLToPath } from "node:url"
-import { FileMigrationProvider, Migrator } from "kysely"
+import { Migrator, type Migration, type MigrationProvider } from "kysely"
 import { db } from "./db/driver"
+import { migrations } from "./db/migrations"
 
-const dirname = path.dirname(fileURLToPath(import.meta.url))
+class ObjectMigrationProvider implements MigrationProvider {
+    constructor(private migrations: Record<string, Migration>) {}
+  
+    async getMigrations(): Promise<Record<string, Migration>> {
+      return this.migrations
+    }
+}
 
-async function migrateToLatest() {
+export async function migrateToLatest() {
     const migrator = new Migrator({
         db,
-        provider: new FileMigrationProvider({
-            fs,
-            path,
-            migrationFolder: path.join(dirname, "../migrations"),
-        }),
+        provider: new ObjectMigrationProvider(migrations),
     })
 
     const { error, results } = await migrator.migrateToLatest()

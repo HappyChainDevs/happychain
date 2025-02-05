@@ -321,6 +321,11 @@ contracts.build:
 	cd contracts && make build
 .PHONY: contracts.build
 
+randomness.build: setup.ts shared.build
+	cd packages/txm && make build
+	cd apps/randomness && make build
+.PHONY: randomness.build
+
 # ==================================================================================================
 # DOCS
 

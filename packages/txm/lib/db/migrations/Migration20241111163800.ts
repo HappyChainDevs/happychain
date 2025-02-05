@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely"
-import type { Database } from "../lib/db/types"
+import type { Database } from "../types"
 
-export async function up(db: Kysely<Database>) {
+async function up(db: Kysely<Database>) {
     await db.schema
         .createTable("transaction")
         .addColumn("intentId", "text", (col) => col.notNull())
@@ -16,3 +16,6 @@ export async function up(db: Kysely<Database>) {
         .addColumn("metadata", "json")
         .execute()
 }
+
+export const migration20241111163800 = { up }
+
