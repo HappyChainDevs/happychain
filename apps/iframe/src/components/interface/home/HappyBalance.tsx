@@ -1,7 +1,7 @@
-import { formatUserBalance } from "@happy.tech/wallet-common"
 import { useAtomValue } from "jotai"
 import { useBalance } from "wagmi"
 import { userAtom } from "#src/state/user"
+import { formatUserBalance } from "#src/utils/formatUserBalance"
 
 const HappyBalance = () => {
     const user = useAtomValue(userAtom)

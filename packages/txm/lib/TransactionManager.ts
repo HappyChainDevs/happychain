@@ -1,11 +1,11 @@
+import type { UUID } from "@happy.tech/common"
 import {
     type SafeViemPublicClient,
     type SafeViemWalletClient,
-    type UUID,
     convertToSafeViemPublicClient,
     convertToSafeViemWalletClient,
     getUrlProtocol,
-} from "@happy.tech/common"
+} from "@happy.tech/common/txm"
 import {
     type Abi,
     type Hex,

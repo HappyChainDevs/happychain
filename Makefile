@@ -447,6 +447,11 @@ publish: build test  ## Build, test, then publish current packages
 	changeset tag # push with `git push --follow-tags`
 .PHONY: publish
 
+
+pack: build ## Packs the tarbal, ready to publish manually
+	$(call forall_make , $(SDK_ONLY_PKGS) , pack)
+.PHONY: pack
+
 # ==================================================================================================
 # EXTRAS
 

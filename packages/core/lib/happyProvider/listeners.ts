@@ -1,4 +1,3 @@
-import { getUser } from "@happy.tech/iframe/src/state/user"
 import {
     type AuthState,
     type EventBus,
@@ -79,12 +78,6 @@ export function registerListeners(messageBus: EventBus<MsgsFromIframe, MsgsFromA
      */
     const onUserUpdate = (callback: UserUpdateCallback): ListenerUnsubscribeFn => {
         onUserUpdateCallbacks.add(callback)
-        const currentUser = getUser()
-        if (currentUser) {
-            void Promise.resolve().then(() => {
-                callback(currentUser)
-            })
-        }
         return () => {
             onUserUpdateCallbacks.delete(callback)
         }

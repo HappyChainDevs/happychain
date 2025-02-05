@@ -2,10 +2,6 @@
 
 export { createStorage } from "./services/storage"
 
-// === HOOKS =======================================================================================
-
-export { useIsHydrated } from "./hooks/isHydrated"
-
 // === UTILS =======================================================================================
 
 export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai"
@@ -44,15 +40,7 @@ export { keys, entries } from "./utils/records"
 
 export { unknownToError } from "./utils/error"
 
-export type { SafeViemWalletClient, SafeViemPublicClient } from "./utils/safeViemClients"
-
-export { convertToSafeViemWalletClient, convertToSafeViemPublicClient } from "./utils/safeViemClients"
-
-export { hexSchema } from "./utils/zod"
-
 export { HappyMethodNames, PermissionNames, TransactionType } from "./utils/constants"
-
-export { getUrlProtocol } from "./utils/url"
 
 export { Mutex } from "./utils/mutex"
 

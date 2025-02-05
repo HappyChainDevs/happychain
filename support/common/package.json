@@ -4,27 +4,25 @@
     "version": "0.1.0",
     "type": "module",
     "main": "./dist/index.es.js",
-    "module": "./dist/index.es.js",
-    "types": "./dist/index.es.d.ts",
     "files": ["dist"],
     "exports": {
         ".": {
             "default": "./dist/index.es.js",
             "types": "./dist/index.es.d.ts"
+        },
+        "./txm": {
+            "default": "./dist/txm.es.js",
+            "types": "./dist/txm.es.d.ts"
         }
     },
     "peerDependencies": {
         "jotai": "^2.9.3",
-        "react": "^18.3.1",
         "viem": "^2.21.53",
         "neverthrow": "^8.0.0",
         "zod": "^3.23.8"
     },
     "peerDependenciesMeta": {
         "jotai": {
-            "optional": true
-        },
-        "react": {
             "optional": true
         },
         "viem": {
@@ -39,8 +37,6 @@
     },
     "devDependencies": {
         "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.0",
-        "@types/react": "^18.3.4",
-        "vite-plugin-node-polyfills": "^0.22.0"
+        "@happy.tech/happybuild": "workspace:0.1.0"
     }
 }

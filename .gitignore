@@ -28,6 +28,7 @@ dist
 build
 dist-ssr
 /.cache
+happy.tech-**.tgz
 
 # Contract outputs
 contracts/cache/

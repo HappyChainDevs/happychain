@@ -1,4 +1,4 @@
-import { hexSchema } from "@happy.tech/common"
+import { hexSchema } from "@happy.tech/common/txm"
 import { z } from "zod"
 
 const envSchema = z.object({

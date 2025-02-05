@@ -2,9 +2,10 @@
  * Map that keys on two values — internally implemented as a two-level map.
  */
 export class Map2<K1, K2, V> {
-    private map = new Map<K1, Map<K2, V>>()
+    private readonly map: Map<K1, Map<K2, V>>
 
     constructor(entries?: ReadonlyArray<[K1, K2, V]>) {
+        this.map = new Map<K1, Map<K2, V>>()
         if (entries) {
             for (const [k1, k2, v] of entries) {
                 this.set(k1, k2, v)

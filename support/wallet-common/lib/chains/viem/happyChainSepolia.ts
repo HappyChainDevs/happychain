@@ -1,6 +1,6 @@
-import { defineChain } from "viem"
 import { chainConfig } from "viem/op-stack"
 import { happyChainSepolia as addChainDefinition } from "../definitions/happyChainSepolia"
+import { defineChain } from "../utils"
 import type { Chain } from "./type"
 
 /**
@@ -83,7 +83,7 @@ const contracts = {
 /**
  * HappyChain testnet whose L1 is the Ethereum Sepolia testnet.
  */
-export const happyChainSepolia: Chain = defineChain({
+export const happyChainSepoliaViemChain: Chain = defineChain({
     ...chainConfig,
     id: Number(addChainDefinition.chainId),
     name: addChainDefinition.chainName,

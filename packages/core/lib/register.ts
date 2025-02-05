@@ -6,7 +6,7 @@ import { HappyWallet } from "./wallet/HappyWallet"
 import { isFirefox, makeIframeUrl } from "./wallet/utils"
 
 /**
- * Options for the {@link register} function.
+ * Options for the {@link @happy.tech/core#register} function.
  */
 export type WalletRegisterOptions = {
     /**

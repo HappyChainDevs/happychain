@@ -1,9 +1,7 @@
-import type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
-
 /**
  * We will use -1 to signify unknown error types.
  */
-export type ProviderRpcErrorCode = ViemProviderRpcErrorCode | -1
+export type ProviderRpcErrorCode = 4001 | 4100 | 4200 | 4900 | 4901 | 4902 | -1
 
 /**
  * Error Object is used to transmit error messages

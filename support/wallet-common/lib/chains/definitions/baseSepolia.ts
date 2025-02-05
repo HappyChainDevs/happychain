@@ -1,4 +1,4 @@
-import type { ChainParameters } from "../utils.ts"
+import type { ChainParameters } from "../utils"
 
 export const baseSepolia = {
     chainName: "Base Sepolia",

@@ -11,10 +11,15 @@ import { promiseWithResolvers } from "./promises"
  * and makes it impossible to commit mistakes like releasing a lock that isn't owned.
  */
 export class Mutex {
-    private promise: Promise<void> = Promise.resolve()
-    private resolve: () => void = () => {}
+    private promise: Promise<void>
+    private resolve: () => void
 
-    /** Acquies the lock. */
+    constructor() {
+        this.promise = Promise.resolve()
+        this.resolve = () => {}
+    }
+
+    /** Acquires the lock. */
     async acquire() {
         while (true) {
             const promise = this.promise

@@ -15,7 +15,7 @@ import type {
     Transport,
     WalletClient,
 } from "viem"
-import { unknownToError } from "./error.js"
+import { unknownToError } from "./error"
 
 /** Equivalent to {@link WalletClient} but asserts that type parameters are not undefined. */
 type ViemWalletClient<
@@ -74,52 +74,45 @@ export type DebugTransactionSchema = {
     ReturnType: Call
 }
 
-export interface SafeViemPublicClient extends ViemPublicClient {
-    safeEstimateGas: (
-        ...args: Parameters<ViemPublicClient["estimateGas"]>
-    ) => ResultAsync<Awaited<ReturnType<ViemPublicClient["estimateGas"]>>, EstimateGasErrorType>
-    safeGetTransactionReceipt: (
-        ...args: Parameters<ViemPublicClient["getTransactionReceipt"]>
-    ) => ResultAsync<Awaited<ReturnType<ViemPublicClient["getTransactionReceipt"]>>, GetTransactionReceiptErrorType>
-    safeDebugTransaction: (
-        ...args: DebugTransactionSchema["Parameters"]
-    ) => ResultAsync<DebugTransactionSchema["ReturnType"], RpcErrorType>
-    safeGetChainId: () => ResultAsync<Awaited<ReturnType<ViemPublicClient["getChainId"]>>, GetChainIdErrorType>
-}
+export type SafeViemPublicClient = ReturnType<typeof convertToSafeViemPublicClient>
 
-export function convertToSafeViemPublicClient(client: ViemPublicClient): SafeViemPublicClient {
-    Object.assign(client, {
+export function convertToSafeViemPublicClient(client: ViemPublicClient) {
+    return client.extend((client) => ({
         safeEstimateGas: async (...args: Parameters<ViemPublicClient["estimateGas"]>) =>
-            ResultAsync.fromPromise(client.estimateGas(...args), unknownToError),
+            ResultAsync.fromPromise<Awaited<ReturnType<ViemPublicClient["estimateGas"]>>, EstimateGasErrorType>(
+                client.estimateGas(...args),
+                unknownToError as (u: unknown) => EstimateGasErrorType,
+            ),
         safeGetTransactionReceipt: async (...args: Parameters<ViemPublicClient["getTransactionReceipt"]>) =>
-            ResultAsync.fromPromise(client.getTransactionReceipt(...args), unknownToError),
+            ResultAsync.fromPromise<
+                Awaited<ReturnType<ViemPublicClient["getTransactionReceipt"]>>,
+                GetTransactionReceiptErrorType
+            >(client.getTransactionReceipt(...args), unknownToError as (u: unknown) => GetTransactionReceiptErrorType),
         safeDebugTransaction: async (...args: DebugTransactionSchema["Parameters"]) =>
-            ResultAsync.fromPromise(
+            ResultAsync.fromPromise<DebugTransactionSchema["ReturnType"], RpcErrorType>(
                 client.request({
                     method: "debug_traceTransaction",
                     params: args,
                 }),
-                unknownToError,
+                unknownToError as (u: unknown) => RpcErrorType,
             ),
-        safeGetChainId: async () => ResultAsync.fromPromise(client.getChainId(), unknownToError),
-    })
-
-    return client as SafeViemPublicClient
+        safeGetChainId: async () =>
+            ResultAsync.fromPromise<Awaited<ReturnType<ViemPublicClient["getChainId"]>>, GetChainIdErrorType>(
+                client.getChainId(),
+                unknownToError as (u: unknown) => GetChainIdErrorType,
+            ),
+    }))
 }
 
-export interface SafeViemWalletClient extends ViemWalletClient {
-    safeSendRawTransaction: (
-        ...args: Parameters<ViemWalletClient["sendRawTransaction"]>
-    ) => ResultAsync<Awaited<ReturnType<ViemWalletClient["sendRawTransaction"]>>, SendRawTransactionErrorType>
-    safeSignTransaction: (
-        args: TransactionRequestEIP1559 & { gas: bigint },
-    ) => ResultAsync<Awaited<ReturnType<ViemWalletClient["signTransaction"]>>, SignTransactionErrorType>
-}
+export type SafeViemWalletClient = ReturnType<typeof convertToSafeViemWalletClient>
 
-export function convertToSafeViemWalletClient(client: ViemWalletClient): SafeViemWalletClient {
-    Object.assign(client, {
+export function convertToSafeViemWalletClient(client: ViemWalletClient) {
+    return client.extend((client) => ({
         safeSendRawTransaction: async (...args: Parameters<ViemWalletClient["sendRawTransaction"]>) =>
-            ResultAsync.fromPromise(client.sendRawTransaction(...args), unknownToError),
+            ResultAsync.fromPromise<
+                Awaited<ReturnType<ViemWalletClient["sendRawTransaction"]>>,
+                SendRawTransactionErrorType
+            >(client.sendRawTransaction(...args), unknownToError as (u: unknown) => SendRawTransactionErrorType),
         safeSignTransaction: async (args: TransactionRequestEIP1559 & { gas: bigint }) =>
             ResultAsync.fromThrowable(() => {
                 if (client.account.signTransaction) {
@@ -133,8 +126,6 @@ export function convertToSafeViemWalletClient(client: ViemWalletClient): SafeVie
                     "No signTransaction method found on the account, using signMessage instead. " +
                     "A viem update probably change the internal signing API.")
                 return client.signTransaction(args)
-            })(),
-    })
-
-    return client as SafeViemWalletClient
+            })() as ResultAsync<Awaited<ReturnType<ViemWalletClient["signTransaction"]>>, SignTransactionErrorType>,
+    }))
 }

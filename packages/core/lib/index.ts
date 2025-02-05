@@ -5,7 +5,7 @@ export type { HappyProviderPublic as HappyProvider } from "./happyProvider/inter
 
 export {
     devnet,
-    happyChainSepolia,
+    happyChainSepoliaViemChain as happyChainSepolia,
     defaultChain,
     chains,
     chainsById,
@@ -52,7 +52,7 @@ export type {
     EIP1193UserRejectedRequestError,
 } from "@happy.tech/wallet-common"
 
-export type { AddEthereumChainParameter, Prettify, ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
+// export { createViemPublicClient } from "./wagmi/viem"
 
 export { happyWagmiConnector, createHappyChainWagmiConfig } from "./wagmi/happyWagmiConfig"
 

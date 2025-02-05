@@ -1,11 +1,3 @@
-import {
-    ChainDisconnectedError,
-    ProviderDisconnectedError,
-    SwitchChainError,
-    UnauthorizedProviderError,
-    UnsupportedProviderMethodError,
-    UserRejectedRequestError,
-} from "viem"
 import { EIP1193ErrorCodes } from "./codes"
 import {
     EIP1193ChainDisconnectedError,
@@ -51,26 +43,28 @@ export function getEIP1193ErrorObjectFromCode(code: number, data?: string): EIP1
  * @param error unknown
  * @returns EIP1193ErrorObject
  */
+type ViemLikeError = { code: number; details: string }
+const isViemErrorFormat = (error: unknown): error is ViemLikeError =>
+    error instanceof Error &&
+    "code" in error &&
+    typeof error.code === "number" &&
+    "details" in error &&
+    typeof error.details === "string"
+
+const knownErrorCodes = [
+    EIP1193ErrorCodes.UserRejectedRequest,
+    EIP1193ErrorCodes.Unauthorized,
+    EIP1193ErrorCodes.UnsupportedMethod,
+    EIP1193ErrorCodes.Disconnected,
+    EIP1193ErrorCodes.ChainDisconnected,
+    EIP1193ErrorCodes.SwitchChainError,
+]
 export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorObject {
-    if (error instanceof UserRejectedRequestError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest, error.details)
+    if (isViemErrorFormat(error) && knownErrorCodes.includes(error.code)) {
+        return getEIP1193ErrorObjectFromCode(error.code, error.details)
     }
-    if (error instanceof UnauthorizedProviderError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.Unauthorized, error.details)
-    }
-    if (error instanceof UnsupportedProviderMethodError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UnsupportedMethod, error.details)
-    }
-    if (error instanceof ProviderDisconnectedError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.Disconnected, error.details)
-    }
-    if (error instanceof ChainDisconnectedError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.ChainDisconnected, error.details)
-    }
-    if (error instanceof SwitchChainError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, error.details)
-    }
-    if (error instanceof GenericProviderRpcError) {
+
+    if (isViemErrorFormat(error) && "message" in error && typeof error.message === "string") {
         return getEIP1193ErrorObjectFromCode(error.code, error.message)
     }
 
