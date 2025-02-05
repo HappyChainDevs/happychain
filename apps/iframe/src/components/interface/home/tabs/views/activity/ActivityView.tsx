@@ -3,7 +3,7 @@ import { userAtom } from "#src/state/user"
 import { userOpsAtom } from "#src/state/userOpsHistory.js"
 import UserNotFoundWarning from "../UserNotFoundWarning"
 import TxLoadingSkeleton from "./TxLoadingSkeleton"
-import TxLogEntry from "./TxLogEntry"
+import { TxLogEntry } from "./TxLogEntry"
 
 /**
  * Displays HappyUser's recent 4337 transaction history.
@@ -12,7 +12,7 @@ import TxLogEntry from "./TxLogEntry"
  *
  * For transactions that haven't been confirmed yet, a skeleton is rendered.
  */
-const ActivityView = () => {
+export const ActivityView = () => {
     const user = useAtomValue(userAtom)
     const userOps = useAtomValue(userOpsAtom)
 
@@ -23,7 +23,7 @@ const ActivityView = () => {
     }
 
     return (
-        <div className="flex flex-col w-full max-h-4/5 overflow-y-auto p-2 bg-base-200 rounded-lg space-y-1">
+        <div className="grid gap-4">
             {userOps.pendingOps.map((pendingOp) => (
                 <TxLoadingSkeleton key={`op_pending_${pendingOp.userOpHash}`} tx={pendingOp.userOpHash} />
             ))}
@@ -33,5 +33,3 @@ const ActivityView = () => {
         </div>
     )
 }
-
-export default ActivityView

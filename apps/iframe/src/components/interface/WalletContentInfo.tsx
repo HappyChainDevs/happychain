@@ -2,7 +2,7 @@ import { Tabs } from "@ark-ui/react/tabs"
 import { ContentType } from "../../state/interfaceState"
 import { Tab, TabContent } from "./home/tabs/Tabs"
 import GamesView from "./home/tabs/views/GamesView"
-import ActivityView from "./home/tabs/views/activity/ActivityView"
+import { ActivityView } from "./home/tabs/views/activity/ActivityView"
 import TokenView from "./home/tabs/views/tokens/TokenView"
 
 const WalletContentInfo = () => {
