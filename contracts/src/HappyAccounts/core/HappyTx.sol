@@ -41,7 +41,7 @@ pragma solidity ^0.8.20;
 // Slot 1: |-------------pad(12)---------------|-------------dest(20)-----------------|
 // Slot 2: |-------------pad(12)---------------|------------paymaster(20)-------------|
 // Slot 3: |-------------------------------value(32)----------------------------------|
-// Slot 4: |-------------------------------nonce(32)----------------------------------|
+// Slot 4: |------------------nonceValue(24)------------------|-----nonceTrack(8)-----|
 // Slot 5: |---------------------------maxFeePerGas(32)-------------------------------|
 // Slot 6: |---------------------------submitterFee(32)-------------------------------|
 // Slot 7+: Dynamic length fields (callData, paymasterData, validatorData, extraData)
@@ -53,7 +53,8 @@ struct HappyTx {
     address dest;
     address paymaster;
     uint256 value;
-    uint256 nonce;
+    uint192 nonceTrack;
+    uint64 nonceValue;
     uint256 maxFeePerGas;
     int256 submitterFee;
     bytes callData;
