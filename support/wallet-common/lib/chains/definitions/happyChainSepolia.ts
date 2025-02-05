@@ -1,6 +1,6 @@
-import type { ChainParameters } from "../utils.ts"
+import type { ChainParameters } from "../utils"
 
-export const happyChainSepolia = {
+export const happyChainSepoliaDefinition = {
     chainName: "HappyChain Sepolia",
     rpcUrls: ["https://rpc.testnet.happy.tech/http", "wss://rpc.testnet.happy.tech/ws"],
     nativeCurrency: { name: "HappyChain", symbol: "HAPPY", decimals: 18 },

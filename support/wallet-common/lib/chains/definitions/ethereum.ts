@@ -1,6 +1,6 @@
-import type { ChainParameters } from "../utils.ts"
+import type { ChainParameters } from "../utils"
 
-export const ethereum = {
+export const ethereumDefinition = {
     chainName: "Ethereum",
     rpcUrls: [
         "https://cloudflare-eth.com",

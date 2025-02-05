@@ -5,7 +5,7 @@ export { SafeEventEmitter }
 // === VALUES ======================================================================================
 
 export * from "./chains/viem"
-export * as chainDefinitions from "./chains/definitions"
+export { chainDefinitions } from "./chains/definitions"
 
 export { convertToViemChain } from "./chains/utils"
 export { AuthState, WalletType } from "./interfaces/happyUser"
@@ -22,7 +22,6 @@ export { logger } from "./services/logger"
 export { requestPayloadIsHappyMethod } from "./utils/requestPayloadIsHappyMethod"
 export { waitForCondition } from "./utils/waitForCondition"
 export { shortenAddress } from "./utils/shortenAddress"
-export { formatUserBalance } from "./utils/balanceFormatter"
 
 // === TYPES =======================================================================================
 

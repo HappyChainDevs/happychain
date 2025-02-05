@@ -3,11 +3,12 @@
  * removed.
  */
 export class FIFOCache<K, V> {
-    private cache = new Map<K, V>()
+    private readonly cache: Map<K, V>
     private keys: K[] = []
     private readonly capacity: number
 
     constructor(capacity: number) {
+        this.cache = new Map<K, V>()
         if (capacity <= 0) {
             throw new Error("Capacity must be greater than 0")
         }
@@ -19,7 +20,6 @@ export class FIFOCache<K, V> {
             this.cache.set(key, value)
             return
         }
-
         if (this.cache.size >= this.capacity) {
             const oldestKey = this.keys.shift()
             if (oldestKey !== undefined) {

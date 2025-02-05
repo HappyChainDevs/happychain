@@ -1,5 +1,5 @@
+import type { Prettify } from "@happy.tech/common"
 import type { Address } from "abitype"
-import type { Prettify } from "viem"
 
 /**
  * Viem-compatible Chain type, to work around API-extractor issues.

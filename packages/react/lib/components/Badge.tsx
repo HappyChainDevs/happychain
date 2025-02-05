@@ -1,5 +1,5 @@
 import type { BadgeProps } from "@happy.tech/core"
-
+export type { BadgeProps }
 declare global {
     // biome-ignore lint/style/noNamespace:
     namespace JSX {

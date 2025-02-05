@@ -1,11 +1,4 @@
-import {
-    type SafeViemPublicClient,
-    type SafeViemWalletClient,
-    type UUID,
-    convertToSafeViemPublicClient,
-    convertToSafeViemWalletClient,
-    getUrlProtocol,
-} from "@happy.tech/common"
+import type { UUID } from "@happy.tech/common"
 import {
     type Abi,
     type Hex,
@@ -30,6 +23,9 @@ import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
 import { TxMonitor } from "./TxMonitor.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
+import { getUrlProtocol } from "./utils/getUrlProtocol"
+import type { SafeViemPublicClient, SafeViemWalletClient } from "./utils/safeViemClients"
+import { convertToSafeViemPublicClient, convertToSafeViemWalletClient } from "./utils/safeViemClients"
 
 export type TransactionManagerConfig = {
     /**
