@@ -22,7 +22,7 @@
     },
     "dependencies": {
         "@kevincharm/bls-bn254": "^2.0.0",
-        "@happychain/submitter": "workspace:^",
+        "@happy.tech/submitter": "workspace:^",
         "@openzeppelin/contracts": "^5.0.2",
         "@openzeppelin/contracts-upgradeable": "^5.0.2",
         "ExcessivelySafeCall": "git@github.com:nomad-xyz/ExcessivelySafeCall#release/0.0.1",
