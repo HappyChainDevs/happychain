@@ -85,7 +85,9 @@ jobs:
 
             node --env-file .env ./build/migrate.es.js
 
-            source .env && pm2 start ./build/index.es.js \
+            sed '/^\s*#/d; /^\s*$/d; s/^/export /' .env > .env.export
+
+            source .env.export && pm2 start ./build/index.es.js \
                   --name ${{ env.PM2_PROCESS_NAME }}
             pm2 save
             '
