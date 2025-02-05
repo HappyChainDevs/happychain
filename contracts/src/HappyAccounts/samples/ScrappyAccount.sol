@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-// [LOGGAS] import {console} from "forge-std/Script.sol";
-
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
@@ -29,6 +27,8 @@ import {
     NotFromEntryPoint,
     UnknownDuringSimulation
 } from "../utils/Common.sol";
+
+// [LOGGAS] import {console} from "forge-std/Script.sol";
 
 /**
  * @title  ScrappyAccount
