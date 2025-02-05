@@ -1,0 +1,10 @@
+{
+    "name": "@happy.tech/boop-spec",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "dependencies": {
+        "@happy.tech/common": "workspace:0.1.0",
+        "viem": "^2.21.53"
+    }
+}
