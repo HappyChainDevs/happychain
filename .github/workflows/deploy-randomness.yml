@@ -57,9 +57,17 @@ jobs:
             chmod -R o+rX /home/deployer/randomness
             mv /home/deployer/randomness /tmp
             sudo -u randomness bash -c '
-              rm -rf /home/randomness/randomness
-              cp -r /tmp/randomness /home/randomness/randomness
-              cd /home/randomness/randomness
+              rm -rf /home/randomness/build
+              rm -rf /home/randomness/node_modules
+              cp -r /tmp/randomness/randomness/build /home/randomness/build
+
+              mkdir -p /home/randomness/node_modules
+              cp -r /tmp/randomness/randomness/node_modules/better-sqlite3 /home/randomness/node_modules/better-sqlite3
+              cp -r /tmp/randomness/randomness/node_modules/bindings /home/randomness/node_modules/bindings
+              cp -r /tmp/randomness/randomness/node_modules/file-uri-to-path /home/randomness/node_modules/file-uri-to-path
+          
+              cd /home/randomness
+    
               rm -f .env
 
               cat > .env <<-EOF
