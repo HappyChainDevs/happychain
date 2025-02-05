@@ -46,6 +46,15 @@ NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
 MULTIRUN ?= concurrently
 
 # ==================================================================================================
+# CONSTANTS / HELPERS
+
+# env filename
+ENV_FILE := .env
+
+# Validation function for Ethereum addresses (0x followed by 40 hex chars)
+check_eth_address = $(shell echo $(1) | grep -E '^0x[a-fA-F0-9]{40}$$' > /dev/null && echo 1 || echo 0)
+
+# ==================================================================================================
 # FORALL
 
 define forall
@@ -147,6 +156,30 @@ demo-vue.prod: setup.ts sdk.build  ## Builds & runs the prod version of the Vue 
 	IFRAME_URL=http://localhost:4160 make demo-vue.build
 	$(MULTIRUN) --names "iframe.demo-vue" "cd apps/iframe && make preview" "cd demos/vue && make preview"
 .PHONY: demo-vue.prod
+
+
+fund: ## Request testnet funds - 0.1 $HAPPY - for a specific address (requires ETH_ADDRESS in .env)
+	@if [ ! -f "$(ENV_FILE)" ]; then \
+		echo "Error: $(ENV_FILE) not found. Please create it with ETH_ADDRESS=<your_address>"; \
+		exit 1; \
+	fi
+	$(eval ETH_ADDRESS := $(shell grep '^ETH_ADDRESS=' $(ENV_FILE) | cut -d '=' -f2))
+	@if [ -z "$(ETH_ADDRESS)" ]; then \
+		echo "Error: ETH_ADDRESS not found in $(ENV_FILE)"; \
+		echo "Please set ETH_ADDRESS=<your_address> in $(ENV_FILE)"; \
+		exit 1; \
+	fi
+	@if [ $(call check_eth_address,$(ETH_ADDRESS)) -eq 0 ]; then \
+		echo "Error: Invalid Ethereum address format in .env file"; \
+		echo "Please set a valid ETH_ADDRESS in .env file"; \
+		exit 1; \
+	fi
+	@echo "Requesting funds for address: $(ETH_ADDRESS)"
+	@curl -s 'https://happy-testnet-sepolia.hub.caldera.xyz/api/trpc/faucet.requestFaucetFunds?batch=1' \
+		-H 'content-type: application/json' \
+		--data-raw '{"0":{"json":{"rollupSubdomain":"happy-testnet-sepolia","recipientAddress":"$(ETH_ADDRESS)","turnstileToken":"","tokenRollupAddress":null},"meta":{"values":{"tokenRollupAddress":["undefined"]}}}}' \
+		| jq '.' || echo "Failed to request funds"
+	@echo "Fund request completed!"
 
 # ==================================================================================================
 ##@ Contracts
