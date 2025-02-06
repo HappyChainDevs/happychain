@@ -1,38 +1,30 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
 import { happyChainSepolia } from "@happy.tech/core"
 import { ConnectButton, useHappyChain } from "@happy.tech/react"
-import { useEffect, useMemo, useState } from "react"
-import { createPublicClient, createWalletClient, custom } from "viem"
+import { createHappyPublicClient, createHappyWalletClient } from "@happy.tech/viem"
+import { useEffect, useState } from "react"
 import { gnosis } from "viem/chains"
+
+const publicClient = createHappyPublicClient()
+const walletClient = createHappyWalletClient()
 
 function App() {
     const [signatureResult, setSignatureResult] = useState<string>()
     const [blockResult, setBlockResult] = useState<null | Awaited<ReturnType<typeof publicClient.getBlock>>>()
 
-    const { provider, user, connect, disconnect, showSendScreen, loadAbi, requestSessionKey } = useHappyChain()
-
-    const publicClient = useMemo(() => createPublicClient({ transport: custom(provider!) }), [provider])
-    const walletClient = useMemo(
-        () => user?.address && createWalletClient({ account: user.address, transport: custom(provider!) }),
-        [user, provider],
-    )
+    const { user, connect, disconnect, showSendScreen, loadAbi, requestSessionKey } = useHappyChain()
 
     async function sendStub() {
         showSendScreen()
     }
 
     async function signMessage(message: string) {
-        if (!user || !walletClient) {
-            alert("no user connected")
-            return
-        }
-
         setSignatureResult("")
 
         const signature = await walletClient.signMessage({ message })
 
         const valid = await publicClient.verifyMessage({
-            address: user.controllingAddress,
+            address: user!.controllingAddress,
             message,
             signature,
         })

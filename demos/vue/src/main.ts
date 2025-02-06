@@ -1,5 +1,6 @@
-import { createHappyChainWagmiConfig, happyProvider } from "@happy.tech/core"
-import { type Config as WagmiConfig, WagmiPlugin } from "@wagmi/vue"
+import { happyProvider } from "@happy.tech/core"
+import { createHappyChainWagmiConfig } from "@happy.tech/wagmi"
+import { WagmiPlugin } from "@wagmi/vue"
 import { createApp } from "vue"
 import App from "./App.vue"
 import { VueQueryPlugin, queryClient } from "./query"
@@ -17,7 +18,7 @@ import { HappyChainPlugin, happyChainSepolia } from "./sdk"
 // biome-ignore lint/suspicious/noExplicitAny: demo purposes only. not needed under regular usage
 ;(window as any).happyProvider = happyProvider
 
-export const config = createHappyChainWagmiConfig(happyChainSepolia) as WagmiConfig
+export const config = createHappyChainWagmiConfig(happyChainSepolia)
 
 createApp(App)
     .use(HappyChainPlugin, { chainId: happyChainSepolia.id })

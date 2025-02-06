@@ -13,7 +13,7 @@ include makefiles/help.mk
 SHARED_PKGS := support/common,support/wallet-common,support/worker
 
 # packages only used in the SDK
-SDK_ONLY_PKGS := packages/core,packages/react
+SDK_ONLY_PKGS := packages/core,packages/react,packages/viem,packages/wagmi
 
 # packages needed to build the sdk
 SDK_PKGS := $(SHARED_PKGS),$(SDK_ONLY_PKGS)

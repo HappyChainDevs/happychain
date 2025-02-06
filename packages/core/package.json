@@ -13,18 +13,6 @@
             "default": "./dist/index.es.js"
         }
     },
-    "peerDependencies": {
-        "@wagmi/core": "^2.16.3",
-        "viem": "^2.21.53"
-    },
-    "peerDependenciesMeta": {
-        "@wagmi/core": {
-            "optional": true
-        },
-        "viem": {
-            "optional": true
-        }
-    },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
         "@happy.tech/happybuild": "workspace:0.1.0",
@@ -40,6 +28,7 @@
         "motion": "^10.18.0",
         "preact": "^10.24.0",
         "preact-custom-element": "^4.3.0",
-        "typescript": "^5.6.2"
+        "typescript": "^5.6.2",
+        "viem": "^2.21.53"
     }
 }

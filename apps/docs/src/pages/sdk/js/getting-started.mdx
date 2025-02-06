@@ -72,7 +72,8 @@ import { happyProvider } from '@happy.tech/core'
 ```
 
 ```ts [Wagmi] twoslash
-import { createHappyChainWagmiConfig, happyChainSepolia } from "@happy.tech/core"
+import { happyChainSepolia } from "@happy.tech/core"
+import { createHappyChainWagmiConfig } from "@happy.tech/wagmi"
 
 const config = createHappyChainWagmiConfig(happyChainSepolia)
 ```
@@ -156,11 +157,8 @@ The session key is persisted between session, and further calls to the function 
 prompting the user, so it is safe to always call this function before other actions.
 
 ```ts twoslash
-import {
-    createHappyChainWagmiConfig,
-    happyChainSepolia,
-    requestSessionKey
-} from '@happy.tech/core'
+import { happyChainSepolia, requestSessionKey } from '@happy.tech/core'
+import {createHappyChainWagmiConfig } from '@happy.tech/wagmi'
 import { writeContract } from '@wagmi/core'
 import { parseAbi, type Hash } from "viem"
 
