@@ -6,26 +6,38 @@ pragma solidity ^0.8.20;
  * @dev   Contract implementing simple nonce management for a HappyAccount
  */
 contract BasicNonceManager {
-    event NonceUsed(uint256 indexed nonce);
+    /**
+     * @dev Emitted when a nonce is used in a track
+     * @param nonceTrack The nonce Track used
+     * @param nonceValue The corresponsind nonce value
+     */
+    event NonceUsed(uint192 indexed nonceTrack, uint64 indexed nonceValue);
 
-    uint256 internal _nonce;
+    /// @dev Mapping from track => nonce
+    mapping(uint192 => uint64) private nonceValue;
 
-    function getNonce() external view returns (uint256) {
-        return _nonce;
+    function getNonce(uint192 nonceTrack) public view returns (uint256 nonce) {
+        return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
     }
 
     /**
      * Validates and updates the nonce
      * @param nonceAhead The difference between current nonce and happyTx.nonce
-     * @param isSimulation Wether the current transaction is a simulation (tx.origin == address(0))
-     * @return status The validation status of the nonce
+     * @param nonceTrack The nonce track for the current transaction
+     * @param isSimulation Indicates whether the current transaction is a simulation
+     * @return Whether the nonce was validated and updated succesfully
      */
-    function _validateAndUpdateNonce(int256 nonceAhead, bool isSimulation) internal returns (bool) {
+    function _validateAndUpdateNonce(int256 nonceAhead, uint192 nonceTrack, bool isSimulation)
+        internal
+        returns (bool)
+    {
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) {
             return false;
         }
 
-        emit NonceUsed(_nonce++);
+        emit NonceUsed(nonceTrack, nonceValue[nonceTrack]);
+        nonceValue[nonceTrack]++;
+
         return true;
     }
 }

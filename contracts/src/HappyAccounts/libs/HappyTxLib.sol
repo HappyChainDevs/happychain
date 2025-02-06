@@ -33,23 +33,7 @@ library HappyTxLib {
      * @return The abi encoded hash of the transaction
      */
     function getHappyTxHash(HappyTx memory happyTx) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                happyTx.account,
-                happyTx.nonceTrack,
-                happyTx.nonceValue,
-                keccak256(happyTx.callData),
-                happyTx.gasLimit,
-                happyTx.executeGasLimit,
-                happyTx.dest,
-                happyTx.paymaster,
-                happyTx.value,
-                happyTx.maxFeePerGas,
-                happyTx.submitterFee,
-                keccak256(happyTx.paymasterData),
-                keccak256(happyTx.validatorData)
-            )
-        );
+        return keccak256(encode(happyTx));
     }
 
     /**
@@ -139,10 +123,6 @@ library HappyTxLib {
             ptr := add(ptr, 32)
 
             // Handle dynamic fields
-            // For each dynamic field:
-            // 1. Write length (4 bytes)
-            // 2. Copy data using mcopy
-
             let callDataOffset := mload(add(happyTx, 0x140))
             let pmDataOffset := mload(add(happyTx, 0x160))
             let validatorDataOffset := mload(add(happyTx, 0x180))
@@ -183,12 +163,8 @@ library HappyTxLib {
             mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
             ptr := add(ptr, len)
         }
-
-        // [LOGDEBUG] console.log("encoded result: ");
-        // [LOGDEBUG] console.logBytes(result);
     }
 
-    // TODO: Update to new encoding discussed in call
     /**
      * @dev Decodes the end-to-end encoded happyTx.
      * @param happyTx The encoded happyTx bytes
