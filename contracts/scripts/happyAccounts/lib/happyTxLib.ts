@@ -48,7 +48,7 @@ export function encode(tx: HappyTx): Hex {
 }
 
 export function decode(encoded: Hex): HappyTx {
-        const encodedBytes = encoded.slice(2);
+    const encodedBytes = encoded.slice(2);
     let offset = 0;
 
     // Read static fields (196 bytes total)
