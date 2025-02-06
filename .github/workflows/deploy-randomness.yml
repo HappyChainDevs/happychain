@@ -71,23 +71,19 @@ jobs:
               rm -f .env
 
               cat > .env <<-EOF
-            PRIVATE_KEY=${{ secrets.RANDOMNESS_PRIVATE_KEY }}
-            TXM_DB_PATH=${{ env.TXM_DB_PATH }}
-            RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
-            ${{vars.RANDOMNESS_ENV}}
+            export PRIVATE_KEY=${{ secrets.RANDOMNESS_PRIVATE_KEY }}
+            export TXM_DB_PATH=${{ env.TXM_DB_PATH }}
+            export RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
+            export ${{vars.RANDOMNESS_ENV}}
             EOF
 
             npm rebuild
           
             pm2 delete ${{ env.PM2_PROCESS_NAME }}
+      
+            source .env && node ./build/migrate.es.js
 
-
-
-            node --env-file .env ./build/migrate.es.js
-
-            sed -e 's/\r//' -e "/^[[:space:]]*#/d" -e "/^[[:space:]]*$/d" -e "s/^/export /" .env > .env.export
-
-            source .env.export && pm2 start ./build/index.es.js \
+            source .env && pm2 start ./build/index.es.js \
                   --name ${{ env.PM2_PROCESS_NAME }}
             pm2 save
             '
