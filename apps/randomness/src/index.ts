@@ -27,6 +27,7 @@ class RandomnessService {
             rpc: {
                 url: env.RPC_URL,
                 allowDebug: true,
+                pollingInterval: 250
             },
             maxPriorityFeePerGas: 10n
         })
