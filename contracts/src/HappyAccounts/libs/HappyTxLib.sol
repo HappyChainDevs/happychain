@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {HappyTx} from "../core/HappyTx.sol";
 
 // [LOGGAS] import {console} from "forge-std/Script.sol";
-/* [LOGDEBUG] */ import {console} from "forge-std/Script.sol";
+// [LOGDEBUG] import {console} from "forge-std/Script.sol";
 
 library HappyTxLib {
     /// @dev Number of dynamic fields in HappyTx.
@@ -57,7 +57,7 @@ library HappyTxLib {
      * The encoding is done by packing fields end-to-end without 32-byte word alignment, making it
      * more gas efficient than standard ABI encoding. Dynamic fields are prefixed with their lengths
      * as uint32.
-     * 
+     *
      * Encoding Format:
      * ┌─────────────────────────────────────────────────────────────┐
      * │                       Fixed Size Fields                     │
@@ -75,7 +75,7 @@ library HappyTxLib {
      * │len  │callData │len  │paymaster   │len  │validator │len  │ext│
      * │(4b) │  (Nb)   │(4b) │Data (Nb)   │(4b) │Data (Nb) │(4b) │(N)│
      * └─────┴─────────┴─────┴────────────┴─────┴──────────┴─────┴───┘
-     * 
+     *
      * @param happyTx The transaction to encode
      * @return result The encoded transaction bytes
      */
@@ -84,11 +84,8 @@ library HappyTxLib {
         // Fixed size fields: 20 + 4 + 4 + 20 + 20 + 32 + 24 + 8 + 32 + 32 = 196 bytes
         // Dynamic fields: 4 bytes length + actual length for each dynamic field
         // Calculate total size needed for the encoded bytes
-        uint256 totalSize = 196 +
-            (4 + happyTx.callData.length) +
-            (4 + happyTx.paymasterData.length) +
-            (4 + happyTx.validatorData.length) +
-            (4 + happyTx.extraData.length);
+        uint256 totalSize = 196 + (4 + happyTx.callData.length) + (4 + happyTx.paymasterData.length)
+            + (4 + happyTx.validatorData.length) + (4 + happyTx.extraData.length);
 
         assembly {
             // Allocate memory for result (add 32 bytes for the length prefix)
@@ -97,50 +94,50 @@ library HappyTxLib {
             mstore(0x40, add(result, add(totalSize, 32)))
             // Store length of the result
             mstore(result, totalSize)
-            
+
             // Start writing after length prefix
             let ptr := add(result, 32)
-            
+
             // Copy account (20 bytes)
             mstore(ptr, shl(96, and(mload(happyTx), 0xffffffffffffffffffffffffffffffffffffffff)))
             ptr := add(ptr, 20)
-            
+
             // Copy gasLimit (4 bytes)
             mstore(ptr, shl(224, mload(add(happyTx, 0x20))))
             ptr := add(ptr, 4)
-            
+
             // Copy executeGasLimit (4 bytes)
             mstore(ptr, shl(224, mload(add(happyTx, 0x40))))
             ptr := add(ptr, 4)
-            
+
             // Copy dest (20 bytes)
             mstore(ptr, shl(96, and(mload(add(happyTx, 0x60)), 0xffffffffffffffffffffffffffffffffffffffff)))
             ptr := add(ptr, 20)
-            
+
             // Copy paymaster (20 bytes)
             mstore(ptr, shl(96, and(mload(add(happyTx, 0x80)), 0xffffffffffffffffffffffffffffffffffffffff)))
             ptr := add(ptr, 20)
-            
+
             // Copy value (32 bytes)
             mstore(ptr, mload(add(happyTx, 0xa0)))
             ptr := add(ptr, 32)
-            
+
             // Copy nonceTrack (24 bytes)
             mstore(ptr, shl(64, mload(add(happyTx, 0xc0))))
             ptr := add(ptr, 24)
-            
+
             // Copy nonceValue (8 bytes)
             mstore(ptr, shl(192, and(mload(add(happyTx, 0xe0)), 0xffffffffffffffff)))
             ptr := add(ptr, 8)
-            
+
             // Copy maxFeePerGas (32 bytes)
             mstore(ptr, mload(add(happyTx, 0x100)))
             ptr := add(ptr, 32)
-            
+
             // Copy submitterFee (32 bytes)
             mstore(ptr, mload(add(happyTx, 0x120)))
             ptr := add(ptr, 32)
-            
+
             // Handle dynamic fields
             // For each dynamic field:
             // 1. Write length (4 bytes)
@@ -150,12 +147,12 @@ library HappyTxLib {
             let pmDataOffset := mload(add(happyTx, 0x160))
             let validatorDataOffset := mload(add(happyTx, 0x180))
             let extraDataOffset := mload(add(happyTx, 0x1a0))
-            
+
             let len
             let lenOffset
 
             // callData
-            lenOffset := sub(callDataOffset,0x80)
+            lenOffset := sub(callDataOffset, 0x80)
             len := mload(add(happyTx, lenOffset))
             mstore(ptr, shl(224, len))
             ptr := add(ptr, 4)
@@ -163,7 +160,7 @@ library HappyTxLib {
             ptr := add(ptr, len)
 
             // paymasterData
-            lenOffset := sub(pmDataOffset,0x80)
+            lenOffset := sub(pmDataOffset, 0x80)
             len := mload(add(happyTx, lenOffset))
             mstore(ptr, shl(224, len))
             ptr := add(ptr, 4)
@@ -171,24 +168,24 @@ library HappyTxLib {
             ptr := add(ptr, len)
 
             // validatorData
-            lenOffset := sub(validatorDataOffset,0x80)
+            lenOffset := sub(validatorDataOffset, 0x80)
             len := mload(add(happyTx, lenOffset))
             mstore(ptr, shl(224, len))
-            ptr := add(ptr, 4)   
+            ptr := add(ptr, 4)
             mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
             ptr := add(ptr, len)
 
             // extraData
-            lenOffset := sub(extraDataOffset,0x80)
+            lenOffset := sub(extraDataOffset, 0x80)
             len := mload(add(happyTx, lenOffset))
             mstore(ptr, shl(224, len))
-            ptr := add(ptr, 4)       
+            ptr := add(ptr, 4)
             mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
             ptr := add(ptr, len)
         }
 
-        /* [LOGDEBUG] */ console.log("encoded result: ");
-        /* [LOGDEBUG] */ console.logBytes(result);
+        // [LOGDEBUG] console.log("encoded result: ");
+        // [LOGDEBUG] console.logBytes(result);
     }
 
     // TODO: Update to new encoding discussed in call
@@ -202,79 +199,93 @@ library HappyTxLib {
         if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
 
         assembly {
-            // Get pointer to the calldata bytes (don't skip 32 bytes as this is calldata not memory)
-            let ptr := happyTx.offset
+            // Get pointer to the calldata bytes
+            let cdPtr := happyTx.offset
+            let memPtr := result
 
-            // First slot: account (20) + first 12 bytes of dest
-            let slot1 := calldataload(ptr)
+            // Copy account (20 bytes) + zero pad to 32 bytes
+            calldatacopy(memPtr, cdPtr, 20)
+            mstore(memPtr, shr(96, mload(memPtr)))
+            cdPtr := add(cdPtr, 20)
+            memPtr := add(memPtr, 32)
 
-            let account := shr(96, slot1)
-            mstore(result, account) // account at 0x00
+            // Copy gasLimit (4 bytes) + zero pad to 32 bytes
+            calldatacopy(memPtr, cdPtr, 4)
+            mstore(memPtr, shr(224, mload(memPtr)))
+            cdPtr := add(cdPtr, 4)
+            memPtr := add(memPtr, 32)
 
-            // Get first 12 bytes of dest by bit masking
-            let destFirst12 := shl(64, and(slot1, 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF))
+            // Copy executeGasLimit (4 bytes) + zero pad to 32 bytes
+            calldatacopy(memPtr, cdPtr, 4)
+            mstore(memPtr, shr(224, mload(memPtr)))
+            cdPtr := add(cdPtr, 4)
+            memPtr := add(memPtr, 32)
 
-            // Second slot: paymaster (20) + last 8 bytes of dest + gasLimit (4)
-            let slot2 := calldataload(add(ptr, 32))
+            // Copy dest (20 bytes) + zero pad to 32 bytes
+            calldatacopy(memPtr, cdPtr, 20)
+            mstore(memPtr, shr(96, mload(memPtr)))
+            cdPtr := add(cdPtr, 20)
+            memPtr := add(memPtr, 32)
 
-            let paymaster := shr(96, slot2)
-            mstore(add(result, 0x80), paymaster) // paymaster at 0x80
+            // Copy paymaster (20 bytes) + zero pad to 32 bytes
+            calldatacopy(memPtr, cdPtr, 20)
+            mstore(memPtr, shr(96, mload(memPtr)))
+            cdPtr := add(cdPtr, 20)
+            memPtr := add(memPtr, 32)
 
-            // Get last 8 bytes of dest
-            let destLast8 := shr(32, and(slot2, 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFF00000000))
+            // Copy value (32 bytes)
+            calldatacopy(memPtr, cdPtr, 32)
+            cdPtr := add(cdPtr, 32)
+            memPtr := add(memPtr, 32)
 
-            // Combine dest parts
-            let dest := or(destFirst12, destLast8)
-            mstore(add(result, 0x60), dest) // dest at 0x60
+            // Copy NonceTrack (24 bytes) + zero pad to 32 bytes
+            calldatacopy(memPtr, cdPtr, 24)
+            mstore(memPtr, shr(64, mload(memPtr)))
+            cdPtr := add(cdPtr, 24)
+            memPtr := add(memPtr, 32)
 
-            // Store gasLimit
-            let gasLimit := and(slot2, 0x00000000000000000000000000000000000000000000000000000000FFFFFFFF)
-            mstore(add(result, 0x20), gasLimit)
+            // Copy NonceValue (8 bytes) + zero pad to 32 bytes
+            calldatacopy(memPtr, cdPtr, 8)
+            mstore(memPtr, shr(192, mload(memPtr)))
+            cdPtr := add(cdPtr, 8)
+            memPtr := add(memPtr, 32)
 
-            // Load remaining static fields
-            let value := calldataload(add(ptr, 64))
-            mstore(add(result, 0xA0), value)
+            // Copy maxFeePerGas (32 bytes)
+            calldatacopy(memPtr, cdPtr, 32)
+            cdPtr := add(cdPtr, 32)
+            memPtr := add(memPtr, 32)
 
-            let nonce := calldataload(add(ptr, 96))
-            mstore(add(result, 0xC0), nonce)
-
-            let maxFeePerGas := calldataload(add(ptr, 128))
-            mstore(add(result, 0xE0), maxFeePerGas)
-
-            let submitterFee := calldataload(add(ptr, 160))
-            mstore(add(result, 0x100), submitterFee)
+            // Copy submitterFee (32 bytes)
+            calldatacopy(memPtr, cdPtr, 32)
+            cdPtr := add(cdPtr, 32)
+            memPtr := add(memPtr, 32)
         }
 
-        (
-            uint256 totalLength,
-            uint256 callDataLength,
-            uint256 paymasterDataLength,
-            uint256 validatorDataLength,
-            uint256 extraDataLength,
-            uint32 executeGasLimit
-        ) = _unpackLengths(bytes32(happyTx[192:224]));
+        uint32 len;
+        uint256 offset = DYNAMIC_FIELDS_OFFSET;
 
-        // Validate total length matches calldata
-        if (happyTx.length != DYNAMIC_FIELDS_OFFSET + totalLength) revert MalformedHappyTx();
+        // Read callData length (4 bytes) and data
+        len = uint32(bytes4(happyTx[offset:offset + 4]));
+        offset += 4;
+        result.callData = happyTx[offset:offset + len];
+        offset += len;
 
-        result.executeGasLimit = executeGasLimit;
+        // Read paymasterData length (4 bytes) and data
+        len = uint32(bytes4(happyTx[offset:offset + 4]));
+        offset += 4;
+        result.paymasterData = happyTx[offset:offset + len];
+        offset += len;
 
-        uint256 dynamicOffset = DYNAMIC_FIELDS_OFFSET;
+        // Read validatorData length (4 bytes) and data
+        len = uint32(bytes4(happyTx[offset:offset + 4]));
+        offset += 4;
+        result.validatorData = happyTx[offset:offset + len];
+        offset += len;
 
-        result.callData = happyTx[dynamicOffset:dynamicOffset + callDataLength];
-        if (result.callData.length != callDataLength) revert MalformedHappyTx();
-        dynamicOffset += callDataLength;
-
-        result.paymasterData = happyTx[dynamicOffset:dynamicOffset + paymasterDataLength];
-        if (result.paymasterData.length != paymasterDataLength) revert MalformedHappyTx();
-        dynamicOffset += paymasterDataLength;
-
-        result.validatorData = happyTx[dynamicOffset:dynamicOffset + validatorDataLength];
-        if (result.validatorData.length != validatorDataLength) revert MalformedHappyTx();
-        dynamicOffset += validatorDataLength;
-
-        result.extraData = happyTx[dynamicOffset:dynamicOffset + extraDataLength];
-        if (result.extraData.length != extraDataLength) revert MalformedHappyTx();
+        // Read extraData length (4 bytes) and data
+        uint32 extraDataLen = uint32(bytes4(happyTx[offset:offset + 4]));
+        offset += 4;
+        result.extraData = happyTx[offset:offset + extraDataLen];
 
         // [LOGDEBUG] console.log("\n=== HappyTxLib.decode() ===\n");
         // [LOGDEBUG] console.log(" - account:", result.account);
@@ -283,7 +294,8 @@ library HappyTxLib {
         // [LOGDEBUG] console.log(" - gasLimit:", result.gasLimit);
         // [LOGDEBUG] console.log(" - executeGasLimit:", result.executeGasLimit);
         // [LOGDEBUG] console.log(" - value:", result.value);
-        // [LOGDEBUG] console.log(" - nonce:", result.nonce);
+        // [LOGDEBUG] console.log(" - nonceTrack:", result.nonceTrack);
+        // [LOGDEBUG] console.log(" - nonceValue:", result.nonceValue);
         // [LOGDEBUG] console.log(" - maxFeePerGas:", result.maxFeePerGas);
         // [LOGDEBUG] console.log(" - submitterFee:", result.submitterFee);
         // [LOGDEBUG] console.logBytes(result.callData);
