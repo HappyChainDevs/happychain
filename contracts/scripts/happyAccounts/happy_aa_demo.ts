@@ -101,11 +101,12 @@ async function getTokenBalance(address: Address) {
     })
 }
 
-async function createDummyHappyTx(account: Address, nonce: bigint): Promise<HappyTx> {
+async function createDummyHappyTx(account: Address, nonceValue: bigint): Promise<HappyTx> {
     return {
         account,
         dest: isLocal ? mockDeploymentAnvil.MockTokenA : mockDeploymentTenderly.MockTokenA,
-        nonce,
+        nonceTrack: 0n, // using as default
+        nonceValue: nonceValue,
         value: 0n,
         paymaster: zeroAddress, // self funding
         gasLimit: 4000000000n,
@@ -140,7 +141,8 @@ function getHappyTxHash(happyTx: HappyTx) {
         [
             // TODO: Use the commented out fields when switching from encodeAbiParameters -> encodePacked
             // 'address', // account
-            // 'uint256', // nonce
+            // 'uint192', // nonceTrack
+            // 'uint64', // nonceValue
             // 'bytes32', // callData_hashed
             // 'uint256', // gasLimit
             // 'uint256', // executeGasLimit
@@ -152,7 +154,8 @@ function getHappyTxHash(happyTx: HappyTx) {
             // 'bytes32', // paymasterAndData_hashed
             // 'bytes32', // validatorAndData_hashed
             { type: "address" }, // account
-            { type: "uint256" }, // nonce
+            { type: "uint192" }, // nonceTrack
+            { type: "uint64" }, // nonceValue
             { type: "bytes32" }, // callData_hashed
             { type: "uint256" }, // gasLimit
             { type: "uint256" }, // executeGasLimit
@@ -166,7 +169,8 @@ function getHappyTxHash(happyTx: HappyTx) {
         ],
         [
             happyTx.account,
-            happyTx.nonce,
+            happyTx.nonceTrack,
+            happyTx.nonceValue,
             callData_hashed,
             happyTx.gasLimit,
             happyTx.executeGasLimit,

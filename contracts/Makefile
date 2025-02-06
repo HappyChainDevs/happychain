@@ -109,6 +109,22 @@ test-happyTxLib:
 	forge test --match-contract HappyTxLibTest -vvv
 .PHONY: test-happyTxLib
 
+test-client-happyTx-encode:
+	bun run encodeTests
+.PHONY: test-client-happyTx-encode
+
+test-client-happyTx-decode:
+	bun run decodeTests
+.PHONY: test-client-happyTx-decode
+
+test-client-happyTx-combined:
+	bun run combinedTests
+.PHONY: test-client-happyTx-combined
+
+test-client-happyTx:
+	bun run test
+.PHONY: test-client-happyTx
+
 ####################################################################################################
 # Gas Logging
 

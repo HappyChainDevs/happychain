@@ -17,7 +17,8 @@ import type { Address, Hex } from "viem"
  *                                 3. the submitter (an EOA, `tx.origin`)
  * @param value              - Amount of native tokens (in gas token wei) to transfer
  * @param callData           - Transaction calldata to be executed
- * @param nonce              - Account nonce, interpreted at the account's leisure
+ * @param nonceTrack         - Account nonceTrack, to support parallel happyTx execution
+ * @param nonceValue         - Account nonceValue for the corresponding nonceTrack.
  *
  * Gas and Fee Parameters:
  * @param maxFeePerGas       - Maximum total fee per gas unit (inclusive basefee and priority fee)
@@ -38,7 +39,8 @@ export interface HappyTx {
     dest: Address
     paymaster: Address
     value: bigint
-    nonce: bigint
+    nonceTrack: bigint
+    nonceValue: bigint
     maxFeePerGas: bigint
     submitterFee: bigint
     callData: Hex
