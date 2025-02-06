@@ -150,7 +150,10 @@ contract ScrappyAccount is
             happyTx.submitterFee = 0;
         }
 
-        address signer = happyTx.getHappyTxHash().toEthSignedMessageHash().recover(happyTx.validatorData);
+        bytes memory signature = happyTx.validatorData;
+        happyTx.validatorData = ""; // set to "" to get the hash
+        address signer = happyTx.getHappyTxHash().toEthSignedMessageHash().recover(signature);
+        happyTx.validatorData = signature; // revert back to original value
 
         // NOTE: This function may consume slightly more gas during simulation, in accordance to the spec.
         return isSimulation
@@ -162,7 +165,6 @@ contract ScrappyAccount is
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
         uint256 startGas = gasleft();
-
         (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
         if (!success) {
             output.revertData = returnData;
@@ -176,7 +178,6 @@ contract ScrappyAccount is
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
         // [LOGGAS] uint256 initialGas = gasleft();
-
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
         }
@@ -187,8 +188,8 @@ contract ScrappyAccount is
         payable(tx.origin).call{value: owed}("");
 
         // [LOGGAS] uint256 finalGas = gasleft();
-
         // [LOGGAS] console.log("Gas used in payout:", initialGas - finalGas);
+
         return 0;
     }
 
