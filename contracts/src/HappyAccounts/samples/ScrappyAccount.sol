@@ -130,24 +130,27 @@ contract ScrappyAccount is
             return GasPriceTooHigh.selector;
         }
 
-        uint256 nonce = (happyTx.nonceTrack << 192) | happyTx.nonceValue;
-        int256 nonceAhead = int256(nonce) - int256(_nonce);
+        uint256 happyTxNonce = (happyTx.nonceTrack << 192) | happyTx.nonceValue;
+        uint256 currentNonce = getNonce(happyTx.nonceTrack);
+
         bool isSimulation = tx.origin == address(0);
-        if (!_validateAndUpdateNonce(nonceAhead, isSimulation)) {
+        int256 nonceAhead = int256(happyTxNonce) - int256(currentNonce);
+
+        if (!_validateAndUpdateNonce(nonceAhead, happyTx.nonceTrack, isSimulation)) {
             return InvalidNonce.selector;
         }
 
         if (happyTx.paymaster != address(this)) {
-            // The happyTx is not self-paying
-            // The signer does not sign over these fields to avoid extra network roundtrips
-            // validation policy falls to the paymaster or the sponsoring submitter.
+            // The happyTx is not self-paying.
+            // The signer does not sign over the gas fields to avoid extra network roundtrips.
+            // Validation policy falls to the paymaster or the sponsoring submitter.
             happyTx.gasLimit = 0;
             happyTx.executeGasLimit = 0;
             happyTx.maxFeePerGas = 0;
             happyTx.submitterFee = 0;
-        } // Else, self-paying txn
+        }
 
-        address signer = happyTx.getHappyTxHash().toEthSignedMessageHash().recover(happyTx.extraData);
+        address signer = happyTx.getHappyTxHash().toEthSignedMessageHash().recover(happyTx.validatorData);
 
         // NOTE: This function may consume slightly more gas during simulation, in accordance to the spec.
         return isSimulation
