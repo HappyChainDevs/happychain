@@ -1,6 +1,6 @@
 import { HappyMap, Map2, Mutex, promiseWithResolvers, sleep } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
-import type { HappyUser } from "@happy.tech/wallet-common"
+import type { ApprovedRequestExtraData, HappyUser } from "@happy.tech/wallet-common"
 import { deepHexlify } from "permissionless"
 import { getAccountNonce } from "permissionless/actions"
 import {
@@ -39,6 +39,7 @@ export type SendUserOpArgs = {
     tx: RpcTransactionRequest
     validator: Address
     signer: UserOpSigner
+    preparedOp?: ApprovedRequestExtraData<"eth_sendTransaction">
 }
 
 export type UserOpWrappedCall = {
@@ -58,7 +59,7 @@ export enum VALIDATOR_TYPE {
     PERMISSION = "0x02",
 }
 
-export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs, retry = 2) {
+export async function sendUserOp({ user, tx, validator, signer, preparedOp }: SendUserOpArgs, retry = 2) {
     const smartAccountClient = (await getSmartAccountClient())!
     const account = smartAccountClient.account.address
 
@@ -69,14 +70,13 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
         // We need the separate nonce lookup because:
         // - we do local nonce management to be able to have multiple userOps in flight
         // - prepareUserOperation cannot request nonces for custom nonceKeys (needed for session keys)
-        const [nonce, _preparedUserOp] = await Promise.all([
-            getNextNonce(account, validator),
-            smartAccountClient.prepareUserOperation({
+        const nonce = await getNextNonce(account, validator)
+
+        const _preparedUserOp =
+            preparedOp ||
+            (await smartAccountClient.prepareUserOperation({
                 account: smartAccountClient.account,
                 paymaster: contractAddresses.HappyPaymaster,
-                // Specify this array to avoid fetching the nonce from here too.
-                // We don't really need the dummy signature, but it does not incur an extra network
-                // call and it makes the type system happy.
                 parameters: ["factory", "fees", "gas", "signature"],
                 calls: [
                     {
@@ -85,20 +85,30 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
                         value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
                     },
                 ],
-            } satisfies PrepareUserOperationParameters), // TS too dumb without this
-        ])
+            } satisfies PrepareUserOperationParameters))
 
-        // [DEBUGLOG] // debugNonce = nonce
+        // Transform into exact UserOperation type
+        // TODO AA26 (over VGL)
+        const userOp: UserOperation = {
+            sender: account,
+            nonce,
+            callData: _preparedUserOp.callData,
+            callGasLimit: _preparedUserOp.callGasLimit,
+            maxFeePerGas: _preparedUserOp.maxFeePerGas,
+            maxPriorityFeePerGas: _preparedUserOp.maxPriorityFeePerGas,
+            verificationGasLimit: _preparedUserOp.verificationGasLimit,
+            preVerificationGas: _preparedUserOp.preVerificationGas,
+            signature: "0x", // Will be set by signer
+        }
 
-        // sendUserOperationNow does not want account included
-        const { account: _, ...preparedUserOp } = { ..._preparedUserOp, nonce }
-        preparedUserOp.signature = await signer(preparedUserOp, smartAccountClient)
+        // Sign the operation
+        userOp.signature = await signer(userOp, smartAccountClient)
 
         userOpHash = getUserOperationHash({
             chainId: Number(getCurrentChain().chainId),
             entryPointAddress: contractAddresses.EntryPointV7,
             entryPointVersion: "0.7",
-            userOperation: preparedUserOp,
+            userOperation: userOp,
         })
 
         const pendingUserOpDetails = {
@@ -108,8 +118,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         addPendingUserOp(user.address, pendingUserOpDetails)
 
-        // [DEBUGLOG] // console.log("sending", userOpHash, retry)
-        const userOpReceipt = await submitUserOp(smartAccountClient, validator, preparedUserOp)
+        const userOpReceipt = await submitUserOp(smartAccountClient, validator, userOp)
 
         receiptCache.put(userOpHash, [
             userOpReceipt,
@@ -118,7 +127,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
                 blockNumber: userOpReceipt.receipt.blockNumber,
                 entryPoint: contractAddresses.EntryPointV7,
                 transactionHash: userOpHash,
-                userOperation: preparedUserOp,
+                userOperation: _preparedUserOp,
             } as GetUserOperationReturnType,
         ])
 

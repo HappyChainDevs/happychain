@@ -50,7 +50,9 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         console.warn("Request approved, but no user found")
     }
 
-    switch (request.payload.eip1193params.method) {
+    const requestMethod = request.payload.eip1193params.method
+
+    switch (requestMethod) {
         case "eth_sendTransaction": {
             try {
                 if (!user) throw new EIP1193UnauthorizedError()

@@ -233,17 +233,11 @@ export type ProviderMsgsFromIframe = {
 
 // this is not very extendable atm
 // think this requires some extra tooling but we can run w this for now
-export type ApprovedRequestExtraData<
-    Method extends EIP1193RequestMethods,
-    TAccount extends SmartAccount | undefined = SmartAccount | undefined,
-    TAccountOverride extends SmartAccount | undefined = SmartAccount | undefined,
-    TCalls extends readonly unknown[] = readonly unknown[],
-> = Method extends "eth_sendTransaction"
-    ? PrepareUserOperationReturnType<TAccount, TAccountOverride, TCalls>
-    : undefined
-// type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> = Method extends "eth_sendTransaction"
-//     ? PrepareUserOperationReturnType // this is actually the type we want!
-//     : undefined
+export type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> = Method extends "eth_sendTransaction"
+    ? PrepareUserOperationReturnType<SmartAccount | undefined, SmartAccount | undefined, readonly unknown[]> & {
+          account?: SmartAccount // TODO probably not ideal?
+      }
+    : Record<string, never>
 
 export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP1193RequestMethods> = {
     eip1193params: EIP1193RequestParameters<Method>

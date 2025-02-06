@@ -16,9 +16,8 @@ import {
 } from "viem"
 import type { PrepareUserOperationParameters } from "viem/account-abstraction"
 import { useEstimateFeesPerGas } from "wagmi"
-import type { KernelSmartAccount } from "#src/state/kernelAccount.js"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
-import { getSmartAccountClient } from "#src/state/smartAccountClient.js"
+import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
 import { BlobTxWarning } from "./BlobTxWarning"
@@ -75,15 +74,9 @@ export const EthSendTransaction = ({
     // useState + useEffect paradigm works here (over useMemo) since we will have
     // user interactions for sliders / options for setting gas manually
     const [tx, setTx] = useState<RpcTransactionRequest>(params[0])
-    const [preparedOp, setPreparedOp] = useState<
-        | ApprovedRequestExtraData<
-              "eth_sendTransaction",
-              KernelSmartAccount,
-              undefined,
-              [{ to: Hex; data: Hex; value: bigint }]
-          >
-        | undefined
-    >()
+    const [preparedUserOp, setPreparedUserOp] = useState<ApprovedRequestExtraData<"eth_sendTransaction"> | undefined>(
+        undefined,
+    )
 
     const user = useAtomValue(userAtom)
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
@@ -96,15 +89,7 @@ export const EthSendTransaction = ({
         queryKey,
     } = useEstimateFeesPerGas({ type: "eip1559" })
 
-    const doTheDo = useCallback(async (): Promise<
-        | ApprovedRequestExtraData<
-              "eth_sendTransaction",
-              KernelSmartAccount,
-              undefined,
-              [{ to: Hex; data: Hex; value: bigint }]
-          >
-        | undefined
-    > => {
+    const doTheDo = useCallback(async (): Promise<ApprovedRequestExtraData<"eth_sendTransaction"> | undefined> => {
         const smartAccountClient = (await getSmartAccountClient())!
 
         try {
@@ -134,7 +119,10 @@ export const EthSendTransaction = ({
             try {
                 const op = await doTheDo()
                 console.log(op)
-                setPreparedOp(op)
+
+                // TODO doesn't find the account var here according to the type
+                // const { account, ...rest } = op
+                setPreparedUserOp(op)
             } catch (err) {
                 console.error("Failed to prepare user operation:", err)
             }
@@ -168,6 +156,8 @@ export const EthSendTransaction = ({
             } as RpcTransactionRequest
         })
     }, [maxFeePerGas, maxPriorityFeePerGas, isError])
+
+    console.log(tx)
 
     const abiForContract =
         user?.address && targetContractAddress && recordedAbisForUser[user.address]?.[targetContractAddress]
