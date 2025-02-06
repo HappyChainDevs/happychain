@@ -208,9 +208,14 @@
               "internalType": "uint256"
             },
             {
-              "name": "nonce",
-              "type": "uint256",
-              "internalType": "uint256"
+              "name": "nonceTrack",
+              "type": "uint192",
+              "internalType": "uint192"
+            },
+            {
+              "name": "nonceValue",
+              "type": "uint64",
+              "internalType": "uint64"
             },
             {
               "name": "maxFeePerGas",
@@ -282,10 +287,16 @@
     {
       "type": "function",
       "name": "getNonce",
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "nonceTrack",
+          "type": "uint192",
+          "internalType": "uint192"
+        }
+      ],
       "outputs": [
         {
-          "name": "",
+          "name": "nonce",
           "type": "uint256",
           "internalType": "uint256"
         }
@@ -382,9 +393,14 @@
               "internalType": "uint256"
             },
             {
-              "name": "nonce",
-              "type": "uint256",
-              "internalType": "uint256"
+              "name": "nonceTrack",
+              "type": "uint192",
+              "internalType": "uint192"
+            },
+            {
+              "name": "nonceValue",
+              "type": "uint64",
+              "internalType": "uint64"
             },
             {
               "name": "maxFeePerGas",
@@ -543,9 +559,14 @@
               "internalType": "uint256"
             },
             {
-              "name": "nonce",
-              "type": "uint256",
-              "internalType": "uint256"
+              "name": "nonceTrack",
+              "type": "uint192",
+              "internalType": "uint192"
+            },
+            {
+              "name": "nonceValue",
+              "type": "uint64",
+              "internalType": "uint64"
             },
             {
               "name": "maxFeePerGas",
@@ -607,10 +628,16 @@
       "name": "NonceUsed",
       "inputs": [
         {
-          "name": "nonce",
-          "type": "uint256",
+          "name": "nonceTrack",
+          "type": "uint192",
           "indexed": true,
-          "internalType": "uint256"
+          "internalType": "uint192"
+        },
+        {
+          "name": "nonceValue",
+          "type": "uint64",
+          "indexed": true,
+          "internalType": "uint64"
         }
       ],
       "anonymous": false
@@ -741,11 +768,6 @@
     {
       "type": "error",
       "name": "InvalidInitialization",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "MalformedHappyTx",
       "inputs": []
     },
     {
@@ -960,6 +982,16 @@
           "internalType": "address"
         },
         {
+          "name": "_target",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_maxSubmitterFeePerByte",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
           "name": "_owner",
           "type": "address",
           "internalType": "address"
@@ -988,6 +1020,19 @@
           "name": "",
           "type": "bytes4",
           "internalType": "bytes4"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "maxSubmitterFeePerByte",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
         }
       ],
       "stateMutability": "view"
@@ -1045,9 +1090,14 @@
               "internalType": "uint256"
             },
             {
-              "name": "nonce",
-              "type": "uint256",
-              "internalType": "uint256"
+              "name": "nonceTrack",
+              "type": "uint192",
+              "internalType": "uint192"
+            },
+            {
+              "name": "nonceValue",
+              "type": "uint64",
+              "internalType": "uint64"
             },
             {
               "name": "maxFeePerGas",
@@ -1115,6 +1165,45 @@
       "inputs": [],
       "outputs": [],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setMaxSubmitterFeePerByte",
+      "inputs": [
+        {
+          "name": "_maxSubmitterFeePerByte",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setTarget",
+      "inputs": [
+        {
+          "name": "_target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "target",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
     },
     {
       "type": "function",
