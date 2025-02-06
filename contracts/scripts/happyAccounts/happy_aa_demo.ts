@@ -240,7 +240,7 @@ async function main() {
     try {
         const dummyHappyTx = await createDummyHappyTx(deployedAccountAddress, await getNonce(deployedAccountAddress))
         dummyHappyTx.paymaster = deployedAccountAddress // self-paying
-        dummyHappyTx.extraData = await signHappyTx(dummyHappyTx) // sign over the happyTx
+        dummyHappyTx.validatorData = await signHappyTx(dummyHappyTx) // sign over the happyTx
         const encodedHappyTx: Hex = encode(dummyHappyTx)
 
         console.log("Happy Tx: ", dummyHappyTx)
@@ -271,7 +271,7 @@ async function main() {
     console.log("\n\n\x1b[1m\x1b[48;5;160m\x1b[38;5;88m=== Submitting Happy Transaction (using paymaster) ===\x1b[0m\n")
     try {
         const dummyHappyTx = await createDummyHappyTx(deployedAccountAddress, await getNonce(deployedAccountAddress))
-        dummyHappyTx.extraData = await signHappyTx(dummyHappyTx, true) // sign over the happyTx
+        dummyHappyTx.validatorData = await signHappyTx(dummyHappyTx, true) // sign over the happyTx
 
         console.log("Happy Tx: ", dummyHappyTx)
         console.log("\n⏳ Submitting transaction...\n")

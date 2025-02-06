@@ -57,7 +57,6 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
     console.log(`\n\n/deployAccount\nOwner: ${owner},\nSalt: ${salt}`)
 
     try {
-        // First predict the account address
         const predictedAddress: Address = await publicClient.readContract({
             address: deployment.ScrappyAccountFactory,
             abi: abis.ScrappyAccountFactory,
@@ -65,7 +64,7 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
             args: [salt],
         })
 
-        // Check if code already exists at the predicted address
+        // Check if a contract is already deployed at the predicted address
         const alreadyDeployed = await isContractDeployed(predictedAddress)
         if (alreadyDeployed) {
             console.log("Account already deployed at:", predictedAddress)
@@ -77,7 +76,7 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
             return c.json(validatedResponse)
         }
 
-        // If not deployed, simulate the deployment
+        console.log("⏳ Simulating the transaction...")
         const { request, result } = await publicClient.simulateContract({
             address: deployment.ScrappyAccountFactory,
             abi: abis.ScrappyAccountFactory,
@@ -96,14 +95,13 @@ app.post("/deployAccount", zValidator("json", DeployAccountSchema), async (c) =>
             const validatedResponse = DeployAccountResponseSchema.parse(response)
             return c.json(validatedResponse, 400)
         }
-
-        // Then, actually deploy
+        console.log("✅ Transaction simulation successful.")
+        
+        console.log("⏳ Sending the transaction...")
         const hash = await walletClient.writeContract(request)
-        console.log("Tx Hash:    ", hash)
+        console.log("✅ Transaction submitted successfully: ", hash)
 
         const receipt = await publicClient.waitForTransactionReceipt({ hash })
-        console.log("Tx Receipt: ", receipt.status)
-
         if (receipt.status !== "success") {
             console.error("Deployment failed with receipt:", receipt)
             const response = {
@@ -178,7 +176,7 @@ app.post("/submitHappyTx", zValidator("json", HappyTxSchema), async (c) => {
         console.log(`\n\n/submitHappyTx\nencodedHappyTx: ${encodedHappyTx}`)
 
         console.log("⏳ Simulating the transaction...")
-        // Simulate the transaction first
+
         const { request } = await publicClient.simulateContract({
             address: deployment.HappyEntryPoint,
             abi: abis.HappyEntryPoint,
@@ -186,23 +184,11 @@ app.post("/submitHappyTx", zValidator("json", HappyTxSchema), async (c) => {
             args: [encodedHappyTx],
             account,
         })
-
         console.log("✅ Transaction simulation successful.")
-
         console.log("⏳ Sending the transaction...")
-        // Send the transaction
+
         const hash = await walletClient.writeContract(request)
         console.log("✅ Transaction submitted successfully: ", hash)
-        // console.log("⏳ Submitting the transaction...")
-        // const hash = await walletClient.writeContract({
-        //     address: deployment.HappyEntryPoint,
-        //     abi: abis.HappyEntryPoint,
-        //     functionName: "submit",
-        //     args: [encodedHappyTx],
-        //     account,
-        //     chain: localhost,
-        // })
-        // console.log("Submitted happyTx: ", hash)
 
         const receipt = await publicClient.waitForTransactionReceipt({ hash })
         if (receipt.status !== "success") {
