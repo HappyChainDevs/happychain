@@ -113,7 +113,6 @@ contract ScrappyAccount is
     }
 
     /// @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-    /// @param newImplementation The address of the new implementation contract
     /// @dev Only callable by the owner
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 

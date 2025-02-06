@@ -176,7 +176,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * Also note that `debug_traceCall` is not an acceptable substitute, given
      * that it requires a custom tracer and that those are incompatible between
      * node implementations.
-     *
      */
     function submit(bytes calldata encodedHappyTx) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
@@ -188,9 +187,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         bytes memory returnData;
         (success, returnData) = happyTx.account.excessivelySafeCall(
             happyTx.executeGasLimit,
-            0,
+            0, // gas token transfer value
             MAX_RETURN_DATA_SIZE,
-            abi.encodeWithSelector(IHappyAccount.validate.selector, happyTx)
+            abi.encodeCall(IHappyAccount.validate, (happyTx))
         );
         if (!success) revert ValidationReverted(returnData);
 
@@ -208,10 +207,10 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         (success, returnData) = happyTx.account.excessivelySafeCall(
             // Pass the max possible gas if we need to estimate the gas limit.
             tx.origin == address(0) && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
-            0,
+            0, // gas token transfer value
             // Allow the call revert data to take up the same size as the other revert data.
             MAX_EXECUTE_REVERT_DATA_SIZE,
-            abi.encodeWithSelector(IHappyAccount.execute.selector, happyTx)
+            abi.encodeCall(IHappyAccount.execute, (happyTx))
         );
 
         // Don't revert, as we still want to get the payment for a reverted call.
@@ -245,9 +244,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 gasBeforePayout = gasleft();
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
             happyTx.executeGasLimit,
-            0,
+            0, // gas token transfer value
             MAX_RETURN_DATA_SIZE,
-            abi.encodeWithSelector(IHappyPaymaster.payout.selector, happyTx, consumedGas)
+            abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
         );
         if (!success) revert PaymentReverted(returnData);
 
@@ -256,12 +255,14 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // It's okay if the payment is only for the agreed-upon gas limit.
         // This should never happen if happyTx.gasLimit matches the submitter's tx gas limit.
-        consumedGas = consumedGas + payoutGas > happyTx.gasLimit ? happyTx.gasLimit : payoutGas;
+        consumedGas = consumedGas + payoutGas > happyTx.gasLimit ? happyTx.gasLimit : consumedGas + payoutGas;
+
+        // `submitterFee` can be negative (rebates) but can't charge less than 0.
         int256 _charged = int256(consumedGas * tx.gasprice) + happyTx.submitterFee;
         uint256 charged = _charged > 0 ? uint256(_charged) : 0;
 
-        result = abi.decode(returnData, (bytes4));
         if (tx.origin.balance < balance + charged) {
+            result = abi.decode(returnData, (bytes4));
             revert PaymentFailed(result);
         }
     }
