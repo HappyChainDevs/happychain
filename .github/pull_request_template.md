@@ -47,5 +47,6 @@ Reminder: [PR review guidelines][guidelines]
       comments.
 - [ ] D3. If appropriate, the general architecture of the code is documented in a code comment or
       in a Markdown document.
+- [ ] D4. An appropriate Changeset has been generated (and committed) for changes that touch npm published packages (currently `pacakges/core` and `packages/react`), see [here](../.changeset/README.md) for more info.
 
 </details>

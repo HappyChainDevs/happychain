@@ -8,6 +8,8 @@ env:
   ORGANIZATION: happychaindevs
   PM2_PROCESS_NAME: happy-bundler
   PORT: 49531
+  RPC_URL: https://happy-testnet-sepolia.rpc.caldera.xyz/http
+  BUNDLER_URL: https://bundler.happy.tech
 
 jobs:
   deploy:
@@ -27,12 +29,32 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       
-      - name: Show wallets address
+      - name: Show wallets addresses and balances
         run: |
-          EXECUTOR_WALLET_ADDRESS=$(cast wallet address ${{ secrets.BUNDLER_EXECUTOR_WALLET }})
-          UTILITY_WALLET_ADDRESS=$(cast wallet address ${{ secrets.BUNDLER_UTILITY_WALLET }})
-          echo "Executor wallet: $EXECUTOR_WALLET_ADDRESS"
-          echo "Utility wallet: $UTILITY_WALLET_ADDRESS"
+          EXECUTOR_WALLETS='${{ secrets.BUNDLER_EXECUTOR_WALLETS }}'
+          echo "===== Executor wallet(s) ====="
+          if [[ -n "$EXECUTOR_WALLETS" ]]; then
+            # Remove spaces and extra double quotes
+            EXECUTOR_WALLETS=$(echo "$EXECUTOR_WALLETS" | tr -d '[:space:]' | tr -d '"')
+            IFS=',' read -ra ADDR <<< "$EXECUTOR_WALLETS"
+      
+            for WALLET in "${ADDR[@]}"; do
+              WALLET_ADDRESS=$(cast wallet address "$WALLET")
+              WALLET_BALANCE=$(cast balance "$WALLET_ADDRESS" --rpc-url ${{ env.RPC_URL }} --ether)
+              echo "Executor wallet: $WALLET_ADDRESS with balance: $WALLET_BALANCE"
+            done
+          else
+            echo "No executor wallets found!"
+          fi
+          UTILITY_WALLET='${{ secrets.BUNDLER_UTILITY_WALLET }}'
+          UTILITY_WALLET=$(echo "$UTILITY_WALLET" | tr -d '[:space:]' | tr -d '"')
+          UTILITY_WALLET_ADDRESS=$(cast wallet address "$UTILITY_WALLET")
+          UTILITY_WALLET_BALANCE=$(cast balance "$UTILITY_WALLET_ADDRESS" --rpc-url ${{ env.RPC_URL }} --ether)
+          echo "Utility wallet: $UTILITY_WALLET_ADDRESS, balance $UTILITY_WALLET_BALANCE"
+
+      - name: Print Bundler Config
+        run: |
+            cat packages/bundler/configs/config.happySepolia.json
   
       - name: Build code
         run: |
@@ -70,9 +92,14 @@ jobs:
                   --name ${{ env.PM2_PROCESS_NAME }} \
                   -- run \
                   --config ./configs/config.happySepolia.json \
-                  --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLET }} \
+                  --executor-private-keys ${{ secrets.BUNDLER_EXECUTOR_WALLETS }} \
                   --utility-private-key ${{ secrets.BUNDLER_UTILITY_WALLET }} \
                   --port ${{ env.PORT }}
               pm2 save
             '
             rm -rf /tmp/happy-bundler
+      
+      - name: Send chainId request (healthcheck)
+        run: |
+          sleep 10
+          curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' ${{ env.BUNDLER_URL }} --fail
