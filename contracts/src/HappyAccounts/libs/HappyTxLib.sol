@@ -20,7 +20,7 @@ library HappyTxLib {
     /// @dev Maximum length for dynamic fields (2^40 - 1)
     uint256 private constant MAX_DYNAMIC_FIELD_LENGTH = type(uint40).max;
     /// @dev 192 bytes for static fields, 32 bytes for dynamic fields
-    uint256 private constant DYNAMIC_FIELDS_OFFSET = 224;
+    uint256 private constant DYNAMIC_FIELDS_OFFSET = 196;
 
     /*
     * Selector returned by {@link decodeHappyTx} when unable to properly decode a happyTx.
@@ -79,6 +79,7 @@ library HappyTxLib {
      * @param happyTx The transaction to encode
      * @return result The encoded transaction bytes
      */
+    // TODO: Do we add a try-catch around the inline-assembly? And revert with ErrMalformedEntity if it fails?
     function encode(HappyTx memory happyTx) internal pure returns (bytes memory result) {
         // Fixed size fields: 20 + 4 + 4 + 20 + 20 + 32 + 24 + 8 + 32 + 32 = 196 bytes
         // Dynamic fields: 4 bytes length + actual length for each dynamic field
@@ -88,21 +89,6 @@ library HappyTxLib {
             (4 + happyTx.paymasterData.length) +
             (4 + happyTx.validatorData.length) +
             (4 + happyTx.extraData.length);
-
-        /* [LOGDEBUG] */ bytes32 slotAccount;
-        /* [LOGDEBUG] */ bytes32 slotNonceTrack;
-        /* [LOGDEBUG] */ bytes32 slotNonceValue;
-        /* [LOGDEBUG] */ bytes32 slotGasLimit;
-        /* [LOGDEBUG] */ bytes32 slotExecuteGasLimit;
-        /* [LOGDEBUG] */ bytes32 slotDest;
-        /* [LOGDEBUG] */ bytes32 slotPaymaster;
-        /* [LOGDEBUG] */ bytes32 slotValue;
-        /* [LOGDEBUG] */ bytes32 slotMaxFeePerGas;
-        /* [LOGDEBUG] */ bytes32 slotSubmitterFee;
-        /* [LOGDEBUG] */ bytes32 slotCallDataLen;
-        /* [LOGDEBUG] */ bytes32 slotPaymasterDataLen;
-        /* [LOGDEBUG] */ bytes32 slotValidatorDataLen;
-        /* [LOGDEBUG] */ bytes32 slotExtraDataLen;
 
         assembly {
             // Allocate memory for result (add 32 bytes for the length prefix)
@@ -117,51 +103,41 @@ library HappyTxLib {
             
             // Copy account (20 bytes)
             mstore(ptr, shl(96, and(mload(happyTx), 0xffffffffffffffffffffffffffffffffffffffff)))
-            /* [LOGDEBUG] */ slotAccount := mload(ptr)
             ptr := add(ptr, 20)
             
             // Copy gasLimit (4 bytes)
-            /* [LOGDEBUG] */ slotGasLimit := mload(add(happyTx, 0x20))
             mstore(ptr, shl(224, mload(add(happyTx, 0x20))))
             ptr := add(ptr, 4)
             
             // Copy executeGasLimit (4 bytes)
-            /* [LOGDEBUG] */ slotExecuteGasLimit := mload(add(happyTx, 0x40))
             mstore(ptr, shl(224, mload(add(happyTx, 0x40))))
             ptr := add(ptr, 4)
             
             // Copy dest (20 bytes)
-            /* [LOGDEBUG] */ slotDest := mload(add(happyTx, 0x60))
             mstore(ptr, shl(96, and(mload(add(happyTx, 0x60)), 0xffffffffffffffffffffffffffffffffffffffff)))
             ptr := add(ptr, 20)
             
             // Copy paymaster (20 bytes)
-            /* [LOGDEBUG] */ slotPaymaster := mload(add(happyTx, 0x80))
             mstore(ptr, shl(96, and(mload(add(happyTx, 0x80)), 0xffffffffffffffffffffffffffffffffffffffff)))
             ptr := add(ptr, 20)
             
             // Copy value (32 bytes)
-            /* [LOGDEBUG] */ slotValue := mload(add(happyTx, 0xa0))
             mstore(ptr, mload(add(happyTx, 0xa0)))
             ptr := add(ptr, 32)
             
             // Copy nonceTrack (24 bytes)
-            /* [LOGDEBUG] */ slotNonceTrack := mload(add(happyTx, 0xc0))
             mstore(ptr, shl(64, mload(add(happyTx, 0xc0))))
             ptr := add(ptr, 24)
             
             // Copy nonceValue (8 bytes)
-            /* [LOGDEBUG] */ slotNonceValue := mload(add(happyTx, 0xe0))
             mstore(ptr, shl(192, and(mload(add(happyTx, 0xe0)), 0xffffffffffffffff)))
             ptr := add(ptr, 8)
             
             // Copy maxFeePerGas (32 bytes)
-            /* [LOGDEBUG] */ slotMaxFeePerGas := mload(add(happyTx, 0x100))
             mstore(ptr, mload(add(happyTx, 0x100)))
             ptr := add(ptr, 32)
             
             // Copy submitterFee (32 bytes)
-            /* [LOGDEBUG] */ slotSubmitterFee := mload(add(happyTx, 0x120))
             mstore(ptr, mload(add(happyTx, 0x120)))
             ptr := add(ptr, 32)
             
@@ -169,21 +145,19 @@ library HappyTxLib {
             // For each dynamic field:
             // 1. Write length (4 bytes)
             // 2. Copy data using mcopy
-            
-            /* [LOGDEBUG] */ slotCallDataLen := mload(add(happyTx, 0x140))
-            // /* [LOGDEBUG] */ slotPaymasterDataLen := add(lenOffset, 0x20)
-            // /* [LOGDEBUG] */ slotValidatorDataLen := mload(add(lenOffset, 0x20))
-            /* [LOGDEBUG] */ slotExtraDataLen := mload(add(happyTx, 0x1e0))
 
             let callDataOffset := mload(add(happyTx, 0x140))
             let pmDataOffset := mload(add(happyTx, 0x160))
             let validatorDataOffset := mload(add(happyTx, 0x180))
             let extraDataOffset := mload(add(happyTx, 0x1a0))
+            
+            let len
+            let lenOffset
 
             // callData
-            let lenOffset := sub(callDataOffset,0x80)
-            let len := mload(add(happyTx, lenOffset))
-            mstore(ptr, shl(224, len)) // Store length as uint32
+            lenOffset := sub(callDataOffset,0x80)
+            len := mload(add(happyTx, lenOffset))
+            mstore(ptr, shl(224, len))
             ptr := add(ptr, 4)
             mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
             ptr := add(ptr, len)
@@ -191,7 +165,7 @@ library HappyTxLib {
             // paymasterData
             lenOffset := sub(pmDataOffset,0x80)
             len := mload(add(happyTx, lenOffset))
-            mstore(ptr, shl(224, len)) // Store length as uint32
+            mstore(ptr, shl(224, len))
             ptr := add(ptr, 4)
             mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
             ptr := add(ptr, len)
@@ -199,7 +173,7 @@ library HappyTxLib {
             // validatorData
             lenOffset := sub(validatorDataOffset,0x80)
             len := mload(add(happyTx, lenOffset))
-            mstore(ptr, shl(224, len)) // Store length as uint32
+            mstore(ptr, shl(224, len))
             ptr := add(ptr, 4)   
             mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
             ptr := add(ptr, len)
@@ -207,44 +181,14 @@ library HappyTxLib {
             // extraData
             lenOffset := sub(extraDataOffset,0x80)
             len := mload(add(happyTx, lenOffset))
-            mstore(ptr, shl(224, len)) // Store length as uint32
+            mstore(ptr, shl(224, len))
             ptr := add(ptr, 4)       
             mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
             ptr := add(ptr, len)
         }
 
-        /* [LOGDEBUG] */ console.log("account slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotAccount);
-        /* [LOGDEBUG] */ console.log("nonceTrack slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotNonceTrack);
-        /* [LOGDEBUG] */ console.log("nonceValue slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotNonceValue);
-        /* [LOGDEBUG] */ console.log("gasLimit slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotGasLimit);
-        /* [LOGDEBUG] */ console.log("executeGasLimit slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotExecuteGasLimit);
-        /* [LOGDEBUG] */ console.log("dest slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotDest);
-        /* [LOGDEBUG] */ console.log("paymaster slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotPaymaster);
-        /* [LOGDEBUG] */ console.log("value slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotValue);
-        /* [LOGDEBUG] */ console.log("maxFeePerGas slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotMaxFeePerGas);
-        /* [LOGDEBUG] */ console.log("submitterFee slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotSubmitterFee);
-        /* [LOGDEBUG] */ console.log("callDataLen slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotCallDataLen);
-        /* [LOGDEBUG] */ console.log("paymasterDataLen slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotPaymasterDataLen);
-        /* [LOGDEBUG] */ console.log("validatorDataLen slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotValidatorDataLen);
-        /* [LOGDEBUG] */ console.log("extraDataLen slot: ");
-        /* [LOGDEBUG] */ console.logBytes32(slotExtraDataLen);
         /* [LOGDEBUG] */ console.log("encoded result: ");
         /* [LOGDEBUG] */ console.logBytes(result);
-        console.logBytes(happyTx.callData);
-        console.logBytes(happyTx.extraData);
     }
 
     // TODO: Update to new encoding discussed in call
@@ -254,10 +198,9 @@ library HappyTxLib {
      * @return result The decoded HappyTx struct
      */
     function decode(bytes calldata happyTx) public pure returns (HappyTx memory result) {
-        // First validate minimum length (192 static + 32 encoded dynamic lengths = 224 bytes)
+        // First validate minimum length (196 bytes for the static fields)
         if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
 
-        // solhint-disable-next-line no-inline-assembly
         assembly {
             // Get pointer to the calldata bytes (don't skip 32 bytes as this is calldata not memory)
             let ptr := happyTx.offset
@@ -333,21 +276,21 @@ library HappyTxLib {
         result.extraData = happyTx[dynamicOffset:dynamicOffset + extraDataLength];
         if (result.extraData.length != extraDataLength) revert MalformedHappyTx();
 
-        // [LOGGAS] console.log("\n=== HappyTxLib.decode() ===\n");
-        // [LOGGAS] console.log(" - account:", result.account);
-        // [LOGGAS] console.log(" - dest:", result.dest);
-        // [LOGGAS] console.log(" - paymaster:", result.paymaster);
-        // [LOGGAS] console.log(" - gasLimit:", result.gasLimit);
-        // [LOGGAS] console.log(" - executeGasLimit:", result.executeGasLimit);
-        // [LOGGAS] console.log(" - value:", result.value);
-        // [LOGGAS] console.log(" - nonce:", result.nonce);
-        // [LOGGAS] console.log(" - maxFeePerGas:", result.maxFeePerGas);
-        // [LOGGAS] console.log(" - submitterFee:", result.submitterFee);
-        // [LOGGAS] console.logBytes(result.callData);
-        // [LOGGAS] console.logBytes(result.paymasterData);
-        // [LOGGAS] console.logBytes(result.validatorData);
-        // [LOGGAS] console.logBytes(result.extraData);
-        // [LOGGAS] console.log("\n=== HappyTxLib.decode() ===\n");
+        // [LOGDEBUG] console.log("\n=== HappyTxLib.decode() ===\n");
+        // [LOGDEBUG] console.log(" - account:", result.account);
+        // [LOGDEBUG] console.log(" - dest:", result.dest);
+        // [LOGDEBUG] console.log(" - paymaster:", result.paymaster);
+        // [LOGDEBUG] console.log(" - gasLimit:", result.gasLimit);
+        // [LOGDEBUG] console.log(" - executeGasLimit:", result.executeGasLimit);
+        // [LOGDEBUG] console.log(" - value:", result.value);
+        // [LOGDEBUG] console.log(" - nonce:", result.nonce);
+        // [LOGDEBUG] console.log(" - maxFeePerGas:", result.maxFeePerGas);
+        // [LOGDEBUG] console.log(" - submitterFee:", result.submitterFee);
+        // [LOGDEBUG] console.logBytes(result.callData);
+        // [LOGDEBUG] console.logBytes(result.paymasterData);
+        // [LOGDEBUG] console.logBytes(result.validatorData);
+        // [LOGDEBUG] console.logBytes(result.extraData);
+        // [LOGDEBUG] console.log("\n=== HappyTxLib.decode() ===\n");
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -372,50 +315,5 @@ library HappyTxLib {
         //     - A transaction without calldata and access list is at most ~280 bytes
         //       but due to RLP encoding this should be lower. 200 is a good compromise,
         //       essentially since we already overcharge for the bytes whose value is 0.
-    }
-
-    /**
-     * @dev Utility function to unpack dynamic field lengths from a single word.
-     * Layout (32 bytes total):
-     * |-totalLen(8)-|-dynamicLengths(20)-|-execGasLimit(4)-|
-     * Most significant bits (left) to least significant bits (right)
-     * @param encodedLengths Packed lengths in a single bytes32
-     * @return totalLength Total length of all dynamic fields combined
-     * @return callDataLength Length of callData field
-     * @return paymasterDataLength Length of paymasterData field
-     * @return validatorDataLength Length of validatorData field
-     * @return extraDataLength Length of extraData field
-     * @return execGasLimit Gas limit for execute function
-     */
-    function _unpackLengths(bytes32 encodedLengths)
-        internal
-        pure
-        returns (
-            uint256 totalLength,
-            uint256 callDataLength,
-            uint256 paymasterDataLength,
-            uint256 validatorDataLength,
-            uint256 extraDataLength,
-            uint32 execGasLimit
-        )
-    {
-        unchecked {
-            uint256 encoded = uint256(encodedLengths);
-            totalLength = encoded >> 192;
-            callDataLength = (encoded >> 152) & MASK_DYNAMIC_FIELD_LENGTH;
-            paymasterDataLength = (encoded >> 112) & MASK_DYNAMIC_FIELD_LENGTH;
-            validatorDataLength = (encoded >> 72) & MASK_DYNAMIC_FIELD_LENGTH;
-            extraDataLength = (encoded >> 32) & MASK_DYNAMIC_FIELD_LENGTH;
-            execGasLimit = uint32(encoded & MASK_TOTAL_LENGTH_FIELD);
-
-            // Validate all lengths are within 40 bits
-            uint256 maxLengthValue = callDataLength | paymasterDataLength | validatorDataLength | extraDataLength;
-            if (maxLengthValue > MAX_DYNAMIC_FIELD_LENGTH) revert MalformedHappyTx();
-
-            // Validate total length matches sum of individual lengths
-            if (totalLength != callDataLength + paymasterDataLength + validatorDataLength + extraDataLength) {
-                revert MalformedHappyTx();
-            }
-        }
     }
 }
