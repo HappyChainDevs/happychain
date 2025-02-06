@@ -1,4 +1,4 @@
-import { encodeAbiParameters, encodeFunctionData, formatEther, keccak256, parseEther, zeroAddress } from "viem"
+import { encodeFunctionData, formatEther, keccak256, parseEther, zeroAddress } from "viem"
 import type { Address, Hex } from "viem"
 
 import { type DeployAccountRequest, DeployAccountSchema } from "@happy.tech/submitter/utils/requestSchema"
@@ -129,62 +129,8 @@ async function getNonce(account: Address): Promise<bigint> {
         address: account,
         abi: isLocal ? abisAnvil.ScrappyAccount : abisTenderly.ScrappyAccount,
         functionName: "getNonce",
+        args: [0n],
     })
-}
-
-function getHappyTxHash(happyTx: HappyTx) {
-    const callData_hashed = keccak256(happyTx.callData)
-    const paymasterData_hashed = keccak256(happyTx.paymasterData)
-    const validatorData_hashed = keccak256(happyTx.validatorData)
-
-    const abiEncoded = encodeAbiParameters(
-        [
-            // TODO: Use the commented out fields when switching from encodeAbiParameters -> encodePacked
-            // 'address', // account
-            // 'uint192', // nonceTrack
-            // 'uint64', // nonceValue
-            // 'bytes32', // callData_hashed
-            // 'uint256', // gasLimit
-            // 'uint256', // executeGasLimit
-            // 'address', // dest
-            // 'address', // paymaster
-            // 'uint256', // value
-            // 'uint256', // maxFeePerGas
-            // 'int256', // submitterFee
-            // 'bytes32', // paymasterAndData_hashed
-            // 'bytes32', // validatorAndData_hashed
-            { type: "address" }, // account
-            { type: "uint192" }, // nonceTrack
-            { type: "uint64" }, // nonceValue
-            { type: "bytes32" }, // callData_hashed
-            { type: "uint256" }, // gasLimit
-            { type: "uint256" }, // executeGasLimit
-            { type: "address" }, // dest
-            { type: "address" }, // paymaster
-            { type: "uint256" }, // value
-            { type: "uint256" }, // maxFeePerGas
-            { type: "int256" }, // submitterFee
-            { type: "bytes32" }, // paymasterAndData_hashed
-            { type: "bytes32" }, // validatorAndData_hashed
-        ],
-        [
-            happyTx.account,
-            happyTx.nonceTrack,
-            happyTx.nonceValue,
-            callData_hashed,
-            happyTx.gasLimit,
-            happyTx.executeGasLimit,
-            happyTx.dest,
-            happyTx.paymaster,
-            happyTx.value,
-            happyTx.maxFeePerGas,
-            happyTx.submitterFee,
-            paymasterData_hashed,
-            validatorData_hashed,
-        ],
-    )
-
-    return keccak256(abiEncoded)
 }
 
 async function signHappyTx(happyTx: HappyTx, usingPaymaster = false): Promise<Hex> {
@@ -198,7 +144,8 @@ async function signHappyTx(happyTx: HappyTx, usingPaymaster = false): Promise<He
         txToSign.maxFeePerGas = 0n
         txToSign.submitterFee = 0n
     }
-    const happyTxHash = getHappyTxHash(txToSign)
+
+    const happyTxHash = keccak256(encode(txToSign))
     return await account.signMessage({
         message: { raw: happyTxHash },
     })
