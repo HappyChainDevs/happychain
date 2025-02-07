@@ -38,8 +38,8 @@ export type SendUserOpArgs = {
     user: HappyUser
     tx: RpcTransactionRequest
     validator: Address
+    preparedOp?: ApprovedRequestExtraData<"eth_sendTransaction"> | Record<string, never>
     signer: UserOpSigner
-    preparedOp?: ApprovedRequestExtraData<"eth_sendTransaction">
 }
 
 export type UserOpWrappedCall = {
@@ -87,8 +87,7 @@ export async function sendUserOp({ user, tx, validator, signer, preparedOp }: Se
                 ],
             } satisfies PrepareUserOperationParameters))
 
-        // Transform into exact UserOperation type
-        // TODO AA26 (over VGL)
+        // more type issues here currently
         const userOp: UserOperation = {
             sender: account,
             nonce,
@@ -292,7 +291,7 @@ async function submitUserOp(
  * the next userOp in the queue for each validator. Resync the nonce if the submission fails.
  */
 setInterval(() => {
-    userOpQueues.entries().forEach(async ([validator, queue]) => {
+    for (const [validator, queue] of userOpQueues.entries()) {
         if (!queue || queue.length === 0) return
         const nextNonce = lastNonces.get(validator)! + 1n
         const nonce = queue[0].userOp.nonce
@@ -300,7 +299,7 @@ setInterval(() => {
         if (nonce > nextNonce) return
         const entry = queue.shift()!
         void requestSendUserOpNow(validator, entry)
-    })
+    }
 }, 3000)
 
 /** Performs a low-level `pimlico_sendUserOperationNow` with no retries. */

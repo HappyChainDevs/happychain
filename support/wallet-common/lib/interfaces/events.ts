@@ -225,27 +225,48 @@ export type ProviderMsgsFromIframe = {
 // === POPUP BUS EVENTS ============================================================================
 
 /**
- * Schema for messages that can be sent from the popup to the iframe.
- *
- * This does not require being in the shared package (only used in the iframe package), but it's
- * simpler if all event definitions live in the same place.
+ * Maps EIP1193 method names to their corresponding return type definitions.
+ * Currently supports:
+ * - `eth_sendTransaction`: Returns {@link PrepareUserOperationReturnType} with associated {@link SmartAccount}
  */
+type RequestTypeMap = {
+    eth_sendTransaction: PrepareUserOperationReturnType<
+        SmartAccount | undefined,
+        SmartAccount | undefined,
+        readonly unknown[]
+    > & {
+        account: SmartAccount
+    }
+}
 
-// this is not very extendable atm
-// think this requires some extra tooling but we can run w this for now
-export type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> = Method extends "eth_sendTransaction"
-    ? PrepareUserOperationReturnType<SmartAccount | undefined, SmartAccount | undefined, readonly unknown[]> & {
-          account?: SmartAccount // TODO probably not ideal?
-      }
+/**
+ * Provides type-safe method-specific extra data for EIP1193 requests.
+ * Returns {@link RequestTypeMap} type if method exists, otherwise empty record.
+ * @template Method - EIP1193 method name
+ */
+export type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> = Method extends keyof RequestTypeMap
+    ? RequestTypeMap[Method]
     : Record<string, never>
 
+/**
+ * Payload structure for approved EIP1193 requests.
+ * Combines required EIP1193 parameters with optional method-specific extra data.
+ * @template Method - EIP1193 method name
+ * @property eip1193params - Required EIP1193 request parameters
+ * @property extraData - Optional method-specific additional data
+ */
 export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP1193RequestMethods> = {
     eip1193params: EIP1193RequestParameters<Method>
     extraData?: ApprovedRequestExtraData<Method>
 }
 
+/**
+ * Schema for messages that can be sent from the popup to the iframe.
+ *
+ * This does not require being in the shared package (only used in the iframe package), but it's
+ * simpler if all event definitions live in the same place.
+ */
 export type PopupMsgs = {
-    // [Msgs.PopupApprove]: ProviderEventPayload<EIP1193RequestParameters>
-    [Msgs.PopupApprove]: ProviderEventPayload<ApprovedRequestPayload> // it should only be changed here!
+    [Msgs.PopupApprove]: ProviderEventPayload<ApprovedRequestPayload>
     [Msgs.PopupReject]: ProviderEventError<EIP1193ErrorObject>
 }

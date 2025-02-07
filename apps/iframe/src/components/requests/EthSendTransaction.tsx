@@ -15,7 +15,6 @@ import {
     isAddress,
 } from "viem"
 import type { PrepareUserOperationParameters } from "viem/account-abstraction"
-import { useEstimateFeesPerGas } from "wagmi"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import { userAtom } from "#src/state/user"
@@ -120,44 +119,17 @@ export const EthSendTransaction = ({
                 const op = await doTheDo()
                 console.log(op)
 
-                // TODO doesn't find the account var here according to the type
-                // const { account, ...rest } = op
-                setPreparedUserOp(op)
+                // TODO type issue with `rest`
+                if (op) {
+                    const { account, ...rest } = op
+                    setPreparedUserOp(rest)
+                }
             } catch (err) {
                 console.error("Failed to prepare user operation:", err)
             }
         }
         void prepareTx()
     }, [doTheDo])
-
-    /**
-     * If the maxFee/Gas and / or maxPriorityFee/Gas is not
-     * defined in the wagmi hook / call, we get the estimates from the namesake
-     * wagmi hook and roll them into the tx object.
-     *
-     * cf: https://viem.sh/docs/actions/public/estimateFeesPerGas
-     */
-    useEffect(() => {
-        setTx((prevTx) => {
-            // Handle partial errors by falling back to existing values or defaults
-            const safeMaxFeePerGas = isError ? (prevTx.maxFeePerGas ?? "0") : maxFeePerGas
-            const safeMaxPriorityFeePerGas = isError ? (prevTx.maxPriorityFeePerGas ?? "0") : maxPriorityFeePerGas
-
-            // If gasPrice is defined (~ legacy tx),
-            // set it as maxFeePerGas and reset gasLimit to null
-            const updatedMaxFeePerGas = prevTx.gasPrice ? prevTx.gasPrice : safeMaxFeePerGas
-            const updatedGasLimit = prevTx.gasPrice ? null : prevTx.gasPrice
-
-            return {
-                ...prevTx,
-                maxFeePerGas: updatedMaxFeePerGas,
-                maxPriorityFeePerGas: safeMaxPriorityFeePerGas,
-                gasPrice: updatedGasLimit,
-            } as RpcTransactionRequest
-        })
-    }, [maxFeePerGas, maxPriorityFeePerGas, isError])
-
-    console.log(tx)
 
     const abiForContract =
         user?.address && targetContractAddress && recordedAbisForUser[user.address]?.[targetContractAddress]

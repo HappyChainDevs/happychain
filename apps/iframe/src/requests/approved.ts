@@ -61,6 +61,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                     user,
                     tx: request.payload.eip1193params.params[0],
                     validator: contractAddresses.ECDSAValidator,
+                    preparedOp: request.payload.extraData,
                     signer: async (userOp, smartAccountClient) =>
                         await smartAccountClient.account.signUserOperation(userOp),
                 })
