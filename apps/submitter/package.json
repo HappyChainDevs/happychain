@@ -1,0 +1,19 @@
+{
+    "name": "submitter",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "dependencies": {
+        "@hono/zod-validator": "^0.4.2",
+        "@scalar/hono-api-reference": "^0.5.172",
+        "hono": "^4.6.20",
+        "hono-openapi": "^0.4.4",
+        "viem": "2.21.53",
+        "zod": "3.23.8",
+        "zod-openapi": "^4.2.3"
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "@happy.tech/configs": "workspace:0.1.0"
+    }
+}

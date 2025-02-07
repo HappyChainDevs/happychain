@@ -1,0 +1,77 @@
+import { z } from "zod"
+import { TransactionTypeName } from "../../../tmp/interface/common_chain"
+import { EntryPointStatus } from "../../../tmp/interface/status"
+
+export const ExecuteOutputSchema = z
+    .object({
+        status: z.string(),
+        included: z.boolean(),
+        receipt: z.object({
+            happyTxHash: z.string(),
+            account: z.string(),
+            nonce: z.number(),
+            entryPoint: z.string(),
+            status: z.string(),
+            logs: z.string().array(),
+            revertData: z.string(),
+            failureReason: z.string(),
+            // gasUsed: z.string().transform(BigInt),
+            // gasCost: z.string().transform(BigInt),
+            txReceipt: z.object({
+                blobGasPrice: z.undefined(),
+                blobGasUsed: z.undefined(),
+                blockHash: z.string(),
+                // blockNumber: z.string().transform(BigInt),
+                contractAddress: z.null(),
+                // cumulativeGasUsed: z.string().transform(BigInt),
+                // effectiveGasPrice: z.string().transform(BigInt),
+                from: z.string(),
+                // gasUsed: z.string().transform(BigInt),
+                logs: z.string().array(),
+                logsBloom: z.string(),
+                root: z.undefined(),
+                status: z.string(),
+                to: z.null(),
+                transactionHash: z.string(),
+                transactionIndex: z.number(),
+                type: z.string(),
+            }),
+        }),
+    })
+    .openapi({
+        example: {
+            status: EntryPointStatus.Success,
+            included: false,
+            receipt: {
+                happyTxHash: "0x",
+                account: "0x",
+                nonce: 1,
+                entryPoint: "0x",
+                status: EntryPointStatus.Success,
+                logs: [],
+                revertData: "0x",
+                failureReason: "0x",
+                // gasUsed: "0",
+                // gasCost: "0",
+                txReceipt: {
+                    blobGasPrice: undefined,
+                    blobGasUsed: undefined,
+                    blockHash: "0x",
+                    // blockNumber: "0",
+                    contractAddress: null,
+                    // cumulativeGasUsed: "0",
+                    // effectiveGasPrice: "0",
+                    from: "0x",
+                    // gasUsed: "0",
+                    logs: [],
+                    logsBloom: "0x",
+                    root: undefined,
+                    status: "success",
+                    to: null,
+                    transactionHash: "0x",
+                    transactionIndex: 0,
+                    type: TransactionTypeName.EIP1559,
+                },
+            },
+        },
+    })
