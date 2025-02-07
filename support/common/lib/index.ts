@@ -8,6 +8,8 @@ export { useIsHydrated } from "./hooks/isHydrated"
 
 // === UTILS =======================================================================================
 
+export { Logger } from "./utils/logger"
+
 export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai"
 
 export type {
