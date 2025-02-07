@@ -15,9 +15,6 @@ contract ScrappyAccountFactory {
     /// @dev The implementation contract that all proxies will delegate to {@link ScrappyAccount}.
     address public immutable ACCOUNT_IMPLEMENTATION;
 
-    /// @dev The deterministic EntryPoint contract
-    address private immutable ENTRYPOINT;
-
     /**
      * @dev Emitted when a new HappyAccount is created
      * @param account The address of the created account
@@ -25,9 +22,8 @@ contract ScrappyAccountFactory {
      */
     event HappyAccountCreated(address indexed account, bytes32 salt);
 
-    constructor(address _accountImplementation, address _entryPoint) {
-        ACCOUNT_IMPLEMENTATION = _accountImplementation;
-        ENTRYPOINT = _entryPoint;
+    constructor(address accountImplementation) {
+        ACCOUNT_IMPLEMENTATION = accountImplementation;
     }
 
     /**
