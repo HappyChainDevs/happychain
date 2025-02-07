@@ -834,12 +834,7 @@
       "type": "constructor",
       "inputs": [
         {
-          "name": "_accountImplementation",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "_entryPoint",
+          "name": "accountImplementation",
           "type": "address",
           "internalType": "address"
         }
