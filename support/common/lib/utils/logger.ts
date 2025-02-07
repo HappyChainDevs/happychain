@@ -32,7 +32,7 @@ export enum LogTag {
  * 1) The global log level (OFF, ERROR, WARN, INFO, TRACE).
  * 2) A set of "enabled" tags that filter messages by subsystem.
  * Example usage:
-*   const logger = Logger.instance;
+ *  const logger = Logger.instance;
  *  logger.info(LogTag.IFRAME, 'User logged in.'); // prints "[INFO] [iFrame] User logged in."
  *  logger.setLogLevel(LogLevel.INFO); // Now only INFO and above will print.
  *  logger.enableTags(LogTag.DEMO_REACT); // Now only messages with the DEMO_REACT tag will print.
