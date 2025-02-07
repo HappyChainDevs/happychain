@@ -78,6 +78,8 @@ export class TxMonitor {
         const promises = transactions.map(async (transaction) => {
             const inAirAttempts = transaction.getInAirAttempts()
 
+            console.log("In air attempts", inAirAttempts.map((a) => a.hash))
+
             // This could happen if, on the first try, the attempt to submit the transaction fails before flush
             if (inAirAttempts.length === 0) {
                 return this.handleNotAttemptedTransaction(transaction, block)
