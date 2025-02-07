@@ -122,7 +122,7 @@ export const EthSendTransaction = ({
                 // TODO type issue with `rest`
                 if (op) {
                     const { account, ...rest } = op
-                    setPreparedUserOp(rest)
+                    // setPreparedUserOp(rest)
                 }
             } catch (err) {
                 console.error("Failed to prepare user operation:", err)
