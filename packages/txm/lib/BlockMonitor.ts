@@ -1,6 +1,7 @@
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
+import { bigIntReplacer } from "@happy.tech/common"
 
 /**
  * A type alias for {@link Block} with the `blockTag` set to `"latest"`, ensuring type definitions correspond to the latest block.
