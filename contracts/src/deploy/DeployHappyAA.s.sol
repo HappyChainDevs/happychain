@@ -58,7 +58,7 @@ contract DeployHappyAAContracts is BaseDeployScript {
         (address _scrappyAccountFactory,) = deployDeterministic( //-
             "ScrappyAccountFactory",
             type(ScrappyAccountFactory).creationCode,
-            abi.encode(_scrappyAccount, _happyEntryPoint),
+            abi.encode(_scrappyAccount),
             DEPLOYMENT_SALT //-
         );
         scrappyAccountFactory = ScrappyAccountFactory(_scrappyAccountFactory);
