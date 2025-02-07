@@ -1,4 +1,4 @@
-import { bigIntMax, promiseWithResolvers, unknownToError } from "@happy.tech/common"
+import { bigIntMax, bigIntReplacer, promiseWithResolvers, unknownToError } from "@happy.tech/common"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { type GetTransactionReceiptErrorType, type TransactionReceipt, TransactionReceiptNotFoundError } from "viem"
 import type { LatestBlock } from "./BlockMonitor.js"
@@ -66,6 +66,8 @@ export class TxMonitor {
         const transactions = this.transactionManager.transactionRepository.getNotFinalizedTransactionsOlderThan(
             block.number,
         )
+
+        console.log("Monitoring transactions", JSON.stringify(transactions, bigIntReplacer, 2))
 
         const promises = transactions.map(async (transaction) => {
             const inAirAttempts = transaction.getInAirAttempts()
