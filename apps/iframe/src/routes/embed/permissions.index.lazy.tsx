@@ -11,16 +11,17 @@ function Permissions() {
     const listDappsWithPermissions = useGetAllDappsWithPermissions()
 
     return (
-        <div className="bg-base-100 grow">
-            <div className="absolute inset-0 w-full max-h-[calc(100%-3rem)] overflow-y-auto">
-                <h2 className="text-center bg-base-200 text-base-content font-bold p-1 text-sm">Permissions</h2>
+        <>
+            <div className="bg-base-100 pb-14 relative">
+                <h2 className="sticky z-10 top-0 text-center bg-base-200 text-base-content font-bold p-1 text-sm">
+                    Permissions
+                </h2>
                 <p className="sr-only">Access and change the permissions of all dApps you interacted with.</p>
                 <ListDappsWithPermissions items={listDappsWithPermissions} />
-
                 {listDappsWithPermissions.length > 0 && (
                     <ClearAllDappsPermissions listDappsWithPermissions={listDappsWithPermissions} />
                 )}
             </div>
-        </div>
+        </>
     )
 }

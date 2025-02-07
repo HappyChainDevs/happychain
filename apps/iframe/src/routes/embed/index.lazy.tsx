@@ -15,6 +15,6 @@ function EmbedHome() {
             <ActionButtons />
             <WalletContentInfo />
             <AppStatus />
-        </div>
+        </>
     )
 }

@@ -1,5 +1,9 @@
 import { Msgs } from "@happy.tech/wallet-common"
+<<<<<<< HEAD
 import { ArrowLeft, XCircle } from "@phosphor-icons/react"
+=======
+import { ArrowLeft, Minus } from "@phosphor-icons/react"
+>>>>>>> 60bbc7a8 (refacto(iframe): alternative proposal for global layout (temp))
 import { Link, useLocation } from "@tanstack/react-router"
 import { appMessageBus } from "#src/services/eventBus.ts"
 
@@ -9,7 +13,7 @@ function signalClosed() {
 const GlobalHeader = () => {
     const location = useLocation()
     return (
-        <div className="relative items-center w-full p-1 hidden lg:flex">
+        <div className="relative max-w-prose mx-auto items-center w-full p-1 hidden lg:flex">
             {location.pathname !== "/embed" && (
                 <Link to={"/embed"}>
                     <ArrowLeft weight="bold" className="absolute left-2 top-5" />
