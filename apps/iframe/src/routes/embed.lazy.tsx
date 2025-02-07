@@ -70,7 +70,6 @@ function Embed() {
     if (!user) {
         return <ConnectModal />
     }
-
     return (
         <>
             <main className="flex h-screen w-screen items-stretch overflow-hidden bg-base-200">
@@ -83,6 +82,15 @@ function Embed() {
                                 <UserInfo />
                                 <TriggerSecondaryActionsMenu />
                             </div>
+                        </section>
+                    )}
+                    <section className="relative grid min-h-0 h-full gap-4 overflow-y-auto auto-rows-[1fr]">
+                        <Outlet />
+                        {!location.pathname.includes("permissions") && (
+                            <>
+                                <SecondaryActionsMenu />
+                                <DialogConfirmLogOut handleDisconnect={logout} />
+                            </>
                         )}
 
                         <div className="hidden relative lg:flex w-full grow overflow-y-auto">

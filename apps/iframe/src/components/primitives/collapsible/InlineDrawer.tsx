@@ -23,18 +23,18 @@ const InlineDrawer = ({ rootContext, trigger, children }: InlineDrawerProps) => 
                 "before:fixed before:inset-0 before:size-full before:content-[' ']",
                 "before:bg-opacity-0 before:bg-neutral",
                 "data-[state=closed]:before:z-[-1]",
-                "data-[state=open]:before:bg-opacity-50 data-[state=open]:before:z-auto",
+                "data-[state=open]:before:bg-opacity-50 data-[state=open]:before:z-20",
                 "motion-safe:data-[state=open]:before:animate-fadeIn motion-safe:data-[state=closed]:before:animate-fadeOut",
             ])}
             value={rootContext}
         >
             <div
                 data-part="wrapper"
-                className={`${rootContext.visible ? "rounded-t-[2rem] pt-6" : "rounded-t-none"} rounded-b-xl [animation-delay:250ms] [animation-fill-mode:both] animate-growIn bg-base-100 fixed flex flex-col bottom-px start-px min-h-12 w-[calc(100%-2px)] border-t border-neutral/10`}
+                className={`${rootContext.visible ? "rounded-t-[2rem] rounded-b-none pt-6" : "rounded-t-none"} rounded-b-xl [animation-delay:250ms] [animation-fill-mode:both] animate-growIn bg-base-100 fixed z-30 flex flex-col bottom-0 start-0  min-h-12 w-[calc(100%-2px)] border-t border-neutral/10`}
             >
                 <Collapsible.Trigger
                     className={cx(
-                        "text-xs grow w-full justify-center",
+                        "text-xs z-10 grow w-full justify-center",
                         rootContext.visible
                             ? "font-bold focus:outline-none text-base-content"
                             : recipeButton({

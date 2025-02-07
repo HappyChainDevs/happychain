@@ -33,14 +33,13 @@ const UserInfo = () => {
         // these changes will happen quickly, but not at the exact same time.
         return <UserInfoLoader />
     }
-
     return (
         <div className="flex flex-row items-center space-x-4">
             <div className="relative">
                 <img
                     src={user.avatar}
                     alt={`${user.name}'s avatar`}
-                    className="h-12 rounded-full"
+                    className="h-10 rounded-full"
                     // This is required to avoid google avatars from sometimes failing
                     // to load properly
                     referrerPolicy="no-referrer"
@@ -54,8 +53,12 @@ const UserInfo = () => {
             <div className="flex flex-col items-start justify-between">
                 {user.type === WalletType.Social && <p>{user?.email || user?.name}</p>}
                 <AddressInfo address={user.address} />
+                <span className="flex ps-2 text-sm items-baseline">
+                    <span className="font-bold">{formattedBalance}&nbsp;</span>
+                    <span className="text-[0.9em] font-medium">$HAPPY</span>
+                </span>
             </div>
-        </div>
+        </>
     )
 }
 
