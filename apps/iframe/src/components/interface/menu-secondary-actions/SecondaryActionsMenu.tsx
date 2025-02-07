@@ -37,6 +37,9 @@ const SecondaryActionsMenu = () => {
     return (
         <Menu.Root
             open={isSecondaryMenuVisible}
+            onEscapeKeyDown={() => {
+                setDialogLogOutConfirmationVisibility(false)
+            }}
             onInteractOutside={() => {
                 setDialogLogOutConfirmationVisibility(false)
             }}
@@ -53,7 +56,7 @@ const SecondaryActionsMenu = () => {
         >
             <div
                 className={cx(
-                    "top-4 h-[calc(100%-1rem)]",
+                    "top-0",
                     recipePositioner({
                         originY: "bottom",
                         mode: "modal",
@@ -88,12 +91,18 @@ const SecondaryActionsMenu = () => {
                     <div className="overflow-y-auto flex flex-col">
                         <Menu.Item asChild value={MenuActions.Permissions}>
                             <Link preload="intent" to="/embed/permissions">
-                                <span>Permissions</span>
-                                <CaretRight size="1em" />
+                                <span className="w-full max-w-prose mx-auto justify-between items-center inline-flex">
+                                    <span>Permissions</span>
+                                    <CaretRight size="1em" />
+                                </span>
                             </Link>
                         </Menu.Item>
-                        <Menu.Item value={MenuActions.LogOut}>Logout</Menu.Item>
-                        <Menu.Item value={MenuActions.Back}>Go back</Menu.Item>
+                        <Menu.Item value={MenuActions.LogOut}>
+                            <span className="w-full max-w-prose mx-auto inline-flex">Logout</span>
+                        </Menu.Item>
+                        <Menu.Item value={MenuActions.Back}>
+                            <span className="w-full max-w-prose mx-auto inline-flex">Go back</span>
+                        </Menu.Item>
                     </div>
                 </Menu.Content>
             </div>

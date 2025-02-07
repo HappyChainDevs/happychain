@@ -67,30 +67,30 @@ function Embed() {
     if (!user) {
         return <ConnectModal />
     }
-
     return (
         <>
-            <main className="grid h-full min-h-screen w-screen items-stretch">
-                <div className="flex flex-col size-full items-center justify-start">
+            <main className="h-dvh w-screen rounded-3xl overflow-hidden flex flex-col">
+                <div className="flex flex-col size-full">
                     <GlobalHeader />
 
-                    <div className="relative flex flex-col grow w-full">
-                        {!location.pathname.includes("permissions") && (
+                    {!location.pathname.includes("permissions") && (
+                        <section className="w-full max-w-prose mx-auto py-1">
                             <div className="hidden relative h-fit lg:flex w-fit self-center gap-2">
-                                <UserInfo />
+                                <div className="flex px-2 max-w-prose mx-auto gap-1">
+                                    <UserInfo />
+                                </div>
                             </div>
+                        </section>
+                    )}
+                    <section className="relative grid min-h-0 h-full gap-4 overflow-y-auto auto-rows-[1fr]">
+                        <Outlet />
+                        {!location.pathname.includes("permissions") && (
+                            <>
+                                <SecondaryActionsMenu />
+                                <DialogConfirmLogOut handleDisconnect={logout} />
+                            </>
                         )}
-
-                        <div className="hidden relative lg:flex w-full grow">
-                            <Outlet />
-                            {!location.pathname.includes("permissions") && (
-                                <>
-                                    <SecondaryActionsMenu />
-                                    <DialogConfirmLogOut handleDisconnect={logout} />
-                                </>
-                            )}
-                        </div>
-                    </div>
+                    </section>
                 </div>
             </main>
         </>

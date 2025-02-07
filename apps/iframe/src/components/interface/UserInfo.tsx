@@ -1,6 +1,6 @@
-import { WalletType } from "@happy.tech/wallet-common"
+import { formatUserBalance } from "@happy.tech/wallet-common"
 import { useAtom, useAtomValue } from "jotai"
-import { useAccount } from "wagmi"
+import { useAccount, useBalance } from "wagmi"
 import { useActiveConnectionProvider } from "../../connections/initialize"
 import { userAtom } from "../../state/user"
 import UserInfoLoader from "../loaders/UserInfoLoader"
@@ -9,6 +9,9 @@ import { secondaryMenuVisibilityAtom } from "./menu-secondary-actions/state"
 
 const UserInfo = () => {
     const user = useAtomValue(userAtom)
+    const { data: balance } = useBalance({ address: user?.address })
+    const formattedBalance = formatUserBalance(balance?.value)
+
     const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
     const activeProvider = useActiveConnectionProvider()
 
@@ -35,14 +38,13 @@ const UserInfo = () => {
         // these changes will happen quickly, but not at the exact same time.
         return <UserInfoLoader />
     }
-
     return (
-        <div className="flex flex-col gap-1">
+        <>
             <div className="flex items-baseline w-fit self-center relative">
                 <img
                     src={user.avatar}
                     alt={`${user.name}'s avatar`}
-                    className="h-12 rounded-full"
+                    className="h-10 rounded-full"
                     // This is required to avoid google avatars from sometimes failing
                     // to load properly
                     referrerPolicy="no-referrer"
@@ -62,13 +64,14 @@ const UserInfo = () => {
                     {isVisible ? "Close account actions menu" : "Open account actions menu"}
                 </button>
             </div>
-            <div className="flex flex-col items-center gap-1 justify-between">
-                {user.type === WalletType.Social && (
-                    <p className="text-[0.65rem] font-semibold">{user?.name || user?.email}</p>
-                )}
+            <div className="flex flex-col">
                 <AddressInfo address={user.address} />
+                <span className="flex ps-2 text-sm items-baseline">
+                    <span className="font-bold">{formattedBalance}&nbsp;</span>
+                    <span className="text-[0.9em] font-medium">$HAPPY</span>
+                </span>
             </div>
-        </div>
+        </>
     )
 }
 

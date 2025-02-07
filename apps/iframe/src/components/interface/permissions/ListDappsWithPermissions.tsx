@@ -13,23 +13,25 @@ const ListItem = ({ dappUrl }: ListItemProps) => {
     const [isFaviconBroken, setIsFaviconBroken] = useState(false)
 
     return (
-        <li className="inline-flex w-full p-2 min-h-10 hover:bg-accent/10 [&:focus-within_[data-part=icon]]:bg-accent/10 font-medium relative overflow-hidden text-ellipsis items-center gap-2 text-sm">
-            <img
-                alt={dappUrl}
-                className="text-transparent"
-                loading="lazy"
-                height="16"
-                onError={() => setIsFaviconBroken(true)}
-                src={
-                    isFaviconBroken || dappUrl.includes("localhost:")
-                        ? happychainLogo
-                        : `https://www.google.com/s2/favicons?domain=${dappUrl}&sz=16`
-                }
-                width="16"
-            />
-            <span className="me-auto inline-block">{dappUrl}</span>
-            <span className="p-0.5 rounded-full center" data-part="icon">
-                <CaretRight />
+        <li className="p-2 min-h-10 flex hover:bg-accent/10 [&:focus-within_[data-part=icon]]:bg-accent/10 font-medium relative overflow-hidden text-ellipsis items-center text-sm">
+            <span className="inline-flex gap-2 w-full max-w-prose mx-auto">
+                <img
+                    alt={dappUrl}
+                    className="text-transparent"
+                    loading="lazy"
+                    height="16"
+                    onError={() => setIsFaviconBroken(true)}
+                    src={
+                        isFaviconBroken || dappUrl.includes("localhost:")
+                            ? happychainLogo
+                            : `https://www.google.com/s2/favicons?domain=${dappUrl}&sz=16`
+                    }
+                    width="16"
+                />
+                <span className="me-auto inline-block">{dappUrl}</span>
+                <span className="p-0.5 rounded-full center" data-part="icon">
+                    <CaretRight />
+                </span>
             </span>
             <Link
                 className="absolute size-full block inset-0 z-10 opacity-0"

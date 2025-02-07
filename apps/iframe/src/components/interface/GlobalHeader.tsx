@@ -1,5 +1,5 @@
 import { Msgs } from "@happy.tech/wallet-common"
-import { ArrowLeft, ArrowSquareIn } from "@phosphor-icons/react"
+import { ArrowLeft, Minus } from "@phosphor-icons/react"
 import { Link, useLocation } from "@tanstack/react-router"
 import { appMessageBus } from "#src/services/eventBus"
 
@@ -9,10 +9,10 @@ function signalClosed() {
 const GlobalHeader = () => {
     const location = useLocation()
     return (
-        <div className="relative items-center w-full p-1 hidden lg:flex">
+        <div className="relative max-w-prose mx-auto items-center w-full p-1 hidden lg:flex">
             {location.pathname !== "/embed" && (
                 <Link to={"/embed"}>
-                    <ArrowLeft weight="bold" className="text-base-content absolute start-2 top-5" />
+                    <ArrowLeft weight="bold" className="text-base-content absolute start-2 top-1/2 -translate-y-1/2" />
                 </Link>
             )}
 
@@ -26,7 +26,7 @@ const GlobalHeader = () => {
                 className="dark:opacity-60 text-lg shrink-0 absolute end-2"
                 onClick={signalClosed}
             >
-                <ArrowSquareIn weight="duotone" />
+                <Minus weight="bold" />
             </button>
         </div>
     )
