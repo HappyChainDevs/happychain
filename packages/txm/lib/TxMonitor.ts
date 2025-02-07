@@ -67,7 +67,13 @@ export class TxMonitor {
             block.number,
         )
 
-        console.log("Monitoring transactions", JSON.stringify(transactions, bigIntReplacer, 2))
+        console.log(
+            "Monitoring transactions",
+            transactions.map((t) => ({
+                intentId: t.intentId,
+                nonce: t.attempts.at(0)?.nonce
+            })),
+        )
 
         const promises = transactions.map(async (transaction) => {
             const inAirAttempts = transaction.getInAirAttempts()
