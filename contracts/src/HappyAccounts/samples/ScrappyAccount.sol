@@ -29,7 +29,7 @@ import {
 
 // [LOGGAS] import {console} from "forge-std/Script.sol";
 
-/*
+/**
  * @title  ScrappyAccount
  * @dev    Example implementation of a Happy Account with nonce management, reentrancy protection,
  *         and proxy upgrade capability.
@@ -93,7 +93,7 @@ contract ScrappyAccount is
         _disableInitializers();
     }
 
-    /*
+    /**
      * @dev Initializer for proxy instances
      *      Called by the factory during proxy deployment
      * @param owner The owner who can upgrade the implementation
@@ -103,7 +103,7 @@ contract ScrappyAccount is
         __UUPSUpgradeable_init();
     }
 
-    /*
+    /**
      * @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
      * @dev only callable by the owner
      */
