@@ -881,25 +881,6 @@ const contractToAbi = ({
       "stateMutability": "view"
     },
     {
-      "type": "event",
-      "name": "HappyAccountCreated",
-      "inputs": [
-        {
-          "name": "account",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        },
-        {
-          "name": "salt",
-          "type": "bytes32",
-          "indexed": false,
-          "internalType": "bytes32"
-        }
-      ],
-      "anonymous": false
-    },
-    {
       "type": "error",
       "name": "AlreadyDeployed",
       "inputs": []
@@ -1161,6 +1142,24 @@ const contractToAbi = ({
       "stateMutability": "payable"
     },
     {
+      "type": "function",
+      "name": "withdraw",
+      "inputs": [
+        {
+          "name": "to",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
       "type": "event",
       "name": "Initialized",
       "inputs": [
@@ -1340,11 +1339,11 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "HappyEntryPoint": "0x0E77e9EEccEFeB1fA3D13b52227234e8E04721aC",
-  "ScrappyAccount": "0x915a872A2Da791c920DB73a1086EAF9F69816813",
-  "ScrappyAccountFactory": "0x62600757eC66a61F5f922a754461Cdc0fE4FDaEE",
-  "ScrappyPaymaster": "0xd3191A78D6160933d7600f12Bf92486b05B1B003",
-  "ScrappyPaymasterImpl": "0x236089DD454d10AFc06e16e8866d4b83da2604A3"
+  "HappyEntryPoint": "0xBe697204Cd9a9e0D203106b196802A29200534db",
+  "ScrappyAccount": "0x1eEC2255641A21bBf0e78e4ca5CFBd1c4Cf7e7c4",
+  "ScrappyAccountFactory": "0x54Ce2b538CD2E3447bc2e80A86738A51C3337FFa",
+  "ScrappyPaymaster": "0x28f2D25C0150773D60d4cBeAF0B7e89ecD9c879A",
+  "ScrappyPaymasterImpl": "0x30B3ffF7e2Fe17b213E28A4C1A9e3b9beB2037D9"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi

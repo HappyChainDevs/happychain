@@ -4,32 +4,28 @@ pragma solidity ^0.8.20;
 import {LibClone} from "solady/utils/LibClone.sol";
 import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
 
-/*
+/**
  * @title  ScrappyAccountFactory
- * @dev    Example factory contract for deploying deterministic ERC1967 proxies for {@link ScrappyAccount}.
+ * @dev    Example factory contract for deploying minimal deterministic ERC1967 proxies for {ScrappyAccount}.
  */
 contract ScrappyAccountFactory {
+    /// @dev Error thrown when account initialization fails
     error InitializeError();
+
+    /// @dev Error thrown when attempting to deploy to an address that already has code
     error AlreadyDeployed();
 
-    /// @dev The implementation contract that all proxies will delegate to {@link ScrappyAccount}.
+    /// @dev The implementation contract that all proxies will delegate to {ScrappyAccount}.
     address public immutable ACCOUNT_IMPLEMENTATION;
-
-    /*
-     * @dev Emitted when a new HappyAccount is created
-     * @param account The address of the created account
-     * @param salt The salt used to create the account
-     */
-    event HappyAccountCreated(address indexed account, bytes32 salt);
 
     constructor(address accountImplementation) {
         ACCOUNT_IMPLEMENTATION = accountImplementation;
     }
 
-    /*
-     * @dev Creates a new HappyAccount proxy
+    /**
+     * @dev   Creates a new HappyAccount proxy
      * @param salt A unique salt for deterministic deployment
-     * @return The address of the created account
+     * @param owner The address of the owner of the account
      */
     function createAccount(bytes32 salt, address owner) public payable returns (address) {
         (bool alreadyDeployed, address account) =
@@ -40,14 +36,12 @@ contract ScrappyAccountFactory {
         }
 
         ScrappyAccount(payable(account)).initialize(owner);
-        emit HappyAccountCreated(account, salt);
         return account;
     }
 
-    /*
-     * @dev Predicts the address where a HappyAccount would be deployed
-     * @param salt The salt that would be used
-     * @return The predicted address
+    /**
+     * @dev   Predicts the address where a HappyAccount would be deployed
+     * @param salt used for deterministic deployment
      */
     function getAddress(bytes32 salt) public view returns (address) {
         return LibClone.predictDeterministicAddressERC1967(ACCOUNT_IMPLEMENTATION, salt, address(this));
