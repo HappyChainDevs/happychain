@@ -168,8 +168,6 @@ export class TransactionManager {
     public readonly pollingInterval: number
     public readonly transportProtocol: "http" | "websocket"
 
-    public started: boolean
-
     constructor(_config: TransactionManagerConfig) {
         this.collectors = []
 
@@ -261,8 +259,6 @@ export class TransactionManager {
         this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
 
         this.pollingInterval = _config.rpc.pollingInterval || (Number(this.blockTime) * 1000) / 2
-
-        this.started = false
     }
 
     /**
@@ -272,12 +268,6 @@ export class TransactionManager {
      * @param originator - The originator to add.
      */
     public addTransactionOriginator(originator: TransactionOriginator): void {
-        if (!this.started) {
-            console.warn(
-                "TransactionManager is not started. You must call `start()` before using the transaction manager.",
-            )
-        }
-
         this.collectors.push(originator)
     }
 
@@ -287,22 +277,10 @@ export class TransactionManager {
      * @param handler - The handler function to add.
      */
     public async addHook<T extends TxmHookType>(type: T, handler: TxmHookHandler<T>): Promise<void> {
-        if (!this.started) {
-            console.warn(
-                "TransactionManager is not started. You must call `start()` before using the transaction manager.",
-            )
-        }
-
         await this.hookManager.addHook(type, handler)
     }
 
     public async getTransaction(txIntentId: UUID): Promise<Transaction | undefined> {
-        if (!this.started) {
-            console.warn(
-                "TransactionManager is not started. You must call `start()` before using the transaction manager.",
-            )
-        }
-
         return this.transactionRepository.getTransaction(txIntentId)
     }
 
@@ -312,12 +290,6 @@ export class TransactionManager {
      * @returns A new transaction.
      */
     public createTransaction(params: TransactionConstructorConfig): Transaction {
-        if (!this.started) {
-            console.warn(
-                "TransactionManager is not started. You must call `start()` before using the transaction manager.",
-            )
-        }
-
         return new Transaction({
             ...params,
             from: this.viemWallet.account.address,
@@ -354,7 +326,5 @@ export class TransactionManager {
         await priceOraclePromise
 
         await this.blockMonitor.start()
-
-        this.started = true
     }
 }
