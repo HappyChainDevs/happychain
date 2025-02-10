@@ -36,10 +36,10 @@ const SecondaryActionsMenu = () => {
         <Menu.Root
             open={isSecondaryMenuVisible}
             onEscapeKeyDown={() => {
-                setDialogLogOutConfirmationVisibility(false)
+                setSecondaryMenuVisibility(false)
             }}
             onInteractOutside={() => {
-                setDialogLogOutConfirmationVisibility(false)
+                setSecondaryMenuVisibility(false)
             }}
             onSelect={(details: { value: string }) => {
                 switch (details.value) {
