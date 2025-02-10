@@ -1,9 +1,5 @@
 import { Msgs } from "@happy.tech/wallet-common"
-<<<<<<< HEAD
 import { ArrowLeft, XCircle } from "@phosphor-icons/react"
-=======
-import { ArrowLeft, Minus } from "@phosphor-icons/react"
->>>>>>> 60bbc7a8 (refacto(iframe): alternative proposal for global layout (temp))
 import { Link, useLocation } from "@tanstack/react-router"
 import { appMessageBus } from "#src/services/eventBus.ts"
 
