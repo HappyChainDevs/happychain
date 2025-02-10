@@ -33,7 +33,7 @@ contract Drand {
     }
 
     /**
-     * @notice Posts a new Drand signature for a given drand round. 
+     * @notice Posts a new Drand signature for a given drand round.
      */
     function postDrand(uint64 round, uint256[2] memory signature) external {
         // Encode round for hash-to-point
