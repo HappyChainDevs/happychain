@@ -17,7 +17,9 @@ export class BlockMonitor {
 
     constructor(_transactionManager: TransactionManager) {
         this.txmgr = _transactionManager
+    }
 
+    async start() {
         this.txmgr.viemClient.watchBlocks({
             onBlock: this.onNewBlock.bind(this),
             ...(this.txmgr.transportProtocol === "http"
@@ -29,8 +31,6 @@ export class BlockMonitor {
     }
 
     private onNewBlock(block: LatestBlock) {
-        if (this.txmgr.started) {
-            eventBus.emit(Topics.NewBlock, block)
-        }
+        eventBus.emit(Topics.NewBlock, block)
     }
 }
