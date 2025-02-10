@@ -56,7 +56,6 @@ contract Drand {
             BLS.verifySingle(signature, [DRAND_PK_0, DRAND_PK_1, DRAND_PK_2, DRAND_PK_3], message);
         if (!pairingSuccess || !callSuccess) {
             revert InvalidSignature([DRAND_PK_0, DRAND_PK_1, DRAND_PK_2, DRAND_PK_3], message, signature);
-
         }
         bytes32 roundRandomness = keccak256(abi.encode(signature));
 
