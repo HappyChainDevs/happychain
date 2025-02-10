@@ -53,10 +53,6 @@ const UserInfo = () => {
             <div className="flex flex-col items-start justify-between">
                 {user.type === WalletType.Social && <p>{user?.email || user?.name}</p>}
                 <AddressInfo address={user.address} />
-                <span className="flex ps-2 text-sm items-baseline">
-                    <span className="font-bold">{formattedBalance}&nbsp;</span>
-                    <span className="text-[0.9em] font-medium">$HAPPY</span>
-                </span>
             </div>
         </>
     )
