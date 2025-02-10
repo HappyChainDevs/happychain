@@ -6,17 +6,10 @@ import {BLS} from "bls-bn254/BLS.sol";
 contract Drand {
     bytes public constant DST = bytes("BLS_SIG_BN254G1_XMD:KECCAK-256_SVDW_RO_NUL_");
 
-<<<<<<< HEAD
     uint256 public immutable DRAND_PK_0;
     uint256 public immutable DRAND_PK_1;
     uint256 public immutable DRAND_PK_2;
     uint256 public immutable DRAND_PK_3;
-=======
-    uint256 public immutable drandPK0;
-    uint256 public immutable drandPK1;
-    uint256 public immutable drandPK2;
-    uint256 public immutable drandPK3;
->>>>>>> 816a813a (chore(randomness): move drand pub key to their elements)
     uint256 public immutable DRAND_GENESIS_TIMESTAMP_SECONDS;
     uint256 public immutable DRAND_PERIOD_SECONDS;
     mapping(uint64 round => bytes32 randomness) public drandRandomness;
@@ -31,17 +24,10 @@ contract Drand {
         if (!BLS.isValidPublicKey(_drandPublicKey)) {
             revert InvalidPublicKey(_drandPublicKey);
         }
-<<<<<<< HEAD
         DRAND_PK_0 = _drandPublicKey[0];
         DRAND_PK_1 = _drandPublicKey[1];
         DRAND_PK_2 = _drandPublicKey[2];
         DRAND_PK_3 = _drandPublicKey[3];
-=======
-        drandPK0 = _drandPublicKey[0];
-        drandPK1 = _drandPublicKey[1];
-        drandPK2 = _drandPublicKey[2];
-        drandPK3 = _drandPublicKey[3];
->>>>>>> 816a813a (chore(randomness): move drand pub key to their elements)
         DRAND_GENESIS_TIMESTAMP_SECONDS = _drandGenesisTimestampSeconds;
         DRAND_PERIOD_SECONDS = _drandPeriodSeconds;
     }
