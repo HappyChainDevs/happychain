@@ -4,10 +4,9 @@ pragma solidity ^0.8.20;
 import {HappyTx} from "../core/HappyTx.sol";
 
 // [LOGGAS] import {console} from "forge-std/Script.sol";
-// [LOGDEBUG] import {console} from "forge-std/Script.sol";
 
 library HappyTxLib {
-    /// @dev 192 bytes for static fields
+    /// @dev 196 bytes for static fields
     uint256 private constant DYNAMIC_FIELDS_OFFSET = 196;
 
     /*
@@ -71,43 +70,43 @@ library HappyTxLib {
             let ptr := add(result, 32)
 
             // Copy account (20 bytes)
-            mstore(ptr, shl(96, and(mload(happyTx), 0xffffffffffffffffffffffffffffffffffffffff)))
+            mcopy(ptr, add(happyTx, 12), 20)
             ptr := add(ptr, 20)
 
             // Copy gasLimit (4 bytes)
-            mstore(ptr, shl(224, mload(add(happyTx, 0x20))))
+            mcopy(ptr, add(happyTx, 60), 4)
             ptr := add(ptr, 4)
 
             // Copy executeGasLimit (4 bytes)
-            mstore(ptr, shl(224, mload(add(happyTx, 0x40))))
+            mcopy(ptr, add(happyTx, 92), 4)
             ptr := add(ptr, 4)
 
             // Copy dest (20 bytes)
-            mstore(ptr, shl(96, and(mload(add(happyTx, 0x60)), 0xffffffffffffffffffffffffffffffffffffffff)))
+            mcopy(ptr, add(happyTx, 108), 20)
             ptr := add(ptr, 20)
 
             // Copy paymaster (20 bytes)
-            mstore(ptr, shl(96, and(mload(add(happyTx, 0x80)), 0xffffffffffffffffffffffffffffffffffffffff)))
+            mcopy(ptr, add(happyTx, 140), 20)
             ptr := add(ptr, 20)
 
             // Copy value (32 bytes)
-            mstore(ptr, mload(add(happyTx, 0xa0)))
+            mcopy(ptr, add(happyTx, 160), 32)
             ptr := add(ptr, 32)
 
             // Copy nonceTrack (24 bytes)
-            mstore(ptr, shl(64, mload(add(happyTx, 0xc0))))
+            mcopy(ptr, add(happyTx, 200), 24)
             ptr := add(ptr, 24)
 
             // Copy nonceValue (8 bytes)
-            mstore(ptr, shl(192, and(mload(add(happyTx, 0xe0)), 0xffffffffffffffff)))
+            mcopy(ptr, add(happyTx, 248), 8)
             ptr := add(ptr, 8)
 
             // Copy maxFeePerGas (32 bytes)
-            mstore(ptr, mload(add(happyTx, 0x100)))
+            mcopy(ptr, add(happyTx, 256), 32)
             ptr := add(ptr, 32)
 
             // Copy submitterFee (32 bytes)
-            mstore(ptr, mload(add(happyTx, 0x120)))
+            mcopy(ptr, add(happyTx, 288), 32)
             ptr := add(ptr, 32)
 
             // Handle dynamic fields
@@ -120,35 +119,39 @@ library HappyTxLib {
             let lenOffset
 
             // callData
-            lenOffset := sub(callDataOffset, 0x80)
-            len := mload(add(happyTx, lenOffset))
-            mstore(ptr, shl(224, len))
+            lenOffset := add(happyTx, sub(callDataOffset, 0x80))
+            mcopy(ptr, add(lenOffset, 28), 4)
             ptr := add(ptr, 4)
-            mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
+
+            len := mload(lenOffset)
+            mcopy(ptr, add(lenOffset, 0x20), len)
             ptr := add(ptr, len)
 
             // paymasterData
-            lenOffset := sub(pmDataOffset, 0x80)
-            len := mload(add(happyTx, lenOffset))
-            mstore(ptr, shl(224, len))
+            lenOffset := add(happyTx, sub(pmDataOffset, 0x80))
+            mcopy(ptr, add(lenOffset, 28), 4)
             ptr := add(ptr, 4)
-            mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
+
+            len := mload(lenOffset)
+            mcopy(ptr, add(lenOffset, 0x20), len)
             ptr := add(ptr, len)
 
             // validatorData
-            lenOffset := sub(validatorDataOffset, 0x80)
-            len := mload(add(happyTx, lenOffset))
-            mstore(ptr, shl(224, len))
+            lenOffset := add(happyTx, sub(validatorDataOffset, 0x80))
+            mcopy(ptr, add(lenOffset, 28), 4)
             ptr := add(ptr, 4)
-            mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
+
+            len := mload(lenOffset)
+            mcopy(ptr, add(lenOffset, 0x20), len)
             ptr := add(ptr, len)
 
             // extraData
-            lenOffset := sub(extraDataOffset, 0x80)
-            len := mload(add(happyTx, lenOffset))
-            mstore(ptr, shl(224, len))
+            lenOffset := add(happyTx, sub(extraDataOffset, 0x80))
+            mcopy(ptr, add(lenOffset, 28), 4)
             ptr := add(ptr, 4)
-            mcopy(ptr, add(happyTx, add(lenOffset, 0x20)), len)
+
+            len := mload(lenOffset)
+            mcopy(ptr, add(lenOffset, 0x20), len)
             ptr := add(ptr, len)
         }
     }
@@ -250,28 +253,7 @@ library HappyTxLib {
         uint32 extraDataLen = uint32(bytes4(happyTx[offset:offset + 4]));
         offset += 4;
         result.extraData = happyTx[offset:offset + extraDataLen];
-
-        // [LOGDEBUG] console.log("\n=== HappyTxLib.decode() ===\n");
-        // [LOGDEBUG] console.log(" - account:", result.account);
-        // [LOGDEBUG] console.log(" - dest:", result.dest);
-        // [LOGDEBUG] console.log(" - paymaster:", result.paymaster);
-        // [LOGDEBUG] console.log(" - gasLimit:", result.gasLimit);
-        // [LOGDEBUG] console.log(" - executeGasLimit:", result.executeGasLimit);
-        // [LOGDEBUG] console.log(" - value:", result.value);
-        // [LOGDEBUG] console.log(" - nonceTrack:", result.nonceTrack);
-        // [LOGDEBUG] console.log(" - nonceValue:", result.nonceValue);
-        // [LOGDEBUG] console.log(" - maxFeePerGas:", result.maxFeePerGas);
-        // [LOGDEBUG] console.log(" - submitterFee:", result.submitterFee);
-        // [LOGDEBUG] console.logBytes(result.callData);
-        // [LOGDEBUG] console.logBytes(result.paymasterData);
-        // [LOGDEBUG] console.logBytes(result.validatorData);
-        // [LOGDEBUG] console.logBytes(result.extraData);
-        // [LOGDEBUG] console.log("\n=== HappyTxLib.decode() ===\n");
     }
-
-    /*//////////////////////////////////////////////////////////////
-                        INTERNAL VIEW/PURE HELPERS
-    //////////////////////////////////////////////////////////////*/
 
     /*
      * @dev Returns an overestimation of the gas consumed by a transaction
