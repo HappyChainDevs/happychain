@@ -7,19 +7,7 @@ import {HappyTx} from "../core/HappyTx.sol";
 // [LOGDEBUG] import {console} from "forge-std/Script.sol";
 
 library HappyTxLib {
-    /// @dev Number of dynamic fields in HappyTx.
-    uint256 private constant NUM_DYNAMIC_FIELDS = 4;
-    /// @dev Number of bits used to store the length of any dynamic field in HappyTx.
-    uint256 private constant DYNAMIC_FIELD_LENGTH_BITS = 40;
-    /// @dev Number of bits used to store the total lengh of dynamic fields in HappyTx.
-    uint256 private constant TOTAL_LENGTH_FIELD_BITS = 32;
-    /// @dev Mask for dynamic field length (2^40 - 1)
-    uint256 private constant MASK_DYNAMIC_FIELD_LENGTH = (1 << DYNAMIC_FIELD_LENGTH_BITS) - 1;
-    /// @dev Mask for total length (2^40 - 1)
-    uint256 private constant MASK_TOTAL_LENGTH_FIELD = (1 << TOTAL_LENGTH_FIELD_BITS) - 1;
-    /// @dev Maximum length for dynamic fields (2^40 - 1)
-    uint256 private constant MAX_DYNAMIC_FIELD_LENGTH = type(uint40).max;
-    /// @dev 192 bytes for static fields, 32 bytes for dynamic fields
+    /// @dev 192 bytes for static fields
     uint256 private constant DYNAMIC_FIELDS_OFFSET = 196;
 
     /*
