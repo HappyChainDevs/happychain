@@ -117,9 +117,9 @@ contract ScrappyAccount is
     }
 
     /*
-    * @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-    * @dev Only callable by the owner
-    */
+     * @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
+     * @dev only callable by the owner
+     */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     //* //////////////////////////////////////
@@ -145,8 +145,8 @@ contract ScrappyAccount is
 
         if (happyTx.paymaster != address(this)) {
             // The happyTx is not self-paying.
-            // The signer does not sign over the gas fields to avoid extra network roundtrips.
-            // Validation policy falls to the paymaster or the sponsoring submitter.
+            // The signer does not sign over these fields to avoid extra network roundtrips
+            // validation policy falls to the paymaster or the sponsoring submitter.
             happyTx.gasLimit = 0;
             happyTx.executeGasLimit = 0;
             happyTx.maxFeePerGas = 0;
