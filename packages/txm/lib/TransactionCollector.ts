@@ -55,6 +55,7 @@ export class TransactionCollector {
                     eventBus.emit(Topics.TransactionSubmissionFailed, {
                         transaction,
                         description: submissionResult.error.description,
+                        cause: submissionResult.error.cause,
                     })
                     this.txmgr.nonceManager.returnNonce(nonce)
                 }
