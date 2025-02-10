@@ -98,7 +98,7 @@ export class Transaction {
     status: TransactionStatus
 
     readonly attempts: Attempt[]
-    
+
     // Marks a transaction as older than one block so as avoid monitoring them at the same time we submit the transaction for the first time.
     // It can be undefined because we save transactions before they are submitted, so there is a small time lapse where the transaction is saved but not yet submitted
     collectionBlock: bigint | undefined
