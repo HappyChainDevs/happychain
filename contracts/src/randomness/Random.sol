@@ -12,6 +12,7 @@ contract Random is RandomCommitment, Drand {
     * will be posted on a block with timestamp T (even if such a block exists) because of network delays.
     */
     uint256 public constant DRAND_DELAY_SECONDS = 2;
+
     /**
      * The minimum amount of time (in seconds) that commitments to future Drand randomness must be made
      * in advance. This delay is relative to Drand timestamp (so DRAND_DELAY must also be added).

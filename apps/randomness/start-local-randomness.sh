@@ -155,6 +155,14 @@ fi
 rm -rf logs
 mkdir logs
 
+if [[ -f ".env.bak" ]]; then
+    echo "Error: Backup file '.env.bak' already exists. Refusing to overwrite your existing backup."
+    exit 1
+else
+    cp .env .env.bak
+    echo "Backup created: '.env.bak'"
+fi
+
 echo "Starting Anvil..."
 anvil --block-time $BLOCK_TIME --port $ANVIL_RPC_PORT > "$SCRIPT_DIR/logs/anvil.log" 2>&1 &
 ANVIL_PID=$!
