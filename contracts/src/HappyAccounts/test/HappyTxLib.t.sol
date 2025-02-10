@@ -10,7 +10,7 @@ contract HappyTxLibTest is Test {
     using HappyTxLib for bytes;
     using HappyTxLib for HappyTx;
 
-    /// @dev Tests for {@link HappyTxLib.encode(happyTx);}
+    /// @dev Tests for {HappyTxLib.encode(happyTx);}
     function testEncodeEmptyDynamicFields() public pure {
         HappyTx memory inputTx = HappyTx({
             account: 0x1234567890123456789012345678901234567890,
@@ -86,7 +86,7 @@ contract HappyTxLibTest is Test {
         assertEq(encoded, expected);
     }
 
-    /// @dev Tests for {@link HappyTxLib.decode(happyTx);}
+    /// @dev Tests for {HappyTxLib.decode(happyTx);}
     function testDecodeEmptyDynamicFields() public pure {
         bytes memory encoded =
             hex"1234567890123456789012345678901234567890000f4240000c3500234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000000000000"; // solhint-disable-line max-line-length
@@ -162,7 +162,7 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.extraData, hex"def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0");
     }
 
-    /// @dev Tests for {@link HappyTxLib.encode(happyTx)} <-> {@link HappyTxLib.decode(happyTx)}
+    /// @dev Tests for {HappyTxLib.encode(happyTx)} <-> {HappyTxLib.decode(happyTx)}
     function testCombinedEmpty() public pure {
         HappyTx memory inputTx = HappyTx({
             account: 0x1234567890123456789012345678901234567890,
