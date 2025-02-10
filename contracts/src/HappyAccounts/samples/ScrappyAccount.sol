@@ -108,7 +108,7 @@ contract ScrappyAccount is
 
     /*
      * @dev Initializer for proxy instances
-     *      Called by factory during proxy deployment
+     *      Called by the factory during proxy deployment
      * @param owner The owner who can upgrade the implementation
      */
     function initialize(address owner) external initializer {
