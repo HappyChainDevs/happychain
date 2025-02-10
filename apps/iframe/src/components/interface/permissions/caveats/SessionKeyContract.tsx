@@ -11,13 +11,13 @@ interface SessionKeyContractProps {
     showControl: boolean
 }
 export const SessionKeyContract = ({ contract, dappUrl, showControl }: SessionKeyContractProps) => {
-    const [checked, setChecked] = useState(
-        hasPermissions(dappUrl, {
-            happy_sessionKey: {
-                target: contract,
-            },
-        }),
-    )
+    const permissionRequest = {
+        happy_sessionKey: {
+            target: contract,
+        },
+    }
+
+    const [checked, setChecked] = useState(hasPermissions(dappUrl, permissionRequest))
 
     useEffect(() => {
         if (!showControl && checked) setChecked(false)
@@ -28,17 +28,7 @@ export const SessionKeyContract = ({ contract, dappUrl, showControl }: SessionKe
             checked={checked}
             className="w-full flex justify-between items-baseline focus-within:underline py-2 gap-4 cursor-pointer disabled:cursor-not-allowed text-base-content/80 dark:text-neutral-content/80"
             onCheckedChange={(e: { checked: boolean }) => {
-                checked
-                    ? revokePermissions(dappUrl, {
-                          happy_sessionKey: {
-                              target: contract,
-                          },
-                      })
-                    : grantPermissions(dappUrl, {
-                          happy_sessionKey: {
-                              target: contract,
-                          },
-                      })
+                checked ? revokePermissions(dappUrl, permissionRequest) : grantPermissions(dappUrl, permissionRequest)
                 setChecked(e.checked)
             }}
         >
