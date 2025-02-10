@@ -155,16 +155,16 @@ demo-vue.prod: setup.ts sdk.build  ## Builds & runs the prod version of the Vue 
 .PHONY: demo-vue.prod
 
 
-fund: ## Request testnet funds - 0.1 $HAPPY - for a specific address (requires ETH_ADDRESS in .env)
+fund: ## Request testnet funds - 0.1 $HAPPY - for a specific address (requires setting ADDRESS)
 	@if [ $(call check_eth_address,$(ADDRESS)) -eq 0 ]; then \
 		echo "Error: Invalid Ethereum address format"; \
-		echo "Usage: make fund address=<valid_ethereum_address>"; \
+		echo "Usage: make fund ADDRESS=<valid_ethereum_address>"; \
 		exit 1; \
 	fi
 	@curl -s 'https://happy-testnet-sepolia.hub.caldera.xyz/api/trpc/faucet.requestFaucetFunds?batch=1' \
 		-H 'content-type: application/json' \
 		--data-raw '{"0":{"json":{"rollupSubdomain":"happy-testnet-sepolia","recipientAddress":"$(ADDRESS)","turnstileToken":"","tokenRollupAddress":null},"meta":{"values":{"tokenRollupAddress":["undefined"]}}}}' \
-		| jq '.' || echo "$(RED)Failed to request funds$(RESET)"
+		| jq '.'
 
 # ==================================================================================================
 ##@ Contracts
