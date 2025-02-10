@@ -141,7 +141,7 @@ contract ScrappyAccount is
 
         bytes memory signature = happyTx.validatorData;
         happyTx.validatorData = ""; // set to "" to get the hash
-        address signer = happyTx.getHappyTxHash().toEthSignedMessageHash().recover(signature);
+        address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
         happyTx.validatorData = signature; // revert back to original value
 
         // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
