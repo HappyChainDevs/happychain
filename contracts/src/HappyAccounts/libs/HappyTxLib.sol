@@ -60,11 +60,11 @@ library HappyTxLib {
             + (4 + happyTx.validatorData.length) + (4 + happyTx.extraData.length);
 
         assembly {
-            // Allocate memory for result (add 32 bytes for the length prefix)
+            // Encoded tx will live at next free memory address.
             result := mload(0x40)
-            // Update free memory pointer
+            // Update free memory pointer to point past decoded bytes (+32 bytes is for length).
             mstore(0x40, add(result, add(totalSize, 32)))
-            // Store length of the result
+            // Store length of the encoded tx.
             mstore(result, totalSize)
 
             // Start writing after length prefix
