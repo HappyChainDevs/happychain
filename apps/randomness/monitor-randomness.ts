@@ -1,10 +1,10 @@
 import { http, type Block, type Hex, createPublicClient, encodeAbiParameters, encodePacked, keccak256 } from "viem"
 import { anvil } from "viem/chains"
 import { z } from "zod"
-import { abis } from "./src/ABI/random"
+import { abis, deployment } from "@happy.tech/contracts/random/anvil"
 
 const RANDOMNESS_CONTRACT_ABI = abis.Random
-const RANDOMNESS_CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+const RANDOMNESS_CONTRACT_ADDRESS = deployment.Random;
 const DRAND_SERVICE_URL = "https://api.drand.sh/v2/beacons/evmnet"
 
 const client = createPublicClient({
@@ -71,8 +71,10 @@ const drandInfo = await getDrandInfo()
 const drandDelay = await client.readContract({
     address: RANDOMNESS_CONTRACT_ADDRESS,
     abi: RANDOMNESS_CONTRACT_ABI,
-    functionName: "DRAND_DELAY",
+    functionName: "DRAND_DELAY_SECONDS",
 })
+
+console.log("Drand delay", drandDelay)
 
 client.watchBlocks({ onBlock: onNewBlock, pollingInterval: 500 })
 
@@ -87,6 +89,10 @@ async function onNewBlock(block: Block<bigint, false, "latest">) {
             console.error("Error reading random value", error)
         })
 
+    if (!contractRandomValue) {
+        return
+    }
+
     console.log("Contract random value for block", block.number, contractRandomValue)
 
     const expectedDrandRound = drandTimestampToRound(block.timestamp - drandDelay)
@@ -98,7 +104,13 @@ async function onNewBlock(block: Block<bigint, false, "latest">) {
         abi: RANDOMNESS_CONTRACT_ABI,
         functionName: "getRevealedValue",
         args: [block.number],
+    }).catch((error) => {
+        console.error("Error reading revealed value", error)
     })
+
+    if (!revealedValueForBlock) {
+        return
+    }
 
     const expectedRandomValue = keccak256(
         encodePacked(["bytes32", "uint128"], [drandRandomness, revealedValueForBlock]),
