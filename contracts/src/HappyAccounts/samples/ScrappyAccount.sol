@@ -116,8 +116,10 @@ contract ScrappyAccount is
         __UUPSUpgradeable_init();
     }
 
-    /// @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-    /// @dev Only callable by the owner
+    /*
+    * @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
+    * @dev Only callable by the owner
+    */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     //* //////////////////////////////////////
