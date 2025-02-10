@@ -6,13 +6,13 @@ import {HappyTx} from "../core/HappyTx.sol";
 // [LOGGAS] import {console} from "forge-std/Script.sol";
 
 library HappyTxLib {
-    ///@notice Selector returned by {@link decodeHappyTx} when unable to properly decode a happyTx.
+    ///@notice Selector returned by {decode} when unable to properly decode a happyTx.
     error MalformedHappyTx();
 
     /// @dev 196 bytes for static fields
     uint256 private constant DYNAMIC_FIELDS_OFFSET = 196;
 
-    /*
+    /**
      * @notice Encodes a HappyTx struct into a compact bytes array, for minimal memory usage.
      * The encoding is done by packing fields end-to-end without 32-byte word alignment, making it
      * more gas efficient than standard ABI encoding. Dynamic fields are prefixed with their lengths
@@ -144,8 +144,8 @@ library HappyTxLib {
         }
     }
 
-    /*
-     * @dev Decodes the end-to-end encoded happyTx.
+    /**
+     * @dev Decodes a happyTx that was encoded using {HappyTxLib.encode}.
      * @param happyTx The encoded happyTx bytes
      * @return result The decoded HappyTx struct
      */
@@ -243,7 +243,7 @@ library HappyTxLib {
         result.extraData = happyTx[offset:offset + extraDataLen];
     }
 
-    /*
+    /**
      * @dev Returns an overestimation of the gas consumed by a transaction
      * @param callGas The gas consumed by the function call
      * @param calldataLength The length of the calldata
