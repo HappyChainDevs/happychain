@@ -15,7 +15,7 @@ export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     const { userOpReceipt, value: sendValue } = tx
 
     return (
-        <article className="focus-within:bg-primary/5 p-2 rounded-md grid gap-1 relative">
+        <article className="focus-within:bg-primary/10 hover:bg-primary/5 p-2 rounded-md grid gap-1 relative">
             <div className="flex items-center text-xs gap-[1ex]">
                 <div
                     className={`${userOpReceipt.success ? "text-success dark:text-success/50" : "text-error dark:text-error/50"} bg-base-content/5 dark:bg-base-content/20 p-1 aspect-square rounded-full flex items-center justify-center`}
@@ -23,13 +23,15 @@ export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                     <ArrowUp weight="bold" size="0.795em" />
                 </div>
                 <h1 className="font-medium text-base-content/80">Contract interaction</h1>
-                <div className="ms-auto text-[0.885em] font-semibold text-base-content/70 dark:text-base-content/25">
-                    {shortenAddress(userOpReceipt.userOpHash, 2)}
+                <div className="ms-auto font-semibold text-base-content/70 dark:text-base-content/50">
+                    {shortenAddress(userOpReceipt.userOpHash)}
                 </div>
             </div>
             <p className="flex px-0.5 gap-[0.75ex] items-baseline">
-                <span className="font-bold">- {formatEther(sendValue)}</span>{" "}
-                <span className="text-[0.785em] font-semibold">HAPPY</span>
+                <span className="font-bold block overflow-hidden truncate max-w-[30ch]">
+                    - {formatEther(sendValue)}
+                </span>{" "}
+                <span className="text-xs block font-semibold">HAPPY</span>
             </p>
 
             <a
@@ -39,7 +41,7 @@ export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                 title="View on explorer"
                 className="absolute size-full z-10 inset opacity-0"
             >
-                {shortenAddress(userOpReceipt.userOpHash, 2)}
+                {shortenAddress(userOpReceipt.userOpHash)}
             </a>
         </article>
     )
