@@ -206,14 +206,15 @@ contract ScrappyAccount is
         emit Received(msg.sender, msg.value);
     }
 
-    fallback() external payable {
-        emit Received(msg.sender, msg.value);
-    }
-
     //* //////////////////////////////////////
     //* View functions ///////////////////////
     //* //////////////////////////////////////
 
+    /*
+     * @dev Returns the  EntryPoint contract from which this account accepts functions.
+     * This isn't part of {@link IHappyPaymaster} to enable accounts to accept HappyTx from multiple entrypoints,
+     * which this implementation doesn't support.
+     */
     function entryPoint() external view returns (address) {
         return ENTRYPOINT;
     }
