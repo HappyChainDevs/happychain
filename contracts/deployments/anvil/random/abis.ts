@@ -644,11 +644,7 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-<<<<<<< HEAD
   "Random": "0xEF648561456FEEa23B993747eB7B68d3B7332b6a"
-=======
-  "Random": "0x800EA634c1436C2BD74C6f09E6a537275A44Ac72"
->>>>>>> 71b49576 (feat(randomnness-service): script to launch randomnness service)
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
