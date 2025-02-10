@@ -9,7 +9,7 @@ function signalClosed() {
 const GlobalHeader = () => {
     const location = useLocation()
     return (
-        <div className="relative max-w-prose mx-auto items-center w-full p-1 hidden lg:flex">
+        <div className="relative max-w-prose mx-auto items-center w-full py-1.5 hidden lg:flex">
             {location.pathname !== "/embed" && (
                 <Link to={"/embed"}>
                     <ArrowLeft weight="bold" className="absolute left-2 top-5" />
