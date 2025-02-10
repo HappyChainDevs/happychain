@@ -349,8 +349,11 @@ export class TransactionManager {
             throw new Error(errorMessage)
         }
 
-        // Await the completion of the gas price oracle startup before marking the TransactionManager as started
+        // Wait for the gas price oracle to initialize before starting the block monitor,
+        // which emits 'NewBlock' events as the TXM heartbeat.
         await priceOraclePromise
+
+        await this.blockMonitor.start()
 
         this.started = true
     }
