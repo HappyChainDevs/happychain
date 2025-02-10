@@ -116,14 +116,47 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "drandPublicKey",
-      "inputs": [
+      "name": "drandPK0",
+      "inputs": [],
+      "outputs": [
         {
           "name": "",
           "type": "uint256",
           "internalType": "uint256"
         }
       ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandPK1",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandPK2",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandPK3",
+      "inputs": [],
       "outputs": [
         {
           "name": "",
@@ -611,7 +644,7 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "Random": "0xbd62dAb78e3a40c56b2B62F7B873Bb42Cb111dc8"
+  "Random": "0xd6061015153788Bdc9FFe2a73acaa3ea0Cb253d6"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
