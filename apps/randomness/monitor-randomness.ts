@@ -2,16 +2,10 @@ import { abis, deployment } from "@happy.tech/contracts/random/anvil"
 import { http, type Block, type Hex, createPublicClient, encodeAbiParameters, encodePacked, keccak256 } from "viem"
 import { anvil } from "viem/chains"
 import { z } from "zod"
-<<<<<<< HEAD
 
 const RANDOMNESS_CONTRACT_ABI = abis.Random
 const RANDOMNESS_CONTRACT_ADDRESS = deployment.Random
-=======
-import { abis, deployment } from "@happy.tech/contracts/random/anvil"
 
-const RANDOMNESS_CONTRACT_ABI = abis.Random
-const RANDOMNESS_CONTRACT_ADDRESS = deployment.Random;
->>>>>>> 59f0c410 (chore(randomness): changes in monitor script)
 const DRAND_SERVICE_URL = "https://api.drand.sh/v2/beacons/evmnet"
 
 const client = createPublicClient({
@@ -115,10 +109,6 @@ async function onNewBlock(block: Block<bigint, false, "latest">) {
         .catch((error) => {
             console.error("Error reading revealed value", error)
         })
-
-    if (!revealedValueForBlock) {
-        return
-    }
 
     if (!revealedValueForBlock) {
         return
