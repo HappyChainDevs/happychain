@@ -45,9 +45,8 @@ contract ScrappyAccount is
     using HappyTxLib for HappyTx;
     using MessageHashUtils for bytes32;
 
-    //* //////////////////////////////////////
-    //* Constants ////////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // CONSTANTS
 
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
     uint256 private constant INTRINSIC_GAS = 22_000; // TODO
@@ -67,29 +66,19 @@ contract ScrappyAccount is
         return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
     }
 
-    /*
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
-    uint256[50] private __gap;
-
-    //* //////////////////////////////////////
-    //* Events ///////////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // EVENTS
 
     event Upgraded(address indexed newImplementation);
     event Received(address sender, uint256 amount);
 
-    //* //////////////////////////////////////
-    //* Errors ///////////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // ERRORS
 
     error NotFromAccount();
 
-    //* //////////////////////////////////////
-    //* Modifiers ////////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // MODIFIERS
 
     /// @dev Checks if the the call was made from the EntryPoint contract
     modifier onlyFromEntryPoint() {
@@ -97,9 +86,8 @@ contract ScrappyAccount is
         _;
     }
 
-    //* //////////////////////////////////////
-    //* Constructor //////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // CONSTRUCTOR
 
     constructor(address _entrypoint) {
         ENTRYPOINT = _entrypoint;
@@ -122,9 +110,8 @@ contract ScrappyAccount is
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-    //* //////////////////////////////////////
-    //* External functions ///////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // EXTERNAL FUNCTIONS
 
     function validate(HappyTx memory happyTx) external returns (bytes4) {
         if (happyTx.account != address(this)) {
@@ -158,7 +145,7 @@ contract ScrappyAccount is
         address signer = happyTx.getHappyTxHash().toEthSignedMessageHash().recover(signature);
         happyTx.validatorData = signature; // revert back to original value
 
-        // NOTE: This function may consume slightly more gas during simulation, in accordance to the spec.
+        // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
         return isSimulation
             ? signer == owner()
                 ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
@@ -196,9 +183,8 @@ contract ScrappyAccount is
         return 0;
     }
 
-    //* //////////////////////////////////////
-    //* Special functions ////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // SPECIAL FUNCTIONS
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
         return hash.recover(signature) == owner() ? MAGIC_VALUE : bytes4(0);
@@ -208,13 +194,12 @@ contract ScrappyAccount is
         emit Received(msg.sender, msg.value);
     }
 
-    //* //////////////////////////////////////
-    //* View functions ///////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // VIEW FUNCTIONS
 
-    /*
-     * @dev Returns the  EntryPoint contract from which this account accepts functions.
-     * This isn't part of {@link IHappyPaymaster} to enable accounts to accept HappyTx from multiple entrypoints,
+    /**
+     * @dev Returns the EntryPoint contract from which this account accepts functions.
+     * This isn't part of {IHappyPaymaster} to enable accounts to accept HappyTx from multiple entrypoints,
      * which this implementation doesn't support.
      */
     function entryPoint() external view returns (address) {
