@@ -33,13 +33,12 @@ const getDrandInfo = async () => {
 
     const data = await response.json()
 
-    const genesisTime = data.genesis_time
-    const period = data.period
+    const dataParsed = drandInfoSchema.parse(data)
 
-    return drandInfoSchema.parse({
-        genesis_time: genesisTime,
-        period: period,
-    })
+    return {
+        genesisTime: dataParsed.genesis_time,
+        period: dataParsed.period,
+    }
 }
 const drandRoundSchema = z.object({
     round: z.number().transform((value) => BigInt(value)),
@@ -71,7 +70,7 @@ const getDrandRandomnessForRound = async (round: bigint) => {
 }
 
 const drandTimestampToRound = (timestamp: bigint) => {
-    return (timestamp - drandInfo.genesis_time) / drandInfo.period + 1n
+    return (timestamp - drandInfo.genesisTime) / drandInfo.period + 1n
 }
 
 const drandInfo = await getDrandInfo()
