@@ -164,7 +164,7 @@ else
 fi
 
 echo "Starting Anvil..."
-anvil --block-time $BLOCK_TIME --port $ANVIL_RPC_PORT > "$SCRIPT_DIR/logs/anvil.log" 2>&1 &
+anvil --block-time $BLOCK_TIME --port $ANVIL_RPC_PORT --chain-id 1337 > "$SCRIPT_DIR/logs/anvil.log" 2>&1 &
 ANVIL_PID=$!
 
 # Limit the number of connection attempts to 5
