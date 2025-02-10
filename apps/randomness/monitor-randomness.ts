@@ -1,10 +1,10 @@
+import { abis, deployment } from "@happy.tech/contracts/random/anvil"
 import { http, type Block, type Hex, createPublicClient, encodeAbiParameters, encodePacked, keccak256 } from "viem"
 import { anvil } from "viem/chains"
 import { z } from "zod"
-import { abis, deployment } from "@happy.tech/contracts/random/anvil"
 
 const RANDOMNESS_CONTRACT_ABI = abis.Random
-const RANDOMNESS_CONTRACT_ADDRESS = deployment.Random;
+const RANDOMNESS_CONTRACT_ADDRESS = deployment.Random
 const DRAND_SERVICE_URL = "https://api.drand.sh/v2/beacons/evmnet"
 
 const client = createPublicClient({
@@ -98,14 +98,16 @@ async function onNewBlock(block: Block<bigint, false, "latest">) {
 
     const drandRandomness = await getDrandRandomnessForRound(expectedDrandRound)
 
-    const revealedValueForBlock = await client.readContract({
-        address: RANDOMNESS_CONTRACT_ADDRESS,
-        abi: RANDOMNESS_CONTRACT_ABI,
-        functionName: "getRevealedValue",
-        args: [block.number],
-    }).catch((error) => {
-        console.error("Error reading revealed value", error)
-    })
+    const revealedValueForBlock = await client
+        .readContract({
+            address: RANDOMNESS_CONTRACT_ADDRESS,
+            abi: RANDOMNESS_CONTRACT_ABI,
+            functionName: "getRevealedValue",
+            args: [block.number],
+        })
+        .catch((error) => {
+            console.error("Error reading revealed value", error)
+        })
 
     if (!revealedValueForBlock) {
         return
