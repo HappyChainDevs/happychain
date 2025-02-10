@@ -20,7 +20,6 @@ import {
 
 import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
-import {BasicNonceManager} from "./BasicNonceManager.sol";
 import {
     FutureNonceDuringSimulation,
     InvalidOwnerSignature,
@@ -30,7 +29,7 @@ import {
 
 // [LOGGAS] import {console} from "forge-std/Script.sol";
 
-/**
+/*
  * @title  ScrappyAccount
  * @dev    Example implementation of a Happy Account with nonce management, reentrancy protection,
  *         and proxy upgrade capability.
@@ -38,7 +37,6 @@ import {
 contract ScrappyAccount is
     IHappyAccount,
     IHappyPaymaster,
-    BasicNonceManager,
     ReentrancyGuardTransient,
     OwnableUpgradeable,
     UUPSUpgradeable
@@ -51,18 +49,25 @@ contract ScrappyAccount is
     //* Constants ////////////////////////////
     //* //////////////////////////////////////
 
-    bytes4 private constant INTERFACE_ID = 0x01ffc9a7; // ERC-165
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
     uint256 private constant INTRINSIC_GAS = 22_000; // TODO
     uint256 private constant GAS_OVERHEAD_BUFFER = 12345; // TODO
+    bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
+    bytes4 private constant ERC1271_INTERFACE_ID = 0x1626ba7e;
+    bytes4 private constant IHAPPYACCOUNT_INTERFACE_ID = 0x3554a333;
+    bytes4 private constant IHAPPYPAYMASTER_INTERFACE_ID = 0x24abcf40;
 
     /// @dev The deterministic EntryPoint contract
     address private immutable ENTRYPOINT;
 
-    /// @dev The factory that deployed this proxy
-    address private _factory;
+    /// @dev Mapping from track => nonce
+    mapping(uint192 => uint64) public nonceValue;
 
-    /**
+    function getNonce(uint192 nonceTrack) public view returns (uint256 nonce) {
+        return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
+    }
+
+    /*
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
@@ -73,7 +78,7 @@ contract ScrappyAccount is
     //* Events ///////////////////////////////
     //* //////////////////////////////////////
 
-    event Upgraded(address indexed implementation);
+    event Upgraded(address indexed newImplementation);
     event Received(address sender, uint256 amount);
 
     //* //////////////////////////////////////
@@ -101,14 +106,13 @@ contract ScrappyAccount is
         _disableInitializers();
     }
 
-    /**
+    /*
      * @dev Initializer for proxy instances
      *      Called by factory during proxy deployment
-     * @param _owner The owner who can upgrade the implementation
+     * @param owner The owner who can upgrade the implementation
      */
-    function initialize(address _owner) external initializer {
-        _factory = msg.sender;
-        __Ownable_init(_owner);
+    function initialize(address owner) external initializer {
+        __Ownable_init(owner);
         __UUPSUpgradeable_init();
     }
 
@@ -129,15 +133,13 @@ contract ScrappyAccount is
             return GasPriceTooHigh.selector;
         }
 
+        bool isSimulation = tx.origin == address(0);
         uint256 happyTxNonce = (happyTx.nonceTrack << 192) | happyTx.nonceValue;
         uint256 currentNonce = getNonce(happyTx.nonceTrack);
-
-        bool isSimulation = tx.origin == address(0);
         int256 nonceAhead = int256(happyTxNonce) - int256(currentNonce);
 
-        if (!_validateAndUpdateNonce(nonceAhead, happyTx.nonceTrack, isSimulation)) {
-            return InvalidNonce.selector;
-        }
+        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
+        nonceValue[happyTx.nonceTrack]++;
 
         if (happyTx.paymaster != address(this)) {
             // The happyTx is not self-paying.
@@ -216,11 +218,11 @@ contract ScrappyAccount is
         return ENTRYPOINT;
     }
 
-    function factory() external view override returns (address) {
-        return _factory;
-    }
-
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return interfaceId == INTERFACE_ID;
+        // forgefmt: disable-next-item
+        return interfaceId == ERC165_INTERFACE_ID
+            || interfaceId == ERC1271_INTERFACE_ID
+            || interfaceId == IHAPPYACCOUNT_INTERFACE_ID
+            || interfaceId == IHAPPYPAYMASTER_INTERFACE_ID;
     }
 }

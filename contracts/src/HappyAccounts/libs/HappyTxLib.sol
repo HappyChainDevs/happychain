@@ -27,7 +27,7 @@ library HappyTxLib {
     */
     error MalformedHappyTx();
 
-    /**
+    /*
      * @notice Computes the hash of a HappyTx for signature verification.
      * @param happyTx The transaction to hash
      * @return The abi encoded hash of the transaction
@@ -36,7 +36,7 @@ library HappyTxLib {
         return keccak256(encode(happyTx));
     }
 
-    /**
+    /*
      * @notice Encodes a HappyTx struct into a compact bytes array, for minimal memory usage.
      * The encoding is done by packing fields end-to-end without 32-byte word alignment, making it
      * more gas efficient than standard ABI encoding. Dynamic fields are prefixed with their lengths
@@ -165,7 +165,7 @@ library HappyTxLib {
         }
     }
 
-    /**
+    /*
      * @dev Decodes the end-to-end encoded happyTx.
      * @param happyTx The encoded happyTx bytes
      * @return result The decoded HappyTx struct
@@ -285,7 +285,7 @@ library HappyTxLib {
                         INTERNAL VIEW/PURE HELPERS
     //////////////////////////////////////////////////////////////*/
 
-    /**
+    /*
      * @dev Returns an overestimation of the gas consumed by a transaction
      * @param callGas The gas consumed by the function call
      * @param calldataLength The length of the calldata
