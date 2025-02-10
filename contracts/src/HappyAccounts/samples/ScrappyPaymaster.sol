@@ -139,10 +139,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
         emit Received(msg.sender, msg.value);
     }
 
-    fallback() external payable {
-        emit Received(msg.sender, msg.value);
-    }
-
     //* //////////////////////////////////////
     //* Setter functions //////////////////////
     //* //////////////////////////////////////
