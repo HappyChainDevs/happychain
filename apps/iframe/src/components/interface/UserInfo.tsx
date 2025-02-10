@@ -69,10 +69,6 @@ const UserInfo = () => {
             <div className="flex gap-O.5 flex-col">
                 {user.type === WalletType.Social && <p className="ps-1 font-semibold">{user?.name || user?.email}</p>}
                 <AddressInfo address={user.address} />
-                <span className="flex ps-2 text-sm items-baseline">
-                    <span className="font-bold">{formattedBalance}&nbsp;</span>
-                    <span className="text-[0.9em] font-medium">$HAPPY</span>
-                </span>
             </div>
         </>
     )
