@@ -6,7 +6,7 @@ import {HappyTx} from "../core/HappyTx.sol";
 error WrongTarget();
 error SubmitterFeeTooHigh();
 
-/**
+/*
  * @title  IHappyPaymaster
  * @dev    Interface for paymasters that can sponsor gas fees for HappyTx transactions.
  *         Each user has a gas budget that refills over time, with a maximum cap.
@@ -14,11 +14,11 @@ error SubmitterFeeTooHigh();
 interface IHappyPaymaster {
     /*
      * This function validates whether the passed happyTx is eligible for sponsorship
-     * by this paymaster ("validation"), and if so pays out to the submitter the
-     * submitter tx cost + happyTx.submitterFee.
+     * by this paymaster ("validation"), and if so pays out to the submitter (tx.origin)
+     * the submitter tx cost + happyTx.submitterFee.
      *
      * The submitter tx gas usage is the the minimum amount of gas between:
-     * (a) consumedGas + the cost of payout's own execution (including the call overhead) or,
+     * (a) consumedGas + the cost of payout's own execution or,
      * (b) happyTx.gasLimit.
      * The gas should be priced according to tx.gasPrice.
      *
@@ -30,9 +30,9 @@ interface IHappyPaymaster {
      * custom error to indicate the reason for failure.
      *
      * It can also return {@link UnknownDuringSimulation} in simulation mode
-     * to indicate that validity cannot be ascertained during simulation
-     * (e.g. we can't verify a signature over the gas limit during simulation,
-     * as simulation is used to estimate the gas).
+     * (tx.origin == 0) to indicate that validity cannot be ascertained during
+     * simulation (e.g. we can't verify a signature over the gas limit during
+     * simulation, as simulation is used to estimate the gas).
      *
      * If validation fails with {@link UnknownDuringSimulation} during simulation,
      * the function must carry on with the payment, and ensure that as much gas is

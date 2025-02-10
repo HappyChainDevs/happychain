@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {LibClone} from "solady/utils/LibClone.sol";
 import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
 
-/**
+/*
  * @title  ScrappyAccountFactory
  * @dev    Example factory contract for deploying deterministic ERC1967 proxies for {@link ScrappyAccount}.
  */
@@ -15,7 +15,7 @@ contract ScrappyAccountFactory {
     /// @dev The implementation contract that all proxies will delegate to {@link ScrappyAccount}.
     address public immutable ACCOUNT_IMPLEMENTATION;
 
-    /**
+    /*
      * @dev Emitted when a new HappyAccount is created
      * @param account The address of the created account
      * @param salt The salt used to create the account
@@ -26,7 +26,7 @@ contract ScrappyAccountFactory {
         ACCOUNT_IMPLEMENTATION = accountImplementation;
     }
 
-    /**
+    /*
      * @dev Creates a new HappyAccount proxy
      * @param salt A unique salt for deterministic deployment
      * @return The address of the created account
@@ -44,7 +44,7 @@ contract ScrappyAccountFactory {
         return account;
     }
 
-    /**
+    /*
      * @dev Predicts the address where a HappyAccount would be deployed
      * @param salt The salt that would be used
      * @return The predicted address
