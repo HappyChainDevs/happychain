@@ -105,7 +105,6 @@ interface IHappyAccount {
      */
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4 magicValue);
 
-    // TODO: Note the proper interface IDs, also needs further review, I'm not sure about these
     /*
      * Returns true iff the contract supports the interface identified by the provided ID,
      * and the provided ID is not 0xffffffff, as per https://eips.ethereum.org/EIPS/eip-165.
