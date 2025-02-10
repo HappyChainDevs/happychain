@@ -14,7 +14,7 @@ contract Random is RandomCommitment, Drand {
 
     function random() external view returns (bytes32) {
         bytes32 drand = _getDrandAtTimestamp(block.timestamp - DRAND_DELAY);
-        uint256 revealedValue = getRevealedValue(block.number);
+        uint256 revealedValue = getRevealedValue(uint128(block.number));
         return keccak256(abi.encodePacked(drand, revealedValue));
     }
 
