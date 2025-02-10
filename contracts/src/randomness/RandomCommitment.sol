@@ -31,8 +31,8 @@ contract RandomCommitment is Ownable {
     error InvalidReveal();
     error RevealedValueNotAvailable();
 
-    constructor(address _owner, uint256 _precommit_delay_blocks) Ownable(_owner) {
-        PRECOMMIT_DELAY_BLOCKS = _precommit_delay_blocks;
+    constructor(address _owner, uint256 _precommitDelayBlocks) Ownable(_owner) {
+        PRECOMMIT_DELAY_BLOCKS = _precommitDelayBlocks;
     }
 
     /**
