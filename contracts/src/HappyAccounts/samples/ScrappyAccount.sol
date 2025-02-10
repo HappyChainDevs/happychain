@@ -62,6 +62,7 @@ contract ScrappyAccount is
     /// @dev Mapping from track => nonce
     mapping(uint192 => uint64) public nonceValue;
 
+    /// @notice Returns the next nonce for a given nonce track, combining the track with its current nonce sequence
     function getNonce(uint192 nonceTrack) public view returns (uint256 nonce) {
         return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
     }
@@ -69,13 +70,11 @@ contract ScrappyAccount is
     // ====================================================================================================
     // EVENTS
 
+    /// @notice Emitted when the contract implementation is upgraded to a new implementation
     event Upgraded(address indexed newImplementation);
+
+    /// @notice Emitted when ETH is received by the contract
     event Received(address sender, uint256 amount);
-
-    // ====================================================================================================
-    // ERRORS
-
-    error NotFromAccount();
 
     // ====================================================================================================
     // MODIFIERS
