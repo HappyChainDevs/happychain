@@ -140,10 +140,6 @@ const contractToAbi = ({
       "stateMutability": "nonpayable"
     },
     {
-      "type": "fallback",
-      "stateMutability": "payable"
-    },
-    {
       "type": "receive",
       "stateMutability": "payable"
     },
@@ -278,19 +274,6 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "factory",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "getNonce",
       "inputs": [
         {
@@ -313,7 +296,7 @@ const contractToAbi = ({
       "name": "initialize",
       "inputs": [
         {
-          "name": "_owner",
+          "name": "owner",
           "type": "address",
           "internalType": "address"
         }
@@ -341,6 +324,25 @@ const contractToAbi = ({
           "name": "",
           "type": "bytes4",
           "internalType": "bytes4"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "nonceValue",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint192",
+          "internalType": "uint192"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint64",
+          "internalType": "uint64"
         }
       ],
       "stateMutability": "view"
@@ -630,25 +632,6 @@ const contractToAbi = ({
     },
     {
       "type": "event",
-      "name": "NonceUsed",
-      "inputs": [
-        {
-          "name": "nonceTrack",
-          "type": "uint192",
-          "indexed": true,
-          "internalType": "uint192"
-        },
-        {
-          "name": "nonceValue",
-          "type": "uint64",
-          "indexed": true,
-          "internalType": "uint64"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
       "name": "OwnershipTransferred",
       "inputs": [
         {
@@ -703,7 +686,7 @@ const contractToAbi = ({
       "name": "Upgraded",
       "inputs": [
         {
-          "name": "implementation",
+          "name": "newImplementation",
           "type": "address",
           "indexed": true,
           "internalType": "address"
@@ -773,11 +756,6 @@ const contractToAbi = ({
     {
       "type": "error",
       "name": "InvalidInitialization",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotFromAccount",
       "inputs": []
     },
     {
@@ -939,10 +917,6 @@ const contractToAbi = ({
       "stateMutability": "nonpayable"
     },
     {
-      "type": "fallback",
-      "stateMutability": "payable"
-    },
-    {
       "type": "receive",
       "stateMutability": "payable"
     },
@@ -999,30 +973,6 @@ const contractToAbi = ({
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "isValidSignature",
-      "inputs": [
-        {
-          "name": "hash",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "signature",
-          "type": "bytes",
-          "internalType": "bytes"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes4",
-          "internalType": "bytes4"
-        }
-      ],
-      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -1168,32 +1118,6 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "setMaxSubmitterFeePerByte",
-      "inputs": [
-        {
-          "name": "_maxSubmitterFeePerByte",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "setTarget",
-      "inputs": [
-        {
-          "name": "_target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
       "name": "target",
       "inputs": [],
       "outputs": [
@@ -1305,7 +1229,7 @@ const contractToAbi = ({
       "name": "Upgraded",
       "inputs": [
         {
-          "name": "implementation",
+          "name": "newImplementation",
           "type": "address",
           "indexed": true,
           "internalType": "address"
@@ -1321,33 +1245,6 @@ const contractToAbi = ({
           "name": "target",
           "type": "address",
           "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ECDSAInvalidSignature",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "ECDSAInvalidSignatureLength",
-      "inputs": [
-        {
-          "name": "length",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ECDSAInvalidSignatureS",
-      "inputs": [
-        {
-          "name": "s",
-          "type": "bytes32",
-          "internalType": "bytes32"
         }
       ]
     },
@@ -1375,11 +1272,6 @@ const contractToAbi = ({
     {
       "type": "error",
       "name": "InvalidInitialization",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotFromAccount",
       "inputs": []
     },
     {
@@ -1448,11 +1340,11 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "HappyEntryPoint": "0xf2Bbb2625B73D1aD593513856c6d56C6d852944C",
-  "ScrappyAccount": "0x89BF0750E80252879B62FdFd8C34eCbE95fBbD75",
-  "ScrappyAccountFactory": "0x8Faacd92fAb5317d716823687772b1c0D8c1624c",
-  "ScrappyPaymaster": "0x6C246D86ECD7c56C0952DA36385b70FC3e09D8d2",
-  "ScrappyPaymasterImpl": "0x12D8613d04f35FDeeF2f401f68ACBeCA231Cf450"
+  "HappyEntryPoint": "0x0E77e9EEccEFeB1fA3D13b52227234e8E04721aC",
+  "ScrappyAccount": "0x915a872A2Da791c920DB73a1086EAF9F69816813",
+  "ScrappyAccountFactory": "0x62600757eC66a61F5f922a754461Cdc0fE4FDaEE",
+  "ScrappyPaymaster": "0xd3191A78D6160933d7600f12Bf92486b05B1B003",
+  "ScrappyPaymasterImpl": "0x236089DD454d10AFc06e16e8866d4b83da2604A3"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
