@@ -12,7 +12,7 @@ import {IHappyPaymaster, SubmitterFeeTooHigh, WrongTarget} from "../interfaces/I
 import {NotFromEntryPoint} from "../utils/Common.sol";
 import {HappyTx} from "../core/HappyTx.sol";
 
-/*
+/**
  * @title ScrappyPaymaster
  * @notice An example paymaster contract implementing the IHappyPaymaster interface.
  */
@@ -69,9 +69,11 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
         _disableInitializers();
     }
 
-    /*
-     * @dev Initializer for proxy instances
-     *      Called by factory during proxy deployment
+    /**
+     * @dev   Initializer for proxy instances.
+     * @param _entryPoint The deterministic EntryPoint contract
+     * @param _target The target contract that will be sponsored
+     * @param _maxSubmitterFeePerByte The maximum fee per byte that the submitter is willing to pay
      * @param _owner The owner who can upgrade the implementation
      */
     function initialize(address _entryPoint, address _target, uint256 _maxSubmitterFeePerByte, address _owner)
@@ -85,7 +87,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
         __UUPSUpgradeable_init();
     }
 
-    /*
+    /**
      * @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
      * @param newImplementation The address of the new implementation contract
      * @dev Only callable by the owner
@@ -125,10 +127,10 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     // ====================================================================================================
     // ADMIN FUNCTIONS
 
-    /// @notice Allows the owner to withdraw a specified amount of funds from the paymaster
-    /// @param to Address to send the funds to
-    /// @param amount Amount of wei to withdraw
-    /// @dev Only callable by the owner. Reverts if amount exceeds contract balance
+    /**
+     * @notice Allows the owner to withdraw a specified amount of funds from the paymaster
+     * @dev    Only callable by the owner. Reverts if amount exceeds contract balance
+     */
     function withdraw(address to, uint256 amount) external onlyOwner {
         if (amount > address(this).balance) revert("Insufficient balance");
         (bool success,) = payable(to).call{value: amount}("");
