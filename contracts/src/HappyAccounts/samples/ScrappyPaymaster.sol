@@ -19,9 +19,8 @@ import {HappyTx} from "../core/HappyTx.sol";
 contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;
 
-    //* //////////////////////////////////////
-    //* Constants ////////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // CONSTANTS
 
     /// @dev ERC-1271
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e;
@@ -46,29 +45,19 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     /// @dev The deterministic EntryPoint contract
     address public entryPoint;
 
-    /*
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
-    uint256[50] private __gap;
-
-    //* //////////////////////////////////////
-    //* Events ///////////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // EVENTS
 
     event Upgraded(address indexed newImplementation);
     event Received(address sender, uint256 amount);
 
-    //* //////////////////////////////////////
-    //* Errors ///////////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // ERRORS
 
     error NotFromAccount();
 
-    //* //////////////////////////////////////
-    //* Modifiers ////////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // MODIFIERS
 
     /// @dev Checks if the the call was made from the EntryPoint contract
     modifier onlyFromEntryPoint() {
@@ -76,9 +65,9 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
         _;
     }
 
-    //* //////////////////////////////////////
-    //* Constructor //////////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // CONSTRUCTOR
+
     constructor() {
         _disableInitializers();
     }
@@ -106,9 +95,8 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-    //* //////////////////////////////////////
-    //* External functions ///////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // EXTERNAL FUNCTIONS
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
         if (happyTx.dest != target) {
@@ -129,9 +117,8 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
         return 0;
     }
 
-    //* //////////////////////////////////////
-    //* Special functions ////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // SPECIAL FUNCTIONS
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
         return hash.recover(signature) == owner() ? MAGIC_VALUE : bytes4(0);
@@ -141,9 +128,8 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
         emit Received(msg.sender, msg.value);
     }
 
-    //* //////////////////////////////////////
-    //* Setter functions //////////////////////
-    //* //////////////////////////////////////
+    // ====================================================================================================
+    // SETTER FUNCTIONS
 
     function setTarget(address _target) external onlyOwner {
         target = _target;
