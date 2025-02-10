@@ -1,6 +1,7 @@
 import type { LatestBlock } from "./BlockMonitor"
 import { Topics, eventBus } from "./EventBus.js"
 import type { Transaction } from "./Transaction.js"
+import type { AttemptSubmissionErrorCause } from "./TransactionSubmitter"
 
 export enum TxmHookType {
     All = "All",
@@ -29,6 +30,7 @@ export type TxmTransactionSubmissionFailedHookPayload = {
     type: TxmHookType.TransactionSubmissionFailed
     transaction: Transaction
     description: string
+    cause: AttemptSubmissionErrorCause
 }
 
 export type TxmHookPayload =
@@ -42,7 +44,11 @@ export type TxmHooksRecord = {
     [TxmHookType.TransactionStatusChanged]: ((transaction: Transaction) => void)[]
     [TxmHookType.TransactionSaveFailed]: ((transaction: Transaction) => void)[]
     [TxmHookType.NewBlock]: ((block: LatestBlock) => void)[]
-    [TxmHookType.TransactionSubmissionFailed]: ((transaction: Transaction, description: string) => void)[]
+    [TxmHookType.TransactionSubmissionFailed]: ((
+        transaction: Transaction,
+        description: string,
+        cause: AttemptSubmissionErrorCause,
+    ) => void)[]
 }
 
 export type TxmHookHandler<T extends TxmHookType = TxmHookType.All> = TxmHooksRecord[T][number]
@@ -120,9 +126,10 @@ export class HookManager {
     private async onTransactionSubmissionFailed(payload: {
         transaction: Transaction
         description: string
+        cause: AttemptSubmissionErrorCause
     }): Promise<void> {
         this.hooks[TxmHookType.TransactionSubmissionFailed].forEach((handler) =>
-            handler(payload.transaction, payload.description),
+            handler(payload.transaction, payload.description, payload.cause),
         )
 
         this.hooks[TxmHookType.All].forEach((handler) =>
@@ -130,6 +137,7 @@ export class HookManager {
                 type: TxmHookType.TransactionSubmissionFailed,
                 transaction: payload.transaction,
                 description: payload.description,
+                cause: payload.cause,
             }),
         )
     }
