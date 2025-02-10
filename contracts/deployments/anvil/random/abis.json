@@ -111,14 +111,10 @@
     },
     {
       "type": "function",
-<<<<<<< HEAD
       "name": "drandPK0",
       "inputs": [],
       "outputs": [
-=======
-      "name": "drandPublicKey",
-      "inputs": [
->>>>>>> 47ad2a07 (feat(randomnness-service): script to launch randomnness service)
+
         {
           "name": "",
           "type": "uint256",
