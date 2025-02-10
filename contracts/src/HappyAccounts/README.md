@@ -15,24 +15,35 @@ These benefits come with intentional trade-offs: slightly higher gas costs (21k 
 ## Directory Structure
 
 ```txt
-happyAccounts/
+happy-accounts/
+│
 ├── core/               # Core contracts required for happy-aa
-│   ├── HappyEntryPoint.sol    # The entrypoint for handling happyTxs on-chain, singleton contract.
-│   └── HappyTx.sol            # The definition of a happyTx.
+│   │
+│   ├── HappyEntryPoint.sol    # The entrypoint is used for handling happy-txs submission.
+│   │                          # A singleton contract used by the submitter to submit happy-txs on chain.
+│   │
+│   └── HappyTx.sol            # The definition of a happy-tx.
+│
 │
 ├── libs/               # Library contracts
-│   └── HappyTxLib.sol         # Utilities for handling HappyTx structs (encoding/decoding)
+│   └── HappyTxLib.sol         # Utilities for handling HappyTx structs (encoding/decoding).
 │
 │
 ├── interfaces/         # Contract interfaces
-│   └── IHappyAccount.sol      # Account interface definitions
-│   └── IHappyPaymaster.sol    # Paymaster interface definitions
+│   │
+│   └── IHappyAccount.sol      # Account interface definitions.
+│   │
+│   └── IHappyPaymaster.sol    # Paymaster interface definitions.
 │
 │
 └── samples/            # Sample implementations of happy-aa components
-    ├── BasicNonceManager.sol  # Simple nonce management for ScrappyAccount (an optional contract)
-    ├── ScrappyAccount.sol     # Reference account implementation, has to be deployed separately for each user
-    └── ScrappyPaymaster.sol   # Reference paymaster implementation, for sponsoring happyTxs, singleton contract
+    │
+    ├── ScrappyAccount.sol     # Reference account implementation, has to be deployed separately for each SCA.
+    │                          # Used by the entrypoint to validate and execute happy-txs, on behalf of the user.
+    │
+    └── ScrappyPaymaster.sol   # Reference paymaster implementation, for sponsoring happyTxs.
+                               # Optionally used by the entrypoint/account to pay fee for the happy-tx, on behalf 
+                               # of the user.
 ```
 
 ## Key Components
