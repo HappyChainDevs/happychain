@@ -38,11 +38,7 @@ const SecondaryActionsMenu = () => {
         <Menu.Root
             open={isSecondaryMenuVisible}
             onEscapeKeyDown={() => {
-<<<<<<< HEAD
                 setSecondaryMenuVisibility(false)
-=======
-                setDialogLogOutConfirmationVisibility(false)
->>>>>>> b07ed422 (refacto(iframe): alternative proposal for global layout (temp))
             }}
             onInteractOutside={() => {
                 setSecondaryMenuVisibility(false)
