@@ -22,18 +22,16 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     // ====================================================================================================
     // CONSTANTS
 
-    /// @dev ERC-1271
-    bytes4 private constant MAGIC_VALUE = 0x1626ba7e;
+    /// @dev Fixed size of an encoded HappyTx: 196 bytes for static fields plus 16 bytes (4 bytes × 4) for storing
+    ///      the lengths of the four dynamic fields
+    uint256 private constant STATIC_FIELDS_SIZE = 212;
 
-    /// @dev TODO is the fixed siz of the MUD-encoded happyTx
-    uint256 private constant TODO_VAR_1 = 224; // TODO Finalize
-
-    /// @dev TODO is the gas cost of this function + call overhead
-    uint256 private constant TODO_VAR_2 = 1234; // TODO Finalize
+    /// @dev The fixed gas cost of payout() function + call overhead
+    uint256 private constant CALL_OVERHEAD = 1234; // TODO
 
     /// @dev 280 is the max size of a tx with empty calldata with an empty access list.
     ///      Given RLP encoding, this should be significantly less.
-    uint256 private constant MAX_TX_SIZE = 100; // TODO
+    uint256 private constant MAX_TX_SIZE = 280; // TODO
 
     /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte
     ///      of data in the submitter tx.
@@ -48,13 +46,11 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     // ====================================================================================================
     // EVENTS
 
+    /// @notice Emitted when the contract implementation is upgraded to a new implementation
     event Upgraded(address indexed newImplementation);
+
+    /// @notice Emitted when ETH is received by the contract
     event Received(address sender, uint256 amount);
-
-    // ====================================================================================================
-    // ERRORS
-
-    error NotFromAccount();
 
     // ====================================================================================================
     // MODIFIERS
@@ -104,14 +100,15 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
         }
 
         uint256 maxSubmitterFee = (
-            MAX_TX_SIZE + TODO_VAR_1 + happyTx.callData.length + happyTx.validatorData.length + happyTx.extraData.length
+            MAX_TX_SIZE + STATIC_FIELDS_SIZE + happyTx.callData.length + happyTx.validatorData.length
+                + happyTx.extraData.length
         ) * maxSubmitterFeePerByte;
 
         if (uint256(happyTx.submitterFee) > maxSubmitterFee) {
             return SubmitterFeeTooHigh.selector;
         }
 
-        uint256 owed = (consumedGas + TODO_VAR_2) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
+        uint256 owed = (consumedGas + CALL_OVERHEAD) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
 
         payable(tx.origin).call{value: owed}("");
         return 0;
@@ -119,10 +116,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
 
     // ====================================================================================================
     // SPECIAL FUNCTIONS
-
-    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
-        return hash.recover(signature) == owner() ? MAGIC_VALUE : bytes4(0);
-    }
 
     receive() external payable {
         emit Received(msg.sender, msg.value);
