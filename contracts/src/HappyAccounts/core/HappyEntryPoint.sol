@@ -15,27 +15,27 @@ import {HappyTx} from "./HappyTx.sol";
 enum CallStatus {
     SUCCESS, // The call succeeded.
     CALL_REVERTED, // The call reverted.
-    EXECUTION_REVERTED // The {@link IHappyAccount.execute} function reverted (in violation of the spec).
+    EXECUTION_REVERTED // The {IHappyAccount.execute} function reverted (in violation of the spec).
 
 }
 
 struct SubmitOutput {
     /**
      * An overestimation of the minimum gas limit necessary to successfully
-     * call {@link EntryPoint.submit} at the top-level of a transaction.
+     * call {EntryPoint.submit} at the top-level of a transaction.
      */
     uint32 gas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully
-     * call {@link IHappyAccount.execute} from {@link EntryPoint.submit}.
+     * call {IHappyAccount.execute} from {EntryPoint.submit}.
      */
     uint32 executeGas;
     /**
-     * Return value of {@link IHappyAccount.validate}.
+     * Return value of {IHappyAccount.validate}.
      *
-     * This is either 0 (success), {@link UnknownDuringSimulation}, indicating
+     * This is either 0 (success), {UnknownDuringSimulation}, indicating
      * that more data is needed (e.g. a signature over the gas fields) but gas could
-     * still be estimated, or {@link FutureNonceDuringSimulation}, indicating that
+     * still be estimated, or {FutureNonceDuringSimulation}, indicating that
      * the transaction is valid but can't be submitted until the nonce matches.
      */
     bytes4 validationStatus;
@@ -45,37 +45,35 @@ struct SubmitOutput {
     CallStatus callStatus;
     /**
      * The revertData with which either the call or the
-     * {@link IHappyAccount.execute} function reverted (when the associated
+     * {IHappyAccount.execute} function reverted (when the associated
      * `callStatus` is set).
      */
     bytes revertData;
 }
 
-/*
+/**
  * When the account validation of the happyTx reverts (in violation of the spec).
  *
- * The parameter contains the revert data (truncated to {@link MAX_RETURN_DATA_SIZE}
- * bytes, so that it can be parsed offchain.
+ * The parameter contains the revert data (truncated to {MAX_VALIDATE_RETURN_DATA_SIZE}
+ * bytes), so that it can be parsed offchain.
  */
 error ValidationReverted(bytes revertData);
 
-/*
+/**
  * When the account validation of the happyTx fails.
  *
  * The parameter identifies the revert reason, which should be a custom error
- * selector returned in {@link ExecutionOutput.validity}.
+ * selector returned in {ExecutionOutput.validity}.
  */
 error ValidationFailed(bytes4 reason);
 
-/*
- * When payment for the happyTx ({@link IPaymaster.payout}) reverts
- * (in violation of the spec).
- *
+/**
+ * When payment for happyTx in {IPaymaster.payout} reverts (in violation of the spec).
  * The parameter contains the revert data, so that it can be parsed offchain.
  */
 error PaymentReverted(bytes revertData);
 
-/*
+/**
  * When payment for the happyTx from the account or paymaster failed.
  *
  * This could be because the payment was rejected (in which case `result`
@@ -84,19 +82,19 @@ error PaymentReverted(bytes revertData);
  */
 error PaymentFailed(bytes4 result);
 
-/*
- * When the {@link IHappyAccount.execute} call succeeds but reports that the
+/**
+ * When the {IHappyAccount.execute} call succeeds but reports that the
  * attempted call reverted.
  *
- * The parameter contains the revert data (truncated to {@link MAX_EXECUTE_RETURN_DATA_SIZE}
+ * The parameter contains the revert data (truncated to {MAX_EXECUTE_RETURN_DATA_SIZE}
  * bytes, so that it can be parsed offchain.
  */
 event CallReverted(bytes revertData);
 
-/*
- * When the {@link IHappyAccount.execute} call reverts (in violation of the spec).
+/**
+ * When the {IHappyAccount.execute} call reverts (in violation of the spec).
  *
- * The parameter contains the revert data (truncated to {@link MAX_EXECUTE_RETURN_DATA_SIZE}
+ * The parameter contains the revert data (truncated to {MAX_EXECUTE_RETURN_DATA_SIZE}
  * bytes, so that it can be parsed offchain.
  */
 event ExecutionReverted(bytes revertData);
@@ -105,36 +103,40 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     // Must be used to avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
 
-    /*
-     * Maximum amount of data allowed to be returned from {@link IHappyAccount.validate},
-     * and {@link IHappyPaymaster.payout} functions.
-     *
+    /**
+     * @dev Maximum amount of data allowed to be returned from {IHappyAccount.validate}.
      * The returned data is as follows:
      * 1st slot: bytes4 selector (minimum 32 bytes are neded to decode the return data)
      */
-    uint16 private constant MAX_RETURN_DATA_SIZE = 32;
+    uint16 private constant MAX_VALIDATE_RETURN_DATA_SIZE = 32;
 
-    /*
-     * Maximum amount of data allowed to be returned from the
-     * {@link IHappyAccount.execute} function.
-     * The encoding of the returned {@link ExecutionOutput} struct is as follows:
-     * 
+    /**
+     * @dev Maximum amount of data allowed to be returned from {IPaymaster.payout}.
+     * The returned data is as follows:
+     * 1st slot: bytes4 selector (minimum 32 bytes are neded to decode the return data)
+     */
+    uint16 private constant MAX_PAYOUT_RETURN_DATA_SIZE = 32;
+
+    /**
+     * @dev Maximum amount of data allowed to be returned from {IHappyAccount.execute}
+     * The encoding of the returned {ExecutionOutput} struct is as follows:
+     *
      * 1st slot: Offset for the struct
-     * 2nd slot: {@link ExecutionOutput.gas}
+     * 2nd slot: {ExecutionOutput.gas}
      * 3rd slot: offset for reverData from where the struct begins
-     * 4th slot: {@link ExecutionOutput.revertData.Length}
-     * 5th slot: {@link ExecutionOutput.revertData}
+     * 4th slot: {ExecutionOutput.revertData.Length}
+     * 5th slot: {ExecutionOutput.revertData}
      * 6th slot: padding, in case revertData is 64 bytes (max size limit for revertData, for now)
      */
     uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 192;
 
-    /*
-     * Fixed max gas overhead for the logic around the {@link HappyPaymaster.payout}
+    /**
+     * Fixed max gas overhead for the logic around the {HappyPaymaster.payout}
      * call, that needs to be paid for by the payer.
      */
     uint256 private constant PAYOUT_OVERHEAD = 700; // TODO: Base 700 (CALL) + some buffer (??)
 
-    /*
+    /**
      * Execute a Happy Transaction, and tries to ensure that the submitter
      * (tx.origin) receives payment for submitting the transaction.
      *
@@ -144,14 +146,14 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * This function will also, in this order:
      *
      * 1. Call the account to validate the happyTx.
-     *    See {@link IHappyAccount#validate} for compliant behaviour.
+     *    See {IHappyAccount.validate} for compliant behaviour.
      *
      * 2. Call the account to execute the transaction.
-     *    See {@link IHappyAccount#execute} for compliant behaviour.
+     *    See {IHappyAccount.execute} for compliant behaviour.
      *
      * 3. Produce a slight overestimation of the gas cost of submitting this
      *    transaction, and charge it either to the paymaster (which can be the
-     *    account itself) by calling its {@link IPaymaster#payout} function.
+     *    account itself) by calling its {IPaymaster.payout} function.
      *    The paymaster must pay this amount + the cost of the `payout` call.
      *
      * Gas estimation is then possible by doing an `eth_call` on this function
@@ -160,13 +162,13 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      *
      * In simulation mode, this function must ignore failed (but not
      * reverted) account and paymaster validation if their result is
-     * the selector of {@link UnknownDuringSimulation} or
-     * {@link FutureNonceDuringSimulation}.
+     * the selector of {UnknownDuringSimulation} or
+     * {FutureNonceDuringSimulation}.
      *
      * Note that the function actually ignores the return value of `payout` as
      * long as the payment is effectively made.
      *
-     * The function returns a filled-in {@link SubmitOutput} structure.
+     * The function returns a filled-in {SubmitOutput} structure.
      * This is needed during simulation, as the logs are not available with
      * `eth_call`.
      *
@@ -188,7 +190,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         (success, returnData) = happyTx.account.excessivelySafeCall(
             happyTx.executeGasLimit,
             0, // gas token transfer value
-            MAX_RETURN_DATA_SIZE,
+            MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
         );
         if (!success) revert ValidationReverted(returnData);
@@ -245,7 +247,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
             happyTx.executeGasLimit,
             0, // gas token transfer value
-            MAX_RETURN_DATA_SIZE,
+            MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
         );
         if (!success) revert PaymentReverted(returnData);
