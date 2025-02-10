@@ -259,7 +259,6 @@ define post-deploy
 		| node-jq --slurp --argjson contracts "$$CONTRACTS" '[$$contracts, .] | transpose | map({ (.[0]): .[1] }) | add' \
 		> out/abis.json;
 
-
 	@# Generate "as const" TypeScript ABI definitions for type usage.
 	@# To use you will want to symlink this file from the deployments dir to the consuming package,
 	@# and .gitignore it.

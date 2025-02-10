@@ -23,7 +23,7 @@ export enum TransactionStatus {
      */
     Cancelling = "Cancelling",
     /**
-     * The transaction has expired, and we are attempting to cancel it to save gas, preventing it from being included on-chain and potentially reverting or executing actions that are no longer relevant.
+     * The transaction has expired, and we cancelled it to save gas, preventing it from being included on-chain and potentially reverting or executing actions that are no longer relevant.
      */
     Cancelled = "Cancelled",
     /**

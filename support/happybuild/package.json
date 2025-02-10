@@ -10,8 +10,7 @@
         "happybuild": "./bin/happybuild.ts"
     },
     "exports": {
-        ".": "./lib/index.ts",
-        "./migrate": "./lib/migrate.ts"
+        ".": "./lib/index.ts"
     },
     "devDependencies": {
         "@arethetypeswrong/cli": "^0.16.4",

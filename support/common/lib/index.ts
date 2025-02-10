@@ -36,7 +36,9 @@ export { debounce } from "./utils/debounce"
 
 export { throttle } from "./utils/throttle"
 
-export { promiseWithResolvers, sleep } from "./utils/promises"
+export { promiseWithResolvers } from "./utils/promises"
+
+export { sleep } from "./utils/sleep"
 
 export type { PromiseWithResolvers, ResolveInputType, ResolveType, RejectType } from "./utils/promises"
 
