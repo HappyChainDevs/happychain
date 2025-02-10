@@ -6,22 +6,11 @@ import {HappyTx} from "../core/HappyTx.sol";
 // [LOGGAS] import {console} from "forge-std/Script.sol";
 
 library HappyTxLib {
-    /// @dev 196 bytes for static fields
-    uint256 private constant DYNAMIC_FIELDS_OFFSET = 196;
-
-    /*
-    * Selector returned by {@link decodeHappyTx} when unable to properly decode a happyTx.
-    */
+    ///@notice Selector returned by {@link decodeHappyTx} when unable to properly decode a happyTx.
     error MalformedHappyTx();
 
-    /*
-     * @notice Computes the hash of a HappyTx for signature verification.
-     * @param happyTx The transaction to hash
-     * @return The abi encoded hash of the transaction
-     */
-    function getHappyTxHash(HappyTx memory happyTx) internal pure returns (bytes32) {
-        return keccak256(encode(happyTx));
-    }
+    /// @dev 196 bytes for static fields
+    uint256 private constant DYNAMIC_FIELDS_OFFSET = 196;
 
     /*
      * @notice Encodes a HappyTx struct into a compact bytes array, for minimal memory usage.
@@ -50,7 +39,6 @@ library HappyTxLib {
      * @param happyTx The transaction to encode
      * @return result The encoded transaction bytes
      */
-    // TODO: Do we add a try-catch around the inline-assembly? And revert with ErrMalformedEntity if it fails?
     function encode(HappyTx memory happyTx) internal pure returns (bytes memory result) {
         // Fixed size fields: 20 + 4 + 4 + 20 + 20 + 32 + 24 + 8 + 32 + 32 = 196 bytes
         // Dynamic fields: 4 bytes length + actual length for each dynamic field
