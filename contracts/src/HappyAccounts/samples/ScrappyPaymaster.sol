@@ -27,17 +27,18 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     uint256 private constant STATIC_FIELDS_SIZE = 212;
 
     /// @dev The fixed gas cost of payout() function + call overhead
-    uint256 private constant CALL_OVERHEAD = 1234; // TODO
+    uint256 private constant PAYOUT_CALL_OVERHEAD = 1234; // TODO
 
     /// @dev 280 is the max size of a tx with empty calldata with an empty access list.
     ///      Given RLP encoding, this should be significantly less.
     uint256 private constant MAX_TX_SIZE = 280; // TODO
 
     /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte
-    ///      of data in the submitter tx.
+    ///      of data in the submitter tx. Set once during initialization.
     uint256 public maxSubmitterFeePerByte;
 
-    /// @dev This spaymaster sponsors all calls to this contract.
+    /// @dev This paymaster sponsors all calls to this target contract.
+    ///      Set once during initialization and cannot be changed afterwards.
     address public target;
 
     /// @dev The deterministic EntryPoint contract
@@ -108,7 +109,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
             return SubmitterFeeTooHigh.selector;
         }
 
-        uint256 owed = (consumedGas + CALL_OVERHEAD) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
+        uint256 owed = (consumedGas + PAYOUT_CALL_OVERHEAD) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
 
         payable(tx.origin).call{value: owed}("");
         return 0;
@@ -122,13 +123,15 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     }
 
     // ====================================================================================================
-    // SETTER FUNCTIONS
+    // ADMIN FUNCTIONS
 
-    function setTarget(address _target) external onlyOwner {
-        target = _target;
-    }
-
-    function setMaxSubmitterFeePerByte(uint256 _maxSubmitterFeePerByte) external onlyOwner {
-        maxSubmitterFeePerByte = _maxSubmitterFeePerByte;
+    /// @notice Allows the owner to withdraw a specified amount of funds from the paymaster
+    /// @param to Address to send the funds to
+    /// @param amount Amount of wei to withdraw
+    /// @dev Only callable by the owner. Reverts if amount exceeds contract balance
+    function withdraw(address to, uint256 amount) external onlyOwner {
+        if (amount > address(this).balance) revert("Insufficient balance");
+        (bool success,) = payable(to).call{value: amount}("");
+        require(success, "Failed to withdraw funds");
     }
 }
