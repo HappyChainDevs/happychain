@@ -5,7 +5,7 @@ import {HappyTx} from "../core/HappyTx.sol";
 
 /*
  * Execution Output struct
- * @param gas         - The amount of gas used by the {@link execute} function.
+ * @param gas         - The amount of gas used by the {@link IHappyAccount.execute(happyTx);} function.
  * @param revertData  - The associated revert data if the call specified by the happyTx reverts; otherwise, it is empty.
  */
 struct ExecutionOutput {
@@ -14,8 +14,8 @@ struct ExecutionOutput {
 }
 
 /*
- * @dev Selector returned from {@link IHappyAccount.validate} when targeting the wrong account, and
- *      optionally from {@link IHappyPaymaster.payout} (typically when implemented as part of an account).
+ * @dev Selector returned from {@link IHappyAccount.validate(happyTx);} when targeting the wrong account, and
+ *      optionally from {@link IHappyPaymaster.payout(happyTx);} (typically when implemented as part of an account).
  */
 error WrongAccount();
 
@@ -25,13 +25,16 @@ error WrongAccount();
 error GasPriceTooHigh();
 
 /*
- * @dev Selector returned by {@link IHappyAccount.validate} if the nonce fails to validate.
- * 
- *      In simulation mode, that call should return {@link FutureNonceDuringSimulation} if
- *      the nonce can be valid in the future instead.
+ * @dev Selector returned by {@link IHappyAccount.validate(happyTx);} if the nonce fails to validate.
+ *      This indicates an invalid nonce that cannot be used now or in the future.
  */
 error InvalidNonce();
 
+/*
+ * @dev Selector returned by {@link IHappyAccount.validate(happyTx);} during simulation mode when
+ *      the nonce is greater than the current nonce but could be valid in the future.
+ *      This allows the EntryPoint to estimate gas even if the nonce isn't ready yet.
+ */
 error FutureNonceDuringSimulation();
 
 /*
@@ -42,12 +45,6 @@ error FutureNonceDuringSimulation();
  *        paying submitters themselves without relying on external paymasters.
  */
 interface IHappyAccount {
-    /*
-     * Returns the address of the factory that deployed this account.
-     * Or addres(0), if this account was not deployed from a factory.
-     */
-    function factory() external view returns (address);
-
     /*
      * Validates a Happy Transaction.
      *
@@ -100,7 +97,7 @@ interface IHappyAccount {
     function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory);
 
     /*
-     * This enables the account to recognize the EOA signatures as authoritative in the
+     * This enables the account to recognize an EOA signature as authoritative in the
      * context of the account, as per per https://eips.ethereum.org/EIPS/eip-1271.
      *
      * This returns the EIP-1271 magic value (0x1626ba7e) iff the provided signature is a valid
@@ -108,9 +105,18 @@ interface IHappyAccount {
      */
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4 magicValue);
 
+    // TODO: Note the proper interface IDs, also needs further review, I'm not sure about these
     /*
      * Returns true iff the contract supports the interface identified by the provided ID,
-     * and the provided ID if not 0xffffffff, as per https://eips.ethereum.org/EIPS/eip-165.
+     * and the provided ID is not 0xffffffff, as per https://eips.ethereum.org/EIPS/eip-165.
+     * 
+     * Required interfaces:
+     * - {IHappyAccount}: This interface itself (0x858232cd)
+     * - {IERC165}: Interface detection (0x01ffc9a7)
+     * - {IERC1271}: Contract signature validation (0x1626ba7e)
+     * 
+     * Optional interfaces:
+     * - {IHappyPaymaster}: For accounts that want to act as their own paymaster (0x255406e7)
      */
     function supportsInterface(bytes4 interfaceID) external view returns (bool);
 }

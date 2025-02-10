@@ -12,7 +12,7 @@ import {IHappyPaymaster, SubmitterFeeTooHigh, WrongTarget} from "../interfaces/I
 import {NotFromEntryPoint} from "../utils/Common.sol";
 import {HappyTx} from "../core/HappyTx.sol";
 
-/**
+/*
  * @title ScrappyPaymaster
  * @notice An example paymaster contract implementing the IHappyPaymaster interface.
  */
@@ -43,11 +43,10 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     /// @dev This spaymaster sponsors all calls to this contract.
     address public target;
 
-    // TODO namespace these fields for easier account upgrades (think on this when turning this into a proxy)
     /// @dev The deterministic EntryPoint contract
     address public entryPoint;
 
-    /**
+    /*
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
@@ -58,7 +57,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     //* Events ///////////////////////////////
     //* //////////////////////////////////////
 
-    event Upgraded(address indexed implementation);
+    event Upgraded(address indexed newImplementation);
     event Received(address sender, uint256 amount);
 
     //* //////////////////////////////////////
@@ -84,7 +83,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
         _disableInitializers();
     }
 
-    /**
+    /*
      * @dev Initializer for proxy instances
      *      Called by factory during proxy deployment
      * @param _owner The owner who can upgrade the implementation
