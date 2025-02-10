@@ -93,18 +93,6 @@ test-gas: ## Runs test and generate a gas report
 	forge test --gas-report
 .PHONY: test-gas
 
-test-happyTxLib-decode:
-	forge test --match-test testDecode -vvv
-.PHONY: test-happyTxLib-decode
-
-test-happyTxLib-encode:
-	forge test --match-test testEncode -vvv
-.PHONY: test-happyTxLib-encode
-
-test-happyTxLib-combined:
-	forge test --match-test testCombined -vvv
-.PHONY: test-happyTxLib-combined
-
 test-happyTxLib:
 	forge test --match-contract HappyTxLibTest -vvv
 .PHONY: test-happyTxLib
