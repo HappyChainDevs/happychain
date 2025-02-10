@@ -13,12 +13,6 @@ export enum RandomnessStatus {
     REVEAL_NOT_SUBMITTED_ON_TIME = "REVEAL_NOT_SUBMITTED_ON_TIME",
 }
 
-export const FINALIZED_STATUSES = [
-    RandomnessStatus.REVEAL_EXECUTED,
-    RandomnessStatus.REVEAL_FAILED,
-    RandomnessStatus.REVEAL_NOT_SUBMITTED_ON_TIME,
-]
-
 export class Randomness {
     public blockNumber: bigint
     public value: bigint
@@ -43,33 +37,33 @@ export class Randomness {
         this.status = params.status
     }
 
-    public commitmentExecuted(): void {
+    commitmentExecuted(): void {
         this.status = RandomnessStatus.COMMITMENT_EXECUTED
     }
 
-    public revealExecuted(): void {
+    revealExecuted(): void {
         this.status = RandomnessStatus.REVEAL_EXECUTED
     }
 
-    public addCommitmentTransactionIntentId(intentId: UUID): void {
+    addCommitmentTransactionIntentId(intentId: UUID): void {
         this.commitmentTransactionIntentId = intentId
         this.status = RandomnessStatus.COMMITMENT_SUBMITTED
     }
 
-    public addRevealTransactionIntentId(intentId: UUID): void {
+    addRevealTransactionIntentId(intentId: UUID): void {
         this.revealTransactionIntentId = intentId
         this.status = RandomnessStatus.REVEAL_SUBMITTED
     }
 
-    public commitmentFailed(): void {
+    commitmentFailed(): void {
         this.status = RandomnessStatus.COMMITMENT_FAILED
     }
 
-    public revealFailed(): void {
+    revealFailed(): void {
         this.status = RandomnessStatus.REVEAL_FAILED
     }
 
-    public revealNotSubmittedOnTime(): void {
+    revealNotSubmittedOnTime(): void {
         this.status = RandomnessStatus.REVEAL_NOT_SUBMITTED_ON_TIME
     }
 

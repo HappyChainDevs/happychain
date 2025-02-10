@@ -1,7 +1,7 @@
 import { type Hex, type UUID, bigIntToZeroPadded } from "@happy.tech/common"
 import type { DrandStatus } from "../Drand"
 import { Randomness, type RandomnessStatus } from "../Randomness"
-import { DIGITS_MAX_UINT256 } from "../RandomnessRepository"
+import { DIGITS_MAX_UINT256 } from "../constants"
 
 // Values are stored as strings because they can be large numbers bigger than the max value of an SQLite integer
 export interface RandomnessRow {

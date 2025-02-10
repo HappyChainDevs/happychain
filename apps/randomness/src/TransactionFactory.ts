@@ -13,6 +13,11 @@ export class TransactionFactory {
     ) {}
 
     createCommitmentTransaction(randomness: Randomness): Transaction {
+        // The commitment transaction must be submitted at least one block
+        // before the deadline, because submissions after the precommit delay
+        // are not allowed. We compute the deadline by subtracting the precommit
+        // delay from the block number, multiplying by the block time, and adding
+        // the genesis timestamp.
         const deadline = Number(
             (randomness.blockNumber - this.precommitDelay) * env.BLOCK_TIME + env.HAPPY_GENESIS_TIMESTAMP_SECONDS,
         )
@@ -26,6 +31,9 @@ export class TransactionFactory {
     }
 
     createRevealValueTransaction(randomness: Randomness): Transaction {
+        // The reveal transaction must execute in its target block.
+        // We calculate its deadline by multiplying the block number by the block time
+        // and adding the genesis timestamp.
         const deadline = Number(randomness.blockNumber * env.BLOCK_TIME + env.HAPPY_GENESIS_TIMESTAMP_SECONDS)
 
         return this.transactionManager.createTransaction({
@@ -37,7 +45,7 @@ export class TransactionFactory {
         })
     }
 
-    public createPostDrandTransaction({
+    createPostDrandTransaction({
         round,
         signature,
     }: {

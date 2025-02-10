@@ -4,7 +4,7 @@ import type { Hex } from "viem"
 import { z } from "zod"
 import { env } from "./env"
 
-export const drandBeaconSchema = z.object({
+const drandBeaconSchema = z.object({
     round: z.number().int().positive(),
     signature: z
         .string()
@@ -32,7 +32,7 @@ export enum DrandError {
 }
 
 export class DrandService {
-    public async getDrandBeacon(round: bigint): Promise<Result<DrandBeacon, DrandError>> {
+    async getDrandBeacon(round: bigint): Promise<Result<DrandBeacon, DrandError>> {
         if (round <= 0n) {
             return err(DrandError.InvalidRound)
         }
@@ -55,19 +55,16 @@ export class DrandService {
 
         const dataRaw = await response.value.json()
 
-        console.log(dataRaw)
         const parsed = drandBeaconSchema.safeParse(dataRaw)
 
         if (!parsed.success) {
             return err(DrandError.InvalidResponse)
         }
 
-        const data = parsed.data
-
-        return ok(data)
+        return ok(parsed.data)
     }
 
-    public currentRound(): bigint {
+    currentRound(): bigint {
         const currentTimestamp = nowInSeconds()
         const currentRound = Math.floor(
             (currentTimestamp - Number(env.EVM_DRAND_GENESIS_TIMESTAMP_SECONDS)) /

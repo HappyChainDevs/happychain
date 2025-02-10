@@ -38,12 +38,11 @@ class RandomnessService {
         })
         this.transactionFactory = new TransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS, env.PRECOMMIT_DELAY)
         this.drandService = new DrandService()
-
-        this.txm.addTransactionOriginator(this.onCollectTransactions.bind(this))
     }
 
     async start() {
         await Promise.all([this.txm.start(), this.randomnessRepository.start()])
+        this.txm.addTransactionOriginator(this.onCollectTransactions.bind(this))
         this.txm.addHook(TxmHookType.TransactionStatusChanged, this.onTransactionStatusChange.bind(this))
         this.txm.addHook(TxmHookType.NewBlock, this.onNewBlock.bind(this))
 
@@ -59,6 +58,11 @@ class RandomnessService {
         const nextDrandBeaconTimestamp =
             Math.ceil((now - drandGenesisTimestampMs) / periodMs) * periodMs + drandGenesisTimestampMs
         await sleep(nextDrandBeaconTimestamp - now)
+
+        // Implements a mutex to ensure that only one instance of this function executes at a time.
+        // Calls made while the mutex is locked are queued as pending promises.
+        // When the current execution completes, the most recent pending promise is immediately resolved,
+        // allowing it to proceed without waiting for the next interval, while any other queued promises are rejected.
         setInterval(async () => {
             if (this.getDrandBeaconLocked) {
                 const pending = promiseWithResolvers<void>()
@@ -87,17 +91,17 @@ class RandomnessService {
     private onTransactionStatusChange(transaction: Transaction) {
         const randomness = this.randomnessRepository.getRandomnessForIntentId(transaction.intentId)
 
+        const successStatuses = [TransactionStatus.Success]
+        const failedStatuses = [TransactionStatus.Failed, TransactionStatus.Expired, TransactionStatus.Cancelled]
+
         if (randomness) {
-            if (transaction.status === TransactionStatus.Success) {
+            if (successStatuses.includes(transaction.status)) {
                 if (randomness.commitmentTransactionIntentId === transaction.intentId) {
                     randomness.commitmentExecuted()
                 } else if (randomness.revealTransactionIntentId === transaction.intentId) {
                     randomness.revealExecuted()
                 }
-            } else if (
-                transaction.status === TransactionStatus.Failed ||
-                transaction.status === TransactionStatus.Expired
-            ) {
+            } else if (failedStatuses.includes(transaction.status)) {
                 if (randomness.commitmentTransactionIntentId === transaction.intentId) {
                     randomness.commitmentFailed()
                 } else if (randomness.revealTransactionIntentId === transaction.intentId) {
@@ -105,11 +109,13 @@ class RandomnessService {
                 }
             }
 
-            this.randomnessRepository.updateRandomness(randomness).then((result) => {
-                if (result.isErr()) {
-                    console.error("Failed to update randomness", result.error)
-                }
-            })
+            if (successStatuses.includes(transaction.status) || failedStatuses.includes(transaction.status)) {
+                this.randomnessRepository.updateRandomness(randomness).then((result) => {
+                    if (result.isErr()) {
+                        console.error("Failed to update randomness", result.error)
+                    }
+                })
+            }
 
             return
         }
@@ -117,9 +123,9 @@ class RandomnessService {
         const drand = this.drandRepository.getDrandByTransactionIntentId(transaction.intentId)
 
         if (drand) {
-            if (transaction.status === TransactionStatus.Failed) {
+            if (failedStatuses.includes(transaction.status)) {
                 drand.transactionFailed()
-            } else if (transaction.status === TransactionStatus.Success) {
+            } else if (successStatuses.includes(transaction.status)) {
                 drand.executionSuccess()
             }
 
@@ -146,7 +152,7 @@ class RandomnessService {
         const randomnesses = this.randomnessRepository.getRandomnessInStatus(RandomnessStatus.COMMITMENT_EXECUTED)
 
         for (const randomness of randomnesses) {
-            if (randomness.blockNumber < block.number + 1n) {
+            if (randomness.blockNumber <= block.number) {
                 randomness.revealNotSubmittedOnTime()
                 this.randomnessRepository.updateRandomness(randomness).then((result) => {
                     if (result.isErr()) {
@@ -192,7 +198,7 @@ class RandomnessService {
 
                 const postDrandTransaction = postDrandTransactionResult.value
 
-                const drand = Drand.createDrand({
+                const drand = Drand.create({
                     round: round,
                     signature: drandBeacon.value.signature,
                     transactionIntentId: postDrandTransaction.intentId,

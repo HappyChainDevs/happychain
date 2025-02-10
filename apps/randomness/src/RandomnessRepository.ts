@@ -1,45 +1,44 @@
 import { type UUID, unknownToError } from "@happy.tech/common"
 import { bigIntToZeroPadded } from "@happy.tech/common"
 import { type Result, ResultAsync } from "neverthrow"
-import { FINALIZED_STATUSES, type Randomness, type RandomnessStatus } from "./Randomness"
+import { type Randomness, RandomnessStatus } from "./Randomness"
+import { DIGITS_MAX_UINT256 } from "./constants"
 import { db } from "./db/driver"
 import { randomnessEntityToRow, randomnessRowToEntity } from "./db/types"
 
-const COMMITMENT_PRUNE_INTERVAL_BLOCKS = 120n // 2 minutes
+const COMMITMENT_PRUNE_INTERVAL_BLOCKS = 60n // 2 minutes
 
-// Quantity of digits in the max uint256 value
-export const DIGITS_MAX_UINT256 = 78
+export const FINALIZED_STATUSES = [
+    RandomnessStatus.REVEAL_EXECUTED,
+    RandomnessStatus.REVEAL_FAILED,
+    RandomnessStatus.REVEAL_NOT_SUBMITTED_ON_TIME,
+]
 
 export class RandomnessRepository {
-    private readonly map = new Map<bigint, Randomness>()
+    // In-memory cache that maps block numbers to their corresponding Randomness
+    private readonly cache = new Map<bigint, Randomness>()
 
     async start(): Promise<void> {
         const randomnessesDb = (await db.selectFrom("randomnesses").selectAll().execute()).map(randomnessRowToEntity)
         for (const randomness of randomnessesDb) {
-            this.map.set(randomness.blockNumber, randomness)
+            this.cache.set(randomness.blockNumber, randomness)
         }
     }
 
     getRandomnessForBlockNumber(blockNumber: bigint): Randomness | undefined {
-        return this.map.get(blockNumber)
+        return this.cache.get(blockNumber)
     }
 
     getRandomnessForIntentId(intentId: UUID): Randomness | undefined {
-        return Array.from(this.map.values()).find(
+        return Array.from(this.cache.values()).find(
             (randomness) =>
                 randomness.commitmentTransactionIntentId === intentId ||
                 randomness.revealTransactionIntentId === intentId,
         )
     }
 
-    getRandomnessInBlockRange(start: bigint, end: bigint): Randomness[] {
-        return Array.from(this.map.values()).filter(
-            (randomness) => randomness.blockNumber >= start && randomness.blockNumber <= end,
-        )
-    }
-
     getRandomnessInStatus(status: RandomnessStatus): Randomness[] {
-        return Array.from(this.map.values()).filter((randomness) => randomness.status === status)
+        return Array.from(this.cache.values()).filter((randomness) => randomness.status === status)
     }
 
     /**
@@ -47,7 +46,7 @@ export class RandomnessRepository {
      * Even if the operation fails, the randomness will be saved in a in-memory cache
      */
     async saveRandomness(randomness: Randomness): Promise<Result<void, Error>> {
-        this.map.set(randomness.blockNumber, randomness)
+        this.cache.set(randomness.blockNumber, randomness)
         const row = randomnessEntityToRow(randomness)
         return await ResultAsync.fromPromise(db.insertInto("randomnesses").values(row).execute(), unknownToError).map(
             () => undefined,
@@ -59,7 +58,7 @@ export class RandomnessRepository {
      * Even if the operation fails, the randomness will be updated in a in-memory cache
      */
     async updateRandomness(randomness: Randomness): Promise<Result<void, Error>> {
-        this.map.set(randomness.blockNumber, randomness)
+        this.cache.set(randomness.blockNumber, randomness)
         const row = randomnessEntityToRow(randomness)
         return await ResultAsync.fromPromise(
             db
@@ -73,9 +72,9 @@ export class RandomnessRepository {
 
     async pruneRandomnesses(latestBlock: bigint): Promise<Result<void, Error>> {
         const cutoffBlock = latestBlock - COMMITMENT_PRUNE_INTERVAL_BLOCKS
-        for (const blockNumber of this.map.keys()) {
+        for (const blockNumber of this.cache.keys()) {
             if (blockNumber < cutoffBlock) {
-                this.map.delete(blockNumber)
+                this.cache.delete(blockNumber)
             }
         }
 

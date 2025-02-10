@@ -13,6 +13,13 @@ export class Drand {
     #status: DrandStatus
     #transactionIntentId: UUID | undefined
 
+    static readonly validTransitions: Record<DrandStatus, DrandStatus[]> = {
+        PENDING: [DrandStatus.SUBMITTED, DrandStatus.FAILED],
+        SUBMITTED: [DrandStatus.SUCCESS, DrandStatus.FAILED],
+        SUCCESS: [],
+        FAILED: [],
+    }
+
     constructor(params: {
         status: DrandStatus
         transactionIntentId?: UUID
@@ -26,49 +33,42 @@ export class Drand {
     }
 
     private setStatus(newStatus: DrandStatus): void {
-        const validTransitions: Record<DrandStatus, DrandStatus[]> = {
-            PENDING: [DrandStatus.SUBMITTED, DrandStatus.FAILED],
-            SUBMITTED: [DrandStatus.SUCCESS, DrandStatus.FAILED],
-            SUCCESS: [],
-            FAILED: [],
-        }
-
-        if (!validTransitions[this.#status].includes(newStatus)) {
+        if (!Drand.validTransitions[this.#status].includes(newStatus)) {
             throw new Error(`Invalid status transition from ${this.#status} to ${newStatus}`)
         }
 
         this.#status = newStatus
     }
 
-    public executionSuccess(): void {
+    executionSuccess(): void {
         this.setStatus(DrandStatus.SUCCESS)
     }
 
-    public transactionSubmitted(): void {
+    transactionSubmitted(): void {
         this.setStatus(DrandStatus.SUBMITTED)
     }
 
-    public transactionFailed(): void {
+    transactionFailed(): void {
         this.setStatus(DrandStatus.FAILED)
     }
 
-    public get round(): bigint {
+    get round(): bigint {
         return this.#round
     }
 
-    public get signature(): Hex | undefined {
+    get signature(): Hex | undefined {
         return this.#signature
     }
 
-    public get status(): DrandStatus {
+    get status(): DrandStatus {
         return this.#status
     }
 
-    public get transactionIntentId(): UUID | undefined {
+    get transactionIntentId(): UUID | undefined {
         return this.#transactionIntentId
     }
 
-    static createDrand(params: {
+    static create(params: {
         transactionIntentId?: UUID
         round: bigint
         signature: Hex

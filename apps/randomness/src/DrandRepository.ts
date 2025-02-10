@@ -1,11 +1,9 @@
 import { type Hex, type UUID, bigIntToZeroPadded, unknownToError } from "@happy.tech/common"
 import { type Result, ResultAsync } from "neverthrow"
-import { Drand, DrandStatus } from "./Drand"
+import { Drand } from "./Drand"
+import { DIGITS_MAX_UINT256 } from "./constants"
 import { db } from "./db/driver"
 import type { DrandRow } from "./db/types"
-
-// Quantity of digits in the max uint256 value
-export const DIGITS_MAX_UINT256 = 78
 
 export class DrandRepository {
     private cache: Drand[] = []
@@ -28,13 +26,13 @@ export class DrandRepository {
         }
     }
 
-    public async start(): Promise<void> {
+    async start(): Promise<void> {
         const drandsDb = (await db.selectFrom("drands").selectAll().execute()).map(this.rowToEntity)
 
         this.cache.push(...drandsDb)
     }
 
-    public async saveDrand(drand: Drand): Promise<Result<void, Error>> {
+    async saveDrand(drand: Drand): Promise<Result<void, Error>> {
         const row = this.entityToRow(drand)
 
         const result = await ResultAsync.fromPromise(db.insertInto("drands").values(row).execute(), unknownToError)
@@ -46,14 +44,14 @@ export class DrandRepository {
         return result.map(() => undefined)
     }
 
-    public getOldestDrandRound(): bigint | undefined {
+    getOldestDrandRound(): bigint | undefined {
         if (this.cache.length === 0) {
             return undefined
         }
         return this.cache.reduce((acc, drand) => (drand.round < acc ? drand.round : acc), this.cache[0].round)
     }
 
-    public findRoundGapsInRange(startRound: bigint, endRound: bigint): bigint[] {
+    findRoundGapsInRange(startRound: bigint, endRound: bigint): bigint[] {
         const roundGaps = []
         for (let round = startRound; round <= endRound; round++) {
             if (!this.cache.find((drand) => drand.round === round)) {
@@ -63,19 +61,15 @@ export class DrandRepository {
         return roundGaps
     }
 
-    public getDrand(round: bigint): Drand | undefined {
+    getDrand(round: bigint): Drand | undefined {
         return this.cache.find((drand) => drand.round === round)
     }
 
-    public getDrandByTransactionIntentId(transactionIntentId: UUID): Drand | undefined {
+    getDrandByTransactionIntentId(transactionIntentId: UUID): Drand | undefined {
         return this.cache.find((drand) => drand.transactionIntentId === transactionIntentId)
     }
 
-    public getPendingDrands(): Drand[] {
-        return this.cache.filter((drand) => drand.status === DrandStatus.PENDING)
-    }
-
-    public async updateDrand(drand: Drand): Promise<Result<void, Error>> {
+    async updateDrand(drand: Drand): Promise<Result<void, Error>> {
         const row = this.entityToRow(drand)
         return ResultAsync.fromPromise(
             db
