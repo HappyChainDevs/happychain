@@ -135,10 +135,6 @@
       "stateMutability": "nonpayable"
     },
     {
-      "type": "fallback",
-      "stateMutability": "payable"
-    },
-    {
       "type": "receive",
       "stateMutability": "payable"
     },
@@ -273,19 +269,6 @@
     },
     {
       "type": "function",
-      "name": "factory",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "getNonce",
       "inputs": [
         {
@@ -308,7 +291,7 @@
       "name": "initialize",
       "inputs": [
         {
-          "name": "_owner",
+          "name": "owner",
           "type": "address",
           "internalType": "address"
         }
@@ -336,6 +319,25 @@
           "name": "",
           "type": "bytes4",
           "internalType": "bytes4"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "nonceValue",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint192",
+          "internalType": "uint192"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint64",
+          "internalType": "uint64"
         }
       ],
       "stateMutability": "view"
@@ -625,25 +627,6 @@
     },
     {
       "type": "event",
-      "name": "NonceUsed",
-      "inputs": [
-        {
-          "name": "nonceTrack",
-          "type": "uint192",
-          "indexed": true,
-          "internalType": "uint192"
-        },
-        {
-          "name": "nonceValue",
-          "type": "uint64",
-          "indexed": true,
-          "internalType": "uint64"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
       "name": "OwnershipTransferred",
       "inputs": [
         {
@@ -698,7 +681,7 @@
       "name": "Upgraded",
       "inputs": [
         {
-          "name": "implementation",
+          "name": "newImplementation",
           "type": "address",
           "indexed": true,
           "internalType": "address"
@@ -768,11 +751,6 @@
     {
       "type": "error",
       "name": "InvalidInitialization",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotFromAccount",
       "inputs": []
     },
     {
@@ -934,10 +912,6 @@
       "stateMutability": "nonpayable"
     },
     {
-      "type": "fallback",
-      "stateMutability": "payable"
-    },
-    {
       "type": "receive",
       "stateMutability": "payable"
     },
@@ -994,30 +968,6 @@
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "isValidSignature",
-      "inputs": [
-        {
-          "name": "hash",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "signature",
-          "type": "bytes",
-          "internalType": "bytes"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes4",
-          "internalType": "bytes4"
-        }
-      ],
-      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -1163,32 +1113,6 @@
     },
     {
       "type": "function",
-      "name": "setMaxSubmitterFeePerByte",
-      "inputs": [
-        {
-          "name": "_maxSubmitterFeePerByte",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "setTarget",
-      "inputs": [
-        {
-          "name": "_target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
       "name": "target",
       "inputs": [],
       "outputs": [
@@ -1300,7 +1224,7 @@
       "name": "Upgraded",
       "inputs": [
         {
-          "name": "implementation",
+          "name": "newImplementation",
           "type": "address",
           "indexed": true,
           "internalType": "address"
@@ -1316,33 +1240,6 @@
           "name": "target",
           "type": "address",
           "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ECDSAInvalidSignature",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "ECDSAInvalidSignatureLength",
-      "inputs": [
-        {
-          "name": "length",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ECDSAInvalidSignatureS",
-      "inputs": [
-        {
-          "name": "s",
-          "type": "bytes32",
-          "internalType": "bytes32"
         }
       ]
     },
@@ -1370,11 +1267,6 @@
     {
       "type": "error",
       "name": "InvalidInitialization",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotFromAccount",
       "inputs": []
     },
     {
