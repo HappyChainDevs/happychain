@@ -18,4 +18,3 @@ async function up(db: Kysely<Database>) {
 }
 
 export const migration20241111163800 = { up }
-
