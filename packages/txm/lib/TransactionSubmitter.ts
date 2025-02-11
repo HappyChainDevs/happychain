@@ -1,6 +1,6 @@
 import { type Result, err, ok } from "neverthrow"
 import type { Hash, Hex, TransactionRequestEIP1559 } from "viem"
-import { encodeFunctionData, keccak256 } from "viem"
+import { TransactionRejectedRpcError, encodeFunctionData, keccak256 } from "viem"
 import type { EstimateGasErrorCause } from "./GasEstimator.js"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
@@ -148,6 +148,12 @@ export class TransactionSubmitter {
         })
 
         if (sendRawTransactionResult.isErr()) {
+            if (
+                sendRawTransactionResult.error instanceof TransactionRejectedRpcError &&
+                sendRawTransactionResult.error.message.includes("nonce too low")
+            ) {
+                this.txmgr.nonceManager.resync()
+            }
             return err({
                 cause: AttemptSubmissionErrorCause.FailedToSendRawTransaction,
                 description: `Failed to send raw transaction ${transaction.intentId}. Details: ${sendRawTransactionResult.error}`,

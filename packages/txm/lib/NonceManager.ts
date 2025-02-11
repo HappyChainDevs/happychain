@@ -28,12 +28,14 @@ import type { TransactionManager } from "./TransactionManager"
 export class NonceManager {
     private txmgr: TransactionManager
     private nonce!: number
-
     private returnedNonceQueue!: number[]
+
+    maxExecutedNonce: number
 
     constructor(_transactionManager: TransactionManager) {
         this.txmgr = _transactionManager
         this.returnedNonceQueue = []
+        this.maxExecutedNonce = 0
     }
 
     public async start() {
@@ -41,8 +43,9 @@ export class NonceManager {
 
         const blockchainNonce = await this.txmgr.viemClient.getTransactionCount({
             address: address,
-            blockTag: "pending",
         })
+
+        this.maxExecutedNonce = blockchainNonce
 
         const highestDbNonce = this.txmgr.transactionRepository.getHighestNonce()
 
@@ -76,5 +79,15 @@ export class NonceManager {
         } else {
             this.returnedNonceQueue.splice(index, 0, nonce)
         }
+    }
+
+    public async resync() {
+        const address = this.txmgr.viemWallet.account.address
+
+        const blockchainNonce = await this.txmgr.viemClient.getTransactionCount({
+            address: address,
+        })
+
+        this.maxExecutedNonce = blockchainNonce
     }
 }

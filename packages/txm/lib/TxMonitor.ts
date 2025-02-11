@@ -117,6 +117,18 @@ export class TxMonitor {
                     return
                 }
 
+                const nonce = transaction.lastAttempt?.nonce
+
+                if (nonce === undefined) {
+                    console.error(`Transaction ${transaction.intentId} inconsistent state: no nonce found`)
+                    return
+                }
+
+                if (nonce <= this.transactionManager.nonceManager.maxExecutedNonce) {
+                    transaction.changeStatus(TransactionStatus.Interrupted)
+                    return
+                }
+
                 return await (transaction.isExpired(block, this.transactionManager.blockTime)
                     ? this.handleExpiredTransaction(transaction)
                     : this.handleStuckTransaction(transaction))
