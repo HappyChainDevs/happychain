@@ -1,11 +1,20 @@
 To install dependencies:
 ```sh
-bun install
+make setup
+```
+
+To view available endpoints:
+```sh
+make routes
 ```
 
 To run:
 ```sh
-bun run dev
+make dev
 ```
 
-open http://localhost:3000
+
+To test:
+```sh
+make test
+```
