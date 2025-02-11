@@ -901,7 +901,7 @@
           "internalType": "address"
         },
         {
-          "name": "maxSubmitterFeePerByte",
+          "name": "submitterTipPerByte",
           "type": "uint256",
           "internalType": "uint256"
         },
@@ -932,7 +932,7 @@
     },
     {
       "type": "function",
-      "name": "MAX_SUBMITTER_FEE_PER_BYTE",
+      "name": "SUBMITTER_TIP_PER_BYTE",
       "inputs": [],
       "outputs": [
         {
