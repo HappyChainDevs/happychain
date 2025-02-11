@@ -87,7 +87,6 @@ export async function sendUserOp({ user, tx, validator, signer, preparedOp }: Se
                 ],
             } satisfies PrepareUserOperationParameters))
 
-        // more type issues here currently
         const userOp: UserOperation = {
             sender: account,
             nonce,

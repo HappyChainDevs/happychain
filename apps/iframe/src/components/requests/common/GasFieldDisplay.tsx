@@ -3,6 +3,9 @@ import FieldLoader from "#src/components/loaders/FieldLoader"
 export enum GasFieldName {
     MaxFeePerGas = "MaxFeePerGas",
     MaxPriorityFeePerGas = "MaxPriorityFeePerGas",
+    PreVerificationGas = "PreVerificationGas",
+    VerificationGasLimit = "VerificationGasLimit",
+    CallGasLimit = "CallGasLimit",
 }
 
 interface GasFieldDisplayProps {

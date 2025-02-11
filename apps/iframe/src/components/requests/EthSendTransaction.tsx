@@ -1,26 +1,25 @@
 import { TransactionType } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
-import type { ApprovedRequestExtraData } from "@happy.tech/wallet-common"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import {
     type AbiFunction,
     type Address,
+    type Block,
     type Hex,
     type RpcTransactionRequest,
     decodeFunctionData,
     formatEther,
     formatGwei,
+    formatUnits,
     hexToBigInt,
     isAddress,
 } from "viem"
-import type {
-    PrepareUserOperationParameters,
-    PrepareUserOperationReturnType,
-    SmartAccount,
-} from "viem/account-abstraction"
+import type { PrepareUserOperationParameters, PrepareUserOperationReturnType } from "viem/account-abstraction"
+import { useAsyncOperation } from "#src/hooks/useAsyncOperation.js"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
-import { getSmartAccountClient } from "#src/state/smartAccountClient"
+import { publicClientAtom } from "#src/state/publicClient.js"
+import { type ExtendedSmartAccountClient, smartAccountClientAtom } from "#src/state/smartAccountClient"
 import { userAtom } from "#src/state/user"
 import { getAppURL } from "#src/utils/appURL"
 import { BlobTxWarning } from "./BlobTxWarning"
@@ -37,6 +36,11 @@ import {
     SubsectionTitle,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
+
+const toBigIntSafe = (value: string | bigint | null | undefined, defaultValue = 0n) => {
+    if (!value) return defaultValue
+    return typeof value === "bigint" ? value : BigInt(value)
+}
 
 /**
  * This is used since specifying a type in a `useSendTransaction` call
@@ -74,63 +78,57 @@ export const EthSendTransaction = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
-    console.log(params[0])
     const tx: RpcTransactionRequest = params[0]
-    const [preparedUserOp, setPreparedUserOp] = useState<ApprovedRequestExtraData<typeof method> | undefined>(undefined)
 
     const user = useAtomValue(userAtom)
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
+    const publicClient = useAtomValue(publicClientAtom)
+
     const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
     const appURL = getAppURL()
 
-    const doTheDo = useCallback(async (): Promise<
-        | (ApprovedRequestExtraData<typeof method> & {
-              account: SmartAccount
-          })
-        | undefined
-    > => {
-        const smartAccountClient = (await getSmartAccountClient())!
+    // Add this at the top with other state
+    const [blockData, setBlockData] = useState<Block | undefined>(undefined)
 
-        try {
-            const prep = (await smartAccountClient.prepareUserOperation({
-                account: smartAccountClient.account,
-                paymaster: contractAddresses.HappyPaymaster as Address,
-                parameters: ["factory", "fees", "gas", "signature"],
-                calls: [
-                    {
-                        to: tx.to,
-                        data: tx.data,
-                        value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                    },
-                ],
-                nonce: 0n,
-                paymasterData: undefined,
-            } satisfies PrepareUserOperationParameters)) satisfies PrepareUserOperationReturnType
-
-            return prep
-        } catch (error) {
-            console.error(error)
-            return undefined
-        }
-    }, [tx])
-
+    // Add a useEffect to fetch block data
     useEffect(() => {
-        const prepareTx = async () => {
-            try {
-                const op = await doTheDo()
-                console.log("op", op)
-                if (op) {
-                    const { account, ...rest } = op
-                    setPreparedUserOp(rest)
-                }
-            } catch (err) {
-                console.error("Failed to prepare user operation:", err)
-            }
+        const fetchBlock = async () => {
+            const block = await publicClient.getBlock()
+            setBlockData(block)
         }
+        void fetchBlock()
+    }, [publicClient])
 
-        void prepareTx()
-    }, [doTheDo])
+    // ====================================== UserOp details ======================================
+    const prepareUserOp = useCallback(
+        async (smartAccountClient: ExtendedSmartAccountClient) => {
+            try {
+                return (await smartAccountClient.prepareUserOperation({
+                    account: smartAccountClient.account,
+                    paymaster: contractAddresses.HappyPaymaster as Address,
+                    parameters: ["factory", "fees", "gas", "signature"],
+                    calls: [
+                        {
+                            to: tx.to,
+                            data: tx.data,
+                            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                        },
+                    ],
+                    nonce: 0n,
+                    paymasterData: undefined,
+                } satisfies PrepareUserOperationParameters)) as PrepareUserOperationReturnType
+            } catch (error) {
+                console.error("Failed to prepare operation:", error)
+                return undefined
+            }
+        },
+        [tx],
+    )
 
+    const { data: preparedUserOp, loading, error } = useAsyncOperation(smartAccountClientAtom, prepareUserOp)
+    // const { account: _, ...rest } = preparedUserOp
+
+    // ====================================== Contract ABI details ======================================
     const abiForContract =
         user?.address && targetContractAddress && recordedAbisForUser[user.address]?.[targetContractAddress]
 
@@ -152,13 +150,35 @@ export const EthSendTransaction = ({
 
     // memo-ed values formatted for display
     const formattedTxInfo = useMemo(() => {
+        if (!preparedUserOp || !blockData) return undefined
+
+        // Calculate gasFee (min of maxFeePerGas and maxPriorityFeePerGas + baseFee)
+        const maxFeePerGas = toBigIntSafe(preparedUserOp.maxFeePerGas)
+        const maxPriorityFeePerGas = toBigIntSafe(preparedUserOp.maxPriorityFeePerGas)
+        const baseFee = toBigIntSafe(blockData.baseFeePerGas)
+
+        const gasFee = maxFeePerGas < maxPriorityFeePerGas + baseFee ? maxFeePerGas : maxPriorityFeePerGas + baseFee
+
+        // Calculate gasUsed (sum of all gas components)
+        const gasUsed =
+            toBigIntSafe(preparedUserOp.preVerificationGas) +
+            toBigIntSafe(preparedUserOp.verificationGasLimit) +
+            toBigIntSafe(preparedUserOp.callGasLimit)
+
+        const estimatedGasCost = gasFee * gasUsed
+
         return {
-            value: formatEther(BigInt(tx.value ?? "0")),
-            maxFeePerGas: formatGwei(BigInt(tx.maxFeePerGas ?? "0")),
-            maxPriorityFeePerGas: formatGwei(BigInt(tx.maxPriorityFeePerGas ?? "0")),
+            value: formatEther(toBigIntSafe(tx.value)),
             type: classifyTxType(tx),
+            preVerificationGas: formatGwei(toBigIntSafe(preparedUserOp.preVerificationGas)),
+            verificationGasLimit: formatGwei(toBigIntSafe(preparedUserOp.verificationGasLimit)),
+            callGasLimit: formatGwei(toBigIntSafe(preparedUserOp.callGasLimit)),
+            maxFeePerGas: formatGwei(maxFeePerGas),
+            maxPriorityFeePerGas: formatGwei(maxPriorityFeePerGas),
+            estimatedGas: formatUnits(estimatedGasCost, 18),
         }
-    }, [tx])
+    }, [preparedUserOp, tx, blockData])
+
     return (
         <>
             <Layout
@@ -166,11 +186,14 @@ export const EthSendTransaction = ({
                 hideActions={tx.type === TransactionType.EIP4844}
                 actions={{
                     accept: {
-                        children: "Confirm",
-                        "aria-disabled": status === "pending",
+                        children: loading ? "Preparing..." : "Confirm",
+                        disabled: loading || Boolean(error) || !preparedUserOp,
                         onClick: () => {
-                            if (status === "pending") return
-                            accept({ eip1193params: { method, params }, extraData: preparedUserOp })
+                            if (loading || !preparedUserOp) return
+                            accept({
+                                eip1193params: { method, params },
+                                extraData: preparedUserOp,
+                            })
                         },
                     },
                     reject: {
@@ -190,59 +213,54 @@ export const EthSendTransaction = ({
                             </SubsectionContent>
                         )}
 
-                        {Number(formattedTxInfo.value) > 0 && (
-                            <SubsectionContent>
-                                <SubsectionTitle>Amount</SubsectionTitle>
-                                <FormattedDetailsLine>{formattedTxInfo.value} HAPPY</FormattedDetailsLine>
-                            </SubsectionContent>
-                        )}
-                    </SubsectionBlock>
-                </SectionBlock>
-                <SectionBlock>
-                    <SubsectionBlock>
-                        <SubsectionContent>
-                            <SubsectionTitle>Transaction type</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedTxInfo.type}</FormattedDetailsLine>
-                        </SubsectionContent>
-                        <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedTxInfo.maxFeePerGas}</FormattedDetailsLine>
-                        </SubsectionContent>
-                        <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedTxInfo.maxPriorityFeePerGas}</FormattedDetailsLine>
-                        </SubsectionContent>
-                    </SubsectionBlock>
-                </SectionBlock>
-
-                {decodedData && (
-                    <DisclosureSection
-                        title="Decoded Function Data"
-                        showWarning
-                        warningText={"This ABI is not verified."}
-                        isOpen={true}
-                    >
-                        <div className="flex flex-wrap justify-between items-baseline gap-2 p-2 border-b border-neutral/10">
-                            <span className="opacity-75 text-xs">Function Name:</span>
-                            <span className="font-mono text-xs truncate px-2 py-1 bg-primary text-primary-content rounded-md max-w-[50%] hover:break-words">
-                                {decodedData.abiFuncDef.name}
-                            </span>
-                        </div>
-
-                        {decodedData.args?.length && (
-                            <div className="w-full">
-                                <ArgsList args={decodedData.args} fnInputs={decodedData.abiFuncDef.inputs} />
-                            </div>
-                        )}
-                    </DisclosureSection>
-                )}
-
-                <DisclosureSection title="Raw Request">
-                    <div className="grid gap-4 p-2">
-                        <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
-                    </div>
-                </DisclosureSection>
-
+                                <SubsectionContent>
+                                    <SubsectionTitle>Amount</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo?.value} HAPPY</FormattedDetailsLine>
+                                </SubsectionContent>
+                            </SubsectionBlock>
+                        </SectionBlock>
+                        <SectionBlock>
+                            <SubsectionBlock>
+                                <SubsectionContent>
+                                    <SubsectionTitle>Transaction type</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo?.type}</FormattedDetailsLine>
+                                </SubsectionContent>
+                                <SubsectionContent>
+                                    <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo?.maxFeePerGas}</FormattedDetailsLine>
+                                </SubsectionContent>
+                                <SubsectionContent>
+                                    <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo?.maxPriorityFeePerGas}</FormattedDetailsLine>
+                                </SubsectionContent>
+                                <SubsectionContent>
+                                    <SubsectionTitle>{GasFieldName.PreVerificationGas}</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo?.preVerificationGas}</FormattedDetailsLine>
+                                </SubsectionContent>
+                                <SubsectionContent>
+                                    <SubsectionTitle>{GasFieldName.VerificationGasLimit}</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo?.verificationGasLimit}</FormattedDetailsLine>
+                                </SubsectionContent>
+                                <SubsectionContent>
+                                    <SubsectionTitle>{GasFieldName.CallGasLimit}</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo?.callGasLimit}</FormattedDetailsLine>
+                                </SubsectionContent>
+                                <SubsectionContent>
+                                    <SubsectionTitle>{"Estimated Gas:"}</SubsectionTitle>
+                                    <FormattedDetailsLine>{formattedTxInfo?.estimatedGas}</FormattedDetailsLine>
+                                </SubsectionContent>
+                            </SubsectionBlock>
+                        </SectionBlock>
+                    </TabContent>
+                    <TabContent value={RequestTabsValues.Raw}>
+                        <SectionBlock>
+                            <SubsectionBlock>
+                                {decodedData && <DecodedData data={decodedData} />}
+                                <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                            </SubsectionBlock>
+                        </SectionBlock>
+                    </TabContent>
+                </Tabs>
                 {tx.type === TransactionType.EIP4844 && (
                     <SectionBlock>
                         <BlobTxWarning onReject={reject} />
