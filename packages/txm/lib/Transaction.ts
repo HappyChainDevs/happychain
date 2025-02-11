@@ -27,6 +27,11 @@ export enum TransactionStatus {
      */
     Cancelled = "Cancelled",
     /**
+     * The transaction's inclusion was interrupted because an external transaction using the same nonce was processed.
+     * To retry including this transaction, it must be resubmitted by a {@link TransactionOriginator}.
+     */
+    Interrupted = "Interrupted",
+    /**
      * The transaction has been included onchain and its execution was successful.
      */
     Success = "Success",
