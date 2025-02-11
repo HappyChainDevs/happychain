@@ -25,9 +25,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     ///      storing the lengths of the four dynamic fields
     uint256 private constant STATIC_FIELDS_SIZE = 212;
 
-    /// @dev The fixed gas cost of payout() function + call overhead
-    uint256 private constant PAYOUT_CALL_OVERHEAD = 1234; // TODO
-
     /// @dev 280 is the max size of a tx with empty calldata with an empty access list.
     ///      Given RLP encoding, this should be significantly less.
     uint256 private constant MAX_TX_SIZE = 280; // TODO
@@ -92,7 +89,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
             return SubmitterFeeTooHigh.selector;
         }
 
-        uint256 owed = (consumedGas + PAYOUT_CALL_OVERHEAD) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
+        uint256 owed = (consumedGas) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
 
         payable(tx.origin).call{value: owed}("");
         return 0;
