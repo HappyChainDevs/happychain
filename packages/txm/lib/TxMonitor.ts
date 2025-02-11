@@ -1,4 +1,4 @@
-import { bigIntMax, bigIntReplacer, promiseWithResolvers, unknownToError } from "@happy.tech/common"
+import { bigIntMax, promiseWithResolvers, unknownToError } from "@happy.tech/common"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { type GetTransactionReceiptErrorType, type TransactionReceipt, TransactionReceiptNotFoundError } from "viem"
 import type { LatestBlock } from "./BlockMonitor.js"
@@ -67,18 +67,8 @@ export class TxMonitor {
             block.number,
         )
 
-        console.log(
-            "Monitoring transactions",
-            transactions.map((t) => ({
-                intentId: t.intentId,
-                nonce: t.attempts.at(0)?.nonce
-            })),
-        )
-
         const promises = transactions.map(async (transaction) => {
             const inAirAttempts = transaction.getInAirAttempts()
-
-            console.log("In air attempts", inAirAttempts.map((a) => a.nonce))
 
             // This could happen if, on the first try, the attempt to submit the transaction fails before flush
             if (inAirAttempts.length === 0) {

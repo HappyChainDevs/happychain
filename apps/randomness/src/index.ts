@@ -27,9 +27,9 @@ class RandomnessService {
             rpc: {
                 url: env.RPC_URL,
                 allowDebug: true,
-                pollingInterval: 250
+                pollingInterval: 250,
             },
-            maxPriorityFeePerGas: 10n
+            maxPriorityFeePerGas: 10n,
         })
         this.transactionFactory = new TransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS, env.PRECOMMIT_DELAY)
         this.drandService = new DrandService(this.drandRepository, this.transactionFactory)
