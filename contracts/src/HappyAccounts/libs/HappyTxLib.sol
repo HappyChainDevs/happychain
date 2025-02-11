@@ -50,6 +50,7 @@ library HappyTxLib {
             + (4 + happyTx.validatorData.length) + (4 + happyTx.extraData.length);
 
         assembly {
+            let inPtr := happyTx
             // Encoded tx will live at next free memory address.
             result := mload(0x40)
             // Update free memory pointer to point past decoded bytes (+32 bytes is for length).
@@ -58,104 +59,104 @@ library HappyTxLib {
             mstore(result, totalSize)
 
             // Start writing after length prefix
-            let ptr := add(result, 32)
+            let outPtr := add(result, 32)
             // Start copying from happyTx offset 12 (account)
-            let cdPtr := add(happyTx, 12)
+            inPtr := add(inPtr, 12)
 
             // Copy account (20 bytes)
-            mcopy(ptr, cdPtr, 20)
-            ptr := add(ptr, 20)
-            cdPtr := add(cdPtr, 48)
+            mcopy(outPtr, inPtr, 20)
+            outPtr := add(outPtr, 20)
+            inPtr := add(inPtr, 48)
 
             // Copy gasLimit (4 bytes)
-            mcopy(ptr, cdPtr, 4)
-            ptr := add(ptr, 4)
-            cdPtr := add(cdPtr, 32)
+            mcopy(outPtr, inPtr, 4)
+            outPtr := add(outPtr, 4)
+            inPtr := add(inPtr, 32)
 
             // Copy executeGasLimit (4 bytes)
-            mcopy(ptr, cdPtr, 4)
-            ptr := add(ptr, 4)
-            cdPtr := add(cdPtr, 16)
+            mcopy(outPtr, inPtr, 4)
+            outPtr := add(outPtr, 4)
+            inPtr := add(inPtr, 16)
 
             // Copy dest (20 bytes)
-            mcopy(ptr, cdPtr, 20)
-            ptr := add(ptr, 20)
-            cdPtr := add(cdPtr, 32)
+            mcopy(outPtr, inPtr, 20)
+            outPtr := add(outPtr, 20)
+            inPtr := add(inPtr, 32)
 
             // Copy paymaster (20 bytes)
-            mcopy(ptr, cdPtr, 20)
-            ptr := add(ptr, 20)
-            cdPtr := add(cdPtr, 20)
+            mcopy(outPtr, inPtr, 20)
+            outPtr := add(outPtr, 20)
+            inPtr := add(inPtr, 20)
 
             // Copy value (32 bytes)
-            mcopy(ptr, cdPtr, 32)
-            ptr := add(ptr, 32)
-            cdPtr := add(cdPtr, 40)
+            mcopy(outPtr, inPtr, 32)
+            outPtr := add(outPtr, 32)
+            inPtr := add(inPtr, 40)
 
             // Copy nonceTrack (24 bytes)
-            mcopy(ptr, cdPtr, 24)
-            ptr := add(ptr, 24)
-            cdPtr := add(cdPtr, 48)
+            mcopy(outPtr, inPtr, 24)
+            outPtr := add(outPtr, 24)
+            inPtr := add(inPtr, 48)
 
             // Copy nonceValue (8 bytes)
-            mcopy(ptr, cdPtr, 8)
-            ptr := add(ptr, 8)
-            cdPtr := add(cdPtr, 8)
+            mcopy(outPtr, inPtr, 8)
+            outPtr := add(outPtr, 8)
+            inPtr := add(inPtr, 8)
 
             // Copy maxFeePerGas (32 bytes)
-            mcopy(ptr, cdPtr, 32)
-            ptr := add(ptr, 32)
-            cdPtr := add(cdPtr, 32)
+            mcopy(outPtr, inPtr, 32)
+            outPtr := add(outPtr, 32)
+            inPtr := add(inPtr, 32)
 
             // Copy submitterFee (32 bytes)
-            mcopy(ptr, cdPtr, 32)
-            ptr := add(ptr, 32)
-            cdPtr := add(cdPtr, 32)
+            mcopy(outPtr, inPtr, 32)
+            outPtr := add(outPtr, 32)
+            inPtr := add(inPtr, 32)
 
             // Handle dynamic fields
-            let callDataOffset := mload(cdPtr)
-            let pmDataOffset := mload(add(cdPtr, 32))
-            let validatorDataOffset := mload(add(cdPtr, 64))
-            let extraDataOffset := mload(add(cdPtr, 96))
+            let callDataOffset := mload(inPtr)
+            let pmDataOffset := mload(add(inPtr, 32))
+            let validatorDataOffset := mload(add(inPtr, 64))
+            let extraDataOffset := mload(add(inPtr, 96))
 
             let len
             let lenOffset
 
             // callData
             lenOffset := add(happyTx, sub(callDataOffset, 0x80))
-            mcopy(ptr, add(lenOffset, 28), 4)
-            ptr := add(ptr, 4)
+            mcopy(outPtr, add(lenOffset, 28), 4)
+            outPtr := add(outPtr, 4)
 
             len := mload(lenOffset)
-            mcopy(ptr, add(lenOffset, 0x20), len)
-            ptr := add(ptr, len)
+            mcopy(outPtr, add(lenOffset, 0x20), len)
+            outPtr := add(outPtr, len)
 
             // paymasterData
             lenOffset := add(happyTx, sub(pmDataOffset, 0x80))
-            mcopy(ptr, add(lenOffset, 28), 4)
-            ptr := add(ptr, 4)
+            mcopy(outPtr, add(lenOffset, 28), 4)
+            outPtr := add(outPtr, 4)
 
             len := mload(lenOffset)
-            mcopy(ptr, add(lenOffset, 0x20), len)
-            ptr := add(ptr, len)
+            mcopy(outPtr, add(lenOffset, 0x20), len)
+            outPtr := add(outPtr, len)
 
             // validatorData
             lenOffset := add(happyTx, sub(validatorDataOffset, 0x80))
-            mcopy(ptr, add(lenOffset, 28), 4)
-            ptr := add(ptr, 4)
+            mcopy(outPtr, add(lenOffset, 28), 4)
+            outPtr := add(outPtr, 4)
 
             len := mload(lenOffset)
-            mcopy(ptr, add(lenOffset, 0x20), len)
-            ptr := add(ptr, len)
+            mcopy(outPtr, add(lenOffset, 0x20), len)
+            outPtr := add(outPtr, len)
 
             // extraData
             lenOffset := add(happyTx, sub(extraDataOffset, 0x80))
-            mcopy(ptr, add(lenOffset, 28), 4)
-            ptr := add(ptr, 4)
+            mcopy(outPtr, add(lenOffset, 28), 4)
+            outPtr := add(outPtr, 4)
 
             len := mload(lenOffset)
-            mcopy(ptr, add(lenOffset, 0x20), len)
-            ptr := add(ptr, len)
+            mcopy(outPtr, add(lenOffset, 0x20), len)
+            outPtr := add(outPtr, len)
         }
     }
 
