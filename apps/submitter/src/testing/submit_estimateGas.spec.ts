@@ -3,7 +3,7 @@ import { testClient } from "hono/testing"
 import { keccak256, parseEther } from "viem"
 import { walletClient as submitterWalletClient } from "#src/clients"
 import { app } from "#src/server"
-import { createMockTokenAMintTx, prepareTx, testAccount, testPublicClient } from "./utils"
+import { createMockTokenAMintTx, getNonce, prepareTx, testAccount, testPublicClient } from "./utils"
 
 const client = testClient(app)
 
@@ -34,7 +34,7 @@ describe("submitter_execute", () => {
         })
 
         it("mints tokens", async () => {
-            const dummyHappyTx = await createMockTokenAMintTx(smartAccount)
+            const dummyHappyTx = await createMockTokenAMintTx(smartAccount, await getNonce(smartAccount))
             // be your own paymaster!
             dummyHappyTx.paymaster = smartAccount
             const encoded = await prepareTx(dummyHappyTx)
@@ -47,7 +47,7 @@ describe("submitter_execute", () => {
 
     describe("paymaster", () => {
         it("mints tokens", async () => {
-            const dummyHappyTx = await createMockTokenAMintTx(smartAccount)
+            const dummyHappyTx = await createMockTokenAMintTx(smartAccount, await getNonce(smartAccount))
 
             const encoded = await prepareTx(dummyHappyTx)
 

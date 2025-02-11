@@ -1,7 +1,5 @@
-import type { Address, PrivateKeyAccount } from "viem"
-import { type WriteContractParameters, writeContract } from "viem/actions"
-import type { localhost } from "viem/chains"
-import type { abis } from "#src/deployments"
+import { writeContract } from "viem/actions"
+import { parseFromViemError } from "#src/errors/utils"
 import type { BasicClient } from "../types"
 import type { simulateSubmit } from "./simulateSubmit"
 
@@ -19,5 +17,9 @@ export async function submit(
     // This should be able to run in isolation if desired
     request: Awaited<ReturnType<typeof simulateSubmit>>["request"],
 ) {
-    return await writeContract(client, request)
+    try {
+        return await writeContract(client, request)
+    } catch (_err) {
+        throw parseFromViemError(_err) || _err
+    }
 }

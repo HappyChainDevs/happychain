@@ -28,7 +28,7 @@ export async function waitForSubmitReceipt(client: BasicClient, { hash, tx }: { 
         status: EntryPointStatus.Success,
 
         /** Logs emitted by HappyTx. */
-        logs: [], //receipt.logs,
+        logs: [], //receipt.logs, // TODO:
 
         /**
          * The revertData carried by one of our custom error, or the raw deal for

@@ -1,8 +1,8 @@
-import type { PrivateKeyAccount, SimulateContractParameters, SimulateContractReturnType } from "viem"
+import type { SimulateContractParameters } from "viem"
 import { simulateContract } from "viem/actions"
-import type { localhost } from "viem/chains"
 import { account } from "#src/clients"
 import { abis } from "#src/deployments"
+import { parseFromViemError } from "#src/errors/utils"
 import type { BasicClient } from "../types"
 
 export async function simulateSubmit(
@@ -12,10 +12,14 @@ export async function simulateSubmit(
         "address" | "args"
     >,
 ) {
-    return await simulateContract(client, {
-        ...params,
-        abi: abis.HappyEntryPoint,
-        functionName: "submit",
-        account,
-    })
+    try {
+        return await simulateContract(client, {
+            ...params,
+            abi: abis.HappyEntryPoint,
+            functionName: "submit",
+            account,
+        })
+    } catch (_err) {
+        throw parseFromViemError(_err) || _err
+    }
 }

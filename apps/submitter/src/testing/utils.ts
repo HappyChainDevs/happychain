@@ -14,17 +14,21 @@ export const testAccount = privateKeyToAccount(key)
 export const testPublicClient = createPublicClient({ ...config, batch: { multicall: true } })
 export const testWalletClient = createWalletClient({ ...config, account: testAccount })
 
-export async function createMockTokenAMintTx(account: Address): Promise<HappyTx> {
+export async function getNonce(account: Address) {
+    return await testPublicClient.readContract({
+        address: account,
+        abi: abis.ScrappyAccount,
+        functionName: "getNonce",
+        args: [0n],
+    })
+}
+
+export async function createMockTokenAMintTx(account: Address, nonceValue: bigint): Promise<HappyTx> {
     return {
         account,
         dest: deployment.MockTokenA,
         nonceTrack: 0n, // using as default
-        nonceValue: await testPublicClient.readContract({
-            address: account,
-            abi: abis.ScrappyAccount,
-            functionName: "getNonce",
-            args: [0n],
-        }),
+        nonceValue: nonceValue,
         value: 0n,
 
         paymaster: zeroAddress, // paymaster is default
