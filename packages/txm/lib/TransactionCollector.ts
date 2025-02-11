@@ -1,7 +1,7 @@
 import { LogTag, Logger } from "@happy.tech/common"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
-import { AttemptType } from "./Transaction.js"
+import { AttemptType, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
 /**
@@ -44,6 +44,10 @@ export class TransactionCollector {
         await Promise.all(
             transactionsBatch.map(async (transaction) => {
                 const nonce = this.txmgr.nonceManager.requestNonce()
+
+                if (transaction.status === TransactionStatus.Interrupted) {
+                    transaction.changeStatus(TransactionStatus.Pending)
+                }
 
                 const submissionResult = await this.txmgr.transactionSubmitter.attemptSubmission(transaction, {
                     type: AttemptType.Original,
