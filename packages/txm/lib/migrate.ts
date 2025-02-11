@@ -1,12 +1,12 @@
-import { Migrator, type Migration, type MigrationProvider } from "kysely"
+import { type Migration, type MigrationProvider, Migrator } from "kysely"
 import { db } from "./db/driver"
 import { migrations } from "./db/migrations"
 
 class ObjectMigrationProvider implements MigrationProvider {
     constructor(private migrations: Record<string, Migration>) {}
-  
+
     async getMigrations(): Promise<Record<string, Migration>> {
-      return this.migrations
+        return this.migrations
     }
 }
 
