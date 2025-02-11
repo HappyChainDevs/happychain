@@ -894,7 +894,28 @@ const contractToAbi = ({
   "ScrappyPaymaster": [
     {
       "type": "constructor",
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "entryPoint",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "maxSubmitterFeePerByte",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "owner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
       "stateMutability": "nonpayable"
     },
     {
@@ -903,20 +924,7 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "UPGRADE_INTERFACE_VERSION",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "string",
-          "internalType": "string"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "entryPoint",
+      "name": "ENTRYPOINT",
       "inputs": [],
       "outputs": [
         {
@@ -929,41 +937,26 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "initialize",
-      "inputs": [
-        {
-          "name": "_entryPoint",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "_target",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "_maxSubmitterFeePerByte",
-          "type": "uint256",
-          "internalType": "uint256"
-        },
-        {
-          "name": "_owner",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "maxSubmitterFeePerByte",
+      "name": "MAX_SUBMITTER_FEE_PER_BYTE",
       "inputs": [],
       "outputs": [
         {
           "name": "",
           "type": "uint256",
           "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "TARGET",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "stateMutability": "view"
@@ -1079,36 +1072,10 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "proxiableUUID",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "renounceOwnership",
       "inputs": [],
       "outputs": [],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "target",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -1122,24 +1089,6 @@ const contractToAbi = ({
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "upgradeToAndCall",
-      "inputs": [
-        {
-          "name": "newImplementation",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "data",
-          "type": "bytes",
-          "internalType": "bytes"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "payable"
     },
     {
       "type": "function",
@@ -1158,19 +1107,6 @@ const contractToAbi = ({
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "event",
-      "name": "Initialized",
-      "inputs": [
-        {
-          "name": "version",
-          "type": "uint64",
-          "indexed": false,
-          "internalType": "uint64"
-        }
-      ],
-      "anonymous": false
     },
     {
       "type": "event",
@@ -1211,76 +1147,8 @@ const contractToAbi = ({
       "anonymous": false
     },
     {
-      "type": "event",
-      "name": "Upgraded",
-      "inputs": [
-        {
-          "name": "implementation",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "Upgraded",
-      "inputs": [
-        {
-          "name": "newImplementation",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "error",
-      "name": "AddressEmptyCode",
-      "inputs": [
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ERC1967InvalidImplementation",
-      "inputs": [
-        {
-          "name": "implementation",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ERC1967NonPayable",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "FailedCall",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "InvalidInitialization",
-      "inputs": []
-    },
-    {
       "type": "error",
       "name": "NotFromEntryPoint",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotInitializing",
       "inputs": []
     },
     {
@@ -1309,22 +1177,6 @@ const contractToAbi = ({
       "type": "error",
       "name": "ReentrancyGuardReentrantCall",
       "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "UUPSUnauthorizedCallContext",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "UUPSUnsupportedProxiableUUID",
-      "inputs": [
-        {
-          "name": "slot",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ]
     }
   ]
 }
@@ -1334,16 +1186,14 @@ const aliasToContract = ({
   "HappyEntryPoint": "HappyEntryPoint",
   "ScrappyAccount": "ScrappyAccount",
   "ScrappyAccountFactory": "ScrappyAccountFactory",
-  "ScrappyPaymaster": "ScrappyPaymaster",
-  "ScrappyPaymasterImpl": "ScrappyPaymaster"
+  "ScrappyPaymaster": "ScrappyPaymaster"
 }) as const
 
 export const deployment = ({
-  "HappyEntryPoint": "0xBe697204Cd9a9e0D203106b196802A29200534db",
-  "ScrappyAccount": "0x1eEC2255641A21bBf0e78e4ca5CFBd1c4Cf7e7c4",
-  "ScrappyAccountFactory": "0x54Ce2b538CD2E3447bc2e80A86738A51C3337FFa",
-  "ScrappyPaymaster": "0x28f2D25C0150773D60d4cBeAF0B7e89ecD9c879A",
-  "ScrappyPaymasterImpl": "0x30B3ffF7e2Fe17b213E28A4C1A9e3b9beB2037D9"
+  "HappyEntryPoint": "0x9d32df00A428220585275cD4c07d8c22E3dd7f2f",
+  "ScrappyAccount": "0x538a97E3184ca57b485B8D697B84F80Ce325d781",
+  "ScrappyAccountFactory": "0xBDF40A91F4F71046878139Dd5BF4a4868Fdd64b1",
+  "ScrappyPaymaster": "0x35D66b888a03BdBd6e77eaEAC358Eb0d65a3aBDe"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
