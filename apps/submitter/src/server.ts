@@ -1,20 +1,21 @@
 import { Hono } from "hono"
-import { every, except, some } from "hono/combine"
+import { every, except } from "hono/combine"
 import { logger } from "hono/logger"
 import { prettyJSON } from "hono/pretty-json"
 import { requestId } from "hono/request-id"
 import { timeout } from "hono/timeout"
 import { timing } from "hono/timing"
+import env from "./env"
 import accountsApi from "./routes/api/accounts"
 import submitterApi from "./routes/api/submitter"
 import { initOpenAPI } from "./routes/docs"
 
 export const app = new Hono()
     // middleware
-    // don't run these during testing
     .use(
         except(
-            () => process.env.NODE_ENV === "test" || false,
+            // don't run these during testing
+            () => env.NODE_ENV === "test",
             every(
                 timing(), // measure response times
                 logger(), // log all calls to the console

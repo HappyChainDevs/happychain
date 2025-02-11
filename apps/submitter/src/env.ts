@@ -7,6 +7,7 @@ import "zod-openapi/extend"
 const envSchema = z.object({
     PRIVATE_KEY_LOCAL: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")),
     APP_PORT: z.coerce.number().default(3001),
+    NODE_ENV: z.enum(["production", "development", "test"]),
 })
 
 // Validate `process.env` against our schema
