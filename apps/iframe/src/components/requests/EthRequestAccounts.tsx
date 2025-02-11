@@ -21,8 +21,7 @@ export const EthRequestAccounts = ({
             actions={{
                 accept: {
                     children: "Allow",
-                    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                    onClick: () => accept({ method, params } as any),
+                    onClick: () => accept({ eip1193params: { method, params } }),
                 },
                 reject: {
                     children: "Go back",

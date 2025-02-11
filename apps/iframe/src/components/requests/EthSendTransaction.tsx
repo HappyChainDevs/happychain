@@ -18,7 +18,7 @@ import type { PrepareUserOperationParameters } from "viem/account-abstraction"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import { userAtom } from "#src/state/user"
-import { queryClient } from "#src/tanstack-query/config"
+import { getAppURL } from "#src/utils/appURL"
 import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
 import DisclosureSection from "./common/DisclosureSection"
@@ -70,23 +70,15 @@ export const EthSendTransaction = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
-    // useState + useEffect paradigm works here (over useMemo) since we will have
-    // user interactions for sliders / options for setting gas manually
-    const [tx, setTx] = useState<RpcTransactionRequest>(params[0])
-    const [preparedUserOp, setPreparedUserOp] = useState<ApprovedRequestExtraData<"eth_sendTransaction"> | undefined>(
+    const tx: RpcTransactionRequest = params[0]
+    const [_preparedUserOp, _setPreparedUserOp] = useState<ApprovedRequestExtraData<typeof method> | undefined>(
         undefined,
     )
 
     const user = useAtomValue(userAtom)
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
     const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
-
-    const {
-        data: { maxFeePerGas, maxPriorityFeePerGas } = {},
-        isError,
-        status,
-        queryKey,
-    } = useEstimateFeesPerGas({ type: "eip1559" })
+    const appURL = getAppURL()
 
     const doTheDo = useCallback(async (): Promise<ApprovedRequestExtraData<"eth_sendTransaction"> | undefined> => {
         const smartAccountClient = (await getSmartAccountClient())!
@@ -121,7 +113,7 @@ export const EthSendTransaction = ({
 
                 // TODO type issue with `rest`
                 if (op) {
-                    const { account, ...rest } = op
+                    const { account, ..._rest } = op
                     // setPreparedUserOp(rest)
                 }
             } catch (err) {
@@ -170,8 +162,7 @@ export const EthSendTransaction = ({
                         "aria-disabled": status === "pending",
                         onClick: () => {
                             if (status === "pending") return
-                            accept({ method, params })
-                            void queryClient.invalidateQueries({ queryKey })
+                            accept({ eip1193params: { method, params } })
                         },
                     },
                     reject: {
