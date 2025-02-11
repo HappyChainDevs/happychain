@@ -2,6 +2,7 @@
 import type { MapTuple, ObjectFromTuples, UnionToTuple } from "@happy.tech/common"
 import type { Address } from "viem"
 
+
 const contractToAbi = ({
   "HappyCounter": [
     {
@@ -417,10 +418,10 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "HappyCounter": "0xeAe5825cd598FD74ffa199b6849b2286eb8405Ca",
-  "MockTokenA": "0xc80629fE33747288AaFb97684F86f7eD2D1aBF69",
-  "MockTokenB": "0xe7b1987CE19C0824D03b8bcc5919DB9604096376",
-  "MockTokenC": "0x901F67FCF4870453CE82eb2E986E4e68AFe7313F"
+  "HappyCounter": "0x58402165A115f23AB884c51F01574537f39616fF",
+  "MockTokenA": "0x07b354EFA748883a342a9ba4780Cc9728f51e3D5",
+  "MockTokenB": "0x64cB328036F118Bc4354e9213c9f9FFE9d5375e7",
+  "MockTokenC": "0xAe9b457CE9e4C0fcd64bf679975A649Df1e26b3B"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
@@ -440,4 +441,5 @@ for (const [alias, contractName] of Object.entries(aliasToContract)) {
     // biome-ignore lint/suspicious/noExplicitAny: safe generated code
     abis[alias as ContractAlias] = contractToAbi[contractName as ContractName] as any
 }
+
 

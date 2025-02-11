@@ -10,7 +10,8 @@ export type HappyTx = {
     dest: Address
     value: UInt256
     callData: Bytes
-    nonce: UInt256
+    nonceTrack: UInt256
+    nonceValue: UInt256
     maxFeePerGas: UInt256 //
     submitterFee: Int256 //
     paymaster: Address

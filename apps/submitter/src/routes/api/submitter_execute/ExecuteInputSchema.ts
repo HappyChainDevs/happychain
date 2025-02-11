@@ -1,5 +1,6 @@
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
+import { deployment } from "#src/deployments"
 
 const happyTxSchema = z.object({
     account: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Address
@@ -8,7 +9,8 @@ const happyTxSchema = z.object({
     dest: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Address
     value: z.string().transform((a) => BigInt(a)), // UInt256
     callData: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Bytes
-    nonce: z.string().transform((a) => BigInt(a)), // UInt256
+    nonceTrack: z.string().transform(BigInt), // UInt256
+    nonceValue: z.string().transform(BigInt), // UInt256
     maxFeePerGas: z.string().transform((a) => BigInt(a)),
     submitterFee: z.string().transform((a) => BigInt(a)),
     paymaster: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Address
@@ -23,28 +25,32 @@ export const ExecuteInputSchema = z
         entryPoint: z
             .string()
             .refine((str): str is `0x${string}` => str.startsWith("0x"))
-            .optional(),
+            .optional()
+            .default(deployment.HappyEntryPoint),
 
         /** HappyTx to execute. */
-        tx: happyTxSchema,
+        // tx: happyTxSchema,
+        tx: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")),
     })
     .openapi({
         example: {
-            tx: {
-                account: "0x123", // Address
-                dest: "0x123", // Address
-                value: "1234", // UInt256
-                callData: "0x00000", // Bytes
-                nonce: "1234", // UInt256
-                paymaster: "0x123", // Address
-                paymasterData: "0x00000", // Bytes
-                validatorData: "0x00000", // Bytes
-                extraData: "0x00000", // Bytes
-                gasLimit: 0,
-                executeGasLimit: 0,
-                maxFeePerGas: "0",
-                submitterFee: "0",
-            },
+            tx: "0x1234", // pre encoded
+            // tx: {
+            //     account: "0x123", // Address
+            //     dest: "0x123", // Address
+            //     value: "1234", // UInt256
+            //     callData: "0x00000", // Bytes
+            //     nonceTrack: "1234", // UInt256
+            //     nonceValue: "1234", // UInt256
+            //     paymaster: "0x123", // Address
+            //     paymasterData: "0x00000", // Bytes
+            //     validatorData: "0x00000", // Bytes
+            //     extraData: "0x00000", // Bytes
+            //     gasLimit: 0,
+            //     executeGasLimit: 0,
+            //     maxFeePerGas: "0",
+            //     submitterFee: "0",
+            // },
         },
     })
 

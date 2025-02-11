@@ -1,18 +1,15 @@
-import { happyChainSepolia } from "@happy.tech/wallet-common"
 import { http, createPublicClient, createWalletClient } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
+import { localhost } from "viem/chains"
 import env from "../env"
 import { createSubmitterClient } from "./submitterClient/createSubmitterClient"
 
-const publicConfig = {
-    chain: happyChainSepolia,
-    transport: http(happyChainSepolia.rpcUrls.default.http[0]),
-} as const
+export const account = privateKeyToAccount(env.PRIVATE_KEY_LOCAL)
+export const chain = localhost
 
-const walletConfig = {
-    account: privateKeyToAccount(env.PRIVATE_KEY_LOCAL),
-    ...publicConfig,
-}
+const publicConfig = { chain, transport: http() } as const
+
+const walletConfig = { account, ...publicConfig }
 
 export const publicClient = createPublicClient(publicConfig)
 export const walletClient = createWalletClient(walletConfig)

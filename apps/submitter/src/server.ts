@@ -4,7 +4,8 @@ import { prettyJSON } from "hono/pretty-json"
 import { requestId } from "hono/request-id"
 import { timeout } from "hono/timeout"
 import { timing } from "hono/timing"
-import api from "./routes/api"
+import accountsApi from "./routes/api/accounts"
+import submitterApi from "./routes/api/submitter"
 import { initOpenAPI } from "./routes/docs"
 
 export const app = new Hono()
@@ -16,12 +17,13 @@ export const app = new Hono()
     .use(requestId())
 
     // routes
-    .route("/api/v1", api)
+    .route("/api/v1/submitter", submitterApi)
+    .route("/api/v1/accounts", accountsApi)
 
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
 app.onError((err, c) => {
     console.error(`${err}`)
-    return c.text("Unhandled Error", 500)
+    return c.text(`${err}`, 500)
 })
 
 // Enable API Documentation page

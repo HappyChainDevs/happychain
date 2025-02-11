@@ -1,3 +1,4 @@
+// TODO: does this make sense here? no... on client though... yes?
 export type CustomRpcSchema = [
     {
         Method: "submitter_estimateGas"
