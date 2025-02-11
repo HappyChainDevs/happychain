@@ -133,7 +133,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * Fixed max gas overhead for the logic around the ExcessivelySafeCall to
      * {HappyPaymaster.payout} that needs to be paid for by the payer.
      */
-    uint256 private constant PAYOUT_OVERHEAD = 1200; // TODO: gas usage of ExcessivelySafeCall
+    uint256 private constant PAYOUT_CALL_OVERHEAD = 1200; // TODO: gas usage of ExcessivelySafeCall
 
     /**
      * Execute a Happy Transaction, and tries to ensure that the submitter
@@ -233,7 +233,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // This is an overestimation of the actual gas cost of the submitter.
         // WITHOUT the gas cost of the "payout" call (which is accounted for later).
         uint256 consumedGas =
-            HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_OVERHEAD;
+            HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
 
         if (happyTx.paymaster == address(0)) {
             // Sponsoring submitter, no need to charge anyone
@@ -252,7 +252,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         if (!success) revert PaymentReverted(returnData);
 
         uint256 payoutGas = gasBeforePayout - gasleft();
-        output.gas = uint32(consumedGas + payoutGas);
+        output.gas = uint32(consumedGas + payoutGas - PAYOUT_CALL_OVERHEAD);
 
         // It's okay if the payment is only for the agreed-upon gas limit.
         // This should never happen if happyTx.gasLimit matches the submitter's tx gas limit.

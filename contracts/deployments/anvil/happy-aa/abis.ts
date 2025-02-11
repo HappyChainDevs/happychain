@@ -1190,10 +1190,10 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "HappyEntryPoint": "0x4eDAAFCD2B734Cd86aD7E4009F44C6bF41546ce4",
-  "ScrappyAccount": "0x8F320D250381227CEb6ce1aC9c7430043D4A49Bd",
-  "ScrappyAccountFactory": "0x63da0C62e6AE61dD32136B69b1b840586d9EE2fA",
-  "ScrappyPaymaster": "0xC89Ee077909c2443E12553fAA579Ca524005356b"
+  "HappyEntryPoint": "0xcE14ade5aEdd0375F4c050488dcd8E0fF67F8A94",
+  "ScrappyAccount": "0xCA09573CE5207Be05702CD18d489329f510f939D",
+  "ScrappyAccountFactory": "0x6E92459580207A8BD074968Fe21a3312Ec38EEdD",
+  "ScrappyPaymaster": "0xA2aaA75b6d0608e4Db680e3e62bFe6F658876788"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
