@@ -5,10 +5,7 @@ import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
 
 import { ImportTokensDialog } from "#src/components/interface/home/tabs/views/tokens/ImportTokensDialog"
-import {
-    dialogLogOutConfirmationVisibilityAtom,
-    secondaryMenuVisibilityAtom,
-} from "#src/components/interface/menu-secondary-actions/state"
+import { dialogLogOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
 import { signalClosed, signalOpen } from "#src/utils/walletState.ts"
 import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
