@@ -11,12 +11,13 @@ import {ScrappyAccountFactory} from "../HappyAccounts/factories/ScrappyAccountFa
 contract DeployHappyAAContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
-    uint256 public constant PAYMASTER_DEPOSIT = 10 ether;
+    address public constant PM_TARGET = 0xc80629fE33747288AaFb97684F86f7eD2D1aBF69;
+    uint256 public constant PM_MAX_FEE_PER_BYTE = 10 gwei;
+    uint256 public constant PM_DEPOSIT = 10 ether;
 
     ScrappyAccount public scrappyAccount;
     HappyEntryPoint public happyEntryPoint;
     ScrappyPaymaster public scrappyPaymaster;
-    ScrappyPaymaster public scrappyPaymasterImpl;
     ScrappyAccountFactory public scrappyAccountFactory;
 
     function deploy() internal override {
@@ -65,31 +66,19 @@ contract DeployHappyAAContracts is BaseDeployScript {
 
         // -----------------------------------------------------------------------------------------
 
-        (address payable _scrappyPaymasterImpl,) = deployDeterministic( //-
-            "ScrappyPaymasterImpl",
+        (address payable _scrappyPaymaster,) = deployDeterministic( //-
             "ScrappyPaymaster",
             type(ScrappyPaymaster).creationCode,
-            abi.encode(),
+            abi.encode(_happyEntryPoint, PM_TARGET, PM_MAX_FEE_PER_BYTE, owner),
             DEPLOYMENT_SALT //-
         );
-        scrappyPaymasterImpl = ScrappyPaymaster(_scrappyPaymasterImpl);
+        scrappyPaymaster = ScrappyPaymaster(_scrappyPaymaster);
 
         // -----------------------------------------------------------------------------------------
 
-        (address _scrappyPaymaster, bool paymasterDeployed) = deployDeterministicProxy( //-
-            "ScrappyPaymaster",
-            _scrappyPaymasterImpl,
-            abi.encodeCall(
-                scrappyPaymasterImpl.initialize,
-                (_happyEntryPoint, 0xc80629fE33747288AaFb97684F86f7eD2D1aBF69, 10 ^ 9 wei, owner)
-            ), // TODO, proper values?
-            DEPLOYMENT_SALT //-
-        );
-        scrappyPaymaster = ScrappyPaymaster(payable(_scrappyPaymaster));
-
-        if (isLocal && paymasterDeployed) {
+        if (isLocal) {
             // In local mode, fund the paymaster with some gas tokens.
-            payable(_scrappyPaymaster).transfer(PAYMASTER_DEPOSIT);
+            payable(scrappyPaymaster).transfer(PM_DEPOSIT);
         }
 
         // -----------------------------------------------------------------------------------------
