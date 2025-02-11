@@ -102,9 +102,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
         emit Received(msg.sender, msg.value);
     }
 
-    // ====================================================================================================
-    // ADMIN FUNCTIONS
-
     /**
      * @notice Allows the owner to withdraw a specified amount of funds from the paymaster
      * @dev    Only callable by the owner. Reverts if amount exceeds contract balance
