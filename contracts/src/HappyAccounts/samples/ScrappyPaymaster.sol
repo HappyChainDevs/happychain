@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IHappyPaymaster, SubmitterFeeTooHigh, WrongTarget} from "../interfaces/IHappyPaymaster.sol";
 import {NotFromEntryPoint} from "../utils/Common.sol";
+import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "../core/HappyTx.sol";
 
 /**
@@ -16,6 +16,7 @@ import {HappyTx} from "../core/HappyTx.sol";
  */
 contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable {
     using ECDSA for bytes32;
+    using HappyTxLib for HappyTx;
 
     // ====================================================================================================
     // CONSTANTS
@@ -38,7 +39,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     address public immutable TARGET;
 
     /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte of data.
-    uint256 public immutable MAX_SUBMITTER_FEE_PER_BYTE;
+    uint256 public immutable SUBMITTER_TIP_PER_BYTE;
 
     // ====================================================================================================
     // EVENTS
@@ -61,12 +62,12 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     /**
      * @param entryPoint The deterministic EntryPoint contract
      * @param target The target contract that will be sponsored
-     * @param maxSubmitterFeePerByte The maximum fee per byte that the submitter is willing to pay
+     * @param submitterTipPerByte The maximum fee per byte that the submitter is willing to pay
      */
-    constructor(address entryPoint, address target, uint256 maxSubmitterFeePerByte, address owner) Ownable(owner) {
+    constructor(address entryPoint, address target, uint256 submitterTipPerByte, address owner) Ownable(owner) {
         ENTRYPOINT = entryPoint;
         TARGET = target;
-        MAX_SUBMITTER_FEE_PER_BYTE = maxSubmitterFeePerByte;
+        SUBMITTER_TIP_PER_BYTE = submitterTipPerByte;
     }
 
     // ====================================================================================================
@@ -77,10 +78,15 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
             return WrongTarget.selector;
         }
 
-        uint256 maxSubmitterFee = (
-            MAX_TX_SIZE + STATIC_FIELDS_SIZE + happyTx.callData.length + happyTx.validatorData.length
-                + happyTx.extraData.length
-        ) * MAX_SUBMITTER_FEE_PER_BYTE;
+        // forgefmt: disable-next-item
+        uint256 totalSize = MAX_TX_SIZE
+            + STATIC_FIELDS_SIZE
+            + happyTx.callData.length
+            + happyTx.validatorData.length
+            + happyTx.extraData.length;
+
+        uint256 maxFeePerByte = HappyTxLib.maxCalldataFeePerByte(happyTx);
+        uint256 maxSubmitterFee = totalSize * (maxFeePerByte + SUBMITTER_TIP_PER_BYTE);
 
         if (uint256(happyTx.submitterFee) > maxSubmitterFee) {
             return SubmitterFeeTooHigh.selector;
