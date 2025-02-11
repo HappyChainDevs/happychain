@@ -40,21 +40,27 @@ export default new Hono()
 
             const decoded = decodeHappyTx(data.tx)
 
+            const hasGasLimitsSet =
+                decoded.executeGasLimit && decoded.gasLimit && decoded.maxFeePerGas && decoded.submitterFee
+
+            const usingPaymaster = decoded.account !== decoded.paymaster
+
             // If using a paymaster, these values may be left as 0
             // and we will fill in here
-            if (decoded.account !== decoded.paymaster) {
+            if (usingPaymaster) {
                 decoded.executeGasLimit ||= 4000000000
                 decoded.gasLimit ||= 4000000000
                 decoded.maxFeePerGas ||= ((await publicClient.estimateMaxPriorityFeePerGas()) * 120n) / 100n
                 decoded.submitterFee ||= 100n
             }
 
-            const { request } = await submitterClient.simulateSubmit({
-                address: data.entryPoint,
-                args: [encodeHappyTx(decoded)],
-            })
+            const args = { address: data.entryPoint, args: [encodeHappyTx(decoded)] } as const
+
+            // if gas limits where manually set, we skip simulation
+            const { request } = hasGasLimitsSet ? { request: args } : await submitterClient.simulateSubmit(args)
 
             const hash = await submitterClient.submit(request)
+
             const receipt = await submitterClient.waitForSubmitReceipt({ hash, ...data })
 
             return c.json(

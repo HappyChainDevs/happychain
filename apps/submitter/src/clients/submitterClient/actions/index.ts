@@ -3,6 +3,8 @@ import { simulateSubmit } from "./simulateSubmit"
 import { submit } from "./submit"
 import { waitForSubmitReceipt } from "./waitForSubmitReceipt"
 
+export { simulateSubmit, submit, waitForSubmitReceipt }
+
 export type SubmitterActions = {
     simulateSubmit: (args: Parameters<typeof simulateSubmit>[1]) => ReturnType<typeof simulateSubmit>
     submit: (args: Parameters<typeof submit>[1]) => ReturnType<typeof submit>
