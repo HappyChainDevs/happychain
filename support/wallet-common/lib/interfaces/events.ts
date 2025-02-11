@@ -1,4 +1,4 @@
-import type { PrepareUserOperationReturnType, SmartAccount } from "viem/account-abstraction"
+import type { PrepareUserOperationReturnType } from "viem/account-abstraction"
 import type { EIP1193ErrorObject } from "../errors"
 import type { OverlayErrorCode } from "../errors/overlay-errors"
 import type { EIP1193EventName, EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193.ts"
@@ -229,24 +229,18 @@ export type ProviderMsgsFromIframe = {
  * Currently supports:
  * - `eth_sendTransaction`: Returns {@link PrepareUserOperationReturnType} with associated {@link SmartAccount}
  */
-type RequestTypeMap = {
-    eth_sendTransaction: PrepareUserOperationReturnType<
-        SmartAccount | undefined,
-        SmartAccount | undefined,
-        readonly unknown[]
-    > & {
-        account: SmartAccount
-    }
+
+type RequestExtraDataTypeMap = {
+    eth_sendTransaction: PrepareUserOperationReturnType
 }
 
 /**
  * Provides type-safe method-specific extra data for EIP1193 requests.
- * Returns {@link RequestTypeMap} type if method exists, otherwise empty record.
+ * Returns {@link RequestExtraDataTypeMap} type if method exists, otherwise empty record.
  * @template Method - EIP1193 method name
  */
-export type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> = Method extends keyof RequestTypeMap
-    ? RequestTypeMap[Method]
-    : Record<string, never>
+export type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> =
+    Method extends keyof RequestExtraDataTypeMap ? RequestExtraDataTypeMap[Method] : Record<string, never>
 
 /**
  * Payload structure for approved EIP1193 requests.

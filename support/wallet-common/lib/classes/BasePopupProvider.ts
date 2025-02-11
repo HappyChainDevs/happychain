@@ -17,7 +17,7 @@ const POPUP_FEATURES = ["width=400", "height=800", "popup=true", "toolbar=0", "m
 
 /**
  * This class serves as a base for EIP-1193 providers that sometimes need to create popups to
- * collect user approal. In particular, we have one such provider living on the app that relays
+ * collect user approval. In particular, we have one such provider living on the app that relays
  * requests to the iframe, and one such provider living in the iframe which is for requests
  * initiated from within the iframe.
  *

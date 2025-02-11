@@ -14,7 +14,11 @@ import {
     hexToBigInt,
     isAddress,
 } from "viem"
-import type { PrepareUserOperationParameters } from "viem/account-abstraction"
+import type {
+    PrepareUserOperationParameters,
+    PrepareUserOperationReturnType,
+    SmartAccount,
+} from "viem/account-abstraction"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import { userAtom } from "#src/state/user"
@@ -70,21 +74,25 @@ export const EthSendTransaction = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
+    console.log(params[0])
     const tx: RpcTransactionRequest = params[0]
-    const [_preparedUserOp, _setPreparedUserOp] = useState<ApprovedRequestExtraData<typeof method> | undefined>(
-        undefined,
-    )
+    const [preparedUserOp, setPreparedUserOp] = useState<ApprovedRequestExtraData<typeof method> | undefined>(undefined)
 
     const user = useAtomValue(userAtom)
     const recordedAbisForUser = useAtomValue(abiContractMappingAtom)
     const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
     const appURL = getAppURL()
 
-    const doTheDo = useCallback(async (): Promise<ApprovedRequestExtraData<"eth_sendTransaction"> | undefined> => {
+    const doTheDo = useCallback(async (): Promise<
+        | (ApprovedRequestExtraData<typeof method> & {
+              account: SmartAccount
+          })
+        | undefined
+    > => {
         const smartAccountClient = (await getSmartAccountClient())!
 
         try {
-            return await smartAccountClient.prepareUserOperation({
+            const prep = (await smartAccountClient.prepareUserOperation({
                 account: smartAccountClient.account,
                 paymaster: contractAddresses.HappyPaymaster as Address,
                 parameters: ["factory", "fees", "gas", "signature"],
@@ -97,29 +105,29 @@ export const EthSendTransaction = ({
                 ],
                 nonce: 0n,
                 paymasterData: undefined,
-            } satisfies PrepareUserOperationParameters)
+            } satisfies PrepareUserOperationParameters)) satisfies PrepareUserOperationReturnType
+
+            return prep
         } catch (error) {
             console.error(error)
             return undefined
         }
     }, [tx])
 
-    // Add useEffect to call doTheDo when transaction changes
     useEffect(() => {
         const prepareTx = async () => {
             try {
                 const op = await doTheDo()
-                console.log(op)
-
-                // TODO type issue with `rest`
+                console.log("op", op)
                 if (op) {
-                    const { account, ..._rest } = op
-                    // setPreparedUserOp(rest)
+                    const { account, ...rest } = op
+                    setPreparedUserOp(rest)
                 }
             } catch (err) {
                 console.error("Failed to prepare user operation:", err)
             }
         }
+
         void prepareTx()
     }, [doTheDo])
 
@@ -162,7 +170,7 @@ export const EthSendTransaction = ({
                         "aria-disabled": status === "pending",
                         onClick: () => {
                             if (status === "pending") return
-                            accept({ eip1193params: { method, params } })
+                            accept({ eip1193params: { method, params }, extraData: preparedUserOp })
                         },
                     },
                     reject: {
