@@ -1,7 +1,6 @@
 {
-  "HappyEntryPoint": "0xBe697204Cd9a9e0D203106b196802A29200534db",
-  "ScrappyAccount": "0x1eEC2255641A21bBf0e78e4ca5CFBd1c4Cf7e7c4",
-  "ScrappyAccountFactory": "0x54Ce2b538CD2E3447bc2e80A86738A51C3337FFa",
-  "ScrappyPaymaster": "0x28f2D25C0150773D60d4cBeAF0B7e89ecD9c879A",
-  "ScrappyPaymasterImpl": "0x30B3ffF7e2Fe17b213E28A4C1A9e3b9beB2037D9"
+  "HappyEntryPoint": "0x9d32df00A428220585275cD4c07d8c22E3dd7f2f",
+  "ScrappyAccount": "0x538a97E3184ca57b485B8D697B84F80Ce325d781",
+  "ScrappyAccountFactory": "0xBDF40A91F4F71046878139Dd5BF4a4868Fdd64b1",
+  "ScrappyPaymaster": "0x35D66b888a03BdBd6e77eaEAC358Eb0d65a3aBDe"
 }

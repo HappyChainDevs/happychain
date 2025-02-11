@@ -3,10 +3,8 @@ pragma solidity ^0.8.20;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-
-import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IHappyPaymaster, SubmitterFeeTooHigh, WrongTarget} from "../interfaces/IHappyPaymaster.sol";
 import {NotFromEntryPoint} from "../utils/Common.sol";
@@ -16,14 +14,14 @@ import {HappyTx} from "../core/HappyTx.sol";
  * @title ScrappyPaymaster
  * @notice An example paymaster contract implementing the IHappyPaymaster interface.
  */
-contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
+contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable {
     using ECDSA for bytes32;
 
     // ====================================================================================================
     // CONSTANTS
 
-    /// @dev Fixed size of an encoded HappyTx: 196 bytes for static fields plus 16 bytes (4 bytes × 4) for storing
-    ///      the lengths of the four dynamic fields
+    /// @dev Fixed size of an encoded HappyTx: 196 bytes for static fields plus 16 bytes (4 bytes × 4) for
+    ///      storing the lengths of the four dynamic fields
     uint256 private constant STATIC_FIELDS_SIZE = 212;
 
     /// @dev The fixed gas cost of payout() function + call overhead
@@ -33,22 +31,17 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
     ///      Given RLP encoding, this should be significantly less.
     uint256 private constant MAX_TX_SIZE = 280; // TODO
 
-    /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte
-    ///      of data in the submitter tx. Set once during initialization.
-    uint256 public maxSubmitterFeePerByte;
+    /// @dev The deterministic EntryPoint contract
+    address public immutable ENTRYPOINT;
 
     /// @dev This paymaster sponsors all calls to this target contract.
-    ///      Set once during initialization and cannot be changed afterwards.
-    address public target;
+    address public immutable TARGET;
 
-    /// @dev The deterministic EntryPoint contract
-    address public entryPoint;
+    /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte of data.
+    uint256 public immutable MAX_SUBMITTER_FEE_PER_BYTE;
 
     // ====================================================================================================
     // EVENTS
-
-    /// @notice Emitted when the contract implementation is upgraded to a new implementation
-    event Upgraded(address indexed newImplementation);
 
     /// @notice Emitted when ETH is received by the contract
     event Received(address sender, uint256 amount);
@@ -58,54 +51,36 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, OwnableU
 
     /// @dev Checks if the the call was made from the EntryPoint contract
     modifier onlyFromEntryPoint() {
-        if (msg.sender != entryPoint) revert NotFromEntryPoint();
+        if (msg.sender != ENTRYPOINT) revert NotFromEntryPoint();
         _;
     }
 
     // ====================================================================================================
     // CONSTRUCTOR
 
-    constructor() {
-        _disableInitializers();
-    }
-
     /**
-     * @dev   Initializer for proxy instances.
-     * @param _entryPoint The deterministic EntryPoint contract
-     * @param _target The target contract that will be sponsored
-     * @param _maxSubmitterFeePerByte The maximum fee per byte that the submitter is willing to pay
-     * @param _owner The owner who can upgrade the implementation
+     * @param entryPoint The deterministic EntryPoint contract
+     * @param target The target contract that will be sponsored
+     * @param maxSubmitterFeePerByte The maximum fee per byte that the submitter is willing to pay
      */
-    function initialize(address _entryPoint, address _target, uint256 _maxSubmitterFeePerByte, address _owner)
-        external
-        initializer
-    {
-        entryPoint = _entryPoint;
-        target = _target;
-        maxSubmitterFeePerByte = _maxSubmitterFeePerByte;
-        __Ownable_init(_owner);
-        __UUPSUpgradeable_init();
+    constructor(address entryPoint, address target, uint256 maxSubmitterFeePerByte, address owner) Ownable(owner) {
+        ENTRYPOINT = entryPoint;
+        TARGET = target;
+        MAX_SUBMITTER_FEE_PER_BYTE = maxSubmitterFeePerByte;
     }
-
-    /**
-     * @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-     * @param newImplementation The address of the new implementation contract
-     * @dev Only callable by the owner
-     */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
-        if (happyTx.dest != target) {
+        if (happyTx.dest != TARGET) {
             return WrongTarget.selector;
         }
 
         uint256 maxSubmitterFee = (
             MAX_TX_SIZE + STATIC_FIELDS_SIZE + happyTx.callData.length + happyTx.validatorData.length
                 + happyTx.extraData.length
-        ) * maxSubmitterFeePerByte;
+        ) * MAX_SUBMITTER_FEE_PER_BYTE;
 
         if (uint256(happyTx.submitterFee) > maxSubmitterFee) {
             return SubmitterFeeTooHigh.selector;
