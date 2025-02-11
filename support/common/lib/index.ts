@@ -21,7 +21,7 @@ export type {
     Hex,
 } from "./utils/types"
 
-export { bigIntMax, bigIntReplacer, bigIntReviver, bigIntToZeroPadded } from "./utils/bigint"
+export { bigIntMax, bigIntReplacer, bigIntReviver, bigIntToZeroPadded, toBigIntSafe } from "./utils/bigint"
 
 export { validateNumericInput } from "./utils/regexChecks"
 

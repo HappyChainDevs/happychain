@@ -1,4 +1,4 @@
-import { TransactionType } from "@happy.tech/common"
+import { TransactionType, toBigIntSafe } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -16,9 +16,9 @@ import {
     isAddress,
 } from "viem"
 import type { PrepareUserOperationParameters, PrepareUserOperationReturnType } from "viem/account-abstraction"
-import { useAsyncOperation } from "#src/hooks/useAsyncOperation.js"
+import { useAsyncOperation } from "#src/hooks/useAsyncOperation"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
-import { publicClientAtom } from "#src/state/publicClient.js"
+import { publicClientAtom } from "#src/state/publicClient"
 import { type ExtendedSmartAccountClient, smartAccountClientAtom } from "#src/state/smartAccountClient"
 import { userAtom } from "#src/state/user"
 import { getAppURL } from "#src/utils/appURL"
@@ -37,9 +37,12 @@ import {
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
-const toBigIntSafe = (value: string | bigint | null | undefined, defaultValue = 0n) => {
-    if (!value) return defaultValue
-    return typeof value === "bigint" ? value : BigInt(value)
+export enum GasFieldName {
+    MaxFeePerGas = "MaxFeePerGas",
+    MaxPriorityFeePerGas = "MaxPriorityFeePerGas",
+    PreVerificationGas = "PreVerificationGas",
+    VerificationGasLimit = "VerificationGasLimit",
+    CallGasLimit = "CallGasLimit",
 }
 
 /**
@@ -87,10 +90,9 @@ export const EthSendTransaction = ({
     const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
     const appURL = getAppURL()
 
-    // Add this at the top with other state
+    // get and store block data
     const [blockData, setBlockData] = useState<Block | undefined>(undefined)
 
-    // Add a useEffect to fetch block data
     useEffect(() => {
         const fetchBlock = async () => {
             const block = await publicClient.getBlock()

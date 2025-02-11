@@ -44,8 +44,6 @@ export function useAsyncOperation<T, R>(
 
         try {
             const client = atomValue
-
-            // Early return pattern for cleaner flow
             if (!client) {
                 return setState({
                     data: undefined,
@@ -54,14 +52,12 @@ export function useAsyncOperation<T, R>(
                 })
             }
 
-            // Single setState path for both cases
             setState({
                 data: operation ? await operation(client) : (client as unknown as R),
                 loading: false,
                 error: undefined,
             })
         } catch (error) {
-            // Type guard for better error handling
             const errorMessage = error instanceof Error ? error : new Error("Unknown error occurred")
 
             setState({
@@ -72,7 +68,6 @@ export function useAsyncOperation<T, R>(
         }
     }, [atomValue, operation])
 
-    // Cleanup on unmount
     useEffect(() => {
         let mounted = true
 
