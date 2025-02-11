@@ -125,16 +125,15 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * 2nd slot: {ExecutionOutput.gas}
      * 3rd slot: offset for reverData from where the struct begins
      * 4th slot: {ExecutionOutput.revertData.Length}
-     * 5th slot: {ExecutionOutput.revertData}
-     * 6th slot: padding, in case revertData is 64 bytes (max size limit for revertData, for now)
+     * 5th slot (onwards): {ExecutionOutput.revertData} (max 256 bytes)
      */
-    uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 192;
+    uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 384;
 
     /**
-     * Fixed max gas overhead for the logic around the {HappyPaymaster.payout}
-     * call, that needs to be paid for by the payer.
+     * Fixed max gas overhead for the logic around the ExcessivelySafeCall to
+     * {HappyPaymaster.payout} that needs to be paid for by the payer.
      */
-    uint256 private constant PAYOUT_OVERHEAD = 700; // TODO: Base 700 (CALL) + some buffer (??)
+    uint256 private constant PAYOUT_OVERHEAD = 1200; // TODO: gas usage of ExcessivelySafeCall
 
     /**
      * Execute a Happy Transaction, and tries to ensure that the submitter

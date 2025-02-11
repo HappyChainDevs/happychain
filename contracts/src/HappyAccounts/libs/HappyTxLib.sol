@@ -6,11 +6,14 @@ import {HappyTx} from "../core/HappyTx.sol";
 // [LOGGAS] import {console} from "forge-std/Script.sol";
 
 library HappyTxLib {
-    ///@notice Selector returned by {decode} when unable to properly decode a happyTx.
+    /// @notice Selector returned by {decode} when unable to properly decode a happyTx.
     error MalformedHappyTx();
 
-    /// @dev 196 bytes for static fields
+    /// @dev Encoded HappyTx takes up 196 bytes for the static fields.
     uint256 private constant DYNAMIC_FIELDS_OFFSET = 196;
+
+    /// @dev Assuming all calldata bytes are non-zero (16 gas per byte).
+    uint256 private constant CALLDATA_GAS_PER_BYTE = 16;
 
     /**
      * @notice Encodes a HappyTx struct into a compact bytes array, for minimal memory usage.
@@ -266,12 +269,21 @@ library HappyTxLib {
      *         - Function dispatch overhead (TODO)
      */
     function txGasFromCallGas(uint256 callGas, uint256 calldataLength) internal pure returns (uint256) {
-        return 21000 + (200 + calldataLength) * 16 + callGas; // + TODO;
+        return 21000 + (200 + calldataLength) * CALLDATA_GAS_PER_BYTE + callGas; // + TODO;
 
         // - `(200 + calldataLength) * 16` is an overestimate of the calldata part of the
         //    intrinsic gas obtained by assuming every byte is non-zero in the tx data.
         //     - A transaction without calldata and access list is at most ~280 bytes
         //       but due to RLP encoding this should be lower. 200 is a good compromise,
         //       essentially since we already overcharge for the bytes whose value is 0.
+    }
+
+    /**
+     * @dev Returns the maximum fee per byte for a HappyTx's calldata
+     * @return The maximum fee per byte, calculated by overestimating all calldata bytes
+     *         as non-zero (16 gas per byte).
+     */
+    function maxCalldataFeePerByte(HappyTx memory happyTx) internal pure returns (uint256) {
+        return (happyTx.maxFeePerGas) * CALLDATA_GAS_PER_BYTE;
     }
 }
