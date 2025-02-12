@@ -27,6 +27,8 @@ import {
     UnknownDuringSimulation
 } from "../utils/Common.sol";
 
+// [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
+
 /**
  * Example implementation of a Happy Account with nonce management, reentrancy protection,
  * and proxy upgrade capability.

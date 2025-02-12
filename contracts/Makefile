@@ -126,6 +126,20 @@ gas-logging-off:
 	@echo "Gas logging is now OFF"
 .PHONY: gas-logging-off
 
+# Turn internal gas logging on for ScrappyAccount and ScrappyPaymaster
+internal-gas-logging-on:
+	@echo "Turning internal gas logging ON..."
+	@find ./src/HappyAccounts/samples -type f -name "*.sol" -exec sed -i '' 's|// \[LOGGAS_INTERNAL\]|/* [LOGGAS_INTERNAL] */|g' {} +
+	@echo "Internal gas logging is now ON"
+.PHONY: internal-gas-logging-on
+
+# Turn internal gas logging off for ScrappyAccount and ScrappyPaymaster
+internal-gas-logging-off:
+	@echo "Turning internal gas logging OFF..."
+	@find ./src/HappyAccounts/samples -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS_INTERNAL\] \*/|// [LOGGAS_INTERNAL]|g' {} +
+	@echo "Internal gas logging is now OFF"
+.PHONY: internal-gas-logging-off
+
 ####################################################################################################
 # Debug Logging
 
