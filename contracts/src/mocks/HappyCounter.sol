@@ -2,8 +2,7 @@
 pragma solidity ^0.8.20;
 
 contract HappyCounter {
-
-    mapping (address => uint256) private _count;
+    mapping(address => uint256) private _count;
 
     // Get the current count
     function getCount() public view returns (uint256 count) {
