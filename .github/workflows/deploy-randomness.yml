@@ -69,8 +69,6 @@ jobs:
     
               rm -f .env
 
-              # This indentation is required for YAML and heredoc to work properly.
-              # Adding spaces breaks the heredoc due to YAML's strict indentation rules.
               cat > .env <<-EOF
             export PRIVATE_KEY=${{ secrets.RANDOMNESS_PRIVATE_KEY }}
             export TXM_DB_PATH=${{ env.TXM_DB_PATH }}
