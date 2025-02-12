@@ -27,6 +27,9 @@ export class BlockMonitor {
                       pollingInterval: this.txmgr.pollingInterval,
                   }
                 : {}),
+            onError: (error) => {
+                console.error("Error watching blocks", error)
+            },
         })
     }
 
