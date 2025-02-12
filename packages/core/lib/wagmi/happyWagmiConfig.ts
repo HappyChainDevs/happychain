@@ -51,13 +51,10 @@ export function happyWagmiConnector(): CreateConnectorFn {
  * @see {@link https://wagmi.sh/react/api/createConfig#config Wagmi Config Documentation}
  * @see {@link https://viem.sh/docs/glossary/types#chain Viem Chain Type}
  */
-export function createHappyChainWagmiConfig(
-    chain: Chain,
-    connector: CreateConnectorFn = happyWagmiConnector(),
-): Config {
+export function createHappyChainWagmiConfig(chain: Chain): Config {
     return createConfig({
         chains: [chain],
-        connectors: [connector],
+        connectors: [happyWagmiConnector()],
         multiInjectedProviderDiscovery: false,
         transports: {
             [chain.id]: custom(happyProvider),
