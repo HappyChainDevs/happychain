@@ -1,6 +1,7 @@
 import { WalletType } from "@happy.tech/wallet-common"
 import { useAtom, useAtomValue } from "jotai"
 import { useAccount } from "wagmi"
+import { secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
 import { useActiveConnectionProvider } from "../../connections/initialize"
 import { userAtom } from "../../state/user"
 import UserInfoLoader from "../loaders/UserInfoLoader"
