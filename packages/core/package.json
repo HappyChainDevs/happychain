@@ -11,6 +11,10 @@
         ".": {
             "types": "./dist/index.es.d.ts",
             "default": "./dist/index.es.js"
+        },
+        "./wagmi": {
+            "types": "./dist/wagmi.es.d.ts",
+            "default": "./dist/wagmi.es.js"
         }
     },
     "dependencies": {

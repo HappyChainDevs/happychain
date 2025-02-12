@@ -1,4 +1,5 @@
-import { createHappyChainWagmiConfig, happyChainSepolia, happyProvider } from "@happy.tech/core"
+import { happyChainSepolia, happyProvider } from "@happy.tech/core"
+import { createHappyChainWagmiConfig } from "@happy.tech/core/wagmi"
 import { HappyChainPlugin } from "@happy.tech/vue"
 import { type Config as WagmiConfig, WagmiPlugin } from "@wagmi/vue"
 import { createApp } from "vue"

@@ -1,6 +1,14 @@
 import { type Config, type CreateConnectorFn, createConfig, custom, injected } from "@wagmi/core"
 import type { Chain } from "@wagmi/core/chains"
-import { happyProvider } from "./happyProvider/initialize"
+
+// - We're excluding `@happy.tech/core` from the wagmi export to prevent it from rebundling
+//   the provider code in the main export.
+// - We can't use a top-level import has that causes TSC to error (since technically when
+//   building, `@happy.tech/core` is this package and doesn't exist yet).
+// - The string concatenation similarly prevents TSC from seeing through the import.
+//   Bun however picks it up just fine.
+// - For requires targeting recent browsers (Vite: `build: { target: "esnext" }`)
+const { happyProvider } = await import("@happy.tech" + "/core")
 
 /**
  * A custom wagmi [Connector](https://wagmi.sh/react/api/connectors/injected) that is

@@ -55,6 +55,4 @@ export type {
 export { createHappyPublicClient, createHappyWalletClient } from "./viem"
 export type { HappyPublicClient, HappyWalletClient } from "./viem"
 
-export { happyWagmiConnector, createHappyChainWagmiConfig } from "./wagmi"
-
 export type { BadgeProps } from "./badge/define"

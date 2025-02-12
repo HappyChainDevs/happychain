@@ -6,4 +6,7 @@ export default defineConfig({
     server: { port: 6003, strictPort: true },
     preview: { port: 6003, strictPort: true },
     plugins: [vue()],
+    build: {
+        target: "esnext",
+    },
 })
