@@ -4,7 +4,6 @@ import {
     type ApprovedRequestPayload,
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
-    // type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     type Msgs,
@@ -50,18 +49,20 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         console.warn("Request approved, but no user found")
     }
 
-    const requestMethod = request.payload.eip1193params.method
+    const { method: requestMethod, params: requestParams } = request.payload.eip1193params
 
     switch (requestMethod) {
+        // This functionality is same as in injected.ts
+        // TODO: refactor once we have a better plan on how to maintain separation while reducing
+        // code duplication here
         case "eth_sendTransaction": {
             try {
                 if (!user) throw new EIP1193UnauthorizedError()
-                console.log(request.payload)
                 return await sendUserOp({
                     user,
-                    tx: request.payload.eip1193params.params[0],
+                    tx: requestParams[0],
                     validator: contractAddresses.ECDSAValidator,
-                    preparedOp: request.payload.extraData,
+                    preparedOp: request.payload.extraData, // TODO handle this being {} / Record<string, never>?
                     signer: async (userOp, smartAccountClient) =>
                         await smartAccountClient.account.signUserOperation(userOp),
                 })
@@ -78,12 +79,11 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         case "wallet_requestPermissions":
-            return grantPermissions(app, request.payload.eip1193params.params[0])
+            return grantPermissions(app, requestParams[0])
 
         case "wallet_addEthereumChain": {
             const chains = getChains()
-            const params =
-                Array.isArray(request.payload.eip1193params.params) && request.payload.eip1193params.params[0]
+            const params = Array.isArray(requestParams) && requestParams[0]
             const isValid = isAddChainParams(params)
 
             if (!isValid)
@@ -95,7 +95,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             const response = await sendToWalletClient({
                 ...request,
                 eip1193params: request.payload.eip1193params,
-                extraData: undefined,
             })
             // Only add chain if the request is successful.
             setChains((prev) => ({ ...prev, [params.chainId]: params }))
@@ -104,7 +103,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
         case "wallet_switchEthereumChain": {
             const chains = getChains()
-            const chainId = request.payload.eip1193params.params[0].chainId
+            const chainId = requestParams[0].chainId
 
             // ensure chain has already been added
             if (!(chainId in chains)) {
@@ -121,22 +120,22 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 eip1193params: request.payload.eip1193params,
                 extraData: undefined,
             })
-            // Currently this fails: web3Auth is hardcoded to the default intial chain.
+            // Currently this fails: web3Auth is hardcoded to the default initial chain.
             setCurrentChain(chains[chainId])
             return response
         }
 
         case "wallet_watchAsset": {
-            return user ? addWatchedAsset(user.address, request.payload.eip1193params.params) : false
+            return user ? addWatchedAsset(user.address, requestParams) : false
         }
 
         case HappyMethodNames.USE_ABI: {
-            return user ? loadAbiForUser(user.address, request.payload.eip1193params.params) : false
+            return user ? loadAbiForUser(user.address, requestParams) : false
         }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             // address of contract the session key will be authorized to interact with
-            const targetContract = request.payload.eip1193params.params[0]
+            const targetContract = requestParams[0]
 
             if (!isAddress(targetContract)) {
                 throw new InvalidAddressError({ address: targetContract })

@@ -60,22 +60,14 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
     switch (request.payload.method) {
         case "eth_chainId": {
             const currChain = getCurrentChain().chainId
-            return (
-                currChain ??
-                (await sendToPublicClient(app, {
-                    ...request.payload,
-                }))
-            )
+            return currChain ?? (await sendToPublicClient(app, { ...request, payload: request.payload }))
         }
 
         case "eth_sendTransaction": {
             const user = getUser()
             if (!user) throw new EIP1193UnauthorizedError()
-            const reqParams = request.payload.params[0]
-
-            const tx = reqParams
-            const target = reqParams.to
-
+            const tx = request.payload.params[0]
+            const target = request.payload.params[0].to
             if (!tx || !target) return false
 
             const permissions = getPermissions(app, {
@@ -172,7 +164,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                 } as Transaction // performs type-check, but allows extra fields
             } catch (_err) {
                 // Fall back to handling it as a regular transaction if the hash doesn't correspond to a userop.
-                return await sendToPublicClient(app, request.payload)
+                return await sendToPublicClient(app, request)
             }
         }
 
@@ -209,7 +201,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                     value, // Extra field because why not?
                 } as TransactionReceipt // performs type-check, but allows extra fields
             } catch (_err) {
-                return sendToPublicClient(app, request.payload)
+                return sendToPublicClient(app, request)
             }
         }
 
@@ -308,22 +300,22 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         }
 
         default:
-            return await sendToPublicClient(app, request.payload)
+            return await sendToPublicClient(app, request)
     }
 }
 
-async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPermissionless]["payload"]>(
+async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPermissionless]>(
     app: AppURL,
     request: T,
-): Promise<EIP1193RequestResult<T["method"]>> {
-    if (checkIfRequestRequiresConfirmation(app, request)) {
+): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
+    if (checkIfRequestRequiresConfirmation(app, request.payload)) {
         throw new EIP1193UnauthorizedError()
     }
     const client: Client = getPublicClient()
 
-    if (requestPayloadIsHappyMethod(request)) {
+    if (requestPayloadIsHappyMethod(request.payload)) {
         throw new EIP1193UnsupportedMethodError()
     }
 
-    return await client.request(request)
+    return await client.request(request.payload)
 }

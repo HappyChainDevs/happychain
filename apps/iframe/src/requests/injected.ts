@@ -67,10 +67,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         // Different from permissionless.ts as this actually calls the provider
         // to ensure we still have a connection with the extension wallet
         case HappyMethodNames.USER: {
-            const acc = await sendToInjectedClient(app, {
-                ...request,
-                payload: { method: "eth_accounts" },
-            })
+            const acc = await sendToInjectedClient(app, { ...request, payload: { method: "eth_accounts" } })
             return acc.length ? user : undefined
         }
 
