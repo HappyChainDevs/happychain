@@ -71,11 +71,11 @@ jobs:
               rm -f .env
 
               cat > .env <<-EOF
-              export PRIVATE_KEY=${{ secrets.RANDOMNESS_PRIVATE_KEY }}
-              export TXM_DB_PATH=${{ env.TXM_DB_PATH }}
-              export RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
-              export ${{vars.RANDOMNESS_ENV}}
-              EOF
+            export PRIVATE_KEY=${{ secrets.RANDOMNESS_PRIVATE_KEY }}
+            export TXM_DB_PATH=${{ env.TXM_DB_PATH }}
+            export RANDOMNESS_DB_PATH=${{ env.RANDOMNESS_DB_PATH }}
+            export ${{vars.RANDOMNESS_ENV}}
+            EOF
 
               npm rebuild
             
