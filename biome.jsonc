@@ -4,7 +4,9 @@
     "files": {
         "ignore": [
             // packages will manage their own configs
-            "./packages"
+            "./packages",
+            // run `make contracts.check`
+            "./contracts"
         ]
     }
 }
