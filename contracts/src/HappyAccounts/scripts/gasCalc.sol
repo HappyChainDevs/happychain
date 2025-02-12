@@ -12,42 +12,42 @@ import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
 import {ScrappyPaymaster} from "../samples/ScrappyPaymaster.sol";
 import {ScrappyAccountFactory} from "../factories/ScrappyAccountFactory.sol";
 
-// import {DeployHappyAAContracts} from "../../deploy/DeployHappyAA.s.sol";
+import {DeployHappyAAContracts} from "../../deploy/DeployHappyAA.s.sol";
 
 contract HappyEntryPointGasEstimator is Test {
     using HappyTxLib for HappyTx;
 
-    address private constant DEPLOYER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     bytes32 private constant DEPLOYMENT_SALT = 0;
-    uint256 private constant PM_SUBMITTER_TIP_PER_BYTE = 2 gwei;
-    uint256 private constant PM_DEPOSIT = 10 ether;
+    address private constant DEPLOYER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    address private constant OWNER = 0x4BC8e81Ad3BE83276837f184138FC96770C14297;
 
     DeployHappyAAContracts private deployer;
     ScrappyPaymaster private scrappyPaymaster;
     HappyEntryPoint private happyEntryPoint;
+    ScrappyAccount private scrappyAccountImpl;
     ScrappyAccount private scrappyAccount;
     ScrappyAccountFactory private scrappyAccountFactory;
 
     function setUp() public {
-        // deployer = new DeployHappyAAContracts();
-        // vm.deal(DEPLOYER, 100 ether);
-        // vm.prank(DEPLOYER);
-        // deployer.deployForTests();
+        // Set up the Deployment Script
+        deployer = new DeployHappyAAContracts();
 
-        // happyEntryPoint = deployer.happyEntryPoint();
-        // scrappyPaymaster = deployer.scrappyPaymaster();
-        // scrappyAccount = deployer.scrappyAccount();
+        // Deploy the happy-aa contracts
+        vm.prank(DEPLOYER);
+        deployer.deployForTests();
 
-        happyEntryPoint = new HappyEntryPoint{salt: DEPLOYMENT_SALT}();
-        scrappyAccount = new ScrappyAccount{salt: DEPLOYMENT_SALT}(address(happyEntryPoint));
+        happyEntryPoint = deployer.happyEntryPoint();
+        scrappyPaymaster = deployer.scrappyPaymaster();
+        scrappyAccountFactory = deployer.scrappyAccountFactory();
+        scrappyAccountImpl = deployer.scrappyAccount();
         
-        
-        scrappyPaymaster = new ScrappyPaymaster{salt: DEPLOYMENT_SALT}(
-            address(happyEntryPoint),
-            PM_SUBMITTER_TIP_PER_BYTE,
-            DEPLOYER
-        );
-        payable(scrappyPaymaster).transfer(PM_DEPOSIT);
+        // Deploy a Smart Account using the factory
+        address _scrappyAccount = scrappyAccountFactory.createAccount(DEPLOYMENT_SALT, OWNER);
+        scrappyAccount = ScrappyAccount(payable(_scrappyAccount));
+
+        // TODO: transfer call AFTER state change ^^, else, linter gives reentrancy attack warning :p
+        // Fund the paymaster with some gas tokens
+        payable(address(scrappyPaymaster)).transfer(10 ether);
     }
 
     // ====================================================================================================

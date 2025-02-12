@@ -166,7 +166,7 @@ debug-logging-off:
 
 happyEntrypoint-gas: ## Generates a gas report for the happy entrypoint contract.
 	@make gas-logging-on
-	@forge test -vvv --match-contract HappyEntryPointGasEstimator --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 
+	@forge test -vvv --match-contract HappyEntryPointGasEstimator
 	# --rpc-url $(RPC_LOCAL) --isolate 
 	# | awk '/Gas used in submit \(uninitialized and cold storage\)/{p=1}; p' > happyEntrypoint_gas_report.txt
 	@make gas-logging-off
