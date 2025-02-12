@@ -1,17 +1,13 @@
-import { promiseWithResolvers, sleep } from "@happy.tech/common"
 import { abis } from "@happy.tech/contracts/random/anvil"
 import { TransactionManager, TransactionStatus, TxmHookType } from "@happy.tech/txm"
 import type { LatestBlock, Transaction } from "@happy.tech/txm"
 import { CustomGasEstimator } from "./CustomGasEstimator.js"
-import { Drand } from "./Drand"
 import { DrandRepository } from "./DrandRepository"
-import { DrandError, DrandService } from "./DrandService"
+import { DrandService } from "./DrandService"
 import { Randomness, RandomnessStatus } from "./Randomness.js"
 import { RandomnessRepository } from "./RandomnessRepository.js"
 import { TransactionFactory } from "./TransactionFactory.js"
 import { env } from "./env.js"
-
-const MS_IN_SECOND = 1000
 
 class RandomnessService {
     private readonly randomnessRepository: RandomnessRepository
@@ -19,9 +15,6 @@ class RandomnessService {
     private readonly txm: TransactionManager
     private readonly transactionFactory: TransactionFactory
     private readonly drandService: DrandService
-    private getDrandBeaconLocked = false
-    private pendingGetDrandBeaconPromises: PromiseWithResolvers<void>[] = []
-    private pendingPostDrandTransactions: Transaction[] = []
 
     constructor() {
         this.randomnessRepository = new RandomnessRepository()
@@ -37,7 +30,7 @@ class RandomnessService {
             },
         })
         this.transactionFactory = new TransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS, env.PRECOMMIT_DELAY)
-        this.drandService = new DrandService()
+        this.drandService = new DrandService(this.drandRepository, this.transactionFactory)
     }
 
     async start() {
@@ -49,50 +42,7 @@ class RandomnessService {
             console.error(description)
         })
 
-        // Start fetching Drand beacons for past rounds. Subsequently, beacons will be fetched at regular intervals
-        // to maintain synchronization with the Drand network
-        this.handleNewDrandBeacons()
-
-        // Synchronize the retrieval of new Drand beacons with the Drand network to request them as soon as they become available.
-        const periodMs = Number(env.EVM_DRAND_PERIOD_SECONDS) * MS_IN_SECOND
-        const drandGenesisTimestampMs = Number(env.EVM_DRAND_GENESIS_TIMESTAMP_SECONDS) * MS_IN_SECOND
-        const now = Date.now()
-
-        // Calculates timestamp for the next Drand beacon:
-        // 1. Obtains the elapsed time since genesis: now - drandGenesisTimestampMs.
-        // 2. Divides this time by the period (periodMs) and rounds up to get the next round.
-        // 3. Converts the next round back to an absolute timestamp by multiplying by periodMs and adding drandGenesisTimestampMs.
-        const nextDrandBeaconTimestamp =
-            Math.ceil((now - drandGenesisTimestampMs) / periodMs) * periodMs + drandGenesisTimestampMs
-        await sleep(nextDrandBeaconTimestamp - now)
-
-        // Implements a mutex to ensure that only one instance of this function executes at a time.
-        // Calls made while the mutex is locked are queued as pending promises.
-        // When the current execution completes, the most recent pending promise is immediately resolved,
-        // allowing it to proceed without waiting for the next interval, while any other queued promises are rejected.
-        setInterval(async () => {
-            if (this.getDrandBeaconLocked) {
-                const pending = promiseWithResolvers<void>()
-                this.pendingGetDrandBeaconPromises.push(pending)
-
-                try {
-                    await pending.promise
-                } catch {
-                    return
-                }
-            }
-
-            this.getDrandBeaconLocked = true
-            try {
-                await this.handleNewDrandBeacons()
-            } catch (error) {
-                console.error("Error in handleNewDrandBeacons: ", error)
-            }
-            this.getDrandBeaconLocked = false
-
-            this.pendingGetDrandBeaconPromises.pop()?.resolve()
-            this.pendingGetDrandBeaconPromises.forEach((p) => p.reject())
-        }, Number(env.EVM_DRAND_PERIOD_SECONDS) * MS_IN_SECOND)
+        this.drandService.start()
     }
 
     private onTransactionStatusChange(transaction: Transaction) {
@@ -170,59 +120,6 @@ class RandomnessService {
         }
     }
 
-    private async handleNewDrandBeacons() {
-        const currentRound = this.drandService.currentRound()
-        const oldestDrand = this.drandRepository.getOldestDrandRound() ?? env.EVM_DRAND_START_ROUND
-        const drandGaps = this.drandRepository.findRoundGapsInRange(oldestDrand, currentRound)
-
-        await Promise.all(
-            drandGaps.map(async (round) => {
-                let drandBeacon = await this.drandService.getDrandBeacon(round)
-                if (drandBeacon.isErr()) {
-                    if (drandBeacon.error !== DrandError.TooEarly) {
-                        console.error("Failed to get drand beacon", drandBeacon.error)
-                        return
-                    }
-
-                    await sleep(1000)
-                    drandBeacon = await this.drandService.getDrandBeacon(round)
-
-                    if (drandBeacon.isErr()) {
-                        console.error("Failed to get drand beacon", drandBeacon.error)
-                        return
-                    }
-                }
-
-                const postDrandTransactionResult = this.transactionFactory.createPostDrandTransaction({
-                    round: round,
-                    signature: drandBeacon.value.signature,
-                })
-
-                if (postDrandTransactionResult.isErr()) {
-                    console.error("Failed to create post drand transaction", postDrandTransactionResult.error)
-                    return
-                }
-
-                const postDrandTransaction = postDrandTransactionResult.value
-
-                const drand = Drand.create({
-                    round: round,
-                    signature: drandBeacon.value.signature,
-                    transactionIntentId: postDrandTransaction.intentId,
-                })
-
-                const drandSaved = await this.drandRepository.saveDrand(drand)
-
-                if (drandSaved.isErr()) {
-                    console.error("Failed to save drand", drandSaved.error)
-                    return
-                }
-
-                this.pendingPostDrandTransactions.push(postDrandTransaction)
-            }),
-        )
-    }
-
     private async onCollectTransactions(block: LatestBlock): Promise<Transaction[]> {
         const transactions: Transaction[] = []
 
@@ -278,9 +175,11 @@ class RandomnessService {
             })
         }
 
-        transactions.push(...this.pendingPostDrandTransactions)
+        const drandTransactions = this.drandService.pullDrandTransactions()
 
-        this.pendingPostDrandTransactions.map(async (transaction) => {
+        transactions.push(...drandTransactions)
+
+        drandTransactions.map(async (transaction) => {
             const drand = this.drandRepository.getDrandByTransactionIntentId(transaction.intentId)
 
             if (!drand) {
@@ -293,8 +192,6 @@ class RandomnessService {
                 console.error("Failed to update drand", error)
             })
         })
-
-        this.pendingPostDrandTransactions = []
 
         return transactions
     }
