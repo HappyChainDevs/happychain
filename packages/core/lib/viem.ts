@@ -10,7 +10,15 @@ import {
     createWalletClient,
     custom,
 } from "viem"
-import { happyProvider, onUserUpdate } from "./happyProvider/initialize"
+
+// - We're excluding `@happy.tech/core` from the viem export to prevent it from rebundling
+//   the provider code in the main export.
+// - We can't use a top-level import has that causes TSC to error (since technically when
+//   building, `@happy.tech/core` is this package and doesn't exist yet).
+// - The string concatenation similarly prevents TSC from seeing through the import.
+//   Bun however picks it up just fine.
+// - For requires targeting recent browsers (Vite: `build: { target: "esnext" }`)
+const { happyProvider, onUserUpdate } = await import("@happy.tech" + "/core")
 
 /**
  * Return type for {@link createHappyPublicClient}.

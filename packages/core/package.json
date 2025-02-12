@@ -12,6 +12,10 @@
             "types": "./dist/index.es.d.ts",
             "default": "./dist/index.es.js"
         },
+        "./viem": {
+            "types": "./dist/viem.es.d.ts",
+            "default": "./dist/viem.es.js"
+        },
         "./wagmi": {
             "types": "./dist/wagmi.es.d.ts",
             "default": "./dist/wagmi.es.js"

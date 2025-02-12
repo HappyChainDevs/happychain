@@ -16,4 +16,10 @@ setup-symlinks::
 		mkdir -p node_modules/.tmp; \
 		touch node_modules/.tmp/.dev; \
 	fi
+	@if ! [[ -r ./dist/viem.es.js ]]; then \
+  		ln -sf ../$(SRC_ROOT_DIR)/wagmi.ts ./dist/viem.es.js; \
+  		ln -sf ../$(SRC_ROOT_DIR)/wagmi.ts ./dist/viem.es.d.ts; \
+		mkdir -p node_modules/.tmp; \
+		touch node_modules/.tmp/.dev; \
+	fi
 .PHONY: setup-symlinks
