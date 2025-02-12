@@ -144,7 +144,13 @@ debug-logging-off:
 .PHONY: debug-logging-off
 
 ####################################################################################################
-# Demos & Reports
+# Reports
+
+happyEntrypoint-gas: ## Generates a gas report for the happy entrypoint contract.
+	@make gas-logging-on
+	@forge test -vv --match-contract HappyEntryPointGasEstimator --rpc-url $(RPC_LOCAL) --isolate> happyEntrypoint_gas_report.txt
+	@make gas-logging-off
+.PHONY: happyEntrypoint-gas
 
 paymaster-gas: ## Generates a gas report for the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
@@ -153,6 +159,9 @@ paymaster-gas: ## Generates a gas report for the Paymaster contract.
 paymaster-flamechart: ## Generates a flamechart for the gas usage of the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart
 .PHONY: test-aa-gas-flamechart
+
+####################################################################################################
+# Demos
 
 aa-demo: ## All-in-one run of the AA demo script, including Anvil & contract deployments.
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
