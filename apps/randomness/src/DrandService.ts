@@ -63,9 +63,9 @@ export class DrandService {
             Math.ceil((now - drandGenesisTimestampMs) / periodMs) * periodMs + drandGenesisTimestampMs
         await sleep(nextDrandBeaconTimestamp - now)
 
-        setInterval(async () => {
-            await this.handleNewDrandBeacons()
-        }, periodMs)
+        this.handleNewDrandBeacons()
+
+        setInterval(this.handleNewDrandBeacons.bind(this), periodMs)
     }
 
     async getDrandBeacon(round: bigint): Promise<Result<DrandBeacon, DrandError>> {
