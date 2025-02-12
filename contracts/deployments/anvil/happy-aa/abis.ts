@@ -901,11 +901,6 @@ const contractToAbi = ({
           "internalType": "address"
         },
         {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
           "name": "submitterTipPerByte",
           "type": "uint256",
           "internalType": "uint256"
@@ -944,19 +939,6 @@ const contractToAbi = ({
           "name": "",
           "type": "uint256",
           "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "TARGET",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
         }
       ],
       "stateMutability": "view"
@@ -1193,7 +1175,7 @@ export const deployment = ({
   "HappyEntryPoint": "0xcE14ade5aEdd0375F4c050488dcd8E0fF67F8A94",
   "ScrappyAccount": "0xCA09573CE5207Be05702CD18d489329f510f939D",
   "ScrappyAccountFactory": "0x6E92459580207A8BD074968Fe21a3312Ec38EEdD",
-  "ScrappyPaymaster": "0xA2aaA75b6d0608e4Db680e3e62bFe6F658876788"
+  "ScrappyPaymaster": "0x680D4c174Da76a5b316bC9752C0eE8cFfDF21f92"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi

@@ -1,4 +1,4 @@
-import { keccak256, toHex } from "viem"
+import { toFunctionSelector } from "viem"
 
 // Calculate interface ID by XORing function selectors
 function calculateInterfaceId(functionSignatures: string[]): string {
@@ -6,7 +6,7 @@ function calculateInterfaceId(functionSignatures: string[]): string {
 
     for (const signature of functionSignatures) {
         // Take first 4 bytes of keccak256
-        const selector = BigInt(keccak256(toHex(signature)).slice(0, 10))
+        const selector = BigInt(toFunctionSelector(signature))
         interfaceId ^= selector
     }
 

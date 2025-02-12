@@ -5,7 +5,7 @@ import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/Reentrancy
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {IHappyPaymaster, SubmitterFeeTooHigh, WrongTarget} from "../interfaces/IHappyPaymaster.sol";
+import {IHappyPaymaster, SubmitterFeeTooHigh} from "../interfaces/IHappyPaymaster.sol";
 import {NotFromEntryPoint} from "../utils/Common.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "../core/HappyTx.sol";
@@ -32,9 +32,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     /// @dev The deterministic EntryPoint contract
     address public immutable ENTRYPOINT;
 
-    /// @dev This paymaster sponsors all calls to this target contract.
-    address public immutable TARGET;
-
     /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte of data.
     uint256 public immutable SUBMITTER_TIP_PER_BYTE;
 
@@ -58,12 +55,10 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
 
     /**
      * @param entryPoint The deterministic EntryPoint contract
-     * @param target The target contract that will be sponsored
      * @param submitterTipPerByte The maximum fee per byte that the submitter is willing to pay
      */
-    constructor(address entryPoint, address target, uint256 submitterTipPerByte, address owner) Ownable(owner) {
+    constructor(address entryPoint, uint256 submitterTipPerByte, address owner) Ownable(owner) {
         ENTRYPOINT = entryPoint;
-        TARGET = target;
         SUBMITTER_TIP_PER_BYTE = submitterTipPerByte;
     }
 
@@ -71,10 +66,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // EXTERNAL FUNCTIONS
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
-        if (happyTx.dest != TARGET) {
-            return WrongTarget.selector;
-        }
-
         // forgefmt: disable-next-item
         uint256 totalSize = MAX_TX_SIZE
             + STATIC_FIELDS_SIZE
