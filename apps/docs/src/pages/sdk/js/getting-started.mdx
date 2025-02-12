@@ -66,15 +66,16 @@ The most common examples are below, but it should be fully compatible with most 
 
 :::code-group
 
-```ts [Viem] twoslash
-import { createHappyPublicClient, createHappyWalletClient } from "@happy.tech/core"
+```ts [Viem]
+import { createHappyPublicClient, createHappyWalletClient } from "@happy.tech/core/viem"
 
 const publicClient = createHappyPublicClient() // [!code focus]
 const walletClient = createHappyWalletClient() // [!code focus]
 ```
 
 ```ts [Wagmi] twoslash
-import { createHappyChainWagmiConfig, happyChainSepolia } from "@happy.tech/core"
+import { happyChainSepolia } from "@happy.tech/core"
+import { createHappyChainWagmiConfig } from "@happy.tech/core/wagmi"
 import { connect } from "@wagmi/core"
 
 const config = createHappyChainWagmiConfig(happyChainSepolia)// [!code focus]
@@ -100,7 +101,7 @@ const walletClient = createWalletClient({ transport }) // [!code focus]
 
 ```ts [Wagmi (custom)] twoslash
 import { happyChainSepolia, happyProvider } from "@happy.tech/core"
-import { happyWagmiConnector } from "@happy.tech/core"
+import { happyWagmiConnector } from "@happy.tech/core/wagmi"
 import { connect, createConfig, custom } from "@wagmi/core"
 
 const connector = happyWagmiConnector()
@@ -183,12 +184,9 @@ authorizing the app to transact with the selected contract on the user's behalf.
 The session key is persisted between session, and further calls to the function simply return without
 prompting the user, so it is safe to always call this function before other actions.
 
-```ts twoslash
-import {
-    createHappyChainWagmiConfig,
-    happyChainSepolia,
-    requestSessionKey
-} from "@happy.tech/core"
+```ts
+import { happyChainSepolia, requestSessionKey } from "@happy.tech/core"
+import { createHappyChainWagmiConfig } from "@happy.tech/core/wagmi"
 import { writeContract } from "@wagmi/core"
 import { parseAbi, type Hash } from "viem"
 

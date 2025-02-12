@@ -7,7 +7,11 @@ export default {
     tsconfig: "./tsconfig.typedoc.core.json",
     // https://typedoc.org/options/input/
     name: "@happy.tech/core",
-    entryPoints: ["../../packages/core/lib/index.ts"],
+    entryPoints: [
+        "../../packages/core/lib/index.ts",
+        "../../packages/core/lib/viem.ts",
+        "../../packages/core/lib/wagmi.ts",
+    ],
 
     // https://typedoc.org/options/output
     out: "src/pages/sdk/js/api",
