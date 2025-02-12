@@ -39,7 +39,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // EVENTS
 
     /// @notice Emitted when ETH is received by the contract
-    event Received(address sender, uint256 amount);
+    event Received(address indexed sender, uint256 amount);
 
     // ====================================================================================================
     // MODIFIERS
