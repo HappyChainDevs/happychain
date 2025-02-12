@@ -159,16 +159,22 @@ debug-logging-off:
 
 ####################################################################################################
 # Reports
+#
+# NOTE: These reports require an active local Ethereum node (Anvil) to be running.
+# Before running any of these targets, start Anvil using:
+#   make anvil
 
 happyEntrypoint-gas: ## Generates a gas report for the happy entrypoint contract.
 	@make gas-logging-on
-	@forge test -vv --match-contract HappyEntryPointGasEstimator --rpc-url $(RPC_LOCAL) --isolate> happyEntrypoint_gas_report.txt
+	@forge test -vvv --match-contract HappyEntryPointGasEstimator --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 
+	# --rpc-url $(RPC_LOCAL) --isolate 
+	# | awk '/Gas used in submit \(uninitialized and cold storage\)/{p=1}; p' > happyEntrypoint_gas_report.txt
 	@make gas-logging-off
 .PHONY: happyEntrypoint-gas
 
 paymaster-gas: ## Generates a gas report for the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
-.PHONY: gas-paymaster
+.PHONY: paymaster-gas
 
 paymaster-flamechart: ## Generates a flamechart for the gas usage of the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart

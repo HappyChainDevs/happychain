@@ -10,24 +10,44 @@ import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyEntryPoint} from "../core/HappyEntryPoint.sol";
 import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
 import {ScrappyPaymaster} from "../samples/ScrappyPaymaster.sol";
+import {ScrappyAccountFactory} from "../factories/ScrappyAccountFactory.sol";
 
-import {DeployHappyAAContracts} from "../../deploy/DeployHappyAA.s.sol";
+// import {DeployHappyAAContracts} from "../../deploy/DeployHappyAA.s.sol";
 
 contract HappyEntryPointGasEstimator is Test {
     using HappyTxLib for HappyTx;
 
-    DeployHappyAAContracts public deployer;
-    ScrappyPaymaster public scrappyPaymaster;
-    HappyEntryPoint public happyEntryPoint;
-    ScrappyAccount public scrappyAccount;
+    address private constant DEPLOYER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    bytes32 private constant DEPLOYMENT_SALT = 0;
+    uint256 private constant PM_SUBMITTER_TIP_PER_BYTE = 2 gwei;
+    uint256 private constant PM_DEPOSIT = 10 ether;
+
+    DeployHappyAAContracts private deployer;
+    ScrappyPaymaster private scrappyPaymaster;
+    HappyEntryPoint private happyEntryPoint;
+    ScrappyAccount private scrappyAccount;
+    ScrappyAccountFactory private scrappyAccountFactory;
 
     function setUp() public {
-        deployer = new DeployHappyAAContracts();
-        deployer.run();
+        // deployer = new DeployHappyAAContracts();
+        // vm.deal(DEPLOYER, 100 ether);
+        // vm.prank(DEPLOYER);
+        // deployer.deployForTests();
 
-        happyEntryPoint = deployer.happyEntryPoint();
-        scrappyPaymaster = deployer.scrappyPaymaster();
-        scrappyAccount = deployer.scrappyAccount();
+        // happyEntryPoint = deployer.happyEntryPoint();
+        // scrappyPaymaster = deployer.scrappyPaymaster();
+        // scrappyAccount = deployer.scrappyAccount();
+
+        happyEntryPoint = new HappyEntryPoint{salt: DEPLOYMENT_SALT}();
+        scrappyAccount = new ScrappyAccount{salt: DEPLOYMENT_SALT}(address(happyEntryPoint));
+        
+        
+        scrappyPaymaster = new ScrappyPaymaster{salt: DEPLOYMENT_SALT}(
+            address(happyEntryPoint),
+            PM_SUBMITTER_TIP_PER_BYTE,
+            DEPLOYER
+        );
+        payable(scrappyPaymaster).transfer(PM_DEPOSIT);
     }
 
     // ====================================================================================================
@@ -55,12 +75,7 @@ contract HappyEntryPointGasEstimator is Test {
         uint256 gasBefore = gasleft();
         happyEntryPoint.submit(encodedHappyTx);
         uint256 gasAfter = gasleft();
-    }
-
-    function estimateHappyEPSubmitGasForMultipleTxs(bytes memory encodedHappyTx) public returns (uint256) {
-        uint256 gasBefore = gasleft();
-        happyEntryPoint.submit(encodedHappyTx);
-        uint256 gasAfter = gasleft();
+        return gasBefore - gasAfter;
     }
 
     // ====================================================================================================
