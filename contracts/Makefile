@@ -365,9 +365,4 @@ deploy-random: ## Deploys the randomness contracts and saves the deployment.
 	make deploy DEPLOY_SCRIPT=DeployRandom.s.sol
 .PHONY: deploy-random
 
-deploy-config: ## Deploys the config contract.
-	$(eval $(call set-deployment-name,config))
-	make deploy DEPLOY_SCRIPT=DeployConfig.s.sol
-.PHONY: deploy-config
-
 ####################################################################################################

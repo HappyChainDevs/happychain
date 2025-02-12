@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Ownable} from "openzeppelin/access/Ownable.sol";
 
-contract Config is Ownable {
+contract AddressBook is Ownable {
     address public random;
 
     constructor(address _owner, address _random) Ownable(_owner) {
