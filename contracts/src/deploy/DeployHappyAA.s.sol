@@ -11,7 +11,6 @@ import {ScrappyAccountFactory} from "../HappyAccounts/factories/ScrappyAccountFa
 contract DeployHappyAAContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
-    address public constant PM_TARGET = 0xc80629fE33747288AaFb97684F86f7eD2D1aBF69;
     uint256 public constant PM_SUBMITTER_TIP_PER_BYTE = 2 gwei;
     uint256 public constant PM_DEPOSIT = 10 ether;
 
@@ -69,7 +68,7 @@ contract DeployHappyAAContracts is BaseDeployScript {
         (address payable _scrappyPaymaster,) = deployDeterministic( //-
             "ScrappyPaymaster",
             type(ScrappyPaymaster).creationCode,
-            abi.encode(_happyEntryPoint, PM_TARGET, PM_SUBMITTER_TIP_PER_BYTE, owner),
+            abi.encode(_happyEntryPoint, PM_SUBMITTER_TIP_PER_BYTE, owner),
             DEPLOYMENT_SALT //-
         );
         scrappyPaymaster = ScrappyPaymaster(_scrappyPaymaster);
