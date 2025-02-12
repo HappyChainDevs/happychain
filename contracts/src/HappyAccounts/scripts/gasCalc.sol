@@ -30,16 +30,41 @@ contract HappyEntryPointGasEstimator is Test {
         scrappyAccount = deployer.scrappyAccount();
     }
 
+    // ====================================================================================================
+    // SELF-PAYING HAPPY TXs
+
     function testEstimateEntryPointSubmitGas() public {
-        // 1. Get the encoded happy tx
+        // Step 1. Submit the encoded happy tx (uninitialized and cold storage)
         bytes memory encodedHappyTx = _getSelfPayingEncodedHappyTx();
+        uint256 gasUninitialized = estimateHappyEPSubmitGasForSingleTx(encodedHappyTx);
+        console.log("Gas used in submit (uninitialized and cold storage):", gasUninitialized);
 
-        // 2. Submit the encoded happy tx (uninitialized and cold storage)
-        happyEntryPoint.submit(encodedHappyTx);
-
-        // 3. Submit the encoded happy tx (initialized, but cold storage)
-        happyEntryPoint.submit(encodedHappyTx);
+        // Step 2. Submit the encoded happy tx (initialized, but cold storage)
+        uint256 gasCold = estimateHappyEPSubmitGasForSingleTx(encodedHappyTx);
+        console.log("Gas used in submit (initialized, but cold storage):", gasCold);
     }
+
+    // ====================================================================================================
+    // SUBMITTER-SPONSORED HAPPY TXs
+
+    // ====================================================================================================
+    // GAS ESTIMATION UTILS
+
+    /// @dev Internal function to estimate gas used by `submit` for a single happy tx.
+    function estimateHappyEPSubmitGasForSingleTx(bytes memory encodedHappyTx) public returns (uint256) {
+        uint256 gasBefore = gasleft();
+        happyEntryPoint.submit(encodedHappyTx);
+        uint256 gasAfter = gasleft();
+    }
+
+    function estimateHappyEPSubmitGasForMultipleTxs(bytes memory encodedHappyTx) public returns (uint256) {
+        uint256 gasBefore = gasleft();
+        happyEntryPoint.submit(encodedHappyTx);
+        uint256 gasAfter = gasleft();
+    }
+
+    // ====================================================================================================
+    // HAPPY TX CREATION UTILS
 
     /**
      * @dev Internal helper function to create a simple `HappyTx`. The values are hardcoded for

@@ -10,6 +10,8 @@ import {NotFromEntryPoint} from "../utils/Common.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "../core/HappyTx.sol";
 
+// [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
+
 /**
  * An example paymaster contract implementing the IHappyPaymaster interface.
  * This paymaster sponsors any call, as long as its submitter fee is not too high
