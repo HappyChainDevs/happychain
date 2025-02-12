@@ -43,10 +43,11 @@ Reminder: [PR review guidelines][guidelines]
 
 - [ ] D1. I made it easy to reason locally about the code, by (1) using proper abstraction boundaries,
       (2) commenting these boundaries correctly, (3) adding inline comments for context when needed.
-- [ ] D2. All public-facing APIs & meaningful (non-local) internal APIs are properly documented in code
-      comments.
+- [ ] D2. All public-facing APIs are documented in the docs.  
+          Public APIS and meaningful (non-local) internal APIs are properly documented in code comments.
 - [ ] D3. If appropriate, the general architecture of the code is documented in a code comment or
-      in a Markdown document.
-- [ ] D4. An appropriate Changeset has been generated (and committed) for changes that touch npm published packages (currently `packages/core` and `packages/react`), see [here](https://github.com/HappyChainDevs/happychain/tree/master/.changeset) for more info.
+          in a Markdown document.
+- [ ] D4. An appropriate Changeset has been generated (and committed) with `make changeset` for
+          breaking and meaningful changes in packages (not required for cleanups & refactors).
 
 </details>
