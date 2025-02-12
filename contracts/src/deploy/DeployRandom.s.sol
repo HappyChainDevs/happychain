@@ -3,14 +3,16 @@ pragma solidity ^0.8.20;
 
 import {BaseDeployScript} from "./BaseDeployScript.sol";
 import {Random} from "../randomness/Random.sol";
-
+import {AddressBook} from "../AddressBook.sol";
 /**
  * @dev Deploys the Randomness contract.
  */
-contract DeployRandom is BaseDeployScript {
-    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
-    Random public random;
 
+contract DeployRandom is BaseDeployScript {
+    bytes32 public constant RANDOM_DEPLOYMENT_SALT = bytes32(uint256(0));
+    bytes32 public constant CONFIG_DEPLOYMENT_SALT = bytes32(uint256(1));
+    Random public random;
+    AddressBook public addressBook;
     /*
      * To understand these values. Please refer to the following link:
      * https://docs.anyrand.com/diy/quickstart
@@ -33,16 +35,24 @@ contract DeployRandom is BaseDeployScript {
 
     function deploy() internal override {
         uint256 precommitDelayBlocks = vm.envUint("PRECOMMIT_DELAY_BLOCKS");
-        address owner = vm.envAddress("RANDOM_OWNER");
+        address randomOwner = vm.envAddress("RANDOM_OWNER");
         (address _random,) = deployDeterministic(
             "Random",
             type(Random).creationCode,
             abi.encode(
-                owner, drandPublicKey, DRAND_GENESIS_TIMESTAMP_SECONDS, DRAND_PERIOD_SECONDS, precommitDelayBlocks
+                randomOwner, drandPublicKey, DRAND_GENESIS_TIMESTAMP_SECONDS, DRAND_PERIOD_SECONDS, precommitDelayBlocks
             ),
-            DEPLOYMENT_SALT
+            RANDOM_DEPLOYMENT_SALT
         );
         random = Random(_random);
         deployed("Random", address(random));
+
+        address addressBookOwner = vm.envAddress("ADDRESS_BOOK_OWNER");
+        (address _addressBook,) = deployDeterministic(
+            "AddressBook", type(AddressBook).creationCode, abi.encode(addressBookOwner, _random), CONFIG_DEPLOYMENT_SALT
+        );
+        addressBook = AddressBook(_addressBook);
+
+        deployed("AddressBook", address(addressBook));
     }
 }
