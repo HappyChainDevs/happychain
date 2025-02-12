@@ -14,23 +14,46 @@ export type LatestBlock = Block<bigint, false, "latest">
  */
 export class BlockMonitor {
     private txmgr: TransactionManager
-
+    private unwatch: (() => void) | undefined
+    private blockTimeout: ReturnType<typeof setTimeout> | undefined
+  
     constructor(_transactionManager: TransactionManager) {
-        this.txmgr = _transactionManager
+      this.txmgr = _transactionManager
     }
-
+  
     async start() {
-        this.txmgr.viemClient.watchBlocks({
-            onBlock: this.onNewBlock.bind(this),
-            ...(this.txmgr.transportProtocol === "http"
-                ? {
-                      pollingInterval: this.txmgr.pollingInterval,
-                  }
-                : {}),
-        })
+      this.scheduleTimeout()
+      this.unwatch = this.txmgr.viemClient.watchBlocks({
+        onBlock: this.onNewBlock.bind(this),
+        ...(this.txmgr.transportProtocol === "http"
+          ? { pollingInterval: this.txmgr.pollingInterval }
+          : {}),
+        onError: (error) => {
+          console.error("Error watching blocks", error)
+          this.resetWatch()
+        },
+      })
     }
-
+  
     private onNewBlock(block: LatestBlock) {
-        eventBus.emit(Topics.NewBlock, block)
+      if (this.blockTimeout) clearTimeout(this.blockTimeout)
+      eventBus.emit(Topics.NewBlock, block)
+      this.scheduleTimeout()
     }
-}
+  
+    private scheduleTimeout() {
+      console.log("Scheduling timeout")
+      this.blockTimeout = setTimeout(() => {
+        console.log("Timeout reached. Resetting watch.")
+        this.resetWatch()
+      }, 20_000)
+    }
+  
+    private resetWatch() {
+      console.log("No blocks received in 20s. Resetting watch.")
+      if (this.unwatch) {
+        this.unwatch()
+      }
+      this.start()
+    }
+  }

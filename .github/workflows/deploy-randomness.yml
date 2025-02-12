@@ -2,6 +2,9 @@ name: Deploy Randomness
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - gabriel/debug-randomness
 
 env:
   REGISTRY: ghcr.io
