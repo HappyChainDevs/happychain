@@ -19,8 +19,7 @@ export enum LogLevel {
  * Tags that categorize log messages by subsystem or feature area.
  */
 export enum LogTag {
-    IFRAME = "iFrame",
-    DEMO_REACT = "demo-react",
+    ALL = "All",
 }
 
 /**
@@ -30,12 +29,11 @@ export enum LogTag {
  * each of which can be selectively enabled or disabled
  * based on two factors:
  * 1) The global log level (OFF, ERROR, WARN, INFO, TRACE).
- * 2) A set of "enabled" tags that filter messages by subsystem.
+ * 2) A set of "enabled" tags that filter messages by subsystem. All enabled by default.
  * Example usage:
  *  const logger = Logger.instance;
- *  logger.info(LogTag.IFRAME, 'User logged in.'); // prints "[INFO] [iFrame] User logged in."
+ *  logger.info(LogTag.ALL, 'User logged in.'); // prints "[INFO] User logged in."
  *  logger.setLogLevel(LogLevel.INFO); // Now only INFO and above will print.
- *  logger.enableTags(LogTag.DEMO_REACT); // Now only messages with the DEMO_REACT tag will print.
  */
 export class Logger {
     /**
@@ -49,19 +47,12 @@ export class Logger {
     private minLevel: LogLevel = LogLevel.OFF
 
     /**
-     * A collection of tags for which logs are allowed.
-     * Only logs containing at least one enabled tag will be printed,
-     * provided they also meet the minLevel criteria.
+     * Set of enabled tags for filtering log messages.
      */
-    private enabledTags: Set<string> = new Set()
+    private enabledTags: Set<LogTag> = new Set()
 
     /**
-     * Private constructor to enforce singleton usage.
-     */
-    private constructor() {}
-
-    /**
-     * Retrieves the singleton instance of the Logger.
+     * Returns the single instance of the logger.
      */
     public static get instance(): Logger {
         if (!Logger._instance) {
@@ -71,63 +62,47 @@ export class Logger {
     }
 
     /**
-     * Sets the minimum log level.
+     * Private constructor to enforce singleton pattern.
+     */
+    private constructor() {
+        this.enableTags(LogTag.ALL)
+    }
+
+    /**
+     * Sets the minimum log level. Messages below this level will not be printed.
      *
-     * @param level The desired minimum log level (OFF, ERROR, WARN, INFO, TRACE).
-     *              A message is only logged if:
-     *              (a) its severity is <= minLevel, and
-     *              (b) it has at least one enabled tag.
+     * @param level The minimum log level to set.
      */
     public setLogLevel(level: LogLevel): void {
         this.minLevel = level
     }
 
     /**
-     * Enables one or more tags for logging.
+     * Enables logging for the specified tags.
      *
-     * Only messages that include at least one "enabled" tag will be considered
-     * for printing. All other tags/messages are filtered out.
-     *
-     * @param tags A list of tags (strings or LogTag enum values).
-     *             Example: enableTags(LogTag.SYSTEM, LogTag.NETWORK)
+     * @param tags The tags to enable.
      */
-    public enableTags(...tags: (string | LogTag)[]): void {
-        for (const tag of tags) {
-            this.enabledTags.add(tag)
-        }
+    public enableTags(...tags: LogTag[]): void {
+        tags.forEach((tag) => this.enabledTags.add(tag))
     }
 
     /**
-     * Disables (removes) one or more tags from the "enabled" set.
+     * Disables logging for the specified tags.
      *
-     * @param tags A list of tags to remove. After calling this,
-     *             any future log that only has the removed tags
-     *             will be filtered out.
+     * @param tags The tags to disable.
      */
-    public disableTags(...tags: (string | LogTag)[]): void {
-        for (const tag of tags) {
-            this.enabledTags.delete(tag)
-        }
+    public disableTags(...tags: LogTag[]): void {
+        tags.forEach((tag) => this.enabledTags.delete(tag))
     }
 
     /**
-     * Clears all enabled tags.
+     * Determines if a message should be logged based on the log level and tags.
      *
-     * After this, no logs will be printed unless new tags are re-enabled.
+     * @param level The log level of the message.
+     * @param inputTags The tags associated with the message.
+     * @returns True if the message should be logged, false otherwise.
      */
-    public clearAllTags(): void {
-        this.enabledTags.clear()
-    }
-
-    /**
-     * Internal helper to decide if a message meets the level + tag criteria.
-     *
-     * @param level      The log level (ERROR, WARN, INFO, or TRACE).
-     * @param inputTags  The tags associated with the log call.
-     * @returns true if the log should be printed, false otherwise.
-     */
-    private shouldLog(level: LogLevel, inputTags: string[]): boolean {
-        // If the level is above the minLevel (higher numeric value => less important),
+    private shouldLog(level: LogLevel, inputTags: LogTag[]): boolean {
         // we skip logging. For example, if minLevel=ERROR, then WARN/INFO/TRACE won't show.
         if (level > this.minLevel) {
             return false
@@ -141,54 +116,57 @@ export class Logger {
     }
 
     /**
+     * Generic log function that logs a message at the specified log level.
+     *
+     * @param level The log level of the message.
+     * @param tagOrTags One or more tags describing the subsystem(s).
+     * @param args Additional data to print.
+     */
+    public log(level: LogLevel, tagOrTags: LogTag | LogTag[], ...args: unknown[]): void {
+        const tags = Array.isArray(tagOrTags) ? tagOrTags : [tagOrTags]
+        if (this.shouldLog(level, tags)) {
+            const levelStr = LogLevel[level].toUpperCase()
+            console.log(`[${levelStr}]`, `[${tags.join(", ")}]`, ...args)
+        }
+    }
+
+    /**
      * Logs a message at the ERROR level.
      *
-     * @param tagOrTags One or more tags describing the subsystem(s)
-     * @param args      Additional data to print
+     * @param tagOrTags One or more tags describing the subsystem(s).
+     * @param args Additional data to print.
      */
     public error(tagOrTags: LogTag | LogTag[], ...args: unknown[]): void {
-        const tags = Array.isArray(tagOrTags) ? tagOrTags : [tagOrTags]
-        if (this.shouldLog(LogLevel.ERROR, tags)) {
-            console.error("[ERROR]", `[${tags.join(", ")}]`, ...args)
-        }
+        this.log(LogLevel.ERROR, tagOrTags, ...args)
     }
 
     /**
      * Logs a message at the WARN level.
      *
-     * @param tagOrTags One or more tags describing the subsystem(s)
-     * @param args      Additional data to print
+     * @param tagOrTags One or more tags describing the subsystem(s).
+     * @param args Additional data to print.
      */
     public warn(tagOrTags: LogTag | LogTag[], ...args: unknown[]): void {
-        const tags = Array.isArray(tagOrTags) ? tagOrTags : [tagOrTags]
-        if (this.shouldLog(LogLevel.WARN, tags)) {
-            console.warn("[WARN]", `[${tags.join(", ")}]`, ...args)
-        }
+        this.log(LogLevel.WARN, tagOrTags, ...args)
     }
 
     /**
      * Logs a message at the INFO level.
      *
-     * @param tagOrTags One or more tags describing the subsystem(s)
-     * @param args      Additional data to print
+     * @param tagOrTags One or more tags describing the subsystem(s).
+     * @param args Additional data to print.
      */
     public info(tagOrTags: LogTag | LogTag[], ...args: unknown[]): void {
-        const tags = Array.isArray(tagOrTags) ? tagOrTags : [tagOrTags]
-        if (this.shouldLog(LogLevel.INFO, tags)) {
-            console.info("[INFO]", `[${tags.join(", ")}]`, ...args)
-        }
+        this.log(LogLevel.INFO, tagOrTags, ...args)
     }
 
     /**
      * Logs a message at the TRACE level.
      *
-     * @param tagOrTags One or more tags describing the subsystem(s)
-     * @param args      Additional data to print
+     * @param tagOrTags One or more tags describing the subsystem(s).
+     * @param args Additional data to print.
      */
     public trace(tagOrTags: LogTag | LogTag[], ...args: unknown[]): void {
-        const tags = Array.isArray(tagOrTags) ? tagOrTags : [tagOrTags]
-        if (this.shouldLog(LogLevel.TRACE, tags)) {
-            console.trace("[TRACE]", `[${tags.join(", ")}]`, ...args)
-        }
+        this.log(LogLevel.TRACE, tagOrTags, ...args)
     }
 }
