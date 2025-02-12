@@ -34,7 +34,6 @@ export class BlockMonitor {
     }
 
     private onNewBlock(block: LatestBlock) {
-        console.log("New block received", block.number)
         eventBus.emit(Topics.NewBlock, block)
     }
 }
