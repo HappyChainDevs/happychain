@@ -24,7 +24,7 @@ const envSchema = z.object({
     EVM_DRAND_URL: z.string().trim(),
     EVM_DRAND_GENESIS_TIMESTAMP_SECONDS: z.string().transform((s) => BigInt(s)),
     EVM_DRAND_PERIOD_SECONDS: z.string().transform((s) => BigInt(s)),
-    EVM_DRAND_START_ROUND: z.string().transform((s) => BigInt(s)),
+    EVM_DRAND_MARGIN: z.string().transform((s) => BigInt(s)),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)
