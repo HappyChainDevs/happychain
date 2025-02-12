@@ -34,6 +34,9 @@ export enum Msgs {
      */
     InjectedWalletConnected = "injected-wallet:connected",
 
+    /** Announces injected wallets to the iframe following EIP-6963 'detail.info' format. */
+    AnnounceInjectedProvider = "announce-injected-provider",
+
     /**
      * Instructs the iframe to mirror a permission that has been granted to the user by the
      * injected wallet.
@@ -123,7 +126,6 @@ export enum Msgs {
 
     /** Informs the iframe that the user has rejected a request in the popup. */
     PopupReject = "popup:reject",
-    AnnounceInjectedProvider = "AnnounceInjectedProvider",
 }
 
 // =================================================================================================

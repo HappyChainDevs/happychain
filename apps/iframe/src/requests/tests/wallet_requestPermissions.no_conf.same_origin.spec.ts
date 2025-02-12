@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
-import type { HappyUser } from "@happy.tech/wallet-common"
+import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
@@ -9,8 +9,9 @@ import { setUser } from "../../state/user"
 import { createHappyUserFromWallet } from "../../utils/createHappyUserFromWallet"
 import { dispatchHandlers } from "../permissionless"
 
-const { appURL, iframeID, appURLMock, requestUtilsMock } = await vi //
-    .hoisted(async () => await import("#src/testing/same_origin.mocks"))
+const { appURL, iframeID, appURLMock, requestUtilsMock } = await vi.hoisted(
+    async () => await import("#src/testing/same_origin.mocks"),
+)
 
 vi.mock(import("#src/utils/appURL"), appURLMock)
 vi.mock(import("#src/requests/utils"), requestUtilsMock)
@@ -29,7 +30,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
             const request = makePayload(iframeID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
-            })
+            }) as ProviderEventPayload<EIP1193RequestParameters>
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
@@ -48,7 +49,7 @@ describe("#publicClient #wallet_requestPermissions #same_origin", () => {
             const request = makePayload(iframeID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
-            })
+            }) as ProviderEventPayload<EIP1193RequestParameters>
             await dispatchHandlers(request)
             await dispatchHandlers(request)
             await dispatchHandlers(request)
