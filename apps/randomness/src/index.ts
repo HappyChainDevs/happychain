@@ -42,7 +42,7 @@ class RandomnessService {
             console.error(description)
         })
 
-        this.drandService.start()
+        await this.drandService.start()
     }
 
     private onTransactionStatusChange(transaction: Transaction) {
