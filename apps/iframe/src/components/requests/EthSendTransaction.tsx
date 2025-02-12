@@ -133,11 +133,16 @@ export const EthSendTransaction = ({
 
     const { data: preparedUserOp, loading, error } = useAsyncOperation(smartAccountClientAtom, prepareUserOp)
 
-    let exData = undefined
-    if (preparedUserOp) {
+    const exData = useMemo(() => {
+        if (!preparedUserOp) return undefined
+
+        // Extract UserOperation data without the account field for acceptance.
+        // We exclude the account since it's not part of the standard UserOperation type
+        // and shouldn't be included in the final transaction submission - also causes a DataCloneError when
+        // being sent through the event bus to the iframe.
         const { account: _, ...rest } = preparedUserOp as PrepareUserOperationReturnType & { account: SmartAccount }
-        exData = rest
-    }
+        return rest
+    }, [preparedUserOp])
 
     // ====================================== Contract ABI details ======================================
     const abiForContract =
