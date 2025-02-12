@@ -15,7 +15,11 @@ import {
     hexToBigInt,
     isAddress,
 } from "viem"
-import type { PrepareUserOperationParameters, PrepareUserOperationReturnType } from "viem/account-abstraction"
+import type {
+    PrepareUserOperationParameters,
+    PrepareUserOperationReturnType,
+    SmartAccount,
+} from "viem/account-abstraction"
 import { useAsyncOperation } from "#src/hooks/useAsyncOperation"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { publicClientAtom } from "#src/state/publicClient"
@@ -120,7 +124,7 @@ export const EthSendTransaction = ({
                     paymasterData: undefined,
                 } satisfies PrepareUserOperationParameters)) as PrepareUserOperationReturnType
             } catch (error) {
-                console.error("Failed to prepare operation:", error)
+                console.error("[prepareUserOp] Error", error)
                 return undefined
             }
         },
@@ -128,7 +132,12 @@ export const EthSendTransaction = ({
     )
 
     const { data: preparedUserOp, loading, error } = useAsyncOperation(smartAccountClientAtom, prepareUserOp)
-    // const { account: _, ...rest } = preparedUserOp
+
+    let exData = undefined
+    if (preparedUserOp) {
+        const { account: _, ...rest } = preparedUserOp as PrepareUserOperationReturnType & { account: SmartAccount }
+        exData = rest
+    }
 
     // ====================================== Contract ABI details ======================================
     const abiForContract =
@@ -194,7 +203,7 @@ export const EthSendTransaction = ({
                             if (loading || !preparedUserOp) return
                             accept({
                                 eip1193params: { method, params },
-                                extraData: preparedUserOp,
+                                extraData: exData,
                             })
                         },
                     },
