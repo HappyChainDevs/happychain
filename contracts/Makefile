@@ -167,10 +167,10 @@ debug-logging-off:
 happyEntryPoint-gas: ## Generates a gas report for the happy entrypoint contract.
 	@echo "Running tests..."
 	@make gas-logging-on
-	@forge test -vvv --match-contract HappyEntryPointGasEstimator --isolate | awk '/HappyEntryPoint Gas Report :-/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
+	@forge test -vvv --match-contract HappyEntryPointGasEstimator --isolate | awk '/=== HappyEntryPoint Gas Report ===/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
 	@make gas-logging-off
 	@make internal-gas-logging-on
-	@forge test -vvv --match-contract HappyEntryPointGasEstimator --isolate | awk '/Gas used in submit \(uninitialized and cold storage\)/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@forge test -vvv --match-contract HappyEntryPointGasEstimator --isolate | awk '/1\. First Transaction/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@make internal-gas-logging-off
 	@echo "Tests completed"
 .PHONY: happyEntryPoint-gas
