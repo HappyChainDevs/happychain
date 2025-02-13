@@ -89,19 +89,23 @@ contract HappyEntryPointGasEstimator is Test {
      * transactions and storage slot warming.
      */
     function testEstimateEntryPointSubmitGas() public {
-        console.log("\nHappyEntryPoint Gas Report :-");
+        console.log("\n=== HappyEntryPoint Gas Report ===\n");
+
         // Step 1. Submit the encoded happy tx (uninitialized and cold storage)
-        console.log("\nGas used in submit (uninitialized and cold storage)");
+        console.log("1. First Transaction (Cold + Uninitialized Storage)");
+        console.log("   ---------------------------------------");
         HappyTx memory happyTx1 = _createSignedHappyTx(SCA, SCA, 0);
         happyEntryPoint.submit(happyTx1.encode());
 
         // Step 2. Submit the encoded happy tx (initialized and cold storage)
-        console.log("\nGas used in submit (initialized and cold storage)");
+        console.log("\n2. Second Transaction (Cold + Initialized Storage)");
+        console.log("   ----------------------------------------");
         HappyTx memory happyTx2 = _createSignedHappyTx(SCA, SCA, 1);
         happyEntryPoint.submit(happyTx2.encode());
 
         // Step 3. Submit multiple txs in same call to measure warm storage access
-        console.log("\nGas used in submit (warm storage access)");
+        console.log("\n3. Batch Transactions (Warm Storage Access)");
+        console.log("   -----------------------------------");
 
         // Create array of transactions
         HappyTx[] memory warmTxs = new HappyTx[](2);

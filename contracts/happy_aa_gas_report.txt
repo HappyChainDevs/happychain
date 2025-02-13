@@ -1,22 +1,28 @@
-HappyEntryPoint Gas Report :-
-  
-Gas used in submit (uninitialized and cold storage)
+=== HappyEntryPoint Gas Report ===
+
+  1. First Transaction (Cold + Uninitialized Storage)
+     ---------------------------------------
   payoutCallOverhead 12029
   
-Gas used in submit (initialized and cold storage)
+2. Second Transaction (Cold + Initialized Storage)
+     ----------------------------------------
   payoutCallOverhead 12029
   
-Gas used in submit (warm storage access)
+3. Batch Transactions (Warm Storage Access)
+     -----------------------------------
   payoutCallOverhead 12029
   payoutCallOverhead 12029
 
-Gas used in submit (uninitialized and cold storage)
+  1. First Transaction (Cold + Uninitialized Storage)
+     ---------------------------------------
   inside payout 7112
   
-Gas used in submit (initialized and cold storage)
+2. Second Transaction (Cold + Initialized Storage)
+     ----------------------------------------
   inside payout 7112
   
-Gas used in submit (warm storage access)
+3. Batch Transactions (Warm Storage Access)
+     -----------------------------------
   inside payout 7112
   inside payout 7112
 
