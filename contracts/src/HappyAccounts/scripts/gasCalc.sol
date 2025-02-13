@@ -76,15 +76,13 @@ contract HappyEntryPointGasEstimator is Test {
     function testEstimateEntryPointSubmitGas() public {
         // Step 1. Submit the encoded happy tx (uninitialized and cold storage)
         console.log("Gas used in submit (uninitialized and cold storage)\n");
+        HappyTx memory happyTx1 = _createSelfPayingHappyTx(SCA, SCA, 0);
+        happyEntryPoint.submit(happyTx1.encode());
 
-        HappyTx memory inputTx = _getSelfPayingHappyTx();
-        bytes memory encoded = inputTx.encode();
-
-        HappyTx memory temp = _createSelfPayingHappyTx(SCA, SCA, 0);
-        console.log("Signature\n");
-        console.logBytes(temp.validatorData);
-
-        happyEntryPoint.submit(encoded);
+        // Step 2. Submit the encoded happy tx (initialized and cold storage)
+        console.log("Gas used in submit (initialized and cold storage)\n");
+        HappyTx memory happyTx2 = _createSelfPayingHappyTx(SCA, SCA, 1);
+        happyEntryPoint.submit(happyTx2.encode());
     }
 
     // ====================================================================================================
