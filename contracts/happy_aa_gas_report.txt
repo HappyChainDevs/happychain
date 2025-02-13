@@ -1,22 +1,26 @@
 HappyEntryPoint Gas Report
   
 1. First Transaction (Cold + Uninitialized Storage)
-  ----------------------------------------------------
+   ----------------------------------------------------
   excessivelySafeCall gas usage:  12029
      Tx Gas used:  135440
   
 2. Second Transaction (Cold + Initialized Storage)
-  ----------------------------------------------------
+   ----------------------------------------------------
   excessivelySafeCall gas usage:  12029
      TxGas used:  84140
   
 3. Batch Transactions (Warm Storage Access)
-  ----------------------------------------------------
+   ----------------------------------------------------
   excessivelySafeCall gas usage:  12029
   excessivelySafeCall gas usage:  12029
      Tx Gas used (2nd txn):  46375
 
 ScrappyAccount payout gas usage
-  ----------------------------------------------------
+   ----------------------------------------------------
   inside payout 9612
+
+ScrappyPaymaster payout gas usage
+   ----------------------------------------------------
+  inside payout 9998
 
