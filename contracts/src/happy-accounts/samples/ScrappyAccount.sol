@@ -159,12 +159,6 @@ contract ScrappyAccount is
         address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
         happyTx.validatorData = signature; // revert back to original value
 
-        console.log("Validating..., reached here?");
-        console.log("Signer: ", signer);
-        console.log("Owner: ", owner());
-        console.log("isSimulation: ", isSimulation);
-        console.log("nonceAhead: ", nonceAhead);
-
         // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
         return isSimulation
             ? signer == owner()
