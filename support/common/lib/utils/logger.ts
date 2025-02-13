@@ -62,13 +62,6 @@ export class Logger {
     }
 
     /**
-     * Private constructor to enforce singleton pattern.
-     */
-    private constructor() {
-        this.enableTags(LogTag.ALL)
-    }
-
-    /**
      * Sets the minimum log level. Messages below this level will not be printed.
      *
      * @param level The minimum log level to set.
