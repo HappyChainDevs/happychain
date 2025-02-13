@@ -36,6 +36,7 @@ contract HappyEntryPointGasEstimator is Test {
     address private constant OWNER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     address private constant DEST = 0x07b354EFA748883a342a9ba4780Cc9728f51e3D5;
     address private constant SCA = 0xb60849107b2B5C0F6e3bAEeC23FC3d2E43812632;
+    address private constant ZERO_ADDRESS = 0x0000000000000000000000000000000000000000;
 
     // ====================================================================================================
     // STATE VARIABLES
@@ -97,31 +98,28 @@ contract HappyEntryPointGasEstimator is Test {
      * This test estimates gas consumption for:
      * 1. Initial transaction with uninitialized storage slots (worst case)
      * 2. Subsequent transaction with initialized but cold storage slots
-     * 3. Multiple transactions in same block benefiting from warm storage
-     *
-     * The results help understand gas optimizations possible through batching
-     * transactions and storage slot warming.
+     * 3. Multiple transactions in same block benefiting from warm storage (better case?)
      */
     function testEstimateEntryPointSubmitGas() public {
-        console.log("\n=== HappyEntryPoint Gas Report ===\n");
+        console.log("\nHappyEntryPoint Gas Report");
 
         // Step 1. Submit the encoded happy tx (uninitialized and cold storage)
-        console.log("1. First Transaction (Cold + Uninitialized Storage)");
-        console.log("   ---------------------------------------");
+        console.log("\n1. First Transaction (Cold + Uninitialized Storage)");
+        console.log("----------------------------------------------------");
         HappyTx memory happyTx1 = _createSignedHappyTx(SCA, SCA, 0);
         uint256 gasUninitialized = this._estimateEPSubmitGas(happyTx1.encode());
-        console.log("   Gas used: ", gasUninitialized);
+        console.log("   Tx Gas used: ", gasUninitialized);
 
         // Step 2. Submit the encoded happy tx (initialized and cold storage)
         console.log("\n2. Second Transaction (Cold + Initialized Storage)");
-        console.log("   ----------------------------------------");
+        console.log("----------------------------------------------------");
         HappyTx memory happyTx2 = _createSignedHappyTx(SCA, SCA, 1);
         uint256 gasCold = this._estimateEPSubmitGas(happyTx2.encode());
-        console.log("   Gas used: ", gasCold);
+        console.log("   TxGas used: ", gasCold);
 
         // Step 3. Submit multiple txs in same call to measure warm storage access
         console.log("\n3. Batch Transactions (Warm Storage Access)");
-        console.log("   -----------------------------------");
+        console.log("----------------------------------------------------");
 
         // Create array of transactions
         HappyTx[] memory warmTxs = new HappyTx[](2);
@@ -134,7 +132,17 @@ contract HappyEntryPointGasEstimator is Test {
             encodedWarmTxs[i] = warmTxs[i].encode();
         }
         // Submit the transactions
-        this._estimateEPGasForMultipleTxs(encodedWarmTxs);
+        uint256[] memory gasUsedWarm = this._estimateEPGasForMultipleTxs(encodedWarmTxs);
+        console.log("   Tx Gas used (2nd txn): ", gasUsedWarm[1]);
+    }
+
+    function testEstimateHappyAccountPayoutGas() public {
+        console.log("\nScrappyAccount payout gas usage");
+        console.log("----------------------------------------------------");
+        vm.prank(address(happyEntryPoint));
+        HappyTx memory happyTx = _createSignedHappyTx(SCA, ZERO_ADDRESS, 0);
+        ScrappyAccount(payable(SCA)).payout(happyTx, 0);
+        // console.log("   payout internal gas used: ", gasUsed);
     }
 
     // ====================================================================================================
@@ -149,18 +157,23 @@ contract HappyEntryPointGasEstimator is Test {
         uint256 gasBefore = gasleft();
         happyEntryPoint.submit(encodedHappyTx);
         uint256 gasAfter = gasleft();
+
         return gasBefore - gasAfter;
     }
 
     /// @dev Internal function to submit multiple transactions and measure gas for each.
     /// This function is used to measure gas usage when submitting multiple transactions in a single call.
-    function _estimateEPGasForMultipleTxs(bytes[] memory encodedHappyTxs) external {
+    function _estimateEPGasForMultipleTxs(bytes[] memory encodedHappyTxs) external returns (uint256[] memory) {
+        uint256[] memory gasUsedArray = new uint256[](encodedHappyTxs.length);
+
         for (uint256 i = 0; i < encodedHappyTxs.length; i++) {
             uint256 start = gasleft();
             happyEntryPoint.submit(encodedHappyTxs[i]);
             uint256 end = gasleft();
-            console.log("   Gas used: ", start - end);
+            gasUsedArray[i] = start - end;
         }
+
+        return gasUsedArray;
     }
 
     // ====================================================================================================
@@ -191,7 +204,7 @@ contract HappyEntryPointGasEstimator is Test {
         return happyTx;
     }
 
-    /// @dev Internal helper function to create a stub happy tx.
+    /// @dev Internal helper function to create a stub happy tx. The callData is `mint` call to a token at `dest`.
     function _getStubHappyTx() internal pure returns (HappyTx memory) {
         return HappyTx({
             account: 0x0000000000000000000000000000000000000000, // Stub value

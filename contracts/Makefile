@@ -114,30 +114,26 @@ test-predictDeploymentAddress:
 
 # Turn gas logging on by uncommenting the measurement statements
 gas-logging-on:
-	@echo "Turning gas logging ON..."
 	@find . -type f -name "*.sol" -exec sed -i '' 's|// \[LOGGAS\]|/* [LOGGAS] */|g' {} +
-	@echo "Gas logging is now ON"
+	@echo "Gas logging turned ON"
 .PHONY: gas-logging-on
 
 # Turn gas logging off by commenting out the measurement statements
 gas-logging-off:
-	@echo "Turning gas logging OFF..."
 	@find . -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS\] \*/|// [LOGGAS]|g' {} +
-	@echo "Gas logging is now OFF"
+	@echo "Gas logging turned OFF"
 .PHONY: gas-logging-off
 
 # Turn internal gas logging on for ScrappyAccount and ScrappyPaymaster
 internal-gas-logging-on:
-	@echo "Turning internal gas logging ON..."
 	@find ./src/HappyAccounts/samples -type f -name "*.sol" -exec sed -i '' 's|// \[LOGGAS_INTERNAL\]|/* [LOGGAS_INTERNAL] */|g' {} +
-	@echo "Internal gas logging is now ON"
+	@echo "Internal Gas logging turned ON"
 .PHONY: internal-gas-logging-on
 
 # Turn internal gas logging off for ScrappyAccount and ScrappyPaymaster
 internal-gas-logging-off:
-	@echo "Turning internal gas logging OFF..."
 	@find ./src/HappyAccounts/samples -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS_INTERNAL\] \*/|// [LOGGAS_INTERNAL]|g' {} +
-	@echo "Internal gas logging is now OFF"
+	@echo "Internal Gas logging turned OFF"
 .PHONY: internal-gas-logging-off
 
 ####################################################################################################
@@ -159,29 +155,30 @@ debug-logging-off:
 
 ####################################################################################################
 # Reports
-#
+# TODO: Not really reqd rn :p
 # NOTE: These reports require an active local Ethereum node (Anvil) to be running.
 # Before running any of these targets, start Anvil using:
 #   make anvil
 
+happy-aa-gas-report: ## Generates a gas report for the happy account contract.
+	@make happyEntryPoint-gas
+	@make happyAccountPayout-gas
+.PHONY: happy-aa-gas-report
+
 happyEntryPoint-gas: ## Generates a gas report for the happy entrypoint contract.
-	@echo "Running tests..."
 	@make gas-logging-on
-	@forge test -vvv --match-test testEstimateEntryPointSubmitGas --isolate | awk '/=== HappyEntryPoint Gas Report ===/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateEntryPointSubmitGas --isolate | awk '/HappyEntryPoint Gas Report/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
 	@make gas-logging-off
-	@echo "Tests completed"
 .PHONY: happyEntryPoint-gas
 
 happyAccountPayout-gas: ## Generates a gas report for the happy account payout contract.
-	@echo "Running tests..."
 	@make internal-gas-logging-on
-	@forge test -vvv --match-test testEstimateEntryPointSubmitGas --isolate | awk '/=== HappyAccountPayout Gas Report ===/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateHappyAccountPayoutGas --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@make internal-gas-logging-off
-	@echo "Tests completed"
 .PHONY: happyAccountPayout-gas
 
 paymaster-gas: ## Generates a gas report for the Paymaster contract.
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' > paymaster_gas_report.txt
 .PHONY: paymaster-gas
 
 paymaster-flamechart: ## Generates a flamechart for the gas usage of the Paymaster contract.
