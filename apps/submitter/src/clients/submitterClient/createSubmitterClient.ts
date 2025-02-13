@@ -1,19 +1,12 @@
 import type { happyChainSepolia } from "@happy.tech/wallet-common"
-import {
-    type ClientConfig,
-    type HttpTransport,
-    type Prettify,
-    type PrivateKeyAccount,
-    createClient,
-    rpcSchema,
-} from "viem"
+import { type ClientConfig, type HttpTransport, type Prettify, type PrivateKeyAccount, createClient } from "viem"
 import { submitterActions } from "./actions"
-import type { CustomRpcSchema } from "./rpcSchema"
+
 import type { SubmitterClient } from "./types"
 
 export type SubmitterClientConfig = Prettify<
     Pick<
-        ClientConfig<HttpTransport, typeof happyChainSepolia, PrivateKeyAccount, CustomRpcSchema>,
+        ClientConfig<HttpTransport, typeof happyChainSepolia, PrivateKeyAccount>,
         "account" | "cacheTime" | "ccipRead" | "chain" | "key" | "name" | "pollingInterval" | "rpcSchema" | "transport"
     >
 >
@@ -26,7 +19,6 @@ export function createSubmitterClient(parameters: SubmitterClientConfig): Submit
         key,
         name,
         transport,
-        rpcSchema: rpcSchema<CustomRpcSchema>(),
         type: "submitterClient",
     })
 

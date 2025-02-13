@@ -29,28 +29,28 @@ export const ExecuteInputSchema = z
             .default(deployment.HappyEntryPoint),
 
         /** HappyTx to execute. */
-        // tx: happyTxSchema,
-        tx: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")),
+        tx: happyTxSchema,
+        // tx: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")),
     })
     .openapi({
         example: {
-            tx: "0x1234", // pre encoded
-            // tx: {
-            //     account: "0x123", // Address
-            //     dest: "0x123", // Address
-            //     value: "1234", // UInt256
-            //     callData: "0x00000", // Bytes
-            //     nonceTrack: "1234", // UInt256
-            //     nonceValue: "1234", // UInt256
-            //     paymaster: "0x123", // Address
-            //     paymasterData: "0x00000", // Bytes
-            //     validatorData: "0x00000", // Bytes
-            //     extraData: "0x00000", // Bytes
-            //     gasLimit: 0,
-            //     executeGasLimit: 0,
-            //     maxFeePerGas: "0",
-            //     submitterFee: "0",
-            // },
+            // tx: "0x1234", // pre encoded
+            tx: {
+                account: "0x123", // Address
+                dest: "0x123", // Address
+                value: "0x1", // UInt256
+                callData: "0x00000", // Bytes
+                nonceTrack: "1234", // UInt256
+                nonceValue: "1234", // UInt256
+                paymaster: "0x123", // Address
+                paymasterData: "0x00000", // Bytes
+                validatorData: "0x00000", // Bytes
+                extraData: "0x00000", // Bytes
+                gasLimit: 0,
+                executeGasLimit: 0,
+                maxFeePerGas: "0",
+                submitterFee: "0",
+            },
         },
     })
 

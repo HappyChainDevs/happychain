@@ -1,21 +1,26 @@
 import { Hono } from "hono"
-import { publicClient, submitterClient } from "#src/clients"
+import { executeHappyTx } from "#src/actions/executeHappyTx"
+import { fetchNonce } from "#src/actions/fetchNonce"
+import { submitterClient } from "#src/clients"
 import { BaseFailedError, BaseRevertedError } from "#src/errors"
 import { parseFromViemError } from "#src/errors/utils"
-import { decodeHappyTx } from "#src/utils/decodeHappyTx"
+import { createNonceQueueManager, enqueueBuffer } from "#src/nonceQueueManager"
 import { encodeHappyTx } from "#src/utils/encodeHappyTx"
 import { estimateGasDescription } from "./submitter_estimateGas/EstimateGasDescription"
 import { estimateGasValidation } from "./submitter_estimateGas/EstimateGasInputSchema"
 import { executeDescription } from "./submitter_execute/ExecuteDescription"
 import { executeValidation } from "./submitter_execute/ExecuteInputSchema"
 
+const executeManager = createNonceQueueManager(5, 10, executeHappyTx, fetchNonce)
+
 export default new Hono()
     .post("/estimateGas", estimateGasDescription, estimateGasValidation, async (c) => {
         const data = c.req.valid("json")
 
-        const { request } = await submitterClient.simulateSubmit({ address: data.entryPoint, args: [data.tx] })
-
-        const decoded = decodeHappyTx(data.tx)
+        const { request } = await submitterClient.simulateSubmit({
+            address: data.entryPoint,
+            args: [encodeHappyTx(data.tx)],
+        })
 
         return c.json(
             {
@@ -24,10 +29,10 @@ export default new Hono()
                     validationStatus: "success",
                     entryPoint: data.entryPoint,
                 },
+                executeGasLimit: data.tx.executeGasLimit,
+                gasLimit: data.tx.gasLimit,
                 maxFeePerGas: request.maxFeePerGas?.toString(16),
-                submitterFee: decoded.submitterFee.toString(16),
-                gasLimit: decoded.gasLimit,
-                executeGasLimit: decoded.executeGasLimit,
+                submitterFee: data.tx.submitterFee?.toString(16),
                 status: "success",
             },
             200,
@@ -38,39 +43,20 @@ export default new Hono()
         try {
             const data = c.req.valid("json")
 
-            const decoded = decodeHappyTx(data.tx)
-
-            const hasGasLimitsSet =
-                decoded.executeGasLimit && decoded.gasLimit && decoded.maxFeePerGas && decoded.submitterFee
-
-            const usingPaymaster = decoded.account !== decoded.paymaster
-
-            // If using a paymaster, these values may be left as 0
-            // and we will fill in here
-            if (usingPaymaster) {
-                decoded.executeGasLimit ||= 4000000000
-                decoded.gasLimit ||= 4000000000
-                decoded.maxFeePerGas ||= ((await publicClient.estimateMaxPriorityFeePerGas()) * 120n) / 100n
-                decoded.submitterFee ||= 100n
-            }
-
-            const args = { address: data.entryPoint, args: [encodeHappyTx(decoded)] } as const
-
-            // if gas limits where manually set, we skip simulation
-            const { request } = hasGasLimitsSet ? { request: args } : await submitterClient.simulateSubmit(args)
-
-            const hash = await submitterClient.submit(request)
-
-            const receipt = await submitterClient.waitForSubmitReceipt({ hash, ...data })
+            const receipt = await enqueueBuffer(executeManager, {
+                // buffer management
+                nonceTrack: data.tx.nonceTrack,
+                nonceValue: data.tx.nonceValue,
+                account: data.tx.account,
+                // additional data
+                entryPoint: data.entryPoint,
+                tx: data.tx,
+            })
 
             return c.json(
                 {
-                    // duplicated from receipt?
                     status: receipt.status,
-
-                    /** Whether the happyTx was included and executed onchain. */
                     included: Boolean(receipt.txReceipt.transactionHash),
-
                     receipt,
                 },
                 200,

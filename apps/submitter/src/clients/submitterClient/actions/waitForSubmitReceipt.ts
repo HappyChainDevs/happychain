@@ -46,7 +46,7 @@ export async function waitForSubmitReceipt(client: BasicClient, { hash, tx }: { 
         gasUsed: receipt.gasUsed.toString(16),
 
         /** Total gas cost for the HappyTx in wei (inclusive submitter fee) */
-        gasCost: receipt.effectiveGasPrice.toString(16), // TODO: cost or price?
+        gasCost: (receipt.gasUsed * receipt.effectiveGasPrice).toString(16),
 
         /**
          * Receipt for the transaction that carried the HappyTx.

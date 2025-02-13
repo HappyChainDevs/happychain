@@ -3,7 +3,7 @@ import { testClient } from "hono/testing"
 import { keccak256, parseEther } from "viem"
 import { walletClient as submitterWalletClient } from "#src/clients"
 import { app } from "#src/server"
-import { createMockTokenAMintTx, getNonce, prepareTx, testAccount, testPublicClient } from "./utils"
+import { createMockTokenAMintHappyTx, getNonce, prepareTx, testAccount, testPublicClient } from "./utils"
 
 const client = testClient(app)
 
@@ -15,9 +15,9 @@ describe("submitter_execute", () => {
         smartAccount = await client.api.v1.accounts.deployAccount
             .$post({
                 json: {
-                    owner: testAccount.address,
+                    owner: testAccount.account.address,
                     // salt: increment counter to create new smartAccount
-                    salt: keccak256(Uint8Array.from(Buffer.from([testAccount.address, 3].join("_")))),
+                    salt: keccak256(Uint8Array.from(Buffer.from([testAccount.account.address, 3].join("_")))),
                 },
             })
             .then((a) => {
@@ -33,8 +33,8 @@ describe("submitter_execute", () => {
             await testPublicClient.waitForTransactionReceipt({ hash })
         })
 
-        it("mints tokens", async () => {
-            const dummyHappyTx = await createMockTokenAMintTx(smartAccount, await getNonce(smartAccount))
+        it("estimates gas for a token mint", async () => {
+            const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, await getNonce(smartAccount))
             // be your own paymaster!
             dummyHappyTx.paymaster = smartAccount
             const encoded = await prepareTx(dummyHappyTx)
@@ -46,8 +46,8 @@ describe("submitter_execute", () => {
     })
 
     describe("paymaster", () => {
-        it("mints tokens", async () => {
-            const dummyHappyTx = await createMockTokenAMintTx(smartAccount, await getNonce(smartAccount))
+        it("estimates gas for a token mint", async () => {
+            const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, await getNonce(smartAccount))
 
             const encoded = await prepareTx(dummyHappyTx)
 

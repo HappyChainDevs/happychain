@@ -5,44 +5,39 @@ import { abis, deployment } from "#src/deployments"
 
 export default new Hono().post("/deployAccount", async (c) => {
     const { owner, salt } = await c.req.json()
-    try {
-        const predictedAddress = await publicClient.readContract({
-            address: deployment.ScrappyAccountFactory,
-            abi: abis.ScrappyAccountFactory,
-            functionName: "getAddress",
-            args: [salt],
-        })
 
-        // Check if a contract is already deployed at the predicted address
-        const alreadyDeployed = await isContractDeployed(predictedAddress)
-        if (alreadyDeployed) return c.json(predictedAddress, 200)
+    const predictedAddress = await publicClient.readContract({
+        address: deployment.ScrappyAccountFactory,
+        abi: abis.ScrappyAccountFactory,
+        functionName: "getAddress",
+        args: [salt],
+    })
 
-        const { request, result } = await publicClient.simulateContract({
-            address: deployment.ScrappyAccountFactory,
-            abi: abis.ScrappyAccountFactory,
-            functionName: "createAccount",
-            args: [salt, owner],
-            account,
-        })
+    // Check if a contract is already deployed at the predicted address
+    const alreadyDeployed = await isContractDeployed(predictedAddress)
+    if (alreadyDeployed) return c.json(predictedAddress, 200)
 
-        // Check if the predicted address matches the result
-        if (result !== predictedAddress) throw new Error("Address mismatch during simulation")
+    const { request, result } = await publicClient.simulateContract({
+        address: deployment.ScrappyAccountFactory,
+        abi: abis.ScrappyAccountFactory,
+        functionName: "createAccount",
+        args: [salt, owner],
+        account,
+    })
 
-        const hash = await walletClient.writeContract(request)
-        const receipt = await publicClient.waitForTransactionReceipt({ hash })
+    // Check if the predicted address matches the result
+    if (result !== predictedAddress) throw new Error("Address mismatch during simulation")
 
-        // validate deployment
-        if (receipt.status !== "success") throw new Error("Transaction failed on-chain.")
-        if (result !== predictedAddress) throw new Error("Address mismatch during deployment")
-        if (!(await isContractDeployed(predictedAddress)))
-            throw new Error(`Contract deployment failed: No code found at ${predictedAddress}`)
+    const hash = await walletClient.writeContract(request)
+    const receipt = await publicClient.waitForTransactionReceipt({ hash })
 
-        return c.json(predictedAddress, 200)
-    } catch (error) {
-        console.error("Error during account deployment:", error)
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        return c.json({ success: false, error: (error as any)?.message || `Unknown error: ${error}`, hash: "" }, 500)
-    }
+    // validate deployment
+    if (receipt.status !== "success") throw new Error("Transaction failed on-chain.")
+    if (result !== predictedAddress) throw new Error("Address mismatch during deployment")
+    if (!(await isContractDeployed(predictedAddress)))
+        throw new Error(`Contract deployment failed: No code found at ${predictedAddress}`)
+
+    return c.json(predictedAddress, 200)
 })
 
 async function isContractDeployed(address: Address): Promise<boolean> {

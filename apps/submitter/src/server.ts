@@ -32,8 +32,8 @@ export const app = new Hono()
 
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
 app.onError((err, c) => {
-    console.error(`${err}`)
-    return c.text(`${err}`, 500)
+    console.error(`[${c.get("requestId")}]: ${err}`)
+    return c.text(`Something Happened, file a report with this key to find out more: ${c.get("requestId")}`, 500)
 })
 
 // Enable API Documentation page
