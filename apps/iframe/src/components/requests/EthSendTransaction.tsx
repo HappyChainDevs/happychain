@@ -1,7 +1,8 @@
 import { TransactionType, toBigIntSafe } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
+import { useMutation } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
     type AbiFunction,
     type Address,
@@ -20,10 +21,9 @@ import type {
     PrepareUserOperationReturnType,
     SmartAccount,
 } from "viem/account-abstraction"
-import { useAsyncOperation } from "#src/hooks/useAsyncOperation"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { publicClientAtom } from "#src/state/publicClient"
-import { type ExtendedSmartAccountClient, smartAccountClientAtom } from "#src/state/smartAccountClient"
+import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import { userAtom } from "#src/state/user"
 import { getAppURL } from "#src/utils/appURL"
 import { BlobTxWarning } from "./BlobTxWarning"
@@ -106,32 +106,46 @@ export const EthSendTransaction = ({
     }, [publicClient])
 
     // ====================================== UserOp details ======================================
-    const prepareUserOp = useCallback(
-        async (smartAccountClient: ExtendedSmartAccountClient) => {
-            try {
-                return (await smartAccountClient.prepareUserOperation({
-                    account: smartAccountClient.account,
-                    paymaster: contractAddresses.HappyPaymaster as Address,
-                    parameters: ["factory", "fees", "gas", "signature"],
-                    calls: [
-                        {
-                            to: tx.to,
-                            data: tx.data,
-                            value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                        },
-                    ],
-                    nonce: 0n,
-                    paymasterData: undefined,
-                } satisfies PrepareUserOperationParameters)) as PrepareUserOperationReturnType
-            } catch (error) {
-                console.error("[prepareUserOp] Error", error)
-                return undefined
-            }
-        },
-        [tx],
-    )
 
-    const { data: preparedUserOp, loading, error } = useAsyncOperation(smartAccountClientAtom, prepareUserOp)
+    const {
+        data: preparedUserOp,
+        isPending,
+        isError,
+        mutate,
+    } = useMutation({
+        mutationFn: async () => {
+            const smartAccountClient = await getSmartAccountClient()
+            if (!smartAccountClient) {
+                throw new Error("Smart account client not initialized")
+            }
+
+            const userOp = await smartAccountClient.prepareUserOperation({
+                account: smartAccountClient.account,
+                paymaster: contractAddresses.HappyPaymaster as Address,
+                parameters: ["factory", "fees", "gas", "signature"],
+                calls: [
+                    {
+                        to: tx.to,
+                        data: tx.data,
+                        value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                    },
+                ],
+                nonce: 0n,
+            } satisfies PrepareUserOperationParameters)
+
+            if (!userOp) {
+                throw new Error("Failed to prepare user operation")
+            }
+
+            return userOp as PrepareUserOperationReturnType
+        },
+        retry: 3,
+    })
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: we want it to run when tx is populated
+    useEffect(() => {
+        mutate()
+    }, [tx, mutate])
 
     const exData = useMemo(() => {
         if (!preparedUserOp) return undefined
@@ -202,10 +216,10 @@ export const EthSendTransaction = ({
                 hideActions={tx.type === TransactionType.EIP4844}
                 actions={{
                     accept: {
-                        children: loading ? "Preparing..." : "Confirm",
-                        disabled: loading || Boolean(error) || !preparedUserOp,
+                        children: isPending ? "Preparing..." : "Confirm",
+                        disabled: isPending || isError || !preparedUserOp,
                         onClick: () => {
-                            if (loading || !preparedUserOp) return
+                            if (isPending || !preparedUserOp) return
                             accept({
                                 eip1193RequestParams: { method, params },
                                 extraData: exData,
