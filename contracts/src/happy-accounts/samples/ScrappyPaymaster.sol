@@ -89,13 +89,13 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
         uint256 owed = consumedGas * happyTx.maxFeePerGas + uint256(happyTx.submitterFee) + PAYMENT_OVERHEAD_GAS;
         // ^MAGIC VARIABLE TO DEFINE, which must account of for the cost of the code below, see LOGGAS code for computing it
 
-        // [LOGGAS] uint256 gasStartOverhead = gasleft();
-        // [LOGGAS] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
+        // [LOGGAS_INTERNAL] uint256 gasStartOverhead = gasleft();
+        // [LOGGAS_INTERNAL] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
         owed += gasleft() - gasStart;
 
         (payable(tx.origin).call{value: owed}(""));
 
-        // [LOGGAS] console.log("PAYMENT_OVERHEAD_GAS", gasleft() - gasStartOverhead);
+        // [LOGGAS_INTERNAL] console.log("PAYMENT_OVERHEAD_GAS", gasleft() - gasStartOverhead);
 
         return 0;
     }
