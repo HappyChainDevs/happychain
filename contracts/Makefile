@@ -164,12 +164,17 @@ debug-logging-off:
 # Before running any of these targets, start Anvil using:
 #   make anvil
 
-happyEntrypoint-gas: ## Generates a gas report for the happy entrypoint contract.
+happyEntryPoint-gas: ## Generates a gas report for the happy entrypoint contract.
+	@echo "Running tests..."
 	@make gas-logging-on
-	@forge test -vvv --match-contract HappyEntryPointGasEstimator --isolate
-	# | awk '/Gas used in submit \(uninitialized and cold storage\)/{p=1}; p' > happyEntrypoint_gas_report.txt
+	@forge test -vvv --match-contract HappyEntryPointGasEstimator
+	# --isolate | awk '/Gas used in submit \(uninitialized and cold storage\)/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
 	@make gas-logging-off
-.PHONY: happyEntrypoint-gas
+	# @make internal-gas-logging-on
+	# @forge test -vvv --match-contract HappyEntryPointGasEstimator --isolate | awk '/Gas used in submit \(uninitialized and cold storage\)/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
+	# @make internal-gas-logging-off
+	@echo "Tests completed"
+.PHONY: happyEntryPoint-gas
 
 paymaster-gas: ## Generates a gas report for the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
