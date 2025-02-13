@@ -163,6 +163,7 @@ debug-logging-off:
 happy-aa-gas-report: ## Generates a gas report for the happy account contract.
 	@make happyEntryPoint-gas
 	@make happyAccountPayout-gas
+	@make happyPaymasterPayout-gas
 .PHONY: happy-aa-gas-report
 
 happyEntryPoint-gas: ## Generates a gas report for the happy entrypoint contract.
@@ -173,9 +174,15 @@ happyEntryPoint-gas: ## Generates a gas report for the happy entrypoint contract
 
 happyAccountPayout-gas: ## Generates a gas report for the happy account payout contract.
 	@make internal-gas-logging-on
-	@forge test -vvv --match-test testEstimateHappyAccountPayoutGas --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateScrappyAccountPayoutGas --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@make internal-gas-logging-off
 .PHONY: happyAccountPayout-gas
+
+happyPaymasterPayout-gas: ## Generates a gas report for the happy paymaster payout contract.
+	@make internal-gas-logging-on
+	@forge test -vvv --match-test testEstimateScrappyPaymasterPayoutGas --isolate | awk '/ScrappyPaymaster payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@make internal-gas-logging-off
+.PHONY: happyPaymasterPayout-gas
 
 paymaster-gas: ## Generates a gas report for the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' > paymaster_gas_report.txt
