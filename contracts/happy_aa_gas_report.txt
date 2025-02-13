@@ -1,19 +1,22 @@
-=== HappyEntryPoint Gas Report ===
-
-  1. First Transaction (Cold + Uninitialized Storage)
-     ---------------------------------------
-  payoutCallOverhead 12029
-     Gas used:  161465
+HappyEntryPoint Gas Report
+  
+1. First Transaction (Cold + Uninitialized Storage)
+  ----------------------------------------------------
+  excessivelySafeCall gas usage:  12029
+     Tx Gas used:  135440
   
 2. Second Transaction (Cold + Initialized Storage)
-     ----------------------------------------
-  payoutCallOverhead 12029
-     Gas used:  105689
+  ----------------------------------------------------
+  excessivelySafeCall gas usage:  12029
+     TxGas used:  84140
   
 3. Batch Transactions (Warm Storage Access)
-     -----------------------------------
-  payoutCallOverhead 12029
-     Gas used:  84266
-  payoutCallOverhead 12029
-     Gas used:  46371
+  ----------------------------------------------------
+  excessivelySafeCall gas usage:  12029
+  excessivelySafeCall gas usage:  12029
+     Tx Gas used (2nd txn):  46375
+
+ScrappyAccount payout gas usage
+  ----------------------------------------------------
+  inside payout 9612
 
