@@ -167,13 +167,18 @@ debug-logging-off:
 happyEntryPoint-gas: ## Generates a gas report for the happy entrypoint contract.
 	@echo "Running tests..."
 	@make gas-logging-on
-	@forge test -vvv --match-contract HappyEntryPointGasEstimator --isolate | awk '/=== HappyEntryPoint Gas Report ===/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateEntryPointSubmitGas --isolate | awk '/=== HappyEntryPoint Gas Report ===/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
 	@make gas-logging-off
-	@make internal-gas-logging-on
-	@forge test -vvv --match-contract HappyEntryPointGasEstimator --isolate | awk '/1\. First Transaction/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
-	@make internal-gas-logging-off
 	@echo "Tests completed"
 .PHONY: happyEntryPoint-gas
+
+happyAccountPayout-gas: ## Generates a gas report for the happy account payout contract.
+	@echo "Running tests..."
+	@make internal-gas-logging-on
+	@forge test -vvv --match-test testEstimateEntryPointSubmitGas --isolate | awk '/=== HappyAccountPayout Gas Report ===/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@make internal-gas-logging-off
+	@echo "Tests completed"
+.PHONY: happyAccountPayout-gas
 
 paymaster-gas: ## Generates a gas report for the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt

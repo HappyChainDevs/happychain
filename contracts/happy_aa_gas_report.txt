@@ -3,26 +3,17 @@
   1. First Transaction (Cold + Uninitialized Storage)
      ---------------------------------------
   payoutCallOverhead 12029
+     Gas used:  161465
   
 2. Second Transaction (Cold + Initialized Storage)
      ----------------------------------------
   payoutCallOverhead 12029
+     Gas used:  105689
   
 3. Batch Transactions (Warm Storage Access)
      -----------------------------------
   payoutCallOverhead 12029
+     Gas used:  84266
   payoutCallOverhead 12029
-
-  1. First Transaction (Cold + Uninitialized Storage)
-     ---------------------------------------
-  inside payout 7112
-  
-2. Second Transaction (Cold + Initialized Storage)
-     ----------------------------------------
-  inside payout 7112
-  
-3. Batch Transactions (Warm Storage Access)
-     -----------------------------------
-  inside payout 7112
-  inside payout 7112
+     Gas used:  46371
 
