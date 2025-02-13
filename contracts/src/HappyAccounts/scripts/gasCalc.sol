@@ -21,7 +21,7 @@ contract HappyEntryPointGasEstimator is Test {
 
     bytes32 private constant DEPLOYMENT_SALT = 0;
     address private constant DEPLOYER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-    address private constant OWNER = 0x4BC8e81Ad3BE83276837f184138FC96770C14297;
+    address private constant OWNER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
     DeployHappyAAContracts private deployer;
     ScrappyPaymaster private scrappyPaymaster;
@@ -49,6 +49,7 @@ contract HappyEntryPointGasEstimator is Test {
         accountAddr = scrappyAccountFactory.createAccount(DEPLOYMENT_SALT, OWNER);
         scrappyAccount = ScrappyAccount(payable(accountAddr));
         console.log("Account address: ", accountAddr);
+        
         // TODO: transfer call AFTER state change ^^, else, linter gives reentrancy attack warning :p
         // Fund the paymaster with some gas tokens
         payable(address(scrappyPaymaster)).transfer(10 ether);
@@ -71,6 +72,8 @@ contract HappyEntryPointGasEstimator is Test {
     // ====================================================================================================
     // SUBMITTER-SPONSORED HAPPY TXs
 
+    // TODO: write these tests
+
     // ====================================================================================================
     // GAS ESTIMATION UTILS
 
@@ -92,19 +95,19 @@ contract HappyEntryPointGasEstimator is Test {
      */
     function _createSelfPayingHappyTx() internal view returns (HappyTx memory) {
         return HappyTx({
-            account: accountAddr,
+            account: 0x824077650B597d34B8AA6423AdB8feA8DbE77f77,
             gasLimit: 4000000000, // 0xEE6B2800
             executeGasLimit: 4000000000, // 0xEE6B2800
             dest: 0x07b354EFA748883a342a9ba4780Cc9728f51e3D5,
-            paymaster: accountAddr,
+            paymaster: 0x824077650B597d34B8AA6423AdB8feA8DbE77f77,
             value: 0,
             nonceTrack: 0,
             nonceValue: 0,
             maxFeePerGas: 1200000000, // 0x47868C00
             submitterFee: 100, // 0x64
-            callData: hex"40c10f190000000000000000000000009b1939cf7db082897e270b621591c7a90dbd6f9200000000000000000000000000000000000000000000000000038d7ea4c68000",
+            callData: hex"40c10f19000000000000000000000000824077650b597d34b8aa6423adb8fea8dbe77f7700000000000000000000000000000000000000000000000000038d7ea4c68000",
             paymasterData: hex"",
-            validatorData: hex"5a76aed1518c4d4fdb717da39a38ca53773bc086ae9f9d96d6ab1bd8d43910191687c90f157b70823d6e3edc97aba11c24aa39d64a6190cc47e83bcb90089ecf1b",
+            validatorData: hex"39d85db95ee4537d206fbea9ddcace8683a378aee8426f31073453145e9262b610143d6702ec9deeeedbe8b3059da3ae237ff8f27251a1674c7ae9c48193a5ff1c",
             extraData: hex""
         });
     }
@@ -139,7 +142,7 @@ contract HappyEntryPointGasEstimator is Test {
      */
     function _getSelfPayingEncodedHappyTx() internal pure returns (bytes memory) {
         return
-        hex"9B1939cf7db082897e270B621591C7A90dBD6f92ee6b2800ee6b280007b354EFA748883a342a9ba4780Cc9728f51e3D59B1939cf7db082897e270B621591C7A90dBD6f92000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000047868c0000000000000000000000000000000000000000000000000000000000000000640000004440c10f190000000000000000000000009b1939cf7db082897e270b621591c7a90dbd6f9200000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000415a76aed1518c4d4fdb717da39a38ca53773bc086ae9f9d96d6ab1bd8d43910191687c90f157b70823d6e3edc97aba11c24aa39d64a6190cc47e83bcb90089ecf1b00000000";
+        hex"824077650B597d34B8AA6423AdB8feA8DbE77f77ee6b2800ee6b280007b354EFA748883a342a9ba4780Cc9728f51e3D5824077650B597d34B8AA6423AdB8feA8DbE77f77000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000047868c0000000000000000000000000000000000000000000000000000000000000000640000004440c10f19000000000000000000000000824077650b597d34b8aa6423adb8fea8dbe77f7700000000000000000000000000000000000000000000000000038d7ea4c68000000000000000004139d85db95ee4537d206fbea9ddcace8683a378aee8426f31073453145e9262b610143d6702ec9deeeedbe8b3059da3ae237ff8f27251a1674c7ae9c48193a5ff1c00000000";
     }
 
     /**
