@@ -73,16 +73,48 @@ contract HappyEntryPointGasEstimator is Test {
     // ====================================================================================================
     // SELF-PAYING HAPPY TXs
 
+    /**
+     * @notice Measures gas usage for submitting transactions through the EntryPoint, analyzing
+     * different storage access patterns:
+     * 1. Cold + uninitialized storage access (first ever transaction)
+     * 2. Cold + initialized storage access (subsequent transactions in different blocks)
+     * 3. Warm storage access (multiple transactions in same block)
+     *
+     * This test estimates gas consumption for:
+     * 1. Initial transaction with uninitialized storage slots (worst case)
+     * 2. Subsequent transaction with initialized but cold storage slots
+     * 3. Multiple transactions in same block benefiting from warm storage
+     *
+     * The results help understand gas optimizations possible through batching
+     * transactions and storage slot warming.
+     */
     function testEstimateEntryPointSubmitGas() public {
+        console.log("\nHappyEntryPoint Gas Report :-");
         // Step 1. Submit the encoded happy tx (uninitialized and cold storage)
-        console.log("Gas used in submit (uninitialized and cold storage)\n");
-        HappyTx memory happyTx1 = _createSelfPayingHappyTx(SCA, SCA, 0);
+        console.log("\nGas used in submit (uninitialized and cold storage)");
+        HappyTx memory happyTx1 = _createSignedHappyTx(SCA, SCA, 0);
         happyEntryPoint.submit(happyTx1.encode());
 
         // Step 2. Submit the encoded happy tx (initialized and cold storage)
-        console.log("Gas used in submit (initialized and cold storage)\n");
-        HappyTx memory happyTx2 = _createSelfPayingHappyTx(SCA, SCA, 1);
+        console.log("\nGas used in submit (initialized and cold storage)");
+        HappyTx memory happyTx2 = _createSignedHappyTx(SCA, SCA, 1);
         happyEntryPoint.submit(happyTx2.encode());
+
+        // Step 3. Submit multiple txs in same call to measure warm storage access
+        console.log("\nGas used in submit (warm storage access)");
+
+        // Create array of transactions
+        HappyTx[] memory warmTxs = new HappyTx[](2);
+        warmTxs[0] = _createSignedHappyTx(SCA, SCA, 2);
+        warmTxs[1] = _createSignedHappyTx(SCA, SCA, 3);
+
+        // Encode the transactions
+        bytes[] memory encodedWarmTxs = new bytes[](warmTxs.length);
+        for (uint256 i = 0; i < warmTxs.length; i++) {
+            encodedWarmTxs[i] = warmTxs[i].encode();
+        }
+        // Submit the transactions
+        this._estimateEPGasForMultipleTxs(encodedWarmTxs);
     }
 
     // ====================================================================================================
@@ -94,16 +126,16 @@ contract HappyEntryPointGasEstimator is Test {
     // GAS ESTIMATION UTILS
 
     /// @dev Internal function to estimate gas used by `submit` for a single happy tx.
-    function estimateHappyEPSubmitGasForSingleTx(bytes memory encodedHappyTx) public returns (uint256) {
-        uint256 gasBefore = gasleft();
-        happyEntryPoint.submit(encodedHappyTx);
-        uint256 gasAfter = gasleft();
-        return gasBefore - gasAfter;
+    function _estimateEPGasForMultipleTxs(bytes[] memory encodedHappyTxs) external {
+        for (uint256 i = 0; i < encodedHappyTxs.length; i++) {
+            happyEntryPoint.submit(encodedHappyTxs[i]);
+        }
     }
 
     // ====================================================================================================
     // HAPPY TX CREATION UTILS
 
+    /// @dev Internal helper function to sign a happy tx.
     function signHappyTx(HappyTx memory happyTx) internal pure returns (bytes memory signature) {
         bytes32 hash = keccak256(happyTx.encode()).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) =
@@ -111,22 +143,25 @@ contract HappyEntryPointGasEstimator is Test {
         signature = abi.encodePacked(r, s, v);
     }
 
-    function _createSelfPayingHappyTx(address account, address paymaster, uint256 nonce)
+    /// @dev Internal helper function to create a signed happy tx.
+    function _createSignedHappyTx(address account, address paymaster, uint256 nonce)
         internal
         pure
         returns (HappyTx memory)
     {
-        HappyTx memory happyTx = _getBasicHappyTx();
+        HappyTx memory happyTx = _getStubHappyTx();
+
         happyTx.account = account;
         happyTx.paymaster = paymaster;
         happyTx.nonceTrack = 0;
         happyTx.nonceValue = uint64(nonce);
-        happyTx.validatorData = signHappyTx(happyTx);
 
+        happyTx.validatorData = signHappyTx(happyTx);
         return happyTx;
     }
 
-    function _getBasicHappyTx() internal pure returns (HappyTx memory) {
+    /// @dev Internal helper function to create a stub happy tx.
+    function _getStubHappyTx() internal pure returns (HappyTx memory) {
         return HappyTx({
             account: 0x0000000000000000000000000000000000000000, // Stub value
             gasLimit: 4000000000, // 0xEE6B2800

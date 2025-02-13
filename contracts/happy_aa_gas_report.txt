@@ -1,7 +1,22 @@
-  Gas used in submit (uninitialized and cold storage)
-
+HappyEntryPoint Gas Report :-
+  
+Gas used in submit (uninitialized and cold storage)
   payoutCallOverhead 12029
-  Gas used in submit (initialized and cold storage)
-
+  
+Gas used in submit (initialized and cold storage)
   payoutCallOverhead 12029
+  
+Gas used in submit (warm storage access)
+  payoutCallOverhead 12029
+  payoutCallOverhead 12029
+
+Gas used in submit (uninitialized and cold storage)
+  inside payout 7112
+  
+Gas used in submit (initialized and cold storage)
+  inside payout 7112
+  
+Gas used in submit (warm storage access)
+  inside payout 7112
+  inside payout 7112
 
