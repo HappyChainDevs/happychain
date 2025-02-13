@@ -207,7 +207,7 @@ export const EthSendTransaction = ({
                         onClick: () => {
                             if (loading || !preparedUserOp) return
                             accept({
-                                eip1193params: { method, params },
+                                eip1193RequestParams: { method, params },
                                 extraData: exData,
                             })
                         },

@@ -28,7 +28,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
         expect(getAllPermissions(appURL).length).toBe(0)
         expect(getAllPermissions(iframeURL).length).toBe(1)
         const request = makePayload(parentID, {
-            eip1193params: { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] },
+            eip1193RequestParams: { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] },
         }) as ProviderEventPayload<ApprovedRequestPayload>
         const response = await dispatchHandlers(request)
         expect(getAllPermissions(appURL).length).toBe(1)
@@ -48,7 +48,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
     test("adds eth_account permissions (with caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(0)
         const request = makePayload(parentID, {
-            eip1193params: {
+            eip1193RequestParams: {
                 method: "wallet_requestPermissions",
                 params: [
                     {

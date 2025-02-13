@@ -49,7 +49,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         console.warn("Request approved, but no user found")
     }
 
-    const { method: requestMethod, params: requestParams } = request.payload.eip1193params
+    const { method: requestMethod, params: requestParams } = request.payload.eip1193RequestParams
 
     switch (requestMethod) {
         // This functionality is same as in injected.ts
@@ -94,7 +94,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             const response = await sendToWalletClient({
                 ...request,
-                eip1193params: request.payload.eip1193params,
+                eip1193RequestParams: request.payload.eip1193RequestParams,
             })
             // Only add chain if the request is successful.
             setChains((prev) => ({ ...prev, [params.chainId]: params }))
@@ -117,8 +117,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
             const response = await sendToWalletClient({
                 ...request,
-                eip1193params: request.payload.eip1193params,
-                extraData: undefined,
+                eip1193RequestParams: request.payload.eip1193RequestParams,
             })
             // Currently this fails: web3Auth is hardcoded to the default initial chain.
             setCurrentChain(chains[chainId])
@@ -194,13 +193,13 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
 async function sendToWalletClient<T extends PopupMsgs[Msgs.PopupApprove]["payload"]>(
     request: T,
-): Promise<ApprovedRequestPayload<T["eip1193params"]["method"]>> {
+): Promise<ApprovedRequestPayload<T["eip1193RequestParams"]["method"]>> {
     const client: Client | undefined = getWalletClient()
     if (!client) throw new EIP1193DisconnectedError()
 
-    if (requestPayloadIsHappyMethod(request.eip1193params)) {
+    if (requestPayloadIsHappyMethod(request.eip1193RequestParams)) {
         throw new EIP1193UnsupportedMethodError()
     }
 
-    return await client.request(request.eip1193params)
+    return await client.request(request.eip1193RequestParams)
 }

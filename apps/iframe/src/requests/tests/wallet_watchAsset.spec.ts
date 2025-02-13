@@ -26,7 +26,7 @@ describe("walletClient wallet_watchAsset", () => {
     test("adds token", async () => {
         expect(Object.keys(getWatchedAssets()).length).toBe(0)
         const request = makePayload(iframeID, {
-            eip1193params: {
+            eip1193RequestParams: {
                 method: "wallet_watchAsset",
                 params: {
                     type: "ERC20",

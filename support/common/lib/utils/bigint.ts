@@ -47,7 +47,11 @@ export function bigIntToZeroPadded(value: bigint, totalDigits: number): string {
  * toBigIntSafe(null) // 0n
  * toBigIntSafe(undefined, 1n) // 1n
  */
-export const toBigIntSafe = (value: string | bigint | null | undefined, defaultValue = 0n) => {
-    if (!value) return defaultValue
-    return typeof value === "bigint" ? value : BigInt(value)
+export const toBigIntSafe = (value: string | bigint | null | undefined) => {
+    if (!value) return 0n
+    try {
+        return typeof value === "bigint" ? value : BigInt(value)
+    } catch {
+        return 0n
+    }
 }

@@ -28,7 +28,7 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     test("adds eth_account permissions (no caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
         const request = makePayload(iframeID, {
-            eip1193params: {
+            eip1193RequestParams: {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
             },
@@ -49,7 +49,7 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     test("adds eth_account permissions (with caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
         const request = makePayload(iframeID, {
-            eip1193params: {
+            eip1193RequestParams: {
                 method: "wallet_requestPermissions",
                 params: [
                     {
@@ -81,7 +81,7 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
     test("only adds permissions once", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
         const request = makePayload(iframeID, {
-            eip1193params: { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] },
+            eip1193RequestParams: { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] },
         }) as ProviderEventPayload<ApprovedRequestPayload>
         await dispatchHandlers(request)
         await dispatchHandlers(request)

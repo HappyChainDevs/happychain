@@ -248,11 +248,11 @@ export type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> =
  * Payload structure for approved EIP1193 requests.
  * Combines required EIP1193 parameters with optional method-specific extra data.
  * @template Method - EIP1193 method name
- * @property eip1193params - Required EIP1193 request parameters
+ * @property eip1193RequestParams - Required EIP1193 request parameters
  * @property extraData - Optional method-specific additional data
  */
 export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP1193RequestMethods> = {
-    eip1193params: EIP1193RequestParameters<Method>
+    eip1193RequestParams: EIP1193RequestParameters<Method>
     extraData?: ApprovedRequestExtraData<Method>
 }
 
