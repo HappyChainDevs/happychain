@@ -23,11 +23,6 @@ bytes constant PROXY_BYTECODE = hex"363d3d373d3d363d7f360894a13ba1a3210667c82849
 contract HappyEntryPointGasEstimator is Test {
     using HappyTxLib for HappyTx;
 
-    // 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-    // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-
-    bytes32 private constant DEPLOYMENT_SALT = 0;
-    address private constant DEPLOYER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     address private constant OWNER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     address private constant DEST = 0x07b354EFA748883a342a9ba4780Cc9728f51e3D5;
 
@@ -46,17 +41,12 @@ contract HappyEntryPointGasEstimator is Test {
         deployer = new DeployHappyAAContracts();
 
         // Deploy the happy-aa contracts
-        vm.prank(DEPLOYER);
+        vm.prank(OWNER);
         deployer.deployForTests();
 
         happyEntryPoint = deployer.happyEntryPoint();
         scrappyPaymaster = deployer.scrappyPaymaster();
-        // scrappyAccountFactory = deployer.scrappyAccountFactory();
         scrappyAccountImpl = deployer.scrappyAccount();
-
-        // Deploy a Smart Account using the factory
-        // address _scrappyAccount = scrappyAccountFactory.createAccount(DEPLOYMENT_SALT, OWNER);
-        // scrappyAccount = ScrappyAccount(payable(_scrappyAccount));
 
         // Fund the smart account and paymaster with some gas tokens
         payable(address(0xb60849107b2B5C0F6e3bAEeC23FC3d2E43812632)).transfer(10 ether);
@@ -76,13 +66,12 @@ contract HappyEntryPointGasEstimator is Test {
 
     function testEstimateEntryPointSubmitGas() public {
         // Step 1. Submit the encoded happy tx (uninitialized and cold storage)
-        bytes memory encodedHappyTx = _getSelfPayingEncodedHappyTx();
-        uint256 gasUninitialized = estimateHappyEPSubmitGasForSingleTx(encodedHappyTx);
-        console.log("Gas used in submit (uninitialized and cold storage):", gasUninitialized);
+        console.log("Gas used in submit (uninitialized and cold storage)\n");
 
-        // // Step 2. Submit the encoded happy tx (initialized, but cold storage)
-        // uint256 gasCold = estimateHappyEPSubmitGasForSingleTx(encodedHappyTx);
-        // console.log("Gas used in submit (initialized, but cold storage):", gasCold);
+        HappyTx memory inputTx = _getSelfPayingHappyTx();
+        bytes memory encoded = inputTx.encode();
+        console.logBytes(encoded);
+        happyEntryPoint.submit(encoded);
     }
 
     // ====================================================================================================
@@ -104,12 +93,48 @@ contract HappyEntryPointGasEstimator is Test {
     // ====================================================================================================
     // HAPPY TX CREATION UTILS
 
+    function signHappyTx(HappyTx memory happyTx) internal pure returns (bytes memory signature) {
+        bytes32 hash = keccak256(happyTx.encode());
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80, hash);
+        signature = abi.encodePacked(v, r, s);
+    }
+
+    function _createSelfPayingHappyTx(address account, address paymaster, uint256 nonce) internal pure returns (HappyTx memory) {
+        HappyTx memory happyTx = _getBasicHappyTx();
+        happyTx.account = account;
+        happyTx.paymaster = paymaster;
+        happyTx.nonceTrack = 0;
+        happyTx.nonceValue = uint64(nonce);
+        happyTx.validatorData = signHappyTx(happyTx);
+
+        return happyTx;
+    }
+
+    function _getBasicHappyTx() internal pure returns (HappyTx memory) {
+        return HappyTx({
+            account: 0x0000000000000000000000000000000000000000, // Stub value
+            gasLimit: 4000000000, // 0xEE6B2800
+            executeGasLimit: 4000000000, // 0xEE6B2800
+            dest: DEST,
+            paymaster: 0x0000000000000000000000000000000000000000, // Stub value
+            value: 0,
+            nonceTrack: 0,
+            nonceValue: 0,
+            maxFeePerGas: 1200000000, // 0x47868C00
+            submitterFee: 100, // 0x64
+            callData: hex"40c10f19000000000000000000000000b60849107b2b5c0f6e3baeec23fc3d2e4381263200000000000000000000000000000000000000000000000000038d7ea4c68000",
+            paymasterData: hex"",
+            validatorData: hex"",
+            extraData: hex""
+        });
+    }
+
     /**
      * @dev Internal helper function to create a simple `HappyTx`. The values are hardcoded for
      *      testing purposes, and were obtained from a real happy-aa transaction submitted on-chain.
      *      The account itself pays for the gas and the submitter fee.
      */
-    function _createSelfPayingHappyTx() internal pure returns (HappyTx memory) {
+    function _getSelfPayingHappyTx() internal pure returns (HappyTx memory) {
         return HappyTx({
             account: 0xb60849107b2B5C0F6e3bAEeC23FC3d2E43812632,
             gasLimit: 4000000000, // 0xEE6B2800
@@ -129,44 +154,11 @@ contract HappyEntryPointGasEstimator is Test {
     }
 
     /**
-     * @dev Internal helper function to create a simple `HappyTx`. The values are hardcoded for
-     *      testing purposes, and were obtained from a real happy-aa transaction submitted on-chain.
-     *      Submitter (0x0000000000000000000000000000000000000000) acts as the paymaster.
-     */
-    function _createSubmitterSponsoredHappyTx() internal pure returns (HappyTx memory) {
-        return HappyTx({
-            account: 0x9B1939cf7db082897e270B621591C7A90dBD6f92,
-            gasLimit: 4000000000, // 0xEE6B2800
-            executeGasLimit: 4000000000, // 0xEE6B2800
-            dest: 0x07b354EFA748883a342a9ba4780Cc9728f51e3D5,
-            paymaster: 0x0000000000000000000000000000000000000000,
-            value: 0,
-            nonceTrack: 0,
-            nonceValue: 1,
-            maxFeePerGas: 1200000, // 0x124F80
-            submitterFee: 100, // 0x64
-            callData: hex"40c10f190000000000000000000000009b1939cf7db082897e270b621591c7a90dbd6f9200000000000000000000000000000000000000000000000000038d7ea4c68000",
-            paymasterData: hex"",
-            validatorData: hex"2edfb8f8ab47aec96ec5fe25d5c6072d160bfdef88eca6b07e2e809ff18401271212a089746c2fd93cd09e8f76a4cbda2878738a6b64802fc5c2092d02a69b571b",
-            extraData: hex""
-        });
-    }
-
-    /**
      * @dev Internal helper function to get the encoded happyTx.
      * With account as the paymaster.
      */
     function _getSelfPayingEncodedHappyTx() internal pure returns (bytes memory) {
         return
         hex"b60849107b2B5C0F6e3bAEeC23FC3d2E43812632ee6b2800ee6b280007b354EFA748883a342a9ba4780Cc9728f51e3D5b60849107b2B5C0F6e3bAEeC23FC3d2E43812632000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000047868c0000000000000000000000000000000000000000000000000000000000000000640000004440c10f19000000000000000000000000b60849107b2b5c0f6e3baeec23fc3d2e4381263200000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000414c5e0665baab94cf452ad74410d4d55b1e8fa48f72333363a138f376765c1f6752f0a55b55405099c817fdd842dbb1e992856b4bc8fb71981c0b3f2e17e992971b00000000";
-    }
-
-    /**
-     * @dev Internal helper function to get the encoded happyTx.
-     * With the submitter (0x0000000000000000000000000000000000000000) as the paymaster.
-     */
-    function _getSubmitterSponsoredEncodedHappyTx() internal pure returns (bytes memory) {
-        return
-        hex"9b1939cf7db082897e270b621591c7a90dbd6f92ee6b2800ee6b280007b354efa748883a342a9ba4780cc9728f51e3d50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000124f8000000000000000000000000000000000000000000000000000000000000000640000004440c10f190000000000000000000000009b1939cf7db082897e270b621591c7a90dbd6f9200000000000000000000000000000000000000000000000000038d7ea4c6800000000000000000412edfb8f8ab47aec96ec5fe25d5c6072d160bfdef88eca6b07e2e809ff18401271212a089746c2fd93cd09e8f76a4cbda2878738a6b64802fc5c2092d02a69b571b00000000";
     }
 }

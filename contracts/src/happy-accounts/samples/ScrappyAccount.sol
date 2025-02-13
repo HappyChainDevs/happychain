@@ -28,7 +28,6 @@ import {
 } from "../utils/Common.sol";
 
 // [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
-import {console} from "forge-std/Script.sol";
 
 /**
  * Example implementation of a Happy Account with nonce management, reentrancy protection,
@@ -121,18 +120,11 @@ contract ScrappyAccount is
     // EXTERNAL FUNCTIONS
 
     function validate(HappyTx memory happyTx) external returns (bytes4) {
-        console.log("validate reached?");
         if (happyTx.account != address(this)) {
-            console.log("wrongaccount :(");
-            console.log("happyTx.account: ", happyTx.account);
-            console.log("this: ", address(this));
             return WrongAccount.selector;
         }
 
         if (tx.gasprice > happyTx.maxFeePerGas) {
-            console.log("gasprice :(");
-            console.log("tx.gasprice: ", tx.gasprice);
-            console.log("happyTx.maxFeePerGas: ", happyTx.maxFeePerGas);
             return GasPriceTooHigh.selector;
         }
 
