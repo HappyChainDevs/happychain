@@ -4,6 +4,12 @@ pragma solidity ^0.8.20;
 import {RandomCommitment} from "./RandomCommitment.sol";
 import {Drand} from "./Drand.sol";
 
+/**
+ * This contract is checked by the sequencer to obtain its owner and to prioritize the owner's transaction,
+ * ensuring that it is included as the first transaction of the block. This ordering makes the randomness available
+ * for all transactions in the block. It is very important that if we add new variables, the `owner` variable remains
+ * in the same storage slot (currently 0x00), because that is the slot used by the sequencer to retrieve the owner's address.
+ */
 contract Random is RandomCommitment, Drand {
     /*
     * The amount of time in seconds by which we delay reading the values from the Drand network.
