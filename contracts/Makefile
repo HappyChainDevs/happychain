@@ -160,17 +160,24 @@ debug-logging-off:
 # Before running any of these targets, start Anvil using:
 #   make anvil
 
-happy-aa-gas-report: ## Generates a gas report for the happy account contract.
+happy-aa-gas-report: ## Generates a gas report for the happy-aa contracts
 	@make happyEntryPoint-gas
 	@make happyAccountPayout-gas
 	@make happyPaymasterPayout-gas
+	@make happyAccountExecute-gas
 .PHONY: happy-aa-gas-report
 
 happyEntryPoint-gas: ## Generates a gas report for the happy entrypoint contract.
 	@make gas-logging-on
-	@forge test -vvv --match-test testEstimateEntryPointSubmitGas --isolate | awk '/HappyEntryPoint Gas Report/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForSelfPayingTx --isolate | awk '/HappyEntryPoint Gas Report For Self-Paying Transactions/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
 	@make gas-logging-off
 .PHONY: happyEntryPoint-gas
+
+happyAccountExecute-gas: ## Generates a gas report for the happy account execute contract.
+	@make internal-gas-logging-on
+	@forge test -vvv --match-test testEstimateScrappyAccountExecuteGas --isolate | awk '/ScrappyAccount execute gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@make internal-gas-logging-off
+.PHONY: happyAccountExecute-gas
 
 happyAccountPayout-gas: ## Generates a gas report for the happy account payout contract.
 	@make internal-gas-logging-on
