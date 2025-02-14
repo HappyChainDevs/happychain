@@ -66,6 +66,8 @@ const safeList = new Set([
     "wallet_revokePermissions", // https://github.com/MetaMask/metamask-improvement-proposals/blob/main/MIPs/mip-2.md
     "web3_clientVersion",
     "web3_sha3",
+    // eip-5792
+    "wallet_getCapabilities",
 ])
 
 /**
@@ -116,6 +118,9 @@ const unsafeList = new Set([
     // cryptography
     "eth_decrypt",
     "eth_getEncryptionPublicKey",
+    // eip-5792: tx batching
+    "wallet_sendCalls",
+    "wallet_showCallsStatus", // shows pretty info popup
 ])
 
 /**

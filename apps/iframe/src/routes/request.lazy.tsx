@@ -4,6 +4,7 @@ import { createLazyFileRoute } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
 import { HappyRequestSessionKey } from "#src/components/requests/HappyRequestSessionKey.js"
 import { HappyUseAbi } from "#src/components/requests/HappyUseAbi"
+import { WalletSendCalls } from "#src/components/requests/WalletSendCalls"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
@@ -136,6 +137,8 @@ function Request() {
             return <HappyUseAbi {...props} />
         case HappyMethodNames.REQUEST_SESSION_KEY:
             return <HappyRequestSessionKey {...props} />
+        case "wallet_sendCalls":
+            return <WalletSendCalls {...props} />
         default:
             return (
                 <main>

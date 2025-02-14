@@ -7,6 +7,7 @@ import { providerAtom } from "./provider"
 import { transportAtom } from "./transport"
 import { userAtom } from "./user"
 
+// TODO extend with eip5792Actions() ?
 export type AccountWalletClient = WalletClient<
     CustomTransport,
     undefined,

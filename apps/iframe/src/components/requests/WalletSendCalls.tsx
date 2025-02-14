@@ -1,0 +1,37 @@
+import { Button } from "../primitives/button/Button"
+import RawRequestDetails from "./common/RawRequestDetails"
+import RequestContent from "./common/RequestContent"
+import RequestLayout from "./common/RequestLayout"
+import type { RequestConfirmationProps } from "./props"
+
+export const WalletSendCalls = ({ method, params, reject, accept }: RequestConfirmationProps<"wallet_sendCalls">) => {
+    console.log("param", { method, params })
+    // TODO only for testiog
+    return (
+        <RequestLayout method={method}>
+            <RequestContent>
+                <div className="flex flex-col gap-6">
+                    <div className="flex flex-col items-center gap-2">
+                        <span className="text-sm text-neutral-content">Calls</span>
+                        {/* <pre className="grow">{formattedSignPayload}</pre> */}
+                    </div>
+
+                    <RawRequestDetails params={params} />
+                </div>
+            </RequestContent>
+
+            <div className="flex flex-col w-full gap-2">
+                <Button
+                    intent="primary"
+                    className="text-neutral-content justify-center"
+                    onClick={() => accept({ method, params })}
+                >
+                    Sign
+                </Button>
+                <Button intent="outline-negative" className="text-base-content justify-center" onClick={reject}>
+                    Reject
+                </Button>
+            </div>
+        </RequestLayout>
+    )
+}

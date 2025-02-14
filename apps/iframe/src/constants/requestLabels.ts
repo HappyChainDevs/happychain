@@ -11,6 +11,7 @@ export const requestLabels = {
     wallet_watchAsset: "Watch Asset",
     [HappyMethodNames.USE_ABI]: "Record ABI",
     [HappyMethodNames.REQUEST_SESSION_KEY]: "Approve Session Key",
+    wallet_sendCalls: "Send Calls",
 } as const
 
 export const permissionDescriptions = {
