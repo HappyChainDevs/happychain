@@ -161,18 +161,15 @@ contract ScrappyAccount is
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
         uint256 startGas = gasleft();
-        // [LOGGAS_INTERNAL] uint256 execGasStart = gasleft();
         (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
-        // [LOGGAS_INTERNAL] uint256 execGasEnd = gasleft();
-        // [LOGGAS_INTERNAL] console.log("execute call gas usage: ", execGasStart - execGasEnd);
         if (!success) {
             output.revertData = returnData;
             return output;
         }
 
-        output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
+        output.gas = startGas - gasleft() + EXECUTE_GAS_OVERHEAD_BUFFER;
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
-        // [LOGGAS_INTERNAL] console.log("inside execute: ", startGas-endGas);
+        // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", startGas-endGas);
     }
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
