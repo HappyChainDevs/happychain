@@ -10,6 +10,7 @@ import { routeTree } from "./routeTree.gen"
 import "./listeners"
 
 import "./index.css"
+import type { Logger } from "@happy.tech/common"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider } from "wagmi"
 import { queryClient } from "./tanstack-query/config"
@@ -28,7 +29,7 @@ declare module "@tanstack/react-router" {
 
 declare global {
     interface Window {
-        happyLogger: typeof logger
+        happyLogger: Logger
     }
 }
 
