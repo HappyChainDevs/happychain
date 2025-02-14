@@ -209,17 +209,7 @@ fi
 
 echo "Contracts deployed"
 
-echo "Fetching Drand round..."
-
-round=$(curl -s $DRAND_URL | jq -r '.round')
-
-echo "Drand round: $round"
-
-echo "Setting environment variable $DRAND_ROUND_ENV_VAR to $round"
-set_env_var .env $DRAND_ROUND_ENV_VAR $round false
-
 make -C $SCRIPT_DIR/../../packages/txm build
-
 
 empty_sqlite_db $TXM_DB_PATH
 echo $TXM_DB_PATH
