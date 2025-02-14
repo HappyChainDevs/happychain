@@ -82,7 +82,10 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
 
         uint256 owed = (consumedGas) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
 
-        payable(tx.origin).call{value: owed}("");
+        assembly {
+            // Intentionally ignore return value
+            pop(call(gas(), origin(), owed, 0, 0, 0, 0))
+        }
         return 0;
     }
 
