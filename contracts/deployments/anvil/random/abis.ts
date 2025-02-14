@@ -763,8 +763,8 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "AddressBook": "0xA015df073de672522b948418F14baD5999e70eba",
-  "Random": "0xe3364591EcFAb34e743830B6Ce165AFb699Ff18a"
+  "AddressBook": "0x67f1f982515895d5186013E5035e3fd38B6eC446",
+  "Random": "0xC68804dfc148A221330fac653c01D9f254aDf39C"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
