@@ -4,27 +4,27 @@
       "type": "constructor",
       "inputs": [
         {
-          "name": "_publicKey",
+          "name": "_owner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_drandPublicKey",
           "type": "uint256[4]",
           "internalType": "uint256[4]"
         },
         {
-          "name": "_genesisTimestamp",
+          "name": "_drandGenesisTimestampSeconds",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "_period",
+          "name": "_drandPeriodSeconds",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "_happyGenesisTimestamp",
-          "type": "uint256",
-          "internalType": "uint256"
-        },
-        {
-          "name": "_happyTimeBlock",
+          "name": "_precommitDelayBlocks",
           "type": "uint256",
           "internalType": "uint256"
         }
@@ -33,7 +33,33 @@
     },
     {
       "type": "function",
-      "name": "DRAND_DELAY",
+      "name": "DRAND_DELAY_SECONDS",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DRAND_GENESIS_TIMESTAMP_SECONDS",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DRAND_PERIOD_SECONDS",
       "inputs": [],
       "outputs": [
         {
@@ -59,7 +85,7 @@
     },
     {
       "type": "function",
-      "name": "PRECOMMIT_DELAY",
+      "name": "MIN_PRECOMMIT_TIME_SECONDS",
       "inputs": [],
       "outputs": [
         {
@@ -72,20 +98,7 @@
     },
     {
       "type": "function",
-      "name": "drandGenesisTimestamp",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "drandPeriod",
+      "name": "PRECOMMIT_DELAY_BLOCKS",
       "inputs": [],
       "outputs": [
         {
@@ -159,60 +172,15 @@
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         }
       ],
       "outputs": [
         {
           "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "happyGenesisTimestamp",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "happyTimeBlock",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "nextValidBlock",
-      "inputs": [
-        {
-          "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         }
       ],
       "stateMutability": "view"
@@ -255,8 +223,8 @@
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         },
         {
           "name": "commitmentHash",
@@ -291,26 +259,7 @@
       "inputs": [],
       "outputs": [
         {
-          "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "randomForBlock",
-      "inputs": [
-        {
-          "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
+          "name": "randomValue",
           "type": "bytes32",
           "internalType": "bytes32"
         }
@@ -349,13 +298,13 @@
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         },
         {
           "name": "revealedValue",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         }
       ],
       "outputs": [],
@@ -399,15 +348,15 @@
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         }
       ],
       "outputs": [
         {
           "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         }
       ],
       "stateMutability": "view"
@@ -418,9 +367,9 @@
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
+          "type": "uint128",
           "indexed": true,
-          "internalType": "uint256"
+          "internalType": "uint128"
         },
         {
           "name": "commitment",
@@ -475,15 +424,15 @@
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
+          "type": "uint128",
           "indexed": true,
-          "internalType": "uint256"
+          "internalType": "uint128"
         },
         {
           "name": "revealedValue",
-          "type": "uint256",
+          "type": "uint128",
           "indexed": false,
-          "internalType": "uint256"
+          "internalType": "uint128"
         }
       ],
       "anonymous": false

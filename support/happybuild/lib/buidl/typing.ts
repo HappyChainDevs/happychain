@@ -25,7 +25,7 @@ export async function handleTypes(config: Config, ctx: Context) {
         configBuildTimes.tsc = "cached"
     }
 
-    if (config.rollupTypes) {
+    if (config.emitTypes && config.rollupTypes) {
         // Don't roll up from the same config more than once per build.
         if (!ctx.usedApiExtractorConfigs.has(config.apiExtractorConfig!)) {
             const t0 = performance.now()

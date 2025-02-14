@@ -5,6 +5,10 @@
     "type": "module",
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
+    "exports": {
+        ".": "./dist/index.es.js",
+        "./migrate": "./dist/migrate.es.js"
+    },
     "dependencies": {
         "@happy.tech/common": "workspace:0.1.0",
         "@happy.tech/txm": "workspace:0.1.0",

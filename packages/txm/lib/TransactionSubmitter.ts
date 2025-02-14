@@ -22,6 +22,7 @@ export enum AttemptSubmissionErrorCause {
 
 export type AttemptSubmissionError = {
     cause: AttemptSubmissionErrorCause | EstimateGasErrorCause
+    description: string
     flushed: boolean
 }
 
@@ -72,7 +73,11 @@ export class TransactionSubmitter {
 
             if (!abi) {
                 console.error(`ABI not found for contract ${transaction.contractName}`)
-                return err({ cause: AttemptSubmissionErrorCause.ABINotFound, flushed: false })
+                return err({
+                    cause: AttemptSubmissionErrorCause.ABINotFound,
+                    description: `ABI not found for contract ${transaction.contractName}`,
+                    flushed: false,
+                })
             }
 
             const functionName = transaction.functionName
@@ -82,7 +87,11 @@ export class TransactionSubmitter {
             const gasResult = await this.txmgr.gasEstimator.estimateGas(this.txmgr, transaction)
 
             if (gasResult.isErr()) {
-                return err({ cause: gasResult.error, flushed: false })
+                return err({
+                    cause: gasResult.error.cause,
+                    description: gasResult.error.description,
+                    flushed: false,
+                })
             }
 
             const gas = gasResult.value
@@ -103,7 +112,11 @@ export class TransactionSubmitter {
         const signedTransactionResult = await this.txmgr.viemWallet.safeSignTransaction(transactionRequest)
 
         if (signedTransactionResult.isErr()) {
-            return err({ cause: AttemptSubmissionErrorCause.FailedToSignTransaction, flushed: false })
+            return err({
+                cause: AttemptSubmissionErrorCause.FailedToSignTransaction,
+                description: `Failed to sign transaction ${transaction.intentId}. Details: ${signedTransactionResult.error}`,
+                flushed: false,
+            })
         }
 
         const signedTransaction = signedTransactionResult.value
@@ -123,7 +136,11 @@ export class TransactionSubmitter {
 
         if (updateResult.isErr()) {
             transaction.removeAttempt(hash)
-            return err({ cause: AttemptSubmissionErrorCause.FailedToUpdate, flushed: false })
+            return err({
+                cause: AttemptSubmissionErrorCause.FailedToUpdate,
+                description: `Failed to update transaction ${transaction.intentId}. Details: ${updateResult.error}`,
+                flushed: false,
+            })
         }
 
         const sendRawTransactionResult = await this.txmgr.viemWallet.safeSendRawTransaction({
@@ -131,7 +148,11 @@ export class TransactionSubmitter {
         })
 
         if (sendRawTransactionResult.isErr()) {
-            return err({ cause: AttemptSubmissionErrorCause.FailedToSendRawTransaction, flushed: true })
+            return err({
+                cause: AttemptSubmissionErrorCause.FailedToSendRawTransaction,
+                description: `Failed to send raw transaction ${transaction.intentId}. Details: ${sendRawTransactionResult.error}`,
+                flushed: true,
+            })
         }
 
         return ok(undefined)

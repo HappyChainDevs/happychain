@@ -38,7 +38,9 @@ export { debounce } from "./utils/debounce"
 
 export { throttle } from "./utils/throttle"
 
-export { promiseWithResolvers, sleep } from "./utils/promises"
+export { promiseWithResolvers } from "./utils/promises"
+
+export { sleep } from "./utils/sleep"
 
 export type { PromiseWithResolvers, ResolveInputType, ResolveType, RejectType } from "./utils/promises"
 
@@ -63,6 +65,8 @@ export { getOrSet, getOrSetAsync, HappyMap } from "./collections/map"
 export { Map2 } from "./collections/map2"
 
 export { FIFOCache } from "./collections/fifo-cache"
+
+export { fetchWithRetry } from "./utils/fetch"
 
 // === DATA ========================================================================================
 

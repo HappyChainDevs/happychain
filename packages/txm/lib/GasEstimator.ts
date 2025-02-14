@@ -4,8 +4,13 @@ import type { Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
 export enum EstimateGasErrorCause {
-    ABINotFound = "ABINotFound",
-    ClientError = "ClientError",
+    EstimateGasABINotFound = "EstimateGasABINotFound",
+    EstimateGasClientError = "EstimateGasClientError",
+}
+
+export interface EstimateGasError {
+    cause: EstimateGasErrorCause
+    description: string
 }
 
 /**
@@ -33,7 +38,7 @@ export interface GasEstimator {
     estimateGas(
         transactionManager: TransactionManager,
         transaction: Transaction,
-    ): Promise<Result<bigint, EstimateGasErrorCause>>
+    ): Promise<Result<bigint, EstimateGasError>>
 }
 
 /**
@@ -47,7 +52,7 @@ export class DefaultGasLimitEstimator implements GasEstimator {
     public async estimateGas(
         transactionManager: TransactionManager,
         transaction: Transaction,
-    ): Promise<Result<bigint, EstimateGasErrorCause>> {
+    ): Promise<Result<bigint, EstimateGasError>> {
         return this.simulateTransactionForGas(transactionManager, transaction)
     }
 
@@ -59,11 +64,14 @@ export class DefaultGasLimitEstimator implements GasEstimator {
     protected async simulateTransactionForGas(
         transactionManager: TransactionManager,
         transaction: Transaction,
-    ): Promise<Result<bigint, EstimateGasErrorCause>> {
+    ): Promise<Result<bigint, EstimateGasError>> {
         const abi = transactionManager.abiManager.get(transaction.contractName)
 
         if (!abi) {
-            return err(EstimateGasErrorCause.ABINotFound)
+            return err({
+                cause: EstimateGasErrorCause.EstimateGasABINotFound,
+                description: `ABI not found for contract ${transaction.contractName}`,
+            })
         }
 
         const functionName = transaction.functionName
@@ -78,7 +86,10 @@ export class DefaultGasLimitEstimator implements GasEstimator {
         })
 
         if (gasResult.isErr()) {
-            return err(EstimateGasErrorCause.ClientError)
+            return err({
+                cause: EstimateGasErrorCause.EstimateGasClientError,
+                description: `Failed to estimate gas for transaction ${transaction.intentId}. Details: ${gasResult.error}`,
+            })
         }
 
         return ok(gasResult.value)

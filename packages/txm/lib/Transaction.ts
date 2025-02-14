@@ -23,7 +23,7 @@ export enum TransactionStatus {
      */
     Cancelling = "Cancelling",
     /**
-     * The transaction has expired, and we are attempting to cancel it to save gas, preventing it from being included on-chain and potentially reverting or executing actions that are no longer relevant.
+     * The transaction has expired, and we cancelled it to save gas, preventing it from being included on-chain and potentially reverting or executing actions that are no longer relevant.
      */
     Cancelled = "Cancelled",
     /**
@@ -99,6 +99,10 @@ export class Transaction {
 
     readonly attempts: Attempt[]
 
+    // Marks a transaction as older than one block so as avoid monitoring them at the same time we submit the transaction for the first time.
+    // It can be undefined because we save transactions before they are submitted, so there is a small time lapse where the transaction is saved but not yet submitted
+    collectionBlock: bigint | undefined
+
     // Whether the transaction has been updated and needs to be flushed to the database.
     // This field is not persisted in the database.
     pendingFlush: boolean
@@ -129,6 +133,7 @@ export class Transaction {
         chainId,
         status,
         attempts,
+        collectionBlock,
         createdAt,
         updatedAt,
         pendingFlush,
@@ -139,6 +144,7 @@ export class Transaction {
         chainId: number
         status?: TransactionStatus
         attempts?: Attempt[]
+        collectionBlock?: bigint
         createdAt?: Date
         updatedAt?: Date
         pendingFlush?: boolean
@@ -154,6 +160,7 @@ export class Transaction {
         this.deadline = deadline
         this.status = status ?? TransactionStatus.Pending
         this.attempts = attempts ?? []
+        this.collectionBlock = collectionBlock
         this.createdAt = createdAt ?? new Date()
         this.updatedAt = updatedAt ?? new Date()
         this.metadata = metadata ?? {}
@@ -163,6 +170,11 @@ export class Transaction {
 
     addAttempt(attempt: Attempt): void {
         this.attempts.push(attempt)
+        this.markUpdated()
+    }
+
+    addCollectionBlock(blockNumber: bigint): void {
+        this.collectionBlock = blockNumber
         this.markUpdated()
     }
 
@@ -226,6 +238,7 @@ export class Transaction {
             contractName: this.contractName,
             args: JSON.stringify(this.args, bigIntReplacer),
             deadline: this.deadline,
+            collectionBlock: this.collectionBlock ? Number(this.collectionBlock) : undefined,
             status: this.status,
             attempts: JSON.stringify(this.attempts, bigIntReplacer),
             metadata: this.metadata ? JSON.stringify(this.metadata, bigIntReplacer) : undefined,
@@ -239,6 +252,7 @@ export class Transaction {
             ...row,
             args: JSON.parse(row.args, bigIntReviver),
             attempts: JSON.parse(row.attempts, bigIntReviver),
+            collectionBlock: row.collectionBlock ? BigInt(row.collectionBlock) : undefined,
             metadata: row.metadata ? JSON.parse(row.metadata, bigIntReviver) : undefined,
             createdAt: new Date(row.createdAt),
             updatedAt: new Date(row.updatedAt),

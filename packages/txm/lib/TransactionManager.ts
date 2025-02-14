@@ -43,7 +43,7 @@ export type TransactionManagerConfig = {
         url: string
         /**
          * The timeout for the RPC node.
-         * Defaults to 500 milliseconds.
+         * Defaults to 2000 milliseconds.
          */
         timeout?: number
         /**
@@ -63,6 +63,12 @@ export type TransactionManagerConfig = {
          * Defaults to false.
          */
         allowDebug?: boolean
+
+        /**
+         * Specifies the polling interval in milliseconds.
+         * Defaults to 1/2 of the block time.
+         */
+        pollingInterval?: number
     }
     /** The private key of the account used for signing transactions. */
     privateKey: Hex
@@ -159,6 +165,8 @@ export class TransactionManager {
     public readonly rpcAllowDebug: boolean
     public readonly blockTime: bigint
     public readonly finalizedTransactionPurgeTime: number
+    public readonly pollingInterval: number
+    public readonly transportProtocol: "http" | "websocket"
 
     constructor(_config: TransactionManagerConfig) {
         this.collectors = []
@@ -169,12 +177,14 @@ export class TransactionManager {
             throw protocol.error
         }
 
+        this.transportProtocol = protocol.value
+
         const retries = _config.rpc.retries || 2
         const retryDelay = _config.rpc.retryDelay || 50
-        const timeout = _config.rpc.timeout || 500
+        const timeout = _config.rpc.timeout || 2000
 
         let transport: ViemTransport
-        if (protocol.value === "http") {
+        if (this.transportProtocol === "http") {
             transport = viemHttpTransport(_config.rpc.url, {
                 timeout,
                 retryCount: retries,
@@ -247,6 +257,8 @@ export class TransactionManager {
         this.rpcAllowDebug = _config.rpc.allowDebug || false
         this.blockTime = _config.blockTime || 2n
         this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
+
+        this.pollingInterval = _config.rpc.pollingInterval || (Number(this.blockTime) * 1000) / 2
     }
 
     /**
@@ -309,7 +321,10 @@ export class TransactionManager {
             throw new Error(errorMessage)
         }
 
-        // Await the completion of the gas price oracle startup before marking the TransactionManager as started
+        // Wait for the gas price oracle to initialize before starting the block monitor,
+        // which emits 'NewBlock' events as the TXM heartbeat.
         await priceOraclePromise
+
+        await this.blockMonitor.start()
     }
 }

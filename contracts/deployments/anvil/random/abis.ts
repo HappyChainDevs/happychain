@@ -9,17 +9,27 @@ const contractToAbi = ({
       "type": "constructor",
       "inputs": [
         {
-          "name": "_publicKey",
+          "name": "_owner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_drandPublicKey",
           "type": "uint256[4]",
           "internalType": "uint256[4]"
         },
         {
-          "name": "_genesisTimestamp",
+          "name": "_drandGenesisTimestampSeconds",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "_period",
+          "name": "_drandPeriodSeconds",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_precommitDelayBlocks",
           "type": "uint256",
           "internalType": "uint256"
         }
@@ -28,7 +38,33 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "DRAND_DELAY",
+      "name": "DRAND_DELAY_SECONDS",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DRAND_GENESIS_TIMESTAMP_SECONDS",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DRAND_PERIOD_SECONDS",
       "inputs": [],
       "outputs": [
         {
@@ -54,7 +90,7 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "PRECOMMIT_DELAY",
+      "name": "MIN_PRECOMMIT_TIME_SECONDS",
       "inputs": [],
       "outputs": [
         {
@@ -67,13 +103,103 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "genesisTimestamp",
+      "name": "PRECOMMIT_DELAY_BLOCKS",
       "inputs": [],
       "outputs": [
         {
           "name": "",
           "type": "uint256",
           "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandPK0",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandPK1",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandPK2",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandPK3",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "drandRandomness",
+      "inputs": [
+        {
+          "name": "round",
+          "type": "uint64",
+          "internalType": "uint64"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "randomness",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getDrand",
+      "inputs": [
+        {
+          "name": "round",
+          "type": "uint64",
+          "internalType": "uint64"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
         }
       ],
       "stateMutability": "view"
@@ -84,15 +210,15 @@ const contractToAbi = ({
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         }
       ],
       "outputs": [
         {
           "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         }
       ],
       "stateMutability": "view"
@@ -131,25 +257,12 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "period",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "postCommitment",
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         },
         {
           "name": "commitmentHash",
@@ -180,30 +293,11 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "publicKey",
-      "inputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "random",
       "inputs": [],
       "outputs": [
         {
-          "name": "",
+          "name": "randomValue",
           "type": "bytes32",
           "internalType": "bytes32"
         }
@@ -231,25 +325,6 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "randomness",
-      "inputs": [
-        {
-          "name": "round",
-          "type": "uint64",
-          "internalType": "uint64"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "randomness",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
       "name": "renounceOwnership",
       "inputs": [],
       "outputs": [],
@@ -261,13 +336,13 @@ const contractToAbi = ({
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         },
         {
           "name": "revealedValue",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "uint128",
+          "internalType": "uint128"
         }
       ],
       "outputs": [],
@@ -288,19 +363,38 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "unsafeGetRevealedValue",
+      "name": "unsafeGetDrand",
       "inputs": [
         {
-          "name": "blockNumber",
-          "type": "uint256",
-          "internalType": "uint256"
+          "name": "round",
+          "type": "uint64",
+          "internalType": "uint64"
         }
       ],
       "outputs": [
         {
           "name": "",
-          "type": "uint256",
-          "internalType": "uint256"
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "unsafeGetRevealedValue",
+      "inputs": [
+        {
+          "name": "blockNumber",
+          "type": "uint128",
+          "internalType": "uint128"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint128",
+          "internalType": "uint128"
         }
       ],
       "stateMutability": "view"
@@ -311,12 +405,31 @@ const contractToAbi = ({
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
+          "type": "uint128",
           "indexed": true,
-          "internalType": "uint256"
+          "internalType": "uint128"
         },
         {
           "name": "commitment",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "DrandRandomnessPosted",
+      "inputs": [
+        {
+          "name": "round",
+          "type": "uint64",
+          "indexed": true,
+          "internalType": "uint64"
+        },
+        {
+          "name": "randomness",
           "type": "bytes32",
           "indexed": false,
           "internalType": "bytes32"
@@ -349,15 +462,15 @@ const contractToAbi = ({
       "inputs": [
         {
           "name": "blockNumber",
-          "type": "uint256",
+          "type": "uint128",
           "indexed": true,
-          "internalType": "uint256"
+          "internalType": "uint128"
         },
         {
           "name": "revealedValue",
-          "type": "uint256",
+          "type": "uint128",
           "indexed": false,
-          "internalType": "uint256"
+          "internalType": "uint128"
         }
       ],
       "anonymous": false
@@ -531,7 +644,7 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "Random": "0x9ACE2eE177EB91eEed9591ea50Cb903d551DD0f9"
+  "Random": "0xEF648561456FEEa23B993747eB7B68d3B7332b6a"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
