@@ -27,8 +27,6 @@ import {
     UnknownDuringSimulation
 } from "../utils/Common.sol";
 
-// [LOGGAS] import {console} from "forge-std/Script.sol";
-
 /**
  * @title  ScrappyAccount
  * @dev    Example implementation of a Happy Account with nonce management, reentrancy protection,
@@ -166,7 +164,6 @@ contract ScrappyAccount is
     }
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
-        // [LOGGAS] uint256 initialGas = gasleft();
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
         }
@@ -174,11 +171,10 @@ contract ScrappyAccount is
         uint256 owed = (consumedGas + INTRINSIC_GAS + GAS_OVERHEAD_BUFFER) // TODO
             * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
 
-        payable(tx.origin).call{value: owed}("");
-
-        // [LOGGAS] uint256 finalGas = gasleft();
-        // [LOGGAS] console.log("Gas used in payout:", initialGas - finalGas);
-
+        assembly {
+            // Intentionally ignore return value
+            pop(call(gas(), origin(), owed, 0, 0, 0, 0))
+        }
         return 0;
     }
 
