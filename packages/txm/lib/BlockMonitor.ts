@@ -16,11 +16,10 @@ export class BlockMonitor {
     private txmgr: TransactionManager
     private unwatch: (() => void) | undefined
     private blockTimeout: ReturnType<typeof setTimeout> | undefined
-
     constructor(_transactionManager: TransactionManager) {
-        this.txmgr = _transactionManager
+      this.txmgr = _transactionManager
     }
-
+  
     async start() {
         this.scheduleTimeout()
         this.unwatch = this.txmgr.viemClient.watchBlocks({
@@ -32,7 +31,7 @@ export class BlockMonitor {
             },
         })
     }
-
+  
     private onNewBlock(block: LatestBlock) {
         if (this.blockTimeout) clearTimeout(this.blockTimeout)
         eventBus.emit(Topics.NewBlock, block)
@@ -52,4 +51,4 @@ export class BlockMonitor {
         }
         this.start()
     }
-}
+  }
