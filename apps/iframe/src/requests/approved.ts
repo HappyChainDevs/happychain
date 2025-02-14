@@ -177,6 +177,25 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             return accountSessionKey.address
         }
 
+        // EIP-5792
+        case "wallet_sendCalls": {
+            // TODO implementation pending
+            const callsData = request.payload.params?.[0]
+
+            if (callsData) {
+            }
+
+            return 1
+        }
+
+        case "wallet_showCallsStatus": {
+            const _bundleIdentifier = request.payload.params?.[0]
+            // TODO pretty popup
+
+            // c.f. https://github.com/wevm/viem/blob/66e5f6ab7b683a90775dcb8fae340e3154d74b38/src/experimental/eip5792/actions/showCallsStatus.ts#L10
+            return undefined
+        }
+
         default:
             return await sendToWalletClient(request)
     }
