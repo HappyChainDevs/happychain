@@ -12,7 +12,6 @@ import {
     decodeFunctionData,
     formatEther,
     formatGwei,
-    formatUnits,
     hexToBigInt,
     isAddress,
 } from "viem"
@@ -139,7 +138,6 @@ export const EthSendTransaction = ({
 
             return userOp as PrepareUserOperationReturnType
         },
-        retry: 3,
     })
 
     // biome-ignore lint/correctness/useExhaustiveDependencies: we want it to run when tx is populated
@@ -147,7 +145,7 @@ export const EthSendTransaction = ({
         mutate()
     }, [tx, mutate])
 
-    const exData = useMemo(() => {
+    const sanitizedUserOpData = useMemo(() => {
         if (!preparedUserOp) return undefined
 
         // Extract UserOperation data without the account field for acceptance.
@@ -161,7 +159,6 @@ export const EthSendTransaction = ({
     // ====================================== Contract ABI details ======================================
     const abiForContract =
         user?.address && targetContractAddress && recordedAbisForUser[user.address]?.[targetContractAddress]
-
     // Decodes the function call data for the given contract ABI and transaction data.
     const decodedData = useMemo(() => {
         if (!abiForContract || !tx.data) return undefined
@@ -179,33 +176,30 @@ export const EthSendTransaction = ({
     }, [abiForContract, tx.data])
 
     // memo-ed values formatted for display
-    const formattedTxInfo = useMemo(() => {
+    const formattedUserOpInfo = useMemo(() => {
         if (!preparedUserOp || !blockData) return undefined
 
-        // Calculate gasFee (min of maxFeePerGas and maxPriorityFeePerGas + baseFee)
-        const maxFeePerGas = toBigIntSafe(preparedUserOp.maxFeePerGas)
-        const maxPriorityFeePerGas = toBigIntSafe(preparedUserOp.maxPriorityFeePerGas)
+        const { preVerificationGas, verificationGasLimit, callGasLimit, maxFeePerGas, maxPriorityFeePerGas } =
+            preparedUserOp
         const baseFee = toBigIntSafe(blockData.baseFeePerGas)
 
+        // Calculate gasFee (min of maxFeePerGas and maxPriorityFeePerGas + baseFee)
         const gasFee = maxFeePerGas < maxPriorityFeePerGas + baseFee ? maxFeePerGas : maxPriorityFeePerGas + baseFee
 
         // Calculate gasUsed (sum of all gas components)
-        const gasUsed =
-            toBigIntSafe(preparedUserOp.preVerificationGas) +
-            toBigIntSafe(preparedUserOp.verificationGasLimit) +
-            toBigIntSafe(preparedUserOp.callGasLimit)
+        const gasUsed = callGasLimit + verificationGasLimit + callGasLimit
 
         const estimatedGasCost = gasFee * gasUsed
 
         return {
             value: formatEther(toBigIntSafe(tx.value)),
             type: classifyTxType(tx),
-            preVerificationGas: formatGwei(toBigIntSafe(preparedUserOp.preVerificationGas)),
-            verificationGasLimit: formatGwei(toBigIntSafe(preparedUserOp.verificationGasLimit)),
-            callGasLimit: formatGwei(toBigIntSafe(preparedUserOp.callGasLimit)),
+            preVerificationGas: formatGwei(preVerificationGas),
+            verificationGasLimit: formatGwei(verificationGasLimit),
+            callGasLimit: formatGwei(callGasLimit),
             maxFeePerGas: formatGwei(maxFeePerGas),
             maxPriorityFeePerGas: formatGwei(maxPriorityFeePerGas),
-            estimatedGas: formatUnits(estimatedGasCost, 18),
+            estimatedGas: formatEther(estimatedGasCost),
         }
     }, [preparedUserOp, tx, blockData])
 
@@ -222,7 +216,7 @@ export const EthSendTransaction = ({
                             if (isPending || !preparedUserOp) return
                             accept({
                                 eip1193RequestParams: { method, params },
-                                extraData: exData,
+                                extraData: sanitizedUserOpData,
                             })
                         },
                     },
@@ -245,7 +239,7 @@ export const EthSendTransaction = ({
 
                                 <SubsectionContent>
                                     <SubsectionTitle>Amount</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo?.value} HAPPY</FormattedDetailsLine>
+                                    <FormattedDetailsLine>{formattedUserOpInfo?.value} HAPPY</FormattedDetailsLine>
                                 </SubsectionContent>
                             </SubsectionBlock>
                         </SectionBlock>
@@ -253,31 +247,37 @@ export const EthSendTransaction = ({
                             <SubsectionBlock>
                                 <SubsectionContent>
                                     <SubsectionTitle>Transaction type</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo?.type}</FormattedDetailsLine>
+                                    <FormattedDetailsLine>{formattedUserOpInfo?.type}</FormattedDetailsLine>
                                 </SubsectionContent>
                                 <SubsectionContent>
                                     <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo?.maxFeePerGas}</FormattedDetailsLine>
+                                    <FormattedDetailsLine>{formattedUserOpInfo?.maxFeePerGas}</FormattedDetailsLine>
                                 </SubsectionContent>
                                 <SubsectionContent>
                                     <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo?.maxPriorityFeePerGas}</FormattedDetailsLine>
+                                    <FormattedDetailsLine>
+                                        {formattedUserOpInfo?.maxPriorityFeePerGas}
+                                    </FormattedDetailsLine>
                                 </SubsectionContent>
                                 <SubsectionContent>
                                     <SubsectionTitle>{GasFieldName.PreVerificationGas}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo?.preVerificationGas}</FormattedDetailsLine>
+                                    <FormattedDetailsLine>
+                                        {formattedUserOpInfo?.preVerificationGas}
+                                    </FormattedDetailsLine>
                                 </SubsectionContent>
                                 <SubsectionContent>
                                     <SubsectionTitle>{GasFieldName.VerificationGasLimit}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo?.verificationGasLimit}</FormattedDetailsLine>
+                                    <FormattedDetailsLine>
+                                        {formattedUserOpInfo?.verificationGasLimit}
+                                    </FormattedDetailsLine>
                                 </SubsectionContent>
                                 <SubsectionContent>
                                     <SubsectionTitle>{GasFieldName.CallGasLimit}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo?.callGasLimit}</FormattedDetailsLine>
+                                    <FormattedDetailsLine>{formattedUserOpInfo?.callGasLimit}</FormattedDetailsLine>
                                 </SubsectionContent>
                                 <SubsectionContent>
                                     <SubsectionTitle>{"Estimated Gas:"}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo?.estimatedGas}</FormattedDetailsLine>
+                                    <FormattedDetailsLine>{formattedUserOpInfo?.estimatedGas}</FormattedDetailsLine>
                                 </SubsectionContent>
                             </SubsectionBlock>
                         </SectionBlock>

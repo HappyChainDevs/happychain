@@ -63,7 +63,7 @@ export const Layout = ({
                             </div>
                         </div>
                         {headline && <h1 className="font-bold text-xl">{headline}</h1>}
-                        <p className="opacity-80 text-sm">{description}</p>
+                        <p className="opacity-80 text-sm whitespace-pre-line">{description}</p>
                     </div>
                 </section>
                 <div className="pb-6">{children}</div>
