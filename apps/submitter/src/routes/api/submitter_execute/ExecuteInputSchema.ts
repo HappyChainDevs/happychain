@@ -4,15 +4,15 @@ import { deployment } from "#src/deployments"
 
 const happyTxSchema = z.object({
     account: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Address
-    gasLimit: z.coerce.number(), // UInt32 //
-    executeGasLimit: z.coerce.number(), // UInt32 //
+    gasLimit: z.string().transform(BigInt), // UInt32 //
+    executeGasLimit: z.string().transform(BigInt), // UInt32 //
     dest: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Address
-    value: z.string().transform((a) => BigInt(a)), // UInt256
+    value: z.string().transform(BigInt), // UInt256
     callData: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Bytes
     nonceTrack: z.string().transform(BigInt), // UInt256
     nonceValue: z.string().transform(BigInt), // UInt256
-    maxFeePerGas: z.string().transform((a) => BigInt(a)),
-    submitterFee: z.string().transform((a) => BigInt(a)),
+    maxFeePerGas: z.string().transform(BigInt),
+    submitterFee: z.string().transform(BigInt),
     paymaster: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Address
     paymasterData: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Bytes
     validatorData: z.string().refine((str): str is `0x${string}` => str.startsWith("0x")), // Bytes
@@ -46,8 +46,8 @@ export const ExecuteInputSchema = z
                 paymasterData: "0x00000", // Bytes
                 validatorData: "0x00000", // Bytes
                 extraData: "0x00000", // Bytes
-                gasLimit: 0,
-                executeGasLimit: 0,
+                gasLimit: "0",
+                executeGasLimit: "0",
                 maxFeePerGas: "0",
                 submitterFee: "0",
             },

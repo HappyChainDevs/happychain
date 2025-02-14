@@ -1,16 +1,11 @@
-import { http, createPublicClient, createWalletClient } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
+import { http, createPublicClient } from "viem"
 import { localhost } from "viem/chains"
-import env from "../env"
 import { createSubmitterClient } from "./submitterClient/createSubmitterClient"
 
-export const account = privateKeyToAccount(env.PRIVATE_KEY_LOCAL)
 export const chain = localhost
 
 const publicConfig = { chain, transport: http() } as const
 
-const walletConfig = { account, ...publicConfig }
-
 export const publicClient = createPublicClient(publicConfig)
-export const walletClient = createWalletClient(walletConfig)
-export const submitterClient = createSubmitterClient(walletConfig)
+
+export const submitterClient = createSubmitterClient(publicConfig) // don't hoist account, so it can be injected per address

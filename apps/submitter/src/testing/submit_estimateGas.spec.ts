@@ -1,9 +1,8 @@
 import { beforeAll, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
-import { keccak256, parseEther } from "viem"
-import { walletClient as submitterWalletClient } from "#src/clients"
+import { keccak256 } from "viem"
 import { app } from "#src/server"
-import { createMockTokenAMintHappyTx, getNonce, prepareTx, testAccount, testPublicClient } from "./utils"
+import { createMockTokenAMintHappyTx, fundAccount, getNonce, prepareTx, testAccount } from "./utils"
 
 const client = testClient(app)
 
@@ -29,8 +28,7 @@ describe("submitter_execute", () => {
     describe("self-paying", () => {
         beforeAll(async () => {
             // faucet for self paying
-            const hash = await submitterWalletClient.sendTransaction({ to: smartAccount, value: parseEther("1") })
-            await testPublicClient.waitForTransactionReceipt({ hash })
+            await fundAccount(smartAccount)
         })
 
         it("estimates gas for a token mint", async () => {

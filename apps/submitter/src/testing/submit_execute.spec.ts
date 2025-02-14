@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
-import { keccak256, parseEther } from "viem"
-import { walletClient as submitterWalletClient } from "#src/clients"
+import { keccak256 } from "viem"
 import type { BaseFailedError } from "#src/errors"
 import { app } from "#src/server"
+import type { HappyTxStateSuccess } from "#src/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#src/tmp/interface/status"
-import { createMockTokenAMintHappyTx, getNonce, prepareTx, testAccount, testPublicClient } from "./utils"
+import { createMockTokenAMintHappyTx, fundAccount, getNonce, prepareTx, testAccount } from "./utils"
 
 const client = testClient(app)
 
@@ -14,12 +14,13 @@ describe("submitter_execute", () => {
 
     beforeAll(async () => {
         // deploys smart account (if needed)
+
         smartAccount = await client.api.v1.accounts.deployAccount
             .$post({
                 json: {
                     owner: testAccount.account.address,
                     // salt: increment counter to create new smartAccount
-                    salt: keccak256(Uint8Array.from(Buffer.from([testAccount.account.address, 3].join("_")))),
+                    salt: keccak256(Uint8Array.from(Buffer.from([testAccount.account.address, 4].join("_")))),
                 },
             })
             .then((a) => {
@@ -31,22 +32,23 @@ describe("submitter_execute", () => {
     describe("self-paying", () => {
         beforeAll(async () => {
             // faucet for self paying
-            const hash = await submitterWalletClient.sendTransaction({ to: smartAccount, value: parseEther("1") })
-            await testPublicClient.waitForTransactionReceipt({ hash })
+            await fundAccount(smartAccount)
         })
 
         it("mints tokens", async () => {
             const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, await getNonce(smartAccount))
+
             // be your own paymaster!
             dummyHappyTx.paymaster = smartAccount
-            const encoded = await prepareTx(dummyHappyTx)
 
-            const result = await client.api.v1.submitter.execute.$post({ json: { tx: encoded } })
+            const prepared = await prepareTx(dummyHappyTx)
+
+            const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
 
             expect(result.status).toBe(200)
             if (result.status !== 200) return
 
-            const response = await result.json()
+            const response = (await result.json()) as HappyTxStateSuccess
             expect(response.status).toBe(EntryPointStatus.Success)
             expect(response.included).toBe(true)
             expect(response.receipt.txReceipt.transactionHash).toBeString()
@@ -57,14 +59,14 @@ describe("submitter_execute", () => {
         it("mints tokens", async () => {
             const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, await getNonce(smartAccount))
 
-            const encoded = await prepareTx(dummyHappyTx)
+            const prepared = await prepareTx(dummyHappyTx)
 
-            const result = await client.api.v1.submitter.execute.$post({ json: { tx: encoded } })
+            const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
 
             expect(result.status).toBe(200)
             if (result.status !== 200) return
 
-            const response = await result.json()
+            const response = (await result.json()) as HappyTxStateSuccess
             expect(response.status).toBe(EntryPointStatus.Success)
             expect(response.included).toBe(true)
             expect(response.receipt.txReceipt.transactionHash).toBeString()
@@ -74,9 +76,9 @@ describe("submitter_execute", () => {
             // subtract 1 from valid nonce
 
             const nonce = (await getNonce(smartAccount)) - 1n
-            const encoded = await prepareTx(await createMockTokenAMintHappyTx(smartAccount, nonce))
+            const prepared = await prepareTx(await createMockTokenAMintHappyTx(smartAccount, nonce))
 
-            const result = await client.api.v1.submitter.execute.$post({ json: { tx: encoded } })
+            const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
 
             expect(result.status).toBe(500)
             if (result.status !== 500) return
@@ -90,11 +92,11 @@ describe("submitter_execute", () => {
 
         it("can't re-use a nonce", async () => {
             const nonce = await getNonce(smartAccount)
-            const encoded = await prepareTx(await createMockTokenAMintHappyTx(smartAccount, nonce))
+            const prepared = await prepareTx(await createMockTokenAMintHappyTx(smartAccount, nonce))
 
-            const result1 = await client.api.v1.submitter.execute.$post({ json: { tx: encoded } })
+            const result1 = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
             // again with same nonce
-            const result2 = await client.api.v1.submitter.execute.$post({ json: { tx: encoded } })
+            const result2 = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
 
             expect(result1.status).toBe(200)
             expect(result2.status).toBe(500)
@@ -107,32 +109,12 @@ describe("submitter_execute", () => {
             expect(response2.revertData).toBe("0x756688fe")
         })
 
-        // This test passes when submitted onchain directly
-        // however when using a buffer, it will hold this TX in the queue forever
-        // (or until all previous nonces have been used) causing the test to timeout
-        // it("can't skip a nonce", async () => {
-        //     const nonce = (await getNonce(smartAccount)) + 1n // skip a nonce
-
-        //     const encoded = await prepareTx(await createMockTokenAMintTx(smartAccount, nonce))
-
-        //     const result = await client.api.v1.submitter.execute.$post({ json: { tx: encoded } })
-
-        //     expect(result.status).toBe(500)
-        //     if (result.status !== 500) return
-
-        //     const response = (await result.json()) as BaseFailedError
-
-        //     expect(response.status).toBe(EntryPointStatus.ValidationFailed)
-        //     expect(response.failureReason).toBeUndefined()
-        //     expect(response.revertData).toBe("0x756688fe")
-        // })
-
         it("fills in executeGasLimit automatically", async () => {
             const nonce = await getNonce(smartAccount)
 
             const tx = await createMockTokenAMintHappyTx(smartAccount, nonce)
 
-            const encoded = await prepareTx({ ...tx, executeGasLimit: 0 })
+            const encoded = await prepareTx({ ...tx, executeGasLimit: 0n })
 
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: encoded } })
 

@@ -3,8 +3,8 @@ import type { EstimateGasInput } from "../tmp/interface/submitter_estimateGas"
 export function encodeHappyTx(tx: EstimateGasInput["tx"]): `0x${string}` {
     // Static fields
     const accountHex = tx.account.slice(2)
-    const gasLimitHex = (tx.gasLimit || "")?.toString(16).padStart(8, "0")
-    const executeGasLimitHex = (tx.executeGasLimit || "")?.toString(16).padStart(8, "0")
+    const gasLimitHex = (tx.gasLimit || 0n)?.toString(16).padStart(8, "0")
+    const executeGasLimitHex = (tx.executeGasLimit || 0n)?.toString(16).padStart(8, "0")
     const destHex = tx.dest.slice(2)
     const paymasterHex = tx.paymaster.slice(2)
     const valueHex = tx.value.toString(16).padStart(64, "0")

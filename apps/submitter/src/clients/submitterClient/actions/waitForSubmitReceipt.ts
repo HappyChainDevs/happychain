@@ -1,10 +1,13 @@
-import type { Hex } from "viem"
+import type { happyChainSepolia } from "@happy.tech/wallet-common"
+import type { Account, Client, Hex, HttpTransport } from "viem"
 import { waitForTransactionReceipt } from "viem/actions"
 import { EntryPointStatus } from "#src/tmp/interface/status"
 import { decodeHappyTx } from "#src/utils/decodeHappyTx"
-import type { BasicClient } from "../types"
 
-export async function waitForSubmitReceipt(client: BasicClient, { hash, tx }: { hash: Hex; tx: Hex }) {
+export async function waitForSubmitReceipt<account extends Account | undefined = undefined>(
+    client: Client<HttpTransport, typeof happyChainSepolia, account>,
+    { hash, tx }: { hash: Hex; tx: Hex },
+) {
     const receipt = await waitForTransactionReceipt(client, { hash, pollingInterval: 500 })
 
     const decoded = decodeHappyTx(tx)

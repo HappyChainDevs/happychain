@@ -1,6 +1,7 @@
 import { Hono } from "hono"
 import { executeHappyTx } from "#src/actions/executeHappyTx"
 import { fetchNonce } from "#src/actions/fetchNonce"
+import { findExecutionAccount } from "#src/actions/findExecutionAccount"
 import { submitterClient } from "#src/clients"
 import { BaseFailedError, BaseRevertedError } from "#src/errors"
 import { parseFromViemError } from "#src/errors/utils"
@@ -17,7 +18,10 @@ export default new Hono()
     .post("/estimateGas", estimateGasDescription, estimateGasValidation, async (c) => {
         const data = c.req.valid("json")
 
-        const { request } = await submitterClient.simulateSubmit({
+        const account = findExecutionAccount(data.tx)
+
+        const estimates = await submitterClient.estimateSubmitGas({
+            account,
             address: data.entryPoint,
             args: [encodeHappyTx(data.tx)],
         })
@@ -29,10 +33,10 @@ export default new Hono()
                     validationStatus: "success",
                     entryPoint: data.entryPoint,
                 },
-                executeGasLimit: data.tx.executeGasLimit,
-                gasLimit: data.tx.gasLimit,
-                maxFeePerGas: request.maxFeePerGas?.toString(16),
-                submitterFee: data.tx.submitterFee?.toString(16),
+                executeGasLimit: estimates.executeGasLimit.toString(),
+                gasLimit: estimates.gasLimit.toString(),
+                maxFeePerGas: estimates.maxFeePerGas.toString(),
+                submitterFee: estimates.submitterFee.toString(),
                 status: "success",
             },
             200,
@@ -43,7 +47,7 @@ export default new Hono()
         try {
             const data = c.req.valid("json")
 
-            const receipt = await enqueueBuffer(executeManager, {
+            const state = await enqueueBuffer(executeManager, {
                 // buffer management
                 nonceTrack: data.tx.nonceTrack,
                 nonceValue: data.tx.nonceValue,
@@ -53,14 +57,7 @@ export default new Hono()
                 tx: data.tx,
             })
 
-            return c.json(
-                {
-                    status: receipt.status,
-                    included: Boolean(receipt.txReceipt.transactionHash),
-                    receipt,
-                },
-                200,
-            )
+            return c.json(state, 200)
         } catch (_err) {
             if (_err instanceof BaseFailedError) return c.json(_err.getResponseData(), 500)
             if (_err instanceof BaseRevertedError) return c.json(_err.getResponseData(), 500)

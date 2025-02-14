@@ -1,7 +1,14 @@
 import { Hono } from "hono"
-import type { Address } from "viem"
-import { account, publicClient, walletClient } from "#src/clients"
+import { http, type Address, createPublicClient, createWalletClient } from "viem"
+import { privateKeyToAccount } from "viem/accounts"
+import { chain } from "#src/clients"
 import { abis, deployment } from "#src/deployments"
+import env from "#src/env"
+
+// Account responsible for deploying ScrappyAccounts
+const account = privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
+const publicClient = createPublicClient({ chain, transport: http() })
+const walletClient = createWalletClient({ chain, transport: http(), account })
 
 export default new Hono().post("/deployAccount", async (c) => {
     const { owner, salt } = await c.req.json()

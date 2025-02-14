@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { deployment } from "#src/deployments"
 
 export const EstimateGasOutputSchema = z
     .object({
@@ -18,12 +19,12 @@ export const EstimateGasOutputSchema = z
             simulationResult: {
                 status: "success",
                 validationStatus: "success",
-                entryPoint: "0x1234",
+                entryPoint: deployment.HappyEntryPoint,
             },
-            maxFeePerGas: "123",
-            submitterFee: "123",
-            gasLimit: "123",
-            executeGasLimit: "123",
+            maxFeePerGas: "0",
+            submitterFee: "0",
+            gasLimit: "0",
+            executeGasLimit: "0",
             status: "success",
         },
     })

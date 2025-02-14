@@ -134,9 +134,9 @@ export type UInt160 = bigint
 export type UInt128 = bigint
 export type UInt96 = bigint
 export type UInt64 = bigint
-export type UInt32 = number
-export type UInt16 = number
-export type UInt8 = number
+export type UInt32 = bigint
+export type UInt16 = bigint
+export type UInt8 = bigint
 
 export type Int256 = bigint
 export type Int192 = bigint
@@ -144,9 +144,9 @@ export type Int160 = bigint
 export type Int128 = bigint
 export type Int96 = bigint
 export type Int64 = bigint
-export type Int32 = number
-export type Int16 = number
-export type Int8 = number
+export type Int32 = bigint
+export type Int16 = bigint
+export type Int8 = bigint
 
 export type Bytes = Hex
 

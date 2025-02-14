@@ -1,17 +1,29 @@
 import type { happyChainSepolia } from "@happy.tech/wallet-common"
-import { type ClientConfig, type HttpTransport, type Prettify, type PrivateKeyAccount, createClient } from "viem"
+import {
+    type Account,
+    type Address,
+    type ClientConfig,
+    type HttpTransport,
+    type ParseAccount,
+    type Prettify,
+    createClient,
+} from "viem"
 import { submitterActions } from "./actions"
 
 import type { SubmitterClient } from "./types"
 
-export type SubmitterClientConfig = Prettify<
+export type SubmitterClientConfig<
+    accountOrAddress extends Account | Address | undefined = Account | Address | undefined,
+> = Prettify<
     Pick<
-        ClientConfig<HttpTransport, typeof happyChainSepolia, PrivateKeyAccount>,
+        ClientConfig<HttpTransport, typeof happyChainSepolia, accountOrAddress>,
         "account" | "cacheTime" | "ccipRead" | "chain" | "key" | "name" | "pollingInterval" | "rpcSchema" | "transport"
     >
 >
 
-export function createSubmitterClient(parameters: SubmitterClientConfig): SubmitterClient {
+export function createSubmitterClient<accountOrAddress extends Account | Address | undefined = undefined>(
+    parameters: SubmitterClientConfig<accountOrAddress>,
+): SubmitterClient<ParseAccount<accountOrAddress>> {
     const { key = "submitter", name = "Submitter Client", transport } = parameters
 
     const client = createClient({

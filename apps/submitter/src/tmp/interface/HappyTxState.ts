@@ -13,9 +13,10 @@ import type {
  * been included onchain yet.
  */
 // biome-ignore format: readability
-export type HappyTxState = {
+export type HappyTxStateSubmitterError = {
     status: SubmitterErrorSimulationUnavailable
-} | {
+}
+export type HappyTxStateEntryPointError = {
     status: Omit<EntryPointStatus, EntryPointStatus.Success> | SubmitterErrorSimulationMaybeAvailable
 
     /** Whether the happyTx was included and executed onchain. */
@@ -26,7 +27,9 @@ export type HappyTxState = {
      * to presimulate a tx before submitting, nor does he have to persist the simulation result.
      */
     simulation?: SimulationResult | undefined
-} | {
+}
+
+export type HappyTxStateSuccess = {
     status: EntryPointStatus.Success
 
     /** Whether the happyTx was included and executed onchain. */
@@ -34,6 +37,8 @@ export type HappyTxState = {
 
     receipt: HappyTxReceipt
 }
+
+export type HappyTxState = HappyTxStateSubmitterError | HappyTxStateEntryPointError | HappyTxStateSuccess
 
 // -------------------------------------------------------------------------------------------------
 

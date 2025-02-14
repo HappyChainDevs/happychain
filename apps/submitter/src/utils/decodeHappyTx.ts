@@ -9,10 +9,10 @@ export function decodeHappyTx(encoded: Hex): HappyTx {
     const account = `0x${encodedBytes.slice(offset, offset + 40)}` as Address
     offset += 40 // 20 bytes
 
-    const gasLimit = Number(`0x${encodedBytes.slice(offset, offset + 8)}`)
+    const gasLimit = BigInt(`0x${encodedBytes.slice(offset, offset + 8)}`)
     offset += 8 // 4 bytes
 
-    const executeGasLimit = Number(`0x${encodedBytes.slice(offset, offset + 8)}`)
+    const executeGasLimit = BigInt(`0x${encodedBytes.slice(offset, offset + 8)}`)
     offset += 8 // 4 bytes
 
     const dest = `0x${encodedBytes.slice(offset, offset + 40)}` as Address

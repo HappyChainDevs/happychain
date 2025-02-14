@@ -1,34 +1,40 @@
-import type { Prettify } from "viem"
-import { type SimulateContractParameters, writeContract } from "viem/actions"
-import { account } from "#src/clients"
+import type { happyChainSepolia } from "@happy.tech/wallet-common"
+import type { Account, Client, HttpTransport, WriteContractParameters } from "viem"
+import { parseAccount } from "viem/accounts"
+import { writeContract } from "viem/actions"
 import { abis } from "#src/deployments"
 import { parseFromViemError } from "#src/errors/utils"
-import type { BasicClient } from "../types"
 
-export async function submit(
-    client: BasicClient,
-    // request: Parameters<typeof writeContract>[1] & { address: Address; args: [`0x${string}`] },
-    // request: WriteContractParameters<
-    //     typeof abis.HappyEntryPoint,
-    //     "submit",
-    //     [`0x${string}`],
-    //     typeof localhost,
-    //     PrivateKeyAccount
-    // >,
-    // TODO: this shouldn't rely on the returnType of simulateSubmit
-    // This should be able to run in isolation if desired
-    // request: Awaited<ReturnType<typeof simulateSubmit>>["request"],
-    request: Prettify<
-        Pick<SimulateContractParameters<typeof abis.HappyEntryPoint, "submit", [`0x${string}`]>, "address" | "args">
+export async function submit<account extends Account | undefined = undefined>(
+    client: Client<HttpTransport, typeof happyChainSepolia, account>,
+    request: Omit<
+        WriteContractParameters<
+            typeof abis.HappyEntryPoint,
+            "submit",
+            readonly [`0x${string}`],
+            typeof happyChainSepolia,
+            account
+        >,
+        "abi" | "functionName"
     >,
 ) {
+    const { account: account_ = client.account, ...params } = request
+    if (!account_) throw new Error("Account Not Found - submit")
+    const account = account_ ? parseAccount(account_) : null
+
     try {
         return await writeContract(client, {
-            ...request,
+            ...params,
             abi: abis.HappyEntryPoint,
             functionName: "submit",
             account,
-        })
+        } as WriteContractParameters<
+            typeof abis.HappyEntryPoint,
+            "submit",
+            readonly [`0x${string}`],
+            typeof happyChainSepolia,
+            account
+        >)
     } catch (_err) {
         throw parseFromViemError(_err) || _err
     }

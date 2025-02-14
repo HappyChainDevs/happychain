@@ -7,8 +7,8 @@ describe("encode", () => {
     test("should correctly encode tx with empty dynamic data", () => {
         const tx: HappyTx = {
             account: "0x1234567890123456789012345678901234567890",
-            gasLimit: 1000000,
-            executeGasLimit: 800000,
+            gasLimit: 1000000n,
+            executeGasLimit: 800000n,
             dest: "0x2345678901234567890123456789012345678901",
             paymaster: "0x3456789012345678901234567890123456789012",
             value: 1000000000000000000n, // 1 ETH (10^19 in wei)
@@ -31,8 +31,8 @@ describe("encode", () => {
     test("should correctly encode tx with all fields", () => {
         const tx: HappyTx = {
             account: "0x1234567890123456789012345678901234567890",
-            gasLimit: 1000000,
-            executeGasLimit: 800000,
+            gasLimit: 1000000n,
+            executeGasLimit: 800000n,
             dest: "0x2345678901234567890123456789012345678901",
             paymaster: "0x3456789012345678901234567890123456789012",
             value: 1000000000000000000n, // 1 ETH (10^19 in wei)
@@ -55,8 +55,8 @@ describe("encode", () => {
     test("should correctly encode tx with big dynamic fields", () => {
         const tx: HappyTx = {
             account: "0x1234567890123456789012345678901234567890",
-            gasLimit: 1000000,
-            executeGasLimit: 800000,
+            gasLimit: 1000000n,
+            executeGasLimit: 800000n,
             dest: "0x2345678901234567890123456789012345678901",
             paymaster: "0x3456789012345678901234567890123456789012",
             value: 1000000000000000000n, // 1 ETH (10^19 in wei)
