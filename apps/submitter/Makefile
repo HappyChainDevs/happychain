@@ -20,7 +20,24 @@ clean: ## Removes build artifacts
 	@rm -rf node_modules
 .PHONY: clean
 
-setup: node_modules
+
+migrate-fresh: ## Deletes database and starts fresh
+	@rm ${DATABASE_URL}
+	make migrate
+.PHONY: migrate-fresh
+
+
+migrate: ## Runes latest migrations
+	@bun --bun kysely migrate:latest
+	@bun kysely-codegen \
+		--dialect kysely-bun-sqlite \
+		--out-file=src/database/types.d.ts \
+		--singular \
+		--overrides='{"columns":{"happy_transactions.transactionId":"number | null"}}'
+.PHONY: migrate
+
+setup: node_modules migrate
+	echo ${DATABASE_URL}
 .PHONY: setup
 
 node_modules: package.json

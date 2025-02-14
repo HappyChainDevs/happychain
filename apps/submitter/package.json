@@ -8,12 +8,16 @@
         "@scalar/hono-api-reference": "^0.5.172",
         "hono": "^4.6.20",
         "hono-openapi": "^0.4.4",
+        "kysely": "^0.27.5",
+        "kysely-bun-sqlite": "^0.3.2",
+        "kysely-codegen": "^0.17.0",
         "viem": "2.21.53",
         "zod": "3.23.8",
         "zod-openapi": "^4.2.3"
     },
     "devDependencies": {
+        "@happy.tech/configs": "workspace:0.1.0",
         "@types/bun": "latest",
-        "@happy.tech/configs": "workspace:0.1.0"
+        "kysely-ctl": "^0.11.0"
     }
 }

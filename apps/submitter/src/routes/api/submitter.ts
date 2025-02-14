@@ -6,6 +6,11 @@ import { submitterClient } from "#src/clients"
 import { BaseFailedError, BaseRevertedError } from "#src/errors"
 import { parseFromViemError } from "#src/errors/utils"
 import { createNonceQueueManager, enqueueBuffer } from "#src/nonceQueueManager"
+import { insertHappyTransaction } from "#src/queries/insertHappyTransaction"
+import { insertTransaction } from "#src/queries/insertTransaction"
+import { updateHappyTransaction } from "#src/queries/updateHappyTransaction"
+import type { HappyTxStateSuccess } from "#src/tmp/interface/HappyTxState"
+import { EntryPointStatus } from "#src/tmp/interface/status"
 import { encodeHappyTx } from "#src/utils/encodeHappyTx"
 import { estimateGasDescription } from "./submitter_estimateGas/EstimateGasDescription"
 import { estimateGasValidation } from "./submitter_estimateGas/EstimateGasInputSchema"
@@ -47,6 +52,8 @@ export default new Hono()
         try {
             const data = c.req.valid("json")
 
+            const dbId = await insertHappyTransaction(data.entryPoint, data.tx)
+
             const state = await enqueueBuffer(executeManager, {
                 // buffer management
                 nonceTrack: data.tx.nonceTrack,
@@ -56,6 +63,13 @@ export default new Hono()
                 entryPoint: data.entryPoint,
                 tx: data.tx,
             })
+
+            const txData = {
+                hash: (state as HappyTxStateSuccess).receipt.txReceipt.transactionHash,
+                blockNumber: `0x${(state as HappyTxStateSuccess).receipt.txReceipt.blockNumber}`,
+            }
+            const tx = await insertTransaction(txData)
+            await updateHappyTransaction(dbId!.id, { transactionId: tx?.id })
 
             return c.json(state, 200)
         } catch (_err) {
