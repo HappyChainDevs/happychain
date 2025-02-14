@@ -69,6 +69,12 @@ export type TransactionManagerConfig = {
          * Defaults to 1/2 of the block time.
          */
         pollingInterval?: number
+
+        /**
+         * The time without blocks before closing the connection to the RPC node and reconnecting.
+         * Defaults to 4000 milliseconds.
+         */
+        blockInactivityTimeout?: number
     }
     /** The private key of the account used for signing transactions. */
     privateKey: Hex
@@ -167,6 +173,7 @@ export class TransactionManager {
     public readonly finalizedTransactionPurgeTime: number
     public readonly pollingInterval: number
     public readonly transportProtocol: "http" | "websocket"
+    public readonly blockInactivityTimeout: number
 
     constructor(_config: TransactionManagerConfig) {
         this.collectors = []
@@ -259,6 +266,7 @@ export class TransactionManager {
         this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
 
         this.pollingInterval = _config.rpc.pollingInterval || (Number(this.blockTime) * 1000) / 2
+        this.blockInactivityTimeout = _config.rpc.blockInactivityTimeout || 4000
     }
 
     /**
