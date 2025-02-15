@@ -11,9 +11,13 @@ const ChainSwitchingDemo = () => {
         toast.success(`Chain details added: ${gnosis.id}.`)
     }
     async function addConflictedChain() {
-        await walletClient?.addChain({ chain: { ...gnosis, name: "Gnosis 2" } })
-        console.error("successfully added conflicting chain")
-        toast.error("(!!) Added conflicting chain (!!)")
+        try {
+            await walletClient?.addChain({ chain: { ...gnosis, name: "Gnosis 2" } })
+            toast.success(`Chain details added: ${gnosis.id}.`)
+        } catch (error) {
+            console.error("[addConflictedChain]:", error)
+            toast.error("Error adding conflicting chain, already added.")
+        }
     }
 
     async function switchChain(chainId: string | number) {

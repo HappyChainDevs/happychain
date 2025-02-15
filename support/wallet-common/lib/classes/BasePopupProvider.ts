@@ -1,6 +1,6 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { GenericProviderRpcError } from "../errors"
+import { convertErrorObjectToEIP1193ErrorInstance } from "../errors/utils"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
 
@@ -89,7 +89,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         this.inFlightRequests.delete(data.key)
         popup?.close()
 
-        if (data.error) reject(new GenericProviderRpcError(data.error))
+        if (data.error) reject(convertErrorObjectToEIP1193ErrorInstance(data.error))
         else resolve(data.payload)
     }
 
