@@ -98,8 +98,6 @@ export const ImportTokensDialog = () => {
             const symbol = formData.get("symbol") as string
             const decimals = formData.get("decimals") as string
 
-            console.log({ address, symbol, decimals })
-
             if (address && symbol && decimals) {
                 try {
                     await watchAssetAsync({
@@ -139,7 +137,7 @@ export const ImportTokensDialog = () => {
                 })}
             >
                 <Dialog.Content className="text-center overflow-y-auto bg-base-300 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
-                    <div className="flex flex-row my-auto gap-1 items-start">
+                    <div className="flex flex-row my-auto gap-4 items-start">
                         <div className="flex flex-col w-full items-start justify-start">
                             <Dialog.Title className="text-start font-bold text-base-content">
                                 Import ERC-20 Token
@@ -207,8 +205,10 @@ export const ImportTokensDialog = () => {
                                 name="decimals"
                                 readOnly
                                 className={cx(
-                                    "w-full h-[40px] text-left px-3 py-2 resize-none bg-base-100 border border-base-300 rounded-md text-base-content",
-                                    !isValidAddress && "opacity-50 cursor-not-allowed",
+                                    "w-full h-[40px] text-start px-3 py-2 text-neutral-12/90 resize-none rounded-md text-base-content",
+                                    "bg-base-100 border shadow-sm",
+                                    "!appearance-none focus:ring-0 focus:outline-none caret-transparent",
+                                    !isValidAddress && "opacity-20 cursor-not-allowed",
                                 )}
                                 defaultValue={!isValidAddress ? "" : decimals !== undefined ? decimals : ""}
                             />
