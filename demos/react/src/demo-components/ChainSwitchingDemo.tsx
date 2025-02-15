@@ -1,4 +1,4 @@
-import { happyChainSepolia } from "@happychain/react"
+import { happyChainSepolia } from "@happy.tech/core"
 import { toast } from "sonner"
 import { gnosis } from "viem/chains"
 import useClients from "../useClients"

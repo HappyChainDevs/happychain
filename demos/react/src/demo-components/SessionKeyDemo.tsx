@@ -1,5 +1,6 @@
-import { abis, deployment } from "@happychain/contracts/mocks/sepolia"
-import { happyChainSepolia, useHappyChain } from "@happychain/react"
+import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
+import { happyChainSepolia } from "@happy.tech/core"
+import { useHappyChain } from "@happy.tech/react"
 import { toast } from "sonner"
 import useClients from "../useClients"
 

@@ -1,5 +1,4 @@
-import { useHappyChain } from "@happychain/react"
-import { ConnectButton } from "../BadgeComponent"
+import { ConnectButton, useHappyChain } from "@happy.tech/react"
 
 const ConnectionDemo = () => {
     const { user, connect, disconnect } = useHappyChain()

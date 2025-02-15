@@ -1,4 +1,4 @@
-import { useHappyChain } from "@happychain/react"
+import { useHappyChain } from "@happy.tech/react"
 import { useMemo } from "react"
 import { type PublicClient, type WalletClient, createPublicClient, createWalletClient, custom } from "viem"
 
