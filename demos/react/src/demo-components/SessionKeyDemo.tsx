@@ -1,12 +1,14 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
 import { happyChainSepolia } from "@happy.tech/core"
 import { useHappyChain } from "@happy.tech/react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import useClients from "../useClients"
 
 const SessionKeyDemo = () => {
     const { user, requestSessionKey } = useHappyChain()
     const { walletClient, publicClient } = useClients()
+    const [counter, setCounter] = useState<bigint>(0n)
 
     async function getCounterValue() {
         if (!publicClient) throw new Error("Public client not initialized")
@@ -15,7 +17,7 @@ const SessionKeyDemo = () => {
             address: deployment.HappyCounter,
             abi: abis.HappyCounter,
             functionName: "getCount",
-        })
+        }) as Promise<bigint>
     }
 
     async function submitIncrement() {
@@ -33,12 +35,7 @@ const SessionKeyDemo = () => {
 
     async function incrementCounter() {
         try {
-            // Get initial count
-            const initialCount = await getCounterValue()
-
-            // Submit and wait for transaction
             const hash = await submitIncrement()
-
             if (hash) {
                 toast.info("UserOp submitted successfully!", {
                     duration: Number.POSITIVE_INFINITY,
@@ -57,16 +54,15 @@ const SessionKeyDemo = () => {
 
                 if (!publicClient) return
 
-                // Wait for receipt and check status
                 const receipt = await publicClient.waitForTransactionReceipt({ hash })
                 if (receipt.status === "reverted") {
                     toast.error("UserOp reverted!")
                     return
                 }
 
-                // Get final count and show success message
                 const newCount = await getCounterValue()
-                toast.success(`Counter incremented from ${initialCount} to ${newCount} :)`)
+                setCounter(newCount)
+                toast.success(`Counter incremented to ${newCount}`)
             }
         } catch (error) {
             console.log("[incrementCounter] error:", error)
@@ -77,13 +73,24 @@ const SessionKeyDemo = () => {
     async function addSessionKeyToCounterContract() {
         await requestSessionKey(deployment.HappyCounter)
         toast.success(
-            `Session Key recorded successfuly for ${deployment.HappyCounter}. Try sending a transaction to the counter with the button below!`,
+            `Session Key recorded successfully for ${deployment.HappyCounter}. Try sending a transaction to the counter with the button below!`,
         )
     }
+
+    // initial setup for counter display value
+    // biome-ignore lint/correctness/useExhaustiveDependencies: infinite re-render
+    useEffect(() => {
+        async function fetchCounter() {
+            const count = await getCounterValue()
+            setCounter(count)
+        }
+        fetchCounter()
+    }, [])
 
     return (
         <div className="grid grid-cols-2 gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
             <div className="text-lg font-bold col-span-2">Session Keys Functionality</div>
+
             <button
                 type="button"
                 onClick={addSessionKeyToCounterContract}
@@ -95,6 +102,8 @@ const SessionKeyDemo = () => {
             <button type="button" onClick={incrementCounter} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Counter ++
             </button>
+
+            <div className="col-span-2 text-center text-4xl font-bold mt-2">{counter.toString()}</div>
         </div>
     )
 }

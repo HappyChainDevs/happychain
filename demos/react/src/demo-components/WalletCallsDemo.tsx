@@ -1,5 +1,6 @@
 import { useHappyChain } from "@happy.tech/react"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import useClients from "../useClients"
 
 const WalletCallsDemo = () => {
@@ -29,6 +30,8 @@ const WalletCallsDemo = () => {
             message,
             signature,
         })
+
+        toast.success(`Message Signed by Wallet: ${message}`)
 
         if (valid) {
             setSignatureResult(signature)
