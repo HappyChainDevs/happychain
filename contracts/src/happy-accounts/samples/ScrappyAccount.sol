@@ -167,7 +167,7 @@ contract ScrappyAccount is
             return output;
         }
 
-        output.gas = startGas - gasleft() + EXECUTE_GAS_OVERHEAD_BUFFER;
+        output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
         // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", startGas-endGas);
     }
