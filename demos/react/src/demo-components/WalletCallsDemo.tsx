@@ -1,4 +1,4 @@
-import { useHappyChain } from "@happychain/react"
+import { useHappyChain } from "@happy.tech/react"
 import { useEffect, useState } from "react"
 import useClients from "../useClients"
 
