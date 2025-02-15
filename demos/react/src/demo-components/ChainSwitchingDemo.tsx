@@ -8,6 +8,7 @@ const ChainSwitchingDemo = () => {
 
     async function addChain() {
         await walletClient?.addChain({ chain: gnosis })
+        toast.success(`Chain details added: ${gnosis.id}.`)
     }
     async function addConflictedChain() {
         await walletClient?.addChain({ chain: { ...gnosis, name: "Gnosis 2" } })
@@ -17,6 +18,7 @@ const ChainSwitchingDemo = () => {
 
     async function switchChain(chainId: string | number) {
         await walletClient?.switchChain({ id: Number(chainId) })
+        toast.success(`Chains switched successfully to chainID: ${chainId}.`)
     }
 
     return (
