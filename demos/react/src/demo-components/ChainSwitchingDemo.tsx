@@ -36,10 +36,10 @@ const ChainSwitchingDemo = () => {
             <button
                 type="button"
                 onClick={addConflictedChain}
-                className="rounded-lg bg-sky-300 p-2 shadow-xl whitespace-nowrap truncate"
+                className="rounded-lg bg-sky-300 p-2 shadow-xl text-center"
             >
                 Add "Gnosis 2"
-                <small>(creates conflict)</small>
+                <small className="block text-sm text-gray-700">(creates conflict)</small>
             </button>
 
             <button
