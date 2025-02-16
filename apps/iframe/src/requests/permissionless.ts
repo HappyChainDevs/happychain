@@ -271,7 +271,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             // The app may have bypassed the permission check, but this doesn't do anything.
             return null
 
-        // EIP5792 methdos
+        // EIP-5792
         case "wallet_getCapabilities": {
             // This method SHOULD return an error if the user has not
             // already authorized a connection between the application and

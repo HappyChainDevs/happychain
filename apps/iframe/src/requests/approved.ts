@@ -8,10 +8,11 @@ import {
     EIP1193UnsupportedMethodError,
     type Msgs,
     type PopupMsgs,
+    WalletCapability,
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { type Client, InvalidAddressError, isAddress } from "viem"
+import { type Client, type Hex, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import {
     checkIsSessionKeyModuleInstalled,
@@ -179,20 +180,48 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
 
         // EIP-5792
         case "wallet_sendCalls": {
-            // TODO implementation pending
+            if (!user) throw new EIP1193UnauthorizedError()
             const callsData = request.payload.params?.[0]
+            if (!callsData) throw new Error()
 
-            if (callsData) {
+            if (user.controllingAddress !== callsData.from) {
+                // MAY reject the request if the from address does not match the enabled account
+                throw new Error()
+            }
+            // validate that no unsupported capability is sent through - this should go into the docs
+            const allowedCapabilities = new Set([WalletCapability.BoopPaymaster])
+            if (callsData.capabilities) {
+                for (const capability of Object.keys(callsData.capabilities)) {
+                    if (!allowedCapabilities.has(capability as WalletCapability)) {
+                        throw new EIP1193UnsupportedMethodError()
+                    }
+                }
             }
 
-            return 1
+            let lastUserOpHash: Hex | null = null
+
+            for (const call of callsData.calls) {
+                const { to, value, data, chainId } = call // Remove chainId
+
+                if (chainId !== getCurrentChain().chainId) throw new Error("Invalid chainId detected.")
+
+                if (!to) throw new Error("Missing 'to' address in transaction call")
+
+                lastUserOpHash = await sendUserOp({
+                    user,
+                    tx: { to, value, data },
+                    validator: contractAddresses.ECDSAValidator,
+                    signer: async (userOp, smartAccountClient) =>
+                        await smartAccountClient.account.signUserOperation(userOp),
+                })
+            }
+
+            return lastUserOpHash
         }
 
         case "wallet_showCallsStatus": {
-            const _bundleIdentifier = request.payload.params?.[0]
+            const _boopBundleId = request.payload.params?.[0]
             // TODO pretty popup
-
-            // c.f. https://github.com/wevm/viem/blob/66e5f6ab7b683a90775dcb8fae340e3154d74b38/src/experimental/eip5792/actions/showCallsStatus.ts#L10
             return undefined
         }
 
