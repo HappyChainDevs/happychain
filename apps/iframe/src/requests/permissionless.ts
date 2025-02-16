@@ -15,6 +15,7 @@ import {
     type Address,
     type Client,
     type Hash,
+    InternalRpcError,
     InvalidAddressError,
     type Transaction,
     type TransactionReceipt,
@@ -41,6 +42,7 @@ import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
+import { convertUserOpReceiptToCallStatus } from "./modules/boop-batcher/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
 
@@ -294,8 +296,21 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             return capabilities
         }
 
+        // this method only returns a subset of the fields that eth_getTransactionReceipt returns
         case "wallet_getCallsStatus": {
-            return true
+            // TODO if the batch was atomic, this handler MUST return only a single receipt
+            try {
+                const [hash] = request.payload.params as [Hash]
+                if (!hash) {
+                    throw new InternalRpcError(new Error("Transaction hash is missing."))
+                }
+                const transactionReceipt = await getPublicClient()!.getTransactionReceipt({ hash })
+
+                return convertUserOpReceiptToCallStatus(transactionReceipt ? [transactionReceipt] : null)
+            } catch (error) {
+                console.error(error)
+                throw error
+            }
         }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {

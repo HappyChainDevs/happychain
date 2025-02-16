@@ -12,7 +12,7 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { type Client, type Hex, InvalidAddressError, isAddress } from "viem"
+import { type Client, type Hex, InternalRpcError, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import {
     checkIsSessionKeyModuleInstalled,
@@ -182,18 +182,18 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case "wallet_sendCalls": {
             if (!user) throw new EIP1193UnauthorizedError()
             const callsData = request.payload.params?.[0]
-            if (!callsData) throw new Error()
+            if (!callsData) throw new InternalRpcError(new Error("Invalid request payload"))
 
             if (user.controllingAddress !== callsData.from) {
                 // MAY reject the request if the from address does not match the enabled account
-                throw new Error()
+                throw new InternalRpcError(new Error("Sender address does not match enabled account"))
             }
             // validate that no unsupported capability is sent through - this should go into the docs
             const allowedCapabilities = new Set([WalletCapability.BoopPaymaster])
             if (callsData.capabilities) {
                 for (const capability of Object.keys(callsData.capabilities)) {
                     if (!allowedCapabilities.has(capability as WalletCapability)) {
-                        throw new EIP1193UnsupportedMethodError()
+                        throw new InternalRpcError(new Error("Invalid capability"))
                     }
                 }
             }
@@ -203,7 +203,8 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             for (const call of callsData.calls) {
                 const { to, value, data, chainId } = call // Remove chainId
 
-                if (chainId !== getCurrentChain().chainId) throw new Error("Invalid chainId detected.")
+                if (chainId !== getCurrentChain().chainId)
+                    throw new InternalRpcError(new Error("Invalid chainId detected"))
 
                 if (!to) throw new Error("Missing 'to' address in transaction call")
 
@@ -220,8 +221,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         case "wallet_showCallsStatus": {
+            // this will come from the popup
             const _boopBundleId = request.payload.params?.[0]
             // TODO pretty popup
+            // call wallet_getCallsStatus
             return undefined
         }
 
