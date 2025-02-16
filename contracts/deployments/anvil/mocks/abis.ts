@@ -441,4 +441,3 @@ for (const [alias, contractName] of Object.entries(aliasToContract)) {
     abis[alias as ContractAlias] = contractToAbi[contractName as ContractName] as any
 }
 
-
