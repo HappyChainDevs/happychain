@@ -1,6 +1,5 @@
 export enum WalletCapability {
-    AtomicBatch = "atomicBatch",
-    PaymasterService = "paymasterService",
-    AuxiliaryFunds = "auxiliaryFunds",
-    OnchainPaymaster = "onchainPaymaster",
+    // TODO rename to HappyWalletCapability
+    // AtomicBatch = "atomicBatch", // coming soon!
+    BoopPaymaster = "boopPaymaster",
 }
