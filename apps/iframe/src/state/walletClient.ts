@@ -2,17 +2,18 @@ import { accessorsFromAtom } from "@happy.tech/common"
 import { type Atom, atom } from "jotai"
 import type { CustomTransport, ParseAccount, WalletClient } from "viem"
 import { type PublicRpcSchema, type WalletRpcSchema, createWalletClient } from "viem"
+import { type Eip5792Actions, eip5792Actions } from "viem/experimental"
 import { providerAtom } from "./provider"
 import { transportAtom } from "./transport"
 import { userAtom } from "./user"
 
-// TODO extend with eip5792Actions() ?
 export type AccountWalletClient = WalletClient<
     CustomTransport,
     undefined,
     ParseAccount<`0x${string}`>,
     [...WalletRpcSchema, ...PublicRpcSchema]
->
+> &
+    Eip5792Actions
 
 export const walletClientAtom: Atom<AccountWalletClient | undefined> = atom<AccountWalletClient | undefined>((get) => {
     const user = get(userAtom)
@@ -20,7 +21,7 @@ export const walletClientAtom: Atom<AccountWalletClient | undefined> = atom<Acco
     const transport = get(transportAtom)
     if (!user?.controllingAddress || !provider || !transport) return
 
-    return createWalletClient({ account: user.controllingAddress, transport })
+    return createWalletClient({ account: user.controllingAddress, transport }).extend(eip5792Actions())
 })
 
 export const { getValue: getWalletClient } = accessorsFromAtom(walletClientAtom)
