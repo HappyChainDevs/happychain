@@ -306,43 +306,33 @@ export class TransactionManager {
     }
 
     public async start(): Promise<void> {
-        console.log("Starting transaction manager")
         // Start the gas price oracle to prevent other parts of the application from calling `suggestGasForNextBlock` before the gas price oracle has initialized the gas price after processing the first block
         const priceOraclePromise = this.gasPriceOracle.start()
 
-        console.log("Starting gas price oracle")
         // Get the chain ID of the RPC node
         const rpcChainIdPromise = this.viemClient.safeGetChainId()
 
-        console.log("Starting transaction repository")
         // Start the transaction repository
         await this.transactionRepository.start()
 
-        console.log("Starting nonce manager")
         // Start the nonce manager, which depends on the transaction repository
         await this.nonceManager.start()
 
-        console.log("Getting chain ID")
         const rpcChainId = await rpcChainIdPromise
 
-        console.log("Checking chain ID")
         if (rpcChainId.isErr()) {
-            console.error("Error getting chain ID", rpcChainId.error)
             throw rpcChainId.error
         }
 
-        console.log("Checking chain ID match")
         if (rpcChainId.value !== this.chainId) {
             const errorMessage = `The chain ID of the RPC node (${rpcChainId.value}) does not match the chain ID of the transaction manager (${this.chainId}).`
             throw new Error(errorMessage)
         }
 
-        console.log("Awaiting gas price oracle initialization")
         // Wait for the gas price oracle to initialize before starting the block monitor,
         // which emits 'NewBlock' events as the TXM heartbeat.
         await priceOraclePromise
 
-        console.log("Starting block monitor")
         await this.blockMonitor.start()
     }
 }
