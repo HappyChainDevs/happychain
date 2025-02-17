@@ -16,26 +16,22 @@ These benefits come with intentional trade-offs: slightly higher gas costs (21k 
 
 ```txt
 happy-accounts/
-├── core/               # Core contracts required for happy-aa
-│   ├── HappyEntryPoint.sol    # The entrypoint is used for handling happy-txs submission.
-│   │                          # A singleton contract used by the submitter to submit happy-txs on chain.
+├── core/               # Core contracts (for use by submitters, dapps and end users to submit happyTxs)
+│   ├── HappyEntryPoint.sol    # The entrypoint for handling happyTxs on-chain, singleton contract.
 │   └── HappyTx.sol            # The definition of a happy-tx.
 │
-├── libs/               # Library contracts
+├── libs/               # Library contracts (for use by `core/` and account/paymaster implementations)
 │   └── HappyTxLib.sol         # Utilities for handling HappyTx structs (encoding/decoding).
 │
-├── interfaces/         # Contract interfaces
+├── interfaces/         # Contract interfaces (for use by `samples/`)
 │   │
 │   └── IHappyAccount.sol      # Account interface definitions.
-│   │
 │   └── IHappyPaymaster.sol    # Paymaster interface definitions.
 │
-└── samples/            # Sample implementations of happy-aa components
-    ├── ScrappyAccount.sol     # Reference account implementation, has to be deployed separately for each SCA.
-    │                          # Used by the entrypoint to validate and execute happy-txs, on behalf of the user.
+└── samples/            # Sample implementations (for use by dapps and end users to interact with core contracts)
+    ├── ScrappyAccount.sol     # Reference account implementation, has to be deployed separately for each user.
     └── ScrappyPaymaster.sol   # Reference paymaster implementation, for sponsoring happyTxs.
-                               # Optionally used by the entrypoint/account to pay fee for the happy-tx, on behalf 
-                               # of the user.
+                               # Reference paymaster implementation, for sponsoring happyTxs, singleton contract.
 ```
 
 ### Core Contracts
