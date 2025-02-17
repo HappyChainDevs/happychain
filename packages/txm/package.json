@@ -6,6 +6,9 @@
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.es.d.ts",
+    "scripts": {
+        "test": "vitest"
+    },
     "exports": {
         ".": {
             "default": "./dist/index.es.js",
@@ -23,7 +26,8 @@
         "better-sqlite3": "^11.5.0",
         "eventemitter3": "^5.0.1",
         "kysely": "^0.27.4",
-        "neverthrow": "^8.0.0"
+        "neverthrow": "^8.0.0",
+        "vitest": "^3.0.5"
     },
     "peerDependencies": {
         "viem": "^2.20.1"
@@ -31,6 +35,8 @@
     "devDependencies": {
         "@happy.tech/happybuild": "workspace:0.1.0",
         "@types/better-sqlite3": "^7.6.11",
+        "@types/express": "^5.0.0",
+        "express": "^4.21.2",
         "ts-node": "11.0.0-beta.1",
         "typescript": "^5.6.2"
     }
