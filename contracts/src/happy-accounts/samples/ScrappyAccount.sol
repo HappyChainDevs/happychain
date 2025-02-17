@@ -168,8 +168,11 @@ contract ScrappyAccount is
         }
 
         output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
+
+        // [LOGGAS_INTERNAL] uint256 startGasEmulate = gasleft();
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
         // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", startGas-endGas);
+        // [LOGGAS_INTERNAL] console.log("execute output.gas: ", output.gas);
     }
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
