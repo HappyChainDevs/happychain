@@ -3,8 +3,6 @@ pragma solidity ^0.8.20;
 
 import {HappyTx} from "../core/HappyTx.sol";
 
-// [LOGGAS] import {console} from "forge-std/Script.sol";
-
 /// @notice Utility library for encoding and decoding HappyTx structs with efficient gas usage and minimal overhead.
 library HappyTxLib {
     /// @notice Selector returned by {decode} when unable to properly decode a happyTx.
@@ -170,20 +168,20 @@ library HappyTxLib {
     }
 
     /**
-     * @dev Decodes a happyTx that was encoded using {HappyTxLib.encode}.
-     * @param happyTx The encoded happyTx bytes
+     * @dev Decodes an encodedHappyTx that was encoded using {HappyTxLib.encode}.
+     * @param encodedHappyTx The encoded happyTx bytes
      * @return result The decoded HappyTx struct
      */
-    function decode(bytes calldata happyTx) public pure returns (HappyTx memory result) {
+    function decode(bytes calldata encodedHappyTx) public pure returns (HappyTx memory result) {
         // First validate minimum length (196 bytes for the static fields)
-        if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
+        if (encodedHappyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
 
         uint32 len;
         uint256 offset;
 
         assembly {
             // Get pointer to the calldata bytes
-            let cdPtr := happyTx.offset
+            let cdPtr := encodedHappyTx.offset
             let memPtr := result
 
             // Copy account (20 bytes) + zero pad to 32 bytes
@@ -236,31 +234,31 @@ library HappyTxLib {
             cdPtr := add(cdPtr, 32)
 
             // Dynamic fields offset is the difference between current and start position
-            offset := sub(cdPtr, happyTx.offset)
+            offset := sub(cdPtr, encodedHappyTx.offset)
         }
 
         // Read callData length (4 bytes) and data
-        len = uint32(bytes4(happyTx[offset:offset + 4]));
+        len = uint32(bytes4(encodedHappyTx[offset:offset + 4]));
         offset += 4;
-        result.callData = happyTx[offset:offset + len];
+        result.callData = encodedHappyTx[offset:offset + len];
         offset += len;
 
         // Read paymasterData length (4 bytes) and data
-        len = uint32(bytes4(happyTx[offset:offset + 4]));
+        len = uint32(bytes4(encodedHappyTx[offset:offset + 4]));
         offset += 4;
-        result.paymasterData = happyTx[offset:offset + len];
+        result.paymasterData = encodedHappyTx[offset:offset + len];
         offset += len;
 
         // Read validatorData length (4 bytes) and data
-        len = uint32(bytes4(happyTx[offset:offset + 4]));
+        len = uint32(bytes4(encodedHappyTx[offset:offset + 4]));
         offset += 4;
-        result.validatorData = happyTx[offset:offset + len];
+        result.validatorData = encodedHappyTx[offset:offset + len];
         offset += len;
 
         // Read extraData length (4 bytes) and data
-        uint32 extraDataLen = uint32(bytes4(happyTx[offset:offset + 4]));
+        uint32 extraDataLen = uint32(bytes4(encodedHappyTx[offset:offset + 4]));
         offset += 4;
-        result.extraData = happyTx[offset:offset + extraDataLen];
+        result.extraData = encodedHappyTx[offset:offset + extraDataLen];
     }
 
     /**

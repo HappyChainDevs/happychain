@@ -5,8 +5,7 @@ import {LibClone} from "solady/utils/LibClone.sol";
 import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
 
 /**
- * @title  ScrappyAccountFactory
- * @dev    Example factory contract for deploying minimal deterministic ERC1967 proxies for {ScrappyAccount}.
+ * @notice Example factory contract for deploying minimal deterministic ERC1967 proxies for {ScrappyAccount}.
  */
 contract ScrappyAccountFactory {
     /// @dev Error thrown when account initialization fails

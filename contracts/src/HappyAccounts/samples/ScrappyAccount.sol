@@ -28,7 +28,6 @@ import {
 } from "../utils/Common.sol";
 
 /**
- * @title  ScrappyAccount
  * @dev    Example implementation of a Happy Account with nonce management, reentrancy protection,
  *         and proxy upgrade capability.
  */
@@ -49,12 +48,13 @@ contract ScrappyAccount is
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
     uint256 private constant INTRINSIC_GAS = 22_000; // TODO
     uint256 private constant GAS_OVERHEAD_BUFFER = 12345; // TODO
+
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
     bytes4 private constant ERC1271_INTERFACE_ID = 0x1626ba7e;
     bytes4 private constant IHAPPYACCOUNT_INTERFACE_ID = 0x90ab9eae;
     bytes4 private constant IHAPPYPAYMASTER_INTERFACE_ID = 0xa79b0c0c;
 
-    /// @dev The deterministic EntryPoint contract
+    /// @dev The allowed EntryPoint contract
     address private immutable ENTRYPOINT;
 
     /// @dev Mapping from track => nonce
