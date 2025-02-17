@@ -3,6 +3,7 @@ import { icon64x64 } from "@happy.tech/common"
 import { AuthState } from "@happy.tech/wallet-common"
 import { useAnimatedStateTransitions } from "./hooks/useAnimatedStateTransitions"
 import { useAuthState } from "./hooks/useAuthState"
+import { useHappyUser } from "./hooks/useHappyUser"
 import { useWalletActions } from "./hooks/useWalletActions"
 
 export interface WalletFrameProps {
@@ -11,10 +12,13 @@ export interface WalletFrameProps {
 
 export const WalletFrame = ({ dragging }: WalletFrameProps) => {
     const { authState } = useAuthState()
+    const { user } = useHappyUser()
     const { toggleWalletOpen, isOpen } = useWalletActions()
     const { frame, iframe } = useAnimatedStateTransitions()
 
     const openable = !isOpen && !dragging
+
+    const showSpinner = !user && authState === AuthState.Initializing
 
     return (
         <div
@@ -30,11 +34,12 @@ export const WalletFrame = ({ dragging }: WalletFrameProps) => {
             onClick={(e) => openable && toggleWalletOpen(e)}
             onKeyDown={(e) => openable && toggleWalletOpen(e)}
             data-open-state={isOpen}
+            data-has-user={!!user}
             data-auth-state={authState}
             data-drag-state={dragging}
             className="wallet-frame"
         >
-            {authState === AuthState.Initializing && <LoadingSpinner />}
+            {showSpinner && <LoadingSpinner />}
             {/* Base64 to avoid any bundle issues and network requests */}
             <img src={icon64x64} alt="HappyChain Logo" className="wallet-logo" inert={true} />
 
