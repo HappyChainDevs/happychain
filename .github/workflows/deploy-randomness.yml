@@ -52,6 +52,8 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
+          # We copy better-sqlite3, bindings, and file-uri-to-path separately because the bundled file does not include
+          # better-sqlite3 and its dependencies
           script: |
             chmod -R o+rX /home/deployer/randomness
             mv /home/deployer/randomness /tmp
