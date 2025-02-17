@@ -49,10 +49,7 @@ contract HappyEntryPointGasEstimator is Test {
 
     function setUp() public {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
-        console.log("private key:", privKey);
-        console.logBytes32(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
-        console.log("owner:", owner);
 
         // Set up the Deployment Script
         deployer = new DeployHappyAAContracts();
@@ -95,14 +92,14 @@ contract HappyEntryPointGasEstimator is Test {
         // Step 1. Submit the encoded happy tx (uninitialized and cold storage)
         console.log("\n1. First Transaction (Cold + Uninitialized Storage)");
         console.log(" ----------------------------------------------------");
-        HappyTx memory happyTx1 = _createSignedHappyTx(smartAccount, smartAccount, 0);
+        HappyTx memory happyTx1 = _createSignedHappyTx(smartAccount, smartAccount);
         uint256 gasUninitialized = this._estimateSubmitGas(happyTx1.encode());
         console.log("   Tx Gas used: ", gasUninitialized);
 
         // Step 2. Submit the encoded happy tx (initialized and cold storage)
         console.log("\n2. Second Transaction (Cold + Initialized Storage)");
         console.log(" ----------------------------------------------------");
-        HappyTx memory happyTx2 = _createSignedHappyTx(smartAccount, smartAccount, 1);
+        HappyTx memory happyTx2 = _createSignedHappyTx(smartAccount, smartAccount);
         uint256 gasCold = this._estimateSubmitGas(happyTx2.encode());
         console.log("   TxGas used: ", gasCold);
     }
@@ -118,19 +115,19 @@ contract HappyEntryPointGasEstimator is Test {
      * 3. Warm storage access (multiple transactions in same block)
      */
     function testEstimateEntryPointSubmitGasForPaymasterSponsoredTx() public {
-        console.log("\nHappyEntryPoint Gas Report For Paymaster-Sponsored Transactions");
+        console.log("HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions");
 
         // Step 1. Submit the encoded happy tx (uninitialized and cold storage)
         console.log("\n1. First Transaction (Cold + Uninitialized Storage)");
         console.log(" ----------------------------------------------------");
-        HappyTx memory happyTx1 = _createSignedHappyTx(smartAccount, paymaster, 0);
+        HappyTx memory happyTx1 = _createSignedHappyTx(smartAccount, paymaster);
         uint256 gasUninitialized = this._estimateSubmitGas(happyTx1.encode());
         console.log("   Tx Gas used: ", gasUninitialized);
 
         // Step 2. Submit the encoded happy tx (initialized and cold storage)
         console.log("\n2. Second Transaction (Cold + Initialized Storage)");
         console.log(" ----------------------------------------------------");
-        HappyTx memory happyTx2 = _createSignedHappyTx(smartAccount, paymaster, 3);
+        HappyTx memory happyTx2 = _createSignedHappyTx(smartAccount, paymaster);
         uint256 gasCold = this._estimateSubmitGas(happyTx2.encode());
         console.log("   TxGas used: ", gasCold);
     }
@@ -151,7 +148,7 @@ contract HappyEntryPointGasEstimator is Test {
     function testEstimateScrappyAccountPayoutGas() public {
         console.log("\nScrappyAccount payout gas usage");
         console.log(" ----------------------------------------------------");
-        HappyTx memory happyTx = _createSignedHappyTx(smartAccount, smartAccount, 0);
+        HappyTx memory happyTx = _createSignedHappyTx(smartAccount, smartAccount);
         vm.prank(address(happyEntryPoint));
         ScrappyAccount(payable(smartAccount)).payout(happyTx, 0);
         // console.log("   payout internal gas used: ", gasUsed);
@@ -163,7 +160,7 @@ contract HappyEntryPointGasEstimator is Test {
     function testEstimateScrappyPaymasterPayoutGas() public {
         console.log("\nScrappyPaymaster payout gas usage");
         console.log(" ----------------------------------------------------");
-        HappyTx memory happyTx = _createSignedHappyTx(smartAccount, paymaster, 0);
+        HappyTx memory happyTx = _createSignedHappyTx(smartAccount, paymaster);
         vm.prank(address(happyEntryPoint));
         scrappyPaymaster.payout(happyTx, 0);
     }
@@ -174,7 +171,7 @@ contract HappyEntryPointGasEstimator is Test {
     function testEstimateScrappyAccountExecuteGas() public {
         console.log("\nScrappyAccount execute gas usage");
         console.log(" ----------------------------------------------------");
-        HappyTx memory happyTx = _createSignedHappyTx(smartAccount, smartAccount, 0);
+        HappyTx memory happyTx = _createSignedHappyTx(smartAccount, smartAccount);
         vm.prank(address(happyEntryPoint));
         ScrappyAccount(payable(smartAccount)).execute(happyTx);
     }
@@ -183,19 +180,49 @@ contract HappyEntryPointGasEstimator is Test {
     // HAPPY TX CREATION UTILS
 
     /// @dev Internal helper function to create a signed happy tx.
-    function _createSignedHappyTx(address account, address _paymaster, uint256 nonce)
+    function _createSignedHappyTx(address _account, address _paymaster)
         internal
         view
         returns (HappyTx memory)
     {
         HappyTx memory happyTx = _getStubHappyTx();
 
-        happyTx.account = account;
+        happyTx.account = _account;
         happyTx.paymaster = _paymaster;
         happyTx.nonceTrack = 0;
-        happyTx.nonceValue = uint64(nonce);
+        happyTx.nonceValue = getNonce();
 
+        // Store original values
+        uint32 origGasLimit;
+        uint32 origExecuteGasLimit;
+        uint256 origMaxFeePerGas;
+        int256 origSubmitterFee;
+
+        if (_paymaster != _account) {
+            // Store original values
+            origGasLimit = happyTx.gasLimit;
+            origExecuteGasLimit = happyTx.executeGasLimit;
+            origMaxFeePerGas = happyTx.maxFeePerGas;
+            origSubmitterFee = happyTx.submitterFee;
+
+            // Temporarily zero them for signing
+            happyTx.gasLimit = 0;
+            happyTx.executeGasLimit = 0;
+            happyTx.maxFeePerGas = 0;
+            happyTx.submitterFee = 0;
+        }
+
+        // Sign the transaction with zeroed values
         happyTx.validatorData = signHappyTx(happyTx);
+
+        if (_paymaster != _account) {
+            // Restore original values after signing
+            happyTx.gasLimit = origGasLimit;
+            happyTx.executeGasLimit = origExecuteGasLimit;
+            happyTx.maxFeePerGas = origMaxFeePerGas;
+            happyTx.submitterFee = origSubmitterFee;
+        }
+
         return happyTx;
     }
 
@@ -229,5 +256,10 @@ contract HappyEntryPointGasEstimator is Test {
     /// @dev Internal helper function to create calldata for IERC20.mint().
     function _getMintCallData() internal view returns (bytes memory) {
         return abi.encodeCall(MockERC20Token.mint, (target, DEPOSIT));
+    }
+
+    /// @dev Internal helper function to get the nonce of a smart account.
+    function getNonce() public view returns (uint64) {
+        return uint64(ScrappyAccount(payable(smartAccount)).getNonce(0));
     }
 }
