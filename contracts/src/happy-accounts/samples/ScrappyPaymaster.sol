@@ -91,12 +91,12 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
 
         // [LOGGAS_INTERNAL] uint256 gasStartOverhead = gasleft();
         // [LOGGAS_INTERNAL] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
-        owed += gasleft() - gasStart;
+        owed += gasStart - gasleft();
 
         // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
         (payable(tx.origin).call{value: owed}(""));
 
-        // [LOGGAS_INTERNAL] console.log("PAYMENT_OVERHEAD_GAS", gasleft() - gasStartOverhead);
+        // [LOGGAS_INTERNAL] console.log("PAYMENT_OVERHEAD_GAS", gasStartOverhead - gasleft());
 
         return 0;
     }

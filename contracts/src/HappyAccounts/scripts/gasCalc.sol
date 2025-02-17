@@ -25,7 +25,6 @@ contract HappyEntryPointGasEstimator is Test {
     // CONSTANTS
 
     bytes32 private constant SALT = 0x0000000000000000000000000000000000000000000000000000000000000000;
-    address private constant OWNER = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     address private constant ZERO_ADDRESS = 0x0000000000000000000000000000000000000000;
     uint256 private constant DEPOSIT = 10 ether;
 
@@ -42,16 +41,21 @@ contract HappyEntryPointGasEstimator is Test {
     address private smartAccount;
     address private paymaster;
     address private target;
+    uint256 private privKey;
+    address private owner;
 
     // ====================================================================================================
     // COMMON TEST SETUP
 
     function setUp() public {
+        privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
+        owner = vm.addr(privKey);
+
         // Set up the Deployment Script
         deployer = new DeployHappyAAContracts();
 
         // Deploy the happy-aa contracts as foundry-account-0
-        vm.prank(OWNER);
+        vm.prank(owner);
         deployer.deployForTests();
 
         happyEntryPoint = deployer.happyEntryPoint();
@@ -59,7 +63,7 @@ contract HappyEntryPointGasEstimator is Test {
         scrappyAccountFactory = deployer.scrappyAccountFactory();
 
         // Deploy and initialize the proxy for scrappy account
-        smartAccount = scrappyAccountFactory.createAccount(SALT, OWNER);
+        smartAccount = scrappyAccountFactory.createAccount(SALT, owner);
 
         // Fund the smart account and paymaster
         vm.deal(smartAccount, DEPOSIT);
@@ -144,8 +148,8 @@ contract HappyEntryPointGasEstimator is Test {
     function testEstimateScrappyAccountPayoutGas() public {
         console.log("\nScrappyAccount payout gas usage");
         console.log(" ----------------------------------------------------");
-        vm.prank(address(happyEntryPoint));
         HappyTx memory happyTx = _createSignedHappyTx(smartAccount, smartAccount, 0);
+        vm.prank(address(happyEntryPoint));
         ScrappyAccount(payable(smartAccount)).payout(happyTx, 0);
         // console.log("   payout internal gas used: ", gasUsed);
     }
@@ -156,8 +160,8 @@ contract HappyEntryPointGasEstimator is Test {
     function testEstimateScrappyPaymasterPayoutGas() public {
         console.log("\nScrappyPaymaster payout gas usage");
         console.log(" ----------------------------------------------------");
-        vm.prank(address(happyEntryPoint));
         HappyTx memory happyTx = _createSignedHappyTx(smartAccount, paymaster, 0);
+        vm.prank(address(happyEntryPoint));
         scrappyPaymaster.payout(happyTx, 0);
     }
 
@@ -167,8 +171,8 @@ contract HappyEntryPointGasEstimator is Test {
     function testEstimateScrappyAccountExecuteGas() public {
         console.log("\nScrappyAccount execute gas usage");
         console.log(" ----------------------------------------------------");
-        vm.prank(address(happyEntryPoint));
         HappyTx memory happyTx = _createSignedHappyTx(smartAccount, smartAccount, 0);
+        vm.prank(address(happyEntryPoint));
         ScrappyAccount(payable(smartAccount)).execute(happyTx);
     }
 
@@ -213,10 +217,9 @@ contract HappyEntryPointGasEstimator is Test {
     }
 
     /// @dev Internal helper function to sign a happy tx.
-    function signHappyTx(HappyTx memory happyTx) internal pure returns (bytes memory signature) {
+    function signHappyTx(HappyTx memory happyTx) internal view returns (bytes memory signature) {
         bytes32 hash = keccak256(happyTx.encode()).toEthSignedMessageHash();
-        (uint8 v, bytes32 r, bytes32 s) =
-            vm.sign(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80, hash);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
     }
 
