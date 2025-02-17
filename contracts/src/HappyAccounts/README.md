@@ -24,7 +24,6 @@ happy-accounts/
 │   └── HappyTxLib.sol         # Utilities for handling HappyTx structs (encoding/decoding).
 │
 ├── interfaces/         # Contract interfaces (for use by `samples/`)
-│   │
 │   └── IHappyAccount.sol      # Account interface definitions.
 │   └── IHappyPaymaster.sol    # Paymaster interface definitions.
 │
