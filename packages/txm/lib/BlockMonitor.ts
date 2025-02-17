@@ -26,7 +26,7 @@ export class BlockMonitor {
                 ? {
                       pollingInterval: this.txmgr.pollingInterval,
                   }
-                : {})
+                : {}),
         })
     }
 
