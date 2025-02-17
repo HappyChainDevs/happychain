@@ -51,7 +51,6 @@ library HappyTxLib {
             + (4 + happyTx.validatorData.length) + (4 + happyTx.extraData.length);
 
         assembly {
-            let inPtr := happyTx
             // Encoded tx will live at next free memory address.
             result := mload(0x40)
             // Update free memory pointer to point past decoded bytes (+32 bytes is for length).
@@ -59,50 +58,49 @@ library HappyTxLib {
             // Store length of the encoded tx.
             mstore(result, totalSize)
 
-            // Start writing after length prefix
+            // Start writing to `result` after the length prefix slot
+            let inPtr := happyTx
             let outPtr := add(result, 32)
-            // Start copying from happyTx offset 12 (account)
-            inPtr := add(inPtr, 12)
 
             // Copy account (20 bytes)
-            mcopy(outPtr, inPtr, 20)
+            mcopy(outPtr, add(inPtr, 12), 20)
             outPtr := add(outPtr, 20)
-            inPtr := add(inPtr, 48)
+            inPtr := add(inPtr, 32)
 
             // Copy gasLimit (4 bytes)
-            mcopy(outPtr, inPtr, 4)
+            mcopy(outPtr, add(inPtr, 28), 4)
             outPtr := add(outPtr, 4)
             inPtr := add(inPtr, 32)
 
             // Copy executeGasLimit (4 bytes)
-            mcopy(outPtr, inPtr, 4)
+            mcopy(outPtr, add(inPtr, 28), 4)
             outPtr := add(outPtr, 4)
-            inPtr := add(inPtr, 16)
+            inPtr := add(inPtr, 32)
 
             // Copy dest (20 bytes)
-            mcopy(outPtr, inPtr, 20)
+            mcopy(outPtr, add(inPtr, 12), 20)
             outPtr := add(outPtr, 20)
             inPtr := add(inPtr, 32)
 
             // Copy paymaster (20 bytes)
-            mcopy(outPtr, inPtr, 20)
+            mcopy(outPtr, add(inPtr, 12), 20)
             outPtr := add(outPtr, 20)
-            inPtr := add(inPtr, 20)
+            inPtr := add(inPtr, 32)
 
             // Copy value (32 bytes)
             mcopy(outPtr, inPtr, 32)
             outPtr := add(outPtr, 32)
-            inPtr := add(inPtr, 40)
+            inPtr := add(inPtr, 32)
 
             // Copy nonceTrack (24 bytes)
-            mcopy(outPtr, inPtr, 24)
+            mcopy(outPtr, add(inPtr, 8), 24)
             outPtr := add(outPtr, 24)
-            inPtr := add(inPtr, 48)
+            inPtr := add(inPtr, 32)
 
             // Copy nonceValue (8 bytes)
-            mcopy(outPtr, inPtr, 8)
+            mcopy(outPtr, add(inPtr, 24), 8)
             outPtr := add(outPtr, 8)
-            inPtr := add(inPtr, 8)
+            inPtr := add(inPtr, 32)
 
             // Copy maxFeePerGas (32 bytes)
             mcopy(outPtr, inPtr, 32)
@@ -170,38 +168,36 @@ library HappyTxLib {
         // First validate minimum length (196 bytes for the static fields)
         if (happyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
 
+        uint32 len;
+        uint256 offset;
+
         assembly {
             // Get pointer to the calldata bytes
             let cdPtr := happyTx.offset
             let memPtr := result
 
             // Copy account (20 bytes) + zero pad to 32 bytes
-            calldatacopy(memPtr, cdPtr, 20)
-            mstore(memPtr, shr(96, mload(memPtr)))
+            calldatacopy(add(memPtr, 12), cdPtr, 20)
             cdPtr := add(cdPtr, 20)
             memPtr := add(memPtr, 32)
 
             // Copy gasLimit (4 bytes) + zero pad to 32 bytes
-            calldatacopy(memPtr, cdPtr, 4)
-            mstore(memPtr, shr(224, mload(memPtr)))
+            calldatacopy(add(memPtr, 28), cdPtr, 4)
             cdPtr := add(cdPtr, 4)
             memPtr := add(memPtr, 32)
 
             // Copy executeGasLimit (4 bytes) + zero pad to 32 bytes
-            calldatacopy(memPtr, cdPtr, 4)
-            mstore(memPtr, shr(224, mload(memPtr)))
+            calldatacopy(add(memPtr, 28), cdPtr, 4)
             cdPtr := add(cdPtr, 4)
             memPtr := add(memPtr, 32)
 
             // Copy dest (20 bytes) + zero pad to 32 bytes
-            calldatacopy(memPtr, cdPtr, 20)
-            mstore(memPtr, shr(96, mload(memPtr)))
+            calldatacopy(add(memPtr, 12), cdPtr, 20)
             cdPtr := add(cdPtr, 20)
             memPtr := add(memPtr, 32)
 
             // Copy paymaster (20 bytes) + zero pad to 32 bytes
-            calldatacopy(memPtr, cdPtr, 20)
-            mstore(memPtr, shr(96, mload(memPtr)))
+            calldatacopy(add(memPtr, 12), cdPtr, 20)
             cdPtr := add(cdPtr, 20)
             memPtr := add(memPtr, 32)
 
@@ -211,14 +207,12 @@ library HappyTxLib {
             memPtr := add(memPtr, 32)
 
             // Copy NonceTrack (24 bytes) + zero pad to 32 bytes
-            calldatacopy(memPtr, cdPtr, 24)
-            mstore(memPtr, shr(64, mload(memPtr)))
+            calldatacopy(add(memPtr, 8), cdPtr, 24)
             cdPtr := add(cdPtr, 24)
             memPtr := add(memPtr, 32)
 
             // Copy NonceValue (8 bytes) + zero pad to 32 bytes
-            calldatacopy(memPtr, cdPtr, 8)
-            mstore(memPtr, shr(192, mload(memPtr)))
+            calldatacopy(add(memPtr, 24), cdPtr, 8)
             cdPtr := add(cdPtr, 8)
             memPtr := add(memPtr, 32)
 
@@ -230,11 +224,10 @@ library HappyTxLib {
             // Copy submitterFee (32 bytes)
             calldatacopy(memPtr, cdPtr, 32)
             cdPtr := add(cdPtr, 32)
-            memPtr := add(memPtr, 32)
-        }
 
-        uint32 len;
-        uint256 offset = DYNAMIC_FIELDS_OFFSET;
+            // Dynamic fields offset is the difference between current and start position
+            offset := sub(cdPtr, happyTx.offset)
+        }
 
         // Read callData length (4 bytes) and data
         len = uint32(bytes4(happyTx[offset:offset + 4]));
