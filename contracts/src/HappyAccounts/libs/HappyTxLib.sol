@@ -5,6 +5,7 @@ import {HappyTx} from "../core/HappyTx.sol";
 
 // [LOGGAS] import {console} from "forge-std/Script.sol";
 
+/// @notice Utility library for encoding and decoding HappyTx structs with efficient gas usage and minimal overhead.
 library HappyTxLib {
     /// @notice Selector returned by {decode} when unable to properly decode a happyTx.
     error MalformedHappyTx();

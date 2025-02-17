@@ -1,6 +1,7 @@
+// Calculate ERC165 interface IDs for HappyAccount interfaces
 import { toFunctionSelector } from "viem"
 
-// Calculate interface ID by XORing function selectors
+// Calculate interface ID by XORing function selectors per ERC165
 function calculateInterfaceId(functionSignatures: string[]): string {
     let interfaceId = 0n
 
