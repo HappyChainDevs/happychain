@@ -49,7 +49,10 @@ contract HappyEntryPointGasEstimator is Test {
 
     function setUp() public {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
+        console.log("private key:", privKey);
+        console.logBytes32(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
+        console.log("owner:", owner);
 
         // Set up the Deployment Script
         deployer = new DeployHappyAAContracts();
@@ -127,7 +130,7 @@ contract HappyEntryPointGasEstimator is Test {
         // Step 2. Submit the encoded happy tx (initialized and cold storage)
         console.log("\n2. Second Transaction (Cold + Initialized Storage)");
         console.log(" ----------------------------------------------------");
-        HappyTx memory happyTx2 = _createSignedHappyTx(smartAccount, paymaster, 1);
+        HappyTx memory happyTx2 = _createSignedHappyTx(smartAccount, paymaster, 3);
         uint256 gasCold = this._estimateSubmitGas(happyTx2.encode());
         console.log("   TxGas used: ", gasCold);
     }

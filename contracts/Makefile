@@ -170,6 +170,7 @@ happy-aa-gas-report: ## Generates a gas report for the happy-aa contracts
 happyEntryPoint-gas: ## Generates a gas report for the happy entrypoint contract.
 	@make gas-logging-on
 	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForSelfPayingTx --isolate | awk '/HappyEntryPoint Gas Report For Self-Paying Transactions/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForPaymasterSponsoredTx --isolate | awk '/HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions`/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@make gas-logging-off
 .PHONY: happyEntryPoint-gas
 
