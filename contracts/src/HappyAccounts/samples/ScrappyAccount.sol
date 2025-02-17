@@ -157,17 +157,22 @@ contract ScrappyAccount is
     }
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
+        uint256 gasStart = gasleft();
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
         }
 
-        uint256 owed = (consumedGas + INTRINSIC_GAS + GAS_OVERHEAD_BUFFER) // TODO
-            * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
+        uint256 owed = (consumedGas + INTRINSIC_GAS) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee) + GAS_OVERHEAD_BUFFER;
+        // ^MAGIC VARIABLE TO DEFINE, which must account of for the cost of the code below, see LOGGAS code for computing it
 
-        assembly {
-            // Intentionally ignore return value
-            pop(call(gas(), origin(), owed, 0, 0, 0, 0))
-        }
+        // [LOGGAS] uint256 gasStartOverhead = gasleft();
+        // [LOGGAS] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
+        owed += gasleft() - gasStart;
+
+        (payable(tx.origin).call{value: owed}(""));
+
+        // [LOGGAS] console.log("GAS_OVERHEAD_BUFFER", gasleft() - gasStartOverhead);
+
         return 0;
     }
 
