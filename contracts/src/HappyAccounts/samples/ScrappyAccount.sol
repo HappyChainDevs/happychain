@@ -91,20 +91,13 @@ contract ScrappyAccount is
         _disableInitializers();
     }
 
-    /**
-     * @dev Initializer for proxy instances
-     *      Called by the factory during proxy deployment
-     * @param owner The owner who can upgrade the implementation
-     */
+    /// @notice Initializer for proxy instances. Called by the factory during proxy deployment.
     function initialize(address owner) external initializer {
         __Ownable_init(owner);
         __UUPSUpgradeable_init();
     }
 
-    /**
-     * @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-     * @dev only callable by the owner
-     */
+    /// @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ====================================================================================================
