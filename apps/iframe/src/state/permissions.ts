@@ -429,22 +429,25 @@ export function getPermissions(
     permissionsRequest: PermissionsRequest,
 ): WalletPermission[] {
     const appPermissions = getAppPermissions(app)
-    const requests = permissionRequestEntries(permissionsRequest)
-    const basicMatchedPermissions = requests.map(({ name }) => appPermissions[name]).filter(Boolean)
-    const filterCaveats = requests.some((req) => req.caveats.length)
+    const requestEntries = permissionRequestEntries(permissionsRequest)
 
-    if (!filterCaveats) return basicMatchedPermissions
+    return requestEntries.flatMap(({ name, caveats }) => {
+        const permission = appPermissions[name] || []
+        // if we have no caveats to filter by, we can return the matching permission
+        if (caveats.length === 0) return permission
 
-    const fulfillsFilter = basicMatchedPermissions.some((matchedPermission) => {
-        return matchedPermission.caveats.some((c) => {
-            // all matched permissions need to fully fulfill the requested restrictions
-            return requests.every((req) => {
-                return req.caveats.every((caveat) => {
-                    return c.type === caveat.type && c.value === caveat.value
-                })
-            })
-        })
+        // if we have caveats we want to filter by, but the permission does not have
+        // any caveats, then it doesn't match the requirements
+        if (!permission.caveats) return []
+
+        // check if the permission matches every requested caveat
+        const isMatch = caveats.every((requestedCaveat) =>
+            permission.caveats.some(
+                (permissionCaveat) =>
+                    permissionCaveat.type === requestedCaveat.type && permissionCaveat.value === requestedCaveat.value,
+            ),
+        )
+
+        return isMatch ? permission : []
     })
-
-    return fulfillsFilter ? basicMatchedPermissions : []
 }
