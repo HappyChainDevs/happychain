@@ -10,8 +10,6 @@ import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "./HappyTx.sol";
 
-// [LOGGAS] import {console} from "forge-std/Script.sol";
-
 enum CallStatus {
     SUCCESS, // The call succeeded.
     CALL_REVERTED, // The call reverted.

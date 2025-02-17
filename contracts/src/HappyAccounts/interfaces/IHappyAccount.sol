@@ -38,11 +38,9 @@ error InvalidNonce();
 error FutureNonceDuringSimulation();
 
 /**
- * @title IHappyAccount
- * @dev   Interface to be implemented by smart contract accounts conforming to the Happy Account standard.
- *
- *        Accounts can optionally implement the {IHappyPaymaster} interface if they wish to support
- *        paying submitters themselves without relying on external paymasters.
+ * @dev Interface to be implemented by smart contract accounts conforming to the Happy Account standard.
+ *      Accounts can optionally implement the {IHappyPaymaster} interface if they wish to support
+ *      paying submitters themselves without relying on external paymasters.
  */
 interface IHappyAccount {
     /**
