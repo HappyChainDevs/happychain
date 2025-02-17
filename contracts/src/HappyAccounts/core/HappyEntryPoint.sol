@@ -99,6 +99,7 @@ event CallReverted(bytes revertData);
  */
 event ExecutionReverted(bytes revertData);
 
+/// @notice The central contract that handles validation, execution, and fee payment for happyTxs.
 contract HappyEntryPoint is ReentrancyGuardTransient {
     // Must be used to avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
