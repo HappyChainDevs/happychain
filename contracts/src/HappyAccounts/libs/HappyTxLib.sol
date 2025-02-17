@@ -113,48 +113,58 @@ library HappyTxLib {
             inPtr := add(inPtr, 32)
 
             // Handle dynamic fields
-            let callDataOffset := mload(inPtr)
-            let pmDataOffset := mload(add(inPtr, 32))
-            let validatorDataOffset := mload(add(inPtr, 64))
-            let extraDataOffset := mload(add(inPtr, 96))
+            // The dynamic field slots store the offsets from the start of the HappyTx memory slot
+            // Correct required for each field, by moving back 4 slots from the offset
+            let callDataOffset := sub(mload(inPtr), 128)
+            let pmDataOffset := sub(mload(add(inPtr, 32)), 128)
+            let validatorDataOffset := sub(mload(add(inPtr, 64)), 128)
+            let extraDataOffset := sub(mload(add(inPtr, 96)), 128)
 
             let len
-            let lenOffset
+            let offset
 
             // callData
-            lenOffset := add(happyTx, sub(callDataOffset, 0x80))
-            mcopy(outPtr, add(lenOffset, 28), 4)
-            outPtr := add(outPtr, 4)
+            offset := add(happyTx, callDataOffset)
+            len := mload(offset)
 
-            len := mload(lenOffset)
-            mcopy(outPtr, add(lenOffset, 0x20), len)
+            mcopy(outPtr, add(offset, 28), 4)
+            outPtr := add(outPtr, 4)
+            offset := add(offset, 32)
+
+            mcopy(outPtr, offset, len)
             outPtr := add(outPtr, len)
 
             // paymasterData
-            lenOffset := add(happyTx, sub(pmDataOffset, 0x80))
-            mcopy(outPtr, add(lenOffset, 28), 4)
-            outPtr := add(outPtr, 4)
+            offset := add(happyTx, pmDataOffset)
+            len := mload(offset)
 
-            len := mload(lenOffset)
-            mcopy(outPtr, add(lenOffset, 0x20), len)
+            mcopy(outPtr, add(offset, 28), 4)
+            outPtr := add(outPtr, 4)
+            offset := add(offset, 32)
+
+            mcopy(outPtr, offset, len)
             outPtr := add(outPtr, len)
 
             // validatorData
-            lenOffset := add(happyTx, sub(validatorDataOffset, 0x80))
-            mcopy(outPtr, add(lenOffset, 28), 4)
-            outPtr := add(outPtr, 4)
+            offset := add(happyTx, validatorDataOffset)
+            len := mload(offset)
 
-            len := mload(lenOffset)
-            mcopy(outPtr, add(lenOffset, 0x20), len)
+            mcopy(outPtr, add(offset, 28), 4)
+            outPtr := add(outPtr, 4)
+            offset := add(offset, 32)
+
+            mcopy(outPtr, offset, len)
             outPtr := add(outPtr, len)
 
             // extraData
-            lenOffset := add(happyTx, sub(extraDataOffset, 0x80))
-            mcopy(outPtr, add(lenOffset, 28), 4)
-            outPtr := add(outPtr, 4)
+            offset := add(happyTx, extraDataOffset)
+            len := mload(offset)
 
-            len := mload(lenOffset)
-            mcopy(outPtr, add(lenOffset, 0x20), len)
+            mcopy(outPtr, add(offset, 28), 4)
+            outPtr := add(outPtr, 4)
+            offset := add(offset, 32)
+
+            mcopy(outPtr, offset, len)
             outPtr := add(outPtr, len)
         }
     }
