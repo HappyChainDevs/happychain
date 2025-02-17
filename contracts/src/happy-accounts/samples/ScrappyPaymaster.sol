@@ -29,7 +29,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     uint256 private constant STATIC_FIELDS_SIZE = 212;
 
     /// @dev The amount of gas that is added to the payment of the submitter.
-    uint256 private constant PAYMENT_OVERHEAD_GAS = 12345; // TODO: In gas estimation PR
+    uint256 private constant PAYMENT_OVERHEAD_GAS = 9480;
 
     /// @dev The max size of a tx with empty calldata with an empty access list.
     ///      Given RLP encoding, this should usually be significantly less.
