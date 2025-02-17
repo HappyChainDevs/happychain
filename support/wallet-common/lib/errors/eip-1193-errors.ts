@@ -12,12 +12,6 @@ export class GenericProviderRpcError extends Error {
         super(errObj.message)
         this.code = errObj.code
         this.data = errObj.data
-
-        // as the iframe error is thrown from within the iframe
-        // the stack trace is not particularly helpful here.
-        // and just exposes the workings of the internal
-        // events system.
-        this.stack = undefined
     }
 }
 

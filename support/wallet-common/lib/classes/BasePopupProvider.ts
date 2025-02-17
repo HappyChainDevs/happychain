@@ -1,7 +1,7 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
 import { EIP1193ErrorCodes, GenericProviderRpcError, LoginRequiredError } from "../errors"
-import { convertErrorObjectToEIP1193ErrorInstance } from "../errors/utils"
+import { convertEIP1193ErrorObjectToErrorInstance } from "../errors/eip-1193-utils"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
 
@@ -52,7 +52,6 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     protected abstract popupBaseUrl: string
 
     private readonly inFlightRequests: Map<string, InFlightRequest>
-    protected abstract onPopupBlocked(): void
 
     private timer: Timer | null = null
 
@@ -63,6 +62,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
     }
 
     // === PUBLIC INTERFACE ========================================================================
+    protected abstract onPopupBlocked(): void
 
     /**
      * Sends an EIP-1193 request to the provider.
@@ -114,7 +114,7 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         this.inFlightRequests.delete(data.key)
         popup?.close()
 
-        if (data.error) reject(convertErrorObjectToEIP1193ErrorInstance(data.error))
+        if (data.error) reject(convertEIP1193ErrorObjectToErrorInstance(data.error))
         else resolve(data.payload)
     }
 
