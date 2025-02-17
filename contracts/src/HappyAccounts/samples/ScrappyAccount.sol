@@ -162,7 +162,8 @@ contract ScrappyAccount is
             return WrongAccount.selector;
         }
 
-        uint256 owed = (consumedGas + INTRINSIC_GAS) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee) + GAS_OVERHEAD_BUFFER;
+        uint256 owed =
+            (consumedGas + INTRINSIC_GAS) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee) + GAS_OVERHEAD_BUFFER;
         // ^MAGIC VARIABLE TO DEFINE, which must account of for the cost of the code below, see LOGGAS code for computing it
 
         // [LOGGAS] uint256 gasStartOverhead = gasleft();
