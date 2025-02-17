@@ -16,9 +16,8 @@ error WrongTarget();
 error SubmitterFeeTooHigh();
 
 /**
- * @title  IHappyPaymaster
- * @dev    Interface for paymasters that can sponsor gas fees for HappyTx transactions.
- *         Each user has a gas budget that refills over time, with a maximum cap.
+ * @dev Interface for paymasters that can sponsor gas fees for HappyTx transactions.
+ *      Each user has a gas budget that refills over time, with a maximum cap.
  */
 interface IHappyPaymaster {
     /**
