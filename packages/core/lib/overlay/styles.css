@@ -73,6 +73,7 @@
     .dialog-content {
         max-width: 400px;
         padding: 1rem;
+        line-height: 1.25rem;
         font-size: 1.25rem;
         display: flex;
         flex-direction: column;

@@ -16,12 +16,3 @@ export type EIP1193ErrorObject = {
     message: string
     data?: unknown
 }
-
-/**
- * Error interface from {@link https://eips.ethereum.org/EIPS/eip-1193#errors}.
- */
-export interface IProviderRpcError extends Error {
-    message: string
-    code: ProviderRpcErrorCode
-    data?: unknown
-}

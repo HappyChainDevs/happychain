@@ -11,6 +11,7 @@ import {
     type ProviderMsgsFromIframe,
 } from "@happy.tech/wallet-common"
 import { config } from "../config"
+import { emitSetDisplayError } from "./initialize"
 import type { EIP1193ConnectionHandler, HappyProviderConfig } from "./interface"
 
 type InFlightCheck = {
@@ -70,7 +71,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
     }
 
     protected onPopupBlocked() {
-        this.config.msgBus.emit(Msgs.SetOverlayError, OverlayErrorCode.PopupBlocked)
+        emitSetDisplayError(OverlayErrorCode.PopupBlocked)
     }
 
     protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {

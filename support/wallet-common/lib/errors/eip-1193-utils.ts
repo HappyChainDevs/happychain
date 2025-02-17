@@ -19,7 +19,7 @@ import {
 import type { EIP1193ErrorObject } from "./eip-1193-interfaces"
 
 /**
- * given (at minimum) the error code, this creates an error object with a standard description
+ * Given (at minimum) the error code, this creates an error object with a standard description.
  *
  * @param code number (eip 1193 error code)
  * @param data optional data to enhance debugging
@@ -37,7 +37,7 @@ export function getEIP1193ErrorObjectFromCode(code: number, data?: string): EIP1
             return { code, message: "The Provider is disconnected from all chains.", data }
         case EIP1193ErrorCodes.ChainDisconnected:
             return { code, message: "The Provider is not connected to the requested chain.", data }
-        case 4902:
+        case EIP1193ErrorCodes.SwitchChainError:
             return { code, message: "An error occurred when attempting to switch chain.", data }
         default:
             return { code: -1, message: "An unknown RPC error occurred.", data }
@@ -75,7 +75,10 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
     }
 
     let data = ""
-    if (!error || typeof error !== "object") {
+    if (typeof error === "string") {
+        data = error
+    } else if (!error || typeof error !== "object") {
+        // empty - skip
     } else if ("details" in error && typeof error.details === "string") {
         data = error.details
     } else if ("shortMessage" in error && typeof error.shortMessage === "string") {
@@ -97,7 +100,7 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
  * @param error serializable error object
  * @returns EIP1193 Error
  */
-export function convertErrorObjectToEIP1193ErrorInstance(error: EIP1193ErrorObject) {
+export function convertEIP1193ErrorObjectToErrorInstance(error: EIP1193ErrorObject) {
     switch (error.code) {
         case EIP1193ErrorCodes.UserRejectedRequest:
             return new EIP1193UserRejectedRequestError(error as EIP1193ErrorObject)

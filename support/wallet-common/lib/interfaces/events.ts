@@ -48,9 +48,7 @@ export enum Msgs {
     /** Informs the SDK that the iframe has loaded and initialized. */
     IframeInit = "iframe-init",
 
-    /**
-     * When sent from the iframe, this is received by the app and the overlay is displayed.
-     */
+    /** When sent from the iframe, this is received by the app and the overlay is displayed. */
     DisplayOverlayError = "display-overlay-error",
 
     /** Instructs the SDK to resize the resize the iframe to toggle the wallet modal. */
