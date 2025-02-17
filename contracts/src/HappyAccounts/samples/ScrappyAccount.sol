@@ -51,8 +51,8 @@ contract ScrappyAccount is
     uint256 private constant GAS_OVERHEAD_BUFFER = 12345; // TODO
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
     bytes4 private constant ERC1271_INTERFACE_ID = 0x1626ba7e;
-    bytes4 private constant IHAPPYACCOUNT_INTERFACE_ID = 0x3554a333;
-    bytes4 private constant IHAPPYPAYMASTER_INTERFACE_ID = 0x24abcf40;
+    bytes4 private constant IHAPPYACCOUNT_INTERFACE_ID = 0x90ab9eae;
+    bytes4 private constant IHAPPYPAYMASTER_INTERFACE_ID = 0xa79b0c0c;
 
     /// @dev The deterministic EntryPoint contract
     address private immutable ENTRYPOINT;

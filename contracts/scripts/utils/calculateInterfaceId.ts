@@ -13,16 +13,23 @@ function calculateInterfaceId(functionSignatures: string[]): string {
     return "0x" + interfaceId.toString(16).padStart(8, "0")
 }
 
+// HappyTx struct tuple type for function signatures
+const happyTxType =
+    "tuple(address account,uint32 gasLimit,uint32 executeGasLimit,address dest,address paymaster,uint256 value,uint192 nonceTrack,uint64 nonceValue,uint256 maxFeePerGas,int256 submitterFee,bytes callData,bytes paymasterData,bytes validatorData)"
+
 // IHappyAccount interface functions
 const iHappyAccountFunctions = [
-    "validate(HappyTx)",
-    "execute(HappyTx)",
+    `validate(${happyTxType})`,
+    `execute(${happyTxType})`,
     "isValidSignature(bytes32,bytes)",
     "supportsInterface(bytes4)",
 ]
 
 // IHappyPaymaster interface functions
-const iHappyPaymasterFunctions = ["payout(HappyTx)"]
+const iHappyPaymasterFunctions = [`payout(${happyTxType})`]
 
 console.log("IHappyAccount interface ID:", calculateInterfaceId(iHappyAccountFunctions))
 console.log("IHappyPaymaster interface ID:", calculateInterfaceId(iHappyPaymasterFunctions))
+
+// IHappyAccount interface ID: 0x90ab9eae
+// IHappyPaymaster interface ID: 0xa79b0c0c
