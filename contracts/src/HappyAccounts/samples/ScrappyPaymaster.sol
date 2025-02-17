@@ -25,9 +25,12 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     ///      storing the lengths of the four dynamic fields
     uint256 private constant STATIC_FIELDS_SIZE = 212;
 
+    /// @dev The amount of gas that is added to the payment of the submitter.
+    uint256 private constant PAYMENT_OVERHEAD_GAS = 12345; // TODO: In gas estimation PR
+
     /// @dev 280 is the max size of a tx with empty calldata with an empty access list.
     ///      Given RLP encoding, this should be significantly less.
-    uint256 private constant MAX_TX_SIZE = 280; // TODO
+    uint256 private constant MAX_TX_SIZE = 280;
 
     /// @dev The deterministic EntryPoint contract
     address public immutable ENTRYPOINT;
@@ -66,6 +69,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // EXTERNAL FUNCTIONS
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
+        uint256 gasStart = gasleft();
         // forgefmt: disable-next-item
         uint256 totalSize = MAX_TX_SIZE
             + STATIC_FIELDS_SIZE
@@ -80,12 +84,17 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
             return SubmitterFeeTooHigh.selector;
         }
 
-        uint256 owed = (consumedGas) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
+        uint256 owed = (consumedGas) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee) + PAYMENT_OVERHEAD_GAS;
+        // ^MAGIC VARIABLE TO DEFINE, which must account of for the cost of the code below, see LOGGAS code for computing it
 
-        assembly {
-            // Intentionally ignore return value
-            pop(call(gas(), origin(), owed, 0, 0, 0, 0))
-        }
+        // [LOGGAS] uint256 gasStartOverhead = gasleft();
+        // [LOGGAS] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
+        owed += gasleft() - gasStart;
+
+        (payable(tx.origin).call{value: owed}(""));
+
+        // [LOGGAS] console.log("PAYMENT_OVERHEAD_GAS", gasleft() - gasStartOverhead);
+
         return 0;
     }
 
