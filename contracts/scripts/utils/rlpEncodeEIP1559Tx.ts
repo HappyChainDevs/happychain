@@ -6,6 +6,8 @@ import {
     type TransactionSerializableGeneric,
     assertTransactionEIP1559,
     concatHex,
+    maxUint64,
+    maxUint256,
     serializeAccessList,
     toHex,
     toRlp,
@@ -13,30 +15,27 @@ import {
 } from "viem"
 
 // Create a dummy EIP1559 transaction with maximum values for all fields
-const MAX_UINT256Hex =
+const MAX_BYTES32 =
     "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-
-const MAX_UINT256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
-const MAX_UINT64 = 18446744073709551615n
 
 const emptyAccessList: AccessList = []
 
 const dummyTransaction: TransactionSerializableEIP1559 = {
     chainId: 111555111,
     nonce: 9007199254740991,
-    maxPriorityFeePerGas: BigInt(MAX_UINT256),
-    maxFeePerGas: BigInt(MAX_UINT256),
-    gas: BigInt(MAX_UINT64),
+    maxPriorityFeePerGas: maxUint256,
+    maxFeePerGas: maxUint256,
+    gas: maxUint64,
     to: "0xDF55Fd47814C47375FA731dABFF5C0aB54820a61",
-    value: BigInt(MAX_UINT256),
+    value: maxUint256,
     data: "0x",
     accessList: emptyAccessList,
 }
 
 // Dummy signature with maximum values
 const dummySignature: Signature = {
-    r: MAX_UINT256Hex,
-    s: MAX_UINT256Hex,
+    r: MAX_BYTES32,
+    s: MAX_BYTES32,
     v: 1n,
 }
 
@@ -89,6 +88,7 @@ function serializeTransactionEIP1559(
         ...toYParitySignatureArray(transaction, signature),
     ]
 
+    // @ts-ignore This works fine
     return concatHex(["0x02", toRlp(serializedTransaction)])
 }
 
