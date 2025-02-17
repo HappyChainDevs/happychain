@@ -243,6 +243,18 @@ describe("PermissionsService", () => {
                     expect(getPermissions(appURL, "eth_accounts").length).toBe(0)
                 })
 
+                it("grant multiple permissions", () => {
+                    grantPermissions(appURL, { test_permission: { target: "0x123" } })
+                    grantPermissions(appURL, { test_permission: { value: "0x4567" } })
+
+                    const granted = getPermissions(appURL, {
+                        test_permission: { target: "0x123", value: "0x4567" },
+                    })
+
+                    expect(granted.length).toBe(1)
+                    expect(granted[0].caveats.length).toBe(2)
+                })
+
                 it("returns all permissions granted to app (without caveats)", () => {
                     expect(getAllPermissions(appURL).length).toBe(0)
 
@@ -257,8 +269,9 @@ describe("PermissionsService", () => {
                     grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x1234" } })
                     grantPermissions(appURL, { [PermissionNames.SESSION_KEY]: { target: "0x4567" } })
 
-                    expect(getPermissions(appURL, PermissionNames.SESSION_KEY).length).toBe(1)
-                    expect(getPermissions(appURL, PermissionNames.SESSION_KEY)[0].caveats.length).toBe(2)
+                    const granted = getPermissions(appURL, PermissionNames.SESSION_KEY)
+                    expect(granted.length).toBe(1)
+                    expect(granted[0].caveats.length).toBe(2)
                 })
 
                 it("returns all permissions granted to app (filtering caveats)", () => {
