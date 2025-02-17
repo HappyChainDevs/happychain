@@ -86,7 +86,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
             return SubmitterFeeTooHigh.selector;
         }
 
-        uint256 owed = consumedGas * happyTx.maxFeePerGas + uint256(happyTx.submitterFee) + PAYMENT_OVERHEAD_GAS;
+        uint256 owed = (consumedGas + PAYMENT_OVERHEAD_GAS) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
         // ^MAGIC VARIABLE TO DEFINE, which must account of for the cost of the code below, see LOGGAS code for computing it
 
         // [LOGGAS_INTERNAL] uint256 gasStartOverhead = gasleft();
