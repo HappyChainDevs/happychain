@@ -2,9 +2,8 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title HappyTx
- * @dev Represents a Happy Transaction - a transaction made by a Happy Smart Account
- * that can be submitted to the chain by a permissionless submitter.
+ * @notice Represents a Happy Transaction - a transaction made by a Happy Smart Account
+ *         that can be submitted to the chain by a permissionless submitter.
  * The struct is arranged to optimize gas usage by ensuring efficient packing in storage.
  *
  * Slot 0:  |-pad(4)-|-execGasLimit(4)-|-gasLimit(4)-|-----------account(20)------------|

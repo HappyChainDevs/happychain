@@ -11,8 +11,9 @@ import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "../core/HappyTx.sol";
 
 /**
- * @title ScrappyPaymaster
  * @notice An example paymaster contract implementing the IHappyPaymaster interface.
+ *         This paymaster sponsors any call, as long as its submitter fee is not too high
+ *         (computed on the basis of a max gas cost per byte of calldata, configurable at deploy time).
  */
 contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable {
     using ECDSA for bytes32;
@@ -28,11 +29,11 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     /// @dev The amount of gas that is added to the payment of the submitter.
     uint256 private constant PAYMENT_OVERHEAD_GAS = 12345; // TODO: In gas estimation PR
 
-    /// @dev 280 is the max size of a tx with empty calldata with an empty access list.
-    ///      Given RLP encoding, this should be significantly less.
+    /// @dev The max size of a tx with empty calldata with an empty access list.
+    ///      Given RLP encoding, this should usually be significantly less.
     uint256 private constant MAX_TX_SIZE = 280;
 
-    /// @dev The deterministic EntryPoint contract
+    /// @dev The allowed EntryPoint contract
     address public immutable ENTRYPOINT;
 
     /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte of data.
@@ -57,7 +58,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // CONSTRUCTOR
 
     /**
-     * @param entryPoint The deterministic EntryPoint contract
      * @param submitterTipPerByte The maximum fee per byte that the submitter is willing to pay
      */
     constructor(address entryPoint, uint256 submitterTipPerByte, address owner) Ownable(owner) {
@@ -84,7 +84,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
             return SubmitterFeeTooHigh.selector;
         }
 
-        uint256 owed = (consumedGas) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee) + PAYMENT_OVERHEAD_GAS;
+        uint256 owed = consumedGas * happyTx.maxFeePerGas + uint256(happyTx.submitterFee) + PAYMENT_OVERHEAD_GAS;
         // ^MAGIC VARIABLE TO DEFINE, which must account of for the cost of the code below, see LOGGAS code for computing it
 
         // [LOGGAS] uint256 gasStartOverhead = gasleft();
@@ -105,10 +105,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
         emit Received(msg.sender, msg.value);
     }
 
-    /**
-     * @notice Allows the owner to withdraw a specified amount of funds from the paymaster
-     * @dev    Only callable by the owner. Reverts if amount exceeds contract balance
-     */
+    /// @notice Allows the owner to withdraw a specified amount of funds from the paymaster, reverting if failing to transfer.
     function withdraw(address to, uint256 amount) external onlyOwner {
         if (amount > address(this).balance) revert("Insufficient balance");
         (bool success,) = payable(to).call{value: amount}("");
