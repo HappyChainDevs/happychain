@@ -9,6 +9,7 @@ import { Button } from "#src/components/primitives/button/Button"
 import { cx } from "class-variance-authority"
 import { FieldInput } from "#src/components/primitives/input/FieldInput"
 import { Input } from "#src/components/primitives/input/Input"
+import { recipeTextInput } from "#src/components/primitives/input/variants.ts"
 import { recipePositioner } from "#src/components/primitives/popover/variants"
 import { useERC20Balance } from "#src/hooks/useERC20Balance"
 import { importTokensDialogVisibilityAtom } from "#src/state/interfaceState"
@@ -202,13 +203,12 @@ export const ImportTokensDialog = () => {
                             </Field.Label>
                             <textarea
                                 id="token-decimal"
-                                name="decimals"
+                                name="token-decimals"
                                 readOnly
                                 className={cx(
-                                    "w-full h-[40px] text-start px-3 py-2 text-neutral-12/90 resize-none rounded-md text-base-content",
-                                    "bg-base-100 border shadow-sm",
-                                    "!appearance-none focus:ring-0 focus:outline-none caret-transparent",
+                                    "h-[40px] !appearance-none caret-transparent resize-none border",
                                     !isValidAddress && "opacity-20 cursor-not-allowed",
+                                    `${recipeTextInput({ scale: "default" })}`,
                                 )}
                                 defaultValue={!isValidAddress ? "" : decimals !== undefined ? decimals : ""}
                             />

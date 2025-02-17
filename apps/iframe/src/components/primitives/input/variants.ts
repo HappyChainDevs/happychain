@@ -12,7 +12,7 @@ export const recipeTextInput = cva(
         // User activity: focus
         "focus:outline-none focus:ring-4 focus:ring-opacity-25",
         // Behaviour: disabled
-        "[&:is([aria-disabled=true],:disabled)]:opacity-60 [&:is([aria-disabled=true],:disabled)]:cursor-not-allowed",
+        "[&:is([aria-disabled=true],:disabled)]:opacity-20 [&:is([aria-disabled=true],:disabled)]:cursor-not-allowed",
         // State: invalid
         "[&:is(:invalid,[aria-invalid=true]):not(:placeholder-shown),[data-novalidation]]:border-negative-9",
     ],
