@@ -32,11 +32,3 @@ happy-accounts/
     └── ScrappyPaymaster.sol   # Reference paymaster implementation, for sponsoring happyTxs.
                                # Reference paymaster implementation, for sponsoring happyTxs, singleton contract.
 ```
-
-### Core Contracts
-
-- `HappyEntryPoint.sol`: The central contract that processes all HappyAccount transactions. Handles validation, execution, and fee payment in a streamlined manner.
-
-### Libraries
-
-- `HappyTxLib.sol`: Utility library for encoding and decoding HappyTx structs, with efficient gas usage and minimal overhead.
