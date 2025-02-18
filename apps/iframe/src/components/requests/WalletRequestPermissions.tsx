@@ -24,11 +24,11 @@ export const WalletRequestPermissions = ({
     const requestingMultiplePermissions = params.length > 1
     return (
         <Layout
-            labelHeader={`Grant permission${requestingMultiplePermissions && "s"}`}
+            labelHeader={`Grant permission${requestingMultiplePermissions ? "s" : ""}`}
             headline={
                 <>
                     <span className="text-primary">{appURL}</span> is requesting new permission
-                    {requestingMultiplePermissions && "s"}
+                    {requestingMultiplePermissions ? "s" : ""}
                 </>
             }
             description={
@@ -38,7 +38,7 @@ export const WalletRequestPermissions = ({
             }
             actions={{
                 accept: {
-                    children: `Grant permission${requestingMultiplePermissions && "s"}`,
+                    children: `Grant permission${requestingMultiplePermissions ? "s" : ""}`,
                     onClick: () => accept({ method, params }),
                 },
                 reject: {
