@@ -75,11 +75,16 @@ contract DeployHappyAAContracts is BaseDeployScript {
 
         // -----------------------------------------------------------------------------------------
 
-        if (isLocal) {
-            // In local mode, fund the paymaster with some gas tokens.
-            payable(scrappyPaymaster).transfer(PM_DEPOSIT);
-        }
+        // if (isLocal) { // TODO: This caused issues and were taking too long to debug, so commented it out for now
+        //     // In local mode, fund the paymaster with some gas tokens.
+        //     payable(scrappyPaymaster).transfer(PM_DEPOSIT);
+        // }
 
         // -----------------------------------------------------------------------------------------
+    }
+
+    /// @dev Deployment for tests. Avoids broadcasting transactions, allowing use of vm.prank().
+    function deployForTests() external {
+        deploy();
     }
 }
