@@ -155,42 +155,29 @@ debug-logging-off:
 
 ####################################################################################################
 # Reports
-# TODO: Not really reqd rn :p
-# NOTE: These reports require an active local Ethereum node (Anvil) to be running.
-# Before running any of these targets, start Anvil using:
-#   make anvil
+# NOTE: These reports require an active local Ethereum node (Anvil) to be running. (#TODO: Not really reqd rn)
 
 happy-aa-gas-report: ## Generates a gas report for the happy-aa contracts
-	@make happyEntryPoint-gas
-	@make happyAccountPayout-gas
-	@make happyPaymasterPayout-gas
-	@make happyAccountExecute-gas
+	@make entrypoint-submit-gas
+	@make internal-functions-gas
 .PHONY: happy-aa-gas-report
 
-happyEntryPoint-gas: ## Generates a gas report for the happy entrypoint contract.
+entrypoint-submit-gas: ## Generates a gas report for the HappyEntrypoint's submit function.
 	@make gas-logging-on
+	@echo "Running submit function estimation tests..."
 	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForSelfPayingTx --isolate | awk '/HappyEntryPoint Gas Report For Self-Paying Transactions/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
-	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForPaymasterSponsoredTx --isolate | awk '/HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions`/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForPaymasterSponsoredTx --isolate | awk '/HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@make gas-logging-off
-.PHONY: happyEntryPoint-gas
+.PHONY: entrypoint-submit-gas
 
-happyAccountExecute-gas: ## Generates a gas report for the happy account execute contract.
+internal-functions-gas: # Generates gas reports for the sample implementations' execute and payout functions.
 	@make internal-gas-logging-on
+	@echo "Running payout and execute function gas estimation tests..."
 	@forge test -vvv --match-test testEstimateScrappyAccountExecuteGas --isolate | awk '/ScrappyAccount execute gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
-	@make internal-gas-logging-off
-.PHONY: happyAccountExecute-gas
-
-happyAccountPayout-gas: ## Generates a gas report for the happy account payout contract.
-	@make internal-gas-logging-on
 	@forge test -vvv --match-test testEstimateScrappyAccountPayoutGas --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
-	@make internal-gas-logging-off
-.PHONY: happyAccountPayout-gas
-
-happyPaymasterPayout-gas: ## Generates a gas report for the happy paymaster payout contract.
-	@make internal-gas-logging-on
 	@forge test -vvv --match-test testEstimateScrappyPaymasterPayoutGas --isolate | awk '/ScrappyPaymaster payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@make internal-gas-logging-off
-.PHONY: happyPaymasterPayout-gas
+.PHONY: internal-functions-gas
 
 paymaster-gas: ## Generates a gas report for the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' > paymaster_gas_report.txt
