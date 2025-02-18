@@ -101,6 +101,10 @@ test-scrappyAccountFactory:
 	forge test --match-contract ScrappyAccountFactoryTest -vvv
 .PHONY: test-scrappyAccountFactory
 
+test-scrappyAccount-upgradeability:
+	forge test --match-test testUpgradeImplForSmartAccount -vvv
+.PHONY: test-scrappyAccount-upgradeability
+
 ####################################################################################################
 # Gas Logging
 
