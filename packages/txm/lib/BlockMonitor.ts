@@ -16,42 +16,40 @@ export class BlockMonitor {
     private txmgr: TransactionManager
     private unwatch: (() => void) | undefined
     private blockTimeout: ReturnType<typeof setTimeout> | undefined
-  
+
     constructor(_transactionManager: TransactionManager) {
-      this.txmgr = _transactionManager
+        this.txmgr = _transactionManager
     }
-  
+
     async start() {
-      this.scheduleTimeout()
-      this.unwatch = this.txmgr.viemClient.watchBlocks({
-        onBlock: this.onNewBlock.bind(this),
-        ...(this.txmgr.transportProtocol === "http"
-          ? { pollingInterval: this.txmgr.pollingInterval }
-          : {}),
-        onError: (error) => {
-          console.error("Error watching blocks", error)
-          this.resetWatch()
-        },
-      })
+        this.scheduleTimeout()
+        this.unwatch = this.txmgr.viemClient.watchBlocks({
+            onBlock: this.onNewBlock.bind(this),
+            ...(this.txmgr.transportProtocol === "http" ? { pollingInterval: this.txmgr.pollingInterval } : {}),
+            onError: (error) => {
+                console.error("Error watching blocks", error)
+                this.resetWatch()
+            },
+        })
     }
-  
+
     private onNewBlock(block: LatestBlock) {
-      if (this.blockTimeout) clearTimeout(this.blockTimeout)
-      eventBus.emit(Topics.NewBlock, block)
-      this.scheduleTimeout()
+        if (this.blockTimeout) clearTimeout(this.blockTimeout)
+        eventBus.emit(Topics.NewBlock, block)
+        this.scheduleTimeout()
     }
-  
+
     private scheduleTimeout() {
-      this.blockTimeout = setTimeout(() => {
-        console.log("Timeout reached. Resetting watch.")
-        this.resetWatch()
-      }, this.txmgr.blockInactivityTimeout)
+        this.blockTimeout = setTimeout(() => {
+            console.log("Timeout reached. Resetting watch.")
+            this.resetWatch()
+        }, this.txmgr.blockInactivityTimeout)
     }
-  
+
     private resetWatch() {
-      if (this.unwatch) {
-        this.unwatch()
-      }
-      this.start()
+        if (this.unwatch) {
+            this.unwatch()
+        }
+        this.start()
     }
-  }
+}
