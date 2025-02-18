@@ -12,6 +12,25 @@ HappyEntryPoint Gas Report For Self-Paying Transactions
   excessivelySafeCall  (payout) overhead:  12035
      TxGas used:  89881
 
+HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
+  
+1. First Transaction (Cold + Uninitialized Storage)
+   ----------------------------------------------------
+  excessivelySafeCall (execute) overhead:  5382
+  excessivelySafeCall  (payout) overhead:  18303
+     Tx Gas used:  147515
+  
+2. Second Transaction (Cold + Initialized Storage)
+   ----------------------------------------------------
+  excessivelySafeCall (execute) overhead:  5382
+  excessivelySafeCall  (payout) overhead:  18303
+     TxGas used:  96215
+
+ScrappyAccount execute gas usage
+   ----------------------------------------------------
+  execute function gas usage:  49506
+  execute output.gas:  49497
+
 ScrappyAccount payout gas usage
    ----------------------------------------------------
   PAYMENT_OVERHEAD_GAS:  9480
@@ -19,9 +38,4 @@ ScrappyAccount payout gas usage
 ScrappyPaymaster payout gas usage
    ----------------------------------------------------
   PAYMENT_OVERHEAD_GAS 9480
-
-ScrappyAccount execute gas usage
-   ----------------------------------------------------
-  execute function gas usage:  49506
-  execute output.gas:  49497
 
