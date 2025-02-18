@@ -70,9 +70,7 @@ export const EthRequestAccounts = ({
                 </TabContent>
             </Tabs>
             <SectionBlock>
-                <p className="font-bold pb-8 text-center text-sm">
-                    You can revoke granted permissions from your wallet whenever you want.
-                </p>
+                <p className="font-bold pb-8 text-center text-sm">You can revoke this permission from the wallet.</p>
             </SectionBlock>
         </Layout>
     )
