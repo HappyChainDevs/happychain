@@ -119,7 +119,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             return user ? addWatchedAsset(user.address, request.payload.params) : false
         }
 
-        case HappyMethodNames.USE_ABI: {
+        case HappyMethodNames.LOAD_ABI: {
             return user ? loadAbiForUser(user.address, request.payload.params) : false
         }
 
