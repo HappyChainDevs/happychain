@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import {HappyTx} from "../core/HappyTx.sol";
 
-/// @notice Utility library for encoding and decoding HappyTx structs with efficient gas usage and minimal overhead.
 library HappyTxLib {
     /// @notice Selector returned by {decode} when unable to properly decode a happyTx.
     error MalformedHappyTx();
@@ -47,7 +46,6 @@ library HappyTxLib {
         // Calculate total size needed for the encoded bytes
         uint256 totalSize = 196 + (4 + happyTx.callData.length) + (4 + happyTx.paymasterData.length)
             + (4 + happyTx.validatorData.length) + (4 + happyTx.extraData.length);
-
         assembly {
             // Encoded tx will live at next free memory address.
             result := mload(0x40)
@@ -111,58 +109,51 @@ library HappyTxLib {
             inPtr := add(inPtr, 32)
 
             // Handle dynamic fields
-            // The dynamic field slots store the offsets from the start of the HappyTx memory slot
-            // Correct required for each field, by moving back 4 slots from the offset
-            let callDataOffset := sub(mload(inPtr), 128)
-            let pmDataOffset := sub(mload(add(inPtr, 32)), 128)
-            let validatorDataOffset := sub(mload(add(inPtr, 64)), 128)
-            let extraDataOffset := sub(mload(add(inPtr, 96)), 128)
+            let callDataOffset := mload(inPtr)
+            let pmDataOffset := mload(add(inPtr, 32))
+            let validatorDataOffset := mload(add(inPtr, 64))
+            let extraDataOffset := mload(add(inPtr, 96))
 
             let len
-            let offset
 
             // callData
-            offset := add(happyTx, callDataOffset)
-            len := mload(offset)
+            len := mload(callDataOffset)
 
-            mcopy(outPtr, add(offset, 28), 4)
+            mcopy(outPtr, add(callDataOffset, 28), 4)
             outPtr := add(outPtr, 4)
-            offset := add(offset, 32)
+            callDataOffset := add(callDataOffset, 32)
 
-            mcopy(outPtr, offset, len)
+            mcopy(outPtr, callDataOffset, len)
             outPtr := add(outPtr, len)
 
             // paymasterData
-            offset := add(happyTx, pmDataOffset)
-            len := mload(offset)
+            len := mload(pmDataOffset)
 
-            mcopy(outPtr, add(offset, 28), 4)
+            mcopy(outPtr, add(pmDataOffset, 28), 4)
             outPtr := add(outPtr, 4)
-            offset := add(offset, 32)
+            pmDataOffset := add(pmDataOffset, 32)
 
-            mcopy(outPtr, offset, len)
+            mcopy(outPtr, pmDataOffset, len)
             outPtr := add(outPtr, len)
 
             // validatorData
-            offset := add(happyTx, validatorDataOffset)
-            len := mload(offset)
+            len := mload(validatorDataOffset)
 
-            mcopy(outPtr, add(offset, 28), 4)
+            mcopy(outPtr, add(validatorDataOffset, 28), 4)
             outPtr := add(outPtr, 4)
-            offset := add(offset, 32)
+            validatorDataOffset := add(validatorDataOffset, 32)
 
-            mcopy(outPtr, offset, len)
+            mcopy(outPtr, validatorDataOffset, len)
             outPtr := add(outPtr, len)
 
             // extraData
-            offset := add(happyTx, extraDataOffset)
-            len := mload(offset)
+            len := mload(extraDataOffset)
 
-            mcopy(outPtr, add(offset, 28), 4)
+            mcopy(outPtr, add(extraDataOffset, 28), 4)
             outPtr := add(outPtr, 4)
-            offset := add(offset, 32)
+            extraDataOffset := add(extraDataOffset, 32)
 
-            mcopy(outPtr, offset, len)
+            mcopy(outPtr, extraDataOffset, len)
             outPtr := add(outPtr, len)
         }
     }
@@ -172,7 +163,7 @@ library HappyTxLib {
      * @param encodedHappyTx The encoded happyTx bytes
      * @return result The decoded HappyTx struct
      */
-    function decode(bytes calldata encodedHappyTx) public pure returns (HappyTx memory result) {
+    function decode(bytes calldata encodedHappyTx) internal pure returns (HappyTx memory result) {
         // First validate minimum length (196 bytes for the static fields)
         if (encodedHappyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
 

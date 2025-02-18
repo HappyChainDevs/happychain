@@ -10,7 +10,7 @@ contract HappyTxLibTest is Test {
     using HappyTxLib for bytes;
     using HappyTxLib for HappyTx;
 
-    /// @dev Tests for {HappyTxLib.encode(happyTx);}
+    /// @dev Tests for {HappyTxLib.encode}
     function testEncodeEmptyDynamicFields() public pure {
         HappyTx memory inputTx = HappyTx({
             account: 0x1234567890123456789012345678901234567890,
@@ -86,12 +86,12 @@ contract HappyTxLibTest is Test {
         assertEq(encoded, expected);
     }
 
-    /// @dev Tests for {HappyTxLib.decode(happyTx);}
-    function testDecodeEmptyDynamicFields() public pure {
+    /// @dev Tests for {HappyTxLib.decode}
+    function testDecodeEmptyDynamicFields() public view {
         bytes memory encoded =
             hex"1234567890123456789012345678901234567890000f4240000c3500234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000000000000"; // solhint-disable-line max-line-length
 
-        HappyTx memory decoded = encoded.decode();
+        HappyTx memory decoded = this.decode(encoded);
 
         assertEq(decoded.account, address(0x1234567890123456789012345678901234567890));
         assertEq(decoded.gasLimit, 1000000);
@@ -109,11 +109,11 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.extraData, "");
     }
 
-    function testDecodeSmallDynamicFields() public pure {
+    function testDecodeSmallDynamicFields() public view {
         bytes memory encoded =
             hex"1234567890123456789012345678901234567890000f4240000c3500234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e100000000021234000000025678000000029abc00000002def0"; // solhint-disable-line max-line-length
 
-        HappyTx memory decoded = encoded.decode();
+        HappyTx memory decoded = this.decode(encoded);
 
         assertEq(decoded.account, address(0x1234567890123456789012345678901234567890));
         assertEq(decoded.gasLimit, 1000000);
@@ -131,11 +131,11 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.extraData, hex"def0");
     }
 
-    function testDecodeLongDynamicFields() public pure {
+    function testDecodeLongDynamicFields() public view {
         bytes memory encoded =
             hex"1234567890123456789012345678901234567890000f4240000c3500234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e1000000004440c10f190000000000000000000000004bc8e81ad3be83276837f184138fc96770c1429700000000000000000000000000000000000000000000000000038d7ea4c680000000003078907890789078907890789078907890789078907890789078907890789078907890789078907890789078907890789000000041827a29d9e7e5e37adc8ae5ead7993f7d354da82a35a05da3fef21d133e22082f376916126bfece3e226c3a9bfb55354783deb43b58989d0a29ec53b4f36560cc1b00000022def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0"; // solhint-disable-line max-line-length
 
-        HappyTx memory decoded = encoded.decode();
+        HappyTx memory decoded = this.decode(encoded);
 
         assertEq(decoded.account, address(0x1234567890123456789012345678901234567890));
         assertEq(decoded.gasLimit, 1000000);
@@ -162,8 +162,8 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.extraData, hex"def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0");
     }
 
-    /// @dev Tests for {HappyTxLib.encode(happyTx)} <-> {HappyTxLib.decode(happyTx)}
-    function testCombinedEmpty() public pure {
+    /// @dev Tests for {HappyTxLib.encode} <-> {HappyTxLib.decode}
+    function testCombinedEmpty() public view {
         HappyTx memory inputTx = HappyTx({
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
@@ -182,7 +182,7 @@ contract HappyTxLibTest is Test {
         });
 
         bytes memory encoded = inputTx.encode();
-        HappyTx memory decoded = encoded.decode();
+        HappyTx memory decoded = this.decode(encoded);
 
         assertEq(decoded.account, inputTx.account);
         assertEq(decoded.gasLimit, inputTx.gasLimit);
@@ -200,7 +200,7 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.extraData, inputTx.extraData);
     }
 
-    function testCombinedSmall() public pure {
+    function testCombinedSmall() public view {
         HappyTx memory inputTx = HappyTx({
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
@@ -219,7 +219,7 @@ contract HappyTxLibTest is Test {
         });
 
         bytes memory encoded = inputTx.encode();
-        HappyTx memory decoded = encoded.decode();
+        HappyTx memory decoded = this.decode(encoded);
 
         assertEq(decoded.account, inputTx.account);
         assertEq(decoded.gasLimit, inputTx.gasLimit);
@@ -237,7 +237,7 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.extraData, inputTx.extraData);
     }
 
-    function testCombinedLong() public pure {
+    function testCombinedLong() public view {
         HappyTx memory inputTx = HappyTx({
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
@@ -256,7 +256,7 @@ contract HappyTxLibTest is Test {
         });
 
         bytes memory encoded = inputTx.encode();
-        HappyTx memory decoded = encoded.decode();
+        HappyTx memory decoded = this.decode(encoded);
 
         assertEq(decoded.account, inputTx.account);
         assertEq(decoded.gasLimit, inputTx.gasLimit);
@@ -272,5 +272,9 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.paymasterData, inputTx.paymasterData);
         assertEq(decoded.validatorData, inputTx.validatorData);
         assertEq(decoded.extraData, inputTx.extraData);
+    }
+
+    function decode(bytes calldata encodedHappyTx) external pure returns (HappyTx memory) {
+        return HappyTxLib.decode(encodedHappyTx);
     }
 }
