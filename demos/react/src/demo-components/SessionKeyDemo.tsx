@@ -104,7 +104,10 @@ const SessionKeyDemo = () => {
                 Counter ++
             </button>
 
-            <div className="col-span-2 text-center text-4xl font-bold mt-2">{counter.toString()}</div>
+            <div className="col-span-2 text-center mt-2">
+                <pre className="text-sm font-semibold">Current counter value</pre>
+                <div className="text-4xl font-bold">{counter.toString()}</div>
+            </div>
         </div>
     )
 }
