@@ -5,6 +5,7 @@ import {
     Layout,
     RequestTabsValues,
     SectionBlock,
+    SectionTitle,
     SubsectionBlock,
     SubsectionContent,
     SubsectionTitle,
@@ -20,13 +21,14 @@ export const WalletRequestPermissions = ({
     accept,
 }: RequestConfirmationProps<"wallet_requestPermissions">) => {
     const appURL = getAppURL()
-
+    const requestingMultiplePermissions = params.length > 1
     return (
         <Layout
-            labelHeader="Grant permission"
+            labelHeader={`Grant permission${requestingMultiplePermissions && "s"}`}
             headline={
                 <>
-                    <span className="text-primary">{appURL}</span> is requesting new permissions
+                    <span className="text-primary">{appURL}</span> is requesting new permission
+                    {requestingMultiplePermissions && "s"}
                 </>
             }
             description={
@@ -36,7 +38,7 @@ export const WalletRequestPermissions = ({
             }
             actions={{
                 accept: {
-                    children: "Grant permission",
+                    children: `Grant permission${requestingMultiplePermissions && "s"}`,
                     onClick: () => accept({ method, params }),
                 },
                 reject: {
@@ -48,6 +50,7 @@ export const WalletRequestPermissions = ({
             <Tabs defaultValue={RequestTabsValues.Details}>
                 <TabContent value={RequestTabsValues.Details}>
                     <SectionBlock>
+                        <SectionTitle>Permissions</SectionTitle>
                         <SubsectionBlock>
                             <SubsectionContent>
                                 {params.map((param) => {
@@ -75,7 +78,7 @@ export const WalletRequestPermissions = ({
             </Tabs>
             <SectionBlock>
                 <p className="font-bold pb-8 text-center text-sm">
-                    You can revoke granted permissions from your wallet whenever you want.
+                    You can revoke granted permissions from the wallet.
                 </p>
             </SectionBlock>
         </Layout>

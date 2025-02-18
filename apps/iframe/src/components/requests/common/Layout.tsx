@@ -14,7 +14,7 @@ import { userAtom } from "#src/state/user"
 interface LayoutProps extends PropsWithChildren {
     labelHeader: React.ReactNode
     headline: React.ReactNode
-    description: React.ReactNode
+    description?: React.ReactNode
     hideActions?: boolean
     actions: {
         accept: ButtonProps
@@ -83,6 +83,10 @@ export const Layout = ({
 
 export const SectionBlock = ({ children }: PropsWithChildren) => {
     return <section className="max-w-prose py-2 px-2.5 grid gap-2 w-full mx-auto">{children}</section>
+}
+
+export const SectionTitle = ({ children }: PropsWithChildren) => {
+    return <h1 className="text-xs font-semibold">{children}</h1>
 }
 
 export const SubsectionBlock = ({ children }: PropsWithChildren) => {

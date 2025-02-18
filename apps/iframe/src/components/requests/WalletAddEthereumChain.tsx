@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { getAppURL } from "#src/utils/appURL"
 import { FormField, FormFieldLabel } from "../primitives/form-field/FormField"
 import { Input } from "../primitives/input/Input"
 import {
@@ -20,29 +19,13 @@ export const WalletAddEthereumChain = ({
     accept,
 }: RequestConfirmationProps<"wallet_addEthereumChain">) => {
     const [chain, setChain] = useState(params[0])
-    const appURL = getAppURL()
     return (
         <Layout
-            labelHeader="Add custom network"
-            headline={
-                <>
-                    <span className="text-primary">{appURL}</span> would like to use {params[0].chainName}
-                </>
-            }
-            description={
-                <>
-                    <span className="font-medium text-primary">{appURL}</span> suggests adding{" "}
-                    <span className="font-bold">{params[0].chainName}</span> to your wallet. Default settings can be
-                    modified at your convenience. Make sure to{" "}
-                    <a href={`https://chainlist.org/chain/${Number(chain.chainId)}`} target="_blank" rel="noreferrer">
-                        verify network information
-                    </a>{" "}
-                    before adding it.
-                </>
-            }
+            labelHeader="Add custom chain"
+            headline="Add new chain"
             actions={{
                 accept: {
-                    children: "Add network",
+                    children: "Add chain",
                     onClick: () => accept({ method, params: [chain] }),
                 },
                 reject: {
@@ -56,22 +39,22 @@ export const WalletAddEthereumChain = ({
                     <SectionBlock>
                         <form>
                             <fieldset className="grid gap-4">
-                                <legend className="pb-2 text-xs font-semibold">Customize network information</legend>
+                                <legend className="pb-2 text-xs font-semibold">Customize chain information</legend>
                                 <FormField>
-                                    <FormFieldLabel htmlFor="custom-network-name">Name</FormFieldLabel>
+                                    <FormFieldLabel htmlFor="custom-chain-name">Name</FormFieldLabel>
                                     <Input
                                         required
                                         onChange={(e) => {
                                             setChain((old) => ({ ...old, chainName: e.target.value }))
                                         }}
                                         type="text"
-                                        id="custom-network-name"
-                                        name="custom-network-name"
+                                        id="custom-chain-name"
+                                        name="custom-chain-name"
                                         value={chain.chainName}
                                     />
                                 </FormField>
                                 <FormField>
-                                    <FormFieldLabel htmlFor="custom-network-rpc-url">RPC URL</FormFieldLabel>
+                                    <FormFieldLabel htmlFor="custom-chain-rpc-url">RPC URL</FormFieldLabel>
                                     <Input
                                         onChange={(e) => {
                                             setChain((old) => ({ ...old, rpcUrls: [e.target.value] }))
@@ -79,12 +62,12 @@ export const WalletAddEthereumChain = ({
                                         required
                                         type="url"
                                         value={chain.rpcUrls[0] ?? ""}
-                                        id="custom-network-rpc-url"
-                                        name="custom-network-rpc-url"
+                                        id="custom-chain-rpc-url"
+                                        name="custom-chain-rpc-url"
                                     />
                                 </FormField>
                                 <FormField>
-                                    <FormFieldLabel htmlFor="custom-network-currency">Currency symbol</FormFieldLabel>
+                                    <FormFieldLabel htmlFor="custom-chain-currency">Currency symbol</FormFieldLabel>
                                     <Input
                                         type="text"
                                         onChange={(e) => {
@@ -99,13 +82,13 @@ export const WalletAddEthereumChain = ({
                                         }}
                                         required
                                         value={chain.nativeCurrency?.symbol ?? ""}
-                                        id="custom-network-currency"
-                                        name="custom-network-currency"
+                                        id="custom-chain-currency"
+                                        name="custom-chain-currency"
                                     />
                                 </FormField>
 
                                 <FormField>
-                                    <FormFieldLabel isOptional htmlFor="custom-network-block-explorer">
+                                    <FormFieldLabel isOptional htmlFor="custom-chain-block-explorer">
                                         Block explorer
                                     </FormFieldLabel>
                                     <Input
@@ -117,8 +100,8 @@ export const WalletAddEthereumChain = ({
                                             }))
                                         }}
                                         value={chain.blockExplorerUrls?.[0] ?? ""}
-                                        id="custom-network-block-explorer"
-                                        name="custom-network-block-explorer"
+                                        id="custom-chain-block-explorer"
+                                        name="custom-chain-block-explorer"
                                     />
                                 </FormField>
                             </fieldset>
