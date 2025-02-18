@@ -1,10 +1,10 @@
 ScrappyAccount payout gas usage
    ----------------------------------------------------
-  payout total func gas usage:  9736
+  Total payout function gas usage:  9766
 
 ScrappyPaymaster payout gas usage
    ----------------------------------------------------
-  payout total func gas usage:  16523
+  Total payout function gas usage:  10159
 
 ScrappyAccount payout gas usage
    ----------------------------------------------------
