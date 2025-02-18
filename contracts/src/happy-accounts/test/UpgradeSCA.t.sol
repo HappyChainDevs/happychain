@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {console, Test} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -75,16 +75,16 @@ contract UpgradeSCATest is Test {
     // ====================================================================================================
     // TEST TO UPGRADE IMPL OF HAPPY ACCOUNT
 
-    function testUpgradeImplForSmartAccount() public {        
+    function testUpgradeImplForSmartAccount() public {
         // Create and submit upgrade transaction
         HappyTx memory upgradeTx = _createSignedHappyTx(smartAccount, _getUpgradeCallData());
         happyEntryPoint.submit(upgradeTx.encode());
-        
+
         // Verify implementation was updated
         bytes32 updatedImpl = vm.load(smartAccount, IMPLEMENTATION_SLOT);
         address implAddr = address(uint160(uint256(updatedImpl)));
         assertEq(implAddr, newImpl, "Implementation not updated correctly");
-        
+
         // Create and submit mint transaction to verify new implementation works
         HappyTx memory mintTx = _createSignedHappyTx(mockToken, _getMintCallData());
         happyEntryPoint.submit(mintTx.encode());
