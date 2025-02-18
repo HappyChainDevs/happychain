@@ -2,8 +2,8 @@ import { HappyMethodNames } from "@happy.tech/common"
 import { EIP1193ErrorCodes, Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happy.tech/wallet-common"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
+import { HappyLoadAbi } from "#src/components/requests/HappyLoadAbi"
 import { HappyRequestSessionKey } from "#src/components/requests/HappyRequestSessionKey.js"
-import { HappyUseAbi } from "#src/components/requests/HappyUseAbi"
 import { DotLinearWaveLoader } from "../components/loaders/DotLinearWaveLoader"
 import { EthRequestAccounts } from "../components/requests/EthRequestAccounts"
 import { EthSendTransaction } from "../components/requests/EthSendTransaction"
@@ -132,8 +132,8 @@ function Request() {
             return <EthRequestAccounts {...props} />
         case "wallet_watchAsset":
             return <WalletWatchAsset {...props} />
-        case HappyMethodNames.USE_ABI:
-            return <HappyUseAbi {...props} />
+        case HappyMethodNames.LOAD_ABI:
+            return <HappyLoadAbi {...props} />
         case HappyMethodNames.REQUEST_SESSION_KEY:
             return <HappyRequestSessionKey {...props} />
         default:

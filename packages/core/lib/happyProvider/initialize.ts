@@ -134,7 +134,7 @@ export const loadAbi = async (contractAddress: Address, abi: Abi): Promise<void>
     if (!_provider) return undefined
 
     await _provider.request({
-        method: HappyMethodNames.USE_ABI,
+        method: HappyMethodNames.LOAD_ABI,
         params: {
             address: contractAddress,
             abi: abi,
