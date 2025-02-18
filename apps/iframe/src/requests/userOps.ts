@@ -38,7 +38,7 @@ export type SendUserOpArgs = {
     user: HappyUser
     tx: RpcTransactionRequest
     validator: Address
-    preparedOp?: ApprovedRequestExtraData<"eth_sendTransaction"> | Record<string, never>
+    preparedOp?: ApprovedRequestExtraData<"eth_sendTransaction">
     signer: UserOpSigner
 }
 
@@ -73,7 +73,7 @@ export async function sendUserOp({ user, tx, validator, signer, preparedOp }: Se
         const nonce = await getNextNonce(account, validator)
 
         const _preparedUserOp =
-            preparedOp ||
+            preparedOp ??
             (await smartAccountClient.prepareUserOperation({
                 account: smartAccountClient.account,
                 paymaster: contractAddresses.HappyPaymaster,

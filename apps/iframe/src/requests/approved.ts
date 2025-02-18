@@ -1,6 +1,7 @@
 import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import {
+    type ApprovedRequestExtraData,
     type ApprovedRequestPayload,
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -50,7 +51,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
     }
 
     const { method: requestMethod, params: requestParams } = request.payload.eip1193RequestParams
-
     switch (requestMethod) {
         // This functionality is same as in injected.ts
         // TODO: refactor once we have a better plan on how to maintain separation while reducing
@@ -62,7 +62,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                     user,
                     tx: requestParams[0],
                     validator: contractAddresses.ECDSAValidator,
-                    preparedOp: request.payload.extraData, // TODO handle this being {} / Record<string, never>?
+                    preparedOp: request.payload.extraData as ApprovedRequestExtraData<typeof requestMethod>,
                     signer: async (userOp, smartAccountClient) =>
                         await smartAccountClient.account.signUserOperation(userOp),
                 })
