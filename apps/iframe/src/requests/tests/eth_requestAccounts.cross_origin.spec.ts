@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState, EIP1193UnauthorizedError, EIP1193UserRejectedRequestError } from "@happy.tech/wallet-common"
-import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happy.tech/wallet-common"
+import type { EIP1193RequestParameters, HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { clearPermissions, getAllPermissions, grantPermissions } from "#src/state/permissions.ts"
 import { setAuthState } from "../../state/authState"
@@ -25,9 +25,9 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
 
         test("skips eth_requestAccounts permissions when no user", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(parentID, {
+            const request = makePayload<EIP1193RequestParameters>(parentID, {
                 method: "eth_requestAccounts",
-            }) as ProviderEventPayload<EIP1193RequestParameters>
+            })
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
@@ -44,9 +44,9 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
 
         test("throws exception if not previously authorized via popup", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(parentID, {
+            const request = makePayload<EIP1193RequestParameters>(parentID, {
                 method: "eth_requestAccounts",
-            }) as ProviderEventPayload<EIP1193RequestParameters>
+            })
             const response = dispatchHandlers(request)
             await expect(response).rejects.toThrow(EIP1193UserRejectedRequestError)
             expect(getAllPermissions(appURL).length).toBe(0)
@@ -55,9 +55,9 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
         test("returns user accounts if allowed", async () => {
             grantPermissions(appURL, "eth_accounts")
             expect(getAllPermissions(appURL).length).toBe(1)
-            const request = makePayload(parentID, {
+            const request = makePayload<EIP1193RequestParameters>(parentID, {
                 method: "eth_requestAccounts",
-            }) as ProviderEventPayload<EIP1193RequestParameters>
+            })
             const response = await dispatchHandlers(request)
             expect(response).toStrictEqual([user.address])
             expect(getAllPermissions(appURL).length).toBe(1)
@@ -67,9 +67,9 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
             const user = await createHappyUserFromWallet("io.testing", addressFactory())
             setUser(user)
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(parentID, {
+            const request = makePayload<EIP1193RequestParameters>(parentID, {
                 method: "eth_requestAccounts",
-            }) as ProviderEventPayload<EIP1193RequestParameters>
+            })
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UserRejectedRequestError)
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UserRejectedRequestError)
             expect(getAllPermissions(appURL).length).toBe(0)

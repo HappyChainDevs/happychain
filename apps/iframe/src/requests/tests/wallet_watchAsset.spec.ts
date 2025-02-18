@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState } from "@happy.tech/wallet-common"
-import type { ApprovedRequestPayload, HappyUser, ProviderEventPayload } from "@happy.tech/wallet-common"
+import type { ApprovedRequestPayload, HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { getWatchedAssets } from "#src/state/watchedAssets.ts"
 import { setAuthState } from "../../state/authState"
@@ -25,7 +25,7 @@ describe("walletClient wallet_watchAsset", () => {
 
     test("adds token", async () => {
         expect(Object.keys(getWatchedAssets()).length).toBe(0)
-        const request = makePayload(iframeID, {
+        const request = makePayload<ApprovedRequestPayload>(iframeID, {
             eip1193RequestParams: {
                 method: "wallet_watchAsset",
                 params: {
@@ -37,7 +37,7 @@ describe("walletClient wallet_watchAsset", () => {
                     },
                 },
             },
-        }) as ProviderEventPayload<ApprovedRequestPayload>
+        })
         const response = await dispatchHandlers(request)
         expect(response).toBe(true)
         const userAssets = getWatchedAssets()

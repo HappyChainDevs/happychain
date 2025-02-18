@@ -17,13 +17,16 @@ export const addressFactory = () => getAddress(`0x${randomBytes(20).toString("he
 /**
  * Creates a formatted ProviderEventPayload
  */
-export function makePayload(windowId: UUID, payload: EIP1193RequestParameters | ApprovedRequestPayload) {
+export function makePayload<T extends EIP1193RequestParameters | ApprovedRequestPayload>(
+    windowId: UUID,
+    payload: T,
+): ProviderEventPayload<T> {
     return {
         key: createUUID(),
         windowId,
         error: null,
         payload,
-    } as ProviderEventPayload<typeof payload>
+    }
 }
 
 export function generateTestUser(): HappyUser {

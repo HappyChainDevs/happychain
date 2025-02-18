@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState } from "@happy.tech/wallet-common"
-import type { ApprovedRequestPayload, HappyUser, ProviderEventPayload } from "@happy.tech/wallet-common"
+import type { ApprovedRequestPayload, HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
@@ -27,12 +27,12 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
 
     test("adds eth_account permissions (no caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
-        const request = makePayload(iframeID, {
+        const request = makePayload<ApprovedRequestPayload>(iframeID, {
             eip1193RequestParams: {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
             },
-        }) as ProviderEventPayload<ApprovedRequestPayload>
+        })
         const response = await dispatchHandlers(request)
         expect(getAllPermissions(appURL)).toStrictEqual(response)
         expect(response).toStrictEqual([
@@ -48,7 +48,7 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
 
     test("adds eth_account permissions (with caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
-        const request = makePayload(iframeID, {
+        const request = makePayload<ApprovedRequestPayload>(iframeID, {
             eip1193RequestParams: {
                 method: "wallet_requestPermissions",
                 params: [
@@ -59,7 +59,7 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
                     },
                 ],
             },
-        }) as ProviderEventPayload<ApprovedRequestPayload>
+        })
         const response = await dispatchHandlers(request)
         expect(getAllPermissions(appURL)).toStrictEqual(response)
         expect(response).toStrictEqual([
@@ -80,9 +80,9 @@ describe("#walletClient #wallet_requestPermissions #same_origin", () => {
 
     test("only adds permissions once", async () => {
         expect(getAllPermissions(appURL).length).toBe(1)
-        const request = makePayload(iframeID, {
+        const request = makePayload<ApprovedRequestPayload>(iframeID, {
             eip1193RequestParams: { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] },
-        }) as ProviderEventPayload<ApprovedRequestPayload>
+        })
         await dispatchHandlers(request)
         await dispatchHandlers(request)
         await dispatchHandlers(request)

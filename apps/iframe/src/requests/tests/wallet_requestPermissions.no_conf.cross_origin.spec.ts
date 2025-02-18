@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
-import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happy.tech/wallet-common"
+import type { EIP1193RequestParameters, HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
 import { setAuthState } from "../../state/authState"
@@ -25,10 +25,10 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
 
         test("skips wallet_requestPermissions permissions when no user", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(parentID, {
+            const request = makePayload<EIP1193RequestParameters>(parentID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
-            }) as ProviderEventPayload<EIP1193RequestParameters>
+            })
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
@@ -45,10 +45,10 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
 
         test("does not add permissions", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(parentID, {
+            const request = makePayload<EIP1193RequestParameters>(parentID, {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
-            }) as ProviderEventPayload<EIP1193RequestParameters>
+            })
             await dispatchHandlers(request)
             await dispatchHandlers(request)
             await dispatchHandlers(request)

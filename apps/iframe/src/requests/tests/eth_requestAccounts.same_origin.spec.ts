@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState, EIP1193UnauthorizedError } from "@happy.tech/wallet-common"
-import type { EIP1193RequestParameters, HappyUser, ProviderEventPayload } from "@happy.tech/wallet-common"
+import type { EIP1193RequestParameters, HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test } from "vitest"
 import { vi } from "vitest"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
@@ -26,9 +26,9 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
 
         test("skips eth_requestAccounts permissions when no user", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
-            const request = makePayload(iframeID, {
+            const request = makePayload<EIP1193RequestParameters>(iframeID, {
                 method: "eth_requestAccounts",
-            }) as ProviderEventPayload<EIP1193RequestParameters>
+            })
             await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
@@ -45,9 +45,9 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
 
         test("returns connected user address when requested", async () => {
             expect(getAllPermissions(appURL).length).toBe(1)
-            const request = makePayload(iframeID, {
+            const request = makePayload<EIP1193RequestParameters>(iframeID, {
                 method: "eth_requestAccounts",
-            }) as ProviderEventPayload<EIP1193RequestParameters>
+            })
             const response = await dispatchHandlers(request)
             expect(response).toStrictEqual([user.address])
             expect(getAllPermissions(appURL).length).toBe(1)
@@ -55,9 +55,9 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
 
         test("does not add permissions", async () => {
             expect(getAllPermissions(appURL).length).toBe(1)
-            const request = makePayload(iframeID, {
+            const request = makePayload<EIP1193RequestParameters>(iframeID, {
                 method: "eth_requestAccounts",
-            }) as ProviderEventPayload<EIP1193RequestParameters>
+            })
             await dispatchHandlers(request)
             await dispatchHandlers(request)
             await dispatchHandlers(request)

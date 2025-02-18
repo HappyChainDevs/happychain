@@ -1,6 +1,6 @@
 import { addressFactory, makePayload } from "@happy.tech/testing"
 import { AuthState } from "@happy.tech/wallet-common"
-import type { ApprovedRequestPayload, HappyUser, ProviderEventPayload } from "@happy.tech/wallet-common"
+import type { ApprovedRequestPayload, HappyUser } from "@happy.tech/wallet-common"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { setAuthState } from "#src/state/authState"
 import { clearPermissions, getAllPermissions } from "#src/state/permissions.ts"
@@ -27,9 +27,9 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
     test("adds eth_account permissions (no caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(0)
         expect(getAllPermissions(iframeURL).length).toBe(1)
-        const request = makePayload(parentID, {
+        const request = makePayload<ApprovedRequestPayload>(parentID, {
             eip1193RequestParams: { method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] },
-        }) as ProviderEventPayload<ApprovedRequestPayload>
+        })
         const response = await dispatchHandlers(request)
         expect(getAllPermissions(appURL).length).toBe(1)
         expect(getAllPermissions(iframeURL).length).toBe(1)
@@ -47,7 +47,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
 
     test("adds eth_account permissions (with caveats)", async () => {
         expect(getAllPermissions(appURL).length).toBe(0)
-        const request = makePayload(parentID, {
+        const request = makePayload<ApprovedRequestPayload>(parentID, {
             eip1193RequestParams: {
                 method: "wallet_requestPermissions",
                 params: [
@@ -58,7 +58,7 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
                     },
                 ],
             },
-        }) as ProviderEventPayload<ApprovedRequestPayload>
+        })
         const response = await dispatchHandlers(request)
         expect(getAllPermissions(appURL).length).toBe(1)
         expect(response).toStrictEqual([
@@ -80,10 +80,12 @@ describe("#walletClient #wallet_requestPermissions #cross_origin", () => {
     test("only adds permissions once", async () => {
         expect(getAllPermissions(appURL).length).toBe(0)
         expect(getAllPermissions(iframeURL).length).toBe(1)
-        const request = makePayload(parentID, {
-            method: "wallet_requestPermissions",
-            params: [{ eth_accounts: {} }],
-        }) as ProviderEventPayload<ApprovedRequestPayload>
+        const request = makePayload<ApprovedRequestPayload>(parentID, {
+            eip1193RequestParams: {
+                method: "wallet_requestPermissions",
+                params: [{ eth_accounts: {} }],
+            },
+        })
         await dispatchHandlers(request)
         await dispatchHandlers(request)
         await dispatchHandlers(request)
