@@ -426,7 +426,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         }
 
         // same as approved.ts
-        case HappyMethodNames.USE_ABI: {
+        case HappyMethodNames.LOAD_ABI: {
             return user ? loadAbiForUser(user.address, request.payload.params) : false
         }
 

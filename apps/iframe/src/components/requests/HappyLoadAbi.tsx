@@ -17,12 +17,12 @@ import {
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
-export function HappyUseAbi({
+export const HappyLoadAbi = ({
     method,
     params,
     reject,
     accept,
-}: RequestConfirmationProps<typeof HappyMethodNames.USE_ABI>) {
+}: RequestConfirmationProps<typeof HappyMethodNames.LOAD_ABI>) => {
     const classifiedAbi = useClassifyAbi(params.abi)
     const appURL = getAppURL()
 

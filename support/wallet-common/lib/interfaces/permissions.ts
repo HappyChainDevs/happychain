@@ -90,7 +90,7 @@ const interactiveList = new Set([
  */
 const unsafeList = new Set([
     // happychain methods
-    HappyMethodNames.USE_ABI, // eip-xxxx :)
+    HappyMethodNames.LOAD_ABI, // eip-xxxx :)
     HappyMethodNames.REQUEST_SESSION_KEY,
 
     // permissions

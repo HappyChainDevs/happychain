@@ -1,14 +1,14 @@
 import { HappyMethodNames } from "@happy.tech/common"
 
 export const requestLabels = {
-    eth_requestAccounts: "Permission request",
+    eth_requestAccounts: "Connect",
     eth_sendTransaction: "Send transaction",
-    personal_sign: "Signature request",
-    wallet_addEthereumChain: "Add network",
-    wallet_requestPermissions: "Permission request",
-    wallet_switchEthereumChain: "Switch network",
-    wallet_watchAsset: "Watch asset",
-    [HappyMethodNames.USE_ABI]: "Record ABI",
+    personal_sign: "Sign message",
+    wallet_addEthereumChain: "Add chain",
+    wallet_requestPermissions: "Grant permissions",
+    wallet_switchEthereumChain: "Switch chain",
+    wallet_watchAsset: "Watch token",
+    [HappyMethodNames.LOAD_ABI]: "Load ABI",
     [HappyMethodNames.REQUEST_SESSION_KEY]: "Approve session key",
 } as const
 

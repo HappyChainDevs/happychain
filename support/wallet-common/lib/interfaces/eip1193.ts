@@ -15,7 +15,7 @@ export type HappyMethods = [
         ReturnType: HappyUser | undefined
     },
     {
-        Method: typeof HappyMethodNames.USE_ABI
+        Method: typeof HappyMethodNames.LOAD_ABI
         Parameters: RecordAbiPayload
         ReturnType: undefined
     },
