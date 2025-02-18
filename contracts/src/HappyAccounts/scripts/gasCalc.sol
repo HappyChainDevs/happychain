@@ -115,7 +115,7 @@ contract HappyEntryPointGasEstimator is Test {
      * 3. Warm storage access (multiple transactions in same block)
      */
     function testEstimateEntryPointSubmitGasForPaymasterSponsoredTx() public {
-        console.log("HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions");
+        console.log("\nHappyEntryPoint Gas Report For Paymaster-Sponsored Transactions");
 
         // Step 1. Submit the encoded happy tx (uninitialized and cold storage)
         console.log("\n1. First Transaction (Cold + Uninitialized Storage)");
@@ -180,11 +180,7 @@ contract HappyEntryPointGasEstimator is Test {
     // HAPPY TX CREATION UTILS
 
     /// @dev Internal helper function to create a signed happy tx.
-    function _createSignedHappyTx(address _account, address _paymaster)
-        internal
-        view
-        returns (HappyTx memory)
-    {
+    function _createSignedHappyTx(address _account, address _paymaster) internal view returns (HappyTx memory) {
         HappyTx memory happyTx = _getStubHappyTx();
 
         happyTx.account = _account;
