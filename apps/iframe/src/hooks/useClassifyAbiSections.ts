@@ -8,7 +8,6 @@ export enum AbiSectionLabel {
     Constructor = "Constructor",
     Receive = "Receive",
     Fallback = "Fallback",
-    ReadFunctions = "Read Functions",
     WriteFunctions = "Write Functions",
 }
 
@@ -23,20 +22,20 @@ type SectionMap = {
     [AbiSectionLabel.Constructor]: AbiConstructor[]
     [AbiSectionLabel.Receive]: AbiReceive[]
     [AbiSectionLabel.Fallback]: AbiFallback[]
-    [AbiSectionLabel.ReadFunctions]: AbiFunction[]
     [AbiSectionLabel.WriteFunctions]: AbiFunction[]
 }
 
 /**
  * Hook that classifies different sections of a user-inputted ABI
  * into distinct categories such as events, errors, constructors,
- * receive functions, fallback functions, and read/write functions.
+ * receive functions, fallback functions, and write functions.
+ * View functions are excluded as they won't be displayed in the UI.
  * This is used in the popup for the custom `happy_useAbi` RPC call.
  *
  * The classifications are returned as an array of objects, each
  * containing a label and the corresponding items, allowing for
  * easier identification and organization of ABI components in
- * the UI. This design is inspired by the UI [here](https://viem-playground.netlify.app/).
+ * the UI.
  */
 export const useClassifyAbi = (abi: Abi): ClassifiedAbiSection[] => {
     return useMemo(() => {
@@ -46,7 +45,6 @@ export const useClassifyAbi = (abi: Abi): ClassifiedAbiSection[] => {
             [AbiSectionLabel.Constructor]: [],
             [AbiSectionLabel.Receive]: [],
             [AbiSectionLabel.Fallback]: [],
-            [AbiSectionLabel.ReadFunctions]: [],
             [AbiSectionLabel.WriteFunctions]: [],
         }
 
@@ -69,9 +67,7 @@ export const useClassifyAbi = (abi: Abi): ClassifiedAbiSection[] => {
                     break
                 case "function": {
                     const func = item as AbiFunction
-                    if (func.stateMutability === "view" || func.stateMutability === "pure") {
-                        sectionMap[AbiSectionLabel.ReadFunctions].push(func)
-                    } else {
+                    if (func.stateMutability !== "view" && func.stateMutability !== "pure") {
                         sectionMap[AbiSectionLabel.WriteFunctions].push(func)
                     }
                     break
