@@ -60,10 +60,20 @@ contract ScrappyAccount is
     // ====================================================================================================
     // CONSTANTS
 
-    bytes4 private constant MAGIC_VALUE = 0x1626ba7e;
-    uint256 private constant INTRINSIC_GAS = 22_000;
-    uint256 private constant GAS_OVERHEAD_BUFFER = 100;
+    /// @dev ERC-1271 selector
+    bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
 
+    /// @dev Standard Ethereum transaction base cost (21_000) + payout function logic cost (9_600)
+    uint256 private constant INTRINSIC_GAS = 30_600;
+
+    /// @dev Gas overhead for executing the execute function, not measured by gasleft()
+    uint256 private constant GAS_OVERHEAD_BUFFER = 79;
+    // ^ From the gas report, equals total execute function gas usage - output.gas
+
+    /// @dev The amount of gas that is added to the payment of the submitter. (9480 from gas report)
+    uint256 private constant PAYMENT_OVERHEAD_GAS = 9500;
+
+    /// @dev Interface IDs
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
     bytes4 private constant ERC1271_INTERFACE_ID = 0x1626ba7e;
     bytes4 private constant IHAPPYACCOUNT_INTERFACE_ID = 0x909c11f4;
@@ -168,17 +178,17 @@ contract ScrappyAccount is
         }
 
         uint256 owed =
-            (consumedGas + INTRINSIC_GAS) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee) + GAS_OVERHEAD_BUFFER;
+            (consumedGas + INTRINSIC_GAS + PAYMENT_OVERHEAD_GAS) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
         // ^MAGIC VARIABLE TO DEFINE, which must account of for the cost of the code below, see LOGGAS code for computing it
 
-        // [LOGGAS] uint256 gasStartOverhead = gasleft();
-        // [LOGGAS] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
-        owed += gasleft() - gasStart;
+        // [LOGGAS_INTERNAL] uint256 gasStartOverhead = gasleft();
+        // [LOGGAS_INTERNAL] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
+        owed += gasStart - gasleft();
 
         // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
         (payable(tx.origin).call{value: owed}(""));
 
-        // [LOGGAS] console.log("GAS_OVERHEAD_BUFFER", gasleft() - gasStartOverhead);
+        // [LOGGAS_INTERNAL] console.log("PAYMENT_OVERHEAD_GAS: ", gasStartOverhead - gasleft());
 
         return 0;
     }
@@ -209,4 +219,10 @@ contract ScrappyAccount is
     function getNonce(uint192 nonceTrack) public view returns (uint256 nonce) {
         return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
     }
+
+    // ====================================================================================================
+    // INTERNAL FUNCTIONS
+
+    /// @dev Function that authorizes an upgrade of this contract via the UUPS proxy pattern
+    function _authorizeUpgrade(address newImplementation) internal override onlyFromSelf() {}
 }
