@@ -224,5 +224,5 @@ contract ScrappyAccount is
     // INTERNAL FUNCTIONS
 
     /// @dev Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-    function _authorizeUpgrade(address newImplementation) internal override onlyFromSelf() {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyFromSelf {}
 }
