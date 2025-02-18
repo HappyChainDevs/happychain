@@ -16,7 +16,7 @@ import {
 
 // Create a dummy EIP1559 transaction with maximum values for all fields
 const MAX_BYTES32 =
-    "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
 
 const emptyAccessList: AccessList = []
 
@@ -99,6 +99,5 @@ const txSize = (serializedTx.length - 2) / 2 // subtract 2 for '0x' prefix and d
 console.log(`Maximum EIP1559 transaction size: ${txSize} bytes`)
 console.log(`Serialized transaction: ${serializedTx}`)
 
-// Serialized transaction: 0x02f901148406a63227871fffffffffffffa0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff88ffffffffffffffff94df55fd47814c47375fa731dabff5c0ab54820a61a0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8001b840ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb840ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-// Length = 560 hex = 280 bytes (same as earlier 💀)
+// Maximum EIP1559 transaction size: 213 bytes
+// Serialized transaction: 0x02f8d28406a63227871fffffffffffffa0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff88ffffffffffffffff94df55fd47814c47375fa731dabff5c0ab54820a61a0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8001a0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
