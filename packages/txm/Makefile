@@ -6,3 +6,7 @@ include ../../makefiles/help.mk
 migrate: ## Runs pending migrations
 	tsx lib/migrate.ts
 .PHONY: migrate
+
+test: ## Runs the tests
+	vitest;
+.PHONY: test
