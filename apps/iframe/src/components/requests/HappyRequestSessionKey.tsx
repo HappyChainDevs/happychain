@@ -68,7 +68,7 @@ export const HappyRequestSessionKey = ({
                     . You can revoke this access at any time from your wallet settings.
                     <SectionBlock>
                         <div className="grid bg-warning/40 border-warning text-warning-content/90 dark:bg-warning/5 dark:border-warning/20 dark:text-warning gap-2 text-sm border py-[1em] px-[1.25em] rounded-lg w-full">
-                            <p>This could result in loss of funds if the contract can access your assets.</p>
+                            <p>You could lose the tokens the contract can access.</p>
                             <p className="font-bold">Only proceed if you trust {appURL}.</p>
                         </div>
                     </SectionBlock>

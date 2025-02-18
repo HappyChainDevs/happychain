@@ -1,6 +1,5 @@
 import { useMemo } from "react"
 import { hexToString } from "viem"
-import { getAppURL } from "#src/utils/appURL"
 import {
     FormattedDetailsLine,
     Layout,
@@ -15,8 +14,6 @@ import {
 import type { RequestConfirmationProps } from "./props"
 
 export const PersonalSign = ({ method, params, reject, accept }: RequestConfirmationProps<"personal_sign">) => {
-    const appURL = getAppURL()
-
     const formattedSignPayload = useMemo(() => {
         return hexToString(params[0])
     }, [params])
@@ -24,15 +21,11 @@ export const PersonalSign = ({ method, params, reject, accept }: RequestConfirma
     return (
         <Layout
             labelHeader="Your signature is requested."
-            headline={
-                <>
-                    <span className="text-primary">{appURL}</span> is requesting your signature
-                </>
-            }
+            headline="Sign message"
             description={
                 <>
-                    This will allow <span className="font-medium text-primary">{appURL}</span> to verify your wallet
-                    ownership through a signature. This won't allow any access to your funds.
+                    The message will be tied to your account and may be used for authorizations. Make sure you know what
+                    you are signing !
                 </>
             }
             actions={{
@@ -51,7 +44,7 @@ export const PersonalSign = ({ method, params, reject, accept }: RequestConfirma
                     <SectionBlock>
                         <SubsectionBlock>
                             <SubsectionContent>
-                                <SubsectionTitle>Content</SubsectionTitle>
+                                <SubsectionTitle>Message</SubsectionTitle>
                                 <FormattedDetailsLine>{formattedSignPayload}</FormattedDetailsLine>
                             </SubsectionContent>
                         </SubsectionBlock>
