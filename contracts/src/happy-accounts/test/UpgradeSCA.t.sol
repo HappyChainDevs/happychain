@@ -24,11 +24,15 @@ contract UpgradeSCATest is Test {
     // ====================================================================================================
     // CONSTANTS
 
+    bytes32 private constant IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
     bytes32 private constant SALT = 0x0000000000000000000000000000000000000000000000000000000000000000;
     uint256 private constant DEPOSIT = 10 ether;
 
     // ====================================================================================================
     // STATE VARIABLES
+
+    ScrappyAccountFactory private scrappyAccountFactory;
+    HappyEntryPoint private happyEntryPoint;
 
     address private smartAccount;
     address private mockToken;
@@ -50,13 +54,14 @@ contract UpgradeSCATest is Test {
         vm.prank(owner);
         deployer.deployForTests();
 
-        ScrappyAccountFactory scrappyAccountFactory = deployer.scrappyAccountFactory();
+        scrappyAccountFactory = deployer.scrappyAccountFactory();
+        happyEntryPoint = deployer.happyEntryPoint();
 
         // Deploy and initialize the proxy for scrappy account
         smartAccount = scrappyAccountFactory.createAccount(SALT, owner);
 
         // Deploy the new implementation
-        ScrappyAccount scrappyAccountNew = new ScrappyAccount(address(deployer.happyEntryPoint()));
+        ScrappyAccount scrappyAccountNew = new ScrappyAccount(address(happyEntryPoint));
         newImpl = address(scrappyAccountNew);
 
         // Deploy a mock ERC20 token
@@ -70,22 +75,31 @@ contract UpgradeSCATest is Test {
     // ====================================================================================================
     // TEST TO UPGRADE IMPL OF HAPPY ACCOUNT
 
-    function testUpgradeImplOfHappyAccount() public view {
-        HappyTx memory happyTx = _createSignedHappyTx(_getUpgradeCallData());
-        console.logBytes(happyTx.callData); // TODO: temp statement to avoid yellow squigly lines
-            // Check the initial implementation address
+    function testUpgradeImplForSmartAccount() public {        
+        // Create and submit upgrade transaction
+        HappyTx memory upgradeTx = _createSignedHappyTx(smartAccount, _getUpgradeCallData());
+        happyEntryPoint.submit(upgradeTx.encode());
+        
+        // Verify implementation was updated
+        bytes32 updatedImpl = vm.load(smartAccount, IMPLEMENTATION_SLOT);
+        address implAddr = address(uint160(uint256(updatedImpl)));
+        assertEq(implAddr, newImpl, "Implementation not updated correctly");
+        
+        // Create and submit mint transaction to verify new implementation works
+        HappyTx memory mintTx = _createSignedHappyTx(mockToken, _getMintCallData());
+        happyEntryPoint.submit(mintTx.encode());
 
-        // Check the new implementation address
-
-        // Try to submit a happy tx using the new implementation
+        // Verify mint was successful
+        assertEq(MockERC20Token(mockToken).balanceOf(owner), DEPOSIT, "Mint operation failed");
     }
 
     // ====================================================================================================
     // HAPPY TX CREATION UTILS
 
     /// @dev Internal helper function to create a signed happy tx.
-    function _createSignedHappyTx(bytes memory callData) internal view returns (HappyTx memory) {
+    function _createSignedHappyTx(address dest, bytes memory callData) internal view returns (HappyTx memory) {
         HappyTx memory happyTx = _getStubHappyTx();
+        happyTx.dest = dest;
         happyTx.callData = callData;
 
         // Sign the transaction with zeroed values
@@ -98,20 +112,25 @@ contract UpgradeSCATest is Test {
     function _getStubHappyTx() internal view returns (HappyTx memory) {
         return HappyTx({
             account: smartAccount,
-            gasLimit: 4000000000, // 0xEE6B2800
-            executeGasLimit: 4000000000, // 0xEE6B2800
-            dest: smartAccount, // Make a call to a function within the smart account
+            gasLimit: 4000000000,
+            executeGasLimit: 4000000000,
+            dest: 0x0000000000000000000000000000000000000000,
             paymaster: smartAccount,
             value: 0,
             nonceTrack: 0,
             nonceValue: getNonce(),
-            maxFeePerGas: 1200000000, // 0x47868C00
-            submitterFee: 100, // 0x64
+            maxFeePerGas: 1200000000,
+            submitterFee: 100,
             callData: hex"",
             paymasterData: hex"",
             validatorData: hex"",
             extraData: hex""
         });
+    }
+
+    /// @dev Internal helper function to get the nonce of a smart account.
+    function getNonce() public view returns (uint64) {
+        return uint64(ScrappyAccount(payable(smartAccount)).getNonce(0));
     }
 
     /// @dev Internal helper function to sign a happy tx.
@@ -127,12 +146,7 @@ contract UpgradeSCATest is Test {
     }
 
     /// @dev Internal helper function to create calldata for IERC20.mint().
-    function _getEthTransferCallData() internal view returns (bytes memory) {
-        return abi.encodeCall(MockERC20Token.mint, (owner, 0.01 ether));
-    }
-
-    /// @dev Internal helper function to get the nonce of a smart account.
-    function getNonce() public view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).getNonce(0));
+    function _getMintCallData() internal view returns (bytes memory) {
+        return abi.encodeCall(MockERC20Token.mint, (owner, DEPOSIT));
     }
 }
