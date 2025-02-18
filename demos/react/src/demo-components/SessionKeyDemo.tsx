@@ -17,6 +17,7 @@ const SessionKeyDemo = () => {
             address: deployment.HappyCounter,
             abi: abis.HappyCounter,
             functionName: "getCount",
+            account: user?.address,
         }) as Promise<bigint>
     }
 
