@@ -6,7 +6,7 @@ import { type VariantProps, cva } from "class-variance-authority"
 const recipeButton = cva(
     [
         "inline-flex items-center cursor-pointer no-underline font-body",
-        "[&:is([aria-disabled=true],:disabled)]:opacity-50 [&:is([aria-disabled=true],:disabled)]:cursor-not-allowed",
+        "click-disabled:opacity-50 click-disabled:cursor-not-allowed",
         "focus:outline-none",
     ],
     {

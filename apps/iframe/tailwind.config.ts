@@ -1,5 +1,6 @@
 import daisyui from "daisyui"
 import type { Config } from "tailwindcss"
+import plugin from "tailwindcss/plugin"
 
 export default {
     content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
@@ -111,7 +112,20 @@ export default {
             },
         },
     },
-    plugins: [daisyui],
+    plugins: [
+        daisyui,
+        plugin(({ addVariant }) => {
+            addVariant("content-focused", ["&:focus", "&:focus-within"])
+            addVariant("input-invalid", ["&:user-invalid", "&:has(:user-invalid)"])
+            addVariant("click-disabled", ["&[aria-disabled=true]", "&:disabled"])
+            addVariant("input-disabled", [
+                "&:disabled",
+                "&:read-only",
+                "&[aria-disabled=true]",
+                "&:has([aria-disabled=true], :disabled, :read-only)",
+            ])
+        }),
+    ],
     darkMode: ["selector", '[data-theme="night"]'],
     daisyui: {
         logs: false,
