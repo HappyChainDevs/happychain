@@ -1,7 +1,7 @@
 import { type VariantProps, cva } from "class-variance-authority"
 
 /**
- * Brand styling for any UI element that implements a text-input like appearance/behaviour (textarea, some inputs)
+ * Recipe for styling text input-like UI elements (inputs, textareas)
  */
 const recipeInput = cva(
     [
@@ -9,11 +9,13 @@ const recipeInput = cva(
         "w-full",
         "text-start",
         // User activity: focus
-        "focus:outline-none [&:is(:focus,:focus-within)]:ring-2",
+        "focus:outline-none content-focused:ring-2",
         // Behaviour: disabled
-        "[&:is([aria-disabled=true],:disabled,:readonly),:has([aria-disabled=true],:disabled,:readonly))]:opacity-60 [&:is([aria-disabled=true],:disabled,:readonly),:has([aria-disabled=true],:disabled,:readonly))]:cursor-not-allowed",
+        "input-disabled:opacity-60 input-disabled:cursor-not-allowed",
         // State: error
-        "dark:[&:is(:has(:user-invalid[aria-invalid]),:user-invalid[aria-invalid])]:bg-error/5 [&:is(:has(:user-invalid[aria-invalid]),:user-invalid[aria-invalid])]:bg-error/15 [&:is(:has(:user-invalid[aria-invalid]),:user-invalid[aria-invalid])]:border-error/60 dark:[&:is(:has(:user-invalid[aria-invalid]),:user-invalid[aria-invalid])]:border-error/30",
+        "input-invalid:bg-error/15 input-invalid:border-error/60",
+        // State: error (dark mode)
+        "dark:input-invalid:bg-error/5 dark:input-invalid:border-error/30",
     ],
     {
         variants: {
