@@ -43,6 +43,12 @@ contract ScrappyAccount is
     using MessageHashUtils for bytes32;
 
     // ====================================================================================================
+    // ERRORS
+
+    /// @dev Selector returned if the upgrade call is not made from the owner or the account itself.
+    error NotFromOwnerOrSelf();
+
+    // ====================================================================================================
     // EVENTS
 
     /// Emitted when the contract implementation is upgraded to a new implementation
@@ -54,9 +60,9 @@ contract ScrappyAccount is
     // ====================================================================================================
     // CONSTANTS
 
-    bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
-    uint256 private constant INTRINSIC_GAS = 22_000; // TODO
-    uint256 private constant GAS_OVERHEAD_BUFFER = 12345; // TODO
+    bytes4 private constant MAGIC_VALUE = 0x1626ba7e;
+    uint256 private constant INTRINSIC_GAS = 22_000;
+    uint256 private constant GAS_OVERHEAD_BUFFER = 100;
 
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
     bytes4 private constant ERC1271_INTERFACE_ID = 0x1626ba7e;
@@ -81,6 +87,12 @@ contract ScrappyAccount is
         _;
     }
 
+    /// @dev Checks if the the call was made from the owner or the account itself
+    modifier onlyFromSelf() {
+        if (msg.sender != address(this)) revert NotFromOwnerOrSelf();
+        _;
+    }
+
     // ====================================================================================================
     // CONSTRUCTOR
 
@@ -94,9 +106,6 @@ contract ScrappyAccount is
         __Ownable_init(owner);
         __UUPSUpgradeable_init();
     }
-
-    /// @notice Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
