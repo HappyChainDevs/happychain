@@ -56,7 +56,7 @@ export function useFormSendAssets(asset?: Address) {
 
     /**
      * Get user's native token balance.
-     * Only enabled when user is connect and no asset address is provided
+     * Only enabled when user is connected and no asset address is provided
      */
     const queryBalanceNativeToken = useBalance({
         address: user?.address,
