@@ -60,7 +60,7 @@ export const ImportTokensDialog = () => {
     const decimalsInputInvalidCondition = !isLoading && isValidAddress && decimals === undefined
 
     // Fields should be readonly if contract data was successfully fetched
-    const symbolInputReadOnly = symbol === undefined
+    const symbolInputReadOnly = symbol !== undefined
 
     // Button should be disabled if:
     // 1. Address is invalid OR
@@ -109,6 +109,9 @@ export const ImportTokensDialog = () => {
                             decimals: Number(decimals),
                         },
                     })
+                    // clear fields and close dialog
+                    setInputAddress("")
+                    setCustomTokenSymbol("")
                     setVisibility(false)
                 } catch (error) {
                     console.error("Error adding token:", error)
@@ -203,7 +206,7 @@ export const ImportTokensDialog = () => {
                             </Field.Label>
                             <textarea
                                 id="token-decimal"
-                                name="token-decimals"
+                                name="decimals"
                                 readOnly
                                 className={cx(
                                     "h-[40px] !appearance-none caret-transparent resize-none border",

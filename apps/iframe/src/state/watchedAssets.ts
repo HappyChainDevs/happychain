@@ -30,8 +30,8 @@ export function getWatchedAssets(): UserWatchedAssetsRecord {
 
 /**
  * Adds a new asset to the store under the provided address.
- * If the asset does not already exist for the address, it's added.
- * Returns `true` if the asset was successfully added, or `false` if the asset was already in the list.
+ * If the asset does not already exist for the address, it is added.
+ * Does nothing if the asset is already in the list.
  */
 export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters): void {
     if (!isAddress(newAsset.options.address)) {
