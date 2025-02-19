@@ -43,6 +43,15 @@ contract ScrappyAccount is
     using MessageHashUtils for bytes32;
 
     // ====================================================================================================
+    // EVENTS
+
+    /// @notice Emitted when the contract implementation is upgraded to a new implementation
+    event Upgraded(address indexed newImplementation);
+
+    /// @notice Emitted when ETH is received by the contract
+    event Received(address indexed sender, uint256 amount);
+
+    // ====================================================================================================
     // CONSTANTS
 
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
@@ -54,25 +63,14 @@ contract ScrappyAccount is
     bytes4 private constant IHAPPYACCOUNT_INTERFACE_ID = 0x90ab9eae;
     bytes4 private constant IHAPPYPAYMASTER_INTERFACE_ID = 0xa79b0c0c;
 
+    // ====================================================================================================
+    // IMMUTABLES AND STATE VARIABLES
+
     /// @dev The allowed EntryPoint contract
     address private immutable ENTRYPOINT;
 
     /// @dev Mapping from track => nonce
     mapping(uint192 => uint64) public nonceValue;
-
-    /// @notice Returns the next nonce for a given nonce track, combining the track with its current nonce sequence
-    function getNonce(uint192 nonceTrack) public view returns (uint256 nonce) {
-        return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
-    }
-
-    // ====================================================================================================
-    // EVENTS
-
-    /// @notice Emitted when the contract implementation is upgraded to a new implementation
-    event Upgraded(address indexed newImplementation);
-
-    /// @notice Emitted when ETH is received by the contract
-    event Received(address sender, uint256 amount);
 
     // ====================================================================================================
     // MODIFIERS
@@ -151,8 +149,6 @@ contract ScrappyAccount is
             return output;
         }
 
-        // TODO: get upper limit of gas costs that can't be metered via gasleft()
-        // (Solidity gas overhead + gas math and assignment)
         output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
     }
 
@@ -170,6 +166,7 @@ contract ScrappyAccount is
         // [LOGGAS] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
         owed += gasleft() - gasStart;
 
+        // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
         (payable(tx.origin).call{value: owed}(""));
 
         // [LOGGAS] console.log("GAS_OVERHEAD_BUFFER", gasleft() - gasStartOverhead);
@@ -184,12 +181,25 @@ contract ScrappyAccount is
         return hash.recover(signature) == owner() ? MAGIC_VALUE : bytes4(0);
     }
 
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+        // forgefmt: disable-next-item
+        return interfaceId == ERC165_INTERFACE_ID
+            || interfaceId == ERC1271_INTERFACE_ID
+            || interfaceId == IHAPPYACCOUNT_INTERFACE_ID
+            || interfaceId == IHAPPYPAYMASTER_INTERFACE_ID;
+    }
+
     receive() external payable {
         emit Received(msg.sender, msg.value);
     }
 
     // ====================================================================================================
     // VIEW FUNCTIONS
+
+    /// @notice Returns the next nonce for a given nonce track, combining the track with its current nonce sequence
+    function getNonce(uint192 nonceTrack) public view returns (uint256 nonce) {
+        return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
+    }
 
     /**
      * @dev Returns the EntryPoint contract from which this account accepts functions.
@@ -198,13 +208,5 @@ contract ScrappyAccount is
      */
     function entryPoint() external view returns (address) {
         return ENTRYPOINT;
-    }
-
-    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        // forgefmt: disable-next-item
-        return interfaceId == ERC165_INTERFACE_ID
-            || interfaceId == ERC1271_INTERFACE_ID
-            || interfaceId == IHAPPYACCOUNT_INTERFACE_ID
-            || interfaceId == IHAPPYPAYMASTER_INTERFACE_ID;
     }
 }
