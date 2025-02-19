@@ -119,10 +119,14 @@ export default {
             addVariant("input-invalid", ["&:user-invalid", "&:has(:user-invalid)"])
             addVariant("click-disabled", ["&[aria-disabled=true]", "&:disabled"])
             addVariant("input-disabled", [
-                "&:disabled",
-                "&:read-only",
-                "&[aria-disabled=true]",
-                "&:has([aria-disabled=true], :disabled, :read-only)",
+                // Only target input/textarea that are readonly/disabled
+                "&:is(input, textarea):read-only",
+                "&:is(input, textarea):disabled",
+                "&[aria-disabled=true]:is(input, textarea)",
+                // Target readonly/disabled inputs/textareas within the element
+                "&:has(:is(input, textarea):read-only)",
+                "&:has(:is(input, textarea):disabled)",
+                "&:has([aria-disabled=true]:is(input, textarea))",
             ])
         }),
     ],
