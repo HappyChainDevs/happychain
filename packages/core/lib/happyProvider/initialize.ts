@@ -107,8 +107,7 @@ export const connect = async (): Promise<void> => {
     if (!_provider) return
 
     await _provider.request({
-        method: "wallet_requestPermissions",
-        params: [{ eth_accounts: {} }],
+        method: "eth_requestAccounts",
     })
 }
 

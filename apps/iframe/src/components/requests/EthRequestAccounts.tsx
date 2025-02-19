@@ -1,17 +1,5 @@
-import type { Address } from "viem"
 import { getAppURL } from "#src/utils/appURL"
-import {
-    FormattedDetailsLine,
-    Layout,
-    LinkToAddress,
-    RequestTabsValues,
-    SectionBlock,
-    SubsectionBlock,
-    SubsectionContent,
-    SubsectionTitle,
-    TabContent,
-    Tabs,
-} from "./common/Layout"
+import { Layout, SectionBlock } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const EthRequestAccounts = ({
@@ -46,29 +34,6 @@ export const EthRequestAccounts = ({
                 },
             }}
         >
-            <Tabs defaultValue={RequestTabsValues.Details}>
-                <TabContent value={RequestTabsValues.Details}>
-                    <SectionBlock>
-                        <SubsectionBlock>
-                            <SubsectionContent>
-                                <SubsectionTitle>Address</SubsectionTitle>
-
-                                <FormattedDetailsLine>
-                                    <LinkToAddress address={params as unknown as Address}>{params}</LinkToAddress>
-                                    {params}
-                                </FormattedDetailsLine>
-                            </SubsectionContent>
-                        </SubsectionBlock>
-                    </SectionBlock>
-                </TabContent>
-                <TabContent className="break-words" value={RequestTabsValues.Raw}>
-                    <SectionBlock>
-                        <SubsectionBlock>
-                            <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
-                        </SubsectionBlock>
-                    </SectionBlock>
-                </TabContent>
-            </Tabs>
             <SectionBlock>
                 <p className="font-bold pb-8 text-center text-sm">You can revoke this permission from the wallet.</p>
             </SectionBlock>
