@@ -45,8 +45,8 @@ contract ScrappyAccount is
     // ====================================================================================================
     // ERRORS
 
-    /// @dev Selector returned if the upgrade call is not made from the account itself.
-    error NotSelf();
+    /// @dev Selector returned if the upgrade call is not made from the account itself, or from the owner.
+    error NotSelfOrOwner();
 
     // ====================================================================================================
     // EVENTS
@@ -95,8 +95,8 @@ contract ScrappyAccount is
     }
 
     /// @dev Checks if the the call was made from the owner or the account itself
-    modifier onlyFromSelf() {
-        if (msg.sender != address(this)) revert NotSelf();
+    modifier onlySelfOrOwner() {
+        if (msg.sender != address(this) && msg.sender != owner()) revert NotSelfOrOwner();
         _;
     }
 
@@ -221,5 +221,5 @@ contract ScrappyAccount is
     // INTERNAL FUNCTIONS
 
     /// @dev Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-    function _authorizeUpgrade(address newImplementation) internal override onlyFromSelf {}
+    function _authorizeUpgrade(address newImplementation) internal override onlySelfOrOwner {}
 }

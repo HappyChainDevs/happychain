@@ -75,7 +75,8 @@ contract UpgradeSCATest is Test {
     // ====================================================================================================
     // TEST TO UPGRADE IMPL OF HAPPY ACCOUNT
 
-    function testUpgradeImplForSmartAccount() public {
+    /// @dev Test upgradeability via a boop
+    function testUpgradeImplForSmartAccountViaBoop() public {
         // Store the original implementation address
         bytes32 oldImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
 
@@ -97,6 +98,49 @@ contract UpgradeSCATest is Test {
 
         // Verify mint was successful
         assertEq(MockERC20Token(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
+    }
+
+    /// @dev Test upgradeability via a vanilla ethereum tx
+    function testUpgradeImplForSmartAccountViaEthereumTx() public {
+        // Store the original implementation address
+        bytes32 oldImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
+
+        // Create and submit upgrade transaction
+        vm.prank(owner);
+        ScrappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, hex"");
+
+        // Verify implementation was updated
+        bytes32 updatedImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
+        assertNotEq(oldImpl, updatedImpl, "Implementation not updated correctly");
+
+        // Verify the implementation address points to the expected new implementation
+        address implAddr = address(uint160(uint256(updatedImpl)));
+        assertEq(implAddr, newImpl, "Implementation not updated correctly");
+
+        // Create and submit mint transaction to verify new implementation works
+        HappyTx memory mintTx = _createSignedHappyTx(mockToken, _getMintCallData());
+        happyEntryPoint.submit(mintTx.encode());
+
+        // Verify mint was successful
+        assertEq(MockERC20Token(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
+    }
+
+    /// @dev Test that upgradeability fails when not called by owner or account
+    function testUpgradeImplForSmartAccountViaEthereumTxFailsWhenNotOwner() public {
+        // Store the original implementation address
+        bytes32 oldImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
+
+        // Try to upgrade from a non-owner address
+        address nonOwner = address(0xdead);
+        vm.prank(nonOwner);
+
+        // Expect revert when trying to upgrade
+        vm.expectRevert(ScrappyAccount.NotSelfOrOwner.selector);
+        ScrappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, hex"");
+
+        // Verify implementation was not updated
+        bytes32 impl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
+        assertEq(impl, oldImpl, "Implementation should not have changed");
     }
 
     // ====================================================================================================
