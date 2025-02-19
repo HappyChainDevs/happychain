@@ -24,9 +24,11 @@ contract UpgradeSCATest is Test {
     // ====================================================================================================
     // CONSTANTS
 
-    bytes32 private constant IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
-    bytes32 private constant SALT = 0x0000000000000000000000000000000000000000000000000000000000000000;
+    bytes32 private constant ERC1967_IMPLEMENTATION_SLOT =
+        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+    bytes32 private constant SALT = 0;
     uint256 private constant DEPOSIT = 10 ether;
+    uint256 private constant MINT_AMOUNT = 5 ether;
 
     // ====================================================================================================
     // STATE VARIABLES
@@ -61,12 +63,10 @@ contract UpgradeSCATest is Test {
         smartAccount = scrappyAccountFactory.createAccount(SALT, owner);
 
         // Deploy the new implementation
-        ScrappyAccount scrappyAccountNew = new ScrappyAccount(address(happyEntryPoint));
-        newImpl = address(scrappyAccountNew);
+        newImpl = address(new ScrappyAccount(address(happyEntryPoint)));
 
         // Deploy a mock ERC20 token
-        MockERC20Token mockERC20 = new MockERC20Token("MockTokenA", "MTA", uint8(18));
-        mockToken = address(mockERC20);
+        mockToken = address(new MockERC20Token("MockTokenA", "MTA", uint8(18)));
 
         // Fund the smart account
         vm.deal(smartAccount, DEPOSIT);
@@ -76,12 +76,18 @@ contract UpgradeSCATest is Test {
     // TEST TO UPGRADE IMPL OF HAPPY ACCOUNT
 
     function testUpgradeImplForSmartAccount() public {
+        // Store the original implementation address
+        bytes32 oldImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
+
         // Create and submit upgrade transaction
         HappyTx memory upgradeTx = _createSignedHappyTx(smartAccount, _getUpgradeCallData());
         happyEntryPoint.submit(upgradeTx.encode());
 
         // Verify implementation was updated
-        bytes32 updatedImpl = vm.load(smartAccount, IMPLEMENTATION_SLOT);
+        bytes32 updatedImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
+        assertNotEq(oldImpl, updatedImpl, "Implementation not updated correctly");
+
+        // Verify the implementation address points to the expected new implementation
         address implAddr = address(uint160(uint256(updatedImpl)));
         assertEq(implAddr, newImpl, "Implementation not updated correctly");
 
@@ -90,7 +96,7 @@ contract UpgradeSCATest is Test {
         happyEntryPoint.submit(mintTx.encode());
 
         // Verify mint was successful
-        assertEq(MockERC20Token(mockToken).balanceOf(owner), DEPOSIT, "Mint operation failed");
+        assertEq(MockERC20Token(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
     }
 
     // ====================================================================================================
@@ -101,14 +107,11 @@ contract UpgradeSCATest is Test {
         HappyTx memory happyTx = _getStubHappyTx();
         happyTx.dest = dest;
         happyTx.callData = callData;
-
-        // Sign the transaction with zeroed values
-        happyTx.validatorData = signHappyTx(happyTx);
-
+        happyTx.validatorData = _signHappyTx(happyTx);
         return happyTx;
     }
 
-    /// @dev Internal helper function to create a stub happy tx. The callData is `mint` call to a token at `dest`.
+    /// @dev Internal helper function to create a stub happy tx.
     function _getStubHappyTx() internal view returns (HappyTx memory) {
         return HappyTx({
             account: smartAccount,
@@ -118,7 +121,7 @@ contract UpgradeSCATest is Test {
             paymaster: smartAccount,
             value: 0,
             nonceTrack: 0,
-            nonceValue: getNonce(),
+            nonceValue: _getNonce(),
             maxFeePerGas: 1200000000,
             submitterFee: 100,
             callData: hex"",
@@ -129,12 +132,12 @@ contract UpgradeSCATest is Test {
     }
 
     /// @dev Internal helper function to get the nonce of a smart account.
-    function getNonce() public view returns (uint64) {
+    function _getNonce() internal view returns (uint64) {
         return uint64(ScrappyAccount(payable(smartAccount)).getNonce(0));
     }
 
     /// @dev Internal helper function to sign a happy tx.
-    function signHappyTx(HappyTx memory happyTx) internal view returns (bytes memory signature) {
+    function _signHappyTx(HappyTx memory happyTx) internal view returns (bytes memory signature) {
         bytes32 hash = keccak256(happyTx.encode()).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
@@ -147,6 +150,6 @@ contract UpgradeSCATest is Test {
 
     /// @dev Internal helper function to create calldata for IERC20.mint().
     function _getMintCallData() internal view returns (bytes memory) {
-        return abi.encodeCall(MockERC20Token.mint, (owner, DEPOSIT));
+        return abi.encodeCall(MockERC20Token.mint, (owner, MINT_AMOUNT));
     }
 }

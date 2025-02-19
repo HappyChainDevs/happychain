@@ -45,8 +45,8 @@ contract ScrappyAccount is
     // ====================================================================================================
     // ERRORS
 
-    /// @dev Selector returned if the upgrade call is not made from the owner or the account itself.
-    error NotFromOwnerOrSelf();
+    /// @dev Selector returned if the upgrade call is not made from the account itself.
+    error NotSelf();
 
     // ====================================================================================================
     // EVENTS
@@ -96,7 +96,7 @@ contract ScrappyAccount is
 
     /// @dev Checks if the the call was made from the owner or the account itself
     modifier onlyFromSelf() {
-        if (msg.sender != address(this)) revert NotFromOwnerOrSelf();
+        if (msg.sender != address(this)) revert NotSelf();
         _;
     }
 
