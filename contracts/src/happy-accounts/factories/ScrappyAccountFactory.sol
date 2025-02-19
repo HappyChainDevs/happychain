@@ -31,14 +31,13 @@ contract ScrappyAccountFactory {
         // Combine salt with owner for better security against frontrunning
         bytes32 combinedSalt = keccak256(abi.encodePacked(salt, owner));
 
-        // Prepare creation code
-        bytes memory creationCode = type(ERC1967Proxy).creationCode;
-
-        // Prepare initialization data
+        // Prepare contract code
         bytes memory initData = abi.encodeCall(ScrappyAccount.initialize, (owner));
         bytes memory constructorArgs = abi.encode(ACCOUNT_IMPLEMENTATION, initData);
+        bytes memory creationCode = type(ERC1967Proxy).creationCode;
+        bytes memory contractCode = abi.encodePacked(creationCode, constructorArgs);
 
-        address payable proxy = _deployDeterministic(abi.encodePacked(creationCode, constructorArgs), combinedSalt);
+        address payable proxy = _deployDeterministic(contractCode, combinedSalt);
         if (proxy == address(0)) revert InitializeError();
 
         return proxy;
@@ -53,16 +52,23 @@ contract ScrappyAccountFactory {
         return _getAddress(salt, owner);
     }
 
-    /// @dev   Predicts the address where a HappyAccount would be deployed, given the combined salt and owner
+    /// @dev   Predicts the address where a HappyAccount would be deployed, given the combined salt.
     function _getAddress(bytes32 salt, address owner) internal view returns (address) {
         bytes32 combinedSalt = keccak256(abi.encodePacked(salt, owner));
-        bytes32 bytecodeHash = keccak256(type(ERC1967Proxy).creationCode);
+
+        bytes memory creationCode = type(ERC1967Proxy).creationCode;
+        bytes memory initData = abi.encodeCall(ScrappyAccount.initialize, (owner));
+        bytes memory constructorArgs = abi.encode(ACCOUNT_IMPLEMENTATION, initData);
+        bytes memory contractCode = abi.encodePacked(creationCode, constructorArgs);
 
         return address(
-            uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), combinedSalt, bytecodeHash))))
+            uint160(
+                uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), combinedSalt, keccak256(contractCode))))
+            )
         );
     }
 
+    /// @dev   Deploys a contract deterministically given its creation code and salt.
     function _deployDeterministic(bytes memory creationCode, bytes32 salt) internal returns (address payable addr) {
         assembly {
             addr := create2(0, add(creationCode, 0x20), mload(creationCode), salt)
