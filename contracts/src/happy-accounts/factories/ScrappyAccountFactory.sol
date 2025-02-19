@@ -20,58 +20,55 @@ contract ScrappyAccountFactory {
     }
 
     /**
-     * @dev   Creates a new HappyAccount proxy
+     * @notice   Creates and deploys a new HappyAccount proxy contract
      * @param salt A unique salt for deterministic deployment
      * @param owner The address of the owner of the account
      */
     function createAccount(bytes32 salt, address owner) external payable returns (address) {
-        address predictedAddress = _getAddress(salt, owner);
-        if (predictedAddress.code.length > 0) revert AlreadyDeployed();
-
         // Combine salt with owner for better security against frontrunning
         bytes32 combinedSalt = keccak256(abi.encodePacked(salt, owner));
 
-        // Prepare contract code
-        bytes memory initData = abi.encodeCall(ScrappyAccount.initialize, (owner));
-        bytes memory constructorArgs = abi.encode(ACCOUNT_IMPLEMENTATION, initData);
-        bytes memory creationCode = type(ERC1967Proxy).creationCode;
-        bytes memory contractCode = abi.encodePacked(creationCode, constructorArgs);
+        // Prepare contract creation code to avoid re-computation in _getAddress
+        bytes memory contractCode = _prepareContractCode(owner);
 
-        address payable proxy = _deployDeterministic(contractCode, combinedSalt);
+        address predictedAddress = _getAddress(combinedSalt, contractCode);
+        if (predictedAddress.code.length > 0) revert AlreadyDeployed();
+
+        address payable proxy;
+        assembly {
+            proxy := create2(0, add(contractCode, 0x20), mload(contractCode), combinedSalt)
+        }
         if (proxy == address(0)) revert InitializeError();
 
         return proxy;
     }
 
     /**
-     * @dev   Predicts the address where a HappyAccount would be deployed
-     * @param salt used for deterministic deployment
-     * @param owner address of the owner of the account
+     * @notice   Predicts the address where a HappyAccount would be deployed
+     * @param salt A unique salt for deterministic deployment
+     * @param owner The address of the owner of the account
      */
     function getAddress(bytes32 salt, address owner) external view returns (address) {
-        return _getAddress(salt, owner);
+        bytes32 combinedSalt = keccak256(abi.encodePacked(salt, owner));
+        bytes memory contractCode = _prepareContractCode(owner);
+        return _getAddress(combinedSalt, contractCode);
     }
 
-    /// @dev   Predicts the address where a HappyAccount would be deployed, given the combined salt.
-    function _getAddress(bytes32 salt, address owner) internal view returns (address) {
-        bytes32 combinedSalt = keccak256(abi.encodePacked(salt, owner));
+    // ====================================================================================================
+    // INTERNAL FUNCTIONS
 
-        bytes memory creationCode = type(ERC1967Proxy).creationCode;
-        bytes memory initData = abi.encodeCall(ScrappyAccount.initialize, (owner));
-        bytes memory constructorArgs = abi.encode(ACCOUNT_IMPLEMENTATION, initData);
-        bytes memory contractCode = abi.encodePacked(creationCode, constructorArgs);
-
+    /// @dev   Predicts the address where a HappyAccount would be deployed, given the combined salt, and contract code.
+    function _getAddress(bytes32 salt, bytes memory contractCode) internal view returns (address) {
         return address(
-            uint160(
-                uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), combinedSalt, keccak256(contractCode))))
-            )
+            uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(contractCode)))))
         );
     }
 
-    /// @dev   Deploys a contract deterministically given its creation code and salt.
-    function _deployDeterministic(bytes memory creationCode, bytes32 salt) internal returns (address payable addr) {
-        assembly {
-            addr := create2(0, add(creationCode, 0x20), mload(creationCode), salt)
-        }
+    /// @dev Prepares the contract creation code for ERC1967Proxy contract.
+    function _prepareContractCode(address owner) internal view returns (bytes memory) {
+        bytes memory creationCode = type(ERC1967Proxy).creationCode;
+        bytes memory initData = abi.encodeCall(ScrappyAccount.initialize, (owner));
+        bytes memory constructorArgs = abi.encode(ACCOUNT_IMPLEMENTATION, initData);
+        return abi.encodePacked(creationCode, constructorArgs);
     }
 }
