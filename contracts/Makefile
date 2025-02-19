@@ -102,9 +102,7 @@ test-scrappyAccountFactory:
 .PHONY: test-scrappyAccountFactory
 
 test-scrappyAccount-upgradeability:
-	forge test --match-test testUpgradeImplForSmartAccountViaBoop -vvv
-	forge test --match-test testUpgradeImplForSmartAccountViaEthereumTx -vvv
-	forge test --match-test testUpgradeImplForSmartAccountViaEthereumTxFailsWhenNotOwner -vvv
+	forge test --match-contract UpgradeSCATest -vvv
 .PHONY: test-scrappyAccount-upgradeability
 
 ####################################################################################################
