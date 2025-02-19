@@ -97,6 +97,10 @@ test-happyTxLib:
 	forge test --match-contract HappyTxLibTest -vvv
 .PHONY: test-happyTxLib
 
+test-scrappyAccountFactory:
+	forge test --match-contract ScrappyAccountFactoryTest -vvv
+.PHONY: test-scrappyAccountFactory
+
 ####################################################################################################
 # Gas Logging
 
