@@ -6,13 +6,13 @@ import {
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
+    HappyWalletCapability,
     type Msgs,
     type PopupMsgs,
-    WalletCapability,
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { type Client, type Hex, InternalRpcError, InvalidAddressError, isAddress } from "viem"
+import { type Address, type Client, type Hex, InternalRpcError, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import {
     checkIsSessionKeyModuleInstalled,
@@ -181,50 +181,52 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         // EIP-5792
         case "wallet_sendCalls": {
             if (!user) throw new EIP1193UnauthorizedError()
+
             const callsData = request.payload.params?.[0]
             if (!callsData) throw new InternalRpcError(new Error("Invalid request payload"))
 
-            if (user.controllingAddress !== callsData.from) {
+            if (user.address !== callsData.from) {
                 // MAY reject the request if the from address does not match the enabled account
                 throw new InternalRpcError(new Error("Sender address does not match enabled account"))
             }
-            // validate that no unsupported capability is sent through - this should go into the docs
-            const allowedCapabilities = new Set([WalletCapability.BoopPaymaster])
+
+            // validate that no unsupported capability is sent through
+            const allowedCapabilities = new Set([HappyWalletCapability.BoopPaymaster])
             if (callsData.capabilities) {
                 for (const capability of Object.keys(callsData.capabilities)) {
-                    if (!allowedCapabilities.has(capability as WalletCapability)) {
+                    if (!allowedCapabilities.has(capability as HappyWalletCapability)) {
                         throw new InternalRpcError(new Error("Invalid capability"))
                     }
                 }
             }
 
-            let lastUserOpHash: Hex | null = null
+            // extract specified paymaster address from capabilities
+            const boopPaymasterAddress: Address | undefined = callsData.capabilities?.boopPaymaster?.address
+            let userOpHash: Hex | null = null
 
             for (const call of callsData.calls) {
-                const { to, value, data, chainId } = call // Remove chainId
+                const { to, value, data, chainId } = call
 
                 if (chainId !== getCurrentChain().chainId)
                     throw new InternalRpcError(new Error("Invalid chainId detected"))
 
                 if (!to) throw new Error("Missing 'to' address in transaction call")
 
-                lastUserOpHash = await sendUserOp({
+                userOpHash = await sendUserOp({
                     user,
                     tx: { to, value, data },
                     validator: contractAddresses.ECDSAValidator,
+                    paymaster: boopPaymasterAddress,
                     signer: async (userOp, smartAccountClient) =>
                         await smartAccountClient.account.signUserOperation(userOp),
                 })
             }
 
-            return lastUserOpHash
+            return userOpHash
         }
 
         case "wallet_showCallsStatus": {
-            // this will come from the popup
             const _boopBundleId = request.payload.params?.[0]
-            // TODO pretty popup
-            // call wallet_getCallsStatus
             return undefined
         }
 

@@ -68,6 +68,7 @@ const safeList = new Set([
     "web3_sha3",
     // eip-5792
     "wallet_getCapabilities",
+    "wallet_getCallsStatus",
 ])
 
 /**

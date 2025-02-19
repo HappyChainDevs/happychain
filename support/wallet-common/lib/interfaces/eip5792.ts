@@ -1,5 +1,4 @@
-export enum WalletCapability {
-    // TODO rename to HappyWalletCapability
+export enum HappyWalletCapability {
     // AtomicBatch = "atomicBatch", // coming soon!
     BoopPaymaster = "boopPaymaster",
 }
