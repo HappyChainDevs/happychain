@@ -300,13 +300,17 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
         case "wallet_getCallsStatus": {
             // TODO if the batch was atomic, this handler MUST return only a single receipt
             try {
-                const [hash] = request.payload.params as [Hash]
+                const [hash] = request.payload.params as Hash[]
                 if (!hash) {
                     throw new InternalRpcError(new Error("Transaction hash is missing."))
                 }
-                const transactionReceipt = await getPublicClient()!.getTransactionReceipt({ hash })
+                const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
 
-                return convertUserOpReceiptToCallStatus(transactionReceipt ? [transactionReceipt] : null)
+                const userOpReceipt = await smartAccountClient.waitForUserOperationReceipt({
+                    hash: hash,
+                })
+
+                return convertUserOpReceiptToCallStatus(userOpReceipt ? [userOpReceipt] : null)
             } catch (error) {
                 console.error(error)
                 throw error
