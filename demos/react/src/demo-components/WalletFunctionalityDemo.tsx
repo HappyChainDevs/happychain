@@ -8,10 +8,6 @@ const WalletFunctionalityDemo = () => {
     const { user, showSendScreen, loadAbi } = useHappyChain()
     const { walletClient } = useClients()
 
-    async function sendStub() {
-        showSendScreen()
-    }
-
     async function addNewToken() {
         const watchAssetCall = await walletClient?.watchAsset({
             type: "ERC20",
@@ -42,7 +38,7 @@ const WalletFunctionalityDemo = () => {
                 address: deployment.MockTokenA,
                 abi: abis.MockTokenA,
                 functionName: "mint",
-                args: [user.address, BigInt(1000000000000000000n)],
+                args: [user.address, 1000000000000000000n],
                 chain: happyChainSepolia,
             })
 
@@ -66,7 +62,7 @@ const WalletFunctionalityDemo = () => {
     return (
         <div className="grid grid-cols-2 gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
             <div className="text-lg font-bold col-span-2">Wallet Functionality</div>
-            <button type="button" onClick={sendStub} className="rounded-lg bg-sky-300 p-2 shadow-xl">
+            <button type="button" onClick={showSendScreen} className="rounded-lg bg-sky-300 p-2 shadow-xl">
                 Show Send Screen
             </button>
 
