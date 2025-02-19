@@ -57,7 +57,9 @@ const WalletFunctionalityDemo = () => {
 
     async function loadAbiStub() {
         await loadAbi(deployment.HappyCounter, abis.HappyCounter)
-        toast.success(`ABI loaded for ${deployment.HappyCounter}! Click on the Mint Token button to see the ABI in use within the request popup.`)
+        toast.success(
+            `ABI loaded for ${deployment.HappyCounter}! Click on the Mint Token button to see the ABI in use within the request popup.`,
+        )
     }
 
     return (
