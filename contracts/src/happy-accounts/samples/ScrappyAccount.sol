@@ -51,9 +51,6 @@ contract ScrappyAccount is
     // ====================================================================================================
     // EVENTS
 
-    /// Emitted when the contract implementation is upgraded to a new implementation
-    event Upgraded(address indexed newImplementation);
-
     /// Emitted when ETH is received by the contract
     event Received(address indexed sender, uint256 amount);
 
