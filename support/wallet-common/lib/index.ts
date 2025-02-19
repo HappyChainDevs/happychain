@@ -42,7 +42,7 @@ export type {
 } from "./interfaces/eip1193"
 export type { EIP6963ProviderInfo, EIP6963ProviderDetail, EIP6963AnnounceProviderEvent } from "./interfaces/eip6963"
 
-export { WalletCapability } from "./interfaces/eip5792"
+export { HappyWalletCapability } from "./interfaces/eip5792"
 
 export type {
     MsgsFromApp,

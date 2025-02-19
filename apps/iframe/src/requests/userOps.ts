@@ -38,6 +38,7 @@ export type SendUserOpArgs = {
     tx: RpcTransactionRequest
     validator: Address
     signer: UserOpSigner
+    paymaster?: Address // developers may specify a particular deployed paymaster when they use `wallet_sendCalls`
 }
 
 export type UserOpWrappedCall = {
@@ -57,11 +58,10 @@ export enum VALIDATOR_TYPE {
     PERMISSION = "0x02",
 }
 
-export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs, retry = 2) {
+export async function sendUserOp({ user, tx, validator, signer, paymaster }: SendUserOpArgs, retry = 2) {
     const smartAccountClient = (await getSmartAccountClient())!
     const account = smartAccountClient.account.address
 
-    // [DEBUGLOG] // let debugNonce = 0n
     try {
         // We need the separate nonce lookup because:
         // - we do local nonce management to be able to have multiple userOps in flight
@@ -70,7 +70,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
             getNextNonce(account, validator),
             smartAccountClient.prepareUserOperation({
                 account: smartAccountClient.account,
-                paymaster: contractAddresses.HappyPaymaster,
+                paymaster: paymaster ?? contractAddresses.HappyPaymaster,
                 // Specify this array to avoid fetching the nonce from here too.
                 // We don't really need the dummy signature, but it does not incur an extra network
                 // call and it makes the type system happy.
@@ -84,8 +84,6 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
                 ],
             } satisfies PrepareUserOperationParameters), // TS too dumb without this
         ])
-
-        // [DEBUGLOG] // debugNonce = nonce
 
         // sendUserOperationNow does not want account included
         const { account: _, ...preparedUserOp } = { ..._preparedUserOp, nonce }
@@ -105,7 +103,6 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         addPendingUserOp(user.address, pendingUserOpDetails)
 
-        // [DEBUGLOG] // console.log("sending", userOpHash, retry)
         const userOpReceipt = await submitUserOp(smartAccountClient, validator, preparedUserOp)
 
         receiptCache.put(userOpHash, [
@@ -119,8 +116,6 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
             } as GetUserOperationReturnType,
         ])
 
-        // [DEBUGLOG] // console.log("receipt", userOpHash, retry)
-
         markUserOpAsConfirmed(user.address, pendingUserOpDetails, userOpReceipt)
 
         return userOpReceipt.userOpHash
@@ -128,9 +123,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
         // https://docs.stackup.sh/docs/entrypoint-errors
         // https://docs.pimlico.io/infra/bundler/entrypoint-errors
 
-        // [DEBUGLOG] // console.log("error", nonceB, error.details || error, retry)
-
-        // Most likely the transaction didn't land, so need to resynchronize the nonce.
+        // (most likely) the transaction didn't land, so need to resynchronize the nonce.
         deleteNonce(account, validator)
 
         if (retry > 0) return sendUserOp({ user, tx, validator, signer }, retry - 1)

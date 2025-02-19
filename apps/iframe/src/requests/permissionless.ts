@@ -5,9 +5,9 @@ import {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
+    HappyWalletCapability,
     type Msgs,
     type ProviderMsgsFromApp,
-    WalletCapability,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
 import { decodeNonce } from "permissionless"
@@ -288,7 +288,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
             const capabilities: WalletCapabilities = {
                 [currentChainId]: Object.fromEntries(
-                    Object.values(WalletCapability).map((capability) => [capability, { supported: true }]),
+                    Object.values(HappyWalletCapability).map((capability) => [capability, { supported: true }]),
                 ),
             }
 
