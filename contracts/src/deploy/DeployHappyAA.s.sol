@@ -3,10 +3,10 @@ pragma solidity ^0.8.20;
 
 import {BaseDeployScript} from "./BaseDeployScript.sol";
 
-import {HappyEntryPoint} from "../HappyAccounts/core/HappyEntryPoint.sol";
-import {ScrappyAccount} from "../HappyAccounts/samples/ScrappyAccount.sol";
-import {ScrappyPaymaster} from "../HappyAccounts/samples/ScrappyPaymaster.sol";
-import {ScrappyAccountFactory} from "../HappyAccounts/factories/ScrappyAccountFactory.sol";
+import {HappyEntryPoint} from "../happy-accounts/core/HappyEntryPoint.sol";
+import {ScrappyAccount} from "../happy-accounts/samples/ScrappyAccount.sol";
+import {ScrappyPaymaster} from "../happy-accounts/samples/ScrappyPaymaster.sol";
+import {ScrappyAccountFactory} from "../happy-accounts/factories/ScrappyAccountFactory.sol";
 
 contract DeployHappyAAContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
