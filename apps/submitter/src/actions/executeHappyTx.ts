@@ -6,35 +6,16 @@ import { findExecutionAccount } from "./findExecutionAccount"
 
 export async function executeHappyTx({
     entryPoint,
+    simulate,
     tx,
-}: { entryPoint: `0x${string}`; tx: HappyTx }): Promise<HappyTxState> {
-    const hasGasLimitsSet = tx.executeGasLimit && tx.gasLimit && tx.maxFeePerGas && tx.submitterFee
-
-    const usingPaymaster = tx.account !== tx.paymaster
-
+}: { entryPoint: `0x${string}`; tx: HappyTx; simulate: boolean }): Promise<HappyTxState> {
     const account = findExecutionAccount(tx)
-
-    // If using a paymaster, these values may be left as 0
-    // and we will fill in here
-    if (usingPaymaster && !hasGasLimitsSet) {
-        const estimates = await submitterClient.estimateSubmitGas({
-            address: entryPoint,
-            args: [encodeHappyTx(tx)],
-            account,
-        })
-
-        tx.executeGasLimit ||= estimates.executeGasLimit
-        tx.gasLimit ||= estimates.gasLimit
-        tx.maxFeePerGas ||= estimates.maxFeePerGas
-        tx.submitterFee ||= estimates.submitterFee
-    }
-
     const encoded = encodeHappyTx(tx)
 
     const args = { address: entryPoint, args: [encoded], account } as const
 
     // if gas limits where manually set, we skip simulation
-    const { request } = hasGasLimitsSet ? { request: { ...args } } : await submitterClient.simulateSubmit({ ...args })
+    const { request } = simulate ? await submitterClient.simulateSubmit({ ...args }) : { request: { ...args } }
 
     const hash = await submitterClient.submit({
         ...request,

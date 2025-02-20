@@ -12,7 +12,8 @@ export type HappyTxReceipt = {
     account: Address
 
     /** The nonce of the HappyTx. */
-    nonce: UInt256
+    nonceTrack: UInt256
+    nonceValue: UInt256
 
     /** EntryPoint to which the HappyTx was submitted onchain. */
     entryPoint: Address

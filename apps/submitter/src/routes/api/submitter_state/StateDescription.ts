@@ -1,15 +1,15 @@
 import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
-import { EstimateGasOutputSchema } from "./EstimateGasOutputSchema"
+import { StateOutputSchema } from "./StateOutputSchema"
 
-export const estimateGasDescription = describeRoute({
-    description: "Estimate gas for the supplied HappyTx",
+export const stateDescription = describeRoute({
+    description: "Fetch State Details",
     responses: {
         200: {
-            description: "Successful gas estimation",
+            description: "State Found",
             content: {
                 "application/json": {
-                    schema: resolver(EstimateGasOutputSchema),
+                    schema: resolver(StateOutputSchema),
                 },
             },
         },
@@ -19,7 +19,7 @@ export const estimateGasDescription = describeRoute({
             content: {
                 "application/json": {
                     // TODO: error schema
-                    schema: resolver(EstimateGasOutputSchema),
+                    schema: resolver(StateOutputSchema),
                 },
             },
         },

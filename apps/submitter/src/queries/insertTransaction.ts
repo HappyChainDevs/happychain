@@ -1,5 +1,5 @@
 import { db } from "#src/database"
-import type { Transaction } from "#src/database/types"
+import type { Transaction } from "#src/database/generated"
 
 export async function insertTransaction(tx: Omit<Transaction, "id">) {
     return await db

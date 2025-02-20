@@ -5,10 +5,8 @@ export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .createTable("happy_transactions")
         .addColumn("id", "integer", (col) => col.primaryKey())
-        //
-        .addColumn("transactionId", "integer", (col) => col.references("transactions.id").defaultTo(null))
+        .addColumn("happyTxHash", "text", (col) => col.notNull().unique())
         .addColumn("entryPoint", "text", (col) => col.notNull())
-        //
         .addColumn("account", "text", (col) => col.notNull())
         .addColumn("gasLimit", "text", (col) => col.notNull())
         .addColumn("executeGasLimit", "text", (col) => col.notNull())

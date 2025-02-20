@@ -20,6 +20,7 @@ export type SubmitOutput =
       }
     | {
           status: Exclude<SubmitStatus, SubmitSuccess>
+          hash?: never
       }
 
 /**
@@ -58,16 +59,20 @@ export type SubmitCancelOutput = {
 
     /** Hash of the transaction (*not* HappyTx!) that will cancel the original HappyTx. */
     hash: Hash
+    receipt?: never
 } | {
     status: SubmitCancelStatus.OriginalIncluded
 
     /** Receipt for the original transaction that was included onchain. */
     receipt: HappyTxReceipt
+    hash?: never
 } | {
     status: Exclude<
         SubmitterErrorStatus,
         SubmitterErrorStatus.SimulationTimeout | SubmitterErrorStatus.ReceiptTimeout
     >
+    hash?: never
+    receipt?: never
 }
 
 /**

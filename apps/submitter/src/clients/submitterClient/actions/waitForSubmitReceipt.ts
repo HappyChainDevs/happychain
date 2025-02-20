@@ -1,5 +1,5 @@
 import type { happyChainSepolia } from "@happy.tech/wallet-common"
-import type { Account, Client, Hex, HttpTransport } from "viem"
+import { type Account, type Client, type Hex, type HttpTransport, keccak256 } from "viem"
 import { waitForTransactionReceipt } from "viem/actions"
 import { EntryPointStatus } from "#src/tmp/interface/status"
 import { decodeHappyTx } from "#src/utils/decodeHappyTx"
@@ -12,17 +12,18 @@ export async function waitForSubmitReceipt<account extends Account | undefined =
 
     const decoded = decodeHappyTx(tx)
 
+    const happyTxHash = keccak256(tx)
     // TODO: this makes many assumptions (such as it was a success)...
     // TODO: this formats all bigints.toString(16) which isn't ok
     return {
-        happyTxHash: hash,
+        happyTxHash: happyTxHash,
 
         /** Account that sent the HappyTx. */
         account: decoded.account,
 
         /** The nonce of the HappyTx. */
-        nonceTrack: decoded.nonceTrack.toString(16),
-        nonceValue: decoded.nonceValue.toString(16),
+        nonceTrack: decoded.nonceTrack,
+        nonceValue: decoded.nonceValue,
 
         /** EntryPoint to which the HappyTx was submitted onchain. */
         entryPoint: receipt.to,
@@ -31,7 +32,7 @@ export async function waitForSubmitReceipt<account extends Account | undefined =
         status: EntryPointStatus.Success,
 
         /** Logs emitted by HappyTx. */
-        logs: [], //receipt.logs, // TODO:
+        // logs: [], //receipt.logs, // TODO:
 
         /**
          * The revertData carried by one of our custom error, or the raw deal for
@@ -46,10 +47,10 @@ export async function waitForSubmitReceipt<account extends Account | undefined =
         failureReason: "0x",
 
         /** Gas used by the HappyTx */
-        gasUsed: receipt.gasUsed.toString(16),
+        gasUsed: receipt.gasUsed,
 
         /** Total gas cost for the HappyTx in wei (inclusive submitter fee) */
-        gasCost: (receipt.gasUsed * receipt.effectiveGasPrice).toString(16),
+        gasCost: receipt.gasUsed * receipt.effectiveGasPrice,
 
         /**
          * Receipt for the transaction that carried the HappyTx.
@@ -57,16 +58,16 @@ export async function waitForSubmitReceipt<account extends Account | undefined =
          * carrying the happyTx, and could potentially have carried multiple happyTxs.
          */
         txReceipt: {
-            blobGasPrice: receipt.blobGasPrice?.toString(16),
-            blobGasUsed: receipt.blobGasUsed?.toString(16),
+            blobGasPrice: receipt.blobGasPrice,
+            blobGasUsed: receipt.blobGasUsed,
             blockHash: receipt.blockHash,
-            blockNumber: receipt.blockNumber?.toString(16),
+            blockNumber: receipt.blockNumber,
             contractAddress: receipt.contractAddress,
-            cumulativeGasUsed: receipt.cumulativeGasUsed?.toString(16),
-            effectiveGasPrice: receipt.effectiveGasPrice?.toString(16),
+            cumulativeGasUsed: receipt.cumulativeGasUsed,
+            effectiveGasPrice: receipt.effectiveGasPrice,
             from: receipt.from,
-            gasUsed: receipt.gasUsed?.toString(16),
-            logs: receipt.logs.map((l) => ({ ...l, blockNumber: l.blockNumber.toString(16) })),
+            gasUsed: receipt.gasUsed,
+            logs: receipt.logs.map((l) => ({ ...l, blockNumber: l.blockNumber })),
             logsBloom: receipt.logsBloom,
             root: receipt.root,
             status: receipt.status,

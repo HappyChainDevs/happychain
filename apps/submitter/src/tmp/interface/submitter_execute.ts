@@ -12,6 +12,12 @@ export type ExecuteInput = {
     tx: HappyTx
 }
 
+// TODO: improve
+export type ExecuteOutput = {
+    status: string
+    state: HappyTxState
+}
+
 /**
  * POST /submitter_execute
  *
@@ -27,7 +33,7 @@ export type ExecuteInput = {
  * The submitter is nonce-aware and will buffer up to a certain amount of happyTx per nonce track,
  * depending on its configuration. It will submit happyTxs whenever their nonces becomes eligible.
  */
-export declare function submitter_execute(input: HappyTx): HappyTxState
+export declare function submitter_execute(input: ExecuteInput): ExecuteOutput
 
 export enum ExecuteCancelStatus {
     /** The cancellation was successful. */
@@ -40,6 +46,7 @@ export enum ExecuteCancelStatus {
 // biome-ignore format: readability
 export type ExecuteCancelOutput = {
     status: ExecuteCancelStatus.Success
+    receipt?: never
 } | {
     status: ExecuteCancelStatus.OriginalIncluded
 
@@ -47,6 +54,7 @@ export type ExecuteCancelOutput = {
     receipt: HappyTxReceipt
 } | {
     status: Exclude<SubmitterErrorStatus, SubmitterErrorStatus.SimulationTimeout>
+    receipt?: never
 }
 
 /**

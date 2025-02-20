@@ -46,7 +46,6 @@ export async function enqueueBuffer<T extends Processor, THappyBuffer extends Bu
     happyTx: THappyBuffer,
 ): Promise<ReturnType<typeof manager.processor>> {
     const key = `${happyTx.account}-${happyTx.nonceTrack}`
-
     const oldTrack = getTrack(manager.tracks, key)
 
     const track = (oldTrack?.running && oldTrack) || (await initializeTrack(manager, key, happyTx))

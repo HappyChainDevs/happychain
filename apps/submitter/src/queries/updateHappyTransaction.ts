@@ -1,5 +1,5 @@
 import { db } from "#src/database"
-import type { HappyTransaction } from "#src/database/types"
+import type { HappyTransaction } from "#src/database/generated"
 
 export async function updateHappyTransaction(id: HappyTransaction["id"], updates: Partial<HappyTransaction>) {
     return await db

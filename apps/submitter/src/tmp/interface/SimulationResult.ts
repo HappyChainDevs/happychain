@@ -1,11 +1,11 @@
 import type { Address, Hex } from "./common_chain"
 import type { EntryPointStatus, SimulatedValidationStatus } from "./status"
-
+type Prettify<T> = { [K in keyof T]: T[K] } & {}
 /**
  * The result of simulating a HappyTx.
  */
 // biome-ignore format: readability
-export type SimulationResult = {
+export type SimulationResult = Prettify<{
     status: EntryPointStatus
     validationStatus: SimulatedValidationStatus
 
@@ -13,6 +13,8 @@ export type SimulationResult = {
     entryPoint: Address
 } & ({
         status: EntryPointStatus.Success
+        failureReason?: never
+        revertData?: never
     } | {
         // check with `isFailure(status)`
         status:
@@ -35,5 +37,6 @@ export type SimulationResult = {
 
         /** The revertData of the revert error. */
         revertData: Hex
+        failureReason?: never
     }
-)
+)>

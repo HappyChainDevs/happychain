@@ -5,7 +5,7 @@ include ../../makefiles/help.mk
 ##@ Submitter
 
 dev: ## Start the local dev server for development
-	@bun run --hot src/index.ts
+	@NODE_ENV=development bun --bun run --hot src/index.ts
 .PHONY: dev
 
 routes: ## Display all available routes
@@ -20,24 +20,21 @@ clean: ## Removes build artifacts
 	@rm -rf node_modules
 .PHONY: clean
 
-
 migrate-fresh: ## Deletes database and starts fresh
-	@rm ${DATABASE_URL}
-	make migrate
+	@if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi
+	@make migrate
 .PHONY: migrate-fresh
-
 
 migrate: ## Runes latest migrations
 	@bun --bun kysely migrate:latest
 	@bun kysely-codegen \
 		--dialect kysely-bun-sqlite \
-		--out-file=src/database/types.d.ts \
 		--singular \
-		--overrides='{"columns":{"happy_transactions.transactionId":"number | null"}}'
+		--overrides="$$(cat .config/codegen-type-overrides.json)" \
+		--out-file=src/database/generated.d.ts 
 .PHONY: migrate
 
 setup: node_modules migrate
-	echo ${DATABASE_URL}
 .PHONY: setup
 
 node_modules: package.json

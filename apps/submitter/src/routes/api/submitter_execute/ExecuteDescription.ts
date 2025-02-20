@@ -18,6 +18,7 @@ export const executeDescription = describeRoute({
             description: "Unprocessable Content",
             content: {
                 "application/json": {
+                    // TODO: error schema
                     schema: resolver(ExecuteOutputSchema),
                 },
             },

@@ -15,13 +15,17 @@ import type {
 // biome-ignore format: readability
 export type HappyTxStateSubmitterError = {
     status: SubmitterErrorSimulationUnavailable
+    included?: never,
+    receipt?: never
+    simulation?: never
 }
 export type HappyTxStateEntryPointError = {
-    status: Omit<EntryPointStatus, EntryPointStatus.Success> | SubmitterErrorSimulationMaybeAvailable
+    status: Prettify<Omit<EntryPointStatus, EntryPointStatus.Success> | SubmitterErrorSimulationMaybeAvailable>
 
     /** Whether the happyTx was included and executed onchain. */
     included: false
 
+    receipt?: never
     /**
      * The result of simulation. Not guaranteed to be available, as a submitter does not have
      * to presimulate a tx before submitting, nor does he have to persist the simulation result.
@@ -31,14 +35,14 @@ export type HappyTxStateEntryPointError = {
 
 export type HappyTxStateSuccess = {
     status: EntryPointStatus.Success
-
-    /** Whether the happyTx was included and executed onchain. */
     included: true
-
     receipt: HappyTxReceipt
+    simulation?: never
 }
 
-export type HappyTxState = HappyTxStateSubmitterError | HappyTxStateEntryPointError | HappyTxStateSuccess
+type Prettify<T> = { [K in keyof T]: T[K] } & {}
+
+export type HappyTxState = Prettify<HappyTxStateSubmitterError | HappyTxStateEntryPointError | HappyTxStateSuccess>
 
 // -------------------------------------------------------------------------------------------------
 
@@ -60,6 +64,7 @@ export type StateRequestOutput = {
     state: HappyTxState
 } | {
     status: StateRequestStatus.UnknownHappyTx
+    state?: never
 }
 
 // -------------------------------------------------------------------------------------------------
