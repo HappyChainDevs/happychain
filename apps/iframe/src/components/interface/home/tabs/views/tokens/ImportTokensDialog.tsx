@@ -59,8 +59,9 @@ export const ImportTokensDialog = () => {
     const symbolInputInvalidCondition = !isLoading && isValidAddress && symbol === undefined && customTokenSymbol === ""
     const decimalsInputInvalidCondition = !isLoading && isValidAddress && decimals === undefined
 
-    // Fields should be readonly if contract data was successfully fetched
-    const symbolInputReadOnly = symbol !== undefined
+    // Fields should be readonly (uneditable) iff there's no data fetched from the contract
+    // indicating that the entered contract address is not a valid token contract
+    const symbolInputReadOnly = symbol === undefined
 
     // Button should be disabled if:
     // 1. Address is invalid OR
@@ -85,10 +86,10 @@ export const ImportTokensDialog = () => {
             setCustomTokenSymbol(symbol)
         }
 
-        if (inputAddress === "") {
+        if (inputAddress === "" || !isValidAddress) {
             setCustomTokenSymbol("")
         }
-    }, [inputAddress, symbol])
+    }, [inputAddress, symbol, isValidAddress])
 
     const submitWatchAssetData = useCallback(
         async (e: React.FormEvent<HTMLFormElement>) => {
@@ -213,6 +214,7 @@ export const ImportTokensDialog = () => {
                                     !isValidAddress && "opacity-20 cursor-not-allowed",
                                     `${recipeTextInput({ scale: "default" })}`,
                                 )}
+                                disabled={!isValidAddress}
                                 defaultValue={!isValidAddress ? "" : decimals !== undefined ? decimals : ""}
                             />
                         </FieldInput>

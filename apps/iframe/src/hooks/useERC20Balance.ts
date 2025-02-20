@@ -62,12 +62,6 @@ export function useERC20Balance(
                 const decimals = decimalsResult.result
                 const symbol = symbolResult.result as string | undefined
 
-                // token symbol must be 11 characters or lesser
-                // https://docs.metamask.io/wallet/reference/json-rpc-methods/wallet_watchasset/
-                if (symbol && symbol.length > 11) {
-                    console.warn(`Token symbol "${symbol}" exceeds 11 characters and will be truncated.`)
-                }
-
                 // compute formatted value only if both values are read from the contract
                 const formatted =
                     value !== undefined && decimals !== undefined ? formatUnits(value, decimals) : undefined
