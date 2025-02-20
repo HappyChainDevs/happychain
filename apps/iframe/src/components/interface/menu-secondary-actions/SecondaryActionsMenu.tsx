@@ -11,6 +11,7 @@ const TriggerSecondaryActionsMenu = () => {
 
     return (
         <button
+            className="rounded-full p-0.5 aspect-square bg-neutral/5 focus-within:bg-neutral/10 dark:bg-neutral/50 dark:focus-within:bg-neutral/60"
             type="button"
             title={isVisible ? "Close this menu" : "Open this menu"}
             aria-label={isVisible ? "Close secondary actions menu" : "Open secondary actions menu"}
@@ -18,7 +19,7 @@ const TriggerSecondaryActionsMenu = () => {
                 setVisibility(!isVisible)
             }}
         >
-            {isVisible ? <CaretUp size="1.25em" /> : <CaretDown size="1.25em" />}
+            {isVisible ? <CaretUp size="1.15em" /> : <CaretDown size="1.15em" />}
         </button>
     )
 }
@@ -26,6 +27,7 @@ const TriggerSecondaryActionsMenu = () => {
 enum MenuActions {
     Permissions = "permissions",
     LogOut = "logout",
+    Back = "back",
 }
 
 const SecondaryActionsMenu = () => {
@@ -53,14 +55,18 @@ const SecondaryActionsMenu = () => {
             }}
         >
             <div
-                className={recipePositioner({
-                    originY: "bottom",
-                    mode: "modal",
-                })}
+                className={cx(
+                    "top-0",
+                    recipePositioner({
+                        originY: "bottom",
+                        mode: "modal",
+                    }),
+                )}
             >
                 <Menu.Content
                     className={cx(
                         [
+                            "lock-parent-scroll",
                             // Animation
                             "motion-safe:data-[state=open]:animate-growIn",
                             "py-2 sm:pb-0",
@@ -91,7 +97,12 @@ const SecondaryActionsMenu = () => {
                                 </span>
                             </Link>
                         </Menu.Item>
-                        <Menu.Item value={MenuActions.LogOut}>Logout</Menu.Item>
+                        <Menu.Item value={MenuActions.LogOut}>
+                            <span className="w-full max-w-prose mx-auto inline-flex">Logout</span>
+                        </Menu.Item>
+                        <Menu.Item value={MenuActions.Back}>
+                            <span className="w-full max-w-prose mx-auto inline-flex">Go back</span>
+                        </Menu.Item>
                     </div>
                 </Menu.Content>
             </div>

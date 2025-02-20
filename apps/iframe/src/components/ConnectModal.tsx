@@ -107,7 +107,7 @@ export function ConnectModal() {
                                     >
                                         <img
                                             className={cx(
-                                                "h-full w-auto max-w-8",
+                                                "h-[1.5em] object-container max-w-8",
                                                 prov.id === "injected:wallet.injected" && "dark:invert",
                                             )}
                                             src={prov.icon}

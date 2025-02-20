@@ -33,3 +33,5 @@ export const ActivityView = () => {
         </div>
     )
 }
+
+export default ActivityView

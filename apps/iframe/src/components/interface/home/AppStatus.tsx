@@ -4,12 +4,12 @@ import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { currentChainAtom } from "#src/state/chains.ts"
 import { getAppURL } from "#src/utils/appURL"
 
-const AppStatus = () => {
+export const AppStatus = () => {
     const hasPermission = useHasPermissions("eth_accounts")
     const chain = useAtomValue(currentChainAtom)
 
     return (
-        <div className="focus-within:bg-neutral/5 rounded-md flex w-full items-center justify-center relative text-sm font-bold">
+        <div className="mt-auto py-0.5 bg-base-200 sticky bottom-0 focus-within:bg-neutral/5 rounded-md flex w-full items-center justify-center text-xs font-bold">
             <Link
                 to="/embed/permissions/$dappId"
                 params={{ dappId: encodeURI(getAppURL()) }}
@@ -25,5 +25,3 @@ const AppStatus = () => {
         </div>
     )
 }
-
-export default AppStatus

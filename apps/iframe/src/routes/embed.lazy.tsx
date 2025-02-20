@@ -12,10 +12,7 @@ import { ConnectModal } from "../components/ConnectModal"
 import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
 import { DialogConfirmLogOut } from "../components/interface/menu-secondary-actions/DialogConfirmLogOut"
-import {
-    SecondaryActionsMenu,
-    TriggerSecondaryActionsMenu,
-} from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
+import { SecondaryActionsMenu } from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
 import { useActiveConnectionProvider } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
 import { userAtom } from "../state/user"
@@ -72,15 +69,15 @@ function Embed() {
     }
     return (
         <>
-            <main className="flex h-screen w-screen items-stretch overflow-hidden bg-base-200">
-                <div className="flex flex-col size-full items-center justify-start">
+            <main className="h-dvh w-screen rounded-3xl overflow-hidden flex flex-col">
+                <div className="flex flex-col gap-2 size-full">
                     <GlobalHeader />
-
-                    <div className="relative flex flex-col grow w-full">
-                        {!location.pathname.includes("permissions") && (
-                            <div className="hidden lg:flex w-full items-center justify-between gap-2 bg-base-100 p-2 border-t border-b border-neutral">
-                                <UserInfo />
-                                <TriggerSecondaryActionsMenu />
+                    {!location.pathname.includes("permissions") && (
+                        <section className="w-full max-w-prose mx-auto">
+                            <div className="hidden relative h-fit lg:flex w-fit mx-auto gap-2">
+                                <div className="text-[0.825rem] flex px-2 max-w-prose mx-auto gap-2">
+                                    <UserInfo />
+                                </div>
                             </div>
                         </section>
                     )}
@@ -92,17 +89,7 @@ function Embed() {
                                 <DialogConfirmLogOut handleDisconnect={logout} />
                             </>
                         )}
-
-                        <div className="hidden relative lg:flex w-full grow overflow-y-auto">
-                            <Outlet />
-                            {!location.pathname.includes("permissions") && (
-                                <>
-                                    <SecondaryActionsMenu />
-                                    <DialogConfirmLogOut handleDisconnect={logout} />
-                                </>
-                            )}
-                        </div>
-                    </div>
+                    </section>
                 </div>
             </main>
         </>
