@@ -12,7 +12,7 @@ export const HappyBalance = () => {
         <div className="mx-auto">
             <p className="gap-2 text-3xl items-center leading-none flex tabular-nums">
                 <span className="font-bold">{formattedBalance}</span>
-                <span className="text-[0.675em] font-medium">HAPPY</span>
+                <span className="text-[0.675em] font-medium">$HAPPY</span>
             </p>
         </div>
     )
