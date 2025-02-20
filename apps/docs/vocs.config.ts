@@ -82,5 +82,20 @@ export default defineConfig({
                 },
             ],
         },
+        {
+            text: "Randomness",
+            link: "/randomness",
+            collapsed: true,
+            items: [
+                {
+                    text: "Getting Started",
+                    link: "/randomness/getting-started",
+                },
+                {
+                    text: "Architecture",
+                    link: "/randomness/architecture",
+                },
+            ],
+        },
     ],
 })

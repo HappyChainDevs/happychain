@@ -1,0 +1,32 @@
+---
+layout: doc
+---
+
+# Architecture
+
+## Design
+
+The best solution to obtain provable randomness is to use a distributed system where multiple actors work together to create randomness that none of them can control. 
+It can be thought of a distributed commit-reveal system, where multiple actors commit a contribution to randomness, then reveal at the same time. [drand is such a system](https://drand.love/docs/overview/).
+
+[The drand quicknet produces a new random value every 3s.](https://drand.love/developer/http-api/#public-endpoints)
+Happychain creates a new block every 2s, so this is not enough for every block to have its own unique randomness value.
+
+This can be fixed by having the sequencer commit to a random salt value every block (by posting its hash), revealing it a few blocks later. 
+Then, random values for slots where no drand value are available can be obtained by combining the latest drand value with the latest reveal.
+These values are brought on-chain by an instance of the [txm](/txm). 
+
+## Verification
+Drand randomness is signed by the network nodes, in the form of an aggregated BLS signature. 
+The public (aggregated) key is distributed with the network info, and the signature is distributed with each network info (all of these can be obtained via http API calls).
+
+The integrity of the posted BLS signature is verified in solidity by the Random contract.
+
+## Security
+Because the randomness service selects and posts the salt before the drand value was known, he cannot influence the randomness. 
+The sequencer can, however, know the random value as soon as the drand value becomes known. This considered within the existing security model of the chain.
+
+## Inspirations and Acknowledgements
+- [drand](https://drand.love/docs/overview/)
+- [anyrand](https://docs.anyrand.com/)
+

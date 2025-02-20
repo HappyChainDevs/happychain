@@ -1,0 +1,36 @@
+---
+layout: doc
+---
+
+# Getting started with Randomness
+
+import { HomePage } from 'vocs/components'
+
+Getting started with your contract is as easy as:
+
+```solidity
+interface IRandomness {
+    function random() external view returns (bytes32);
+}
+
+contract RandomnessConsumer {
+    address public randomnessContractAddress = 0xf4822fC7CB2ec69A5f9D4b5d4a59B949eFfa8311; // Happy Testnet
+
+    //..snip
+    function doSomethingWithRandomness() public {
+        bytes32 randomValue = IRandomness(randomnessContractAddress).random();
+        //..snip
+    }
+}
+```
+## Addresses
+
+The Random contract can be found at:
+| Network | Address |
+|-----------|-----------|
+| Happy Testnet     |  [0xFDfD6DCF1FDdB00f174a36fa950Fd6946F1f2AbF](https://happy-testnet-sepolia.explorer.caldera.xyz/address/0xFDfD6DCF1FDdB00f174a36fa950Fd6946F1f2AbF)   |
+
+
+
+
+
