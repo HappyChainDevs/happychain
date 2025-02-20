@@ -19,7 +19,7 @@ const ListItem = ({ permission, dappUrl }: ListItemProps) => {
                 onCheckedChange={(e) => {
                     !e.checked ? revokePermissions(dappUrl, permission) : grantPermissions(dappUrl, permission)
                 }}
-                className="justify-between max-w-prose mx-auto w-full [&_[data-part=label]]:w-3/4 flex-row-reverse text-neutral-content"
+                className="justify-between max-w-prose mx-auto w-full [&_[data-part=label]]:w-3/4 flex-row-reverse dark:text-neutral-content"
                 switchLabel={permissionDescriptions?.[permission] ?? "---"}
             />
         </>
