@@ -1,8 +1,8 @@
 import { useNavigate } from "@tanstack/react-router"
 import { atom, useAtom, useAtomValue } from "jotai"
-import { useMemo } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { type Address, formatEther, isAddress, parseEther } from "viem"
-import { useBalance, useSendTransaction } from "wagmi"
+import { useBalance, useSendTransaction, useWaitForTransactionReceipt } from "wagmi"
 import { getBalanceQueryKey } from "wagmi/query"
 import { coerce, object, string } from "zod"
 import { userAtom } from "#src/state/user"
@@ -74,10 +74,13 @@ export function useFormSendAssets(asset?: Address) {
                     }),
                 })
             },
-            onSuccess() {
-                setForm(DEFAULT_FORM_STATE)
-                navigate({ to: "/embed" })
-            },
+        },
+    })
+
+    const queryWaitForTransactionReceipt = useWaitForTransactionReceipt({
+        hash: mutationSendTransaction?.data,
+        query: {
+            enabled: !!mutationSendTransaction.data,
         },
     })
 
@@ -141,14 +144,25 @@ export function useFormSendAssets(asset?: Address) {
         })
     }
 
+    const onTransactionCompleted = useCallback(() => {
+        mutationSendTransaction.reset()
+        setForm(DEFAULT_FORM_STATE)
+        navigate({ to: "/embed" })
+    }, [setForm, navigate, mutationSendTransaction])
+
+    useEffect(() => {
+        if (queryWaitForTransactionReceipt.isSuccess) onTransactionCompleted()
+    }, [queryWaitForTransactionReceipt.isSuccess, onTransactionCompleted])
+
     return {
         formAtom,
         formErrors,
-        queryBalanceNativeToken,
-        mutationSendTransaction,
+        handleOnClickMaxNativeTokenBalance,
         handleOnInput,
         handleOnSubmit,
-        handleOnClickMaxNativeTokenBalance,
         maximumValueNativeToken,
+        mutationSendTransaction,
+        queryBalanceNativeToken,
+        queryWaitForTransactionReceipt,
     }
 }

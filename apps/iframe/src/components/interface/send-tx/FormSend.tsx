@@ -14,6 +14,7 @@ export const FormSend = () => {
         handleOnInput,
         handleOnClickMaxNativeTokenBalance,
         queryBalanceNativeToken,
+        queryWaitForTransactionReceipt,
         formErrors,
         mutationSendTransaction,
         maximumValueNativeToken,
@@ -29,7 +30,9 @@ export const FormSend = () => {
                         name={FieldFormSendAssets.Recipient}
                         id={FieldFormSendAssets.Recipient}
                         placeholder="0x..."
-                        readOnly={mutationSendTransaction.status === "pending"}
+                        readOnly={
+                            mutationSendTransaction.status === "pending" || queryWaitForTransactionReceipt.isLoading
+                        }
                         onInput={handleOnInput}
                         aria-describedby="help-recipient-address"
                         aria-invalid={!!formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
@@ -72,6 +75,7 @@ export const FormSend = () => {
                             required
                             readOnly={
                                 queryBalanceNativeToken.status !== "success" ||
+                                queryWaitForTransactionReceipt.isLoading ||
                                 mutationSendTransaction.status === "pending"
                             }
                             name={FieldFormSendAssets.Amount}
@@ -95,7 +99,7 @@ export const FormSend = () => {
                             intent="ghost"
                             aria-disabled={
                                 mutationSendTransaction.status === "pending" ||
-                                queryBalanceNativeToken.status === "pending" ||
+                                queryWaitForTransactionReceipt.isLoading ||
                                 maximumValueNativeToken === 0
                             }
                             className="text-xs"
@@ -122,16 +126,27 @@ export const FormSend = () => {
                 <Button
                     className="justify-center"
                     intent="primary"
-                    aria-disabled={mutationSendTransaction.status === "pending" || !!formErrors}
-                    isLoading={mutationSendTransaction.status === "pending"}
+                    aria-disabled={
+                        queryWaitForTransactionReceipt.isLoading ||
+                        mutationSendTransaction.status === "pending" ||
+                        !!formErrors
+                    }
+                    isLoading={mutationSendTransaction.status === "pending" || queryWaitForTransactionReceipt.isLoading}
                     type="submit"
                 >
-                    Send
+                    {mutationSendTransaction.status === "pending"
+                        ? "Sending..."
+                        : queryWaitForTransactionReceipt.isLoading
+                          ? "Confirming..."
+                          : "Send"}
                 </Button>
                 <Button
-                    aria-disabled={mutationSendTransaction.status === "pending"}
+                    aria-disabled={
+                        queryWaitForTransactionReceipt.isLoading || mutationSendTransaction.status === "pending"
+                    }
                     onClick={() => {
-                        if (mutationSendTransaction.status === "pending") return
+                        if (mutationSendTransaction.status === "pending" || queryWaitForTransactionReceipt.isLoading)
+                            return
                         navigate({ to: "/embed" })
                     }}
                     intent="ghost-negative"
