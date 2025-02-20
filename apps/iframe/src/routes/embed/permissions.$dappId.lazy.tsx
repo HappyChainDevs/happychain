@@ -22,44 +22,6 @@ function DappPermissions() {
                 </h2>
                 <p className="sr-only">Access and change the permissions of all dApps you interacted with.</p>
                 <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
                 {Object.keys(listAppPermissions).length > 0 && <ClearAllPermissions url={dappUrl as AppURL} />}
             </div>
         </div>

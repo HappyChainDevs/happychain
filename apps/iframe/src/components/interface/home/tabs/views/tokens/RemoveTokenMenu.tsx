@@ -21,7 +21,7 @@ const RemoveTokenMenu = ({ tokenAddress, userAddress }: RemoveTokensMenuProps) =
     return (
         <Menu.Root aria-label="Asset Options Menu" lazyMount={true} unmountOnExit={true}>
             <Menu.Trigger>
-                <DotsThreeVertical className="opacity-80" size="2.2em" />
+                <DotsThreeVertical className="opacity-80" size="1.5em" />
             </Menu.Trigger>
             <Menu.Positioner className="[--z-index:1!important]">
                 <Menu.Content

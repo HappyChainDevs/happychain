@@ -3,19 +3,17 @@ import { useAtomValue } from "jotai"
 import { useBalance } from "wagmi"
 import { userAtom } from "#src/state/user"
 
-const HappyBalance = () => {
+export const HappyBalance = () => {
     const user = useAtomValue(userAtom)
     const { data: balance } = useBalance({ address: user?.address })
     const formattedBalance = formatUserBalance(balance?.value)
 
     return (
-        <div className="flex flex-row w-full items-center justify-between">
-            <p className="text-lg">$HAPPY</p>
-            <div className="flex flex-col items-center">
-                <p className="text-2xl">{formattedBalance}</p>
-            </div>
+        <div className="mx-auto">
+            <p className="gap-2 text-3xl items-center leading-none flex tabular-nums">
+                <span className="font-bold">{formattedBalance}</span>
+                <span className="text-[0.675em] font-medium">HAPPY</span>
+            </p>
         </div>
     )
 }
-
-export default HappyBalance

@@ -1,3 +1,4 @@
+import { Coins } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { userAtom } from "#src/state/user"
 import { watchedAssetsAtom } from "#src/state/watchedAssets"
@@ -15,7 +16,7 @@ const TokenView = () => {
     const userAssets = watchedAssets[user.address]
 
     return (
-        <ul className="flex flex-col w-full max-h-4/5 overflow-y-auto bg-content min-h-full gap-y-2">
+        <ul className="flex flex-col w-full bg-content min-h-full gap-y-2">
             {userAssets?.length > 0 ? (
                 userAssets.map((asset) => (
                     <li className="relative" key={`${asset.options.address}-${user.uid}`}>
@@ -23,7 +24,12 @@ const TokenView = () => {
                     </li>
                 ))
             ) : (
-                <p className="text-base-content">No apps have added tokens to be tracked.</p>
+                <div className="flex flex-col gap-3 items-center justify-center pt-6">
+                    <Coins className="text-primary/70 dark:text-primary/70 text-4xl" weight="duotone" />
+                    <p className="text-xs italic text-base-content/70 dark:text-base-content/80">
+                        Your watched tokens will appear here.
+                    </p>
+                </div>
             )}
         </ul>
     )
