@@ -10,7 +10,7 @@ export const recipeTextInput = cva(
         "text-start",
         "text-neutral-12/90",
         // User activity: focus
-        "focus:outline-none focus:ring-4 focus:ring-opacity-25",
+        "focus:outline-none focus:ring-2 focus:ring-opacity-25",
         // Behaviour: disabled
         "[&:is([aria-disabled=true],:disabled)]:opacity-20 [&:is([aria-disabled=true],:disabled)]:cursor-not-allowed",
         // State: invalid

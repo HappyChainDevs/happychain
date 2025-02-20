@@ -186,7 +186,7 @@ export const ImportTokensDialog = () => {
                                 inputClass="w-full"
                                 scale={"default"}
                                 onChange={handleCustomSymbolInputChange}
-                                disabled={!isValidAddress}
+                                disabled={!isValidAddress || symbolInputInvalidCondition}
                                 readOnly={symbolInputReadOnly}
                             />
                         </FieldInput>
@@ -214,7 +214,7 @@ export const ImportTokensDialog = () => {
                                     !isValidAddress && "opacity-20 cursor-not-allowed",
                                     `${recipeTextInput({ scale: "default" })}`,
                                 )}
-                                disabled={!isValidAddress}
+                                disabled={!isValidAddress || decimalsInputInvalidCondition}
                                 defaultValue={!isValidAddress ? "" : decimals !== undefined ? decimals : ""}
                             />
                         </FieldInput>
