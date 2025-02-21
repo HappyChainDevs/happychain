@@ -5,6 +5,8 @@ import { privateKeyToAccount } from "viem/accounts"
 import { chain } from "#src/clients"
 import { abis, deployment } from "#src/deployments"
 import env from "#src/env"
+import { logger } from "#src/logger"
+import * as createRoute from "./openApi/create"
 
 // Account responsible for deploying ScrappyAccounts
 const account = privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
@@ -14,6 +16,7 @@ const walletClient = createWalletClient({ chain, transport: http(), account })
 async function getValidAddress({ salt, owner }: { salt: Hex; owner: Hex }) {
     let _salt = salt
     for (let i = 0; i < 10; i++) {
+        logger.trace("Fetching Address", { owner, salt: _salt })
         // TODO: This could be calculated offchain to save a call
         // helper utility found in contracts/scripts/utils/getAddressERC1967.ts
         // HAPPY-389
@@ -35,14 +38,18 @@ async function getValidAddress({ salt, owner }: { salt: Hex; owner: Hex }) {
     throw new Error("Failed to find a valid address")
 }
 
-export default new Hono().post("/create", async (c) => {
-    const data = await c.req.json()
+export default new Hono().post("/create", createRoute.description, createRoute.validation, async (c) => {
+    const data = await c.req.valid("json")
 
     const validAccount = await getValidAddress(data)
 
     // Check if a contract is already deployed at the predicted address
     const alreadyDeployed = await isContractDeployed(validAccount.address)
-    if (alreadyDeployed) return c.json(validAccount, 200)
+
+    if (alreadyDeployed) {
+        logger.trace("Already Deployed!")
+        return c.json(validAccount, 200)
+    }
 
     const { request, result } = await publicClient.simulateContract({
         address: deployment.ScrappyAccountFactory,
@@ -51,6 +58,7 @@ export default new Hono().post("/create", async (c) => {
         args: [validAccount.salt, validAccount.owner],
         account,
     })
+    logger.trace(`Account Simulation Result: ${result}`)
 
     // Check if the predicted address matches the result
     if (result !== validAccount.address) throw new Error("Address mismatch during simulation")
@@ -63,6 +71,7 @@ export default new Hono().post("/create", async (c) => {
     if (!(await isContractDeployed(validAccount.address)))
         throw new Error(`Contract deployment failed: No code found at ${validAccount.address}`)
 
+    logger.trace(`Account Creation Result: ${result}`)
     return c.json(validAccount, 200)
 })
 
