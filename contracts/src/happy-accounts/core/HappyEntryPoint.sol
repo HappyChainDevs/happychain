@@ -120,9 +120,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * @dev Maximum amount of data allowed to be returned from {IHappyAccount.execute}
      * The encoding of the returned {ExecutionOutput} struct is as follows:
      *
-     * 1st slot: Offset for the struct
+     * 1st slot: Offset for the struct (returned values are encoded as a tuple)
      * 2nd slot: {ExecutionOutput.gas}
-     * 3rd slot: offset for reverData from where the struct begins
+     * 3rd slot: offset for revertData from where the struct begins
      * 4th slot: {ExecutionOutput.revertData.Length}
      * 5th slot (onwards): {ExecutionOutput.revertData} (max 256 bytes)
      */
