@@ -3,6 +3,10 @@ import type { HappyTxReceipt } from "./HappyTxReceipt"
 import type { HappyTxState } from "./HappyTxState"
 import type { Address, Hash } from "./common_chain"
 import type { SubmitterErrorStatus } from "./status"
+import { type SubmitStatus, SubmitSuccess } from "./submitter_submit"
+
+export type ExecuteSuccess = SubmitSuccess
+export const ExecuteSuccess = SubmitSuccess
 
 export type ExecuteInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
@@ -12,11 +16,15 @@ export type ExecuteInput = {
     tx: HappyTx
 }
 
-// TODO: improve
-export type ExecuteOutput = {
-    status: string
-    state: HappyTxState
-}
+export type ExecuteOutput =
+    | {
+          status: ExecuteSuccess
+          state: HappyTxState
+      }
+    | {
+          status: Exclude<SubmitStatus, SubmitSuccess>
+          hash?: never
+      }
 
 /**
  * POST /submitter_execute
