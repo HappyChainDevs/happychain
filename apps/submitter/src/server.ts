@@ -8,6 +8,7 @@ import { timing as timingMiddleware } from "hono/timing"
 import env from "./env"
 import { logger } from "./logger"
 import accountsApi from "./routes/api/accounts"
+import { initOpenAPI } from "./routes/docs"
 
 export const app = new Hono()
     // middleware
@@ -33,5 +34,8 @@ app.onError((err, c) => {
     logger.warn(err)
     return c.json({ message: "Something Happened" }, 500)
 })
+
+// Enable API Documentation page
+initOpenAPI(app)
 
 export type AppType = typeof app
