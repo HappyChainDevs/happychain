@@ -4,14 +4,16 @@ import { privateKeyToAccount } from "viem/accounts"
 import { chain } from "#src/clients"
 import { abis, deployment } from "#src/deployments"
 import env from "#src/env"
+import { logger } from "#src/logger"
+import * as createRoute from "./openApi/create"
 
 // Account responsible for deploying ScrappyAccounts
 const account = privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
 const publicClient = createPublicClient({ chain, transport: http() })
 const walletClient = createWalletClient({ chain, transport: http(), account })
 
-export default new Hono().post("/create", async (c) => {
-    const { salt, owner } = await c.req.json()
+export default new Hono().post("/create", createRoute.description, createRoute.validation, async (c) => {
+    const { salt, owner } = await c.req.valid("json")
 
     const predictedAddress = await publicClient.readContract({
         address: deployment.ScrappyAccountFactory,
@@ -22,7 +24,11 @@ export default new Hono().post("/create", async (c) => {
 
     // Check if a contract is already deployed at the predicted address
     const alreadyDeployed = await isContractDeployed(predictedAddress)
-    if (alreadyDeployed) return c.json({ address: predictedAddress, salt, owner }, 200)
+
+    if (alreadyDeployed) {
+        logger.trace("Already Deployed!")
+        return c.json({ address: predictedAddress, salt, owner }, 200)
+    }
 
     const { request, result } = await publicClient.simulateContract({
         address: deployment.ScrappyAccountFactory,
@@ -31,6 +37,7 @@ export default new Hono().post("/create", async (c) => {
         args: [salt, owner],
         account,
     })
+    logger.trace(`Account Simulation Result: ${result}`)
 
     // Check if the predicted address matches the result
     if (result !== predictedAddress) throw new Error("Address mismatch during simulation")
@@ -43,6 +50,7 @@ export default new Hono().post("/create", async (c) => {
     if (!(await isContractDeployed(predictedAddress)))
         throw new Error(`Contract deployment failed: No code found at ${predictedAddress}`)
 
+    logger.trace(`Account Creation Result: ${result}`)
     return c.json({ address: predictedAddress, salt, owner }, 200)
 })
 
