@@ -11,9 +11,9 @@ import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "../core/HappyTx.sol";
 
 /**
- * @notice An example paymaster contract implementing the IHappyPaymaster interface.
- *         This paymaster sponsors any call, as long as its submitter fee is not too high
- *         (computed on the basis of a max gas cost per byte of calldata, configurable at deploy time).
+ * An example paymaster contract implementing the IHappyPaymaster interface.
+ * This paymaster sponsors any call, as long as its submitter fee is not too high
+ * (computed on the basis of a max gas cost per byte of calldata, configurable at deploy time).
  */
 contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable {
     using ECDSA for bytes32;
@@ -33,16 +33,16 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     ///      Given RLP encoding, this should usually be significantly less.
     uint256 private constant MAX_TX_SIZE = 280;
 
-    /// @dev The allowed EntryPoint contract
+    /// The allowed EntryPoint contract
     address public immutable ENTRYPOINT;
 
-    /// @dev This paymaster refuses to pay more to the submitter than this amount of wei per byte of data.
+    /// This paymaster refuses to pay more to the submitter than this amount of wei per byte of data.
     uint256 public immutable SUBMITTER_TIP_PER_BYTE;
 
     // ====================================================================================================
     // EVENTS
 
-    /// @notice Emitted when ETH is received by the contract
+    /// Emitted when ETH is received by the contract
     event Received(address indexed sender, uint256 amount);
 
     // ====================================================================================================
@@ -105,7 +105,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
         emit Received(msg.sender, msg.value);
     }
 
-    /// @notice Allows the owner to withdraw a specified amount of funds from the paymaster, reverting if failing to transfer.
+    /// Allows the owner to withdraw a specified amount of funds from the paymaster, reverting if failing to transfer.
     function withdraw(address to, uint256 amount) external onlyOwner {
         if (amount > address(this).balance) revert("Insufficient balance");
         (bool success,) = payable(to).call{value: amount}("");

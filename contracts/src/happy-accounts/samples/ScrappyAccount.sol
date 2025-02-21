@@ -28,8 +28,8 @@ import {
 } from "../utils/Common.sol";
 
 /**
- * @dev    Example implementation of a Happy Account with nonce management, reentrancy protection,
- *         and proxy upgrade capability.
+ * Example implementation of a Happy Account with nonce management, reentrancy protection,
+ * and proxy upgrade capability.
  */
 contract ScrappyAccount is
     IHappyAccount,
@@ -45,10 +45,10 @@ contract ScrappyAccount is
     // ====================================================================================================
     // EVENTS
 
-    /// @notice Emitted when the contract implementation is upgraded to a new implementation
+    /// Emitted when the contract implementation is upgraded to a new implementation
     event Upgraded(address indexed newImplementation);
 
-    /// @notice Emitted when ETH is received by the contract
+    /// Emitted when ETH is received by the contract
     event Received(address indexed sender, uint256 amount);
 
     // ====================================================================================================
@@ -66,10 +66,10 @@ contract ScrappyAccount is
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
 
-    /// @dev The allowed EntryPoint contract
-    address private immutable ENTRYPOINT;
+    /// The allowed EntryPoint contract
+    address public immutable ENTRYPOINT;
 
-    /// @dev Mapping from track => nonce
+    /// Mapping from track => nonce
     mapping(uint192 => uint64) public nonceValue;
 
     // ====================================================================================================
@@ -89,7 +89,7 @@ contract ScrappyAccount is
         _disableInitializers();
     }
 
-    /// @notice Initializer for proxy instances. Called by the factory during proxy deployment.
+    /// Initializer for proxy instances. Called by the factory during proxy deployment.
     function initialize(address owner) external initializer {
         __Ownable_init(owner);
         __UUPSUpgradeable_init();
@@ -196,17 +196,8 @@ contract ScrappyAccount is
     // ====================================================================================================
     // VIEW FUNCTIONS
 
-    /// @notice Returns the next nonce for a given nonce track, combining the track with its current nonce sequence
+    /// Returns the next nonce for a given nonce track, combining the track with its current nonce sequence
     function getNonce(uint192 nonceTrack) public view returns (uint256 nonce) {
         return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
-    }
-
-    /**
-     * @dev Returns the EntryPoint contract from which this account accepts functions.
-     * This isn't part of {IHappyPaymaster} to enable accounts to accept HappyTx from multiple entrypoints,
-     * which this implementation doesn't support.
-     */
-    function entryPoint() external view returns (address) {
-        return ENTRYPOINT;
     }
 }
