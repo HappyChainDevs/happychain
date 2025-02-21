@@ -8,10 +8,7 @@ import { isHexString } from "./zod/isHexString"
 // variables and their types
 const envSchema = z.object({
     PRIVATE_KEY_LOCAL: z.string().refine(isHexString),
-    PRIVATE_KEY_ACCOUNT_DEPLOYER: z
-        .string()
-        .refine(isHexString)
-        .default(process.env.PRIVATE_KEY_LOCAL as `0x${string}`), // risky, but this is validated above
+    PRIVATE_KEY_ACCOUNT_DEPLOYER: z.string().refine(isHexString),
     APP_PORT: z.coerce.number().default(3002),
     NODE_ENV: z.enum(["production", "development", "test", "cli"]).default("development"),
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
