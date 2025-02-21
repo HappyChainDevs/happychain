@@ -1,0 +1,12 @@
+{
+    "extends": ["@happy.tech/configs/tsconfig.base.json"],
+    "compilerOptions": {
+        "strict": true,
+        "jsx": "react-jsx",
+        "jsxImportSource": "hono/jsx",
+        "paths": {
+            "#src/*": ["./src/*"]
+        }
+    },
+    "include": ["*.ts", "src", "./package.json"]
+}
