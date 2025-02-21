@@ -4,6 +4,9 @@ import { parseAccount } from "viem/accounts"
 import { walletClient } from "#src/clients"
 import { abis } from "#src/deployments"
 import { parseFromViemError } from "#src/errors/utils"
+import { happyTransactionService, submitterService } from "#src/services"
+import { decodeHappyTx } from "#src/utils/decodeHappyTx"
+import { computeHappyTxHash } from "#src/utils/getHappyTxHash"
 
 export async function submit(request: Omit<SubmitWriteParameters, "abi" | "functionName">): Promise<`0x${string}`> {
     const { account: account_, ...params } = request
@@ -11,12 +14,16 @@ export async function submit(request: Omit<SubmitWriteParameters, "abi" | "funct
     const account = account_ ? parseAccount(account_) : null
 
     try {
-        return await walletClient.writeContract({
+        const happyTxHash = computeHappyTxHash(decodeHappyTx(params.args[0]))
+        const persisted = await happyTransactionService.findByHappyTxHashOrThrow(happyTxHash)
+        const transactionHash = await walletClient.writeContract({
             ...params,
             abi: abis.HappyEntryPoint,
             functionName: "submit",
             account,
         } as WriteContractParameters)
+        submitterService.finalizeWhenReady(decodeHappyTx(params.args[0]), persisted.id as number, transactionHash)
+        return transactionHash
     } catch (_err) {
         throw parseFromViemError(_err) || _err
     }
