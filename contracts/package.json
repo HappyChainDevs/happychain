@@ -9,7 +9,9 @@
     "exports": {
         "./account-abstraction/sepolia": "./deployments/happy-sepolia/aa/abis.ts",
         "./mocks/sepolia": "./deployments/happy-sepolia/mocks/abis.ts",
-        "./random/anvil": "./deployments/anvil/random/abis.ts"
+        "./happy-aa/anvil": "./deployments/anvil/happy-aa/abis.ts",
+        "./random/anvil": "./deployments/anvil/random/abis.ts",
+        "./mocks/anvil": "./deployments/anvil/mocks/abis.ts"
     },
     "scripts": {
         "getAddressERC1967Tests": "vitest getAddressERC1967.test.ts"
