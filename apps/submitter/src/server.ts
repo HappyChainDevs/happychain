@@ -8,6 +8,7 @@ import { timing as timingMiddleware } from "hono/timing"
 import env from "./env"
 import { logger } from "./logger"
 import accountsApi from "./routes/api/accounts"
+import submitterApi from "./routes/api/submitter"
 
 export const app = new Hono()
     // middleware
@@ -28,6 +29,7 @@ export const app = new Hono()
     // Routes
     .get("/", (c) => c.text("Greetings from Happychain. Visit https://docs.happy.tech for more information."))
     .route("/api/v1/accounts", accountsApi)
+    .route("/api/v1/submitter", submitterApi)
 
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
 app.onError((err, c) => {
