@@ -7,10 +7,16 @@
             "dist",
             "build",
             "generated.ts",
+            "generated.d.ts",
             "node_modules",
-            "contracts/deployments",
             "routeTree.gen.ts",
-            "*.config.ts.timestamp-*.mjs"
+            "*.config.ts.timestamp-*.mjs",
+
+            "contracts/cache",
+            "contracts/lib",
+            "contracts/out",
+            "contracts/deployments",
+            "contracts/broadcast"
         ]
     },
     "formatter": {

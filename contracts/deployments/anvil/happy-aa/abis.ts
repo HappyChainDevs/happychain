@@ -79,6 +79,11 @@ const contractToAbi = ({
     },
     {
       "type": "error",
+      "name": "MalformedHappyTx",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "PaymentFailed",
       "inputs": [
         {
@@ -145,6 +150,19 @@ const contractToAbi = ({
     },
     {
       "type": "function",
+      "name": "ENTRYPOINT",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "UPGRADE_INTERFACE_VERSION",
       "inputs": [],
       "outputs": [
@@ -152,19 +170,6 @@ const contractToAbi = ({
           "name": "",
           "type": "string",
           "internalType": "string"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "entryPoint",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
         }
       ],
       "stateMutability": "view"
@@ -656,7 +661,7 @@ const contractToAbi = ({
         {
           "name": "sender",
           "type": "address",
-          "indexed": false,
+          "indexed": true,
           "internalType": "address"
         },
         {
@@ -674,19 +679,6 @@ const contractToAbi = ({
       "inputs": [
         {
           "name": "implementation",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "Upgraded",
-      "inputs": [
-        {
-          "name": "newImplementation",
           "type": "address",
           "indexed": true,
           "internalType": "address"
@@ -766,6 +758,11 @@ const contractToAbi = ({
     {
       "type": "error",
       "name": "NotInitializing",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotSelfOrOwner",
       "inputs": []
     },
     {
@@ -869,6 +866,11 @@ const contractToAbi = ({
           "name": "salt",
           "type": "bytes32",
           "internalType": "bytes32"
+        },
+        {
+          "name": "owner",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "outputs": [
@@ -1172,10 +1174,10 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "HappyEntryPoint": "0x11063DeA171d69946Ab39FCE888Dd10258064c1d",
-  "ScrappyAccount": "0x73a2fDfFc3Bb89A166D239de7701e9a3F75F37E7",
-  "ScrappyAccountFactory": "0xEa959CAED58B697258EfB7940E5e17C426483524",
-  "ScrappyPaymaster": "0xF591A2e9ed77cBc1aE5eAD7AC6E3D0d9A58DB69F"
+  "HappyEntryPoint": "0xA87c0d3A5123eB3bB66cD093B25bb30db14CfCD3",
+  "ScrappyAccount": "0xc52AF2D2D72e942d5a401FAb923494A972B580a4",
+  "ScrappyAccountFactory": "0x34338b6f7a979F432063f4D96B4BB37917d103a4",
+  "ScrappyPaymaster": "0x17cb30f230F59b6E328369A97338F1E2A11761a9"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi

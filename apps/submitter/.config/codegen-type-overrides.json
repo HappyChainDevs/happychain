@@ -1,0 +1,29 @@
+{
+    "columns": {
+        "happy_transactions.happyTxHash": "`0x${string}`",
+        "happy_transactions.entryPoint": "`0x${string}`",
+        "happy_transactions.account": "`0x${string}`",
+        "happy_transactions.dest": "`0x${string}`",
+        "happy_transactions.callData": "`0x${string}`",
+        "happy_transactions.paymaster": "`0x${string}`",
+        "happy_transactions.paymasterData": "`0x${string}`",
+        "happy_transactions.validatorData": "`0x${string}`",
+        "happy_transactions.extraData": "`0x${string}`",
+        "happy_transactions.gasLimit": "bigint",
+        "happy_transactions.executeGasLimit": "bigint",
+        "happy_transactions.value": "bigint",
+        "happy_transactions.maxFeePerGas": "bigint",
+        "happy_transactions.submitterFee": "bigint",
+        "happy_transactions.nonceTrack": "bigint",
+        "happy_transactions.nonceValue": "bigint",
+        "happy_receipts.happyTxHash": "`0x${string}`",
+        "happy_receipts.failureReason": "`0x${string}`",
+        "happy_receipts.revertData": "`0x${string}`",
+        "happy_receipts.transactionHash": "`0x${string}`",
+        "happy_receipts.gasUsed": "bigint",
+        "happy_receipts.gasCost": "bigint",
+        "happy_receipts.nonceTrack": "bigint",
+        "happy_receipts.nonceValue": "bigint",
+        "happy_states.included": "boolean"
+    }
+}
