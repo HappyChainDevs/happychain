@@ -43,7 +43,6 @@ describe("submitter_execute", () => {
             const prepared = await prepareTx(dummyHappyTx)
 
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
-
             expect(result.status).toBe(200)
             if (result.status !== 200) return
 
