@@ -9,7 +9,7 @@ import {LibClone} from "solady/utils/LibClone.sol";
 
 import {ENTRYPOINT_V7_SALT, ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
 import {HappyPaymaster} from "../HappyPaymaster.sol";
-import {UserOpLib} from "./UserOpLib.sol";
+import {UserOpLib} from "./userOpLib.sol";
 
 /* solhint-disable no-console*/
 contract GasEstimator is Test {
