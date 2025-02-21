@@ -1,13 +1,16 @@
 import { LogLevel, LogTag, Logger } from "@happy.tech/common"
 import env from "./env"
 
-const logLevel: LogLevel = {
-    off: LogLevel.OFF,
-    trace: LogLevel.TRACE,
-    info: LogLevel.INFO,
-    warn: LogLevel.WARN,
-    error: LogLevel.ERROR,
-}[env.LOG_LEVEL]
+const logLevel: LogLevel =
+    env.NODE_ENV === "test"
+        ? LogLevel.OFF
+        : {
+              off: LogLevel.OFF,
+              trace: LogLevel.TRACE,
+              info: LogLevel.INFO,
+              warn: LogLevel.WARN,
+              error: LogLevel.ERROR,
+          }[env.LOG_LEVEL]
 
 const _logger = Logger.instance
 _logger.enableTags(LogTag.SUBMITTER)
