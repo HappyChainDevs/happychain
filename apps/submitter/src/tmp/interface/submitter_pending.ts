@@ -2,8 +2,9 @@ import type { Address, Hash, UInt256 } from "./common_chain"
 
 export type PendingHappyTxInfo = {
     hash: Hash
-    nonce: UInt256
-    submitted: number
+    nonceTrack: UInt256
+    nonceValue: UInt256
+    submitted: boolean
 }
 
 /**
