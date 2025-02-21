@@ -61,3 +61,4 @@ packages/bundler/alto
 
 # SQLite files
 *.sqlite
+.aider*
