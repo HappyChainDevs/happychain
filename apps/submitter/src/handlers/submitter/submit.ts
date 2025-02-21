@@ -1,4 +1,5 @@
 import { submitterClient } from "#src/clients"
+import { submitterService } from "#src/services"
 import { incrementLocalNonce, isTxBlocked, waitUntilUnblocked } from "#src/services/nonceManager"
 import type { HappyTx } from "#src/tmp/interface/HappyTx"
 import { type SubmitOutput, SubmitSuccess } from "#src/tmp/interface/submitter_submit"
@@ -6,6 +7,9 @@ import { encodeHappyTx } from "#src/utils/encodeHappyTx"
 import { findExecutionAccount } from "#src/utils/findExecutionAccount"
 
 export async function submit(data: { entryPoint: `0x${string}`; tx: HappyTx }): Promise<SubmitOutput> {
+    // Save original tx to the database for historic purposes and data recovery
+    await submitterService.initialize(data.entryPoint, data.tx)
+
     const account = findExecutionAccount(data.tx)
 
     const simulate = await submitterClient.simulateSubmit({
