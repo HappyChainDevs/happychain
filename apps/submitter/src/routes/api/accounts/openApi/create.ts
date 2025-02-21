@@ -2,10 +2,26 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import { isHexString } from "#src/zod/isHexString"
+import env from "#src/env"
+import { isAddress } from "#src/utils/zod/refines/isAddress"
+import { isHexString } from "#src/utils/zod/refines/isHexString"
+
+const inputSchema = z.object({
+    owner: z.string().refine(isAddress).openapi({ example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" }),
+    salt: z
+        .string()
+        .max(66)
+        .refine(isHexString)
+        // convert to bytes32
+        .transform((str) => `0x${str.slice(2).padStart(64, "0")}` as `0x${string}`)
+        .openapi({ example: "0x1" }),
+})
 
 export const description = describeRoute({
+    // Experimental option. Disable in production, but useful in development
+    validateResponse: env.NODE_ENV !== "production",
     description: "Create a new account",
+    hide: env.NODE_ENV === "production",
     responses: {
         200: {
             description: "Successfully created an account",
@@ -22,22 +38,4 @@ export const description = describeRoute({
     },
 })
 
-export const validation = zv(
-    "json",
-    z
-        .object({
-            owner: z.string().refine(isHexString),
-            salt: z
-                .string()
-                .max(66)
-                .refine(isHexString)
-                // convert to bytes32
-                .transform((str) => `0x${str.slice(2).padStart(64, "0")}` as `0x${string}`),
-        })
-        .openapi({
-            example: {
-                owner: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-                salt: "0x1",
-            },
-        }),
-)
+export const validation = zv("json", inputSchema)
