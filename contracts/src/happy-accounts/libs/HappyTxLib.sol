@@ -118,42 +118,30 @@ library HappyTxLib {
 
             // callData
             len := mload(callDataOffset)
-
             mcopy(outPtr, add(callDataOffset, 28), 4)
             outPtr := add(outPtr, 4)
-            callDataOffset := add(callDataOffset, 32)
-
-            mcopy(outPtr, callDataOffset, len)
+            mcopy(outPtr, add(callDataOffset, 32), len)
             outPtr := add(outPtr, len)
 
             // paymasterData
             len := mload(pmDataOffset)
-
             mcopy(outPtr, add(pmDataOffset, 28), 4)
             outPtr := add(outPtr, 4)
-            pmDataOffset := add(pmDataOffset, 32)
-
-            mcopy(outPtr, pmDataOffset, len)
+            mcopy(outPtr, add(pmDataOffset, 32), len)
             outPtr := add(outPtr, len)
 
             // validatorData
             len := mload(validatorDataOffset)
-
             mcopy(outPtr, add(validatorDataOffset, 28), 4)
             outPtr := add(outPtr, 4)
-            validatorDataOffset := add(validatorDataOffset, 32)
-
-            mcopy(outPtr, validatorDataOffset, len)
+            mcopy(outPtr, add(validatorDataOffset, 32), len)
             outPtr := add(outPtr, len)
 
             // extraData
             len := mload(extraDataOffset)
-
             mcopy(outPtr, add(extraDataOffset, 28), 4)
             outPtr := add(outPtr, 4)
-            extraDataOffset := add(extraDataOffset, 32)
-
-            mcopy(outPtr, extraDataOffset, len)
+            mcopy(outPtr, add(extraDataOffset, 32), len)
             outPtr := add(outPtr, len)
         }
     }
