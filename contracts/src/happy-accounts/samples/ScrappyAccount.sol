@@ -60,8 +60,8 @@ contract ScrappyAccount is
 
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
     bytes4 private constant ERC1271_INTERFACE_ID = 0x1626ba7e;
-    bytes4 private constant IHAPPYACCOUNT_INTERFACE_ID = 0x90ab9eae;
-    bytes4 private constant IHAPPYPAYMASTER_INTERFACE_ID = 0xa79b0c0c;
+    bytes4 private constant IHAPPYACCOUNT_INTERFACE_ID = 0x909c11f4;
+    bytes4 private constant IHAPPYPAYMASTER_INTERFACE_ID = 0x9c7b367f;
 
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
