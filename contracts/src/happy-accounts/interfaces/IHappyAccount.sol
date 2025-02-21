@@ -14,33 +14,33 @@ struct ExecutionOutput {
 }
 
 /**
- * @dev Selector returned from {IHappyAccount.validate} when targeting the wrong account, and
- *      optionally from {IHappyPaymaster.payout} (typically when implemented as part of an account).
+ * Selector returned from {IHappyAccount.validate} when targeting the wrong account, and
+ * optionally from {IHappyPaymaster.payout} (typically when implemented as part of an account).
  */
 error WrongAccount();
 
 /**
- * @dev Selector returned when the gas price is too high compared to {HappyTx.maxFeePerGas}.
+ * Selector returned when the gas price is too high compared to {HappyTx.maxFeePerGas}.
  */
 error GasPriceTooHigh();
 
 /**
- * @dev Selector returned by {IHappyAccount.validate} if the nonce fails to validate.
- *      This indicates an invalid nonce that cannot be used now or in the future.
+ * Selector returned by {IHappyAccount.validate} if the nonce fails to validate.
+ * This indicates an invalid nonce that cannot be used now or in the future.
  */
 error InvalidNonce();
 
 /**
- * @dev Selector returned by {IHappyAccount.validate} during simulation mode when
- *      the nonce is greater than the current nonce but could be valid in the future.
- *      This allows the EntryPoint to estimate gas even if the nonce isn't ready yet.
+ * Selector returned by {IHappyAccount.validate} during simulation mode when
+ * the nonce is greater than the current nonce but could be valid in the future.
+ * This allows the EntryPoint to estimate gas even if the nonce isn't ready yet.
  */
 error FutureNonceDuringSimulation();
 
 /**
- * @dev Interface to be implemented by smart contract accounts conforming to the Happy Account standard.
- *      Accounts can optionally implement the {IHappyPaymaster} interface if they wish to support
- *      paying submitters themselves without relying on external paymasters.
+ * Interface to be implemented by smart contract accounts conforming to the Happy Account standard.
+ * Accounts can optionally implement the {IHappyPaymaster} interface if they wish to support
+ * paying submitters themselves without relying on external paymasters.
  */
 interface IHappyAccount {
     /**

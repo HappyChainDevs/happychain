@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-/// @notice Each of these values is shared between at least two or more of IHappyPaymaster,
-///         IHappyAccount, and HappyEntryPoint contracts.
+/// Each of these values is shared between at least two or more of IHappyPaymaster,
+/// IHappyAccount, and HappyEntryPoint contracts.
 
 /**
  * Selector returned by {IHappyAccount.validate} in simulation mode if the
