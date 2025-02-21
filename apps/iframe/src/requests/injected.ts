@@ -20,6 +20,7 @@ import {
     InvalidAddressError,
     type Transaction,
     type TransactionReceipt,
+    type WalletPermission,
     hexToBigInt,
     isAddress,
     parseSignature,
@@ -391,9 +392,24 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         // same explanation as 'eth_requestAccounts' above, we won't do any checks ourselves
         // and instead rely on success/fail of the extension wallet call
         case "wallet_requestPermissions": {
-            const resp = await sendToInjectedClient(app, { ...request, payload: request.payload })
-            if (resp.length) grantPermissions(app, request.payload.params[0])
-            return resp
+            // By default we will simply grant permissions here
+            // Cases which require injected wallet interactions
+            // such as eth_accounts must be special-cased and
+            // forwarded to the injected wallet for confirmation
+            // before proceeding
+            const [{ eth_accounts, ...rest }] = request.payload.params
+
+            if (eth_accounts) {
+                // 'eth_accounts' must be forwarded to the injected wallet to function
+                const injectedResponse = await sendToInjectedClient(app, {
+                    ...request,
+                    payload: { method: request.payload.method, params: [{ eth_accounts }] },
+                })
+                if (injectedResponse.length) grantPermissions(app, { eth_accounts })
+            }
+
+            if (Object.keys(rest).length) grantPermissions(app, rest)
+            return getPermissions(app, request.payload.params[0])
         }
 
         // same as above, however, 'wallet_revokePermissions' is only in permissionless.ts, not
