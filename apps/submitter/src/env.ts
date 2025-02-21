@@ -1,4 +1,7 @@
 import { z } from "zod"
+// Adds .openapi(...) to zod so that we can document the API as we validate
+import "zod-openapi/extend"
+
 import { isHexString } from "./zod/isHexString"
 
 // Define the schema as an object with all of the env
@@ -10,7 +13,7 @@ const envSchema = z.object({
         .refine(isHexString)
         .default(process.env.PRIVATE_KEY_LOCAL as `0x${string}`), // risky, but this is validated above
     APP_PORT: z.coerce.number().default(3001),
-    NODE_ENV: z.enum(["production", "development", "test", "cli"]),
+    NODE_ENV: z.enum(["production", "development", "test", "cli"]).default("development"),
     LOG_LEVEL: z.enum(["off", "trace", "info", "warn", "error"]).default("info"),
 })
 
