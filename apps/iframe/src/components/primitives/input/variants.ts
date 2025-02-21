@@ -49,8 +49,6 @@ export const recipeTextInput = cva(
                     "[&:not([type=search])]:ps-3",
                     // Any text input that isn't a combobox and that shows a placeholder (aka empty state, user didn't type anything yet)
                     "[&:is(:not(:not(:placeholder-shown)),:not([role=combobox]))]:pe-3",
-                    // Any text input not showing a placeholder (aka user typed something) and that isn't a textarea
-                    "[&:not(:placeholder-shown,[data-novalidation],textarea)]:pe-10",
                 ],
             },
         },
