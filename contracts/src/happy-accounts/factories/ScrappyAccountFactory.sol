@@ -6,13 +6,13 @@ import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
 
 /// @notice Sample factory contract for deploying deterministic ERC1967 proxies for {ScrappyAccount}.
 contract ScrappyAccountFactory {
-    /// @dev Error thrown when account initialization fails
+    /// Error thrown when account initialization fails
     error InitializeError();
 
-    /// @dev Error thrown when attempting to deploy to an address that already has code
+    /// Error thrown when attempting to deploy to an address that already has code
     error AlreadyDeployed();
 
-    /// @dev The implementation contract that all proxies will delegate to {ScrappyAccount}.
+    /// The implementation contract that all proxies will delegate to {ScrappyAccount}.
     address public immutable ACCOUNT_IMPLEMENTATION;
 
     constructor(address accountImplementation) {
@@ -20,7 +20,7 @@ contract ScrappyAccountFactory {
     }
 
     /**
-     * @notice   Creates and deploys a new HappyAccount proxy contract
+     * Creates and deploys a new HappyAccount proxy contract
      * @param salt A unique salt for deterministic deployment
      * @param owner The address of the owner of the account
      */
@@ -44,7 +44,7 @@ contract ScrappyAccountFactory {
     }
 
     /**
-     * @notice   Predicts the address where a HappyAccount would be deployed
+     * Predicts the address where a HappyAccount would be deployed
      * @param salt A unique salt for deterministic deployment
      * @param owner The address of the owner of the account
      */
@@ -57,7 +57,7 @@ contract ScrappyAccountFactory {
     // ====================================================================================================
     // INTERNAL FUNCTIONS
 
-    /// @dev   Predicts the address where a HappyAccount would be deployed, given the combined salt, and contract code.
+    /// @dev Predicts the address where a HappyAccount would be deployed, given the combined salt, and contract code.
     function _getAddress(bytes32 salt, bytes memory contractCode) internal view returns (address) {
         return address(
             uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(contractCode)))))
