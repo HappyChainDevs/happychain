@@ -8,6 +8,10 @@ dev: ## Start the local dev server for development
 	@NODE_ENV=development bun --bun run --hot src/index.ts
 .PHONY: dev
 
+routes: ## Display all available routes
+	@bun run src/cli.ts --showRoutes
+.PHONY: routes
+
 test: ## Run the submitter tests
 	@bun test
 .PHONY: dev
