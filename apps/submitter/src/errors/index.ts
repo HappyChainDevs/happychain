@@ -7,7 +7,7 @@ export abstract class HappyBaseError extends Error {
         this.name = this.constructor.name
     }
 
-    abstract getResponseData(): unknown
+    abstract getResponseData(): Record<string, unknown>
 }
 
 export class BaseFailedError extends HappyBaseError {
