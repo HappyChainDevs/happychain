@@ -15,8 +15,7 @@ import {
 } from "viem"
 
 // Create a dummy EIP1559 transaction with maximum values for all fields
-const MAX_BYTES32 =
-    "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+const MAX_BYTES32 = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
 
 const emptyAccessList: AccessList = []
 
