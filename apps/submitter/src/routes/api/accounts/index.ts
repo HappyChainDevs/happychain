@@ -1,60 +1,9 @@
 import { Hono } from "hono"
-import { http, type Address, createPublicClient, createWalletClient } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
-import { chain } from "#src/clients"
-import { abis, deployment } from "#src/deployments"
-import env from "#src/env"
-import { logger } from "#src/logger"
+import { create } from "#src/handlers/accounts/create"
 import * as createRoute from "./openApi/create"
 
-// Account responsible for deploying ScrappyAccounts
-const account = privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
-const publicClient = createPublicClient({ chain, transport: http() })
-const walletClient = createWalletClient({ chain, transport: http(), account })
-
 export default new Hono().post("/create", createRoute.description, createRoute.validation, async (c) => {
-    const { salt, owner } = await c.req.valid("json")
-
-    const predictedAddress = await publicClient.readContract({
-        address: deployment.ScrappyAccountFactory,
-        abi: abis.ScrappyAccountFactory,
-        functionName: "getAddress",
-        args: [salt, owner],
-    })
-
-    // Check if a contract is already deployed at the predicted address
-    const alreadyDeployed = await isContractDeployed(predictedAddress)
-
-    if (alreadyDeployed) {
-        logger.trace("Already Deployed!")
-        return c.json({ address: predictedAddress, salt, owner }, 200)
-    }
-
-    const { request, result } = await publicClient.simulateContract({
-        address: deployment.ScrappyAccountFactory,
-        abi: abis.ScrappyAccountFactory,
-        functionName: "createAccount",
-        args: [salt, owner],
-        account,
-    })
-    logger.trace(`Account Simulation Result: ${result}`)
-
-    // Check if the predicted address matches the result
-    if (result !== predictedAddress) throw new Error("Address mismatch during simulation")
-
-    const hash = await walletClient.writeContract(request)
-    const receipt = await publicClient.waitForTransactionReceipt({ hash })
-
-    // validate deployment
-    if (receipt.status !== "success") throw new Error("Transaction failed on-chain.")
-    if (!(await isContractDeployed(predictedAddress)))
-        throw new Error(`Contract deployment failed: No code found at ${predictedAddress}`)
-
-    logger.trace(`Account Creation Result: ${result}`)
-    return c.json({ address: predictedAddress, salt, owner }, 200)
+    const input = await c.req.valid("json")
+    const output = await create(input)
+    return c.json(output)
 })
-
-async function isContractDeployed(address: Address): Promise<boolean> {
-    const code = await publicClient.getCode({ address })
-    return code !== undefined && code !== "0x"
-}

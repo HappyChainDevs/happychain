@@ -2,7 +2,7 @@ import { z } from "zod"
 // Adds .openapi(...) to zod so that we can document the API as we validate
 import "zod-openapi/extend"
 
-import { isHexString } from "./zod/isHexString"
+import { isHexString } from "#src/utils/zod/refines/isHexString"
 
 // Define the schema as an object with all of the env
 // variables and their types
