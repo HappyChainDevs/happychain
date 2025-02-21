@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {HappyTx} from "../core/HappyTx.sol";
 
 library HappyTxLib {
-    /// @notice Selector returned by {decode} when unable to properly decode a happyTx.
+    /// Selector returned by {decode} when unable to properly decode a happyTx.
     error MalformedHappyTx();
 
     /// @dev Encoded HappyTx takes up 196 bytes for the static fields.
@@ -14,7 +14,7 @@ library HappyTxLib {
     uint256 private constant CALLDATA_GAS_PER_BYTE = 16;
 
     /**
-     * @notice Encodes a HappyTx struct into a compact bytes array, for minimal memory usage.
+     * Encodes a HappyTx struct into a compact bytes array, for minimal memory usage.
      * The encoding is done by packing fields end-to-end without 32-byte word alignment, making it
      * more gas efficient than standard ABI encoding. Dynamic fields are prefixed with their lengths
      * as uint32.
@@ -36,9 +36,6 @@ library HappyTxLib {
      * │len  │callData │len  │paymaster   │len  │validator │len  │ext│
      * │(4b) │  (Nb)   │(4b) │Data (Nb)   │(4b) │Data (Nb) │(4b) │(N)│
      * └─────┴─────────┴─────┴────────────┴─────┴──────────┴─────┴───┘
-     *
-     * @param happyTx The transaction to encode
-     * @return result The encoded transaction bytes
      */
     function encode(HappyTx memory happyTx) internal pure returns (bytes memory result) {
         // Fixed size fields: 20 + 4 + 4 + 20 + 20 + 32 + 24 + 8 + 32 + 32 = 196 bytes
@@ -146,11 +143,7 @@ library HappyTxLib {
         }
     }
 
-    /**
-     * @dev Decodes an encodedHappyTx that was encoded using {HappyTxLib.encode}.
-     * @param encodedHappyTx The encoded happyTx bytes
-     * @return result The decoded HappyTx struct
-     */
+    /// Decodes an encodedHappyTx that was encoded using {HappyTxLib.encode}.
     function decode(bytes calldata encodedHappyTx) internal pure returns (HappyTx memory result) {
         // First validate minimum length (196 bytes for the static fields)
         if (encodedHappyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
