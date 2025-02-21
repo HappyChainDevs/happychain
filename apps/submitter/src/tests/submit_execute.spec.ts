@@ -41,7 +41,7 @@ describe("submitter_execute", () => {
             dummyHappyTx.paymaster = smartAccount
 
             const prepared = await prepareTx(dummyHappyTx)
-
+            console.log({ prepared })
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
 
             expect(result.status).toBe(200)
