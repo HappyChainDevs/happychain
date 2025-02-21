@@ -20,7 +20,21 @@ clean: ## Removes build artifacts
 	@rm -rf node_modules
 .PHONY: clean
 
-setup: node_modules
+migrate-fresh: ## Deletes database and starts fresh
+	@if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi
+	@make migrate
+.PHONY: migrate-fresh
+
+migrate: ## Runes latest migrations
+	@bun --bun kysely migrate:latest
+	@bun kysely-codegen \
+		--dialect kysely-bun-sqlite \
+		--singular \
+		--overrides="$$(cat .config/codegen-type-overrides.json)" \
+		--out-file=src/database/generated.d.ts 
+.PHONY: migrate
+
+setup: node_modules migrate
 .PHONY: setup
 
 node_modules: package.json
