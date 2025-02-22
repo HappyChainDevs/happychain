@@ -8,7 +8,7 @@ import { Randomness, RandomnessStatus } from "./Randomness.js"
 import { RandomnessRepository } from "./RandomnessRepository.js"
 import { TransactionFactory } from "./TransactionFactory.js"
 import { env } from "./env.js"
-import { logger, RAND_TAG } from "./utils/logger"
+import { RAND_TAG, logger } from "./utils/logger"
 
 class RandomnessService {
     private readonly randomnessRepository: RandomnessRepository
@@ -33,7 +33,7 @@ class RandomnessService {
             maxPriorityFeePerGas: 10n,
         })
         this.transactionFactory = new TransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS, env.PRECOMMIT_DELAY)
-        this.drandService = new DrandService(this.drandRepository, this.transactionFactory)   
+        this.drandService = new DrandService(this.drandRepository, this.transactionFactory)
     }
 
     async start() {
@@ -50,7 +50,10 @@ class RandomnessService {
     }
 
     private onTransactionStatusChange(transaction: Transaction) {
-        logger.info(RAND_TAG, `onTransactionStatusChange transaction ${transaction.intentId} status changed to ${transaction.status})`)
+        logger.info(
+            RAND_TAG,
+            `onTransactionStatusChange transaction ${transaction.intentId} status changed to ${transaction.status})`,
+        )
         const randomness = this.randomnessRepository.getRandomnessForIntentId(transaction.intentId)
 
         const successStatuses = [TransactionStatus.Success]
@@ -85,7 +88,10 @@ class RandomnessService {
         const drand = this.drandRepository.getDrandByTransactionIntentId(transaction.intentId)
 
         if (drand) {
-            logger.info(RAND_TAG, `Drand ${drand.round} transaction ${transaction.intentId} status changed to ${transaction.status})`)
+            logger.info(
+                RAND_TAG,
+                `Drand ${drand.round} transaction ${transaction.intentId} status changed to ${transaction.status})`,
+            )
             if (failedStatuses.includes(transaction.status)) {
                 drand.transactionFailed()
             } else if (successStatuses.includes(transaction.status)) {
@@ -119,7 +125,7 @@ class RandomnessService {
                 randomness.revealNotSubmittedOnTime()
                 this.randomnessRepository.updateRandomness(randomness).then((result) => {
                     if (result.isErr()) {
-                        logger.error(RAND_TAG,"Failed to update randomness", result.error)
+                        logger.error(RAND_TAG, "Failed to update randomness", result.error)
                     }
                 })
             }

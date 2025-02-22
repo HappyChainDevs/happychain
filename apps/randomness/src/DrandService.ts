@@ -7,7 +7,7 @@ import { Drand } from "./Drand"
 import type { DrandRepository } from "./DrandRepository"
 import type { TransactionFactory } from "./TransactionFactory"
 import { env } from "./env"
-import { logger, RAND_TAG } from "./utils/logger"
+import { RAND_TAG, logger } from "./utils/logger"
 
 const drandBeaconSchema = z.object({
     round: z.number().int().positive(),
