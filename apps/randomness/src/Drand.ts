@@ -1,4 +1,5 @@
 import type { Hex, UUID } from "@happy.tech/common"
+import { RAND_TAG, logger } from "./utils/logger"
 
 export enum DrandStatus {
     PENDING = "PENDING",
@@ -85,6 +86,8 @@ export class Drand {
         if (params.round <= 0n) {
             throw new Error("Round must be greater than 0")
         }
+
+        logger.trace(RAND_TAG, `Creating new Drand with round ${params.round}`)
 
         return new Drand({
             status: DrandStatus.PENDING,
