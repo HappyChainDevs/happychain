@@ -3,6 +3,7 @@ import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
+import { TXM_TAG, logger } from "./utils/logger.js"
 
 /**
  * This module is responsible for retrieving transactions from the originators when a new block is received.
