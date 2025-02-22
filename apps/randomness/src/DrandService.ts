@@ -7,6 +7,7 @@ import { Drand } from "./Drand"
 import type { DrandRepository } from "./DrandRepository"
 import type { TransactionFactory } from "./TransactionFactory"
 import { env } from "./env"
+import { logger, RAND_TAG } from "./utils/logger"
 
 const drandBeaconSchema = z.object({
     round: z.number().int().positive(),
@@ -66,6 +67,8 @@ export class DrandService {
         this.handleNewDrandBeacons()
 
         setInterval(this.handleNewDrandBeacons.bind(this), periodMs)
+
+        logger.trace(RAND_TAG, "Drand service started")
     }
 
     async getDrandBeacon(round: bigint): Promise<Result<DrandBeacon, DrandError>> {
@@ -85,7 +88,7 @@ export class DrandService {
                 return err(DrandError.TooEarly)
             }
 
-            console.error("Drand beacon fetch error status", response.value.status)
+            logger.error(RAND_TAG, "Drand beacon fetch error status", response.value.status)
             return err(DrandError.Other)
         }
 
@@ -136,7 +139,7 @@ export class DrandService {
         try {
             await this._handleNewDrandBeacons()
         } catch (error) {
-            console.error("Error in handleNewDrandBeacons: ", error)
+            logger.error(RAND_TAG, "Error in handleNewDrandBeacons: ", error)
         }
         this.getDrandBeaconLocked = false
 
@@ -163,7 +166,7 @@ export class DrandService {
                 })
 
                 if (postDrandTransactionResult.isErr()) {
-                    console.error("Failed to create post drand transaction", postDrandTransactionResult.error)
+                    logger.error(RAND_TAG, "Failed to create post drand transaction", postDrandTransactionResult.error)
                     return
                 }
 
@@ -178,7 +181,7 @@ export class DrandService {
                 const drandSaved = await this.drandRepository.saveDrand(drand)
 
                 if (drandSaved.isErr()) {
-                    console.error("Failed to save drand", drandSaved.error)
+                    logger.error(RAND_TAG, "Failed to save drand", drandSaved.error)
                     return
                 }
 

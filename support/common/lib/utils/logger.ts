@@ -22,6 +22,7 @@ export enum LogTag {
     ALL = "All",
     SUBMITTER = "Submitter",
     TXM = "Txm",
+    RANDOM = "Random"
 }
 
 /**
@@ -121,7 +122,7 @@ export class Logger {
         const tags = Array.isArray(tagOrTags) ? tagOrTags : [tagOrTags]
         if (this.shouldLog(level, tags)) {
             const levelStr = LogLevel[level].toUpperCase()
-            console.log(`[${levelStr}]`, `[${tags.join(", ")}]`, ...args)
+            console.log(`[${levelStr}]`, `${(new Date()).toISOString()}`, `[${tags.join(", ")}]`, ...args)
         }
     }
 
