@@ -6,6 +6,7 @@ import { TransactionRejectedRpcError, encodeFunctionData, keccak256 } from "viem
 import type { EstimateGasErrorCause } from "./GasEstimator.js"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
+import { TXM_TAG, logger } from "./utils/logger.js"
 
 export interface SignReturn {
     signedTransaction: Hex
