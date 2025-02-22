@@ -4,7 +4,7 @@ import { Drand } from "./Drand"
 import { DIGITS_MAX_UINT256 } from "./constants"
 import { db } from "./db/driver"
 import type { DrandRow } from "./db/types"
-import { logger, RAND_TAG } from "./utils/logger"
+import { RAND_TAG, logger } from "./utils/logger"
 
 export class DrandRepository {
     private cache: Drand[] = []
