@@ -2,7 +2,7 @@ import { spawn } from "node:child_process"
 import { sleep } from "@happy.tech/common"
 import { ANVIL_PORT, CHAIN_ID } from "./constants"
 
-export function startAnvil() {
+export async function startAnvil() {
     const anvil = spawn("anvil", ["--port", ANVIL_PORT.toString(), "--no-mining", "--chain-id", CHAIN_ID.toString()])
 
     anvil.stderr.on("data", (data) => {
@@ -28,6 +28,7 @@ export function startAnvil() {
                 })
                 const data = await res.json()
                 if (data?.result) {
+                    console.log("Anvil Up")
                     resolve()
                     return
                 }
@@ -52,16 +53,21 @@ export function killAnvil() {
     })
 }
 
-export async function mineBlock() {
-    await fetch(`http://localhost:${ANVIL_PORT}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            jsonrpc: "2.0",
-            method: "evm_mine",
-            params: [],
-            id: 2,
-        }),
-    })
-    await sleep(1000)
+export async function mineBlock(quantity = 1) {
+    let blocksAlreadyMined = 0;
+
+    while(blocksAlreadyMined < quantity) {
+        await fetch(`http://localhost:${ANVIL_PORT}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                method: "evm_mine",
+                params: [],
+                id: 2,
+            }),
+        })
+        await sleep(500)
+        blocksAlreadyMined++
+    }
 }
