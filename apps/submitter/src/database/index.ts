@@ -1,6 +1,7 @@
 import { Database as BunDatabase } from "bun:sqlite"
 import { Kysely } from "kysely"
 import { BunSqliteDialect } from "kysely-bun-sqlite"
+import env from "#src/env"
 import type { DB } from "./generated"
 import { SerializePlugin, type TransformerRules } from "./plugins/SerializerPlugin"
 
@@ -22,6 +23,6 @@ const transformerRules: TransformerRules = {
 }
 
 export const db = new Kysely<DB>({
-    dialect: new BunSqliteDialect({ database: new BunDatabase("db.sqlite") }),
+    dialect: new BunSqliteDialect({ database: new BunDatabase(env.DATABASE_URL) }),
     plugins: [new SerializePlugin(transformerRules)],
 })

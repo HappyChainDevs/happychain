@@ -20,7 +20,7 @@ export class HappyStateRepository {
             .executeTakeFirst()
     }
     async fetchByHashWithReceipt(hash: `0x${string}`) {
-        const query = this.db //
+        const query = this.db
             .selectFrom("happy_states")
             .where(({ exists, selectFrom }) =>
                 exists(
@@ -36,10 +36,6 @@ export class HappyStateRepository {
                     eb
                         .selectFrom("happy_receipts")
                         .select([
-                            // "account",
-                            // "entryPoint",
-                            // "nonceTrack",
-                            // "nonceValue",
                             "failureReason",
                             "gasCost",
                             "gasUsed",
@@ -69,7 +65,7 @@ export class HappyStateRepository {
             .executeTakeFirst()
     }
 
-    async update(id: HappyState["id"], updates: Partial<Omit<HappyState, "id">>) {
+    async update(id: number, updates: Partial<Omit<HappyState, "id">>) {
         return await this.db
             .updateTable("happy_states")
             .set(updates)
