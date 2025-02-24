@@ -3,7 +3,7 @@ import { ANVIL_PORT, PROXY_PORT } from "./constants"
 
 export enum ProxyBehavior {
     Forward = "Forward",
-    Ignore = "Ignore",
+    NotAnswer = "NotAnswer",
 }
 
 export class ProxyServer {
@@ -24,12 +24,7 @@ export class ProxyServer {
         this.app.post("*", async (req, res) => {
             if (req.body.method === "eth_sendRawTransaction") {
                 const behavior = this.nextBehaviors.shift() ?? ProxyBehavior.Forward
-                if (behavior === ProxyBehavior.Ignore) {
-                    res.status(200).json({
-                        jsonrpc: "2.0",
-                        id: req.body.id,
-                        result: "0x",
-                    })
+                if (behavior === ProxyBehavior.NotAnswer) {
                     return
                 }
             }

@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process"
 import { sleep } from "@happy.tech/common"
-import { ANVIL_PORT, CHAIN_ID } from "./constants"
+import { ANVIL_PORT, CHAIN_ID, RPC_URL } from "./constants"
 
 export async function startAnvil() {
     const anvil = spawn("anvil", ["--port", ANVIL_PORT.toString(), "--no-mining", "--chain-id", CHAIN_ID.toString()])
@@ -16,7 +16,7 @@ export async function startAnvil() {
     return new Promise<void>((resolve) => {
         const checkRpc = async () => {
             try {
-                const res = await fetch(`http://localhost:${ANVIL_PORT}`, {
+                const res = await fetch(RPC_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
