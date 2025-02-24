@@ -7,13 +7,23 @@ import { TransactionTypeName } from "#src/tmp/interface/common_chain"
 import { EntryPointStatus, SubmitterErrorStatus } from "#src/tmp/interface/status"
 import { isHexString } from "#src/utils/zod/refines/isHexString"
 
-const inputSchema = z
+const paramSchema = z
     .object({
         hash: z.string().refine(isHexString),
     })
     .openapi({
         example: {
             hash: "0xd7ebadc747305fa2ad180a8666724d71ff5936787746b456cdb976b5c9061fbc",
+        },
+    })
+
+const querySchema = z
+    .object({
+        timeout: z.coerce.number().min(0).max(30_000).default(2_500),
+    })
+    .openapi({
+        example: {
+            timeout: 500,
         },
     })
 
@@ -133,7 +143,7 @@ const outputSchema = z
     })
 
 export const description = describeRoute({
-    description: "Retrieve state by HappyTxHash",
+    description: "Retrieve state by HappyTxHash, waiting if necessary",
     responses: {
         200: {
             description: "Successful State Retrieval",
@@ -145,4 +155,6 @@ export const description = describeRoute({
         },
     },
 })
-export const validation = zv("param", inputSchema)
+
+export const paramValidation = zv("param", paramSchema)
+export const queryValidation = zv("query", querySchema)
