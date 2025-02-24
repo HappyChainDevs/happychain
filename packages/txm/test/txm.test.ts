@@ -1,6 +1,8 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
-import { createPublicClient, defineChain } from "viem"
+import { type Chain, createPublicClient } from "viem"
 import { http } from "viem"
+import { privateKeyToAddress } from "viem/accounts"
+import { anvil as anvilViemChain } from "viem/chains"
 import { afterAll, beforeAll, expect, test } from "vitest"
 import { TxmHookType } from "../lib/HookManager"
 import { TransactionStatus } from "../lib/Transaction"
@@ -13,6 +15,7 @@ import { killAnvil, mineBlock } from "./utils/anvil"
 import { startAnvil } from "./utils/anvil"
 import { CHAIN_ID, PRIVATE_KEY, PROXY_URL } from "./utils/constants"
 import { deployMockContracts } from "./utils/contracts"
+import { assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
 import { cleanDB } from "./utils/db"
 
 const txm = new TransactionManager({
@@ -26,6 +29,8 @@ const txm = new TransactionManager({
     gasEstimator: new TestGasEstimator(),
 })
 
+const fromAddress = privateKeyToAddress(PRIVATE_KEY)
+
 const proxyServer = new ProxyServer()
 
 let transactionQueue: Transaction[] = []
@@ -36,20 +41,7 @@ txm.addTransactionOriginator(async () => {
     return transactions
 })
 
-const chain = defineChain({
-    id: CHAIN_ID,
-    name: "Unknown",
-    rpcUrls: {
-        default: {
-            http: [PROXY_URL],
-        },
-    },
-    nativeCurrency: {
-        name: "Unknown",
-        symbol: "UNKNOWN",
-        decimals: 18,
-    },
-})
+const chain: Chain = { ...anvilViemChain, id: CHAIN_ID, rpcUrls: { default: { http: [PROXY_URL] } } }
 
 const directBlockchainClient = createPublicClient({
     chain: chain,
@@ -102,8 +94,7 @@ test("Simple transaction executed", async () => {
         hash: retrievedTransaction.attempts[0].hash,
     })
 
-    expect(receipt).toBeDefined()
-    expect(receipt?.status).toBe("success")
+    assertReceiptSuccess(deployment.HappyCounter, fromAddress, receipt)
     expect(retrievedTransaction?.status).toBe(TransactionStatus.Success)
 })
 
@@ -115,7 +106,7 @@ test("Transaction retried", async () => {
         args: [],
     })
 
-    proxyServer.addBehavior(ProxyBehavior.Ignore)
+    proxyServer.addBehavior(ProxyBehavior.NotAnswer)
     proxyServer.addBehavior(ProxyBehavior.Forward)
 
     transactionQueue.push(transaction)
@@ -154,7 +145,7 @@ test("Transaction retried", async () => {
         hash: transactionSuccess.attempts[1].hash,
     })
 
-    expect(successReceipt?.status).toBe("success")
+    assertReceiptSuccess(deployment.HappyCounter, fromAddress, successReceipt)
     expect(transactionSuccess.status).toBe(TransactionStatus.Success)
     expect(transaction.attempts.length).toBe(2)
 })
@@ -185,7 +176,7 @@ test("Transaction failed", async () => {
 
     expect(transactionReverted.status).toBe(TransactionStatus.Failed)
     expect(transaction.attempts).length(1)
-    expect(revertReceipt.status).toBe("reverted")
+    assertReceiptReverted(deployment.MockRevert, fromAddress, revertReceipt)
 })
 
 test("Transaction cancelled", async () => {
@@ -199,7 +190,7 @@ test("Transaction cancelled", async () => {
         deadline,
     })
 
-    proxyServer.addBehavior(ProxyBehavior.Ignore)
+    proxyServer.addBehavior(ProxyBehavior.NotAnswer)
 
     transactionQueue.push(transaction)
 
@@ -214,7 +205,7 @@ test("Transaction cancelled", async () => {
             break
         }
 
-        proxyServer.addBehavior(ProxyBehavior.Ignore)
+        proxyServer.addBehavior(ProxyBehavior.NotAnswer)
         await mineBlock()
     }
 
@@ -242,6 +233,6 @@ test("Transaction cancelled", async () => {
     })
 
     expect(transactionCancelled.status).toBe(TransactionStatus.Cancelled)
-    expect(receipt.status).toBe("success")
+    assertReceiptSuccess(fromAddress, fromAddress, receipt)
     expect(transactionExecuted.input).toBe("0x")
 })
