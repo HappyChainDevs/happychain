@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {MockERC20Token} from "../mocks/MockERC20.sol";
 import {BaseDeployScript} from "./BaseDeployScript.sol";
 import {HappyCounter} from "../mocks/HappyCounter.sol";
+import {MockRevert} from "../mocks/MockRevert.sol";
 
 /**
  * @dev Deploys mock contracts for testing purposes.
@@ -18,6 +19,7 @@ contract DeployMockERC20 is BaseDeployScript {
     MockERC20Token public mockTokenB;
     MockERC20Token public mockTokenC;
     HappyCounter public happyCounter;
+    MockRevert public mockRevert;
 
     function deploy() internal override {
         mockTokenA = deployMockToken("MockTokenA", "MTA", SALT_TOKEN_A);
@@ -26,6 +28,8 @@ contract DeployMockERC20 is BaseDeployScript {
         (address _happyCounter,) =
             deployDeterministic("HappyCounter", type(HappyCounter).creationCode, abi.encode(), bytes32(uint256(0)));
         happyCounter = HappyCounter(_happyCounter);
+        (address _mockRevert,) = deployDeterministic("MockRevert", type(MockRevert).creationCode, abi.encode(), bytes32(uint256(0)));
+        mockRevert = MockRevert(_mockRevert);
     }
 
     function deployMockToken(string memory name, string memory symbol, bytes32 salt)
