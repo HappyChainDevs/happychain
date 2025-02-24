@@ -13,7 +13,7 @@ export async function deployMockContracts(): Promise<void> {
         mineBlock()
     }, 1000)
 
-    return new Promise((res, rej) => {
+    return new Promise((res, _) => {
         deployProcess.on("close", () => {
             clearInterval(interval)
             res()
