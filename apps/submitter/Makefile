@@ -21,7 +21,7 @@ clean: ## Removes build artifacts
 .PHONY: clean
 
 migrate-fresh: ## Deletes database and starts fresh
-	@if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi
+	@if [ -f ${DATABASE_URL} ]; then rm ${DATABASE_URL}; fi;
 	@make migrate
 .PHONY: migrate-fresh
 
