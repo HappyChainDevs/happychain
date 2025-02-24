@@ -50,6 +50,15 @@ export async function getNonce(account: Address) {
     })
 }
 
+export async function getMockTokenABalance(account: Address) {
+    return await testPublicClient.readContract({
+        address: deployment.MockTokenA,
+        abi: abis.MockTokenA,
+        functionName: "balanceOf",
+        args: [account],
+    })
+}
+
 export function createMockTokenAMintHappyTx(account: Address, nonceValue: bigint): HappyTx {
     return {
         account,
@@ -68,7 +77,7 @@ export function createMockTokenAMintHappyTx(account: Address, nonceValue: bigint
         callData: encodeFunctionData({
             abi: abis.MockTokenA,
             functionName: "mint",
-            args: [account, parseEther("0.001")],
+            args: [account, 10n ** 18n],
         }),
         paymasterData: "0x",
         validatorData: "0x",

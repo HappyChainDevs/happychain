@@ -29,7 +29,7 @@ export async function waitForSubmitReceipt<account extends Account | undefined =
         status: EntryPointStatus.Success,
 
         /** Logs emitted by HappyTx. */
-        // logs: [], //receipt.logs, // TODO:
+        logs: [], //receipt.logs, // TODO:
 
         /**
          * The revertData carried by one of our custom error, or the raw deal for
