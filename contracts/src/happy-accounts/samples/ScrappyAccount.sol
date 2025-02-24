@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ECDSA} from "solady/utils/ECDSA.sol";
+import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -14,8 +16,13 @@ import {
     ExecutionOutput,
     GasPriceTooHigh,
     InvalidNonce,
-    WrongAccount
+    WrongAccount,
+    ValidatorAlreadyRegistered,
+    ValidatorNotRegistered,
+    InvalidValidatorValue,
+    ValidatorNotFound
 } from "../interfaces/IHappyAccount.sol";
+import {ICustomBoopValidator} from "../interfaces/extensions/ICustomBoopValidator.sol";
 
 import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
@@ -39,6 +46,9 @@ contract ScrappyAccount is
     OwnableUpgradeable,
     UUPSUpgradeable
 {
+    // Must be used to avoid gas exhaustion via return data.
+    using ExcessivelySafeCall for address;
+
     using ECDSA for bytes32;
     using HappyTxLib for HappyTx;
 
@@ -85,6 +95,9 @@ contract ScrappyAccount is
     /// Mapping from track => nonce
     mapping(uint192 => uint64) public nonceValue;
 
+    /// Mapping to check if a validator is registered
+    mapping(address => bool) public validators;
+
     // ====================================================================================================
     // MODIFIERS
 
@@ -117,9 +130,70 @@ contract ScrappyAccount is
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
+    function addValidator(address customValidator) external onlySelfOrOwner {
+        if (validators[customValidator]) {
+            revert ValidatorAlreadyRegistered(customValidator);
+        }
+        validators[customValidator] = true;
+    }
+
+    function removeValidator(address customValidator) external onlySelfOrOwner {
+        if (!validators[customValidator]) {
+            revert ValidatorNotRegistered(customValidator);
+        }
+        validators[customValidator] = false;
+    }
+
     function validate(HappyTx memory happyTx) external returns (bytes4) {
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
+        }
+
+        // Check for custom validator
+        (bool found, bytes memory validatorData) = HappyTxLib.getExtraDataValue(
+            happyTx.extraData,
+            0x000001 // Validator key
+        );
+
+        if (found) {
+            if (validatorData.length != 32) {
+                revert InvalidValidatorValue();
+            }
+
+            address validator;
+            assembly {
+                validator := mload(add(add(validatorData, 0x20), 12)) // skip first 12 bytes
+            }
+
+            // Stub validator mode TODO: delete this, just put here randomly :p
+            if (validator == address(1)) {
+                return 0x00000000;
+            }
+
+            // Check if validator is registered
+            if (!validators[validator]) {
+                revert ValidatorNotRegistered(validator);
+            }
+
+            // Check if address has code and supports interface TODO: There must be a better way to check if "no validator is found"
+            uint256 size;
+            assembly {
+                size := extcodesize(validator)
+            }
+            if (size == 0) {
+                revert ValidatorNotFound(validator);
+            }
+
+            bool success;
+            bytes memory returnData;
+            (success, returnData) = happyTx.account.excessivelySafeCall(
+                happyTx.executeGasLimit,
+                0, // gas token transfer value
+                256, // TODO: This is a placeholder for the actual value
+                abi.encodeCall(ICustomBoopValidator.validate, (happyTx))
+            );
+
+            return bytes4(returnData);
         }
 
         if (tx.gasprice > happyTx.maxFeePerGas) {
