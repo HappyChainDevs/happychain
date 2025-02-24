@@ -378,5 +378,19 @@
       ],
       "anonymous": false
     }
+  ],
+  "MockRevert": [
+    {
+      "type": "function",
+      "name": "revert",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "error",
+      "name": "CustomErrorMockRevert",
+      "inputs": []
+    }
   ]
 }

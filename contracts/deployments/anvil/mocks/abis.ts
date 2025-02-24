@@ -383,12 +383,27 @@ const contractToAbi = ({
       ],
       "anonymous": false
     }
+  ],
+  "MockRevert": [
+    {
+      "type": "function",
+      "name": "revert",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "error",
+      "name": "CustomErrorMockRevert",
+      "inputs": []
+    }
   ]
 }
 ) as const
 
 const aliasToContract = ({
   "HappyCounter": "HappyCounter",
+  "MockRevert": "MockRevert",
   "MockTokenA": "MockERC20",
   "MockTokenB": "MockERC20",
   "MockTokenC": "MockERC20"
@@ -396,6 +411,7 @@ const aliasToContract = ({
 
 export const deployment = ({
   "HappyCounter": "0xAD5A4f9CeaBC2990DD66039FE123828631b4e0Ea",
+  "MockRevert": "0xECCF379c295c129Dc6DFB0622B2EA881A3D548b5",
   "MockTokenA": "0x02206faC6469B2f59FC2Bb9d3BC181Fbe703F8B7",
   "MockTokenB": "0xF2Cd1312bcE60Edcd17406962aB3d76730bf4873",
   "MockTokenC": "0x09420341423aE6D9c14C26052AF66A948BE4982c"

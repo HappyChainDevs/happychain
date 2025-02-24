@@ -1,4 +1,4 @@
-export const CHAIN_ID = 31337
+export const CHAIN_ID = 1337
 export const PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 export const PROXY_PORT = 8546
 export const ANVIL_PORT = 8545
