@@ -4,7 +4,6 @@ import { Drand } from "./Drand"
 import { DIGITS_MAX_UINT256 } from "./constants"
 import { db } from "./db/driver"
 import type { DrandRow } from "./db/types"
-import { RAND_TAG, logger } from "./utils/logger"
 
 export class DrandRepository {
     private cache: Drand[] = []
@@ -31,8 +30,6 @@ export class DrandRepository {
         const drandsDb = (await db.selectFrom("drands").selectAll().execute()).map(this.rowToEntity)
 
         this.cache.push(...drandsDb)
-
-        logger.trace(RAND_TAG, `DrandRepository started, loaded ${this.cache.length} drands from the database`)
     }
 
     async saveDrand(drand: Drand): Promise<Result<void, Error>> {

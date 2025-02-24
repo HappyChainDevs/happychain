@@ -67,8 +67,6 @@ export class DrandService {
         this.handleNewDrandBeacons()
 
         setInterval(this.handleNewDrandBeacons.bind(this), periodMs)
-
-        logger.trace(RAND_TAG, "Drand service started")
     }
 
     async getDrandBeacon(round: bigint): Promise<Result<DrandBeacon, DrandError>> {
