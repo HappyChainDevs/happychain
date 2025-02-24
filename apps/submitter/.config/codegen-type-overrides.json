@@ -17,6 +17,8 @@
         "happy_transactions.nonceTrack": "bigint",
         "happy_transactions.nonceValue": "bigint",
         "happy_receipts.happyTxHash": "`0x${string}`",
+        "happy_receipts.failureReason": "`0x${string}`",
+        "happy_receipts.revertData": "`0x${string}`",
         "happy_receipts.transactionHash": "`0x${string}`",
         "happy_receipts.gasUsed": "bigint",
         "happy_receipts.gasCost": "bigint",
