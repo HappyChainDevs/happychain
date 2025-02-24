@@ -23,7 +23,7 @@ export const app = new Hono()
             ),
         ),
     )
-    .use(timeoutMiddleware(10_000))
+    .use(timeoutMiddleware(30_000))
     .use(requestIdMiddleware())
 
     // Routes
@@ -41,7 +41,7 @@ app.onError((err, c) => {
                   message: `Something Happened, file a report with this key to find out more: ${c.get("requestId")}`,
                   requestId: c.get("requestId"),
               }
-            : { requestId: c.get("requestId"), url: c.req.url, err }
+            : { requestId: c.get("requestId"), url: c.req.url, err: err.message }
 
     return c.json(response, 500)
 })

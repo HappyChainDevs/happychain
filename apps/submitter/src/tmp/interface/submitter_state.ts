@@ -1,6 +1,10 @@
 import type { StateRequestOutput } from "./HappyTxState"
 import type { Hash } from "./common_chain"
 
+export type StateRequestInput = {
+    hash: Hash
+}
+
 /**
  * GET /submitter_state/${hash}
  *
