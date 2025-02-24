@@ -14,6 +14,13 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Source the .env file
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
+else
+    echo ".env file not found in $SCRIPT_DIR"
+    exit 1
+fi
 
 ANVIL_RPC_PORT=8545
 ANVIL_RPC_URL="http://127.0.0.1:$ANVIL_RPC_PORT"
@@ -164,7 +171,7 @@ else
 fi
 
 echo "Starting Anvil..."
-anvil --block-time $BLOCK_TIME --port $ANVIL_RPC_PORT --chain-id 1337 > "$SCRIPT_DIR/logs/anvil.log" 2>&1 &
+anvil --block-time $BLOCK_TIME --port $ANVIL_RPC_PORT --chain-id $CHAIN_ID > "$SCRIPT_DIR/logs/anvil.log" 2>&1 &
 ANVIL_PID=$!
 
 # Limit the number of connection attempts to 5
