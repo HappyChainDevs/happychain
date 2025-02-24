@@ -16,15 +16,26 @@ export class HappyTransactionRepository {
         const data = await this.db //
             .insertInto("happy_transactions")
             .values(state)
-            // If the tx failed, and is retried with the exact same data,
-            // this will be a conflict on txHash, we ignore instead of storing again
-            .onConflict((oc) => oc.column("happyTxHash").doNothing())
+            // If the previous tx failed, and is retried with the exact same data,
+            // this will be a conflict on txHash, all signed data will be the same
+            // but we should update the unsigned data
+            .onConflict((oc) =>
+                oc.column("happyTxHash").doUpdateSet({
+                    gasLimit: state.gasLimit,
+                    executeGasLimit: state.executeGasLimit,
+                    maxFeePerGas: state.maxFeePerGas,
+                    submitterFee: state.submitterFee,
+                    paymasterData: state.paymasterData,
+                    validatorData: state.validatorData,
+                    extraData: state.extraData,
+                }),
+            )
             .returningAll()
             .executeTakeFirst()
         return data
     }
 
-    async update(id: HappyTransaction["id"], updates: Partial<Omit<HappyTransaction, "id">>) {
+    async update(id: number, updates: Partial<Omit<HappyTransaction, "id">>) {
         return await this.db
             .updateTable("happy_transactions")
             .set(updates)
