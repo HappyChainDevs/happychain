@@ -2,7 +2,7 @@ import { z } from "zod"
 // Adds .openapi(...) to zod so that we can document the API as we validate
 import "zod-openapi/extend"
 
-import { isHexString } from "./zod/isHexString"
+import { isHexString } from "./utils/zod/isHexString"
 
 // Define the schema as an object with all of the env
 // variables and their types
@@ -15,6 +15,7 @@ const envSchema = z.object({
     APP_PORT: z.coerce.number().default(3001),
     NODE_ENV: z.enum(["production", "development", "test", "cli"]).default("development"),
     LOG_LEVEL: z.enum(["off", "trace", "info", "warn", "error"]).default("info"),
+    DATABASE_URL: z.string(),
 })
 
 // Validate `process.env` against our schema

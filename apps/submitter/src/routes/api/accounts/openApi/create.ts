@@ -2,7 +2,7 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import { isHexString } from "#src/zod/isHexString"
+import { isHexString } from "#src/utils/zod/isHexString"
 
 export const description = describeRoute({
     description: "Create a new account",

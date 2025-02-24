@@ -1,4 +1,4 @@
-import type { HappyReceiptRepository } from "#src/repositories/HappyReceiptRepository"
+import type { HappyReceiptRepository } from "#src/database/repositories/HappyReceiptRepository"
 import type { HappyTxReceipt } from "#src/tmp/interface/HappyTxReceipt"
 
 export class HappyReceiptService {

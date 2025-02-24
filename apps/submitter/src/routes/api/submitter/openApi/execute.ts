@@ -5,8 +5,8 @@ import { z } from "zod"
 import { deployment } from "#src/deployments"
 import { TransactionTypeName } from "#src/tmp/interface/common_chain"
 import { EntryPointStatus } from "#src/tmp/interface/status"
-import { isHexString } from "#src/zod/refines/isHexString"
-import { toBigInt } from "#src/zod/transforms/toBigInt"
+import { isHexString } from "#src/utils/zod/refines/isHexString"
+import { toBigInt } from "#src/utils/zod/transforms/toBigInt"
 
 const happyTxSchema = z.object({
     account: z.string().refine(isHexString), // Address
