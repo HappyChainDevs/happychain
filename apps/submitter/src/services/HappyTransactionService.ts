@@ -1,5 +1,5 @@
 import type { HappyTransaction } from "#src/database/generated"
-import type { HappyTransactionRepository } from "#src/repositories/HappyTransactionRepository"
+import type { HappyTransactionRepository } from "#src/database/repositories/HappyTransactionRepository"
 
 export class HappyTransactionService {
     constructor(private happyTransactionRepository: HappyTransactionRepository) {}

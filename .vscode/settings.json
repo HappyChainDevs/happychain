@@ -7,6 +7,8 @@
         "happychain",
         "iframe",
         "JWKS",
+        "keccak",
+        "kysely",
         "mipd",
         "permissionless",
         "proxied",

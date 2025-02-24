@@ -5,7 +5,7 @@ import { z } from "zod"
 import { StateRequestStatus } from "#src/tmp/interface/HappyTxState"
 import { TransactionTypeName } from "#src/tmp/interface/common_chain"
 import { EntryPointStatus, SubmitterErrorStatus } from "#src/tmp/interface/status"
-import { isHexString } from "#src/zod/refines/isHexString"
+import { isHexString } from "#src/utils/zod/refines/isHexString"
 
 const inputSchema = z
     .object({

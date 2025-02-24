@@ -16,3 +16,6 @@ import type { AppType } from "./server"
 const client = hc<AppType>("")
 export type Client = typeof client
 export const hcWithType = (...args: Parameters<typeof hc>): Client => hc<AppType>(...args)
+
+// TODO: export typed RPC as above
+// TODO: export viem 'actions' to extend a standard client to easily interact with the submitter

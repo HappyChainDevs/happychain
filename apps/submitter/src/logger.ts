@@ -14,6 +14,7 @@ const logLevel = {
     error: LogLevel.ERROR,
 }[env.LOG_LEVEL]
 
+// TODO: use common/logger
 export const logger = {
     debug(...args: Parameters<typeof console.debug>) {
         if (logLevel > LogLevel.DEBUG) return
