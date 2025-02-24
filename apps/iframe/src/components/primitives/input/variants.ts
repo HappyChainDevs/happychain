@@ -12,7 +12,7 @@ export const recipeTextInput = cva(
         // User activity: focus
         "focus:outline-none focus:ring-2 focus:ring-opacity-25",
         // Behaviour: disabled
-        "[&:is([aria-disabled=true],:disabled)]:opacity-20 [&:is([aria-disabled=true],:disabled)]:cursor-not-allowed",
+        "[&:is([aria-disabled=true],:disabled)]:opacity-[.35] [&:is([aria-disabled=true],:disabled)]:cursor-not-allowed",
         // State: invalid
         "[&:is(:invalid,[aria-invalid=true]):not(:placeholder-shown),[data-novalidation]]:border-negative-9",
     ],
@@ -21,21 +21,12 @@ export const recipeTextInput = cva(
             intent: {
                 default: [
                     // Input
-                    "bg-neutral-3 border-neutral-11/20 bg-mix-base bg-mix-amount-80",
+                    "bg-base-100 border-neutral/25 dark:border-neutral/80",
                     // User activity: hover
                     "hover:border-neutral-11/30",
                     // User activity: focus
                     "focus:ring-primary-9 focus:border-neutral-11/50",
                     // Part: placeholder
-                    "placeholder:text-neutral-11/50",
-                ],
-                // Input
-                ghost: [
-                    "border-transparent bg-transparent",
-                    // User activity: focus
-                    "focus:ring-transparent",
-                    // Part: placeholder
-                    "focus:placeholder:text-neutral-11/70",
                     "placeholder:text-neutral-11/50",
                 ],
             },

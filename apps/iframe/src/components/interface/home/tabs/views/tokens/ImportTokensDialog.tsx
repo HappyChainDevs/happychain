@@ -210,7 +210,7 @@ export const ImportTokensDialog = () => {
                                 name="decimals"
                                 readOnly
                                 className={cx(
-                                    "h-[40px] !appearance-none caret-transparent resize-none border",
+                                    "h-[40px] !appearance-none caret-transparent resize-none border focus:ring-0",
                                     !isValidAddress && "opacity-20 cursor-not-allowed",
                                     `${recipeTextInput({ scale: "default" })}`,
                                 )}
