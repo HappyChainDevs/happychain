@@ -189,15 +189,14 @@ test("Transaction failed", async () => {
 })
 
 test("Transaction cancelled", async () => {
-    const deadline = Math.round(Date.now()/1000 + 2)
-
+    const deadline = Math.round(Date.now() / 1000 + 2)
 
     const transaction = await txm.createTransaction({
         address: deployment.HappyCounter,
         functionName: "increment",
         contractName: "HappyCounter",
         args: [],
-        deadline
+        deadline,
     })
 
     proxyServer.addBehavior(ProxyBehavior.Ignore)
@@ -206,9 +205,9 @@ test("Transaction cancelled", async () => {
 
     await mineBlock()
 
-    while(true) {
+    while (true) {
         const latestBlock = await directBlockchainClient.getBlock({
-            blockTag: "latest"
+            blockTag: "latest",
         })
 
         if (latestBlock.timestamp > deadline) {
@@ -239,10 +238,10 @@ test("Transaction cancelled", async () => {
     })
 
     const transactionExecuted = await directBlockchainClient.getTransaction({
-        hash: latestAttempt.hash
+        hash: latestAttempt.hash,
     })
 
     expect(transactionCancelled.status).toBe(TransactionStatus.Cancelled)
-    expect(receipt.status).toBe("success");
+    expect(receipt.status).toBe("success")
     expect(transactionExecuted.input).toBe("0x")
 })

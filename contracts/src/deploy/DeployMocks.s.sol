@@ -28,7 +28,8 @@ contract DeployMockERC20 is BaseDeployScript {
         (address _happyCounter,) =
             deployDeterministic("HappyCounter", type(HappyCounter).creationCode, abi.encode(), bytes32(uint256(0)));
         happyCounter = HappyCounter(_happyCounter);
-        (address _mockRevert,) = deployDeterministic("MockRevert", type(MockRevert).creationCode, abi.encode(), bytes32(uint256(0)));
+        (address _mockRevert,) =
+            deployDeterministic("MockRevert", type(MockRevert).creationCode, abi.encode(), bytes32(uint256(0)));
         mockRevert = MockRevert(_mockRevert);
     }
 

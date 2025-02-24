@@ -54,9 +54,9 @@ export function killAnvil() {
 }
 
 export async function mineBlock(quantity = 1) {
-    let blocksAlreadyMined = 0;
+    let blocksAlreadyMined = 0
 
-    while(blocksAlreadyMined < quantity) {
+    while (blocksAlreadyMined < quantity) {
         await fetch(`http://localhost:${ANVIL_PORT}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
