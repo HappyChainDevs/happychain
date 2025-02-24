@@ -1,5 +1,5 @@
 import type { HappyState } from "#src/database/generated"
-import type { HappyStateRepository } from "#src/repositories/HappyStateRepository"
+import type { HappyStateRepository } from "#src/database/repositories/HappyStateRepository"
 import type { HappyTxState } from "#src/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#src/tmp/interface/status"
 

@@ -49,8 +49,6 @@ submitter/
     │   └── # Database Connection & Repositories
     ├── errors/
     │   └── # Error definitions
-    ├── nonceQueueManager/
-    │   └── # Buffer management
     ├── routes/
     │   └── # API routes
     ├── services/

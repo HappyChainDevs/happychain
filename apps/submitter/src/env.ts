@@ -15,7 +15,7 @@ const envSchema = z.object({
     APP_PORT: z.coerce.number().default(3001),
     NODE_ENV: z.enum(["production", "development", "test", "cli"]).default("development"),
     LOG_LEVEL: z.enum(["off", "trace", "info", "warn", "error"]).default("info"),
-
+    DATABASE_URL: z.string(),
     LIMITS_EXECUTE_BUFFER_LIMIT: z.coerce.number().default(50),
     LIMITS_EXECUTE_MAX_CAPACITY: z.coerce.number().default(100),
 })
