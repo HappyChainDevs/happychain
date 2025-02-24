@@ -105,6 +105,10 @@ test-scrappyAccount-upgradeability:
 	forge test --match-contract UpgradeSCATest -vvv
 .PHONY: test-scrappyAccount-upgradeability
 
+test-predictDeploymentAddress:
+	@bun run getAddressERC1967Tests
+.PHONY: test-predictDeploymentAddress
+
 ####################################################################################################
 # Gas Logging
 
