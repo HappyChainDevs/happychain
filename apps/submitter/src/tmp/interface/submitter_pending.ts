@@ -1,5 +1,13 @@
 import type { Address, Hash, UInt256 } from "./common_chain"
 
+export type PendingHappyTxInput = {
+    account: Address
+}
+
+export type PendingHappyTxOutput = {
+    pending: PendingHappyTxInfo[]
+}
+
 export type PendingHappyTxInfo = {
     hash: Hash
     nonceTrack: UInt256
