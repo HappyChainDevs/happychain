@@ -12,6 +12,7 @@ import {
     getNonce,
     prepareTx,
     testAccount,
+    testPublicClient,
 } from "./utils"
 
 const client = testClient(app)
@@ -35,22 +36,20 @@ describe("submitter_execute", () => {
     describe("self-paying", () => {
         beforeAll(async () => {
             // faucet for self paying
-            await fundAccount(smartAccount)
+            if ((await testPublicClient.getBalance({ address: smartAccount })) < 10n ** 16n) {
+                await fundAccount(smartAccount)
+            }
         })
 
         it("mints tokens", async () => {
             const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, await getNonce(smartAccount))
-
             // be your own paymaster!
             dummyHappyTx.paymaster = smartAccount
-
             const prepared = await prepareTx(dummyHappyTx)
-
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
 
             expect(result.status).toBe(200)
             if (result.status !== 200) return
-
             const response = (await result.json()) as unknown as HappyTxStateSuccess
             expect(response.status).toBe(EntryPointStatus.Success)
             expect(response.included).toBe(true)
