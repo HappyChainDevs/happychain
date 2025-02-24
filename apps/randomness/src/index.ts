@@ -46,14 +46,9 @@ class RandomnessService {
         })
 
         await this.drandService.start()
-        logger.info(RAND_TAG, "Randomness service started")
     }
 
     private onTransactionStatusChange(transaction: Transaction) {
-        logger.info(
-            RAND_TAG,
-            `onTransactionStatusChange transaction ${transaction.intentId} status changed to ${transaction.status})`,
-        )
         const randomness = this.randomnessRepository.getRandomnessForIntentId(transaction.intentId)
 
         const successStatuses = [TransactionStatus.Success]
