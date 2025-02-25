@@ -12,6 +12,10 @@ export class TestGasEstimator extends DefaultGasLimitEstimator {
             return ok(40_000n)
         }
 
+        if (transaction.functionName === "revertDueToGasLimit") {
+            return ok(40_000n)
+        }
+
         return this.simulateTransactionForGas(transactionManager, transaction)
     }
 }

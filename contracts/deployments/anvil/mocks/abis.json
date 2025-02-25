@@ -388,6 +388,13 @@
       "stateMutability": "nonpayable"
     },
     {
+      "type": "function",
+      "name": "revertDueToGasLimit",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
       "type": "error",
       "name": "CustomErrorMockRevert",
       "inputs": []
