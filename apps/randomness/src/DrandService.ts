@@ -150,21 +150,29 @@ export class DrandService {
 
         await Promise.all(
             drandGaps.map(async (round) => {
-                let drandBeacon = await this.getDrandBeacon(round)
-                if (drandBeacon.isErr()) {
-                    if (drandBeacon.error !== DrandError.TooEarly) {
-                        console.error("Failed to get drand beacon", drandBeacon.error)
-                        return
+
+
+                    const maxRetries = 10
+                    const retryIntervalMs = 100
+                    let retryCount = 0
+                    
+                    let drandBeacon: Result<DrandBeacon, DrandError> | undefined
+                    while (retryCount < maxRetries) {
+                        await sleep(retryIntervalMs)
+                        drandBeacon = await this.getDrandBeacon(round)
+                        
+                        if (drandBeacon.isOk() || drandBeacon.error !== DrandError.TooEarly) {
+                            break
+                        }
+                        
+                        retryCount++
                     }
 
-                    await sleep(1000)
-                    drandBeacon = await this.getDrandBeacon(round)
-
-                    if (drandBeacon.isErr()) {
-                        console.error("Failed to get drand beacon", drandBeacon.error)
+                    if (!drandBeacon || drandBeacon.isErr()) {
+                        console.error("Failed to get drand beacon", drandBeacon?.error)
                         return
                     }
-                }
+                
 
                 const postDrandTransactionResult = this.transactionFactory.createPostDrandTransaction({
                     round: round,
