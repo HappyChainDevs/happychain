@@ -1,7 +1,7 @@
+import { LogTag, Logger } from "@happy.tech/common"
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
-
 /**
  * A type alias for {@link Block} with the `blockTag` set to `"latest"`, ensuring type definitions correspond to the latest block.
  */
@@ -27,8 +27,8 @@ export class BlockMonitor {
             onBlock: this.onNewBlock.bind(this),
             ...(this.txmgr.transportProtocol === "http" ? { pollingInterval: this.txmgr.pollingInterval } : {}),
             onError: (error) => {
-                console.error("Error watching blocks", error)
-                this.resetWatch()
+                Logger.instance.error(LogTag.TXM, "Error watching blocks", error)
+                this.resetBlockSubscription()
             },
         })
     }
@@ -41,12 +41,12 @@ export class BlockMonitor {
 
     private scheduleTimeout() {
         this.blockTimeout = setTimeout(() => {
-            console.log("Timeout reached. Resetting watch.")
-            this.resetWatch()
+            Logger.instance.warn(LogTag.TXM, "Timeout reached. Resetting block subscription.")
+            this.resetBlockSubscription()
         }, this.txmgr.blockInactivityTimeout)
     }
 
-    private resetWatch() {
+    private resetBlockSubscription() {
         if (this.unwatch) {
             this.unwatch()
         }

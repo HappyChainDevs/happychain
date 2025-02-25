@@ -1,3 +1,4 @@
+import { LogTag, Logger } from "@happy.tech/common"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType } from "./Transaction.js"
@@ -36,7 +37,7 @@ export class TransactionCollector {
             for (const transaction of transactionsBatch) {
                 eventBus.emit(Topics.TransactionSaveFailed, { transaction })
             }
-            console.error("Error saving transactions", saveResult.error)
+            Logger.instance.error(LogTag.TXM, "Error saving transactions", saveResult.error)
             return
         }
 

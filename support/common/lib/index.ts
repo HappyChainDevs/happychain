@@ -8,7 +8,7 @@ export { useIsHydrated } from "./hooks/isHydrated"
 
 // === UTILS =======================================================================================
 
-export { Logger } from "./utils/logger"
+export { Logger, LogTag } from "./utils/logger"
 
 export { atomWithCompare, atomWithCompareAndStorage, accessorsFromAtom, createBigIntStorage } from "./utils/jotai"
 

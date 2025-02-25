@@ -1,3 +1,5 @@
+import { LogTag } from "@happy.tech/common"
+import { Logger } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import type { Hash, Hex, TransactionRequestEIP1559 } from "viem"
 import { encodeFunctionData, keccak256 } from "viem"
@@ -72,7 +74,7 @@ export class TransactionSubmitter {
             const abi = this.txmgr.abiManager.get(transaction.contractName)
 
             if (!abi) {
-                console.error(`ABI not found for contract ${transaction.contractName}`)
+                Logger.instance.error(LogTag.TXM, `ABI not found for contract ${transaction.contractName}`)
                 return err({
                     cause: AttemptSubmissionErrorCause.ABINotFound,
                     description: `ABI not found for contract ${transaction.contractName}`,

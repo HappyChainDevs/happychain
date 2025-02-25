@@ -20,6 +20,7 @@ export enum LogLevel {
  */
 export enum LogTag {
     ALL = "All",
+    TXM = "Txm",
 }
 
 /**
