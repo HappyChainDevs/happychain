@@ -1,0 +1,21 @@
+{
+  "name": "@happy.tech/design-tokens",
+  "private": true,
+  "version": "0.0.1",
+  "sideEffects": ["**/*.css"],
+  "exports": {
+    "./theme.css": "./tokens/base.css",
+    "./tailwind.css": "./tokens/tailwind.css",
+    "./fonts.css": "./src/fonts.css",
+    "./gradients.css": "./src/gradients.css",
+    "./design-tokens.json": "./tokens.json"
+  },
+  "scripts": {
+    "tokens:build": "rm -rf ./tokens && tz build && bun run src/scripts/to-tailwind-v4.ts ./tokens/base.css ./tokens/tailwind.css"
+  },
+  "devDependencies": {
+    "@terrazzo/cli": "^0.6.1",
+    "@terrazzo/plugin-css": "^0.6.0",
+    "@types/bun": "latest"
+  }
+}
