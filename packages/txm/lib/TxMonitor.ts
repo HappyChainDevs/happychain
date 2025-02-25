@@ -1,4 +1,4 @@
-import { bigIntMax, promiseWithResolvers, unknownToError } from "@happy.tech/common"
+import { LogTag, Logger, bigIntMax, promiseWithResolvers, unknownToError } from "@happy.tech/common"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { type GetTransactionReceiptErrorType, type TransactionReceipt, TransactionReceiptNotFoundError } from "viem"
 import type { LatestBlock } from "./BlockMonitor.js"
@@ -54,7 +54,7 @@ export class TxMonitor {
         try {
             await this.handleNewBlock(block)
         } catch (error) {
-            console.error("Error in handleNewBlock: ", error)
+            Logger.instance.error(LogTag.TXM, "Error in handleNewBlock: ", error)
         }
         this.locked = false
 
@@ -113,7 +113,10 @@ export class TxMonitor {
                     that the transaction was executed and we don’t know
                 */
                 if (attemptOrResults.some((v) => v.isErr())) {
-                    console.error(`Failed to get transaction receipt for transaction ${transaction.intentId}`)
+                    Logger.instance.error(
+                        LogTag.TXM,
+                        `Failed to get transaction receipt for transaction ${transaction.intentId}`,
+                    )
                     return
                 }
 
@@ -126,7 +129,7 @@ export class TxMonitor {
 
             if (receipt.status === "success") {
                 if (attempt.type === AttemptType.Cancellation) {
-                    console.error(`Transaction ${transaction.intentId} was cancelled`)
+                    Logger.instance.error(LogTag.TXM, `Transaction ${transaction.intentId} was cancelled`)
                     return transaction.changeStatus(TransactionStatus.Cancelled)
                 }
                 return transaction.changeStatus(TransactionStatus.Success)
@@ -140,7 +143,7 @@ export class TxMonitor {
             )
 
             if (!shouldRetry) {
-                console.error(`Transaction ${transaction.intentId} failed`)
+                Logger.instance.error(LogTag.TXM, `Transaction ${transaction.intentId} failed`)
                 return transaction.changeStatus(TransactionStatus.Failed)
             }
 
@@ -155,7 +158,7 @@ export class TxMonitor {
         )
 
         if (result.isErr()) {
-            console.error("Error flushing transactions in onNewBlock")
+            Logger.instance.error(LogTag.TXM, "Error flushing transactions in onNewBlock")
         }
     }
 
@@ -182,7 +185,8 @@ export class TxMonitor {
         const attempt = transaction.lastAttempt
 
         if (!attempt) {
-            console.error(
+            Logger.instance.error(
+                LogTag.TXM,
                 `Transaction ${transaction.intentId} inconsistent state: no attempt found in handleExpiredTransaction`,
             )
             return
@@ -207,7 +211,8 @@ export class TxMonitor {
         const attempt = transaction.lastAttempt
 
         if (!attempt) {
-            console.error(
+            Logger.instance.error(
+                LogTag.TXM,
                 `Transaction ${transaction.intentId} inconsistent state: no attempt found in handleStuckTransaction`,
             )
             return
