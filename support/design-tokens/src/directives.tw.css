@@ -1,0 +1,41 @@
+/* 
+  Custom variants
+*/
+@custom-variant content-focused {  
+  &:focus,
+  &:focus-within {
+    @slot;
+  }
+}
+
+@custom-variant input-invalid {  
+  &:user-invalid,
+  &:has(:user-invalid) {
+    @slot;
+  }
+}
+
+@custom-variant click-disabled {  
+  &[aria-disabled=true],
+  &:disabled {
+    @slot;
+  }
+}
+
+@custom-variant input-disabled {  
+  &:is(input, textarea):read-only,
+  &:is(input, textarea):disabled,
+  &[aria-disabled=true]:is(input, textarea),
+  &:has(:is(input, textarea):read-only),
+  &:has(:is(input, textarea):disabled),
+  &:has([aria-disabled=true]:is(input, textarea)) {
+    @slot;
+  }
+}
+
+/*
+  Custom utilities
+*/
+@utility bg-gradient-hds-* {  
+  background-image: --value(--gradient-hds-*);
+}
