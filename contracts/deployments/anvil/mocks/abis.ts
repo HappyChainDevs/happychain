@@ -393,6 +393,13 @@ const contractToAbi = ({
       "stateMutability": "nonpayable"
     },
     {
+      "type": "function",
+      "name": "revertDueToGasLimit",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
       "type": "error",
       "name": "CustomErrorMockRevert",
       "inputs": []
@@ -411,7 +418,7 @@ const aliasToContract = ({
 
 export const deployment = ({
   "HappyCounter": "0xAD5A4f9CeaBC2990DD66039FE123828631b4e0Ea",
-  "MockRevert": "0xaBDA2A8E0ea2042106Bf9FB0300d267719E93C9b",
+  "MockRevert": "0x4C1ecA7b9C3d4A033000616e94b4bB10Ee66De57",
   "MockTokenA": "0x02206faC6469B2f59FC2Bb9d3BC181Fbe703F8B7",
   "MockTokenB": "0xF2Cd1312bcE60Edcd17406962aB3d76730bf4873",
   "MockTokenC": "0x09420341423aE6D9c14C26052AF66A948BE4982c"
