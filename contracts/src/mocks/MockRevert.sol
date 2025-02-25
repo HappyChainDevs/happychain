@@ -7,4 +7,11 @@ contract MockRevert {
     function revert() public {
         revert CustomErrorMockRevert();
     }
+
+    function revertDueToGasLimit() public {
+        uint256 i = 0;
+        while (true) {
+            i++;
+        }
+    }
 }
