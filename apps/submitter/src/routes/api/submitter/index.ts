@@ -6,9 +6,10 @@ import { db } from "#src/database"
 import { HappyReceiptRepository } from "#src/database/repositories/HappyReceiptRepository"
 import { HappyStateRepository } from "#src/database/repositories/HappyStateRepository"
 import { HappyTransactionRepository } from "#src/database/repositories/HappyTransactionRepository"
+import env from "#src/env"
 import { HappyBaseError } from "#src/errors"
 import { parseFromViemError } from "#src/errors/utils"
-import { createNonceQueueManager, enqueueBuffer } from "#src/nonceQueueManager"
+import { createNonceQueueManager, enqueueBuffer, getUserBuffers } from "#src/nonceQueueManager"
 import { HappyReceiptService } from "#src/services/HappyReceiptService"
 import { HappyStateService } from "#src/services/HappyStateService"
 import { HappyTransactionService } from "#src/services/HappyTransactionService"
@@ -37,8 +38,18 @@ const happyReceiptService = new HappyReceiptService(happyReceiptRepository)
 
 const submitterService = new SubmitterService(happyTransactionService, happyStateService, happyReceiptService)
 
-const executeManager = createNonceQueueManager(5, 10, executeHappyTx, fetchNonce)
-const submitManager = createNonceQueueManager(5, 10, submitHappyTx, fetchNonce)
+const executeManager = createNonceQueueManager(
+    env.LIMITS_EXECUTE_BUFFER_LIMIT,
+    env.LIMITS_EXECUTE_MAX_CAPACITY,
+    executeHappyTx,
+    fetchNonce,
+)
+const submitManager = createNonceQueueManager(
+    env.LIMITS_SUBMIT_BUFFER_LIMIT,
+    env.LIMITS_EXECUTE_MAX_CAPACITY,
+    submitHappyTx,
+    fetchNonce,
+)
 
 export default new Hono()
     .post("/estimateGas", estimateGasRoute.description, estimateGasRoute.validation, async (c) => {
@@ -213,5 +224,13 @@ export default new Hono()
         },
     )
     .get("/pending/:account", async (c) => {
-        return c.json([], 500)
+        const account = c.req.param("account")
+        const executePending = getUserBuffers(executeManager, account)
+        const submitPending = getUserBuffers(submitManager, account)
+
+        const sorted = executePending.concat(submitPending).sort((a, b) => {
+            if (a.nonceTrack === b.nonceTrack) return Number(a.nonceValue - b.nonceValue)
+            return Number(a.nonceTrack - b.nonceTrack)
+        })
+        return c.json(sorted, 200)
     })

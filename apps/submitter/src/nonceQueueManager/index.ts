@@ -1,2 +1,2 @@
-export { createNonceQueueManager, enqueueBuffer } from "./nonceQueueManager"
+export { createNonceQueueManager, enqueueBuffer, getUserBuffers } from "./nonceQueueManager"
 export * from "./types"

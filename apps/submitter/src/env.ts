@@ -16,6 +16,11 @@ const envSchema = z.object({
     NODE_ENV: z.enum(["production", "development", "test", "cli"]).default("development"),
     LOG_LEVEL: z.enum(["off", "trace", "info", "warn", "error"]).default("info"),
     DATABASE_URL: z.string(),
+
+    LIMITS_SUBMIT_BUFFER_LIMIT: z.coerce.number().default(50),
+    LIMITS_SUBMIT_MAX_CAPACITY: z.coerce.number().default(100),
+    LIMITS_EXECUTE_BUFFER_LIMIT: z.coerce.number().default(50),
+    LIMITS_EXECUTE_MAX_CAPACITY: z.coerce.number().default(100),
 })
 
 // Validate `process.env` against our schema
