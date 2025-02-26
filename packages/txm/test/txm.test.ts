@@ -8,7 +8,6 @@ import { TxmHookType } from "../lib/HookManager"
 import { AttemptType, TransactionStatus } from "../lib/Transaction"
 import type { Transaction } from "../lib/Transaction"
 import { TransactionManager } from "../lib/TransactionManager"
-import { db } from "../lib/db/driver"
 import { migrateToLatest } from "../lib/migrate"
 import { ProxyBehavior, ProxyServer } from "./utils/ProxyServer"
 import { TestGasEstimator } from "./utils/TestGasEstimator"
@@ -18,7 +17,7 @@ import { startAnvil } from "./utils/anvil"
 import { CHAIN_ID, PRIVATE_KEY, PROXY_URL } from "./utils/constants"
 import { deployMockContracts } from "./utils/contracts"
 import { assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
-import { cleanDB } from "./utils/db"
+import { cleanDB, getPersistedTransaction } from "./utils/db"
 
 const retryManager = new TestRetryManager()
 
@@ -35,8 +34,6 @@ const txm = new TransactionManager({
 })
 
 const fromAddress = privateKeyToAddress(PRIVATE_KEY)
-
-let initialNonce = 0
 
 const proxyServer = new ProxyServer()
 
@@ -55,6 +52,27 @@ const directBlockchainClient = createPublicClient({
     transport: http(),
 })
 
+async function getCurrentCounterValue(): Promise<bigint> {
+    return await directBlockchainClient.readContract({
+        address: deployment.HappyCounter,
+        functionName: "getCount",
+        abi: abis.HappyCounter,
+        account: fromAddress,
+    })
+}
+
+async function createCounterTransaction(deadline?: number): Promise<Transaction> {
+    return await txm.createTransaction({
+        address: deployment.HappyCounter,
+        functionName: "increment",
+        contractName: "HappyCounter",
+        args: [],
+        deadline,
+    })
+}
+
+let nonceBeforeEachTest: number
+
 beforeAll(async () => {
     await cleanDB()
     await migrateToLatest()
@@ -62,8 +80,10 @@ beforeAll(async () => {
     await deployMockContracts()
     await proxyServer.start()
     await txm.start()
+})
 
-    initialNonce = await directBlockchainClient.getTransactionCount({
+beforeEach(async () => {
+    nonceBeforeEachTest = await directBlockchainClient.getTransactionCount({
         address: fromAddress,
     })
 })
@@ -84,19 +104,9 @@ test("Setup is correct", async () => {
 })
 
 test("Simple transaction executed", async () => {
-    const previousCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+    const previousCount = await getCurrentCounterValue()
 
-    const transaction = await txm.createTransaction({
-        address: deployment.HappyCounter,
-        functionName: "increment",
-        contractName: "HappyCounter",
-        args: [],
-    })
+    const transaction = await createCounterTransaction()
 
     transactionQueue.push(transaction)
 
@@ -112,41 +122,22 @@ test("Simple transaction executed", async () => {
         hash: retrievedTransaction.attempts[0].hash,
     })
 
-    const currentCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+    const currentCount = await getCurrentCounterValue()
 
-    const persistedTransaction = await db
-        .selectFrom("transaction")
-        .where("intentId", "=", transaction.intentId)
-        .selectAll()
-        .executeTakeFirst()
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
 
     assertReceiptSuccess(deployment.HappyCounter, fromAddress, receipt)
     expect(retrievedTransaction?.status).toBe(TransactionStatus.Success)
     expect(currentCount).toBe(previousCount + 1n)
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
-    expect(retrievedTransaction?.lastAttempt?.nonce).toBe(initialNonce)
+    expect(retrievedTransaction?.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
 })
 
 test("Transaction retried", async () => {
-    const previousCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+    const previousCount = await getCurrentCounterValue()
 
-    const transaction = await txm.createTransaction({
-        address: deployment.HappyCounter,
-        functionName: "increment",
-        contractName: "HappyCounter",
-        args: [],
-    })
+    const transaction = await createCounterTransaction()
 
     proxyServer.addBehavior(ProxyBehavior.NotAnswer)
 
@@ -186,27 +177,17 @@ test("Transaction retried", async () => {
         hash: transactionSuccess.attempts[1].hash,
     })
 
-    const currentCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+    const currentCount = await getCurrentCounterValue()
 
     assertReceiptSuccess(deployment.HappyCounter, fromAddress, successReceipt)
     expect(transactionSuccess.status).toBe(TransactionStatus.Success)
     expect(transaction.attempts.length).toBe(2)
     expect(currentCount).toBe(previousCount + 1n)
-    expect(transactionSuccess.lastAttempt?.nonce).toBe(initialNonce + 1)
+    expect(transactionSuccess.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
 })
 
 test("Transaction failed", async () => {
-    const previousCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+    const previousCount = await getCurrentCounterValue()
 
     const transaction = await txm.createTransaction({
         address: deployment.MockRevert,
@@ -229,27 +210,17 @@ test("Transaction failed", async () => {
         hash: transactionReverted.attempts[0].hash,
     })
 
-    const currentCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+    const currentCount = await getCurrentCounterValue()
 
     expect(transactionReverted.status).toBe(TransactionStatus.Failed)
     expect(transaction.attempts).length(1)
     assertReceiptReverted(deployment.MockRevert, fromAddress, revertReceipt)
     expect(currentCount).toBe(previousCount)
-    expect(transactionReverted.lastAttempt?.nonce).toBe(initialNonce + 2)
+    expect(transactionReverted.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
 })
 
 test("Transaction failed for out of gas", async () => {
-    const previousCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+    const previousCount = await getCurrentCounterValue()
 
     const transaction = await txm.createTransaction({
         address: deployment.MockRevert,
@@ -272,39 +243,23 @@ test("Transaction failed for out of gas", async () => {
         hash: transactionReverted.attempts[0].hash,
     })
 
-    const currentCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+    const currentCount = await getCurrentCounterValue()
 
     expect(transactionReverted.status).toBe(TransactionStatus.Failed)
     expect(transaction.attempts).length(1)
     assertReceiptReverted(deployment.MockRevert, fromAddress, revertReceipt)
     expect(currentCount).toBe(previousCount)
-    expect(transactionReverted.lastAttempt?.nonce).toBe(initialNonce + 3)
+    expect(transactionReverted.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
     expect(retryManager.haveTriedToRetry(transaction.intentId)).toBeTruthy()
     expect(revertReceipt.gasUsed).toBe(transactionReverted.attempts[0].gas)
 })
 
-test("Transaction cancelled", async () => {
-    const previousCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+test("Transaction cancelled due to deadline passing", async () => {
+    const previousCount = await getCurrentCounterValue()
 
     const deadline = Math.round(Date.now() / 1000 + 2)
 
-    const transaction = await txm.createTransaction({
-        address: deployment.HappyCounter,
-        functionName: "increment",
-        contractName: "HappyCounter",
-        args: [],
-        deadline,
-    })
+    const transaction = await createCounterTransaction(deadline)
 
     proxyServer.addBehavior(ProxyBehavior.NotAnswer)
 
@@ -357,12 +312,7 @@ test("Transaction cancelled", async () => {
         hash: latestAttempt.hash,
     })
 
-    const currentCount = await directBlockchainClient.readContract({
-        address: deployment.HappyCounter,
-        functionName: "getCount",
-        abi: abis.HappyCounter,
-        account: fromAddress,
-    })
+    const currentCount = await getCurrentCounterValue()
 
     expect(transactionCancelled.status).toBe(TransactionStatus.Cancelled)
     assertReceiptSuccess(fromAddress, fromAddress, receipt)
@@ -370,5 +320,5 @@ test("Transaction cancelled", async () => {
     expect(receipt.gasUsed).toBe(21000n)
     expect(latestAttempt.type).toBe(AttemptType.Cancellation)
     expect(currentCount).toBe(previousCount)
-    expect(transactionCancelled.lastAttempt?.nonce).toBe(initialNonce + 4)
+    expect(transactionCancelled.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
 })
