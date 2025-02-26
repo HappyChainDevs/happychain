@@ -58,11 +58,20 @@ contract ScrappyAccount is
     /// @dev Selector returned if the upgrade call is not made from the account itself, or from the owner.
     error NotSelfOrOwner();
 
+    /// @dev Selector returned if the validation of the HappyTx by the external validator failed.
+    error ValidatorReverted(bytes4 reason);
+
     // ====================================================================================================
     // EVENTS
 
     /// Emitted when ETH is received by the contract
     event Received(address indexed sender, uint256 amount);
+
+    /// Emitted when a validator is added to the account
+    event ValidatorAdded(address indexed validator);
+
+    /// Emitted when a validator is removed from the account
+    event ValidatorRemoved(address indexed validator);
 
     // ====================================================================================================
     // CONSTANTS
@@ -137,17 +146,15 @@ contract ScrappyAccount is
     // EXTERNAL FUNCTIONS
 
     function addValidator(address customValidator) external onlySelfOrOwner {
-        if (validators[customValidator]) {
-            revert ValidatorAlreadyRegistered(customValidator);
-        }
+        if (validators[customValidator]) revert ValidatorAlreadyRegistered(customValidator);
         validators[customValidator] = true;
+        emit ValidatorAdded(customValidator);
     }
 
     function removeValidator(address customValidator) external onlySelfOrOwner {
-        if (!validators[customValidator]) {
-            revert ValidatorNotRegistered(customValidator);
-        }
-        validators[customValidator] = false;
+        if (!validators[customValidator]) revert ValidatorNotRegistered(customValidator);
+        delete validators[customValidator];
+        emit ValidatorRemoved(customValidator);
     }
 
     function validate(HappyTx memory happyTx) external returns (bytes4) {
@@ -288,8 +295,6 @@ contract ScrappyAccount is
             revert ValidatorNotFound(validator);
         }
 
-        // TODO: Check if this address is a valid validator, but how?
-
         bool success;
         bytes memory returnData;
         (success, returnData) = validator.excessivelySafeCall(
@@ -299,6 +304,11 @@ contract ScrappyAccount is
             abi.encodeCall(ICustomBoopValidator.validate, (happyTx))
         );
 
-        return success && bytes4(returnData) == bytes4(0);
+        if (!success) {
+            bytes4 revertData = abi.decode(returnData, (bytes4));
+            revert ValidatorReverted(revertData);
+        }
+
+        return bytes4(returnData) == bytes4(0);
     }
 }
