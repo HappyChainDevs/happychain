@@ -1,4 +1,5 @@
 import { TransactionType } from "@happy.tech/common"
+import { shortenAddress } from "@happy.tech/wallet-common"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -22,13 +23,10 @@ import {
     FormattedDetailsLine,
     Layout,
     LinkToAddress,
-    RequestTabsValues,
     SectionBlock,
     SubsectionBlock,
     SubsectionContent,
     SubsectionTitle,
-    TabContent,
-    Tabs,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
@@ -144,19 +142,7 @@ export const EthSendTransaction = ({
         <>
             <Layout
                 labelHeader="Confirm transaction"
-                headline={
-                    <>
-                        Confirm your interaction with {tx.to?.slice(0, 4)}...{tx.to?.slice(-4)}
-                    </>
-                }
-                description={
-                    <>
-                        <span className="font-bold text-primary">{appURL}</span> needs you to confirm this transaction.{" "}
-                        <span className="font-bold">
-                            This transaction will use {formattedTxInfo.value} of your HAPPY balance.
-                        </span>
-                    </>
-                }
+                headline={<>Confirm transaction</>}
                 hideActions={tx.type === TransactionType.EIP4844}
                 actions={{
                     accept: {
@@ -174,55 +160,46 @@ export const EthSendTransaction = ({
                     },
                 }}
             >
-                <Tabs defaultValue={RequestTabsValues.Details}>
-                    <TabContent value={RequestTabsValues.Details}>
-                        <SectionBlock>
-                            <SubsectionBlock>
-                                <SubsectionContent>
-                                    <SubsectionTitle>Sender address</SubsectionTitle>
-                                    <FormattedDetailsLine>
-                                        <LinkToAddress address={tx.from as Address}>{tx.from}</LinkToAddress>
-                                    </FormattedDetailsLine>
-                                </SubsectionContent>
-                                <SubsectionContent>
-                                    <SubsectionTitle>Receiver address</SubsectionTitle>
-                                    <FormattedDetailsLine>
-                                        <LinkToAddress address={tx.to as Address}>{tx.to}</LinkToAddress>
-                                    </FormattedDetailsLine>
-                                </SubsectionContent>
+                <SectionBlock>
+                    <SubsectionBlock>
+                        <SubsectionContent>
+                            <SubsectionTitle>Receiver address</SubsectionTitle>
+                            <FormattedDetailsLine>
+                                <LinkToAddress address={tx.to as Address}>{shortenAddress(tx.to)}</LinkToAddress>
+                            </FormattedDetailsLine>
+                        </SubsectionContent>
 
-                                <SubsectionContent>
-                                    <SubsectionTitle>Amount</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo.value} HAPPY</FormattedDetailsLine>
-                                </SubsectionContent>
-                            </SubsectionBlock>
-                        </SectionBlock>
-                        <SectionBlock>
-                            <SubsectionBlock>
-                                <SubsectionContent>
-                                    <SubsectionTitle>Transaction type</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo.type}</FormattedDetailsLine>
-                                </SubsectionContent>
-                                <SubsectionContent>
-                                    <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo.maxFeePerGas}</FormattedDetailsLine>
-                                </SubsectionContent>
-                                <SubsectionContent>
-                                    <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedTxInfo.maxPriorityFeePerGas}</FormattedDetailsLine>
-                                </SubsectionContent>
-                            </SubsectionBlock>
-                        </SectionBlock>
-                    </TabContent>
-                    <TabContent value={RequestTabsValues.Raw}>
-                        <SectionBlock>
-                            <SubsectionBlock>
-                                {decodedData && <DecodedData data={decodedData} />}
-                                <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
-                            </SubsectionBlock>
-                        </SectionBlock>
-                    </TabContent>
-                </Tabs>
+                        {Number(formattedTxInfo.value) > 0 && (
+                            <SubsectionContent>
+                                <SubsectionTitle>Amount</SubsectionTitle>
+                                <FormattedDetailsLine>{formattedTxInfo.value} HAPPY</FormattedDetailsLine>
+                            </SubsectionContent>
+                        )}
+                    </SubsectionBlock>
+                </SectionBlock>
+                <SectionBlock>
+                    <SubsectionBlock>
+                        <SubsectionContent>
+                            <SubsectionTitle>Transaction type</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedTxInfo.type}</FormattedDetailsLine>
+                        </SubsectionContent>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedTxInfo.maxFeePerGas}</FormattedDetailsLine>
+                        </SubsectionContent>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedTxInfo.maxPriorityFeePerGas}</FormattedDetailsLine>
+                        </SubsectionContent>
+                    </SubsectionBlock>
+                </SectionBlock>
+                <SectionBlock>
+                    <SubsectionBlock>
+                        <SubsectionTitle>Decoded data</SubsectionTitle>
+                        {decodedData && <DecodedData data={decodedData} />}
+                        <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                    </SubsectionBlock>
+                </SectionBlock>
                 {tx.type === TransactionType.EIP4844 && (
                     <SectionBlock>
                         <BlobTxWarning onReject={reject} />

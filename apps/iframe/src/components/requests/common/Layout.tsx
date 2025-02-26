@@ -40,7 +40,7 @@ export const Layout = ({
             </header>
             <div className="pt-16">
                 <section className="w-full px-2">
-                    <div className="mx-auto w-full grid gap-6 text-center max-w-prose">
+                    <div className="mx-auto w-full grid gap-4 text-center max-w-prose">
                         <h1 className="font-bold text-xl">{headline}</h1>
                         <div title={user?.address} className="flex gap-2 text-start justify-center text-xs rounded-xl">
                             <div className="h-8 overflow-hidden aspect-square rounded-full bg-neutral/90">
@@ -62,7 +62,7 @@ export const Layout = ({
                         <p className="opacity-80 text-sm">{description}</p>
                     </div>
                 </section>
-                <div className="pt-6">{children}</div>
+                <div className="pb-6">{children}</div>
 
                 {!hideActions && (
                     <div className="mt-auto px-2 py-6 border-t border-neutral/10 dark:border-neutral/50">
