@@ -2,15 +2,20 @@
     "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
     "files": {
         "ignore": [
-            ".pnpm-store",
+            "*.config.ts.timestamp-*.mjs",
             ".next",
-            "dist",
+            ".pnpm-store",
             "build",
+            "contracts/broadcast",
+            "contracts/cache",
+            "contracts/deployments",
+            "contracts/lib",
+            "contracts/out",
+            "dist",
+            "generated.d.ts",
             "generated.ts",
             "node_modules",
-            "contracts/deployments",
-            "routeTree.gen.ts",
-            "*.config.ts.timestamp-*.mjs"
+            "routeTree.gen.ts"
         ]
     },
     "formatter": {
