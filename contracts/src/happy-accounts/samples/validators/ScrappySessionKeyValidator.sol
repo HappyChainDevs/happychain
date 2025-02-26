@@ -9,11 +9,10 @@ import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
 import {ICustomBoopValidator} from "../../interfaces/extensions/ICustomBoopValidator.sol";
-import {GasPriceTooHigh, InvalidNonce} from "../../interfaces/IHappyAccount.sol";
 
 import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
-import {FutureNonceDuringSimulation, InvalidOwnerSignature, UnknownDuringSimulation} from "../../utils/Common.sol";
+import {InvalidOwnerSignature} from "../../utils/Common.sol";
 
 struct SessionKeyValidatorStorage {
     address sessionKey;
@@ -82,20 +81,8 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
         return _getStorageKey(account, target);
     }
 
-    function validate(HappyTx memory happyTx) external returns (bytes4) {
+    function validate(HappyTx memory happyTx) external view returns (bytes4) {
         address sessionKey = sessionKeyValidatorStorage[_getStorageKey(msg.sender, bytes20(happyTx.dest))].sessionKey;
-
-        if (tx.gasprice > happyTx.maxFeePerGas) {
-            return GasPriceTooHigh.selector;
-        }
-
-        bool isSimulation = tx.origin == address(0);
-        uint256 happyTxNonce = (happyTx.nonceTrack << 192) | happyTx.nonceValue;
-        uint256 currentNonce = getNonce(happyTx.nonceTrack);
-        int256 nonceAhead = int256(happyTxNonce) - int256(currentNonce);
-
-        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
-        nonceValue[happyTx.nonceTrack]++;
 
         if (happyTx.paymaster != happyTx.account) {
             // The happyTx is not self-paying.
@@ -109,16 +96,11 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
 
         bytes memory signature = happyTx.validatorData;
         happyTx.validatorData = ""; // set to "" to get the hash
-        // address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
+        // address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature); // TODO: gives error for some reason
         address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(keccak256(happyTx.encode())), signature);
         happyTx.validatorData = signature; // revert back to original value
 
-        // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
-        return isSimulation
-            ? signer == sessionKey
-                ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
-                : UnknownDuringSimulation.selector
-            : signer == sessionKey ? bytes4(0) : InvalidOwnerSignature.selector;
+        return signer == sessionKey ? bytes4(0) : bytes4(InvalidOwnerSignature.selector);
     }
 
     // ====================================================================================================
@@ -130,11 +112,6 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
 
     receive() external payable {
         emit Received(msg.sender, msg.value);
-    }
-
-    /// Returns the next nonce for a given nonce track, combining the track with its current nonce sequence
-    function getNonce(uint192 nonceTrack) public view returns (uint256 nonce) {
-        return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
     }
 
     // ====================================================================================================

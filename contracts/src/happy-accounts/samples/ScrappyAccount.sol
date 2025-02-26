@@ -168,68 +168,40 @@ contract ScrappyAccount is
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
         nonceValue[happyTx.nonceTrack]++;
 
-        // Check for custom validator
+        bool validationSuccess;
+
         (bool found, bytes memory validatorData) = HappyTxLib.getExtraDataValue(
             happyTx.extraData,
             0x000001 // Validator key
         );
 
         if (found) {
-            if (validatorData.length != 32) {
-                revert InvalidValidatorValue();
+            validationSuccess = _validateWithExternalValidator(happyTx, validatorData);
+        } else {
+            if (happyTx.paymaster != address(this)) {
+                // The happyTx is not self-paying.
+                // The signer does not sign over these fields to avoid extra network roundtrips
+                // validation policy falls to the paymaster or the sponsoring submitter.
+                happyTx.gasLimit = 0;
+                happyTx.executeGasLimit = 0;
+                happyTx.maxFeePerGas = 0;
+                happyTx.submitterFee = 0;
             }
 
-            address validator;
-            assembly {
-                validator := mload(add(add(validatorData, 0x20), 12)) // skip first 12 bytes
-            }
+            bytes memory signature = happyTx.validatorData;
+            happyTx.validatorData = ""; // set to "" to get the hash
+            address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
+            happyTx.validatorData = signature; // revert back to original value
 
-            // Check if validator is registered
-            if (!validators[validator]) {
-                revert ValidatorNotFound(validator);
-            }
+            validationSuccess = signer == owner();
+        }
 
-            // TODO: Check if this address is a valid validator, but how?
-
-            bool success;
-            bytes memory returnData;
-            (success, returnData) = validator.excessivelySafeCall(
-                happyTx.executeGasLimit,
-                0, // gas token transfer value
-                MAX_VALIDATE_RETURN_DATA_SIZE,
-                abi.encodeCall(ICustomBoopValidator.validate, (happyTx))
-            );
-
-            bool validationSuccess = success && bytes4(returnData) == bytes4(0);
-
-            return isSimulation
+        // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
+        return isSimulation
             ? validationSuccess
                 ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
                 : UnknownDuringSimulation.selector
             : validationSuccess ? bytes4(0) : InvalidOwnerSignature.selector;
-        }
-
-        if (happyTx.paymaster != address(this)) {
-            // The happyTx is not self-paying.
-            // The signer does not sign over these fields to avoid extra network roundtrips
-            // validation policy falls to the paymaster or the sponsoring submitter.
-            happyTx.gasLimit = 0;
-            happyTx.executeGasLimit = 0;
-            happyTx.maxFeePerGas = 0;
-            happyTx.submitterFee = 0;
-        }
-
-        bytes memory signature = happyTx.validatorData;
-        happyTx.validatorData = ""; // set to "" to get the hash
-        address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
-        happyTx.validatorData = signature; // revert back to original value
-
-        // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
-        return isSimulation
-            ? signer == owner()
-                ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
-                : UnknownDuringSimulation.selector
-            : signer == owner() ? bytes4(0) : InvalidOwnerSignature.selector;
     }
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
@@ -302,4 +274,36 @@ contract ScrappyAccount is
 
     /// @dev Function that authorizes an upgrade of this contract via the UUPS proxy pattern
     function _authorizeUpgrade(address newImplementation) internal override onlySelfOrOwner {}
+
+    /// @dev Function that validates a happy tx with an external validator, and returns true if the validation was successful
+    function _validateWithExternalValidator(HappyTx memory happyTx, bytes memory validatorData)
+        internal
+        returns (bool)
+    {
+        if (validatorData.length != 32) {
+            revert InvalidValidatorValue();
+        }
+
+        address validator;
+        assembly {
+            validator := mload(add(add(validatorData, 0x20), 12)) // skip first 12 bytes
+        }
+
+        if (!validators[validator]) {
+            revert ValidatorNotFound(validator);
+        }
+
+        // TODO: Check if this address is a valid validator, but how?
+
+        bool success;
+        bytes memory returnData;
+        (success, returnData) = validator.excessivelySafeCall(
+            happyTx.executeGasLimit,
+            0, // gas token transfer value
+            MAX_VALIDATE_RETURN_DATA_SIZE,
+            abi.encodeCall(ICustomBoopValidator.validate, (happyTx))
+        );
+
+        return success && bytes4(returnData) == bytes4(0);
+    }
 }
