@@ -86,6 +86,30 @@ export async function enqueueBuffer<T extends Processor, THappyBuffer extends Bu
 }
 
 /**
+ * Retrieves all happyTx belonging to a specific user based on their address.
+ * @param {NonceQueueManager} manager - The manager object.
+ * @param {string} account - The address of the user.
+ * @returns {Bufferable[]} An array of intents belonging to the user.
+ */
+export function getUserBuffers(manager: NonceQueueManager, account: string): Bufferable[] {
+    const userBuffers: Bufferable[] = []
+
+    const userKeyPrefix = `${account}-`
+    for (const [key, track] of manager.tracks.entries()) {
+        if (key.startsWith(userKeyPrefix)) {
+            for (const buffer of track.queue.values()) {
+                userBuffers.push(buffer.happyTx)
+            }
+            if (track.activeBuffer) {
+                userBuffers.push(track.activeBuffer.happyTx)
+            }
+        }
+    }
+
+    return userBuffers
+}
+
+/**
  * Initializes a track for a given key. Looks up onchain nonce using address & nonceTrack.
  */
 async function initializeTrack(manager: NonceQueueManager, key: string, happyTx: Bufferable): Promise<NonceTrack> {

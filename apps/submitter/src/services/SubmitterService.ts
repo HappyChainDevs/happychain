@@ -8,8 +8,8 @@ import type { HappyTransactionService } from "./HappyTransactionService"
 
 export class SubmitterService {
     constructor(
-        private happyTransactionService: HappyTransactionService,
-        private happyStateService: HappyStateService,
+        public happyTransactionService: HappyTransactionService,
+        protected happyStateService: HappyStateService,
         private happyReceiptService: HappyReceiptService,
     ) {}
 

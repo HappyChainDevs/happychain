@@ -48,7 +48,6 @@ describe("submitter_execute", () => {
             const prepared = await prepareTx(dummyHappyTx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
             expect(result.status).toBe(200)
-            if (result.status !== 200) return
             const response = (await result.json()) as unknown as HappyTxStateSuccess
             expect(response.status).toBe(EntryPointStatus.Success)
             expect(response.included).toBe(true)
@@ -74,42 +73,53 @@ describe("submitter_execute", () => {
                 expect(response.simulation).toBeEmpty()
                 expect(response.receipt).not.toBeEmpty()
             })
+
             it("has happyTxHash", () => {
                 expect(response.receipt.happyTxHash).toBeString()
             })
+
             it("has account", () => {
                 expect(response.receipt.account).toBeString()
             })
+
             it("has nonce", () => {
                 expect(BigInt(response.receipt.nonceTrack)).toBeGreaterThanOrEqual(0n)
                 expect(BigInt(response.receipt.nonceValue)).toBeGreaterThanOrEqual(0n)
             })
+
             it("includes entryPoint", () => {
                 expect(response.receipt.entryPoint).toBeString()
             })
+
             it("has success entrypoint status", () => {
                 expect(response.receipt.status).toBe(EntryPointStatus.Success)
             })
+
             it("contains happy logs", () => {
                 expect(response.receipt.logs).toStrictEqual([])
             })
+
             it("has empty revert/failure data", () => {
                 expect(response.receipt.revertData).toBe("0x")
                 expect(response.receipt.failureReason).toBe("0x")
             })
+
             it("includes gas information", () => {
                 expect(BigInt(response.receipt.gasUsed)).toBeGreaterThan(0n)
                 expect(BigInt(response.receipt.gasCost)).toBeGreaterThan(0n)
             })
+
             it("includes the transaction receipt blob gas info", () => {
                 expect(BigInt(response.receipt.txReceipt.blobGasPrice as bigint)).toBe(1n)
                 expect(response.receipt.txReceipt.blobGasUsed).toBeUndefined()
             })
+
             it("includes the transaction receipt", () => {
                 expect(response.receipt.txReceipt.transactionHash).toBeString()
                 expect(response.receipt.txReceipt.blockHash).toBeString()
                 expect(BigInt(response.receipt.txReceipt.blockNumber)).toBeGreaterThan(0n)
             })
+
             it("includes the transaction receipt contract info", () => {
                 expect(response.receipt.txReceipt.contractAddress).toBe(null)
                 expect(BigInt(response.receipt.txReceipt.cumulativeGasUsed)).toBeGreaterThan(0n)
@@ -128,31 +138,24 @@ describe("submitter_execute", () => {
         })
         it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
-
-            const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, await getNonce(smartAccount))
-
-            const prepared = await prepareTx(dummyHappyTx)
-
+            const tx = await createMockTokenAMintHappyTx(smartAccount, await getNonce(smartAccount))
+            const prepared = await prepareTx(tx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
-            expect(result.status).toBe(200)
-
             const afterBalance = await getMockTokenABalance(smartAccount)
+
+            expect(result.status).toBe(200)
             expect(afterBalance - beforeBalance).toBe(10n ** 18n)
         })
 
         it("can't use a too-low nonce", async () => {
             // subtract 1 from valid nonce
-
             const nonce = (await getNonce(smartAccount)) - 1n
-            const prepared = await prepareTx(await createMockTokenAMintHappyTx(smartAccount, nonce))
-
+            const tx = await createMockTokenAMintHappyTx(smartAccount, nonce)
+            const prepared = await prepareTx(tx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
-
-            expect(result.status).toBe(500)
-            if (result.status !== 500) return
-
             const response = (await result.json()) as unknown as BaseFailedError
 
+            expect(result.status).toBe(500)
             expect(response.status).toBe(EntryPointStatus.ValidationFailed)
             expect(response.failureReason).toBeUndefined()
             expect(response.revertData).toBe("0x756688fe")
@@ -160,18 +163,14 @@ describe("submitter_execute", () => {
 
         it("can't re-use a nonce", async () => {
             const nonce = await getNonce(smartAccount)
-            const prepared = await prepareTx(await createMockTokenAMintHappyTx(smartAccount, nonce))
-
+            const tx = await createMockTokenAMintHappyTx(smartAccount, nonce)
+            const prepared = await prepareTx(tx)
             const result1 = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
-            // again with same nonce
             const result2 = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
+            const response2 = (await result2.json()) as unknown as BaseFailedError
 
             expect(result1.status).toBe(200)
             expect(result2.status).toBe(500)
-            if (result2.status !== 500) return
-
-            const response2 = (await result2.json()) as unknown as BaseFailedError
-
             expect(response2.status).toBe(EntryPointStatus.ValidationFailed)
             expect(response2.failureReason).toBeUndefined()
             expect(response2.revertData).toBe("0x756688fe")
@@ -179,11 +178,8 @@ describe("submitter_execute", () => {
 
         it("fills in executeGasLimit automatically", async () => {
             const nonce = await getNonce(smartAccount)
-
             const tx = await createMockTokenAMintHappyTx(smartAccount, nonce)
-
             const encoded = await prepareTx({ ...tx, executeGasLimit: 0n })
-
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: encoded } })
 
             expect(result.status).toBe(200)
@@ -191,11 +187,8 @@ describe("submitter_execute", () => {
 
         it("fills in maxFeePerGas automatically", async () => {
             const nonce = await getNonce(smartAccount)
-
             const tx = await createMockTokenAMintHappyTx(smartAccount, nonce)
-
             const encoded = await prepareTx({ ...tx, maxFeePerGas: 0n })
-
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: encoded } })
 
             expect(result.status).toBe(200)

@@ -19,7 +19,6 @@ export async function executeHappyTx({
 
         // if gas limits where manually set, we skip simulation
         const { request } = simulate ? await submitterClient.simulateSubmit({ ...args }) : { request: {} }
-
         const hash = await submitterClient.submit({
             ...request,
             ...args,
