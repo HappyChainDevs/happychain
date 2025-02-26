@@ -67,6 +67,13 @@ contract ScrappyAccount is
     // ====================================================================================================
     // CONSTANTS
 
+    /**
+     * @dev Maximum amount of data allowed to be returned from {IHappyAccount.validate}.
+     * The returned data is as follows:
+     * 1st slot: bytes4 selector (minimum 32 bytes are neded to decode the return data)
+     */
+    uint16 private constant MAX_VALIDATE_RETURN_DATA_SIZE = 32;
+
     /// @dev ERC-1271 selector
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
 
@@ -149,6 +156,18 @@ contract ScrappyAccount is
             return WrongAccount.selector;
         }
 
+        if (tx.gasprice > happyTx.maxFeePerGas) {
+            return GasPriceTooHigh.selector;
+        }
+
+        bool isSimulation = tx.origin == address(0);
+        uint256 happyTxNonce = (happyTx.nonceTrack << 192) | happyTx.nonceValue;
+        uint256 currentNonce = getNonce(happyTx.nonceTrack);
+        int256 nonceAhead = int256(happyTxNonce) - int256(currentNonce);
+
+        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
+        nonceValue[happyTx.nonceTrack]++;
+
         // Check for custom validator
         (bool found, bytes memory validatorData) = HappyTxLib.getExtraDataValue(
             happyTx.extraData,
@@ -165,48 +184,30 @@ contract ScrappyAccount is
                 validator := mload(add(add(validatorData, 0x20), 12)) // skip first 12 bytes
             }
 
-            // Stub validator mode TODO: delete this, just put here randomly :p
-            if (validator == address(1)) {
-                return 0x00000000;
-            }
-
             // Check if validator is registered
             if (!validators[validator]) {
-                revert ValidatorNotRegistered(validator);
-            }
-
-            // Check if address has code and supports interface TODO: There must be a better way to check if "no validator is found"
-            uint256 size;
-            assembly {
-                size := extcodesize(validator)
-            }
-            if (size == 0) {
                 revert ValidatorNotFound(validator);
             }
 
+            // TODO: Check if this address is a valid validator, but how?
+
             bool success;
             bytes memory returnData;
-            (success, returnData) = happyTx.account.excessivelySafeCall(
+            (success, returnData) = validator.excessivelySafeCall(
                 happyTx.executeGasLimit,
                 0, // gas token transfer value
-                256, // TODO: This is a placeholder for the actual value
+                MAX_VALIDATE_RETURN_DATA_SIZE,
                 abi.encodeCall(ICustomBoopValidator.validate, (happyTx))
             );
 
-            return bytes4(returnData);
+            bool validationSuccess = success && bytes4(returnData) == bytes4(0);
+
+            return isSimulation
+            ? validationSuccess
+                ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
+                : UnknownDuringSimulation.selector
+            : validationSuccess ? bytes4(0) : InvalidOwnerSignature.selector;
         }
-
-        if (tx.gasprice > happyTx.maxFeePerGas) {
-            return GasPriceTooHigh.selector;
-        }
-
-        bool isSimulation = tx.origin == address(0);
-        uint256 happyTxNonce = (happyTx.nonceTrack << 192) | happyTx.nonceValue;
-        uint256 currentNonce = getNonce(happyTx.nonceTrack);
-        int256 nonceAhead = int256(happyTxNonce) - int256(currentNonce);
-
-        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
-        nonceValue[happyTx.nonceTrack]++;
 
         if (happyTx.paymaster != address(this)) {
             // The happyTx is not self-paying.
