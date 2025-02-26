@@ -1,5 +1,5 @@
 import { getAppURL } from "#src/utils/appURL"
-import { Layout, SectionBlock } from "./common/Layout"
+import { Layout } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
 export const EthRequestAccounts = ({
@@ -14,15 +14,11 @@ export const EthRequestAccounts = ({
             labelHeader="Access account info"
             headline={
                 <>
-                    <span className="text-primary">{appURL}</span> would like to connect to your account
+                    🤠 Happy Wallet on
+                    <br /> <span className="text-primary">{appURL}</span> wants to connect to your account
                 </>
             }
-            description={
-                <>
-                    This will allow <span className="font-medium text-primary">{appURL}</span> to see your wallet
-                    address and account details. No transactions can be made without your approval.
-                </>
-            }
+            description={<>The app will see your wallet address and account details.</>}
             actions={{
                 accept: {
                     children: "Allow",
@@ -33,10 +29,6 @@ export const EthRequestAccounts = ({
                     onClick: reject,
                 },
             }}
-        >
-            <SectionBlock>
-                <p className="font-bold pb-8 text-center text-sm">You can revoke this permission from the wallet.</p>
-            </SectionBlock>
-        </Layout>
+        ></Layout>
     )
 }
