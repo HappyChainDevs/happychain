@@ -55,21 +55,25 @@ export const HappyRequestSessionKey = ({
             }
             description={
                 <>
-                    This will allow <span className="font-medium text-primary">{appURL}</span> to create a
-                    limited-access key for faster transactions with contract{" "}
-                    <a
-                        href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary border-b border-dashed hover:bg-primary/40"
-                    >
-                        {shortenAddress(targetAddress)}
-                    </a>
-                    . You can revoke this access at any time from your wallet settings.
+                    <p>
+                        The app will be able to send transactions to{" "}
+                        <a
+                            href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary border-b border-dashed hover:bg-primary/40"
+                        >
+                            {shortenAddress(targetAddress)}
+                        </a>{" "}
+                        without approval.
+                    </p>
+                    <p>You can revoke automatic approvals from the wallet.</p>
                     <SectionBlock>
                         <div className="grid bg-warning/40 border-warning text-warning-content/90 dark:bg-warning/5 dark:border-warning/20 dark:text-warning gap-2 text-sm border py-[1em] px-[1.25em] rounded-lg w-full">
                             <p>You could lose the tokens the contract can access.</p>
-                            <p className="font-bold">Only proceed if you trust {appURL}.</p>
+                            <p className="font-bold">
+                                Only proceed if you trust <br /> {appURL}.
+                            </p>
                         </div>
                     </SectionBlock>
                 </>
