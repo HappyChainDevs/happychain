@@ -6,7 +6,7 @@ import { TransactionTypeName } from "#src/tmp/interface/common_chain"
 import { EntryPointStatus } from "#src/tmp/interface/status"
 
 function isValidTransactionType(type: string): type is TransactionTypeName {
-    return type in TransactionTypeName
+    return Object.values(TransactionTypeName).includes(type as TransactionTypeName)
 }
 
 export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Promise<HappyTxReceipt> {
@@ -15,7 +15,6 @@ export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Pr
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
     if (typeof receipt.to !== "string") throw new Error(`[${happyTxHash}] Invalid receipt.to`)
-    if (typeof receipt.contractAddress !== "string") throw new Error(`[${happyTxHash}] Invalid receipt.contractAddress`)
 
     if (!isValidTransactionType(receipt.type)) throw new Error(`[${happyTxHash}] Invalid receipt.type`)
 
