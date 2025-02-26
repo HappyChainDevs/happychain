@@ -37,15 +37,7 @@ export function bigIntToZeroPadded(value: bigint, totalDigits: number): string {
 }
 
 /**
- * Safely converts a value to BigInt, handling null/undefined cases with a default value.
- * @param value - Value to convert (string/bigint/null/undefined)
- * @param defaultValue - Fallback value if input is null/undefined (defaults to 0n)
- * @returns The converted BigInt value
- *
- * @example
- * toBigIntSafe("123") // 123n
- * toBigIntSafe(null) // 0n
- * toBigIntSafe(undefined, 1n) // 1n
+ * Safely converts a value to BigInt, handling null/undefined cases with a default value (0n).
  */
 export const toBigIntSafe = (value: string | bigint | null | undefined) => {
     if (!value) return 0n

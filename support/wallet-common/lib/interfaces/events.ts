@@ -241,8 +241,9 @@ type RequestExtraDataTypeMap = {
  * Returns {@link RequestExtraDataTypeMap} type if method exists, otherwise empty record.
  * @template Method - EIP1193 method name
  */
-export type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> =
-    Method extends keyof RequestExtraDataTypeMap ? RequestExtraDataTypeMap[Method] : Record<string, never>
+export type RequestExtraData<Method extends EIP1193RequestMethods> = Method extends keyof RequestExtraDataTypeMap
+    ? RequestExtraDataTypeMap[Method]
+    : Record<string, never>
 
 /**
  * Payload structure for approved EIP1193 requests.
@@ -253,7 +254,7 @@ export type ApprovedRequestExtraData<Method extends EIP1193RequestMethods> =
  */
 export type ApprovedRequestPayload<Method extends EIP1193RequestMethods = EIP1193RequestMethods> = {
     eip1193RequestParams: EIP1193RequestParameters<Method>
-    extraData?: ApprovedRequestExtraData<Method>
+    extraData?: RequestExtraData<Method>
 }
 
 /**
