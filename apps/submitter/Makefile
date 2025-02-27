@@ -14,7 +14,11 @@ routes: ## Display all available routes
 
 test: ## Run the submitter tests
 	@bun test
-.PHONY: dev
+.PHONY: test
+
+test-watch: ## Run the submitter tests
+	@bun test --watch
+.PHONY: test-watch
 
 clean: ## Removes build artifacts
 	@rm -rf node_modules
@@ -25,14 +29,23 @@ migrate-fresh: ## Deletes database and starts fresh
 	@make migrate
 .PHONY: migrate-fresh
 
-migrate: ## Runes latest migrations
+migrate: ## Runs latest migrations
 	@bun --bun kysely migrate:latest
+	@make migrate-types
+.PHONY: migrate
+
+rollback: ## Rollsback latest migrations
+	@bun --bun kysely migrate:rollabck
+	@make migrate-types
+.PHONY: rollback
+
+migrate-types:
 	@bun kysely-codegen \
 		--dialect kysely-bun-sqlite \
 		--singular \
 		--overrides="$$(cat .config/codegen-type-overrides.json)" \
 		--out-file=src/database/generated.d.ts 
-.PHONY: migrate
+.PHONY: migrate-types
 
 setup: node_modules migrate
 .PHONY: setup
