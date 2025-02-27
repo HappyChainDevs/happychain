@@ -3,6 +3,19 @@ name: Test TXM Package
 on:
   workflow_dispatch:
 
+env:
+  IFRAME_URL: "https://iframe.happy.tech"
+  VITE_BUNDLER_RPC_URL: "-"
+  VITE_FIREBASE_API_KEY: "-"
+  VITE_FIREBASE_AUTH_DOMAIN: "-"
+  VITE_FIREBASE_PROJECT_ID: "-"
+  VITE_FIREBASE_STORAGE_BUCKET: "-"
+  VITE_FIREBASE_MESSAGE_SENDER_ID: "-"
+  VITE_FIREBASE_APP_ID: "-"
+  VITE_WEB3AUTH_CLIENT_ID: "-"
+  VITE_WEB3AUTH_NETWORK: "-"
+  VITE_WEB3AUTH_VERIFIER: "-"
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -18,6 +31,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 23
+      
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.42'
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -26,6 +44,8 @@ jobs:
       
       - name: Build and Test Txm
         run: | 
+            make setup
+            make build
             cd packages/txm
             make build
             make test
