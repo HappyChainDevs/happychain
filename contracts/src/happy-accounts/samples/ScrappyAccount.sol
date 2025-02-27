@@ -146,16 +146,16 @@ contract ScrappyAccount is
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
-    function addValidator(address customValidator) external onlySelfOrOwner {
-        if (validators[customValidator]) revert ValidatorAlreadyRegistered(customValidator);
-        validators[customValidator] = true;
-        emit ValidatorAdded(customValidator);
+    function addValidator(address validator) external onlySelfOrOwner {
+        if (validators[validator]) revert ValidatorAlreadyRegistered(validator);
+        validators[validator] = true;
+        emit ValidatorAdded(validator);
     }
 
-    function removeValidator(address customValidator) external onlySelfOrOwner {
-        if (!validators[customValidator]) revert ValidatorNotRegistered(customValidator);
-        delete validators[customValidator];
-        emit ValidatorRemoved(customValidator);
+    function removeValidator(address validator) external onlySelfOrOwner {
+        if (!validators[validator]) revert ValidatorNotRegistered(validator);
+        delete validators[validator];
+        emit ValidatorRemoved(validator);
     }
 
     function validate(HappyTx memory happyTx) external returns (bytes4) {
