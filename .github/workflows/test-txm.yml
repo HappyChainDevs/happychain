@@ -28,6 +28,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.0
+        with:
+            submodules: recursive
+  
 
       - name: Install Node23 (for tests)
         uses: actions/setup-node@v4
@@ -45,8 +48,10 @@ jobs:
       - name: Compile contracts
         run: |
             make setup
+            ls -R contracts/src/
             cd contracts
-            make build
+            forge clean
+            forge build -vvvv
 
       - name: Create test deployer key
         run: |
