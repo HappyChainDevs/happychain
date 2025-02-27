@@ -25,9 +25,7 @@ contract GasEstimator is Test {
 
     function setUp() public {
         if (ENTRYPOINT_V7.code.length == 0) {
-            // solhint-disable-next-line avoid-low-level-calls
             (bool success,) = CREATE2_PROXY.call(abi.encodePacked(ENTRYPOINT_V7_SALT, ENTRYPOINT_V7_CODE));
-            // solhint-disable-next-line gas-custom-errors
             require(success, "Failed to deploy EntryPointV7");
         }
 
