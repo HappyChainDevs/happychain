@@ -47,7 +47,6 @@ export async function createKernelAccount(
 
         const owner = {
             async request({ method, params }: EIP1193Parameters<WalletRpcSchema>) {
-                //
                 if (["eth_accounts", "eth_requestAccounts"].includes(method)) {
                     return [walletAddress]
                 }
