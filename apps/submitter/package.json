@@ -5,7 +5,8 @@
     "type": "module",
     "devDependencies": {
         "@types/bun": "latest",
-        "@happy.tech/configs": "workspace:0.1.0"
+        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/common": "workspace:0.1.0"
     },
     "peerDependencies": {
         "typescript": "^5.0.0"
