@@ -1,13 +1,10 @@
 name: Test TXM Package
 
 on:
-  push: 
-    paths:
-      - 'packages/txm/**'
   workflow_dispatch:
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
