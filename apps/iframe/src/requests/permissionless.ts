@@ -94,7 +94,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
                         chainId: Number(getCurrentChain().chainId),
                     })
                     return await getWalletClient()!.signMessage({
-                        account: privateKeyToAccount(sessionKey),
+                        account: privateKeyToAccount(sessionKey.key),
                         message: { raw: hash },
                     })
                 },
@@ -296,7 +296,7 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             }
 
             // Return the public address associated with this session key
-            return privateKeyToAccount(sessionKey).address
+            return privateKeyToAccount(sessionKey.key).address
         }
 
         default:

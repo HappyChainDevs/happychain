@@ -1,9 +1,9 @@
-import { type HTTPString, type UUID, createUUID } from "@happy.tech/common"
+import { type HTTPString, PermissionNames, type UUID, createUUID } from "@happy.tech/common"
 import { logger } from "@happy.tech/wallet-common"
 import { type Atom, atom, getDefaultStore } from "jotai"
 import { atomFamily, atomWithStorage, createJSONStorage } from "jotai/utils"
 import type { Address } from "viem"
-import { StorageKey } from "../services/storage"
+import { SessionKeyStatus, StorageKey, storage } from "../services/storage"
 import { type AppURL, getAppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
 import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
@@ -272,10 +272,36 @@ function permissionRequestEntries(permissions: PermissionsRequest): PermissionRe
  * ```
  */
 export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequest): WalletPermission[] {
+    const user = getUser()
     const grantedPermissions = []
     const appPermissions = getAppPermissions(app)
 
     for (const { name, caveats } of permissionRequestEntries(permissionRequest)) {
+        if (name === PermissionNames.SESSION_KEY) {
+            for (const caveat of caveats) {
+                const targetContract = caveat.value as Address
+                const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+
+                if (!user?.address || !storedSessionKeys[user.address]?.[targetContract]) {
+                    continue
+                }
+
+                // does this still allow for the permission to get added if the key is being added for the first time?
+                storage.set(StorageKey.SessionKeys, {
+                    ...storedSessionKeys,
+                    [user!.address]: {
+                        ...(storedSessionKeys?.[user!.address] || {}),
+                        [targetContract]: storedSessionKeys?.[user!.address]?.[targetContract]
+                            ? {
+                                  ...storedSessionKeys[user!.address][targetContract],
+                                  status: SessionKeyStatus.Granted,
+                              }
+                            : storedSessionKeys?.[user!.address]?.[targetContract],
+                    },
+                })
+            }
+        }
+
         // If permission exists, merge new caveats with existing ones
         if (appPermissions[name]) {
             const existingCaveats = appPermissions[name].caveats
@@ -297,12 +323,11 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
             }
             grantedPermissions.push(grantedPermission)
 
-            // Ok to update in place: setAppPermissions` will construct a new object for
-            // permissionsMapAtom.
             appPermissions[name] = grantedPermission
         }
+
         // Accounts permission granted, which lets the app access the user object.
-        if (name === "eth_accounts" && isApp(app) && !isStandaloneIframe()) {
+        if (name === PermissionNames.ETH_ACCTS && isApp(app) && !isStandaloneIframe()) {
             emitUserUpdate(getUser())
         }
     }
@@ -333,19 +358,46 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
  * ```
  */
 export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRequest): void {
+    const user = getUser()
     const appPermissions = getAppPermissions(app)
 
     for (const { name, caveats } of permissionRequestEntries(permissionsRequest)) {
         // If no specific caveats provided, remove entire permission
         if (!caveats.length) {
             delete appPermissions[name]
-            if (name === "eth_accounts") {
+            if (name === PermissionNames.ETH_ACCTS) {
                 emitUserUpdate(undefined)
             }
             continue
         }
 
-        if (!appPermissions[name]) continue
+        // don't actually revoke the permission, toggle it to a pending state
+        // since we wait for the onchain session key to be
+        // revoked for it to be *revoked*
+        if (name === PermissionNames.SESSION_KEY) {
+            for (const caveat of caveats) {
+                const targetContract = caveat.value as Address
+                const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+
+                if (!user?.address || !storedSessionKeys[user.address]?.[targetContract]) {
+                    continue
+                }
+
+                // Update session key status to `pending_revocation`
+                storage.set(StorageKey.SessionKeys, {
+                    ...storedSessionKeys,
+                    [user.address]: {
+                        ...storedSessionKeys[user.address],
+                        [targetContract]: {
+                            ...storedSessionKeys[user.address][targetContract],
+                            status: SessionKeyStatus.PendingRevocation,
+                        },
+                    },
+                })
+            }
+
+            return
+        }
 
         // Remove specific caveats
         const existingPermission = appPermissions[name]

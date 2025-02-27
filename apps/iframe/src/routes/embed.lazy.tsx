@@ -3,13 +3,13 @@ import { Msgs } from "@happy.tech/wallet-common"
 import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
+import GlobalHeader from "#src/components/interface/GlobalHeader.tsx"
 import {
     dialogLogOutConfirmationVisibilityAtom,
     secondaryMenuVisibilityAtom,
 } from "#src/components/interface/menu-secondary-actions/state"
 import { signalClosed, signalOpen } from "#src/utils/walletState"
 import { ConnectModal } from "../components/ConnectModal"
-import GlobalHeader from "../components/interface/GlobalHeader"
 import UserInfo from "../components/interface/UserInfo"
 import { DialogConfirmLogOut } from "../components/interface/menu-secondary-actions/DialogConfirmLogOut"
 import { SecondaryActionsMenu } from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"

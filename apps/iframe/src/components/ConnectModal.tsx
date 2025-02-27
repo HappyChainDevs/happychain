@@ -93,7 +93,8 @@ export function ConnectModal() {
                                     />
                                 </div>
                                 <div className="text-center flex items-center justify-center">
-                                    Verify your {mutationLogin.variables?.name} account to continue with HappyChain.
+                                    Verifying your {mutationLogin.variables?.name} account to continue with
+                                    HappyChain...
                                 </div>
                             </div>
                         ) : (

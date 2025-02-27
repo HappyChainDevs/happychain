@@ -19,15 +19,16 @@ import {
     registerSessionKey,
 } from "#src/requests/modules/session-keys/helpers"
 import { sendUserOp } from "#src/requests/userOps"
-import { StorageKey, storage } from "#src/services/storage"
+import { SessionKeyStatus, StorageKey, storage } from "#src/services/storage"
 import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
-import { grantPermissions } from "#src/state/permissions"
+import { grantPermissions, hasPermissions } from "#src/state/permissions"
 import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
+import { getAppURL } from "#src/utils/appURL.ts"
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
@@ -160,17 +161,32 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 keyRegistered = true
             }
 
-            grantPermissions(app, {
+            const currentApp = getAppURL()
+            const hasSessionKeyPermission = hasPermissions(currentApp, {
                 [PermissionNames.SESSION_KEY]: {
                     target: targetContract,
                 },
             })
 
+            console.log({ hasSessionKeyPermission })
+
+            // Only grant permission if it doesn't already exist
+            if (!hasSessionKeyPermission) {
+                grantPermissions(currentApp, {
+                    [PermissionNames.SESSION_KEY]: {
+                        target: targetContract,
+                    },
+                })
+            }
+
             storage.set(StorageKey.SessionKeys, {
                 ...storedSessionKeys,
                 [user!.address]: {
-                    ...(storedSessionKeys[user!.address] || {}),
-                    [targetContract]: sessionKey,
+                    ...(storedSessionKeys?.[user!.address] || {}),
+                    [targetContract]: {
+                        key: sessionKey,
+                        status: SessionKeyStatus.Granted,
+                    },
                 },
             })
 

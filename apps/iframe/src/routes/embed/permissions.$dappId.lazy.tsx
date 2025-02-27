@@ -1,5 +1,5 @@
 import { createLazyFileRoute, useParams } from "@tanstack/react-router"
-import { ClearAllPermissions } from "#src/components/interface/permissions/ClearAllPermissions"
+import { ClearAllOrSelectedPermissions } from "#src/components/interface/permissions/ClearAllOrSelectedPermissions.tsx"
 import { ListDappPermissions } from "#src/components/interface/permissions/ListPermissions"
 import { useGetDappPermissions } from "#src/components/interface/permissions/useGetDappPermissions"
 import type { AppURL } from "#src/utils/appURL"
@@ -22,7 +22,9 @@ function DappPermissions() {
                 </h2>
                 <p className="sr-only">Access and change the permissions of all dApps you interacted with.</p>
                 <ListDappPermissions dappUrl={dappUrl as AppURL} items={listAppPermissions} />
-                {Object.keys(listAppPermissions).length > 0 && <ClearAllPermissions url={dappUrl as AppURL} />}
+                {Object.keys(listAppPermissions).length > 0 && (
+                    <ClearAllOrSelectedPermissions url={dappUrl as AppURL} />
+                )}
             </div>
         </div>
     )

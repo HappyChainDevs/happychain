@@ -16,11 +16,23 @@ export enum StorageKey {
     SessionKeys = "happychain:session_keys:v1",
 }
 
-export type SessionKeysByTargetContract = Record<Address, Hex>
+export enum SessionKeyStatus {
+    Granted = "granted",
+    PendingRevocation = "pending_revocation",
+    Revoking = "revoking",
+    Revoked = "revoked",
+}
+
+export type SessionKeyInfo = {
+    key: Hex
+    status: SessionKeyStatus
+}
+
+export type SessionKeysByTargetContract = Record<Address, SessionKeyInfo>
+
 export type SessionKeysByHappyUser = Record<Address, SessionKeysByTargetContract>
 
 type StorageSchema = {
-    // cache user within iframe to manage auto-reconnect
     [StorageKey.HappyUser]: HappyUser | undefined
     [StorageKey.SessionKeys]: SessionKeysByHappyUser | undefined
 }

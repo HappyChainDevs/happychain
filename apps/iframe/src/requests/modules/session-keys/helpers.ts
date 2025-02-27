@@ -1,6 +1,7 @@
 import type { Erc7579Actions } from "permissionless/actions/erc7579"
 import { type Address, type Hash, type Hex, concat, encodeFunctionData, numberToHex } from "viem"
 import type { SmartAccount } from "viem/account-abstraction"
+import { SessionKeyStatus, StorageKey, storage } from "#src/services/storage.ts"
 import { getCurrentChain } from "#src/state/chains"
 import type { ExtendedSmartAccountClient } from "#src/state/smartAccountClient"
 import { getAccountAbstractionAbis } from "#src/utils/getAccountAbstractionAbis"
@@ -86,7 +87,7 @@ export async function checkIsSessionKeyModuleInstalled(client: Erc7579Actions<Sm
 }
 
 /**
- * Installs the SessionKeyValidator module for the smart account.
+ * Installs the `SessionKeyValidator` module for the smart account.
  * This module will validate transactions signed by session keys.
  *
  * @param client - The smart account client with ERC-7579 actions support.
@@ -134,7 +135,7 @@ export async function installSessionKeyModule(
 }
 
 /**
- * Registers a new session key with the SessionKeyValidator module.
+ * Registers a new session key with the `SessionKeyValidator` module.
  * This should be called when the module is already installed and we want to add a new session key.
  *
  * @param client - The smart account client with user operation support.
@@ -178,4 +179,53 @@ export async function registerSessionKey(
             },
         ],
     })
+}
+
+/**
+ * function removeSessionKeys(address[] calldata targetContract) external {
+        for (uint256 i = 0; i < targetContract.length; i++) {
+            _removeSessionKey(msg.sender, targetContract[i]);
+        }
+    }
+ */
+export async function revokeSessionKey(client: ExtendedSmartAccountClient, targetContracts: Address[]) {
+    const currentChain = getCurrentChain()?.chainId
+    const abi = getAccountAbstractionAbis(currentChain).SessionKeyValidator
+
+    // does this handle the sc param expecting calldata? how?
+    const data = encodeFunctionData({
+        abi,
+        functionName: "removeSessionKeys",
+        args: [targetContracts],
+    })
+
+    // does any of the module stuff need to be handled here?
+    return await client.sendUserOperation({
+        calls: [
+            {
+                to: getAccountAbstractionContracts(getCurrentChain()?.chainId)?.SessionKeyValidator,
+                data,
+                value: 0n,
+            },
+        ],
+    })
+}
+
+/**
+ * Checks if any session keys are in the pending revocation state for a given happy user.
+ *
+ * @param happyUserAddress - The address of the happy user.
+ * @returns `true` if at least one session key is pending revocation, otherwise `false`.
+ */
+export function hasPendingSessionKeys(userAddress?: Address): boolean | undefined {
+    if (!userAddress) return
+    const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+
+    const sessionKeysByUser = storedSessionKeys[userAddress]
+
+    if (!sessionKeysByUser) return false
+
+    return Object.values(sessionKeysByUser).some(
+        (sessionKeyInfo) => sessionKeyInfo.status === SessionKeyStatus.PendingRevocation,
+    )
 }

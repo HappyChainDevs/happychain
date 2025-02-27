@@ -113,7 +113,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                             chainId: Number(getCurrentChain().chainId),
                         })
                         return await getInjectedClient()!.signMessage({
-                            account: privateKeyToAccount(sessionKey),
+                            account: privateKeyToAccount(sessionKey.key),
                             message: { raw: hash },
                         })
                     },

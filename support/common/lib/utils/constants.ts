@@ -6,6 +6,7 @@ export enum HappyMethodNames {
 
 export enum PermissionNames {
     SESSION_KEY = "happy_sessionKey",
+    ETH_ACCTS = "eth_accounts",
 }
 
 export enum TransactionType {
