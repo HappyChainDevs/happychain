@@ -10,6 +10,8 @@ import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "./HappyTx.sol";
 
+// [LOGGAS] import {console} from "forge-std/Script.sol";
+
 enum CallStatus {
     SUCCESS, // The call succeeded.
     CALL_REVERTED, // The call reverted.
@@ -132,7 +134,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * Fixed max gas overhead for the logic around the ExcessivelySafeCall to
      * {HappyPaymaster.payout} that needs to be paid for by the payer.
      */
-    uint256 private constant PAYOUT_CALL_OVERHEAD = 1200; // TODO: gas usage of ExcessivelySafeCall
+    uint256 private constant PAYOUT_CALL_OVERHEAD = 4300;
+    //^ From the gas report, 2409 for self-paying, 4299 for paymaster-sponsored, taking the max of both.
 
     /**
      * Execute a Happy Transaction, and tries to ensure that the submitter
@@ -181,6 +184,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 gasStart = gasleft();
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
 
+        // [LOGGAS] uint256 decodeGasEnd = gasleft();
+        // [LOGGAS] console.log("HappyTxLib.decode gas usage: ", gasStart - decodeGasEnd);
+
         // 1. Validate happyTx with account
 
         bool success;
@@ -204,6 +210,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // 2. Execute the call
 
+        // [LOGGAS] uint256 executeGasStart = gasleft();
+
         (success, returnData) = happyTx.account.excessivelySafeCall(
             // Pass the max possible gas if we need to estimate the gas limit.
             tx.origin == address(0) && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
@@ -212,6 +220,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             MAX_EXECUTE_REVERT_DATA_SIZE,
             abi.encodeCall(IHappyAccount.execute, (happyTx))
         );
+
+        // [LOGGAS] uint256 executeGasEnd = gasleft();
+        // [LOGGAS] uint256 executeCallGasUsed = executeGasStart - executeGasEnd;
+        // [LOGGAS] ExecutionOutput memory execOutputGasReport = abi.decode(returnData, (ExecutionOutput));
+        // [LOGGAS] uint256 executeCallOverhead = executeCallGasUsed - execOutputGasReport.gas;
+        // [LOGGAS] console.log("excessivelySafeCall (execute) overhead: ", executeCallOverhead);
 
         // Don't revert, as we still want to get the payment for a reverted call.
         ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
@@ -244,6 +258,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         uint256 balance = tx.origin.balance;
         uint256 gasBeforePayout = gasleft();
+        // [LOGGAS] uint256 payoutGasStart = gasleft();
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
             happyTx.executeGasLimit,
             0, // gas token transfer value
@@ -251,6 +266,13 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
         );
         if (!success) revert PaymentReverted(returnData);
+
+        // [LOGGAS] uint256 payoutGasEnd = gasleft();
+        // [LOGGAS] uint256 payoutCallGasUsed = payoutGasStart - payoutGasEnd;
+        // [LOGGAS] uint256 payoutLogicGasUsage = happyTx.account == happyTx.paymaster ? 9766 : 10159;
+        // ^From the happy_aa_payout_gas_report.txt (generated separately)
+        // [LOGGAS] uint256 payoutCallOverhead= payoutCallGasUsed - payoutLogicGasUsage;
+        // [LOGGAS] console.log("excessivelySafeCall  (payout) overhead: ", payoutCallOverhead);
 
         uint256 payoutGas = gasBeforePayout - gasleft();
         output.gas = uint32(consumedGas + payoutGas - PAYOUT_CALL_OVERHEAD);
