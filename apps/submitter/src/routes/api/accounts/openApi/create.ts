@@ -2,10 +2,14 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
+import env from "#src/env"
 import { isHexString } from "#src/utils/zod/isHexString"
 
 export const description = describeRoute({
+    // Experimental option. Disable in production, but useful in development
+    validateResponse: env.NODE_ENV !== "production",
     description: "Create a new account",
+    hide: env.NODE_ENV === "production",
     responses: {
         200: {
             description: "Successfully created an account",

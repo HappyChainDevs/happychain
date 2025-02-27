@@ -47,10 +47,9 @@ describe("submitter_execute", () => {
             dummyHappyTx.paymaster = smartAccount
             const prepared = await prepareTx(dummyHappyTx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
+            const response = (await result.json()) as unknown as HappyTxStateSuccess
 
             expect(result.status).toBe(200)
-            if (result.status !== 200) return
-            const response = (await result.json()) as unknown as HappyTxStateSuccess
             expect(response.status).toBe(EntryPointStatus.Success)
             expect(response.included).toBe(true)
             expect(response.receipt.txReceipt.transactionHash).toBeString()
@@ -117,7 +116,19 @@ describe("submitter_execute", () => {
                 expect(BigInt(response.receipt.txReceipt.effectiveGasPrice)).toBeGreaterThan(0n)
                 expect(response.receipt.txReceipt.from).toBeString()
                 expect(BigInt(response.receipt.txReceipt.gasUsed)).toBeGreaterThan(0n)
-                expect(response.receipt.txReceipt.logs).toStrictEqual([])
+                expect(response.receipt.txReceipt.logs.length).toBe(1)
+                expect(response.receipt.txReceipt.logs[0]).toMatchObject({
+                    address: expect.any(String),
+                    blockHash: expect.any(String),
+                    blockNumber: expect.any(String),
+                    blockTimestamp: expect.any(String),
+                    data: expect.any(String),
+                    logIndex: expect.any(Number),
+                    removed: expect.any(Boolean),
+                    topics: expect.any(Array),
+                    transactionHash: expect.any(String),
+                    transactionIndex: expect.any(Number),
+                })
                 expect(response.receipt.txReceipt.logsBloom).toBeString()
                 expect(response.receipt.txReceipt.root).toBeString()
                 expect(response.receipt.txReceipt.status).toBe("success")
@@ -149,8 +160,7 @@ describe("submitter_execute", () => {
 
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
 
-            expect(result.status).toBe(500)
-            if (result.status !== 500) return
+            expect(result.status as number).toBe(422)
 
             const response = (await result.json()) as unknown as BaseFailedError
 
@@ -168,8 +178,7 @@ describe("submitter_execute", () => {
             const result2 = await client.api.v1.submitter.execute.$post({ json: { tx: prepared } })
 
             expect(result1.status).toBe(200)
-            expect(result2.status).toBe(500)
-            if (result2.status !== 500) return
+            expect(result2.status as number).toBe(422)
 
             const response2 = (await result2.json()) as unknown as BaseFailedError
 

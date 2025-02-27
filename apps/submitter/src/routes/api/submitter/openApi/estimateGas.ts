@@ -3,6 +3,7 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
 import { deployment } from "#src/deployments"
+import env from "#src/env"
 import { isHexString } from "#src/utils/zod/refines/isHexString"
 import { toBigInt } from "#src/utils/zod/transforms/toBigInt"
 
@@ -90,6 +91,7 @@ const outputSchema = z
     })
 
 export const description = describeRoute({
+    validateResponse: env.NODE_ENV !== "production",
     description: "Estimate gas for the supplied HappyTx",
     responses: {
         200: {

@@ -682,19 +682,6 @@
       "anonymous": false
     },
     {
-      "type": "event",
-      "name": "Upgraded",
-      "inputs": [
-        {
-          "name": "newImplementation",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
       "type": "error",
       "name": "AddressEmptyCode",
       "inputs": [
@@ -766,6 +753,11 @@
     {
       "type": "error",
       "name": "NotInitializing",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotSelfOrOwner",
       "inputs": []
     },
     {

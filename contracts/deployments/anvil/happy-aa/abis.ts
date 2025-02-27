@@ -687,19 +687,6 @@ const contractToAbi = ({
       "anonymous": false
     },
     {
-      "type": "event",
-      "name": "Upgraded",
-      "inputs": [
-        {
-          "name": "newImplementation",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
       "type": "error",
       "name": "AddressEmptyCode",
       "inputs": [
@@ -771,6 +758,11 @@ const contractToAbi = ({
     {
       "type": "error",
       "name": "NotInitializing",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotSelfOrOwner",
       "inputs": []
     },
     {
@@ -1183,8 +1175,8 @@ const aliasToContract = ({
 
 export const deployment = ({
   "HappyEntryPoint": "0xA87c0d3A5123eB3bB66cD093B25bb30db14CfCD3",
-  "ScrappyAccount": "0x097F92411bB415bca348caEB8f382921D1fa4D19",
-  "ScrappyAccountFactory": "0x73b6648976f8F85BFe357F58aB2B8905481Da103",
+  "ScrappyAccount": "0xc52AF2D2D72e942d5a401FAb923494A972B580a4",
+  "ScrappyAccountFactory": "0x34338b6f7a979F432063f4D96B4BB37917d103a4",
   "ScrappyPaymaster": "0x17cb30f230F59b6E328369A97338F1E2A11761a9"
 }) as const
 

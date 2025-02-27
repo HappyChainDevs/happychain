@@ -23,13 +23,4 @@ export class HappyTransactionRepository {
             .executeTakeFirst()
         return data
     }
-
-    async update(id: HappyTransaction["id"], updates: Partial<Omit<HappyTransaction, "id">>) {
-        return await this.db
-            .updateTable("happy_transactions")
-            .set(updates)
-            .where("id", "=", id)
-            .returningAll()
-            .executeTakeFirst()
-    }
 }

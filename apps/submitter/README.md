@@ -28,26 +28,24 @@ make dev
 
 ### Server Operations
 - `make dev` - Start development server with hot reload
-- `make start` - Start production server
 - `make routes` - List all available API endpoints
 
 ### Testing
 - `make test` - Run all tests
 - `make test-watch` - Run tests in watch mode
-- `make coverage` - Generate test coverage report
 
 ## Project Structure
 
 ```
 submitter/
-├── .config/          # Configuration files including Kysely setup
+├── .config/          # Configuration files for Kysely setup
 ├── migrations/       # Database migrations (timestamp ordered)
 └── src/
-    ├── actions/      # Transaction execution logic
     ├── clients/      # API clients and interfaces
     │   └── submitterClient/
     ├── database/     # Database connections and repositories
     ├── errors/       # Error definitions and handling
+    ├── handlers/     # API route handlers
     ├── nonceQueueManager/  # Transaction nonce management
     ├── routes/       # API endpoint definitions
     ├── services/     # Business logic services
@@ -60,19 +58,7 @@ submitter/
 
 The service exposes RESTful endpoints for:
 - Transaction submission
-- Transaction status monitoring  
-- Nonce management
+- Transaction status monitoring
 - Gas price estimation
 
 View all endpoints with `make routes`
-
-## Contributing
-
-1. Create feature branch from `main`
-2. Make changes and add tests
-3. Run tests with `make test`
-4. Submit pull request
-
-## License
-
-Copyright © Happy Wallet. All rights reserved.

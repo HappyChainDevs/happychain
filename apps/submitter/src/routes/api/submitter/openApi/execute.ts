@@ -3,6 +3,7 @@ import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
 import { deployment } from "#src/deployments"
+import env from "#src/env"
 import { TransactionTypeName } from "#src/tmp/interface/common_chain"
 import { EntryPointStatus } from "#src/tmp/interface/status"
 import { isHexString } from "#src/utils/zod/refines/isHexString"
@@ -23,6 +24,19 @@ const happyTxSchema = z.object({
     paymasterData: z.string().refine(isHexString), // Bytes
     validatorData: z.string().refine(isHexString), // Bytes
     extraData: z.string().refine(isHexString), // Bytes
+})
+
+const transactionSchema = z.object({
+    address: z.string(),
+    blockHash: z.string(),
+    blockNumber: z.string(),
+    blockTimestamp: z.string(),
+    data: z.string(),
+    logIndex: z.number(),
+    removed: z.boolean(),
+    topics: z.string().array(),
+    transactionHash: z.string(),
+    transactionIndex: z.number(),
 })
 
 export const inputSchema = z
@@ -63,7 +77,8 @@ const outputSchema = z
         receipt: z.object({
             happyTxHash: z.string(),
             account: z.string(),
-            nonce: z.number(),
+            nonceTrack: z.string(),
+            nonceValue: z.string(),
             entryPoint: z.string(),
             status: z.string(),
             logs: z.string().array(),
@@ -72,8 +87,8 @@ const outputSchema = z
             // gasUsed: z.string().transform(BigInt),
             // gasCost: z.string().transform(BigInt),
             txReceipt: z.object({
-                blobGasPrice: z.undefined(),
-                blobGasUsed: z.undefined(),
+                blobGasPrice: z.union([z.string(), z.undefined()]),
+                blobGasUsed: z.union([z.string(), z.undefined()]),
                 blockHash: z.string(),
                 // blockNumber: z.string().transform(BigInt),
                 contractAddress: z.null(),
@@ -81,11 +96,11 @@ const outputSchema = z
                 // effectiveGasPrice: z.string().transform(BigInt),
                 from: z.string(),
                 // gasUsed: z.string().transform(BigInt),
-                logs: z.string().array(),
+                logs: transactionSchema.array(), //z.string().array(),
                 logsBloom: z.string(),
-                root: z.undefined(),
+                root: z.union([z.string(), z.undefined()]),
                 status: z.string(),
-                to: z.null(),
+                to: z.union([z.string(), z.null()]),
                 transactionHash: z.string(),
                 transactionIndex: z.number(),
                 type: z.string(),
@@ -99,7 +114,8 @@ const outputSchema = z
             receipt: {
                 happyTxHash: "0x",
                 account: "0x",
-                nonce: 1,
+                nonceTrack: "0x1",
+                nonceValue: "0x1",
                 entryPoint: "0x",
                 status: EntryPointStatus.Success,
                 logs: [],
@@ -131,6 +147,7 @@ const outputSchema = z
     })
 
 export const description = describeRoute({
+    validateResponse: env.NODE_ENV !== "production",
     description: "Execute HappyTX",
     responses: {
         200: {

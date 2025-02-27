@@ -4,7 +4,7 @@ import { createSubmitterClient } from "./submitterClient/createSubmitterClient"
 
 export const chain = localhost
 
-const config = { chain, transport: http() } as const
+export const config = { chain, transport: http() } as const
 
 export const publicClient = createPublicClient(config)
 

@@ -10,11 +10,11 @@ import { isHexString } from "#src/utils/zod/refines/isHexString"
 
 const inputSchema = z
     .object({
-        hash: z.string().refine(isHexString),
+        account: z.string().refine(isHexString),
     })
     .openapi({
         example: {
-            hash: "0xd7ebadc747305fa2ad180a8666724d71ff5936787746b456cdb976b5c9061fbc",
+            account: "0x",
         },
     })
 
@@ -135,10 +135,10 @@ const outputSchema = z
 
 export const description = describeRoute({
     validateResponse: env.NODE_ENV !== "production",
-    description: "Retrieve state by HappyTxHash",
+    description: "Retrieve pending happy transactions for Account",
     responses: {
         200: {
-            description: "Successful State Retrieval",
+            description: "Pending HappyTransactions",
             content: {
                 "application/json": {
                     schema: resolver(outputSchema),

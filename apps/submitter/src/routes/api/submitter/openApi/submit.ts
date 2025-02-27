@@ -2,6 +2,7 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
+import env from "#src/env"
 import { EntryPointStatus } from "#src/tmp/interface/status"
 import { isHexString } from "#src/utils/zod/refines/isHexString"
 import { inputSchema } from "./execute"
@@ -21,6 +22,7 @@ const outputSchema = z
     })
 
 export const description = describeRoute({
+    validateResponse: env.NODE_ENV !== "production",
     description: "Submits HappyTX",
     responses: {
         200: {
