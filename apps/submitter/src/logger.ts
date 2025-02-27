@@ -13,11 +13,20 @@ const _logger = Logger.instance
 _logger.enableTags(LogTag.SUBMITTER)
 _logger.setLogLevel(logLevel)
 
-export const logger: Logger = new Proxy(_logger, {
+// Create a type that omits the LogTag parameter from logger methods
+type SubmitterLogger = {
+    [K in keyof Logger]: Logger[K] extends (tag: LogTag, ...args: infer P) => infer R ? (...args: P) => R : Logger[K]
+}
+
+export const logger = new Proxy(_logger, {
     get(target, prop, receiver) {
-        if (typeof target[prop] === "function") {
-            return (...args: any[]) => target[prop](LogTag.SUBMITTER, ...args)
+        const value = Reflect.get(target, prop, receiver)
+        if (typeof value === "function") {
+            return (...args: unknown[]) => {
+                const method = value as (tag: LogTag, ...args: unknown[]) => unknown
+                return method.call(target, LogTag.SUBMITTER, ...args)
+            }
         }
-        return target[prop]
+        return value
     },
-})
+}) as SubmitterLogger

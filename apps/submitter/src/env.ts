@@ -5,7 +5,7 @@ import { z } from "zod"
 const envSchema = z.object({
     APP_PORT: z.coerce.number().default(3001),
     NODE_ENV: z.enum(["production", "development", "test", "cli"]),
-    LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+    LOG_LEVEL: z.enum(["off", "trace", "info", "warn", "error"]).default("info"),
 })
 
 // Validate `process.env` against our schema
