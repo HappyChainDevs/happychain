@@ -32,9 +32,6 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     /// Emitted when a session key is removed
     event SessionKeyRemoved(address indexed account, address indexed targetContract);
 
-    /// Emitted when ETH is received by the contract
-    event Received(address indexed sender, uint256 amount);
-
     // ====================================================================================================
     // CONSTANTS
 
@@ -46,9 +43,6 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
 
     /// keccak256(account, targetContract) => SessionKeyValidatorStorage
     mapping(bytes32 => SessionKeyValidatorStorage) public sessionKeyValidatorStorage;
-
-    /// Mapping from track => nonce
-    mapping(uint192 => uint64) public nonceValue;
 
     // ====================================================================================================
     // CONSTRUCTOR
@@ -103,15 +97,8 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
         return signer == sessionKey ? bytes4(0) : bytes4(InvalidOwnerSignature.selector);
     }
 
-    // ====================================================================================================
-    // SPECIAL FUNCTIONS
-
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
         return hash.recover(signature) == owner() ? MAGIC_VALUE : bytes4(0);
-    }
-
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
     }
 
     // ====================================================================================================
