@@ -1,7 +1,9 @@
 name: Test TXM Package
 
 on:
-  pull_request:
+  push:
+    paths:
+      - 'packages/txm/**'
   workflow_dispatch:
 
 env:
@@ -31,7 +33,6 @@ jobs:
         with:
             submodules: recursive
   
-
       - name: Install Node23 (for tests)
         uses: actions/setup-node@v4
         with:
@@ -48,9 +49,7 @@ jobs:
       - name: Compile contracts
         run: |
             make setup
-            ls -R contracts/src/
             cd contracts
-            forge clean
             forge build -vvvv
 
       - name: Create test deployer key
@@ -58,9 +57,12 @@ jobs:
            cast wallet import --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80  --unsafe-password  "password" test-account-0
            cd contracts && echo "password" > .password.local
       
-      - name: Build and Test Txm
+      - name: Build All Packages
         run: | 
             make build
+      
+      - name: Test TXM Package
+        run: |
             cd packages/txm
             make build
             make test
