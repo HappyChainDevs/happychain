@@ -9,7 +9,7 @@ export const recipeTextInput = cva(
         // User activity: focus
         "focus:outline-none focus:ring-1 focus:ring-opacity-10",
         // Behaviour: disabled
-        "[&:is([aria-disabled=true],:disabled)]:opacity-[.35] [&:is([aria-disabled=true],:disabled)]:cursor-not-allowed [&:is([aria-disabled=true],:disabled)]:select-none",
+        "[&:is([aria-disabled=true],:disabled)]:opacity-[.35] [&:is([aria-disabled=true],:disabled)]:dark:opacity-[.50] [&:is([aria-disabled=true],:disabled)]:cursor-not-allowed [&:is([aria-disabled=true],:disabled)]:select-none",
         // Behaviour: readonly for inputs & textareas
         "[&:is(:read-only,[aria-readonly=true])]:focus:ring-0 [&:is(:read-only,[aria-readonly=true])]:select-none [&:is(:read-only,[aria-readonly=true])]:pointer-events-none [&:is(:read-only,[aria-readonly=true])]:caret-transparent [&:is(:read-only,[aria-readonly=true])]:touch-none [&:is(:read-only,[aria-readonly=true])]:placeholder-opacity-100",
     ],
