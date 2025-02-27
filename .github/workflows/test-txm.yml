@@ -1,6 +1,7 @@
 name: Test TXM Package
 
 on:
+  pull_request:
   workflow_dispatch:
 
 env:
@@ -41,10 +42,19 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
             version: nightly
+      - name: Compile contracts
+        run: |
+            make setup
+            cd contracts
+            make build
+
+      - name: Create test deployer key
+        run: |
+           cast wallet import --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80  --unsafe-password  "password" test-account-0
+           cd contracts && echo "password" > .password.local
       
       - name: Build and Test Txm
         run: | 
-            make setup
             make build
             cd packages/txm
             make build
