@@ -7,13 +7,10 @@ import {
     FormattedDetailsLine,
     Layout,
     LinkToAddress,
-    RequestTabsValues,
     SectionBlock,
     SubsectionBlock,
     SubsectionContent,
     SubsectionTitle,
-    TabContent,
-    Tabs,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
@@ -52,41 +49,39 @@ export const HappyLoadAbi = ({
                 },
             }}
         >
-            <Tabs defaultValue={RequestTabsValues.Details}>
-                <TabContent value={RequestTabsValues.Details}>
-                    <SectionBlock>
-                        <SubsectionBlock>
-                            <SubsectionContent>
-                                <SubsectionTitle>Address</SubsectionTitle>
-                                <div className="grid relative">
-                                    <FormattedDetailsLine>
-                                        <LinkToAddress address={params.address}>{params.address}</LinkToAddress>
-                                    </FormattedDetailsLine>
-                                </div>
-                            </SubsectionContent>
-                            {classifiedAbi.map(({ label, items }) => (
-                                <SubsectionContent key={`ABI-${label}`}>
-                                    <SubsectionTitle>{label}</SubsectionTitle>
-                                    <ol className="divide-y grid divide-neutral/10 dark:divide-neutral/40 -mx-2.5">
-                                        {items.map((event) => (
-                                            <li className="p-2.5" key={`abi-item-${event}`}>
-                                                <FormattedDetailsLine>{formatAbiItem(event)}</FormattedDetailsLine>
-                                            </li>
-                                        ))}
-                                    </ol>
-                                </SubsectionContent>
-                            ))}
-                        </SubsectionBlock>
-                    </SectionBlock>
-                </TabContent>
-                <TabContent className="break-words" value={RequestTabsValues.Raw}>
-                    <SectionBlock>
-                        <SubsectionBlock>
-                            <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
-                        </SubsectionBlock>
-                    </SectionBlock>
-                </TabContent>
-            </Tabs>
+            <SectionBlock>
+                <SubsectionBlock>
+                    <SubsectionContent>
+                        <SubsectionTitle>Address</SubsectionTitle>
+                        <div className="grid relative">
+                            <FormattedDetailsLine>
+                                <LinkToAddress address={params.address}>{params.address}</LinkToAddress>
+                            </FormattedDetailsLine>
+                        </div>
+                    </SubsectionContent>
+                    {classifiedAbi.map(({ label, items }) => (
+                        <SubsectionContent key={`ABI-${label}`}>
+                            <SubsectionTitle>{label}</SubsectionTitle>
+                            <ol className="divide-y grid divide-neutral/10 dark:divide-neutral/40 -mx-2.5">
+                                {items.map((event) => (
+                                    <li className="p-2.5" key={`abi-item-${event}`}>
+                                        <FormattedDetailsLine>{formatAbiItem(event)}</FormattedDetailsLine>
+                                    </li>
+                                ))}
+                            </ol>
+                        </SubsectionContent>
+                    ))}
+                </SubsectionBlock>
+            </SectionBlock>
+            <SectionBlock>
+                <SubsectionBlock>
+                    <SubsectionContent>
+                        <SubsectionTitle>Data</SubsectionTitle>
+
+                        <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                    </SubsectionContent>
+                </SubsectionBlock>
+            </SectionBlock>
         </Layout>
     )
 }

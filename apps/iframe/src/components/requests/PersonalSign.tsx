@@ -3,13 +3,10 @@ import { hexToString } from "viem"
 import {
     FormattedDetailsLine,
     Layout,
-    RequestTabsValues,
     SectionBlock,
     SubsectionBlock,
     SubsectionContent,
     SubsectionTitle,
-    TabContent,
-    Tabs,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
@@ -39,25 +36,23 @@ export const PersonalSign = ({ method, params, reject, accept }: RequestConfirma
                 },
             }}
         >
-            <Tabs defaultValue={RequestTabsValues.Details}>
-                <TabContent value={RequestTabsValues.Details}>
-                    <SectionBlock>
-                        <SubsectionBlock>
-                            <SubsectionContent>
-                                <SubsectionTitle>Message</SubsectionTitle>
-                                <FormattedDetailsLine>{formattedSignPayload}</FormattedDetailsLine>
-                            </SubsectionContent>
-                        </SubsectionBlock>
-                    </SectionBlock>
-                </TabContent>
-                <TabContent value={RequestTabsValues.Raw}>
-                    <SectionBlock>
-                        <SubsectionBlock>
-                            <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
-                        </SubsectionBlock>
-                    </SectionBlock>
-                </TabContent>
-            </Tabs>
+            <SectionBlock>
+                <SubsectionBlock>
+                    <SubsectionContent>
+                        <SubsectionTitle>Message</SubsectionTitle>
+                        <FormattedDetailsLine>{formattedSignPayload}</FormattedDetailsLine>
+                    </SubsectionContent>
+                </SubsectionBlock>
+            </SectionBlock>
+            <SectionBlock>
+                <SubsectionBlock>
+                    <SubsectionContent>
+                        <SubsectionTitle>Data</SubsectionTitle>
+
+                        <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                    </SubsectionContent>
+                </SubsectionBlock>
+            </SectionBlock>
         </Layout>
     )
 }
