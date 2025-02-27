@@ -16,6 +16,7 @@ env:
   VITE_WEB3AUTH_CLIENT_ID: "-"
   VITE_WEB3AUTH_NETWORK: "-"
   VITE_WEB3AUTH_VERIFIER: "-"
+  FOUNDRY_PROFILE: default
 
 jobs:
   test:
@@ -40,8 +41,7 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-            version: nightly
+            
       - name: Compile contracts
         run: |
             make setup
