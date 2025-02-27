@@ -1,9 +1,17 @@
 import { spawn } from "node:child_process"
 import { sleep } from "@happy.tech/common"
-import { ANVIL_PORT, CHAIN_ID, RPC_URL } from "./constants"
+import { ANVIL_PORT, BLOCK_GAS_LIMIT, CHAIN_ID, RPC_URL } from "./constants"
 
 export async function startAnvil() {
-    const anvil = spawn("anvil", ["--port", ANVIL_PORT.toString(), "--no-mining", "--chain-id", CHAIN_ID.toString()])
+    const anvil = spawn("anvil", [
+        "--port",
+        ANVIL_PORT.toString(),
+        "--no-mining",
+        "--chain-id",
+        CHAIN_ID.toString(),
+        "--gas-limit",
+        BLOCK_GAS_LIMIT.toString(),
+    ])
 
     anvil.stderr.on("data", (data) => {
         console.error(`stderr: ${data}`)

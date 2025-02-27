@@ -407,6 +407,21 @@ const contractToAbi = ({
       "anonymous": false
     }
   ],
+  "MockGasBurner": [
+    {
+      "type": "function",
+      "name": "burnGas",
+      "inputs": [
+        {
+          "name": "amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    }
+  ],
   "MockRevert": [
     {
       "type": "function",
@@ -433,6 +448,7 @@ const contractToAbi = ({
 
 const aliasToContract = ({
   "HappyCounter": "HappyCounter",
+  "MockGasBurner": "MockGasBurner",
   "MockRevert": "MockRevert",
   "MockTokenA": "MockERC20Token",
   "MockTokenB": "MockERC20Token",
@@ -441,6 +457,7 @@ const aliasToContract = ({
 
 export const deployment = ({
   "HappyCounter": "0xAD5A4f9CeaBC2990DD66039FE123828631b4e0Ea",
+  "MockGasBurner": "0xa7Fe1a65542c9f36c597Ae3349aF7FaE80CDad5F",
   "MockRevert": "0x097276735a7E3087aD8C930a1dE559Eca44F4d51",
   "MockTokenA": "0x07b354EFA748883a342a9ba4780Cc9728f51e3D5",
   "MockTokenB": "0x64cB328036F118Bc4354e9213c9f9FFE9d5375e7",

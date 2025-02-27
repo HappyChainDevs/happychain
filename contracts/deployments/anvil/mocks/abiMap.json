@@ -1,5 +1,6 @@
 {
   "HappyCounter": "HappyCounter",
+  "MockGasBurner": "MockGasBurner",
   "MockRevert": "MockRevert",
   "MockTokenA": "MockERC20Token",
   "MockTokenB": "MockERC20Token",
