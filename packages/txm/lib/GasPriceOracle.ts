@@ -59,7 +59,7 @@ export class GasPriceOracle {
         const gasUsedDelta = gasUsed - targetGas
         const baseFeeDelta = (baseFeePerGas * gasUsedDelta) / targetGas / this.txmgr.eip1559.baseFeeChangeDenominator
 
-        if (targetGas > gasUsed) {
+        if (gasUsed > targetGas) {
             return baseFeePerGas + bigIntMax(baseFeeDelta, 1n)
         }
         return baseFeePerGas + baseFeeDelta
