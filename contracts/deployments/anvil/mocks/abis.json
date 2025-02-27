@@ -379,6 +379,21 @@
       "anonymous": false
     }
   ],
+  "MockGasBurner": [
+    {
+      "type": "function",
+      "name": "burnGas",
+      "inputs": [
+        {
+          "name": "amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    }
+  ],
   "MockRevert": [
     {
       "type": "function",

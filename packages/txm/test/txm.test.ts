@@ -1,7 +1,7 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
-import { type Chain, createPublicClient } from "viem"
+import { type Chain, createPublicClient, createWalletClient } from "viem"
 import { http } from "viem"
-import { privateKeyToAddress } from "viem/accounts"
+import { privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
 import { anvil as anvilViemChain } from "viem/chains"
 import { afterAll, beforeAll, expect, test } from "vitest"
 import { TxmHookType } from "../lib/HookManager"
@@ -14,10 +14,12 @@ import { TestGasEstimator } from "./utils/TestGasEstimator"
 import { TestRetryManager } from "./utils/TestRetryManager"
 import { killAnvil, mineBlock } from "./utils/anvil"
 import { startAnvil } from "./utils/anvil"
-import { CHAIN_ID, PRIVATE_KEY, PROXY_URL } from "./utils/constants"
+import { BASE_FEE_PERCENTAGE_MARGIN, BLOCK_GAS_LIMIT, CHAIN_ID, PRIVATE_KEY, PRIVATE_KEY_2, PROXY_URL } from "./utils/constants"
 import { deployMockContracts } from "./utils/contracts"
 import { assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
 import { cleanDB, getPersistedTransaction } from "./utils/db"
+import { ethereumDefaultEIP1559Parameters } from "../lib/eip1559"
+import { bigIntReplacer } from "../../../support/common/lib"
 
 const retryManager = new TestRetryManager()
 
@@ -31,6 +33,8 @@ const txm = new TransactionManager({
     abis: abis,
     gasEstimator: new TestGasEstimator(),
     retryPolicyManager: retryManager,
+    baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
+    eip1559: ethereumDefaultEIP1559Parameters
 })
 
 const fromAddress = privateKeyToAddress(PRIVATE_KEY)
@@ -51,6 +55,16 @@ const directBlockchainClient = createPublicClient({
     chain: chain,
     transport: http(),
 })
+
+const secondAccountWallet = privateKeyToAccount(PRIVATE_KEY_2)
+
+const secondWalletClient = createWalletClient({
+    account: secondAccountWallet,
+    chain: chain,
+    transport: http(),
+})
+
+
 
 async function getCurrentCounterValue(): Promise<bigint> {
     return await directBlockchainClient.readContract({
@@ -74,6 +88,15 @@ async function createCounterTransaction(deadline?: number): Promise<Transaction>
         contractName: "HappyCounter",
         args: [],
         deadline,
+    })
+}
+
+async function createBurnGasTransactionWithSecondWallet() {
+     await secondWalletClient.writeContract({
+        address: deployment.MockGasBurner,
+        abi: abis.MockGasBurner,
+        functionName: "burnGas",
+        args: [BigInt(BLOCK_GAS_LIMIT)],
     })
 }
 
@@ -356,4 +379,106 @@ test("Transaction cancelled due to deadline passing", async () => {
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Cancelled)
     expect(blockchainNonce).toBe(nonceBeforeEachTest + 1)
+})
+
+test("Correctly calculates baseFeePerGas after a block with high gas usage", async () => {
+    const transactionBurner = await txm.createTransaction({
+        address: deployment.MockGasBurner,
+        functionName: "burnGas",
+        contractName: "MockGasBurner",
+        args: [BLOCK_GAS_LIMIT],
+    })
+
+    transactionQueue.push(transactionBurner)
+
+    await mineBlock(2)
+
+    const transactionBurnerExecuted = await txm.getTransaction(transactionBurner.intentId)
+
+    if (!transactionBurnerExecuted) {
+        throw new Error("Transaction not found")
+    }
+
+    const receipt = await directBlockchainClient.getTransactionReceipt({
+        hash: transactionBurnerExecuted.attempts[0].hash,
+    })
+
+    const incrementerTransaction = await createCounterTransaction()
+
+    transactionQueue.push(incrementerTransaction)
+
+    await mineBlock(2)
+
+    const currentBaseFee = (await directBlockchainClient.getBlock({
+        blockTag: "latest",
+    })).baseFeePerGas
+
+    const incrementerExecuted = await txm.getTransaction(incrementerTransaction.intentId)
+
+    if (!incrementerExecuted) {
+        throw new Error("Transaction not found")
+    }
+
+    const attempt = incrementerExecuted.attempts[0]
+
+    const blockchainNonce = await getCurrentNonce()
+
+    const persistedTransaction = await getPersistedTransaction(incrementerTransaction.intentId)
+
+    expect(receipt.gasUsed).toBeGreaterThanOrEqual(BLOCK_GAS_LIMIT * 0.9)
+    expect((attempt.maxFeePerGas - attempt.maxPriorityFeePerGas)).toBe(currentBaseFee)
+    expect(incrementerExecuted.status).toBe(TransactionStatus.Success)
+    expect(persistedTransaction).toBeDefined()
+    expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
+    expect(blockchainNonce).toBe(nonceBeforeEachTest + 2)
+})
+
+
+test("Transaction succeeds in congested blocks", async () => {
+    const previousCount = await getCurrentCounterValue()
+
+    await createBurnGasTransactionWithSecondWallet()
+    await createBurnGasTransactionWithSecondWallet()
+
+    const incrementerTransaction = await createCounterTransaction()
+
+    transactionQueue.push(incrementerTransaction)
+
+    let iterations = 0
+    while (true) {
+        await mineBlock()
+
+        await createBurnGasTransactionWithSecondWallet()
+        await createBurnGasTransactionWithSecondWallet()
+
+        transactionQueue.push(incrementerTransaction)
+
+        const executedIncrementerTransaction = await txm.getTransaction(incrementerTransaction.intentId)
+
+        if (executedIncrementerTransaction?.status === TransactionStatus.Success) {
+            break
+        }
+
+        iterations++
+    }
+
+    const executedIncrementerTransaction = await txm.getTransaction(incrementerTransaction.intentId)
+
+    if (!executedIncrementerTransaction) {
+        throw new Error("Transaction not found")
+    }
+    
+    const persistedTransaction = await getPersistedTransaction(incrementerTransaction.intentId)
+
+    const incrementerReceipt = await directBlockchainClient.getTransactionReceipt({
+        hash: executedIncrementerTransaction.attempts[0].hash,
+    })
+
+    const currentCount = await getCurrentCounterValue()
+
+    expect(iterations).toBeLessThan(5)
+    expect(persistedTransaction).toBeDefined()
+    expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
+    expect(incrementerReceipt.status).toBe("success")
+    expect(currentCount).toBe(previousCount + 1n)
 })

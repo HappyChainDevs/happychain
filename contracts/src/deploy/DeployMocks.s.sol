@@ -5,6 +5,7 @@ import {MockERC20} from "../mocks/MockERC20.sol";
 import {BaseDeployScript} from "./BaseDeployScript.sol";
 import {HappyCounter} from "../mocks/HappyCounter.sol";
 import {MockRevert} from "../mocks/MockRevert.sol";
+import {MockGasBurner} from "../mocks/GasBurner.sol";
 
 /**
  * @dev Deploys mock contracts for testing purposes.
@@ -20,6 +21,7 @@ contract DeployMockERC20 is BaseDeployScript {
     MockERC20 public mockTokenC;
     HappyCounter public happyCounter;
     MockRevert public mockRevert;
+    MockGasBurner public mockGasBurner;
 
     function deploy() internal override {
         mockTokenA = deployMockToken("MockTokenA", "MTA", SALT_TOKEN_A);
@@ -30,7 +32,10 @@ contract DeployMockERC20 is BaseDeployScript {
         happyCounter = HappyCounter(_happyCounter);
         (address _mockRevert,) =
             deployDeterministic("MockRevert", type(MockRevert).creationCode, abi.encode(), bytes32(uint256(0)));
+        (address _mockGasBurner,) =
+            deployDeterministic("MockGasBurner", type(MockGasBurner).creationCode, abi.encode(), bytes32(uint256(0)));
         mockRevert = MockRevert(_mockRevert);
+        mockGasBurner = MockGasBurner(_mockGasBurner);
     }
 
     function deployMockToken(string memory name, string memory symbol, bytes32 salt) internal returns (MockERC20) {
