@@ -11,11 +11,11 @@ export const EthRequestAccounts = ({
     const appURL = getAppURL()
     return (
         <Layout
-            labelHeader="Access account info"
+            labelHeader={`Access 🤠 Happy Wallet on ${appURL}`}
             headline={
                 <>
-                    🤠 Happy Wallet on
-                    <br /> <span className="text-primary">{appURL}</span> wants to connect to your account
+                    <span className="text-primary">{appURL}</span>
+                    <br /> wants to connect to your account
                 </>
             }
             description={<>The app will see your wallet address and account details.</>}
@@ -29,6 +29,6 @@ export const EthRequestAccounts = ({
                     onClick: reject,
                 },
             }}
-        ></Layout>
+        />
     )
 }

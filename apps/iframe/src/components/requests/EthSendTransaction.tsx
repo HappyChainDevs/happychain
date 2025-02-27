@@ -141,7 +141,7 @@ export const EthSendTransaction = ({
     return (
         <>
             <Layout
-                labelHeader="Confirm transaction"
+                labelHeader={`Confirm transaction on ${appURL}`}
                 headline={<>Confirm transaction</>}
                 hideActions={tx.type === TransactionType.EIP4844}
                 actions={{
@@ -162,12 +162,16 @@ export const EthSendTransaction = ({
             >
                 <SectionBlock>
                     <SubsectionBlock>
-                        <SubsectionContent>
-                            <SubsectionTitle>Receiver address</SubsectionTitle>
-                            <FormattedDetailsLine>
-                                <LinkToAddress address={tx.to as Address}>{shortenAddress(tx.to)}</LinkToAddress>
-                            </FormattedDetailsLine>
-                        </SubsectionContent>
+                        {tx?.to && (
+                            <SubsectionContent>
+                                <SubsectionTitle>Receiver address</SubsectionTitle>
+                                <FormattedDetailsLine>
+                                    <LinkToAddress address={tx.to as Address}>
+                                        {shortenAddress(tx.to as Address)}
+                                    </LinkToAddress>
+                                </FormattedDetailsLine>
+                            </SubsectionContent>
+                        )}
 
                         {Number(formattedTxInfo.value) > 0 && (
                             <SubsectionContent>
