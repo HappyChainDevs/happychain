@@ -4,11 +4,11 @@ pragma solidity ^0.8.20;
 contract MockRevert {
     error CustomErrorMockRevert();
 
-    function revert() public {
+    function intentionalRevert() public pure {
         revert CustomErrorMockRevert();
     }
 
-    function revertDueToGasLimit() public {
+    function intentionalRevertDueToGasLimit() public pure {
         uint256 i = 0;
         while (true) {
             i++;

@@ -382,17 +382,17 @@
   "MockRevert": [
     {
       "type": "function",
-      "name": "revert",
+      "name": "intentionalRevert",
       "inputs": [],
       "outputs": [],
-      "stateMutability": "nonpayable"
+      "stateMutability": "pure"
     },
     {
       "type": "function",
-      "name": "revertDueToGasLimit",
+      "name": "intentionalRevertDueToGasLimit",
       "inputs": [],
       "outputs": [],
-      "stateMutability": "nonpayable"
+      "stateMutability": "pure"
     },
     {
       "type": "error",
