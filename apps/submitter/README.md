@@ -28,7 +28,6 @@ make dev
 
 ### Server Operations
 - `make dev` - Start development server with hot reload
-- `make start` - Start production server
 - `make routes` - List all available API endpoints
 
 ### Testing
@@ -39,27 +38,20 @@ make dev
 
 ```
 submitter/
-├── .config/          # Configuration files including Kysely setup
+├── .config/          # Configuration files for Kysely setup
 ├── migrations/       # Database migrations (timestamp ordered)
 └── src/
-    ├── actions/      # Transaction execution logic
     ├── clients/      # API clients and interfaces
     │   └── submitterClient/
-    │       └── # Custom submitter actions
-    ├── database/
-    │   └── # Database Connection & Repositories
-    ├── errors/
-    │   └── # Error definitions
-    ├── routes/
-    │   └── # API routes
-    ├── services/
-    │   └── # Data services
-    ├── tests/
-    │   └── # e2e app tests
-    ├── tmp/
-    │   └── # copy pasted boop spec interfaces
-    └── utils/
-        └── # general purpose utilities & helpers
+    ├── database/     # Database connections and repositories
+    ├── errors/       # Error definitions and handling
+    ├── handlers/     # API route handlers
+    ├── routes/       # API endpoint definitions
+    ├── services/     # Business logic services
+    ├── tests/        # End-to-end and integration tests
+    ├── tmp/          # Temporary spec interfaces
+    ├── utils/        # Helper functions and utilities
+    └── validation/   # Data validation utils
 ```
 
 ## API Documentation
