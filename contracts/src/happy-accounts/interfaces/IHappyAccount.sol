@@ -49,6 +49,18 @@ error ValidatorNotRegistered(address validator);
 /// Selector returned by {IHappyAccount.validate} if the validator's value is invalid.
 error InvalidValidatorValue();
 
+/// Selector returned by {IHappyAccount.addExecutor} if the executor is already registered.
+error ExecutorAlreadyRegistered(address executor);
+
+/// Selector returned by {IHappyAccount.removeExecutor} if the executor is not registered.
+error ExecutorNotRegistered(address executor);
+
+/// Selector returned by {IHappyAccount.execute} if the executor's value is invalid.
+error InvalidExecutorValue();
+
+/// Selector returned by {IHappyAccount.execute} if the executor is not found.
+error ExecutorNotFound(address executor);
+
 /**
  * Interface to be implemented by smart contract accounts conforming to the Happy Account standard.
  * Accounts can optionally implement the {IHappyPaymaster} interface if they wish to support
