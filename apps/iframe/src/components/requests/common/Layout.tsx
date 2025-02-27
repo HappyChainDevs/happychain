@@ -1,9 +1,3 @@
-import {
-    Tabs as ArkTabs,
-    type TabContentProps as ArkTabsContentProps,
-    type TabsRootProps as ArkTabsRootProps,
-} from "@ark-ui/react"
-import { cx } from "class-variance-authority"
 import { useAtomValue } from "jotai"
 import type { PropsWithChildren } from "react"
 import type { Address } from "viem"
@@ -117,57 +111,6 @@ export const FormattedDetailsLine = ({ children, isCode }: FormattedDetailsLineP
             {children}
         </pre>
     )
-}
-
-export enum RequestTabsValues {
-    Details = "details",
-    Raw = "raw",
-}
-
-export const REQUEST_TABS = [
-    {
-        value: RequestTabsValues.Details,
-        label: "Details",
-        isDefault: true,
-    },
-    {
-        value: RequestTabsValues.Raw,
-        label: "Raw data",
-        isDefault: false,
-    },
-]
-
-interface TabsProps extends ArkTabsRootProps {
-    defaultValue: RequestTabsValues
-}
-export const Tabs = ({ children, ...rootProps }: TabsProps) => {
-    return (
-        <ArkTabs.Root {...rootProps}>
-            <div className="border-b border-neutral/10 dark:border-neutral/50">
-                <ArkTabs.List className="max-w-prose w-full mx-auto">
-                    {REQUEST_TABS.map((tab) => (
-                        <ArkTabs.Trigger
-                            className="cursor-pointer text-sm font-semibold px-4 pt-4 pb-2 opacity-70 data-[selected]:opacity-100"
-                            value={tab.value}
-                            key={`${tab.value}-trigger`}
-                        >
-                            {tab.label}
-                        </ArkTabs.Trigger>
-                    ))}
-                    <ArkTabs.Indicator className="w-[var(--width)] bg-primary h-0.5" />
-                </ArkTabs.List>
-            </div>
-            {children}
-        </ArkTabs.Root>
-    )
-}
-
-interface TabContentProps extends ArkTabsContentProps {
-    value: RequestTabsValues
-}
-
-export const TabContent = ({ className, ...contentProps }: TabContentProps) => {
-    return <ArkTabs.Content className={cx("px-2 py-4", className)} {...contentProps} />
 }
 
 interface LinkToAddressProps extends PropsWithChildren {
