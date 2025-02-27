@@ -21,14 +21,14 @@ export const TriggerImportTokensDialog = () => {
     return (
         <button
             type="button"
-            className="flex flex-row items-center justify-center gap-3 hover:underline"
+            className="flex flex-row items-center justify-center gap-2 hover:underline"
             aria-label={"Open Import Tokens Dialog"}
             onClick={() => {
                 setVisibility(!isVisible)
             }}
         >
-            <Plus size="1em" />
-            <span>Import Tokens</span>
+            <Plus size="0.875em" />
+            <span className="text-sm">Import Tokens</span>
         </button>
     )
 }
@@ -144,7 +144,7 @@ export const ImportTokensDialog = () => {
                 <Dialog.Content className="text-center overflow-y-auto bg-base-300 p-4 lg:p-5 text-sm text-neutral-11 min-h-fit size-full inset-0 pb-3 sm:pb-0 relative [&[data-state=open]]:flex flex-col motion-safe:[&[data-state=open]]:animate-growIn motion-safe:[&[data-state=closed]]:animate-growOut">
                     <div className="flex flex-row my-auto gap-4 items-start">
                         <div className="flex flex-col w-full items-start justify-start">
-                            <Dialog.Title className="text-start font-bold text-base-content">
+                            <Dialog.Title className="text-start font-semibold text-base-content">
                                 Import ERC-20 Token
                             </Dialog.Title>
                         </div>
