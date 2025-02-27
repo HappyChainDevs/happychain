@@ -50,11 +50,15 @@ contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, Own
         // 3. call _executeBatch -> executes each call individually
         output = _executeBatch(executionBatch);
         // 4. return the output
+        // TODO output.gas += OVERALL_GAS_OVERHEAD_BUFFER; (gas used for this function + _executeBatch's for loop maybe)
+        // TODO , OR return directly inline
+        // return _executeBatch(executionBatch) + OVERALL_GAS_OVERHEAD_BUFFER;
     }
 
     // ====================================================================================================
     // INTERNAL FUNCTIONS
 
+    /// @dev Executes a batch of calls, returns the total gas used
     function _executeBatch(Execution[] memory executionBatch) internal returns (ExecutionOutput memory output) {
         // For each call, execute it and add the gas used to the total
         // Return the total gas used
@@ -70,6 +74,7 @@ contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, Own
         }
     }
 
+    /// @dev Executes a single call, returns the gas used
     function _execute(Execution memory execution) internal returns (ExecutionOutput memory output) {
         uint256 startGas = gasleft();
         (bool success, bytes memory returnData) = execution.dest.call{value: execution.value}(execution.callData);
@@ -80,6 +85,37 @@ contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, Own
 
         output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
     }
+
+    /*
+    OR, maybe we just have one function, saves on call/jump gas to _execute for each call
+    function _executeBatch(Execution[] memory executionBatch) internal returns (ExecutionOutput memory output) {
+        uint256 totalGas = 0;
+        
+        for (uint256 i = 0; i < executionBatch.length; i++) {
+            uint256 startGas = gasleft();
+            
+            // Execute the call
+            (bool success, bytes memory result) = executionBatch[i].dest.call{value: executionBatch[i].value}(
+                executionBatch[i].callData
+            );
+            
+            // Calculate gas used for this call
+            uint256 gasUsed = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
+            totalGas += gasUsed;
+            
+            // If any call fails, return immediately with the error
+            if (!success) {
+                output.revertData = result;
+                output.gas = totalGas;
+                return output;
+            }
+        }
+        
+        // All calls succeeded
+        output.gas = totalGas;
+        return output;
+    }
+    */
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }

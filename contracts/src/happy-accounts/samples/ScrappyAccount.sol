@@ -19,9 +19,15 @@ import {
     ValidatorAlreadyRegistered,
     ValidatorNotRegistered,
     InvalidValidatorValue,
-    ValidatorNotFound
+    ValidatorNotFound,
+    ExecutorAlreadyRegistered,
+    ExecutorNotRegistered,
+    InvalidExecutorValue,
+    ExecutorNotFound
 } from "../interfaces/IHappyAccount.sol";
+
 import {ICustomBoopValidator} from "../interfaces/extensions/ICustomBoopValidator.sol";
+import {ICustomBoopExecutor} from "../interfaces/extensions/ICustomBoopExecutor.sol";
 
 import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
@@ -72,6 +78,12 @@ contract ScrappyAccount is
     /// Emitted when a validator is removed from the account
     event ValidatorRemoved(address indexed validator);
 
+    /// Emitted when an executor is added to the account
+    event ExecutorAdded(address indexed executor);
+
+    /// Emitted when an executor is removed from the account
+    event ExecutorRemoved(address indexed executor);
+
     // ====================================================================================================
     // CONSTANTS
 
@@ -111,6 +123,9 @@ contract ScrappyAccount is
 
     /// Mapping to check if a validator is registered
     mapping(address => bool) public validators;
+
+    /// Mapping to check if an executor is registered
+    mapping(address => bool) public executors;
 
     // ====================================================================================================
     // MODIFIERS
@@ -154,6 +169,18 @@ contract ScrappyAccount is
         if (!validators[validator]) revert ValidatorNotRegistered(validator);
         delete validators[validator];
         emit ValidatorRemoved(validator);
+    }
+
+    function addExecutor(address executor) external onlyOwner {
+        if (executors[executor]) revert ExecutorAlreadyRegistered(executor);
+        executors[executor] = true;
+        emit ExecutorAdded(executor);
+    }
+
+    function removeExecutor(address executor) external onlyOwner {
+        if (!executors[executor]) revert ExecutorNotRegistered(executor);
+        delete executors[executor];
+        emit ExecutorRemoved(executor);
     }
 
     function validate(HappyTx memory happyTx) external returns (bytes4) {
@@ -210,15 +237,27 @@ contract ScrappyAccount is
     }
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
-        uint256 startGas = gasleft();
-        (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
-        if (!success) {
-            output.revertData = returnData;
-            return output;
-        }
+        uint256 gasStart = gasleft();
+        // Check for executor in extraData
+        (bool found, bytes memory executorData) = HappyTxLib.getExtraDataValue(
+            happyTx.extraData,
+            0x000002 // Executor key
+        );
 
-        output.success = true;
-        output.gas = startGas - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD;
+        if (found) {
+            // Execute with external executor
+            output = _executeWithExternalExecutor(happyTx, executorData);
+        } else {
+            // Default execution
+            (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
+            if (!success) {
+                output.revertData = returnData;
+                output.gas = gasStart - gasleft();
+                return output;
+            }
+
+            output.gas = gasStart - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD;
+        }
 
         // [LOGGAS_INTERNAL] uint256 _startGasEmulate = gasleft(); // To simulate the gasleft() at the top of the function
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
@@ -302,5 +341,27 @@ contract ScrappyAccount is
         }
 
         return bytes4(returnData) == bytes4(0);
+    }
+
+    /// @dev Function that executes a happy tx with an external executor, and returns the execution output
+    function _executeWithExternalExecutor(HappyTx memory happyTx, bytes memory executorData)
+        internal
+        returns (ExecutionOutput memory output)
+    {
+        if (executorData.length != 32) {
+            revert InvalidExecutorValue();
+        }
+
+        address executor;
+        assembly {
+            executor := mload(add(add(executorData, 0x20), 12)) // skip first 12 bytes
+        }
+
+        if (!executors[executor]) {
+            revert ExecutorNotFound(executor);
+        }
+
+        // Call external executor
+        return ICustomBoopExecutor(executor).execute(happyTx);
     }
 }
