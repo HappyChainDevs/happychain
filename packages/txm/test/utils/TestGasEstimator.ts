@@ -8,11 +8,11 @@ export class TestGasEstimator extends DefaultGasLimitEstimator {
         transactionManager: TransactionManager,
         transaction: Transaction,
     ): Promise<Result<bigint, EstimateGasError>> {
-        if (transaction.functionName === "revert") {
+        if (transaction.functionName === "intentionalRevert") {
             return ok(40_000n)
         }
 
-        if (transaction.functionName === "revertDueToGasLimit") {
+        if (transaction.functionName === "intentionalRevertDueToGasLimit") {
             return ok(40_000n)
         }
 
