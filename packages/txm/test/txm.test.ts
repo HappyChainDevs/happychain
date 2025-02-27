@@ -61,6 +61,12 @@ async function getCurrentCounterValue(): Promise<bigint> {
     })
 }
 
+async function getCurrentNonce(): Promise<number> {
+    return await directBlockchainClient.getTransactionCount({
+        address: fromAddress,
+    })
+}
+
 async function createCounterTransaction(deadline?: number): Promise<Transaction> {
     return await txm.createTransaction({
         address: deployment.HappyCounter,
@@ -83,9 +89,7 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
-    nonceBeforeEachTest = await directBlockchainClient.getTransactionCount({
-        address: fromAddress,
-    })
+    nonceBeforeEachTest = await getCurrentNonce()
 })
 
 afterAll(() => {
@@ -126,12 +130,15 @@ test("Simple transaction executed", async () => {
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
 
+    const blockchainNonce = await getCurrentNonce()
+
     assertReceiptSuccess(deployment.HappyCounter, fromAddress, receipt)
     expect(retrievedTransaction?.status).toBe(TransactionStatus.Success)
     expect(currentCount).toBe(previousCount + 1n)
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
     expect(retrievedTransaction?.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
+    expect(blockchainNonce).toBe(nonceBeforeEachTest + 1)
 })
 
 test("Transaction retried", async () => {
@@ -179,11 +186,18 @@ test("Transaction retried", async () => {
 
     const currentCount = await getCurrentCounterValue()
 
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    const blockchainNonce = await getCurrentNonce()
+
     assertReceiptSuccess(deployment.HappyCounter, fromAddress, successReceipt)
     expect(transactionSuccess.status).toBe(TransactionStatus.Success)
     expect(transaction.attempts.length).toBe(2)
     expect(currentCount).toBe(previousCount + 1n)
     expect(transactionSuccess.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
+    expect(persistedTransaction).toBeDefined()
+    expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
+    expect(blockchainNonce).toBe(nonceBeforeEachTest + 1)
 })
 
 test("Transaction failed", async () => {
@@ -191,7 +205,7 @@ test("Transaction failed", async () => {
 
     const transaction = await txm.createTransaction({
         address: deployment.MockRevert,
-        functionName: "revert",
+        functionName: "intentionalRevert",
         contractName: "MockRevert",
         args: [],
     })
@@ -212,11 +226,18 @@ test("Transaction failed", async () => {
 
     const currentCount = await getCurrentCounterValue()
 
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    const blockchainNonce = await getCurrentNonce()
+
     expect(transactionReverted.status).toBe(TransactionStatus.Failed)
     expect(transaction.attempts).length(1)
     assertReceiptReverted(deployment.MockRevert, fromAddress, revertReceipt)
     expect(currentCount).toBe(previousCount)
     expect(transactionReverted.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
+    expect(persistedTransaction).toBeDefined()
+    expect(persistedTransaction?.status).toBe(TransactionStatus.Failed)
+    expect(blockchainNonce).toBe(nonceBeforeEachTest + 1)
 })
 
 test("Transaction failed for out of gas", async () => {
@@ -224,7 +245,7 @@ test("Transaction failed for out of gas", async () => {
 
     const transaction = await txm.createTransaction({
         address: deployment.MockRevert,
-        functionName: "revertDueToGasLimit",
+        functionName: "intentionalRevertDueToGasLimit",
         contractName: "MockRevert",
         args: [],
     })
@@ -244,6 +265,10 @@ test("Transaction failed for out of gas", async () => {
     })
 
     const currentCount = await getCurrentCounterValue()
+
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    const blockchainNonce = await getCurrentNonce()
 
     expect(transactionReverted.status).toBe(TransactionStatus.Failed)
     expect(transaction.attempts).length(1)
@@ -252,6 +277,9 @@ test("Transaction failed for out of gas", async () => {
     expect(transactionReverted.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
     expect(retryManager.haveTriedToRetry(transaction.intentId)).toBeTruthy()
     expect(revertReceipt.gasUsed).toBe(transactionReverted.attempts[0].gas)
+    expect(persistedTransaction).toBeDefined()
+    expect(persistedTransaction?.status).toBe(TransactionStatus.Failed)
+    expect(blockchainNonce).toBe(nonceBeforeEachTest + 1)
 })
 
 test("Transaction cancelled due to deadline passing", async () => {
@@ -314,6 +342,10 @@ test("Transaction cancelled due to deadline passing", async () => {
 
     const currentCount = await getCurrentCounterValue()
 
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    const blockchainNonce = await getCurrentNonce()
+
     expect(transactionCancelled.status).toBe(TransactionStatus.Cancelled)
     assertReceiptSuccess(fromAddress, fromAddress, receipt)
     expect(transactionExecuted.input).toBe("0x")
@@ -321,4 +353,7 @@ test("Transaction cancelled due to deadline passing", async () => {
     expect(latestAttempt.type).toBe(AttemptType.Cancellation)
     expect(currentCount).toBe(previousCount)
     expect(transactionCancelled.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
+    expect(persistedTransaction).toBeDefined()
+    expect(persistedTransaction?.status).toBe(TransactionStatus.Cancelled)
+    expect(blockchainNonce).toBe(nonceBeforeEachTest + 1)
 })
