@@ -2,12 +2,8 @@ import type { Hex } from "viem"
 import { publicClient } from "#src/clients"
 import type { HappyTx } from "#src/tmp/interface/HappyTx"
 import type { HappyTxReceipt } from "#src/tmp/interface/HappyTxReceipt"
-import { TransactionTypeName } from "#src/tmp/interface/common_chain"
 import { EntryPointStatus } from "#src/tmp/interface/status"
-
-function isValidTransactionType(type: string): type is TransactionTypeName {
-    return Object.values(TransactionTypeName).includes(type as TransactionTypeName)
-}
+import { isValidTransactionType } from "#src/utils/isValidTransactionType"
 
 export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Promise<HappyTxReceipt> {
     const { txHash, happyTxHash, happyTx } = params
@@ -69,7 +65,7 @@ export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Pr
             blobGasUsed: receipt.blobGasUsed,
             blockHash: receipt.blockHash,
             blockNumber: receipt.blockNumber,
-            contractAddress: receipt.contractAddress,
+            contractAddress: receipt.contractAddress || null,
             cumulativeGasUsed: receipt.cumulativeGasUsed,
             effectiveGasPrice: receipt.effectiveGasPrice,
             from: receipt.from,

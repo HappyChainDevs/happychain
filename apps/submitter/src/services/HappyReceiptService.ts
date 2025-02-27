@@ -4,31 +4,34 @@ import { logger } from "#src/logger"
 import type { HappyTxReceipt } from "#src/tmp/interface/HappyTxReceipt"
 import type { Hash, Receipt, TransactionTypeName } from "#src/tmp/interface/common_chain"
 import type { EntryPointStatus } from "#src/tmp/interface/status"
+import { isValidTransactionType } from "#src/utils/isValidTransactionType"
 
 export class HappyReceiptService {
     constructor(private happyReceiptRepository: HappyReceiptRepository) {}
 
     async findByHappyTxHash(happyTxHash: Hash): Promise<HappyTxReceipt | undefined> {
-        const receipt = await this.happyReceiptRepository.findByHash(happyTxHash)
+        const happyReceipt = await this.happyReceiptRepository.findByHash(happyTxHash)
 
-        if (!receipt) return
+        if (!happyReceipt) return
 
-        const transactionReceipt = await publicClient.getTransactionReceipt({ hash: receipt.transactionHash })
+        const transactionReceipt = await publicClient.getTransactionReceipt({ hash: happyReceipt.transactionHash })
 
         logger.warn("[HappyReceiptService.findByHash] Warning: Logs not yet implemented")
 
+        if (!isValidTransactionType(transactionReceipt.type)) throw new Error(`[${happyTxHash}] Invalid receipt.type`)
+
         return {
             happyTxHash: happyTxHash,
-            status: receipt.status as EntryPointStatus,
-            account: receipt.account,
-            nonceTrack: receipt.nonceTrack,
-            nonceValue: receipt.nonceValue,
-            entryPoint: receipt.entryPoint,
-            logs: transactionReceipt.logs.filter((l) => l.address === receipt.entryPoint),
-            revertData: receipt.revertData,
-            failureReason: receipt.failureReason,
-            gasUsed: receipt.gasUsed,
-            gasCost: receipt.gasCost,
+            status: happyReceipt.status as EntryPointStatus,
+            account: happyReceipt.account,
+            nonceTrack: happyReceipt.nonceTrack,
+            nonceValue: happyReceipt.nonceValue,
+            entryPoint: happyReceipt.entryPoint,
+            logs: transactionReceipt.logs.filter((l) => l.address === happyReceipt.entryPoint),
+            revertData: happyReceipt.revertData,
+            failureReason: happyReceipt.failureReason,
+            gasUsed: happyReceipt.gasUsed,
+            gasCost: happyReceipt.gasCost,
             txReceipt: {
                 ...transactionReceipt,
                 type: transactionReceipt.type as TransactionTypeName, // TODO: validate this cast
