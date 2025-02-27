@@ -186,7 +186,7 @@ contract HappyEntryPointGasEstimator is Test {
         happyTx.account = _account;
         happyTx.paymaster = _paymaster;
         happyTx.nonceTrack = 0;
-        happyTx.nonceValue = getNonce();
+        happyTx.nonceValue = _getNonce();
 
         // Store original values
         uint32 origGasLimit;
@@ -209,7 +209,7 @@ contract HappyEntryPointGasEstimator is Test {
         }
 
         // Sign the transaction with zeroed values
-        happyTx.validatorData = signHappyTx(happyTx);
+        happyTx.validatorData = _signHappyTx(happyTx);
 
         if (_paymaster != _account) {
             // Restore original values after signing
@@ -243,7 +243,7 @@ contract HappyEntryPointGasEstimator is Test {
     }
 
     /// @dev Internal helper function to sign a happy tx.
-    function signHappyTx(HappyTx memory happyTx) internal view returns (bytes memory signature) {
+    function _signHappyTx(HappyTx memory happyTx) internal view returns (bytes memory signature) {
         bytes32 hash = keccak256(happyTx.encode()).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
@@ -255,7 +255,7 @@ contract HappyEntryPointGasEstimator is Test {
     }
 
     /// @dev Internal helper function to get the nonce of a smart account.
-    function getNonce() public view returns (uint64) {
+    function _getNonce() internal view returns (uint64) {
         return uint64(ScrappyAccount(payable(smartAccount)).getNonce(0));
     }
 }
