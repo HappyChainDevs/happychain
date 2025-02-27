@@ -1,34 +1,23 @@
+import { LogLevel, LogTag, Logger } from "@happy.tech/common"
 import env from "./env"
 
-enum LogLevel {
-    DEBUG = 0,
-    INFO = 1,
-    WARN = 2,
-    ERROR = 3,
-}
-
-const logLevel = {
-    debug: LogLevel.DEBUG,
+const logLevel: LogLevel = {
+    off: LogLevel.OFF,
+    trace: LogLevel.TRACE,
     info: LogLevel.INFO,
     warn: LogLevel.WARN,
     error: LogLevel.ERROR,
 }[env.LOG_LEVEL]
 
-export const logger = {
-    debug(...args: Parameters<typeof console.debug>) {
-        if (logLevel > LogLevel.DEBUG) return
-        console.debug(...args)
+const _logger = Logger.instance
+_logger.enableTags(LogTag.SUBMITTER)
+_logger.setLogLevel(logLevel)
+
+export const logger: Logger = new Proxy(_logger, {
+    get(target, prop, receiver) {
+        if (typeof target[prop] === "function") {
+            return (...args: any[]) => target[prop](LogTag.SUBMITTER, ...args)
+        }
+        return target[prop]
     },
-    info(...args: Parameters<typeof console.info>) {
-        if (logLevel > LogLevel.INFO) return
-        console.info(...args)
-    },
-    warn(...args: Parameters<typeof console.warn>) {
-        if (logLevel > LogLevel.WARN) return
-        console.warn(...args)
-    },
-    error(...args: Parameters<typeof console.error>) {
-        if (logLevel > LogLevel.ERROR) return
-        console.error(...args)
-    },
-}
+})
