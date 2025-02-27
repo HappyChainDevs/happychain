@@ -1,64 +1,78 @@
-## Setup
+# Submitter Service
 
-To install dependencies:
+The Submitter service handles transaction submission and management for the Happy Wallet system. It provides a robust API for processing transactions with features like nonce tracking, gas estimation, and transaction monitoring.
+
+## Quick Start
+
+1. Install dependencies:
 ```sh
 make setup
 ```
 
-To run migrations:
+2. Set up the database:
 ```sh
 make migrate
 ```
 
-To delete database and re-run migrations
-```sh
-make migrate-fresh
-```
-
-To view available endpoints:
-```sh
-make routes
-```
-
-To run (dev mode):
+3. Start development server:
 ```sh
 make dev
 ```
 
-To test:
-```sh
-make test
-```
+## Development Commands
 
-## App Structure
+### Database Management
+- `make migrate` - Run all pending migrations
+- `make migrate-fresh` - Reset database and run all migrations
+- `make rollback` - Revert last migration
+
+### Server Operations
+- `make dev` - Start development server with hot reload
+- `make start` - Start production server
+- `make routes` - List all available API endpoints
+
+### Testing
+- `make test` - Run all tests
+- `make test-watch` - Run tests in watch mode
+- `make coverage` - Generate test coverage report
+
+## Project Structure
 
 ```
 submitter/
-├── .config/
-│   └── # Kysely config
-├── migrations/
-│   └── # Timestamp ordered migrations
+├── .config/          # Configuration files including Kysely setup
+├── migrations/       # Database migrations (timestamp ordered)
 └── src/
-    ├── actions/
-    │   └── # Execution actions
-    ├── clients/
-    │   ├── # Viem client entries
+    ├── actions/      # Transaction execution logic
+    ├── clients/      # API clients and interfaces
     │   └── submitterClient/
-    │       └── # Custom submitter actions
-    ├── database/
-    │   └── # Database Connection & Repositories
-    ├── errors/
-    │   └── # Error definitions
-    ├── nonceQueueManager/
-    │   └── # Buffer management
-    ├── routes/
-    │   └── # API routes
-    ├── services/
-    │   └── # Data services
-    ├── tests/
-    │   └── # e2e app tests
-    ├── tmp/
-    │   └── # copy pasted boop spec interfaces
-    └── utils/
-        └── # general purpose utilities & helpers
+    ├── database/     # Database connections and repositories
+    ├── errors/       # Error definitions and handling
+    ├── nonceQueueManager/  # Transaction nonce management
+    ├── routes/       # API endpoint definitions
+    ├── services/     # Business logic services
+    ├── tests/        # End-to-end and integration tests
+    ├── tmp/          # Temporary spec interfaces
+    └── utils/        # Helper functions and utilities
 ```
+
+## API Documentation
+
+The service exposes RESTful endpoints for:
+- Transaction submission
+- Transaction status monitoring  
+- Nonce management
+- Gas price estimation
+
+View all endpoints with `make routes`
+
+## Contributing
+
+1. Create feature branch from `main`
+2. Make changes and add tests
+3. Run tests with `make test`
+4. Submit pull request
+
+## License
+
+Copyright © Happy Wallet. All rights reserved.
