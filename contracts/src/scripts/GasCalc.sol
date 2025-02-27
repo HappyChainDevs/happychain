@@ -11,7 +11,6 @@ import {ENTRYPOINT_V7_SALT, ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPo
 import {HappyPaymaster} from "../HappyPaymaster.sol";
 import {UserOpLib} from "./UserOpLib.sol";
 
-/* solhint-disable no-console*/
 contract GasEstimator is Test {
     using UserOpLib for PackedUserOperation;
 
@@ -40,9 +39,7 @@ contract GasEstimator is Test {
             LibClone.createDeterministicERC1967(0, address(implementation), DEPLOYMENT_SALT);
 
         if (!alreadyDeployed) {
-            // solhint-disable-next-line avoid-low-level-calls
             (bool success,) = proxy.call(initData);
-            // solhint-disable-next-line gas-custom-errors
             require(success, "Initialization failed");
         }
 
@@ -185,11 +182,9 @@ contract GasEstimator is Test {
             preVerificationGas: 55378,
             gasFees: bytes32(0x0000000000000000000000003b9aca000000000000000000000000003b9deb7c),
             paymasterAndData: bytes(
-                // solhint-disable-next-line max-line-length
                 hex"a33009b1552a751929b7e240aaa62b2640782fbc0000000000000000000000000000bbb800000000000000000000000000000001"
             ),
             signature: bytes(
-                // solhint-disable-next-line max-line-length
                 hex"7cfc78c01ec5ea50208d14fb1ee865569e015da08c27807575d70bf66041ffe335fe5e4e0dbcce07fddf357e4584b9e6de77ca13806d2d715ade184ba4bc15fc1b"
             )
         });
