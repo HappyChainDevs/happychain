@@ -1,0 +1,36 @@
+name: Test Transaction Manager
+
+on:
+  push: 
+    paths:
+        - 'packages/txm/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+
+      - name: Install Node23 (for tests)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+            version: nightly
+      
+      - name: Build and Test Txm
+        run: | 
+            cd packages/txm
+            make build
+            make test
+      
+
