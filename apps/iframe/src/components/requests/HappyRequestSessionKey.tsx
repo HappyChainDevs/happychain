@@ -10,13 +10,10 @@ import {
     FormattedDetailsLine,
     Layout,
     LinkToAddress,
-    RequestTabsValues,
     SectionBlock,
     SubsectionBlock,
     SubsectionContent,
     SubsectionTitle,
-    TabContent,
-    Tabs,
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
@@ -89,27 +86,25 @@ export const HappyRequestSessionKey = ({
                 },
             }}
         >
-            <Tabs defaultValue={RequestTabsValues.Details}>
-                <TabContent value={RequestTabsValues.Details}>
-                    <SectionBlock>
-                        <SubsectionBlock>
-                            <SubsectionContent>
-                                <SubsectionTitle>Authorized contract address</SubsectionTitle>
-                                <FormattedDetailsLine>
-                                    <LinkToAddress address={targetAddress}> {targetAddress}</LinkToAddress>
-                                </FormattedDetailsLine>
-                            </SubsectionContent>
-                        </SubsectionBlock>
-                    </SectionBlock>
-                </TabContent>
-                <TabContent className="break-words" value={RequestTabsValues.Raw}>
-                    <SectionBlock>
-                        <SubsectionBlock>
-                            <FormattedDetailsLine isCode>{queryBytecode.data}</FormattedDetailsLine>
-                        </SubsectionBlock>
-                    </SectionBlock>
-                </TabContent>
-            </Tabs>
+            <SectionBlock>
+                <SubsectionBlock>
+                    <SubsectionContent>
+                        <SubsectionTitle>Authorized contract address</SubsectionTitle>
+                        <FormattedDetailsLine>
+                            <LinkToAddress address={targetAddress}> {targetAddress}</LinkToAddress>
+                        </FormattedDetailsLine>
+                    </SubsectionContent>
+                </SubsectionBlock>
+            </SectionBlock>
+            <SectionBlock>
+                <SubsectionBlock>
+                    <SubsectionContent>
+                        <SubsectionTitle>Data</SubsectionTitle>
+
+                        <FormattedDetailsLine isCode>{queryBytecode.data}</FormattedDetailsLine>
+                    </SubsectionContent>
+                </SubsectionBlock>
+            </SectionBlock>
         </Layout>
     )
 }
