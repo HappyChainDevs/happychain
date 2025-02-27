@@ -1,4 +1,4 @@
-import { submitterClient } from "#src/clients"
+import { happyReceiptService } from "#src/services"
 import type { HappyTx } from "#src/tmp/interface/HappyTx"
 import { EntryPointStatus } from "#src/tmp/interface/status"
 import { type ExecuteOutput, ExecuteSuccess } from "#src/tmp/interface/submitter_execute"
@@ -14,7 +14,7 @@ export async function execute(data: { entryPoint: `0x${string}`; tx: HappyTx }):
         return status satisfies ExecuteOutput
     }
 
-    const receipt = await submitterClient.waitForSubmitReceipt({ txHash: status.hash, happyTx: data.tx, happyTxHash })
+    const receipt = await happyReceiptService.findByHappyTxHashWithTimeout(happyTxHash, 60_000)
     if (!receipt || receipt.txReceipt.status !== "success") throw new Error("Unable to retrieve receipt")
 
     return {
