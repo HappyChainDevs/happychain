@@ -252,21 +252,21 @@ export class TransactionManager {
         this.transactionCollector = new TransactionCollector(this)
         this.transactionSubmitter = new TransactionSubmitter(this)
         this.hookManager = new HookManager()
-        this.retryPolicyManager = _config.retryPolicyManager || new DefaultRetryPolicyManager()
+        this.retryPolicyManager = _config.retryPolicyManager ?? new DefaultRetryPolicyManager()
 
         this.chainId = _config.chainId
-        this.eip1559 = _config.eip1559 || opStackDefaultEIP1559Parameters
+        this.eip1559 = _config.eip1559 ?? opStackDefaultEIP1559Parameters
         this.abiManager = new ABIManager(_config.abis)
 
-        this.baseFeeMargin = _config.baseFeePercentageMargin || 20n
-        this.maxPriorityFeePerGas = _config.maxPriorityFeePerGas || 0n
+        this.baseFeeMargin = _config.baseFeePercentageMargin ?? 20n
+        this.maxPriorityFeePerGas = _config.maxPriorityFeePerGas ?? 0n
 
-        this.rpcAllowDebug = _config.rpc.allowDebug || false
-        this.blockTime = _config.blockTime || 2n
-        this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime || 2 * 60 * 1000
+        this.rpcAllowDebug = _config.rpc.allowDebug ?? false
+        this.blockTime = _config.blockTime ?? 2n
+        this.finalizedTransactionPurgeTime = _config.finalizedTransactionPurgeTime ?? 2 * 60 * 1000
 
-        this.pollingInterval = _config.rpc.pollingInterval || (Number(this.blockTime) * 1000) / 2
-        this.blockInactivityTimeout = _config.rpc.blockInactivityTimeout || 4000
+        this.pollingInterval = _config.rpc.pollingInterval ?? (Number(this.blockTime) * 1000) / 2
+        this.blockInactivityTimeout = _config.rpc.blockInactivityTimeout ?? 4000
     }
 
     /**
