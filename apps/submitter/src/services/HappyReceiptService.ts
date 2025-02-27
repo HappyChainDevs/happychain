@@ -58,11 +58,10 @@ export class HappyReceiptService {
 
     async insert(newData: HappyTxReceipt) {
         const { txReceipt, ...newData2 } = newData
-        const data = await this.happyReceiptRepository.insert({
+        return await this.happyReceiptRepository.insert({
             ...newData2,
             transactionHash: txReceipt.transactionHash,
         })
-        return data
     }
 
     async insertOrThrow(newData: HappyTxReceipt) {

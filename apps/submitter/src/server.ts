@@ -1,11 +1,14 @@
 import { Hono } from "hono"
 import { every, except } from "hono/combine"
+import { HTTPException } from "hono/http-exception"
 import { logger as loggerMiddleware } from "hono/logger"
 import { prettyJSON as prettyJSONMiddleware } from "hono/pretty-json"
 import { requestId as requestIdMiddleware } from "hono/request-id"
 import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
+import { ZodError } from "zod"
 import env from "./env"
+import { HappyBaseError } from "./errors"
 import { logger } from "./logger"
 import accountsApi from "./routes/api/accounts"
 import submitterApi from "./routes/api/submitter"
@@ -32,8 +35,17 @@ export const app = new Hono()
     .route("/api/v1/submitter", submitterApi)
 
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
-app.onError((err, c) => {
+app.onError(async (err, c) => {
+    if (err instanceof HTTPException && err.cause instanceof ZodError) {
+        const errors = err.cause.issues.map((i) => ({ path: i.path.join("."), message: i.message }))
+        logger.warn(errors)
+        return c.json({ errors }, 500)
+    }
+
     logger.warn({ requestId: c.get("requestId"), url: c.req.url }, err)
+
+    if (err instanceof HTTPException) return err.getResponse()
+    if (err instanceof HappyBaseError) return c.json(err.getResponseData(), 422)
 
     const response =
         env.NODE_ENV === "production"

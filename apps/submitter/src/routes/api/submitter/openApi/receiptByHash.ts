@@ -1,7 +1,7 @@
 import { describeRoute } from "hono-openapi"
-import { resolver } from "hono-openapi/zod"
-import { validator as zv } from "hono-openapi/zod"
+import { resolver, validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
+import env from "#src/env"
 import { StateRequestStatus } from "#src/tmp/interface/HappyTxState"
 import { TransactionTypeName } from "#src/tmp/interface/common_chain"
 import { EntryPointStatus, SubmitterErrorStatus } from "#src/tmp/interface/status"
@@ -143,6 +143,7 @@ const outputSchema = z
     })
 
 export const description = describeRoute({
+    validateResponse: env.NODE_ENV !== "production",
     description: "Retrieve state by HappyTxHash, waiting if necessary",
     responses: {
         200: {
