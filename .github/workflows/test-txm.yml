@@ -1,9 +1,9 @@
-name: Test Transaction Manager
+name: Test TXM Package
 
 on:
   push: 
     paths:
-        - 'packages/txm/**'
+      - 'packages/txm/**'
   workflow_dispatch:
 
 jobs:
@@ -32,5 +32,3 @@ jobs:
             cd packages/txm
             make build
             make test
-      
-
