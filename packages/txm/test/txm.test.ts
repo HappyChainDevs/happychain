@@ -8,18 +8,24 @@ import { TxmHookType } from "../lib/HookManager"
 import { AttemptType, TransactionStatus } from "../lib/Transaction"
 import type { Transaction } from "../lib/Transaction"
 import { TransactionManager } from "../lib/TransactionManager"
+import { ethereumDefaultEIP1559Parameters } from "../lib/eip1559"
 import { migrateToLatest } from "../lib/migrate"
 import { ProxyBehavior, ProxyServer } from "./utils/ProxyServer"
 import { TestGasEstimator } from "./utils/TestGasEstimator"
 import { TestRetryManager } from "./utils/TestRetryManager"
 import { killAnvil, mineBlock } from "./utils/anvil"
 import { startAnvil } from "./utils/anvil"
-import { BASE_FEE_PERCENTAGE_MARGIN, BLOCK_GAS_LIMIT, CHAIN_ID, PRIVATE_KEY, PRIVATE_KEY_2, PROXY_URL } from "./utils/constants"
+import {
+    BASE_FEE_PERCENTAGE_MARGIN,
+    BLOCK_GAS_LIMIT,
+    CHAIN_ID,
+    PRIVATE_KEY,
+    PRIVATE_KEY_2,
+    PROXY_URL,
+} from "./utils/constants"
 import { deployMockContracts } from "./utils/contracts"
 import { assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
 import { cleanDB, getPersistedTransaction } from "./utils/db"
-import { ethereumDefaultEIP1559Parameters } from "../lib/eip1559"
-import { bigIntReplacer } from "../../../support/common/lib"
 
 const retryManager = new TestRetryManager()
 
@@ -34,7 +40,7 @@ const txm = new TransactionManager({
     gasEstimator: new TestGasEstimator(),
     retryPolicyManager: retryManager,
     baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
-    eip1559: ethereumDefaultEIP1559Parameters
+    eip1559: ethereumDefaultEIP1559Parameters,
 })
 
 const fromAddress = privateKeyToAddress(PRIVATE_KEY)
@@ -64,8 +70,6 @@ const secondWalletClient = createWalletClient({
     transport: http(),
 })
 
-
-
 async function getCurrentCounterValue(): Promise<bigint> {
     return await directBlockchainClient.readContract({
         address: deployment.HappyCounter,
@@ -92,7 +96,7 @@ async function createCounterTransaction(deadline?: number): Promise<Transaction>
 }
 
 async function createBurnGasTransactionWithSecondWallet() {
-     await secondWalletClient.writeContract({
+    await secondWalletClient.writeContract({
         address: deployment.MockGasBurner,
         abi: abis.MockGasBurner,
         functionName: "burnGas",
@@ -409,9 +413,11 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
 
     await mineBlock(2)
 
-    const currentBaseFee = (await directBlockchainClient.getBlock({
-        blockTag: "latest",
-    })).baseFeePerGas
+    const currentBaseFee = (
+        await directBlockchainClient.getBlock({
+            blockTag: "latest",
+        })
+    ).baseFeePerGas
 
     const incrementerExecuted = await txm.getTransaction(incrementerTransaction.intentId)
 
@@ -426,13 +432,12 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
     const persistedTransaction = await getPersistedTransaction(incrementerTransaction.intentId)
 
     expect(receipt.gasUsed).toBeGreaterThanOrEqual(BLOCK_GAS_LIMIT * 0.9)
-    expect((attempt.maxFeePerGas - attempt.maxPriorityFeePerGas)).toBe(currentBaseFee)
+    expect(attempt.maxFeePerGas - attempt.maxPriorityFeePerGas).toBe(currentBaseFee)
     expect(incrementerExecuted.status).toBe(TransactionStatus.Success)
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
     expect(blockchainNonce).toBe(nonceBeforeEachTest + 2)
 })
-
 
 test("Transaction succeeds in congested blocks", async () => {
     const previousCount = await getCurrentCounterValue()
@@ -467,7 +472,7 @@ test("Transaction succeeds in congested blocks", async () => {
     if (!executedIncrementerTransaction) {
         throw new Error("Transaction not found")
     }
-    
+
     const persistedTransaction = await getPersistedTransaction(incrementerTransaction.intentId)
 
     const incrementerReceipt = await directBlockchainClient.getTransactionReceipt({
