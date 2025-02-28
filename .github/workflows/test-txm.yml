@@ -58,12 +58,11 @@ jobs:
            cast wallet import --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80  --unsafe-password  "password" test-account-0
            cd contracts && echo "password" > .password.local
       
-      - name: Build txm ackages
+      - name: Build txm packages
         run: | 
             make txm.build
       
-      - name: Test TXM Package
+      - name: Test txm package
         run: |
             cd packages/txm
-            make build
             make test
