@@ -1,7 +1,6 @@
 import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import {
-    type ApprovedRequestExtraData,
     type ApprovedRequestPayload,
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -9,6 +8,7 @@ import {
     EIP1193UnsupportedMethodError,
     type Msgs,
     type PopupMsgs,
+    type RequestExtraData,
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
@@ -62,7 +62,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                     user,
                     tx: requestParams[0],
                     validator: contractAddresses.ECDSAValidator,
-                    preparedOp: request.payload.extraData as ApprovedRequestExtraData<typeof requestMethod>,
+                    preparedOp: request.payload.extraData as RequestExtraData<typeof requestMethod>,
                     signer: async (userOp, smartAccountClient) =>
                         await smartAccountClient.account.signUserOperation(userOp),
                 })

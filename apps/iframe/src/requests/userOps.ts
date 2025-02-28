@@ -1,6 +1,6 @@
 import { HappyMap, Map2, Mutex, promiseWithResolvers, sleep } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
-import type { ApprovedRequestExtraData, HappyUser } from "@happy.tech/wallet-common"
+import type { HappyUser, RequestExtraData } from "@happy.tech/wallet-common"
 import { deepHexlify } from "permissionless"
 import { getAccountNonce } from "permissionless/actions"
 import {
@@ -38,7 +38,7 @@ export type SendUserOpArgs = {
     user: HappyUser
     tx: RpcTransactionRequest
     validator: Address
-    preparedOp?: ApprovedRequestExtraData<"eth_sendTransaction">
+    preparedOp?: RequestExtraData<"eth_sendTransaction">
     signer: UserOpSigner
 }
 

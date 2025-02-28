@@ -182,24 +182,21 @@ export const EthSendTransaction = ({
         const { preVerificationGas, verificationGasLimit, callGasLimit, maxFeePerGas, maxPriorityFeePerGas } =
             preparedUserOp
         const baseFee = toBigIntSafe(blockData.baseFeePerGas)
-
         // Calculate gasFee (min of maxFeePerGas and maxPriorityFeePerGas + baseFee)
         const gasFee = maxFeePerGas < maxPriorityFeePerGas + baseFee ? maxFeePerGas : maxPriorityFeePerGas + baseFee
-
-        // Calculate gasUsed (sum of all gas components)
+        // Calculate gasUsed (sum of all gas fields)
         const gasUsed = callGasLimit + verificationGasLimit + callGasLimit
-
         const estimatedGasCost = gasFee * gasUsed
 
         return {
             value: formatEther(toBigIntSafe(tx.value)),
             type: classifyTxType(tx),
-            preVerificationGas: formatGwei(preVerificationGas),
-            verificationGasLimit: formatGwei(verificationGasLimit),
-            callGasLimit: formatGwei(callGasLimit),
-            maxFeePerGas: formatGwei(maxFeePerGas),
-            maxPriorityFeePerGas: formatGwei(maxPriorityFeePerGas),
-            estimatedGas: formatEther(estimatedGasCost),
+            preVerificationGas: String(preVerificationGas),
+            verificationGasLimit: String(verificationGasLimit),
+            callGasLimit: String(callGasLimit),
+            maxFeePerGas: String(maxFeePerGas),
+            maxPriorityFeePerGas: String(maxPriorityFeePerGas),
+            estimatedGas: String(estimatedGasCost),
         }
     }, [preparedUserOp, tx, blockData])
 
