@@ -15,3 +15,9 @@ export function assertReceiptSuccess(to: Address, from: Address, receipt?: Trans
 export function assertReceiptReverted(to: Address, from: Address, receipt?: TransactionReceipt): void {
     assertReceipt(to, from, "reverted", receipt)
 }
+
+export function assertIsDefined<T>(value: T): value is NonNullable<T> {
+    const isDefined = value !== undefined && value !== null
+    expect(isDefined).toBe(true)
+    return isDefined
+}
