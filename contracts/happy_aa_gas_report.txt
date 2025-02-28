@@ -49,5 +49,5 @@ ScrappyPaymaster payout gas usage
 
 HappyTxLib txGasFromCallGas payout gas usage
    ----------------------------------------------------
-  txGasFromCallGas function gas usage:  2
+    txGasFromCallGas function gas usage: 3
 
