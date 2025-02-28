@@ -311,49 +311,4 @@ library HappyTxLib {
 
         return (false, new bytes(0));
     }
-
-    // TODO: Maybe fully in assembly? (P.S, code below doesn't work, it's just for reference, wrote it quickly and didn't test it)
-    function getExtraDataValue2(bytes memory extraData, bytes3 key)
-        internal
-        pure
-        returns (bool found, bytes memory value)
-    {
-        // Early return for empty or too short data
-        if (extraData.length < 6) {
-            return (false, new bytes(0));
-        }
-
-        uint256 len;
-        bytes3 currentKey;
-        assembly {
-            let dataEnd := add(extraData, add(mload(extraData), 0x20))
-            let ptr := add(extraData, 0x20)
-
-            for {} lt(add(ptr, 6), dataEnd) {} {
-                // Load key directly into bytes3
-                currentKey := mload(ptr)
-                // Load length
-                len := shr(232, mload(add(ptr, 3)))
-
-                // Check if we have enough bytes left for the value
-                if gt(add(add(ptr, 6), len), dataEnd) { break }
-
-                // If key matches, copy value and return
-                if eq(currentKey, key) {
-                    // Allocate new bytes array
-                    value := mload(0x40)
-                    mstore(value, len) // store length
-                    mstore(0x40, add(add(value, 0x20), len)) // update free memory pointer
-
-                    // Copy value bytes
-                    mcopy(add(value, 0x20), add(ptr, 6), len)
-                    found := 1
-                    break
-                }
-
-                // Move pointer to next entry
-                ptr := add(ptr, add(6, len))
-            }
-        }
-    }
 }
