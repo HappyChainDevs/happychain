@@ -20,8 +20,8 @@ library HappyTxLib {
     uint256 private constant INTRINSIC_TX_GAS = 21_000;
 
     /// @dev Estimated length in bytes of a transaction after RLP encoding without calldata/access list.
-    /// A transaction without calldata and access list is at most ~220 bytes after RLP encoding.
-    /// We use 200 as a good compromise since we already overcharge for zero-value bytes.
+    ///      A transaction without calldata and an empty access list is at most ~220 bytes after RLP encoding.
+    ///      We use 200 as a good compromise since we already overcharge for zero-value bytes in the calldata.
     uint256 private constant RLP_ENCODED_TX_LENGTH = 200;
 
     /**
