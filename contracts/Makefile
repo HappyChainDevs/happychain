@@ -348,7 +348,7 @@ endef
 
 # Explanation of the jq command;
 #    CONTRACTS == [ "Contract1", "Contract2", ... ]
-#    The command up to xargs sequencially emit the ABI (JSON objects) of each contract.
+#    The command up to xargs sequentially emit the ABI (JSON objects) of each contract.
 #	 The jq command in the '--slurp' line starts by creating [CONTRACTS, ArrayOfABIs]
 #    It then transposes it: [ ["Contract1", ABI1], ["Contract2", ABI2], ... ]
 #    Finally, it maps it to [{ "Contract1": ABI1 } , { "Contract2": ABI2 } , ... ]
