@@ -126,32 +126,15 @@ gas-logging-off:
 
 # Turn internal gas logging on for ScrappyAccount and ScrappyPaymaster
 internal-gas-logging-on:
-	@find ./src/HappyAccounts/samples -type f -name "*.sol" -exec sed -i '' 's|// \[LOGGAS_INTERNAL\]|/* [LOGGAS_INTERNAL] */|g' {} +
+	@find . -type f -name "*.sol" -exec sed -i '' 's|// \[LOGGAS_INTERNAL\]|/* [LOGGAS_INTERNAL] */|g' {} +
 	@echo "Internal Gas logging turned ON"
 .PHONY: internal-gas-logging-on
 
 # Turn internal gas logging off for ScrappyAccount and ScrappyPaymaster
 internal-gas-logging-off:
-	@find ./src/HappyAccounts/samples -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS_INTERNAL\] \*/|// [LOGGAS_INTERNAL]|g' {} +
+	@find . -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS_INTERNAL\] \*/|// [LOGGAS_INTERNAL]|g' {} +
 	@echo "Internal Gas logging turned OFF"
 .PHONY: internal-gas-logging-off
-
-####################################################################################################
-# Debug Logging
-
-# Turn debug logging on by uncommenting the debug statements
-debug-logging-on:
-	@echo "Turning debug logging ON..."
-	@find . -type f -name "*.sol" -exec sed -i '' 's|// \[LOGDEBUG\]|/* [LOGDEBUG] */|g' {} +
-	@echo "Debug logging is now ON"
-.PHONY: debug-logging-on
-
-# Turn debug logging off by commenting out the debug statements
-debug-logging-off:
-	@echo "Turning debug logging OFF..."
-	@find . -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGDEBUG\] \*/|// [LOGDEBUG]|g' {} +
-	@echo "Debug logging is now OFF"
-.PHONY: debug-logging-off
 
 ####################################################################################################
 # Reports
@@ -176,6 +159,7 @@ internal-functions-gas: # Generates gas reports for the sample implementations' 
 	@forge test -vvv --match-test testEstimateScrappyAccountExecuteGas --isolate | awk '/ScrappyAccount execute gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@forge test -vvv --match-test testEstimateScrappyAccountPayoutGas --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@forge test -vvv --match-test testEstimateScrappyPaymasterPayoutGas --isolate | awk '/ScrappyPaymaster payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateFunctionDispatchOverhead --isolate | awk '/HappyTxLib txGasFromCallGas payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@make internal-gas-logging-off
 .PHONY: internal-functions-gas
 

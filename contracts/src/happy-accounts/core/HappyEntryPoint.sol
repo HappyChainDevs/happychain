@@ -245,10 +245,16 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // 3. Collect payment
 
+        // [LOGGAS] uint256 txGasStart = gasleft();
+
         // This is an overestimation of the actual gas cost of the submitter.
         // WITHOUT the gas cost of the "payout" call (which is accounted for later).
         uint256 consumedGas =
             HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
+
+        // [LOGGAS] uint256 txGasEnd = gasleft();
+        // [LOGGAS] uint256 txGasUsed = txGasStart - txGasEnd;
+        // [LOGGAS] console.log("txGasFromCallGas overall gas usage: ", txGasUsed);
 
         if (happyTx.paymaster == address(0)) {
             // Sponsoring submitter, no need to charge anyone
