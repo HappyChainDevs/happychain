@@ -4,6 +4,9 @@ pragma solidity ^0.8.20;
 /// Each of these values is shared between at least two or more of IHappyPaymaster,
 /// IHappyAccount, and HappyEntryPoint contracts.
 
+// ====================================================================================================
+// ERRORS
+
 /**
  * Selector returned by {IHappyAccount.validate} in simulation mode if the
  * nonce can be valid in the future but is not the current nonce (and so the happyTx
@@ -36,3 +39,24 @@ error NotFromEntryPoint();
  * Selector returned by {IHappyAccount.validte} when the happyTx's signature is invalid.
  */
 error InvalidOwnerSignature();
+
+// ====================================================================================================
+// EXTENSION KEYS
+
+/**
+ * @dev Key used in extraData for validator extensions
+ * Used in {ScrappyAccount.validate} to retrieve validator data from extraData
+ */
+bytes3 constant VALIDATOR_KEY = 0x000001;
+
+/**
+ * @dev Key used in extraData for executor extensions
+ * Used in {ScrappyAccount.execute} to retrieve executor data from extraData
+ */
+bytes3 constant EXECUTOR_KEY = 0x000002;
+
+/**
+ * @dev Key used in extraData for batch call data
+ * Used in {BatchCallExecutor.execute} to retrieve batch call information from extraData
+ */
+bytes3 constant BATCH_CALL_KEY = 0x000100;
