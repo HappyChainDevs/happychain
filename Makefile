@@ -344,6 +344,11 @@ randomness.build: setup.ts shared.build
 	cd apps/randomness && make build
 .PHONY: randomness.build
 
+txm.build: setup.ts shared.build
+	cd packages/txm && make build
+.PHONY: txm.build
+
+
 # ==================================================================================================
 # DOCS
 
