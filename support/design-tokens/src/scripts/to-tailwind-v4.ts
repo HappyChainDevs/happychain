@@ -1,302 +1,344 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 
+const REGEX = {
+    rootBlock: /\*?:root\*?\s*{([^}]*)}/,
+    cssVariableName: /--[\w-]+/g,
+    legacyDesignSystemPrefix: /--happy-ds-/g,
+    cssVariableReference: /var\((--[\w-]+)\)/g,
+    hdsInfixPattern: /^--([\w]+)-hds-/,
+    addHdsInfix: /^--([\w]+)-/,
+    commentPattern: /\/\*.*?\*\//,
+    createDeclarationPattern: (varName: string) => new RegExp(`${varName}\\s*:`, "g"),
+}
 
-
+/**
+ * Specifies where content should be placed in the output Tailwind CSS file
+ */
 enum ContentPositionInFile {
+    /** Content at the beginning of the file (eg: custom font declarations) */
     Start = "start of file",
+
+    /** Direct CSS variable declarations in the @theme block */
     Theme = "@theme block",
+
+    /** CSS variable references in the @theme inline block */
     ThemeInline = "@theme inline block",
+
+    /** Content at the end of the file (eg: custom directives) */
     End = "end of file",
 }
 
 interface TransformOptions {
     inputPath: string
     outputPath: string
-    additionalFiles?: {
+    additionalFiles?: Array<{
         path: string
         location: ContentPositionInFile
         transform?: boolean
-    }[]
+    }>
+}
+
+interface FileContentResult {
+    content: string
+    isRootContent: boolean
+}
+
+function safeReadFile(filePath: string, isRequired = false): string | null {
+    try {
+        if (!existsSync(filePath)) {
+            if (isRequired) {
+                throw new Error(`Required file not found: ${filePath}`)
+            }
+            console.warn(`File not found: ${filePath}`)
+            return null
+        }
+        return readFileSync(filePath, "utf-8")
+    } catch (error) {
+        if (isRequired) {
+            throw new Error(`Error reading required file: ${filePath}`)
+        }
+        console.warn(`Error reading file: ${filePath}`, error)
+        return null
+    }
 }
 
 /**
- * Turns a CSS file generated from Terrazzo to a Tailwind V4 config CSS file.
- * 
- * 1. Extract CSS variables from `:root{}` and sanitize to Tailwind V4 friendly naming convention
- * 2. Adds `'hds-'` infix 
- * 
- * For example :
- * `--color-primitive-black` → `--color-hds-primitive-black`
- * `--font-weight-bold` → `--font-hds-weight-bold`
+ * Extracts CSS variable declarations from the `:root{}` block of a CSS file
+ * and remove the design system prefix.
+ */
+function extractCssVariables(rawCss: string): FileContentResult {
+    // Extract :root{} content
+    const rootMatch = REGEX.rootBlock.exec(rawCss)
+
+    if (rootMatch?.[1]) {
+        // Remove Terrazzo generated prefixes to make CSS variables match Tailwind naming conventions
+        const tailwindCompliantCssVar = rootMatch[1].replace(REGEX.legacyDesignSystemPrefix, "--")
+        return { content: tailwindCompliantCssVar, isRootContent: true }
+    }
+
+    // If not in :root{} block, return unchanged full content
+    return { content: rawCss, isRootContent: false }
+}
+
+/**
+ * List all CSS variables present
+ */
+function findCssVariables(rawCss: string): Set<string> {
+    const cssVariables = new Set<string>()
+    let match: RegExpExecArray | null = REGEX.cssVariableName.exec(rawCss)
+
+    while (match !== null) {
+        cssVariables.add(match[0])
+        match = REGEX.cssVariableName.exec(rawCss)
+    }
+    return cssVariables
+}
+
+/**
+ * Creates mappings from original CSS variable names to Tailwind V4 compatible names.
+ * Adds the 'hds-' infix to ensure unique variable names within our design system.
  *
- * 3. Separates variables between 2 groups :
- *   - Direct values in @theme block 
- *   - References in @theme inline (perfect to work on themes easily)
- * 
- * @example 
- * ```bashrc
- *   bun run src/scripts/to-tailwind-v4.ts --input tokens/base.css --output tokens/tailwind.css
- * ```
-*/
-function toTailwindV4(options: TransformOptions): void {
-    const { inputPath, outputPath, additionalFiles = [] } = options
+ * @see {@link https://tailwindcss.com/docs/theme#default-theme-variable-reference}
+ */
+function buildVariableMappings(cssVariables: Set<string>): Record<string, string> {
+    const mappings: Record<string, string> = {}
 
+    for (const variable of cssVariables) {
+        // Skip if variable already has -hds infix in the right position
+        mappings[variable] = variable.match(REGEX.hdsInfixPattern)
+            ? variable
+            : variable.replace(REGEX.addHdsInfix, "--$1-hds-")
+    }
+
+    return mappings
+}
+
+/**
+ * Transforms raw CSS by replacing variable names according to the provided mappings.
+ * Handles both variable declarations and variable references in var(--) functions.
+ */
+function applyCssTransformations(rawCss: string, variableMappings: Record<string, string>): string {
+    let result = rawCss
+
+    // Process variables from longest to shortest to avoid partial replacements
+    const sortedVars = Object.keys(variableMappings).sort((a, b) => b.length - a.length)
+
+    // First, transform variable declarations
+    for (const originalVar of sortedVars) {
+        const transformedVar = variableMappings[originalVar]
+        result = result.replace(REGEX.createDeclarationPattern(originalVar), `${transformedVar}:`)
+    }
+
+    // Then, transform variable references
+    return result.replace(REGEX.cssVariableReference, (match, varName) =>
+        varName in variableMappings ? `var(${variableMappings[varName]})` : match,
+    )
+}
+
+/**
+ * Processes raw CSS for transformation
+ */
+function processRawCss(rawCss: string, applyTransform: boolean, variableMappings: Record<string, string>): string {
+    if (!applyTransform) return rawCss
+
+    const extractResult = extractCssVariables(rawCss)
+
+    // Only transform raw css if it's from a :root block or if transformation is explicitly requested
+    return extractResult.isRootContent
+        ? applyCssTransformations(extractResult.content, variableMappings)
+        : applyCssTransformations(rawCss, variableMappings)
+}
+
+/**
+ * Determines if a CSS line should be in `@theme` or `@theme inline` based on
+ * whether it references other variables
+ *
+ * @see {@link https://tailwindcss.com/docs/theme#referencing-other-variables}
+ */
+function determineThemePosition(cssLine: string): ContentPositionInFile {
+    return cssLine.includes("var(--") ? ContentPositionInFile.ThemeInline : ContentPositionInFile.Theme
+}
+
+/**
+ * Processes a line of CSS content, skipping comments and empty lines
+ */
+function processContentLine(
+    line: string,
+    sectionContent: Record<ContentPositionInFile, string[]>,
+    location?: ContentPositionInFile,
+): void {
+    const trimmedLine = line.trim()
+
+    // Skip empty lines and comments
+    if (!trimmedLine || trimmedLine.startsWith("/*")) return
+
+    // Determine where this line belongs
+    const sectionType = location || determineThemePosition(trimmedLine)
+    sectionContent[sectionType].push(trimmedLine)
+}
+
+/**
+ * Transforms a CSS file from Terrazzo format to Tailwind V4 CSS-first config.
+ * @see {@link https://tailwindcss.com/docs/theme}
+ */
+function toTailwindV4Config({ inputPath, outputPath, additionalFiles = [] }: TransformOptions): void {
     try {
-        const cssContent = readFileSync(inputPath, "utf-8")
-
-        // Extract just the :root{} section (ignoring media queries)
-        // Support both :root and *:root* syntax
-        const rootRegex = /\*?:root\*?\s*{([^}]*)}/
-        const rootMatch = rootRegex.exec(cssContent)
-
-        if (!rootMatch || !rootMatch[1]) {
-            throw new Error("Could not find :root{} section in CSS file")
+        // 1. Initialize content containers by section
+        const sectionContent: Record<ContentPositionInFile, string[]> = {
+            [ContentPositionInFile.Start]: [],
+            [ContentPositionInFile.Theme]: [],
+            [ContentPositionInFile.ThemeInline]: [],
+            [ContentPositionInFile.End]: [],
         }
 
-        // Get the content inside the :root{} block and remove the `happy-ds-` prefix
-        const rootContent = rootMatch[1].replace(/--happy-ds-/g, "--")
+        // 2. Read the main input file
+        const terrazzoCss = safeReadFile(inputPath, true)
 
-        // Add `hds-` infix to variable name
-        function addHdsPrefix(name: string): string {
-            return name.replace(/^--([\w]+)-/, "--$1-hds-")
+        // 3. Extract and collect CSS variables for transformation
+        const terrazzoCssVariables = extractCssVariables(terrazzoCss!)
+        let allCssContent = terrazzoCssVariables.content
+
+        // 4. Collect additional css for variable scanning
+        const validAdditionalCssFiles = additionalFiles.filter((file) => file.transform)
+
+        for (const file of validAdditionalCssFiles) {
+            const rawCss = safeReadFile(file.path)
+            if (!rawCss) continue
+
+            const additionalCssVars = extractCssVariables(rawCss)
+            allCssContent += "\n" + additionalCssVars.content
         }
 
-        // 1. Find all CSS variable names in all content
-        const varRegex = /--[\w-]+/g
-        const allCssVars = new Set<string>()
-        let match: RegExpExecArray | null | undefined
+        // 5. Build variable mappings
+        const cssVariables = findCssVariables(allCssContent)
+        const variableMappings = buildVariableMappings(cssVariables)
 
-        // Find all variables in the :root content
-        let contentToSearch = rootContent
+        // 6. Process and categorize main file content
 
-        // Include content from additional files that need transformation
-        additionalFiles.forEach((file) => {
-            if (file.transform && existsSync(file.path)) {
-                try {
-                    let fileContent = readFileSync(file.path, "utf-8")
+        applyCssTransformations(terrazzoCssVariables.content, variableMappings)
+            .split("\n")
+            .forEach((line) => {
+                processContentLine(line, sectionContent)
+            })
 
-                    // Extract content from :root{} (for the files that have it)
-                    const rootRegex = /\*?:root\*?\s*{([^}]*)}/
-                    const rootMatch = rootRegex.exec(fileContent)
-
-                    if (rootMatch?.[1]) {
-                        // Use content from inside the :root{} block
-                        fileContent = rootMatch[1].replace(/--happy-ds-/g, "--")
-                    }
-
-                    contentToSearch += "\n" + fileContent
-                } catch (_err) {
-                    console.warn(`⚠️ Warning: Couldn't read additional file for variable scanning: ${file.path}`)
-                }
-            }
-        })
-
-        // 1. Get all CSS variables (--abc)
-        while (match !== null) {
-            if (match?.[0]) allCssVars.add(match[0])
-            match = varRegex.exec(contentToSearch)
-        }
-
-        // 2. Create mapping of original to transformed variable names
-        const cssVarMappings: Record<string, string> = {}
-        Array.from(allCssVars).forEach((v) => {
-            cssVarMappings[v] = addHdsPrefix(v)
-        })
-
-        // 3. Transform the root content
-        let sanitizedRootContent = rootContent
-
-        // Sort variables by length (longest first) to avoid partial replacements
-        const sortedCssVars = Object.keys(cssVarMappings).sort((a, b) => b.length - a.length)
-
-        // Replace all occurrences, both in variable declarations and var(--) references
-        for (const originalCssVar of sortedCssVars) {
-            const sanitizedCssVar = cssVarMappings[originalCssVar]
-            const cssVarRegExp = new RegExp(originalCssVar, "g")
-            sanitizedRootContent = sanitizedRootContent.replace(cssVarRegExp, sanitizedCssVar)
-        }
-
-        // 4. Split into direct values and references
-        const directValues: Array<string> = []
-        const variableReferences: Array<string> = []
-
-        sanitizedRootContent.split("\n").forEach((line) => {
-            const trimmedLine = line.trim()
-            if (!trimmedLine || trimmedLine.startsWith("/*")) {
-                return
-            }
-
-            if (trimmedLine.includes("var(--")) {
-                variableReferences.push(trimmedLine)
-            } else {
-                directValues.push(trimmedLine)
-            }
-        })
-
-        // 5. Process additional files
-        const startContent: Array<string> = []
-        const themeContent: Array<string> = []
-        const themeInlineContent: Array<string> = []
-        const endContent: Array<string> = []
-
+        // 7. Process additional files
         for (const file of additionalFiles) {
-            if (!existsSync(file.path)) {
-                console.warn(`⚠️ Warning: File not found: ${file.path}`)
-                continue
+            const fileContent = safeReadFile(file.path)
+            if (!fileContent) continue
+
+            const processedContent = processRawCss(fileContent, !!file.transform, variableMappings)
+
+            // Handle content based on file location
+            if (file.location === ContentPositionInFile.Start || file.location === ContentPositionInFile.End) {
+                // For start and end sections, keep content as a whole
+                sectionContent[file.location].push(processedContent)
+            } else {
+                // For @theme sections, process line by line
+                processedContent.split("\n").forEach((line) => {
+                    processContentLine(line, sectionContent, file.location)
+                })
             }
 
-            try {
-                let fileContent = readFileSync(file.path, "utf-8")
-
-                // Apply transformation (if needed)
-                if (file.transform) {
-                    // Extract content from :root{} block if it's present
-                    const rootRegex = /\*?:root\*?\s*{([^}]*)}/
-                    const rootMatch = rootRegex.exec(fileContent)
-
-                    if (rootMatch?.[1]) {
-                        // Replace content with what's inside our :root{} block
-                        fileContent = rootMatch[1].replace(/--happy-ds-/g, "--")
-                    }
-
-                    // Sanitize variables in the content
-                    for (const originalCssVar of sortedCssVars) {
-                        const sanitizedCssVar = cssVarMappings[originalCssVar]
-                        const varRegExp = new RegExp(originalCssVar, "g")
-                        fileContent = fileContent.replace(varRegExp, sanitizedCssVar)
-                    }
-                }
-
-                // Add content to the appropriate section (@theme, @theme inline, start or end of the file)
-                switch (file.location) {
-                    case ContentPositionInFile.Start:
-                        startContent.push(fileContent)
-                        break
-                    case ContentPositionInFile.Theme:
-                        // Split content into lines and add each line to directValues
-                        fileContent.split("\n").forEach((line) => {
-                            const trimmedLine = line.trim()
-                            if (trimmedLine && !trimmedLine.startsWith("/*")) {
-                                themeContent.push(trimmedLine)
-                            }
-                        })
-                        break
-                    case ContentPositionInFile.ThemeInline:
-                        // Split content into lines and add each line to variableReferences
-                        fileContent.split("\n").forEach((line) => {
-                            const trimmedLine = line.trim()
-                            if (trimmedLine && !trimmedLine.startsWith("/*")) {
-                                themeInlineContent.push(trimmedLine)
-                            }
-                        })
-                        break
-                    case ContentPositionInFile.End:
-                        endContent.push(fileContent)
-                        break
-                    default:
-                        endContent.push(fileContent)
-                        break
-                }
-
-                console.log(`✅ Merged content from: ${file.path} (${file.location})`)
-            } catch (err) {
-                console.warn(`⚠️ Warning: Error processing additional file: ${file.path}`, err)
-            }
+            console.log(`Ingested and processed ${file.path}`)
         }
 
-        const headerComment = `/* -------------------------------------------
+        // 8. Build output part by part
+        const outputParts = [
+            `/* -------------------------------------------
  *  Autogenerated. DO NOT EDIT BY HAND !
- * ------------------------------------------- */`
+ * ------------------------------------------- */`,
+        ]
 
-        // Create new CSS with all sections
-        const parts = [headerComment]
-
-        // Start of file content (eg: custom fonts declaration)
-        if (startContent.length > 0) {
-            parts.push(startContent.join("\n"))
+        // Add start block
+        if (sectionContent[ContentPositionInFile.Start].length > 0) {
+            outputParts.push(sectionContent[ContentPositionInFile.Start].join("\n"))
         }
 
-        /**
-         * Main theme
-         * @see https://tailwindcss.com/docs/theme#theme-variable-namespaces
-         */
-        parts.push("\n@theme {")
-        parts.push([...directValues, ...themeContent].join("\n"))
-        parts.push("}")
+        // Add @theme blocks
+        outputParts.push("\n@theme {")
+        if (sectionContent[ContentPositionInFile.Theme].length > 0) {
+            outputParts.push(sectionContent[ContentPositionInFile.Theme].join("\n"))
+        }
+        outputParts.push("}")
 
-        /**
-         * References to other in-theme variables
-         * @see https://tailwindcss.com/docs/theme#referencing-other-variables
-         */
-        parts.push("\n@theme inline {")
-        parts.push([...variableReferences, ...themeInlineContent].join("\n"))
-        parts.push("}")
+        outputParts.push("\n@theme inline {")
+        if (sectionContent[ContentPositionInFile.ThemeInline].length > 0) {
+            outputParts.push(sectionContent[ContentPositionInFile.ThemeInline].join("\n"))
+        }
+        outputParts.push("}")
 
-        // Additional CSS content that doesn't really fit in any other position
-        if (endContent.length > 0) {
-            parts.push(endContent.join("\n"))
+        // Add end block
+        if (sectionContent[ContentPositionInFile.End].length > 0) {
+            outputParts.push(sectionContent[ContentPositionInFile.End].join("\n"))
         }
 
-        // Write our complete Tailwind V4 config
-        writeFileSync(outputPath, parts.join("\n"), "utf-8")
-
-        console.log(`✅ Tailwind V4 config generated from ${inputPath}`)
+        // 9. Write the final output file
+        writeFileSync(outputPath, outputParts.join("\n"), "utf-8")
+        console.log("✅ Tailwind V4 config generated successfully !")
     } catch (error) {
-        console.error("Error transforming CSS:", error)
+        console.error("❌ Error generating Tailwind config :", error)
         process.exit(1)
     }
 }
 
-// Process command line arguments
-const args = process.argv.slice(2)
-let inputPath = "input.css"
-let outputPath = "output.css"
-
-// Parse command line arguments
-for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--input" || args[i] === "-i") {
-        inputPath = args[++i]
-    } else if (args[i] === "--output" || args[i] === "-o") {
-        outputPath = args[++i]
-    } else if (i === 0 && !args[i].startsWith("-")) {
-        // Support for positional arguments for backward compatibility
-        inputPath = args[i]
-    } else if (i === 1 && !args[i].startsWith("-")) {
-        outputPath = args[i]
+/**
+ * Parses CLI arguments to extract input and output file paths.
+ */
+function parseCliArgs(args: string[]): { inputPath: string; outputPath: string } {
+    const options = {
+        inputPath: "input.css",
+        outputPath: "output.css",
     }
+
+    // Process named arguments
+    for (let i = 0; i < args.length; i++) {
+        if ((args[i] === "--input" || args[i] === "-i") && i + 1 < args.length) {
+            options.inputPath = args[++i]
+        } else if ((args[i] === "--output" || args[i] === "-o") && i + 1 < args.length) {
+            options.outputPath = args[++i]
+        }
+    }
+
+    // Process positional arguments
+    if (args.length > 0 && !args[0].startsWith("-")) options.inputPath = args[0]
+    if (args.length > 1 && !args[1].startsWith("-")) options.outputPath = args[1]
+
+    return options
 }
 
-console.log(`
+function main(): void {
+    const { inputPath, outputPath } = parseCliArgs(process.argv.slice(2))
+
+    console.log(`
 Tailwind V4 transformer
 --------------
 Input: ${inputPath}
 Output: ${outputPath}
 `)
 
-const additionalFiles = [
-    // Fonts declaration
-    {
-        path: "src/fonts.css",
-        location: ContentPositionInFile.Start,
-        transform: false,
-    },
-    // Raw gradients
-    {
-        path: "src/gradients.css",
-        location: ContentPositionInFile.ThemeInline,
-        transform: true,
-    },
-    // Custom tailwind directives (utilities, variants, custom variants etc)
-    {
-        path: "src/directives.tw.css",
-        location: ContentPositionInFile.End,
-        transform: true,
-    },
-]
+    const additionalFiles = [
+        {
+            path: "src/fonts.css",
+            location: ContentPositionInFile.Start,
+            transform: false,
+        },
+        {
+            path: "src/gradients.css",
+            location: ContentPositionInFile.ThemeInline,
+            transform: true,
+        },
+        {
+            path: "src/directives.tw.css",
+            location: ContentPositionInFile.End,
+            transform: true,
+        },
+    ]
 
-// Run the transformation
-toTailwindV4({
-    inputPath,
-    outputPath,
-    additionalFiles,
-})
+    toTailwindV4Config({
+        inputPath,
+        outputPath,
+        additionalFiles,
+    })
+}
+
+main()
