@@ -3,8 +3,7 @@ pragma solidity ^0.8.20;
 
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -286,18 +285,12 @@ contract ScrappyAccount is
             revert InvalidValidatorValue();
         }
 
-        address validator;
-        assembly {
-            validator := mload(add(add(validatorData, 0x20), 12)) // skip first 12 bytes
-        }
-
+        address validator = address(uint160(uint256(bytes32(validatorData))));
         if (!validators[validator]) {
             revert ValidatorNotFound(validator);
         }
 
-        bool success;
-        bytes memory returnData;
-        (success, returnData) = validator.excessivelySafeCall(
+        (bool success, bytes memory returnData) = validator.excessivelySafeCall(
             happyTx.executeGasLimit,
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
@@ -305,8 +298,7 @@ contract ScrappyAccount is
         );
 
         if (!success) {
-            bytes4 revertData = abi.decode(returnData, (bytes4));
-            revert ValidatorReverted(revertData);
+            revert ValidatorReverted(abi.decode(returnData, (bytes4)));
         }
 
         return bytes4(returnData) == bytes4(0);
