@@ -11,7 +11,6 @@ import {
     type RpcTransactionRequest,
     decodeFunctionData,
     formatEther,
-    formatGwei,
     hexToBigInt,
     isAddress,
 } from "viem"
