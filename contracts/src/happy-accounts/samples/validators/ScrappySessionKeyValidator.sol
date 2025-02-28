@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -21,7 +20,6 @@ struct SessionKeyValidatorStorage {
 contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;
     using HappyTxLib for HappyTx;
-    using MessageHashUtils for bytes32;
 
     // ====================================================================================================
     // EVENTS
@@ -90,8 +88,7 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
 
         bytes memory signature = happyTx.validatorData;
         happyTx.validatorData = ""; // set to "" to get the hash
-        // address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature); // TODO: gives error for some reason
-        address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(keccak256(happyTx.encode())), signature);
+        address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
         happyTx.validatorData = signature; // revert back to original value
 
         return signer == sessionKey ? bytes4(0) : bytes4(InvalidOwnerSignature.selector);
