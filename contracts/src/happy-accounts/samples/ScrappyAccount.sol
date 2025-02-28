@@ -35,7 +35,9 @@ import {
     FutureNonceDuringSimulation,
     InvalidOwnerSignature,
     NotFromEntryPoint,
-    UnknownDuringSimulation
+    UnknownDuringSimulation,
+    VALIDATOR_KEY,
+    EXECUTOR_KEY
 } from "../utils/Common.sol";
 
 // [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
@@ -172,13 +174,13 @@ contract ScrappyAccount is
         emit ValidatorRemoved(validator);
     }
 
-    function addExecutor(address executor) external onlyOwner {
+    function addExecutor(address executor) external onlySelfOrOwner {
         if (executors[executor]) revert ExecutorAlreadyRegistered(executor);
         executors[executor] = true;
         emit ExecutorAdded(executor);
     }
 
-    function removeExecutor(address executor) external onlyOwner {
+    function removeExecutor(address executor) external onlySelfOrOwner {
         if (!executors[executor]) revert ExecutorNotRegistered(executor);
         delete executors[executor];
         emit ExecutorRemoved(executor);
@@ -203,10 +205,7 @@ contract ScrappyAccount is
 
         bool validationSuccess;
 
-        (bool found, bytes memory validatorData) = HappyTxLib.getExtraDataValue(
-            happyTx.extraData,
-            0x000001 // Validator key
-        );
+        (bool found, bytes memory validatorData) = HappyTxLib.getExtraDataValue(happyTx.extraData, VALIDATOR_KEY);
 
         if (found) {
             validationSuccess = _validateWithExternalValidator(happyTx, validatorData);
@@ -240,10 +239,7 @@ contract ScrappyAccount is
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
         uint256 gasStart = gasleft();
         // Check for executor in extraData
-        (bool found, bytes memory executorData) = HappyTxLib.getExtraDataValue(
-            happyTx.extraData,
-            0x000002 // Executor key
-        );
+        (bool found, bytes memory executorData) = HappyTxLib.getExtraDataValue(happyTx.extraData, EXECUTOR_KEY);
 
         if (found) {
             // Execute with external executor
