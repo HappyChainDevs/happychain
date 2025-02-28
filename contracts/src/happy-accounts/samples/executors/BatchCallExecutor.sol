@@ -11,6 +11,7 @@ import {ICustomBoopExecutor} from "../../interfaces/extensions/ICustomBoopExecut
 
 import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
+import {BATCH_CALL_KEY} from "../../utils/Common.sol";
 
 /// @dev The execution data of a call in a batch
 struct Execution {
@@ -21,10 +22,22 @@ struct Execution {
 
 contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
     // ====================================================================================================
+    // ERRORS
+
+    /**
+     * @dev Selector returned by {BatchCallExecutor.execute} when no batch call data is found in the extraData.
+     *      This indicates that the transaction failed to include the required batch call information.
+     */
+    error MissingBatchCallData();
+
+    // ====================================================================================================
     // CONSTANTS
 
     /// @dev Gas overhead for executing the execute function, not measured by gasleft()
     uint256 private constant GAS_OVERHEAD_BUFFER = 100;
+
+    /// @dev Overall gas overhead for the execute function, not measured by gasleft()
+    uint256 private constant OVERALL_GAS_OVERHEAD_BUFFER = 500;
 
     // ====================================================================================================
     // CONSTRUCTOR
@@ -43,16 +56,14 @@ contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, Own
 
     function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory output) {
         // 1. Parse the extraData with a key, to retrieve the calls
-        (bool found, bytes memory calls) = HappyTxLib.getExtraDataValue(happyTx.extraData, 0x000100); // BatchCall key
-        require(found, "BatchCall not found");
+        (bool found, bytes memory calls) = HappyTxLib.getExtraDataValue(happyTx.extraData, BATCH_CALL_KEY);
+        if (!found) revert MissingBatchCallData();
+
         // 2. decodeBatch the bytes memory -> bytes memory[]
         Execution[] memory executionBatch = abi.decode(calls, (Execution[]));
+
         // 3. call _executeBatch -> executes each call individually
-        output = _executeBatch(executionBatch);
-        // 4. return the output
-        // TODO output.gas += OVERALL_GAS_OVERHEAD_BUFFER; (gas used for this function + _executeBatch's for loop maybe)
-        // TODO , OR return directly inline
-        // return _executeBatch(executionBatch) + OVERALL_GAS_OVERHEAD_BUFFER;
+        return _executeBatch(executionBatch);
     }
 
     // ====================================================================================================
@@ -61,8 +72,7 @@ contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, Own
     /// @dev Executes a batch of calls, returns the total gas used
     function _executeBatch(Execution[] memory executionBatch) internal returns (ExecutionOutput memory output) {
         // For each call, execute it and add the gas used to the total
-        // Return the total gas used
-        // If any call reverts, the entire batch reverts, return that calls output.revertData
+        // If any call reverts, the entire batch reverts, return that call's output.revertData
         for (uint256 i = 0; i < executionBatch.length; i++) {
             ExecutionOutput memory callOutput = _execute(executionBatch[i]);
             if (callOutput.revertData.length > 0) {
@@ -72,6 +82,7 @@ contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, Own
 
             output.gas += callOutput.gas;
         }
+        output.gas += OVERALL_GAS_OVERHEAD_BUFFER;
     }
 
     /// @dev Executes a single call, returns the gas used
@@ -86,36 +97,6 @@ contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, Own
         output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
     }
 
-    /*
-    OR, maybe we just have one function, saves on call/jump gas to _execute for each call
-    function _executeBatch(Execution[] memory executionBatch) internal returns (ExecutionOutput memory output) {
-        uint256 totalGas = 0;
-        
-        for (uint256 i = 0; i < executionBatch.length; i++) {
-            uint256 startGas = gasleft();
-            
-            // Execute the call
-            (bool success, bytes memory result) = executionBatch[i].dest.call{value: executionBatch[i].value}(
-                executionBatch[i].callData
-            );
-            
-            // Calculate gas used for this call
-            uint256 gasUsed = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
-            totalGas += gasUsed;
-            
-            // If any call fails, return immediately with the error
-            if (!success) {
-                output.revertData = result;
-                output.gas = totalGas;
-                return output;
-            }
-        }
-        
-        // All calls succeeded
-        output.gas = totalGas;
-        return output;
-    }
-    */
-
+    /// @dev Authorizes the upgrade of the contract.
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
