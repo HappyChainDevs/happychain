@@ -4,15 +4,17 @@ HappyEntryPoint Gas Report For Self-Paying Transactions
    ----------------------------------------------------
   HappyTxLib.decode gas usage:  3964
   excessivelySafeCall (execute) overhead:  5543
-  excessivelySafeCall  (payout) overhead:  2409
-     Tx Gas used:  131137
+  txGasFromCallGas overall gas usage:  383
+  excessivelySafeCall  (payout) overhead:  2435
+     Tx Gas used:  131952
   
 2. Second Transaction (Cold + Initialized Storage)
    ----------------------------------------------------
   HappyTxLib.decode gas usage:  3964
   excessivelySafeCall (execute) overhead:  5543
-  excessivelySafeCall  (payout) overhead:  2409
-     TxGas used:  79837
+  txGasFromCallGas overall gas usage:  383
+  excessivelySafeCall  (payout) overhead:  2435
+     TxGas used:  80652
 
 HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
   
@@ -20,15 +22,17 @@ HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
    ----------------------------------------------------
   HappyTxLib.decode gas usage:  3964
   excessivelySafeCall (execute) overhead:  5543
-  excessivelySafeCall  (payout) overhead:  4299
-     Tx Gas used:  133498
+  txGasFromCallGas overall gas usage:  383
+  excessivelySafeCall  (payout) overhead:  4303
+     Tx Gas used:  134291
   
 2. Second Transaction (Cold + Initialized Storage)
    ----------------------------------------------------
   HappyTxLib.decode gas usage:  3964
   excessivelySafeCall (execute) overhead:  5543
-  excessivelySafeCall  (payout) overhead:  4299
-     TxGas used:  82198
+  txGasFromCallGas overall gas usage:  383
+  excessivelySafeCall  (payout) overhead:  4303
+     TxGas used:  82991
 
 ScrappyAccount execute gas usage
    ----------------------------------------------------
@@ -42,4 +46,8 @@ ScrappyAccount payout gas usage
 ScrappyPaymaster payout gas usage
    ----------------------------------------------------
   PAYMENT_OVERHEAD_GAS 9480
+
+HappyTxLib txGasFromCallGas payout gas usage
+   ----------------------------------------------------
+  txGasFromCallGas function gas usage:  2
 

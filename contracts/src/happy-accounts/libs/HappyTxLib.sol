@@ -3,6 +3,8 @@ pragma solidity ^0.8.20;
 
 import {HappyTx} from "../core/HappyTx.sol";
 
+// [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
+
 library HappyTxLib {
     /// Selector returned by {decode} when unable to properly decode a happyTx.
     error MalformedHappyTx();
@@ -12,6 +14,12 @@ library HappyTxLib {
 
     /// @dev Assuming all calldata bytes are non-zero (16 gas per byte).
     uint256 private constant CALLDATA_GAS_PER_BYTE = 16;
+
+    /// @dev Gas overhead for calling the txGasFromCallGas function
+    uint256 private constant FUNCTION_DISPATCH_OVERHEAD = 380;
+
+    /// @dev Standard Ethereum transaction base cost (21_000)
+    uint256 private constant INTRINSIC_TX_GAS = 21_000;
 
     /**
      * Encodes a HappyTx struct into a compact bytes array, for minimal memory usage.
@@ -237,20 +245,29 @@ library HappyTxLib {
      * @dev Returns an overestimation of the gas consumed by a transaction
      * @param callGas The gas consumed by the function call
      * @param calldataLength The length of the calldata
-     * @return The estimated total gas consumption including:
+     * @return txGas The estimated total gas consumption including:
      *         - 21000 fixed intrinsic gas
      *         - Calldata gas cost assuming all non-zero bytes
      *         - callGas
-     *         - Function dispatch overhead (TODO)
+     *         - Function dispatch overhead
      */
-    function txGasFromCallGas(uint256 callGas, uint256 calldataLength) internal pure returns (uint256) {
-        return 21000 + (200 + calldataLength) * CALLDATA_GAS_PER_BYTE + callGas; // + TODO;
+    function txGasFromCallGas(uint256 callGas, uint256 calldataLength) internal view returns (uint256 txGas) {
+        // [LOGGAS_INTERNAL] uint256 startGas = gasleft();
+
+        // forgefmt: disable-next-item
+        txGas = (200 + calldataLength) * CALLDATA_GAS_PER_BYTE
+            + callGas
+            + INTRINSIC_TX_GAS
+            + FUNCTION_DISPATCH_OVERHEAD;
+
+        // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
+        // [LOGGAS_INTERNAL] console.log("txGasFromCallGas function gas usage: ", startGas-endGas);
 
         // - `(200 + calldataLength) * 16` is an overestimate of the calldata part of the
         //    intrinsic gas obtained by assuming every byte is non-zero in the tx data.
-        //     - A transaction without calldata and access list is at most ~280 bytes
-        //       but due to RLP encoding this should be lower. 200 is a good compromise,
-        //       essentially since we already overcharge for the bytes whose value is 0.
+        //     - A transaction without calldata and access list is at most ~220 bytes
+        //       after RLP encoding. 200 is a good compromise, essentially
+        //       since we already overcharge for the bytes whose value is 0.
     }
 
     /**

@@ -177,6 +177,17 @@ contract HappyEntryPointGasEstimator is Test {
     }
 
     // ====================================================================================================
+    // FUNCTION DISPATCH OVERHEAD ESTIMATION
+
+    function testEstimateFunctionDispatchOverhead() public {
+        console.log("\nHappyTxLib txGasFromCallGas payout gas usage");
+        console.log(" ----------------------------------------------------");
+        uint256 callGas = 100;
+        uint256 calldataLength = 100;
+        HappyTxLib.txGasFromCallGas(callGas, calldataLength);
+    }
+
+    // ====================================================================================================
     // HAPPY TX CREATION UTILS
 
     /// @dev Internal helper function to create a signed happy tx.
