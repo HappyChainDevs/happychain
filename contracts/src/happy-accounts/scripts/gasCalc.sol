@@ -182,7 +182,7 @@ contract HappyEntryPointGasEstimator is Test {
     function testEstimateFunctionDispatchOverhead() public pure {
         console.log("\nHappyTxLib txGasFromCallGas payout gas usage");
         console.log(" ----------------------------------------------------");
-        console.log("  txGasFromCallGas function gas usage: 2"); // Hardcoded for sake of gas-report
+        console.log("  txGasFromCallGas function gas usage: 3"); // Hardcoded for sake of gas report generation
     }
 
     // ====================================================================================================
