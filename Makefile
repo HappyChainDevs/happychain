@@ -404,7 +404,7 @@ contracts.clean:
 install-frozen:
 	# --frozen-lockfile will not generate the lockfile if missing
 	@if [ -r bun.lockb ]; then \
-		bun install; \
+		bun install --frozen-lockfile; \
 	else \
 		bun install; \
 	fi
