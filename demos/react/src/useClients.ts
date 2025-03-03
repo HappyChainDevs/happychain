@@ -9,13 +9,14 @@ import {
     createWalletClient,
     custom,
 } from "viem"
+import { eip5792Actions, type Eip5792Actions } from "viem/experimental"
 
 /**
  * Creates custom public + wallet clients using the HappyProvider.
  */
 export default function useClients(): {
     publicClient: PublicClient
-    walletClient: WalletClient<CustomTransport, undefined, Account> | null
+    walletClient: WalletClient<CustomTransport, undefined, Account> & Eip5792Actions | null
 } {
     const { provider, user } = useHappyChain()
 
@@ -27,7 +28,7 @@ export default function useClients(): {
                 ? createWalletClient({
                       account: user.address,
                       transport: custom(provider),
-                  })
+                  }).extend(eip5792Actions())
                 : null,
         [user, provider],
     )
