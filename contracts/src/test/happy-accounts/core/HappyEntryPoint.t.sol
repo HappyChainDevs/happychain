@@ -11,7 +11,7 @@ import {HappyTxTestUtils} from "../Utils.sol";
 import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
-import {HappyEntryPoint} from "../../../happy-accounts/core/HappyEntryPoint.sol";
+import {HappyEntryPoint, ValidationReverted} from "../../../happy-accounts/core/HappyEntryPoint.sol";
 import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
 import {ScrappyPaymaster} from "../../../happy-accounts/samples/ScrappyPaymaster.sol";
 import {ScrappyAccountFactory} from "../../../happy-accounts/factories/ScrappyAccountFactory.sol";
@@ -26,6 +26,7 @@ contract HappyEntryPointTest is Test {
     // CONSTANTS
 
     bytes32 private constant SALT = 0x0000000000000000000000000000000000000000000000000000000000000000;
+    address private constant ZERO_ADDRESS = address(0);
     uint256 private constant DEPOSIT = 10 ether;
 
     // ====================================================================================================
@@ -76,10 +77,78 @@ contract HappyEntryPointTest is Test {
     }
 
     // ====================================================================================================
-    // TESTS
+    // BASIC TESTS
 
-    function testBasicSelfPayingTx() public {
+    function testSelfPayingTx() public {
+        // Self-paying: account == paymaster
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, smartAccount, dest, privKey);
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    function testPaymasterSponsoredTx() public {
+        // Paymaster-sponsored: paymaster is the ScrappyPaymaster
         HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
         happyEntryPoint.submit(happyTx.encode());
     }
+
+    function testSubmitterSponsoredTx() public {
+        // Submitter-sponsored: paymaster is zero address
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, ZERO_ADDRESS, dest, privKey);
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    // ====================================================================================================
+    // BAISC SIMULATION TESTS
+
+    function testSimulateSelfPayingTx() public {
+        // Self-paying simulation: account == paymaster
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, smartAccount, dest, privKey);
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    function testSimulatePaymasterSponsoredTx() public {
+        // Paymaster-sponsored simulation: paymaster is the ScrappyPaymaster
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    function testSimulateSubmitterSponsoredTx() public {
+        // Submitter-sponsored simulation: paymaster is zero address
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, ZERO_ADDRESS, dest, privKey);
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    // ====================================================================================================
+    // VALIDATION TESTS
+
+    function testValidatorReverts() public {
+        // Create a basic HappyTx
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, ZERO_ADDRESS, dest, privKey);
+
+        // Corrupt the validatorData with invalid signature format (not proper r,s,v format)
+        // This will cause the recover function to revert during validation
+        happyTx.validatorData = hex"deadbeef";
+
+        bytes memory ecdsaLibError = abi.encodeWithSelector(
+            bytes4(keccak256("ECDSAInvalidSignatureLength(uint256)")),
+            4 // length of "deadbeef"
+        );
+
+        // The validation should revert when we submit this transaction
+        vm.expectRevert(abi.encodeWithSelector(ValidationReverted.selector, ecdsaLibError));
+
+        // Submit the transaction to trigger the revert
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    function testSimulationWithLowNonce() public {}
+
+    // ====================================================================================================
+    // EXECUTION TESTS
+
+    // ====================================================================================================
+    // PAYOUT TESTS
 }
