@@ -93,6 +93,19 @@ test-gas: ## Runs test and generate a gas report
 	forge test --gas-report
 .PHONY: test-gas
 
+####################################################################################################
+# Happy-AA Unit Tests
+
+test-happy-aa:
+	test-happyTxLib
+	test-happyEntryPoint
+	test-scrappyAccount
+	test-scrappyPaymaster
+	test-scrappyAccountFactory
+	test-scrappyAccount-upgradeability
+	test-predictDeploymentAddress
+.PHONY: test-happy-aa
+
 test-happyTxLib:
 	forge test --match-contract HappyTxLibTest -vvv
 .PHONY: test-happyTxLib
