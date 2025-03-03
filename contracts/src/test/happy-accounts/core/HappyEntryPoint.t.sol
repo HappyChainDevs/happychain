@@ -44,6 +44,7 @@ contract HappyEntryPointTest is Test {
     address private mockToken;
     uint256 private privKey;
     address private owner;
+    address private dest;
 
     function setUp() public {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
@@ -71,8 +72,14 @@ contract HappyEntryPointTest is Test {
         vm.deal(paymaster, DEPOSIT);
 
         mockToken = address(new MockERC20Token("MockTokenA", "MTA", uint8(18)));
+        dest = mockToken;
     }
 
     // ====================================================================================================
     // TESTS
+
+    function testBasicSelfPayingTx() public {
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+        happyEntryPoint.submit(happyTx.encode());
+    }
 }

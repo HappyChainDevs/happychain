@@ -97,6 +97,18 @@ test-happyTxLib:
 	forge test --match-contract HappyTxLibTest -vvv
 .PHONY: test-happyTxLib
 
+test-happyEntryPoint:
+	forge test --match-contract HappyEntryPointTest -vvv
+.PHONY: test-happyEntryPoint
+
+test-scrappyAccount:
+	forge test --match-contract ScrappyAccountTest -vvv
+.PHONY: test-scrappyAccount
+
+test-scrappyPaymaster:
+	forge test --match-contract ScrappyPaymasterTest -vvv
+.PHONY: test-scrappyPaymaster
+
 test-scrappyAccountFactory:
 	forge test --match-contract ScrappyAccountFactoryTest -vvv
 .PHONY: test-scrappyAccountFactory

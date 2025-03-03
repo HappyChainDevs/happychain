@@ -17,19 +17,17 @@ contract HappyTxTestUtils is Test {
     uint256 private constant TOKEN_MINT_AMOUNT = 10;
     uint192 private constant DEFAULT_NONCETRACK = 0;
 
-    function createSignedHappyTx(
-        address account,
-        address paymaster,
-        address dest,
-        uint256 privKey,
-        address smartAccount
-    ) public view returns (HappyTx memory) {
+    function createSignedHappyTx(address account, address paymaster, address dest, uint256 privKey)
+        public
+        view
+        returns (HappyTx memory)
+    {
         HappyTx memory happyTx = getStubHappyTx(dest, TOKEN_MINT_AMOUNT);
 
         happyTx.account = account;
         happyTx.paymaster = paymaster;
         happyTx.nonceTrack = 0;
-        happyTx.nonceValue = getNonce(smartAccount, DEFAULT_NONCETRACK);
+        happyTx.nonceValue = getNonce(account, DEFAULT_NONCETRACK);
 
         // Store original values
         uint32 origGasLimit;
