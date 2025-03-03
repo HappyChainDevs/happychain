@@ -12,7 +12,17 @@ export function injectOpenAPIDocs<TApp extends Hono>(
     config: OpenApiSpecsOptions,
     options: Partial<{ theme: Parameters<typeof apiReference>[0]["theme"]; url: string; jsonUrl: string }> = {},
 ): void {
-    const { theme = "saturn", url = "/docs", jsonUrl = `${url}/openapi.json` } = options
-    app.get(url, apiReference({ theme, spec: { url: jsonUrl } }))
+    const { theme = "kepler", url = "/docs", jsonUrl = `${url}/openapi.json` } = options
+    app.get(
+        url,
+        // https://github.com/scalar/scalar/blob/main/documentation/configuration.md
+        apiReference({
+            pageTitle: "Boop API Reference - HappyChain",
+            theme,
+            spec: { url: jsonUrl },
+            showSidebar: true,
+            hideSearch: false,
+        }),
+    )
     app.get(jsonUrl, openAPISpecs(app, config))
 }
