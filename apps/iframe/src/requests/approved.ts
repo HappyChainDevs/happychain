@@ -226,7 +226,6 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         }
 
         case "wallet_showCallsStatus": {
-            const _boopBundleId = request.payload.params?.[0]
             return undefined
         }
 

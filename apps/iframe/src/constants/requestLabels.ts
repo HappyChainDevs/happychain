@@ -6,11 +6,11 @@ export const requestLabels = {
     personal_sign: "Signature Request",
     wallet_addEthereumChain: "Add Network",
     wallet_requestPermissions: "Permission Request",
+    wallet_sendCalls: "Send Calls",
     wallet_switchEthereumChain: "Switch Network",
     wallet_watchAsset: "Watch Asset",
     [HappyMethodNames.USE_ABI]: "Record ABI",
     [HappyMethodNames.REQUEST_SESSION_KEY]: "Approve Session Key",
-    wallet_sendCalls: "Send Calls",
 } as const
 
 export const permissionDescriptions = {
