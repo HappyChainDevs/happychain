@@ -1,4 +1,5 @@
 import { getAbiItem, parseAbi, toFunctionSelector } from "viem/utils"
+
 /**
  * Used to calculate the selectors for the following _errors_
  *
@@ -19,15 +20,18 @@ const abi = parseAbi([
     "function GasPriceTooHigh()",
     "function WrongAccount()",
     "function FutureNonceDuringSimulation()",
+
     // Common.sol ErrorSelectors
     "function FutureNonceDuringSimulation()",
     "function UnknownDuringSimulation()",
     "function NotFromEntryPoint()",
     "function InvalidOwnerSignature()",
+
     // IHappyPaymaster.sol ErrorSelectors
     "function WrongTarget()",
     "function InvalidOwnerSignature()",
 ])
+
 // Attempts
 export const getErrorNameFromSelector = (selector: `0x${string}`) => getAbiItem({ abi: abi, name: selector })?.name
 export const getSelectorFromErrorName = (name: string) => {

@@ -40,7 +40,7 @@ export function addBuffer(
     const track = tracks.get(key)!
 
     // TODO: fake the revert error, feels bad, should be better
-    if (nonceValue < track.nextNonce) throw new ValidationFailedError(undefined, "0x756688fe")
+    if (nonceValue < track.nextNonce) throw new ValidationFailedError(undefined, "InvalidNonce")
 
     const existingBuffer = track.queue.get(nonceValue)
     if (existingBuffer) {
