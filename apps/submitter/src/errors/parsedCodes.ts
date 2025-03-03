@@ -20,11 +20,13 @@ const abi = parseAbi([
     "function GasPriceTooHigh()",
     "function WrongAccount()",
     "function FutureNonceDuringSimulation()",
+
     // Common.sol ErrorSelectors
     "function FutureNonceDuringSimulation()",
     "function UnknownDuringSimulation()",
     "function NotFromEntryPoint()",
     "function InvalidOwnerSignature()",
+
     // IHappyPaymaster.sol ErrorSelectors
     "function WrongTarget()",
     "function InvalidOwnerSignature()",

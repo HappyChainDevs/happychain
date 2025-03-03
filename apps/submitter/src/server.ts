@@ -30,7 +30,13 @@ export const app = new Hono()
     .use(requestIdMiddleware())
 
     // Routes
-    .get("/", (c) => c.text("Greetings from Happychain. Visit https://docs.happy.tech for more information."))
+    .get("/", (c) =>
+        c.html(
+            `Greetings from Happychain. 
+            Visit the <a href='https://docs.happy.tech'>Happy Docs</a> for more information, 
+            or the <a href='/docs'>Open API Spec</a>`,
+        ),
+    )
     .route("/api/v1/accounts", accountsApi)
     .route("/api/v1/submitter", submitterApi)
 
@@ -39,7 +45,7 @@ app.onError(async (err, c) => {
     if (err instanceof HTTPException && err.cause instanceof ZodError) {
         const errors = err.cause.issues.map((i) => ({ path: i.path.join("."), message: i.message }))
         logger.warn(errors)
-        return c.json({ errors }, 500)
+        return c.json({ errors }, 422)
     }
 
     logger.warn({ requestId: c.get("requestId"), url: c.req.url }, err)

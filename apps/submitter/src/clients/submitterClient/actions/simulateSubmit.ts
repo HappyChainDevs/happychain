@@ -11,7 +11,8 @@ export async function simulateSubmit(
     request: Omit<SubmitSimulateParameters, "abi" | "functionName">,
 ): Promise<SubmitSimulateReturnType> {
     if (!request.account) throw new Error("Account Not Found - simulateSubmit")
-    // We simulate using the zero address here so we can bypass future nonce reverts
+
+    // Simulate with zero address to allow for future nonce simulation
     const account = parseAccount(zeroAddress)
     const requestAccount = parseAccount(request.account)
 
