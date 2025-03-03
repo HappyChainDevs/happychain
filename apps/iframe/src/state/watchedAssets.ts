@@ -33,7 +33,7 @@ export function getWatchedAssets(): UserWatchedAssetsRecord {
  * If the asset does not already exist for the address, it is added.
  * Does nothing if the asset is already in the list.
  */
-export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters): void {
+export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters): boolean {
     if (!isAddress(newAsset.options.address)) {
         throw new Error("Invalid asset address format")
     }
@@ -49,6 +49,8 @@ export function addWatchedAsset(address: Address, newAsset: WatchAssetParameters
                   [address]: [...assetsForAddress, newAsset],
               }
     })
+
+    return true
 }
 
 /**

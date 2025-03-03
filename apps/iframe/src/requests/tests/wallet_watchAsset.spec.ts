@@ -41,5 +41,11 @@ describe("walletClient wallet_watchAsset", () => {
         const userAssets = getWatchedAssets()
         const assetsForAddress = userAssets[user.address]
         expect(assetsForAddress.length).toBe(1)
+
+        // add the same token a second time, shouldn't add a new token but also returns true
+        // since this isn't an error case
+        const reAddTokenReq = await dispatchHandlers(request)
+        expect(assetsForAddress.length).toBe(1)
+        expect(reAddTokenReq).toBe(true)
     })
 })
