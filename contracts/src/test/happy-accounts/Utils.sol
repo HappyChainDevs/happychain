@@ -14,7 +14,7 @@ contract HappyTxTestUtils is Test {
     using HappyTxLib for HappyTx;
     using MessageHashUtils for bytes32;
 
-    uint256 private constant TOKEN_MINT_AMOUNT = 10;
+    uint256 private constant TOKEN_MINT_AMOUNT = 1000;
     uint192 private constant DEFAULT_NONCETRACK = 0;
 
     function createSignedHappyTxForMint(address account, address paymaster, address dest, uint256 privKey)
@@ -33,12 +33,8 @@ contract HappyTxTestUtils is Test {
         uint256 privKey,
         bytes memory callData
     ) public view returns (HappyTx memory) {
-        HappyTx memory happyTx = getStubHappyTx(dest, callData);
-
-        happyTx.account = account;
-        happyTx.paymaster = paymaster;
-        happyTx.nonceTrack = 0;
-        happyTx.nonceValue = getNonce(account, DEFAULT_NONCETRACK);
+        HappyTx memory happyTx = getStubHappyTx(account, dest, paymaster, callData);
+        happyTx.nonceValue = getNonce(account);
 
         // Store original values
         uint32 origGasLimit;
@@ -72,13 +68,17 @@ contract HappyTxTestUtils is Test {
         return happyTx;
     }
 
-    function getStubHappyTx(address _dest, bytes memory _callData) public pure returns (HappyTx memory) {
+    function getStubHappyTx(address _account, address _dest, address _paymaster, bytes memory _callData)
+        public
+        pure
+        returns (HappyTx memory)
+    {
         return HappyTx({
-            account: address(0), // Stub value
+            account: _account,
             gasLimit: 4000000000, // 0xEE6B2800
             executeGasLimit: 4000000000, // 0xEE6B2800
             dest: _dest,
-            paymaster: address(0), // Stub value
+            paymaster: _paymaster,
             value: 0,
             nonceTrack: 0,
             nonceValue: 0,
@@ -97,8 +97,24 @@ contract HappyTxTestUtils is Test {
         signature = abi.encodePacked(r, s, v);
     }
 
+    function getMintCallData(address target) public pure returns (bytes memory) {
+        return abi.encodeCall(MockERC20Token.mint, (target, TOKEN_MINT_AMOUNT));
+    }
+
     function getMintCallData(address target, uint256 amount) public pure returns (bytes memory) {
         return abi.encodeCall(MockERC20Token.mint, (target, amount));
+    }
+
+    function getETHTransferCallData(address target) public pure returns (bytes memory) {
+        return abi.encodeWithSignature("transfer(address, uint256)", target, TOKEN_MINT_AMOUNT);
+    }
+
+    function getETHTransferCallData(address target, uint256 amount) public pure returns (bytes memory) {
+        return abi.encodeWithSignature("transfer(address, uint256)", target, amount);
+    }
+
+    function getNonce(address smartAccount) public view returns (uint64) {
+        return uint64(ScrappyAccount(payable(smartAccount)).getNonce(DEFAULT_NONCETRACK));
     }
 
     function getNonce(address smartAccount, uint192 nonceTrack) public view returns (uint64) {
