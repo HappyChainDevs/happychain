@@ -231,6 +231,10 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // Don't revert, as we still want to get the payment for a reverted call.
         ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
+        // TODO: We should also probably check if exec.gas = 0
+        // TODO: In case there's empty revertData but inner call fails (success = false inside execute)
+        // TODO: Even if we don't care if execute call reverted, we still want payout
+        // TODO: But we should probably add it to callstatus (for simulation or for actual execution)
         if (!success) {
             emit ExecutionReverted(returnData);
             output.callStatus = CallStatus.EXECUTION_REVERTED;
