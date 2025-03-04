@@ -258,12 +258,35 @@ contract HappyEntryPointTest is HappyTxTestUtils {
             createSignedHappyTx(smartAccount, dest, smartAccount, privKey, getETHTransferCallData(dest));
 
         // The call should fail because the smartAccount address doesn't have enough funds
+        // TODO: This doesn't have any revertData either, so the output.callStatus is CALL_SUCCEEDED, not sigma
         vm.expectRevert();
         happyEntryPoint.submit(happyTx.encode());
     }
 
     // ====================================================================================================
     // EXECUTION TESTS (SIMULATION)
+
+    function testSimulationWithZeroExecGasLimit() public {
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(dest));
+        happyTx.executeGasLimit = 0;
+        happyTx.nonceValue = getNonce(smartAccount, 0);
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The output.executeGas gives the gas usage for execute() call
+        assertEq(output.executeGas, 49473); // TODO: Is there need to check against this hardcoded value?
+
+        // Submit a new happyTx with the above execGasLimit, it should succeed
+        happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(dest));
+        happyTx.executeGasLimit = output.executeGas;
+        happyTx.nonceValue = getNonce(smartAccount, 0);
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // This should NOT revert (hopefully?)
+        happyEntryPoint.submit(happyTx.encode());
+    }
 
     // ====================================================================================================
     // PAYOUT TESTS
