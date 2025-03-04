@@ -227,6 +227,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             output.callStatus = CallStatus.SUCCESS;
         }
 
+        output.executeGas = uint32(execOutput.gas);
+
         // 3. Collect payment
 
         // This is an overestimation of the actual gas cost of the submitter.
