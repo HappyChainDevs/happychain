@@ -276,14 +276,10 @@ library HappyTxLib {
         pure
         returns (bool found, bytes memory value)
     {
-        // Early return for empty or too short data
-        if (extraData.length < 6) {
-            return (false, new bytes(0));
-        }
-
         uint256 i = 0;
         bytes3 currentKey;
         uint24 currentLen;
+
         while (i + 6 <= extraData.length) {
             assembly {
                 let offset := add(add(extraData, 0x20), i)
