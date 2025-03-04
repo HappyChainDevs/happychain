@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
 import {HappyTxTestUtils} from "../Utils.sol";
@@ -11,16 +10,12 @@ import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
-
 import {InvalidOwnerSignature} from "../../../happy-accounts/utils/Common.sol";
-import {GasPriceTooHigh, InvalidNonce} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
 
-import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
-import {ScrappyPaymaster} from "../../../happy-accounts/samples/ScrappyPaymaster.sol";
-import {ScrappyAccountFactory} from "../../../happy-accounts/factories/ScrappyAccountFactory.sol";
+import {GasPriceTooHigh, InvalidNonce} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
 import {HappyEntryPoint, ValidationFailed, ValidationReverted} from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
-contract HappyEntryPointTest is Test {
+contract HappyEntryPointTest is HappyTxTestUtils {
     using HappyTxLib for HappyTx;
     using ECDSA for bytes32;
 
@@ -35,47 +30,33 @@ contract HappyEntryPointTest is Test {
     // STATE VARIABLES
 
     DeployHappyAAContracts private deployer;
-    HappyTxTestUtils private utils;
-
     HappyEntryPoint private happyEntryPoint;
-    ScrappyAccount private scrappyAccount;
-    ScrappyPaymaster private scrappyPaymaster;
-    ScrappyAccountFactory private scrappyAccountFactory;
 
     address private smartAccount;
     address private paymaster;
-    address private mockToken;
     uint256 private privKey;
     address private owner;
-    address private dest;
+    address private dest; // The mockToken address for these tests
 
     function setUp() public {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
 
-        // Set up the utils
-        utils = new HappyTxTestUtils();
-
-        // Set up the Deployment Script
+        // Set up the Deployment Script, and deploy the happy-aa contracts as foundry-account-0
         deployer = new DeployHappyAAContracts();
-
-        // Deploy the happy-aa contracts as foundry-account-0
         vm.prank(owner);
         deployer.deployForTests();
 
         happyEntryPoint = deployer.happyEntryPoint();
-        scrappyPaymaster = deployer.scrappyPaymaster();
-        scrappyAccountFactory = deployer.scrappyAccountFactory();
-
-        smartAccount = scrappyAccountFactory.createAccount(SALT, owner);
-        paymaster = address(scrappyPaymaster);
+        paymaster = address(deployer.scrappyPaymaster());
+        smartAccount = deployer.scrappyAccountFactory().createAccount(SALT, owner);
 
         // Fund the smart account and paymaster
-        vm.deal(smartAccount, DEPOSIT);
         vm.deal(paymaster, DEPOSIT);
+        vm.deal(smartAccount, DEPOSIT);
 
-        mockToken = address(new MockERC20Token("MockTokenA", "MTA", uint8(18)));
-        dest = mockToken;
+        // Deploy a mock ERC20 token
+        dest = address(new MockERC20Token("MockTokenA", "MTA", uint8(18)));
     }
 
     // ====================================================================================================
@@ -83,42 +64,42 @@ contract HappyEntryPointTest is Test {
 
     function testSelfPayingTx() public {
         // Self-paying: account == paymaster
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, smartAccount, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, smartAccount, dest, privKey);
         happyEntryPoint.submit(happyTx.encode());
     }
 
     function testPaymasterSponsoredTx() public {
         // Paymaster-sponsored: paymaster is the ScrappyPaymaster
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
         happyEntryPoint.submit(happyTx.encode());
     }
 
     function testSubmitterSponsoredTx() public {
         // Submitter-sponsored: paymaster is zero address
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, ZERO_ADDRESS, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, ZERO_ADDRESS, dest, privKey);
         happyEntryPoint.submit(happyTx.encode());
     }
 
     // ====================================================================================================
-    // BAISC SIMULATION TESTS
+    // BAISC TESTS (SIMULATION)
 
     function testSimulateSelfPayingTx() public {
         // Self-paying simulation: account == paymaster
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, smartAccount, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, smartAccount, dest, privKey);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         happyEntryPoint.submit(happyTx.encode());
     }
 
     function testSimulatePaymasterSponsoredTx() public {
         // Paymaster-sponsored simulation: paymaster is the ScrappyPaymaster
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         happyEntryPoint.submit(happyTx.encode());
     }
 
     function testSimulateSubmitterSponsoredTx() public {
         // Submitter-sponsored simulation: paymaster is zero address
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, ZERO_ADDRESS, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, ZERO_ADDRESS, dest, privKey);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         happyEntryPoint.submit(happyTx.encode());
     }
@@ -128,7 +109,7 @@ contract HappyEntryPointTest is Test {
 
     function testValidatorRevertedRecover() public {
         // Create a basic HappyTx
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, ZERO_ADDRESS, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, ZERO_ADDRESS, dest, privKey);
 
         // Corrupt the validatorData with invalid signature format (not proper r,s,v format)
         // This will cause the recover function to revert during validation
@@ -144,7 +125,7 @@ contract HappyEntryPointTest is Test {
     }
 
     function testValidationFailedGasPriceTooHigh() public {
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
 
         // Set a very high tx gas price (higher than happyTx.maxFeePerGas)
         vm.txGasPrice(5000000000);
@@ -158,7 +139,7 @@ contract HappyEntryPointTest is Test {
 
     function testValidationFailedInvalidNonce() public {
         // This should fail for both nonce too high and nonce too low cases
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
 
         // Set a very high tx nonce (higher than happyTx.nonceValue)
         happyTx.nonceValue += 100;
@@ -171,7 +152,7 @@ contract HappyEntryPointTest is Test {
     }
 
     function testValidationFailedInvalidOwnerSignature() public {
-        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
 
         // Change any field to invalid the signature over the happyTx
         happyTx.paymaster = ZERO_ADDRESS;
@@ -186,9 +167,22 @@ contract HappyEntryPointTest is Test {
     // ====================================================================================================
     // VALIDATION TESTS (SIMULATION)
 
-    function testSimulationWithLowNonce() public {}
+    function testValidationFailedInvalidNonceSimulationWithLowNonce() public {
+        // This should fail for both nonce too high and nonce too low cases
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
 
-    function testSimulationWithCorrectNonce() public {}
+        // First execute the happyTx to increment the nonce
+        happyEntryPoint.submit(happyTx.encode());
+
+        // Now use the same happyTx again, so it'll have a low nonce value this time
+
+        // The function should revert with ValidationFailed(InvalidNonce.selector)
+        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidNonce.selector));
+
+        // Submit the transaction to trigger the revert
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        happyEntryPoint.submit(happyTx.encode());
+    }
 
     function testSimulationWithFutureNonce() public {}
 

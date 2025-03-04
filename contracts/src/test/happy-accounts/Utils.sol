@@ -17,12 +17,23 @@ contract HappyTxTestUtils is Test {
     uint256 private constant TOKEN_MINT_AMOUNT = 10;
     uint192 private constant DEFAULT_NONCETRACK = 0;
 
-    function createSignedHappyTx(address account, address paymaster, address dest, uint256 privKey)
+    function createSignedHappyTxForMint(address account, address paymaster, address dest, uint256 privKey)
         public
         view
         returns (HappyTx memory)
     {
-        HappyTx memory happyTx = getStubHappyTx(dest, TOKEN_MINT_AMOUNT);
+        bytes memory callData = getMintCallData(dest, TOKEN_MINT_AMOUNT);
+        return createSignedHappyTx(account, paymaster, dest, privKey, callData);
+    }
+
+    function createSignedHappyTx(
+        address account,
+        address paymaster,
+        address dest,
+        uint256 privKey,
+        bytes memory callData
+    ) public view returns (HappyTx memory) {
+        HappyTx memory happyTx = getStubHappyTx(dest, callData);
 
         happyTx.account = account;
         happyTx.paymaster = paymaster;
@@ -61,19 +72,19 @@ contract HappyTxTestUtils is Test {
         return happyTx;
     }
 
-    function getStubHappyTx(address dest, uint256 mintAmount) public pure returns (HappyTx memory) {
+    function getStubHappyTx(address _dest, bytes memory _callData) public pure returns (HappyTx memory) {
         return HappyTx({
             account: address(0), // Stub value
             gasLimit: 4000000000, // 0xEE6B2800
             executeGasLimit: 4000000000, // 0xEE6B2800
-            dest: dest,
+            dest: _dest,
             paymaster: address(0), // Stub value
             value: 0,
             nonceTrack: 0,
             nonceValue: 0,
             maxFeePerGas: 1200000000, // 0x47868C00
             submitterFee: 100, // 0x64
-            callData: getMintCallData(dest, mintAmount),
+            callData: _callData,
             paymasterData: hex"",
             validatorData: hex"",
             extraData: hex""
