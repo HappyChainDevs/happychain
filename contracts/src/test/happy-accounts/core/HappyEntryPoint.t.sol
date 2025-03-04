@@ -2,30 +2,32 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
 
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-
-import {MockERC20Token} from "../../../mocks/MockERC20.sol";
 import {HappyTxTestUtils} from "../Utils.sol";
+import {MockERC20Token} from "../../../mocks/MockERC20.sol";
 
 import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
-import {HappyEntryPoint, ValidationReverted} from "../../../happy-accounts/core/HappyEntryPoint.sol";
+import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
+
+import {InvalidOwnerSignature} from "../../../happy-accounts/utils/Common.sol";
+import {GasPriceTooHigh, InvalidNonce} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
+
 import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
 import {ScrappyPaymaster} from "../../../happy-accounts/samples/ScrappyPaymaster.sol";
 import {ScrappyAccountFactory} from "../../../happy-accounts/factories/ScrappyAccountFactory.sol";
-
-import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
+import {HappyEntryPoint, ValidationFailed, ValidationReverted} from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
 contract HappyEntryPointTest is Test {
     using HappyTxLib for HappyTx;
-    using MessageHashUtils for bytes32;
+    using ECDSA for bytes32;
 
     // ====================================================================================================
     // CONSTANTS
 
-    bytes32 private constant SALT = 0x0000000000000000000000000000000000000000000000000000000000000000;
+    bytes32 private constant SALT = 0;
     address private constant ZERO_ADDRESS = address(0);
     uint256 private constant DEPOSIT = 10 ether;
 
@@ -124,7 +126,7 @@ contract HappyEntryPointTest is Test {
     // ====================================================================================================
     // VALIDATION TESTS
 
-    function testValidatorReverts() public {
+    function testValidatorRevertedRecover() public {
         // Create a basic HappyTx
         HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, ZERO_ADDRESS, dest, privKey);
 
@@ -132,19 +134,65 @@ contract HappyEntryPointTest is Test {
         // This will cause the recover function to revert during validation
         happyTx.validatorData = hex"deadbeef";
 
-        bytes memory ecdsaLibError = abi.encodeWithSelector(
-            bytes4(keccak256("ECDSAInvalidSignatureLength(uint256)")),
-            4 // length of "deadbeef"
-        );
+        bytes memory ecdsaError = abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()")));
 
-        // The validation should revert when we submit this transaction
-        vm.expectRevert(abi.encodeWithSelector(ValidationReverted.selector, ecdsaLibError));
+        // The function should revert with ValidationReverted(InvalidSignature.selector)
+        vm.expectRevert(abi.encodeWithSelector(ValidationReverted.selector, ecdsaError));
 
         // Submit the transaction to trigger the revert
         happyEntryPoint.submit(happyTx.encode());
     }
 
+    function testValidationFailedGasPriceTooHigh() public {
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+
+        // Set a very high tx gas price (higher than happyTx.maxFeePerGas)
+        vm.txGasPrice(5000000000);
+
+        // The function should revert with ValidationFailed(GasPriceTooHigh.selector)
+        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, GasPriceTooHigh.selector));
+
+        // Submit the transaction to trigger the revert
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    function testValidationFailedInvalidNonce() public {
+        // This should fail for both nonce too high and nonce too low cases
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+
+        // Set a very high tx nonce (higher than happyTx.nonceValue)
+        happyTx.nonceValue += 100;
+
+        // The function should revert with ValidationFailed(InvalidNonce.selector)
+        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidNonce.selector));
+
+        // Submit the transaction to trigger the revert
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    function testValidationFailedInvalidOwnerSignature() public {
+        HappyTx memory happyTx = utils.createSignedHappyTx(smartAccount, paymaster, dest, privKey);
+
+        // Change any field to invalid the signature over the happyTx
+        happyTx.paymaster = ZERO_ADDRESS;
+
+        // The function should revert with ValidationFailed(InvalidOwnerSignature.selector)
+        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidOwnerSignature.selector));
+
+        // Submit the transaction to trigger the revert
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    // ====================================================================================================
+    // VALIDATION TESTS (SIMULATION)
+
     function testSimulationWithLowNonce() public {}
+
+    function testSimulationWithCorrectNonce() public {}
+
+    function testSimulationWithFutureNonce() public {}
+
+    function testSimulationWithInvalidOwnerSignature() public {}
 
     // ====================================================================================================
     // EXECUTION TESTS
