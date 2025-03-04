@@ -238,9 +238,32 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
     }
 
-    function testExecuteInnerCallRevertsInvalidCallData() public {
+    function testExecuteInnerCallRevertsInvalidCallDataEmptryRevertData() public {
         // Set a very low execution gas limit for the happyTx
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(10));
+        happyTx.nonceValue = getNonce(smartAccount, 0);
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // The result should be output.callStatus = CallReverted, with  output.revertData = OOG
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        bytes memory revertData = new bytes(0);
+        assertEq(uint8(output.callStatus), uint8(CallStatus.CALL_REVERTED));
+        assertEq(output.revertData, revertData);
+        assertEq(output.executeGas, 0);
+    }
+
+    // TODO: Can probably revert "with a reason" if I mint uint256.max; that'll cause an overflow and revert
+    // Update: It just reverts with 00000000 revert data
+    // TODO: review this by running:
+    // ❯ source .env && forge test --match-test testExecuteInnerCallRevertsInvalidCallData -vvvv
+    function testExecuteInnerCallRevertsInvalidCallData() public {
+        // Pre-mint tokens to the address to cause overflow in the next mint call
+        MockERC20Token(dest).mint(smartAccount, UINT256_MAX);
+
+        // This one should cause an overflow
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(smartAccount, UINT256_MAX));
         happyTx.nonceValue = getNonce(smartAccount, 0);
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 

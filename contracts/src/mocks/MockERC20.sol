@@ -8,6 +8,9 @@ import {MockERC20} from "forge-std/mocks/MockERC20.sol";
  * It SHOULD NOT be used in production.
  */
 contract MockERC20Token is MockERC20 {
+    /// @dev Returned by AlwaysRevert(), used for testing purposes.
+    error AlwaysRevert();
+
     constructor(string memory name, string memory symbol, uint8 decimals) {
         initialize(name, symbol, decimals);
     }
@@ -27,5 +30,10 @@ contract MockERC20Token is MockERC20 {
      */
     function burn(uint256 amount) public {
         _burn(msg.sender, amount);
+    }
+
+    /// @dev Reverts with the AlwaysRevert() error. Used for testing purposes.
+    function alwaysRevert() external pure {
+        revert AlwaysRevert();
     }
 }
