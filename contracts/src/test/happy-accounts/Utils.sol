@@ -113,9 +113,9 @@ contract HappyTxTestUtils is Test {
         return abi.encodeWithSignature("transfer(address, uint256)", target, amount);
     }
 
-    // function getpermitCallData() public pure returns (bytes memory) {
-    //     return abi.encodeCall(MockERC20Token.permit, (0, 0, 0, 0, 0, 0, 0));
-    // }
+    function getAlwaysRevertCallData() public pure returns (bytes memory) {
+        return abi.encodeCall(MockERC20Token.alwaysRevert, ());
+    }
 
     function getNonce(address smartAccount) public view returns (uint64) {
         return uint64(ScrappyAccount(payable(smartAccount)).getNonce(DEFAULT_NONCETRACK));
