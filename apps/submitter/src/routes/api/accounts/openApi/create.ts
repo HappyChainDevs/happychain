@@ -5,10 +5,10 @@ import { z } from "zod"
 import { isHexString } from "#src/zod/isHexString"
 
 export const description = describeRoute({
-    description: "Estimate gas for the supplied HappyTx",
+    description: "Create a new account",
     responses: {
         200: {
-            description: "Successful gas estimation",
+            description: "Successfully created an account",
             content: {
                 "application/json": {
                     schema: resolver(
