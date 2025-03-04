@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
 
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
@@ -42,7 +41,6 @@ contract ScrappyAccount is
 {
     using ECDSA for bytes32;
     using HappyTxLib for HappyTx;
-    using MessageHashUtils for bytes32;
 
     // ====================================================================================================
     // ERRORS
