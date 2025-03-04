@@ -259,18 +259,32 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // ❯ source .env && forge test --match-test testExecuteInnerCallRevertsInvalidCallData -vvvv
     function testExecuteInnerCallRevertsInvalidCallData() public {
         // Pre-mint tokens to the address to cause overflow in the next mint call
-        MockERC20Token(dest).mint(smartAccount, UINT256_MAX);
+        MockERC20Token(dest).mint(smartAccount, UINT256_MAX-1);
 
         // This one should cause an overflow
         HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(smartAccount, UINT256_MAX));
+            getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(smartAccount, UINT256_MAX-1));
         happyTx.nonceValue = getNonce(smartAccount, 0);
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
-        // The result should be output.callStatus = CallReverted, with  output.revertData = OOG
+        // The result should be output.callStatus = CallReverted
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
 
         bytes memory revertData = new bytes(0);
+        assertEq(uint8(output.callStatus), uint8(CallStatus.CALL_REVERTED));
+        assertEq(output.revertData, revertData);
+        assertEq(output.executeGas, 0);
+    }
+
+    function testExecuteMockTokenAlwaysReverts() public {
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getAlwaysRevertCallData());
+        happyTx.nonceValue = getNonce(smartAccount, 0);
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // The result should be output.callStatus = CallReverted
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        bytes memory revertData = abi.encodeWithSelector(MockERC20Token.AlwaysRevert.selector);
         assertEq(uint8(output.callStatus), uint8(CallStatus.CALL_REVERTED));
         assertEq(output.revertData, revertData);
         assertEq(output.executeGas, 0);
