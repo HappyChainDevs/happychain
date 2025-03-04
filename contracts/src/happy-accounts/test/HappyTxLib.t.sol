@@ -10,7 +10,9 @@ contract HappyTxLibTest is Test {
     using HappyTxLib for bytes;
     using HappyTxLib for HappyTx;
 
-    // Tests for {HappyTxLib.encode}
+    // ====================================================================================================
+    // TESTS FOR {HappyTxLib.encode}
+
     function testEncodeEmptyDynamicFields() public pure {
         HappyTx memory inputTx = HappyTx({
             account: 0x1234567890123456789012345678901234567890,
@@ -86,7 +88,9 @@ contract HappyTxLibTest is Test {
         assertEq(encoded, expected);
     }
 
-    // Tests for {HappyTxLib.decode}
+    // ====================================================================================================
+    // TESTS FOR {HappyTxLib.decode}
+
     function testDecodeEmptyDynamicFields() public view {
         bytes memory encoded =
             hex"1234567890123456789012345678901234567890000f4240000c3500234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000000000000"; // solhint-disable-line max-line-length
@@ -162,7 +166,9 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.extraData, hex"def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0");
     }
 
-    // Tests for {HappyTxLib.encode} <-> {HappyTxLib.decode}
+    // ====================================================================================================
+    // TESTS FOR {HappyTxLib.encode} <-> {HappyTxLib.decode}
+
     function testCombinedEmpty() public view {
         HappyTx memory inputTx = HappyTx({
             account: 0x1234567890123456789012345678901234567890,
@@ -278,9 +284,11 @@ contract HappyTxLibTest is Test {
         return HappyTxLib.decode(encodedHappyTx);
     }
 
-    // TODO: this is a temp basic test
-    function testGetExtraDataValue() public pure {
-        // Test 1: Single key-value pair
+    // ====================================================================================================
+    // TESTS FOR {HappyTxLib.getExtraDataValue}
+
+    function testGEDSingleKeyValue() public pure {
+        // Test for single key-value pair
         bytes memory data = new bytes(9); // 3 (key) + 3 (length) + 3 (value)
 
         // Set key 'abc'
@@ -302,18 +310,47 @@ contract HappyTxLibTest is Test {
         assertEq(bytes1(value[0]), bytes1(0x78), "First byte should match");
         assertEq(bytes1(value[1]), bytes1(0x79), "Second byte should match");
         assertEq(bytes1(value[2]), bytes1(0x7a), "Third byte should match");
+    }
 
-        // Test 2: Key not found
-        (found, value) = HappyTxLib.getExtraDataValue(data, bytes3(hex"646566")); // 'def'
+    function testGEDKeyNotFound() public pure {
+        // Test for key not found
+        bytes memory data = new bytes(9);
+
+        // Set key 'abc'
+        data[0] = 0x61; // 'a'
+        data[1] = 0x62; // 'b'
+        data[2] = 0x63; // 'c'
+        // Set length to 3
+        data[3] = 0x00;
+        data[4] = 0x00;
+        data[5] = 0x03;
+        // Set value to 'xyz'
+        data[6] = 0x78; // 'x'
+        data[7] = 0x79; // 'y'
+        data[8] = 0x7a; // 'z'
+
+        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(data, bytes3(hex"646566")); // 'def'
         assertFalse(found, "Should not find non-existent key");
         assertEq(value.length, 0, "Value should be empty for non-existent key");
+    }
 
-        // Test 3: Multiple key-value pairs
+    function testGEDMultipleKeyValues() public pure {
+        // Test for multiple key-value pairs
         bytes memory multiData = new bytes(18); // Two pairs of 9 bytes each
-        // First pair: key='abc', length=3, value='xyz'
-        for (uint256 i = 0; i < 9; i++) {
-            multiData[i] = data[i];
-        }
+
+        // Set key 'abc'
+        multiData[0] = 0x61; // 'a'
+        multiData[1] = 0x62; // 'b'
+        multiData[2] = 0x63; // 'c'
+        // Set length to 3
+        multiData[3] = 0x00;
+        multiData[4] = 0x00;
+        multiData[5] = 0x03;
+        // Set value to 'xyz'
+        multiData[6] = 0x78; // 'x'
+        multiData[7] = 0x79; // 'y'
+        multiData[8] = 0x7a; // 'z'
+
         // Second pair: key='def', length=3, value='123'
         multiData[9] = 0x64; // 'd'
         multiData[10] = 0x65; // 'e'
@@ -325,22 +362,58 @@ contract HappyTxLibTest is Test {
         multiData[16] = 0x32; // '2'
         multiData[17] = 0x33; // '3'
 
-        (found, value) = HappyTxLib.getExtraDataValue(multiData, bytes3(hex"646566")); // 'def'
+        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(multiData, bytes3(hex"646566")); // 'def'
         assertTrue(found, "Should find second key");
         assertEq(value.length, 3, "Second value length should match");
         assertEq(bytes1(value[0]), bytes1(0x31), "First byte should match");
         assertEq(bytes1(value[1]), bytes1(0x32), "Second byte should match");
         assertEq(bytes1(value[2]), bytes1(0x33), "Third byte should match");
+    }
 
-        // Test 4: Empty data
-        (found, value) = HappyTxLib.getExtraDataValue(new bytes(0), bytes3(hex"616263"));
+    function testGEDEmptyData() public pure {
+        // Test for empty data
+        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(new bytes(0), bytes3(hex"616263"));
         assertFalse(found, "Should not find key in empty data");
         assertEq(value.length, 0, "Value should be empty for empty data");
+    }
 
-        // Test 5: Invalid data (too short)
+    function testGEDInvalidDataTooShort() public pure {
+        // Test for invalid data (too short)
         bytes memory invalidData = new bytes(5); // Less than minimum 6 bytes needed
-        (found, value) = HappyTxLib.getExtraDataValue(invalidData, bytes3(hex"616263"));
+        // Set key 'abc'
+        invalidData[0] = 0x61; // 'a'
+        invalidData[1] = 0x62; // 'b'
+        invalidData[2] = 0x63; // 'c'
+        // Set length to 3 (Not enough bytes to encode the length)
+        invalidData[3] = 0x00;
+        invalidData[4] = 0x00;
+
+        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(invalidData, bytes3(hex"616263"));
         assertFalse(found, "Should not find key in invalid data");
         assertEq(value.length, 0, "Value should be empty for invalid data");
+    }
+
+    function testGEDLengthExceedsAvailableBytes() public pure {
+        // Test for length exceeds available bytes
+        bytes memory truncatedData = new bytes(8); // Only enough for key + length + 1 byte of value
+
+        // Set key 'abc'
+        truncatedData[0] = 0x61; // 'a'
+        truncatedData[1] = 0x62; // 'b'
+        truncatedData[2] = 0x63; // 'c'
+
+        // Set length to 4 (but we only have space for 1 byte of value)
+        truncatedData[3] = 0x00;
+        truncatedData[4] = 0x00;
+        truncatedData[5] = 0x04;
+
+        // Set only 1 byte of value
+        truncatedData[6] = 0x78; // 'x'
+        // truncatedData[7], truncatedData[8], truncatedData[9] would be needed for the full value
+        // but we don't have enough space, so the function should return not found
+
+        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(truncatedData, bytes3(hex"616263"));
+        assertFalse(found, "Should not find key when length exceeds available bytes");
+        assertEq(value.length, 0, "Value should be empty when length exceeds available bytes");
     }
 }
