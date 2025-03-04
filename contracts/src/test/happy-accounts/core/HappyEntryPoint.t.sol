@@ -10,10 +10,20 @@ import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
-import {InvalidOwnerSignature} from "../../../happy-accounts/utils/Common.sol";
+import {InvalidOwnerSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
 
-import {GasPriceTooHigh, InvalidNonce} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
-import {HappyEntryPoint, ValidationFailed, ValidationReverted} from "../../../happy-accounts/core/HappyEntryPoint.sol";
+import {
+    FutureNonceDuringSimulation,
+    GasPriceTooHigh,
+    InvalidNonce
+} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
+import {
+    CallStatus,
+    SubmitOutput,
+    HappyEntryPoint,
+    ValidationFailed,
+    ValidationReverted
+} from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
 contract HappyEntryPointTest is HappyTxTestUtils {
     using HappyTxLib for HappyTx;
@@ -167,7 +177,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // ====================================================================================================
     // VALIDATION TESTS (SIMULATION)
 
-    function testValidationFailedInvalidNonceSimulationWithLowNonce() public {
+    function testSimulateWithLowNonceValidationFailedInvalidNonce() public {
         // This should fail for both nonce too high and nonce too low cases
         HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
 
@@ -184,12 +194,80 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
     }
 
-    function testSimulationWithFutureNonce() public {}
+    function testSimulateWithFutureNonce() public {
+        // Set a future nonce for the simulated happyTx
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(dest));
+        happyTx.nonceValue = 100;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
 
-    function testSimulationWithInvalidOwnerSignature() public {}
+        // The function should return output.validationStatus = FutureNonceDuringSimulation.selector
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The output should be FutureNonceDuringSimulation.selector
+        assertEq(output.validationStatus, bytes4(FutureNonceDuringSimulation.selector));
+    }
+
+    function testSimulateWithUnknownDuringSimulation() public {
+        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
+
+        // Change any field to invalid the signature over the happyTx
+        happyTx.paymaster = ZERO_ADDRESS;
+
+        // The function should return output.validationStatus = UnknownDuringSimulation.selector
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The output should be UnknownDuringSimulation.selector
+        assertEq(output.validationStatus, bytes4(UnknownDuringSimulation.selector));
+    }
 
     // ====================================================================================================
     // EXECUTION TESTS
+
+    function testExecuteWithLowExecutionGasLimitExcessivelySafeCallReverts() public {
+        // Set a very low execution gas limit for the happyTx
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(dest));
+        happyTx.executeGasLimit = 100;
+        happyTx.nonceValue = getNonce(smartAccount, 0);
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // The result should be output.callStatus = CallReverted, with  output.revertData = OOG
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        bytes memory revertData = new bytes(0);
+        assertEq(uint8(output.callStatus), uint8(CallStatus.CALL_REVERTED));
+        assertEq(output.revertData, revertData);
+        assertEq(output.executeGas, 0);
+    }
+
+    function testExecuteWithLowExecutionGasLimitMintTokenCallReverts() public {
+        // Set a very low execution gas limit for the happyTx
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(dest));
+        happyTx.executeGasLimit = 100;
+        happyTx.nonceValue = getNonce(smartAccount, 0);
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // The result should be output.callStatus = CallReverted, with  output.revertData = OOG
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        bytes memory revertData = new bytes(0);
+        assertEq(uint8(output.callStatus), uint8(CallStatus.CALL_REVERTED));
+        assertEq(output.revertData, revertData);
+        assertEq(output.executeGas, 0);
+    }
+
+    function testExecuteWithHighHappyTxValueGTAccountBalance() public {
+        HappyTx memory happyTx =
+            createSignedHappyTx(smartAccount, dest, smartAccount, privKey, getETHTransferCallData(dest));
+
+        // The call should fail because the smartAccount address doesn't have enough funds
+        vm.expectRevert();
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    // ====================================================================================================
+    // EXECUTION TESTS (SIMULATION)
 
     // ====================================================================================================
     // PAYOUT TESTS
