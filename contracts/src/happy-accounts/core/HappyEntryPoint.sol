@@ -107,16 +107,18 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     /**
      * @dev Maximum amount of data allowed to be returned from {IHappyAccount.validate}.
      * The returned data is as follows:
-     * 1st slot: bytes4 selector (minimum 32 bytes are neded to decode the return data)
+     * 1st slot: bytes4 selector (minimum 32 bytes are used by the error selector)
+     * 2nd slot onwards: 224 bytes reserved for parameters of the error (if any)
      */
-    uint16 private constant MAX_VALIDATE_RETURN_DATA_SIZE = 64;
+    uint16 private constant MAX_VALIDATE_RETURN_DATA_SIZE = 256;
 
     /**
      * @dev Maximum amount of data allowed to be returned from {IPaymaster.payout}.
      * The returned data is as follows:
-     * 1st slot: bytes4 selector (minimum 32 bytes are neded to decode the return data)
+     * 1st slot: bytes4 selector (minimum 32 bytes are used by the error selector)
+     * 2nd slot onwards: 224 bytes reserved for parameters of the error (if any)
      */
-    uint16 private constant MAX_PAYOUT_RETURN_DATA_SIZE = 32;
+    uint16 private constant MAX_PAYOUT_RETURN_DATA_SIZE = 256;
 
     /**
      * @dev Maximum amount of data allowed to be returned from {IHappyAccount.execute}
