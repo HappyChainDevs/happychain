@@ -155,6 +155,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     uint256 private constant PAYOUT_CALL_OVERHEAD = 4300;
     //^ From the gas report, 2409 for self-paying, 4299 for paymaster-sponsored, taking the max of both.
 
+    /**
+     * Gas buffer to ensure we have enough gas to handle post-OOG revert scenarios.
+     * This amount will be reserved from the available gas for validate and payout operations.
+     */
+    uint256 private constant POST_OOG_GAS_BUFFER = 2500;
+
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
@@ -204,6 +210,11 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     function submit(bytes calldata encodedHappyTx) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
+        bool isSimulation = tx.origin == address(0);
+
+        // Track remaining gas, starting with the total gas limit minus a buffer for post-OOG handling
+        uint256 remainingGas =
+            happyTx.gasLimit > POST_OOG_GAS_BUFFER ? happyTx.gasLimit - POST_OOG_GAS_BUFFER : happyTx.gasLimit;
 
         // [LOGGAS] uint256 decodeGasEnd = gasleft();
         // [LOGGAS] console.log("HappyTxLib.decode gas usage: ", gasStart - decodeGasEnd);
@@ -214,7 +225,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         bytes memory returnData;
         try this.safeCallWrapper(
             happyTx.account,
-            happyTx.gasLimit,
+            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : remainingGas,
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
@@ -227,7 +238,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         }
         if (!success) revert ValidationReverted(returnData);
 
-        bool isSimulation = tx.origin == address(0);
         bytes4 result = abi.decode(returnData, (bytes4));
         if (result != 0) {
             bool shouldContinue = isSimulation
@@ -291,6 +301,15 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 consumedGas =
             HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
 
+        // Update remaining gas after validation and execution, ensuring we maintain our buffer
+        uint256 bufferedConsumedGas = consumedGas + POST_OOG_GAS_BUFFER;
+        if (bufferedConsumedGas >= happyTx.gasLimit) {
+            // If we've consumed most of the gas (including buffer), ensure we have a minimal amount for payout
+            remainingGas = happyTx.gasLimit / 10; // 10% of original gas limit as a minimal fallback
+        } else {
+            remainingGas = happyTx.gasLimit - consumedGas - POST_OOG_GAS_BUFFER;
+        }
+
         // [LOGGAS] uint256 txGasEnd = gasleft();
         // [LOGGAS] uint256 txGasUsed = txGasStart - txGasEnd;
         // [LOGGAS] console.log("txGasFromCallGas overall gas usage: ", txGasUsed);
@@ -306,7 +325,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] uint256 payoutGasStart = gasleft();
         try this.safeCallWrapper(
             happyTx.paymaster,
-            happyTx.gasLimit,
+            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : remainingGas,
             0, // gas token transfer value
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
