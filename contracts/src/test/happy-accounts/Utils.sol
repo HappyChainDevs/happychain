@@ -14,16 +14,21 @@ contract HappyTxTestUtils is Test {
     using HappyTxLib for HappyTx;
     using MessageHashUtils for bytes32;
 
-    uint256 private constant TOKEN_MINT_AMOUNT = 1000;
-    uint192 private constant DEFAULT_NONCETRACK = 0;
+    uint256 public constant TOKEN_MINT_AMOUNT = 1000;
+    uint192 public constant DEFAULT_NONCETRACK = 0;
 
-    function createSignedHappyTxForMint(address account, address paymaster, address dest, uint256 privKey)
-        public
-        view
-        returns (HappyTx memory)
-    {
-        bytes memory callData = getMintCallData(dest, TOKEN_MINT_AMOUNT);
-        return createSignedHappyTx(account, paymaster, dest, privKey, callData);
+    // ====================================================================================================
+    // HAPPY TX HELPERS
+
+    function createSignedHappyTxForMintToken(
+        address account,
+        address paymaster,
+        address mintTokenTo,
+        address token,
+        uint256 privKey
+    ) public view returns (HappyTx memory happyTx) {
+        bytes memory mintCallData = getMintTokenCallData(mintTokenTo, TOKEN_MINT_AMOUNT);
+        happyTx = createSignedHappyTx(account, paymaster, token, privKey, mintCallData);
     }
 
     function createSignedHappyTx(
@@ -32,23 +37,24 @@ contract HappyTxTestUtils is Test {
         address dest,
         uint256 privKey,
         bytes memory callData
-    ) public view returns (HappyTx memory) {
-        HappyTx memory happyTx = getStubHappyTx(account, dest, paymaster, callData);
+    ) public view returns (HappyTx memory happyTx) {
+        happyTx = getStubHappyTx(account, dest, paymaster, callData);
         happyTx.nonceValue = getNonce(account);
 
-        // Store original values
+        // Store the original gas values
         uint32 origGasLimit;
         uint32 origExecuteGasLimit;
         uint256 origMaxFeePerGas;
         int256 origSubmitterFee;
 
         if (paymaster != account) {
+            // If the happy-tx is not self-paying, we don't sign over the gas values
             origGasLimit = happyTx.gasLimit;
             origExecuteGasLimit = happyTx.executeGasLimit;
             origMaxFeePerGas = happyTx.maxFeePerGas;
             origSubmitterFee = happyTx.submitterFee;
 
-            // Temporarily zero them for signing
+            // Temporarily make them zero to not sign over them
             happyTx.gasLimit = 0;
             happyTx.executeGasLimit = 0;
             happyTx.maxFeePerGas = 0;
@@ -58,32 +64,30 @@ contract HappyTxTestUtils is Test {
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         if (paymaster != account) {
-            // Restore original values after signing
+            // Restore the original gas values after signing
             happyTx.gasLimit = origGasLimit;
             happyTx.executeGasLimit = origExecuteGasLimit;
             happyTx.maxFeePerGas = origMaxFeePerGas;
             happyTx.submitterFee = origSubmitterFee;
         }
-
-        return happyTx;
     }
 
     function getStubHappyTx(address _account, address _dest, address _paymaster, bytes memory _callData)
         public
-        pure
+        view
         returns (HappyTx memory)
     {
         return HappyTx({
             account: _account,
-            gasLimit: 4000000000, // 0xEE6B2800
-            executeGasLimit: 4000000000, // 0xEE6B2800
+            gasLimit: 4000000000,
+            executeGasLimit: 4000000000,
             dest: _dest,
             paymaster: _paymaster,
             value: 0,
             nonceTrack: 0,
-            nonceValue: 0,
-            maxFeePerGas: 1200000000, // 0x47868C00
-            submitterFee: 100, // 0x64
+            nonceValue: getNonce(_account),
+            maxFeePerGas: 1200000000,
+            submitterFee: 100,
             callData: _callData,
             paymasterData: hex"",
             validatorData: hex"",
@@ -97,25 +101,23 @@ contract HappyTxTestUtils is Test {
         signature = abi.encodePacked(r, s, v);
     }
 
-    function getMintCallData(address target) public pure returns (bytes memory) {
-        return abi.encodeCall(MockERC20Token.mint, (target, TOKEN_MINT_AMOUNT));
+    // ====================================================================================================
+    // CALLDATA HELPERS
+
+    function getMintTokenCallData(address mintTokenTo, uint256 amount) public pure returns (bytes memory) {
+        return abi.encodeCall(MockERC20Token.mint, (mintTokenTo, amount));
     }
 
-    function getMintCallData(address target, uint256 amount) public pure returns (bytes memory) {
-        return abi.encodeCall(MockERC20Token.mint, (target, amount));
+    function getETHTransferCallData(address transferTo, uint256 amount) public pure returns (bytes memory) {
+        return abi.encodeWithSignature("transfer(address, uint256)", transferTo, amount);
     }
 
-    function getETHTransferCallData(address target) public pure returns (bytes memory) {
-        return abi.encodeWithSignature("transfer(address, uint256)", target, TOKEN_MINT_AMOUNT);
-    }
-
-    function getETHTransferCallData(address target, uint256 amount) public pure returns (bytes memory) {
-        return abi.encodeWithSignature("transfer(address, uint256)", target, amount);
-    }
-
-    function getAlwaysRevertCallData() public pure returns (bytes memory) {
+    function getMockTokenAlwaysRevertCallData() public pure returns (bytes memory) {
         return abi.encodeCall(MockERC20Token.alwaysRevert, ());
     }
+
+    // ====================================================================================================
+    // NONCE HELPERS
 
     function getNonce(address smartAccount) public view returns (uint64) {
         return uint64(ScrappyAccount(payable(smartAccount)).getNonce(DEFAULT_NONCETRACK));
@@ -123,5 +125,16 @@ contract HappyTxTestUtils is Test {
 
     function getNonce(address smartAccount, uint192 nonceTrack) public view returns (uint64) {
         return uint64(ScrappyAccount(payable(smartAccount)).getNonce(nonceTrack));
+    }
+
+    // ====================================================================================================
+    // OTHER HELPERS
+
+    function getTokenBalance(address token, address account) public view returns (uint256) {
+        return MockERC20Token(token).balanceOf(account);
+    }
+
+    function getEthBalance(address account) public view returns (uint256) {
+        return address(account).balance;
     }
 }
