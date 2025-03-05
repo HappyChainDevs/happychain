@@ -153,6 +153,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     uint256 private constant PAYOUT_CALL_OVERHEAD = 4500;
     //^ From the gas report, 2425 for self-paying, 4395 for paymaster-sponsored, taking the maximum.
 
+    /**
+     * Gas buffer to ensure we have enough gas to handle post-OOG revert scenarios.
+     * This amount will be reserved from the available gas for validate and payout operations.
+     */
+    uint256 private constant POST_OOG_GAS_BUFFER = 2500;
+
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
@@ -202,6 +208,11 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     function submit(bytes calldata encodedHappyTx) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
+        bool isSimulation = tx.origin == address(0);
+
+        // Track remaining gas, starting with the total gas limit minus a buffer for post-OOG handling
+        uint256 remainingGas =
+            happyTx.gasLimit > POST_OOG_GAS_BUFFER ? happyTx.gasLimit - POST_OOG_GAS_BUFFER : happyTx.gasLimit;
 
         // [LOGGAS] uint256 decodeGasEnd = gasleft();
         // [LOGGAS] console.log("HappyTxLib.decode gas usage: ", gasStart - decodeGasEnd);
@@ -212,7 +223,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         bytes memory returnData;
         try this.safeCallWrapper(
             happyTx.account,
-            happyTx.gasLimit,
+            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : remainingGas,
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
@@ -227,6 +238,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // If there is less than 4 bytes of data, the validation didn't strictly revert, however
         // it is improperly implemented.
         if (!success || output.validationStatus.length < 4) revert ValidationReverted(output.validationStatus);
+
 
         bool isSimulation = tx.origin == address(0);
         bytes4 selector;
