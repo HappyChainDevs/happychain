@@ -22,19 +22,19 @@ contract HappyTxTestUtils is Test {
 
     function createSignedHappyTxForMintToken(
         address account,
-        address paymaster,
         address mintTokenTo,
+        address paymaster,
         address token,
         uint256 privKey
     ) public view returns (HappyTx memory happyTx) {
         bytes memory mintCallData = getMintTokenCallData(mintTokenTo, TOKEN_MINT_AMOUNT);
-        happyTx = createSignedHappyTx(account, paymaster, token, privKey, mintCallData);
+        happyTx = createSignedHappyTx(account, token, paymaster, privKey, mintCallData);
     }
 
     function createSignedHappyTx(
         address account,
-        address paymaster,
         address dest,
+        address paymaster,
         uint256 privKey,
         bytes memory callData
     ) public view returns (HappyTx memory happyTx) {

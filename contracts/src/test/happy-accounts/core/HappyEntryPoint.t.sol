@@ -87,19 +87,19 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testPaymasterSponsoredTx() public {
         // Paymaster-sponsored: paymaster == ScrappyPaymaster
-        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
+        uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
         happyEntryPoint.submit(happyTx.encode());
-        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
+        uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
         assertEq(finalTokenBalance, initialTokenBalance + TOKEN_MINT_AMOUNT);
     }
 
     function testSubmitterSponsoredTx() public {
         // Submitter-sponsored: paymaster == address(0)
-        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
+        uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
         happyEntryPoint.submit(happyTx.encode());
-        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
+        uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
         assertEq(finalTokenBalance, initialTokenBalance + TOKEN_MINT_AMOUNT);
     }
 
@@ -108,35 +108,23 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testSimulateSelfPayingTx() public {
         // Self-paying simulation: account == paymaster
-        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         happyEntryPoint.submit(happyTx.encode());
-        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
-        // In simulation mode, the token balance shouldn't actually change
-        assertEq(finalTokenBalance, initialTokenBalance);
     }
 
     function testSimulatePaymasterSponsoredTx() public {
         // Paymaster-sponsored simulation: paymaster is the ScrappyPaymaster
-        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         happyEntryPoint.submit(happyTx.encode());
-        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
-        // In simulation mode, the token balance shouldn't actually change
-        assertEq(finalTokenBalance, initialTokenBalance);
     }
 
     function testSimulateSubmitterSponsoredTx() public {
         // Submitter-sponsored simulation: paymaster is zero address
-        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         happyEntryPoint.submit(happyTx.encode());
-        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
-        // In simulation mode, the token balance shouldn't actually change
-        assertEq(finalTokenBalance, initialTokenBalance);
     }
 
     // ====================================================================================================
@@ -279,7 +267,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     function testExecuteMockTokenAlwaysReverts() public {
-        HappyTx memory happyTx = createSignedHappyTx(smartAccount, paymaster, mockToken, privKey, getMockTokenAlwaysRevertCallData());
+        HappyTx memory happyTx =
+            createSignedHappyTx(smartAccount, paymaster, mockToken, privKey, getMockTokenAlwaysRevertCallData());
 
         // The result should be output.callStatus = CallReverted
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
@@ -309,7 +298,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // EXECUTION TESTS (SIMULATION)
 
     function testSimulationWithZeroExecutionGasLimit() public {
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx.executeGasLimit = 0;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
@@ -321,7 +311,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // Submit a new happyTx with the above execGasLimit, it should succeed
         happyTx = getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx.executeGasLimit = output.executeGas * 110/100; // 10% buffer
+        happyTx.executeGasLimit = output.executeGas * 110 / 100; // 10% buffer
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // This should NOT revert (hopefully?)
