@@ -62,7 +62,10 @@ export class GoogleConnector extends FirebaseConnector {
          * to repeat on the next page refresh.
          */
         if (storage.get(StorageKey.HappyUser)?.type !== WalletType.Social) return
-        await disconnectWagmi(config)
+        try {
+            // if wagmi wasn't previously successfully connected, this throws
+            await disconnectWagmi(config)
+        } catch {}
         setUserWithProvider(undefined, undefined)
     }
 

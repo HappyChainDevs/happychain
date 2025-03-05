@@ -43,7 +43,7 @@ function useClientConnectionRequest() {
     const clearClientConnectionRequest = useCallback(() => setClientConnectionRequest(null), [])
 
     useEffect(() => {
-        appMessageBus.on(Msgs.ConnectRequest, (_req) => setClientConnectionRequest(_req))
+        return appMessageBus.on(Msgs.ConnectRequest, (_req) => setClientConnectionRequest(_req))
     }, [])
 
     useEffect(() => {
@@ -66,7 +66,6 @@ function useClientConnectionRequest() {
 
 const ConnectContent = () => {
     const [popupBlocked, setPopupBlocked] = useState(false)
-    const providers = useConnectionProviders()
     const { clientConnectionRequest, clearClientConnectionRequest } = useClientConnectionRequest()
 
     const mutationLogin = useMutation({
@@ -84,14 +83,19 @@ const ConnectContent = () => {
             return clientConnectionRequest ? { response, request } : undefined
         },
         onSettled(response, _error) {
-            if (isFirebaseError(_error, FirebaseErrorCode.PopupBlocked)) {
-                return setPopupBlocked(true)
-            }
+            // popup was blocked
+            if (isFirebaseError(_error, FirebaseErrorCode.PopupBlocked)) return setPopupBlocked(true)
+            else setPopupBlocked(false)
 
-            if (_error && !isFirebaseError(_error, FirebaseErrorCode.PopupClosed)) {
-                // unknown error, just log it.
-                return console.error(_error)
-            }
+            // unknown error, just log it.
+            if (_error && !isFirebaseError(_error, FirebaseErrorCode.PopupClosed)) return console.error(_error)
+
+            // user just closed the popup without connecting
+            // Don't need to log the error
+            if (_error && isFirebaseError(_error, FirebaseErrorCode.PopupClosed)) return
+
+            // _error should always be null here, so if its not, something strange happened...
+            if (_error) return console.error(_error)
 
             // iframe-originated requests won't need any response to be emitted
             if (!response) return
@@ -101,38 +105,27 @@ const ConnectContent = () => {
         },
     })
 
+    if (popupBlocked || mutationLogin.isError) {
+        return (
+            <div className="overflow-y-auto [scrollbar-width:thin]">
+                <ErrorDisplay
+                    popupBlocked={popupBlocked}
+                    onAccept={() => {
+                        setPopupBlocked(false)
+                        mutationLogin.reset()
+                    }}
+                />
+            </div>
+        )
+    }
+
     return (
         <>
             <div className="overflow-y-auto [scrollbar-width:thin]">
-                {popupBlocked ? (
-                    <PopupBlockedWarning />
-                ) : mutationLogin.isError ? (
-                    <GenericWarning />
-                ) : mutationLogin.isPending ? (
+                {mutationLogin.isPending ? (
                     <LoginPending provider={mutationLogin.variables} />
                 ) : (
-                    <div className="grid gap-4">
-                        {providers.map((prov) => {
-                            return (
-                                <Button
-                                    intent="outline"
-                                    type="button"
-                                    key={prov.id}
-                                    onClick={() => mutationLogin.mutate(prov)}
-                                >
-                                    <img
-                                        className={cx(
-                                            "h-[1.5em] object-container max-w-8",
-                                            prov.id === "injected:wallet.injected" && "dark:invert",
-                                        )}
-                                        src={prov.icon}
-                                        alt={`${prov.name} icon`}
-                                    />
-                                    <span className="grow me-8">{prov.name}</span>
-                                </Button>
-                            )
-                        })}
-                    </div>
+                    <ProviderList onSelect={(prov) => mutationLogin.mutate(prov)} />
                 )}
             </div>
             <Button intent="ghost" type="button" className="h-fit justify-center" onClick={() => signalClosed()}>
@@ -157,6 +150,43 @@ const LoginPending = ({ provider }: { provider?: ConnectionProvider }) => {
     )
 }
 
+const ProviderList = ({ onSelect }: { onSelect: (provider: ConnectionProvider) => void }) => {
+    const providers = useConnectionProviders()
+
+    return (
+        <div className="grid gap-4">
+            {providers.map((prov) => {
+                return (
+                    <Button intent="outline" type="button" key={prov.id} onClick={() => onSelect(prov)}>
+                        <img
+                            className={cx(
+                                "h-[1.5em] object-container max-w-8",
+                                prov.id === "injected:wallet.injected" && "dark:invert",
+                            )}
+                            src={prov.icon}
+                            alt={`${prov.name} icon`}
+                        />
+                        <span className="grow me-8">{prov.name}</span>
+                    </Button>
+                )
+            })}
+        </div>
+    )
+}
+
+const ErrorDisplay = ({ popupBlocked, onAccept }: { popupBlocked: boolean; onAccept: () => void }) => {
+    return (
+        <>
+            {popupBlocked ? <PopupBlockedWarning /> : <GenericConnectionWarning />}
+            <div className="flex items-center justify-center mt-4 ">
+                <Button intent="secondary" type="button" className="w-full h-fit justify-center" onClick={onAccept}>
+                    Ok
+                </Button>
+            </div>
+        </>
+    )
+}
+
 const PopupBlockedWarning = () => {
     return (
         <div
@@ -169,7 +199,7 @@ const PopupBlockedWarning = () => {
     )
 }
 
-const GenericWarning = () => {
+const GenericConnectionWarning = () => {
     return (
         <div
             role="alert"
