@@ -223,7 +223,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         bytes memory returnData;
         try this.safeCallWrapper(
             happyTx.account,
-            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : remainingGas,
+            isSimulation && happyTx.gasLimit == 0 ? gasleft() : remainingGas,
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
@@ -312,6 +312,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             return output;
         }
 
+        remainingGas = consumedGas + POST_OOG_GAS_BUFFER > happyTx.gasLimit ? 0 : happyTx.gasLimit - consumedGas - POST_OOG_GAS_BUFFER;
         uint256 balance = tx.origin.balance;
         uint256 gasBeforePayout = gasleft();
 
