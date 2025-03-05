@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {MockERC20} from "forge-std/mocks/MockERC20.sol";
+import {MockERC20} from "./BaseMockERC20.sol";
 
 /**
  * @notice This is a mock contract for the $HAPPY token, derived from MockERC20 for testing purposes.
