@@ -84,8 +84,11 @@ export class InjectedConnector implements ConnectionProvider {
     }
 
     public async onDisconnect() {
+        try {
+            // if wagmi wasn't previously successfully connected, this throws
+            await disconnectWagmi(config)
+        } catch {}
         setUserWithProvider(undefined, undefined)
-        await disconnectWagmi(config)
     }
 
     public async connect(req: MsgsFromApp[Msgs.ConnectRequest]): Promise<MsgsFromIframe[Msgs.ConnectResponse]> {

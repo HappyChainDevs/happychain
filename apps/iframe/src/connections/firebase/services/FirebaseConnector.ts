@@ -8,8 +8,8 @@ import {
 } from "@happy.tech/wallet-common"
 import type { JWTLoginParams } from "@web3auth/mpc-core-kit"
 import {
-    type AuthProvider,
-    type User,
+    type AuthProvider as FirebaseAuthProvider,
+    type User as FirebaseAuthUser,
     browserPopupRedirectResolver,
     onAuthStateChanged,
     signInWithPopup,
@@ -47,7 +47,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         this.listenForAuthChange()
     }
 
-    abstract getAuthProvider(): AuthProvider
+    abstract getAuthProvider(): FirebaseAuthProvider
     abstract onConnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
     abstract onReconnect(user: HappyUser, provider: EIP1193Provider): Promise<void> | void
     abstract onDisconnect(): Promise<void> | void
@@ -103,7 +103,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         }
     }
 
-    private static makeHappyUserPartial(user: User, id: string) {
+    private static makeHappyUserPartial(user: FirebaseAuthUser, id: string) {
         return {
             // connection type
             provider: id,
@@ -164,7 +164,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
         return this.disconnect()
     }
 
-    private async fetchLoginTokenForUser(user: User) {
+    private async fetchLoginTokenForUser(user: FirebaseAuthUser) {
         const token = await user.getIdTokenResult(true)
 
         if (!token.claims.sub) {
