@@ -207,12 +207,19 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         bool success;
         bytes memory returnData;
-        (success, returnData) = happyTx.account.excessivelySafeCall(
+        try this.safeCallWrapper(
+            happyTx.account,
             happyTx.gasLimit,
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
-        );
+        ) returns (bool _success, bytes memory _returnData) {
+            success = _success;
+            returnData = _returnData;
+        } catch (bytes memory lowLevelData) {
+            revert ValidationReverted(output.validationStatus);
+        }
+
         output.validationStatus = abi.decode(returnData, ((bytes)));
         // If there is less than 4 bytes of data, the validation didn't strictly revert, however
         // it is improperly implemented.
@@ -235,14 +242,19 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // [LOGGAS] uint256 executeGasStart = gasleft();
 
-        (success, returnData) = happyTx.account.excessivelySafeCall(
-            // Pass the max possible gas if we need to estimate the gas limit.
+        try this.safeCallWrapper(
+            happyTx.account,
             isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
-            0, // gas token transfer value
-            // Allow the call revert data to take up the same size as the other revert data.
+            0,
             MAX_EXECUTE_REVERT_DATA_SIZE,
             abi.encodeCall(IHappyAccount.execute, (happyTx))
-        );
+        ) returns (bool _success, bytes memory _returnData) {
+            success = _success;
+            returnData = _returnData;
+        } catch (bytes memory lowLevelData) {
+            success = false;
+            returnData = abi.encodeWithSelector(bytes4(keccak256(lowLevelData)));
+        }
 
         // [LOGGAS] uint256 executeGasEnd = gasleft();
         // [LOGGAS] uint256 executeCallGasUsed = executeGasStart - executeGasEnd;
@@ -295,7 +307,13 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             0, // gas token transfer value
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
-        );
+        ) returns (bool _success, bytes memory _returnData) {
+            success = _success;
+            returnData = _returnData;
+        } catch (bytes memory lowLevelData) {
+            success = false;
+            returnData = abi.encodeWithSelector(bytes4(keccak256(lowLevelData)));
+        }
         if (!success) revert PaymentReverted(returnData);
         output.payoutStatus = abi.decode(returnData, (bytes));
 
@@ -321,5 +339,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         if (tx.origin.balance < balance + charged) {
             revert PaymentFailed(returnData);
         }
+    }
+
+    function safeCallWrapper(address target, uint256 gas, uint256 value, uint16 maxCopy, bytes memory calldata_)
+        external
+        returns (bool, bytes memory)
+    {
+        return target.excessivelySafeCall(gas, value, maxCopy, calldata_);
     }
 }
