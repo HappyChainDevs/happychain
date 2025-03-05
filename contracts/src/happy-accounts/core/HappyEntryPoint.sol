@@ -225,7 +225,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         bytes memory returnData;
         try this.safeCallWrapper(
             happyTx.account,
-            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : remainingGas,
+            isSimulation && happyTx.gasLimit == 0 ? gasleft() : remainingGas,
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
@@ -301,15 +301,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 consumedGas =
             HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
 
-        // Update remaining gas after validation and execution, ensuring we maintain our buffer
-        uint256 bufferedConsumedGas = consumedGas + POST_OOG_GAS_BUFFER;
-        if (bufferedConsumedGas >= happyTx.gasLimit) {
-            // If we've consumed most of the gas (including buffer), ensure we have a minimal amount for payout
-            remainingGas = happyTx.gasLimit / 10; // 10% of original gas limit as a minimal fallback
-        } else {
-            remainingGas = happyTx.gasLimit - consumedGas - POST_OOG_GAS_BUFFER;
-        }
-
         // [LOGGAS] uint256 txGasEnd = gasleft();
         // [LOGGAS] uint256 txGasUsed = txGasStart - txGasEnd;
         // [LOGGAS] console.log("txGasFromCallGas overall gas usage: ", txGasUsed);
@@ -320,12 +311,13 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             return output;
         }
 
+        remainingGas = consumedGas + POST_OOG_GAS_BUFFER > happyTx.gasLimit ? 0 : happyTx.gasLimit - consumedGas - POST_OOG_GAS_BUFFER;
         uint256 balance = tx.origin.balance;
         uint256 gasBeforePayout = gasleft();
         // [LOGGAS] uint256 payoutGasStart = gasleft();
         try this.safeCallWrapper(
             happyTx.paymaster,
-            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : remainingGas,
+            isSimulation && happyTx.gasLimit == 0 ? gasleft() : remainingGas,
             0, // gas token transfer value
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
