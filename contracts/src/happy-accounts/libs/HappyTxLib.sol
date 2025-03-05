@@ -271,6 +271,13 @@ library HappyTxLib {
         return (happyTx.maxFeePerGas) * CALLDATA_GAS_PER_BYTE;
     }
 
+    /**
+     * @dev Retrieves a value from the extraData field by looking up a specific key
+     * @param extraData The encoded extra data byte array to search in
+     * @param key The 3-byte key to lookup in the extraData
+     * @return found Boolean indicating whether the key was found
+     * @return value The value associated with the key, or empty bytes if not found
+     */
     function getExtraDataValue(bytes memory extraData, bytes3 key)
         internal
         pure
