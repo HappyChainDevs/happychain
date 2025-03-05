@@ -218,13 +218,14 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // it is improperly implemented.
         if (!success || output.validationStatus.length < 4) revert ValidationReverted(output.validationStatus);
 
+        bool isSimulation = tx.origin == address(0);
         bytes4 selector;
         assembly {
             // skip tuple offset and length, then extract 4 first bytes
             mcopy(selector, add(returnData, 64), 4)
         }
         if (selector != 0) {
-            bool shouldContinue = tx.origin == address(0)
+            bool shouldContinue = isSimulation
                 && (selector == UnknownDuringSimulation.selector || selector == FutureNonceDuringSimulation.selector);
 
             if (!shouldContinue) revert ValidationFailed(returnData);
@@ -236,7 +237,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         (success, returnData) = happyTx.account.excessivelySafeCall(
             // Pass the max possible gas if we need to estimate the gas limit.
-            tx.origin == address(0) && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
+            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0, // gas token transfer value
             // Allow the call revert data to take up the same size as the other revert data.
             MAX_EXECUTE_REVERT_DATA_SIZE,

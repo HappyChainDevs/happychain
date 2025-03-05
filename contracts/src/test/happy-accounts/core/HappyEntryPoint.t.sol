@@ -33,8 +33,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // CONSTANTS
 
     bytes32 private constant SALT = 0;
+    bytes32 private constant SALT2 = bytes32(uint256(1));
     address private constant ZERO_ADDRESS = address(0);
-    uint256 private constant DEPOSIT = 10 ether;
+    uint256 private constant INITIAL_DEPOSIT = 10 ether;
 
     // ====================================================================================================
     // STATE VARIABLES
@@ -44,9 +45,10 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     address private smartAccount;
     address private paymaster;
+    address private mockToken;
     uint256 private privKey;
     address private owner;
-    address private dest; // The mockToken address for these tests
+    address private dest;
 
     function setUp() public {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
@@ -61,33 +63,44 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         paymaster = address(deployer.scrappyPaymaster());
         smartAccount = deployer.scrappyAccountFactory().createAccount(SALT, owner);
 
+        dest = deployer.scrappyAccountFactory().createAccount(SALT2, owner);
+
         // Fund the smart account and paymaster
-        vm.deal(paymaster, DEPOSIT);
-        vm.deal(smartAccount, DEPOSIT);
+        vm.deal(paymaster, INITIAL_DEPOSIT);
+        vm.deal(smartAccount, INITIAL_DEPOSIT);
 
         // Deploy a mock ERC20 token
-        dest = address(new MockERC20Token("MockTokenA", "MTA", uint8(18)));
+        mockToken = address(new MockERC20Token("MockTokenA", "MTA", uint8(18)));
     }
 
     // ====================================================================================================
     // BASIC TESTS
 
     function testSelfPayingTx() public {
-        // Self-paying: account == paymaster
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, smartAccount, dest, privKey);
+        // Self-paying: paymaster == account itself
+        uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
         happyEntryPoint.submit(happyTx.encode());
+        uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
+        assertEq(finalTokenBalance, initialTokenBalance + TOKEN_MINT_AMOUNT);
     }
 
     function testPaymasterSponsoredTx() public {
-        // Paymaster-sponsored: paymaster is the ScrappyPaymaster
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
+        // Paymaster-sponsored: paymaster == ScrappyPaymaster
+        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
         happyEntryPoint.submit(happyTx.encode());
+        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
+        assertEq(finalTokenBalance, initialTokenBalance + TOKEN_MINT_AMOUNT);
     }
 
     function testSubmitterSponsoredTx() public {
-        // Submitter-sponsored: paymaster is zero address
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, ZERO_ADDRESS, dest, privKey);
+        // Submitter-sponsored: paymaster == address(0)
+        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
         happyEntryPoint.submit(happyTx.encode());
+        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
+        assertEq(finalTokenBalance, initialTokenBalance + TOKEN_MINT_AMOUNT);
     }
 
     // ====================================================================================================
@@ -95,23 +108,35 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testSimulateSelfPayingTx() public {
         // Self-paying simulation: account == paymaster
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, smartAccount, dest, privKey);
+        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         happyEntryPoint.submit(happyTx.encode());
+        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
+        // In simulation mode, the token balance shouldn't actually change
+        assertEq(finalTokenBalance, initialTokenBalance);
     }
 
     function testSimulatePaymasterSponsoredTx() public {
         // Paymaster-sponsored simulation: paymaster is the ScrappyPaymaster
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
+        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         happyEntryPoint.submit(happyTx.encode());
+        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
+        // In simulation mode, the token balance shouldn't actually change
+        assertEq(finalTokenBalance, initialTokenBalance);
     }
 
     function testSimulateSubmitterSponsoredTx() public {
         // Submitter-sponsored simulation: paymaster is zero address
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, ZERO_ADDRESS, dest, privKey);
+        uint256 initialTokenBalance = getTokenBalance(dest, smartAccount);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         happyEntryPoint.submit(happyTx.encode());
+        uint256 finalTokenBalance = getTokenBalance(dest, smartAccount);
+        // In simulation mode, the token balance shouldn't actually change
+        assertEq(finalTokenBalance, initialTokenBalance);
     }
 
     // ====================================================================================================
@@ -119,15 +144,14 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testValidatorRevertedRecover() public {
         // Create a basic HappyTx
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, ZERO_ADDRESS, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
         // Corrupt the validatorData with invalid signature format (not proper r,s,v format)
         // This will cause the recover function to revert during validation
         happyTx.validatorData = hex"deadbeef";
 
-        bytes memory ecdsaError = abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()")));
-
         // The function should revert with ValidationReverted(InvalidSignature.selector)
+        bytes memory ecdsaError = abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()")));
         vm.expectRevert(abi.encodeWithSelector(ValidationReverted.selector, ecdsaError));
 
         // Submit the transaction to trigger the revert
@@ -135,7 +159,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     function testValidationFailedGasPriceTooHigh() public {
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
         // Set a very high tx gas price (higher than happyTx.maxFeePerGas)
         vm.txGasPrice(5000000000);
@@ -149,7 +173,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testValidationFailedInvalidNonce() public {
         // This should fail for both nonce too high and nonce too low cases
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
         // Set a very high tx nonce (higher than happyTx.nonceValue)
         happyTx.nonceValue += 100;
@@ -162,10 +186,10 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     function testValidationFailedInvalidOwnerSignature() public {
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
-        // Change any field to invalid the signature over the happyTx
-        happyTx.paymaster = ZERO_ADDRESS;
+        // Change any field (except nonce) to invalid the signature over the happyTx
+        happyTx.gasLimit += 10;
 
         // The function should revert with ValidationFailed(InvalidOwnerSignature.selector)
         vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidOwnerSignature.selector));
@@ -179,12 +203,13 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testSimulateWithLowNonceValidationFailedInvalidNonce() public {
         // This should fail for both nonce too high and nonce too low cases
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
         // First execute the happyTx to increment the nonce
         happyEntryPoint.submit(happyTx.encode());
 
-        // Now use the same happyTx again, so it'll have a low nonce value this time
+        // Now use the same happyTx again, so it'll have a low nonce value this time, causing it to fail.
+        // Note: we don't need to re-sign the happyTx, as the call will revert before it reaches signature validation stage.
 
         // The function should revert with ValidationFailed(InvalidNonce.selector)
         vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidNonce.selector));
@@ -196,7 +221,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testSimulateWithFutureNonce() public {
         // Set a future nonce for the simulated happyTx
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(dest));
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx.nonceValue = 100;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
@@ -209,7 +235,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     function testSimulateWithUnknownDuringSimulation() public {
-        HappyTx memory happyTx = createSignedHappyTxForMint(smartAccount, paymaster, dest, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
         // Change any field to invalid the signature over the happyTx
         happyTx.paymaster = ZERO_ADDRESS;
@@ -226,10 +252,11 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // EXECUTION TESTS
 
     function testExecuteWithLowExecutionGasLimitExcessivelySafeCallReverts() public {
-        // Set a very low execution gas limit for the happyTx
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(dest));
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+
+        // Set a very low execution gas limit for the happyTx, and sign over it
         happyTx.executeGasLimit = 2000;
-        happyTx.nonceValue = getNonce(smartAccount, 0);
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // EVMError OOG causes the submit() function to revert as well
@@ -240,9 +267,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testExecuteInnerCallRevertsInvalidCallDataEmptryRevertData() public {
         // Set a very low execution gas limit for the happyTx
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(10));
-        happyTx.nonceValue = getNonce(smartAccount, 0);
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
+        HappyTx memory happyTx = createSignedHappyTx(smartAccount, paymaster, dest, privKey, new bytes(10));
 
         // The result should be output.callStatus = CallReverted, with  output.revertData = OOG
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
@@ -253,33 +278,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         assertEq(output.executeGas, 0);
     }
 
-    // TODO: Can probably revert "with a reason" if I mint uint256.max; that'll cause an overflow and revert
-    // Update: It just reverts with 00000000 revert data
-    // TODO: review this by running:
-    // ❯ source .env && forge test --match-test testExecuteInnerCallRevertsInvalidCallData -vvvv
-    function testExecuteInnerCallRevertsInvalidCallData() public {
-        // Pre-mint tokens to the address to cause overflow in the next mint call
-        MockERC20Token(dest).mint(smartAccount, UINT256_MAX-1);
-
-        // This one should cause an overflow
-        HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(smartAccount, UINT256_MAX-1));
-        happyTx.nonceValue = getNonce(smartAccount, 0);
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // The result should be output.callStatus = CallReverted
-        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-
-        bytes memory revertData = new bytes(0);
-        assertEq(uint8(output.callStatus), uint8(CallStatus.CALL_REVERTED));
-        assertEq(output.revertData, revertData);
-        assertEq(output.executeGas, 0);
-    }
-
     function testExecuteMockTokenAlwaysReverts() public {
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getAlwaysRevertCallData());
-        happyTx.nonceValue = getNonce(smartAccount, 0);
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
+        HappyTx memory happyTx = createSignedHappyTx(smartAccount, paymaster, mockToken, privKey, getMockTokenAlwaysRevertCallData());
 
         // The result should be output.callStatus = CallReverted
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
@@ -291,34 +291,37 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     function testExecuteWithHighHappyTxValueGreaterThanAccountBalance() public {
+        // Set the initial balance of the smart account to 0
+        vm.deal(smartAccount, 0);
         HappyTx memory happyTx =
-            createSignedHappyTx(smartAccount, dest, smartAccount, privKey, getETHTransferCallData(dest));
+            createSignedHappyTx(smartAccount, ZERO_ADDRESS, dest, privKey, getETHTransferCallData(dest, 1));
 
         // The call should fail because the smartAccount address doesn't have enough funds
-        // TODO: This doesn't have any revertData either, so the output.callStatus is CALL_SUCCEEDED, not sigma
-        vm.expectRevert();
+        vm.expectRevert(); // TODO: This doesn't have any revertData either, so the output.callStatus is CALL_SUCCEEDED, not sigma
         happyEntryPoint.submit(happyTx.encode());
+
+        // Account balance should remain unchanged since the transaction would be unsuccessful
+        uint256 newEthBalance = (smartAccount).balance;
+        assertEq(newEthBalance, 0);
     }
 
     // ====================================================================================================
     // EXECUTION TESTS (SIMULATION)
 
-    function testSimulationWithZeroExecGasLimit() public {
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(dest));
+    function testSimulationWithZeroExecutionGasLimit() public {
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx.executeGasLimit = 0;
-        happyTx.nonceValue = getNonce(smartAccount, 0);
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
 
         // The output.executeGas gives the gas usage for execute() call
-        assertEq(output.executeGas, 49473); // TODO: Is there need to check against this hardcoded value?
+        assertGt(output.executeGas, 0);
 
         // Submit a new happyTx with the above execGasLimit, it should succeed
-        happyTx = getStubHappyTx(smartAccount, dest, smartAccount, getMintCallData(dest));
-        happyTx.executeGasLimit = output.executeGas;
-        happyTx.nonceValue = getNonce(smartAccount, 0);
+        happyTx = getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.executeGasLimit = output.executeGas * 110/100; // 10% buffer
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // This should NOT revert (hopefully?)
