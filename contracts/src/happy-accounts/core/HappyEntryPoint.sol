@@ -153,6 +153,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     uint256 private constant PAYOUT_CALL_OVERHEAD = 4500;
     //^ From the gas report, 2425 for self-paying, 4395 for paymaster-sponsored, taking the maximum.
 
+    // ====================================================================================================
+    // EXTERNAL FUNCTIONS
+
     /**
      * Execute a Happy Transaction, and tries to ensure that the submitter
      * (tx.origin) receives payment for submitting the transaction.
@@ -251,9 +254,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         ) returns (bool _success, bytes memory _returnData) {
             success = _success;
             returnData = _returnData;
-        } catch (bytes memory lowLevelData) {
+        } catch (bytes memory _returnData) {
             success = false;
-            returnData = abi.encodeWithSelector(bytes4(keccak256(lowLevelData)));
+            returnData = _returnData;
         }
 
         // [LOGGAS] uint256 executeGasEnd = gasleft();
@@ -312,7 +315,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             returnData = _returnData;
         } catch (bytes memory lowLevelData) {
             success = false;
-            returnData = abi.encodeWithSelector(bytes4(keccak256(lowLevelData)));
+            returnData = lowLevelData;
         }
         if (!success) revert PaymentReverted(returnData);
         output.payoutStatus = abi.decode(returnData, (bytes));
@@ -341,10 +344,22 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         }
     }
 
+    // ====================================================================================================
+    // HELPER FUNCTIONS
+
     function safeCallWrapper(address target, uint256 gas, uint256 value, uint16 maxCopy, bytes memory calldata_)
         external
+        onlySelf
         returns (bool, bytes memory)
     {
-        return target.excessivelySafeCall(gas, value, maxCopy, calldata_);
+        (bool success, bytes memory returnData) = target.excessivelySafeCall(gas, value, maxCopy, calldata_);
+
+        // Detect out-of-gas error specifically (false, 0x)
+        if (!success && returnData.length == 0) {
+            // Return false but with a specific out-of-gas error signature
+            return (false, abi.encodeWithSelector(bytes4(keccak256("outOfGas()"))));
+        }
+
+        return (success, returnData);
     }
 }
