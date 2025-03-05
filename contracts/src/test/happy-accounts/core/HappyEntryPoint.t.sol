@@ -9,6 +9,8 @@ import {MockERC20Token} from "../../../mocks/MockERC20.sol";
 import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
+import {ExecutionReverted} from "../../../happy-accounts/core/HappyEntryPoint.sol";
+
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
 import {InvalidOwnerSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
 
@@ -155,7 +157,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // ====================================================================================================
     // VALIDATION TESTS
 
-    function testValidatorRevertedRecover() public {
+    function testValidatorRevertedAtEcdsaRecover() public {
         // Create a basic HappyTx
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
@@ -264,17 +266,23 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // ====================================================================================================
     // EXECUTION TESTS
 
-    function testExecuteWithLowExecutionGasLimitExcessivelySafeCallReverts() public {
+    function testExecuteWithLowExecutionGasLimitOOG() public {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
 
         // Set a very low execution gas limit for the happyTx, and sign over it
-        happyTx.executeGasLimit = 2000;
+        happyTx.executeGasLimit = 200;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
-        // EVMError OOG causes the submit() function to revert as well
-        vm.expectRevert();
-        happyEntryPoint.submit(happyTx.encode());
+        // Expect the ExecutionReverted event to be emitted
+        vm.expectEmit(true, false, false, true, address(happyEntryPoint));
+        emit ExecutionReverted(abi.encodePacked(bytes4(0x31fe52e8)));
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        assertEq(output.validationStatus, bytes4(0));
+        assertEq(uint8(output.callStatus), uint8(CallStatus.EXECUTION_REVERTED));
+        assertEq(output.revertData, abi.encodeWithSelector(bytes4(keccak256("outOfGas()"))));
+        assertEq(output.executeGas, 0);
     }
 
     function testExecuteInnerCallRevertsInvalidCallDataEmptryRevertData() public {

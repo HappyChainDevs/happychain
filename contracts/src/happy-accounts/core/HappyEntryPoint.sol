@@ -104,6 +104,22 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     // Must be used to avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
 
+    // ====================================================================================================
+    // ERRORS
+
+    error NotFromSelf();
+
+    // ====================================================================================================
+    // MODIFIERS
+
+    modifier onlySelf() {
+        if (msg.sender != address(this)) revert NotFromSelf();
+        _;
+    }
+
+    // ====================================================================================================
+    // CONSTANTS
+
     /**
      * @dev Maximum amount of data allowed to be returned from {IHappyAccount.validate}.
      * The returned data is as follows:
@@ -138,6 +154,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      */
     uint256 private constant PAYOUT_CALL_OVERHEAD = 4300;
     //^ From the gas report, 2409 for self-paying, 4299 for paymaster-sponsored, taking the max of both.
+
+    // ====================================================================================================
+    // EXTERNAL FUNCTIONS
 
     /**
      * Execute a Happy Transaction, and tries to ensure that the submitter
@@ -204,7 +223,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             returnData = _returnData;
         } catch (bytes memory lowLevelData) {
             success = false;
-            returnData = abi.encodeWithSelector(bytes4(keccak256(lowLevelData)));
+            returnData = lowLevelData;
         }
         if (!success) revert ValidationReverted(returnData);
 
@@ -231,9 +250,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         ) returns (bool _success, bytes memory _returnData) {
             success = _success;
             returnData = _returnData;
-        } catch (bytes memory lowLevelData) {
+        } catch (bytes memory _returnData) {
             success = false;
-            returnData = abi.encodeWithSelector(bytes4(keccak256(lowLevelData)));
+            returnData = _returnData;
         }
 
         // [LOGGAS] uint256 executeGasEnd = gasleft();
@@ -243,24 +262,25 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] console.log("excessivelySafeCall (execute) overhead: ", executeCallOverhead);
 
         // Don't revert, as we still want to get the payment for a reverted call.
-        ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
-        // TODO: We should also probably check if exec.gas = 0
-        // TODO: In case there's empty revertData but inner call fails (success = false inside execute)
-        // TODO: Even if we don't care if execute call reverted, we still want payout
-        // TODO: But we should probably add it to callstatus (for simulation or for actual execution)
         if (!success) {
             emit ExecutionReverted(returnData);
+
             output.callStatus = CallStatus.EXECUTION_REVERTED;
             output.revertData = returnData;
-        } else if (execOutput.revertData.length != 0) {
-            emit CallReverted(execOutput.revertData);
-            output.callStatus = CallStatus.CALL_REVERTED;
-            output.revertData = execOutput.revertData;
+            output.executeGas = 0;
         } else {
-            output.callStatus = CallStatus.SUCCESS;
-        }
+            ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
+            if (execOutput.revertData.length != 0 || execOutput.gas == 0) {
+                emit CallReverted(execOutput.revertData);
 
-        output.executeGas = uint32(execOutput.gas);
+                output.callStatus = CallStatus.CALL_REVERTED;
+                output.revertData = execOutput.revertData;
+            } else {
+                output.callStatus = CallStatus.SUCCESS;
+            }
+
+            output.executeGas = uint32(execOutput.gas);
+        }
 
         // 3. Collect payment
 
@@ -295,7 +315,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             returnData = _returnData;
         } catch (bytes memory lowLevelData) {
             success = false;
-            returnData = abi.encodeWithSelector(bytes4(keccak256(lowLevelData)));
+            returnData = lowLevelData;
         }
         if (!success) revert PaymentReverted(returnData);
 
@@ -323,10 +343,22 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         }
     }
 
+    // ====================================================================================================
+    // HELPER FUNCTIONS
+
     function safeCallWrapper(address target, uint256 gas, uint256 value, uint16 maxCopy, bytes memory calldata_)
         external
+        onlySelf
         returns (bool, bytes memory)
     {
-        return target.excessivelySafeCall(gas, value, maxCopy, calldata_);
+        (bool success, bytes memory returnData) = target.excessivelySafeCall(gas, value, maxCopy, calldata_);
+
+        // Detect out-of-gas error specifically (false, 0x)
+        if (!success && returnData.length == 0) {
+            // Return false but with a specific out-of-gas error signature
+            return (false, abi.encodeWithSelector(bytes4(keccak256("outOfGas()"))));
+        }
+
+        return (success, returnData);
     }
 }
