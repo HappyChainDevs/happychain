@@ -201,9 +201,10 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         );
         if (!success) revert ValidationReverted(returnData);
 
+        bool isSimulation = tx.origin == address(0);
         bytes4 result = abi.decode(returnData, (bytes4));
         if (result != 0) {
-            bool shouldContinue = tx.origin == address(0)
+            bool shouldContinue = isSimulation
                 && (result == UnknownDuringSimulation.selector || result == FutureNonceDuringSimulation.selector);
 
             if (!shouldContinue) revert ValidationFailed(result);
@@ -216,7 +217,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         (success, returnData) = happyTx.account.excessivelySafeCall(
             // Pass the max possible gas if we need to estimate the gas limit.
-            tx.origin == address(0) && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
+            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0, // gas token transfer value
             // Allow the call revert data to take up the same size as the other revert data.
             MAX_EXECUTE_REVERT_DATA_SIZE,
