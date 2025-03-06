@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {MockERC20Token} from "../mocks/MockERC20.sol";
+import {MockERC20} from "../mocks/MockERC20.sol";
 import {BaseDeployScript} from "./BaseDeployScript.sol";
 import {HappyCounter} from "../mocks/HappyCounter.sol";
 
@@ -14,9 +14,9 @@ contract DeployMockERC20 is BaseDeployScript {
     bytes32 public constant SALT_TOKEN_B = bytes32(uint256(1));
     bytes32 public constant SALT_TOKEN_C = bytes32(uint256(2));
 
-    MockERC20Token public mockTokenA;
-    MockERC20Token public mockTokenB;
-    MockERC20Token public mockTokenC;
+    MockERC20 public mockTokenA;
+    MockERC20 public mockTokenB;
+    MockERC20 public mockTokenC;
     HappyCounter public happyCounter;
 
     function deploy() internal override {
@@ -28,13 +28,10 @@ contract DeployMockERC20 is BaseDeployScript {
         happyCounter = HappyCounter(_happyCounter);
     }
 
-    function deployMockToken(string memory name, string memory symbol, bytes32 salt)
-        internal
-        returns (MockERC20Token)
-    {
+    function deployMockToken(string memory name, string memory symbol, bytes32 salt) internal returns (MockERC20) {
         (address addr,) = deployDeterministic(
-            name, "MockERC20Token", type(MockERC20Token).creationCode, abi.encode(name, symbol, uint8(18)), salt
+            name, "MockERC20", type(MockERC20).creationCode, abi.encode(name, symbol, uint8(18)), salt
         );
-        return MockERC20Token(addr);
+        return MockERC20(addr);
     }
 }

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {BaseDeployScript} from "../deploy/BaseDeployScript.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {MockERC20Token} from "../mocks/MockERC20.sol";
+import {MockERC20} from "../mocks/MockERC20.sol";
 import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
 
 import {SIG_VALIDATION_SUCCESS_UINT, SIG_VALIDATION_FAILED_UINT} from "kernel/types/Constants.sol";
@@ -13,7 +13,7 @@ import {Test} from "forge-std/Test.sol";
 
 contract SessionValidatorTest is Test, BaseDeployScript {
     SessionKeyValidator public sessionKeyValidator;
-    MockERC20Token public mockToken;
+    MockERC20 public mockToken;
 
     function setUp() public {
         (address _sessionKeyValidator,) = deployDeterministicProxy(
@@ -23,7 +23,7 @@ contract SessionValidatorTest is Test, BaseDeployScript {
             bytes32(0)
         );
         sessionKeyValidator = SessionKeyValidator(_sessionKeyValidator);
-        mockToken = new MockERC20Token("MockToken", "MTK", 18);
+        mockToken = new MockERC20("MockToken", "MTK", 18);
     }
 
     struct PartialPackedUserOperation {
