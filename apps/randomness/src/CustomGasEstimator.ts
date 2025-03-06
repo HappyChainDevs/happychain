@@ -18,7 +18,7 @@ export class CustomGasEstimator extends DefaultGasLimitEstimator {
             return ok(75000n)
         }
         if (transaction.functionName === "revealValue") {
-            return ok(40000n)
+            return ok(60000n)
         }
 
         if (transaction.functionName === "postDrand") {
