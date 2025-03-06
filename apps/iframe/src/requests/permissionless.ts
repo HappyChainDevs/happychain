@@ -5,7 +5,6 @@ import {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
-    HappyWalletCapability,
     type Msgs,
     type ProviderMsgsFromApp,
     requestPayloadIsHappyMethod,
@@ -15,11 +14,9 @@ import {
     type Address,
     type Client,
     type Hash,
-    InternalRpcError,
     InvalidAddressError,
     type Transaction,
     type TransactionReceipt,
-    type WalletCapabilities,
     hexToBigInt,
     isAddress,
     parseSignature,
@@ -42,7 +39,6 @@ import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
-import { convertUserOpReceiptToCallStatus } from "./modules/boop-batcher/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
 
@@ -272,50 +268,6 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             // If this is permissionless, we're already on the right chain so we simply succeed.
             // The app may have bypassed the permission check, but this doesn't do anything.
             return null
-
-        // EIP-5792
-        case "wallet_getCapabilities": {
-            // This method SHOULD return an error if the user has not
-            // already authorized a connection between the application and
-            // the requested address.
-            checkAuthenticated()
-            const queryAddress = request.payload.params?.[0]
-            if (!queryAddress) {
-                throw new Error("Missing address parameter")
-            }
-
-            const currentChainId = getCurrentChain().chainId
-
-            const capabilities: WalletCapabilities = {
-                [currentChainId]: Object.fromEntries(
-                    Object.values(HappyWalletCapability).map((capability) => [capability, { supported: true }]),
-                ),
-            }
-
-            // c.f. https://www.eip5792.xyz/reference/getCapabilities#returns
-            return capabilities
-        }
-
-        // this method only returns a subset of the fields that eth_getTransactionReceipt returns
-        case "wallet_getCallsStatus": {
-            // TODO if the batch was atomic, this handler MUST return only a single receipt
-            try {
-                const [hash] = request.payload.params as Hash[]
-                if (!hash) {
-                    throw new InternalRpcError(new Error("Transaction hash is missing."))
-                }
-                const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
-
-                const userOpReceipt = await smartAccountClient.waitForUserOperationReceipt({
-                    hash: hash,
-                })
-
-                return convertUserOpReceiptToCallStatus(userOpReceipt ? [userOpReceipt] : null)
-            } catch (error) {
-                console.error(error)
-                throw error
-            }
-        }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             const user = getUser()
