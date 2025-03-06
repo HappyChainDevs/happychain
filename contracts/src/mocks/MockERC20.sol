@@ -79,6 +79,11 @@ contract MockERC20 is IERC20 {
         revert AlwaysRevert();
     }
 
+    /// @dev Reverts with no data. Used for testing purposes.
+    function alwaysRevertEmpty() external pure {
+        revert("");
+    }
+
     /*//////////////////////////////////////////////////////////////
                             EIP-2612 STORAGE
     //////////////////////////////////////////////////////////////*/
