@@ -135,23 +135,89 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testSimulateSelfPayingTx() public {
         // Self-paying simulation: account == paymaster
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
+        uint256 id = vm.snapshot();
+
+        uint256 initialBalance = getEthBalance(smartAccount);
+        uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
+
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.gasLimit = 0;
+        happyTx.executeGasLimit = 0;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        happyEntryPoint.submit(happyTx.encode());
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        vm.revertTo(id); // EVM state is like before the .submit() call
+
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS));
+
+        // The balance should be the same as before, as this was a simulated call, not actually submitted on-chain
+        uint256 finalBalance = getEthBalance(smartAccount);
+        assertEq(finalBalance, initialBalance);
+
+        uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
+        assertEq(finalTokenBalance, initialTokenBalance);
     }
 
     function testSimulatePaymasterSponsoredTx() public {
         // Paymaster-sponsored simulation: paymaster is the ScrappyPaymaster
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
+        uint256 id = vm.snapshot();
+
+        uint256 initialBalance = getEthBalance(smartAccount);
+        uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
+
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.gasLimit = 0;
+        happyTx.executeGasLimit = 0;
+        happyTx.maxFeePerGas = 0;
+        happyTx.submitterFee = 0;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+        happyTx.maxFeePerGas = 1200000000;
+
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        happyEntryPoint.submit(happyTx.encode());
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        vm.revertTo(id); // EVM state is like before the .submit() call
+
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS));
+
+        // The balance should be the same as before, as this was a simulated call, not actually submitted on-chain
+        uint256 finalBalance = getEthBalance(smartAccount);
+        assertEq(finalBalance, initialBalance);
+
+        uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
+        assertEq(finalTokenBalance, initialTokenBalance);
     }
 
     function testSimulateSubmitterSponsoredTx() public {
         // Submitter-sponsored simulation: paymaster is zero address
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
+        uint256 id = vm.snapshot();
+
+        uint256 initialBalance = getEthBalance(smartAccount);
+        uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
+
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.gasLimit = 0;
+        happyTx.executeGasLimit = 0;
+        happyTx.maxFeePerGas = 0;
+        happyTx.submitterFee = 0;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+        happyTx.maxFeePerGas = 1200000000;
+
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        happyEntryPoint.submit(happyTx.encode());
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        vm.revertTo(id); // EVM state is like before the .submit() call
+
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS));
+
+        // The balance should be the same as before, as this was a simulated call, not actually submitted on-chain
+        uint256 finalBalance = getEthBalance(smartAccount);
+        assertEq(finalBalance, initialBalance);
+
+        uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
+        assertEq(finalTokenBalance, initialTokenBalance);
     }
 
     // ====================================================================================================
@@ -353,4 +419,18 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     // ====================================================================================================
     // PAYOUT TESTS
+
+    // ====================================================================================================
+    // HELPERS
+
+    function _assertExpectedSubmitOutput(SubmitOutput memory output, bytes4 validationStatus, uint8 callStatus)
+        internal
+        pure
+    {
+        assertGt(output.gas, 0);
+        assertGt(output.executeGas, 0);
+        assertEq(output.validationStatus, validationStatus);
+        assertEq(uint8(output.callStatus), callStatus);
+        assertEq(output.revertData.length, 0);
+    }
 }
