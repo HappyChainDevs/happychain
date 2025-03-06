@@ -312,7 +312,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             return output;
         }
 
-        remainingGas = consumedGas + POST_OOG_GAS_BUFFER > happyTx.gasLimit ? 0 : happyTx.gasLimit - consumedGas - POST_OOG_GAS_BUFFER;
+        remainingGas = consumedGas + POST_OOG_GAS_BUFFER > happyTx.gasLimit
+            ? 0
+            : happyTx.gasLimit - consumedGas - POST_OOG_GAS_BUFFER;
         uint256 balance = tx.origin.balance;
         uint256 gasBeforePayout = gasleft();
 
