@@ -1,9 +1,9 @@
 import { type HTMLArkProps, ark } from "@ark-ui/react"
 import type { VariantProps } from "class-variance-authority"
 import { forwardRef } from "react"
-import { recipeTextInput } from "./variants"
+import { recipeInput } from "./variants"
 
-type InputVariantsProps = VariantProps<typeof recipeTextInput>
+type InputVariantsProps = VariantProps<typeof recipeInput>
 interface InputProps extends InputVariantsProps, HTMLArkProps<"input"> {
     inputClass?: string
     wrapperClass?: string
@@ -14,7 +14,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     return (
         <div className={`relative w-full ${wrapperClass ?? ""}`}>
             <ark.input
-                className={`${recipeTextInput({ scale: scale, intent: intent, className: inputClass })}`}
+                className={`${recipeInput({ scale: scale, intent: intent, className: inputClass })}`}
                 placeholder={rest?.placeholder ?? ""}
                 type={rest?.type ?? "text"}
                 ref={ref}
