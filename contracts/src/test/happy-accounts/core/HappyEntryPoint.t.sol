@@ -357,17 +357,12 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     //     assertEq(output.executeGas, 0);
     // }
 
-    function testExecuteInnerCallRevertsInvalidCallData() public {
-        // Set a very low execution gas limit for the happyTx
+    function testExecuteInnerCallRevertsEmptyCallData() public {
         HappyTx memory happyTx = createSignedHappyTx(smartAccount, dest, paymaster, privKey, new bytes(10));
 
-        // The result should be output.callStatus = CallReverted, with  output.revertData = OOG
+        // This reverts with empty revertData: ← [Revert] EvmError: Revert
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-
-        bytes memory revertData = new bytes(0);
-
-        // assertEq(uint8(output.callStatus), uint8(CallStatus.CALL_REVERTED)); // TODO: uncomment after fixing the code
-        assertEq(output.revertData, revertData);
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.CALL_REVERTED), new bytes(0));
         assertEq(output.executeGas, 0);
     }
 
@@ -384,15 +379,41 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         assertEq(output.executeGas, 0);
     }
 
-    function testExecuteWithHighHappyTxValueGreaterThanAccountBalance() public {
+    function testExecuteMockTokenAlwaysRevertsEmpty() public {
+        HappyTx memory happyTx =
+            createSignedHappyTx(smartAccount, mockToken, paymaster, privKey, getMockTokenAlwaysRevertEmptyCallData());
+
+        // This reverts with empty revertData: ← [Revert] EvmError: Revert
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.CALL_REVERTED), new bytes(0));
+        assertEq(output.executeGas, 0);
+    }
+
+    //! This is another emvError like OOG, not a typical revert/require: ← [OutOfFunds] EvmError: OutOfFunds
+    function testExecuteWithHighHappyTxValueGreaterThanSmartAccountBalance() public {
         // Set the initial balance of the smart account to 0
         vm.deal(smartAccount, 0);
-        HappyTx memory happyTx =
-            createSignedHappyTx(smartAccount, ZERO_ADDRESS, dest, privKey, getETHTransferCallData(dest, 1));
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, ZERO_ADDRESS, new bytes(0));
+
+        // Set happyTx.value to a value higher than the smart account's balance
+        happyTx.value = 1;
+
+        // Make all gas fields zero before signing, as this is a submitter sponsored tx (as zero balance account can't pay for its gas fee)
+        happyTx.gasLimit = 0;
+        happyTx.executeGasLimit = 0;
+        happyTx.maxFeePerGas = 0;
+        happyTx.submitterFee = 0;
+
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Re-populate the gas fields to initial values so the transaction can be executed on-chain
+        happyTx.gasLimit = 4000000000;
+        happyTx.executeGasLimit = 4000000000;
+        happyTx.maxFeePerGas = 1200000000;
 
         // The call should fail because the smartAccount address doesn't have enough funds
-        vm.expectRevert(); // TODO: This doesn't have any revertData either, so the output.callStatus is CALL_SUCCEEDED, not sigma
-        happyEntryPoint.submit(happyTx.encode());
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.CALL_REVERTED), new bytes(0));
 
         // Account balance should remain unchanged since the transaction would be unsuccessful
         uint256 newEthBalance = (smartAccount).balance;

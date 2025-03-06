@@ -116,6 +116,10 @@ contract HappyTxTestUtils is Test {
         return abi.encodeCall(MockERC20.alwaysRevert, ());
     }
 
+    function getMockTokenAlwaysRevertEmptyCallData() public pure returns (bytes memory) {
+        return abi.encodeCall(MockERC20.alwaysRevertEmpty, ());
+    }
+
     // ====================================================================================================
     // NONCE HELPERS
 
