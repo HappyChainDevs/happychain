@@ -133,7 +133,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
-    // BAISC TESTS (SIMULATION)
+    // BASIC TESTS (SIMULATION)
 
     function testSimulateSelfPayingTx() public {
         // Self-paying simulation: account == paymaster
@@ -339,24 +339,25 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // EXECUTION TESTS
 
     // TODO: 🚧 Test under construction 🏗️
-    // function testExecuteWithLowExecutionGasLimitOOG() public {
-    //     HappyTx memory happyTx =
-    //         getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+    function testExecuteWithLowExecutionGasLimitOOG() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
 
-    //     // Set a very low execution gas limit for the happyTx, and sign over it
-    //     happyTx.executeGasLimit = 200;
-    //     happyTx.validatorData = signHappyTx(happyTx, privKey);
+        // Set a very low execution gas limit for the happyTx, and sign over it
+        // 7955 gas needed for excessivelysafecall(execute) + some buffer, thus, guaranteed to OOG due to inner call
+        happyTx.executeGasLimit = 8000;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
 
-    //     // Expect the ExecutionReverted event to be emitted
-    //     vm.expectEmit(true, false, false, true, address(happyEntryPoint));
-    //     emit ExecutionReverted(abi.encodePacked(bytes4(0x31fe52e8)));
-    //     SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        // Expect the ExecutionReverted event to be emitted
+        // vm.expectEmit(true, false, false, true, address(happyEntryPoint));
+        // emit ExecutionReverted(abi.encodePacked(bytes4(0x31fe52e8)));
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
 
-    //     assertEq(output.validationStatus, bytes4(0));
-    //     assertEq(uint8(output.callStatus), uint8(CallStatus.EXECUTION_REVERTED));
-    //     assertEq(output.revertData, abi.encodeWithSelector(bytes4(keccak256("outOfGas()"))));
-    //     assertEq(output.executeGas, 0);
-    // }
+        assertEq(output.executeGas, 0);
+        _assertExpectedSubmitOutput(
+            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(bytes4(keccak256("outOfGas()")))
+        );
+    }
 
     function testExecuteInnerCallRevertsEmptyCallData() public {
         HappyTx memory happyTx = createSignedHappyTx(smartAccount, dest, paymaster, privKey, new bytes(10));
