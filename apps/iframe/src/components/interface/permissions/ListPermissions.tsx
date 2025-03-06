@@ -1,10 +1,13 @@
-import type { WalletPermissionCaveat } from "viem"
+import type { Address, WalletPermissionCaveat } from "viem"
 import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels"
 import { useHasPermissions } from "#src/hooks/useHasPermissions"
 import { type AppPermissions, type WalletPermission, grantPermissions, revokePermissions } from "#src/state/permissions"
 import type { AppURL } from "#src/utils/appURL"
 import { Switch } from "../../primitives/toggle-switch/Switch"
 import { SessionKeyContract } from "./caveats/SessionKeyContract"
+
+import { useAtom } from "jotai"
+import { targetContractsAtom } from "#src/state/interfaceState"
 
 interface CaveatControlProps {
     permissionKey: string
@@ -29,15 +32,28 @@ interface ListItemProps {
 
 const ListItem = ({ permission }: ListItemProps) => {
     const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker as AppURL)
+    const [, setTargetContracts] = useAtom(targetContractsAtom)
     return (
         <div className="w-full">
             <Switch
                 disabled={!hasPermission && permission.caveats.length > 0}
                 checked={hasPermission}
                 onCheckedChange={(e) => {
-                    !e.checked
-                        ? revokePermissions(permission.invoker as AppURL, permission.parentCapability)
-                        : grantPermissions(permission.invoker as AppURL, permission.parentCapability)
+                    if (!e.checked) {
+                        // When revoking parent permission, also clear all selected target contracts
+                        setTargetContracts([])
+                        revokePermissions(permission.invoker as AppURL, permission.parentCapability)
+                    } else {
+                        const caveatAddresses = permission.caveats.reduce((addresses, caveat) => {
+                            if (caveat.type === "target" && typeof caveat.value === "string") {
+                                addresses.push(caveat.value as Address)
+                            }
+                            return addresses
+                        }, [] as Address[])
+
+                        setTargetContracts(caveatAddresses)
+                        grantPermissions(permission.invoker as AppURL, permission.parentCapability)
+                    }
                 }}
                 className="justify-between w-full [&_[data-part=label]]:w-3/4 flex-row-reverse text-base-content dark:text-neutral-content"
                 switchLabel={

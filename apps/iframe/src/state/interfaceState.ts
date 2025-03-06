@@ -1,5 +1,6 @@
 import { accessorsFromAtom } from "@happy.tech/common"
 import { atom } from "jotai"
+import type { Address } from "viem"
 
 export enum ContentType {
     TOKENS = "Tokens",
