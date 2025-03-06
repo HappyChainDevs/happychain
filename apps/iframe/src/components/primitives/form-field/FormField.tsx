@@ -16,20 +16,18 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(({ className = "", 
     <ArkField.Root ref={ref} className={cx("grid gap-1 group", className)} {...props} />
 ))
 
-interface LabelProps extends FieldLabelProps {
-    isOptional?: boolean
-}
-const Label = forwardRef<HTMLLabelElement, LabelProps>(({ className = "", children, isOptional, ...props }, ref) => (
+interface LabelProps extends FieldLabelProps {}
+const Label = forwardRef<HTMLLabelElement, LabelProps>(({ className = "", children, ...props }, ref) => (
     <ArkField.Label
         ref={ref}
         className={cx(
-            "text-xs opacity-80 group-focus-within:opacity-100 inline-flex gap-[1ex] items-baseline",
+            "text-xs  opacity-80 group-focus-within:opacity-100 inline-flex gap-[1ex] items-baseline",
             className ?? "",
         )}
         {...props}
     >
         {children}
-        {isOptional && <span className="opacity-90 text-[0.8725em]">(optional)</span>}
+        <span className="group-has-[[data-required]]:hidden opacity-90 text-[0.8725em]">(optional)</span>
     </ArkField.Label>
 ))
 

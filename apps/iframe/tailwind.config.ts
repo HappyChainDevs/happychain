@@ -116,7 +116,12 @@ export default {
         daisyui,
         plugin(({ addVariant }) => {
             addVariant("content-focused", ["&:focus", "&:focus-within"])
-            addVariant("input-invalid", ["&:user-invalid", "&:has(:user-invalid)"])
+            addVariant("input-invalid", [
+                "&:user-invalid",
+                "&:has(:user-invalid)",
+                "&:[data-invalid]",
+                "&:has([data-invalid])",
+            ])
             addVariant("click-disabled", ["&[aria-disabled=true]", "&:disabled"])
             addVariant("input-disabled", [
                 // Only target input/textarea that are readonly/disabled

@@ -1,5 +1,5 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { FormSend } from "#src/components/interface/send-tx/FormSend.tsx"
+import { FormSend } from "#src/components/interface/send-tx/FormSend"
 
 export const Route = createLazyFileRoute("/embed/send")({
     component: Send,

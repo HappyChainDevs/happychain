@@ -42,7 +42,7 @@ const schemaFormSendAsset = object({
         .number({
             message: "Ensure you enter a positive amount number.",
         })
-        .positive({ message: "Ensure you enter a positive amount number." }),
+        .nonnegative({ message: "Ensure you enter a positive amount number." }),
 })
 
 /**

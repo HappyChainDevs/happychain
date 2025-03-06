@@ -1,9 +1,8 @@
 import { useNavigate } from "@tanstack/react-router"
 import { cx } from "class-variance-authority"
 import { Button } from "#src/components/primitives/button/Button"
-import { FormField, FormFieldLabel } from "#src/components/primitives/form-field/FormField"
-import { Input } from "#src/components/primitives/input/Input"
-import { recipeInput } from "#src/components/primitives/input/variant"
+import { FormField } from "#src/components/primitives/form-field/FormField"
+import { recipeInput } from "#src/components/primitives/input/variants"
 import { FieldFormSendAssets, useFormSendAssets } from "#src/hooks/useFormSendAssets"
 
 export const FormSend = () => {
@@ -22,39 +21,33 @@ export const FormSend = () => {
 
     return (
         <form onSubmit={handleOnSubmit} className="w-full grid gap-4">
-            <FormField>
-                <FormFieldLabel htmlFor={FieldFormSendAssets.Recipient}>To:</FormFieldLabel>
-                <div className="grid gap-1 [&:has(input:user-invalid)_.indicator]:not-sr-only">
-                    <Input
-                        required
-                        name={FieldFormSendAssets.Recipient}
-                        id={FieldFormSendAssets.Recipient}
-                        placeholder="0x..."
-                        readOnly={
-                            mutationSendTransaction.status === "pending" || queryWaitForTransactionReceipt.isLoading
-                        }
-                        onInput={handleOnInput}
-                        aria-describedby="help-recipient-address"
-                        aria-invalid={!!formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
-                        pattern="^$|^0x[a-fA-F0-9]{40}$"
-                        {...(formErrors?.fieldErrors[FieldFormSendAssets.Recipient] && {
-                            "aria-errormessage": "error-recipient-address",
-                        })}
-                    />
-                    <p className="sr-only" id="help-recipient-address">
-                        The Ethereum address you'll send the tokens to.
-                    </p>
+            <FormField.Root
+                readOnly={mutationSendTransaction.status === "pending" || queryWaitForTransactionReceipt.isLoading}
+                invalid={!!formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
+                required
+            >
+                <FormField.Label>To:</FormField.Label>
+                <FormField.Input
+                    name={FieldFormSendAssets.Recipient}
+                    placeholder="0x..."
+                    onInput={handleOnInput}
+                    pattern="^$|^0x[a-fA-F0-9]{40}$"
+                />
+                <FormField.HelperText>The Ethereum address you'll send the tokens to.</FormField.HelperText>
 
-                    {formErrors?.fieldErrors[FieldFormSendAssets.Recipient] && (
-                        <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="error-recipient-address">
-                            {formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}
-                        </p>
-                    )}
-                </div>
-            </FormField>
-            <FormField>
+                <FormField.ErrorText>{formErrors?.fieldErrors[FieldFormSendAssets.Recipient]}</FormField.ErrorText>
+            </FormField.Root>
+            <FormField.Root
+                invalid={!!formErrors?.fieldErrors[FieldFormSendAssets.Amount]}
+                required
+                readOnly={
+                    queryBalanceNativeToken.status !== "success" ||
+                    queryWaitForTransactionReceipt.isLoading ||
+                    mutationSendTransaction.status === "pending"
+                }
+            >
                 <div className="flex items-baseline justify-between gap-[1ex]">
-                    <FormFieldLabel htmlFor={FieldFormSendAssets.Amount}>Amount:</FormFieldLabel>
+                    <FormField.Label htmlFor={FieldFormSendAssets.Amount}>Amount:</FormField.Label>
                     <p
                         className={cx(
                             "text-[0.6925em] font-medium inline-flex gap-[1ex] items-baseline",
@@ -71,15 +64,7 @@ export const FormSend = () => {
                             class: "relative flex justify-between gap-1",
                         })}
                     >
-                        <input
-                            required
-                            readOnly={
-                                queryBalanceNativeToken.status !== "success" ||
-                                queryWaitForTransactionReceipt.isLoading ||
-                                mutationSendTransaction.status === "pending"
-                            }
-                            name={FieldFormSendAssets.Amount}
-                            id={FieldFormSendAssets.Amount}
+                        <FormField.Unstyled.Input
                             className="w-full focus:outline-none h-full bg-transparent"
                             placeholder="0.0"
                             step="any"
@@ -89,11 +74,7 @@ export const FormSend = () => {
                             value={formValue[FieldFormSendAssets.Amount]}
                             max={maximumValueNativeToken}
                             onInput={handleOnInput}
-                            aria-describedby="help-send-amount"
-                            aria-invalid={!!formErrors?.fieldErrors[FieldFormSendAssets.Amount]}
-                            {...(formErrors?.fieldErrors[FieldFormSendAssets.Amount] && {
-                                "aria-errormessage": "error-send-amount",
-                            })}
+                            name={FieldFormSendAssets.Amount}
                         />
                         <Button
                             intent="ghost"
@@ -110,18 +91,14 @@ export const FormSend = () => {
                         </Button>
                     </div>
                     <div className="grid">
-                        <p className="sr-only" id="help-send-amount">
+                        <FormField.HelperText>
                             The amount of tokens you want to send from your account.
-                        </p>
+                        </FormField.HelperText>
 
-                        {formErrors?.fieldErrors[FieldFormSendAssets.Amount] && (
-                            <p className="sr-only indicator w-full text-[0.65rem] font-medium" id="error-send-amount">
-                                {formErrors?.fieldErrors[FieldFormSendAssets.Amount]}
-                            </p>
-                        )}
+                        <FormField.ErrorText>{formErrors?.fieldErrors[FieldFormSendAssets.Amount]}</FormField.ErrorText>
                     </div>
                 </div>
-            </FormField>
+            </FormField.Root>
             <div className="grid gap-4">
                 <Button
                     className="justify-center"
