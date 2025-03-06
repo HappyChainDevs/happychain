@@ -28,40 +28,27 @@
       "stateMutability": "nonpayable"
     }
   ],
-  "MockERC20Token": [
+  "MockERC20": [
     {
       "type": "constructor",
       "inputs": [
         {
-          "name": "name",
+          "name": "name_",
           "type": "string",
           "internalType": "string"
         },
         {
-          "name": "symbol",
+          "name": "symbol_",
           "type": "string",
           "internalType": "string"
         },
         {
-          "name": "decimals",
+          "name": "decimals_",
           "type": "uint8",
           "internalType": "uint8"
         }
       ],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "DOMAIN_SEPARATOR",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ],
-      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -158,26 +145,16 @@
     },
     {
       "type": "function",
-      "name": "initialize",
-      "inputs": [
+      "name": "domainSeparator",
+      "inputs": [],
+      "outputs": [
         {
-          "name": "name_",
-          "type": "string",
-          "internalType": "string"
-        },
-        {
-          "name": "symbol_",
-          "type": "string",
-          "internalType": "string"
-        },
-        {
-          "name": "decimals_",
-          "type": "uint8",
-          "internalType": "uint8"
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
         }
       ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
+      "stateMutability": "view"
     },
     {
       "type": "function",
