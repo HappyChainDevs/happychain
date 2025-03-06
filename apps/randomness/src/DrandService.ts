@@ -158,13 +158,12 @@ export class DrandService {
                     
                     let drandBeacon: Result<DrandBeacon, DrandError> | undefined
                     while (retryCount < maxRetries) {
-                        await sleep(retryIntervalMs)
                         drandBeacon = await this.getDrandBeacon(round)
                         
                         if (drandBeacon.isOk() || drandBeacon.error !== DrandError.TooEarly) {
                             break
                         }
-                        
+                        await sleep(retryIntervalMs)
                         retryCount++
                     }
 
