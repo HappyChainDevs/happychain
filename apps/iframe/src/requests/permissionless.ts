@@ -5,6 +5,7 @@ import {
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
     EIP1193UserRejectedRequestError,
+    HappyWalletCapability,
     type Msgs,
     type ProviderMsgsFromApp,
     requestPayloadIsHappyMethod,
@@ -17,6 +18,7 @@ import {
     InvalidAddressError,
     type Transaction,
     type TransactionReceipt,
+    type WalletCapabilities,
     hexToBigInt,
     isAddress,
     parseSignature,
@@ -268,6 +270,28 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
             // If this is permissionless, we're already on the right chain so we simply succeed.
             // The app may have bypassed the permission check, but this doesn't do anything.
             return null
+
+        case "wallet_getCapabilities": {
+            // This method SHOULD return an error if the user has not
+            // already authorized a connection between the application and
+            // the requested address.
+            checkAuthenticated()
+            const queryAddress = request.payload.params?.[0]
+            if (!queryAddress) {
+                throw new Error("Missing address parameter")
+            }
+
+            const currentChainId = getCurrentChain().chainId
+
+            const capabilities: WalletCapabilities = {
+                [currentChainId]: Object.fromEntries(
+                    Object.values(HappyWalletCapability).map((capability) => [capability, { supported: true }]),
+                ),
+            }
+
+            // c.f. https://www.eip5792.xyz/reference/getCapabilities#returns
+            return capabilities
+        }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
             const user = getUser()
