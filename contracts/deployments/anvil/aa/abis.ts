@@ -2,6 +2,7 @@
 import type { MapTuple, ObjectFromTuples, UnionToTuple } from "@happy.tech/common"
 import type { Address } from "viem"
 
+
 const contractToAbi = ({
   "ECDSAValidator": [
     {
@@ -5262,16 +5263,16 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "ECDSAValidator": "0x94B1980766ba8f54219032d6015Db17503EcB3B3",
+  "ECDSAValidator": "0x4d8D0AA39E4575C9F7C3040EA5B6c572975EccAb",
   "EntryPointSimulations": "0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47",
   "EntryPointV7": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
-  "FactoryStaker": "0x7320D07F22410F5c9C1B6a36e7A2EC98ea46c798",
-  "HappyPaymaster": "0xB05FA760Ee641e5181E9f644aE3ffD7641a033d4",
-  "HappyPaymasterImpl": "0x0FfDd8496bcB39a2480f1becC9DA707705eF87c2",
-  "Kernel": "0xdd89F027AB0Fc0256239f8B51cE7C76F28Ad8401",
-  "KernelFactory": "0x773A02bcED76c707Dd9FbBbA82E302e16Ee4d692",
-  "SessionKeyValidator": "0x0581055D50BeF3C718C9463aE3d0f6CD92F9e1A4",
-  "SessionKeyValidatorImpl": "0xDB1ff22b66c456b4e828f467C0F048196afE08e3"
+  "FactoryStaker": "0xa357891B8835C32dd300F458D0A7782e094885C3",
+  "HappyPaymaster": "0xD152B3FF12460aab8147cA3BEAa5a27Ff4946Bbe",
+  "HappyPaymasterImpl": "0x1594E0d736229B26dBb4538c6ce2D77a161586e3",
+  "Kernel": "0x0B973b2a601c34ad322f9a398b3208AC7d97C51F",
+  "KernelFactory": "0xd40c9edac363Cb34604589D94D1d3754cdf33737",
+  "SessionKeyValidator": "0xAe4C86c95d7808F3ED4b979015AE5AEc80622638",
+  "SessionKeyValidatorImpl": "0xBd093dc63136234697480bB337D2551C5925f017"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
@@ -5291,4 +5292,5 @@ for (const [alias, contractName] of Object.entries(aliasToContract)) {
     // biome-ignore lint/suspicious/noExplicitAny: safe generated code
     abis[alias as ContractAlias] = contractToAbi[contractName as ContractName] as any
 }
+
 

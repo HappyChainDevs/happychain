@@ -2,6 +2,7 @@
 import type { MapTuple, ObjectFromTuples, UnionToTuple } from "@happy.tech/common"
 import type { Address } from "viem"
 
+
 const contractToAbi = ({
   "HappyCounter": [
     {
@@ -32,40 +33,27 @@ const contractToAbi = ({
       "stateMutability": "nonpayable"
     }
   ],
-  "MockERC20Token": [
+  "MockERC20": [
     {
       "type": "constructor",
       "inputs": [
         {
-          "name": "name",
+          "name": "name_",
           "type": "string",
           "internalType": "string"
         },
         {
-          "name": "symbol",
+          "name": "symbol_",
           "type": "string",
           "internalType": "string"
         },
         {
-          "name": "decimals",
+          "name": "decimals_",
           "type": "uint8",
           "internalType": "uint8"
         }
       ],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "DOMAIN_SEPARATOR",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ],
-      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -162,26 +150,16 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "initialize",
-      "inputs": [
+      "name": "domainSeparator",
+      "inputs": [],
+      "outputs": [
         {
-          "name": "name_",
-          "type": "string",
-          "internalType": "string"
-        },
-        {
-          "name": "symbol_",
-          "type": "string",
-          "internalType": "string"
-        },
-        {
-          "name": "decimals_",
-          "type": "uint8",
-          "internalType": "uint8"
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
         }
       ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
+      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -411,16 +389,16 @@ const contractToAbi = ({
 
 const aliasToContract = ({
   "HappyCounter": "HappyCounter",
-  "MockTokenA": "MockERC20Token",
-  "MockTokenB": "MockERC20Token",
-  "MockTokenC": "MockERC20Token"
+  "MockTokenA": "MockERC20",
+  "MockTokenB": "MockERC20",
+  "MockTokenC": "MockERC20"
 }) as const
 
 export const deployment = ({
-  "HappyCounter": "0xA66289d0C5A8AF20692414156b32cAe00F24A416",
-  "MockTokenA": "0xc80629fE33747288AaFb97684F86f7eD2D1aBF69",
-  "MockTokenB": "0xe7b1987CE19C0824D03b8bcc5919DB9604096376",
-  "MockTokenC": "0x901F67FCF4870453CE82eb2E986E4e68AFe7313F"
+  "HappyCounter": "0xAD5A4f9CeaBC2990DD66039FE123828631b4e0Ea",
+  "MockTokenA": "0x02206faC6469B2f59FC2Bb9d3BC181Fbe703F8B7",
+  "MockTokenB": "0xF2Cd1312bcE60Edcd17406962aB3d76730bf4873",
+  "MockTokenC": "0x09420341423aE6D9c14C26052AF66A948BE4982c"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
@@ -440,3 +418,5 @@ for (const [alias, contractName] of Object.entries(aliasToContract)) {
     // biome-ignore lint/suspicious/noExplicitAny: safe generated code
     abis[alias as ContractAlias] = contractToAbi[contractName as ContractName] as any
 }
+
+
