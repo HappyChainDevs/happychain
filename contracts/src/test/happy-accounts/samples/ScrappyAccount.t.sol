@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {MockERC20Token} from "../../../mocks/MockERC20.sol";
+import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {HappyTxTestUtils} from "../Utils.sol";
 
 import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
@@ -21,7 +21,7 @@ contract ScrappyAccountTest is Test {
     // STATE VARIABLES
 
     HappyTxTestUtils private utils;
-    MockERC20Token private mockToken;
+    MockERC20 private mockToken;
 
     ScrappyAccount private scrappyAccount;
     ScrappyAccountFactory private scrappyAccountFactory;
@@ -47,7 +47,7 @@ contract ScrappyAccountTest is Test {
         vm.deal(smartAccount, ACCOUNT_DEPOSIT);
 
         // Deploy a mock ERC20 token
-        mockToken = new MockERC20Token("MockTokenA", "MTA", uint8(18));
+        mockToken = new MockERC20("MockTokenA", "MTA", uint8(18));
     }
 
     // ====================================================================================================

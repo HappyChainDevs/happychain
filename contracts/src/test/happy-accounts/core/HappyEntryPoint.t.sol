@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
 import {HappyTxTestUtils} from "../Utils.sol";
-import {MockERC20Token} from "../../../mocks/MockERC20.sol";
+import {MockERC20} from "../../../mocks/MockERC20.sol";
 
 import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
@@ -72,7 +72,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.deal(smartAccount, INITIAL_DEPOSIT);
 
         // Deploy a mock ERC20 token
-        mockToken = address(new MockERC20Token("MockTokenA", "MTA", uint8(18)));
+        mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
     }
 
     // ====================================================================================================
@@ -305,7 +305,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // The result should be output.callStatus = CallReverted
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
 
-        bytes memory revertData = abi.encodeWithSelector(MockERC20Token.AlwaysRevert.selector);
+        bytes memory revertData = abi.encodeWithSelector(MockERC20.AlwaysRevert.selector);
         assertEq(uint8(output.callStatus), uint8(CallStatus.CALL_REVERTED));
         assertEq(output.revertData, revertData);
         assertEq(output.executeGas, 0);
