@@ -1,8 +1,9 @@
 import { Checkbox } from "@ark-ui/react"
 import { Check } from "@phosphor-icons/react"
+import { useAtom } from "jotai"
 import { useEffect, useState } from "react"
 import type { Address } from "viem"
-import { grantPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
+import { targetContractsAtom } from "#src/state/interfaceState"
 import type { AppURL } from "#src/utils/appURL"
 
 interface SessionKeyContractProps {
@@ -10,14 +11,9 @@ interface SessionKeyContractProps {
     contract: Address
     showControl: boolean
 }
-export const SessionKeyContract = ({ contract, dappUrl, showControl }: SessionKeyContractProps) => {
-    const permissionRequest = {
-        happy_sessionKey: {
-            target: contract,
-        },
-    }
-
-    const [checked, setChecked] = useState(hasPermissions(dappUrl, permissionRequest))
+export const SessionKeyContract = ({ contract, showControl }: SessionKeyContractProps) => {
+    const [targetContracts, setTargetContracts] = useAtom(targetContractsAtom)
+    const [checked, setChecked] = useState(targetContracts.includes(contract))
 
     useEffect(() => {
         if (!showControl && checked) setChecked(false)
@@ -28,7 +24,11 @@ export const SessionKeyContract = ({ contract, dappUrl, showControl }: SessionKe
             checked={checked}
             className="w-full flex justify-between items-baseline focus-within:underline py-2 gap-4 cursor-pointer disabled:cursor-not-allowed text-base-content/80 dark:text-neutral-content/80"
             onCheckedChange={(e: { checked: boolean }) => {
-                checked ? revokePermissions(dappUrl, permissionRequest) : grantPermissions(dappUrl, permissionRequest)
+                if (e.checked) {
+                    setTargetContracts((prev) => [...prev, contract])
+                } else {
+                    setTargetContracts((prev) => prev.filter((addr) => addr !== contract))
+                }
                 setChecked(e.checked)
             }}
         >

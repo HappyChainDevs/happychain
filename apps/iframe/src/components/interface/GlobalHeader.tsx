@@ -13,11 +13,12 @@ const GlobalHeader = () => {
     const location = useLocation()
     const [isVisible, setVisibility] = useAtom(secondaryMenuVisibilityAtom)
     const optionsLabel = isVisible ? "Close options menu" : "Open options menu"
+    
 
     return (
         <div className="relative max-w-prose mx-auto items-center w-full py-1.5 hidden lg:flex">
             {location.pathname !== "/embed" && (
-                <Link to={"/embed"}>
+                <Link to={"/embed"} onClick={backButtonAction}>
                     <ArrowLeft weight="bold" className="text-base-content absolute start-2 top-1/2 -translate-y-1/2" />
                 </Link>
             )}
