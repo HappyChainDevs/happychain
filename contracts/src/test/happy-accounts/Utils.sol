@@ -7,7 +7,7 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 import {HappyTx} from "../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../happy-accounts/libs/HappyTxLib.sol";
 import {ScrappyAccount} from "../../happy-accounts/samples/ScrappyAccount.sol";
-import {MockERC20Token} from "../../mocks/MockERC20.sol";
+import {MockERC20} from "../../mocks/MockERC20.sol";
 
 /// Common utility functions for HappyAccounts unit tests
 contract HappyTxTestUtils is Test {
@@ -105,7 +105,7 @@ contract HappyTxTestUtils is Test {
     // CALLDATA HELPERS
 
     function getMintTokenCallData(address mintTokenTo, uint256 amount) public pure returns (bytes memory) {
-        return abi.encodeCall(MockERC20Token.mint, (mintTokenTo, amount));
+        return abi.encodeCall(MockERC20.mint, (mintTokenTo, amount));
     }
 
     function getETHTransferCallData(address transferTo, uint256 amount) public pure returns (bytes memory) {
@@ -113,7 +113,7 @@ contract HappyTxTestUtils is Test {
     }
 
     function getMockTokenAlwaysRevertCallData() public pure returns (bytes memory) {
-        return abi.encodeCall(MockERC20Token.alwaysRevert, ());
+        return abi.encodeCall(MockERC20.alwaysRevert, ());
     }
 
     // ====================================================================================================
@@ -131,7 +131,7 @@ contract HappyTxTestUtils is Test {
     // OTHER HELPERS
 
     function getTokenBalance(address token, address account) public view returns (uint256) {
-        return MockERC20Token(token).balanceOf(account);
+        return MockERC20(token).balanceOf(account);
     }
 
     function getEthBalance(address account) public view returns (uint256) {
