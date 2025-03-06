@@ -7,7 +7,7 @@ import {console} from "forge-std/Script.sol";
 import {PackedUserOperation} from "account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 
-import {ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
+import {ENTRYPOINT_V7_SALT, ENTRYPOINT_V7_CODE} from "../deploy/initcode/EntryPointV7Code.sol";
 import {HappyPaymaster} from "../HappyPaymaster.sol";
 import {UserOpLib} from "./UserOpLib.sol";
 
@@ -26,7 +26,7 @@ contract GasEstimator is Test {
     function setUp() public {
         if (ENTRYPOINT_V7.code.length == 0) {
             // solhint-disable-next-line avoid-low-level-calls
-            (bool success,) = CREATE2_PROXY.call(ENTRYPOINT_V7_CODE);
+            (bool success,) = CREATE2_PROXY.call(abi.encodePacked(ENTRYPOINT_V7_SALT, ENTRYPOINT_V7_CODE));
             // solhint-disable-next-line gas-custom-errors
             require(success, "Failed to deploy EntryPointV7");
         }
