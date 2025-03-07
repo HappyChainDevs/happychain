@@ -62,9 +62,7 @@ Create and or update a CSS file and add the following :
 
 /* Note: you can add as many @source as needed. */
 
-/*
-  Tailwind v4 config (design tokens, font declarations, custom composite tokens)
-*/
+/* Tailwind v4 config (design tokens, font declarations, custom composite tokens) */
 @import "@happy.tech/design-tokens/tailwind.css";
 ```
 
