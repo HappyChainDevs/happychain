@@ -1,0 +1,23 @@
+{
+  "name": "@happy.tech/uikit-react",
+  "version": "0.1.0",
+  "types": "./src/index.ts",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@ark-ui/react": "^5.0.0",
+    "@happy.tech/design-system": "workspace:*",
+    "@tanstack/react-table": "^8.21.2"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@happy.tech/configs": "workspace:0.1.0",
+    "@types/react": "^19.0.10",
+    "typescript": "^5.8.2"
+  }
+}
