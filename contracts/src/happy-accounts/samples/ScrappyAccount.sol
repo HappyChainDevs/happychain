@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ECDSA} from "solady/utils/ECDSA.sol";
-
+// import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -69,6 +69,9 @@ contract ScrappyAccount is
     /// @dev Gas overhead for executing the execute function, not measured by gasleft()
     uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
 
+    // /// @dev Buffer to account for gas costs of returning the function if inner call runs out of gas.
+    // uint256 private constant OOG_BUFFER = 3200;
+
     /// @dev Interface IDs
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
     bytes4 private constant ERC1271_INTERFACE_ID = 0x1626ba7e;
@@ -116,7 +119,7 @@ contract ScrappyAccount is
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
-    function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes4) {
+    function validate(HappyTx memory happyTx) external onlyFromEntryPoint nonReentrant returns (bytes4) {
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
         }
@@ -163,8 +166,14 @@ contract ScrappyAccount is
         returns (ExecutionOutput memory output)
     {
         uint256 startGas = gasleft();
+        // uint256 gasForCall = (startGas * 63/64) - OOG_BUFFER;
+        // if (happyTx.value > 0) gasForCall -= 6700;
+
         (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
+        // happyTx.dest.call{gas: (gasleft() * 63 / 64) - 625, value: happyTx.value}(happyTx.callData);
+        //  ExcessivelySafeCall.excessivelySafeCall(happyTx.dest, gasleft() - 600, happyTx.value, 256, happyTx.callData);
         if (!success) {
+            output.success = false;
             output.revertData = returnData;
             return output;
         }

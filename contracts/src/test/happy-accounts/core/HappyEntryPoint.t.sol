@@ -350,20 +350,56 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
 
-        // Set a very low execution gas limit for the happyTx, and sign over it
-        // 7955 gas needed for excessivelysafecall(execute) + some buffer, thus, guaranteed to OOG due to inner call
-        happyTx.executeGasLimit = 8000;
+        // Enough to reach MockERC20.mint, but still runs out of gas.
+        // happyTx.executeGasLimit = 10000;
+        happyTx.executeGasLimit = 19200;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
-        // Expect the ExecutionReverted event to be emitted
-        // vm.expectEmit(true, false, false, true, address(happyEntryPoint));
-        // emit ExecutionReverted(abi.encodePacked(bytes4(0x31fe52e8)));
+        // Submit the transaction
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
 
-        assertEq(output.executeGas, 0);
+        // The function should return output.callStatus = CallReverted
         _assertExpectedSubmitOutput(
-            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(bytes4(keccak256("outOfGas()")))
+            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(bytes4(keccak256("OutOfGas()")))
         );
+        assertEq(output.executeGas, 0);
+    }
+
+    function testExecuteWithLowExecutionGasLimitNonZeroValueOOG() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+
+        // Enough to reach MockERC20.mint, but still runs out of gas.
+        happyTx.executeGasLimit = 25000;
+        happyTx.value = 1 wei;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The function should return output.callStatus = CallReverted
+        _assertExpectedSubmitOutput(
+            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(bytes4(keccak256("OutOfGas()")))
+        );
+        assertEq(output.executeGas, 0);
+    }
+
+    function testExecuteWithLowExecutionGasLimitEthTransferOOG() public {
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0)); // Empty callData
+
+        // Enough to reach MockERC20.mint, but still runs out of gas.
+        happyTx.value = 1 wei;
+        happyTx.executeGasLimit = 20000;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The function should return output.callStatus = CallReverted
+        _assertExpectedSubmitOutput(
+            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(bytes4(keccak256("OutOfGas()")))
+        );
+        assertEq(output.executeGas, 0);
     }
 
     function testExecuteInnerCallRevertsEmptyCallData() public {
@@ -398,14 +434,13 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         assertEq(output.executeGas, 0);
     }
 
-    //! This is another emvError like OOG, not a typical revert/require: ← [OutOfFunds] EvmError: OutOfFunds
     function testExecuteWithHighHappyTxValueGreaterThanSmartAccountBalance() public {
         // Set the initial balance of the smart account to 0
         vm.deal(smartAccount, 0);
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, ZERO_ADDRESS, new bytes(0));
 
         // Set happyTx.value to a value higher than the smart account's balance
-        happyTx.value = 1;
+        happyTx.value = 1 ether;
 
         // Make all gas fields zero before signing, as this is a submitter sponsored tx (as zero balance account can't pay for its gas fee)
         happyTx.gasLimit = 0;
@@ -422,7 +457,10 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // The call should fail because the smartAccount address doesn't have enough funds
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.CALL_REVERTED), new bytes(0));
+
+        // This is an EvmError: OutOfFunds (like OOG), not a custom revert, so the function returns an empty revertData
+        bytes memory outOfFundsError = new bytes(0);
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.CALL_REVERTED), outOfFundsError);
 
         // Account balance should remain unchanged since the transaction would be unsuccessful
         uint256 newEthBalance = (smartAccount).balance;

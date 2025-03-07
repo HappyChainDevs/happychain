@@ -8,6 +8,7 @@ import {HappyTx} from "../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../happy-accounts/libs/HappyTxLib.sol";
 import {ScrappyAccount} from "../../happy-accounts/samples/ScrappyAccount.sol";
 import {MockERC20} from "../../mocks/MockERC20.sol";
+import {BurnAllGas} from "../../test/mocks/BurnAllGas.sol";
 
 /// Common utility functions for HappyAccounts unit tests
 contract HappyTxTestUtils is Test {
@@ -108,16 +109,16 @@ contract HappyTxTestUtils is Test {
         return abi.encodeCall(MockERC20.mint, (mintTokenTo, amount));
     }
 
-    function getETHTransferCallData(address transferTo, uint256 amount) public pure returns (bytes memory) {
-        return abi.encodeWithSignature("transfer(address, uint256)", transferTo, amount);
-    }
-
     function getMockTokenAlwaysRevertCallData() public pure returns (bytes memory) {
         return abi.encodeCall(MockERC20.alwaysRevert, ());
     }
 
     function getMockTokenAlwaysRevertEmptyCallData() public pure returns (bytes memory) {
         return abi.encodeCall(MockERC20.alwaysRevertEmpty, ());
+    }
+
+    function getBurnAllGasCallData() public pure returns (bytes memory) {
+        return abi.encodeCall(BurnAllGas.burnAllGas, ());
     }
 
     // ====================================================================================================
