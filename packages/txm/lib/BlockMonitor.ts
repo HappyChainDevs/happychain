@@ -2,6 +2,25 @@ import { LogTag, Logger } from "@happy.tech/common"
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
+import { metrics, ValueType } from '@opentelemetry/api';
+
+const meter = metrics.getMeter('txm.block-monitor');
+
+const currentBlockGauge = meter.createGauge('txm.block-monitor.current-block', {
+    description: 'Current block number',
+    unit: 'count',
+    valueType: ValueType.INT
+});
+
+const newBlockDelayHistogram = meter.createHistogram('txm.block-monitor.new-block-delay', {
+    description: 'Time delay between when a block is generated and when it is received',
+    unit: 'ms',
+    valueType: ValueType.INT,
+    advice: {
+        explicitBucketBoundaries: [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1250, 1500, 1750, 2000, 4000, Number.POSITIVE_INFINITY]
+    }
+});
+
 /**
  * A type alias for {@link Block} with the `blockTag` set to `"latest"`, ensuring type definitions correspond to the latest block.
  */
@@ -35,6 +54,11 @@ export class BlockMonitor {
     private onNewBlock(block: LatestBlock) {
         if (this.blockTimeout) clearTimeout(this.blockTimeout)
         eventBus.emit(Topics.NewBlock, block)
+
+        currentBlockGauge.record(Number(block.number))
+        console.log(Date.now() - Number(block.timestamp) * 1000)
+        newBlockDelayHistogram.record(Date.now()- Number(block.timestamp) * 1000)
+
         this.scheduleTimeout()
     }
 
