@@ -1,0 +1,17 @@
+{
+  "name": "@happy.tech/design-system",
+  "type": "module",
+  "types": "./src/index.ts",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@happy.tech/configs": "workspace:0.1.0",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "cva": "^1.0.0-beta.3"
+  }
+}
