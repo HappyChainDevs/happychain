@@ -1,19 +1,19 @@
 import { unknownToError } from "@happy.tech/common"
 import type { UUID } from "@happy.tech/common"
+import { ValueType, metrics } from "@opentelemetry/api"
 import { type Result, ResultAsync } from "neverthrow"
 import { Topics, eventBus } from "./EventBus.js"
 import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { db } from "./db/driver.js"
-import { metrics, ValueType } from '@opentelemetry/api';
 
-const meter = metrics.getMeter('txm.transaction-repository');
+const meter = metrics.getMeter("txm.transaction-repository")
 
-const notFinalizedTransactionsGauge = meter.createGauge('txm.transaction-repository.not-finalized-transactions', {
-    description: 'Quantity of transactions in the repository that are not finalized',
-    unit: 'count',
-    valueType: ValueType.INT
-});
+const notFinalizedTransactionsGauge = meter.createGauge("txm.transaction-repository.not-finalized-transactions", {
+    description: "Quantity of transactions in the repository that are not finalized",
+    unit: "count",
+    valueType: ValueType.INT,
+})
 
 /**
  * This module acts as intermediate layer between the library and the database.

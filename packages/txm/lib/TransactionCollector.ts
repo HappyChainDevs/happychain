@@ -1,11 +1,11 @@
 import { LogTag, Logger } from "@happy.tech/common"
+import { ValueType, metrics } from "@opentelemetry/api"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
-import { metrics, ValueType } from '@opentelemetry/api';
 
-const meter = metrics.getMeter('txm-collector');
+const meter = metrics.getMeter("txm-collector")
 
 /**
  * This module is responsible for retrieving transactions from the originators when a new block is received.
@@ -16,11 +16,11 @@ const meter = metrics.getMeter('txm-collector');
 
 export class TransactionCollector {
     private readonly txmgr: TransactionManager
-    private readonly collectorCounter = meter.createCounter('txm.collector.count', {
-        description: 'Number of transactions collected',
-        unit: 'count',
-        valueType: ValueType.INT
-    });
+    private readonly collectorCounter = meter.createCounter("txm.collector.count", {
+        description: "Number of transactions collected",
+        unit: "count",
+        valueType: ValueType.INT,
+    })
 
     constructor(_txmgr: TransactionManager) {
         this.txmgr = _txmgr
