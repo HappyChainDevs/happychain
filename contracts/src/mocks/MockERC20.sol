@@ -59,7 +59,7 @@ contract MockERC20 is IERC20 {
      * @param _account The account receiving minted tokens.
      * @param _amount  The amount of tokens to mint.
      */
-    function mint(address _account, uint256 _amount) public {
+    function mint(address _account, uint256 _amount) public payable {
         _mint(_account, _amount);
     }
 
