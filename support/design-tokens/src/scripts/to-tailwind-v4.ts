@@ -1,5 +1,21 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 
+/**
+ * Utility script to transform DTCG compliant CSS variables generated from Terrazzo CLI
+ * into a Tailwind V4 CSS-first configuration file (`tailwind.css`). It ensures that :
+ *
+ * 1. The CSS variable declarations match Tailwind V4 naming convention and
+ *    are scoped to the proper directive block format (`@theme` or `theme inline`).
+ *
+ * 2. All CSS variables have the prefix (-hds-) to make sure that our variables
+ *    are properly namespaced and won't conflict with Tailwind's built-in variables.
+ *
+ * 3. Additional CSS declarations  defined in separate files are merged into
+ *    a single coherent Tailwind config file.
+ *
+ * @see {@link https://tailwindcss.com/docs/theme} Tailwind V4 theming documentation
+ */
+
 const REGEX = {
     rootBlock: /\*?:root\*?\s*{([^}]*)}/,
     cssVariableName: /--[\w-]+/g,
@@ -309,12 +325,10 @@ function parseCliArgs(args: string[]): { inputPath: string; outputPath: string }
 function main(): void {
     const { inputPath, outputPath } = parseCliArgs(process.argv.slice(2))
 
-    console.log(`
-Tailwind V4 transformer
---------------
-Input: ${inputPath}
-Output: ${outputPath}
-`)
+    console.log("Tailwind V4 transformer")
+    console.log("--------------")
+    console.log(`Input: ${inputPath}`)
+    console.log(`Output: ${outputPath}`)
 
     const additionalFiles = [
         {
