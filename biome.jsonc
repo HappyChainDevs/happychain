@@ -4,7 +4,8 @@
     "files": {
         "ignore": [
             // packages will manage their own configs
-            "./packages"
+            "./packages",
+            "./support/design-tokens/tokens"
         ]
     }
 }
