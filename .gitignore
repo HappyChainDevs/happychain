@@ -44,6 +44,9 @@ apps/docs/src/pages/**/api
 # Cloned Repositories
 packages/bundler/alto
 
+# Design tokens generated CSS files
+support/design-tokens/tokens
+
 # Editor configs and files
 .idea
 *.iml
