@@ -5,6 +5,7 @@ import {ECDSA} from "solady/utils/ECDSA.sol";
 
 import {HappyTxTestUtils} from "../Utils.sol";
 import {MockERC20} from "../../../mocks/MockERC20.sol";
+import {BurnAllGas} from "../../../test/mocks/BurnAllGas.sol";
 
 import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
@@ -46,10 +47,13 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     address private smartAccount;
     address private paymaster;
-    address private mockToken;
+
     uint256 private privKey;
     address private owner;
     address private dest;
+
+    address private mockToken;
+    address private burnAllGas;
 
     function setUp() public {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
@@ -72,6 +76,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // Deploy a mock ERC20 token
         mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
+
+        // Deploy a mock contract that burns all gas
+        burnAllGas = address(new BurnAllGas());
     }
 
     // ====================================================================================================
