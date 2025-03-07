@@ -1,57 +1,53 @@
-/* 
-  Custom variants
-*/
-@custom-variant content-focused {  
-  &:focus,
-  &:focus-within {
-    @slot;
-  }
+/* Custom variants */
+@custom-variant content-focused {
+    &:focus,
+    &:focus-within {
+        @slot;
+    }
 }
 
-@custom-variant input-invalid {  
-  &:user-invalid,
-  &:has(:user-invalid) {
-    @slot;
-  }
+@custom-variant input-invalid {
+    &:user-invalid,
+    &:has(:user-invalid) {
+        @slot;
+    }
 }
 
-@custom-variant click-disabled {  
-  &[aria-disabled=true],
-  &:disabled {
-    @slot;
-  }
+@custom-variant click-disabled {
+    &[aria-disabled=true],
+    &:disabled {
+        @slot;
+    }
 }
 
-@custom-variant input-disabled {  
-  &:is(input, textarea):read-only,
-  &:is([data-hds=input]):disabled,
-  &[aria-disabled=true]:is([data-hds=input]),
-  &:has(:is(input, textarea):read-only),
-  &:has(:is([data-hds=input]):disabled),
-  &:has([aria-disabled=true]:is([data-hds=input])) {
-    @slot;
-  }
+@custom-variant input-disabled {
+    &:is(input, textarea):read-only,
+    &:is([data-hds=input]):disabled,
+    &[aria-disabled=true]:is([data-hds=input]),
+    &:has(:is(input, textarea):read-only),
+    &:has(:is([data-hds=input]):disabled),
+    &:has([aria-disabled=true]:is([data-hds=input])) {
+        @slot;
+    }
 }
 
 @custom-variant is-hds-input {
-  &[data-hds=input],
-  & > [data-hds=input] {
-    @slot;
-  }
+    &[data-hds=input],
+    & > [data-hds=input] {
+        @slot;
+    }
 }
 
-/*
-  Custom utilities
-*/
-@utility bg-gradient-hds-* {  
-  background-image: --value(--gradient-hds-*);
+/* Custom utilities */
+@utility bg-gradient-hds-* {
+    background-image: --value(--gradient-hds-*);
 }
 
-@utility bg-icon-hds-* {  
-  background-image: --value(--icon-hds-*);
+@utility bg-icon-hds-* {
+    background-image: --value(--icon-hds-*);
 }
 
-@utility mask-icon-hds-* {  
-  mask-image: --value(--icon-hds-*);
+@utility mask-icon-hds-* {    
+    mask-image: --value(--icon-hds-*);
 }
 

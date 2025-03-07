@@ -14,6 +14,7 @@
         "tokens:build": "rm -rf ./tokens && tz build && bun run src/scripts/to-tailwind-v4.ts ./tokens/base.css ./tokens/tailwind.css"
     },
     "devDependencies": {
+        "@happy.tech/configs": "workspace:0.1.0",
         "@terrazzo/cli": "^0.6.1",
         "@terrazzo/plugin-css": "^0.6.0",
         "@types/bun": "latest"

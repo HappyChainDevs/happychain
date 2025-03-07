@@ -15,7 +15,9 @@
             "generated.d.ts",
             "generated.ts",
             "node_modules",
-            "routeTree.gen.ts"
+            "routeTree.gen.ts",
+            "directives.tw.css",
+            "support/design-tokens/tokens"
         ]
     },
     "formatter": {
