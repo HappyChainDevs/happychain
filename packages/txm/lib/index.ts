@@ -1,3 +1,4 @@
+import "./instrumentation.js"
 export { Transaction, TransactionStatus, type TransactionConstructorConfig } from "./Transaction.js"
 export { TransactionManager, type TransactionManagerConfig, type TransactionOriginator } from "./TransactionManager.js"
 export type { Abi } from "viem"

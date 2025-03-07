@@ -3,6 +3,9 @@ import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
+import { metrics, ValueType } from '@opentelemetry/api';
+
+const meter = metrics.getMeter('txm-collector');
 
 /**
  * This module is responsible for retrieving transactions from the originators when a new block is received.
@@ -13,6 +16,11 @@ import type { TransactionManager } from "./TransactionManager.js"
 
 export class TransactionCollector {
     private readonly txmgr: TransactionManager
+    private readonly collectorCounter = meter.createCounter('txm.collector.count', {
+        description: 'Number of transactions collected',
+        unit: 'count',
+        valueType: ValueType.INT
+    });
 
     constructor(_txmgr: TransactionManager) {
         this.txmgr = _txmgr
@@ -40,6 +48,8 @@ export class TransactionCollector {
             Logger.instance.error(LogTag.TXM, "Error saving transactions", saveResult.error)
             return
         }
+
+        this.collectorCounter.add(transactionsBatch.length)
 
         await Promise.all(
             transactionsBatch.map(async (transaction) => {
