@@ -133,13 +133,15 @@ afterAll(() => {
 
 test("NewBlock hook works correctly", async () => {
     let hookTriggered = false
-    txm.addHook(TxmHookType.NewBlock, () => {
+    const cleanHook = await txm.addHook(TxmHookType.NewBlock, () => {
         hookTriggered = true
     })
 
     await mineBlock()
 
     expect(hookTriggered).toBe(true)
+
+    cleanHook()
 })
 
 test("onTransactionStatusChanged hook works correctly", async () => {
@@ -149,7 +151,7 @@ test("onTransactionStatusChanged hook works correctly", async () => {
 
     transactionQueue.push(transaction)
 
-    txm.addHook(TxmHookType.TransactionStatusChanged, (transactionInHook) => {
+    const cleanHook = await txm.addHook(TxmHookType.TransactionStatusChanged, (transactionInHook) => {
         hookTriggered = true
         expect(transactionInHook.status).toBe(TransactionStatus.Success)
         expect(transactionInHook.intentId).toBe(transaction.intentId)
@@ -158,6 +160,28 @@ test("onTransactionStatusChanged hook works correctly", async () => {
     await mineBlock(2)
 
     expect(hookTriggered).toBe(true)
+
+    cleanHook()
+})
+
+test("TransactionSubmissionFailed hook works correctly", async () => {
+    let hookTriggered = false
+
+    const cleanHook = await txm.addHook(TxmHookType.TransactionSubmissionFailed, (transactionInHook) => {
+        hookTriggered = true
+    })
+
+    proxyServer.addBehavior(ProxyBehavior.Fail)
+
+    const transaction = await createCounterTransaction()
+
+    transactionQueue.push(transaction)
+
+    await mineBlock(2)
+
+    expect(hookTriggered).toBe(true)
+
+    cleanHook()
 })
 
 test("Simple transaction executed", async () => {
