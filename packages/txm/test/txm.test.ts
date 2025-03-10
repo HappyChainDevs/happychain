@@ -36,6 +36,7 @@ const txm = new TransactionManager({
     rpc: {
         url: PROXY_URL,
         pollingInterval: 200,
+        allowDebug: true,
     },
     abis: abis,
     gasEstimator: new TestGasEstimator(),
