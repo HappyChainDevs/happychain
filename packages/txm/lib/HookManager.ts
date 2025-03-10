@@ -52,6 +52,7 @@ export type TxmHooksRecord = {
 }
 
 export type TxmHookHandler<T extends TxmHookType = TxmHookType.All> = TxmHooksRecord[T][number]
+
 /**
  * This module manages the hooks system. A hook in the transaction manager is a callback function that
  * executes when specific events occur, such as when a transaction's status changes.
@@ -81,11 +82,18 @@ export class HookManager {
         eventBus.on(Topics.TransactionSubmissionFailed, this.onTransactionSubmissionFailed.bind(this))
     }
 
-    public async addHook<T extends TxmHookType>(type: T, handler: TxmHookHandler<T>): Promise<void> {
+    public async addHook<T extends TxmHookType>(type: T, handler: TxmHookHandler<T>): Promise<() => void> {
         if (!this.hooks[type]) {
             this.hooks[type] = []
         }
         this.hooks[type].push(handler)
+
+        return () => {
+            const index = this.hooks[type].indexOf(handler)
+            if (index !== -1) {
+                this.hooks[type].splice(index, 1)
+            }
+        }
     }
 
     private async onTransactionStatusChanged(payload: { transaction: Transaction }): Promise<void> {
