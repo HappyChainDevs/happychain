@@ -1,9 +1,10 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
+import { err } from "neverthrow"
 import { type Block, type Chain, createPublicClient, createWalletClient } from "viem"
 import { http } from "viem"
 import { privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
 import { anvil as anvilViemChain } from "viem/chains"
-import { afterAll, beforeAll, expect, test } from "vitest"
+import { afterAll, beforeAll, expect, test, vi } from "vitest"
 import { TxmHookType } from "../lib/HookManager"
 import { AttemptType, TransactionStatus } from "../lib/Transaction"
 import type { Transaction } from "../lib/Transaction"
@@ -167,8 +168,12 @@ test("onTransactionStatusChanged hook works correctly", async () => {
 test("TransactionSubmissionFailed hook works correctly", async () => {
     let hookTriggered = false
 
+    const previousCount = await getCurrentCounterValue()
+
     const cleanHook = await txm.addHook(TxmHookType.TransactionSubmissionFailed, (transactionInHook) => {
         hookTriggered = true
+        expect(transactionInHook.status).toBe(TransactionStatus.Pending)
+        expect(transactionInHook.intentId).toBe(transaction.intentId)
     })
 
     proxyServer.addBehavior(ProxyBehavior.Fail)
@@ -181,7 +186,52 @@ test("TransactionSubmissionFailed hook works correctly", async () => {
 
     expect(hookTriggered).toBe(true)
 
+    // Mine an additional block to ensure the transaction is included in the blockchain
+    // and to establish a clean starting point for subsequent test cases
+    await mineBlock()
+
+    const retrievedTransaction = await txm.getTransaction(transaction.intentId)
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    if (!assertIsDefined(retrievedTransaction)) return
+
+    expect(retrievedTransaction.status).toBe(TransactionStatus.Success)
+    expect(await getCurrentCounterValue()).toBe(previousCount + 1n)
+    expect(persistedTransaction).toBeDefined()
+    expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
+
     cleanHook()
+})
+
+test("TransactionSaveFailed hook works correctly", async () => {
+    let hookTriggered = false
+
+    const cleanHook = await txm.addHook(TxmHookType.TransactionSaveFailed, (transactionInHook) => {
+        hookTriggered = true
+        expect(transactionInHook.status).toBe(TransactionStatus.Pending)
+        expect(transactionInHook.intentId).toBe(transaction.intentId)
+    })
+
+    const transactionRepository = txm.transactionRepository
+
+    const methodSpy = vi.spyOn(transactionRepository, "saveTransactions")
+
+    methodSpy.mockResolvedValue(err(new Error("Test error")))
+
+    const transaction = await createCounterTransaction()
+
+    transactionQueue.push(transaction)
+
+    await mineBlock(1)
+
+    expect(hookTriggered).toBe(true)
+
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    expect(persistedTransaction).toBeUndefined()
+
+    cleanHook()
+    vi.restoreAllMocks()
 })
 
 test("Simple transaction executed", async () => {
