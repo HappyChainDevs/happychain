@@ -11,7 +11,7 @@ import type { Transaction } from "../lib/Transaction"
 import { TransactionManager } from "../lib/TransactionManager"
 import { ethereumDefaultEIP1559Parameters } from "../lib/eip1559"
 import { migrateToLatest } from "../lib/migrate"
-import { ProxyBehavior, ProxyServer } from "./utils/ProxyServer"
+import { ProxyBehavior, ProxyMode, ProxyServer } from "./utils/ProxyServer"
 import { TestGasEstimator } from "./utils/TestGasEstimator"
 import { TestRetryManager } from "./utils/TestRetryManager"
 import { killAnvil, mineBlock } from "./utils/anvil"
@@ -344,7 +344,12 @@ test("Transaction failed", async () => {
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
 
-    const revertedWithCustomErrorResult = await retryManager.revertWithCustomError(txm, transactionReverted, transactionReverted.attempts[0], "CustomErrorMockRevert")
+    const revertedWithCustomErrorResult = await retryManager.revertWithCustomError(
+        txm,
+        transactionReverted,
+        transactionReverted.attempts[0],
+        "CustomErrorMockRevert",
+    )
 
     if (revertedWithCustomErrorResult.isErr()) {
         throw revertedWithCustomErrorResult.error
@@ -523,6 +528,46 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
     expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 2)
     expect(transactionBurnerExecuted.collectionBlock).toBe(previousBlock.number! + 1n)
+})
+
+test("Transaction manager successfully processes transactions despite random RPC failures", async () => {
+    proxyServer.setMode(ProxyMode.Random, {
+        [ProxyBehavior.NotAnswer]: 0.1,
+        [ProxyBehavior.Fail]: 0.2,
+        [ProxyBehavior.Forward]: 0.7,
+    })
+
+    const previousBlock = await getCurrentBlock()
+    const emittedTransactions: Transaction[] = []
+    const numTransactions = 5
+    for (let i = 0; i < numTransactions; i++) {
+        const transaction = await createCounterTransaction()
+        transactionQueue.push(transaction)
+        emittedTransactions.push(transaction)
+
+        await mineBlock()
+    }
+
+    await mineBlock(5)
+
+    let successfulTransactions = 0
+    for (const [index, transaction] of emittedTransactions.entries()) {
+        const executedTransaction = await txm.getTransaction(transaction.intentId)
+
+        if (executedTransaction?.status === TransactionStatus.Success) {
+            successfulTransactions++
+        }
+
+        const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+        assertIsDefined(persistedTransaction)
+        expect(persistedTransaction?.status).toBe(executedTransaction?.status)
+        expect(executedTransaction?.collectionBlock).toBe(previousBlock.number! + BigInt(index + 1))
+    }
+
+    expect(successfulTransactions).toBeGreaterThan(numTransactions - 1)
+
+    proxyServer.setMode(ProxyMode.Deterministic)
 })
 
 test("Transaction succeeds in congested blocks", async () => {
