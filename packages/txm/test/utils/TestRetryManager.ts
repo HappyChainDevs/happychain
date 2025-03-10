@@ -7,21 +7,24 @@ export class TestRetryManager extends DefaultRetryPolicyManager {
     private transactionsThatHaveTriedToRetry: string[] = []
 
     public async shouldRetry(
-        txm: TransactionManager,
+        _txm: TransactionManager,
         transaction: Transaction,
         _attempt: Attempt,
         _receipt: TransactionReceipt,
     ): Promise<boolean> {
         this.transactionsThatHaveTriedToRetry.push(transaction.intentId)
-
-        const revertReason = await this.getRevertReason(txm, _attempt)
-
-        console.log("revertReason", revertReason)
-
         return false
     }
 
     public haveTriedToRetry(intentId: string): boolean {
         return this.transactionsThatHaveTriedToRetry.includes(intentId)
+    }
+
+    public getRevertMessageAndOutput(txm: TransactionManager, attempt: Attempt) {
+        return super.getRevertMessageAndOutput(txm, attempt)
+    }
+
+    public revertWithCustomError(txm: TransactionManager, transaction: Transaction, attempt: Attempt, customError: string) {
+        return super.isCustomError(txm, transaction, attempt, customError)
     }
 }
