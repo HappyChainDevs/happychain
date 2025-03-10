@@ -1,3 +1,4 @@
+import type { Prettify } from "@happy.tech/common"
 import type { HappyTxReceipt } from "./HappyTxReceipt"
 import type { SimulationResult } from "./SimulationResult"
 import type {
@@ -39,8 +40,6 @@ export type HappyTxStateSuccess = {
     receipt: HappyTxReceipt
     simulation?: never
 }
-
-type Prettify<T> = { [K in keyof T]: T[K] } & {}
 
 export type HappyTxState = Prettify<HappyTxStateSubmitterError | HappyTxStateEntryPointError | HappyTxStateSuccess>
 

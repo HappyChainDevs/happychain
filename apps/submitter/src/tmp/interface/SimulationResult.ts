@@ -1,6 +1,7 @@
+import type { Prettify } from "@happy.tech/common"
 import type { Address, Hex } from "./common_chain"
 import type { EntryPointStatus, SimulatedValidationStatus } from "./status"
-type Prettify<T> = { [K in keyof T]: T[K] } & {}
+
 /**
  * The result of simulating a HappyTx.
  */
@@ -8,9 +9,12 @@ type Prettify<T> = { [K in keyof T]: T[K] } & {}
 export type SimulationResult = Prettify<{
     status: EntryPointStatus
     validationStatus: SimulatedValidationStatus
-
     /** EntryPoint to which the HappyTx was submitted onchain. */
     entryPoint: Address
+    /** The selector of the returned custom error. */
+    failureReason?: never | Hex
+    /** The revert data *carried* by the returned custom error. */
+    revertData?: never | Hex
 } & ({
         status: EntryPointStatus.Success
         failureReason?: never
@@ -21,11 +25,7 @@ export type SimulationResult = Prettify<{
             | EntryPointStatus.ValidationFailed
             | EntryPointStatus.ExecuteFailed
             | EntryPointStatus.PaymentFailed
-
-        /** The selector of the returned custom error. */
         failureReason: Hex
-
-        /** The revert data *carried* by the returned custom error. */
         revertData: Hex
     } | {
         // check with `isRevert(status)`
@@ -34,8 +34,6 @@ export type SimulationResult = Prettify<{
             | EntryPointStatus.ExecuteReverted
             | EntryPointStatus.PaymentReverted
             | EntryPointStatus.UnexpectedReverted
-
-        /** The revertData of the revert error. */
         revertData: Hex
         failureReason?: never
     }

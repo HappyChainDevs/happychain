@@ -18,7 +18,9 @@ _logger.setLogLevel(logLevel)
 
 // Create a type that omits the LogTag parameter from logger methods
 type SubmitterLogger = {
-    [K in keyof Logger]: Logger[K] extends (tag: LogTag, ...args: infer P) => infer R ? (...args: P) => R : Logger[K]
+    [K in keyof Logger]: Logger[K] extends (tag: LogTag.SUBMITTER, ...args: infer P) => infer R
+        ? (...args: P) => R
+        : Logger[K]
 }
 
 export const logger = new Proxy(_logger, {
