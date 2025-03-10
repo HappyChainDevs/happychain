@@ -4,15 +4,15 @@ import type { DB, HappyTransaction } from "#src/database/generated"
 export class HappyTransactionRepository {
     constructor(private db: Kysely<DB>) {}
 
-    async findByHappyTxHash(hash: `0x${string}`) {
+    async findByHappyTxHash(happyTxHash: `0x${string}`) {
         return await this.db
             .selectFrom("happy_transactions")
             .selectAll()
-            .where("happyTxHash", "=", hash)
-            .executeTakeFirstOrThrow()
+            .where("happyTxHash", "=", happyTxHash)
+            .executeTakeFirst()
     }
 
-    async insert(state: Omit<HappyTransaction, "id">) {
+    async insert(state: Omit<HappyTransaction, "id">): Promise<HappyTransaction | undefined> {
         const data = await this.db //
             .insertInto("happy_transactions")
             .values(state)
@@ -32,7 +32,7 @@ export class HappyTransactionRepository {
             )
             .returningAll()
             .executeTakeFirst()
-        return data
+        return data as HappyTransaction | undefined
     }
 
     async update(id: number, updates: Partial<Omit<HappyTransaction, "id">>) {
