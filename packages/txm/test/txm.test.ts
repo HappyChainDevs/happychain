@@ -1,5 +1,5 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
-import { type Chain, createPublicClient, createWalletClient } from "viem"
+import { type Block, type Chain, createPublicClient, createWalletClient } from "viem"
 import { http } from "viem"
 import { privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
 import { anvil as anvilViemChain } from "viem/chains"
@@ -85,6 +85,12 @@ async function getCurrentNonce(): Promise<number> {
     })
 }
 
+async function getCurrentBlock(): Promise<Block> {
+    return await directBlockchainClient.getBlock({
+        blockTag: "latest",
+    })
+}
+
 async function createCounterTransaction(deadline?: number): Promise<Transaction> {
     return await txm.createTransaction({
         address: deployment.HappyCounter,
@@ -125,15 +131,33 @@ afterAll(() => {
     killAnvil()
 })
 
-test("Setup is correct", async () => {
-    let blockMined = false
+test("NewBlock hook works correctly", async () => {
+    let hookTriggered = false
     txm.addHook(TxmHookType.NewBlock, () => {
-        blockMined = true
+        hookTriggered = true
     })
 
     await mineBlock()
 
-    expect(blockMined).toBe(true)
+    expect(hookTriggered).toBe(true)
+})
+
+test("onTransactionStatusChanged hook works correctly", async () => {
+    let hookTriggered = false
+
+    const transaction = await createCounterTransaction()
+
+    transactionQueue.push(transaction)
+
+    txm.addHook(TxmHookType.TransactionStatusChanged, (transactionInHook) => {
+        hookTriggered = true
+        expect(transactionInHook.status).toBe(TransactionStatus.Success)
+        expect(transactionInHook.intentId).toBe(transaction.intentId)
+    })
+
+    await mineBlock(2)
+
+    expect(hookTriggered).toBe(true)
 })
 
 test("Simple transaction executed", async () => {
@@ -142,6 +166,8 @@ test("Simple transaction executed", async () => {
     const transaction = await createCounterTransaction()
 
     transactionQueue.push(transaction)
+
+    const previousBlock = await getCurrentBlock()
 
     await mineBlock(2)
 
@@ -162,6 +188,7 @@ test("Simple transaction executed", async () => {
     expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
     expect(retrievedTransaction?.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 1)
+    expect(retrievedTransaction.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
 test("Transaction retried", async () => {
@@ -172,6 +199,8 @@ test("Transaction retried", async () => {
     proxyServer.addBehavior(ProxyBehavior.NotAnswer)
 
     transactionQueue.push(transaction)
+
+    const previousBlock = await getCurrentBlock()
 
     await mineBlock(2)
 
@@ -211,6 +240,7 @@ test("Transaction retried", async () => {
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 1)
+    expect(transactionSuccess.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
 test("Transaction failed", async () => {
@@ -224,6 +254,8 @@ test("Transaction failed", async () => {
     })
 
     transactionQueue.push(transaction)
+
+    const previousBlock = await getCurrentBlock()
 
     await mineBlock(2)
 
@@ -245,6 +277,7 @@ test("Transaction failed", async () => {
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Failed)
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 1)
+    expect(transactionReverted.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
 test("Transaction failed for out of gas", async () => {
@@ -258,6 +291,8 @@ test("Transaction failed for out of gas", async () => {
     })
 
     transactionQueue.push(transaction)
+
+    const previousBlock = await getCurrentBlock()
 
     await mineBlock(2)
 
@@ -281,6 +316,7 @@ test("Transaction failed for out of gas", async () => {
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Failed)
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 1)
+    expect(transactionReverted.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
 test("Transaction cancelled due to deadline passing", async () => {
@@ -293,6 +329,8 @@ test("Transaction cancelled due to deadline passing", async () => {
     proxyServer.addBehavior(ProxyBehavior.NotAnswer)
 
     transactionQueue.push(transaction)
+
+    const previousBlock = await getCurrentBlock()
 
     await mineBlock()
 
@@ -347,6 +385,7 @@ test("Transaction cancelled due to deadline passing", async () => {
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Cancelled)
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 1)
+    expect(transactionCancelled.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
 test("Correctly calculates baseFeePerGas after a block with high gas usage", async () => {
@@ -358,6 +397,8 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
     })
 
     transactionQueue.push(transactionBurner)
+
+    const previousBlock = await getCurrentBlock()
 
     await mineBlock(2)
 
@@ -395,6 +436,7 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 2)
+    expect(transactionBurnerExecuted.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
 test("Transaction succeeds in congested blocks", async () => {
@@ -405,6 +447,8 @@ test("Transaction succeeds in congested blocks", async () => {
     const incrementerTransaction = await createCounterTransaction()
 
     transactionQueue.push(incrementerTransaction)
+
+    const previousBlock = await getCurrentBlock()
 
     let iterations = 0
     while (true) {
@@ -436,4 +480,5 @@ test("Transaction succeeds in congested blocks", async () => {
     expect(persistedTransaction?.status).toBe(TransactionStatus.Success)
     expect(incrementerReceipt.status).toBe("success")
     expect(await getCurrentCounterValue()).toBe(previousCount + 1n)
+    expect(executedIncrementerTransaction.collectionBlock).toBe(previousBlock.number! + 1n)
 })
