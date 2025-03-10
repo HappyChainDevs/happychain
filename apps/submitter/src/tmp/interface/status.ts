@@ -57,7 +57,7 @@ export enum EntryPointStatus {
 
     /**
      * The account validation of the HappyTx reverted.
-     * This indicates either a disfunctional account or a disfunctional submitter.
+     * This indicates either a dysfunctional account or a dysfunctional submitter.
      */
     ValidationReverted = "entrypointValidationReverted",
 
@@ -66,7 +66,7 @@ export enum EntryPointStatus {
 
     /**
      * The account's `execute` call reverted.
-     * This indicates either a disfunctional account or a disfunctional submitter.
+     * This indicates either a dysfunctional account or a dysfunctional submitter.
      */
     ExecuteReverted = "entrypointExecuteReverted",
 
@@ -77,7 +77,7 @@ export enum EntryPointStatus {
 
     /**
      * The paymaster's `payout` call reverted.
-     * This indicates either a disfunctional paymaster or a disfunctional submitter.
+     * This indicates either a dysfunctional paymaster or a dysfunctional submitter.
      */
     PaymentReverted = "entrypointPaymentReverted",
 
@@ -145,7 +145,7 @@ export enum SimulatedValidationStatus {
     Unknown = "simulationUnknown",
 
     /**
-     * Validation suceeded during simulation, but the nonce is ahead of the current nonce, and the
+     * Validation succeeded during simulation, but the nonce is ahead of the current nonce, and the
      * HappyTx would thus fail if submitted onchain immediately.
      */
     FutureNonce = "simulationFutureNonce",

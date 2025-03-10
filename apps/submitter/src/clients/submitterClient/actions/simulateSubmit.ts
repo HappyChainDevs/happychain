@@ -1,20 +1,23 @@
 import type { happyChainSepolia } from "@happy.tech/wallet-common"
-import { type Account, type SimulateContractParameters, type SimulateContractReturnType, zeroAddress } from "viem"
+import type { Account, SimulateContractParameters, SimulateContractReturnType } from "viem"
+import { zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
 import { publicClient } from "#src/clients"
 import { abis } from "#src/deployments"
 import { parseFromViemError } from "#src/errors/utils"
+import { submitterService } from "#src/services"
+import type { SimulationResult } from "#src/tmp/interface/SimulationResult"
 import { decodeHappyTx } from "#src/utils/decodeHappyTx"
 import { encodeHappyTx } from "#src/utils/encodeHappyTx"
+import { computeHappyTxHash } from "#src/utils/getHappyTxHash"
 
 export async function simulateSubmit(
     request: Omit<SubmitSimulateParameters, "abi" | "functionName">,
 ): Promise<SubmitSimulateReturnType> {
     if (!request.account) throw new Error("Account Not Found - simulateSubmit")
-
+    const requestAccount = parseAccount(request.account)
     // Simulate with zero address to allow for future nonce simulation
     const account = parseAccount(zeroAddress)
-    const requestAccount = parseAccount(request.account)
 
     const req = {
         ...request,
@@ -24,6 +27,7 @@ export async function simulateSubmit(
     } as SubmitSimulateParameters
 
     const tx = decodeHappyTx(req.args[0])
+    const happyTxHash = computeHappyTxHash(tx)
     const needsGasHotfix = tx.paymaster !== tx.account && !tx.gasLimit && !tx.executeGasLimit
     try {
         const { request, result } = await publicClient.simulateContract(
@@ -36,7 +40,10 @@ export async function simulateSubmit(
                 : req,
         )
 
+        const simulation = await submitterService.insertSimulationSuccess(happyTxHash, req, result)
+        // Update gas limits for the encoded tx if they where previously 0
         const decoded = decodeHappyTx(request.args[0])
+
         const hasSuccessfulGasEstimation = Boolean(result.gas && result.executeGas)
         const needsPaymasterGasFilled = Boolean(
             decoded.paymaster !== decoded.account && !decoded.gasLimit && !decoded.executeGasLimit,
@@ -48,16 +55,17 @@ export async function simulateSubmit(
         const args = [encodeHappyTx(decoded)]
 
         return {
+            // restore original account, instead of zeroAddress which was used
             request: {
                 ...request,
-                // potentially updated gas values
-                args,
-                // restore original account, instead of zeroAddress which was used
+                args, // potentially updated gas values
                 account: requestAccount,
             } as unknown as typeof request,
             result,
+            simulation,
         }
     } catch (_err) {
+        await submitterService.insertSimulationFailure(happyTxHash, req, _err)
         throw parseFromViemError(_err) || _err
     }
 }
@@ -79,4 +87,4 @@ type SubmitSimulateReturnType = SimulateContractReturnType<
     undefined,
     undefined,
     Account
->
+> & { simulation?: SimulationResult | undefined }

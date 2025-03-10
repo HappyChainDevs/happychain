@@ -10,8 +10,7 @@ export class HappyReceiptService {
     constructor(private happyReceiptRepository: HappyReceiptRepository) {}
 
     async findByHappyTxHash(happyTxHash: Hash): Promise<HappyTxReceipt | undefined> {
-        const happyReceipt = await this.happyReceiptRepository.findByHash(happyTxHash)
-
+        const happyReceipt = await this.happyReceiptRepository.findByHappyTxHash(happyTxHash)
         if (!happyReceipt) return
 
         const transactionReceipt = await publicClient.getTransactionReceipt({ hash: happyReceipt.transactionHash })
@@ -45,6 +44,7 @@ export class HappyReceiptService {
         if (!receipt) throw new Error("Failed to find receipt")
         return receipt
     }
+
     async findByHappyTxHashWithTimeout(happyTxHash: Hash, timeout: number, pollInterval = 250) {
         const end = Date.now() + timeout
 
