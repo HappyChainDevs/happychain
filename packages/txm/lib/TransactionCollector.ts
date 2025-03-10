@@ -57,7 +57,6 @@ export class TransactionCollector {
                 })
 
                 if (submissionResult.isErr()) {
-                    console.log("emitting event - transactionSubmissionFailed")
                     eventBus.emit(Topics.TransactionSubmissionFailed, {
                         transaction,
                         description: submissionResult.error.description,
