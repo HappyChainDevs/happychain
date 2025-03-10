@@ -15,7 +15,11 @@ import type { HappyTx } from "#src/tmp/interface/HappyTx"
 
 const defaultAccount = privateKeyToAccount(env.PRIVATE_KEY_LOCAL)
 
-export function findExecutionAccount(_tx?: HappyTx): Account {
+// These fields where chosen as they could be useful when selection which account to execute with.
+// can be adjusted to fit the actual requirements
+type PartialTx = Pick<HappyTx, "account" | "nonceTrack" | "nonceValue" | "paymaster" | "dest">
+
+export function findExecutionAccount(_tx?: PartialTx): Account {
     // TODO: select wallet per account.
     // One approach would be to check all current/pending/processed transactions
     // to find the least used account, then save this useraddress<->systemaccount relation
