@@ -7,13 +7,13 @@ export type HappyTx = {
     account: Address
     gasLimit: UInt32 //
     executeGasLimit: UInt32 //
+    maxFeePerGas: UInt256 //
+    submitterFee: Int256 //
     dest: Address
     value: UInt256
     callData: Bytes
     nonceTrack: UInt256
     nonceValue: UInt256
-    maxFeePerGas: UInt256 //
-    submitterFee: Int256 //
     paymaster: Address
     paymasterData: Bytes
     validatorData: Bytes
