@@ -24,7 +24,12 @@ export class TestRetryManager extends DefaultRetryPolicyManager {
         return super.getRevertMessageAndOutput(txm, attempt)
     }
 
-    public revertWithCustomError(txm: TransactionManager, transaction: Transaction, attempt: Attempt, customError: string) {
+    public revertWithCustomError(
+        txm: TransactionManager,
+        transaction: Transaction,
+        attempt: Attempt,
+        customError: string,
+    ) {
         return super.isCustomError(txm, transaction, attempt, customError)
     }
 }

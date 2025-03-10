@@ -11,7 +11,7 @@ export async function startAnvil() {
         CHAIN_ID.toString(),
         "--gas-limit",
         BLOCK_GAS_LIMIT.toString(),
-        "--steps-tracing"
+        "--steps-tracing",
     ])
 
     anvil.stderr.on("data", (data) => {
