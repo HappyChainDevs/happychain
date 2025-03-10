@@ -8,8 +8,16 @@ import {ScrappyAccount} from "../happy-accounts/samples/ScrappyAccount.sol";
 import {ScrappyPaymaster} from "../happy-accounts/samples/ScrappyPaymaster.sol";
 import {ScrappyAccountFactory} from "../happy-accounts/factories/ScrappyAccountFactory.sol";
 
+import {MockERC20} from "../mocks/MockERC20.sol";
+
+// Updated a bit to deploy on tenderly
+// Steps: Just use CONFIG=LOCAL, but change RPC_LOCAL to tenderly virtual testnet URL
+// Set verify_local = true
+// VERIFIER_URL_LOCAL=--slow --verifier-url https://virtual.sepolia.rpc.tenderly.co/d76e8a9e-e772-4bb0-af97-109ea110af34/verify/etherscan
+// Can keep PRIVATE_KEY_LOCAL, just fund it with the faucet on tenderly virtual testnet with 1000 eth
+
 contract DeployHappyAAContracts is BaseDeployScript {
-    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
+    bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(1));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     uint256 public constant PM_SUBMITTER_TIP_PER_BYTE = 2 gwei;
     uint256 public constant PM_DEPOSIT = 10 ether;
@@ -18,6 +26,7 @@ contract DeployHappyAAContracts is BaseDeployScript {
     HappyEntryPoint public happyEntryPoint;
     ScrappyPaymaster public scrappyPaymaster;
     ScrappyAccountFactory public scrappyAccountFactory;
+    MockERC20 public mockToken;
 
     function deploy() internal override {
         string memory config = vm.envOr("CONFIG", string(""));
@@ -81,6 +90,10 @@ contract DeployHappyAAContracts is BaseDeployScript {
         }
 
         // -----------------------------------------------------------------------------------------
+        // Deploy a mock ERC20 token
+
+        mockToken = new MockERC20("MockTokenA", "MTA", uint8(18));
+        deployed("MockERC20", address(mockToken));
     }
 
     /// @dev Deployment for tests. Avoids broadcasting transactions, allowing use of vm.prank().
