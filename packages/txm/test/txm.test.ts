@@ -344,6 +344,12 @@ test("Transaction failed", async () => {
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
 
+    const revertedWithCustomErrorResult = await retryManager.revertWithCustomError(txm, transactionReverted, transactionReverted.attempts[0], "CustomErrorMockRevert")
+
+    if (revertedWithCustomErrorResult.isErr()) {
+        throw revertedWithCustomErrorResult.error
+    }
+
     expect(transactionReverted.status).toBe(TransactionStatus.Failed)
     expect(transaction.attempts).length(1)
     assertReceiptReverted(deployment.MockRevert, fromAddress, revertReceipt)
@@ -353,6 +359,7 @@ test("Transaction failed", async () => {
     expect(persistedTransaction?.status).toBe(TransactionStatus.Failed)
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 1)
     expect(transactionReverted.collectionBlock).toBe(previousBlock.number! + 1n)
+    expect(revertedWithCustomErrorResult.value).toBe(true)
 })
 
 test("Transaction failed for out of gas", async () => {
@@ -381,12 +388,16 @@ test("Transaction failed for out of gas", async () => {
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
 
+    const { message, output } = await retryManager.getRevertMessageAndOutput(txm, transactionReverted.attempts[0])
+
     expect(transactionReverted.status).toBe(TransactionStatus.Failed)
     expect(transaction.attempts).length(1)
     assertReceiptReverted(deployment.MockRevert, fromAddress, revertReceipt)
     expect(await getCurrentCounterValue()).toBe(previousCount)
     expect(transactionReverted.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
     expect(retryManager.haveTriedToRetry(transaction.intentId)).toBeTruthy()
+    expect(message).toBe("Out of gas")
+    expect(output).toBeUndefined()
     expect(revertReceipt.gasUsed).toBe(transactionReverted.attempts[0].gas)
     expect(persistedTransaction).toBeDefined()
     expect(persistedTransaction?.status).toBe(TransactionStatus.Failed)
