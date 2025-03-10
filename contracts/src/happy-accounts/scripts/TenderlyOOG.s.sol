@@ -4,15 +4,13 @@ pragma solidity ^0.8.20;
 import {Script} from "forge-std/Script.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
-import {MockERC20} from "../../mocks/MockERC20.sol";
-import {BurnAllGas} from "../../test/mocks/BurnAllGas.sol";
-
 import {HappyTx} from "../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../happy-accounts/libs/HappyTxLib.sol";
 
+import {MockERC20} from "../../mocks/MockERC20.sol";
 import {HappyEntryPoint} from "../core/HappyEntryPoint.sol";
 import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
-import {DeployHappyAAContracts} from "../../deploy/DeployHappyAA.s.sol";
+import {ScrappyAccountFactory} from "../factories/ScrappyAccountFactory.sol";
 
 contract TenderlyOOG is Script {
     using ECDSA for bytes32;
@@ -29,59 +27,41 @@ contract TenderlyOOG is Script {
     uint256 public constant TOKEN_MINT_AMOUNT = 1000;
     uint192 public constant DEFAULT_NONCETRACK = 0;
 
+    uint256 private constant privKey = uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80);
+    address private constant owner = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+
     // ====================================================================================================
     // STATE VARIABLES
 
-    DeployHappyAAContracts private deployer;
     HappyEntryPoint private happyEntryPoint;
 
-    address private smartAccount;
-    address private paymaster;
+    // Easier to separately deploy the contract first, then copy paste these address from dep.json
+    address private scrappyAccountFactory = 0x13b348F3EF330FC328Bb3cDa4261DCc43b62cB86;
+    address private mockToken = 0xB42D31900E5F9b0b541C0e0ABBd6c52e69cDF07e;
 
-    uint256 private privKey;
-    address private owner;
-    address private dest;
+    address private smartAccount = 0x16c0486AB97774be23bF85AcD8B5973A3f5e3AB8;
+    address private dest = 0xB42D31900E5F9b0b541C0e0ABBd6c52e69cDF07e; // mockToken
 
-    address private mockToken;
-    address private burnAllGas;
+    address private constant _happyEntryPoint = 0x47915b0147baB7d51b92dCbbc4baC0F3b82226f7;
 
     function run() external {
         setUp();
         executeWithLowExecutionGasLimitOOG();
     }
 
-    function setUp() public {
-        privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
-        owner = vm.addr(privKey);
-
-        // Set up the Deployment Script, and deploy the happy-aa contracts as foundry-account-0
-        deployer = new DeployHappyAAContracts();
-        vm.prank(owner);
-        deployer.deployForTests();
-
-        happyEntryPoint = deployer.happyEntryPoint();
-        paymaster = address(deployer.scrappyPaymaster());
-        smartAccount = deployer.scrappyAccountFactory().createAccount(SALT, owner);
-
-        dest = deployer.scrappyAccountFactory().createAccount(SALT2, owner);
-
-        // Fund the smart account and paymaster
-        vm.deal(paymaster, INITIAL_DEPOSIT);
-        vm.deal(smartAccount, INITIAL_DEPOSIT);
-
-        // Deploy a mock ERC20 token
-        mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
-
-        // Deploy a mock contract that burns all gas
-        burnAllGas = address(new BurnAllGas());
+    function setUp() internal {
+        vm.startBroadcast();
+        // Foundry can't validate ERC1967 for some reason, so better to not deploy this in deployHappyAAA
+        smartAccount = ScrappyAccountFactory(scrappyAccountFactory).createAccount(SALT2, owner);
+        vm.stopBroadcast();
     }
 
-    function executeWithLowExecutionGasLimitOOG() public {
+    function executeWithLowExecutionGasLimitOOG() internal {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
 
         // Enough to reach MockERC20.mint, but still runs out of gas.
-        happyTx.executeGasLimit = 100000;
+        // happyTx.executeGasLimit = 40000;
 
         uint32 origGasLimit;
         uint32 origExecuteGasLimit;
@@ -112,8 +92,10 @@ contract TenderlyOOG is Script {
             happyTx.submitterFee = origSubmitterFee;
         }
 
-        // Submit the transaction
-        happyEntryPoint.submit(happyTx.encode());
+        // Don't broadcast the signing portion above, only broadcast the relevant "1" tx below
+        vm.startBroadcast();
+        HappyEntryPoint(_happyEntryPoint).submit(happyTx.encode());
+        vm.stopBroadcast();
     }
 
     function getStubHappyTx(address _account, address _dest, address _paymaster, bytes memory _callData)
