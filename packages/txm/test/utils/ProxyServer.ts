@@ -6,6 +6,7 @@ import { ANVIL_PORT, PROXY_PORT } from "./constants"
 export enum ProxyBehavior {
     Forward = "Forward",
     NotAnswer = "NotAnswer",
+    Fail = "Fail",
 }
 
 export class ProxyServer {
@@ -22,6 +23,9 @@ export class ProxyServer {
                 const behavior = this.nextBehaviors.shift() ?? ProxyBehavior.Forward
                 if (behavior === ProxyBehavior.NotAnswer) {
                     return
+                }
+                if (behavior === ProxyBehavior.Fail) {
+                    return c.json({ error: "Proxy error" }, 500)
                 }
             }
             const reqUrl = new URL(c.req.url)
