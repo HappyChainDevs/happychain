@@ -1,5 +1,5 @@
 import type { Prettify } from "@happy.tech/common"
-import { happyReceiptService } from "#src/services"
+import { happyReceiptService, happySimulationService } from "#src/services"
 import { type StateRequestOutput, StateRequestStatus } from "#src/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#src/tmp/interface/status"
 import type { ReceiptInput } from "#src/tmp/interface/submitter_receipt"
@@ -13,6 +13,15 @@ export async function receiptByHash({
         return {
             status: StateRequestStatus.Success,
             state: { status: receipt.status, included: true, receipt: receipt },
+        } satisfies StateRequestOutput
+    }
+
+    const simulation = await happySimulationService.findResultByHappyTxHash(hash)
+
+    if (simulation?.status) {
+        return {
+            status: StateRequestStatus.Success,
+            state: { status: simulation.status, included: false, simulation },
         } satisfies StateRequestOutput
     }
 

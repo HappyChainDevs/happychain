@@ -29,7 +29,7 @@ export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Pr
         nonceValue: happyTx.nonceValue,
 
         /** EntryPoint to which the HappyTx was submitted onchain. */
-        entryPoint: receipt.to,
+        entryPoint: receipt.to as `0x${string}`,
 
         /** Result of onchain submission of the HappyTx. */
         status: EntryPointStatus.Success,
@@ -41,13 +41,13 @@ export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Pr
          * The revertData carried by one of our custom error, or the raw deal for
          * "otherReverted". Empty if `!status.endsWith("Reverted")`.
          */
-        revertData: "0x",
+        revertData: "0x" as const,
 
         /**
          * The selector carried by one of our custom error.
          * Empty if `!status.endsWith("Failed")`
          */
-        failureReason: "0x",
+        failureReason: "0x" as const,
 
         /** Gas used by the HappyTx */
         gasUsed: receipt.gasUsed,
@@ -77,7 +77,7 @@ export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Pr
             to: receipt.to,
             transactionHash: receipt.transactionHash,
             transactionIndex: receipt.transactionIndex,
-            type: receipt.type,
+            type: receipt.type as TransactionTypeName,
         },
     }
 }

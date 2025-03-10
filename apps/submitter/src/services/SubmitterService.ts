@@ -1,9 +1,15 @@
 import { submitterClient } from "#src/clients"
+import { getBaseError } from "#src/errors/utils"
 import type { HappyTx } from "#src/tmp/interface/HappyTx"
 import type { HappyTxState } from "#src/tmp/interface/HappyTxState"
 import type { EntryPointStatus } from "#src/tmp/interface/status"
 import { computeHappyTxHash } from "#src/utils/getHappyTxHash"
 import type { HappyReceiptService } from "./HappyReceiptService"
+import type {
+    HappySimulationService,
+    SubmitContractSimulateParameters,
+    SubmitContractSimulateReturnType,
+} from "./HappySimulationService"
 import type { HappyStateService } from "./HappyStateService"
 import type { HappyTransactionService } from "./HappyTransactionService"
 
@@ -12,6 +18,7 @@ export class SubmitterService {
         private happyTransactionService: HappyTransactionService,
         private happyStateService: HappyStateService,
         private happyReceiptService: HappyReceiptService,
+        private happySimulationService: HappySimulationService,
     ) {}
 
     async initialize(entryPoint: `0x${string}`, happyTx: HappyTx) {
@@ -40,5 +47,20 @@ export class SubmitterService {
             included: Boolean(receipt.txReceipt.transactionHash) as true,
             receipt,
         })
+    }
+
+    async insertSimulationSuccess(
+        happyTxHash: `0x${string}`,
+        request: SubmitContractSimulateParameters,
+        result: SubmitContractSimulateReturnType["result"],
+    ) {
+        return await this.happySimulationService.insertSuccessResult(happyTxHash, request, result)
+    }
+
+    async insertSimulationFailure(happyTxHash: `0x${string}`, request: SubmitContractSimulateParameters, err: unknown) {
+        const baseError = getBaseError(err)
+        const hasRawData = baseError && "raw" in baseError && typeof baseError.raw === "string"
+        const data = hasRawData ? (baseError.raw as `0x${string}`) || "0x" : "0x"
+        return await this.happySimulationService.insertFailureResult(happyTxHash, request, data)
     }
 }

@@ -2,6 +2,7 @@ import { submitterClient } from "#src/clients"
 import { submitterService } from "#src/services"
 import { incrementLocalNonce, isTxBlocked, waitUntilUnblocked } from "#src/services/nonceManager"
 import type { HappyTx } from "#src/tmp/interface/HappyTx"
+import { EntryPointStatus } from "#src/tmp/interface/status"
 import { type SubmitOutput, SubmitSuccess } from "#src/tmp/interface/submitter_submit"
 import { encodeHappyTx } from "#src/utils/encodeHappyTx"
 import { findExecutionAccount } from "#src/utils/findExecutionAccount"
@@ -17,6 +18,10 @@ export async function submit(data: { entryPoint: `0x${string}`; tx: HappyTx }): 
         args: [encodeHappyTx(data.tx)],
         account,
     })
+
+    if (simulate.simulation?.status !== EntryPointStatus.Success) {
+        throw new Error("Simulation failed") // TODO: more information as to what failed
+    }
 
     if (await isTxBlocked(data.tx)) {
         await waitUntilUnblocked(data.tx)

@@ -5,7 +5,7 @@ import type { Hash } from "#src/tmp/interface/common_chain"
 export class HappyReceiptRepository {
     constructor(private db: Kysely<DB>) {}
 
-    async findByHash(hash: Hash) {
+    async findByHappyTxHash(happyHash: Hash) {
         const query = this.db
             .selectFrom("happy_receipts")
             .select([
@@ -24,7 +24,33 @@ export class HappyReceiptRepository {
                 "happy_transactions.nonceValue",
                 "happy_transactions.entryPoint",
             ])
-            .where("happy_transactions.happyTxHash", "=", hash)
+
+            .where("happy_receipts.happyTxHash", "=", happyHash)
+
+        return await query.executeTakeFirst()
+    }
+
+    async findByTransactionHash(transactionHash: Hash) {
+        const query = this.db
+            .selectFrom("happy_receipts")
+            .select([
+                "happy_receipts.happyTxHash",
+                "happy_receipts.status",
+                "happy_receipts.revertData",
+                "happy_receipts.failureReason",
+                "happy_receipts.gasUsed",
+                "happy_receipts.gasCost",
+                "happy_receipts.transactionHash",
+            ])
+            .innerJoin("happy_transactions", "happy_transactions.happyTxHash", "happy_receipts.happyTxHash")
+            .select([
+                "happy_transactions.account",
+                "happy_transactions.nonceTrack",
+                "happy_transactions.nonceValue",
+                "happy_transactions.entryPoint",
+            ])
+
+            .where("happy_receipts.transactionHash", "=", transactionHash)
 
         return await query.executeTakeFirst()
     }
