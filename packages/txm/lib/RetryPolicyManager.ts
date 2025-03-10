@@ -1,6 +1,7 @@
-import type { TransactionReceipt } from "viem"
+import  { encodeErrorResult, type TransactionReceipt } from "viem"
 import type { Attempt, Transaction } from "./Transaction"
 import type { TransactionManager } from "./TransactionManager"
+import { err, ok, type Result } from "neverthrow"
 
 export type RevertedTransactionReceipt = TransactionReceipt<bigint, number, "reverted", "eip1559">
 
@@ -39,10 +40,10 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
      * @param attempt - The attempt
      * @returns The revert message or undefined if it cannot be retrieved or the rpc does not allow debug
      */
-    protected async getRevertMessage(
+    protected async getRevertMessageAndOutput(
         transactionManager: TransactionManager,
         attempt: Attempt,
-    ): Promise<string | undefined> {
+    ): Promise<{ message: string | undefined; output: string | undefined }> {
         const traceResult = transactionManager.rpcAllowDebug
             ? await transactionManager.viemClient.safeDebugTransaction(attempt.hash, {
                   tracer: "callTracer",
@@ -50,10 +51,10 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
             : undefined
 
         if (!traceResult || traceResult.isErr()) {
-            return undefined
+            return { message: undefined, output: undefined }
         }
 
-        return traceResult.value.error
+        return { message: traceResult.value.error, output: traceResult.value.output }
     }
 
     protected async isOutOfGas(
@@ -61,12 +62,46 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
         attempt: Attempt,
         receipt: RevertedTransactionReceipt,
     ): Promise<boolean> {
-        const revertMessage = await this.getRevertMessage(transactionManager, attempt)
+        const { message } = await this.getRevertMessageAndOutput(transactionManager, attempt)
 
-        if (!revertMessage) {
+        if (!message) {
             return receipt.gasUsed === attempt.gas
         }
 
-        return revertMessage === "Out of Gas"
+        return message === "Out of Gas"
+    }
+
+    protected async revertedWithMessage(
+        transactionManager: TransactionManager,
+        attempt: Attempt,
+        message: string,
+    ): Promise<boolean> {
+        const { message: _message } = await this.getRevertMessageAndOutput(transactionManager, attempt)
+
+        return _message === message
+    }
+
+    protected async isCustomError(
+        transactionManager: TransactionManager,
+        transaction: Transaction,
+        attempt: Attempt,
+        customError: string
+    ): Promise<Result<boolean, Error>> {
+        const { output } = await this.getRevertMessageAndOutput(transactionManager, attempt)
+
+        if (!output) {
+            return ok(false)
+        }
+
+        const abi = transactionManager.abiManager.get(transaction.contractName)
+
+        if (!abi) {
+            return err(new Error("Contract not found"))
+        }
+
+        return ok(encodeErrorResult({
+            abi: abi,
+            errorName: customError,
+        }) === output)
     }
 }
