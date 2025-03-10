@@ -56,13 +56,16 @@ export class TransactionCollector {
                     maxPriorityFeePerGas,
                 })
 
-                if (submissionResult.isErr() && !submissionResult.error.flushed) {
+                if (submissionResult.isErr()) {
                     eventBus.emit(Topics.TransactionSubmissionFailed, {
                         transaction,
                         description: submissionResult.error.description,
                         cause: submissionResult.error.cause,
                     })
-                    this.txmgr.nonceManager.returnNonce(nonce)
+
+                    if (!submissionResult.error.flushed) {
+                        this.txmgr.nonceManager.returnNonce(nonce)
+                    }
                 }
             }),
         )
