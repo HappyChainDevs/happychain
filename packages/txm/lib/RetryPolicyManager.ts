@@ -1,7 +1,7 @@
-import  { encodeErrorResult, type TransactionReceipt } from "viem"
+import { type Result, err, ok } from "neverthrow"
+import { type TransactionReceipt, encodeErrorResult } from "viem"
 import type { Attempt, Transaction } from "./Transaction"
 import type { TransactionManager } from "./TransactionManager"
-import { err, ok, type Result } from "neverthrow"
 
 export type RevertedTransactionReceipt = TransactionReceipt<bigint, number, "reverted", "eip1559">
 
@@ -85,7 +85,7 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
         transactionManager: TransactionManager,
         transaction: Transaction,
         attempt: Attempt,
-        customError: string
+        customError: string,
     ): Promise<Result<boolean, Error>> {
         const { output } = await this.getRevertMessageAndOutput(transactionManager, attempt)
 
@@ -99,9 +99,11 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
             return err(new Error("Contract not found"))
         }
 
-        return ok(encodeErrorResult({
-            abi: abi,
-            errorName: customError,
-        }) === output)
+        return ok(
+            encodeErrorResult({
+                abi: abi,
+                errorName: customError,
+            }) === output,
+        )
     }
 }
