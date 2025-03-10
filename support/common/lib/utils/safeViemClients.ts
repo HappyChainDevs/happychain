@@ -43,8 +43,16 @@ export type Call = {
     gas: string
     gasUsed: string
     input: string
+    /**
+     * When a transaction reverts, this field contains the revert reason message.
+     * For custom errors, this will always be 'Reverted'.
+     * For out of gas scenarios, this will be 'Out of Gas'.
+     */
     error?: string
-    revertReason?: string
+    /**
+     * When a transaction reverts with a custom error, this field contains the custom error signature
+     */
+    output?: string
     calls?: Call[]
 }
 

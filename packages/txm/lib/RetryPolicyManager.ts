@@ -33,13 +33,13 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
     }
 
     /**
-     * Retrieves the reason for transaction reversion by utilizing the debug_traceTransaction RPC method.
+     * Retrieves the message for transaction reversion by utilizing the debug_traceTransaction RPC method.
      * Returns undefined if the request fails or if the transaction has not been reverted.
      * @param transactionManager - The transaction manager
      * @param attempt - The attempt
-     * @returns The revert reason or undefined if it cannot be retrieved or the rpc does not allow debug
+     * @returns The revert message or undefined if it cannot be retrieved or the rpc does not allow debug
      */
-    protected async getRevertReason(
+    protected async getRevertMessage(
         transactionManager: TransactionManager,
         attempt: Attempt,
     ): Promise<string | undefined> {
@@ -53,7 +53,7 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
             return undefined
         }
 
-        return traceResult.value.revertReason
+        return traceResult.value.error
     }
 
     protected async isOutOfGas(
@@ -61,12 +61,12 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
         attempt: Attempt,
         receipt: RevertedTransactionReceipt,
     ): Promise<boolean> {
-        const revertReason = await this.getRevertReason(transactionManager, attempt)
+        const revertMessage = await this.getRevertMessage(transactionManager, attempt)
 
-        if (!revertReason) {
+        if (!revertMessage) {
             return receipt.gasUsed === attempt.gas
         }
 
-        return revertReason === "Out of Gas"
+        return revertMessage === "Out of Gas"
     }
 }
