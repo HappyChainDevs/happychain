@@ -14,10 +14,15 @@ const inputSchema = z.object({
         .openapi({ example: "0xd7ebadc747305fa2ad180a8666724d71ff5936787746b456cdb976b5c9061fbc" }),
 })
 
-const outputSchema = z.object({
-    status: z.enum([StateRequestStatus.Success, StateRequestStatus.UnknownHappyTx]),
-    state: happyTxStateSchema,
-})
+const outputSchema = z.discriminatedUnion("status", [
+    z.object({
+        status: z.literal(StateRequestStatus.Success),
+        state: happyTxStateSchema,
+    }),
+    z.object({
+        status: z.literal(StateRequestStatus.UnknownHappyTx),
+    }),
+])
 
 export const description = describeRoute({
     validateResponse: env.NODE_ENV !== "production",
