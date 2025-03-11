@@ -82,7 +82,7 @@ export class HookManager {
         eventBus.on(Topics.TransactionSubmissionFailed, this.onTransactionSubmissionFailed.bind(this))
     }
 
-    public async addHook<T extends TxmHookType>(type: T, handler: TxmHookHandler<T>): Promise<() => void> {
+    public addHook<T extends TxmHookType>(type: T, handler: TxmHookHandler<T>): () => void {
         if (!this.hooks[type]) {
             this.hooks[type] = []
         }
