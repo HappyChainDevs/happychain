@@ -215,8 +215,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      */
     function submit(bytes calldata encodedHappyTx) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
-        console.log("gasleft()", gasStart);
-        // First console = 3165 gas, others = 665 gas; 2500 extra gas (hmmm, maybe an SLOAD? or a CALL?)
+
+        //////////
+        console.log("HEP: gasleft(), (sub 3165 from this for logging): ", gasStart);
+        gasStart -= 3165;
+        // First console = 3165 gas, others = 665 gas; 2500 extra gas
+        //////////
 
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
         bool isSimulation = tx.origin == address(0);
@@ -226,11 +230,19 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // 1. Validate happyTx with account
 
+        uint256 gasBeforeValidate = gasleft();
+
+        //////////
+        // console.log("gasStart - gasBeforeValidate : ", gasStart - gasBeforeValidate); // 7187 gas used for above decode, etc.
+        // console.log("sending to validate: happyTx.gasLimit - (gasStart-gasBeforeValidate)", happyTx.gasLimit - (gasStart - gasBeforeValidate));
+        // constant BeforeValidateBuffer = 7187; below, do happyTx.gasLimit - 7200
+        //////////
+
         bool success;
         bytes memory returnData;
         (success, returnData) = this.safeCallWrapper(
             happyTx.account,
-            isSimulation && happyTx.gasLimit == 0 ? gasleft() : happyTx.gasLimit - POST_OOG_GAS_BUFFER,
+            isSimulation && happyTx.gasLimit == 0 ? gasleft() : happyTx.gasLimit - (gasStart - gasBeforeValidate), // - POST_OOG_GAS_BUFFER,
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
@@ -249,7 +261,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // 2. Execute the call
 
         // [LOGGAS] uint256 executeGasStart = gasleft();
-
+        uint256 beforeSafeExternalCall = gasleft();
+        console.log("beforeSafeExternalCall, sub 650 for this log: ", beforeSafeExternalCall);
         (success, returnData) = this.safeExternalCall(
             happyTx.account,
             isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
@@ -294,6 +307,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // WITHOUT the gas cost of the "payout" call (which is accounted for later).
         uint256 consumedGas =
             HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
+        // console.log("consumedGas: ", consumedGas);
 
         // [LOGGAS] uint256 txGasEnd = gasleft();
         // [LOGGAS] uint256 txGasUsed = txGasStart - txGasEnd;
@@ -308,11 +322,17 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 balance = tx.origin.balance;
         uint256 gasBeforePayout = gasleft();
 
+        //////////
+        // console.log("gasStart - gasBeforePayout = gas used till payout call: ", gasStart - gasBeforePayout); // 49K
+        // console.log("sending to payout: happyTx.gasLimit - (gasStart - gasBeforePayout)", happyTx.gasLimit - (gasStart - gasBeforePayout));
+        // constant BeforePayoutBuffer = 107K; below, do happyTx.gasLimit - 107K
+        //////////
+
         // [LOGGAS] uint256 payoutGasStart = gasleft();
 
         (success, returnData) = this.safeCallWrapper(
             happyTx.paymaster,
-            isSimulation && happyTx.gasLimit == 0 ? gasleft() : happyTx.gasLimit - consumedGas - POST_OOG_GAS_BUFFER,
+            isSimulation && happyTx.gasLimit == 0 ? gasleft() : happyTx.gasLimit - (gasStart - gasBeforePayout), // - POST_OOG_GAS_BUFFER,
             0, // gas token transfer value
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
@@ -359,6 +379,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         external
         returns (bool, bytes memory)
     {
+        uint256 startGas = gasleft();
+        console.log("inside safeExternalCall, startGas (sub 650 from this) = ", startGas, " ; _gas = ", _gas);
         bool _success;
         bytes memory _returnData = new bytes(_maxCopy);
         assembly {
@@ -370,8 +392,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             mstore(_returnData, _toCopy)
             returndatacopy(add(_returnData, 0x20), 0, _toCopy)
         }
-        console.log("inside, _success = ", _success);
-        console.logBytes(_returnData);
+        // console.log("inside, _success = ", _success);
+        // console.logBytes(_returnData);
         return (_success, _returnData);
     }
 }

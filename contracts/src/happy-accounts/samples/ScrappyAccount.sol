@@ -167,11 +167,18 @@ contract ScrappyAccount is
         returns (ExecutionOutput memory output)
     {
         uint256 startGas = gasleft();
-        console.log("startGas", startGas);
+        console.log("In execute, startGas", startGas);
         uint256 gasForCall = (startGas * 63 / 64) - OOG_BUFFER;
+        console.log("gasForCall", gasForCall);
+        startGas = gasleft();
+        console.log("gasleft() after gasForCall logging 1", startGas);
+        startGas = gasleft();
+        console.log("gasleft() after gasForCall logging 2", startGas);
+
         // if (happyTx.value > 0) gasForCall -= 6700;
 
-        (bool success, bytes memory returnData) = happyTx.account.call{gas: 15000, value: happyTx.value}(""); // (happyTx.callData);
+        (bool success, bytes memory returnData) =
+            happyTx.dest.call{gas: gasForCall, value: happyTx.value}(happyTx.callData);
         // happyTx.dest.call{gas: (gasleft() * 63 / 64) - 625, value: happyTx.value}(happyTx.callData);
         //  ExcessivelySafeCall.excessivelySafeCall(happyTx.dest, gasleft() - 600, happyTx.value, 256, happyTx.callData);
         if (!success) {
