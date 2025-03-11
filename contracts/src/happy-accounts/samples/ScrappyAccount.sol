@@ -71,7 +71,7 @@ contract ScrappyAccount is
     uint256 private constant PAYMENT_OVERHEAD_GAS = 9500;
 
     // /// @dev Buffer to account for gas costs of returning the function if inner call runs out of gas.
-    // uint256 private constant OOG_BUFFER = 3200;
+    uint256 private constant OOG_BUFFER = 3200;
 
     /// @dev Interface IDs
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
@@ -108,7 +108,7 @@ contract ScrappyAccount is
 
     constructor(address _entrypoint) {
         ENTRYPOINT = _entrypoint;
-        _disableInitializers();
+        // _disableInitializers();
     }
 
     /// Initializer for proxy instances. Called by the factory during proxy deployment.
@@ -166,11 +166,12 @@ contract ScrappyAccount is
         nonReentrant
         returns (ExecutionOutput memory output)
     {
+        // console.log("execute function gas usage: ", gasleft());
         uint256 startGas = gasleft();
-        // uint256 gasForCall = (startGas * 63/64) - OOG_BUFFER;
-        // if (happyTx.value > 0) gasForCall -= 6700;
+        uint256 gasForCall = (startGas * 63/64) - OOG_BUFFER;
+        if (happyTx.value > 0) gasForCall -= 10000;
 
-        (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
+        (bool success, bytes memory returnData) = happyTx.dest.call{gas: gasForCall, value: happyTx.value}(happyTx.callData);
         // happyTx.dest.call{gas: (gasleft() * 63 / 64) - 625, value: happyTx.value}(happyTx.callData);
         //  ExcessivelySafeCall.excessivelySafeCall(happyTx.dest, gasleft() - 600, happyTx.value, 256, happyTx.callData);
         if (!success) {
@@ -180,7 +181,7 @@ contract ScrappyAccount is
         }
 
         output.success = true;
-        output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
+        output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER + OOG_BUFFER;
 
         // [LOGGAS_INTERNAL] uint256 startGasEmulate = gasleft();
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();

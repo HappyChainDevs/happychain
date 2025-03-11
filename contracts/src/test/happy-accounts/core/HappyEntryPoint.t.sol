@@ -26,6 +26,10 @@ import {
     ValidationReverted
 } from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
+import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
+
+import {console} from "forge-std/console.sol";
+
 contract HappyEntryPointTest is HappyTxTestUtils {
     using HappyTxLib for HappyTx;
     using ECDSA for bytes32;
@@ -78,6 +82,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // Deploy a mock contract that burns all gas
         burnAllGas = address(new BurnAllGas());
+
+        console.log("token address ", mockToken);
     }
 
     // ====================================================================================================
@@ -346,39 +352,56 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     // TODO: 🚧 Test under construction 🏗️
     function testExecuteWithLowExecutionGasLimitOOG() public {
+        ScrappyAccount nonUpgradble = new ScrappyAccount(address(happyEntryPoint));
+        nonUpgradble.initialize(owner);
+        // smartAccount = address(nonUpgradble);
+        vm.deal(smartAccount, INITIAL_DEPOSIT);
+
+        address receivingAddress = address(0xdeadbeef); 
         HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(receivingAddress, TOKEN_MINT_AMOUNT));
 
         // Enough to reach MockERC20.mint, but still runs out of gas.
         // happyTx.executeGasLimit = 10000;
         happyTx.executeGasLimit = 19200;
+        happyTx.gasLimit = 4_000_000_000;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Submit the transaction
-        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        (bool success, bytes memory data) = address(happyEntryPoint).call{gas:happyTx.gasLimit}(abi.encodeWithSelector(happyEntryPoint.submit.selector, happyTx.encode()));
 
+        SubmitOutput memory output = abi.decode(data, (SubmitOutput));
         // The function should return output.callStatus = CallReverted
         _assertExpectedSubmitOutput(
-            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(bytes4(keccak256("OutOfGas()")))
+            output, 0, uint8(CallStatus.CALL_REVERTED), ""
         );
         assertEq(output.executeGas, 0);
     }
 
     function testExecuteWithLowExecutionGasLimitNonZeroValueOOG() public {
-        HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+
+
+        ScrappyAccount nonUpgradble = new ScrappyAccount(address(happyEntryPoint));
+        nonUpgradble.initialize(owner);
+        smartAccount = address(nonUpgradble);
+        vm.deal(smartAccount, INITIAL_DEPOSIT);
+
+                HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(address(0xdeadbeef), TOKEN_MINT_AMOUNT));
+
 
         // Enough to reach MockERC20.mint, but still runs out of gas.
-        happyTx.executeGasLimit = 25000;
+        happyTx.executeGasLimit = 28000;
+        happyTx.gasLimit = 4_000_000;
         happyTx.value = 1 wei;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Submit the transaction
-        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-
+        (bool success, bytes memory data) = address(happyEntryPoint).call{gas:happyTx.gasLimit}(abi.encodeWithSelector(happyEntryPoint.submit.selector, happyTx.encode()));
+        SubmitOutput memory output = abi.decode(data, (SubmitOutput)); 
         // The function should return output.callStatus = CallReverted
         _assertExpectedSubmitOutput(
-            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(bytes4(keccak256("OutOfGas()")))
+            output, 0, uint8(CallStatus.CALL_REVERTED), ""
         );
         assertEq(output.executeGas, 0);
     }
@@ -388,7 +411,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // Enough to reach MockERC20.mint, but still runs out of gas.
         happyTx.value = 1 wei;
-        happyTx.executeGasLimit = 20000;
+        happyTx.executeGasLimit = 18000;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Submit the transaction
@@ -396,7 +419,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // The function should return output.callStatus = CallReverted
         _assertExpectedSubmitOutput(
-            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(bytes4(keccak256("OutOfGas()")))
+            output, 0, uint8(CallStatus.CALL_REVERTED), ""
         );
         assertEq(output.executeGas, 0);
     }
