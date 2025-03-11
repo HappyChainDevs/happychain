@@ -14,4 +14,4 @@ export type StateRequestInput = {
  * even if he did see the HappyTx before. In this case he should answer with a status of {@link
  * StateRequestStatus.UnknownHappyTx}.
  */
-export declare function submitter_state(input: Hash): StateRequestOutput
+export declare function submitter_state(input: StateRequestInput): StateRequestOutput

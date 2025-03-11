@@ -12,6 +12,7 @@ export type {
     HTTPString,
     AssertAssignableTo,
     AssertCompatible,
+    Optional,
     Prettify,
     TupleUnion,
     UnionToTuple,

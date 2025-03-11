@@ -1,6 +1,6 @@
 import type { HappyTx } from "./HappyTx"
 import type { HappyTxReceipt } from "./HappyTxReceipt"
-import type { Hash } from "./common_chain"
+import type { Address, Hash } from "./common_chain"
 import type { SubmitterErrorStatus } from "./status"
 
 export type SubmitSuccess = "submitSuccess"
@@ -11,6 +11,14 @@ export type SubmitStatus =
     | SubmitterErrorStatus.UnexpectedError
     | SubmitterErrorStatus.BufferExceeded
     | SubmitterErrorStatus.OverCapacity
+
+export type SubmitInput = {
+    /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
+    entryPoint?: Address | undefined
+
+    /** HappyTx to execute. */
+    tx: HappyTx
+}
 
 export type SubmitOutput =
     | {
