@@ -1,9 +1,9 @@
+import type { Prettify } from "@happy.tech/common"
+
 // Utility type to transform all bigint fields to string
 type ReplaceBigIntWithString<T> = {
     [K in keyof T]: T[K] extends bigint ? string : T[K] extends object ? ReplaceBigIntWithString<T[K]> : T[K]
 }
-
-type Prettify<T> = { [K in keyof T]: T[K] } & {}
 
 // Utility functions to serialize and deserialize bigint values
 export function serializeBigInt<T>(obj: T): Prettify<ReplaceBigIntWithString<T>> {

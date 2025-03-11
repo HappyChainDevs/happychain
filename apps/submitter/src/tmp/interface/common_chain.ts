@@ -153,9 +153,3 @@ export type Bytes = Hex
 // support/common/lib/datatypes/url.ts
 /** Type of http:// and https:// prefixed strings. */
 export type HTTPString = `http://${string}` | `https://${string}`
-
-// support/common/lib/utils/types.ts
-/** A version of `Base` with `OptionalKeys` made optional. */
-// biome-ignore format: readability
-export type Optional<Base, OptionalKeys extends keyof Base>
-    = Omit<Base, OptionalKeys> & Partial<Pick<Base, OptionalKeys>>

@@ -38,6 +38,15 @@ export type AssertCompatible<A extends B, B extends C, C = A> = never
 export type Prettify<T> = { [K in keyof T]: T[K] } & {}
 
 /**
+ * A version of `Base` with `OptionalKeys` made optional.
+ *
+ * e.g. `Optional<{ a: string, b: number }, "b">` evaluates to `{ a: string, b?: number }`.
+ */
+export type Optional<Base, OptionalKeys extends keyof Base> = Prettify<
+    Omit<Base, OptionalKeys> & Partial<Pick<Base, OptionalKeys>>
+>
+
+/**
  * Returns the array type that matches all possible permutations of the input disjunction type `T`.
  * Note this has combinatorial complexity.
  *
