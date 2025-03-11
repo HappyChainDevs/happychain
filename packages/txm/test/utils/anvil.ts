@@ -66,7 +66,7 @@ export async function mineBlock(quantity = 1) {
     let blocksAlreadyMined = 0
 
     while (blocksAlreadyMined < quantity) {
-        await fetch(`http://localhost:${ANVIL_PORT}`, {
+        await fetch(RPC_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
