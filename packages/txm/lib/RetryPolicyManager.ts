@@ -71,7 +71,7 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
         return message === "Out of Gas"
     }
 
-    protected async revertedWithMessage(
+    protected async isRevertedWithMessage(
         transactionManager: TransactionManager,
         attempt: Attempt,
         message: string,
