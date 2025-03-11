@@ -71,7 +71,7 @@ contract ScrappyAccount is
     uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
 
     /// @dev Buffer to account for gas costs of returning the function if inner call runs out of gas.
-    uint256 private constant OOG_BUFFER = 3200;
+    uint256 private constant OOG_BUFFER = 500;
 
     /// @dev Interface IDs
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
@@ -167,22 +167,11 @@ contract ScrappyAccount is
         returns (ExecutionOutput memory output)
     {
         uint256 startGas = gasleft();
-        console.log("In execute, startGas", startGas);
-        uint256 gasForCall = (startGas * 63 / 64) - OOG_BUFFER;
-        console.log("gasForCall", gasForCall);
-        startGas = gasleft();
-        console.log("gasleft() after gasForCall logging 1", startGas);
-        startGas = gasleft();
-        console.log("gasleft() after gasForCall logging 2", startGas);
-
-        // if (happyTx.value > 0) gasForCall -= 6700;
+        console.log("In execute, startGas, sub 650 from this", startGas);
 
         (bool success, bytes memory returnData) =
-            happyTx.dest.call{gas: gasForCall, value: happyTx.value}(happyTx.callData);
-        // happyTx.dest.call{gas: (gasleft() * 63 / 64) - 625, value: happyTx.value}(happyTx.callData);
-        //  ExcessivelySafeCall.excessivelySafeCall(happyTx.dest, gasleft() - 600, happyTx.value, 256, happyTx.callData);
+            happyTx.dest.call{gas: (gasleft() * 63 / 64) - OOG_BUFFER, value: happyTx.value}(happyTx.callData);
         if (!success) {
-            output.success = false;
             output.revertData = returnData;
             return output;
         }
