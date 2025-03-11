@@ -10,8 +10,7 @@ import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "./HappyTx.sol";
 
-// [LOGGAS]
-import {console} from "forge-std/Script.sol";
+// [LOGGAS] import {console} from "forge-std/Script.sol";
 
 enum CallStatus {
     SUCCESS, // The call succeeded.
@@ -217,8 +216,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 gasStart = gasleft();
 
         //////////
-        console.log("HEP: gasleft(), (sub 3165 from this for logging): ", gasStart);
-        gasStart -= 3165;
+        // console.log("HEP: gasleft(), (sub 3165 from this for logging): ", gasStart);
+        // gasStart -= 3165;
         // First console = 3165 gas, others = 665 gas; 2500 extra gas
         //////////
 
@@ -261,8 +260,11 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // 2. Execute the call
 
         // [LOGGAS] uint256 executeGasStart = gasleft();
-        uint256 beforeSafeExternalCall = gasleft();
-        console.log("beforeSafeExternalCall, sub 650 for this log: ", beforeSafeExternalCall);
+
+        // uint256 beforeSafeExternalCall = gasleft();
+        // console.log("beforeSafeExternalCall, sub 650 for this log: ", beforeSafeExternalCall);
+
+        //! The call below takes ~3300 gas
         (success, returnData) = this.safeExternalCall(
             happyTx.account,
             isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
@@ -379,8 +381,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         external
         returns (bool, bytes memory)
     {
-        uint256 startGas = gasleft();
-        console.log("inside safeExternalCall, startGas (sub 650 from this) = ", startGas, " ; _gas = ", _gas);
+        // console.log("inside safeExternalCall, startGas (sub 650 from this) = ", gasleft(), " ; _gas = ", _gas);
+
         bool _success;
         bytes memory _returnData = new bytes(_maxCopy);
         assembly {

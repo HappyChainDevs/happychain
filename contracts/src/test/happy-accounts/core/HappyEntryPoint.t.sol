@@ -379,8 +379,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
 
-        happyTx.gasLimit = 72_000; // This is the gas used for everything except call() to execute inside `safeExternalCall`
-        happyTx.executeGasLimit = 5_000;
+        happyTx.gasLimit = 78_000; // This is the gas used for everything except call() to execute inside `safeExternalCall`
+        happyTx.executeGasLimit = 4_400; // Lower than this, and there isn't enough gas to revert, also gives memory OOG
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Submit the transaction

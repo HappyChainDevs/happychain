@@ -26,8 +26,7 @@ import {
     UnknownDuringSimulation
 } from "../utils/Common.sol";
 
-// [LOGGAS_INTERNAL]
-import {console} from "forge-std/Script.sol";
+// [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
 
 /**
  * Example implementation of a Happy Account with nonce management, reentrancy protection,
@@ -71,7 +70,7 @@ contract ScrappyAccount is
     uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
 
     /// @dev Buffer to account for gas costs of returning the function if inner call runs out of gas.
-    uint256 private constant OOG_BUFFER = 500;
+    uint256 private constant OOG_BUFFER = 3200; // 2800 CALL + 400 buffer for post OOG code
 
     /// @dev Interface IDs
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
@@ -167,11 +166,27 @@ contract ScrappyAccount is
         returns (ExecutionOutput memory output)
     {
         uint256 startGas = gasleft();
-        console.log("In execute, startGas, sub 650 from this", startGas);
+
+        // gasleft() is calculated first, then 650 gas is used by console
+        // console.log("In execute, gas before CALL (sub 650)", gasleft()); // sub 650
+
+        int256 callGas = int256(gasleft()) - int256(OOG_BUFFER);
+        if (callGas < 0) {
+            output.revertData = abi.encodeWithSelector(bytes4(keccak256("OutOfGas()")));
+            return output;
+        }
 
         (bool success, bytes memory returnData) =
-            happyTx.dest.call{gas: (gasleft() * 63 / 64) - OOG_BUFFER, value: happyTx.value}(happyTx.callData);
+        // happyTx.dest.call{gas: gasleft() - OOG_BUFFER, value: happyTx.value}(happyTx.callData);
+         happyTx.dest.call{gas: uint256(callGas), value: happyTx.value}(happyTx.callData);
+
+        // uint256 endGas = gasleft();
+        // console.log("callGas var: ", callGas);
+        // console.log("gasleft after CALL: ", endGas);
+        // console.log("gas used in CALL: ", startGas-endGas);
+
         if (!success) {
+            // output.gas = endGas;
             output.revertData = returnData;
             return output;
         }
