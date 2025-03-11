@@ -1,6 +1,7 @@
+import type { Optional } from "@happy.tech/common"
 import type { HappyTx } from "./HappyTx"
 import type { SimulationResult } from "./SimulationResult"
-import type { Address, Optional } from "./common_chain"
+import type { Address } from "./common_chain"
 import type { EntryPointStatus, SubmitterErrorSimulationUnavailable } from "./status"
 
 export type EstimateGasInput = {
