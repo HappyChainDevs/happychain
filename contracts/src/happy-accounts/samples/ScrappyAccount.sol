@@ -26,7 +26,8 @@ import {
     UnknownDuringSimulation
 } from "../utils/Common.sol";
 
-// [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
+// [LOGGAS_INTERNAL]
+import {console} from "forge-std/Script.sol";
 
 /**
  * Example implementation of a Happy Account with nonce management, reentrancy protection,
@@ -69,8 +70,8 @@ contract ScrappyAccount is
     /// @dev Gas overhead for executing the execute function, not measured by gasleft()
     uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
 
-    // /// @dev Buffer to account for gas costs of returning the function if inner call runs out of gas.
-    // uint256 private constant OOG_BUFFER = 3200;
+    /// @dev Buffer to account for gas costs of returning the function if inner call runs out of gas.
+    uint256 private constant OOG_BUFFER = 3200;
 
     /// @dev Interface IDs
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
@@ -166,10 +167,11 @@ contract ScrappyAccount is
         returns (ExecutionOutput memory output)
     {
         uint256 startGas = gasleft();
-        // uint256 gasForCall = (startGas * 63/64) - OOG_BUFFER;
+        console.log("startGas", startGas);
+        uint256 gasForCall = (startGas * 63 / 64) - OOG_BUFFER;
         // if (happyTx.value > 0) gasForCall -= 6700;
 
-        (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
+        (bool success, bytes memory returnData) = happyTx.account.call{gas: 15000, value: happyTx.value}(""); // (happyTx.callData);
         // happyTx.dest.call{gas: (gasleft() * 63 / 64) - 625, value: happyTx.value}(happyTx.callData);
         //  ExcessivelySafeCall.excessivelySafeCall(happyTx.dest, gasleft() - 600, happyTx.value, 256, happyTx.callData);
         if (!success) {

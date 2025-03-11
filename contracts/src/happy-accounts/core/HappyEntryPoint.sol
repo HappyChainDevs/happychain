@@ -215,6 +215,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      */
     function submit(bytes calldata encodedHappyTx) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
+        console.log("gasleft()", gasStart);
+        // First console = 3165 gas, others = 665 gas; 2500 extra gas (hmmm, maybe an SLOAD? or a CALL?)
+
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
         bool isSimulation = tx.origin == address(0);
 
@@ -247,7 +250,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // [LOGGAS] uint256 executeGasStart = gasleft();
 
-        (success, returnData) = happyTx.account.excessivelySafeCall(
+        (success, returnData) = this.safeExternalCall(
+            happyTx.account,
             isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0, // gas token transfer value
             // Allow the call revert data to take up the same size as the other revert data.
@@ -351,8 +355,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     }
 
     /// @dev Copied from https://github.com/nomad-xyz/ExcessivelySafeCall/blob/main/src/ExcessivelySafeCall.sol
-    function safeInternalCall(address _target, uint256 _gas, uint256 _value, uint16 _maxCopy, bytes memory _calldata)
-        internal
+    function safeExternalCall(address _target, uint256 _gas, uint256 _value, uint16 _maxCopy, bytes memory _calldata)
+        external
         returns (bool, bytes memory)
     {
         bool _success;
