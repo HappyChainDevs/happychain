@@ -1,8 +1,6 @@
 import { type HappyUser, WalletType } from "@happy.tech/wallet-common"
-import { getKernelAccountAddress } from "#src/state/kernelAccount.ts"
 
 export async function createHappyUserFromWallet(providerId: string, address: `0x${string}`): Promise<HappyUser> {
-    const accountAddress = await getKernelAccountAddress(address)
     return {
         // connection type
         provider: providerId,
@@ -16,7 +14,7 @@ export async function createHappyUserFromWallet(providerId: string, address: `0x
         uid: address,
 
         // web3 details
-        address: accountAddress,
+        address: address,
         controllingAddress: address,
     }
 }

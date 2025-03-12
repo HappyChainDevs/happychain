@@ -1,7 +1,9 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { EIP1193ErrorCodes, GenericProviderRpcError, LoginRequiredError } from "../errors"
-import { convertEIP1193ErrorObjectToErrorInstance } from "../errors/eip-1193-utils"
+import { EIP1193ProviderErrorCodes, GenericJsonRpcError, GenericProviderRpcError, LoginRequiredError } from "../errors"
+
+import { convertEIP1193ErrorObjectToErrorInstance } from "../errors/eip-1193/eip-1193-utils"
+import { createErrorFromParams } from "../errors/eip-1474/eip-1474-utils"
 import type { EIP1193RequestParameters, EIP1193RequestResult } from "../interfaces/eip1193"
 import type { Msgs, ProviderMsgsFromIframe } from "../interfaces/events"
 
@@ -94,9 +96,9 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
             if (e instanceof GenericProviderRpcError) throw e
 
             const code =
-                (e as GenericProviderRpcError)?.code in EIP1193ErrorCodes
+                (e as GenericProviderRpcError)?.code in EIP1193ProviderErrorCodes
                     ? (e as GenericProviderRpcError).code
-                    : EIP1193ErrorCodes.Unknown
+                    : EIP1193ProviderErrorCodes.Unknown
             const message: string = (e as Error)?.message || "An unknown error occurred"
             throw new GenericProviderRpcError({ code, message, data: message })
         }
@@ -114,8 +116,13 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
         this.inFlightRequests.delete(data.key)
         popup?.close()
 
-        if (data.error) reject(convertEIP1193ErrorObjectToErrorInstance(data.error))
-        else resolve(data.payload)
+        if (data.error) {
+            if (data.error instanceof GenericProviderRpcError) {
+                reject(convertEIP1193ErrorObjectToErrorInstance(data.error))
+            } else if (data.error instanceof GenericJsonRpcError) {
+                reject(createErrorFromParams(data.error))
+            }
+        } else resolve(data.payload)
     }
 
     // === ABSTRACT METHODS ========================================================================
