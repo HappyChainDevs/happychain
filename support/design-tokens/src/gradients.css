@@ -1,44 +1,93 @@
 :root {
-    --happy-ds-gradient-system-skeuo-surface: linear-gradient(
-        152.64deg,
-        var(--happy-ds-color-system-skeuo-surface-900) 0.98%,
-        var(--happy-ds-color-system-skeuo-surface-750) 96.67%
-    );
+    /* vertical system colors gradients */
 
-    --happy-ds-gradient-system-skeuo-etched-in: linear-gradient(
+    --happy-ds-gradient-system-skeuo-surface-500-425: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--happy-ds-color-system-skeuo-surface-100), transparent 20%) 0%,
-        color-mix(in srgb, var(--happy-ds-color-system-skeuo-surface-250), transparent 19.81%),
-        color-mix(in srgb, var(--happy-ds-color-system-skeuo-surface-600), transparent 19%)
+        var(--color-hds-system-skeuo-surface-500) 0%,
+        color-mix(in srgb, var(--color-hds-system-skeuo-surface-400) 55%, var(--color-hds-system-skeuo-surface-450) 45%)
+            100%
     );
 
-    --happy-ds-gradient-system-skeuo-floating: linear-gradient(
+    --happy-ds-gradient-system-skeuo-surface-100-250-600: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-hds-system-skeuo-surface-100), transparent 18%) 0%,
+        color-mix(in srgb, var(--color-hds-system-skeuo-surface-250), transparent 34.89%),
+        color-mix(in srgb, var(--color-hds-system-skeuo-surface-600), transparent 30%)
+    );
+
+    --happy-ds-gradient-system-skeuo-surface-400-350: linear-gradient(
+        180deg,
+        var(--happy-ds-color-system-skeuo-surface-400) 0%,
+        var(--happy-ds-color-system-skeuo-surface-350) 100%
+    );
+
+    --happy-ds-gradient-system-skeuo-surface-700-utility-tint: linear-gradient(
         180deg,
         var(--happy-ds-color-system-skeuo-surface-700) 0%,
         var(--happy-ds-color-utility-tint) 100%
     );
 
-    --happy-ds-gradient-system-skeuo-raised: linear-gradient(
+    --happy-ds-gradient-system-skeuo-surface-900-750: linear-gradient(
+        180deg,
+        var(--happy-ds-color-system-skeuo-surface-900) 0%,
+        var(--happy-ds-color-system-skeuo-surface-750) 100%
+    );
+
+    --happy-ds-gradient-system-skeuo-surface-1000-800: linear-gradient(
         180deg,
         var(--happy-ds-color-system-skeuo-surface-1000) 0%,
         var(--happy-ds-color-system-skeuo-surface-800) 100%
     );
 
-    --happy-ds-gradient-system-skeuo-inset: linear-gradient(
+    /* Angled system colors gradients */
+
+    --happy-ds-gradient-152deg-system-skeuo-surface-950-700: linear-gradient(
+        152.64deg,
+        var(--happy-ds-color-system-skeuo-surface-950) 0.98%,
+        var(--happy-ds-color-system-skeuo-surface-700) 96.67%
+    );
+
+    --happy-ds-gradient-155deg-utility-tint-system-skeuo-surface-600-350: linear-gradient(
+        155.46deg,
+        var(--happy-ds-color-utility-tint) 0%,
+        var(--happy-ds-color-system-skeuo-surface-600) 56.39%,
+        var(--happy-ds-color-system-skeuo-surface-350) 100%
+    );
+
+    --happy-ds-gradient-154deg-system-skeuo-surface-850-700: linear-gradient(
+        154.32deg,
+        var(--happy-ds-color-system-skeuo-surface-850) 1%,
+        var(--happy-ds-color-system-skeuo-surface-700) 96.82%
+    );
+
+    --happy-ds-gradient-332deg-system-skeuo-surface-450-550: linear-gradient(
         332.64deg,
         var(--happy-ds-color-system-skeuo-surface-450) 1.99%,
         var(--happy-ds-color-system-skeuo-surface-550) 97.69%
     );
 
-    --happy-ds-gradient-system-skeuo-concave: linear-gradient(
+    /* Utility colors based gradients */
+    --happy-ds-gradient-utility-shade25-tint40: linear-gradient(
         180deg,
         var(--happy-ds-color-utility-shade-25) 0%,
         var(--happy-ds-color-utility-tint-40) 100%
     );
 
-    --happy-ds-gradient-system-skeuo-glare: linear-gradient(
+    --happy-ds-gradient-utility-shade-48-20: linear-gradient(
+        180deg,
+        var(--happy-ds-color-utility-shade-48) 0%,
+        var(--happy-ds-color-utility-shade-20) 100%
+    );
+
+    --happy-ds-gradient-utility-tint-40-15: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--happy-ds-color-utility-tint-40), transparent 10%) 0%,
+        color-mix(in srgb, var(--happy-ds-color-utility-tint-15), transparent 10%) 100%
+    );
+
+    --happy-ds-gradient-utility-tint-30-transparent: linear-gradient(
         121.06deg,
         var(--happy-ds-color-utility-tint-30) 0%,
-        transparent 68.8%
+        rgba(255, 255, 255, 0) 68.8%
     );
 }
