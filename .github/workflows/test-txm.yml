@@ -1,13 +1,15 @@
 name: Test TXM Package
 
 on:
-  push:
-    paths:
-      - 'packages/txm/**'
   pull_request:
     paths:
       - 'packages/txm/**'
-  workflow_dispatch:
+    types:
+      - synchronize  # Only runs when new commits are pushed to the PR
+      - opened       # Runs when the PR is first created
+      - reopened     # Runs if the PR was closed and then reopened
+  workflow_dispatch:  # Allows manual runs
+
 
 env:
   IFRAME_URL: "https://iframe.happy.tech"
