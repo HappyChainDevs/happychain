@@ -9,8 +9,7 @@ import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "./HappyTx.sol";
 
-// [LOGGAS]
-import {console} from "forge-std/Script.sol";
+// [LOGGAS] import {console} from "forge-std/Script.sol";
 
 enum CallStatus {
     SUCCESS, // The call succeeded.
@@ -209,12 +208,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     function submit(bytes calldata encodedHappyTx) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
 
-        //////////
-        // console.log("HEP: gasleft(): ", gasStart);
-        // gasStart -= 3165;
-        // First console = 3165 gas, others = 665 gas; 2500 extra gas for first console log
-        //////////
-
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
         bool isSimulation = tx.origin == address(0);
 
@@ -224,13 +217,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // 1. Validate happyTx with account
 
         uint256 gasBeforeValidate = gasleft();
-
-        //////////
-        // console.log("gasStart - gasBeforeValidate : ", gasStart - gasBeforeValidate); // 7187 gas used for above decode, etc.
-        // console.log("sending to validate: happyTx.gasLimit - (gasStart-gasBeforeValidate)", happyTx.gasLimit - (gasStart - gasBeforeValidate));
-        // constant BeforeValidateBuffer = 7187; below, do happyTx.gasLimit - 7200
-        //////////
-
         bool success;
         bytes memory returnData;
 
@@ -245,8 +231,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
         );
-        //! There are proper error selectors for each type of failure in the validate() spec,
-        //! so empty returnData can only by an EvmError (most likely OOG). So no need to check gasleft() here
         if (!success) revert ValidationReverted(returnData);
 
         bytes4 result = abi.decode(returnData, (bytes4));
@@ -322,12 +306,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 balance = tx.origin.balance;
         uint256 gasBeforePayout = gasleft();
 
-        //////////
-        // console.log("gasStart - gasBeforePayout = gas used till payout call: ", gasStart - gasBeforePayout); // 49K
-        // console.log("sending to payout: happyTx.gasLimit - (gasStart - gasBeforePayout)", happyTx.gasLimit - (gasStart - gasBeforePayout));
-        // constant BeforePayoutBuffer = 107K; below, do happyTx.gasLimit - 107K
-        //////////
-
         // [LOGGAS] uint256 payoutGasStart = gasleft();
 
         int256 payoutCallGas =
@@ -341,8 +319,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
         );
-        //! There are proper error selectors for each type of failure in the payout() spec,
-        //! so empty returnData can only by an EvmError (most likely OOG). So no need to check gasleft() here
         if (!success) revert PaymentReverted(returnData);
 
         // [LOGGAS] uint256 payoutGasEnd = gasleft();
@@ -390,7 +366,5 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             mstore(_returnData, _toCopy)
             returndatacopy(add(_returnData, 0x20), 0, _toCopy)
         }
-        console.log("_success: ", _success);
-        console.logBytes(_returnData);
     }
 }
