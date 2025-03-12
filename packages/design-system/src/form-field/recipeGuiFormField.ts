@@ -1,6 +1,6 @@
 import { type VariantProps, cva } from "cva"
-import { type GuiNativeSelectVariantsProps, recipeGuiNativeSelect } from "../native-select"
-import { type GuiUserInputVariantsProps, recipeGuiUserInput } from "../user-input"
+import { type GuiNativeSelectVariantsProps, recipeGuiNativeSelect } from "../native-select/recipeGuiNativeSelect"
+import { type GuiUserInputVariantsProps, recipeGuiUserInput } from "../user-input/recipeGuiUserInput"
 
 const recipeGuiFormFieldContainer = cva({
     base: ["flex flex-col"],
