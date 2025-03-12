@@ -13,8 +13,10 @@ import { hc } from "hono/client"
 import type { AppType } from "./server"
 
 // compile types: https://hono.dev/docs/guides/rpc#compile-your-code-before-using-it-recommended
-const client = hc<AppType>("")
-export type Client = typeof client
-export function hcWithType(...args: Parameters<typeof hc>): Client {
+const clientType = hc<AppType>("")
+export type Client = typeof clientType
+export function client(...args: Parameters<typeof hc>): Client {
     return hc<AppType>(...args)
 }
+
+export { computeHappyTxHash } from "./utils/getHappyTxHash"

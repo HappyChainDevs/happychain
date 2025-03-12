@@ -9,7 +9,6 @@ import { submit } from "./submit"
 export async function execute(data: { entryPoint: `0x${string}`; tx: HappyTx }): Promise<ExecuteOutput> {
     const happyTxHash = computeHappyTxHash(data.tx)
     const status = await submit(data)
-
     if (status.status !== SubmitSuccess || !status.hash) {
         return status satisfies ExecuteOutput
     }

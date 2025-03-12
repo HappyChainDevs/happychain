@@ -43,9 +43,9 @@ export const app = new Hono()
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
 app.onError(async (err, c) => {
     if (err instanceof HTTPException && err.cause instanceof ZodError) {
-        const errors = err.cause.issues.map((i) => ({ path: i.path.join("."), message: i.message }))
-        logger.warn(errors)
-        return c.json({ errors }, 422)
+        const error = err.cause.issues.map((i) => ({ path: i.path.join("."), message: i.message }))
+        logger.warn(error)
+        return c.json({ error }, 422)
     }
 
     logger.warn({ requestId: c.get("requestId"), url: c.req.url }, err)
@@ -58,8 +58,9 @@ app.onError(async (err, c) => {
             ? {
                   message: `Something Happened, file a report with this key to find out more: ${c.get("requestId")}`,
                   requestId: c.get("requestId"),
+                  // don't include raw error in prod
               }
-            : { requestId: c.get("requestId"), url: c.req.url, err: err.message }
+            : { requestId: c.get("requestId"), url: c.req.url, error: err.message }
 
     return c.json(response, 500)
 })

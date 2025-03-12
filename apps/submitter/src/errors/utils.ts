@@ -19,11 +19,11 @@ function is0xString(str: unknown): str is `0x${string}` {
  * If this is not available, we will return the raw selector.
  */
 function parseRawArgs(args: readonly `0x${string}`[]) {
-    return args.map((a) => getErrorNameFromSelector(a) || a)
+    return args?.map((a) => getErrorNameFromSelector(a) || a) ?? []
 }
+
 export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
     const err = getBaseError(_err)
-
     if (!err) return
     if ("raw" in err && is0xString(err.raw)) {
         // TODO: unsure if this is the correct way to handle this

@@ -1,0 +1,15 @@
+{
+    "name": "@happy.tech/submitter-client",
+    "module": "index.ts",
+    "type": "module",
+    "private": true,
+    "devDependencies": {
+        "@types/bun": "latest",
+        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/common": "workspace:0.1.0",
+        "submitter": "workspace:0.0.0"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    }
+}

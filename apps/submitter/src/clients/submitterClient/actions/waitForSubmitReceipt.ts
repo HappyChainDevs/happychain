@@ -6,7 +6,8 @@ import { EntryPointStatus } from "#src/tmp/interface/status"
 import { isValidTransactionType } from "#src/utils/isValidTransactionType"
 
 export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Promise<HappyTxReceipt> {
-    const { txHash, happyTxHash, happyTx } = params
+    // TODO: this should only accept happyTxHash and look up the rest in the database
+    const { txHash, happyTx, happyTxHash } = params
 
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 

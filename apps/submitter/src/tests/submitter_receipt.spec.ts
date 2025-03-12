@@ -39,6 +39,7 @@ describe("submitter_receipt", () => {
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             .then((a) => a.json())) as any
 
+        expect(state.error).toBeUndefined()
         expect(state.status).toBe(StateRequestStatus.Success)
         expect(state.state.status).toBe(EntryPointStatus.Success)
         expect(state.state.included).toBe(true)

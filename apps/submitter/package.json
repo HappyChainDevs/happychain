@@ -3,6 +3,20 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "files": ["dist"],
+    "main": "./dist/index.es.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.es.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.es.d.ts",
+            "default": "./dist/index.es.js"
+        },
+        "./client": {
+            "types": "./dist/rpc.es.d.ts",
+            "default": "./dist/rpc.es.js"
+        }
+    },
     "devDependencies": {
         "@types/bun": "latest",
         "@happy.tech/configs": "workspace:0.1.0",

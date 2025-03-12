@@ -41,7 +41,7 @@ async function getOnchainNonce(account: Address, nonceTrack: NonceTrack) {
     return await publicClient.readContract({
         address: account,
         abi: abis.ScrappyAccount,
-        functionName: "getNonce",
+        functionName: "nonceValue",
         args: [nonceTrack],
     })
 }

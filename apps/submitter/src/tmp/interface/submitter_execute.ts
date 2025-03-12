@@ -8,10 +8,6 @@ import { type SubmitStatus, SubmitSuccess } from "./submitter_submit"
 export type ExecuteSuccess = SubmitSuccess
 export const ExecuteSuccess = SubmitSuccess
 
-// TODO: same as submitter?
-export type ExecuteSuccess = SubmitSuccess
-export const ExecuteSuccess = SubmitSuccess
-
 export type ExecuteInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
     entryPoint?: Address | undefined
