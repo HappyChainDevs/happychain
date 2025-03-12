@@ -1,8 +1,6 @@
 import type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
 
-/**
- * We will use -1 to signify unknown error types.
- */
+// TODO remove the -1
 export type ProviderRpcErrorCode = ViemProviderRpcErrorCode | -1
 
 /**

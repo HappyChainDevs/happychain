@@ -1,5 +1,10 @@
 import { HappyMethodNames } from "@happy.tech/common"
-import { EIP1193ErrorCodes, Msgs, type PopupMsgs, getEIP1193ErrorObjectFromCode } from "@happy.tech/wallet-common"
+import {
+    EIP1193ProviderErrorCodes,
+    Msgs,
+    type PopupMsgs,
+    getEIP1193ErrorObjectFromCode,
+} from "@happy.tech/wallet-common"
 import { createLazyFileRoute } from "@tanstack/react-router"
 import { useCallback, useEffect, useState } from "react"
 import { HappyLoadAbi } from "#src/components/requests/HappyLoadAbi"
@@ -51,7 +56,7 @@ function Request() {
 
         void frame.postMessage(
             makeMessage(Msgs.PopupReject, {
-                error: getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest),
+                error: getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.UserRejectedRequest),
                 windowId,
                 key,
                 payload: null,

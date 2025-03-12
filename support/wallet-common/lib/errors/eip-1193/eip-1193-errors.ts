@@ -1,4 +1,4 @@
-import { EIP1193ErrorCodes } from "./eip-1193-codes"
+import { EIP1193ProviderErrorCodes } from "./eip-1193-codes"
 import type { EIP1193ErrorObject, ProviderRpcErrorCode } from "./eip-1193-interfaces"
 
 /**
@@ -23,7 +23,7 @@ export class GenericProviderRpcError extends Error {
 export class EIP1193UserRejectedRequestError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
-            code: EIP1193ErrorCodes.UserRejectedRequest,
+            code: EIP1193ProviderErrorCodes.UserRejectedRequest,
             message: errObj?.message || "User Rejected Request",
             data: errObj?.data || "User Rejected Request",
         })
@@ -36,7 +36,7 @@ export class EIP1193UserRejectedRequestError extends GenericProviderRpcError {
 export class EIP1193UnauthorizedError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
-            code: EIP1193ErrorCodes.Unauthorized,
+            code: EIP1193ProviderErrorCodes.Unauthorized,
             message: errObj?.message || "Unauthorized",
             data: errObj?.data || "Unauthorized",
         })
@@ -49,7 +49,7 @@ export class EIP1193UnauthorizedError extends GenericProviderRpcError {
 export class EIP1193UnsupportedMethodError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
-            code: EIP1193ErrorCodes.UnsupportedMethod,
+            code: EIP1193ProviderErrorCodes.UnsupportedMethod,
             message: errObj?.message || "Unsupported Method",
             data: errObj?.data || "Unsupported Method",
         })
@@ -62,7 +62,7 @@ export class EIP1193UnsupportedMethodError extends GenericProviderRpcError {
 export class EIP1193DisconnectedError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
-            code: EIP1193ErrorCodes.Disconnected,
+            code: EIP1193ProviderErrorCodes.Disconnected,
             message: errObj?.message || "Disconnected",
             data: errObj?.data || "Disconnected",
         })
@@ -75,7 +75,7 @@ export class EIP1193DisconnectedError extends GenericProviderRpcError {
 export class EIP1193ChainDisconnectedError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
-            code: EIP1193ErrorCodes.ChainDisconnected,
+            code: EIP1193ProviderErrorCodes.ChainDisconnected,
             message: errObj?.message || "Chain Disconnected",
             data: errObj?.data || "Chain Disconnected",
         })
@@ -88,7 +88,7 @@ export class EIP1193ChainDisconnectedError extends GenericProviderRpcError {
 export class EIP1193ChainNotRecognizedError extends GenericProviderRpcError {
     constructor(errObj?: EIP1193ErrorObject) {
         super({
-            code: EIP1193ErrorCodes.SwitchChainError,
+            code: EIP1193ProviderErrorCodes.SwitchChainError,
             message: errObj?.message || "Chain Not Recognized",
             data: errObj?.data || "Chain Not Recognized",
         })

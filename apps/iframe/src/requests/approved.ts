@@ -2,7 +2,7 @@ import { HappyMethodNames, PermissionNames } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import {
     EIP1193DisconnectedError,
-    EIP1193ErrorCodes,
+    EIP1193ProviderErrorCodes,
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
     EIP1193UnsupportedMethodError,
@@ -84,10 +84,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             const isValid = isAddChainParams(params)
 
             if (!isValid)
-                throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Invalid request body")
+                throw getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.SwitchChainError, "Invalid request body")
 
             if (params.chainId in chains)
-                throw getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, "Chain already exists")
+                throw getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.SwitchChainError, "Chain already exists")
 
             const response = await sendToWalletClient({ ...request, payload: request.payload })
             // Only add chain if the request is successful.
@@ -102,7 +102,7 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
             // ensure chain has already been added
             if (!(chainId in chains)) {
                 throw getEIP1193ErrorObjectFromCode(
-                    EIP1193ErrorCodes.SwitchChainError,
+                    EIP1193ProviderErrorCodes.SwitchChainError,
                     "Unrecognized chain ID, try adding the chain first.",
                 )
             }
