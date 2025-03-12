@@ -12,7 +12,7 @@ import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
-import {InvalidOwnerSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
+import {InvalidOwnerSignature, UnknownDuringSimulation, OutOfGas} from "../../../happy-accounts/utils/Common.sol";
 
 import {
     FutureNonceDuringSimulation,
@@ -161,7 +161,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
         _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
-
         vm.revertToState(id); // EVM state is like before the .submit() call
 
         // The balance should be the same as before, as this was a simulated call, not actually submitted on-chain
@@ -191,7 +190,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
         _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
-
         vm.revertToState(id); // EVM state is like before the .submit() call
 
         // The balance should be the same as before, as this was a simulated call, not actually submitted on-chain
@@ -221,7 +219,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
         _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
-
         vm.revertToState(id); // EVM state is like before the .submit() call
 
         // The balance should be the same as before, as this was a simulated call, not actually submitted on-chain
@@ -348,73 +345,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // ====================================================================================================
     // EXECUTION TESTS
 
-    function testExecuteWithZeroExecutionGasLimitOOG() public {
-        HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-
-        // This is the gas used for everything except call() to execute inside `safeExternalCall`
-        happyTx.gasLimit = 70_000;
-
-        // As value > 0 takes more gas, this covers both zero and non-zero value cases
-        happyTx.value = 1 wei;
-
-        // This way, the external call to `execute` reverts right away
-        happyTx.executeGasLimit = 0;
-
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Submit the transaction
-        (bool success, bytes memory returnData) = address(happyEntryPoint).call{gas: uint256(happyTx.gasLimit)}(
-            abi.encodeCall(HappyEntryPoint.submit, (happyTx.encode()))
-        );
-        if (success) {
-            SubmitOutput memory output = abi.decode(returnData, (SubmitOutput));
-            _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.EXECUTION_REVERTED), new bytes(0));
-            assertEq(output.executeGas, 0);
-        }
-    }
-
-    // TODO: 🚧 Test under construction 🏗️
-    function testExecuteWithLowExecutionGasLimitOOG() public {
-        HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-
-        happyTx.gasLimit = 78_000; // This is the gas used for everything except call() to execute inside `safeExternalCall`
-        happyTx.executeGasLimit = 4_400; // Lower than this, and there isn't enough gas to revert, also gives memory OOG
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Submit the transaction
-        (bool success, bytes memory returnData) = address(happyEntryPoint).call{
-            gas: uint256(happyTx.gasLimit + happyTx.executeGasLimit)
-        }(abi.encodeCall(HappyEntryPoint.submit, (happyTx.encode())));
-        if (success) {
-            SubmitOutput memory output = abi.decode(returnData, (SubmitOutput));
-
-            // The function should return output.callStatus = CallReverted
-            _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.CALL_REVERTED), new bytes(0));
-            assertGe(output.executeGas, 0);
-        }
-    }
-
-    // TODO: Add a case with happyTx.value > 0
-
-    function testExecuteWithLowExecutionGasLimitEthTransferOOG() public {
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0)); // Empty callData
-
-        happyTx.value = 1 wei;
-        happyTx.executeGasLimit = 20000;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Submit the transaction
-        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-
-        // The function should return output.callStatus = CallReverted
-        _assertExpectedSubmitOutput(
-            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(bytes4(keccak256("OutOfGas()")))
-        );
-        assertEq(output.executeGas, 0);
-    }
-
     function testExecuteInnerCallRevertsEmptyCallData() public {
         HappyTx memory happyTx = createSignedHappyTx(smartAccount, dest, paymaster, privKey, new bytes(10));
 
@@ -437,7 +367,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         assertEq(output.executeGas, 0);
     }
 
-    function testExecuteMockTokenRevertsEmpty() public {
+    function testExecuteMockTokenEmptyReverts() public {
         HappyTx memory happyTx =
             createSignedHappyTx(smartAccount, mockToken, paymaster, privKey, getMockTokenAlwaysRevertEmptyCallData());
 
@@ -519,6 +449,120 @@ contract HappyEntryPointTest is HappyTxTestUtils {
             SubmitOutput memory output2 = abi.decode(returnData, (SubmitOutput));
             _assertExpectedSubmitOutput(output2, 0, uint8(CallStatus.SUCCESS), new bytes(0));
         }
+    }
+
+    // ====================================================================================================
+    // EXECUTION TESTS (OOG)
+
+    function testExecuteWithZeroExecutionGasLimitOOG() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+
+        // This is the gas used for everything except call() to execute inside `safeExternalCall`
+        happyTx.gasLimit = 73_000;
+
+        // This way, the external call to `execute` reverts right away
+        happyTx.executeGasLimit = 0;
+
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        (bool success, bytes memory returnData) = address(happyEntryPoint).call{gas: uint256(happyTx.gasLimit)}(
+            abi.encodeCall(HappyEntryPoint.submit, (happyTx.encode()))
+        );
+        if (success) {
+            SubmitOutput memory output = abi.decode(returnData, (SubmitOutput));
+            _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.EXECUTION_REVERTED), new bytes(0));
+            assertEq(output.executeGas, 0);
+        }
+    }
+
+    function testExecuteWithLowExecutionGasLimitOOG() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+
+        happyTx.gasLimit = 75_000; // This is the gas used for everything except call() to execute inside `safeExternalCall`
+        happyTx.executeGasLimit = 4_600; // Reverts on the preExecutionCheck
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        (bool success, bytes memory returnData) = address(happyEntryPoint).call{
+            gas: uint256(happyTx.gasLimit + happyTx.executeGasLimit)
+        }(abi.encodeCall(HappyEntryPoint.submit, (happyTx.encode())));
+        if (success) {
+            SubmitOutput memory output = abi.decode(returnData, (SubmitOutput));
+
+            // The function should return output.callStatus = CallReverted
+            _assertExpectedSubmitOutput(
+                output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(OutOfGas.selector)
+            );
+            assertGe(output.executeGas, 0);
+        }
+    }
+
+    // TODO, OOG inside execute(), causes a revert, instead of using the OOG buffer to return accordingly
+    function testExecuteWithLowExecutionGasLimitInsideExecuteCallOOG() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+
+        happyTx.gasLimit = 85_000; // This is the gas used for everything except call() to execute inside `safeExternalCall`
+        happyTx.executeGasLimit = 40_600; // Reverts on the preExecutionCheck
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        (bool success, bytes memory returnData) = address(happyEntryPoint).call{
+            gas: uint256(happyTx.gasLimit + happyTx.executeGasLimit)
+        }(abi.encodeCall(HappyEntryPoint.submit, (happyTx.encode())));
+        if (success) {
+            SubmitOutput memory output = abi.decode(returnData, (SubmitOutput));
+
+            // The function should return output.callStatus = CallReverted
+            _assertExpectedSubmitOutput(
+                output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(OutOfGas.selector)
+            );
+            assertGe(output.executeGas, 0);
+        }
+    }
+
+    function testExecuteWithLowExecutionGasNonZeroValueLimitOOG() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+
+        happyTx.gasLimit = 75_000; // This is the gas used for everything except call() to execute inside `safeExternalCall`
+        happyTx.value = 10 wei; // value > 0 uses 6700 more gas in a CALL
+        happyTx.executeGasLimit = 4600 + 6700; // Lower than this, and there isn't enough gas to revert, also gives memory OOG
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        (bool success, bytes memory returnData) = address(happyEntryPoint).call{
+            gas: uint256(happyTx.gasLimit + happyTx.executeGasLimit)
+        }(abi.encodeCall(HappyEntryPoint.submit, (happyTx.encode())));
+        if (success) {
+            SubmitOutput memory output = abi.decode(returnData, (SubmitOutput));
+
+            // The function should return output.callStatus = CallReverted
+            _assertExpectedSubmitOutput(
+                output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(OutOfGas.selector)
+            );
+            assertGe(output.executeGas, 0);
+        }
+    }
+
+    function testExecuteWithLowExecutionGasLimitEthTransferOOG() public {
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, smartAccount, smartAccount, new bytes(0));
+
+        happyTx.value = 1 wei;
+        happyTx.executeGasLimit = 5_000;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The function should return output.callStatus = CallReverted
+        _assertExpectedSubmitOutput(
+            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(OutOfGas.selector)
+        );
+        assertEq(output.executeGas, 0);
     }
 
     // ====================================================================================================

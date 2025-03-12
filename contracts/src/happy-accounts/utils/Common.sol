@@ -36,3 +36,8 @@ error NotFromEntryPoint();
  * Selector returned by {IHappyAccount.validte} when the happyTx's signature is invalid.
  */
 error InvalidOwnerSignature();
+
+/**
+ * Selector returned by {HappyEntryPoint.submit} and {IHappyAccount.execute} when the happyTx's gas limit is too low.
+ */
+error OutOfGas();

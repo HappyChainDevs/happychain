@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-import {FutureNonceDuringSimulation, UnknownDuringSimulation} from "../utils/Common.sol";
+import {FutureNonceDuringSimulation, UnknownDuringSimulation, OutOfGas} from "../utils/Common.sol";
 import {IHappyAccount, ExecutionOutput} from "../interfaces/IHappyAccount.sol";
 import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "./HappyTx.sol";
 
-// [LOGGAS] import {console} from "forge-std/Script.sol";
+// [LOGGAS]
+import {console} from "forge-std/Script.sol";
 
 enum CallStatus {
     SUCCESS, // The call succeeded.
@@ -101,17 +101,11 @@ event ExecutionReverted(bytes revertData);
 
 /// @notice The central contract that handles validation, execution, and fee payment for happyTxs.
 contract HappyEntryPoint is ReentrancyGuardTransient {
-    // Must be used to avoid gas exhaustion via return data.
-    using ExcessivelySafeCall for address;
-
     // ====================================================================================================
     // ERRORS
 
     /// @dev
     error NotFromSelf();
-
-    /// @dev Selector returned by {CallReverted(revertData)} when the inner execute call runs out of gas.
-    error OutOfGas();
 
     // ====================================================================================================
     // MODIFIERS
@@ -164,7 +158,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * Gas buffer to ensure we have enough gas to handle post-OOG revert scenarios.
      * This amount will be reserved from the available gas for validate and payout operations.
      */
-    uint256 private constant POST_OOG_GAS_BUFFER = 2500;
+    uint256 private constant POST_OOG_GAS_BUFFER = 3000;
 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
@@ -216,9 +210,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 gasStart = gasleft();
 
         //////////
-        // console.log("HEP: gasleft(), (sub 3165 from this for logging): ", gasStart);
+        // console.log("HEP: gasleft(): ", gasStart);
         // gasStart -= 3165;
-        // First console = 3165 gas, others = 665 gas; 2500 extra gas
+        // First console = 3165 gas, others = 665 gas; 2500 extra gas for first console log
         //////////
 
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
@@ -239,13 +233,20 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         bool success;
         bytes memory returnData;
-        (success, returnData) = this.safeCallWrapper(
+
+        int256 validateCallGas =
+            int256(uint256(happyTx.gasLimit)) - int256(gasStart - gasBeforeValidate + POST_OOG_GAS_BUFFER);
+        if (validateCallGas <= 0) revert OutOfGas();
+
+        (success, returnData) = safeCall(
             happyTx.account,
-            isSimulation && happyTx.gasLimit == 0 ? gasleft() : happyTx.gasLimit - (gasStart - gasBeforeValidate), // - POST_OOG_GAS_BUFFER,
+            isSimulation && happyTx.gasLimit == 0 ? gasleft() : uint256(validateCallGas),
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
         );
+        //! There are proper error selectors for each type of failure in the validate() spec,
+        //! so empty returnData can only by an EvmError (most likely OOG). So no need to check gasleft() here
         if (!success) revert ValidationReverted(returnData);
 
         bytes4 result = abi.decode(returnData, (bytes4));
@@ -264,12 +265,10 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // uint256 beforeSafeExternalCall = gasleft();
         // console.log("beforeSafeExternalCall, sub 650 for this log: ", beforeSafeExternalCall);
 
-        //! The call below takes ~3300 gas
-        (success, returnData) = this.safeExternalCall(
+        (success, returnData) = safeCall(
             happyTx.account,
             isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0, // gas token transfer value
-            // Allow the call revert data to take up the same size as the other revert data.
             MAX_EXECUTE_REVERT_DATA_SIZE,
             abi.encodeCall(IHappyAccount.execute, (happyTx))
         );
@@ -309,7 +308,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // WITHOUT the gas cost of the "payout" call (which is accounted for later).
         uint256 consumedGas =
             HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
-        // console.log("consumedGas: ", consumedGas);
 
         // [LOGGAS] uint256 txGasEnd = gasleft();
         // [LOGGAS] uint256 txGasUsed = txGasStart - txGasEnd;
@@ -332,13 +330,19 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // [LOGGAS] uint256 payoutGasStart = gasleft();
 
-        (success, returnData) = this.safeCallWrapper(
+        int256 payoutCallGas =
+            int256(uint256(happyTx.gasLimit)) - int256(gasStart - gasBeforePayout + POST_OOG_GAS_BUFFER);
+        if (payoutCallGas <= 0) revert OutOfGas();
+
+        (success, returnData) = safeCall(
             happyTx.paymaster,
-            isSimulation && happyTx.gasLimit == 0 ? gasleft() : happyTx.gasLimit - (gasStart - gasBeforePayout), // - POST_OOG_GAS_BUFFER,
+            isSimulation && happyTx.gasLimit == 0 ? gasleft() : uint256(payoutCallGas),
             0, // gas token transfer value
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
         );
+        //! There are proper error selectors for each type of failure in the payout() spec,
+        //! so empty returnData can only by an EvmError (most likely OOG). So no need to check gasleft() here
         if (!success) revert PaymentReverted(returnData);
 
         // [LOGGAS] uint256 payoutGasEnd = gasleft();
@@ -368,23 +372,15 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     // ====================================================================================================
     // HELPER FUNCTIONS
 
-    function safeCallWrapper(address target, uint256 gas, uint256 value, uint16 maxCopy, bytes memory calldata_)
-        external
-        onlySelf
-        returns (bool, bytes memory)
+    /**
+     * Must be used to avoid gas exhaustion via return data.
+     * @dev Forked from https://github.com/nomad-xyz/ExcessivelySafeCall/blob/main/src/ExcessivelySafeCall.sol
+     */
+    function safeCall(address _target, uint256 _gas, uint256 _value, uint16 _maxCopy, bytes memory _calldata)
+        internal
+        returns (bool _success, bytes memory _returnData)
     {
-        return ExcessivelySafeCall.excessivelySafeCall(target, gas, value, maxCopy, calldata_);
-    }
-
-    /// @dev Copied from https://github.com/nomad-xyz/ExcessivelySafeCall/blob/main/src/ExcessivelySafeCall.sol
-    function safeExternalCall(address _target, uint256 _gas, uint256 _value, uint16 _maxCopy, bytes memory _calldata)
-        external
-        returns (bool, bytes memory)
-    {
-        // console.log("inside safeExternalCall, startGas (sub 650 from this) = ", gasleft(), " ; _gas = ", _gas);
-
-        bool _success;
-        bytes memory _returnData = new bytes(_maxCopy);
+        _returnData = new bytes(_maxCopy);
         assembly {
             _success := call(_gas, _target, _value, add(_calldata, 0x20), mload(_calldata), 0, 0)
 
@@ -394,8 +390,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             mstore(_returnData, _toCopy)
             returndatacopy(add(_returnData, 0x20), 0, _toCopy)
         }
-        // console.log("inside, _success = ", _success);
-        // console.logBytes(_returnData);
-        return (_success, _returnData);
+        console.log("_success: ", _success);
+        console.logBytes(_returnData);
     }
 }

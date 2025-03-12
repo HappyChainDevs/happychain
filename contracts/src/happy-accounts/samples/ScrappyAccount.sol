@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ECDSA} from "solady/utils/ECDSA.sol";
-// import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
+
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -23,6 +23,7 @@ import {
     FutureNonceDuringSimulation,
     InvalidOwnerSignature,
     NotFromEntryPoint,
+    OutOfGas,
     UnknownDuringSimulation
 } from "../utils/Common.sol";
 
@@ -70,7 +71,13 @@ contract ScrappyAccount is
     uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
 
     /// @dev Buffer to account for gas costs of returning the function if inner call runs out of gas.
-    uint256 private constant OOG_BUFFER = 3200; // 2800 CALL + 400 buffer for post OOG code
+    uint256 private constant POST_OOG_BUFFER = 500;
+
+    /// @dev Estimated gas cost of making an external call
+    uint256 private constant CALL_GAS_COST = 3000;
+
+    /// @dev Overhead in an external call's gas usage when tx.value > 0
+    uint256 private constant NON_ZERO_VALUE_OVERHEAD = 6700;
 
     /// @dev Interface IDs
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
@@ -166,28 +173,35 @@ contract ScrappyAccount is
         returns (ExecutionOutput memory output)
     {
         uint256 startGas = gasleft();
+        uint256 outOfGasBuffer = CALL_GAS_COST + POST_OOG_BUFFER + (happyTx.value > 0 ? NON_ZERO_VALUE_OVERHEAD : 0);
+        uint256 callGasAmount = startGas > outOfGasBuffer ? startGas - outOfGasBuffer : 0;
 
-        // gasleft() is calculated first, then 650 gas is used by console
-        // console.log("In execute, gas before CALL (sub 650)", gasleft()); // sub 650
-
-        int256 callGas = int256(gasleft()) - int256(OOG_BUFFER);
-        if (callGas < 0) {
-            output.revertData = abi.encodeWithSelector(bytes4(keccak256("OutOfGas()")));
+        // Pre-emptive check for extremely low gas
+        if (callGasAmount == 0) {
+            // output.gas = 1; //! temp to debug without console
+            output.revertData = abi.encodeWithSelector(OutOfGas.selector);
             return output;
         }
 
-        (bool success, bytes memory returnData) =
-        // happyTx.dest.call{gas: gasleft() - OOG_BUFFER, value: happyTx.value}(happyTx.callData);
-         happyTx.dest.call{gas: uint256(callGas), value: happyTx.value}(happyTx.callData);
+        // Track gas before the call
+        uint256 preCallGas = gasleft();
 
-        // uint256 endGas = gasleft();
-        // console.log("callGas var: ", callGas);
-        // console.log("gasleft after CALL: ", endGas);
-        // console.log("gas used in CALL: ", startGas-endGas);
+        (bool success, bytes memory returnData) =
+            happyTx.dest.call{gas: callGasAmount, value: happyTx.value}(happyTx.callData);
+
+        // Calculate gas used in the call
+        uint256 gasUsed = preCallGas - gasleft();
+        uint256 gasUsageRatio = ((gasUsed - CALL_GAS_COST) * 100) / callGasAmount;
 
         if (!success) {
-            // output.gas = endGas;
-            output.revertData = returnData;
+            // If returnData is empty and gas usage is very high (>99%), it's likely an OOG error
+            if (returnData.length == 0 && gasUsageRatio > 99) {
+                // output.gas = 2; //! temp to debug without console
+                output.revertData = abi.encodeWithSelector(OutOfGas.selector);
+            } else {
+                // output.gas = 3; //! temp to debug without console
+                output.revertData = returnData;
+            }
             return output;
         }
 
