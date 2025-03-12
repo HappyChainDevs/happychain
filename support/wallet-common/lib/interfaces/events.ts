@@ -1,4 +1,4 @@
-import type { EIP1193ErrorObject } from "../errors"
+import type { EIP1193ErrorObject, EIP1474ErrorObject } from "../errors"
 import type { OverlayErrorCode } from "../errors/overlay-errors"
 import type { EIP1193EventName, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193.ts"
 import type { EIP6963ProviderInfo } from "./eip6963"
@@ -203,7 +203,9 @@ export type ProviderMsgsFromApp = {
 /**
  * Schema for messages that can be sent from the iframe to the app.
  */
-export type ProviderEvent = ProviderEventError<EIP1193ErrorObject> | ProviderEventPayload<EIP1193RequestResult>
+export type ProviderEvent =
+    | ProviderEventError<EIP1193ErrorObject | EIP1474ErrorObject>
+    | ProviderEventPayload<EIP1193RequestResult>
 export type ProviderMsgsFromIframe = {
     [Msgs.RequestResponse]: ProviderEvent
     [Msgs.PermissionCheckResponse]: ProviderEventPayload<boolean> | ProviderEventError

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, mock } from "bun:test"
 import { type UUID, createUUID } from "@happy.tech/common"
 import {
     AuthState,
-    EIP1193ErrorCodes,
+    EIP1193ProviderErrorCodes,
     type EIP1193RequestParameters,
     EventBus,
     EventBusMode,
@@ -195,7 +195,7 @@ describe("HappyProvider", () => {
             iframeProviderBus.emit(Msgs.RequestResponse, {
                 key,
                 windowId: uuid,
-                error: getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest),
+                error: getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.UserRejectedRequest),
                 payload: null,
             })
         })

@@ -6,7 +6,7 @@ import {
     UnsupportedProviderMethodError,
     UserRejectedRequestError,
 } from "viem"
-import { EIP1193ErrorCodes } from "./eip-1193-codes"
+import { EIP1193ProviderErrorCodes } from "./eip-1193-codes"
 import {
     EIP1193ChainDisconnectedError,
     EIP1193ChainNotRecognizedError,
@@ -21,24 +21,24 @@ import type { EIP1193ErrorObject } from "./eip-1193-interfaces"
 /**
  * Given (at minimum) the error code, this creates an error object with a standard description.
  *
- * @param code number (eip 1193 error code)
+ * @param code number (EIP1193 error code)
  * @param data optional data to enhance debugging
  * @returns serializable error object
  */
 export function getEIP1193ErrorObjectFromCode(code: number, data?: string): EIP1193ErrorObject {
     switch (code) {
-        case EIP1193ErrorCodes.UserRejectedRequest:
+        case EIP1193ProviderErrorCodes.UserRejectedRequest:
             return { code, message: "The user rejected the request.", data }
-        case EIP1193ErrorCodes.Unauthorized:
+        case EIP1193ProviderErrorCodes.Unauthorized:
             return { code, message: "The requested method and/or account has not been authorized by the user.", data }
-        case EIP1193ErrorCodes.UnsupportedMethod:
+        case EIP1193ProviderErrorCodes.UnsupportedMethod:
             return { code, message: "The Provider does not support the requested method.", data }
-        case EIP1193ErrorCodes.Disconnected:
+        case EIP1193ProviderErrorCodes.Disconnected:
             return { code, message: "The Provider is disconnected from all chains.", data }
-        case EIP1193ErrorCodes.ChainDisconnected:
+        case EIP1193ProviderErrorCodes.ChainDisconnected:
             return { code, message: "The Provider is not connected to the requested chain.", data }
-        case EIP1193ErrorCodes.SwitchChainError:
-            return { code, message: "An error occurred when attempting to switch chain.", data }
+        case EIP1193ProviderErrorCodes.SwitchChainError:
+            return { code, message: "An error occurred when attempting to switch chains.", data }
         default:
             return { code: -1, message: "An unknown RPC error occurred.", data }
     }
@@ -53,22 +53,22 @@ export function getEIP1193ErrorObjectFromCode(code: number, data?: string): EIP1
  */
 export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorObject {
     if (error instanceof UserRejectedRequestError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest, error.details)
+        return getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.UserRejectedRequest, error.details)
     }
     if (error instanceof UnauthorizedProviderError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.Unauthorized, error.details)
+        return getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.Unauthorized, error.details)
     }
     if (error instanceof UnsupportedProviderMethodError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UnsupportedMethod, error.details)
+        return getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.UnsupportedMethod, error.details)
     }
     if (error instanceof ProviderDisconnectedError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.Disconnected, error.details)
+        return getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.Disconnected, error.details)
     }
     if (error instanceof ChainDisconnectedError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.ChainDisconnected, error.details)
+        return getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.ChainDisconnected, error.details)
     }
     if (error instanceof SwitchChainError) {
-        return getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.SwitchChainError, error.details)
+        return getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.SwitchChainError, error.details)
     }
     if (error instanceof GenericProviderRpcError) {
         return getEIP1193ErrorObjectFromCode(error.code, error.message)
@@ -90,7 +90,7 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
     }
 
     // biome-ignore lint/suspicious/noExplicitAny: error can be anything
-    const errorCode = (error as any)?.code ?? EIP1193ErrorCodes.Unknown
+    const errorCode = (error as any)?.code ?? EIP1193ProviderErrorCodes.Unknown
     return getEIP1193ErrorObjectFromCode(errorCode, data)
 }
 
@@ -102,17 +102,17 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
  */
 export function convertEIP1193ErrorObjectToErrorInstance(error: EIP1193ErrorObject) {
     switch (error.code) {
-        case EIP1193ErrorCodes.UserRejectedRequest:
+        case EIP1193ProviderErrorCodes.UserRejectedRequest:
             return new EIP1193UserRejectedRequestError(error as EIP1193ErrorObject)
-        case EIP1193ErrorCodes.Unauthorized:
+        case EIP1193ProviderErrorCodes.Unauthorized:
             return new EIP1193UnauthorizedError(error as EIP1193ErrorObject)
-        case EIP1193ErrorCodes.UnsupportedMethod:
+        case EIP1193ProviderErrorCodes.UnsupportedMethod:
             return new EIP1193UnsupportedMethodError(error as EIP1193ErrorObject)
-        case EIP1193ErrorCodes.Disconnected:
+        case EIP1193ProviderErrorCodes.Disconnected:
             return new EIP1193DisconnectedError(error as EIP1193ErrorObject)
-        case EIP1193ErrorCodes.ChainDisconnected:
+        case EIP1193ProviderErrorCodes.ChainDisconnected:
             return new EIP1193ChainDisconnectedError(error as EIP1193ErrorObject)
-        case EIP1193ErrorCodes.SwitchChainError:
+        case EIP1193ProviderErrorCodes.SwitchChainError:
             return new EIP1193ChainNotRecognizedError(error as EIP1193ErrorObject)
         default:
             return new GenericProviderRpcError(error)

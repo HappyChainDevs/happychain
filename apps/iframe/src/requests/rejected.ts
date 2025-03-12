@@ -1,5 +1,5 @@
 import {
-    EIP1193ErrorCodes,
+    EIP1193ProviderErrorCodes,
     Msgs,
     type PopupMsgs,
     WalletType,
@@ -16,7 +16,7 @@ import { appForSourceID } from "./utils"
  * Processes requests rejected by the user in the pop-up, forwarding the rejection to the app.
  */
 export async function handleRejectedRequest(data: PopupMsgs[Msgs.PopupReject]): Promise<void> {
-    const error = data.error || getEIP1193ErrorObjectFromCode(EIP1193ErrorCodes.UserRejectedRequest)
+    const error = data.error || getEIP1193ErrorObjectFromCode(EIP1193ProviderErrorCodes.UserRejectedRequest)
 
     const response = {
         key: data.key,
