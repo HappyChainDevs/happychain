@@ -79,6 +79,11 @@ const contractToAbi = ({
     },
     {
       "type": "error",
+      "name": "MalformedHappyTx",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "PaymentFailed",
       "inputs": [
         {
@@ -145,6 +150,19 @@ const contractToAbi = ({
     },
     {
       "type": "function",
+      "name": "ENTRYPOINT",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "UPGRADE_INTERFACE_VERSION",
       "inputs": [],
       "outputs": [
@@ -152,19 +170,6 @@ const contractToAbi = ({
           "name": "",
           "type": "string",
           "internalType": "string"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "entryPoint",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
         }
       ],
       "stateMutability": "view"
@@ -656,7 +661,7 @@ const contractToAbi = ({
         {
           "name": "sender",
           "type": "address",
-          "indexed": false,
+          "indexed": true,
           "internalType": "address"
         },
         {
@@ -682,19 +687,6 @@ const contractToAbi = ({
       "anonymous": false
     },
     {
-      "type": "event",
-      "name": "Upgraded",
-      "inputs": [
-        {
-          "name": "newImplementation",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
       "type": "error",
       "name": "AddressEmptyCode",
       "inputs": [
@@ -702,33 +694,6 @@ const contractToAbi = ({
           "name": "target",
           "type": "address",
           "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ECDSAInvalidSignature",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "ECDSAInvalidSignatureLength",
-      "inputs": [
-        {
-          "name": "length",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ECDSAInvalidSignatureS",
-      "inputs": [
-        {
-          "name": "s",
-          "type": "bytes32",
-          "internalType": "bytes32"
         }
       ]
     },
@@ -766,6 +731,11 @@ const contractToAbi = ({
     {
       "type": "error",
       "name": "NotInitializing",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotSelfOrOwner",
       "inputs": []
     },
     {
@@ -869,6 +839,11 @@ const contractToAbi = ({
           "name": "salt",
           "type": "bytes32",
           "internalType": "bytes32"
+        },
+        {
+          "name": "owner",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "outputs": [
@@ -1172,10 +1147,10 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "HappyEntryPoint": "0x11063DeA171d69946Ab39FCE888Dd10258064c1d",
-  "ScrappyAccount": "0x73a2fDfFc3Bb89A166D239de7701e9a3F75F37E7",
-  "ScrappyAccountFactory": "0xEa959CAED58B697258EfB7940E5e17C426483524",
-  "ScrappyPaymaster": "0xF591A2e9ed77cBc1aE5eAD7AC6E3D0d9A58DB69F"
+  "HappyEntryPoint": "0x434f1F8F5f66067C3781C9Aa37399F3C7Fe37029",
+  "ScrappyAccount": "0x48F78DfCC420F21E683EF6787EDA2f4F3bFbf757",
+  "ScrappyAccountFactory": "0xA5d2eA5b36858fB41DC6F85982A2C2a9e49ecF1D",
+  "ScrappyPaymaster": "0xc50aF5F9f2ff25dbfFBc324D46cbFA85FAf2344b"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi
