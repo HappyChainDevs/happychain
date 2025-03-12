@@ -1,4 +1,1 @@
-export const coreNativeSelectStyles = [
-  "[&_select]:appearance-none",
-  "relative",
-]
+export const coreNativeSelectStyles = ["[&_select]:appearance-none", "relative"]

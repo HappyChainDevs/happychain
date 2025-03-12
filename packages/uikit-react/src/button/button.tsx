@@ -1,48 +1,45 @@
-import { forwardRef } from "react";
-import { SkeuoButton, type SkeuoButtonProps } from "./skeuo";
-import { GuiButton, type GuiButtonProps } from "./gui";
+import { forwardRef } from "react"
+import { GuiButton, type GuiButtonProps } from "./gui"
+import { SkeuoButton, type SkeuoButtonProps } from "./skeuo"
 
-interface ButtonCoreProps {};
-
-const Root = forwardRef<HTMLElement, ButtonCoreProps>((props, ref) => {
-  return null;
-});
+const Root = forwardRef<HTMLElement>((_props, _ref) => {
+    return null
+})
 
 const Gui = forwardRef<HTMLElement, GuiButtonProps>((props, ref) => {
-  return <GuiButton ref={ref} {...props} />;
-});
+    return <GuiButton ref={ref} {...props} />
+})
 
 const Skeuo = forwardRef<HTMLElement, SkeuoButtonProps>((props, ref) => {
-  return <SkeuoButton ref={ref} {...props} />;
-});
-
+    return <SkeuoButton ref={ref} {...props} />
+})
 
 /**
  * A clickable element the user interacts with to trigger actions and events.
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button} `<button>` element API Reference
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a} `<a>` element API Reference
- * 
+ *
  * @example - GUI paradigm
  * import { Button } from '@happy.tech/uikit-react';
- * 
+ *
  * const ExampleGuiButton = () => {
  *   return (
  *     <Button.Gui>Hello from GUI !</Button.Gui>
  *   );
  * }
- * 
+ *
  * @example - Skeuomorphic paradigm
  * import { Button } from '@happy.tech/uikit-react';
- * 
+ *
  * const ExampleSkeuoButton = () => {
  *   return (
  *     <Button.Skeuo>Hello from GUI !</Button.Skeuo>
  *   );
  * }
- * 
+ *
  * @example - As a link
  * import { Button } from '@happy.tech/uikit-react';
- * 
+ *
  * const ExampleLinkButton = () => {
  *   return (
  *     <Button.Gui aspect="ghost" href="https://example.com"> A link button</Button.Gui>
@@ -50,10 +47,10 @@ const Skeuo = forwardRef<HTMLElement, SkeuoButtonProps>((props, ref) => {
  * }
  */
 const Button = Object.assign(Root, {
-  Gui,
-  Skeuo,
-});
+    Gui,
+    Skeuo,
+})
 
-Button.displayName = "Button";
+Button.displayName = "Button"
 
 export { Button }

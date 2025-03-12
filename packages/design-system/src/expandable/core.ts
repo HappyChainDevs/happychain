@@ -5,5 +5,5 @@ export const coreExpandableStyle = [
     //  -- Indicator: color
     "**:data-expandable-indicator:bg-current",
     //  -- Indicator: mask properties
-   "**:data-expandable-indicator:[mask-repeat:no-repeat] **:data-expandable-indicator:[mask-position:center]"
+    "**:data-expandable-indicator:[mask-repeat:no-repeat] **:data-expandable-indicator:[mask-position:center]",
 ]

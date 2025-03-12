@@ -1,5 +1,5 @@
 import { type VariantProps, cva } from "cva"
-import { coreExpandableStyle } from "./core";
+import { coreExpandableStyle } from "./core"
 
 /**
  * Visual pattern for expandable/collapsible elements that follow the minimalistic, retro look
@@ -30,27 +30,26 @@ import { coreExpandableStyle } from "./core";
  *       like accordions, collapsible sections, select inputs or dropdown menus.
  */
 export const recipeGuiExpandable = cva({
-  base: [
-    ...coreExpandableStyle,
-    // -- Indicator
-    //  -- Indicator: mask properties
-    "**:data-expandable-indicator:mask-icon-hds-system-gui-caret-down",
-    "**:data-expandable-indicator:h-full",
-    "**:data-expandable-indicator:absolute",
-    "**:data-expandable-indicator:top-0",
-    "**:data-expandable-indicator:end-3",
-    "**:data-expandable-indicator:w-3.5",    
-  ],
-  variants: {
-    scale: {
-      default: "",
-      large: "",
-    }
-  },
-  defaultVariants: {
-    scale: 'default',
-  },
-});
-
+    base: [
+        ...coreExpandableStyle,
+        // -- Indicator
+        //  -- Indicator: mask properties
+        "**:data-expandable-indicator:mask-icon-hds-system-gui-caret-down",
+        "**:data-expandable-indicator:h-full",
+        "**:data-expandable-indicator:absolute",
+        "**:data-expandable-indicator:top-0",
+        "**:data-expandable-indicator:end-3",
+        "**:data-expandable-indicator:w-3.5",
+    ],
+    variants: {
+        scale: {
+            default: "",
+            large: "",
+        },
+    },
+    defaultVariants: {
+        scale: "default",
+    },
+})
 
 export type GuiExpandableVariantsProps = VariantProps<typeof recipeGuiExpandable>
