@@ -33,8 +33,11 @@ BACKEND_ONLY_PKGS := packages/txm,apps/randomness
 # packages needed to build the backend services (order matters)
 BACKEND_PKGS := support/common,$(BACKEND_ONLY_PKGS)
 
+# design system packages
+DESIGN_SYSTEM_PKGS := support/design-tokens,packages/design-system,packages/uikit-react
+
 # all typescript packages, excluding docs
-TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS}
+TS_PKGS := $(ACCOUNT_PKGS),$(DEMOS_PKGS),${BACKEND_PKGS},${DESIGN_SYSTEM_PKGS}
 
 # all packages that have a package.json
 NPM_PKGS := $(TS_PKGS),apps/docs,contracts,support/configs
