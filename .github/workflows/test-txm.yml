@@ -1,0 +1,69 @@
+name: Test TXM Package
+
+on:
+  push:
+    paths:
+      - 'packages/txm/**'
+  workflow_dispatch:
+
+env:
+  IFRAME_URL: "https://iframe.happy.tech"
+  VITE_BUNDLER_RPC_URL: "-"
+  VITE_FIREBASE_API_KEY: "-"
+  VITE_FIREBASE_AUTH_DOMAIN: "-"
+  VITE_FIREBASE_PROJECT_ID: "-"
+  VITE_FIREBASE_STORAGE_BUCKET: "-"
+  VITE_FIREBASE_MESSAGE_SENDER_ID: "-"
+  VITE_FIREBASE_APP_ID: "-"
+  VITE_WEB3AUTH_CLIENT_ID: "-"
+  VITE_WEB3AUTH_NETWORK: "-"
+  VITE_WEB3AUTH_VERIFIER: "-"
+  FOUNDRY_PROFILE: default
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+        with:
+            submodules: recursive
+  
+      - name: Install Node23 (for tests)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+      
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.42'
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+            
+      - name: Compile contracts
+        run: |
+            make setup
+            cd contracts
+            forge build -vvvv
+    
+      # This step uses the default Anvil test private key (account #0)
+      # The key is publicly known and should NEVER be used in production environments
+      - name: Create test deployer key
+        run: |
+           cast wallet import --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80  --unsafe-password  "password" test-account-0
+           cd contracts && echo "password" > .password.local
+      
+      - name: Build txm packages
+        run: | 
+            make txm.build
+      
+      - name: Test txm package
+        run: |
+            cd packages/txm
+            make test
