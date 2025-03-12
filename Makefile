@@ -404,10 +404,10 @@ contracts.clean:
 # DEPENDENCY MANAGEMENT
 #   Update dependencies, check for outdated dependencies, etc.
 
-# Install packages as specified in the bun.lockb.
+# Install packages as specified in the bun.lock.
 install-frozen:
 	# --frozen-lockfile will not generate the lockfile if missing
-	@if [ -r bun.lockb ]; then \
+	@if [ -r bun.lock ]; then \
 		bun install --frozen-lockfile; \
 	else \
 		bun install; \
