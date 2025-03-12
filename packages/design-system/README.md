@@ -33,7 +33,7 @@ The design system supports multiple design paradigms :
 Import the design recipes to style your interface :
 
 ```tsx
-import { recipeGuiButton } from '@happy.tech/design-recipes';
+import { recipeGuiButton } from '@happy.tech/design-system';
 
 const MyCustomButton = ({ className, variant, size, ...props }) => {
   return (
@@ -120,7 +120,7 @@ export type GuiComplexComponentVariantsProps =
 
 Regardless of the component, your styling recipe is likely to apply one or more of these variants :
 
-- `intent`:  communicates what the component is trying to communicate to the user (eg: a negative, positive action). Intent primarily affects colors.
+- `intent`:  conveys what the component is trying to communicate to the user (eg: a negative, positive action). Intent primarily affects colors.
 - `aspect`: defines the visual style or appearance variation of a component while maintaining its same general purpose. It's about **how the component looks**, not what it means (eg: `outline` = colored borders and text but transparent background ; `ghost` = colored text but transparent background and border ; `dimmed` = dimmed colorful background but full chroma text...)
 - `scale`: defines how much visual space and emphasis a component has. It primarily affects padding, font size, margins, and other dimensional properties.
 
@@ -134,6 +134,7 @@ Consider adding responsive variants for components that need different styles at
 
 In some cases, our custom Tailwind utility classes (including [our custom utilities](https://tailwindcss.com/docs/adding-custom-styles#customizing-your-theme)) might not be enough and you would have to reach to using [arbitrary values](https://tailwindcss.com/docs/adding-custom-styles#using-arbitrary-values). If so, **avoid raw values; like `bg-[#ffffff]` or `text-white`** and prefer using our **semantic** CSS variables.
 
- Using Tailwind spacing utilities is fine, as we use the same base spacing value (`4px`), but in some places you might need to use our `hds-` utilities. 
+ Using Tailwind spacing utilities is fine, as we use the same base spacing value (`4px`), but in some places you might need to use our `hds-` prefixed utilities. 
+
 
 Refer to our generated tailwind theme, along with the [Tailwind docs](https://tailwindcss.com/docs/theme#default-theme-variable-reference).
