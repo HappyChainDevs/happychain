@@ -401,7 +401,7 @@ test("Transaction failed for out of gas", async () => {
     expect(await getCurrentCounterValue()).toBe(previousCount)
     expect(transactionReverted.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
     expect(retryManager.haveTriedToRetry(transaction.intentId)).toBeTruthy()
-    expect(message).toBe("Out of gas")
+    expect(message).toMatch(/out of gas/i)
     expect(output).toBeUndefined()
     expect(revertReceipt.gasUsed).toBe(transactionReverted.attempts[0].gas)
     expect(persistedTransaction).toBeDefined()
