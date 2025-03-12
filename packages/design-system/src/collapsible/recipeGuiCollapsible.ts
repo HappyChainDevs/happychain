@@ -1,5 +1,5 @@
-import { cva, cx, type VariantProps } from "cva";
-import { recipeGuiExpandable } from "../expandable";
+import { type VariantProps, cva, cx } from "cva"
+import { recipeGuiExpandable } from "../expandable"
 
 const recipeGuiCollapsibleContainer = cva({
     base: [
@@ -7,53 +7,48 @@ const recipeGuiCollapsibleContainer = cva({
         "**:data-expandable-indicator:absolute",
         "**:data-expandable-indicator:block",
         "**:data-expandable-indicator:top-0",
-        "**:data-expandable-indicator:end-3",       
-        "**:data-expandable-indicator:w-3.5",  
+        "**:data-expandable-indicator:end-3",
+        "**:data-expandable-indicator:w-3.5",
     ],
     variants: {
         intent: {
-            default: 'border-hds-system-gui-foreground-default/50 text-hds-system-gui-foreground-default'
+            default: "border-hds-system-gui-foreground-default/50 text-hds-system-gui-foreground-default",
         },
         scale: {
             default: "text-hds-system-gui-base tracking-hds-loose",
-        }
+        },
     },
     defaultVariants: {
-        intent: 'default',
-        scale: 'default'
-    }
+        intent: "default",
+        scale: "default",
+    },
 })
 
 export type GuiCollapsibleContainerVariantsProps = VariantProps<typeof recipeGuiCollapsibleContainer>
 
 const recipeGuiCollapsibleTrigger = cva({
-    base: [
-        "relative",
-        "cursor-pointer is-disabled:cursor-not-allowed",
-        "w-full inline-flex gap-3 justify-between",
-    ],
+    base: ["relative", "cursor-pointer is-disabled:cursor-not-allowed", "w-full inline-flex gap-3 justify-between"],
     variants: {
         scale: {
             default: "py-2 px-3",
-        }
+        },
     },
     defaultVariants: {
-        scale: 'default'
-    }
+        scale: "default",
+    },
 })
 
 export type GuiCollapsibleTriggerVariantsProps = VariantProps<typeof recipeGuiCollapsibleTrigger>
 
-
 const recipeGuiCollapsibleContent = cva({
     variants: {
         scale: {
-            default: "pb-3 px-3"
-        }
+            default: "pb-3 px-3",
+        },
     },
     defaultVariants: {
-        scale: 'default'
-    }
+        scale: "default",
+    },
 })
 
 export type GuiCollapsibleContentVariantsProps = VariantProps<typeof recipeGuiCollapsibleContent>
@@ -62,18 +57,18 @@ export type GuiCollapsibleContentVariantsProps = VariantProps<typeof recipeGuiCo
  * Visual pattern for collapsible sections that mimic the minimalistic, retro look of early
  * graphics-based operating systems. The collapsible component allows toggling visibility
  * of content sections.
- * 
+ *
  * This recipe consists of multiple related elements:
  * - container: The outer wrapper that provides styling and structure
  * - trigger: The interactive element that toggles content visibility
  * - content: The section that can be expanded or collapsed
- * 
+ *
  * Under the hood, this recipe utilizes the `recipeGuiExpandable` for functionality while
  * adding specific styling and behavior for the collapsible pattern.
- * 
+ *
  * @variant `intent` - Controls the semantic meaning
  * @variant `scale` - Controls the dimensions
- * 
+ *
  * @example - Basic collapsible section
  * ```tsx
  * <div className={recipeGuiCollapsible.container()}>
@@ -91,12 +86,12 @@ export type GuiCollapsibleContentVariantsProps = VariantProps<typeof recipeGuiCo
  * @note For proper accessibility, use appropriate semantic elements (button for trigger).
  */
 export const recipeGuiCollapsible = {
-    container: (props: GuiCollapsibleContainerVariantsProps) => cx(recipeGuiCollapsibleContainer(props), recipeGuiExpandable()),
+    container: (props: GuiCollapsibleContainerVariantsProps) =>
+        cx(recipeGuiCollapsibleContainer(props), recipeGuiExpandable()),
     trigger: (props: GuiCollapsibleTriggerVariantsProps) => recipeGuiCollapsibleTrigger(props),
-    content: (props: GuiCollapsibleContentVariantsProps) => recipeGuiCollapsibleContent(props)
-};
+    content: (props: GuiCollapsibleContentVariantsProps) => recipeGuiCollapsibleContent(props),
+}
 
-export type GuiCollapsibleVariantsProps = 
-  VariantProps<typeof recipeGuiCollapsible.container> & 
-  VariantProps<typeof recipeGuiCollapsible.content> & 
-  VariantProps<typeof recipeGuiCollapsible.trigger>;
+export type GuiCollapsibleVariantsProps = VariantProps<typeof recipeGuiCollapsible.container> &
+    VariantProps<typeof recipeGuiCollapsible.content> &
+    VariantProps<typeof recipeGuiCollapsible.trigger>

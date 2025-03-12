@@ -1,5 +1,5 @@
-import { Field as ArkField } from '@ark-ui/react/field'
-import { GuiContainer, GuiErrorText, GuiHelperText, GuiInput, GuiLabel, GuiSelect, GuiTextarea } from "./gui";
+import { Field as ArkField } from "@ark-ui/react/field"
+import { GuiContainer, GuiErrorText, GuiHelperText, GuiInput, GuiLabel, GuiSelect, GuiTextarea } from "./gui"
 
 const Root = ArkField.Root
 
@@ -9,7 +9,7 @@ const Root = ArkField.Root
  *
  * @example - Basic input field
  * import { Field } from '@happy.tech/uikit-react';
- * 
+ *
  * const FormFieldUserEmail = () => {
  *   return (
  *     <Field.Gui.Root required>
@@ -22,16 +22,16 @@ const Root = ArkField.Root
  * }
  */
 const Field = Object.assign(Root, {
-  Gui: {
-    Root: GuiContainer,
-    Input: GuiInput,
-    Textarea: GuiTextarea,
-    Select: GuiSelect,
-    Label: GuiLabel,
-    ErrorText: GuiErrorText,
-    HelperText: GuiHelperText
-  },
-  ...ArkField,
-});
+    Gui: {
+        Root: GuiContainer,
+        Input: GuiInput,
+        Textarea: GuiTextarea,
+        Select: GuiSelect,
+        Label: GuiLabel,
+        ErrorText: GuiErrorText,
+        HelperText: GuiHelperText,
+    },
+    ...ArkField,
+})
 
-export { Field };
+export { Field }

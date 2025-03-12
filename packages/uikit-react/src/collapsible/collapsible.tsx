@@ -1,5 +1,5 @@
-import { Collapsible as ArkCollapsible } from '@ark-ui/react/collapsible'
-import { GuiContainer, GuiTrigger, GuiContent } from './gui';
+import { Collapsible as ArkCollapsible } from "@ark-ui/react/collapsible"
+import { GuiContainer, GuiContent, GuiTrigger } from "./gui"
 
 /**
  * A composable component the user can expand/reduce to reveal/hide content inline.
@@ -7,7 +7,7 @@ import { GuiContainer, GuiTrigger, GuiContent } from './gui';
  *
  * @example Basic collapsible section
  * import { Collapsible } from '@happy.tech/uikit-react';
- * 
+ *
  * const HideAndSeek = () => {
  *   return (
  *     <Collapsible defaultOpen={false}>
@@ -23,12 +23,12 @@ import { GuiContainer, GuiTrigger, GuiContent } from './gui';
  */
 
 const Collapsible = Object.assign({
-  Gui: {
-    Root: GuiContainer,
-    Content: GuiContent,
-    Trigger: GuiTrigger,
-  },
-  ...ArkCollapsible,
-});
+    Gui: {
+        Root: GuiContainer,
+        Content: GuiContent,
+        Trigger: GuiTrigger,
+    },
+    ...ArkCollapsible,
+})
 
-export { Collapsible };
+export { Collapsible }
