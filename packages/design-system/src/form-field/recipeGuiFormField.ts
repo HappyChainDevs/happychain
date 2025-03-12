@@ -1,11 +1,9 @@
-import { cva, type VariantProps } from "cva";
-import { recipeGuiUserInput, type GuiUserInputVariantsProps } from '../user-input';
-import { recipeGuiNativeSelect, type GuiNativeSelectVariantsProps } from "../native-select";
+import { type VariantProps, cva } from "cva"
+import { type GuiNativeSelectVariantsProps, recipeGuiNativeSelect } from "../native-select"
+import { type GuiUserInputVariantsProps, recipeGuiUserInput } from "../user-input"
 
 const recipeGuiFormFieldContainer = cva({
-    base: [
-        "flex flex-col",
-    ],
+    base: ["flex flex-col"],
 })
 export type GuiFormFieldContainerVariantsProps = VariantProps<typeof recipeGuiFormFieldContainer>
 
@@ -14,39 +12,36 @@ const recipeGuiFormFieldLabel = cva({
     variants: {
         scale: {
             default: "pb-2",
-        }
+        },
     },
     defaultVariants: {
-        scale: 'default'
-    }
+        scale: "default",
+    },
 })
 export type GuiFormFieldLabelVariantsProps = VariantProps<typeof recipeGuiFormFieldLabel>
 
-
 const recipeGuiFormFieldHelperText = cva({
-    base: ['sr-only'],
+    base: ["sr-only"],
 })
 export type GuiFormFieldHelperTextVariantsProps = VariantProps<typeof recipeGuiFormFieldHelperText>
-
 
 const recipeGuiFormFieldErrorText = cva({
     base: "font-hds-system-gui-display text-hds-system-gui-foreground-intent-negative text-hds-system-gui-base",
     variants: {
         scale: {
             default: "pt-1.5",
-        }
+        },
     },
     defaultVariants: {
-        scale: 'default'
-    }
+        scale: "default",
+    },
 })
 export type GuiFormFieldErrorTextVariantsProps = VariantProps<typeof recipeGuiFormFieldErrorText>
-
 
 /**
  * Visual pattern for form fields that mimic the minimalistic, retro look of early graphics-based
  * operating systems. Provides a complete set of styles for creating accessible form elements.
- * 
+ *
  * This recipe consists of multiple related elements:
  * - parent: Container that groups form field elements
  * - label: Text label for the form field
@@ -55,38 +50,38 @@ export type GuiFormFieldErrorTextVariantsProps = VariantProps<typeof recipeGuiFo
  * - input: Text input field (uses recipeGuiUserInput)
  * - select: Dropdown select field (uses recipeGuiNativeSelect)
  * - textarea: Multiline text input (uses recipeGuiUserInput)
- * 
+ *
  * @variant `scale` - Controls the spacing and dimensions
  * @example - Complete form field with label, input, and error message
  * ```tsx
  * <div className={recipeGuiFormField.parent()}>
- *   <label 
- *     htmlFor="email-input" 
+ *   <label
+ *     htmlFor="email-input"
  *     className={recipeGuiFormField.label()}
  *   >
  *     Your e-mail address
  *   </label>
- *   <span 
- *     id="email-helper" 
+ *   <span
+ *     id="email-helper"
  *     className={recipeGuiFormField.helperText()}
  *   >
  *     Enter your e-mail address for account recovery
  *   </span>
- *   <input 
+ *   <input
  *     id="email-input"
  *     type="email"
  *     aria-describedby="email-helper email-error"
  *     className={recipeGuiFormField.input()}
  *   />
- *   <span 
- *     id="email-error" 
+ *   <span
+ *     id="email-error"
  *     className={recipeGuiFormField.errorText()}
  *   >
  *     Please enter a valid e-mail address
  *   </span>
  * </div>
  * ```
- * 
+ *
  * @note Always connect labels to inputs using for/htmlFor and id attributes for accessibility.
  * @note Use aria-describedby to link inputs with helper and error text.
  * @note The helper text is visually hidden by default but available to screen readers.
@@ -100,11 +95,10 @@ export const recipeGuiFormField = {
     input: (props: GuiUserInputVariantsProps) => recipeGuiUserInput(props),
     select: (props: GuiNativeSelectVariantsProps) => recipeGuiNativeSelect(props),
     textarea: (props: GuiUserInputVariantsProps) => recipeGuiUserInput(props),
-};
+}
 
-export type GuiFormFieldVariantsProps = 
-  VariantProps<typeof recipeGuiFormField.parent> & 
-  VariantProps<typeof recipeGuiFormField.label> & 
-  VariantProps<typeof recipeGuiUserInput> & 
-  VariantProps<typeof recipeGuiNativeSelect> & 
-  VariantProps<typeof recipeGuiFormField.helperText>;
+export type GuiFormFieldVariantsProps = VariantProps<typeof recipeGuiFormField.parent> &
+    VariantProps<typeof recipeGuiFormField.label> &
+    VariantProps<typeof recipeGuiUserInput> &
+    VariantProps<typeof recipeGuiNativeSelect> &
+    VariantProps<typeof recipeGuiFormField.helperText>
