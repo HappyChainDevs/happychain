@@ -24,6 +24,8 @@ Discord, ...) + seamless 2FA, or via a traditional wallet extension (Metamask, R
 
 ## Lifecycle
 
+
+
 You can run `make help` to get a short description of the most common commands.
 
 - `make setup` — don't forget to run this before anything else, or when dependencies change!
