@@ -41,12 +41,12 @@ jobs:
       - name: Install Node23 (for tests)
         uses: actions/setup-node@v4
         with:
-          node-version: 23
+          node-version: 23.9.0
       
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: '1.1.42'
+          bun-version: 1.2.4
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
