@@ -174,7 +174,7 @@ fund: ## Request testnet funds - 0.1 $HAPPY - for a specific address (requires s
 		echo "Usage: make fund ADDRESS=<valid_ethereum_address>"; \
 		exit 1; \
 	fi
-	@curl -s 'https://happy-testnet-sepolia.hub.caldera.xyz/api/trpc/faucet.requestFaucetFunds?batch=1' \
+	@curl -s 'https://happychain-sepolia-redeploy.hub.caldera.xyz/api/trpc/faucet.requestFaucetFunds?batch=1' \
 		-H 'content-type: application/json' \
 		--data-raw '{"0":{"json":{"rollupSubdomain":"happy-testnet-sepolia","recipientAddress":"$(ADDRESS)","turnstileToken":"","tokenRollupAddress":null},"meta":{"values":{"tokenRollupAddress":["undefined"]}}}}' \
 		| jq '.'

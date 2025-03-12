@@ -1,6 +1,6 @@
 {
     "network-name": "happy-testnet",
-    "rpc-url": "https://happy-testnet-sepolia.rpc.caldera.xyz/http",
+    "rpc-url": "https://rpc.testnet.happy.tech/http",
     "min-entity-stake": 1,
     "min-executor-balance": "100000000000000000",
     "min-entity-unstake-delay": 1,

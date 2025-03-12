@@ -43,7 +43,7 @@ const SessionKeyDemo = () => {
                         className="text-info hover:text-primary/50 underline"
                         target="_blank"
                         rel="noreferrer"
-                        href={`https://happy-testnet-sepolia.explorer.caldera.xyz/op/${hash}`}
+                        href={`https://explorer.testnet.happy.tech/op/${hash}`}
                     >
                         (explorer)
                     </a>
