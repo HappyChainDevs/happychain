@@ -243,6 +243,7 @@ test("Simple transaction executed", async () => {
     transactionQueue.push(transaction)
 
     const previousBlock = await getCurrentBlock()
+    console.log("previousBlock", previousBlock)
 
     await mineBlock(2)
 
