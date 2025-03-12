@@ -1,1 +1,1 @@
-export * from './recipeGuiMenu'
+export * from "./recipeGuiMenu"

@@ -4,5 +4,5 @@ export const coreUserInputStyle = [
     // Display
     "is-hds-input:inline-flex",
     // State: disable
-    "input-disabled:opacity-50 input-disabled:cursor-not-allowed"
+    "input-disabled:opacity-50 input-disabled:cursor-not-allowed",
 ]
