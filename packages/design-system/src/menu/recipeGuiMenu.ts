@@ -1,5 +1,5 @@
 import { type VariantProps, cva, cx } from "cva"
-import { recipeGuiPanel } from "../panel"
+import { recipeGuiPanel } from "../panel/recipeGuiPanel"
 
 const recipeGuiMenuContent = cva({
     base: ["size-full max-h-[29vh] flex flex-col overflow-y-auto"],

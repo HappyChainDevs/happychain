@@ -1,5 +1,5 @@
 import { type VariantProps, cva, cx } from "cva"
-import { recipeGuiExpandable } from "../expandable"
+import { recipeGuiExpandable } from "../expandable/recipeGuiExpandable"
 
 const recipeGuiCollapsibleContainer = cva({
     base: [
