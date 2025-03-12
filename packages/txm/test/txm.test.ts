@@ -621,7 +621,6 @@ test("Finalized transactions are automatically purged from db after finalizedTra
 
     const mockedFinalizedTransactionPurgeTime = 6000
 
-
     Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
         value: mockedFinalizedTransactionPurgeTime,
         configurable: true,
@@ -655,7 +654,6 @@ test("Finalized transactions are automatically purged from db after finalizedTra
 
             break
         }
-
 
         const transactionPersisted = await getPersistedTransaction(transaction.intentId)
 
