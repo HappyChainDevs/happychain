@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { writeFileSync } from "node:fs"
+import { REGEX, findCssVariableNames, safeReadFile } from "./helpers"
 
 /**
  * Utility script to transform DTCG compliant CSS variables generated from Terrazzo CLI
@@ -15,17 +16,6 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs"
  *
  * @see {@link https://tailwindcss.com/docs/theme} Tailwind V4 theming documentation
  */
-
-const REGEX = {
-    rootBlock: /\*?:root\*?\s*{([^}]*)}/,
-    cssVariableName: /--[\w-]+/g,
-    legacyDesignSystemPrefix: /--happy-ds-/g,
-    cssVariableReference: /var\((--[\w-]+)\)/g,
-    hdsInfixPattern: /^--([\w]+)-hds-/,
-    addHdsInfix: /^--([\w]+)-/,
-    commentPattern: /\/\*.*?\*\//,
-    createDeclarationPattern: (varName: string) => new RegExp(`${varName}\\s*:`, "g"),
-}
 
 /**
  * Specifies where content should be placed in the output Tailwind CSS file
@@ -59,25 +49,6 @@ interface FileContentResult {
     isRootContent: boolean
 }
 
-function safeReadFile(filePath: string, isRequired = false): string | null {
-    try {
-        if (!existsSync(filePath)) {
-            if (isRequired) {
-                throw new Error(`Required file not found: ${filePath}`)
-            }
-            console.warn(`File not found: ${filePath}`)
-            return null
-        }
-        return readFileSync(filePath, "utf-8")
-    } catch (error) {
-        if (isRequired) {
-            throw new Error(`Error reading required file: ${filePath}`)
-        }
-        console.warn(`Error reading file: ${filePath}`, error)
-        return null
-    }
-}
-
 /**
  * Extracts CSS variable declarations from the `:root{}` block of a CSS file
  * and remove the design system prefix.
@@ -97,24 +68,8 @@ function extractCssVariables(rawCss: string): FileContentResult {
 }
 
 /**
- * List all CSS variables present
- */
-function findCssVariables(rawCss: string): Set<string> {
-    const cssVariables = new Set<string>()
-    let match: RegExpExecArray | null = REGEX.cssVariableName.exec(rawCss)
-
-    while (match !== null) {
-        cssVariables.add(match[0])
-        match = REGEX.cssVariableName.exec(rawCss)
-    }
-    return cssVariables
-}
-
-/**
  * Creates mappings from original CSS variable names to Tailwind V4 compatible names.
  * Adds the 'hds-' infix to ensure unique variable names within our design system.
- *
- * @see {@link https://tailwindcss.com/docs/theme#default-theme-variable-reference}
  */
 function buildVariableMappings(cssVariables: Set<string>): Record<string, string> {
     const mappings: Record<string, string> = {}
@@ -168,8 +123,6 @@ function processRawCss(rawCss: string, applyTransform: boolean, variableMappings
 /**
  * Determines if a CSS line should be in `@theme` or `@theme inline` based on
  * whether it references other variables
- *
- * @see {@link https://tailwindcss.com/docs/theme#referencing-other-variables}
  */
 function determineThemePosition(cssLine: string): ContentPositionInFile {
     return cssLine.includes("var(--") ? ContentPositionInFile.ThemeInline : ContentPositionInFile.Theme
@@ -195,7 +148,6 @@ function processContentLine(
 
 /**
  * Transforms a CSS file from Terrazzo format to Tailwind V4 CSS-first config.
- * @see {@link https://tailwindcss.com/docs/theme}
  */
 function toTailwindV4Config({ inputPath, outputPath, additionalFiles = [] }: TransformOptions): void {
     try {
@@ -208,10 +160,12 @@ function toTailwindV4Config({ inputPath, outputPath, additionalFiles = [] }: Tra
         }
 
         // 2. Read the main input file
+        console.log(`Reading input CSS from: ${inputPath}`)
         const terrazzoCss = safeReadFile(inputPath, true)
+        if (!terrazzoCss) return
 
         // 3. Extract and collect CSS variables for transformation
-        const terrazzoCssVariables = extractCssVariables(terrazzoCss!)
+        const terrazzoCssVariables = extractCssVariables(terrazzoCss)
         let allCssContent = terrazzoCssVariables.content
 
         // 4. Collect additional css for variable scanning
@@ -226,11 +180,10 @@ function toTailwindV4Config({ inputPath, outputPath, additionalFiles = [] }: Tra
         }
 
         // 5. Build variable mappings
-        const cssVariables = findCssVariables(allCssContent)
+        const cssVariables = findCssVariableNames(allCssContent)
         const variableMappings = buildVariableMappings(cssVariables)
 
         // 6. Process and categorize main file content
-
         applyCssTransformations(terrazzoCssVariables.content, variableMappings)
             .split("\n")
             .forEach((line) => {
@@ -290,40 +243,41 @@ function toTailwindV4Config({ inputPath, outputPath, additionalFiles = [] }: Tra
 
         // 9. Write the final output file
         writeFileSync(outputPath, outputParts.join("\n"), "utf-8")
-        console.log("✅ Tailwind V4 config generated successfully !")
+        console.log(`✅ Tailwind V4 config generated successfully and written to: ${outputPath}`)
     } catch (error) {
-        console.error("❌ Error generating Tailwind config :", error)
+        console.error("❌ Error generating Tailwind config:", error)
         process.exit(1)
     }
 }
 
 /**
- * Parses CLI arguments to extract input and output file paths.
+ * Main function
  */
-function parseCliArgs(args: string[]): { inputPath: string; outputPath: string } {
-    const options = {
-        inputPath: "input.css",
-        outputPath: "output.css",
+function main(): void {
+    // Get command line arguments
+    const args = process.argv.slice(2)
+
+    // Handle both positional and named arguments
+    let inputPath = "input.css"
+    let outputPath = "output.css"
+
+    // Try to get positional arguments first
+    if (args.length >= 1 && !args[0].startsWith("--")) {
+        inputPath = args[0]
     }
 
-    // Process named arguments
+    if (args.length >= 2 && !args[1].startsWith("--")) {
+        outputPath = args[1]
+    }
+
+    // Also check for named arguments
     for (let i = 0; i < args.length; i++) {
         if ((args[i] === "--input" || args[i] === "-i") && i + 1 < args.length) {
-            options.inputPath = args[++i]
+            inputPath = args[++i]
         } else if ((args[i] === "--output" || args[i] === "-o") && i + 1 < args.length) {
-            options.outputPath = args[++i]
+            outputPath = args[++i]
         }
     }
-
-    // Process positional arguments
-    if (args.length > 0 && !args[0].startsWith("-")) options.inputPath = args[0]
-    if (args.length > 1 && !args[1].startsWith("-")) options.outputPath = args[1]
-
-    return options
-}
-
-function main(): void {
-    const { inputPath, outputPath } = parseCliArgs(process.argv.slice(2))
 
     console.log("Tailwind V4 transformer")
     console.log("--------------")
@@ -355,4 +309,7 @@ function main(): void {
     })
 }
 
-main()
+// Run the script if this file is executed directly
+if (require.main === module) {
+    main()
+}

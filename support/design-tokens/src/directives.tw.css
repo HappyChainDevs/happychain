@@ -1,53 +1,62 @@
-/* Custom variants */
-@custom-variant content-focused {
+/* 
+  Custom variants
+*/
+@custom-variant content-focused {  
     &:focus,
     &:focus-within {
-        @slot;
+      @slot;
     }
-}
-
-@custom-variant input-invalid {
+  }
+  
+  @custom-variant input-invalid {  
     &:user-invalid,
     &:has(:user-invalid) {
-        @slot;
+      @slot;
     }
-}
-
-@custom-variant click-disabled {
+  }
+  
+  @custom-variant click-disabled {  
     &[aria-disabled=true],
     &:disabled {
-        @slot;
+      @slot;
     }
-}
-
-@custom-variant input-disabled {
+  }
+  
+  @custom-variant input-disabled {  
     &:is(input, textarea):read-only,
     &:is([data-hds=input]):disabled,
     &[aria-disabled=true]:is([data-hds=input]),
     &:has(:is(input, textarea):read-only),
     &:has(:is([data-hds=input]):disabled),
     &:has([aria-disabled=true]:is([data-hds=input])) {
-        @slot;
+      @slot;
     }
-}
-
-@custom-variant is-hds-input {
+  }
+  
+  @custom-variant is-hds-input {
     &[data-hds=input],
     & > [data-hds=input] {
-        @slot;
+      @slot;
     }
-}
-
-/* Custom utilities */
-@utility bg-gradient-hds-* {
+  }
+  
+  /*
+    Custom utilities
+  */
+  @utility bg-gradient-hds-* {  
     background-image: --value(--gradient-hds-*);
-}
-
-@utility bg-icon-hds-* {
+  }
+  
+  @utility border-gradient-hds-* {  
+    border-image: --value(--gradient-hds-*);
+  }
+  
+  @utility bg-icon-hds-* {  
     background-image: --value(--icon-hds-*);
-}
-
-@utility mask-icon-hds-* {    
+  }
+  
+  @utility mask-icon-hds-* {  
     mask-image: --value(--icon-hds-*);
-}
-
+  }
+  
+  
