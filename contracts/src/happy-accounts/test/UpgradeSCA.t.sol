@@ -9,7 +9,7 @@ import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 
-import {MockERC20Token} from "../../mocks/MockERC20.sol";
+import {MockERC20} from "../../mocks/MockERC20.sol";
 
 import {HappyEntryPoint} from "../core/HappyEntryPoint.sol";
 import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
@@ -66,7 +66,7 @@ contract UpgradeSCATest is Test {
         newImpl = address(new ScrappyAccount(address(happyEntryPoint)));
 
         // Deploy a mock ERC20 token
-        mockToken = address(new MockERC20Token("MockTokenA", "MTA", uint8(18)));
+        mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
 
         // Fund the smart account
         vm.deal(smartAccount, DEPOSIT);
@@ -97,7 +97,7 @@ contract UpgradeSCATest is Test {
         happyEntryPoint.submit(mintTx.encode());
 
         // Verify mint was successful
-        assertEq(MockERC20Token(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
+        assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
     }
 
     /// @dev Test upgradeability via a vanilla ethereum tx
@@ -122,7 +122,7 @@ contract UpgradeSCATest is Test {
         happyEntryPoint.submit(mintTx.encode());
 
         // Verify mint was successful
-        assertEq(MockERC20Token(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
+        assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
     }
 
     /// @dev Test that upgradeability fails when not called by owner or account
@@ -194,6 +194,6 @@ contract UpgradeSCATest is Test {
 
     /// @dev Internal helper function to create calldata for IERC20.mint().
     function _getMintCallData() internal view returns (bytes memory) {
-        return abi.encodeCall(MockERC20Token.mint, (owner, MINT_AMOUNT));
+        return abi.encodeCall(MockERC20.mint, (owner, MINT_AMOUNT));
     }
 }

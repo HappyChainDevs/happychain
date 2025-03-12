@@ -8,7 +8,7 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 
-import {MockERC20Token} from "../../mocks/MockERC20.sol";
+import {MockERC20} from "../../mocks/MockERC20.sol";
 
 import {HappyEntryPoint} from "../core/HappyEntryPoint.sol";
 import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
@@ -32,7 +32,7 @@ contract HappyEntryPointGasEstimator is Test {
     // STATE VARIABLES
 
     DeployHappyAAContracts private deployer;
-    MockERC20Token private mockERC20;
+    MockERC20 private mockERC20;
     HappyEntryPoint private happyEntryPoint;
     ScrappyAccount private scrappyAccount;
     ScrappyPaymaster private scrappyPaymaster;
@@ -70,7 +70,7 @@ contract HappyEntryPointGasEstimator is Test {
         vm.deal(address(scrappyPaymaster), DEPOSIT);
 
         // Deploy a mock ERC20 token
-        mockERC20 = new MockERC20Token("MockTokenA", "MTA", uint8(18));
+        mockERC20 = new MockERC20("MockTokenA", "MTA", uint8(18));
         target = address(mockERC20);
 
         paymaster = address(scrappyPaymaster);
@@ -151,7 +151,6 @@ contract HappyEntryPointGasEstimator is Test {
         HappyTx memory happyTx = _createSignedHappyTx(smartAccount, smartAccount);
         vm.prank(address(happyEntryPoint));
         ScrappyAccount(payable(smartAccount)).payout(happyTx, 0);
-        // console.log("   payout internal gas used: ", gasUsed);
     }
 
     // ====================================================================================================
@@ -260,7 +259,7 @@ contract HappyEntryPointGasEstimator is Test {
 
     /// @dev Internal helper function to create calldata for IERC20.mint().
     function _getMintCallData() internal view returns (bytes memory) {
-        return abi.encodeCall(MockERC20Token.mint, (target, DEPOSIT));
+        return abi.encodeCall(MockERC20.mint, (target, DEPOSIT));
     }
 
     /// @dev Internal helper function to get the nonce of a smart account.

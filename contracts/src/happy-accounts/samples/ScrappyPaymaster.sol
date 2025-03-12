@@ -28,8 +28,11 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     ///      storing the lengths of the four dynamic fields
     uint256 private constant STATIC_FIELDS_SIZE = 212;
 
+    /// @dev Payout function logic cost before payment call
+    uint256 private constant PAYOUT_INTRINSIC_GAS_OVERHEAD = 800; // 742 from the gas report
+
     /// @dev The amount of gas that is added to the payment of the submitter.
-    uint256 private constant PAYMENT_OVERHEAD_GAS = 9480;
+    uint256 private constant PAYOUT_PAYMENT_OVERHEAD_GAS = 9500; // 9368 from the gas report
 
     /// @dev The max size of a tx with empty calldata with an empty access list.
     ///      Given RLP encoding, this should usually be significantly less.
@@ -71,7 +74,8 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // EXTERNAL FUNCTIONS
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
-        uint256 gasStart = gasleft();
+        // [LOGGAS_INTERNAL] uint256 gasOverheadStart = gasleft();
+
         // forgefmt: disable-next-item
         uint256 totalSize = MAX_TX_SIZE
             + STATIC_FIELDS_SIZE
@@ -86,17 +90,18 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
             return SubmitterFeeTooHigh.selector;
         }
 
-        uint256 owed = (consumedGas + PAYMENT_OVERHEAD_GAS) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
-        // ^MAGIC VARIABLE TO DEFINE, which must account of for the cost of the code below, see LOGGAS code for computing it
+        int256 _owed = int256(
+            (consumedGas + PAYOUT_INTRINSIC_GAS_OVERHEAD + PAYOUT_PAYMENT_OVERHEAD_GAS) * happyTx.maxFeePerGas
+        ) + happyTx.submitterFee;
+        uint256 owed = _owed > 0 ? uint256(_owed) : 0;
 
-        // [LOGGAS_INTERNAL] uint256 gasStartOverhead = gasleft();
-        // [LOGGAS_INTERNAL] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
-        owed += gasStart - gasleft();
+        // [LOGGAS_INTERNAL] uint256 gasPaymentStart = gasleft(); // emulates the cost of the top gasleft call
 
         // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
         (payable(tx.origin).call{value: owed}(""));
 
-        // [LOGGAS_INTERNAL] console.log("PAYMENT_OVERHEAD_GAS", gasStartOverhead - gasleft());
+        // [LOGGAS_INTERNAL] console.log("PAYOUT_PAYMENT_OVERHEAD_GAS", gasPaymentStart - gasleft());
+        // [LOGGAS_INTERNAL] console.log("PAYOUT_INTRINSIC_GAS_OVERHEAD", gasOverheadStart - gasPaymentStart);
 
         return 0;
     }

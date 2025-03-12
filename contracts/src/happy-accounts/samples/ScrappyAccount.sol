@@ -60,15 +60,14 @@ contract ScrappyAccount is
     /// @dev ERC-1271 selector
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
 
-    /// @dev Standard Ethereum transaction base cost (21_000) + payout function logic cost (9_600)
-    uint256 private constant INTRINSIC_GAS = 30_600;
+    /// @dev Payout function logic cost before payment call
+    uint256 private constant PAYOUT_INTRINSIC_GAS_OVERHEAD = 400; // 390 from the gas report
+
+    /// @dev The amount of gas that is added to the payment of the submitter.
+    uint256 private constant PAYOUT_PAYMENT_OVERHEAD_GAS = 9500; // 9368 from the gas report
 
     /// @dev Gas overhead for executing the execute function, not measured by gasleft()
-    uint256 private constant GAS_OVERHEAD_BUFFER = 79;
-    // ^ From the gas report, equals total execute function gas usage - output.gas
-
-    /// @dev The amount of gas that is added to the payment of the submitter. (9480 from gas report)
-    uint256 private constant PAYMENT_OVERHEAD_GAS = 9500;
+    uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
 
     /// @dev Interface IDs
     bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
@@ -165,32 +164,33 @@ contract ScrappyAccount is
             return output;
         }
 
-        output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
+        output.gas = startGas - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD;
 
-        // [LOGGAS_INTERNAL] uint256 startGasEmulate = gasleft();
+        // [LOGGAS_INTERNAL] uint256 _startGasEmulate = gasleft(); // To simulate the gasleft() at the top of the function
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
         // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", startGas-endGas);
         // [LOGGAS_INTERNAL] console.log("execute output.gas: ", output.gas);
     }
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
-        uint256 gasStart = gasleft();
+        // [LOGGAS_INTERNAL] uint256 gasOverheadStart = gasleft();
+
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
         }
 
-        uint256 owed =
-            (consumedGas + INTRINSIC_GAS + PAYMENT_OVERHEAD_GAS) * happyTx.maxFeePerGas + uint256(happyTx.submitterFee);
-        // ^MAGIC VARIABLE TO DEFINE, which must account of for the cost of the code below, see LOGGAS code for computing it
+        int256 _owed = int256(
+            (consumedGas + PAYOUT_INTRINSIC_GAS_OVERHEAD + PAYOUT_PAYMENT_OVERHEAD_GAS) * happyTx.maxFeePerGas
+        ) + happyTx.submitterFee;
+        uint256 owed = _owed > 0 ? uint256(_owed) : 0;
 
-        // [LOGGAS_INTERNAL] uint256 gasStartOverhead = gasleft();
-        // [LOGGAS_INTERNAL] uint256 gasStartEmulate = gasleft(); // emulates the cost of the top gasleft call
-        owed += gasStart - gasleft();
+        // [LOGGAS_INTERNAL] uint256 gasPaymentStart = gasleft(); // emulates the cost of the top gasleft call
 
         // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
         (payable(tx.origin).call{value: owed}(""));
 
-        // [LOGGAS_INTERNAL] console.log("PAYMENT_OVERHEAD_GAS: ", gasStartOverhead - gasleft());
+        // [LOGGAS_INTERNAL] console.log("PAYOUT_PAYMENT_OVERHEAD_GAS", gasPaymentStart - gasleft());
+        // [LOGGAS_INTERNAL] console.log("PAYOUT_INTRINSIC_GAS_OVERHEAD", gasOverheadStart - gasPaymentStart);
 
         return 0;
     }
