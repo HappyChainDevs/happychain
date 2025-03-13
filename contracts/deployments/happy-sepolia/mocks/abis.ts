@@ -2,7 +2,6 @@
 import type { MapTuple, ObjectFromTuples, UnionToTuple } from "@happy.tech/common"
 import type { Address } from "viem"
 
-
 const contractToAbi = ({
   "HappyCounter": [
     {
