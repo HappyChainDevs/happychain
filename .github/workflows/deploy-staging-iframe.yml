@@ -18,10 +18,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Check SSH
-        run: |
-          ssh -V
-          bun install git@github.com:nomad-xyz/ExcessivelySafeCall#release/0.0.1
       - name: Build code
         run: |
           printf "${{ vars.STAGING_IFRAME_ENV }}" > apps/iframe/.env
