@@ -16,8 +16,12 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.2
+          bun-version: latest
 
+      - name: Check SSH
+        run: |
+          ssh -V
+          bun install git@github.com:nomad-xyz/ExcessivelySafeCall#release/0.0.1
       - name: Build code
         run: |
           printf "${{ vars.STAGING_IFRAME_ENV }}" > apps/iframe/.env
