@@ -1,5 +1,6 @@
 import { TransactionType, toBigIntSafe } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
+import { shortenAddress } from "@happy.tech/wallet-common"
 import { useMutation } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
@@ -45,6 +46,7 @@ export enum GasFieldName {
     PreVerificationGas = "PreVerificationGas",
     VerificationGasLimit = "VerificationGasLimit",
     CallGasLimit = "CallGasLimit",
+    EstimatedGas = "EstimatedGas",
 }
 
 /**
@@ -232,61 +234,51 @@ export const EthSendTransaction = ({
                                 </FormattedDetailsLine>
                             </SubsectionContent>
                         )}
+                        <SubsectionContent>
+                            <SubsectionTitle>Amount</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedUserOpInfo?.value} HAPPY</FormattedDetailsLine>
+                        </SubsectionContent>
+                    </SubsectionBlock>
+                </SectionBlock>
+                <SectionBlock>
+                    <SubsectionBlock>
+                        <SubsectionContent>
+                            <SubsectionTitle>Transaction type</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedUserOpInfo?.type}</FormattedDetailsLine>
+                        </SubsectionContent>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedUserOpInfo?.maxFeePerGas}</FormattedDetailsLine>
+                        </SubsectionContent>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedUserOpInfo?.maxPriorityFeePerGas}</FormattedDetailsLine>
+                        </SubsectionContent>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.PreVerificationGas}</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedUserOpInfo?.preVerificationGas}</FormattedDetailsLine>
+                        </SubsectionContent>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.VerificationGasLimit}</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedUserOpInfo?.verificationGasLimit}</FormattedDetailsLine>
+                        </SubsectionContent>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.CallGasLimit}</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedUserOpInfo?.callGasLimit}</FormattedDetailsLine>
+                        </SubsectionContent>
+                        <SubsectionContent>
+                            <SubsectionTitle>{GasFieldName.EstimatedGas}</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedUserOpInfo?.estimatedGas}</FormattedDetailsLine>
+                        </SubsectionContent>
+                    </SubsectionBlock>
+                </SectionBlock>
 
-                                <SubsectionContent>
-                                    <SubsectionTitle>Amount</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedUserOpInfo?.value} HAPPY</FormattedDetailsLine>
-                                </SubsectionContent>
-                            </SubsectionBlock>
-                        </SectionBlock>
-                        <SectionBlock>
-                            <SubsectionBlock>
-                                <SubsectionContent>
-                                    <SubsectionTitle>Transaction type</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedUserOpInfo?.type}</FormattedDetailsLine>
-                                </SubsectionContent>
-                                <SubsectionContent>
-                                    <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedUserOpInfo?.maxFeePerGas}</FormattedDetailsLine>
-                                </SubsectionContent>
-                                <SubsectionContent>
-                                    <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
-                                    <FormattedDetailsLine>
-                                        {formattedUserOpInfo?.maxPriorityFeePerGas}
-                                    </FormattedDetailsLine>
-                                </SubsectionContent>
-                                <SubsectionContent>
-                                    <SubsectionTitle>{GasFieldName.PreVerificationGas}</SubsectionTitle>
-                                    <FormattedDetailsLine>
-                                        {formattedUserOpInfo?.preVerificationGas}
-                                    </FormattedDetailsLine>
-                                </SubsectionContent>
-                                <SubsectionContent>
-                                    <SubsectionTitle>{GasFieldName.VerificationGasLimit}</SubsectionTitle>
-                                    <FormattedDetailsLine>
-                                        {formattedUserOpInfo?.verificationGasLimit}
-                                    </FormattedDetailsLine>
-                                </SubsectionContent>
-                                <SubsectionContent>
-                                    <SubsectionTitle>{GasFieldName.CallGasLimit}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedUserOpInfo?.callGasLimit}</FormattedDetailsLine>
-                                </SubsectionContent>
-                                <SubsectionContent>
-                                    <SubsectionTitle>{"Estimated Gas:"}</SubsectionTitle>
-                                    <FormattedDetailsLine>{formattedUserOpInfo?.estimatedGas}</FormattedDetailsLine>
-                                </SubsectionContent>
-                            </SubsectionBlock>
-                        </SectionBlock>
-                    </TabContent>
-                    <TabContent value={RequestTabsValues.Raw}>
-                        <SectionBlock>
-                            <SubsectionBlock>
-                                {decodedData && <DecodedData data={decodedData} />}
-                                <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
-                            </SubsectionBlock>
-                        </SectionBlock>
-                    </TabContent>
-                </Tabs>
+                <SectionBlock>
+                    <SubsectionBlock>
+                        {decodedData && <DecodedData data={decodedData} />}
+                        <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                    </SubsectionBlock>
+                </SectionBlock>
                 {tx.type === TransactionType.EIP4844 && (
                     <SectionBlock>
                         <BlobTxWarning onReject={reject} />

@@ -1,7 +1,6 @@
 import { type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 
 import {
-    type ApprovedRequestPayload,
     AuthState,
     BasePopupProvider,
     type EIP1193RequestParameters,
@@ -75,7 +74,7 @@ export class SocialWalletHandler extends BasePopupProvider implements EIP1193Con
         HappyProviderImplem.instance().displayError(OverlayErrorCode.PopupBlocked)
     }
 
-    protected override async requiresUserApproval(args: ApprovedRequestPayload): Promise<boolean> {
+    protected override async requiresUserApproval(args: EIP1193RequestParameters): Promise<boolean> {
         const key = createUUID()
         const { promise, resolve, reject } = promiseWithResolvers<boolean>()
         this.inFlightChecks.set(key, { resolve, reject })

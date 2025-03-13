@@ -1,7 +1,12 @@
 import type { PrepareUserOperationReturnType } from "viem/account-abstraction"
 import type { EIP1193ErrorObject } from "../errors"
 import type { OverlayErrorCode } from "../errors/overlay-errors"
-import type { EIP1193EventName, EIP1193RequestMethods, EIP1193RequestParameters, EIP1193RequestResult } from "./eip1193.ts"
+import type {
+    EIP1193EventName,
+    EIP1193RequestMethods,
+    EIP1193RequestParameters,
+    EIP1193RequestResult,
+} from "./eip1193.ts"
 import type { EIP6963ProviderInfo } from "./eip6963"
 import type { AuthState, HappyUser } from "./happyUser"
 import type { ProviderEventError, ProviderEventPayload } from "./payloads"
