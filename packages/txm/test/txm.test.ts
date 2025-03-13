@@ -639,22 +639,9 @@ test("Finalized transactions are automatically purged from db after finalizedTra
     expect(transactionPersisted.status).toBe(TransactionStatus.Success)
 
     const updatedAt = transactionPersisted.updatedAt
+    const purgeTime = updatedAt + mockedFinalizedTransactionPurgeTime
 
-    while (true) {
-        const now = Date.now()
-        const purgeTime = updatedAt + txm.finalizedTransactionPurgeTime
-
-        if (now > purgeTime) {
-            // We give a 2 second margin to avoid race conditions, because it's possible that the transaction
-            // hasn't been purged yet, so we wait for the next block
-            if (now - 2000 < purgeTime) {
-                await mineBlock()
-                continue
-            }
-
-            break
-        }
-
+    while (Date.now() < purgeTime) {
         const transactionPersisted = await getPersistedTransaction(transaction.intentId)
 
         expect(transactionPersisted).toBeDefined()
@@ -662,6 +649,8 @@ test("Finalized transactions are automatically purged from db after finalizedTra
 
         await mineBlock()
     }
+
+    await mineBlock()
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
 
