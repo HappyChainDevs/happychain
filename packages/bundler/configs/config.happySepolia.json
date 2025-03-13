@@ -2,7 +2,7 @@
     "network-name": "happy-testnet",
     "rpc-url": "https://rpc.testnet.happy.tech/http",
     "min-entity-stake": 1,
-    "min-executor-balance": "100000000000000000",
+    "min-executor-balance": "10000000000000000",
     "min-entity-unstake-delay": 1,
     "max-bundle-wait": 100,
     "max-bundle-size": 10,
