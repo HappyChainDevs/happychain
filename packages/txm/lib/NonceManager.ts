@@ -1,26 +1,7 @@
-import { ValueType, metrics } from "@opentelemetry/api"
 import type { TransactionManager } from "./TransactionManager"
+import { nonceManagerGauge, returnedNonceCounter, returnedNonceQueueGauge } from "./telemetry/metrics"
 
-const meter = metrics.getMeter("txm.nonce-manager")
-
-const nonceManagerGauge = meter.createGauge("txm.nonce-manager.nonce", {
-    description: "Current nonce",
-    unit: "count",
-    valueType: ValueType.INT,
-})
-
-const returnedNonceCounter = meter.createCounter("txm.nonce-manager.returned-nonce", {
-    description: "Number of transaction nonces that were reserved but returned to the queue",
-    unit: "count",
-    valueType: ValueType.INT,
-})
-
-const returnedNonceQueueGauge = meter.createGauge("txm.nonce-manager.returned-nonce-queue", {
-    description: "Quantity of returned nonces in the queue",
-    unit: "count",
-    valueType: ValueType.INT,
-})
-
+/*
 /*
  * This class manages the nonce of the account that the transaction manager is using.
  *

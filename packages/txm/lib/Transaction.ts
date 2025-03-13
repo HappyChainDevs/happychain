@@ -1,18 +1,10 @@
 import { type UUID, bigIntReplacer, bigIntReviver, createUUID } from "@happy.tech/common"
-import { ValueType, metrics } from "@opentelemetry/api"
 import type { Insertable, Selectable } from "kysely"
 import type { Address, ContractFunctionArgs, Hash } from "viem"
 import type { LatestBlock } from "./BlockMonitor"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionTable } from "./db/types.js"
-
-const meter = metrics.getMeter("txm.transaction")
-
-const transactionStatusChangeCounter = meter.createCounter("txm.transaction.status-change", {
-    description: "Count of transactions transitioning to a different status",
-    unit: "count",
-    valueType: ValueType.INT,
-})
+import { transactionStatusChangeCounter } from "./telemetry/metrics"
 
 export enum TransactionStatus {
     /**
