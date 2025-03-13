@@ -1,9 +1,10 @@
 import { LogTag, Logger } from "@happy.tech/common"
+import { context, trace } from "@opentelemetry/api"
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { TxmMetrics } from "./telemetry/metrics"
-
+import { TraceMethod } from "./telemetry/traces"
 /**
  * A type alias for {@link Block} with the `blockTag` set to `"latest"`, ensuring type definitions correspond to the latest block.
  */
@@ -31,11 +32,15 @@ export class BlockMonitor {
         })
     }
 
+    @TraceMethod("txm.block-monitor.on-new-block")
     private onNewBlock(block: LatestBlock | undefined) {
         if (!block) {
             Logger.instance.error(LogTag.TXM, "Received undefined block")
             return
         }
+
+        const span = trace.getSpan(context.active())!
+        span.setAttribute("block.number", Number(block.number))
 
         if (this.latestProcessedBlockNumber && block.number <= this.latestProcessedBlockNumber) {
             Logger.instance.warn(

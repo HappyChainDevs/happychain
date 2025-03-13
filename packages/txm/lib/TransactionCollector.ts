@@ -1,9 +1,11 @@
 import { LogTag, Logger } from "@happy.tech/common"
+import { context, trace } from "@opentelemetry/api"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { TxmMetrics } from "./telemetry/metrics"
+import { TraceMethod } from "./telemetry/traces"
 
 /**
  * This module is responsible for retrieving transactions from the originators when a new block is received.
@@ -20,7 +22,10 @@ export class TransactionCollector {
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
+    @TraceMethod("txm.transaction-collector.on-new-block")
     private async onNewBlock(block: LatestBlock) {
+        const span = trace.getSpan(context.active())!
+
         const { maxFeePerGas, maxPriorityFeePerGas } = this.txmgr.gasPriceOracle.suggestGasForNextBlock()
 
         const transactionUnsorted = await Promise.all(this.txmgr.collectors.map((c) => c(block)))
@@ -33,6 +38,13 @@ export class TransactionCollector {
             })
 
         const saveResult = await this.txmgr.transactionRepository.saveTransactions(transactionsBatch)
+
+        for (const transaction of transactionsBatch) {
+            span.addEvent("transaction-collector.collected-transaction", {
+                transactionIntentId: transaction.intentId,
+                blockNumber: Number(block.number),
+            })
+        }
 
         if (saveResult.isErr()) {
             for (const transaction of transactionsBatch) {
