@@ -27,7 +27,7 @@ export const WalletFrame = ({ dragging }: WalletFrameProps) => {
             // When 'open' it will be a standard div. A button here doesn't work, as the iframe fills
             // the element, swallowing all clicks, rendering the button un-clickable.
             // Iframe is also not a valid descendant of a button.
-            role={!isOpen ? "button" : undefined}
+            role={!isOpen ? "button" : "generic"}
             aria-label={!isOpen ? "Open Wallet" : ""}
             tabIndex={0}
             ref={frame}
