@@ -1,9 +1,11 @@
+import { context, trace } from "@opentelemetry/api"
 import { type Result, err, ok } from "neverthrow"
 import type { TransactionRequestEIP1559 } from "viem"
 import { TransactionRejectedRpcError, encodeFunctionData, keccak256 } from "viem"
 import type { EstimateGasErrorCause } from "./GasEstimator.js"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
+import { TraceMethod } from "./telemetry/traces"
 
 export type AttemptSubmissionParameters = Omit<Attempt, "hash" | "gas">
 
@@ -44,6 +46,7 @@ export class TransactionSubmitter {
         this.txmgr = txmgr
     }
 
+    @TraceMethod("txm.transaction-submitter.submit-new-attempt")
     public async submitNewAttempt(
         transaction: Transaction,
         payload: AttemptSubmissionParameters,
@@ -62,15 +65,19 @@ export class TransactionSubmitter {
         )
     }
 
+    @TraceMethod("txm.transaction-submitter.resubmit-attempt")
     async resubmitAttempt(transaction: Transaction, attempt: Attempt): Promise<AttemptSubmissionResult> {
         return await this.sendAttempt(transaction, attempt, false)
     }
 
+    @TraceMethod("txm.transaction-submitter.send-attempt")
     private async sendAttempt(
         transaction: Transaction,
         attempt: Omit<Attempt, "hash" | "gas"> & Partial<Pick<Attempt, "hash" | "gas">>,
         saveAttempt = false,
     ): Promise<AttemptSubmissionResult> {
+        const span = trace.getSpan(context.active())!
+
         let transactionRequest: TransactionRequestEIP1559 & { gas: bigint }
 
         if (attempt.type === AttemptType.Cancellation) {
@@ -166,6 +173,16 @@ export class TransactionSubmitter {
                 })
             }
         }
+
+        span.addEvent("transaction-submitter.attempt-submission", {
+            transactionIntentId: transaction.intentId,
+            attemptType: attempt.type,
+            attemptHash: hash,
+            attemptNonce: attempt.nonce,
+            attemptMaxFeePerGas: Number(attempt.maxFeePerGas),
+            attemptMaxPriorityFeePerGas: Number(attempt.maxPriorityFeePerGas),
+            attemptGas: Number(transactionRequest.gas),
+        })
 
         const sendRawTransactionResult = await this.txmgr.viemWallet.safeSendRawTransaction({
             serializedTransaction: signedTransaction,
