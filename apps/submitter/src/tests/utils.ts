@@ -11,19 +11,21 @@ export function createTestAccount(privateKey = generatePrivateKey()) {
         account,
         createHappyTx(nonceTrack = 0n) {
             const nonceValue = nonceMap.get(nonceTrack) ?? 0n
-            const tx = createMockTokenAMintHappyTx(account.address, nonceValue)
+            const tx = createMockTokenAMintHappyTx(account.address)
+            tx.nonceTrack = nonceTrack
+            tx.nonceValue = nonceValue
             nonceMap.set(nonceTrack, nonceValue + 1n)
             return tx
         },
     }
 }
 
-function createMockTokenAMintHappyTx(account: Address, nonceValue: bigint): HappyTx {
+function createMockTokenAMintHappyTx(account: Address): HappyTx {
     return {
         account,
         dest: deployment.MockTokenA,
         nonceTrack: 0n, // using as default
-        nonceValue: nonceValue,
+        nonceValue: 0n, // as default
         value: 0n,
         // paymaster is default
         paymaster: zeroAddress,

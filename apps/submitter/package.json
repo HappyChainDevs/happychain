@@ -14,6 +14,7 @@
     "dependencies": {
         "@hono/zod-validator": "^0.4.3",
         "@scalar/hono-api-reference": "^0.5.175",
+        "@tyriar/fibonacci-heap": "^2.0.9",
         "hono": "^4.7.2",
         "hono-openapi": "^0.4.4",
         "viem": "^2.21.53",
