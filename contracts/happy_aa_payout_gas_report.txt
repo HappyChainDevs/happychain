@@ -1,0 +1,15 @@
+ScrappyAccount payout gas usage
+   ----------------------------------------------------
+  Total payout function gas usage:  9766
+
+ScrappyPaymaster payout gas usage
+   ----------------------------------------------------
+  Total payout function gas usage:  10159
+
+ScrappyAccount payout gas usage
+   ----------------------------------------------------
+  PAYMENT_OVERHEAD_GAS:  9480
+
+ScrappyPaymaster payout gas usage
+   ----------------------------------------------------
+  PAYMENT_OVERHEAD_GAS 9480

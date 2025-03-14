@@ -66,7 +66,8 @@ watch: ## Builds contracts & runs tests on contract change
 .PHONY: watch
 
 clean: ## Removes build output
-	forge clean
+	@# Avoid failures when trying to clean after a preceding `make nuke`.
+	forge clean > /dev/null 2> /dev/null || true
 	rm -rf node_modules/.tmp
 .PHONY: clean
 
@@ -93,16 +94,85 @@ test-gas: ## Runs test and generate a gas report
 	forge test --gas-report
 .PHONY: test-gas
 
+test-happyTxLib:
+	forge test --match-contract HappyTxLibTest -vvv
+.PHONY: test-happyTxLib
+
+test-scrappyAccountFactory:
+	forge test --match-contract ScrappyAccountFactoryTest -vvv
+.PHONY: test-scrappyAccountFactory
+
+test-scrappyAccount-upgradeability:
+	forge test --match-contract UpgradeSCATest -vvv
+.PHONY: test-scrappyAccount-upgradeability
+
+test-predictDeploymentAddress:
+	@bun run getAddressERC1967Tests
+.PHONY: test-predictDeploymentAddress
+
 ####################################################################################################
-# Demos & Reports
+# Gas Logging
+
+# Turn gas logging on by uncommenting the measurement statements
+gas-logging-on:
+	@find . -type f -name "*.sol" -exec sed -i '' 's|// \[LOGGAS\]|/* [LOGGAS] */|g' {} +
+	@echo "Gas logging turned ON"
+.PHONY: gas-logging-on
+
+# Turn gas logging off by commenting out the measurement statements
+gas-logging-off:
+	@find . -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS\] \*/|// [LOGGAS]|g' {} +
+	@echo "Gas logging turned OFF"
+.PHONY: gas-logging-off
+
+# Turn internal gas logging on for ScrappyAccount and ScrappyPaymaster
+internal-gas-logging-on:
+	@find . -type f -name "*.sol" -exec sed -i '' 's|// \[LOGGAS_INTERNAL\]|/* [LOGGAS_INTERNAL] */|g' {} +
+	@echo "Internal Gas logging turned ON"
+.PHONY: internal-gas-logging-on
+
+# Turn internal gas logging off for ScrappyAccount and ScrappyPaymaster
+internal-gas-logging-off:
+	@find . -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS_INTERNAL\] \*/|// [LOGGAS_INTERNAL]|g' {} +
+	@echo "Internal Gas logging turned OFF"
+.PHONY: internal-gas-logging-off
+
+####################################################################################################
+# Reports (require a local Ethereum node (Anvil) to be running)
+
+happy-aa-gas-report: ## Generates a gas report for the happy-aa contracts
+	@make entrypoint-submit-gas
+	@make internal-functions-gas
+.PHONY: happy-aa-gas-report
+
+entrypoint-submit-gas: ## Generates a gas report for the HappyEntrypoint's submit function.
+	@make gas-logging-on
+	@echo "Running submit function estimation tests..."
+	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForSelfPayingTx --rpc-url $(RPC_LOCAL) --isolate | awk '/HappyEntryPoint Gas Report For Self-Paying Transactions/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForPaymasterSponsoredTx --rpc-url $(RPC_LOCAL) --isolate | awk '/HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@make gas-logging-off
+.PHONY: entrypoint-submit-gas
+
+internal-functions-gas: # Generates gas reports for the sample implementations' execute and payout functions.
+	@make internal-gas-logging-on
+	@echo "Running payout and execute function gas estimation tests..."
+	@forge test -vvv --match-test testEstimateScrappyAccountExecuteGas --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount execute gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateScrappyAccountPayoutGas --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateScrappyPaymasterPayoutGas --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyPaymaster payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@forge test -vvv --match-test testEstimateFunctionDispatchOverhead --rpc-url $(RPC_LOCAL) --isolate | awk '/HappyTxLib txGasFromCallGas payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@make internal-gas-logging-off
+.PHONY: internal-functions-gas
 
 paymaster-gas: ## Generates a gas report for the Paymaster contract.
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/^Logs:/{p=1; next} p && !/^Suite result:/ && !/^Ran [0-9]+ test suite/' | sed 's/^  //' | sed '/^$$/d' > paymaster_gas_report.txt
-.PHONY: gas-paymaster
+	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' > paymaster_gas_report.txt
+.PHONY: paymaster-gas
 
 paymaster-flamechart: ## Generates a flamechart for the gas usage of the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart
 .PHONY: test-aa-gas-flamechart
+
+####################################################################################################
+# Demos
 
 aa-demo: ## All-in-one run of the AA demo script, including Anvil & contract deployments.
 	@lsof -ti :$(ANVIL_PORT) | xargs kill -9 2>/dev/null || true
@@ -349,6 +419,11 @@ endif
 	$(eval $(call set-deployment-name,l1-upgradeable))
 	make deploy DEPLOY_SCRIPT=DeployL1Upgradeable.s.sol
 .PHONY: deploy-l1-upgradeable
+
+deploy-happy-aa: ## Deploys the Happy AA contracts.
+	$(eval $(call set-deployment-name,happy-aa))
+	make deploy DEPLOY_SCRIPT=DeployHappyAA.s.sol
+.PHONY: deploy-happy-aa
 
 deploy-aa: ## Deploys the AA contracts.
 	$(eval $(call set-deployment-name,aa))

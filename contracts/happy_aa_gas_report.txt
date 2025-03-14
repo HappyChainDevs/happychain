@@ -1,0 +1,55 @@
+HappyEntryPoint Gas Report For Self-Paying Transactions
+  
+1. First Transaction (Cold + Uninitialized Storage)
+   ----------------------------------------------------
+  HappyTxLib.decode gas usage:  3964
+  excessivelySafeCall (execute) overhead:  5543
+  txGasFromCallGas overall gas usage:  383
+  excessivelySafeCall  (payout) overhead:  2374
+     Tx Gas used:  131644
+  
+2. Second Transaction (Cold + Initialized Storage)
+   ----------------------------------------------------
+  HappyTxLib.decode gas usage:  3964
+  excessivelySafeCall (execute) overhead:  5543
+  txGasFromCallGas overall gas usage:  383
+  excessivelySafeCall  (payout) overhead:  2374
+     TxGas used:  80344
+
+HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
+  
+1. First Transaction (Cold + Uninitialized Storage)
+   ----------------------------------------------------
+  HappyTxLib.decode gas usage:  3964
+  excessivelySafeCall (execute) overhead:  5543
+  txGasFromCallGas overall gas usage:  383
+  excessivelySafeCall  (payout) overhead:  4314
+     Tx Gas used:  134014
+  
+2. Second Transaction (Cold + Initialized Storage)
+   ----------------------------------------------------
+  HappyTxLib.decode gas usage:  3964
+  excessivelySafeCall (execute) overhead:  5543
+  txGasFromCallGas overall gas usage:  383
+  excessivelySafeCall  (payout) overhead:  4314
+     TxGas used:  82714
+
+ScrappyAccount execute gas usage
+   ----------------------------------------------------
+  execute function gas usage:  49429
+  execute output.gas:  49429
+
+ScrappyAccount payout gas usage
+   ----------------------------------------------------
+  PAYOUT_PAYMENT_OVERHEAD_GAS 9368
+  PAYOUT_INTRINSIC_GAS_OVERHEAD 390
+
+ScrappyPaymaster payout gas usage
+   ----------------------------------------------------
+  PAYOUT_PAYMENT_OVERHEAD_GAS 9365
+  PAYOUT_INTRINSIC_GAS_OVERHEAD 739
+
+HappyTxLib txGasFromCallGas payout gas usage
+   ----------------------------------------------------
+    txGasFromCallGas function gas usage: 3
+
