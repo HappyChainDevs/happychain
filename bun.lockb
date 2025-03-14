@@ -1,0 +1,6 @@
+This file is necessary for Cloudflare Pages to detect bun!
+It does not yet (March 2025) support detecting the text-based bun.lock.
+
+Cloudflare will also fail to `bun install` from our makefile if it's the first bun invocation (which
+we can enforce via `SKIP_DEPENDENCY_INSTALL=1`, choking on the Github dependencies, but if installed
+via their build system (and using bun), then things work.
