@@ -1,6 +1,13 @@
+import { toast } from "sonner"
+import { walletClient } from "../clients"
+
 const CallBatchDemo = () => {
     async function getCapabilities() {
-        // const caps = await walletClient?.getCapabilities()
+        const caps = await walletClient?.getCapabilities()
+
+        console.log(caps)
+
+        toast.info("Check console for supported capabilities!")
     }
 
     async function sendBatch() {
