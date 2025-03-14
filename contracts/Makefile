@@ -66,7 +66,8 @@ watch: ## Builds contracts & runs tests on contract change
 .PHONY: watch
 
 clean: ## Removes build output
-	forge clean
+	@# Avoid failures when trying to clean after a preceding `make nuke`.
+	forge clean > /dev/null 2> /dev/null || true
 	rm -rf node_modules/.tmp
 .PHONY: clean
 
