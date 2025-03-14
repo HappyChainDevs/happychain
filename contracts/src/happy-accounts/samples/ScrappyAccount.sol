@@ -71,10 +71,10 @@ contract ScrappyAccount is
     uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
 
     /// @dev Buffer to account for gas costs of returning the function if inner call runs out of gas.
-    uint256 private constant POST_OOG_BUFFER = 500;
+    uint256 private constant POST_OOG_BUFFER = 1000;
 
     /// @dev Estimated gas cost of making an external call
-    uint256 private constant CALL_GAS_COST = 3000;
+    uint256 private constant CALL_GAS_COST = 3500;
 
     /// @dev Overhead in an external call's gas usage when tx.value > 0
     uint256 private constant NON_ZERO_VALUE_OVERHEAD = 6700;
@@ -178,7 +178,7 @@ contract ScrappyAccount is
 
         // Pre-emptive check for extremely low gas
         if (callGasAmount == 0) {
-            // output.gas = 1; //! temp to debug without console
+            output.gas = 1; //! temp to debug without console
             output.revertData = abi.encodeWithSelector(OutOfGas.selector);
             return output;
         }
@@ -191,15 +191,15 @@ contract ScrappyAccount is
 
         // Calculate gas used in the call
         uint256 gasUsed = preCallGas - gasleft();
-        uint256 gasUsageRatio = ((gasUsed - CALL_GAS_COST) * 100) / callGasAmount;
+        uint256 gasUsageRatio = (gasUsed * 100) / callGasAmount;
 
         if (!success) {
-            // If returnData is empty and gas usage is very high (>99%), it's likely an OOG error
-            if (returnData.length == 0 && gasUsageRatio > 99) {
-                // output.gas = 2; //! temp to debug without console
+            // If returnData is empty and gas usage is very high (>95%), it's likely an OOG error
+            if (returnData.length == 0 && gasUsageRatio > 95) {
+                output.gas = 2; //! temp to debug without console
                 output.revertData = abi.encodeWithSelector(OutOfGas.selector);
             } else {
-                // output.gas = 3; //! temp to debug without console
+                output.gas = 3; //! temp to debug without console
                 output.revertData = returnData;
             }
             return output;

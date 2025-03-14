@@ -307,7 +307,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 gasBeforePayout = gasleft();
 
         // [LOGGAS] uint256 payoutGasStart = gasleft();
-
+        // TODO: this can just be `gasleft()` if tx.gas = happyTx.gasLimit (not need for extra variables)
         int256 payoutCallGas =
             int256(uint256(happyTx.gasLimit)) - int256(gasStart - gasBeforePayout + POST_OOG_GAS_BUFFER);
         if (payoutCallGas <= 0) revert OutOfGas();

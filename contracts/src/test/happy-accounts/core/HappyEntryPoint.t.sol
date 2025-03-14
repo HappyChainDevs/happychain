@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {console} from "forge-std/Script.sol";
 
 import {HappyTxTestUtils} from "../Utils.sol";
 import {MockERC20} from "../../../mocks/MockERC20.sol";
@@ -23,7 +22,6 @@ import {
     CallStatus,
     SubmitOutput,
     HappyEntryPoint,
-    PaymentFailed,
     ValidationFailed,
     ValidationReverted
 } from "../../../happy-accounts/core/HappyEntryPoint.sol";
@@ -116,8 +114,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         assertLt(finalBalance, initialBalance);
 
         uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
-        console.log("intialTokenBalance", initialTokenBalance);
-        console.log("finalTokenBalance", finalTokenBalance);
         assertEq(finalTokenBalance, initialTokenBalance + TOKEN_MINT_AMOUNT);
     }
 
@@ -501,13 +497,12 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         }
     }
 
-    //! OOG inside execute(), causes a revert, instead of using the OOG buffer to handle the post OOG code
     function testExecuteWithLowExecutionGasLimitInsideExecuteCallOOG() public {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
 
         happyTx.gasLimit = 85_000; // This is the gas used for everything except call() to execute inside `safeExternalCall`
-        happyTx.executeGasLimit = 40_600; // Reverts on the preExecutionCheck
+        happyTx.executeGasLimit = 14_600; // Goes into the `mint` call and runs out of gas
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Submit the transaction
@@ -525,13 +520,37 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         }
     }
 
-    function testExecuteWithLowExecutionGasNonZeroValueLimitOOG() public {
+    function testExecuteWithLowExecutionGasLimitNonZeroValueOOG() public {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
 
         happyTx.gasLimit = 75_000; // This is the gas used for everything except call() to execute inside `safeExternalCall`
         happyTx.value = 10 wei; // value > 0 uses 6700 more gas in a CALL
         happyTx.executeGasLimit = 4600 + 6700; // Lower than this, and there isn't enough gas to revert, also gives memory OOG
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        (bool success, bytes memory returnData) = address(happyEntryPoint).call{
+            gas: uint256(happyTx.gasLimit + happyTx.executeGasLimit)
+        }(abi.encodeCall(HappyEntryPoint.submit, (happyTx.encode())));
+        if (success) {
+            SubmitOutput memory output = abi.decode(returnData, (SubmitOutput));
+
+            // The function should return output.callStatus = CallReverted
+            _assertExpectedSubmitOutput(
+                output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(OutOfGas.selector)
+            );
+            assertGe(output.executeGas, 0);
+        }
+    }
+
+    function testExecuteWithLowExecutionGasLimitNonZeroValueInsideCallOOG() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+
+        happyTx.gasLimit = 75_000; // This is the gas used for everything except call() to execute inside `safeExternalCall`
+        happyTx.value = 10 wei; // value > 0 (uses 6700 more gas in a CALL)
+        happyTx.executeGasLimit = 4600 + 6700 + 25000;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Submit the transaction
