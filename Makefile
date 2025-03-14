@@ -356,7 +356,7 @@ docs.build:
 .PHONY: docs.build
 
 # Fully self-contained target to build docs, to be used by docs page host.
-docs.contained: setup.ts shared.dev sdk.dev docs.build
+docs.contained: setup setup.ts shared.dev sdk.dev docs.build
 .PHONY: docs.contained
 
 docs.preview: ## Serve already-built docs
