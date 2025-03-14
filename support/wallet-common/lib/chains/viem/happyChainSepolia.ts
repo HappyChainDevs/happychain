@@ -5,7 +5,7 @@ import type { Chain } from "./type"
 
 /**
  * Contract Info can be found here:
- * https://happychain-sepolia-redeploy.hub.caldera.xyz/
+ * https://testnet.happy.tech
  */
 const rollup = {
     genesis: {
