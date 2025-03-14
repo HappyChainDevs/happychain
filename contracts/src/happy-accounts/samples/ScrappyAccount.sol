@@ -219,6 +219,7 @@ contract ScrappyAccount is
         return abi.encodeWithSelector(validationResult);
     }
 
+<<<<<<< HEAD
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
         uint256 gasStart = gasleft();
         (bool found, bytes memory executorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, EXECUTOR_KEY);

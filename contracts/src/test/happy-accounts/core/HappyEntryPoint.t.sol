@@ -459,8 +459,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx.submitterFee = -1_200_000_000 * 500_000; // happyTx.maxFeePerGas * overEstimation of consumedGas
         happyTx.validatorData = signHappyTx(happyTx, privKey);
-        
-        // The function should never return if tx.gasPrice <= happyTx.maxFeePerGas, 
+
+        // The function should never return if tx.gasPrice <= happyTx.maxFeePerGas,
         // in which case the expected charged amount = 0
 
         // Submit the transaction

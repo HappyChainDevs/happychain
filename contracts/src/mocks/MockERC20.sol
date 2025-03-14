@@ -81,9 +81,8 @@ contract MockERC20 is IERC20 {
 
     /// @dev Reverts with no data. Used for testing purposes.
     function alwaysRevertEmpty() external pure {
-        assembly {
-            revert(0, 0)
-        }
+        // solhint-disable-next-line reason-string
+        revert();
     }
 
     /*//////////////////////////////////////////////////////////////
