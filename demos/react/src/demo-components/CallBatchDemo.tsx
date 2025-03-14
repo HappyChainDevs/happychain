@@ -10,10 +10,6 @@ const CallBatchDemo = () => {
         toast.info("Check console for supported capabilities!")
     }
 
-    async function sendBatch() {
-        // const bundles = await walletClient?.sendCalls()
-    }
-
     async function getCallsStatus() {
         // const stat = await walletClient?.getCallsStatus()
     }
@@ -28,14 +24,6 @@ const CallBatchDemo = () => {
                 className="rounded-lg bg-sky-300 p-2 shadow-xl font-mono truncate"
             >
                 wallet_getCapabilities
-            </button>
-
-            <button
-                type="button"
-                onClick={sendBatch}
-                className="rounded-lg bg-sky-300 p-2 shadow-xl text-center font-mono"
-            >
-                wallet_sendCalls
             </button>
 
             <button type="button" onClick={getCallsStatus} className="rounded-lg bg-sky-300 p-2 shadow-xl font-mono">
