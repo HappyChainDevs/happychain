@@ -29,7 +29,7 @@ export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Pr
         nonceValue: happyTx.nonceValue,
 
         /** EntryPoint to which the HappyTx was submitted onchain. */
-        entryPoint: receipt.to as `0x${string}`,
+        entryPoint: receipt.to,
 
         /** Result of onchain submission of the HappyTx. */
         status: EntryPointStatus.Success,
@@ -77,7 +77,7 @@ export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Pr
             to: receipt.to,
             transactionHash: receipt.transactionHash,
             transactionIndex: receipt.transactionIndex,
-            type: receipt.type as TransactionTypeName,
+            type: receipt.type,
         },
     }
 }

@@ -28,6 +28,7 @@ export async function simulateSubmit(
 
     const tx = decodeHappyTx(req.args[0])
     const happyTxHash = computeHappyTxHash(tx)
+
     const needsGasHotfix = tx.paymaster !== tx.account && !tx.gasLimit && !tx.executeGasLimit
     try {
         const { request, result } = await publicClient.simulateContract(
