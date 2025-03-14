@@ -74,7 +74,7 @@ export class DrandService {
         }
 
         const url = `${env.EVM_DRAND_URL}/rounds/${round}`
-        const response = await ResultAsync.fromPromise(fetchWithRetry(url, {}, 2, 2000), unknownToError)
+        const response = await ResultAsync.fromPromise(fetchWithRetry(url, {}, 3, 1000, 3000), unknownToError)
 
         if (response.isErr()) {
             return err(DrandError.NetworkError)

@@ -1,3 +1,6 @@
+import { promiseWithResolvers } from "./promises"
+import { sleep } from "./sleep"
+
 /**
  * Performs an HTTP request using fetch with retry capability and a timeout for each attempt.
  *
@@ -6,8 +9,10 @@
  *                   See https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#fetch_options.
  * @param maxRetries The maximum number of retry attempts in case of failure or timeout.
  *                   (Default: 3)
- * @param timeout    The maximum time (in milliseconds) to wait for each attempt before timing out.
+ * @param retryAfter The time (in milliseconds) to wait before retrying the request.
  *                   (Default: 5000)
+ * @param absoluteTimeout The maximum time (in milliseconds) to wait for all retry attempts before timing out.
+ *                   (Default: 15000)
  *
  * @returns          A promise that resolves with the response of the request (type Response).
  *                   Throws an error if all retry attempts fail or if a timeout occurs.
@@ -16,19 +21,41 @@ export async function fetchWithRetry(
     url: string,
     options: RequestInit = {},
     maxRetries = 3,
-    timeout = 5000,
+    retryAfter = 5000,
+    absoluteTimeout = 15000,
 ): Promise<Response> {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const signal = AbortSignal.timeout(timeout)
-            const response = await fetch(url, { ...options, signal })
-            return response
-        } catch (error) {
-            if (attempt === maxRetries) {
-                throw error
-            }
-        }
-    }
+    return new Promise((outerResolve, outerReject) => {
+        ;(async () => {
+            let isResolved = false
+            const startTime = Date.now()
 
-    throw new Error("Failed to complete the request.")
+            for (let i = 0; i < maxRetries; i++) {
+                const { resolve: localResolve, promise: localPromise } = promiseWithResolvers<Response>()
+                const elapsed = Date.now() - startTime
+                const signal = AbortSignal.timeout(absoluteTimeout - elapsed)
+
+                fetch(url, { ...options, signal })
+                    .then((response) => {
+                        if (response.ok) {
+                            isResolved = true
+                            outerResolve(response)
+                        } else if (i === maxRetries - 1) {
+                            outerResolve(response)
+                        } else {
+                            localResolve(response)
+                        }
+                    })
+                    .catch((err) => {
+                        if (i === maxRetries - 1) {
+                            outerReject(err)
+                        } else {
+                            localResolve(err)
+                        }
+                    })
+
+                await Promise.race([localPromise, sleep(retryAfter)])
+                if (isResolved) break
+            }
+        })()
+    })
 }
