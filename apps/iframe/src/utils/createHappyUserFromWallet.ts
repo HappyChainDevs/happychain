@@ -17,7 +17,7 @@ export async function createHappyUserFromWallet(providerId: string, address: Add
         uid: address,
 
         // web3 details
-        address: address,
+        address: accountAddress,
         controllingAddress: address,
     }
 }
