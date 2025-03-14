@@ -116,7 +116,7 @@ contract ScrappyAccount is
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
-    function validate(HappyTx memory happyTx) external returns (bytes4) {
+    function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes4) {
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
         }
@@ -156,7 +156,12 @@ contract ScrappyAccount is
             : signer == owner() ? bytes4(0) : InvalidOwnerSignature.selector;
     }
 
-    function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
+    function execute(HappyTx memory happyTx)
+        external
+        onlyFromEntryPoint
+        nonReentrant
+        returns (ExecutionOutput memory output)
+    {
         uint256 startGas = gasleft();
         (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
         if (!success) {
@@ -164,6 +169,7 @@ contract ScrappyAccount is
             return output;
         }
 
+        output.success = true;
         output.gas = startGas - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD;
 
         // [LOGGAS_INTERNAL] uint256 _startGasEmulate = gasleft(); // To simulate the gasleft() at the top of the function

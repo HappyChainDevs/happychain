@@ -141,12 +141,13 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * The encoding of the returned {ExecutionOutput} struct is as follows:
      *
      * 1st slot: Offset for the struct (returned values are encoded as a tuple)
-     * 2nd slot: {ExecutionOutput.gas}
-     * 3rd slot: offset for revertData from where the struct begins
-     * 4th slot: {ExecutionOutput.revertData.Length}
-     * 5th slot (onwards): {ExecutionOutput.revertData} (max 256 bytes)
+     * 2nd slot: {ExecutionOutput.success}
+     * 3rd slot: {ExecutionOutput.gas}
+     * 4th slot: offset for revertData from where the struct begins
+     * 5th slot: {ExecutionOutput.revertData.Length}
+     * 6th slot (onwards): {ExecutionOutput.revertData} (max 256 bytes)
      */
-    uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 384;
+    uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 416;
 
     /**
      * Fixed max gas overhead for the logic around the ExcessivelySafeCall to
@@ -264,7 +265,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             output.executeGas = 0;
         } else {
             ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
-            if (execOutput.revertData.length != 0 || execOutput.gas == 0) {
+            if (execOutput.revertData.length != 0 || execOutput.success == false) {
                 emit CallReverted(execOutput.revertData);
 
                 output.callStatus = CallStatus.CALL_REVERTED;
