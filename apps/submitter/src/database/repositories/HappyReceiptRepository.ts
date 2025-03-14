@@ -6,32 +6,17 @@ export class HappyReceiptRepository {
     constructor(private db: Kysely<DB>) {}
 
     async findByHappyTxHash(happyHash: Hash) {
-        const query = this.db
-            .selectFrom("happy_receipts")
-            .select([
-                "happy_receipts.happyTxHash",
-                "happy_receipts.status",
-                "happy_receipts.revertData",
-                "happy_receipts.failureReason",
-                "happy_receipts.gasUsed",
-                "happy_receipts.gasCost",
-                "happy_receipts.transactionHash",
-            ])
-            .innerJoin("happy_transactions", "happy_transactions.happyTxHash", "happy_receipts.happyTxHash")
-            .select([
-                "happy_transactions.account",
-                "happy_transactions.nonceTrack",
-                "happy_transactions.nonceValue",
-                "happy_transactions.entryPoint",
-            ])
-
-            .where("happy_receipts.happyTxHash", "=", happyHash)
-
+        const query = this.selectReceipts().where("happy_receipts.happyTxHash", "=", happyHash)
         return await query.executeTakeFirst()
     }
 
     async findByTransactionHash(transactionHash: Hash) {
-        const query = this.db
+        const query = this.selectReceipts().where("happy_receipts.transactionHash", "=", transactionHash)
+        return await query.executeTakeFirst()
+    }
+
+    private selectReceipts() {
+        return this.db
             .selectFrom("happy_receipts")
             .select([
                 "happy_receipts.happyTxHash",
@@ -49,10 +34,6 @@ export class HappyReceiptRepository {
                 "happy_transactions.nonceValue",
                 "happy_transactions.entryPoint",
             ])
-
-            .where("happy_receipts.transactionHash", "=", transactionHash)
-
-        return await query.executeTakeFirst()
     }
 
     async insert(state: Omit<HappyReceipt, "id">) {

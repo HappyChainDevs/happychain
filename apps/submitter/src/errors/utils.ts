@@ -1,4 +1,5 @@
 import { BaseError, ContractFunctionRevertedError } from "viem"
+import { isHexString } from "#src/utils/zod/refines/isHexString"
 import type { HappyBaseError } from "./index"
 import {
     ExecuteRevertedError,
@@ -10,7 +11,7 @@ import {
 import { decodeRawError, getErrorNameFromSelector } from "./parsedCodes"
 
 function is0xString(str: unknown): str is `0x${string}` {
-    return typeof str === "string" && str.startsWith("0x")
+    return typeof str === "string" && isHexString(str)
 }
 
 /**
