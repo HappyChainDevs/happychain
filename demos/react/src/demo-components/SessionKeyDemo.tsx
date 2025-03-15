@@ -41,21 +41,6 @@ const SessionKeyDemo = () => {
         try {
             const hash = await submitIncrement()
             if (!hash) return
-            toast.info("UserOp submitted successfully!", {
-                duration: Number.POSITIVE_INFINITY,
-                closeButton: true,
-                action: (
-                    <a
-                        className="text-info hover:text-primary/50 underline"
-                        target="_blank"
-                        rel="noreferrer"
-                        href={`${happyChainSepolia.blockExplorers!.default.url}/op/${hash}`}
-                    >
-                        (explorer)
-                    </a>
-                ),
-            })
-
             if (!publicClient) return
 
             const receipt = await publicClient.waitForTransactionReceipt({ hash })
