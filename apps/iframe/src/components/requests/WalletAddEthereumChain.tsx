@@ -20,7 +20,6 @@ export const WalletAddEthereumChain = ({
     const [chain, setChain] = useState(params[0])
     return (
         <Layout
-            labelHeader="Add custom chain"
             headline="Add new chain"
             actions={{
                 accept: {
