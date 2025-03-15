@@ -15,7 +15,6 @@ export const WalletSwitchEthereumChain = ({
 
     return (
         <Layout
-            labelHeader="Switch chain"
             headline="Switch chain"
             description={
                 !chain ? (
