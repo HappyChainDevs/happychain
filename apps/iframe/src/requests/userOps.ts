@@ -26,7 +26,7 @@ import {
 import { receiptCache } from "#src/requests/permissionless"
 import { addPendingUserOp, markUserOpAsConfirmed, markUserOpAsFailed } from "#src/services/userOpsHistory"
 import { getCurrentChain } from "#src/state/chains"
-import { getPublicClient } from "#src/state/publicClient.js"
+import { getPublicClient } from "#src/state/publicClient"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 
 export type UserOpSigner = (

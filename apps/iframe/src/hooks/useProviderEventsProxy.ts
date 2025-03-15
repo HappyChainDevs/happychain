@@ -1,7 +1,7 @@
 import { type EIP1193EventName, Msgs } from "@happy.tech/wallet-common"
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
-import { iframeProvider } from "#src/wagmi/provider.js"
+import { iframeProvider } from "#src/wagmi/provider"
 import { happyProviderBus } from "../services/eventBus"
 import { providerAtom } from "../state/provider"
 

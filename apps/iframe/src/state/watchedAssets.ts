@@ -1,7 +1,7 @@
 import { getDefaultStore } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { type Address, type WatchAssetParameters, isAddress } from "viem"
-import { StorageKey } from "#src/services/storage.js"
+import { StorageKey } from "#src/services/storage"
 
 export type UserWatchedAssetsRecord = Record<Address, WatchAssetParameters[]>
 
