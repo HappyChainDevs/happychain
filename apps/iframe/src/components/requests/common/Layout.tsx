@@ -40,7 +40,15 @@ export const Layout = ({
                         <h1 className="font-bold text-xl">{headline}</h1>
                         <div title={user?.address} className="flex gap-2 text-start justify-center text-xs rounded-xl">
                             <div className="h-8 overflow-hidden aspect-square rounded-full bg-neutral/90">
-                                {user?.avatar && <img src={user?.avatar} alt={`${user?.email} avatar`} />}
+                                {user?.avatar && (
+                                    <img
+                                        src={user?.avatar}
+                                        alt={`${user?.email} avatar`}
+                                        // This is required to avoid google avatars from sometimes failing
+                                        // to load properly
+                                        referrerPolicy="no-referrer"
+                                    />
+                                )}
                             </div>
 
                             <div className="grid">
