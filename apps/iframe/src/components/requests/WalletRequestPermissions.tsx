@@ -1,3 +1,4 @@
+import { EthRequestAccounts } from "#src/components/requests/EthRequestAccounts"
 import { type PermissionDescriptionIndex, permissionDescriptions } from "#src/constants/requestLabels.ts"
 import { getAppURL } from "#src/utils/appURL"
 import {
@@ -19,6 +20,10 @@ export const WalletRequestPermissions = ({
 }: RequestConfirmationProps<"wallet_requestPermissions">) => {
     const appURL = getAppURL()
     const requestingMultiplePermissions = params.length > 1
+
+    if (!requestingMultiplePermissions && "eth_accounts" in params[0])
+        return <EthRequestAccounts method={method} params={params} reject={reject} accept={accept} />
+
     return (
         <Layout
             labelHeader={`Grant permission${requestingMultiplePermissions ? "s" : ""}`}

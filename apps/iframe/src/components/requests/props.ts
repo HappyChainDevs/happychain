@@ -1,5 +1,5 @@
 import type { Msgs, PopupMsgs } from "@happy.tech/wallet-common"
-import type { requestLabels } from "../../constants/requestLabels"
+import type { requestLabels } from "#src/constants/requestLabels"
 
 type Request<TMethod extends keyof typeof requestLabels> = Extract<
     PopupMsgs[Msgs.PopupApprove]["payload"],
@@ -13,5 +13,5 @@ export interface RequestConfirmationProps<
     method: TRequest["method"]
     params: TRequest["params"]
     reject: () => void
-    accept: ({ method, params }: TRequest) => void
+    accept: (request: PopupMsgs[Msgs.PopupApprove]["payload"]) => void
 }
