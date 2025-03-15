@@ -22,7 +22,7 @@ const TxLoadingSkeleton = ({ tx }: TxLoadingSkeletonProps) => {
                 <div className="animate-spin size-5 flex items-center justify-center">
                     <CircleNotch weight="bold" size="0.95em" />
                 </div>
-                <h1 className="font-medium text-base-content/80">Pending transaction</h1>
+                <div className="font-medium text-base-content/80">Pending transaction</div>
                 <div className="ms-auto font-semibold text-base-content/70 dark:text-base-content/50">
                     {shortenAddress(tx)}
                 </div>
