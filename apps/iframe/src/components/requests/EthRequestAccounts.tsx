@@ -7,11 +7,10 @@ export const EthRequestAccounts = ({
     params,
     reject,
     accept,
-}: RequestConfirmationProps<"eth_requestAccounts">) => {
+}: RequestConfirmationProps<"eth_requestAccounts" | "wallet_requestPermissions">) => {
     const appURL = getAppURL()
     return (
         <Layout
-            labelHeader={`Access 🤠 Happy Wallet on ${appURL}`}
             headline={
                 <>
                     <span className="text-primary">{appURL}</span>
@@ -22,7 +21,8 @@ export const EthRequestAccounts = ({
             actions={{
                 accept: {
                     children: "Allow",
-                    onClick: () => accept({ method, params }),
+                    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+                    onClick: () => accept({ method, params } as any),
                 },
                 reject: {
                     children: "Go back",
