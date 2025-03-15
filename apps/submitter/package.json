@@ -16,7 +16,7 @@
         "@scalar/hono-api-reference": "^0.5.175",
         "hono": "^4.7.2",
         "hono-openapi": "^0.4.4",
-        "viem": "^2.23.4",
+        "viem": "^2.21.53",
         "zod": "3.23.8",
         "zod-openapi": "^4.2.3"
     }
