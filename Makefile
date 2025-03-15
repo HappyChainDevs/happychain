@@ -337,9 +337,9 @@ txm.build: setup.ts shared.build
 .PHONY: txm.build
 
 # ==================================================================================================
-# DOCS
+##@ Docs
 
-docs.build:
+docs.build: ## Build the docs
 	cd apps/docs && make build
 .PHONY: docs.build
 
