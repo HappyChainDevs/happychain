@@ -14,20 +14,13 @@ export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConf
     const { type, options } = params
     return (
         <Layout
-            headline={`Add $${options.symbol} to your assets watch list`}
+            headline={`Add $${options.symbol} to your watch list`}
             description={
-                <>
-                    {options.image && (
-                        <div className="h-12 w-12 rounded-full overflow-hidden">
-                            <img src={options.image} alt={options.symbol} className="object-cover size-full" />
-                        </div>
-                    )}
-                    Add the token{" "}
-                    <span className="font-bold">
-                        <span className="text-primary">${options.symbol}</span>
-                    </span>{" "}
-                    to your watch list.
-                </>
+                options.image && (
+                    <div className="h-12 w-12 rounded-full overflow-hidden">
+                        <img src={options.image} alt={options.symbol} className="object-cover size-full" />
+                    </div>
+                )
             }
             actions={{
                 accept: {
