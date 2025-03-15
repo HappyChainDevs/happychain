@@ -116,7 +116,7 @@ interface FormattedDetailsLineProps extends PropsWithChildren {
 export const FormattedDetailsLine = ({ children, isCode }: FormattedDetailsLineProps) => {
     return (
         <pre
-            className={`overflow-auto tabular-nums text-ellipsis [scrollbar-width:thin] ${isCode ? "whitespace-pre" : "whitespace-pre-line"}`}
+            className={`overflow-auto tabular-nums text-ellipsis text-sm [scrollbar-width:thin] ${isCode ? "whitespace-pre" : "whitespace-pre-line"}`}
         >
             {children}
         </pre>

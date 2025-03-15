@@ -57,7 +57,7 @@ export const HappyLoadAbi = ({
                     {classifiedAbi.map(({ label, items }) => (
                         <SubsectionContent key={`ABI-${label}`}>
                             <SubsectionTitle>{label}</SubsectionTitle>
-                            <ol className="divide-y grid divide-neutral/10 dark:divide-neutral/40 -mx-2.5">
+                            <ol className="divide-y grid divide-neutral/10 dark:divide-neutral/40 -mx-2.5 text-sm">
                                 {items.map((event) => (
                                     <li className="p-2.5" key={`abi-item-${event}`}>
                                         <FormattedDetailsLine>{formatAbiItem(event)}</FormattedDetailsLine>
