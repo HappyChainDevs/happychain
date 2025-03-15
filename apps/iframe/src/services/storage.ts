@@ -1,4 +1,4 @@
-import { createStorage } from "@happy.tech/common"
+import { bigIntReplacer, bigIntReviver, createStorage } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Address } from "abitype"
 import type { Hex } from "viem"
@@ -33,17 +33,27 @@ const migrations: Record<string, (oldVal: any) => any> = {}
 function cleanOrMigrateStorage() {
     if (typeof window === "undefined") return
 
-    for (const [key, value] of Object.entries(localStorage)) {
-        const components = value.split(":")
+    for (const key of Object.keys(localStorage)) {
+        const components = key.split(":")
         if (components.length === 3 && components[0] === "happychain") {
             const name = components[1]
             const version = components[2]
-            const newKey = Object.keys(StorageKey).find((k) => k.split(":")[1] === name)
+            const newKey = Object.values(StorageKey).find((k) => k.split(":")[1] === name)
             const newVersion = newKey?.split(":")[2]
 
             if (newKey && newVersion !== version) {
                 const migrate = migrations[key]
-                migrate ? localStorage.setItem(newKey, migrate(localStorage.get(key))) : localStorage.removeItem(key)
+                if (migrate) {
+                    console.log(`migrating happychain:${name} from ${version} to ${newVersion}`)
+                    const oldVal = JSON.parse(localStorage[key], bigIntReviver)
+                    localStorage[newKey] = JSON.stringify(migrate(oldVal), bigIntReplacer)
+                    delete localStorage[key]
+                } else {
+                    console.warn(
+                        `storage happychain:${name} updated from ${version} to ${newVersion}, removing old version`,
+                    )
+                    delete localStorage[key]
+                }
             }
         }
     }
