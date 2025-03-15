@@ -26,17 +26,14 @@ export const WalletRequestPermissions = ({
 
     return (
         <Layout
-            labelHeader={`Grant permission${requestingMultiplePermissions ? "s" : ""}`}
-            headline={
-                <>
-                    <span className="text-primary">{appURL}</span> is requesting new permission
-                    {requestingMultiplePermissions ? "s" : ""}
-                </>
-            }
+            headline={<>Grant new permission{requestingMultiplePermissions ? "s" : ""}</>}
             description={
-                <>
-                    <span className="font-medium text-primary">{appURL}</span> would like to :
-                </>
+                <div className="mb-4">
+                    <p className="mb-2">
+                        Requested by <span className="font-medium text-primary">{appURL}</span>
+                    </p>
+                    <p>You can revoke permissions from the wallet settings.</p>
+                </div>
             }
             actions={{
                 accept: {
@@ -71,15 +68,9 @@ export const WalletRequestPermissions = ({
                 <SubsectionBlock>
                     <SubsectionContent>
                         <SubsectionTitle>Data</SubsectionTitle>
-
                         <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
                     </SubsectionContent>
                 </SubsectionBlock>
-            </SectionBlock>
-            <SectionBlock>
-                <p className="font-bold pb-8 text-center text-sm">
-                    You can revoke granted permissions from the wallet.
-                </p>
             </SectionBlock>
         </Layout>
     )
