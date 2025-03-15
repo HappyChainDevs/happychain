@@ -1,10 +1,10 @@
 {
     "name": "demo-js",
     "private": true,
-    "version": "0.1.0",
+    "version": "0.1.1",
     "type": "module",
     "dependencies": {
-        "@happy.tech/core": "workspace:0.1.2"
+        "@happy.tech/core": "workspace:0.2.0"
     },
     "devDependencies": {
         "@happy.tech/configs": "workspace:0.1.0",

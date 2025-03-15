@@ -1,5 +1,13 @@
 # demo-js
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [fa37f4c]
+- Updated dependencies [4282d08]
+  - @happy.tech/core@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

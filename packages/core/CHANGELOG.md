@@ -1,5 +1,15 @@
 # @happy.tech/core
 
+## 0.2.0
+
+### Minor Changes
+
+- 4282d08: Display warning when confirmation popup is blocked during a request
+
+### Patch Changes
+
+- fa37f4c: Update loading animation
+
 ## 0.1.2
 
 ### Patch Changes
