@@ -88,7 +88,7 @@ endef
 # BASICS COMMANDS
 #   To get the project running locally.
 
-setup: install-frozen enable-hooks enable-bun-lockfile-diffs ## To be run when first setting up the repository.
+setup: install-frozen enable-hooks ## To be run when first setting up the repository.
 	$(call forall_make , $(NPM_PKGS) , setup)
 	@echo "Running make setup in ./packages/bundler"
 	@cd packages/bundler && make setup
@@ -392,10 +392,10 @@ contracts.clean:
 # DEPENDENCY MANAGEMENT
 #   Update dependencies, check for outdated dependencies, etc.
 
-# Install packages as specified in the bun.lockb.
+# Install packages as specified in bun.lock.
 install-frozen:
 	# --frozen-lockfile will not generate the lockfile if missing
-	@if [ -r bun.lockb ]; then \
+	@if [ -r bun.lock ]; then \
 		bun install --frozen-lockfile; \
 	else \
 		bun install; \
@@ -480,14 +480,3 @@ enable-hooks:
 disable-hooks:
 	git config --unset core.hooksPath
 .PHONY: disable-hooks
-
-# Allows git diffs for bun lockfiles https://bun.sh/docs/install/lockfile
-enable-bun-lockfile-diffs:
-	git config diff.lockb.textconv bun
-	git config diff.lockb.binary true
-.PHONY: enable-bun-lockfile-diffs
-
-disable-bun-lockfile-diffs:
-	git config --unset diff.lockb.textconv
-	git config --unset diff.lockb.binary
-.PHONY: disable-bun-lockfile-diffs

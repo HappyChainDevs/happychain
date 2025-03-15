@@ -22,7 +22,7 @@ $(call ADD_PATH , ./node_modules/.bin)
 
 # Enables running workspace-level bun-installed binaries easily and without going through bun.
 # The condition makes sure this is not added in the top-level Makefile itself.
-ifeq (,$(wildcard bun.lockb))
+ifeq (,$(wildcard bun.lock))
 $(call ADD_PATH , ../../node_modules/.bin)
 endif
 
