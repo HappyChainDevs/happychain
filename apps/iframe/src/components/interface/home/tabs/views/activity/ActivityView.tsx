@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai"
 import { userAtom } from "#src/state/user"
-import { userOpsAtom } from "#src/state/userOpsHistory.js"
+import { UserOpStatus, userOpsAtom } from "#src/state/userOpsHistory"
 import UserNotFoundWarning from "../UserNotFoundWarning"
 import TxLoadingSkeleton from "./TxLoadingSkeleton"
 import { TxLogEntry } from "./TxLogEntry"
@@ -18,18 +18,19 @@ export const ActivityView = () => {
 
     if (!user) return <UserNotFoundWarning />
 
-    if (!userOps.confirmedOps?.length && !userOps.pendingOps?.length) {
+    if (!userOps.length) {
         return <div className="size-full p-2">No transactions to display.</div>
     }
 
     return (
         <div className="grid gap-4">
-            {userOps.pendingOps.map((pendingOp) => (
-                <TxLoadingSkeleton key={`op_pending_${pendingOp.userOpHash}`} tx={pendingOp.userOpHash} />
-            ))}
-            {userOps.confirmedOps.map((confirmedOp) => (
-                <TxLogEntry key={`op_history_${confirmedOp.userOpReceipt.userOpHash}`} tx={confirmedOp} />
-            ))}
+            {userOps.map((op) =>
+                op.status === UserOpStatus.Pending ? (
+                    <TxLoadingSkeleton key={`op_pending_${op.userOpHash}`} tx={op.userOpHash} />
+                ) : (
+                    <TxLogEntry key={`op_confirmed_${op.userOpHash}`} tx={op} />
+                ),
+            )}
         </div>
     )
 }

@@ -1,96 +1,66 @@
+import { waitForCondition } from "@happy.tech/wallet-common"
 import { getDefaultStore } from "jotai"
-import { type Address, type Hash, hexToNumber, stringToHex } from "viem"
+import { type Address, hexToNumber, stringToHex } from "viem"
 import type { UserOperationReceipt } from "viem/account-abstraction"
 import { getBalanceQueryKey } from "wagmi/query"
 import { getCurrentChain } from "#src/state/chains"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
-import { getUser } from "#src/state/user"
-import {
-    type PendingUserOpDetails,
-    type UserOpInfo,
-    confirmedUserOpsAtom,
-    pendingUserOpsAtom,
-} from "#src/state/userOpsHistory"
+import { getUser, userAtom } from "#src/state/user"
+import { type UserOpInfo, UserOpStatus, userOpsRecordAtom } from "#src/state/userOpsHistory"
 import { queryClient } from "#src/tanstack-query/config"
 
 const store = getDefaultStore()
 
-export function addPendingUserOp(address: Address, payload: Omit<PendingUserOpDetails, "status">, monitor = false) {
-    store.set(pendingUserOpsAtom, (existingEntries) => {
-        const pendingUserOps = existingEntries[address] || []
-        const isAlreadyPending = pendingUserOps.some((op) => op.userOpHash === payload.userOpHash)
+async function monitorUserOpsOnLoad() {
+    const user = store.get(userAtom)
+    if (!user) return
+    await waitForCondition(() => getSmartAccountClient())
+    const pendingOps = store.get(userOpsRecordAtom)[user.address]?.filter((op) => op.status === UserOpStatus.Pending)
+    if (!pendingOps || pendingOps.length === 0) return
+    for (const userOpDetails of pendingOps) {
+        void monitorPendingUserOp(user.address, userOpDetails)
+    }
+}
 
-        if (isAlreadyPending) {
-            return existingEntries
-        }
+// Monitor existing pending userOps on load or whenever the user changes
+if (store.get(userAtom)) void monitorUserOpsOnLoad()
+store.sub(userAtom, () => void monitorUserOpsOnLoad())
 
-        if (monitor) void monitorPendingUserOp(address, { ...payload, status: "pending" })
-
+/**
+ * Adds the userOp info to the atom for the given user, replacing an existing userOp with the same
+ * hash if one already exists.
+ */
+function addUserOp(address: Address, newOp: UserOpInfo) {
+    store.set(userOpsRecordAtom, (userOpsRecord: Record<Address, UserOpInfo[]>) => {
+        const userOps = userOpsRecord[address] || []
+        const index = userOps.findIndex((op) => op.userOpHash === newOp.userOpHash)
         return {
-            ...existingEntries,
-            [address]: [{ ...payload, status: "pending" }, ...pendingUserOps],
+            ...userOpsRecord,
+            [address]:
+                index < 0 //
+                    ? [newOp, ...userOps]
+                    : userOps.toSpliced(index, 1, newOp),
         }
     })
 }
 
-export function markUserOpAsFailed(address: Address, payload: PendingUserOpDetails) {
-    store.set(pendingUserOpsAtom, (existingEntries) => {
-        const pendingUserOps = existingEntries[address] || []
-        return {
-            ...existingEntries,
-            [address]: pendingUserOps.map((op) =>
-                op.userOpHash === payload.userOpHash
-                    ? ({ ...op, status: "failed" } satisfies PendingUserOpDetails)
-                    : op,
-            ),
-        }
-    })
+export function addPendingUserOp(address: Address, userOpInfo: Omit<UserOpInfo, "status">, monitor = true) {
+    const userOp = { ...userOpInfo, status: UserOpStatus.Pending }
+    addUserOp(address, userOp)
+    if (monitor) void monitorPendingUserOp(address, userOp)
 }
 
-export function markUserOpAsConfirmed(
-    address: Address,
-    payload: Omit<PendingUserOpDetails, "status">,
-    receipt: UserOperationReceipt,
-) {
-    removePendingUserOp(address, payload.userOpHash)
-    addConfirmedUserOp(address, {
+export function markUserOpAsConfirmed(address: Address, value: bigint, receipt: UserOperationReceipt) {
+    addUserOp(address, {
+        userOpHash: receipt.userOpHash,
+        value,
         userOpReceipt: receipt,
-        value: payload.value,
+        status: UserOpStatus.Success,
     })
 }
 
-function addConfirmedUserOp(address: Address, userOpInfo: UserOpInfo) {
-    store.set(confirmedUserOpsAtom, (existingEntries) => {
-        const userHistory = existingEntries[address] || []
-        const isReceiptAlreadyLogged = userHistory.some(
-            (op) => op.userOpReceipt.userOpHash === userOpInfo.userOpReceipt.userOpHash,
-        )
-
-        if (isReceiptAlreadyLogged) {
-            return existingEntries
-        }
-
-        return {
-            ...existingEntries,
-            [address]: [userOpInfo, ...userHistory],
-        }
-    })
-}
-
-function removePendingUserOp(address: Address, userOpHash: Hash) {
-    store.set(pendingUserOpsAtom, (existingEntries) => {
-        const updatedOps = (existingEntries[address] || []).filter((op) => op.userOpHash !== userOpHash)
-
-        if (updatedOps.length === 0) {
-            const { [address]: _, ...remainingEntries } = existingEntries
-            return remainingEntries
-        }
-
-        return {
-            ...existingEntries,
-            [address]: updatedOps,
-        }
-    })
+export function markUserOpAsFailed(address: Address, userOpInfo: Omit<UserOpInfo, "status">) {
+    addUserOp(address, { ...userOpInfo, status: UserOpStatus.Failure })
 }
 
 /**
@@ -100,16 +70,18 @@ function removePendingUserOp(address: Address, userOpHash: Hash) {
  * If the UserOperation fails or gets stuck, we'll never receive a receipt.
  *
  * @param address - Smart account address of the user
- * @param payload - The UserOperation details to monitor
+ * @param userOpInfo - The UserOperation details to monitor
  */
-async function monitorPendingUserOp(address: Address, payload: PendingUserOpDetails) {
+async function monitorPendingUserOp(address: Address, userOpInfo: UserOpInfo) {
     try {
         const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
         const receipt = await smartAccountClient.waitForUserOperationReceipt({
-            hash: payload.userOpHash,
-            timeout: 60_000,
+            hash: userOpInfo.userOpHash,
+            // TODO decrease when boops land — heuristic and can still in theory produce wrong results
+            timeout: 120_000,
         })
-        markUserOpAsConfirmed(address, payload, receipt)
+
+        markUserOpAsConfirmed(address, userOpInfo.value, receipt)
 
         // Refetch balances for associated assets
         queryClient.invalidateQueries({
@@ -118,8 +90,7 @@ async function monitorPendingUserOp(address: Address, payload: PendingUserOpDeta
                 chainId: hexToNumber(stringToHex(getCurrentChain().chainId)),
             }),
         })
-    } catch (error) {
-        console.warn(`UserOperation failed: ${payload.userOpHash}`, error)
-        markUserOpAsFailed(address, payload)
+    } catch (_) {
+        markUserOpAsFailed(address, userOpInfo)
     }
 }
