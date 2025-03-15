@@ -141,7 +141,6 @@ export const EthSendTransaction = ({
     return (
         <>
             <Layout
-                labelHeader={`Confirm transaction on ${appURL}`}
                 headline={<>Confirm transaction</>}
                 hideActions={tx.type === TransactionType.EIP4844}
                 actions={{
