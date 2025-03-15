@@ -7,7 +7,7 @@ import { type AppURL, getAppURL, getIframeURL, isIframe } from "../utils/appURL"
 /** ID passed to the iframe by the parent window (app). */
 const _parentID = new URLSearchParams(window.location.search).get("windowId")
 
-if (!isIframe(getAppURL()) && !_parentID) {
+if (!isIframe(getAppURL()) && !_parentID && process.env.NODE_ENV !== "test") {
     console.warn("Iframe initialized without windowId")
 }
 

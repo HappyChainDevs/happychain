@@ -158,9 +158,11 @@ export const requestSessionKey = async (contractAddress: Address): Promise<void>
 export const showSendScreen = (): void => {
     void iframeMessageBus?.emit(Msgs.RequestWalletDisplay, WalletDisplayAction.Send)
 }
+
 export function emitWalletDisplayAction(open: boolean) {
     void iframeMessageBus?.emit(Msgs.RequestWalletDisplay, open ? WalletDisplayAction.Open : WalletDisplayAction.Closed)
 }
+
 export function emitSetDisplayError(errorCode: OverlayErrorCode) {
     void iframeMessageBus?.emit(Msgs.SetOverlayError, errorCode)
 }
