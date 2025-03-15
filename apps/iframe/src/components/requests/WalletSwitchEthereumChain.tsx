@@ -19,8 +19,11 @@ export const WalletSwitchEthereumChain = ({
             description={
                 !chain ? (
                     <>
-                        Unknown chain with ID <span className="font-bold">{params[0].chainId}</span> would like to
-                        switch to an unknown network. <br /> Please add this chain first, then try again.
+                        <p className="mb-2">
+                            The app wants to switch to an unknown chain with ID{" "}
+                            <span className="font-bold">{params[0].chainId}</span>
+                        </p>
+                        <p>Please add this chain first, then try again.</p>
                     </>
                 ) : (
                     <>
