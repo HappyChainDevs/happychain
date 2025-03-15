@@ -1,10 +1,8 @@
 import type { HappyMethodNames } from "@happy.tech/common"
 import { shortenAddress } from "@happy.tech/wallet-common"
-import { useQuery } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
-import { type Address, isAddress } from "viem"
+import type { Address } from "viem"
 import { currentChainAtom } from "#src/state/chains"
-import { publicClientAtom } from "#src/state/publicClient"
 import { getAppURL } from "#src/utils/appURL"
 import {
     FormattedDetailsLine,
@@ -17,10 +15,6 @@ import {
 } from "./common/Layout"
 import type { RequestConfirmationProps } from "./props"
 
-const KEY_QUERY_GET_BYTECODE = "get-bytecode"
-export function getKeyQueryGetBytecode(targetAddress: Address) {
-    return [KEY_QUERY_GET_BYTECODE, targetAddress]
-}
 export const HappyRequestSessionKey = ({
     method,
     params,
@@ -28,18 +22,9 @@ export const HappyRequestSessionKey = ({
     accept,
 }: RequestConfirmationProps<typeof HappyMethodNames.REQUEST_SESSION_KEY>) => {
     const targetAddress: Address = params[0]
-    const publicClient = useAtomValue(publicClientAtom)
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
     const appURL = getAppURL()
-
-    const queryBytecode = useQuery({
-        queryKey: getKeyQueryGetBytecode(targetAddress),
-        queryFn: async () => {
-            return await publicClient.getCode({ address: targetAddress })
-        },
-        enabled: isAddress(targetAddress),
-    })
 
     return (
         <Layout
