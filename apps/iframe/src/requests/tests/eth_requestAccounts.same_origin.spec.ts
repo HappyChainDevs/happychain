@@ -27,7 +27,7 @@ describe("#publicClient #eth_requestAccounts #same_origin", () => {
         test("skips eth_requestAccounts permissions when no user", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
             const request = makePayload(iframeID, { method: "eth_requestAccounts" })
-            expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
+            await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
 

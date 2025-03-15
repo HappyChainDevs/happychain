@@ -26,7 +26,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
         test("skips eth_requestAccounts permissions when no user", async () => {
             expect(getAllPermissions(appURL).length).toBe(0)
             const request = makePayload(parentID, { method: "eth_requestAccounts" })
-            expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
+            await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
 
@@ -44,7 +44,7 @@ describe("#publicClient #eth_requestAccounts #cross_origin ", () => {
             expect(getAllPermissions(appURL).length).toBe(0)
             const request = makePayload(parentID, { method: "eth_requestAccounts" })
             const response = dispatchHandlers(request)
-            expect(response).rejects.toThrow(EIP1193UserRejectedRequestError)
+            await expect(response).rejects.toThrow(EIP1193UserRejectedRequestError)
             expect(getAllPermissions(appURL).length).toBe(0)
         })
 

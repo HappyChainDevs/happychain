@@ -29,7 +29,7 @@ describe("#publicClient #wallet_requestPermissions #cross_origin", () => {
                 method: "wallet_requestPermissions",
                 params: [{ eth_accounts: {} }],
             })
-            expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
+            await expect(dispatchHandlers(request)).rejects.toThrow(EIP1193UnauthorizedError)
         })
     })
 
