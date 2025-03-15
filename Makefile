@@ -113,6 +113,11 @@ nuke: clean ## Removes build artifacts and dependencies
 	$(MAKE) remove-modules
 .PHONY: nuke
 
+# Only cleans & removes node_modules (doesn't touch the bundler or contracts)
+nuke.ts: clean
+	$(MAKE) remove-modules
+.PHONY: nuke
+
 test: sdk.test iframe.test ## Run tests
 .PHONY: test
 
