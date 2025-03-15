@@ -2,6 +2,7 @@
 import type { MapTuple, ObjectFromTuples, UnionToTuple } from "@happy.tech/common"
 import type { Address } from "viem"
 
+
 const contractToAbi = ({
   "HappyCounter": [
     {
@@ -32,40 +33,27 @@ const contractToAbi = ({
       "stateMutability": "nonpayable"
     }
   ],
-  "MockERC20Token": [
+  "MockERC20": [
     {
       "type": "constructor",
       "inputs": [
         {
-          "name": "name",
+          "name": "name_",
           "type": "string",
           "internalType": "string"
         },
         {
-          "name": "symbol",
+          "name": "symbol_",
           "type": "string",
           "internalType": "string"
         },
         {
-          "name": "decimals",
+          "name": "decimals_",
           "type": "uint8",
           "internalType": "uint8"
         }
       ],
       "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "DOMAIN_SEPARATOR",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ],
-      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -162,26 +150,16 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "initialize",
-      "inputs": [
+      "name": "domainSeparator",
+      "inputs": [],
+      "outputs": [
         {
-          "name": "name_",
-          "type": "string",
-          "internalType": "string"
-        },
-        {
-          "name": "symbol_",
-          "type": "string",
-          "internalType": "string"
-        },
-        {
-          "name": "decimals_",
-          "type": "uint8",
-          "internalType": "uint8"
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
         }
       ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
+      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -405,19 +383,59 @@ const contractToAbi = ({
       ],
       "anonymous": false
     }
+  ],
+  "MockGasBurner": [
+    {
+      "type": "function",
+      "name": "burnGas",
+      "inputs": [
+        {
+          "name": "amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    }
+  ],
+  "MockRevert": [
+    {
+      "type": "function",
+      "name": "intentionalRevert",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "intentionalRevertDueToGasLimit",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "error",
+      "name": "CustomErrorMockRevert",
+      "inputs": []
+    }
   ]
 }
 ) as const
 
 const aliasToContract = ({
   "HappyCounter": "HappyCounter",
-  "MockTokenA": "MockERC20Token",
-  "MockTokenB": "MockERC20Token",
-  "MockTokenC": "MockERC20Token"
+  "MockGasBurner": "MockGasBurner",
+  "MockRevert": "MockRevert",
+  "MockTokenA": "MockERC20",
+  "MockTokenB": "MockERC20",
+  "MockTokenC": "MockERC20"
 }) as const
 
 export const deployment = ({
   "HappyCounter": "0xAD5A4f9CeaBC2990DD66039FE123828631b4e0Ea",
+  "MockGasBurner": "0xa7Fe1a65542c9f36c597Ae3349aF7FaE80CDad5F",
+  "MockRevert": "0x097276735a7E3087aD8C930a1dE559Eca44F4d51",
   "MockTokenA": "0x02206faC6469B2f59FC2Bb9d3BC181Fbe703F8B7",
   "MockTokenB": "0xF2Cd1312bcE60Edcd17406962aB3d76730bf4873",
   "MockTokenC": "0x09420341423aE6D9c14C26052AF66A948BE4982c"
