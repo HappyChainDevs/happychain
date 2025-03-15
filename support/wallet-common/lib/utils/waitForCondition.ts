@@ -1,5 +1,6 @@
 export async function waitForCondition(
-    callback: (...args: unknown[]) => boolean | Promise<boolean>,
+    // `unknown` return type so that we can wait for things to be truthy
+    callback: (...args: unknown[]) => unknown | Promise<unknown>,
     maxPollTimeMs = 30_000,
     pollIntervalMs = 50,
 ) {
