@@ -107,6 +107,7 @@ async function monitorPendingUserOp(address: Address, payload: PendingUserOpDeta
         const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
         const receipt = await smartAccountClient.waitForUserOperationReceipt({
             hash: payload.userOpHash,
+            timeout: 60_000,
         })
 
         if (receipt) {
