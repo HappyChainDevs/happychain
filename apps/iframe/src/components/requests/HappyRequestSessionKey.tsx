@@ -43,16 +43,10 @@ export const HappyRequestSessionKey = ({
 
     return (
         <Layout
-            labelHeader="Enable automatic approvals"
-            headline={
-                <>
-                    <span className="text-primary">{appURL}</span> would like your permission to automatically approve
-                    transactions for contract {shortenAddress(targetAddress, 4)}
-                </>
-            }
+            headline={<>Enable automatic approvals</>}
             description={
                 <>
-                    <p>
+                    <p className="mb-2">
                         The app will be able to send transactions to{" "}
                         <a
                             href={`${blockExplorerUrl}/address/${targetAddress}?tab=contract`}
@@ -67,7 +61,7 @@ export const HappyRequestSessionKey = ({
                     <p>You can revoke automatic approvals from the wallet.</p>
                     <SectionBlock>
                         <div className="grid bg-warning/40 border-warning text-warning-content/90 dark:bg-warning/5 dark:border-warning/20 dark:text-warning gap-2 text-sm border py-[1em] px-[1.25em] rounded-lg w-full">
-                            <p>You could lose the tokens the contract can access.</p>
+                            <p>You could lose tokens the contract can access.</p>
                             <p className="font-bold">
                                 Only proceed if you trust <br /> {appURL}.
                             </p>
@@ -93,15 +87,6 @@ export const HappyRequestSessionKey = ({
                         <FormattedDetailsLine>
                             <LinkToAddress address={targetAddress}> {targetAddress}</LinkToAddress>
                         </FormattedDetailsLine>
-                    </SubsectionContent>
-                </SubsectionBlock>
-            </SectionBlock>
-            <SectionBlock>
-                <SubsectionBlock>
-                    <SubsectionContent>
-                        <SubsectionTitle>Data</SubsectionTitle>
-
-                        <FormattedDetailsLine isCode>{queryBytecode.data}</FormattedDetailsLine>
                     </SubsectionContent>
                 </SubsectionBlock>
             </SectionBlock>
