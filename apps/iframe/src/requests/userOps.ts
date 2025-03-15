@@ -5,6 +5,7 @@ import { deepHexlify } from "permissionless"
 import { getAccountNonce } from "permissionless/actions"
 import {
     type Address,
+    type Hash,
     type Hex,
     type RpcTransactionRequest,
     type UnionPartialBy,
@@ -23,7 +24,7 @@ import {
     getUserOperationHash,
 } from "viem/account-abstraction"
 import { receiptCache } from "#src/requests/permissionless"
-import { addPendingUserOp, markUserOpAsConfirmed } from "#src/services/userOpsHistory"
+import { addPendingUserOp, markUserOpAsConfirmed, markUserOpAsFailed } from "#src/services/userOpsHistory"
 import { getCurrentChain } from "#src/state/chains"
 import { getPublicClient } from "#src/state/publicClient.js"
 import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
@@ -61,6 +62,8 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
     const smartAccountClient = (await getSmartAccountClient())!
     const account = smartAccountClient.account.address
 
+    let userOpHash: Hash | undefined = undefined
+
     // [DEBUGLOG] // let debugNonce = 0n
     try {
         // We need the separate nonce lookup because:
@@ -91,7 +94,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
         const { account: _, ...preparedUserOp } = { ..._preparedUserOp, nonce }
         preparedUserOp.signature = await signer(preparedUserOp, smartAccountClient)
 
-        const userOpHash = getUserOperationHash({
+        userOpHash = getUserOperationHash({
             chainId: Number(getCurrentChain().chainId),
             entryPointAddress: contractAddresses.EntryPointV7,
             entryPointVersion: "0.7",
@@ -121,7 +124,7 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
 
         // [DEBUGLOG] // console.log("receipt", userOpHash, retry)
 
-        markUserOpAsConfirmed(user.address, pendingUserOpDetails, userOpReceipt)
+        markUserOpAsConfirmed(user.address, pendingUserOpDetails.value, userOpReceipt)
 
         return userOpReceipt.userOpHash
     } catch (error) {
@@ -134,6 +137,14 @@ export async function sendUserOp({ user, tx, validator, signer }: SendUserOpArgs
         deleteNonce(account, validator)
 
         if (retry > 0) return sendUserOp({ user, tx, validator, signer }, retry - 1)
+
+        // noinspection PointlessBooleanExpressionJS
+        if (userOpHash) {
+            markUserOpAsFailed(user.address, {
+                value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                userOpHash,
+            })
+        }
         throw error
     }
 }

@@ -9,6 +9,7 @@ export enum OperationType {
     ContractInteraction = "contract-interaction",
     SessionKeyAdded = "session-key-added",
     SessionKeyRemoved = "session-key-removed",
+    Failed = "failed",
 }
 
 interface BaseActivityDetails {
@@ -17,32 +18,42 @@ interface BaseActivityDetails {
 
 interface ERC20TransferDetails extends BaseActivityDetails {
     type: OperationType.ERC20Transfer
-    details: {
+    details?: {
         address: Address
         to: Address
         from: Address
         amount: bigint
         symbol?: string
         decimals?: number
-    } | null
+    }
 }
 
 interface NativeTransferDetails extends BaseActivityDetails {
     type: OperationType.NativeTransfer
-    details: null
+    details?: undefined
 }
 
 interface SessionKeyDetails extends BaseActivityDetails {
     type: OperationType.SessionKeyAdded | OperationType.SessionKeyRemoved
-    details: null
+    details?: undefined
 }
 
 interface ContractInteractionDetails extends BaseActivityDetails {
     type: OperationType.ContractInteraction
-    details: null
+    details?: undefined
 }
 
-type ActivityDetails = ERC20TransferDetails | NativeTransferDetails | SessionKeyDetails | ContractInteractionDetails
+interface FailedDetails extends BaseActivityDetails {
+    type: OperationType.Failed
+    details?: undefined
+}
+
+type ActivityDetails =
+    | ERC20TransferDetails
+    | NativeTransferDetails
+    | SessionKeyDetails
+    | ContractInteractionDetails
+    | FailedDetails
 
 const EVENT_SIGNATURES = {
     ERC20_TRANSFER: keccak256(stringToHex("Transfer(address,address,uint256)")),
@@ -52,10 +63,12 @@ const EVENT_SIGNATURES = {
 
 /**
  * Decodes an ERC20 Transfer event log into a structured format
+ * NOTE: currently unused but could be used to display more info from ERC-20 transfers
+ *
  * @param log - The event log to decode
  * @returns The decoded transfer information or null if decoding fails
  */
-function decodeERC20TransferLog(log: Log) {
+function _decodeERC20TransferLog(log: Log) {
     try {
         return {
             address: log.address,
@@ -65,7 +78,7 @@ function decodeERC20TransferLog(log: Log) {
         }
     } catch (e) {
         console.error("Failed to decode transfer log:", e)
-        return null
+        return undefined
     }
 }
 
@@ -75,41 +88,29 @@ function decodeERC20TransferLog(log: Log) {
  * @returns The classified activity details
  */
 function classifyUserOperation(transaction: UserOpInfo): ActivityDetails {
+    if (!transaction?.userOpReceipt?.success) return { type: OperationType.Failed }
+
     const logs = transaction.userOpReceipt.receipt.logs
 
     for (const log of logs) {
-        const eventSignature = log.topics[0]?.toLowerCase()
-
-        switch (eventSignature) {
-            case EVENT_SIGNATURES.ERC20_TRANSFER: {
-                return {
-                    type: OperationType.ERC20Transfer,
-                    details: decodeERC20TransferLog(log),
-                }
-            }
+        switch (log.topics[0]?.toLowerCase()) {
+            case EVENT_SIGNATURES.ERC20_TRANSFER:
+                return { type: OperationType.ERC20Transfer }
             case EVENT_SIGNATURES.SESSION_KEY_ADDED:
-                return {
-                    type: OperationType.SessionKeyAdded,
-                    details: null,
-                }
+                return { type: OperationType.SessionKeyAdded }
             case EVENT_SIGNATURES.SESSION_KEY_REMOVED:
-                return {
-                    type: OperationType.SessionKeyRemoved,
-                    details: null,
-                }
+                return { type: OperationType.SessionKeyRemoved }
         }
     }
 
     if (transaction.value > 0n) {
         return {
             type: OperationType.NativeTransfer,
-            details: null,
         }
     }
 
     return {
         type: OperationType.ContractInteraction,
-        details: null,
     }
 }
 

@@ -1,5 +1,5 @@
 import { shortenAddress } from "@happy.tech/wallet-common"
-import { ArrowUp, Lightning, LightningSlash, PencilSimple } from "@phosphor-icons/react"
+import { ArrowUp, Lightning, LightningSlash, PencilSimple, WarningOctagon } from "@phosphor-icons/react"
 import { useAtomValue } from "jotai"
 import { formatEther, formatUnits } from "viem"
 import { currentChainAtom } from "#src/state/chains"
@@ -27,6 +27,10 @@ const ACTIVITY_HEADLINE = {
         label: "Session key removed",
         icon: LightningSlash,
     },
+    [OperationType.Failed]: {
+        label: "Failed",
+        icon: WarningOctagon,
+    },
 }
 
 interface TxLogEntryProps {
@@ -37,14 +41,14 @@ export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
     const { details, type } = useClassifyActivity(tx)
     const currentChain = useAtomValue(currentChainAtom)
     const blockExplorerUrl = currentChain.blockExplorerUrls ? currentChain.blockExplorerUrls[0] : ""
-    const { userOpReceipt, value: sendValue } = tx
+    const { userOpReceipt, userOpHash, value } = tx
     const Icon = ACTIVITY_HEADLINE[type].icon
 
     return (
         <article className="focus-within:bg-primary/10 hover:bg-primary/5 p-2 rounded-md grid gap-1 relative">
             <div className="flex items-baseline text-xs gap-3">
                 <div
-                    className={`${tx.userOpReceipt.success ? "text-primary dark:text-primary/50" : "text-error dark:text-error/50"} bg-base-content/5 dark:bg-base-content/20 p-1 aspect-square rounded-full flex items-center justify-center`}
+                    className={`${userOpReceipt?.success ? "text-primary dark:text-primary/50" : "text-error dark:text-error/50"} bg-base-content/5 dark:bg-base-content/20 p-1 aspect-square rounded-full flex items-center justify-center`}
                 >
                     <Icon weight="bold" size="0.95em" />
                 </div>
@@ -55,13 +59,13 @@ export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                 </h1>
 
                 <div className="ms-auto font-semibold text-base-content/70 dark:text-base-content/50">
-                    {shortenAddress(userOpReceipt.userOpHash)}
+                    {shortenAddress(userOpHash)}
                 </div>
             </div>
-            {type === OperationType.NativeTransfer && sendValue !== 0n && (
+            {type === OperationType.NativeTransfer && value !== 0n && (
                 <p className="flex px-0.5 gap-[0.75ex] items-baseline">
                     <span className="font-bold block overflow-hidden truncate max-w-[30ch]">
-                        - {formatEther(sendValue)}
+                        - {formatEther(value)}
                     </span>{" "}
                     <span className="text-xs block font-semibold">HAPPY</span>
                 </p>
@@ -77,13 +81,13 @@ export const TxLogEntry = ({ tx }: TxLogEntryProps) => {
                 </p>
             )}
             <a
-                href={`${blockExplorerUrl}/op/${userOpReceipt.userOpHash}`}
+                href={`${blockExplorerUrl}/op/${userOpHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 title="View on explorer"
                 className="absolute size-full z-10 inset opacity-0"
             >
-                {shortenAddress(userOpReceipt.userOpHash)}
+                {shortenAddress(userOpHash)}
             </a>
         </article>
     )
