@@ -2,7 +2,6 @@ import type { HappyMethodNames } from "@happy.tech/common"
 import { shortenAddress } from "@happy.tech/wallet-common"
 import { formatAbiItem } from "abitype"
 import { useClassifyAbi } from "#src/hooks/useClassifyAbiSections"
-import { getAppURL } from "#src/utils/appURL"
 import {
     FormattedDetailsLine,
     Layout,
@@ -21,7 +20,6 @@ export const HappyLoadAbi = ({
     accept,
 }: RequestConfirmationProps<typeof HappyMethodNames.LOAD_ABI>) => {
     const classifiedAbi = useClassifyAbi(params.abi)
-    const appURL = getAppURL()
 
     return (
         <Layout
