@@ -25,12 +25,7 @@ export const HappyLoadAbi = ({
 
     return (
         <Layout
-            labelHeader="Import contract interface"
-            headline={
-                <>
-                    <span className="text-primary">{appURL}</span> wants to import a contract interface
-                </>
-            }
+            headline={<>Import contract interface</>}
             description={
                 <>
                     Transactions sent to{" "}
@@ -71,15 +66,6 @@ export const HappyLoadAbi = ({
                             </ol>
                         </SubsectionContent>
                     ))}
-                </SubsectionBlock>
-            </SectionBlock>
-            <SectionBlock>
-                <SubsectionBlock>
-                    <SubsectionContent>
-                        <SubsectionTitle>Data</SubsectionTitle>
-
-                        <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
-                    </SubsectionContent>
                 </SubsectionBlock>
             </SectionBlock>
         </Layout>
