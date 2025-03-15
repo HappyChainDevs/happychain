@@ -2,11 +2,11 @@
   "ECDSAValidator": "0x4d8D0AA39E4575C9F7C3040EA5B6c572975EccAb",
   "EntryPointSimulations": "0xBbe8A301FbDb2a4CD58c4A37c262ecef8f889c47",
   "EntryPointV7": "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
-  "FactoryStaker": "0xd4Cc7CBc04C99F670EbaF8182b875010bbd11efF",
-  "HappyPaymaster": "0xf47A1581d5Ee34dFBe4C340BeC15ae5D6B015466",
+  "FactoryStaker": "0xAd3bFC653d8F4ba9975baA8B475c5eF93Ea98932",
+  "HappyPaymaster": "0x622C3088eC5869aaA9106aee61a26d78e3f7ba9F",
   "HappyPaymasterImpl": "0x23abA076B796e829136DAf9Bfe7dfb712fF40a93",
   "Kernel": "0x0B973b2a601c34ad322f9a398b3208AC7d97C51F",
   "KernelFactory": "0xd40c9edac363Cb34604589D94D1d3754cdf33737",
-  "SessionKeyValidator": "0x58A82036423f4f655c175b0e029fd3D8eEb8d55A",
+  "SessionKeyValidator": "0x64E9D038Dee32d55155531564bfd6262942b68F3",
   "SessionKeyValidatorImpl": "0xd27e88D6ce4e02D5E7eF92C6333759281511a14c"
 }
