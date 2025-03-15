@@ -109,21 +109,15 @@ async function monitorPendingUserOp(address: Address, payload: PendingUserOpDeta
             hash: payload.userOpHash,
             timeout: 60_000,
         })
+        markUserOpAsConfirmed(address, payload, receipt)
 
-        if (receipt) {
-            removePendingUserOp(address, payload.userOpHash)
-            addConfirmedUserOp(address, {
-                userOpReceipt: receipt,
-                value: payload.value,
-            })
-            // Refetch balances for associated assets
-            queryClient.invalidateQueries({
-                queryKey: getBalanceQueryKey({
-                    address: getUser()?.address,
-                    chainId: hexToNumber(stringToHex(getCurrentChain().chainId)),
-                }),
-            })
-        }
+        // Refetch balances for associated assets
+        queryClient.invalidateQueries({
+            queryKey: getBalanceQueryKey({
+                address: getUser()?.address,
+                chainId: hexToNumber(stringToHex(getCurrentChain().chainId)),
+            }),
+        })
     } catch (error) {
         console.warn(`UserOperation failed: ${payload.userOpHash}`, error)
         markUserOpAsFailed(address, payload)
