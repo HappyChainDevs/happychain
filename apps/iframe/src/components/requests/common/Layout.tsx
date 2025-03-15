@@ -4,9 +4,10 @@ import type { Address } from "viem"
 import { Button, type ButtonProps } from "#src/components/primitives/button/Button"
 import { currentChainAtom } from "#src/state/chains"
 import { userAtom } from "#src/state/user"
+import { getAppURL } from "#src/utils/appURL"
 
 interface LayoutProps extends PropsWithChildren {
-    labelHeader: React.ReactNode
+    labelHeader?: React.ReactNode
     headline: React.ReactNode
     description?: React.ReactNode
     hideActions?: boolean
@@ -25,11 +26,12 @@ export const Layout = ({
     children,
 }: LayoutProps) => {
     const user = useAtomValue(userAtom)
+    const appURL = getAppURL()
     return (
         <main className="flex flex-col min-h-dvh bg-base-300">
             <header className="w-full fixed z-10 bg-base-300 border-b border-neutral/10 dark:border-neutral/50 p-2 text-center font-bold text-xs">
                 <div className="mx-auto w-full max-w-prose">
-                    <h1>{labelHeader}</h1>
+                    <h1>{labelHeader ?? appURL}</h1>
                 </div>
             </header>
             <div className="pt-16">

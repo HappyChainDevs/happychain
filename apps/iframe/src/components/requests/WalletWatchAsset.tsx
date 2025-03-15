@@ -13,10 +13,8 @@ import type { RequestConfirmationProps } from "./props"
 
 export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConfirmationProps<"wallet_watchAsset">) => {
     const { type, options } = params
-    const appURL = getAppURL()
     return (
         <Layout
-            labelHeader="Watch asset"
             headline={`Add $${options.symbol} to your assets watch list`}
             description={
                 <>
@@ -25,11 +23,11 @@ export const WalletWatchAsset = ({ method, params, reject, accept }: RequestConf
                             <img src={options.image} alt={options.symbol} className="object-cover size-full" />
                         </div>
                     )}
-                    This will allow <span className="font-bold text-primary">{appURL}</span> to add the{" "}
+                    Add the token{" "}
                     <span className="font-bold">
-                        asset <span className="text-primary">${options.symbol}</span>
+                        <span className="text-primary">${options.symbol}</span>
                     </span>{" "}
-                    to your watch list. No funds will be moved or accessed.
+                    to your watch list.
                 </>
             }
             actions={{
