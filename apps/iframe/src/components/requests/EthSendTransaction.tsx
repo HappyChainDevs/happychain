@@ -1,5 +1,4 @@
 import { TransactionType } from "@happy.tech/common"
-import { shortenAddress } from "@happy.tech/wallet-common"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -15,7 +14,6 @@ import { useEstimateFeesPerGas } from "wagmi"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { userAtom } from "#src/state/user"
 import { queryClient } from "#src/tanstack-query/config"
-import { getAppURL } from "#src/utils/appURL"
 import { BlobTxWarning } from "./BlobTxWarning"
 import DecodedData from "./common/DecodedData"
 import { GasFieldName } from "./common/GasFieldDisplay"
@@ -66,8 +64,6 @@ export const EthSendTransaction = ({
     reject,
     accept,
 }: RequestConfirmationProps<"eth_sendTransaction">) => {
-    const appURL = getAppURL()
-
     // useState + useEffect paradigm works here (over useMemo) since we will have
     // user interactions for sliders / options for setting gas manually
     const [tx, setTx] = useState<RpcTransactionRequest>(params[0])
@@ -150,7 +146,7 @@ export const EthSendTransaction = ({
                         onClick: () => {
                             if (status === "pending") return
                             accept({ method, params })
-                            queryClient.invalidateQueries({ queryKey })
+                            void queryClient.invalidateQueries({ queryKey })
                         },
                     },
                     reject: {
