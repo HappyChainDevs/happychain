@@ -17,13 +17,12 @@ export const PersonalSign = ({ method, params, reject, accept }: RequestConfirma
 
     return (
         <Layout
-            labelHeader="Your signature is requested."
             headline="Sign message"
             description={
-                <>
-                    The message will be tied to your account and may be used for authorizations. Make sure you know what
-                    you are signing !
-                </>
+                <p className="mb-4">
+                    <p className="mb-2">The signature may be used for authorizations.</p>
+                    <p>Make sure you know what you are signing !</p>
+                </p>
             }
             actions={{
                 accept: {
@@ -47,9 +46,10 @@ export const PersonalSign = ({ method, params, reject, accept }: RequestConfirma
             <SectionBlock>
                 <SubsectionBlock>
                     <SubsectionContent>
-                        <SubsectionTitle>Data</SubsectionTitle>
-
-                        <FormattedDetailsLine isCode>{JSON.stringify(params, null, 2)}</FormattedDetailsLine>
+                        <SubsectionTitle>Raw Message</SubsectionTitle>
+                        <div style={{ overflowWrap: "anywhere", maxWidth: "100%" }}>
+                            <FormattedDetailsLine>{params[0]}</FormattedDetailsLine>
+                        </div>
                     </SubsectionContent>
                 </SubsectionBlock>
             </SectionBlock>
