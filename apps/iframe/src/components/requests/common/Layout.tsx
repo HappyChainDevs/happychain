@@ -8,7 +8,7 @@ import { getAppURL } from "#src/utils/appURL"
 
 interface LayoutProps extends PropsWithChildren {
     labelHeader?: React.ReactNode
-    headline: React.ReactNode
+    headline?: React.ReactNode
     description?: React.ReactNode
     hideActions?: boolean
     actions: {
@@ -34,10 +34,9 @@ export const Layout = ({
                     <h1>{labelHeader ?? appURL}</h1>
                 </div>
             </header>
-            <div className="pt-16">
+            <div className="pt-12">
                 <section className="w-full px-2">
                     <div className="mx-auto w-full grid gap-4 text-center max-w-prose">
-                        <h1 className="font-bold text-xl">{headline}</h1>
                         <div title={user?.address} className="flex gap-2 text-start justify-center text-xs rounded-xl">
                             <div className="h-8 overflow-hidden aspect-square rounded-full bg-neutral/90">
                                 {user?.avatar && (
@@ -63,6 +62,7 @@ export const Layout = ({
                                 )}
                             </div>
                         </div>
+                        {headline && <h1 className="font-bold text-xl">{headline}</h1>}
                         <p className="opacity-80 text-sm">{description}</p>
                     </div>
                 </section>
