@@ -52,7 +52,7 @@ describe("event bus", () => {
             emitterBus.emit("callback:", args)
             emitterBus.emit("callback:", args)
 
-            await setTimeout(0)
+            await setTimeout(0.01) // 0 causes a NaN error
             expect(mockCallback).toHaveBeenCalledTimes(3)
         })
     })
