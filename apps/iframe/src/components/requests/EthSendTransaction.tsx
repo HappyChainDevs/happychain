@@ -165,9 +165,7 @@ export const EthSendTransaction = ({
                             <SubsectionContent>
                                 <SubsectionTitle>Receiver address</SubsectionTitle>
                                 <FormattedDetailsLine>
-                                    <LinkToAddress address={tx.to as Address}>
-                                        {shortenAddress(tx.to as Address)}
-                                    </LinkToAddress>
+                                    <LinkToAddress address={tx.to as Address}>{tx.to}</LinkToAddress>
                                 </FormattedDetailsLine>
                             </SubsectionContent>
                         )}
