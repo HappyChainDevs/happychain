@@ -1,16 +1,17 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/sepolia"
 import { happyChainSepolia } from "@happy.tech/core"
 import { useHappyChain } from "@happy.tech/react"
-import { useEffect, useState } from "react"
+import { Spinner } from "@phosphor-icons/react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import useClients from "../useClients"
 
 const SessionKeyDemo = () => {
     const { user, requestSessionKey } = useHappyChain()
     const { walletClient, publicClient } = useClients()
-    const [counter, setCounter] = useState<bigint>(0n)
+    const [counter, setCounter] = useState<bigint | undefined>()
 
-    async function getCounterValue() {
+    const getCounterValue = useCallback(async () => {
         if (!publicClient) throw new Error("Public client not initialized")
 
         return await publicClient.readContract({
@@ -19,7 +20,12 @@ const SessionKeyDemo = () => {
             functionName: "getCount",
             account: user?.address,
         })
-    }
+    }, [publicClient, user])
+
+    useEffect(() => {
+        if (!publicClient) return
+        getCounterValue().then((value) => setCounter(value))
+    }, [publicClient, getCounterValue])
 
     async function submitIncrement() {
         if (!walletClient || !user?.address) throw new Error("Wallet not connected")
@@ -102,7 +108,11 @@ const SessionKeyDemo = () => {
 
             <div className="col-span-2 text-center mt-2">
                 <pre className="text-sm font-semibold">Current counter value</pre>
-                <div className="text-4xl font-bold">{counter.toString()}</div>
+                {counter ? (
+                    <div className="text-4xl font-bold">{counter.toString()}</div>
+                ) : (
+                    <Spinner className="animate-spin mx-auto" size="2.25rem" />
+                )}
             </div>
         </div>
     )
