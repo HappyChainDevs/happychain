@@ -1,18 +1,18 @@
 import { forwardRef } from "react"
 import { GuiButton, type GuiButtonProps } from "./gui"
-import { SkeuoButton, type SkeuoButtonProps } from "./skeuo"
+import { SkeuoButton, } from "./skeuo"
+
+type ButtonElement = HTMLButtonElement | HTMLAnchorElement | HTMLElement
 
 const Root = forwardRef<HTMLElement>((_props, _ref) => {
     return null
 })
 
-const Gui = forwardRef<HTMLElement, GuiButtonProps>((props, ref) => {
-    return <GuiButton ref={ref} {...props} />
+const Gui = forwardRef<ButtonElement, GuiButtonProps>((props, ref) => {
+    return <GuiButton ref={ref as any} {...props} />
 })
 
-const Skeuo = forwardRef<HTMLElement, SkeuoButtonProps>((props, ref) => {
-    return <SkeuoButton ref={ref} {...props} />
-})
+const Skeuo = SkeuoButton
 
 /**
  * A clickable element the user interacts with to trigger actions and events.
@@ -27,22 +27,51 @@ const Skeuo = forwardRef<HTMLElement, SkeuoButtonProps>((props, ref) => {
  *     <Button.Gui>Hello from GUI !</Button.Gui>
  *   );
  * }
+ * 
+ * @example - GUI link
+ * import { Button } from '@happy.tech/uikit-react';
  *
- * @example - Skeuomorphic paradigm
+ * const GuiAnchor = () => {
+ *   return (
+ *     <Button.Gui asChild>
+ *        <a href="/">Gui link !</a>
+ *     </Button.Gui>
+ *   );
+ * }
+ * 
+  * @example - Render as custom component (eg: router link component)
+ * import { Button } from '@happy.tech/uikit-react';
+ *
+ * const CustomGuiLink = () => {
+ *   return (
+ *     <Button.Gui asChild>
+ *        <Link to="/">Custom component !</a>
+ *     </Button.Gui>
+ *   );
+ * }
+ * @example - Skeuomorphic button
  * import { Button } from '@happy.tech/uikit-react';
  *
  * const ExampleSkeuoButton = () => {
  *   return (
- *     <Button.Skeuo>Hello from GUI !</Button.Skeuo>
+ *     <Button.Skeuo>
+ *       <Button.Skeuo.Label>Click me</Button.Skeuo.Label>
+ *       <Button.Skeuo.Trigger />
+ *     </Button.Skeuo>
  *   );
  * }
  *
- * @example - As a link
+ * @example - Skeuomorphic paradigm with custom <Link> component
  * import { Button } from '@happy.tech/uikit-react';
  *
- * const ExampleLinkButton = () => {
+ * const ExampleSkeuoLinkButton = () => {
  *   return (
- *     <Button.Gui aspect="ghost" href="https://example.com"> A link button</Button.Gui>
+ *     <Button.Skeuo>
+ *       <Button.Skeuo.Label>Visit dashboard</Button.Skeuo.Label>
+ *       <Button.Skeuo.Trigger asChild>
+ *          <Link to="/dashboard">Open</Link>
+ *       </Button.Skeuo.Trigger>
+ *     </Button.Skeuo>
  *   );
  * }
  */
@@ -53,4 +82,4 @@ const Button = Object.assign(Root, {
 
 Button.displayName = "Button"
 
-export { Button }
+export { Button, type GuiButtonProps }
