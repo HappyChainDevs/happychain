@@ -105,6 +105,7 @@ export const recipeSkeuoButton = {
             "before:inset-0 before:block before:size-full before:content-[' ']",
             "after:absolute after:inset-0 after:block after:size-full after:content-[' ']",
             "before:mix-blend-overlay",
+            "before:pointer-events-none after:pointer-events-none",
             "after:mix-blend-overlay",
         ],
         variants: {
@@ -137,7 +138,7 @@ export const recipeSkeuoButton = {
                 default: "rounded-full",
             },
             intent: {
-                default: "bg-gradient-hds-system-skeuo-concave ",
+                default: "bg-gradient-hds-utility-shade25-tint40 ",
             },
         },
         defaultVariants: {
@@ -179,7 +180,7 @@ export const recipeSkeuoButton = {
 
     // The actual interactive element
     interactiveElement: cva({
-        base: ["cursor-pointer", "absolute z-10 block inset-0 size-full", "sr-only"],
+        base: ["absolute z-10 block inset-0 size-full", "opacity-0"],
     }),
 }
 
