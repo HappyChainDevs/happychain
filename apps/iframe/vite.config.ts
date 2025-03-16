@@ -1,5 +1,6 @@
-/// <reference types="vitest" />
 import { SharedWorkerPlugin } from "@happy.tech/worker"
+/// <reference types="vitest" />
+import tailwindcss from "@tailwindcss/vite"
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig, loadEnv } from "vite"
@@ -35,6 +36,7 @@ export default defineConfig(({ command, mode }) => {
         server: { port: 5160, strictPort: true },
         preview: { port: 5160, strictPort: true },
         plugins: [
+            tailwindcss(),
             TanStackRouterVite(),
             react({ babel: { presets: ["jotai/babel/preset"] } }),
             SharedWorkerPlugin({
