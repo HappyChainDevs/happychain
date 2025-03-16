@@ -1,0 +1,38 @@
+@import "tailwindcss" source(none);
+
+/* If you're restructuring, don't forget to edit the path below or all styles will be gone ! */
+@source "../../../../../packages/design-system/src";
+@source "../../../index.html";
+@source "../screens";
+@source "../layouts";
+@source "../features";
+
+/* Tailwind v4 config (design tokens, font declarations, custom composite tokens) */
+@import "@happy.tech/design-tokens/tailwind.css";
+
+
+@keyframes shutter-open {
+    0% {
+        transform: translateY(0) perspective(100px) translateZ(0px);
+    }
+    5% {
+        transform: translateY(0) perspective(100px) translateZ(-1px);
+    }
+    100% {
+        transform: translateY(-150%) perspective(100px) translateZ(-1px);
+    }
+}
+
+@keyframes shutter-close {
+
+    0% {
+        transform: translateY(-150%) perspective(100px) translateZ(-1px);
+    }
+    98% {
+        transform: translateY(0) perspective(100px) translateZ(-1px);
+    }
+    100% {
+        transform: translateY(0) perspective(100px) translateZ(0px);
+    }
+
+}
