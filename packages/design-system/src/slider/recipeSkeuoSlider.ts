@@ -21,7 +21,7 @@ const recipeSkeuoSliderLabel = cva({
 export type SkeuoSliderLabelVariantsProps = VariantProps<typeof recipeSkeuoSliderLabel>
 
 const recipeSkeuoSliderControl = cva({
-    base: ["z-1 rounded-full"],
+    base: ["z-1 group group-has-[[aria-disabled]]:cursor-not-allowed rounded-full"],
     variants: {
         intent: {
             default: "bg-gradient-hds-system-skeuo-surface-100-250-600 shadow-hds-bevel-200",
@@ -51,6 +51,7 @@ const recipeSkeuoSliderThumb = cva({
         "motion-safe:transition-all duration-200",
         "aspect-square rounded-full",
         "absolute",
+        "aria-disabled:cursor-not-allowed",
         "data-[orientation=horizontal]:top-1/2 data-[orientation=horizontal]:-translate-y-1/2",
         'before:absolute before:content-[" "]  before:aspect-square before:rounded-full',
         "before:top-1/2 before:start-1/2 before:-translate-y-1/2 before:-translate-x-1/2",
