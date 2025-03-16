@@ -1,3 +1,6 @@
+// Alert
+export * from './alert/recipeGuiAlert'
+
 // Button
 export * from "./button/recipeGuiButton"
 export * from "./button/recipeSkeuoButton"
