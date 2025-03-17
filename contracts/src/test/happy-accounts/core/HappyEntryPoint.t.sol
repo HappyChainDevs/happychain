@@ -22,6 +22,7 @@ import {
     SubmitOutput,
     HappyEntryPoint,
     PaymentFailed,
+    PaymentReverted,
     ValidationFailed,
     ValidationReverted
 } from "../../../happy-accounts/core/HappyEntryPoint.sol";
@@ -390,29 +391,17 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         assertEq(output.executeGas, 0);
     }
 
-    //! This is another emvError like OOG, not a typical revert/require: ← [OutOfFunds] EvmError: OutOfFunds
     function testExecuteWithHighHappyTxValueGreaterThanSmartAccountBalance() public {
         // Set the initial balance of the smart account to 0
         vm.deal(smartAccount, 0);
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, ZERO_ADDRESS, new bytes(0));
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, paymaster, new bytes(0));
 
         // Set happyTx.value to a value higher than the smart account's balance
-        happyTx.value = 1;
-
-        // Make all gas fields zero before signing, as this is a submitter sponsored tx (as zero balance account can't pay for its gas fee)
-        happyTx.gasLimit = 0;
-        happyTx.executeGasLimit = 0;
-        happyTx.maxFeePerGas = 0;
-        happyTx.submitterFee = 0;
-
+        happyTx.value = 1 wei;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
-        // Re-populate the gas fields to initial values so the transaction can be executed on-chain
-        happyTx.gasLimit = 4000000000;
-        happyTx.executeGasLimit = 4000000000;
-        happyTx.maxFeePerGas = 1200000000;
-
         // The call should fail because the smartAccount address doesn't have enough funds
+        vm.deal(smartAccount, 0);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
         _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.CALL_REVERTED), new bytes(0));
 
@@ -442,7 +431,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Submit the happyTx again, with the above execGasLimit
         HappyTx memory happyTx2 =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx2.executeGasLimit = output.executeGas * 110 / 100; // 10% buffer
+        happyTx2.executeGasLimit = output.executeGas + 10_000; // Buffer to make ext call
         // TODO: removing this buffer, somehow correctly gives evmRevertst: OOG -> CallStatus.CALL_FAILED (which we want)
         happyTx2.validatorData = signHappyTx(happyTx2, privKey);
 
@@ -454,57 +443,99 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // ====================================================================================================
     // PAYOUT TESTS
 
-    function testPayoutWithSuperNegativeSubmitterFee() public {
+    function testSelfPayoutNegativeSubmitterFee() public {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx.submitterFee = -1_200_000_000 * 500_000; // happyTx.maxFeePerGas * overEstimation of consumedGas
+        happyTx.maxFeePerGas = 10; // For simple case
+        happyTx.submitterFee = -1_500_000; // Enough to make _charged < 0 inside HEP
         happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // The function should never return if tx.gasPrice <= happyTx.maxFeePerGas,
-        // in which case the expected charged amount = 0
 
         // Submit the transaction
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
         _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
     }
 
-    function testPayoutFailsSubmitterFeeRebate() public {
+    function testPaymasterPayoutNegativeSubmitterFee() public {
         HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx.submitterFee = -1_200_000; // happyTx.maxFeePerGas * overEstimation of consumedGas
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.maxFeePerGas = 10; // For simple case
+        happyTx.submitterFee = -1_500_000; // Enough to make _charged < 0 inside HEP
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
-        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector));
+        // Submit the transaction
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+    }
+
+    function testSelfPayoutRevertsOverFlow() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.maxFeePerGas = type(uint256).max; // This will cause an overflow and revert
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Panic error 0x11: Arithmetic operation results in underflow or overflow.
+        bytes4 panicSelector = bytes4(keccak256("Panic(uint256)"));
+        bytes memory overflowError = abi.encodeWithSelector(panicSelector, 0x11);
+
+        vm.expectRevert(abi.encodeWithSelector(PaymentReverted.selector, overflowError));
         happyEntryPoint.submit(happyTx.encode());
     }
 
-    function testPayoutFailsDueToVeryLowMaxFeePerGas() public {
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
+    function testPaymasterPayoutRevertsOverFlow() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.maxFeePerGas = type(uint256).max; // This will cause an overflow and revert
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
 
-        // The function should revert with PaymentFailed()
-        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector));
+        // Panic error 0x11: Arithmetic operation results in underflow or overflow.
+        bytes4 panicSelector = bytes4(keccak256("Panic(uint256)"));
+        bytes memory overflowError = abi.encodeWithSelector(panicSelector, 0x11);
+
+        vm.expectRevert(abi.encodeWithSelector(PaymentReverted.selector, overflowError));
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    function testSelfPayoutVeryLowMaxFeePerGas() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.maxFeePerGas = 1; // GTE to the tx.gasprice set below
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Submit the transaction
-        happyEntryPoint.submit(happyTx.encode());
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+    }
+
+    function testPaymasterPayoutVeryLowMaxFeePerGas() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.maxFeePerGas = 1; // GTE to the tx.gasprice set below
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
     }
 
     function testPayoutFailsDueToLowAccountBalance() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
 
-        // The function should revert with PaymentFailed()
-        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector));
-        // Submit the transaction
+        // Give the account a low balance so it can't pay back the fee
+        vm.deal(smartAccount, 0);
 
+        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, bytes4(0)));
+        vm.txGasPrice(happyTx.maxFeePerGas);
         happyEntryPoint.submit(happyTx.encode());
     }
 
     function testPayoutFailsDueToLowPaymasterBalance() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
-        // The function should revert with PaymentFailed()
-        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector));
+        // Give the paymaster a low balance so it can't pay back the fee
+        vm.deal(paymaster, 0);
 
-        // Submit the transaction
+        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, bytes4(0)));
+        vm.txGasPrice(happyTx.maxFeePerGas);
         happyEntryPoint.submit(happyTx.encode());
     }
 
