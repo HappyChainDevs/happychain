@@ -39,42 +39,12 @@ error InvalidNonce();
  */
 error FutureNonceDuringSimulation();
 
-/// Selector returned by {HappyEntryPoint.submit} if the validator is not found for the given account.
-error ValidatorNotFound(address validator);
-
-/// Selector returned by {IHappyAccount.addValidator} if the validator is already registered.
-error ValidatorAlreadyRegistered(address validator);
-
-/// Selector returned by {IHappyAccount.removeValidator} if the validator is not registered.
-error ValidatorNotRegistered(address validator);
-
-/// Selector returned by {IHappyAccount.validate} if the validator's value is invalid.
-error InvalidValidatorValue();
-
-/// Selector returned by {IHappyAccount.addExecutor} if the executor is already registered.
-error ExecutorAlreadyRegistered(address executor);
-
-/// Selector returned by {IHappyAccount.removeExecutor} if the executor is not registered.
-error ExecutorNotRegistered(address executor);
-
-/// Selector returned by {IHappyAccount.execute} if the executor's value is invalid.
-error InvalidExecutorValue();
-
-/// Selector returned by {IHappyAccount.execute} if the executor is not found.
-error ExecutorNotFound(address executor);
-
 /**
  * Interface to be implemented by smart contract accounts conforming to the Happy Account standard.
  * Accounts can optionally implement the {IHappyPaymaster} interface if they wish to support
  * paying submitters themselves without relying on external paymasters.
  */
 interface IHappyAccount {
-    /// Reverts if the validator is already present.
-    function addValidator(address customValidator) external;
-
-    /// Reverts if the validator is not present.
-    function removeValidator(address customValidator) external;
-
     /**
      * Validates a Happy Transaction.
      *
