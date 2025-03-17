@@ -198,20 +198,18 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     function submit(bytes calldata encodedHappyTx) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
+        bool isSimulation = tx.origin == address(0);
 
         // [LOGGAS] uint256 decodeGasEnd = gasleft();
         // [LOGGAS] console.log("HappyTxLib.decode gas usage: ", gasStart - decodeGasEnd);
 
         // 1. Validate happyTx with account
 
-        uint256 gasBeforeValidate = gasleft();
         bool success;
         bytes memory returnData;
 
         (success, returnData) = happyTx.account.excessivelySafeCall(
-            isSimulation && happyTx.gasLimit == 0
-                ? gasleft()
-                : happyTx.gasLimit - (gasStart - gasBeforeValidate + POST_OOG_GAS_BUFFER),
+            isSimulation && happyTx.gasLimit == 0 ? gasleft() : gasleft() - POST_OOG_GAS_BUFFER,
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
@@ -290,9 +288,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] uint256 payoutGasStart = gasleft();
 
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
-            isSimulation && happyTx.gasLimit == 0
-                ? gasleft()
-                : happyTx.gasLimit - (gasStart - gasBeforePayout + POST_OOG_GAS_BUFFER),
+            isSimulation && happyTx.gasLimit == 0 ? gasleft() : gasleft() - POST_OOG_GAS_BUFFER,
             0, // gas token transfer value
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
