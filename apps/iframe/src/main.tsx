@@ -9,7 +9,8 @@ import { routeTree } from "./routeTree.gen"
 
 import "./listeners"
 
-import "./index.css"
+// import "./index.css"
+import "./v2/styles/app.css"
 import type { Logger } from "@happy.tech/common"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider } from "wagmi"
