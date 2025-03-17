@@ -28,5 +28,8 @@
         "@happy.tech/happybuild": "workspace:0.1.1",
         "@types/react": "^18.3.4",
         "vite-plugin-node-polyfills": "^0.22.0"
+    },
+    "dependencies": {
+        "@opentelemetry/api": "^1.9.0"
     }
 }
