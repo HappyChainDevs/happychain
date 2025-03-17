@@ -1,5 +1,5 @@
 // Alert
-export * from './alert/recipeGuiAlert'
+export * from "./alert/recipeGuiAlert"
 
 // Button
 export * from "./button/recipeGuiButton"
