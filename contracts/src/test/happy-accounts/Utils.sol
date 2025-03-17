@@ -40,36 +40,7 @@ contract HappyTxTestUtils is Test {
     ) public view returns (HappyTx memory happyTx) {
         happyTx = getStubHappyTx(account, dest, paymaster, callData);
         happyTx.nonceValue = getNonce(account);
-
-        // Store the original gas values
-        uint32 origGasLimit;
-        uint32 origExecuteGasLimit;
-        uint256 origMaxFeePerGas;
-        int256 origSubmitterFee;
-
-        if (paymaster != account) {
-            // If the happy-tx is not self-paying, we don't sign over the gas values
-            origGasLimit = happyTx.gasLimit;
-            origExecuteGasLimit = happyTx.executeGasLimit;
-            origMaxFeePerGas = happyTx.maxFeePerGas;
-            origSubmitterFee = happyTx.submitterFee;
-
-            // Temporarily make them zero to not sign over them
-            happyTx.gasLimit = 0;
-            happyTx.executeGasLimit = 0;
-            happyTx.maxFeePerGas = 0;
-            happyTx.submitterFee = 0;
-        }
-
         happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        if (paymaster != account) {
-            // Restore the original gas values after signing
-            happyTx.gasLimit = origGasLimit;
-            happyTx.executeGasLimit = origExecuteGasLimit;
-            happyTx.maxFeePerGas = origMaxFeePerGas;
-            happyTx.submitterFee = origSubmitterFee;
-        }
     }
 
     function getStubHappyTx(address _account, address _dest, address _paymaster, bytes memory _callData)
@@ -96,9 +67,37 @@ contract HappyTxTestUtils is Test {
     }
 
     function signHappyTx(HappyTx memory happyTx, uint256 privKey) public pure returns (bytes memory signature) {
+        // Store the original gas values
+        uint32 origGasLimit;
+        uint32 origExecuteGasLimit;
+        uint256 origMaxFeePerGas;
+        int256 origSubmitterFee;
+
+        if (happyTx.paymaster != happyTx.account) {
+            // If the happy-tx is not self-paying, we don't sign over the gas values
+            origGasLimit = happyTx.gasLimit;
+            origExecuteGasLimit = happyTx.executeGasLimit;
+            origMaxFeePerGas = happyTx.maxFeePerGas;
+            origSubmitterFee = happyTx.submitterFee;
+
+            // Temporarily make them zero to not sign over them
+            happyTx.gasLimit = 0;
+            happyTx.executeGasLimit = 0;
+            happyTx.maxFeePerGas = 0;
+            happyTx.submitterFee = 0;
+        }
+
         bytes32 hash = keccak256(happyTx.encode()).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
+
+        if (happyTx.paymaster != happyTx.account) {
+            // Restore the original gas values after signing
+            happyTx.gasLimit = origGasLimit;
+            happyTx.executeGasLimit = origExecuteGasLimit;
+            happyTx.maxFeePerGas = origMaxFeePerGas;
+            happyTx.submitterFee = origSubmitterFee;
+        }
     }
 
     // ====================================================================================================
