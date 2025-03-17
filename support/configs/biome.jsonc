@@ -17,7 +17,8 @@
             "node_modules",
             "routeTree.gen.ts",
             "directives.tw.css",
-            "tokens/tailwind.css"
+            "tokens/tailwind.css",
+            "styles/app.css"
         ]
     },
     "formatter": {
