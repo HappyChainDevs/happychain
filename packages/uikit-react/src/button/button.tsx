@@ -1,18 +1,10 @@
 import { forwardRef } from "react"
 import { GuiButton, type GuiButtonProps } from "./gui"
-import { SkeuoButton, } from "./skeuo"
-
-type ButtonElement = HTMLButtonElement | HTMLAnchorElement | HTMLElement
+import { SkeuoButton } from "./skeuo"
 
 const Root = forwardRef<HTMLElement>((_props, _ref) => {
     return null
 })
-
-const Gui = forwardRef<ButtonElement, GuiButtonProps>((props, ref) => {
-    return <GuiButton ref={ref as any} {...props} />
-})
-
-const Skeuo = SkeuoButton
 
 /**
  * A clickable element the user interacts with to trigger actions and events.
@@ -27,7 +19,7 @@ const Skeuo = SkeuoButton
  *     <Button.Gui>Hello from GUI !</Button.Gui>
  *   );
  * }
- * 
+ *
  * @example - GUI link
  * import { Button } from '@happy.tech/uikit-react';
  *
@@ -38,8 +30,8 @@ const Skeuo = SkeuoButton
  *     </Button.Gui>
  *   );
  * }
- * 
-  * @example - Render as custom component (eg: router link component)
+ *
+ * @example - Render as custom component (eg: router link component)
  * import { Button } from '@happy.tech/uikit-react';
  *
  * const CustomGuiLink = () => {
@@ -76,8 +68,8 @@ const Skeuo = SkeuoButton
  * }
  */
 const Button = Object.assign(Root, {
-    Gui,
-    Skeuo,
+    Gui: GuiButton,
+    Skeuo: SkeuoButton,
 })
 
 Button.displayName = "Button"

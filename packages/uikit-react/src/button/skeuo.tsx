@@ -8,105 +8,80 @@ import type { PropsWithChildren } from "react"
  * @internal
  */
 type SkeuoButtonContext = {
-  intent?: SkeuoButtonVariantsProps["intent"]
-  scale?: SkeuoButtonVariantsProps["scale"]
-  depth?: SkeuoButtonVariantsProps["depth"]
-  alignItems?: SkeuoButtonVariantsProps["alignItems"]
-  justifyContent?: SkeuoButtonVariantsProps["justifyContent"]
+    intent?: SkeuoButtonVariantsProps["intent"]
+    scale?: SkeuoButtonVariantsProps["scale"]
+    depth?: SkeuoButtonVariantsProps["depth"]
+    alignItems?: SkeuoButtonVariantsProps["alignItems"]
+    justifyContent?: SkeuoButtonVariantsProps["justifyContent"]
 
-  /** Unique ID for accessibility connection between visible label and interactive element */
-  labelId?: string
+    /** Unique ID for accessibility connection between visible label and interactive element */
+    labelId?: string
 }
 
 const SkeuoButtonContext = createContext<SkeuoButtonContext>({})
 
 interface RootProps extends SkeuoButtonVariantsProps, HTMLArkProps<"div">, PropsWithChildren {}
 const Root = forwardRef<HTMLDivElement, RootProps>((props, ref) => {
-  const {
-    intent,
-    scale,
-    depth,
-    alignItems,
-    justifyContent,
-    className,
-    children,
-    ...rest
-  } = props
+    const { intent, scale, depth, alignItems, justifyContent, className, children, ...rest } = props
 
-  const labelId = useId()
+    const labelId = useId()
 
-  return (
-    <SkeuoButtonContext.Provider
-      value={{
-        intent,
-        scale,
-        depth,
-        alignItems,
-        justifyContent,
-        labelId,
-      }}
-    >
-      <div
-        ref={ref}
-        className={recipeSkeuoButton.parent({ className })}
-        {...rest}
-      >
-        <span
-          data-part="cuttout"
-          className={recipeSkeuoButton.cuttout({ intent, scale })}
+    return (
+        <SkeuoButtonContext.Provider
+            value={{
+                intent,
+                scale,
+                depth,
+                alignItems,
+                justifyContent,
+                labelId,
+            }}
         >
-          <span
-            data-part="texture"
-            className={recipeSkeuoButton.texture({ intent, scale })}
-          >
-            <span
-              data-part="positioner"
-              className={recipeSkeuoButton.positioner()}
-            >
-              {children}
-              <span
-                data-part="recess"
-                className={recipeSkeuoButton.recess({ intent, scale, depth })}
-              />
-            </span>
-          </span>
-        </span>
-      </div>
-    </SkeuoButtonContext.Provider>
-  )
+            <div ref={ref} className={recipeSkeuoButton.parent({ className })} {...rest}>
+                <span data-part="cuttout" className={recipeSkeuoButton.cuttout({ intent, scale })}>
+                    <span data-part="texture" className={recipeSkeuoButton.texture({ intent, scale })}>
+                        <span data-part="positioner" className={recipeSkeuoButton.positioner()}>
+                            {children}
+                            <span data-part="recess" className={recipeSkeuoButton.recess({ intent, scale, depth })} />
+                        </span>
+                    </span>
+                </span>
+            </div>
+        </SkeuoButtonContext.Provider>
+    )
 })
 
 interface LabelProps extends HTMLArkProps<"span">, PropsWithChildren {}
 
 /**
  * The visible label part of the skeuomorphic button.
- * 
+ *
  * @example
  * ```tsx
  * <SkeuoButton.Label>I'm visible !</SkeuoButton.Label>
  * ```
  */
 const Label = forwardRef<HTMLSpanElement, LabelProps>((props, ref) => {
-  const { children, className, ...rest } = props
-  const { intent, scale, justifyContent, alignItems, labelId } = useContext(SkeuoButtonContext)
+    const { children, className, ...rest } = props
+    const { intent, scale, justifyContent, alignItems, labelId } = useContext(SkeuoButtonContext)
 
-  return (
-    <span
-      ref={ref}
-      className={recipeSkeuoButton.label({
-        intent,
-        scale,
-        justifyContent,
-        alignItems,
-        className,
-      })}
-      id={labelId}
-      data-part="label"
-      {...rest}
-    >
-      {children}
-    </span>
-  )
+    return (
+        <span
+            ref={ref}
+            className={recipeSkeuoButton.label({
+                intent,
+                scale,
+                justifyContent,
+                alignItems,
+                className,
+            })}
+            id={labelId}
+            data-part="label"
+            {...rest}
+        >
+            {children}
+        </span>
+    )
 })
 
 interface TriggerProps extends HTMLArkProps<"button">, PropsWithChildren {}
@@ -114,14 +89,14 @@ interface TriggerProps extends HTMLArkProps<"button">, PropsWithChildren {}
  * The interactive trigger component of the skeuomorphic button.
  * This is the component that handles user interactions and events.
  * It's visually hidden but handles all the button functionality.
- * 
+ *
  * @example - Basic usage
  * ```tsx
  * <SkeuoButton.Trigger type="button" onClick={handleClick}>
  *    Basic hidden trigger!
  * </SkeuoButton.Trigger>
  *
- * 
+ *
  * @example - With custom element
  * ```
  * <SkeuoButton.Trigger asChild>
@@ -130,28 +105,28 @@ interface TriggerProps extends HTMLArkProps<"button">, PropsWithChildren {}
  * ```
  */
 const Trigger = forwardRef<HTMLButtonElement, TriggerProps>((props, ref) => {
-  const { children, className, asChild, ...rest } = props
-  const { labelId } = useContext(SkeuoButtonContext)
+    const { children, className, asChild, ...rest } = props
+    const { labelId } = useContext(SkeuoButtonContext)
 
-  return (
-    <ark.button
-      ref={ref}
-      className={recipeSkeuoButton.interactiveElement({ className })}
-      data-part="interactive-element"
-      aria-labelledby={labelId}
-      asChild={asChild}
-      {...rest}
-    >
-      {children}
-    </ark.button>
-  )
+    return (
+        <ark.button
+            ref={ref}
+            className={recipeSkeuoButton.interactiveElement({ className })}
+            data-part="interactive-element"
+            aria-labelledby={labelId}
+            asChild={asChild}
+            {...rest}
+        >
+            {children}
+        </ark.button>
+    )
 })
 
-Root.displayName = 'SkeuoButton'
-Label.displayName = 'SkeuoButton.Label'
-Trigger.displayName = 'SkeuoButton.Trigger'
+Root.displayName = "SkeuoButton"
+Label.displayName = "SkeuoButton.Label"
+Trigger.displayName = "SkeuoButton.Trigger"
 
-/** 
+/**
  * @example - Basic usage
  * ```tsx
  * <SkeuoButton>
@@ -159,7 +134,7 @@ Trigger.displayName = 'SkeuoButton.Trigger'
  *   <SkeuoButton.Trigger onClick={() => alert('Clicked!')} />
  * </SkeuoButton>
  * ```
- * 
+ *
  * @example - Rendering a custom component instead of a `<button>`
  * ```tsx
  * <SkeuoButton>
@@ -171,6 +146,6 @@ Trigger.displayName = 'SkeuoButton.Trigger'
  * ```
  */
 export const SkeuoButton = Object.assign(Root, {
-  Label,
-  Trigger,
+    Label,
+    Trigger,
 })
