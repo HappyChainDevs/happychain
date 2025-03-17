@@ -15,19 +15,19 @@ import {
     ExecutionOutput,
     GasPriceTooHigh,
     InvalidNonce,
-    WrongAccount,
-    ValidatorAlreadyRegistered,
-    ValidatorNotRegistered,
-    InvalidValidatorValue,
-    ValidatorNotFound,
-    ExecutorAlreadyRegistered,
-    ExecutorNotRegistered,
-    InvalidExecutorValue,
-    ExecutorNotFound
+    WrongAccount
 } from "../interfaces/IHappyAccount.sol";
 
 import {ICustomBoopValidator} from "../interfaces/extensions/ICustomBoopValidator.sol";
 import {ICustomBoopExecutor} from "../interfaces/extensions/ICustomBoopExecutor.sol";
+import {
+    IExtendedAccount,
+    ExtensionType,
+    ExtensionNotFound,
+    ExtensionAlreadyRegistered,
+    ExtensionNotRegistered,
+    InvalidExtensionValue
+} from "../interfaces/extensions/IExtendedAccount.sol";
 
 import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
@@ -49,6 +49,7 @@ import {
 contract ScrappyAccount is
     IHappyAccount,
     IHappyPaymaster,
+    IExtendedAccount,
     ReentrancyGuardTransient,
     OwnableUpgradeable,
     UUPSUpgradeable
@@ -73,18 +74,6 @@ contract ScrappyAccount is
 
     /// Emitted when ETH is received by the contract
     event Received(address indexed sender, uint256 amount);
-
-    /// Emitted when a validator is added to the account
-    event ValidatorAdded(address indexed validator);
-
-    /// Emitted when a validator is removed from the account
-    event ValidatorRemoved(address indexed validator);
-
-    /// Emitted when an executor is added to the account
-    event ExecutorAdded(address indexed executor);
-
-    /// Emitted when an executor is removed from the account
-    event ExecutorRemoved(address indexed executor);
 
     // ====================================================================================================
     // CONSTANTS
@@ -123,11 +112,8 @@ contract ScrappyAccount is
     /// Mapping from track => nonce
     mapping(uint192 => uint256) public nonceValue;
 
-    /// Mapping to check if a validator is registered
-    mapping(address => bool) public validators;
-
-    /// Mapping to check if an executor is registered
-    mapping(address => bool) public executors;
+    /// Mapping to check if an extension is registered by type
+    mapping(ExtensionType => mapping(address => bool)) public extensions;
 
     // ====================================================================================================
     // MODIFIERS
@@ -161,31 +147,25 @@ contract ScrappyAccount is
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
-    function addValidator(address validator) external onlySelfOrOwner {
-        if (validators[validator]) revert ValidatorAlreadyRegistered(validator);
-        validators[validator] = true;
-        emit ValidatorAdded(validator);
+    function addExtension(address extension, ExtensionType extensionType) external onlySelfOrOwner {
+        if (extensions[extensionType][extension]) {
+            revert ExtensionAlreadyRegistered(extension, extensionType);
+        }
+
+        extensions[extensionType][extension] = true;
+        emit ExtensionAdded(extension, extensionType);
     }
 
-    function removeValidator(address validator) external onlySelfOrOwner {
-        if (!validators[validator]) revert ValidatorNotRegistered(validator);
-        delete validators[validator];
-        emit ValidatorRemoved(validator);
+    function removeExtension(address extension, ExtensionType extensionType) external onlySelfOrOwner {
+        if (!extensions[extensionType][extension]) {
+            revert ExtensionNotRegistered(extension, extensionType);
+        }
+
+        delete extensions[extensionType][extension];
+        emit ExtensionRemoved(extension, extensionType);
     }
 
-    function addExecutor(address executor) external onlySelfOrOwner {
-        if (executors[executor]) revert ExecutorAlreadyRegistered(executor);
-        executors[executor] = true;
-        emit ExecutorAdded(executor);
-    }
-
-    function removeExecutor(address executor) external onlySelfOrOwner {
-        if (!executors[executor]) revert ExecutorNotRegistered(executor);
-        delete executors[executor];
-        emit ExecutorRemoved(executor);
-    }
-
-    function validate(HappyTx memory happyTx) external returns (bytes4) {
+    function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes4) {
         if (happyTx.account != address(this)) {
             return WrongAccount.selector;
         }
@@ -317,12 +297,12 @@ contract ScrappyAccount is
         returns (bool)
     {
         if (validatorData.length != 32) {
-            revert InvalidValidatorValue();
+            revert InvalidExtensionValue(ExtensionType.Validator);
         }
 
         address validator = address(uint160(uint256(bytes32(validatorData))));
-        if (!validators[validator]) {
-            revert ValidatorNotFound(validator);
+        if (!extensions[ExtensionType.Validator][validator]) {
+            revert ExtensionNotFound(validator, ExtensionType.Validator);
         }
 
         (bool success, bytes memory returnData) = validator.excessivelySafeCall(
@@ -345,7 +325,7 @@ contract ScrappyAccount is
         returns (ExecutionOutput memory output)
     {
         if (executorData.length != 32) {
-            revert InvalidExecutorValue();
+            revert InvalidExtensionValue(ExtensionType.Executor);
         }
 
         address executor;
@@ -353,8 +333,8 @@ contract ScrappyAccount is
             executor := mload(add(add(executorData, 0x20), 12)) // skip first 12 bytes
         }
 
-        if (!executors[executor]) {
-            revert ExecutorNotFound(executor);
+        if (!extensions[ExtensionType.Executor][executor]) {
+            revert ExtensionNotFound(executor, ExtensionType.Executor);
         }
 
         // Call external executor
