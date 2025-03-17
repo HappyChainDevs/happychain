@@ -24,12 +24,8 @@ const recipeGuiAlertContainer = cva({
     },
 })
 export type GuiAlertContainerVariantsProps = VariantProps<typeof recipeGuiAlertContainer>
-const recipeGuiAlertIcon = cva({ 
-    base: [
-        "aspect-square",
-        "[mask-position:center] [mask-size:contain] [mask-repeat:no-repeat]",
-        "bg-current",
-    ],
+const recipeGuiAlertIcon = cva({
+    base: ["aspect-square", "[mask-position:center] [mask-size:contain] [mask-repeat:no-repeat]", "bg-current"],
     variants: {
         aspect: {
             default: "",
@@ -53,60 +49,44 @@ const recipeGuiAlertIcon = cva({
 })
 export type GuiAlertIconVariantsProps = VariantProps<typeof recipeGuiAlertIcon>
 
-
 const recipeGuiAlertTitle = cva({
-    base: [
-        'text-center',
-        'font-hds-system-gui-display',
-        'font-[weight:var(--font-hds-weight-normal)]'
-    ],
+    base: ["text-center", "font-hds-system-gui-display", "font-[weight:var(--font-hds-weight-normal)]"],
     variants: {
         intent: {
             default: "text-hds-system-gui-foreground-default",
             info: "text-hds-system-gui-foreground-default",
             warning: "text-hds-system-gui-foreground-default",
             positive: "text-hds-system-gui-foreground-default",
-            negative: "text-hds-system-gui-foreground-default"
+            negative: "text-hds-system-gui-foreground-default",
         },
         scale: {
-            default: [
-                "tracking-hds-loose",
-                "text-hds-system-gui-base"
-            ]
+            default: ["tracking-hds-loose", "text-hds-system-gui-base"],
         },
     },
     defaultVariants: {
         scale: "default",
-        intent: "default"
+        intent: "default",
     },
 })
 export type GuiAlertTitleVariantsProps = VariantProps<typeof recipeGuiAlertTitle>
 
 const recipeGuiAlertDescription = cva({
-    base: [
-        'text-center',
-        'font-hds-system-gui-display',
-        'font-[weight:var(--font-hds-weight-normal)]'
-    ],
+    base: ["text-center", "font-hds-system-gui-display", "font-[weight:var(--font-hds-weight-normal)]"],
     variants: {
         intent: {
             default: "text-hds-system-gui-foreground-default",
             info: "text-hds-system-gui-foreground-default",
             warning: "text-hds-system-gui-foreground-default",
             positive: "text-hds-system-gui-foreground-default",
-            negative: "text-hds-system-gui-foreground-default"
+            negative: "text-hds-system-gui-foreground-default",
         },
         scale: {
-            default: [
-                "tracking-hds-loose",
-                "text-hds-system-gui-base",
-                "[&_br]:mb-1"
-            ]
+            default: ["tracking-hds-loose", "text-hds-system-gui-base", "[&_br]:mb-1"],
         },
     },
     defaultVariants: {
         scale: "default",
-        intent: "default"
+        intent: "default",
     },
 })
 export type GuiAlertDescriptionVariantsProps = VariantProps<typeof recipeGuiAlertDescription>
@@ -114,7 +94,6 @@ export type GuiAlertDescriptionVariantsProps = VariantProps<typeof recipeGuiAler
 const recipeGuiAlertActions = cva({
     base: ["flex flex-col justify-center"],
     variants: {
-
         scale: {
             default: "gap-2",
         },
@@ -128,7 +107,7 @@ export type GuiAlertActionsVariantsProps = VariantProps<typeof recipeGuiAlertAct
 /**
  * Visual pattern for inline alerts feedback messages that may need user attention/action.
  * Mimics the minimalistic, retro look of early graphics-based operating systems.
- * 
+ *
  * This recipe consists of multiple related elements:
  * - container: The outer wrapper that provides styling and structure
  * - icon: Visual indicator of the alert type (info, warning, error, etc.)
@@ -149,7 +128,7 @@ export type GuiAlertActionsVariantsProps = VariantProps<typeof recipeGuiAlertAct
  *   </div>
  * </div>
  * ```
- * 
+ *
  * @note For proper accessibility, use appropriate semantic elements and ARIA roles.
  */
 export const recipeGuiAlert = {
