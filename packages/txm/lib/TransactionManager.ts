@@ -24,10 +24,12 @@ import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
 import { TxMonitor } from "./TxMonitor.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
-import { blockchainRpcResponseTimeHistogram, rpcCounter, rpcErrorCounter } from "./telemetry/metrics"
 import { getUrlProtocol } from "./utils/getUrlProtocol"
 import type { SafeViemPublicClient, SafeViemWalletClient } from "./utils/safeViemClients"
 import { convertToSafeViemPublicClient, convertToSafeViemWalletClient } from "./utils/safeViemClients"
+import { initializeTelemetry } from "./telemetry/instrumentation"
+import { TxmMetrics } from "./telemetry/metrics"
+import type { MetricReader } from "@opentelemetry/sdk-metrics"
 
 export type TransactionManagerConfig = {
     /**
@@ -135,6 +137,30 @@ export type TransactionManagerConfig = {
      * Default: {@link DefaultRetryPolicyManager}
      */
     retryPolicyManager?: RetryPolicyManager
+
+    /**
+     * Transaction Manager metrics configuration.
+     */
+    metrics?: {
+        /**
+         * Whether to enable metrics collection.
+         * Defaults to true.
+         */
+        active?: boolean
+        /**
+         * Port number for the default Prometheus metrics endpoint.
+         * The default metric reader is a Prometheus reader that exposes metrics via this endpoint.
+         * This setting is only used when custom metricReaders are not provided.
+         * Defaults to 9090.
+         */
+        port?: number
+        /**
+         * Custom metric readers to use instead of the default Prometheus reader.
+         * If provided, these readers will be used and the port setting will be ignored.
+         * If not provided, a default Prometheus reader will be configured using the specified port.
+         */
+        metricReaders?: MetricReader[]
+    }
 }
 
 export type TransactionOriginator = (block: LatestBlock) => Promise<Transaction[]>
@@ -174,6 +200,12 @@ export class TransactionManager {
     public readonly blockInactivityTimeout: number
 
     constructor(_config: TransactionManagerConfig) {
+        initializeTelemetry({
+            active: _config.metrics?.active ?? true,
+            port: _config.metrics?.port ?? 9090,
+            metricReaders: _config.metrics?.metricReaders,
+        })
+
         this.collectors = []
 
         const protocol = getUrlProtocol(_config.rpc.url)
@@ -233,9 +265,9 @@ export class TransactionManager {
                 chain,
             }),
             {
-                rpcCounter: rpcCounter,
-                rpcErrorCounter: rpcErrorCounter,
-                rpcResponseTimeHistogram: blockchainRpcResponseTimeHistogram,
+                rpcCounter: TxmMetrics.getInstance().rpcCounter,
+                rpcErrorCounter: TxmMetrics.getInstance().rpcErrorCounter,
+                rpcResponseTimeHistogram: TxmMetrics.getInstance().blockchainRpcResponseTimeHistogram,
             },
         )
 
@@ -245,9 +277,9 @@ export class TransactionManager {
                 chain,
             }),
             {
-                rpcCounter: rpcCounter,
-                rpcErrorCounter: rpcErrorCounter,
-                rpcResponseTimeHistogram: blockchainRpcResponseTimeHistogram,
+                rpcCounter: TxmMetrics.getInstance().rpcCounter,
+                rpcErrorCounter: TxmMetrics.getInstance().rpcErrorCounter,
+                rpcResponseTimeHistogram: TxmMetrics.getInstance().blockchainRpcResponseTimeHistogram,
             },
         )
 

@@ -4,7 +4,7 @@ import type { Address, ContractFunctionArgs, Hash } from "viem"
 import type { LatestBlock } from "./BlockMonitor"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionTable } from "./db/types.js"
-import { attemptsUntilFinalization, transactionStatusChangeCounter } from "./telemetry/metrics"
+import { TxmMetrics } from "./telemetry/metrics"
 
 export enum TransactionStatus {
     /**
@@ -206,11 +206,11 @@ export class Transaction {
         this.status = status
         this.markUpdated()
 
-        transactionStatusChangeCounter.add(1, {
+        TxmMetrics.getInstance().transactionStatusChangeCounter.add(1, {
             status: this.status,
         })
 
-        attemptsUntilFinalization.record(this.attempts.length)
+        TxmMetrics.getInstance().attemptsUntilFinalization.record(this.attempts.length)
 
         eventBus.emit(Topics.TransactionStatusChanged, {
             transaction: this,

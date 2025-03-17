@@ -1,7 +1,7 @@
 import opentelemetry from "@opentelemetry/api"
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus"
 import { Resource } from "@opentelemetry/resources"
-import { MeterProvider } from "@opentelemetry/sdk-metrics"
+import { MeterProvider, type MetricReader } from "@opentelemetry/sdk-metrics"
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions"
 
 const resource = Resource.default().merge(
@@ -11,11 +11,19 @@ const resource = Resource.default().merge(
     }),
 )
 
-const prometheusExporter = new PrometheusExporter({ port: 9090 })
+export function initializeTelemetry({
+    active,
+    port,
+    metricReaders,
+}: { active: boolean; port: number; metricReaders?: MetricReader[] }): void {
+    if (!active) {
+        return
+    }
 
-const myServiceMeterProvider = new MeterProvider({
-    resource: resource,
-    readers: [prometheusExporter],
-})
+    const meterProvider = new MeterProvider({
+        resource: resource,
+        readers: metricReaders || [new PrometheusExporter({ port })],
+    })
 
-opentelemetry.metrics.setGlobalMeterProvider(myServiceMeterProvider)
+    opentelemetry.metrics.setGlobalMeterProvider(meterProvider)
+}
