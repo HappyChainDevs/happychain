@@ -1,6 +1,5 @@
 import { TransactionType, toBigIntSafe } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
-import { shortenAddress } from "@happy.tech/wallet-common"
 import { useMutation } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
@@ -24,7 +23,6 @@ import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { publicClientAtom } from "#src/state/publicClient"
 import { getSmartAccountClient } from "#src/state/smartAccountClient"
 import { userAtom } from "#src/state/user"
-import { getAppURL } from "#src/utils/appURL"
 import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
 import DisclosureSection from "./common/DisclosureSection"
@@ -67,15 +65,8 @@ function classifyTxType(tx: RpcTransactionRequest) {
         case TransactionType.EIP7702:
             return "EIP-7702 (unsupported)"
         default:
-            // these fields will be set by the wagmi hook if not
-            // already present in the tx object
-            if (tx.maxFeePerGas || tx.maxPriorityFeePerGas) {
-                return "EIP-1559"
-            }
-
-            if (tx.gasPrice) {
-                return "EIP-1559 (converted from legacy)"
-            }
+            // what we really (only) support
+            return "UserOp"
     }
 }
 
@@ -92,7 +83,6 @@ export const EthSendTransaction = ({
     const publicClient = useAtomValue(publicClientAtom)
 
     const targetContractAddress = tx.to && isAddress(tx.to) ? tx.to : undefined
-    const appURL = getAppURL()
 
     // get and store block data
     const [blockData, setBlockData] = useState<Block | undefined>(undefined)
