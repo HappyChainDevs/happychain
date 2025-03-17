@@ -6,6 +6,7 @@ import { Topics, eventBus } from "./EventBus.js"
 import type { RevertedTransactionReceipt } from "./RetryPolicyManager"
 import { type Attempt, AttemptType, type Transaction, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
+import { transactionInclusionBlockHistogram, transactionsRetriedCounter } from "./telemetry/metrics"
 
 type AttemptWithReceipt = { attempt: Attempt; receipt: TransactionReceipt }
 
@@ -139,6 +140,8 @@ export class TxMonitor {
 
             const { attempt, receipt } = attemptOrResults
 
+            transactionInclusionBlockHistogram.record(Number(block.number - transaction.collectionBlock!))
+
             if (receipt.status === "success") {
                 if (attempt.type === AttemptType.Cancellation) {
                     Logger.instance.error(LogTag.TXM, `Transaction ${transaction.intentId} was cancelled`)
@@ -158,6 +161,8 @@ export class TxMonitor {
                 Logger.instance.error(LogTag.TXM, `Transaction ${transaction.intentId} failed`)
                 return transaction.changeStatus(TransactionStatus.Failed)
             }
+
+            transactionsRetriedCounter.add(1)
 
             return this.handleRetryTransaction(transaction)
         })

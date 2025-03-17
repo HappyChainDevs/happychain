@@ -1,10 +1,12 @@
 import { unknownToError } from "@happy.tech/common"
+import type { Counter, Histogram } from "@opentelemetry/api"
 import { ResultAsync } from "neverthrow"
 import type {
     Account,
     Chain,
     EstimateGasErrorType,
     GetChainIdErrorType,
+    GetTransactionCountErrorType,
     GetTransactionReceiptErrorType,
     Hash,
     PublicClient,
@@ -82,58 +84,223 @@ export type DebugTransactionSchema = {
     ReturnType: Call
 }
 
-export type SafeViemPublicClient = ReturnType<typeof convertToSafeViemPublicClient>
+export interface SafeViemPublicClient extends ViemPublicClient {
+    rpcCounter: Counter | undefined
+    rpcErrorCounter: Counter | undefined
+    rpcResponseTimeHistogram: Histogram | undefined
 
-export function convertToSafeViemPublicClient(client: ViemPublicClient) {
-    return client.extend((client) => ({
-        safeEstimateGas: async (...args: Parameters<ViemPublicClient["estimateGas"]>) =>
-            ResultAsync.fromPromise<Awaited<ReturnType<ViemPublicClient["estimateGas"]>>, EstimateGasErrorType>(
-                client.estimateGas(...args),
-                unknownToError as (u: unknown) => EstimateGasErrorType,
-            ),
-        safeGetTransactionReceipt: async (...args: Parameters<ViemPublicClient["getTransactionReceipt"]>) =>
-            ResultAsync.fromPromise<
-                Awaited<ReturnType<ViemPublicClient["getTransactionReceipt"]>>,
-                GetTransactionReceiptErrorType
-            >(client.getTransactionReceipt(...args), unknownToError as (u: unknown) => GetTransactionReceiptErrorType),
-        safeDebugTransaction: async (...args: DebugTransactionSchema["Parameters"]) =>
-            ResultAsync.fromPromise<DebugTransactionSchema["ReturnType"], RpcErrorType>(
-                client.request({
-                    method: "debug_traceTransaction",
-                    params: args,
-                }),
-                unknownToError as (u: unknown) => RpcErrorType,
-            ),
-        safeGetChainId: async () =>
-            ResultAsync.fromPromise<Awaited<ReturnType<ViemPublicClient["getChainId"]>>, GetChainIdErrorType>(
-                client.getChainId(),
-                unknownToError as (u: unknown) => GetChainIdErrorType,
-            ),
-    }))
+    safeEstimateGas: (
+        ...args: Parameters<ViemPublicClient["estimateGas"]>
+    ) => ResultAsync<Awaited<ReturnType<ViemPublicClient["estimateGas"]>>, EstimateGasErrorType>
+    safeGetTransactionReceipt: (
+        ...args: Parameters<ViemPublicClient["getTransactionReceipt"]>
+    ) => ResultAsync<Awaited<ReturnType<ViemPublicClient["getTransactionReceipt"]>>, GetTransactionReceiptErrorType>
+    safeDebugTransaction: (
+        ...args: DebugTransactionSchema["Parameters"]
+    ) => ResultAsync<DebugTransactionSchema["ReturnType"], RpcErrorType>
+    safeGetChainId: () => ResultAsync<Awaited<ReturnType<ViemPublicClient["getChainId"]>>, GetChainIdErrorType>
+    safeGetTransactionCount: (
+        ...args: Parameters<ViemPublicClient["getTransactionCount"]>
+    ) => ResultAsync<Awaited<ReturnType<ViemPublicClient["getTransactionCount"]>>, GetTransactionCountErrorType>
 }
 
-export type SafeViemWalletClient = ReturnType<typeof convertToSafeViemWalletClient>
+export interface MetricsHandlers {
+    rpcCounter?: Counter
+    rpcErrorCounter?: Counter
+    rpcResponseTimeHistogram?: Histogram
+}
 
-export function convertToSafeViemWalletClient(client: ViemWalletClient) {
-    return client.extend((client) => ({
-        safeSendRawTransaction: async (...args: Parameters<ViemWalletClient["sendRawTransaction"]>) =>
-            ResultAsync.fromPromise<
-                Awaited<ReturnType<ViemWalletClient["sendRawTransaction"]>>,
-                SendRawTransactionErrorType
-            >(client.sendRawTransaction(...args), unknownToError as (u: unknown) => SendRawTransactionErrorType),
-        safeSignTransaction: async (args: TransactionRequestEIP1559 & { gas: bigint }) =>
-            ResultAsync.fromThrowable(() => {
-                if (client.account.signTransaction) {
-                    return client.account.signTransaction({
-                        ...args,
-                        chainId: client.chain.id,
-                    })
+export function convertToSafeViemPublicClient(
+    client: ViemPublicClient,
+    metrics?: MetricsHandlers,
+): SafeViemPublicClient {
+    const safeClient = client as SafeViemPublicClient
+
+    safeClient.rpcCounter = metrics?.rpcCounter
+    safeClient.rpcErrorCounter = metrics?.rpcErrorCounter
+    safeClient.rpcResponseTimeHistogram = metrics?.rpcResponseTimeHistogram
+
+    safeClient.safeEstimateGas = (...args: Parameters<ViemPublicClient["estimateGas"]>) => {
+        if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "estimateGas" })
+        const startTime = Date.now()
+
+        return ResultAsync.fromPromise(client.estimateGas(...args), unknownToError)
+            .map((result) => {
+                const duration = Date.now() - startTime
+                if (safeClient.rpcResponseTimeHistogram)
+                    safeClient.rpcResponseTimeHistogram.record(duration, { method: "estimateGas" })
+                return result
+            })
+            .mapErr((error) => {
+                if (safeClient.rpcErrorCounter) {
+                    safeClient.rpcErrorCounter.add(1, { method: "estimateGas" })
                 }
-                // biome-ignore format: tidy
-                console.warn(
-                    "No signTransaction method found on the account, using signMessage instead. " +
-                    "A viem update probably change the internal signing API.")
-                return client.signTransaction(args)
-            })() as ResultAsync<Awaited<ReturnType<ViemWalletClient["signTransaction"]>>, SignTransactionErrorType>,
-    }))
+                return error as EstimateGasErrorType
+            })
+    }
+
+    safeClient.safeGetTransactionReceipt = (...args: Parameters<ViemPublicClient["getTransactionReceipt"]>) => {
+        if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "getTransactionReceipt" })
+        const startTime = Date.now()
+
+        return ResultAsync.fromPromise(client.getTransactionReceipt(...args), unknownToError)
+            .map((result) => {
+                const duration = Date.now() - startTime
+                if (safeClient.rpcResponseTimeHistogram)
+                    safeClient.rpcResponseTimeHistogram.record(duration, { method: "getTransactionReceipt" })
+                return result
+            })
+            .mapErr((error) => {
+                if (safeClient.rpcErrorCounter) {
+                    safeClient.rpcErrorCounter.add(1, { method: "getTransactionReceipt" })
+                }
+                return error as GetTransactionReceiptErrorType
+            })
+    }
+
+    safeClient.safeDebugTransaction = (...args: DebugTransactionSchema["Parameters"]) => {
+        if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "debug_traceTransaction" })
+        const startTime = Date.now()
+
+        return ResultAsync.fromPromise(
+            client.request({
+                method: "debug_traceTransaction",
+                params: args,
+            }),
+            unknownToError,
+        )
+            .map((result) => {
+                const duration = Date.now() - startTime
+                if (safeClient.rpcResponseTimeHistogram)
+                    safeClient.rpcResponseTimeHistogram.record(duration, { method: "debug_traceTransaction" })
+                return result as Call
+            })
+            .mapErr((error) => {
+                if (safeClient.rpcErrorCounter) {
+                    safeClient.rpcErrorCounter.add(1, { method: "debug_traceTransaction" })
+                }
+                return error as RpcErrorType
+            })
+    }
+
+    safeClient.safeGetChainId = () => {
+        if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "getChainId" })
+        const startTime = Date.now()
+
+        return ResultAsync.fromPromise(client.getChainId(), unknownToError)
+            .map((result) => {
+                const duration = Date.now() - startTime
+                if (safeClient.rpcResponseTimeHistogram)
+                    safeClient.rpcResponseTimeHistogram.record(duration, { method: "getChainId" })
+                return result
+            })
+            .mapErr((error) => {
+                if (safeClient.rpcErrorCounter) {
+                    safeClient.rpcErrorCounter.add(1, { method: "getChainId" })
+                }
+                return error as GetChainIdErrorType
+            })
+    }
+
+    safeClient.safeGetTransactionCount = (...args: Parameters<ViemPublicClient["getTransactionCount"]>) => {
+        if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "getTransactionCount" })
+        const startTime = Date.now()
+
+        return ResultAsync.fromPromise(client.getTransactionCount(...args), unknownToError)
+            .map((result) => {
+                const duration = Date.now() - startTime
+                if (safeClient.rpcResponseTimeHistogram)
+                    safeClient.rpcResponseTimeHistogram.record(duration, { method: "getTransactionCount" })
+                return result
+            })
+            .mapErr((error) => {
+                if (safeClient.rpcErrorCounter) {
+                    safeClient.rpcErrorCounter.add(1, { method: "getTransactionCount" })
+                }
+                return error as GetTransactionCountErrorType
+            })
+    }
+
+    return safeClient
+}
+
+export interface SafeViemWalletClient extends ViemWalletClient {
+    rpcCounter?: Counter
+    rpcErrorCounter?: Counter
+    rpcResponseTimeHistogram?: Histogram
+
+    safeSendRawTransaction: (
+        ...args: Parameters<ViemWalletClient["sendRawTransaction"]>
+    ) => ResultAsync<Awaited<ReturnType<ViemWalletClient["sendRawTransaction"]>>, SendRawTransactionErrorType>
+    safeSignTransaction: (
+        args: TransactionRequestEIP1559 & { gas: bigint },
+    ) => ResultAsync<Awaited<ReturnType<ViemWalletClient["signTransaction"]>>, SignTransactionErrorType>
+}
+
+export function convertToSafeViemWalletClient(
+    client: ViemWalletClient,
+    metrics?: MetricsHandlers,
+): SafeViemWalletClient {
+    const safeClient = client as SafeViemWalletClient
+
+    safeClient.rpcCounter = metrics?.rpcCounter
+    safeClient.rpcErrorCounter = metrics?.rpcErrorCounter
+    safeClient.rpcResponseTimeHistogram = metrics?.rpcResponseTimeHistogram
+
+    safeClient.safeSendRawTransaction = (...args: Parameters<ViemWalletClient["sendRawTransaction"]>) => {
+        if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "sendRawTransaction" })
+        const startTime = Date.now()
+
+        return ResultAsync.fromPromise(client.sendRawTransaction(...args), unknownToError)
+            .map((result) => {
+                const duration = Date.now() - startTime
+                if (safeClient.rpcResponseTimeHistogram)
+                    safeClient.rpcResponseTimeHistogram.record(duration, { method: "sendRawTransaction" })
+                return result
+            })
+            .mapErr((error) => {
+                if (safeClient.rpcErrorCounter) {
+                    safeClient.rpcErrorCounter.add(1, { method: "sendRawTransaction" })
+                }
+                return error as SendRawTransactionErrorType
+            })
+    }
+
+    safeClient.safeSignTransaction = (args: TransactionRequestEIP1559 & { gas: bigint }) => {
+        if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "signTransaction" })
+        const startTime = Date.now()
+
+        return ResultAsync.fromThrowable(() => {
+            // We first attempt to use the account's signTransaction method since it's more efficient:
+            // it doesn't make an additional getChainId RPC call when chainId is provided.
+            // If the account's signTransaction is not available, we fallback to the client's
+            // signTransaction method, which will make a getChainId call even if chainId is provided.
+
+            if (client.account.signTransaction) {
+                return client.account.signTransaction({
+                    ...args,
+                    chainId: client.chain.id,
+                })
+            }
+            // biome-ignore format: tidy
+            console.warn(
+                "No signTransaction method found on the account, using signMessage instead. " +
+                "A viem update probably change the internal signing API.");
+            return client.signTransaction(args)
+        })()
+            .map((result) => {
+                const duration = Date.now() - startTime
+                if (safeClient.rpcResponseTimeHistogram)
+                    safeClient.rpcResponseTimeHistogram.record(duration, { method: "signTransaction" })
+                return result
+            })
+            .mapErr((error) => {
+                if (safeClient.rpcErrorCounter) {
+                    safeClient.rpcErrorCounter.add(1, { method: "signTransaction" })
+                }
+                return error as SignTransactionErrorType
+            })
+    }
+
+    return safeClient
 }

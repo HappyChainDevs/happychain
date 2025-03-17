@@ -1,11 +1,16 @@
 import { unknownToError } from "@happy.tech/common"
 import type { UUID } from "@happy.tech/common"
-import { type Result, ResultAsync } from "neverthrow"
+import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { Topics, eventBus } from "./EventBus.js"
 import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { db } from "./db/driver.js"
-import { notFinalizedTransactionsGauge } from "./telemetry/metrics"
+import {
+    databaseErrorsCounter,
+    databaseOperationDurationHistogram,
+    databaseOperationsCounter,
+    notFinalizedTransactionsGauge,
+} from "./telemetry/metrics"
 
 /**
  * This module acts as intermediate layer between the library and the database.
@@ -42,27 +47,53 @@ export class TransactionRepository {
         return this.notFinalizedTransactions.filter((t) => t.collectionBlock && t.collectionBlock < blockNumber)
     }
 
-    async getTransaction(intentId: UUID): Promise<Transaction | undefined> {
+    async getTransaction(intentId: UUID): Promise<Result<Transaction | undefined, Error>> {
         const cachedTransaction = this.notFinalizedTransactions.find((t) => t.intentId === intentId)
 
         if (cachedTransaction) {
-            return cachedTransaction
+            return ok(cachedTransaction)
         }
 
-        const persistedTransaction = await db
-            .selectFrom("transaction")
-            .where("intentId", "=", intentId)
-            .where("from", "=", this.transactionManager.viemWallet.account.address)
-            .selectAll()
-            .executeTakeFirst()
+        databaseOperationsCounter.add(1, {
+            operation: "getTransaction",
+        })
+        const start = Date.now()
 
-        return persistedTransaction ? Transaction.fromDbRow(persistedTransaction) : undefined
+        const persistedTransactionResult = await ResultAsync.fromPromise(
+            db
+                .selectFrom("transaction")
+                .where("intentId", "=", intentId)
+                .where("from", "=", this.transactionManager.viemWallet.account.address)
+                .selectAll()
+                .executeTakeFirst(),
+            unknownToError,
+        )
+
+        databaseOperationDurationHistogram.record(Date.now() - start, {
+            operation: "getTransaction",
+        })
+
+        if (persistedTransactionResult.isErr()) {
+            databaseErrorsCounter.add(1, {
+                operation: "getTransaction",
+            })
+            return err(persistedTransactionResult.error)
+        }
+
+        const persistedTransaction = persistedTransactionResult.value
+
+        return persistedTransaction ? ok(Transaction.fromDbRow(persistedTransaction)) : ok(undefined)
     }
 
     async saveTransactions(transactions: Transaction[]): Promise<Result<void, Error>> {
         const transactionsToFlush = transactions.filter((t) => t.pendingFlush)
 
         const notPersistedTransactions = transactions.filter((t) => t.notPersisted)
+
+        databaseOperationsCounter.add(1, {
+            operation: "saveTransactions",
+        })
+        const start = Date.now()
 
         const result = await ResultAsync.fromPromise(
             db.transaction().execute(async (dbTransaction) => {
@@ -82,6 +113,10 @@ export class TransactionRepository {
             unknownToError,
         )
 
+        databaseOperationDurationHistogram.record(Date.now() - start, {
+            operation: "saveTransactions",
+        })
+
         if (result.isOk()) {
             this.notFinalizedTransactions = this.notFinalizedTransactions.filter((transaction) =>
                 NotFinalizedStatuses.includes(transaction.status),
@@ -90,6 +125,10 @@ export class TransactionRepository {
             transactions.forEach((t) => t.markFlushed())
 
             notFinalizedTransactionsGauge.record(this.notFinalizedTransactions.length)
+        } else {
+            databaseErrorsCounter.add(1, {
+                operation: "saveTransactions",
+            })
         }
 
         return result
@@ -108,11 +147,31 @@ export class TransactionRepository {
     }
 
     async purgeFinalizedTransactions() {
-        await db
-            .deleteFrom("transaction")
-            .where("status", "not in", NotFinalizedStatuses)
-            .where("updatedAt", "<", Date.now() - this.transactionManager.finalizedTransactionPurgeTime)
-            .where("from", "=", this.transactionManager.viemWallet.account.address)
-            .execute()
+        databaseOperationsCounter.add(1, {
+            operation: "purgeFinalizedTransactions",
+        })
+        const start = Date.now()
+
+        const result = await ResultAsync.fromPromise(
+            db
+                .deleteFrom("transaction")
+                .where("status", "not in", NotFinalizedStatuses)
+                .where("updatedAt", "<", Date.now() - this.transactionManager.finalizedTransactionPurgeTime)
+                .where("from", "=", this.transactionManager.viemWallet.account.address)
+                .execute(),
+            unknownToError,
+        )
+
+        databaseOperationDurationHistogram.record(Date.now() - start, {
+            operation: "purgeFinalizedTransactions",
+        })
+
+        if (result.isErr()) {
+            databaseErrorsCounter.add(1, {
+                operation: "purgeFinalizedTransactions",
+            })
+        }
+
+        return result
     }
 }

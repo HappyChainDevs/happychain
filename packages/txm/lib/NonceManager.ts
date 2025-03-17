@@ -1,3 +1,4 @@
+import { LogTag, Logger } from "@happy.tech/common"
 import type { TransactionManager } from "./TransactionManager"
 import { nonceManagerGauge, returnedNonceCounter, returnedNonceQueueGauge } from "./telemetry/metrics"
 
@@ -92,10 +93,17 @@ export class NonceManager {
     public async resync() {
         const address = this.txmgr.viemWallet.account.address
 
-        const blockchainNonce = await this.txmgr.viemClient.getTransactionCount({
+        const blockchainNonceResult = await this.txmgr.viemClient.safeGetTransactionCount({
             address: address,
         })
 
-        this.maxExecutedNonce = blockchainNonce
+        if (blockchainNonceResult.isErr()) {
+            Logger.instance.error(LogTag.TXM, `Failed to get transaction count for address ${address}`, {
+                error: blockchainNonceResult.error,
+            })
+            return
+        }
+
+        this.maxExecutedNonce = blockchainNonceResult.value
     }
 }

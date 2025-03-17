@@ -2,7 +2,7 @@ import { LogTag, Logger } from "@happy.tech/common"
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
-import { currentBlockGauge, newBlockDelayHistogram } from "./telemetry/metrics"
+import { currentBlockGauge, newBlockDelayHistogram, resetBlockMonitorCounter } from "./telemetry/metrics"
 
 /**
  * A type alias for {@link Block} with the `blockTag` set to `"latest"`, ensuring type definitions correspond to the latest block.
@@ -52,6 +52,7 @@ export class BlockMonitor {
     }
 
     private resetBlockSubscription() {
+        resetBlockMonitorCounter.add(1)
         if (this.unwatch) {
             this.unwatch()
         }

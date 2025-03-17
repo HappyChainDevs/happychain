@@ -1,4 +1,5 @@
 import type { UUID } from "@happy.tech/common"
+import type { Result } from "neverthrow"
 import {
     type Abi,
     type Hex,
@@ -23,6 +24,7 @@ import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
 import { TxMonitor } from "./TxMonitor.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
+import { blockchainRpcResponseTimeHistogram, rpcCounter, rpcErrorCounter } from "./telemetry/metrics"
 import { getUrlProtocol } from "./utils/getUrlProtocol"
 import type { SafeViemPublicClient, SafeViemWalletClient } from "./utils/safeViemClients"
 import { convertToSafeViemPublicClient, convertToSafeViemWalletClient } from "./utils/safeViemClients"
@@ -230,6 +232,11 @@ export class TransactionManager {
                 transport,
                 chain,
             }),
+            {
+                rpcCounter: rpcCounter,
+                rpcErrorCounter: rpcErrorCounter,
+                rpcResponseTimeHistogram: blockchainRpcResponseTimeHistogram,
+            },
         )
 
         this.viemClient = convertToSafeViemPublicClient(
@@ -237,6 +244,11 @@ export class TransactionManager {
                 transport,
                 chain,
             }),
+            {
+                rpcCounter: rpcCounter,
+                rpcErrorCounter: rpcErrorCounter,
+                rpcResponseTimeHistogram: blockchainRpcResponseTimeHistogram,
+            },
         )
 
         this.nonceManager = new NonceManager(this)
@@ -284,7 +296,7 @@ export class TransactionManager {
         return this.hookManager.addHook(type, handler)
     }
 
-    public async getTransaction(txIntentId: UUID): Promise<Transaction | undefined> {
+    public async getTransaction(txIntentId: UUID): Promise<Result<Transaction | undefined, Error>> {
         return this.transactionRepository.getTransaction(txIntentId)
     }
 
