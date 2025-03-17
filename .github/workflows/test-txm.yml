@@ -1,9 +1,13 @@
 name: Test TXM Package
 
 on:
-  push:
+  pull_request:
     paths:
       - 'packages/txm/**'
+    types:
+      - opened
+      - reopened
+      - synchronize
   workflow_dispatch:
 
 env:
