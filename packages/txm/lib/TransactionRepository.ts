@@ -5,12 +5,7 @@ import { Topics, eventBus } from "./EventBus.js"
 import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { db } from "./db/driver.js"
-import {
-    databaseErrorsCounter,
-    databaseOperationDurationHistogram,
-    databaseOperationsCounter,
-    notFinalizedTransactionsGauge,
-} from "./telemetry/metrics"
+import { TxmMetrics } from "./telemetry/metrics"
 
 /**
  * This module acts as intermediate layer between the library and the database.
@@ -54,7 +49,7 @@ export class TransactionRepository {
             return ok(cachedTransaction)
         }
 
-        databaseOperationsCounter.add(1, {
+        TxmMetrics.getInstance().databaseOperationsCounter.add(1, {
             operation: "getTransaction",
         })
         const start = Date.now()
@@ -69,12 +64,12 @@ export class TransactionRepository {
             unknownToError,
         )
 
-        databaseOperationDurationHistogram.record(Date.now() - start, {
+        TxmMetrics.getInstance().databaseOperationDurationHistogram.record(Date.now() - start, {
             operation: "getTransaction",
         })
 
         if (persistedTransactionResult.isErr()) {
-            databaseErrorsCounter.add(1, {
+            TxmMetrics.getInstance().databaseErrorsCounter.add(1, {
                 operation: "getTransaction",
             })
             return err(persistedTransactionResult.error)
@@ -90,7 +85,7 @@ export class TransactionRepository {
 
         const notPersistedTransactions = transactions.filter((t) => t.notPersisted)
 
-        databaseOperationsCounter.add(1, {
+        TxmMetrics.getInstance().databaseOperationsCounter.add(1, {
             operation: "saveTransactions",
         })
         const start = Date.now()
@@ -113,7 +108,7 @@ export class TransactionRepository {
             unknownToError,
         )
 
-        databaseOperationDurationHistogram.record(Date.now() - start, {
+        TxmMetrics.getInstance().databaseOperationDurationHistogram.record(Date.now() - start, {
             operation: "saveTransactions",
         })
 
@@ -124,9 +119,9 @@ export class TransactionRepository {
             this.notFinalizedTransactions.push(...notPersistedTransactions)
             transactions.forEach((t) => t.markFlushed())
 
-            notFinalizedTransactionsGauge.record(this.notFinalizedTransactions.length)
+            TxmMetrics.getInstance().notFinalizedTransactionsGauge.record(this.notFinalizedTransactions.length)
         } else {
-            databaseErrorsCounter.add(1, {
+            TxmMetrics.getInstance().databaseErrorsCounter.add(1, {
                 operation: "saveTransactions",
             })
         }
@@ -147,7 +142,7 @@ export class TransactionRepository {
     }
 
     async purgeFinalizedTransactions() {
-        databaseOperationsCounter.add(1, {
+        TxmMetrics.getInstance().databaseOperationsCounter.add(1, {
             operation: "purgeFinalizedTransactions",
         })
         const start = Date.now()
@@ -162,12 +157,12 @@ export class TransactionRepository {
             unknownToError,
         )
 
-        databaseOperationDurationHistogram.record(Date.now() - start, {
+        TxmMetrics.getInstance().databaseOperationDurationHistogram.record(Date.now() - start, {
             operation: "purgeFinalizedTransactions",
         })
 
         if (result.isErr()) {
-            databaseErrorsCounter.add(1, {
+            TxmMetrics.getInstance().databaseErrorsCounter.add(1, {
                 operation: "purgeFinalizedTransactions",
             })
         }

@@ -1,6 +1,6 @@
 import { LogTag, Logger } from "@happy.tech/common"
 import type { TransactionManager } from "./TransactionManager"
-import { nonceManagerGauge, returnedNonceCounter, returnedNonceQueueGauge } from "./telemetry/metrics"
+import { TxmMetrics } from "./telemetry/metrics"
 
 /*
 /*
@@ -66,13 +66,13 @@ export class NonceManager {
     public requestNonce(): number {
         if (this.returnedNonceQueue.length > 0) {
             const nonce = this.returnedNonceQueue.shift()!
-            returnedNonceQueueGauge.record(this.returnedNonceQueue.length)
+            TxmMetrics.getInstance().returnedNonceQueueGauge.record(this.returnedNonceQueue.length)
             return nonce
         }
 
         const requestedNonce = this.nonce
         this.nonce = this.nonce + 1
-        nonceManagerGauge.record(this.nonce)
+        TxmMetrics.getInstance().nonceManagerGauge.record(this.nonce)
         return requestedNonce
     }
 
@@ -86,8 +86,8 @@ export class NonceManager {
             this.returnedNonceQueue.splice(index, 0, nonce)
         }
 
-        returnedNonceCounter.add(1)
-        returnedNonceQueueGauge.record(this.returnedNonceQueue.length)
+        TxmMetrics.getInstance().returnedNonceCounter.add(1)
+        TxmMetrics.getInstance().returnedNonceQueueGauge.record(this.returnedNonceQueue.length)
     }
 
     public async resync() {

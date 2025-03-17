@@ -2,7 +2,7 @@ import { LogTag, Logger } from "@happy.tech/common"
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
-import { currentBlockGauge, newBlockDelayHistogram, resetBlockMonitorCounter } from "./telemetry/metrics"
+import { TxmMetrics } from "./telemetry/metrics"
 
 /**
  * A type alias for {@link Block} with the `blockTag` set to `"latest"`, ensuring type definitions correspond to the latest block.
@@ -38,8 +38,8 @@ export class BlockMonitor {
         if (this.blockTimeout) clearTimeout(this.blockTimeout)
         eventBus.emit(Topics.NewBlock, block)
 
-        currentBlockGauge.record(Number(block.number))
-        newBlockDelayHistogram.record(Date.now() - Number(block.timestamp) * 1000)
+        TxmMetrics.getInstance().currentBlockGauge.record(Number(block.number))
+        TxmMetrics.getInstance().newBlockDelayHistogram.record(Date.now() - Number(block.timestamp) * 1000)
 
         this.scheduleTimeout()
     }
@@ -52,7 +52,7 @@ export class BlockMonitor {
     }
 
     private resetBlockSubscription() {
-        resetBlockMonitorCounter.add(1)
+        TxmMetrics.getInstance().resetBlockMonitorCounter.add(1)
         if (this.unwatch) {
             this.unwatch()
         }
