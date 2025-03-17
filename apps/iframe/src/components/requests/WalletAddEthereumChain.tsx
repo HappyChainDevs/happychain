@@ -23,7 +23,7 @@ export const WalletAddEthereumChain = ({
             headline="Add new chain"
             actions={{
                 accept: {
-                    children: "Add network",
+                    children: "Add chain",
                     onClick: () => accept({ eip1193RequestParams: { method, params } }),
                 },
                 reject: {
