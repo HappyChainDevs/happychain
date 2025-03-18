@@ -10,6 +10,7 @@ const SessionKeyDemo = () => {
     const { user, requestSessionKey } = useHappyChain()
     const { walletClient, publicClient } = useClients()
     const [counter, setCounter] = useState<bigint | undefined>()
+    const [loading, setLoading] = useState(false)
 
     const getCounterValue = useCallback(async () => {
         if (!publicClient) throw new Error("Public client not initialized")
@@ -22,10 +23,15 @@ const SessionKeyDemo = () => {
         })
     }, [publicClient, user])
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: missing counter by design
     useEffect(() => {
-        if (!publicClient) return
-        getCounterValue().then((value) => setCounter(value))
-    }, [publicClient, getCounterValue])
+        if (!publicClient || !user) return
+        setLoading(true)
+        getCounterValue().then((value) => {
+            if (!counter) setCounter(value)
+            setLoading(false)
+        })
+    }, [user, publicClient, getCounterValue])
 
     async function submitIncrement() {
         if (!walletClient || !user?.address) throw new Error("Wallet not connected")
@@ -65,16 +71,6 @@ const SessionKeyDemo = () => {
         )
     }
 
-    // initial setup for counter display value
-    // biome-ignore lint/correctness/useExhaustiveDependencies: infinite re-render
-    useEffect(() => {
-        async function fetchCounter() {
-            const count = await getCounterValue()
-            setCounter(count)
-        }
-        fetchCounter()
-    }, [])
-
     return (
         <div className="grid grid-cols-2 gap-4 backdrop-blur-sm bg-gray-200/35 p-4 rounded-lg">
             <div className="text-lg font-bold col-span-2">Session Keys Functionality</div>
@@ -95,8 +91,10 @@ const SessionKeyDemo = () => {
                 <pre className="text-sm font-semibold">Current counter value</pre>
                 {counter ? (
                     <div className="text-4xl font-bold">{counter.toString()}</div>
-                ) : (
+                ) : loading ? (
                     <Spinner className="animate-spin mx-auto" size="2.25rem" />
+                ) : (
+                    <div className="text-4xl font-bold">×</div>
                 )}
             </div>
         </div>
