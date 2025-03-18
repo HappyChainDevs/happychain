@@ -5,10 +5,12 @@ import {HappyTx} from "../core/HappyTx.sol";
 
 /**
  * Execution Output
+ * @param success     - Whether the call specified by the happyTx was successful.
  * @param gas         - The amount of gas used by the {IHappyAccount.execute} function.
  * @param revertData  - The associated revert data if the call specified by the happyTx reverts; otherwise, it is empty.
  */
 struct ExecutionOutput {
+    bool success;
     uint256 gas;
     bytes revertData;
 }
