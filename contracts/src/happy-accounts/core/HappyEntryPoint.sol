@@ -225,7 +225,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] uint256 executeCallGasUsed = executeGasStart - executeGasEnd;
         // [LOGGAS] ExecutionOutput memory execOutputGasReport = abi.decode(returnData, (ExecutionOutput));
         // [LOGGAS] uint256 executeCallOverhead = executeCallGasUsed - execOutputGasReport.gas;
-        // [LOGGAS] console.log("excessivelySafeCall (execute) overhead: ", executeCallOverhead);
+        // [LOGGAS] console.log("excessivelySafeCall (execute) gas usage: ", executeCallGasUsed);
+        // [LOGGAS] console.log("excessivelySafeCall (execute) overhead (gas used - execOutput.gas): ", executeCallOverhead);
 
         // Don't revert, as we still want to get the payment for a reverted call.
         ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
@@ -245,16 +246,16 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // 3. Collect payment
 
-        // [LOGGAS] uint256 txGasStart = gasleft();
+        // [LOGGAS] uint256 txGasFromCallStart = gasleft();
 
         // This is an overestimation of the actual gas cost of the submitter.
         // WITHOUT the gas cost of the "payout" call (which is accounted for later).
         uint256 consumedGas =
             HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
 
-        // [LOGGAS] uint256 txGasEnd = gasleft();
-        // [LOGGAS] uint256 txGasUsed = txGasStart - txGasEnd;
-        // [LOGGAS] console.log("txGasFromCallGas overall gas usage: ", txGasUsed);
+        // [LOGGAS] uint256 txGasFromCallEnd = gasleft();
+        // [LOGGAS] uint256 txGasFromCallUsed = txGasFromCallStart - txGasFromCallEnd;
+        // [LOGGAS] console.log("txGasFromCallGas overall gas usage: ", txGasFromCallUsed);
 
         if (happyTx.paymaster == address(0)) {
             // Sponsoring submitter, no need to charge anyone
@@ -264,7 +265,9 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         uint256 balance = tx.origin.balance;
         uint256 gasBeforePayout = gasleft();
+
         // [LOGGAS] uint256 payoutGasStart = gasleft();
+
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
             happyTx.executeGasLimit,
             0, // gas token transfer value

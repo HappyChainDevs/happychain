@@ -102,6 +102,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
 
         // [LOGGAS_INTERNAL] console.log("PAYOUT_PAYMENT_OVERHEAD_GAS", gasPaymentStart - gasleft());
         // [LOGGAS_INTERNAL] console.log("PAYOUT_INTRINSIC_GAS_OVERHEAD", gasOverheadStart - gasPaymentStart);
+        // [LOGGAS_INTERNAL] console.log("payout function gas usage = PAYOUT_PAYMENT_OVERHEAD_GAS + PAYOUT_INTRINSIC_GAS_OVERHEAD");
 
         return 0;
     }
