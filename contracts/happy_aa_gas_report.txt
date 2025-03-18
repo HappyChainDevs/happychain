@@ -6,8 +6,9 @@ HappyEntryPoint Gas Report For Self-Paying Transactions
   excessivelySafeCall (execute) gas usage:  54972
   excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5543
   txGasFromCallGas overall gas usage:  383
-  excessivelySafeCall  (payout) overhead:  2376
-     Tx Gas used:  132333
+  excessivelySafeCall  (payout) gas usage:  12131
+  excessivelySafeCall  (payout) overhead:  2346
+     Tx Gas used:  132996
   
 2. Second Transaction (Cold + Initialized Storage)
    ----------------------------------------------------
@@ -15,8 +16,9 @@ HappyEntryPoint Gas Report For Self-Paying Transactions
   excessivelySafeCall (execute) gas usage:  20772
   excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5543
   txGasFromCallGas overall gas usage:  383
-  excessivelySafeCall  (payout) overhead:  2376
-     TxGas used:  81033
+  excessivelySafeCall  (payout) gas usage:  12131
+  excessivelySafeCall  (payout) overhead:  2346
+     TxGas used:  81696
 
 HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
   
@@ -26,8 +28,9 @@ HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
   excessivelySafeCall (execute) gas usage:  54972
   excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5543
   txGasFromCallGas overall gas usage:  383
-  excessivelySafeCall  (payout) overhead:  4316
-     Tx Gas used:  134703
+  excessivelySafeCall  (payout) gas usage:  14423
+  excessivelySafeCall  (payout) overhead:  4300
+     Tx Gas used:  135366
   
 2. Second Transaction (Cold + Initialized Storage)
    ----------------------------------------------------
@@ -35,8 +38,9 @@ HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
   excessivelySafeCall (execute) gas usage:  20772
   excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5543
   txGasFromCallGas overall gas usage:  383
-  excessivelySafeCall  (payout) overhead:  4316
-     TxGas used:  83403
+  excessivelySafeCall  (payout) gas usage:  14423
+  excessivelySafeCall  (payout) overhead:  4300
+     TxGas used:  84066
 
 ScrappyAccount execute gas usage
    ----------------------------------------------------
@@ -47,13 +51,13 @@ ScrappyAccount payout gas usage
    ----------------------------------------------------
   PAYOUT_PAYMENT_OVERHEAD_GAS 9368
   PAYOUT_INTRINSIC_GAS_OVERHEAD 417
-  payout function gas usage = PAYOUT_PAYMENT_OVERHEAD_GAS + PAYOUT_INTRINSIC_GAS_OVERHEAD
+  payout function gas usage = PAYOUT_PAYMENT_OVERHEAD_GAS + PAYOUT_INTRINSIC_GAS_OVERHEAD = 9785
 
 ScrappyPaymaster payout gas usage
    ----------------------------------------------------
   PAYOUT_PAYMENT_OVERHEAD_GAS 9365
   PAYOUT_INTRINSIC_GAS_OVERHEAD 758
-  payout function gas usage = PAYOUT_PAYMENT_OVERHEAD_GAS + PAYOUT_INTRINSIC_GAS_OVERHEAD
+  payout function gas usage = PAYOUT_PAYMENT_OVERHEAD_GAS + PAYOUT_INTRINSIC_GAS_OVERHEAD = 10123
 
 HappyTxLib txGasFromCallGas payout gas usage
    ----------------------------------------------------

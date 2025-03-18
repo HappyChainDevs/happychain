@@ -135,7 +135,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * {HappyPaymaster.payout} that needs to be paid for by the payer.
      */
     uint256 private constant PAYOUT_CALL_OVERHEAD = 4300;
-    //^ From the gas report, 2409 for self-paying, 4299 for paymaster-sponsored, taking the max of both.
+    //^ From the gas report, 2346 for self-paying, 4300 for paymaster-sponsored, taking the maximum.
 
     /**
      * Execute a Happy Transaction, and tries to ensure that the submitter
@@ -278,9 +278,10 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // [LOGGAS] uint256 payoutGasEnd = gasleft();
         // [LOGGAS] uint256 payoutCallGasUsed = payoutGasStart - payoutGasEnd;
-        // [LOGGAS] uint256 payoutLogicGasUsage = happyTx.account == happyTx.paymaster ? 9758 : 10110;
-        // ^From the happy_aa_payout_gas_report.txt (generated separately)
+        // [LOGGAS] uint256 payoutLogicGasUsage = happyTx.account == happyTx.paymaster ? 9785 : 10123;
+        // ^From the happy_aa_gas_report.txt
         // [LOGGAS] uint256 payoutCallOverhead= payoutCallGasUsed - payoutLogicGasUsage;
+        // [LOGGAS] console.log("excessivelySafeCall  (payout) gas usage: ", payoutCallGasUsed);
         // [LOGGAS] console.log("excessivelySafeCall  (payout) overhead: ", payoutCallOverhead);
 
         uint256 payoutGas = gasBeforePayout - gasleft();
