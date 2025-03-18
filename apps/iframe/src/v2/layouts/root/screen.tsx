@@ -84,7 +84,7 @@ export const Scrollable = forwardRef<HTMLDivElement, HTMLArkProps<"div">>(
     },
 )
 
-const NavbarItem = forwardRef<HTMLDivElement, GuiButtonProps>(
+const NavbarItem = forwardRef<HTMLButtonElement, GuiButtonProps>(
     ({ className = "", children, asChild, ...props }, ref) => {
         return (
             <Button.Gui
