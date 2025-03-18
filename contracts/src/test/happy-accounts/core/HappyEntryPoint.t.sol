@@ -495,26 +495,32 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
     }
 
-    function testSelfPayoutVeryLowMaxFeePerGas() public {
+    function testSelfPayoutRevertsVeryLowMaxFeePerGas() public {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx.maxFeePerGas = 1; // GTE to the tx.gasprice set below
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
+        // The tx should revert with PaymentFailed if charged amount + finalBalace < initialBalance
+        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, bytes4(0)));
+        vm.txGasPrice(1); // LTE happyTx.maxFeePerGas
+
         // Submit the transaction
-        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        happyEntryPoint.submit(happyTx.encode());
     }
 
-    function testPaymasterPayoutVeryLowMaxFeePerGas() public {
+    function testPaymasterPayoutRevertsVeryLowMaxFeePerGas() public {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx.maxFeePerGas = 1; // GTE to the tx.gasprice set below
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
+        // The tx should revert with PaymentFailed if charged amount + finalBalace < initialBalance
+        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, bytes4(0)));
+        vm.txGasPrice(1); // LTE happyTx.maxFeePerGas
+
         // Submit the transaction
-        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        happyEntryPoint.submit(happyTx.encode());
     }
 
     function testPayoutFailsDueToLowAccountBalance() public {
