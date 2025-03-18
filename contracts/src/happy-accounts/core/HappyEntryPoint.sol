@@ -282,7 +282,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // ^From the happy_aa_gas_report.txt
         // [LOGGAS] uint256 payoutCallOverhead= payoutCallGasUsed - payoutLogicGasUsage;
         // [LOGGAS] console.log("excessivelySafeCall  (payout) gas usage: ", payoutCallGasUsed);
-        // [LOGGAS] console.log("excessivelySafeCall  (payout) overhead: ", payoutCallOverhead);
+        // [LOGGAS] console.log("excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage): ", payoutCallOverhead);
 
         uint256 payoutGas = gasBeforePayout - gasleft();
         output.gas = uint32(consumedGas + payoutGas - PAYOUT_CALL_OVERHEAD);

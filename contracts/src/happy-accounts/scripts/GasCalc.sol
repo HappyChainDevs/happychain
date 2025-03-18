@@ -258,8 +258,8 @@ contract HappyEntryPointGasEstimator is Test {
     }
 
     /// @dev Internal helper function to create calldata for IERC20.mint().
-    function _getMintCallData() internal view returns (bytes memory) {
-        return abi.encodeCall(MockERC20.mint, (target, DEPOSIT));
+    function _getMintCallData() internal pure returns (bytes memory) {
+        return abi.encodeCall(MockERC20.mint, (ZERO_ADDRESS, DEPOSIT));
     }
 
     /// @dev Internal helper function to get the nonce of a smart account.
