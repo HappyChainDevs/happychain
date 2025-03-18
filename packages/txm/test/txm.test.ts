@@ -26,7 +26,7 @@ import {
     RPC_URL,
 } from "./utils/constants"
 import { deployMockContracts } from "./utils/contracts"
-import { assertIsDefined, assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
+import { assertIsDefined, assertIsOk, assertReceiptReverted, assertReceiptSuccess } from "./utils/customAsserts"
 import { cleanDB, getPersistedTransaction } from "./utils/db"
 
 const retryManager = new TestRetryManager()
@@ -193,8 +193,12 @@ test("TransactionSubmissionFailed hook works correctly", async () => {
     // and to establish a clean starting point for subsequent test cases
     await mineBlock()
 
-    const retrievedTransaction = await txm.getTransaction(transaction.intentId)
+    const retrievedTransactionResult = await txm.getTransaction(transaction.intentId)
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    if (!assertIsOk(retrievedTransactionResult)) return
+
+    const retrievedTransaction = retrievedTransactionResult.value
 
     if (!assertIsDefined(retrievedTransaction)) return
 
@@ -248,7 +252,11 @@ test("Simple transaction executed", async () => {
 
     await mineBlock(2)
 
-    const retrievedTransaction = await txm.getTransaction(transaction.intentId)
+    const retrievedTransactionResult = await txm.getTransaction(transaction.intentId)
+
+    if (!assertIsOk(retrievedTransactionResult)) return
+
+    const retrievedTransaction = retrievedTransactionResult.value
 
     if (!assertIsDefined(retrievedTransaction)) return
 
@@ -281,7 +289,11 @@ test("Transaction retried", async () => {
 
     await mineBlock(2)
 
-    const transactionPending = await txm.getTransaction(transaction.intentId)
+    const transactionPendingResult = await txm.getTransaction(transaction.intentId)
+
+    if (!assertIsOk(transactionPendingResult)) return
+
+    const transactionPending = transactionPendingResult.value
 
     if (!assertIsDefined(transactionPending)) return
 
@@ -299,7 +311,11 @@ test("Transaction retried", async () => {
 
     await mineBlock()
 
-    const transactionSuccess = await txm.getTransaction(transaction.intentId)
+    const transactionSuccessResult = await txm.getTransaction(transaction.intentId)
+
+    if (!assertIsOk(transactionSuccessResult)) return
+
+    const transactionSuccess = transactionSuccessResult.value
 
     if (!assertIsDefined(transactionSuccess)) return
 
@@ -336,7 +352,11 @@ test("Transaction failed", async () => {
 
     await mineBlock(2)
 
-    const transactionReverted = await txm.getTransaction(transaction.intentId)
+    const transactionRevertedResult = await txm.getTransaction(transaction.intentId)
+
+    if (!assertIsOk(transactionRevertedResult)) return
+
+    const transactionReverted = transactionRevertedResult.value
 
     if (!assertIsDefined(transactionReverted)) return
 
@@ -385,7 +405,11 @@ test("Transaction failed for out of gas", async () => {
 
     await mineBlock(2)
 
-    const transactionReverted = await txm.getTransaction(transaction.intentId)
+    const transactionRevertedResult = await txm.getTransaction(transaction.intentId)
+
+    if (!assertIsOk(transactionRevertedResult)) return
+
+    const transactionReverted = transactionRevertedResult.value
 
     if (!assertIsDefined(transactionReverted)) return
 
@@ -442,7 +466,11 @@ test("Transaction cancelled due to deadline passing", async () => {
 
     await mineBlock()
 
-    const transactionCancelling = await txm.getTransaction(transaction.intentId)
+    const transactionCancellingResult = await txm.getTransaction(transaction.intentId)
+
+    if (!assertIsOk(transactionCancellingResult)) return
+
+    const transactionCancelling = transactionCancellingResult.value
 
     if (!assertIsDefined(transactionCancelling)) return
 
@@ -450,7 +478,11 @@ test("Transaction cancelled due to deadline passing", async () => {
 
     await mineBlock()
 
-    const transactionCancelled = await txm.getTransaction(transaction.intentId)
+    const transactionCancelledResult = await txm.getTransaction(transaction.intentId)
+
+    if (!assertIsOk(transactionCancelledResult)) return
+
+    const transactionCancelled = transactionCancelledResult.value
 
     if (!assertIsDefined(transactionCancelled)) return
 
@@ -495,7 +527,11 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
 
     await mineBlock(2)
 
-    const transactionBurnerExecuted = await txm.getTransaction(transactionBurner.intentId)
+    const transactionBurnerExecutedResult = await txm.getTransaction(transactionBurner.intentId)
+
+    if (!assertIsOk(transactionBurnerExecutedResult)) return
+
+    const transactionBurnerExecuted = transactionBurnerExecutedResult.value
 
     if (!assertIsDefined(transactionBurnerExecuted)) return
 
@@ -515,7 +551,11 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
         })
     ).baseFeePerGas
 
-    const incrementerExecuted = await txm.getTransaction(incrementerTransaction.intentId)
+    const incrementerExecutedResult = await txm.getTransaction(incrementerTransaction.intentId)
+
+    if (!assertIsOk(incrementerExecutedResult)) return
+
+    const incrementerExecuted = incrementerExecutedResult.value
 
     if (!assertIsDefined(incrementerExecuted)) return
 
@@ -554,9 +594,15 @@ test("Transaction manager successfully processes transactions despite random RPC
 
     let successfulTransactions = 0
     for (const [index, transaction] of emittedTransactions.entries()) {
-        const executedTransaction = await txm.getTransaction(transaction.intentId)
+        const executedTransactionResult = await txm.getTransaction(transaction.intentId)
 
-        if (executedTransaction?.status === TransactionStatus.Success) {
+        if (!assertIsOk(executedTransactionResult)) return
+
+        const executedTransaction = executedTransactionResult.value
+
+        if (!assertIsDefined(executedTransaction)) return
+
+        if (executedTransaction.status === TransactionStatus.Success) {
             successfulTransactions++
         }
 
@@ -589,16 +635,26 @@ test("Transaction succeeds in congested blocks", async () => {
 
         await sendBurnGasTransactionWithSecondWallet(2)
 
-        const executedIncrementerTransaction = await txm.getTransaction(incrementerTransaction.intentId)
+        const executedIncrementerTransactionResult = await txm.getTransaction(incrementerTransaction.intentId)
 
-        if (executedIncrementerTransaction?.status === TransactionStatus.Success) {
+        if (!assertIsOk(executedIncrementerTransactionResult)) return
+
+        const executedIncrementerTransaction = executedIncrementerTransactionResult.value
+
+        if (!assertIsDefined(executedIncrementerTransaction)) return
+
+        if (executedIncrementerTransaction.status === TransactionStatus.Success) {
             break
         }
 
         iterations++
     }
 
-    const executedIncrementerTransaction = await txm.getTransaction(incrementerTransaction.intentId)
+    const executedIncrementerTransactionResult = await txm.getTransaction(incrementerTransaction.intentId)
+
+    if (!assertIsOk(executedIncrementerTransactionResult)) return
+
+    const executedIncrementerTransaction = executedIncrementerTransactionResult.value
 
     if (!assertIsDefined(executedIncrementerTransaction)) return
 
