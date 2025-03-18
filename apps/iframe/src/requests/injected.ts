@@ -20,7 +20,6 @@ import {
     InvalidAddressError,
     type Transaction,
     type TransactionReceipt,
-    type WalletPermission,
     hexToBigInt,
     isAddress,
     parseSignature,
