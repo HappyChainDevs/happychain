@@ -7,8 +7,8 @@ HappyEntryPoint Gas Report For Self-Paying Transactions
   excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5543
   txGasFromCallGas overall gas usage:  383
   excessivelySafeCall  (payout) gas usage:  12131
-  excessivelySafeCall  (payout) overhead:  2346
-     Tx Gas used:  132996
+  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  2346
+     Tx Gas used:  133022
   
 2. Second Transaction (Cold + Initialized Storage)
    ----------------------------------------------------
@@ -17,8 +17,8 @@ HappyEntryPoint Gas Report For Self-Paying Transactions
   excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5543
   txGasFromCallGas overall gas usage:  383
   excessivelySafeCall  (payout) gas usage:  12131
-  excessivelySafeCall  (payout) overhead:  2346
-     TxGas used:  81696
+  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  2346
+     TxGas used:  81722
 
 HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
   
@@ -29,8 +29,8 @@ HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
   excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5543
   txGasFromCallGas overall gas usage:  383
   excessivelySafeCall  (payout) gas usage:  14423
-  excessivelySafeCall  (payout) overhead:  4300
-     Tx Gas used:  135366
+  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  4300
+     Tx Gas used:  135392
   
 2. Second Transaction (Cold + Initialized Storage)
    ----------------------------------------------------
@@ -39,8 +39,8 @@ HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
   excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5543
   txGasFromCallGas overall gas usage:  383
   excessivelySafeCall  (payout) gas usage:  14423
-  excessivelySafeCall  (payout) overhead:  4300
-     TxGas used:  84066
+  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  4300
+     TxGas used:  84092
 
 ScrappyAccount execute gas usage
    ----------------------------------------------------
