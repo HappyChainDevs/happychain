@@ -1,9 +1,11 @@
 import { Checkbox } from "@ark-ui/react"
+import { PermissionNames } from "@happy.tech/common"
 import { Check } from "@phosphor-icons/react"
 import { useAtom } from "jotai"
 import { useEffect, useState } from "react"
 import type { Address } from "viem"
 import { targetContractsAtom } from "#src/state/interfaceState"
+import { hasPermissions } from "#src/state/permissions.ts"
 import type { AppURL } from "#src/utils/appURL"
 
 interface SessionKeyContractProps {
@@ -11,9 +13,16 @@ interface SessionKeyContractProps {
     contract: Address
     showControl: boolean
 }
-export const SessionKeyContract = ({ contract, showControl }: SessionKeyContractProps) => {
-    const [targetContracts, setTargetContracts] = useAtom(targetContractsAtom)
-    const [checked, setChecked] = useState(targetContracts.includes(contract))
+export const SessionKeyContract = ({ dappUrl, contract, showControl }: SessionKeyContractProps) => {
+    const [, setTargetContracts] = useAtom(targetContractsAtom)
+    const permissionRequest = {
+        [PermissionNames.SESSION_KEY]: {
+            target: contract,
+        },
+    }
+
+    // initial state is the presence of the granted permission
+    const [checked, setChecked] = useState(hasPermissions(dappUrl, permissionRequest))
 
     useEffect(() => {
         if (!showControl && checked) setChecked(false)
@@ -25,9 +34,9 @@ export const SessionKeyContract = ({ contract, showControl }: SessionKeyContract
             className="w-full flex justify-between items-baseline focus-within:underline py-2 gap-4 cursor-pointer disabled:cursor-not-allowed text-base-content/80 dark:text-neutral-content/80"
             onCheckedChange={(e: { checked: boolean }) => {
                 if (e.checked) {
-                    setTargetContracts((prev) => [...prev, contract])
-                } else {
                     setTargetContracts((prev) => prev.filter((addr) => addr !== contract))
+                } else {
+                    setTargetContracts((prev) => [...prev, contract])
                 }
                 setChecked(e.checked)
             }}

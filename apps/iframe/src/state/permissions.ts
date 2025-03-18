@@ -241,7 +241,6 @@ function permissionRequestEntries(permissions: PermissionsRequest): PermissionRe
             : Object.entries(permissions)
 
     return entries.map(([name, caveatsRequest]) => {
-        // Proper caveat transposition logic — though never used in practice.
         const caveats: WalletPermissionCaveat[] = //
             Object.entries(caveatsRequest) //
                 .map(([type, value]) => ({ type, value }))
@@ -337,9 +336,13 @@ export function grantPermissions(app: AppURL, permissionRequest: PermissionsRequ
  * ```
  */
 export function revokePermissions(app: AppURL, permissionsRequest: PermissionsRequest): void {
+    console.log("revokePerms", permissionsRequest)
     const appPermissions = getAppPermissions(app)
 
+    console.log("[revokePermissions] appPerms:", appPermissions)
+
     for (const { name, caveats } of permissionRequestEntries(permissionsRequest)) {
+        console.log("name, cav:", { name, caveats })
         // If no specific caveats provided, remove entire permission
         if (!caveats.length) {
             delete appPermissions[name]
