@@ -157,7 +157,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * Gas buffer to ensure we have enough gas to handle post-OOG revert scenarios.
      * This amount will be reserved from the available gas for validate and payout operations.
      */
-    uint256 private constant POST_OOG_GAS_BUFFER = 2500;
+    uint256 private constant POST_OOG_GAS_BUFFER = 3000;
 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
