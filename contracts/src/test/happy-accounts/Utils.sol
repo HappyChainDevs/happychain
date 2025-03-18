@@ -39,7 +39,6 @@ contract HappyTxTestUtils is Test {
         bytes memory callData
     ) public view returns (HappyTx memory happyTx) {
         happyTx = getStubHappyTx(account, dest, paymaster, callData);
-        happyTx.nonceValue = getNonce(account);
         happyTx.validatorData = signHappyTx(happyTx, privKey);
     }
 
@@ -56,7 +55,7 @@ contract HappyTxTestUtils is Test {
             paymaster: _paymaster,
             value: 0,
             nonceTrack: 0,
-            nonceValue: getNonce(_account),
+            nonceValue: getNonceValue(_account),
             maxFeePerGas: 1200000000,
             submitterFee: 100,
             callData: _callData,
@@ -122,11 +121,11 @@ contract HappyTxTestUtils is Test {
     // ====================================================================================================
     // NONCE HELPERS
 
-    function getNonce(address smartAccount) public view returns (uint64) {
+    function getNonceValue(address smartAccount) public view returns (uint64) {
         return uint64(ScrappyAccount(payable(smartAccount)).getNonce(DEFAULT_NONCETRACK));
     }
 
-    function getNonce(address smartAccount, uint192 nonceTrack) public view returns (uint64) {
+    function getNonceValue(address smartAccount, uint192 nonceTrack) public view returns (uint64) {
         return uint64(ScrappyAccount(payable(smartAccount)).getNonce(nonceTrack));
     }
 
