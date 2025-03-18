@@ -1,3 +1,4 @@
+import type { Ok, Result } from "neverthrow"
 import type { Address, TransactionReceipt } from "viem"
 import { expect } from "vitest"
 
@@ -20,4 +21,9 @@ export function assertIsDefined<T>(value: T): value is NonNullable<T> {
     const isDefined = value !== undefined && value !== null
     expect(isDefined).toBe(true)
     return isDefined
+}
+
+export function assertIsOk<T, E>(result: Result<T, E>): result is Ok<T, E> {
+    expect(result.isOk()).toBe(true)
+    return result.isOk()
 }
