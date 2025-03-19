@@ -100,7 +100,7 @@ contract ScrappyAccount is
     address public immutable ENTRYPOINT;
 
     /// Mapping from track => nonce
-    mapping(uint192 => uint256) public nonceValue;
+    mapping(uint192 => uint256) private nonceValue;
 
     /// Mapping to check if an extension is registered by type
     mapping(ExtensionType => mapping(address => bool)) public extensions;
