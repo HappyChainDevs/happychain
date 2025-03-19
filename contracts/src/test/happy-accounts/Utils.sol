@@ -15,7 +15,7 @@ contract HappyTxTestUtils is Test {
     using MessageHashUtils for bytes32;
 
     uint256 public constant TOKEN_MINT_AMOUNT = 1000;
-    uint192 public constant DEFAULT_NONCETRACK = 0;
+    uint192 public constant DEFAULT_NONCETRACK = 1;
 
     // ====================================================================================================
     // HAPPY TX HELPERS
@@ -54,7 +54,7 @@ contract HappyTxTestUtils is Test {
             dest: _dest,
             paymaster: _paymaster,
             value: 0,
-            nonceTrack: 0,
+            nonceTrack: DEFAULT_NONCETRACK,
             nonceValue: getNonceValue(_account),
             maxFeePerGas: 1200000000,
             submitterFee: 100,
@@ -122,11 +122,11 @@ contract HappyTxTestUtils is Test {
     // NONCE HELPERS
 
     function getNonceValue(address smartAccount) public view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).getNonce(DEFAULT_NONCETRACK));
+        return uint64(ScrappyAccount(payable(smartAccount)).nonceValue(DEFAULT_NONCETRACK));
     }
 
     function getNonceValue(address smartAccount, uint192 nonceTrack) public view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).getNonce(nonceTrack));
+        return uint64(ScrappyAccount(payable(smartAccount)).nonceValue(nonceTrack));
     }
 
     // ====================================================================================================
