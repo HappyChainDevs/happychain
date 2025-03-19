@@ -27,7 +27,7 @@ export type EstimateGasOutput = (
         status: EntryPointStatus
 
         /** Simulation result, included only if `!isSubmitterError(status)`. */
-        simulationResult: SimulationResult
+        simulationResult: SimulationResult | undefined
 
         /** Estimate max fee per gas (in wei) for the HappyTx. */
         maxFeePerGas: bigint
