@@ -7,14 +7,14 @@ import { StateRequestStatus } from "#src/tmp/interface/HappyTxState"
 import { isHexString } from "#src/utils/zod/refines/isHexString"
 import { happyTxStateSchema } from "#src/validation/schemas/happyTxState"
 
-const inputSchema = z.object({
+export const inputSchema = z.object({
     hash: z
         .string()
         .refine(isHexString)
         .openapi({ example: "0xd7ebadc747305fa2ad180a8666724d71ff5936787746b456cdb976b5c9061fbc" }),
 })
 
-const outputSchema = z.discriminatedUnion("status", [
+export const outputSchema = z.discriminatedUnion("status", [
     z.object({
         status: z.literal(StateRequestStatus.Success),
         state: happyTxStateSchema,

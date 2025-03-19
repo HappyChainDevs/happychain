@@ -27,9 +27,11 @@ describe("simulateSubmit", () => {
     })
 
     // try with no gas, and lots of gas
+    // it("should simulate submit", async (gasLimit = 0n) => {
     it.each([0n, 4000000000n])("should simulate submit", async (gasLimit) => {
-        const unsigned = await createMockTokenAMintHappyTx(smartAccount, 0n)
+        const unsigned = await createMockTokenAMintHappyTx(smartAccount, 0n, 1n)
         unsigned.executeGasLimit = gasLimit
+        unsigned.gasLimit = gasLimit
 
         unsigned.validatorData = await testAccount.account.signMessage({
             message: { raw: computeHappyTxHash(unsigned) },
@@ -50,7 +52,7 @@ describe("simulateSubmit", () => {
             expect(result.validationStatus).toBe("0x00000000")
             expect(result.callStatus).toBe(0)
             expect(result.revertData).toBe("0x")
-        } catch {
+        } catch (_err) {
             expect.unreachable()
         }
     })
