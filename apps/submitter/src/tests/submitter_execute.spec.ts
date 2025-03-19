@@ -195,8 +195,6 @@ describe("submitter_execute", () => {
             expect(result.status).toBe(422)
         })
 
-        // TODO: currently test fails due to contract bug. calling non-existant function should revert
-        // in entrypoint
         it("throws when invalid ABI is used to make call", async () => {
             const nonce = await getNonce(smartAccount, nonceTrack)
             const tx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)

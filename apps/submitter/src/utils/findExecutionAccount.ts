@@ -19,11 +19,15 @@ const defaultAccount = privateKeyToAccount(env.PRIVATE_KEY_LOCAL)
 // can be adjusted to fit the actual requirements
 type PartialTx = Pick<HappyTx, "account" | "nonceTrack" | "nonceValue" | "paymaster" | "dest">
 
-export function findExecutionAccount(_tx?: PartialTx): Account {
+const accounts = [defaultAccount]
+
+export function findExecutionAccount(tx?: PartialTx): Account {
+    if (!tx) return defaultAccount
+
     // TODO: select wallet per account.
     // One approach would be to check all current/pending/processed transactions
     // to find the least used account, then save this useraddress<->systemaccount relation
     // for future transactions to ensure that the same user account will always be processed
     // by the same system account
-    return defaultAccount
+    return accounts[0]
 }
