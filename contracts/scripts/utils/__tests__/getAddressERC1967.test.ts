@@ -1,7 +1,7 @@
 import { type Address, type Hex, pad, toHex } from "viem"
 import { describe, expect, test } from "vitest"
 
-import { predictDeterministicAddressERC1967 } from "../getAddressERC1967"
+import { getAddressERC1967 } from "../getAddressERC1967"
 
 describe("getAddressERC1967", () => {
     const SALT: Hex = pad(toHex(0))
@@ -17,17 +17,17 @@ describe("getAddressERC1967", () => {
     const EXP_ADDR_SALT2_OWNER1: Address = "0xf5c6Ad0BF25CDe468ecC146263E7eCfC36cF1003" // salt2 + owner
 
     test("predicts same address as ScrappyAccountFactory for initial deployment (salt1 + owner1)", async () => {
-        const predicted = predictDeterministicAddressERC1967(SALT, OWNER, IMPLEMENTATION_ADDRESS, FACTORY_ADDRESS)
+        const predicted = getAddressERC1967(SALT, OWNER, IMPLEMENTATION_ADDRESS, FACTORY_ADDRESS)
         expect(predicted).toBe(EXP_ADDR_SALT1_OWNER1)
     })
 
     test("predicts same address as ScrappyAccountFactory for different owner with same salt (salt1 + owner2)", async () => {
-        const predicted = predictDeterministicAddressERC1967(SALT, OWNER2, IMPLEMENTATION_ADDRESS, FACTORY_ADDRESS)
+        const predicted = getAddressERC1967(SALT, OWNER2, IMPLEMENTATION_ADDRESS, FACTORY_ADDRESS)
         expect(predicted).toBe(EXP_ADDR_SALT1_OWNER2)
     })
 
     test("predicts same address as ScrappyAccountFactory for same owner with different salt (salt2 + owner1)", async () => {
-        const predicted = predictDeterministicAddressERC1967(SALT2, OWNER, IMPLEMENTATION_ADDRESS, FACTORY_ADDRESS)
+        const predicted = getAddressERC1967(SALT2, OWNER, IMPLEMENTATION_ADDRESS, FACTORY_ADDRESS)
         expect(predicted).toBe(EXP_ADDR_SALT2_OWNER1)
     })
 })

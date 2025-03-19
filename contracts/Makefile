@@ -98,13 +98,13 @@ test-gas: ## Runs test and generate a gas report
 # Happy-AA Unit Tests
 
 test-happy-aa:
-	test-happyTxLib
-	test-happyEntryPoint
-	test-scrappyAccount
-	test-scrappyPaymaster
-	test-scrappyAccountFactory
-	test-scrappyAccount-upgradeability
-	test-predictDeploymentAddress
+	@make test-happyTxLib
+	@make test-happyEntryPoint
+	@make test-scrappyAccount
+	@make test-scrappyPaymaster
+	@make test-scrappyAccountFactory
+	@make test-scrappyAccount-upgradeability
+	@make test-predictDeploymentAddress
 .PHONY: test-happy-aa
 
 test-happyTxLib:
