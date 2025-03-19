@@ -36,5 +36,5 @@ export const GuiTrigger = forwardRef<HTMLButtonElement, GuiTriggerProps>(
 
 interface GuiContentProps extends CollapsibleContentProps, GuiCollapsibleContentVariantsProps {}
 export const GuiContent = forwardRef<HTMLDivElement, GuiContentProps>(({ className = "", scale, ...props }, ref) => (
-    <ArkCollapsible.Content ref={ref} className={recipeGuiCollapsible.content({ scale })} {...props} />
+    <ArkCollapsible.Content ref={ref} className={cx(recipeGuiCollapsible.content({ scale }), className)} {...props} />
 ))
