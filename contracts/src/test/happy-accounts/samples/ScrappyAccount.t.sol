@@ -350,6 +350,84 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
+    // PAYOUT TESTS
+
+    function testPayoutWrongAccount() public {
+        // Create a happyTx with an invalid account field
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        happyTx.account = ZERO_ADDRESS;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Payout function must be called by the HappyEntryPoint
+        vm.prank(happyEntryPoint);
+        bytes4 payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, 0);
+        assertEq(payoutData, WrongAccount.selector);
+    }
+
+    function testPayoutSuccessfulGasCalculation() public {
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+
+        // Set up test parameters
+        uint256 consumedGas = 100000;
+        uint256 maxFeePerGas = happyTx.maxFeePerGas;
+        int256 submitterFee = happyTx.submitterFee;
+
+        // Calculate expected owed amount
+        uint256 payoutIntrinsicGasOverhead = 400; // From ScrappyAccount.sol
+        uint256 payoutPaymentOverheadGas = 9500; // From ScrappyAccount.sol
+
+        int256 _owed =
+            int256((consumedGas + payoutIntrinsicGasOverhead + payoutPaymentOverheadGas) * maxFeePerGas) + submitterFee;
+        uint256 owed = _owed > 0 ? uint256(_owed) : 0;
+
+        // Set up a test recipient address and record its initial balance
+        address payable recipient = payable(address(0x123));
+        uint256 initialBalance = recipient.balance;
+
+        // Fund the smart account
+        vm.deal(smartAccount, owed * 2); // Ensure enough funds
+
+        // Mock tx.origin to be our test recipient
+        vm.prank(happyEntryPoint, recipient);
+
+        // Call payout
+        bytes4 payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
+
+        // Verify payout was successful
+        assertEq(payoutData, bytes4(0));
+
+        // Verify recipient received the correct amount
+        assertEq(recipient.balance, initialBalance + owed);
+    }
+
+    function testPayoutZeroOwed() public {
+        // Create a valid happyTx with negative submitterFee to force owed to be zero
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+
+        // Set up to make the owed amount negative (which should result in 0 transfer)
+        uint256 consumedGas = 100;
+        happyTx.maxFeePerGas = 1; // Minimum gas price
+        happyTx.submitterFee = -100000; // Large negative fee to ensure owed is negative
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Set up a test recipient address and record its initial balance
+        address payable recipient = payable(address(0x123));
+        uint256 initialBalance = recipient.balance;
+
+        // Mock tx.origin to be our test recipient
+        vm.prank(happyEntryPoint, recipient);
+
+        // Call payout
+        bytes4 payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
+
+        // Verify payout was successful
+        assertEq(payoutData, bytes4(0));
+
+        // Verify recipient balance didn't change (owed should be 0)
+        assertEq(recipient.balance, initialBalance);
+    }
+
+    // ====================================================================================================
     // ISVALIDSIGNATURE TESTS
 
     function testIsValidSignatureWithValidSignature() public view {
@@ -403,6 +481,21 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         bytes4 happyPaymasterInterfaceId = 0x9c7b367f; // IHappyPaymaster interface ID
         assertTrue(account.supportsInterface(happyPaymasterInterfaceId), "Should support IHappyPaymaster");
+    }
+
+    // ====================================================================================================
+    // NONCE FUNCTION TESTS
+
+    function testGetNonceWithExtremeTrackValues() public view {
+        // Test with max uint192 value
+        uint192 maxTrack = type(uint192).max;
+        uint256 nonceValue = ScrappyAccount(payable(smartAccount)).getNonceValue(maxTrack);
+        uint256 nonce = ScrappyAccount(payable(smartAccount)).getNonce(maxTrack);
+
+        // Initial nonce value should be 0
+        assertEq(nonceValue, 0);
+        // getNonce should return track << 64 | nonceValue
+        assertEq(nonce, uint256(maxTrack) << 64 | nonceValue);
     }
 
     // ====================================================================================================
