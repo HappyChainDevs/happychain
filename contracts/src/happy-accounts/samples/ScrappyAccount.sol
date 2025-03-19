@@ -215,11 +215,6 @@ contract ScrappyAccount is
     // ====================================================================================================
     // VIEW FUNCTIONS
 
-    /// Returns the next nonce for a given nonce track, combining the track with its current nonce sequence
-    function getNonce(uint192 nonceTrack) external view returns (uint256) {
-        return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
-    }
-
     /// Returns the current nonce value for a given nonce track
     function getNonceValue(uint192 nonceTrack) external view returns (uint256) {
         return nonceValue[nonceTrack];
