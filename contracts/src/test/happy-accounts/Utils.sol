@@ -122,11 +122,11 @@ contract HappyTxTestUtils is Test {
     // NONCE HELPERS
 
     function getNonceValue(address smartAccount) public view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).nonceValue(DEFAULT_NONCETRACK));
+        return uint64(ScrappyAccount(payable(smartAccount)).getNonceValue(DEFAULT_NONCETRACK));
     }
 
     function getNonceValue(address smartAccount, uint192 nonceTrack) public view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).nonceValue(nonceTrack));
+        return uint64(ScrappyAccount(payable(smartAccount)).getNonceValue(nonceTrack));
     }
 
     // ====================================================================================================
