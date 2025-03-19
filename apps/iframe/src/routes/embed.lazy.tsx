@@ -1,18 +1,12 @@
 import { WalletDisplayAction } from "@happy.tech/wallet-common"
 import { Msgs } from "@happy.tech/wallet-common"
-import { Outlet, createLazyFileRoute, useLocation, useNavigate } from "@tanstack/react-router"
+import { Outlet, createLazyFileRoute, useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
-import { BannerList } from "#src/components/interface/banners/BannerList.tsx"
-import { ImportTokensDialog } from "#src/components/interface/home/tabs/views/tokens/ImportTokensDialog"
-import { dialogLogOutConfirmationVisibilityAtom, secondaryMenuVisibilityAtom } from "#src/state/interfaceState"
 import { signalClosed, signalOpen } from "#src/utils/walletState"
+import { Scrollable } from "#src/v2/layouts/root/screen"
+import { dialogConfirmLogOutVisibility, userDetailsCollapsibleVisibility } from "#src/v2/layouts/root/user"
 import { ConnectModal } from "../components/ConnectModal"
-import GlobalHeader from "../components/interface/GlobalHeader"
-import UserInfo from "../components/interface/UserInfo"
-import { DialogConfirmLogOut } from "../components/interface/menu-secondary-actions/DialogConfirmLogOut"
-import { SecondaryActionsMenu } from "../components/interface/menu-secondary-actions/SecondaryActionsMenu"
-import { useActiveConnectionProvider } from "../connections/initialize"
 import { appMessageBus } from "../services/eventBus"
 import { userAtom } from "../state/user"
 
@@ -21,12 +15,10 @@ export const Route = createLazyFileRoute("/embed")({
 })
 
 function Embed() {
-    const location = useLocation()
     const user = useAtomValue(userAtom)
-    const activeProvider = useActiveConnectionProvider()
     const navigate = useNavigate()
-    const [, setSecondaryMenuVisibility] = useAtom(secondaryMenuVisibilityAtom)
-    const [, setDialogLogoutVisibility] = useAtom(dialogLogOutConfirmationVisibilityAtom)
+    const [, setUserDetailsVisibility] = useAtom(userDetailsCollapsibleVisibility)
+    const [, setLogoutVisibility] = useAtom(dialogConfirmLogOutVisibility)
 
     useEffect(() => {
         const unsubscribe = appMessageBus.on(Msgs.RequestWalletDisplay, async (screen) => {
@@ -44,8 +36,8 @@ function Embed() {
                     break
                 case WalletDisplayAction.Closed:
                     signalClosed()
-                    setSecondaryMenuVisibility(false)
-                    setDialogLogoutVisibility(false)
+                    setUserDetailsVisibility(false)
+                    setLogoutVisibility(false)
                     break
             }
         })
@@ -54,18 +46,18 @@ function Embed() {
         // RequestWalletDisplay calls will be silently lost
         void appMessageBus.emit(Msgs.IframeInit, true)
         return unsubscribe
-    }, [navigate, setSecondaryMenuVisibility, setDialogLogoutVisibility])
-
-    async function logout() {
-        setSecondaryMenuVisibility(false)
-        setDialogLogoutVisibility(false)
-        void appMessageBus.emit(Msgs.WalletVisibility, { isOpen: false })
-        await activeProvider?.disconnect()
-    }
+    }, [navigate, setUserDetailsVisibility, setLogoutVisibility])
 
     if (!user) {
         return <ConnectModal />
     }
+
+    return (
+        <Scrollable className="pt-4">
+            <Outlet />
+        </Scrollable>
+    )
+    /*
     return (
         <main className="h-dvh w-screen rounded-3xl overflow-hidden flex flex-col">
             <div className="flex flex-col gap-2 size-full">
@@ -92,5 +84,5 @@ function Embed() {
                 </section>
             </div>
         </main>
-    )
+        */
 }
