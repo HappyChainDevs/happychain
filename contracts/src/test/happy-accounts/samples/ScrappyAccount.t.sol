@@ -9,6 +9,7 @@ import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
 import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
 import {
+    ExecutionOutput,
     GasPriceTooHigh,
     WrongAccount,
     InvalidNonce,
@@ -17,7 +18,7 @@ import {
 import {HappyEntryPoint} from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
-import {InvalidOwnerSignature} from "../../../happy-accounts/utils/Common.sol";
+import {InvalidOwnerSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
 
 contract ScrappyAccountTest is HappyTxTestUtils {
     using HappyTxLib for HappyTx;
@@ -277,11 +278,132 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     // ====================================================================================================
     // SIGNATURE VALIDATION TESTS (SIMULATION)
 
-    function testSimulationValidateEmptySignature() public {}
+    function testSimulationValidateUnknownDuringSimulation() public {
+        // Create a happyTx with a signature from a different owner
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        happyTx.validatorData = signHappyTx(happyTx, DUMMY_PRIV_KEY);
 
-    function testSimulationValidateInvalidSignatureLength() public {}
+        // Validate function must be called by the HappyEntryPoint, with tx.origin = address(0)
+        vm.prank(happyEntryPoint, ZERO_ADDRESS);
 
-    function testSimulationValidateInvalidSignature() public {}
+        bytes4 validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        assertEq(validationData, UnknownDuringSimulation.selector);
+    }
+
+    // ====================================================================================================
+    // EXECUTION TESTS
+
+    function testExecuteMintToken() public {
+        uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
+
+        // Create a valid happyTx for minting mock tokens
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
+
+        // Execute the transaction
+        vm.prank(happyEntryPoint);
+        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+
+        assertGt(output.gas, 0);
+        assertTrue(output.success);
+        assertEq(output.revertData, new bytes(0));
+
+        uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
+        assertEq(finalTokenBalance, initialTokenBalance + TOKEN_MINT_AMOUNT);
+    }
+
+    function testExecuteEthTransfer() public {
+        uint256 initialBalance = getEthBalance(dest);
+
+        // Create a valid happyTx for transferring ETH
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        happyTx.value = 1 ether;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Execute the transaction
+        vm.prank(happyEntryPoint);
+        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+
+        assertGt(output.gas, 0);
+        assertTrue(output.success);
+        assertEq(output.revertData, new bytes(0));
+
+        uint256 finalBalance = getEthBalance(dest);
+        assertEq(finalBalance, initialBalance + happyTx.value);
+    }
+
+    function testExecuteInnerCallFails() public {
+        uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
+
+        // Create a happyTx with wrong token address, so the call reverts
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, dest, privKey);
+
+        // Execute the transaction
+        vm.prank(happyEntryPoint);
+        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+
+        assertEq(output.gas, 0);
+        assertFalse(output.success);
+        assertEq(output.revertData, new bytes(0));
+
+        uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
+        assertEq(finalTokenBalance, initialTokenBalance);
+    }
+
+    // ====================================================================================================
+    // ISVALIDSIGNATURE TESTS
+
+    function testIsValidSignatureWithValidSignature() public view {
+        // Create a test message hash
+        bytes32 messageHash = keccak256(abi.encodePacked("test message"));
+
+        // Sign the message with the owner's private key
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, messageHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        // Call isValidSignature and verify it returns the correct magic value
+        bytes4 result = ScrappyAccount(payable(smartAccount)).isValidSignature(messageHash, signature);
+        bytes4 expectedMagicValue = 0x1626ba7e; // MAGIC_VALUE from ERC-1271
+        assertEq(result, expectedMagicValue);
+    }
+
+    function testIsValidSignatureWithInvalidSignature() public view {
+        // Create a test message hash
+        bytes32 messageHash = keccak256(abi.encodePacked("test message"));
+
+        // Use a different private key to create an invalid signature
+        uint256 wrongPrivKey = 0x2222222222222222222222222222222222222222222222222222222222222222;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongPrivKey, messageHash);
+        bytes memory invalidSignature = abi.encodePacked(r, s, v);
+
+        // Call isValidSignature and verify it returns bytes4(0) for invalid signature
+        bytes4 result = ScrappyAccount(payable(smartAccount)).isValidSignature(messageHash, invalidSignature);
+        assertEq(result, bytes4(0));
+    }
+
+    // ====================================================================================================
+    // INTERFACE SUPPORT TESTS
+
+    function testSupportsInterface() public view {
+        // Get reference to the ScrappyAccount contract
+        ScrappyAccount account = ScrappyAccount(payable(smartAccount));
+
+        // Test that a random interface ID is not supported
+        bytes4 randomInterfaceId = 0x12345678;
+        assertFalse(account.supportsInterface(randomInterfaceId), "Should not support random interface");
+
+        // Test for supported interfaces
+        bytes4 erc165InterfaceId = 0x01ffc9a7; // ERC-165 interface ID
+        assertTrue(account.supportsInterface(erc165InterfaceId), "Should support ERC-165");
+
+        bytes4 erc1271InterfaceId = 0x1626ba7e; // ERC-1271 interface ID
+        assertTrue(account.supportsInterface(erc1271InterfaceId), "Should support ERC-1271");
+
+        bytes4 happyAccountInterfaceId = 0x909c11f4; // IHappyAccount interface ID
+        assertTrue(account.supportsInterface(happyAccountInterfaceId), "Should support IHappyAccount");
+
+        bytes4 happyPaymasterInterfaceId = 0x9c7b367f; // IHappyPaymaster interface ID
+        assertTrue(account.supportsInterface(happyPaymasterInterfaceId), "Should support IHappyPaymaster");
+    }
 
     // ====================================================================================================
     // HELPER FUNCTIONS

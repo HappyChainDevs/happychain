@@ -15,7 +15,7 @@ contract HappyTxTestUtils is Test {
     using MessageHashUtils for bytes32;
 
     uint256 public constant TOKEN_MINT_AMOUNT = 1000;
-    uint192 public constant DEFAULT_NONCETRACK = 1;
+    uint192 public constant DEFAULT_NONCETRACK = type(uint192).max;
 
     // ====================================================================================================
     // HAPPY TX HELPERS
