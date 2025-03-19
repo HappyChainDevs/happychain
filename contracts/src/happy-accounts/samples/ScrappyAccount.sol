@@ -82,7 +82,7 @@ contract ScrappyAccount is
     address public immutable ENTRYPOINT;
 
     /// Mapping from track => nonce
-    mapping(uint192 => uint64) public nonceValue;
+    mapping(uint192 => uint256) private nonceValue;
 
     // ====================================================================================================
     // MODIFIERS
@@ -126,7 +126,7 @@ contract ScrappyAccount is
         }
 
         bool isSimulation = tx.origin == address(0);
-        int64 nonceAhead = int64(happyTx.nonceValue) - int64(nonceValue[happyTx.nonceTrack]);
+        int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - int256(nonceValue[happyTx.nonceTrack]);
 
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
         nonceValue[happyTx.nonceTrack]++;
@@ -217,7 +217,7 @@ contract ScrappyAccount is
 
     /// Returns the next nonce for a given nonce track, combining the track with its current nonce sequence
     function getNonce(uint192 nonceTrack) external view returns (uint256) {
-        return (nonceValue[nonceTrack] >> 192) | (uint256(nonceTrack) << 64);
+        return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
     }
 
     /// Returns the current nonce value for a given nonce track
