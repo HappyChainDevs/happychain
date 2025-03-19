@@ -5,6 +5,8 @@ import { cx } from "cva"
 import { useAtomValue } from "jotai"
 import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
+import { RootDialogsIsland } from "./dialogs"
+import { UserDetails } from "./user"
 
 /**
  * The display area and simulated screen reflection effect.
@@ -56,7 +58,7 @@ const RootView = ({ className = "", children, ...props }: HTMLAttributes<HTMLDiv
         <div
             data-scope="display"
             data-part="view"
-            className={cx("relative grid group h-full grid-rows-[auto_1fr]", className)}
+            className={cx("relative group grid h-full grid-rows-[1fr_12fr_1fr]", className)}
             {...props}
         >
             {children}
@@ -107,7 +109,10 @@ const RootNavbar = forwardRef<HTMLDivElement, HTMLArkProps<"div">>(
             <div
                 data-scope="view"
                 data-part="footer"
-                className="w-full pt-2 sticky mt-auto bottom-0 start-0 bg-hds-system-skeuo-surface-default"
+                className={cx(
+                    "w-full pt-2 sticky mt-auto bottom-0 start-0 bg-hds-system-skeuo-surface-default",
+                    className,
+                )}
             >
                 <div
                     data-scope="footer"
@@ -192,6 +197,20 @@ const RootBottomNavbarIsland = () => {
     )
 }
 
+const RootHeader = ({ children }: PropsWithChildren) => {
+    return (
+        <div data-scope="view" data-part="header" className="size-full pb-2">
+            {children}
+        </div>
+    )
+}
+const RootHeaderIsland = () => {
+    return (
+        <RootHeader>
+            <UserDetails />
+        </RootHeader>
+    )
+}
 /**
  * A specific content layout structure within a `<Screen />`
  * Handles organization of GUI elements. Its content changes based on user actions, but are always
@@ -206,6 +225,7 @@ const RootBottomNavbarIsland = () => {
  *     </Screen.View.Scrollable>
  *     <p>Another fixed paragraph.</p>
  *     <Screen.View.BottomNavbarIsland />
+ *     <Screen.View.DialogsIsland />
  *   </Screen.View>
  * ```
  */
@@ -213,6 +233,8 @@ export const View = Object.assign(RootView, {
     Scrollable,
     BottomNavbar,
     BottomNavbarIsland: RootBottomNavbarIsland,
+    HeaderIsland: RootHeaderIsland,
+    DialogsIsland: RootDialogsIsland,
 })
 
 /**
