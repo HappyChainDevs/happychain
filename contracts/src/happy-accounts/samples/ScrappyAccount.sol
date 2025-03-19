@@ -126,9 +126,7 @@ contract ScrappyAccount is
         }
 
         bool isSimulation = tx.origin == address(0);
-        uint256 happyTxNonce = (happyTx.nonceTrack << 192) | happyTx.nonceValue;
-        uint256 currentNonce = getNonce(happyTx.nonceTrack);
-        int256 nonceAhead = int256(happyTxNonce) - int256(currentNonce);
+        int64 nonceAhead = int64(happyTx.nonceValue) - int64(nonceValue[happyTx.nonceTrack]);
 
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
         nonceValue[happyTx.nonceTrack]++;
@@ -218,8 +216,13 @@ contract ScrappyAccount is
     // VIEW FUNCTIONS
 
     /// Returns the next nonce for a given nonce track, combining the track with its current nonce sequence
-    function getNonce(uint192 nonceTrack) public view returns (uint256 nonce) {
+    function getNonce(uint192 nonceTrack) external view returns (uint256) {
         return nonceValue[nonceTrack] | (uint256(nonceTrack) << 64);
+    }
+
+    /// Returns the current nonce value for a given nonce track
+    function getNonceValue(uint192 nonceTrack) external view returns (uint256) {
+        return nonceValue[nonceTrack];
     }
 
     // ====================================================================================================
