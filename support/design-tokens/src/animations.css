@@ -1,0 +1,21 @@
+@keyframes hds-slide-down {
+    from {
+        height: 0;
+        flex-grow: 0;
+    }
+    to {
+        height: var(--height);
+        flex-grow: 1;
+    }
+}
+
+@keyframes hds-slide-up {
+    from {
+        height: var(--height);
+        flex-grow: 1;
+    }
+    to {
+        height: 0;
+        flex-grow: 0;
+    }
+}
