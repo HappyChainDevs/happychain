@@ -1,6 +1,7 @@
 export * from "./alert/alert"
 export * from "./button/button"
 export * from "./collapsible/collapsible"
+export * from "./dialog/dialog"
 export * from "./field/field"
 export * from "./input/input"
 export * from "./menu/menu"
