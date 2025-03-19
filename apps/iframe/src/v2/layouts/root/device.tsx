@@ -129,9 +129,10 @@ const ActionsIsland = () => {
                     className={cx(
                         "rounded-[inherit]",
                         "drop-shadow-[0_25px_25px_var(--color-hds-utility-shade-50))]",
-                        "motion-safe:transition-all",
-                        "motion-safe:group-[[data-state=transitioning]]:animate-[shutter-close_450ms_ease-in-out_forwards]",
-                        "motion-safe:group-[[data-state=ready]]:animate-[shutter-open_350ms_ease-in-out_forwards]",
+                        "translate-y-0",
+                        "group-[[data-state=ready]]:-translate-y-[150%]",
+                        "motion-safe:transition-[all_500ms_ease-in-out]",
+                        "delay-300",
                         "absolute size-full block z-1 inset-0",
                         "shadow-hds-bevel-inwards-advanced",
                         "bg-gradient-hds-154deg-system-skeuo-surface-850-700",
