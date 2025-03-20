@@ -13,7 +13,6 @@ export function isSendCallsParams(param: unknown): param is WalletSendCallsParam
         z.object({
             calls: z.array(callSchema).readonly(),
             capabilities: z.record(z.string(), z.any()).optional(),
-            chainId: z.union([z.string(), z.number()]).optional(),
             from: z.string(),
             version: z.string(),
         }),
