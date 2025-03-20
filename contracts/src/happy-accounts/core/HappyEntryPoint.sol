@@ -104,31 +104,37 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     // Must be used to avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
 
+    // ====================================================================================================
+    // CONSTANTS
+
     /**
      * @dev Maximum amount of data allowed to be returned from {IHappyAccount.validate}.
      * The returned data is as follows:
-     * 1st slot: bytes4 selector (minimum 32 bytes are neded to decode the return data)
+     * 1st slot: bytes4 selector (minimum 32 bytes are used by the error selector)
+     * 2nd slot onwards: 224 bytes reserved for parameters of the error (if any)
      */
-    uint16 private constant MAX_VALIDATE_RETURN_DATA_SIZE = 32;
+    uint16 private constant MAX_VALIDATE_RETURN_DATA_SIZE = 256;
 
     /**
      * @dev Maximum amount of data allowed to be returned from {IPaymaster.payout}.
      * The returned data is as follows:
-     * 1st slot: bytes4 selector (minimum 32 bytes are neded to decode the return data)
+     * 1st slot: bytes4 selector (minimum 32 bytes are used by the error selector)
+     * 2nd slot onwards: 224 bytes reserved for parameters of the error (if any)
      */
-    uint16 private constant MAX_PAYOUT_RETURN_DATA_SIZE = 32;
+    uint16 private constant MAX_PAYOUT_RETURN_DATA_SIZE = 256;
 
     /**
      * @dev Maximum amount of data allowed to be returned from {IHappyAccount.execute}
      * The encoding of the returned {ExecutionOutput} struct is as follows:
      *
      * 1st slot: Offset for the struct (returned values are encoded as a tuple)
-     * 2nd slot: {ExecutionOutput.gas}
-     * 3rd slot: offset for revertData from where the struct begins
-     * 4th slot: {ExecutionOutput.revertData.Length}
-     * 5th slot (onwards): {ExecutionOutput.revertData} (max 256 bytes)
+     * 2nd slot: {ExecutionOutput.success}
+     * 3rd slot: {ExecutionOutput.gas}
+     * 4th slot: offset for revertData from where the struct begins
+     * 5th slot: {ExecutionOutput.revertData.Length}
+     * 6th slot (onwards): {ExecutionOutput.revertData} (max 256 bytes)
      */
-    uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 384;
+    uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 416;
 
     /**
      * Fixed max gas overhead for the logic around the ExcessivelySafeCall to
