@@ -246,7 +246,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
         // Set a very high tx gas price (higher than happyTx.maxFeePerGas)
-        vm.txGasPrice(5000000000);
+        vm.txGasPrice(happyTx.maxFeePerGas * 2);
 
         // The function should revert with ValidationFailed(GasPriceTooHigh.selector)
         vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, GasPriceTooHigh.selector));

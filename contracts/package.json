@@ -14,7 +14,7 @@
         "./random/anvil": "./deployments/anvil/random/abis.ts"
     },
     "scripts": {
-        "getAddressERC1967Tests": "vitest getAddressERC1967.test.ts"
+        "getAddressERC1967Tests": "vitest run getAddressERC1967.test.ts"
     },
     "dependencies": {
         "@kevincharm/bls-bn254": "^2.0.0",
