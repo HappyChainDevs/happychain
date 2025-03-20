@@ -187,9 +187,10 @@ contract ScrappyAccount is
         // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
         (payable(tx.origin).call{value: owed}(""));
 
-        // [LOGGAS_INTERNAL] console.log("PAYOUT_PAYMENT_OVERHEAD_GAS", gasPaymentStart - gasleft());
+        // [LOGGAS_INTERNAL] uint256 gasPaymentEnd = gasleft();
+        // [LOGGAS_INTERNAL] console.log("PAYOUT_PAYMENT_OVERHEAD_GAS", gasPaymentStart - gasPaymentEnd);
         // [LOGGAS_INTERNAL] console.log("PAYOUT_INTRINSIC_GAS_OVERHEAD", gasOverheadStart - gasPaymentStart);
-        // [LOGGAS_INTERNAL] console.log("payout function gas usage = PAYOUT_PAYMENT_OVERHEAD_GAS + PAYOUT_INTRINSIC_GAS_OVERHEAD");
+        // [LOGGAS_INTERNAL] console.log("overall payout function gas usage = ", gasOverheadStart - gasPaymentEnd);
 
         return 0;
     }
