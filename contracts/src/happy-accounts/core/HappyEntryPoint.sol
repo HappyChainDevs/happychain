@@ -303,7 +303,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] uint256 payoutGasStart = gasleft();
 
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
-            happyTx.gasLimit,
+            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : gasleft() - POST_OOG_GAS_BUFFER,
             0, // gas token transfer value
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
