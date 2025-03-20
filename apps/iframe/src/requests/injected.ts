@@ -1,7 +1,6 @@
 import { HappyMethodNames, PermissionNames, TransactionType } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import {
-    type ApprovedRequestPayload,
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
     type EIP1193RequestResult,
@@ -345,11 +344,9 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                 resp = await sendToInjectedClient(app, {
                     ...request,
                     payload: {
-                        eip1193params: {
-                            method: "eth_requestAccounts",
-                            params: undefined,
-                        },
-                    } as ApprovedRequestPayload<"eth_requestAccounts">,
+                        method: "eth_requestAccounts",
+                        params: undefined,
+                    },
                 })
                 if (!resp.length) return []
             }
@@ -396,21 +393,19 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             // such as eth_accounts must be special-cased and
             // forwarded to the injected wallet for confirmation
             // before proceeding
-            const [{ eth_accounts, ...rest }] = request.payload.eip1193params.params
+            const [{ eth_accounts, ...rest }] = request.payload.params
 
             if (eth_accounts) {
                 // 'eth_accounts' must be forwarded to the injected wallet to function
                 const injectedResponse = await sendToInjectedClient(app, {
                     ...request,
-                    payload: {
-                        eip1193params: { method: request.payload.eip1193params.method, params: [{ eth_accounts }] },
-                    },
+                    payload: { method: request.payload.method, params: [{ eth_accounts }] },
                 })
                 if (injectedResponse.length) grantPermissions(app, { eth_accounts })
             }
 
             if (Object.keys(rest).length) grantPermissions(app, rest)
-            return getPermissions(app, request.payload.eip1193params.params[0])
+            return getPermissions(app, request.payload.params[0])
         }
 
         // same as above, however, 'wallet_revokePermissions' is only in permissionless.ts, not
