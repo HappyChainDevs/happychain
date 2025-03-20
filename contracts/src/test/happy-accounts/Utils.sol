@@ -55,7 +55,7 @@ contract HappyTxTestUtils is Test {
             paymaster: _paymaster,
             value: 0,
             nonceTrack: DEFAULT_NONCETRACK,
-            nonceValue: getNonceValue(_account),
+            nonceValue: getAccountNonceValue(_account, DEFAULT_NONCETRACK),
             maxFeePerGas: 1200000000,
             submitterFee: 100,
             callData: _callData,
@@ -121,12 +121,8 @@ contract HappyTxTestUtils is Test {
     // ====================================================================================================
     // NONCE HELPERS
 
-    function getNonceValue(address smartAccount) public view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).getNonceValue(DEFAULT_NONCETRACK));
-    }
-
-    function getNonceValue(address smartAccount, uint192 nonceTrack) public view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).getNonceValue(nonceTrack));
+    function getAccountNonceValue(address smartAccount, uint192 nonceTrack) public view returns (uint64) {
+        return uint64(ScrappyAccount(payable(smartAccount)).nonceValue(nonceTrack));
     }
 
     // ====================================================================================================
