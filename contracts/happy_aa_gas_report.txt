@@ -2,45 +2,45 @@ HappyEntryPoint Gas Report For Self-Paying Transactions
   
 1. First Transaction (Cold + Uninitialized Storage)
    ----------------------------------------------------
-  HappyTxLib.decode gas usage:  3964
-  excessivelySafeCall (execute) gas usage:  55032
-  excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5594
+  HappyTxLib.decode gas usage:  3972
+  excessivelySafeCall (execute) gas usage:  55039
+  excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5601
   txGasFromCallGas overall gas usage:  383
-  excessivelySafeCall  (payout) gas usage:  12207
-  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  2425
-     Tx Gas used:  133180
+  excessivelySafeCall  (payout) gas usage:  12277
+  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  2495
+     Tx Gas used:  133233
   
 2. Second Transaction (Cold + Initialized Storage)
    ----------------------------------------------------
-  HappyTxLib.decode gas usage:  3964
-  excessivelySafeCall (execute) gas usage:  20832
-  excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5594
+  HappyTxLib.decode gas usage:  3972
+  excessivelySafeCall (execute) gas usage:  20839
+  excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5601
   txGasFromCallGas overall gas usage:  383
-  excessivelySafeCall  (payout) gas usage:  12207
-  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  2425
-     TxGas used:  81880
+  excessivelySafeCall  (payout) gas usage:  12277
+  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  2495
+     TxGas used:  81933
 
 HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions
   
 1. First Transaction (Cold + Uninitialized Storage)
    ----------------------------------------------------
-  HappyTxLib.decode gas usage:  3964
-  excessivelySafeCall (execute) gas usage:  55032
-  excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5594
+  HappyTxLib.decode gas usage:  3972
+  excessivelySafeCall (execute) gas usage:  55039
+  excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5601
   txGasFromCallGas overall gas usage:  383
-  excessivelySafeCall  (payout) gas usage:  14499
-  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  4395
-     Tx Gas used:  135550
+  excessivelySafeCall  (payout) gas usage:  14569
+  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  4465
+     Tx Gas used:  135603
   
 2. Second Transaction (Cold + Initialized Storage)
    ----------------------------------------------------
-  HappyTxLib.decode gas usage:  3964
-  excessivelySafeCall (execute) gas usage:  20832
-  excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5594
+  HappyTxLib.decode gas usage:  3972
+  excessivelySafeCall (execute) gas usage:  20839
+  excessivelySafeCall (execute) overhead (gas used - execOutput.gas):  5601
   txGasFromCallGas overall gas usage:  383
-  excessivelySafeCall  (payout) gas usage:  14499
-  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  4395
-     TxGas used:  84250
+  excessivelySafeCall  (payout) gas usage:  14569
+  excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage):  4465
+     TxGas used:  84303
 
 ScrappyAccount execute gas usage
    ----------------------------------------------------

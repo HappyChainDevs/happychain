@@ -141,7 +141,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * {HappyPaymaster.payout} that needs to be paid for by the payer.
      */
     uint256 private constant PAYOUT_CALL_OVERHEAD = 4500;
-    //^ From the gas report, 2425 for self-paying, 4395 for paymaster-sponsored, taking the maximum.
+    //^ From the gas report, 2495 for self-paying, 4465 for paymaster-sponsored, taking the maximum.
 
     /**
      * Gas buffer to ensure we have enough gas to handle post-OOG revert scenarios.
@@ -209,7 +209,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         bytes memory returnData;
 
         (success, returnData) = happyTx.account.excessivelySafeCall(
-            isSimulation && happyTx.gasLimit == 0 ? gasleft() : gasleft() - POST_OOG_GAS_BUFFER,
+            gasleft(),
             0, // gas token transfer value
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
@@ -231,7 +231,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         (success, returnData) = happyTx.account.excessivelySafeCall(
             // Pass the max possible gas if we need to estimate the gas limit.
-            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit - POST_OOG_GAS_BUFFER,
+            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0, // gas token transfer value
             // Allow the call revert data to take up the same size as the other revert data.
             MAX_EXECUTE_REVERT_DATA_SIZE,
