@@ -234,21 +234,23 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] console.log("excessivelySafeCall (execute) gas usage: ", executeCallGasUsed);
         // [LOGGAS] console.log("excessivelySafeCall (execute) overhead (gas used - execOutput.gas): ", executeCallOverhead);
 
-        // Don't revert, as we still want to get the payment for a reverted call.
-        ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
+        // Don't revert if execution fails, as we still want to get the payment for a reverted call.
         if (!success) {
             emit ExecutionReverted(returnData);
             output.callStatus = CallStatus.EXECUTION_REVERTED;
             output.revertData = returnData;
-        } else if (execOutput.revertData.length != 0) {
-            emit CallReverted(execOutput.revertData);
-            output.callStatus = CallStatus.CALL_REVERTED;
-            output.revertData = execOutput.revertData;
         } else {
-            output.callStatus = CallStatus.SUCCESS;
-        }
+            ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
+            if (!execOutput.success) {
+                emit CallReverted(execOutput.revertData);
+                output.callStatus = CallStatus.CALL_REVERTED;
+                output.revertData = execOutput.revertData;
+            } else {
+                output.callStatus = CallStatus.SUCCESS;
+            }
 
-        output.executeGas = uint32(execOutput.gas);
+            output.executeGas = uint32(execOutput.gas);
+        }
 
         // 3. Collect payment
 
