@@ -280,7 +280,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] uint256 payoutCallGasUsed = payoutGasStart - payoutGasEnd;
         // [LOGGAS] uint256 payoutLogicGasUsage = happyTx.account == happyTx.paymaster ? 9785 : 10123;
         // ^From the happy_aa_gas_report.txt
-        // [LOGGAS] uint256 payoutCallOverhead= payoutCallGasUsed - payoutLogicGasUsage;
+        // [LOGGAS] uint256 payoutCallOverhead = payoutCallGasUsed - payoutLogicGasUsage;
         // [LOGGAS] console.log("excessivelySafeCall  (payout) gas usage: ", payoutCallGasUsed);
         // [LOGGAS] console.log("excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage): ", payoutCallOverhead);
 

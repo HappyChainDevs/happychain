@@ -166,7 +166,7 @@ contract ScrappyAccount is
 
         // [LOGGAS_INTERNAL] uint256 _startGasEmulate = gasleft(); // To simulate the gasleft() at the top of the function
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
-        // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", startGas-endGas);
+        // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", startGas - endGas);
         // [LOGGAS_INTERNAL] console.log("execute output.gas: ", output.gas);
     }
 
