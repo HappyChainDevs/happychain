@@ -1,5 +1,11 @@
 # @happy.tech/core
 
+## 0.2.1
+
+### Patch Changes
+
+- d585e3a: fix iframe url in package release
+
 ## 0.2.0
 
 ### Minor Changes
