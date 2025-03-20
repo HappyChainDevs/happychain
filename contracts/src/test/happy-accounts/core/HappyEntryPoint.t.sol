@@ -5,6 +5,7 @@ import {ECDSA} from "solady/utils/ECDSA.sol";
 
 import {HappyTxTestUtils} from "../Utils.sol";
 import {MockERC20} from "../../../mocks/MockERC20.sol";
+import {MockRevert} from "../../../mocks/MockRevert.sol";
 
 import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
@@ -48,6 +49,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     address private smartAccount;
     address private paymaster;
     address private mockToken;
+    address private mockRevert;
     uint256 private privKey;
     address private owner;
     address private dest;
@@ -71,8 +73,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.deal(paymaster, INITIAL_DEPOSIT);
         vm.deal(smartAccount, INITIAL_DEPOSIT);
 
-        // Deploy a mock ERC20 token
+        // Deploy the mock contracts
         mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
+        mockRevert = address(new MockRevert());
     }
 
     // ====================================================================================================
@@ -370,20 +373,23 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testExecuteMockTokenAlwaysReverts() public {
         HappyTx memory happyTx =
-            createSignedHappyTx(smartAccount, mockToken, paymaster, privKey, getMockTokenAlwaysRevertCallData());
+            createSignedHappyTx(smartAccount, mockRevert, paymaster, privKey, getMockRevertCallData());
 
         // The result should be output.callStatus = CallReverted
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
 
         _assertExpectedSubmitOutput(
-            output, 0, uint8(CallStatus.CALL_REVERTED), abi.encodeWithSelector(MockERC20.AlwaysRevert.selector)
+            output,
+            0,
+            uint8(CallStatus.CALL_REVERTED),
+            abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector)
         );
         assertEq(output.executeGas, 0);
     }
 
     function testExecuteMockTokenAlwaysRevertsEmpty() public {
         HappyTx memory happyTx =
-            createSignedHappyTx(smartAccount, mockToken, paymaster, privKey, getMockTokenAlwaysRevertEmptyCallData());
+            createSignedHappyTx(smartAccount, mockRevert, paymaster, privKey, getMockRevertEmptyCallData());
 
         // This reverts with empty revertData: ← [Revert] EvmError: Revert
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
