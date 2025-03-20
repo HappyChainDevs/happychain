@@ -5,7 +5,7 @@
     "type": "module",
     "devDependencies": {
         "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/core": "workspace:0.2.0",
+        "@happy.tech/core": "workspace:0.2.1",
         "@happy.tech/react": "workspace:0.2.0",
         "@happy.tech/vue": "workspace:0.1.0",
         "@types/bun": "^1.1.8",

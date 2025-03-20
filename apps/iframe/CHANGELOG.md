@@ -1,5 +1,15 @@
 # @happy.tech/iframe
 
+## 0.2.1
+
+### Patch Changes
+
+- mitigate incidence of firebase connection issues, and back it possible to retry without a refresh
+- fix connection with injected wallets
+- fix user address when connecting via injected wallet
+- improve send asset UI
+- clean up and normalize request popups
+
 ## 0.2.0
 
 ### Minor Changes

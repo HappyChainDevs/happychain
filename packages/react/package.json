@@ -1,7 +1,7 @@
 {
     "name": "@happy.tech/react",
     "private": false,
-    "version": "0.2.0",
+    "version": "0.2.1",
     "type": "module",
     "files": ["dist"],
     "main": "./dist/index.es.js",
@@ -24,7 +24,7 @@
         "typescript": "^5.6.2"
     },
     "peerDependencies": {
-        "@happy.tech/core": "workspace:^0.2.0",
+        "@happy.tech/core": "workspace:^0.2.1",
         "react": "^18.3.1",
         "react-dom": "^18.3.1"
     }
