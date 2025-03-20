@@ -82,7 +82,7 @@ contract ScrappyAccount is
     address public immutable ENTRYPOINT;
 
     /// Mapping from track => nonce
-    mapping(uint192 => uint256) private nonceValue;
+    mapping(uint192 => uint256) public nonceValue;
 
     // ====================================================================================================
     // MODIFIERS
@@ -210,14 +210,6 @@ contract ScrappyAccount is
 
     receive() external payable {
         emit Received(msg.sender, msg.value);
-    }
-
-    // ====================================================================================================
-    // VIEW FUNCTIONS
-
-    /// Returns the current nonce value for a given nonce track
-    function getNonceValue(uint192 nonceTrack) external view returns (uint256) {
-        return nonceValue[nonceTrack];
     }
 
     // ====================================================================================================
