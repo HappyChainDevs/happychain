@@ -177,7 +177,7 @@ contract UpgradeSCATest is Test {
 
     /// @dev Internal helper function to get the nonce of a smart account.
     function _getNonce() internal view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).getNonce(0));
+        return uint64(ScrappyAccount(payable(smartAccount)).nonceValue(0));
     }
 
     /// @dev Internal helper function to sign a happy tx.
