@@ -1,10 +1,6 @@
 /** @type {import('typedoc').TypeDocOptions} */
 export default {
     plugin: [
-        // https://www.npmjs.com/package/@zamiell/typedoc-plugin-not-exported
-        "@zamiell/typedoc-plugin-not-exported",
-        // https://www.npmjs.com/package/typedoc-plugin-extras
-        "typedoc-plugin-extras",
         // https://typedoc-plugin-markdown.org/
         "typedoc-plugin-markdown",
         // https://www.npmjs.com/package/typedoc-plugin-mdn-links
