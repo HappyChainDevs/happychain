@@ -102,7 +102,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         _incrementAccountNonce();
 
         // Get the initial nonce
-        uint64 origNonce = getNonceValue(smartAccount);
+        uint64 origNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
 
         // Create a happyTx with a nonce value less than the current nonce (negative nonceAhead)
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
@@ -115,13 +115,13 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         assertEq(validationData, InvalidNonce.selector);
 
         // Check that the once wasn't incremented
-        uint64 newNonce = getNonceValue(smartAccount);
+        uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
         assertEq(newNonce, origNonce);
     }
 
     function testValidateInvalidNonceFutureNonce() public {
         // Get the initial nonce
-        uint64 origNonce = getNonceValue(smartAccount);
+        uint64 origNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
 
         // Create a happyTx with a nonce value greater than the current nonce (positive nonceAhead)
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
@@ -134,20 +134,20 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         assertEq(validationData, InvalidNonce.selector);
 
         // Check that the once wasn't incremented
-        uint64 newNonce = getNonceValue(smartAccount);
+        uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
         assertEq(newNonce, origNonce);
     }
 
     function testNonceIncrementAfterSubmit() public {
         // Check initial nonce
-        uint64 initialNonce = getNonceValue(smartAccount);
+        uint64 initialNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
         assertEq(initialNonce, 0);
 
         // Submit a transaction to increment the nonce
         _incrementAccountNonce();
 
         // Check that the nonce was incremented
-        uint64 newNonce = getNonceValue(smartAccount);
+        uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
         assertEq(newNonce, 1);
     }
 
@@ -159,7 +159,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         _incrementAccountNonce();
 
         // Get the initial nonce
-        uint64 origNonce = getNonceValue(smartAccount);
+        uint64 origNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
 
         // Create a happyTx with a nonce value less than the current nonce (negative nonceAhead)
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
@@ -174,7 +174,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         assertEq(validationData, InvalidNonce.selector);
 
         // Check that the once wasn't incremented
-        uint64 newNonce = getNonceValue(smartAccount);
+        uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
         assertEq(newNonce, origNonce);
     }
 
@@ -481,21 +481,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         bytes4 happyPaymasterInterfaceId = 0x9c7b367f; // IHappyPaymaster interface ID
         assertTrue(account.supportsInterface(happyPaymasterInterfaceId), "Should support IHappyPaymaster");
-    }
-
-    // ====================================================================================================
-    // NONCE FUNCTION TESTS
-
-    function testGetNonceWithExtremeTrackValues() public view {
-        // Test with max uint192 value
-        uint192 maxTrack = type(uint192).max;
-        uint256 nonceValue = ScrappyAccount(payable(smartAccount)).getNonceValue(maxTrack);
-        uint256 nonce = ScrappyAccount(payable(smartAccount)).getNonce(maxTrack);
-
-        // Initial nonce value should be 0
-        assertEq(nonceValue, 0);
-        // getNonce should return track << 64 | nonceValue
-        assertEq(nonce, uint256(maxTrack) << 64 | nonceValue);
     }
 
     // ====================================================================================================
