@@ -71,20 +71,6 @@ contract MockERC20 is IERC20 {
         _burn(msg.sender, amount);
     }
 
-    /// @dev Returned by AlwaysRevert(), used for testing purposes.
-    error AlwaysRevert();
-
-    /// @dev Reverts with the AlwaysRevert() error. Used for testing purposes.
-    function alwaysRevert() external pure {
-        revert AlwaysRevert();
-    }
-
-    /// @dev Reverts with no data. Used for testing purposes.
-    function alwaysRevertEmpty() external pure {
-        // solhint-disable-next-line reason-string
-        revert();
-    }
-
     /*//////////////////////////////////////////////////////////////
                             EIP-2612 STORAGE
     //////////////////////////////////////////////////////////////*/

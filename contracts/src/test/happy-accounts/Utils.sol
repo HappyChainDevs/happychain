@@ -8,6 +8,7 @@ import {HappyTx} from "../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../happy-accounts/libs/HappyTxLib.sol";
 import {ScrappyAccount} from "../../happy-accounts/samples/ScrappyAccount.sol";
 import {MockERC20} from "../../mocks/MockERC20.sol";
+import {MockRevert} from "../../mocks/MockRevert.sol";
 
 /// Common utility functions for HappyAccounts unit tests
 contract HappyTxTestUtils is Test {
@@ -110,12 +111,12 @@ contract HappyTxTestUtils is Test {
         return abi.encodeWithSignature("transfer(address, uint256)", transferTo, amount);
     }
 
-    function getMockTokenAlwaysRevertCallData() public pure returns (bytes memory) {
-        return abi.encodeCall(MockERC20.alwaysRevert, ());
+    function getMockRevertCallData() public pure returns (bytes memory) {
+        return abi.encodeCall(MockRevert.intentionalRevert, ());
     }
 
-    function getMockTokenAlwaysRevertEmptyCallData() public pure returns (bytes memory) {
-        return abi.encodeCall(MockERC20.alwaysRevertEmpty, ());
+    function getMockRevertEmptyCallData() public pure returns (bytes memory) {
+        return abi.encodeCall(MockRevert.intentionalRevertEmpty, ());
     }
 
     // ====================================================================================================
