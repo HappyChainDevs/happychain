@@ -1,41 +1,20 @@
 {
     "name": "submitter",
-    "private": true,
-    "version": "0.0.0",
+    "module": "index.ts",
     "type": "module",
-    "files": ["dist"],
-    "main": "./dist/index.es.js",
-    "module": "./dist/index.es.js",
-    "types": "./dist/index.es.d.ts",
-    "exports": {
-        ".": {
-            "types": "./dist/index.es.d.ts",
-            "default": "./dist/index.es.js"
-        },
-        "./client": {
-            "types": "./dist/rpc.es.d.ts",
-            "default": "./dist/rpc.es.js"
-        }
-    },
+    "private": true,
     "devDependencies": {
         "@types/bun": "latest",
         "@happy.tech/configs": "workspace:0.1.0",
         "@happy.tech/common": "workspace:0.1.0"
     },
     "peerDependencies": {
-        "typescript": "^5.0.0"
+        "typescript": "^5"
     },
     "dependencies": {
-        "@hono/zod-validator": "^0.4.3",
+        "@happy.tech/submitter": "workspace:0.0.0",
         "@scalar/hono-api-reference": "^0.5.175",
         "hono": "^4.7.2",
-        "hono-openapi": "^0.4.4",
-        "kysely": "^0.27.5",
-        "kysely-bun-sqlite": "^0.3.2",
-        "kysely-codegen": "^0.17.0",
-        "kysely-ctl": "^0.11.1",
-        "viem": "^2.21.53",
-        "zod": "^3.23.8",
-        "zod-openapi": "^4.2.3"
+        "hono-openapi": "^0.4.4"
     }
 }

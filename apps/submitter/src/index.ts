@@ -1,7 +1,6 @@
-import pkg from "../package.json"
-import env from "./env"
-import { injectOpenAPIDocs } from "./routes/docs"
-import { app } from "./server"
+import { app, env } from "@happy.tech/submitter"
+import pkg from "@happy.tech/submitter/package.json"
+import { injectOpenAPIDocs } from "./docs"
 
 // Enable API Documentation page
 injectOpenAPIDocs(app, {
