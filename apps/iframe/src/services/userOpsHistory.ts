@@ -33,41 +33,95 @@ store.sub(userAtom, () => void monitorUserOpsOnLoad())
 export function addUserOp(address: Address, newOp: UserOpInfo) {
     store.set(userOpsRecordAtom, (userOpsRecord: Record<Address, UserOpInfo[]>) => {
         const userOps = userOpsRecord[address] || []
-        const index = userOps.findIndex((op) => op.userOpHash === newOp.userOpHash)
 
-        // Create a new list with the updated or added operation
-        let updatedOps = index < 0 ? [...userOps, newOp] : userOps.toSpliced(index, 1, newOp)
+        const existingIndex = userOps.findIndex((op) => op.userOpHash === newOp.userOpHash)
+        if (existingIndex >= 0) {
+            const updatedOps = userOps.toSpliced(existingIndex, 1, newOp)
 
-        // If this is a confirmed operation with a nonce, apply partial ordering
-        if (newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce) {
-            // Sort only confirmed operations by nonce (descending), keeping pending operations at top
-            updatedOps = updatedOps.sort((a, b) => {
-                // Always keep pending operations at the top
-                if (a.status === UserOpStatus.Pending && b.status !== UserOpStatus.Pending) return -1
-                if (a.status !== UserOpStatus.Pending && b.status === UserOpStatus.Pending) return 1
-
-                // For confirmed operations, sort by nonce (higher/newer nonces first)
-                const nonceA = getNonceFromUserOp(a)
-                const nonceB = getNonceFromUserOp(b)
-
-                if (nonceA !== null && nonceB !== null) {
-                    return nonceA > nonceB ? -1 : nonceA < nonceB ? 1 : 0
+            // If this is a confirmed op with a nonce, we may need to reorder
+            if (newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce) {
+                return {
+                    ...userOpsRecord,
+                    [address]: reorderWithNonce(updatedOps, newOp),
                 }
+            }
 
-                // If one has a nonce and the other doesn't, prioritize the one with a nonce
-                if (nonceA !== null) return -1
-                if (nonceB !== null) return 1
-
-                // Default to timestamp-based ordering (assuming newer operations were added more recently)
-                return 0
-            })
+            return {
+                ...userOpsRecord,
+                [address]: updatedOps,
+            }
         }
 
+        // This is a new op that doesn't exist in the list
+        // If it's pending, it should go at the top
+        if (newOp.status === UserOpStatus.Pending) {
+            return {
+                ...userOpsRecord,
+                [address]: [newOp, ...userOps],
+            }
+        }
+
+        // If it has a nonce and is confirmed, find the right position
+        if (newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce) {
+            return {
+                ...userOpsRecord,
+                [address]: insertWithNonce(userOps, newOp),
+            }
+        }
+
+        // For other cases (e.g., failures without nonce), just add to the end
         return {
             ...userOpsRecord,
-            [address]: updatedOps,
+            [address]: [...userOps, newOp],
         }
     })
+}
+
+/**
+ * Insert a new operation into the list at the correct position based on nonce ordering.
+ * Uses linear scanning to find the insertion point.
+ */
+function insertWithNonce(userOps: UserOpInfo[], newOp: UserOpInfo): UserOpInfo[] {
+    const newOpNonce = getNonceFromUserOp(newOp)
+    if (newOpNonce === null) {
+        // If no valid nonce, just append to the end
+        return [...userOps, newOp]
+    }
+
+    // First, get past all pending operations (they should stay at the top)
+    let insertIndex = 0
+    while (insertIndex < userOps.length && userOps[insertIndex].status === UserOpStatus.Pending) {
+        insertIndex++
+    }
+
+    // Now find where to insert among the non-pending operations
+    // We want higher nonces (newer) to appear first, so we're looking for the first
+    // operation with a nonce smaller than our new op's nonce
+    while (insertIndex < userOps.length) {
+        const opNonce = getNonceFromUserOp(userOps[insertIndex])
+
+        // If this op has no nonce or a smaller nonce, insert before it
+        if (opNonce === null || opNonce < newOpNonce) {
+            break
+        }
+
+        insertIndex++
+    }
+
+    // Insert at the found position
+    return [...userOps.slice(0, insertIndex), newOp, ...userOps.slice(insertIndex)]
+}
+
+/**
+ * Reorders the list after an existing operation has been updated with a receipt.
+ * This happens when a pending op gets confirmed and now has a nonce.
+ */
+function reorderWithNonce(userOps: UserOpInfo[], updatedOp: UserOpInfo): UserOpInfo[] {
+    // First remove the updated op from the list
+    const filteredOps = userOps.filter((op) => op.userOpHash !== updatedOp.userOpHash)
+
+    // Then insert it at the right position
+    return insertWithNonce(filteredOps, updatedOp)
 }
 
 export function addPendingUserOp(address: Address, userOpInfo: Omit<UserOpInfo, "status">, monitor = true) {
@@ -124,8 +178,11 @@ async function monitorPendingUserOp(address: Address, userOpInfo: UserOpInfo) {
 /**
  * Safely extracts the nonce from a UserOpInfo if available.
  * Returns null if the receipt or nonce doesn't exist.
+ *
+ * This helper is used since expected type for nonce from UserOp is bigint,
+ * but returned value is hex.
  */
-export function getNonceFromUserOp(userOp: UserOpInfo): bigint | null {
+function getNonceFromUserOp(userOp: UserOpInfo): bigint | null {
     if (!userOp.userOpReceipt?.nonce) return null
     try {
         return fromHex(userOp.userOpReceipt.nonce as unknown as Hex, "bigint")
