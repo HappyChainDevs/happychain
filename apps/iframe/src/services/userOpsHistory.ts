@@ -33,46 +33,26 @@ store.sub(userAtom, () => void monitorUserOpsOnLoad())
 export function addUserOp(address: Address, newOp: UserOpInfo) {
     store.set(userOpsRecordAtom, (userOpsRecord: Record<Address, UserOpInfo[]>) => {
         const userOps = userOpsRecord[address] || []
-
         const existingIndex = userOps.findIndex((op) => op.userOpHash === newOp.userOpHash)
-        if (existingIndex >= 0) {
-            const updatedOps = userOps.toSpliced(existingIndex, 1, newOp)
-
-            // If this is a confirmed op with a nonce, we may need to reorder
-            if (newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce) {
-                return {
-                    ...userOpsRecord,
-                    [address]: reorderWithNonce(updatedOps, newOp),
-                }
-            }
-
-            return {
-                ...userOpsRecord,
-                [address]: updatedOps,
-            }
-        }
-
-        // This is a new op that doesn't exist in the list
-        // If it's pending, it should go at the top
-        if (newOp.status === UserOpStatus.Pending) {
-            return {
-                ...userOpsRecord,
-                [address]: [newOp, ...userOps],
-            }
-        }
-
-        // If it has a nonce and is confirmed, find the right position
-        if (newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce) {
-            return {
-                ...userOpsRecord,
-                [address]: insertWithNonce(userOps, newOp),
-            }
-        }
-
-        // For other cases (e.g., failures without nonce), just add to the end
+        
+        // Determine updated operations based on whether it's a new or existing op
+        const updatedOps = existingIndex >= 0
+            ? (newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce)
+                ? reorderWithNonce(userOps.toSpliced(existingIndex, 1, newOp), newOp)
+                : userOps.toSpliced(existingIndex, 1, newOp)
+            : (newOp.status === UserOpStatus.Pending)
+                ? [newOp, ...userOps]
+                : (newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce)
+                    ? insertWithNonce(userOps, newOp)
+                    : [...userOps, newOp]
+        
+        // Separate and limit operations
+        const pendingOps = updatedOps.filter(op => op.status === UserOpStatus.Pending)
+        const confirmedOps = updatedOps.filter(op => op.status !== UserOpStatus.Pending)
+        
         return {
             ...userOpsRecord,
-            [address]: [...userOps, newOp],
+            [address]: [...pendingOps, ...confirmedOps.slice(0, 50)]
         }
     })
 }
