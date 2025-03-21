@@ -283,34 +283,38 @@ library HappyTxLib {
         pure
         returns (bool found, bytes memory value)
     {
-        uint256 i = 0;
-        bytes32 offset;
-        bytes3 currentKey;
+        bytes32 currentKey;
         uint24 currentLen;
+        bytes32 offset;
+        assembly {
+            offset := add(extraData, 0x20)
+        }
 
-        while (i + 6 <= extraData.length) {
+        uint256 end = uint256(offset) + extraData.length;
+
+        while (uint256(offset) + 6 <= end) {
             assembly {
-                offset := add(add(extraData, 0x20), i)
                 currentKey := mload(offset)
-                currentLen := shr(232, mload(add(offset, 3)))
+                offset := add(offset, 3)
+                currentLen := shr(232, mload(offset))
+                offset := add(offset, 3)
             }
 
-            // Check if we have enough bytes left for the value
-            if (i + 6 + currentLen > extraData.length) {
-                break;
+            if (uint256(offset) + currentLen > end) {
+                break; // not enough bytes left for the value
             }
 
-            // If key matches, extract and return the value
             if (currentKey == key) {
                 value = new bytes(currentLen);
                 assembly {
-                    mcopy(add(value, 0x20), add(offset, 6), currentLen)
+                    mcopy(add(value, 0x20), offset, currentLen)
                 }
                 return (true, value);
             }
 
-            // Skip to next entry
-            i += 6 + currentLen;
+            assembly {
+                offset := add(offset, currentLen)
+            }
         }
 
         return (false, new bytes(0));
