@@ -11,6 +11,7 @@ import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "./HappyTx.sol";
 
 // [LOGGAS] import {console} from "forge-std/Script.sol";
+// [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
 
 enum CallStatus {
     SUCCESS, // The call succeeded.
@@ -141,13 +142,13 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * {HappyPaymaster.payout} that needs to be paid for by the payer.
      */
     uint256 private constant PAYOUT_CALL_OVERHEAD = 4500;
-    //^ From the gas report, 2495 for self-paying, 4465 for paymaster-sponsored, taking the maximum.
+    //^ From the gas report, 2449 for self-paying, 4419 for paymaster-sponsored, taking the maximum.
 
     /**
      * Gas buffer to ensure we have enough gas to handle post-OOG revert scenarios.
      * This amount will be reserved from the available gas for validate and payout operations.
      */
-    uint256 private constant POST_OOG_GAS_BUFFER = 3000;
+    uint256 private constant POST_OOG_GAS_BUFFER = 5500;
 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
@@ -288,11 +289,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] uint256 payoutGasStart = gasleft();
 
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
-            isSimulation && happyTx.gasLimit == 0 ? gasleft() : gasleft() - POST_OOG_GAS_BUFFER,
+            gasleft() - POST_OOG_GAS_BUFFER,
             0, // gas token transfer value
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
         );
+        // [LOGGAS_INTERNAL] uint256 postPayoutGasStart = gasleft();
         if (!success) revert PaymentReverted(returnData);
 
         // [LOGGAS] uint256 payoutGasEnd = gasleft();
@@ -318,5 +320,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             result = abi.decode(returnData, (bytes4));
             revert PaymentFailed(result);
         }
+
+        // [LOGGAS_INTERNAL] uint256 postPayoutGasEnd = gasleft();
+        // [LOGGAS_INTERNAL] console.log("post payout gas usage: ", postPayoutGasStart - postPayoutGasEnd);
     }
 }

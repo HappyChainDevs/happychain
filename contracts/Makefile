@@ -160,6 +160,7 @@ internal-functions-gas: # Generates gas reports for the sample implementations' 
 	@forge test -vvv --match-test testEstimateScrappyAccountPayoutGas --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@forge test -vvv --match-test testEstimateScrappyPaymasterPayoutGas --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyPaymaster payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@forge test -vvv --match-test testEstimateFunctionDispatchOverhead --rpc-url $(RPC_LOCAL) --isolate | awk '/HappyTxLib txGasFromCallGas payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
+	@forge test -vvv --match-test testPostPayoutHEPGasUsage --rpc-url $(RPC_LOCAL) --isolate | awk '/HappyEntryPoint post payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
 	@make internal-gas-logging-off
 .PHONY: internal-functions-gas
 

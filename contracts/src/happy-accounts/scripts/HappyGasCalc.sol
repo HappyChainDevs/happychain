@@ -175,6 +175,13 @@ contract HappyEntryPointGasEstimator is Test {
         ScrappyAccount(payable(smartAccount)).execute(happyTx);
     }
 
+    function testPostPayoutHEPGasUsage() public {
+        console.log("\nHappyEntryPoint post payout gas usage");
+        console.log(" ----------------------------------------------------");
+        HappyTx memory happyTx = _createSignedHappyTx(smartAccount, paymaster);
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
     // ====================================================================================================
     // FUNCTION DISPATCH OVERHEAD ESTIMATION
 
