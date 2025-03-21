@@ -147,6 +147,10 @@ contract ScrappyAccount is
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
+    function isExtensionRegistered(address extension, ExtensionType extensionType) external view returns (bool) {
+        return extensions[extensionType][extension];
+    }
+
     function addExtension(address extension, ExtensionType extensionType) external onlySelfOrOwner {
         if (extensions[extensionType][extension]) {
             revert ExtensionAlreadyRegistered(extension, extensionType);
@@ -184,10 +188,11 @@ contract ScrappyAccount is
 
         bool validationSuccess;
 
-        (bool found, bytes memory validatorData) = HappyTxLib.getExtraDataValue(happyTx.extraData, VALIDATOR_KEY);
+        (bool found, bytes memory validatorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, VALIDATOR_KEY);
 
         if (found) {
-            validationSuccess = _validateWithExternalValidator(happyTx, validatorData);
+            bytes4 ret = _validateWithExternalValidator(happyTx, validatorAddress);
+            validationSuccess = ret == 0; // temp
         } else {
             if (happyTx.paymaster != address(this)) {
                 // The happyTx is not self-paying.
@@ -218,11 +223,11 @@ contract ScrappyAccount is
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
         uint256 gasStart = gasleft();
         // Check for executor in extraData
-        (bool found, bytes memory executorData) = HappyTxLib.getExtraDataValue(happyTx.extraData, EXECUTOR_KEY);
+        (bool found, bytes memory executorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, EXECUTOR_KEY);
 
         if (found) {
             // Execute with external executor
-            output = _executeWithExternalExecutor(happyTx, executorData);
+            output = _executeWithExternalExecutor(happyTx, executorAddress);
         } else {
             // Default execution
             (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
@@ -292,15 +297,15 @@ contract ScrappyAccount is
     function _authorizeUpgrade(address newImplementation) internal override onlySelfOrOwner {}
 
     /// @dev Function that validates a happy tx with an external validator, and returns true if the validation was successful
-    function _validateWithExternalValidator(HappyTx memory happyTx, bytes memory validatorData)
+    function _validateWithExternalValidator(HappyTx memory happyTx, bytes memory validatorAddress)
         internal
-        returns (bool)
+        returns (bytes4)
     {
-        if (validatorData.length != 32) {
-            revert InvalidExtensionValue(ExtensionType.Validator);
+        if (validatorAddress.length != 32) {
+            return InvalidExtensionValue.selector;
         }
 
-        address validator = address(uint160(uint256(bytes32(validatorData))));
+        address validator = address(uint160(uint256(bytes32(validatorAddress))));
         if (!extensions[ExtensionType.Validator][validator]) {
             revert ExtensionNotFound(validator, ExtensionType.Validator);
         }
@@ -316,21 +321,21 @@ contract ScrappyAccount is
             revert ValidatorReverted(abi.decode(returnData, (bytes4)));
         }
 
-        return bytes4(returnData) == bytes4(0);
+        return bytes4(returnData); // temp (decode returndata to bytes4)
     }
 
     /// @dev Function that executes a happy tx with an external executor, and returns the execution output
-    function _executeWithExternalExecutor(HappyTx memory happyTx, bytes memory executorData)
+    function _executeWithExternalExecutor(HappyTx memory happyTx, bytes memory executorAddress)
         internal
         returns (ExecutionOutput memory output)
     {
-        if (executorData.length != 32) {
+        if (executorAddress.length != 32) {
             revert InvalidExtensionValue(ExtensionType.Executor);
         }
 
         address executor;
         assembly {
-            executor := mload(add(add(executorData, 0x20), 12)) // skip first 12 bytes
+            executor := mload(add(add(executorAddress, 0x20), 12)) // skip first 12 bytes
         }
 
         if (!extensions[ExtensionType.Executor][executor]) {

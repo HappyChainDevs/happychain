@@ -15,7 +15,7 @@ error ExtensionAlreadyRegistered(address extension, ExtensionType extensionType)
 /// Selector returned if the extension is not registered.
 error ExtensionNotRegistered(address extension, ExtensionType extensionType);
 
-/// Selector returned if the extension's value is invalid.
+/// Revert with this error if the extension's value is invalid.
 error InvalidExtensionValue(ExtensionType extensionType);
 
 interface IExtendedAccount {
@@ -36,4 +36,7 @@ interface IExtendedAccount {
 
     /// Removes an extension from the account.
     function removeExtension(address extension, ExtensionType extensionType) external;
+
+    /// Checks if an extension is already registered.
+    function isExtensionRegistered(address extension, ExtensionType extensionType) external view returns (bool);
 }
