@@ -34,25 +34,26 @@ export function addUserOp(address: Address, newOp: UserOpInfo) {
     store.set(userOpsRecordAtom, (userOpsRecord: Record<Address, UserOpInfo[]>) => {
         const userOps = userOpsRecord[address] || []
         const existingIndex = userOps.findIndex((op) => op.userOpHash === newOp.userOpHash)
-        
+
         // Determine updated operations based on whether it's a new or existing op
-        const updatedOps = existingIndex >= 0
-            ? (newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce)
-                ? reorderWithNonce(userOps.toSpliced(existingIndex, 1, newOp), newOp)
-                : userOps.toSpliced(existingIndex, 1, newOp)
-            : (newOp.status === UserOpStatus.Pending)
-                ? [newOp, ...userOps]
-                : (newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce)
+        const updatedOps =
+            existingIndex >= 0
+                ? newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce
+                    ? reorderWithNonce(userOps.toSpliced(existingIndex, 1, newOp), newOp)
+                    : userOps.toSpliced(existingIndex, 1, newOp)
+                : newOp.status === UserOpStatus.Pending
+                  ? [newOp, ...userOps]
+                  : newOp.status === UserOpStatus.Success && newOp.userOpReceipt?.nonce
                     ? insertWithNonce(userOps, newOp)
                     : [...userOps, newOp]
-        
+
         // Separate and limit operations
-        const pendingOps = updatedOps.filter(op => op.status === UserOpStatus.Pending)
-        const confirmedOps = updatedOps.filter(op => op.status !== UserOpStatus.Pending)
-        
+        const pendingOps = updatedOps.filter((op) => op.status === UserOpStatus.Pending)
+        const confirmedOps = updatedOps.filter((op) => op.status !== UserOpStatus.Pending)
+
         return {
             ...userOpsRecord,
-            [address]: [...pendingOps, ...confirmedOps.slice(0, 50)]
+            [address]: [...pendingOps, ...confirmedOps.slice(0, 50)],
         }
     })
 }
