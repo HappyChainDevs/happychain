@@ -287,7 +287,7 @@ library HappyTxLib {
         uint24 currentLen;
         bytes32 offset;
         assembly {
-            offset := add(extraData, 0x20)
+            offset := add(extraData, 0x20) // skip length
         }
 
         uint256 end = uint256(offset) + extraData.length;
