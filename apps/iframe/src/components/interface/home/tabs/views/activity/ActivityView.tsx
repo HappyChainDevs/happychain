@@ -8,10 +8,9 @@ import BoopEntrySkeleton from "./BoopEntrySkeleton"
 
 /**
  * Displays HappyUser's recent 4337 transaction history.
- * TxReceipts are fetched from the atom, and user specific
- * receipt information is fed into the child component.
- *
  * For transactions that haven't been confirmed yet, a skeleton is rendered.
+ * At most 50 of the most recent userOps are displayed, after that we ask the
+ * user to check the explorer for their entire userOp history.
  */
 export const ActivityView = () => {
     const user = useAtomValue(userAtom)
@@ -29,6 +28,7 @@ export const ActivityView = () => {
             </div>
         )
     }
+    const nonPendingUserOps = userOps.filter((op) => op.status !== UserOpStatus.Pending)
 
     return (
         <div className="grid gap-4">
@@ -38,6 +38,20 @@ export const ActivityView = () => {
                 ) : (
                     <BoopEntrySkeleton key={`boop_pending_${boop.boopHash}`} boopHash={boop.boopHash} />
                 ),
+            )}
+            {nonPendingUserOps.length >= 50 && (
+                <div className="flex flex-row items-center justify-center text-xs gap-1">
+                    <Rows size={"1.15em"} className="text-primary/70 dark:text-primary/70" />
+                    <a
+                        href={`${blockExplorerUrl}/address/${user.address}?tab=user_ops`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="View more on explorer"
+                        className="text-xs italic text-base-content/70 dark:text-base-content/80 hover:underline"
+                    >
+                        View more on explorer
+                    </a>
+                </div>
             )}
         </div>
     )
