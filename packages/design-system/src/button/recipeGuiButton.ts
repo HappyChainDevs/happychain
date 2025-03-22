@@ -39,23 +39,44 @@ export const recipeGuiButton = cva({
             default: "",
             outline: "border-current",
             ghost: "bg-transparent hover:bg-current/10",
+            underline: "underline hover:no-underline focus:no-underline focus:bg-current/5",
         },
         scale: {
-            default: "px-3 py-1.5 text-hds-system-gui-base",
+            default: "text-hds-system-gui-base",
+            sm: "text-[0.7895em]",
+        },
+        shape: {
+            brick: "",
+            inline: "",
         },
     },
-
     compoundVariants: [
+        {
+            shape: "inline",
+            class: "p-0.5",
+        },
+        {
+            scale: "default",
+            shape: "brick",
+            class: "px-3 py-1.5",
+        },
+        {
+            scale: "sm",
+            shape: "brick",
+            class: "px-[0.9em] py-[0.375em]",
+        },
         {
             aspect: "outline",
             scale: "default",
             class: "border",
         },
+        {},
     ],
     defaultVariants: {
         intent: "default",
         aspect: "default",
         scale: "default",
+        shape: "brick",
     },
 })
 
