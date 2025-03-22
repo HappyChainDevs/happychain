@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-enum ExtensionType {
+import {IHappyAccount} from "../IHappyAccount.sol";
+
+    enum ExtensionType {
     Validator,
     Executor
 }
@@ -20,7 +22,9 @@ error ExtensionNotFound(address extension, ExtensionType extensionType);
 /// extension is invalid.
 error InvalidExtensionValue(ExtensionType extensionType);
 
-interface IExtendedAccount {
+/// Interface for Boop accounts (as specified in IHappyAccount) that are extensible with validator
+/// and executor extensions.
+interface IExtensibleBoopAccount is IHappyAccount {
     // ====================================================================================================
     // EVENTS
 
