@@ -6,16 +6,18 @@ enum ExtensionType {
     Executor
 }
 
-/// Selector returned if the extension is not found for the given account.
-error ExtensionNotFound(address extension, ExtensionType extensionType);
-
 /// Selector returned if the extension is already registered.
 error ExtensionAlreadyRegistered(address extension, ExtensionType extensionType);
 
 /// Selector returned if the extension is not registered.
 error ExtensionNotRegistered(address extension, ExtensionType extensionType);
 
-/// Revert with this error if the extension's value is invalid.
+/// Selector returned by account functions if an extension is specified for use in extraData, but
+/// the extension isn't registered in the account.
+error ExtensionNotFound(address extension, ExtensionType extensionType);
+
+/// Selector returned by extension functions and account functions if an extraData value read by an
+/// extension is invalid.
 error InvalidExtensionValue(ExtensionType extensionType);
 
 interface IExtendedAccount {
@@ -31,10 +33,10 @@ interface IExtendedAccount {
     // ====================================================================================================
     // FUNCTIONS
 
-    /// Adds an extension to the account.
+    /// Adds an extension to the account, can revert with ExtensionAlreadyRegistered.
     function addExtension(address extension, ExtensionType extensionType) external;
 
-    /// Removes an extension from the account.
+    /// Removes an extension from the account, can revert with ExtensionNotRegistered.
     function removeExtension(address extension, ExtensionType extensionType) external;
 
     /// Checks if an extension is already registered.
