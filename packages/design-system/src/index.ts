@@ -18,6 +18,9 @@ export * from "./form-field/recipeGuiFormField"
 // Dialog
 export * from "./dialog/recipeGuiDialog"
 
+// Combobox
+export * from "./combobox/recipeGuiCombobox"
+
 // Panel
 export * from "./panel/recipeGuiPanel"
 
