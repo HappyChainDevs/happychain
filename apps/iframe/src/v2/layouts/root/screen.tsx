@@ -5,6 +5,7 @@ import { cx } from "cva"
 import { useAtomValue } from "jotai"
 import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
+import { BottomNavbarSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
 import { RootDialogsIsland } from "./dialogs"
 import { UserDetails } from "./user"
 
@@ -167,7 +168,7 @@ const RootBottomNavbarIsland = () => {
 
     // Prevents rendering the navbar if user isn't connected
     if (PROTECTED_PATHNAMES.includes(pathname) || !user) return null
-
+    if (pathname === PATHNAME_ROUTE_SEND_TOKEN) return <BottomNavbarSendToken />
     // @todo - ... render conditionally any other navbar here ..
 
     // Default navbar
