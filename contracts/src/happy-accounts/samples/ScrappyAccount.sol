@@ -11,7 +11,6 @@ import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {
-    IHappyAccount,
     ExecutionOutput,
     GasPriceTooHigh,
     InvalidNonce,
@@ -21,13 +20,13 @@ import {
 import {ICustomBoopValidator} from "../interfaces/extensions/ICustomBoopValidator.sol";
 import {ICustomBoopExecutor} from "../interfaces/extensions/ICustomBoopExecutor.sol";
 import {
-    IExtendedAccount,
+    IExtensibleBoopAccount,
     ExtensionType,
     ExtensionNotFound,
     ExtensionAlreadyRegistered,
     ExtensionNotRegistered,
     InvalidExtensionValue
-} from "../interfaces/extensions/IExtendedAccount.sol";
+} from "../interfaces/extensions/IExtensibleBoopAccount.sol";
 
 import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
@@ -47,9 +46,8 @@ import {
  * and proxy upgrade capability.
  */
 contract ScrappyAccount is
-    IHappyAccount,
+    IExtensibleBoopAccount,
     IHappyPaymaster,
-    IExtendedAccount,
     ReentrancyGuardTransient,
     OwnableUpgradeable,
     UUPSUpgradeable
