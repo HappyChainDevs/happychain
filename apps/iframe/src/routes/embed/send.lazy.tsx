@@ -1,14 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { FormSend } from "#src/components/interface/send-tx/FormSend.tsx"
+import { ScreenSendToken } from "#src/v2/screens/send/Send"
 
 export const Route = createLazyFileRoute("/embed/send")({
-    component: Send,
+    component: ScreenSendToken,
 })
-
-function Send() {
-    return (
-        <div className="max-w-prose mx-auto w-full py-4 px-2">
-            <FormSend />
-        </div>
-    )
-}
