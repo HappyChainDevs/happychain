@@ -15,6 +15,9 @@ export * from "./expandable/recipeGuiExpandable"
 export * from "./collapsible/recipeGuiCollapsible"
 export * from "./form-field/recipeGuiFormField"
 
+// Combobox
+export * from "./combobox/recipeGuiCombobox"
+
 // Panel
 export * from "./panel/recipeGuiPanel"
 
