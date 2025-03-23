@@ -17,7 +17,6 @@ import {ICustomBoopExecutor, EXECUTOR_KEY} from "../interfaces/extensions/ICusto
 import {
     IExtensibleBoopAccount,
     ExtensionType,
-    ExtensionNotFound,
     ExtensionAlreadyRegistered,
     ExtensionNotRegistered,
     InvalidExtensionValue,
@@ -57,9 +56,6 @@ contract ScrappyAccount is
 
     /// @dev Selector returned if the upgrade call is not made from the account itself, or from the owner.
     error NotSelfOrOwner();
-
-    /// @dev Selector returned if the validation of the HappyTx by the external validator failed.
-    error ValidatorReverted(bytes4 reason);
 
     // ====================================================================================================
     // EVENTS
@@ -108,7 +104,6 @@ contract ScrappyAccount is
     mapping(ExtensionType => mapping(address => bool)) public extensions;
 
     /// Custom executor that was dispatched to during this transaction.
-    // forgefmt: disable-next-line`
     address private transient dispatchedExecutor;
 
     // ====================================================================================================
@@ -176,17 +171,23 @@ contract ScrappyAccount is
 
         bool isSimulation = tx.origin == address(0);
         int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - int256(nonceValue[happyTx.nonceTrack]);
-
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
         nonceValue[happyTx.nonceTrack]++;
 
-        bool validationSuccess;
-
+        bytes4 validationResult;
         (bool found, bytes memory validatorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, VALIDATOR_KEY);
 
         if (found) {
-            bytes4 ret = _validateWithExternalValidator(happyTx, validatorAddress);
-            validationSuccess = ret == 0; // temp
+            if (validatorAddress.length != 20) {
+                validationResult = InvalidExtensionValue.selector;
+            } else {
+                address validator = address(uint160(bytes20(validatorAddress)));
+                if (!extensions[ExtensionType.Validator][validator]) {
+                    validationResult = ExtensionNotRegistered.selector;
+                } else {
+                    validationResult = ICustomBoopValidator(validator).validate(happyTx);
+                }
+            }
         } else {
             if (happyTx.paymaster != address(this)) {
                 // The happyTx is not self-paying.
@@ -203,15 +204,15 @@ contract ScrappyAccount is
             address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
             happyTx.validatorData = signature; // revert back to original value
 
-            validationSuccess = signer == owner();
+            // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
+            validationResult = signer == owner()
+                ? bytes4(0)
+                : isSimulation ? UnknownDuringSimulation.selector : InvalidSignature.selector;
         }
 
-        // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
-        return isSimulation
-            ? validationSuccess
-                ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
-                : UnknownDuringSimulation.selector
-            : validationSuccess ? bytes4(0) : InvalidSignature.selector;
+        return validationResult == bytes4(0)
+            ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
+            : validationResult;
     }
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
@@ -219,20 +220,26 @@ contract ScrappyAccount is
         (bool found, bytes memory executorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, EXECUTOR_KEY);
 
         if (found) {
-            output = _executeWithExternalExecutor(happyTx, executorAddress);
-        } else {
-            // Default execution
-            (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
-            if (!success) {
-                output.revertData = returnData;
-                output.gas = gasStart - gasleft();
-                return output;
+            if (executorAddress.length != 20) {
+                output.revertData = abi.encodeWithSelector(InvalidExtensionValue.selector);
+            } else {
+                address executor = address(uint160(bytes20(executorAddress)));
+                if (!extensions[ExtensionType.Executor][executor]) {
+                    output.revertData = abi.encodeWithSelector(ExtensionNotRegistered.selector);
+                } else {
+                    dispatchedExecutor = executor;
+                    output = ICustomBoopExecutor(executor).execute(happyTx);
+                    dispatchedExecutor = address(0);
+                }
             }
+        } else {
+            (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
+            if (!success) output.revertData = returnData;
         }
 
         output.gas = gasStart - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD;
+        return output;
 
-        // [LOGGAS_INTERNAL] uint256 _startGasEmulate = gasleft(); // To simulate the gasleft() at the top of the function
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
         // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", startGas - endGas);
         // [LOGGAS_INTERNAL] console.log("execute output.gas: ", output.gas);
@@ -292,56 +299,4 @@ contract ScrappyAccount is
 
     /// @dev Function that authorizes an upgrade of this contract via the UUPS proxy pattern
     function _authorizeUpgrade(address newImplementation) internal override onlySelfOrOwner {}
-
-    /// @dev Function that validates a happy tx with an external validator, and returns true if the validation was successful
-    function _validateWithExternalValidator(HappyTx memory happyTx, bytes memory validatorAddress)
-        internal
-        returns (bytes4)
-    {
-        if (validatorAddress.length != 20) {
-            return InvalidExtensionValue.selector;
-        }
-
-        address validator = address(uint160(bytes20(validatorAddress)));
-        if (!extensions[ExtensionType.Validator][validator]) {
-            revert ExtensionNotFound(validator, ExtensionType.Validator);
-        }
-
-        (bool success, bytes memory returnData) = validator.excessivelySafeCall(
-            happyTx.executeGasLimit,
-            0, // gas token transfer value
-            MAX_VALIDATE_RETURN_DATA_SIZE,
-            abi.encodeCall(ICustomBoopValidator.validate, (happyTx))
-        );
-
-        if (!success) {
-            revert ValidatorReverted(abi.decode(returnData, (bytes4)));
-        }
-
-        return bytes4(returnData); // temp (decode returndata to bytes4)
-    }
-
-    /// @dev Function that executes a happy tx with an external executor, and returns the execution output
-    function _executeWithExternalExecutor(HappyTx memory happyTx, bytes memory executorAddress)
-        internal
-        returns (ExecutionOutput memory output)
-    {
-        if (executorAddress.length != 20) {
-            revert InvalidExtensionValue(ExtensionType.Executor);
-        }
-
-        address executor;
-        assembly {
-            mcopy(executor, add(executorAddress, 32), 20)
-        }
-
-        if (!extensions[ExtensionType.Executor][executor]) {
-            revert ExtensionNotFound(executor, ExtensionType.Executor);
-        }
-
-        dispatchedExecutor = executor;
-        output = ICustomBoopExecutor(executor).execute(happyTx);
-        dispatchedExecutor = address(0);
-        return output;
-    }
 }
