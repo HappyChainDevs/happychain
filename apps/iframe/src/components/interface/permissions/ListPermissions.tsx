@@ -40,18 +40,18 @@ const ListItem = ({ permission }: ListItemProps) => {
                 checked={hasPermission}
                 onCheckedChange={(e) => {
                     if (!e.checked) {
-                        // When revoking parent permission, also clear all selected target contracts
-                        setTargetContracts([])
-                        revokePermissions(permission.invoker as AppURL, permission.parentCapability)
-                    } else {
                         const caveatAddresses = permission.caveats.reduce((addresses, caveat) => {
                             if (caveat.type === "target" && typeof caveat.value === "string") {
                                 addresses.push(caveat.value as Address)
                             }
                             return addresses
                         }, [] as Address[])
-
                         setTargetContracts(caveatAddresses)
+
+                        // revoke permissions locally, user clicking back button will handle onchain revocations
+                        revokePermissions(permission.invoker as AppURL, permission.parentCapability)
+                    } else {
+                        setTargetContracts([])
                         grantPermissions(permission.invoker as AppURL, permission.parentCapability)
                     }
                 }}

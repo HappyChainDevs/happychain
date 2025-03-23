@@ -13,15 +13,28 @@ interface SessionKeyContractProps {
     contract: Address
     showControl: boolean
 }
+
+/**
+ * A checkbox that manages session key permissions for a user.
+ *
+ * Initial state: Checkbox is checked if the contract has permissions (determined by
+ * `hasPermissions(dappUrl, permissionRequest))`, otherwise unchecked.
+ *
+ * When unchecked, adds the contract to `targetContractsAtom` for permission (iframe)
+ * and onchain revocation (call to the `SessionKeyValidator`). Actual revocation(s)
+ * happen when user navigates back to the home page.
+ */
 export const SessionKeyContract = ({ dappUrl, contract, showControl }: SessionKeyContractProps) => {
-    const [, setTargetContracts] = useAtom(targetContractsAtom)
+    const [targetContracts, setTargetContracts] = useAtom(targetContractsAtom)
     const permissionRequest = {
         [PermissionNames.SESSION_KEY]: {
             target: contract,
         },
     }
 
-    // initial state is the presence of the granted permission
+    console.log(targetContracts)
+
+    // Initial state is whether the permission is granted or not
     const [checked, setChecked] = useState(hasPermissions(dappUrl, permissionRequest))
 
     useEffect(() => {
@@ -33,10 +46,12 @@ export const SessionKeyContract = ({ dappUrl, contract, showControl }: SessionKe
             checked={checked}
             className="w-full flex justify-between items-baseline focus-within:underline py-2 gap-4 cursor-pointer disabled:cursor-not-allowed text-base-content/80 dark:text-neutral-content/80"
             onCheckedChange={(e: { checked: boolean }) => {
+                // if user deselects it to un-grant the permission, we store it
+                // in the atom to be used in the revokeSessionKey call
                 if (e.checked) {
                     setTargetContracts((prev) => prev.filter((addr) => addr !== contract))
                 } else {
-                    setTargetContracts((prev) => [...prev, contract])
+                    setTargetContracts((prev) => (prev.includes(contract) ? prev : [...prev, contract]))
                 }
                 setChecked(e.checked)
             }}

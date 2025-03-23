@@ -18,8 +18,7 @@ export const WalletContentInfo = () => {
                 <Tabs.List className="max-w-prose mx-auto">
                     <Tab title={ContentType.TOKENS} />
                     {/*<Tab title={ContentType.GAMES} />*/}
-                    <Tab title={ContentType.ACTIVITY} />
-                    <Tab title={ContentType.FAUCET} />
+                    <Tab title={ContentType.ACTIVITY} isDataLoading={isPending} />
                     <Tabs.Indicator className="w-[var(--width)] bg-primary h-0.5" />
                 </Tabs.List>
             </div>
