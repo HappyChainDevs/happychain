@@ -18,19 +18,16 @@ struct CallInfo {
     bytes callData;
 }
 
-/// Selector returned if the extension is already registered.
+/// Thrown when calling addExtension with an already-registered extension.
 error ExtensionAlreadyRegistered(address extension, ExtensionType extensionType);
 
-/// Selector returned if the extension is not registered.
+/// Thrown when calling removeExtension with an unregistered extension, or returned by account
+/// functions if an extension is specified for use in the extraData, but isn't registered.
 error ExtensionNotRegistered(address extension, ExtensionType extensionType);
-
-/// Selector returned by account functions if an extension is specified for use in extraData, but
-/// the extension isn't registered in the account.
-error ExtensionNotFound(address extension, ExtensionType extensionType);
 
 /// Selector returned by extension functions and account functions if an extraData value read by an
 /// extension is invalid.
-error InvalidExtensionValue(ExtensionType extensionType);
+error InvalidExtensionValue();
 
 /// Interface for Boop accounts (as specified in IHappyAccount) that are extensible with validator
 /// and executor extensions.
