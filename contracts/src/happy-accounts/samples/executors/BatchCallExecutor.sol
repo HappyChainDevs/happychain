@@ -5,6 +5,7 @@ import {ExecutionOutput} from "../../interfaces/IHappyAccount.sol";
 import {ICustomBoopExecutor} from "../../interfaces/extensions/ICustomBoopExecutor.sol";
 import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
+import {CallInfo, CallInfoCoding} from "./CallInfo.sol";
 
 /**
  * @dev Key used in {HappyTx.extraData} for call information (array of {CallInfo}),
@@ -13,17 +14,10 @@ import {HappyTxLib} from "../../libs/HappyTxLib.sol";
 bytes3 constant BATCH_CALL_INFO_KEY = 0x000100;
 
 /**
- * @dev Selector returned by {BatchCallExecutor.execute} when no call information is found in the
- * extraData.
+ * @dev Selector returned by {BatchCallExecutor.execute} when the call information is missing or
+ * incorrectly encoded in {HappyTx.extraData}.
  */
-error MissingBatchCallInfo();
-
-/// @dev Information (destination, value and calldata) for a batched call.
-struct CallInfo {
-    address dest;
-    uint256 value;
-    bytes callData;
-}
+error InvalidBatchCallInfo();
 
 /**
  * This executor executes multiples calls in an atomic way (all run, or all revert).
@@ -32,58 +26,57 @@ struct CallInfo {
  * ABI-encoded array in {HappyTx.extraData}, keyed on {BATCH_CALL_INFO_KEY}.
  */
 contract BatchCallExecutor is ICustomBoopExecutor {
-    // ====================================================================================================
-    // CONSTANTS
-
-    /// @dev Gas overhead for executing the execute function, not measured by gasleft()
-    uint256 private constant GAS_OVERHEAD_BUFFER = 100;
-
-    /// @dev Overall gas overhead for the execute function, not measured by gasleft()
-    uint256 private constant OVERALL_GAS_OVERHEAD_BUFFER = 500;
+    using CallInfoCoding for bytes;
 
     // ====================================================================================================
-    // EXTERNAL FUNCTIONS
+    // FUNCTIONS
 
     function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory output) {
-        // 1. Parse the extraData with a key, to retrieve the calls
-        (bool found, bytes memory calls) = HappyTxLib.getExtraDataValue(happyTx.extraData, BATCH_CALL_INFO_KEY);
-        if (!found) revert MissingBatchCallInfo();
+        // 1. Parse the extraData with a key, to retrieve the calls.
+        (bool found, bytes memory _calls) = HappyTxLib.getExtraDataValue(happyTx.extraData, BATCH_CALL_INFO_KEY);
+        if (!found) return _invalidBatchCallInfo();
 
-        // 2. decodeBatch the bytes memory -> bytes memory[]
-        CallInfo[] memory executionBatch = abi.decode(calls, (CallInfo[]));
+        // 2. Decode the call info.
+        (bool success, CallInfo[] memory calls) = _calls.decodeCallInfoArray();
+        if (!success) return _invalidBatchCallInfo();
 
-        // 3. call _executeBatch -> executes each call individually
-        return _executeBatch(executionBatch);
+        // 3. Execute all calls and capture revert data if any.
+        try this._executeBatch(calls) {}
+        catch (bytes memory revertData) {
+            output.revertData = revertData;
+        }
+        return output;
     }
 
-    // ====================================================================================================
-    // INTERNAL FUNCTIONS
+    function _invalidBatchCallInfo() internal returns (ExecutionOutput memory output) {
+        bytes4 error = InvalidBatchCallInfo.selector;
+        bytes memory revertData = new bytes(4);
+        assembly {
+            mcopy(add(revertData, 32), error, 4)
+        }
+        output.revertData = revertData;
+        // TODO set output.status = FAILED, and handle in EntryPoint
+        return output;
+    }
 
-    /// @dev Executes a batch of calls, returns the total gas used
-    function _executeBatch(CallInfo[] memory executionBatch) internal returns (ExecutionOutput memory output) {
-        // For each call, execute it and add the gas used to the total
-        // If any call reverts, the entire batch reverts, return that call's output.revertData
-        for (uint256 i = 0; i < executionBatch.length; i++) {
-            ExecutionOutput memory callOutput = _execute(executionBatch[i]);
-            if (callOutput.revertData.length > 0) {
-                output.revertData = callOutput.revertData;
-                return output;
+    /**
+     * @dev Executes all the provided calls sequentially, reverting if any revert, with the same revert
+     * data. This call is external because it needs to be able to revert if any of the call made
+     * revert, without reverting the `execute` call. This is sensitive code, and can only be called
+     * from this contract, which we check.
+     */
+    function _executeBatch(CallInfo[] memory calls) external {
+        require(msg.sender == address(this));
+
+        for (uint256 i = 0; i < calls.length; i++) {
+            CallInfo memory info = calls[i];
+            (bool success, bytes memory revertData) = info.dest.call{value: info.value}(info.callData);
+            if (!success) {
+                assembly {
+                    // pass the revert data through to the caller
+                    revert(add(revertData, 32), mload(revertData))
+                }
             }
-
-            output.gas += callOutput.gas;
         }
-        output.gas += OVERALL_GAS_OVERHEAD_BUFFER;
-    }
-
-    /// @dev Executes a single call, returns the gas used
-    function _execute(CallInfo memory execution) internal returns (ExecutionOutput memory output) {
-        uint256 startGas = gasleft();
-        (bool success, bytes memory returnData) = execution.dest.call{value: execution.value}(execution.callData);
-        if (!success) {
-            output.revertData = returnData;
-            return output;
-        }
-
-        output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
     }
 }

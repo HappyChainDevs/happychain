@@ -211,11 +211,9 @@ contract ScrappyAccount is
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
         uint256 gasStart = gasleft();
-        // Check for executor in extraData
         (bool found, bytes memory executorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, EXECUTOR_KEY);
 
         if (found) {
-            // Execute with external executor
             output = _executeWithExternalExecutor(happyTx, executorAddress);
         } else {
             // Default execution
@@ -225,9 +223,9 @@ contract ScrappyAccount is
                 output.gas = gasStart - gasleft();
                 return output;
             }
-
-            output.gas = gasStart - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD;
         }
+
+        output.gas = gasStart - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD;
 
         // [LOGGAS_INTERNAL] uint256 _startGasEmulate = gasleft(); // To simulate the gasleft() at the top of the function
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
