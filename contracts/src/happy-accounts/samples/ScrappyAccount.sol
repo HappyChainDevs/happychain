@@ -261,7 +261,7 @@ contract ScrappyAccount is
         }
 
         int256 _owed = int256(
-            (consumedGas + PAYOUT_INTRINSIC_GAS_OVERHEAD + PAYOUT_PAYMENT_OVERHEAD_GAS) * happyTx.maxFeePerGas
+            (consumedGas + PAYOUT_INTRINSIC_GAS_OVERHEAD + PAYOUT_PAYMENT_OVERHEAD_GAS) * tx.gasprice
         ) + happyTx.submitterFee;
         uint256 owed = _owed > 0 ? uint256(_owed) : 0;
 

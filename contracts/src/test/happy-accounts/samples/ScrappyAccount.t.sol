@@ -376,7 +376,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         uint256 payoutPaymentOverheadGas = 9500; // From ScrappyAccount.sol
 
         int256 _owed =
-            int256((consumedGas + payoutIntrinsicGasOverhead + payoutPaymentOverheadGas) * maxFeePerGas) + submitterFee;
+            int256((consumedGas + payoutIntrinsicGasOverhead + payoutPaymentOverheadGas) * tx.gasprice) + submitterFee;
         uint256 owed = _owed > 0 ? uint256(_owed) : 0;
 
         // Set up a test recipient address and record its initial balance
