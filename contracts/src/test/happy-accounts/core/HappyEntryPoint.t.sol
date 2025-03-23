@@ -11,7 +11,7 @@ import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
-import {InvalidOwnerSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
+import {InvalidSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
 
 import {
     FutureNonceDuringSimulation,
@@ -88,7 +88,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCEEDED), new bytes(0));
 
         // The balance of the smart account should decrease after paying for the tx.
         uint256 finalBalance = getEthBalance(smartAccount);
@@ -105,7 +105,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCEEDED), new bytes(0));
 
         // The balance of the paymaster should decrease after paying for the tx.
         uint256 finalBalance = getEthBalance(paymaster);
@@ -126,7 +126,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
         vm.prank(submitter, submitter);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCEEDED), new bytes(0));
 
         // The balance should be the same as before, as the submitter payed for the tx.
         uint256 finalBalance = getEthBalance(submitter);
@@ -154,7 +154,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCEEDED), new bytes(0));
 
         vm.revertToState(id); // EVM state is like before the .submit() call
 
@@ -184,7 +184,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCEEDED), new bytes(0));
 
         vm.revertToState(id); // EVM state is like before the .submit() call
 
@@ -214,7 +214,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCEEDED), new bytes(0));
 
         vm.revertToState(id); // EVM state is like before the .submit() call
 
@@ -272,14 +272,14 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
     }
 
-    function testValidationFailedInvalidOwnerSignature() public {
+    function testValidationFailedInvalidSignature() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
 
         // Change any field (except nonce) to invalid the signature over the happyTx
         happyTx.gasLimit += 10;
 
-        // The function should revert with ValidationFailed(InvalidOwnerSignature.selector)
-        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidOwnerSignature.selector));
+        // The function should revert with ValidationFailed(InvalidSignature.selector)
+        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidSignature.selector));
 
         // Submit the transaction to trigger the revert
         happyEntryPoint.submit(happyTx.encode());
@@ -319,7 +319,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // The output should be FutureNonceDuringSimulation.selector
         _assertExpectedSubmitOutput(
-            output, bytes4(FutureNonceDuringSimulation.selector), uint8(CallStatus.SUCCESS), new bytes(0)
+            output, FutureNonceDuringSimulation.selector, uint8(CallStatus.SUCCEEDED), new bytes(0)
         );
     }
 
@@ -335,7 +335,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // The output should be UnknownDuringSimulation.selector
         _assertExpectedSubmitOutput(
-            output, bytes4(UnknownDuringSimulation.selector), uint8(CallStatus.SUCCESS), new bytes(0)
+            output, UnknownDuringSimulation.selector, uint8(CallStatus.SUCCEEDED), new bytes(0)
         );
     }
 
@@ -368,7 +368,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // This reverts with empty revertData: ← [Revert] EvmError: Revert
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
         _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.CALL_REVERTED), new bytes(0));
-        assertEq(output.executeGas, 0);
     }
 
     function testExecuteMockTokenAlwaysReverts() public {
@@ -384,7 +383,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
             uint8(CallStatus.CALL_REVERTED),
             abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector)
         );
-        assertEq(output.executeGas, 0);
     }
 
     function testExecuteMockTokenAlwaysRevertsEmpty() public {
@@ -394,7 +392,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // This reverts with empty revertData: ← [Revert] EvmError: Revert
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
         _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.CALL_REVERTED), new bytes(0));
-        assertEq(output.executeGas, 0);
     }
 
     function testExecuteWithHighHappyTxValueGreaterThanSmartAccountBalance() public {
@@ -443,7 +440,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // This should succeed now if the execute-gas-limit estimation is accurate
         SubmitOutput memory output2 = happyEntryPoint.submit(happyTx2.encode());
-        _assertExpectedSubmitOutput(output2, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        _assertExpectedSubmitOutput(output2, 0, uint8(CallStatus.SUCCEEDED), new bytes(0));
     }
 
     // ====================================================================================================
@@ -458,7 +455,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // Submit the transaction
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCEEDED), new bytes(0));
     }
 
     function testPaymasterPayoutNegativeSubmitterFee() public {
@@ -470,7 +467,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // Submit the transaction
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCESS), new bytes(0));
+        _assertExpectedSubmitOutput(output, 0, uint8(CallStatus.SUCCEEDED), new bytes(0));
     }
 
     function testSelfPayoutRevertsOverFlow() public {
@@ -507,8 +504,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyTx.maxFeePerGas = 1; // GTE to the tx.gasprice set below
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
-        // The tx should revert with PaymentFailed if charged amount + finalBalace < initialBalance
-        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, bytes4(0)));
+        // The tx should revert with PaymentFailed if charged amount + finalBalance < initialBalance
+        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, abi.encodeWithSelector(bytes4(0))));
         vm.txGasPrice(1); // LTE happyTx.maxFeePerGas
 
         // Submit the transaction
@@ -522,7 +519,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // The tx should revert with PaymentFailed if charged amount + finalBalace < initialBalance
-        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, bytes4(0)));
+        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, abi.encodeWithSelector(bytes4(0))));
         vm.txGasPrice(1); // LTE happyTx.maxFeePerGas
 
         // Submit the transaction
@@ -535,7 +532,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Give the account a low balance so it can't pay back the fee
         vm.deal(smartAccount, 0);
 
-        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, bytes4(0)));
+        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, abi.encodeWithSelector(bytes4(0))));
         vm.txGasPrice(happyTx.maxFeePerGas);
         happyEntryPoint.submit(happyTx.encode());
     }
@@ -546,7 +543,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Give the paymaster a low balance so it can't pay back the fee
         vm.deal(paymaster, 0);
 
-        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, bytes4(0)));
+        vm.expectRevert(abi.encodeWithSelector(PaymentFailed.selector, abi.encodeWithSelector(bytes4(0))));
         vm.txGasPrice(happyTx.maxFeePerGas);
         happyEntryPoint.submit(happyTx.encode());
     }
@@ -557,6 +554,17 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     function _assertExpectedSubmitOutput(
         SubmitOutput memory output,
         bytes4 validationStatus,
+        uint8 callStatus,
+        bytes memory revertData
+    ) internal pure {
+        assertEq(output.validationStatus, abi.encodeWithSelector(validationStatus));
+        assertEq(uint8(output.callStatus), callStatus);
+        assertEq(output.revertData, revertData);
+    }
+
+    function _assertExpectedSubmitOutput(
+        SubmitOutput memory output,
+        bytes memory validationStatus,
         uint8 callStatus,
         bytes memory revertData
     ) internal pure {

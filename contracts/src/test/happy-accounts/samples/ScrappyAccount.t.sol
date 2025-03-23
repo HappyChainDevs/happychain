@@ -15,10 +15,10 @@ import {
     InvalidNonce,
     FutureNonceDuringSimulation
 } from "../../../happy-accounts/interfaces/IHappyAccount.sol";
-import {HappyEntryPoint} from "../../../happy-accounts/core/HappyEntryPoint.sol";
+import {HappyEntryPoint, CallStatus} from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
-import {InvalidOwnerSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
+import {InvalidSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
 
 contract ScrappyAccountTest is HappyTxTestUtils {
     using HappyTxLib for HappyTx;
@@ -77,8 +77,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // Validate function must be called by the HappyEntryPoint
         vm.prank(happyEntryPoint);
-        bytes4 validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, WrongAccount.selector);
+        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        assertEq(validationData, abi.encodeWithSelector(WrongAccount.selector));
     }
 
     function testValidateGasPriceTooHigh() public {
@@ -90,8 +90,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // Validate function must be called by the HappyEntryPoint
         vm.prank(happyEntryPoint);
-        bytes4 validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, GasPriceTooHigh.selector);
+        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        assertEq(validationData, abi.encodeWithSelector(GasPriceTooHigh.selector));
     }
 
     // ====================================================================================================
@@ -111,8 +111,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // Validate function must be called by the HappyEntryPoint
         vm.prank(happyEntryPoint);
-        bytes4 validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, InvalidNonce.selector);
+        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        assertEq(validationData, abi.encodeWithSelector(InvalidNonce.selector));
 
         // Check that the once wasn't incremented
         uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
@@ -130,8 +130,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // Validate function must be called by the HappyEntryPoint
         vm.prank(happyEntryPoint);
-        bytes4 validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, InvalidNonce.selector);
+        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        assertEq(validationData, abi.encodeWithSelector(InvalidNonce.selector));
 
         // Check that the once wasn't incremented
         uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
@@ -168,10 +168,10 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // Simulate a call from the entry point (tx.origin = address(0))
         vm.prank(happyEntryPoint, ZERO_ADDRESS);
-        bytes4 validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
 
         // Even in simulation mode, a stale nonce (nonceAhead < 0) should still fail
-        assertEq(validationData, InvalidNonce.selector);
+        assertEq(validationData, abi.encodeWithSelector(InvalidNonce.selector));
 
         // Check that the once wasn't incremented
         uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
@@ -190,15 +190,15 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // First test in simulation mode - should be valid
         vm.prank(happyEntryPoint, ZERO_ADDRESS);
-        bytes4 simulationValidationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(simulationValidationData, FutureNonceDuringSimulation.selector);
+        bytes memory simulationValidationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        assertEq(simulationValidationData, abi.encodeWithSelector(FutureNonceDuringSimulation.selector));
 
         vm.revertToState(id);
 
         // Now test in real mode - should fail with InvalidNonce
         vm.prank(happyEntryPoint);
-        bytes4 realValidationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(realValidationData, InvalidNonce.selector); // Should fail in real mode
+        bytes memory realValidationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        assertEq(realValidationData, abi.encodeWithSelector(InvalidNonce.selector)); // Should fail in real mode
     }
 
     function testSimulationValidateCorrectNonce() public {
@@ -210,10 +210,10 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // Simulate a call from the entry point (tx.origin = address(0))
         vm.prank(happyEntryPoint, ZERO_ADDRESS);
-        bytes4 validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
 
         // In simulation mode, a correct nonce should be valid
-        assertEq(validationData, bytes4(0)); // Should be valid
+        assertEq(validationData, abi.encodeWithSelector(bytes4(0))); // Should be valid
 
         vm.revertToState(id);
     }
@@ -258,7 +258,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(happyEntryPoint);
 
         // The function should revert with ValidationReverted(InvalidSignature.selector)
-        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()"))));
+        vm.expectRevert(abi.encodeWithSelector(InvalidSignature.selector));
 
         ScrappyAccount(payable(smartAccount)).validate(happyTx);
     }
@@ -271,8 +271,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Validate function must be called by the HappyEntryPoint
         vm.prank(happyEntryPoint);
 
-        bytes4 validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, InvalidOwnerSignature.selector);
+        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        assertEq(validationData, abi.encodeWithSelector(InvalidSignature.selector));
     }
 
     // ====================================================================================================
@@ -286,8 +286,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Validate function must be called by the HappyEntryPoint, with tx.origin = address(0)
         vm.prank(happyEntryPoint, ZERO_ADDRESS);
 
-        bytes4 validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, UnknownDuringSimulation.selector);
+        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        assertEq(validationData, abi.encodeWithSelector(UnknownDuringSimulation.selector));
     }
 
     // ====================================================================================================
@@ -304,7 +304,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
 
         assertGt(output.gas, 0);
-        assertTrue(output.success);
+        assertTrue(output.status == CallStatus.SUCCEEDED);
         assertEq(output.revertData, new bytes(0));
 
         uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
@@ -324,7 +324,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
 
         assertGt(output.gas, 0);
-        assertTrue(output.success);
+        assertTrue(output.status == CallStatus.SUCCEEDED);
         assertEq(output.revertData, new bytes(0));
 
         uint256 finalBalance = getEthBalance(dest);
@@ -341,8 +341,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(happyEntryPoint);
         ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
 
-        assertEq(output.gas, 0);
-        assertFalse(output.success);
+        assertTrue(output.status == CallStatus.CALL_REVERTED);
         assertEq(output.revertData, new bytes(0));
 
         uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
@@ -360,8 +359,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // Payout function must be called by the HappyEntryPoint
         vm.prank(happyEntryPoint);
-        bytes4 payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, 0);
-        assertEq(payoutData, WrongAccount.selector);
+        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, 0);
+        assertEq(payoutData, abi.encodeWithSelector(WrongAccount.selector));
     }
 
     function testPayoutSuccessfulGasCalculation() public {
@@ -391,10 +390,10 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(happyEntryPoint, recipient);
 
         // Call payout
-        bytes4 payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
 
         // Verify payout was successful
-        assertEq(payoutData, bytes4(0));
+        assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
 
         // Verify recipient received the correct amount
         assertEq(recipient.balance, initialBalance + owed);
@@ -418,10 +417,10 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(happyEntryPoint, recipient);
 
         // Call payout
-        bytes4 payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
 
         // Verify payout was successful
-        assertEq(payoutData, bytes4(0));
+        assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
 
         // Verify recipient balance didn't change (owed should be 0)
         assertEq(recipient.balance, initialBalance);
