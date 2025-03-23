@@ -21,36 +21,35 @@ error SubmitterFeeTooHigh();
  */
 interface IHappyPaymaster {
     /**
-     * This function validates whether the passed happyTx is eligible for sponsorship
-     * by this paymaster ("validation"), and if so pays out to the submitter (tx.origin)
-     * the submitter tx cost + happyTx.submitterFee.
+     * This function validates whether the passed happyTx is eligible for sponsorship by this
+     * paymaster ("validation"), and if so pays out to the submitter (tx.origin) the submitter tx
+     * cost + happyTx.submitterFee.
      *
      * The submitter tx gas usage is the the minimum amount of gas between:
      * (a) consumedGas + the cost of payout's own execution or,
      * (b) happyTx.gasLimit.
+     *
      * The gas should be priced according to tx.gasPrice.
      *
-     * This is also allowed to conduct extra operations (e.g. swap an ERC20
-     * from the user to the gas token).
+     * This is also allowed to conduct extra operations (e.g. swap an ERC20 from the user to the gas
+     * token).
      *
-     * The function must return 0 iff it accepted to sponsor the transaction and
-     * successfully paid the submitter. Otherwise it returns the selector of a
-     * custom error to indicate the reason for failure.
+     * The function must return `abi.encodeWithSelector(bytes4(0))` iff it accepted to sponsor the
+     * transaction. Otherwise it returns the result of `abi.encodeWithSelector` with a custom error
+     * to indicate the reason for rejection.
      *
-     * It can also return {UnknownDuringSimulation} in simulation mode
-     * (tx.origin == 0) to indicate that validity cannot be ascertained during
-     * simulation (e.g. we can't verify a signature over the gas limit during
-     * simulation, as simulation is used to estimate the gas).
+     * It can use {UnknownDuringSimulation} as a returned error in simulation mode (tx.origin == 0)
+     * to indicate that validity cannot be ascertained during simulation (e.g. we can't verify a
+     * signature over the gas limit during simulation, as simulation is used to estimate the gas).
      *
-     * If validation fails with {UnknownDuringSimulation} during simulation,
-     * the function must carry on with the payment, and ensure that as much gas is
-     * consume by this function as would be in case of successful validation.
+     * If validation fails with {UnknownDuringSimulation} during simulation, the function must carry
+     * on with the payment, and ensure that as much gas is consume by this function as would be in
+     * case of successful validation.
      *
-     * The function must revert with NotFromEntryPoint} if not called from
-     * the EntryPoint contract (otherwise its funds will be at risk). This function
-     * is otherwise not allowed to revert (even if validation fails).
-     *
-     * The function must NOT revert if the payment fails.
+     * The function must revert with {NotFromEntryPoint} if not called from the EntryPoint contract
+     * (otherwise its funds will be at risk). It must also revert if the payment fails. This
+     * function is otherwise not allowed to revert. If validation fails it should return instead,
+     * as per the above.
      */
-    function payout(HappyTx memory happyTx, uint256 consumedGas) external returns (bytes4);
+    function payout(HappyTx memory happyTx, uint256 consumedGas) external returns (bytes memory);
 }

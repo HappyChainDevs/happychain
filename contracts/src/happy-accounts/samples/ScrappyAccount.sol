@@ -32,6 +32,8 @@ import {
     UnknownDuringSimulation
 } from "../utils/Common.sol";
 
+import {CallStatus} from "../core/HappyEntryPoint.sol";
+
 // [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
 
 /**
@@ -160,18 +162,18 @@ contract ScrappyAccount is
         emit ExtensionRemoved(extension, extensionType);
     }
 
-    function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes4) {
+    function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes memory) {
         if (happyTx.account != address(this)) {
-            return WrongAccount.selector;
+            return abi.encodeWithSelector(WrongAccount.selector);
         }
 
         if (tx.gasprice > happyTx.maxFeePerGas) {
-            return GasPriceTooHigh.selector;
+            return abi.encodeWithSelector(GasPriceTooHigh.selector);
         }
 
         bool isSimulation = tx.origin == address(0);
         int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - int256(nonceValue[happyTx.nonceTrack]);
-        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
+        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return abi.encodeWithSelector(InvalidNonce.selector);
         nonceValue[happyTx.nonceTrack]++;
 
         bytes4 validationResult;
@@ -210,9 +212,11 @@ contract ScrappyAccount is
                 : isSimulation ? UnknownDuringSimulation.selector : InvalidSignature.selector;
         }
 
-        return validationResult == bytes4(0)
+        validationResult = validationResult == bytes4(0)
             ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
             : validationResult;
+
+        return abi.encodeWithSelector(validationResult);
     }
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
@@ -221,10 +225,12 @@ contract ScrappyAccount is
 
         if (found) {
             if (executorAddress.length != 20) {
+                output.status = CallStatus.EXECUTE_FAILED;
                 output.revertData = abi.encodeWithSelector(InvalidExtensionValue.selector);
             } else {
                 address executor = address(uint160(bytes20(executorAddress)));
                 if (!extensions[ExtensionType.Executor][executor]) {
+                    output.status = CallStatus.EXECUTE_FAILED;
                     output.revertData = abi.encodeWithSelector(ExtensionNotRegistered.selector);
                 } else {
                     dispatchedExecutor = executor;
@@ -235,21 +241,23 @@ contract ScrappyAccount is
         } else {
             (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
             if (!success) output.revertData = returnData;
+            output.status = success ? CallStatus.SUCCEEDED : CallStatus.CALL_REVERTED;
         }
 
-        output.gas = gasStart - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD;
-        return output;
+        output.gas = uint32(gasStart - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD);
 
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
         // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", startGas - endGas);
         // [LOGGAS_INTERNAL] console.log("execute output.gas: ", output.gas);
+
+        return output;
     }
 
-    function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
+    function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
         // [LOGGAS_INTERNAL] uint256 gasOverheadStart = gasleft();
 
         if (happyTx.account != address(this)) {
-            return WrongAccount.selector;
+            return abi.encodeWithSelector(WrongAccount.selector);
         }
 
         int256 _owed = int256(
@@ -267,7 +275,7 @@ contract ScrappyAccount is
         // [LOGGAS_INTERNAL] console.log("PAYOUT_INTRINSIC_GAS_OVERHEAD", gasOverheadStart - gasPaymentStart);
         // [LOGGAS_INTERNAL] console.log("overall payout function gas usage = ", gasOverheadStart - gasPaymentEnd);
 
-        return 0;
+        return abi.encodeWithSelector(bytes4(0));
     }
 
     function executeCall(CallInfo memory info) external returns (bool success, bytes memory returnData) {
