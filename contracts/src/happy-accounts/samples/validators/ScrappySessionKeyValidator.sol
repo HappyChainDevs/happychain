@@ -36,24 +36,16 @@ contract SessionKeyValidator is ICustomBoopValidator {
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
 
-    mapping(bytes32 accountAndTargetHash => address sessionKey) private sessionKeys;
+    mapping(address account => mapping(address target => address sessionKey)) public sessionKeys;
 
     // ====================================================================================================
     // FUNCTIONS
-
-    function _keyHash(address account, address target) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(account, target));
-    }
-
-    function getSessionKey(address account, address target) external view returns (address) {
-        return sessionKeys[_keyHash(account, target)];
-    }
 
     function addSessionKey(address target, address sessionKey) public {
         if (target == address(this)) revert("Security: can't register a session key for the validator");
         if (target == msg.sender) revert("Security: can't register a session key for the account");
 
-        sessionKeys[_keyHash(msg.sender, target)] = sessionKey;
+        sessionKeys[msg.sender][target] = sessionKey;
         emit SessionKeyAdded(msg.sender, target, sessionKey);
     }
 
@@ -64,7 +56,7 @@ contract SessionKeyValidator is ICustomBoopValidator {
     }
 
     function removeSessionKey(address target) public {
-        delete sessionKeys[_keyHash(msg.sender, target)];
+        delete sessionKeys[msg.sender][target];
         emit SessionKeyRemoved(msg.sender, target);
     }
 
@@ -91,7 +83,7 @@ contract SessionKeyValidator is ICustomBoopValidator {
         happyTx.validatorData = ""; // set to "" to get the hash
         address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
 
-        address sessionKey = sessionKeys[_keyHash(msg.sender, happyTx.dest)];
+        address sessionKey = sessionKeys[msg.sender][happyTx.dest];
         return signer == sessionKey ? bytes4(0) : bytes4(InvalidSignature.selector);
     }
 }
