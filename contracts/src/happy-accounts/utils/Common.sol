@@ -39,24 +39,3 @@ error NotFromEntryPoint();
  * Selector returned by {IHappyAccount.validte} when the happyTx's signature is invalid.
  */
 error InvalidOwnerSignature();
-
-// ====================================================================================================
-// EXTENSION KEYS
-
-/**
- * Key used in {HappyTx.extraData} to specify a custom validator address (must satisfy
- * {ICustomBoopValidator}), to be looked up by {IHappyAccount.validate} implementations.
- */
-bytes3 constant VALIDATOR_KEY = 0x000001;
-
-/**
- * Key used in {HappyTx.extraData} to specify a custom executor address (must satisfy
- * {ICustomBoopExecutor}), to be looked up by {IHappyAccount.execute} implementations.
- */
-bytes3 constant EXECUTOR_KEY = 0x000002;
-
-/**
- * Key used in {HappyTx.extraData} for call information (array of {BatchCallExecutor.Execution}),
- * to be looked up by {BatchCallExecutor.execute}.
- */
-bytes3 constant BATCH_CALL_KEY = 0x000100;

@@ -11,7 +11,12 @@ import {ICustomBoopExecutor} from "../../interfaces/extensions/ICustomBoopExecut
 
 import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
-import {BATCH_CALL_KEY} from "../../utils/Common.sol";
+
+/**
+ * @dev Key used in {HappyTx.extraData} for call information (array of {BatchCallExecutor.Execution}),
+ * to be looked up by {BatchCallExecutor.execute}.
+ */
+bytes3 constant BATCH_CALL_KEY = 0x000100;
 
 /// @dev The execution data of a call in a batch
 struct Execution {

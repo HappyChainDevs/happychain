@@ -10,15 +10,10 @@ import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
-import {
-    ExecutionOutput,
-    GasPriceTooHigh,
-    InvalidNonce,
-    WrongAccount
-} from "../interfaces/IHappyAccount.sol";
+import {ExecutionOutput, GasPriceTooHigh, InvalidNonce, WrongAccount} from "../interfaces/IHappyAccount.sol";
 
-import {ICustomBoopValidator} from "../interfaces/extensions/ICustomBoopValidator.sol";
-import {ICustomBoopExecutor} from "../interfaces/extensions/ICustomBoopExecutor.sol";
+import {ICustomBoopValidator, VALIDATOR_KEY} from "../interfaces/extensions/ICustomBoopValidator.sol";
+import {ICustomBoopExecutor, EXECUTOR_KEY} from "../interfaces/extensions/ICustomBoopExecutor.sol";
 import {
     IExtensibleBoopAccount,
     ExtensionType,
@@ -34,9 +29,7 @@ import {
     FutureNonceDuringSimulation,
     InvalidOwnerSignature,
     NotFromEntryPoint,
-    UnknownDuringSimulation,
-    VALIDATOR_KEY,
-    EXECUTOR_KEY
+    UnknownDuringSimulation
 } from "../utils/Common.sol";
 
 // [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
