@@ -31,12 +31,6 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     event SessionKeyRemoved(address indexed account, address indexed targetContract);
 
     // ====================================================================================================
-    // CONSTANTS
-
-    /// @dev ERC-1271 selector
-    bytes4 private constant MAGIC_VALUE = 0x1626ba7e;
-
-    // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
 
     /// keccak256(account, targetContract) => SessionKeyValidatorStorage
@@ -95,7 +89,9 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     }
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
-        return hash.recover(signature) == owner() ? MAGIC_VALUE : bytes4(0);
+        // 0x1626ba7e is the ERC-1271 (isValidSignature) magic value that needs to returned as per
+        // the EIP specification when verification is successful.
+        return hash.recover(signature) == owner() ? bytes4(0x1626ba7e) : bytes4(0);
     }
 
     // ====================================================================================================
