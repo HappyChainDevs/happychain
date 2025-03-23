@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 
@@ -20,7 +20,8 @@ import {
     ExtensionNotFound,
     ExtensionAlreadyRegistered,
     ExtensionNotRegistered,
-    InvalidExtensionValue
+    InvalidExtensionValue,
+    CallInfo
 } from "../interfaces/extensions/IExtensibleBoopAccount.sol";
 
 import {HappyTx} from "../core/HappyTx.sol";
@@ -105,6 +106,10 @@ contract ScrappyAccount is
 
     /// Mapping to check if an extension is registered by type
     mapping(ExtensionType => mapping(address => bool)) public extensions;
+
+    /// Custom executor that was dispatched to during this transaction.
+    // forgefmt: disable-next-line`
+    address private transient dispatchedExecutor;
 
     // ====================================================================================================
     // MODIFIERS
@@ -258,6 +263,11 @@ contract ScrappyAccount is
         return 0;
     }
 
+    function executeCall(CallInfo memory info) external returns (bool success, bytes memory returnData) {
+        require(msg.sender == dispatchedExecutor, "not called from executor");
+        return info.dest.call{value: info.value}(info.callData);
+    }
+
     // ====================================================================================================
     // SPECIAL FUNCTIONS
 
@@ -288,11 +298,11 @@ contract ScrappyAccount is
         internal
         returns (bytes4)
     {
-        if (validatorAddress.length != 32) {
+        if (validatorAddress.length != 20) {
             return InvalidExtensionValue.selector;
         }
 
-        address validator = address(uint160(uint256(bytes32(validatorAddress))));
+        address validator = address(uint160(bytes20(validatorAddress)));
         if (!extensions[ExtensionType.Validator][validator]) {
             revert ExtensionNotFound(validator, ExtensionType.Validator);
         }
@@ -316,20 +326,22 @@ contract ScrappyAccount is
         internal
         returns (ExecutionOutput memory output)
     {
-        if (executorAddress.length != 32) {
+        if (executorAddress.length != 20) {
             revert InvalidExtensionValue(ExtensionType.Executor);
         }
 
         address executor;
         assembly {
-            executor := mload(add(add(executorAddress, 0x20), 12)) // skip first 12 bytes
+            mcopy(executor, add(executorAddress, 32), 20)
         }
 
         if (!extensions[ExtensionType.Executor][executor]) {
             revert ExtensionNotFound(executor, ExtensionType.Executor);
         }
 
-        // Call external executor
-        return ICustomBoopExecutor(executor).execute(happyTx);
+        dispatchedExecutor = executor;
+        output = ICustomBoopExecutor(executor).execute(happyTx);
+        dispatchedExecutor = address(0);
+        return output;
     }
 }

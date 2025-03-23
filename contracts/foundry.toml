@@ -2,8 +2,8 @@
 # https://book.getfoundry.sh/reference/config/
 
 [profile.default]
-# This is the last version safe for chains that haven't adopted to the Shangai hardfork EVM changes.
-solc_version = "0.8.26"
+# For Shanghai hardfork + enables transient variables support.
+solc_version = "0.8.28"
 optimizer = true
 optimizer_runs = 20000
 via_ir = true

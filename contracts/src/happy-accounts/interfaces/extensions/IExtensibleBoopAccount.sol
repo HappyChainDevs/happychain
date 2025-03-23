@@ -8,6 +8,16 @@ enum ExtensionType {
     Executor
 }
 
+/**
+ * Information (destination, value and calldata) for a call to be made by the account on behalf
+ * of an execution extension.
+ */
+struct CallInfo {
+    address dest;
+    uint256 value;
+    bytes callData;
+}
+
 /// Selector returned if the extension is already registered.
 error ExtensionAlreadyRegistered(address extension, ExtensionType extensionType);
 
@@ -45,4 +55,13 @@ interface IExtensibleBoopAccount is IHappyAccount {
 
     /// Checks if an extension is already registered.
     function isExtensionRegistered(address extension, ExtensionType extensionType) external view returns (bool);
+
+    /**
+     * Performs a low-level call from the account on behalf of an executor extension.
+     *
+     * This must check that the call was made from a registered executor. It is recommended that the
+     * account set a transient variable to the executor that was dispatched in
+     * {IHappyAccount.execute}, and check that variable here.
+     */
+    function executeCall(CallInfo memory info) external returns (bool success, bytes memory returnData);
 }
