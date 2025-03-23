@@ -179,9 +179,7 @@ contract ScrappyAccount is
         }
 
         bool isSimulation = tx.origin == address(0);
-        uint256 happyTxNonce = (happyTx.nonceTrack << 192) | happyTx.nonceValue;
-        uint256 currentNonce = getNonce(happyTx.nonceTrack);
-        int256 nonceAhead = int256(happyTxNonce) - int256(currentNonce);
+        int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - int256(nonceValue[happyTx.nonceTrack]);
 
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return InvalidNonce.selector;
         nonceValue[happyTx.nonceTrack]++;
