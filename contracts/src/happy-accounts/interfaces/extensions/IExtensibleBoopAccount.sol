@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {IHappyAccount} from "../IHappyAccount.sol";
 
-    enum ExtensionType {
+enum ExtensionType {
     Validator,
     Executor
 }
