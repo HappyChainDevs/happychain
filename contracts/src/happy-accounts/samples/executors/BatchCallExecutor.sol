@@ -3,9 +3,10 @@ pragma solidity ^0.8.20;
 
 import {ExecutionOutput} from "../../interfaces/IHappyAccount.sol";
 import {ICustomBoopExecutor} from "../../interfaces/extensions/ICustomBoopExecutor.sol";
+import {IExtensibleBoopAccount, CallInfo} from "../../interfaces/extensions/IExtensibleBoopAccount.sol";
 import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
-import {CallInfo, CallInfoCoding} from "./CallInfo.sol";
+import {CallInfoCoding} from "./CallInfo.sol";
 
 /**
  * @dev Key used in {HappyTx.extraData} for call information (array of {CallInfo}),
@@ -41,7 +42,7 @@ contract BatchCallExecutor is ICustomBoopExecutor {
         if (!success) return _invalidBatchCallInfo();
 
         // 3. Execute all calls and capture revert data if any.
-        try this._executeBatch(calls) {}
+        try this._executeBatch(msg.sender, calls) {}
         catch (bytes memory revertData) {
             output.revertData = revertData;
         }
@@ -65,12 +66,12 @@ contract BatchCallExecutor is ICustomBoopExecutor {
      * revert, without reverting the `execute` call. This is sensitive code, and can only be called
      * from this contract, which we check.
      */
-    function _executeBatch(CallInfo[] memory calls) external {
-        require(msg.sender == address(this));
+    function _executeBatch(address account, CallInfo[] memory calls) external {
+        require(msg.sender == address(this), "not called from self");
 
         for (uint256 i = 0; i < calls.length; i++) {
             CallInfo memory info = calls[i];
-            (bool success, bytes memory revertData) = info.dest.call{value: info.value}(info.callData);
+            (bool success, bytes memory revertData) = IExtensibleBoopAccount(account).executeCall(info);
             if (!success) {
                 assembly {
                     // pass the revert data through to the caller

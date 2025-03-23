@@ -222,7 +222,11 @@ check: lint format-check
 .PHONY: check
 
 format-check:
+	@# Temp workaround for forge fmt not supporting transient variables.
+	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
+	mv src/happy-accounts/samples/ScrappyAccount.sol src/happy-accounts/samples/ScrappyAccount.bak
 	forge fmt --check src
+	mv src/happy-accounts/samples/ScrappyAccount.bak src/happy-accounts/samples/ScrappyAccount.sol
 .PHONY: format-check
 
 lint:
@@ -231,7 +235,11 @@ lint:
 
 format:
 	biome check ./ --write;
+	@# Temp workaround for forge fmt not supporting transient variables.
+	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
+	mv src/happy-accounts/samples/ScrappyAccount.sol src/happy-accounts/samples/ScrappyAccount.bak
 	forge fmt src
+	mv src/happy-accounts/samples/ScrappyAccount.bak src/happy-accounts/samples/ScrappyAccount.sol
 .PHONY: format
 
 ####################################################################################################

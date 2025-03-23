@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-/**
- * Information (destination, value and calldata) for a call to be made by the account on behalf
- * of an execution extension.
- */
-struct CallInfo {
-    address dest;
-    uint256 value;
-    bytes callData;
-}
+import {CallInfo} from "../../interfaces/extensions/IExtensibleBoopAccount.sol";
 
 library CallInfoCoding {
     function decodeCallInfo(bytes memory data) internal pure returns (bool success, CallInfo memory info) {
