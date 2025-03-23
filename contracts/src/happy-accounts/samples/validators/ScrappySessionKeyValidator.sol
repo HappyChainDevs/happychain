@@ -77,7 +77,6 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     }
 
     function validate(HappyTx memory happyTx) external view returns (bytes4) {
-        address sessionKey = sessionKeys[_keyHash(msg.sender, happyTx.dest)];
 
         if (happyTx.paymaster != happyTx.account) {
             // The happyTx is not self-paying.
@@ -92,8 +91,8 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
         bytes memory signature = happyTx.validatorData;
         happyTx.validatorData = ""; // set to "" to get the hash
         address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
-        happyTx.validatorData = signature; // revert back to original value
 
+        address sessionKey = sessionKeys[_keyHash(msg.sender, happyTx.dest)];
         return signer == sessionKey ? bytes4(0) : bytes4(InvalidOwnerSignature.selector);
     }
 
