@@ -44,19 +44,19 @@ error InvalidOwnerSignature();
 // EXTENSION KEYS
 
 /**
- * @dev Key used in extraData for validator extensions
- * Used in {ScrappyAccount.validate} to retrieve validator data from extraData
+ * Key used in {HappyTx.extraData} to specify a custom validator address (must satisfy
+ * {ICustomBoopValidator}), to be looked up by {IHappyAccount.validate} implementations.
  */
 bytes3 constant VALIDATOR_KEY = 0x000001;
 
 /**
- * @dev Key used in extraData for executor extensions
- * Used in {ScrappyAccount.execute} to retrieve executor data from extraData
+ * Key used in {HappyTx.extraData} to specify a custom executor address (must satisfy
+ * {ICustomBoopExecutor}), to be looked up by {IHappyAccount.execute} implementations.
  */
 bytes3 constant EXECUTOR_KEY = 0x000002;
 
 /**
- * @dev Key used in extraData for batch call data
- * Used in {BatchCallExecutor.execute} to retrieve batch call information from extraData
+ * Key used in {HappyTx.extraData} for call information (array of {BatchCallExecutor.Execution}),
+ * to be looked up by {BatchCallExecutor.execute}.
  */
 bytes3 constant BATCH_CALL_KEY = 0x000100;
