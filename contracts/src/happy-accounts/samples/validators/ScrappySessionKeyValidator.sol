@@ -20,11 +20,8 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     // ====================================================================================================
     // EVENTS
 
-    /// Emitted when a session key is added
-    event SessionKeyAdded(address indexed account, address indexed targetContract, address sessionKey);
-
-    /// Emitted when a session key is removed
-    event SessionKeyRemoved(address indexed account, address indexed targetContract);
+    event SessionKeyAdded(address indexed account, address indexed target, address sessionKey);
+    event SessionKeyRemoved(address indexed account, address indexed target);
 
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
@@ -46,15 +43,15 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
-    function addSessionKeys(address[] calldata targetContract, address[] calldata sessionKey) external {
-        for (uint256 i = 0; i < targetContract.length; i++) {
-            _addSessionKey(msg.sender, targetContract[i], sessionKey[i]);
+    function addSessionKeys(address[] calldata target, address[] calldata sessionKey) external {
+        for (uint256 i = 0; i < target.length; i++) {
+            _addSessionKey(msg.sender, target[i], sessionKey[i]);
         }
     }
 
-    function removeSessionKeys(address[] calldata targetContract) external {
-        for (uint256 i = 0; i < targetContract.length; i++) {
-            _removeSessionKey(msg.sender, targetContract[i]);
+    function removeSessionKeys(address[] calldata target) external {
+        for (uint256 i = 0; i < target.length; i++) {
+            _removeSessionKey(msg.sender, target[i]);
         }
     }
 
@@ -101,9 +98,9 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
         emit SessionKeyAdded(account, target, sessionKey);
     }
 
-    function _removeSessionKey(address account, address targetContract) internal {
-        delete sessionKeys[_keyHash(account, targetContract)];
-        emit SessionKeyRemoved(account, targetContract);
+    function _removeSessionKey(address account, address target) internal {
+        delete sessionKeys[_keyHash(account, target)];
+        emit SessionKeyRemoved(account, target);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
