@@ -2,13 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-
-import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
-
 import {ICustomBoopValidator} from "../../interfaces/extensions/ICustomBoopValidator.sol";
-
 import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
 import {InvalidOwnerSignature} from "../../utils/Common.sol";
@@ -22,7 +16,7 @@ import {InvalidOwnerSignature} from "../../utils/Common.sol";
  * The session key is represented as an address (as that is the result of ecrecover), which is not
  * strictly speaking a key, but we call it that anyway for simplicity.
  */
-contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
+contract SessionKeyValidator is ICustomBoopValidator {
     using ECDSA for bytes32;
     using HappyTxLib for HappyTx;
 
@@ -36,18 +30,6 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     // IMMUTABLES AND STATE VARIABLES
 
     mapping(bytes32 accountAndTargetHash => address sessionKey) private sessionKeys;
-
-    // ====================================================================================================
-    // CONSTRUCTOR
-
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize(address _owner) public initializer {
-        __Ownable_init(_owner);
-        __UUPSUpgradeable_init();
-    }
 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
@@ -77,7 +59,6 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     }
 
     function validate(HappyTx memory happyTx) external view returns (bytes4) {
-
         if (happyTx.paymaster != happyTx.account) {
             // The happyTx is not self-paying.
             // The signer does not sign over these fields to avoid extra network roundtrips
@@ -96,12 +77,6 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
         return signer == sessionKey ? bytes4(0) : bytes4(InvalidOwnerSignature.selector);
     }
 
-    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
-        // 0x1626ba7e is the ERC-1271 (isValidSignature) magic value that needs to returned as per
-        // the EIP specification when verification is successful.
-        return hash.recover(signature) == owner() ? bytes4(0x1626ba7e) : bytes4(0);
-    }
-
     // ====================================================================================================
     // INTERNAL FUNCTIONS
 
@@ -118,6 +93,4 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
         delete sessionKeys[_keyHash(account, target)];
         emit SessionKeyRemoved(account, target);
     }
-
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
