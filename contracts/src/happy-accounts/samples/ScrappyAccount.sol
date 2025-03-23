@@ -27,7 +27,7 @@ import {HappyTx} from "../core/HappyTx.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {
     FutureNonceDuringSimulation,
-    InvalidOwnerSignature,
+    InvalidSignature,
     NotFromEntryPoint,
     UnknownDuringSimulation
 } from "../utils/Common.sol";
@@ -206,7 +206,7 @@ contract ScrappyAccount is
             ? validationSuccess
                 ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
                 : UnknownDuringSimulation.selector
-            : validationSuccess ? bytes4(0) : InvalidOwnerSignature.selector;
+            : validationSuccess ? bytes4(0) : InvalidSignature.selector;
     }
 
     function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
