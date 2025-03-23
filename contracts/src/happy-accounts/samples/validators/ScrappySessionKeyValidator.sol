@@ -13,10 +13,6 @@ import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
 import {InvalidOwnerSignature} from "../../utils/Common.sol";
 
-struct SessionKeyValidatorStorage {
-    address sessionKey;
-}
-
 contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;
     using HappyTxLib for HappyTx;
@@ -33,8 +29,7 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
 
-    /// keccak256(account, targetContract) => SessionKeyValidatorStorage
-    mapping(bytes32 => SessionKeyValidatorStorage) public sessionKeyValidatorStorage;
+    mapping(bytes32 accountAndTargetHash => address sessionKeyAddress) private sessionKeys;
 
     // ====================================================================================================
     // CONSTRUCTOR
@@ -63,12 +58,12 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
         }
     }
 
-    function getStorageKey(address account, bytes20 target) external pure returns (bytes32) {
-        return _getStorageKey(account, target);
+    function getSessionKey(address account, address target) external view returns (address) {
+        return sessionKeys[_keyHash(account, target)];
     }
 
     function validate(HappyTx memory happyTx) external view returns (bytes4) {
-        address sessionKey = sessionKeyValidatorStorage[_getStorageKey(msg.sender, bytes20(happyTx.dest))].sessionKey;
+        address sessionKey = sessionKeys[_keyHash(msg.sender, happyTx.dest)];
 
         if (happyTx.paymaster != happyTx.account) {
             // The happyTx is not self-paying.
@@ -97,17 +92,17 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     // ====================================================================================================
     // INTERNAL FUNCTIONS
 
-    function _getStorageKey(address account, bytes20 target) internal pure returns (bytes32) {
+    function _keyHash(address account, address target) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(account, target));
     }
 
-    function _addSessionKey(address account, address targetContract, address sessionKey) internal {
-        sessionKeyValidatorStorage[_getStorageKey(account, bytes20(targetContract))].sessionKey = sessionKey;
-        emit SessionKeyAdded(account, targetContract, sessionKey);
+    function _addSessionKey(address account, address target, address sessionKey) internal {
+        sessionKeys[_keyHash(account, target)] = sessionKey;
+        emit SessionKeyAdded(account, target, sessionKey);
     }
 
     function _removeSessionKey(address account, address targetContract) internal {
-        delete sessionKeyValidatorStorage[_getStorageKey(account, bytes20(targetContract))];
+        delete sessionKeys[_keyHash(account, targetContract)];
         emit SessionKeyRemoved(account, targetContract);
     }
 
