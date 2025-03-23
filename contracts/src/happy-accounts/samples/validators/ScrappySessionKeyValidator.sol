@@ -13,6 +13,15 @@ import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
 import {InvalidOwnerSignature} from "../../utils/Common.sol";
 
+/**
+ * This validator maintains a mapping from (account, target) pair to session keys, and authorizes
+ * boops from the given account to the target if they are signed with the session key.
+ *
+ * Only the account is abilitated to modify its own mappings.
+ *
+ * The session key is represented as an address (as that is the result of ecrecover), which is not
+ * strictly speaking a key, but we call it that anyway for simplicity.
+ */
 contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;
     using HappyTxLib for HappyTx;
@@ -26,7 +35,7 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
 
-    mapping(bytes32 accountAndTargetHash => address sessionKeyAddress) private sessionKeys;
+    mapping(bytes32 accountAndTargetHash => address sessionKey) private sessionKeys;
 
     // ====================================================================================================
     // CONSTRUCTOR
