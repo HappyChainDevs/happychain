@@ -36,6 +36,7 @@ error UnknownDuringSimulation();
 error NotFromEntryPoint();
 
 /**
- * Selector returned by {IHappyAccount.validte} when the happyTx's signature is invalid.
+ * Selector returned by {IHappyAccount.validate} or a {ICustomBoopValidator} when a signature is
+ * invalid.
  */
-error InvalidOwnerSignature();
+error InvalidSignature();

@@ -5,7 +5,7 @@ import {ECDSA} from "solady/utils/ECDSA.sol";
 import {ICustomBoopValidator} from "../../interfaces/extensions/ICustomBoopValidator.sol";
 import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
-import {InvalidOwnerSignature} from "../../utils/Common.sol";
+import {InvalidSignature} from "../../utils/Common.sol";
 
 /**
  * This validator maintains a mapping from (account, target) pair to session keys, and authorizes
@@ -74,7 +74,7 @@ contract SessionKeyValidator is ICustomBoopValidator {
         address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
 
         address sessionKey = sessionKeys[_keyHash(msg.sender, happyTx.dest)];
-        return signer == sessionKey ? bytes4(0) : bytes4(InvalidOwnerSignature.selector);
+        return signer == sessionKey ? bytes4(0) : bytes4(InvalidSignature.selector);
     }
 
     // ====================================================================================================
