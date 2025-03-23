@@ -7,11 +7,18 @@ import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
 import {InvalidSignature} from "../../utils/Common.sol";
 
+/// Selector returned if trying to validate an account-paid boop with a session key.
+error AccountPaidSessionKeyBoop();
+
 /**
  * This validator maintains a mapping from (account, target) pair to session keys, and authorizes
  * boops from the given account to the target if they are signed with the session key.
  *
  * Only the account is abilitated to modify its own mappings.
+ *
+ * Session key validation is restricted to boops that are not paid for by the account itself,
+ * as this opens a griefing vector where a malicious app destroys user funds by spamming, and
+ * unlike paymasters and submitters, account are not usually set up to handle this.
  *
  * The session key is represented as an address (as that is the result of ecrecover), which is not
  * strictly speaking a key, but we call it that anyway for simplicity.
@@ -68,15 +75,17 @@ contract SessionKeyValidator is ICustomBoopValidator {
     }
 
     function validate(HappyTx memory happyTx) external view returns (bytes4) {
-        if (happyTx.paymaster != happyTx.account) {
-            // The happyTx is not self-paying.
-            // The signer does not sign over these fields to avoid extra network roundtrips
-            // validation policy falls to the paymaster or the sponsoring submitter.
-            happyTx.gasLimit = 0;
-            happyTx.executeGasLimit = 0;
-            happyTx.maxFeePerGas = 0;
-            happyTx.submitterFee = 0;
+        if (happyTx.paymaster == happyTx.account) {
+            return AccountPaidSessionKeyBoop.selector;
         }
+
+        // The happyTx is not self-paying.
+        // The signer does not sign over these fields to avoid extra network roundtrips
+        // validation policy falls to the paymaster or the sponsoring submitter.
+        happyTx.gasLimit = 0;
+        happyTx.executeGasLimit = 0;
+        happyTx.maxFeePerGas = 0;
+        happyTx.submitterFee = 0;
 
         bytes memory signature = happyTx.validatorData;
         happyTx.validatorData = ""; // set to "" to get the hash
