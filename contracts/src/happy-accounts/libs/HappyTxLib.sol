@@ -283,7 +283,7 @@ library HappyTxLib {
         pure
         returns (bool found, bytes memory value)
     {
-        bytes32 currentKey;
+        bytes3 currentKey;
         uint24 currentLen;
         bytes32 offset;
         assembly {
