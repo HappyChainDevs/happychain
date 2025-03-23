@@ -10,6 +10,8 @@ import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "../libs/HappyTxLib.sol";
 import {HappyTx} from "./HappyTx.sol";
 
+import {console} from "forge-std/console.sol";
+
 // [LOGGAS] import {console} from "forge-std/Script.sol";
 
 enum CallStatus {
@@ -17,7 +19,6 @@ enum CallStatus {
     CALL_REVERTED, // The call reverted.
     EXECUTE_FAILED, // The {IHappyAccount.execute} function failed (incorrect input).
     EXECUTE_REVERTED // The {IHappyAccount.execute} function reverted (in violation of the spec).
-
 }
 
 struct SubmitOutput {
@@ -230,7 +231,6 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // it is improperly implemented.
         if (!success || output.validationStatus.length < 4) revert ValidationReverted(output.validationStatus);
 
-        bool isSimulation = tx.origin == address(0);
         bytes4 selector;
         assembly {
             // skip tuple offset and length, then extract 4 first bytes
@@ -308,6 +308,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             MAX_PAYOUT_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
         );
+        console.log("success", success);
+        console.logBytes(returnData);
         if (!success) revert PaymentReverted(returnData);
         output.payoutStatus = abi.decode(returnData, (bytes));
 
@@ -330,8 +332,11 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         int256 _charged = int256(consumedGas * tx.gasprice) + happyTx.submitterFee;
         uint256 charged = _charged > 0 ? uint256(_charged) : 0;
 
+        console.log("charged", charged);
+        console.log("paid", balance - tx.origin.balance);
+
         if (tx.origin.balance < balance + charged) {
-            revert PaymentFailed(returnData);
+            revert PaymentFailed(output.payoutStatus);
         }
     }
 }

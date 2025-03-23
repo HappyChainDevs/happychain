@@ -87,10 +87,10 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
         if (happyTx.submitterFee > 0) {
             uint256 maxFeePerByte = HappyTxLib.maxCalldataFeePerByte(happyTx);
             uint256 maxSubmitterFee = totalSize * (maxFeePerByte + SUBMITTER_TIP_PER_BYTE);
-        }
 
-        if (uint256(happyTx.submitterFee) > maxSubmitterFee) {
-            return abi.encodeWithSelector(SubmitterFeeTooHigh.selector);
+            if (uint256(happyTx.submitterFee) > maxSubmitterFee) {
+                return abi.encodeWithSelector(SubmitterFeeTooHigh.selector);
+            }
         }
 
         int256 _owed = int256(

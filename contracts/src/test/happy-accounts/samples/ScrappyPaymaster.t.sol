@@ -81,10 +81,10 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         vm.prank(happyEntryPoint, RECIPIENT);
 
         // Call payout
-        bytes4 payoutData = ScrappyPaymaster(payable(paymaster)).payout(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).payout(happyTx, consumedGas);
 
         // Verify payout was successful
-        assertEq(payoutData, bytes4(0));
+        assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
 
         // Verify recipient received the correct amount
         assertEq(RECIPIENT.balance, initialBalance + owed);
@@ -106,10 +106,10 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         vm.prank(happyEntryPoint, RECIPIENT);
 
         // Call payout
-        bytes4 payoutData = ScrappyPaymaster(payable(paymaster)).payout(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).payout(happyTx, consumedGas);
 
         // Verify payout was successful
-        assertEq(payoutData, bytes4(0));
+        assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
 
         // Verify recipient balance didn't change (owed should be 0)
         assertEq(RECIPIENT.balance, initialBalance);
@@ -126,10 +126,10 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         vm.prank(happyEntryPoint);
 
         // Call payout - should return SubmitterFeeTooHigh
-        bytes4 payoutData = ScrappyPaymaster(payable(paymaster)).payout(happyTx, 0);
+        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).payout(happyTx, 0);
 
         // Verify correct error code is returned
-        assertEq(payoutData, SubmitterFeeTooHigh.selector);
+        assertEq(payoutData, abi.encodeWithSelector(SubmitterFeeTooHigh.selector));
     }
 
     // ====================================================================================================
