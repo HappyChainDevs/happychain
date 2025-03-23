@@ -2,16 +2,17 @@
 pragma solidity ^0.8.20;
 
 import {HappyTx} from "../core/HappyTx.sol";
+import {CallStatus} from "../core/HappyEntryPoint.sol";
 
 /**
  * Execution Output
- * @param success - Whether the call specified by the happyTx was successful.
+ * @param status      - Status of the execution (succeeded, failed, call failed, or call reverted)
  * @param gas         - The amount of gas used by the {IHappyAccount.execute} function.
  * @param revertData  - The associated revert data if the call specified by the happyTx reverts; otherwise, it is empty.
  */
 struct ExecutionOutput {
-    bool success;
-    uint256 gas;
+    CallStatus status;
+    uint32 gas;
     bytes revertData;
 }
 
@@ -48,51 +49,50 @@ interface IHappyAccount {
     /**
      * Validates a Happy Transaction.
      *
-     * This function returns 0 if the account validates the happyTx according
-     * to its own rules, and a custom error selector otherwise to indicate
-     * the reason for rejection.
+     * This function returns abi.encodeWithSelector(bytes4(0)) if the account validates the happyTx
+     * according to its own rules, and an encoded custom error selector otherwise to indicate the
+     * reason for rejection.
      *
-     * The function should return {WrongAccount} and
-     * {GasPriceTooHigh} if the associated conditions are hit.
+     * The function should return {WrongAccount} and {GasPriceTooHigh} if the associated conditions are
+     * hit.
      *
-     * If the validity cannot be ascertained at simulation time (`tx.origin == 0`),
-     * then the function should return {UnknownDuringSimulation}.
+     * If the validity cannot be ascertained at simulation time (`tx.origin == 0`), then the
+     * function should return {UnknownDuringSimulation}.
      *
      * If the nonce is valid in the future during simulation, the function should return
-     * {FutureNonceDuringSimulation}. If both this and the previous paragraph
-     * apply, the function should return {UnknownDuringSimulation}.
+     * {FutureNonceDuringSimulation}. If both this and the previous paragraph apply, the function
+     * should return {UnknownDuringSimulation}.
      *
-     * In those two cases, the function should consume at least as much gas as it would
-     * if the validation was successful, to allow for accurate gas estimation.
+     * In those two cases, the function should consume at least as much gas as it would if the
+     * validation was successful, to allow for accurate gas estimation.
      *
-     * The function should consume a deterministic amount of gas for a given happyTx
-     * — more precisely, it is not allowed to consume more gas than it does when
-     * simulated via `eth_call`.
+     * The function should consume a deterministic amount of gas for a given happyTx — more
+     * precisely, it is not allowed to consume more gas than it does when simulated via `eth_call`.
      *
-     * This function is not allowed to revert except from lack of gas (which,
-     * if satisfying the condition above, indicates a disfunctional submitter).
+     * This function is not allowed to revert except from lack of gas (which, if satisfying the
+     * condition above, indicates a disfunctional submitter).
      *
      * This function is called directly by {EntryPoint.submit}.
      */
-    function validate(HappyTx memory happyTx) external returns (bytes4);
+    function validate(HappyTx memory happyTx) external returns (bytes memory);
 
     /**
      * Executes the call specified by a Happy Transaction.
      *
-     * The account is allowed to customize the call, or to perform additional
-     * pre and post operations.
+     * The account is allowed to customize the call, or to perform additional pre and post
+     * operations.
      *
-     * If the call fails, this function must set {ExecutionOutput.revertData}
-     * to the call's revert data.
+     * If the call fails, this function must set {ExecutionOutput.revertData} to the call's revert
+     * data.
      *
-     * Otherwise it sets {ExecutionOutput.gas} to the gas consumed by
-     * its entire execution (not only the call), and returns.
+     * Otherwise it sets {ExecutionOutput.gas} to the gas consumed by its entire execution (not only
+     * the call), and returns.
      *
      * This function is never allowed to revert if passed enough gas (according to
      * {HappyTx.executeGasLimit}).
      *
-     * This function is called directly by {EntryPoint.submit} and should
-     * revert with {NotFromEntryPoint} if not called from the entrypoint.
+     * This function is called directly by {EntryPoint.submit} and should revert with
+     * {NotFromEntryPoint} if not called from the entrypoint.
      */
     function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory);
 

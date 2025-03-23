@@ -73,7 +73,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
-    function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes4) {
+    function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
         // [LOGGAS_INTERNAL] uint256 gasOverheadStart = gasleft();
 
         // forgefmt: disable-next-item
@@ -87,7 +87,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
         uint256 maxSubmitterFee = totalSize * (maxFeePerByte + SUBMITTER_TIP_PER_BYTE);
 
         if (uint256(happyTx.submitterFee) > maxSubmitterFee) {
-            return SubmitterFeeTooHigh.selector;
+            return abi.encodeWithSelector(SubmitterFeeTooHigh.selector);
         }
 
         int256 _owed = int256(
@@ -105,7 +105,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
         // [LOGGAS_INTERNAL] console.log("PAYOUT_INTRINSIC_GAS_OVERHEAD", gasOverheadStart - gasPaymentStart);
         // [LOGGAS_INTERNAL] console.log("overall payout function gas usage = ", gasOverheadStart - gasPaymentEnd);
 
-        return 0;
+        return abi.encodeWithSelector(bytes4(0));
     }
 
     // ====================================================================================================

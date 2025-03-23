@@ -13,9 +13,10 @@ import {HappyTx} from "./HappyTx.sol";
 // [LOGGAS] import {console} from "forge-std/Script.sol";
 
 enum CallStatus {
-    SUCCESS, // The call succeeded.
+    SUCCEEDED, // The call succeeded.
     CALL_REVERTED, // The call reverted.
-    EXECUTION_REVERTED // The {IHappyAccount.execute} function reverted (in violation of the spec).
+    EXECUTE_FAILED, // The {IHappyAccount.execute} function failed (incorrect input).
+    EXECUTE_REVERTED // The {IHappyAccount.execute} function reverted (in violation of the spec).
 
 }
 
@@ -33,12 +34,14 @@ struct SubmitOutput {
     /**
      * Return value of {IHappyAccount.validate}.
      *
-     * This is either 0 (success), {UnknownDuringSimulation}, indicating
-     * that more data is needed (e.g. a signature over the gas fields) but gas could
-     * still be estimated, or {FutureNonceDuringSimulation}, indicating that
-     * the transaction is valid but can't be submitted until the nonce matches.
+     * This is an encoded error, or encoded "error" with bytes4(0) as a selector in case of success.
+     * Standard errors include {UnknownDuringSimulation}, indicating that more data is needed (e.g.
+     * a signature over the gas fields) but gas could still be estimated, and
+     * {FutureNonceDuringSimulation}, indicating that the transaction is valid but can't be
+     * submitted until the nonce matches. Custom errors can be used to indicate further reasons for
+     * rejection.
      */
-    bytes4 validationStatus;
+    bytes validationStatus;
     /**
      * Status of the call specified by the happy tx.
      */
@@ -49,6 +52,13 @@ struct SubmitOutput {
      * `callStatus` is set).
      */
     bytes revertData;
+    /**
+     * The return status of {IHappyPaymaster.payout}. If successful, this will be a 4-bytes 0 value,
+     * otherwise the result of an `abi.encodeWithSelector` call, using an error selector to
+     * communicate the reason for failure. This value is returned (not reverted) from `payout` to
+     * communicate the difference between an orderly rejection and an unexpected revert.
+     */
+    bytes payoutStatus;
 }
 
 /**
@@ -62,10 +72,10 @@ error ValidationReverted(bytes revertData);
 /**
  * When the account validation of the happyTx fails.
  *
- * The parameter identifies the revert reason, which should be a custom error
- * selector returned in {ExecutionOutput.validity}.
+ * The parameter identifies the revert reason, which should be an encoded custom error
+ * returned by {ExecutionOutput.validity}.
  */
-error ValidationFailed(bytes4 reason);
+error ValidationFailed(bytes reason);
 
 /**
  * When payment for happyTx in {IPaymaster.payout} reverts (in violation of the spec).
@@ -76,11 +86,11 @@ error PaymentReverted(bytes revertData);
 /**
  * When payment for the happyTx from the account or paymaster failed.
  *
- * This could be because the payment was rejected (in which case `result`
- * will be non-zero and should contain a custom error's selector) or because
- * the payment wasn't (fully) done.
+ * This could be because the payment was rejected (in which case `result` should contain an encoded
+ * custom error) or because the payment wasn't (fully) done (in which case `result` will be
+ * `abi.encodeWithSelector(bytes4(0))`.
  */
-error PaymentFailed(bytes4 result);
+error PaymentFailed(bytes result);
 
 /**
  * When the {IHappyAccount.execute} call succeeds but reports that the
@@ -128,7 +138,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * The encoding of the returned {ExecutionOutput} struct is as follows:
      *
      * 1st slot: Offset for the struct (returned values are encoded as a tuple)
-     * 2nd slot: {ExecutionOutput.success}
+     * 2nd slot: {ExecutionOutput.status}
      * 3rd slot: {ExecutionOutput.gas}
      * 4th slot: offset for revertData from where the struct begins
      * 5th slot: {ExecutionOutput.revertData.Length}
@@ -172,8 +182,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * the selector of {UnknownDuringSimulation} or
      * {FutureNonceDuringSimulation}.
      *
-     * Note that the function actually ignores the return value of `payout` as
-     * long as the payment is effectively made.
+     * Note that the function actually ignores the return value of `payout` (except to report it back)
+     * as long as the payment is effectively made.
      *
      * The function returns a filled-in {SubmitOutput} structure.
      * This is needed during simulation, as the logs are not available with
@@ -203,16 +213,22 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             MAX_VALIDATE_RETURN_DATA_SIZE,
             abi.encodeCall(IHappyAccount.validate, (happyTx))
         );
-        if (!success) revert ValidationReverted(returnData);
+        output.validationStatus = abi.decode(returnData, ((bytes)));
+        // If there is less than 4 bytes of data, the validation didn't strictly revert, however
+        // it is improperly implemented.
+        if (!success || output.validationStatus.length < 4) revert ValidationReverted(output.validationStatus);
 
-        bytes4 result = abi.decode(returnData, (bytes4));
-        if (result != 0) {
-            bool shouldContinue = tx.origin == address(0)
-                && (result == UnknownDuringSimulation.selector || result == FutureNonceDuringSimulation.selector);
-
-            if (!shouldContinue) revert ValidationFailed(result);
+        bytes4 selector;
+        assembly {
+            // skip tuple offset and length, then extract 4 first bytes
+            mcopy(selector, add(returnData, 64), 4)
         }
-        output.validationStatus = result;
+        if (selector != 0) {
+            bool shouldContinue = tx.origin == address(0)
+                && (selector == UnknownDuringSimulation.selector || selector == FutureNonceDuringSimulation.selector);
+
+            if (!shouldContinue) revert ValidationFailed(returnData);
+        }
 
         // 2. Execute the call
 
@@ -237,19 +253,16 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // Don't revert if execution fails, as we still want to get the payment for a reverted call.
         if (!success) {
             emit ExecutionReverted(returnData);
-            output.callStatus = CallStatus.EXECUTION_REVERTED;
+            output.callStatus = CallStatus.EXECUTE_REVERTED;
             output.revertData = returnData;
         } else {
             ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
-            if (!execOutput.success) {
+            output.callStatus = execOutput.status;
+            output.revertData = execOutput.revertData;
+            output.executeGas = execOutput.gas;
+            if (execOutput.status == CallStatus.CALL_REVERTED) {
                 emit CallReverted(execOutput.revertData);
-                output.callStatus = CallStatus.CALL_REVERTED;
-                output.revertData = execOutput.revertData;
-            } else {
-                output.callStatus = CallStatus.SUCCESS;
             }
-
-            output.executeGas = uint32(execOutput.gas);
         }
 
         // 3. Collect payment
@@ -283,6 +296,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
         );
         if (!success) revert PaymentReverted(returnData);
+        output.payoutStatus = abi.decode(returnData, (bytes));
 
         // [LOGGAS] uint256 payoutGasEnd = gasleft();
         // [LOGGAS] uint256 payoutCallGasUsed = payoutGasStart - payoutGasEnd;
@@ -304,8 +318,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         uint256 charged = _charged > 0 ? uint256(_charged) : 0;
 
         if (tx.origin.balance < balance + charged) {
-            result = abi.decode(returnData, (bytes4));
-            revert PaymentFailed(result);
+            revert PaymentFailed(returnData);
         }
     }
 }

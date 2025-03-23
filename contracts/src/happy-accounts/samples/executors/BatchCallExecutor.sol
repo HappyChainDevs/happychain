@@ -7,6 +7,7 @@ import {IExtensibleBoopAccount, CallInfo} from "../../interfaces/extensions/IExt
 import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
 import {CallInfoCoding} from "./CallInfo.sol";
+import {CallStatus} from "../../core/HappyEntryPoint.sol";
 
 /**
  * @dev Key used in {HappyTx.extraData} for call information (array of {CallInfo}),
@@ -35,28 +36,25 @@ contract BatchCallExecutor is ICustomBoopExecutor {
     function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory output) {
         // 1. Parse the extraData with a key, to retrieve the calls.
         (bool found, bytes memory _calls) = HappyTxLib.getExtraDataValue(happyTx.extraData, BATCH_CALL_INFO_KEY);
-        if (!found) return _invalidBatchCallInfo();
 
         // 2. Decode the call info.
-        (bool success, CallInfo[] memory calls) = _calls.decodeCallInfoArray();
-        if (!success) return _invalidBatchCallInfo();
+        bool success;
+        CallInfo[] memory calls;
+        if (found) (success, calls) = _calls.decodeCallInfoArray();
+
+        if (!found || !success) {
+            output.status = CallStatus.EXECUTE_FAILED;
+            output.revertData = abi.encodeWithSelector(InvalidBatchCallInfo.selector);
+            return output;
+        }
 
         // 3. Execute all calls and capture revert data if any.
+        output.status = CallStatus.SUCCEEDED;
         try this._executeBatch(msg.sender, calls) {}
         catch (bytes memory revertData) {
+            output.status = CallStatus.CALL_REVERTED;
             output.revertData = revertData;
         }
-        return output;
-    }
-
-    function _invalidBatchCallInfo() internal returns (ExecutionOutput memory output) {
-        bytes4 error = InvalidBatchCallInfo.selector;
-        bytes memory revertData = new bytes(4);
-        assembly {
-            mcopy(add(revertData, 32), error, 4)
-        }
-        output.revertData = revertData;
-        // TODO set output.status = FAILED, and handle in EntryPoint
         return output;
     }
 
