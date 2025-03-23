@@ -43,10 +43,18 @@ contract SessionKeyValidator is ICustomBoopValidator, ReentrancyGuardTransient, 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
+    function addSessionKey(address target, address sessionKey) external {
+        _addSessionKey(msg.sender, target, sessionKey);
+    }
+
     function addSessionKeys(address[] calldata target, address[] calldata sessionKey) external {
         for (uint256 i = 0; i < target.length; i++) {
             _addSessionKey(msg.sender, target[i], sessionKey[i]);
         }
+    }
+
+    function removeSessionKey(address target) external {
+        _removeSessionKey(msg.sender, target);
     }
 
     function removeSessionKeys(address[] calldata target) external {
