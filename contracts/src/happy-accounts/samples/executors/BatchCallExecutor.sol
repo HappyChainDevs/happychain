@@ -1,14 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-
-import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
-
 import {ExecutionOutput} from "../../interfaces/IHappyAccount.sol";
 import {ICustomBoopExecutor} from "../../interfaces/extensions/ICustomBoopExecutor.sol";
-
 import {HappyTx} from "../../core/HappyTx.sol";
 import {HappyTxLib} from "../../libs/HappyTxLib.sol";
 
@@ -37,7 +31,7 @@ struct CallInfo {
  * Each call specified is specified in a {CallInfo} struct, which are together stored in an
  * ABI-encoded array in {HappyTx.extraData}, keyed on {BATCH_CALL_INFO_KEY}.
  */
-contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, OwnableUpgradeable, UUPSUpgradeable {
+contract BatchCallExecutor is ICustomBoopExecutor {
     // ====================================================================================================
     // CONSTANTS
 
@@ -46,18 +40,6 @@ contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, Own
 
     /// @dev Overall gas overhead for the execute function, not measured by gasleft()
     uint256 private constant OVERALL_GAS_OVERHEAD_BUFFER = 500;
-
-    // ====================================================================================================
-    // CONSTRUCTOR
-
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize(address _owner) public initializer {
-        __Ownable_init(_owner);
-        __UUPSUpgradeable_init();
-    }
 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
@@ -104,7 +86,4 @@ contract BatchCallExecutor is ICustomBoopExecutor, ReentrancyGuardTransient, Own
 
         output.gas = startGas - gasleft() + GAS_OVERHEAD_BUFFER;
     }
-
-    /// @dev Authorizes the upgrade of the contract.
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
