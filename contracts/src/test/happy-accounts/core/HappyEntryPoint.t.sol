@@ -337,8 +337,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
         _assertExpectedSubmitOutput(
-            output, FutureNonceDuringSimulation.selector, uint8(CallStatus.SUCCEEDED), new
-            bytes(0)
+            output, FutureNonceDuringSimulation.selector, uint8(CallStatus.SUCCEEDED), new bytes(0)
         );
         vm.revertToState(id);
     }

@@ -4,11 +4,11 @@ pragma solidity ^0.8.20;
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-import {FutureNonceDuringSimulation, UnknownDuringSimulation} from "../utils/Common.sol";
-import {IHappyAccount, ExecutionOutput} from "../interfaces/IHappyAccount.sol";
-import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
-import {HappyTxLib} from "../libs/HappyTxLib.sol";
-import {HappyTx} from "./HappyTx.sol";
+import {HappyTx} from "boop/core/HappyTx.sol";
+import {IHappyAccount, ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
+import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
+import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
+import {FutureNonceDuringSimulation, UnknownDuringSimulation} from "boop/utils/Common.sol";
 
 // [LOGGAS] import {console} from "forge-std/console.sol";
 
@@ -22,13 +22,13 @@ enum CallStatus {
 
 struct SubmitOutput {
     /**
-     * An overestimation of the minimum gas limit necessary to successfully
-     * call {EntryPoint.submit} at the top-level of a transaction.
+     * An overestimation of the minimum gas limit necessary to successfully call {EntryPoint.submit}
+     * at the top-level of a transaction.
      */
     uint32 gas;
     /**
-     * An overestimation of the minimum gas limit necessary to successfully
-     * call {IHappyAccount.execute} from {EntryPoint.submit}.
+     * An overestimation of the minimum gas limit necessary to successfully call
+     * {IHappyAccount.execute} from {EntryPoint.submit}.
      */
     uint32 executeGas;
     /**
@@ -47,9 +47,8 @@ struct SubmitOutput {
      */
     CallStatus callStatus;
     /**
-     * The revertData with which either the call or the
-     * {IHappyAccount.execute} function reverted (when the associated
-     * `callStatus` is set).
+     * The revertData with which either the call or the {IHappyAccount.execute} function reverted
+     * (when the associated `callStatus` is set).
      */
     bytes revertData;
     /**
@@ -70,7 +69,7 @@ error GasPriceTooHigh();
  * The entrypoint reverts with this error if the nonce fails to validate.
  * This indicates an invalid nonce that cannot be used now or (in simulation mode) in the future.
  */
- error InvalidNonce();
+error InvalidNonce();
 
 /**
  * When the account validation of the happyTx reverts (in violation of the spec).
@@ -152,7 +151,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * 2nd slot: {ExecutionOutput.status}
      * 3rd slot: {ExecutionOutput.gas}
      * 4th slot: offset for revertData from where the struct begins
-     * 5th slot: {ExecutionOutput.revertData.Length}
+     * 5th slot: {ExecutionOutput.revertData.length}
      * 6th slot (onwards): {ExecutionOutput.revertData} (max 256 bytes)
      */
     uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 416;

@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
-import {ScrappyAccountFactory} from "../factories/ScrappyAccountFactory.sol";
+import {ScrappyAccountFactory} from "boop/factories/ScrappyAccountFactory.sol";
+import {ScrappyAccount} from "boop/samples/ScrappyAccount.sol";
 
 contract ScrappyAccountFactoryTest is Test {
     bytes32 private constant DEPLOYMENT_SALT = bytes32(uint256(0));

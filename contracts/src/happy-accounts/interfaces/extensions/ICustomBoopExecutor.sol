@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTx} from "../../core/HappyTx.sol";
-import {ExecutionOutput} from "../../interfaces/IHappyAccount.sol";
+import {HappyTx} from "boop/core/HappyTx.sol";
+import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
 
 /**
  * @dev Key used in {HappyTx.extraData} to specify a custom executor address (must satisfy

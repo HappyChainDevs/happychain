@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTx} from "../../core/HappyTx.sol";
+import {HappyTx} from "boop/core/HappyTx.sol";
 
 /**
  * @dev Key used in {HappyTx.extraData} to specify a custom validator address (must satisfy

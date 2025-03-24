@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTx} from "../core/HappyTx.sol";
+import {HappyTx} from "boop/core/HappyTx.sol";
 
 library HappyTxLib {
     /// Selector returned by {decode} when unable to properly decode a happyTx.
