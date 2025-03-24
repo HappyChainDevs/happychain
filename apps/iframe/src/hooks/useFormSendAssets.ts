@@ -134,7 +134,7 @@ export function useFormSendAssets() {
     async function handleTokensComboboxInputChange(details: { inputValue: string }) {
         const unknownTokenAddress = details.inputValue.trim()
         const matchValue = unknownTokenAddress.toLowerCase()
-        if (isAddress(matchValue) && !tokens.find((item) => item.value.toLowerCase() === matchValue)) {
+        if (isAddress(matchValue) && tokens.filter((item) => item.value.toLowerCase() === matchValue).length === 0) {
             const erc20Contract = {
                 abi: erc20Abi,
                 address: unknownTokenAddress as Address,
