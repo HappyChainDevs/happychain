@@ -25,14 +25,12 @@ interface SessionKeyContractProps {
  * happen when user navigates back to the home page.
  */
 export const SessionKeyContract = ({ dappUrl, contract, showControl }: SessionKeyContractProps) => {
-    const [targetContracts, setTargetContracts] = useAtom(targetContractsAtom)
+    const [_, setTargetContracts] = useAtom(targetContractsAtom)
     const permissionRequest = {
         [PermissionNames.SESSION_KEY]: {
             target: contract,
         },
     }
-
-    console.log(targetContracts)
 
     // Initial state is whether the permission is granted or not
     const [checked, setChecked] = useState(hasPermissions(dappUrl, permissionRequest))
