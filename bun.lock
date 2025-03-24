@@ -112,6 +112,23 @@
         "typescript": "^5.6.2",
       },
     },
+    "apps/submitter": {
+      "name": "submitter",
+      "dependencies": {
+        "@happy.tech/submitter": "workspace:0.0.0",
+        "@scalar/hono-api-reference": "^0.5.175",
+        "hono": "^4.7.2",
+        "hono-openapi": "^0.4.4",
+      },
+      "devDependencies": {
+        "@happy.tech/common": "workspace:0.1.0",
+        "@happy.tech/configs": "workspace:0.1.0",
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "contracts": {
       "name": "@happy.tech/contracts",
       "version": "0.1.0",
@@ -254,7 +271,6 @@
       },
       "dependencies": {
         "@hono/zod-validator": "^0.4.3",
-        "@scalar/hono-api-reference": "^0.5.175",
         "hono": "^4.7.2",
         "hono-openapi": "^0.4.4",
         "kysely": "^0.27.5",
@@ -3718,6 +3734,8 @@
     "style-to-js": ["style-to-js@1.1.16", "", { "dependencies": { "style-to-object": "1.0.8" } }, "sha512-/Q6ld50hKYPH3d/r6nr117TZkHR0w0kGGIVfpG9N6D8NymRPM9RqCUv4pRpJ62E5DqOYx2AFpbZMyCPnjQCnOw=="],
 
     "style-to-object": ["style-to-object@1.0.8", "", { "dependencies": { "inline-style-parser": "0.2.4" } }, "sha512-xT47I/Eo0rwJmaXC4oilDGDWLohVhR6o/xAQcPQN8q6QBuZVL8qMYL85kLmST5cPjAorwvqIA4qXTRQoYHaL6g=="],
+
+    "submitter": ["submitter@workspace:apps/submitter"],
 
     "sucrase": ["sucrase@3.35.0", "", { "dependencies": { "@jridgewell/gen-mapping": "^0.3.2", "commander": "^4.0.0", "glob": "^10.3.10", "lines-and-columns": "^1.1.6", "mz": "^2.7.0", "pirates": "^4.0.1", "ts-interface-checker": "^0.1.9" }, "bin": { "sucrase": "bin/sucrase", "sucrase-node": "bin/sucrase-node" } }, "sha512-8EbVDiu9iN/nESwxeSxDKe0dunta1GOlHufmSSXxMD2z2/tMZpDMpvXQGsc+ajGo8y2uYUmixaSRUc/QPoQ0GA=="],
 
