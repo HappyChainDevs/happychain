@@ -215,7 +215,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(_happyEntryPoint, recipient);
 
         // Call payout
-        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).validatePayment(happyTx, consumedGas);
 
         // Verify payout was successful
         assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
@@ -242,7 +242,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(_happyEntryPoint, recipient);
 
         // Call payout
-        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).validatePayment(happyTx, consumedGas);
 
         // Verify payout was successful
         assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
