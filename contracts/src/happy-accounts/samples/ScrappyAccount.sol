@@ -75,20 +75,11 @@ contract ScrappyAccount is
      */
     uint16 private constant MAX_VALIDATE_RETURN_DATA_SIZE = 32;
 
-    /// @dev ERC-1271 selector
-    bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
-
     /// @dev The amount of gas consumed by the payout function.
     uint256 private constant PAYOUT_GAS = 15_000; // measured: 12833 + safety margin
 
     /// @dev Gas overhead for executing the execute function, not measured by gasleft()
     uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
-
-    /// @dev Interface IDs
-    bytes4 private constant ERC165_INTERFACE_ID = 0x01ffc9a7;
-    bytes4 private constant ERC1271_INTERFACE_ID = 0x1626ba7e;
-    bytes4 private constant IHAPPYACCOUNT_INTERFACE_ID = 0x909c11f4;
-    bytes4 private constant IHAPPYPAYMASTER_INTERFACE_ID = 0x9c7b367f;
 
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
@@ -278,15 +269,17 @@ contract ScrappyAccount is
     // SPECIAL FUNCTIONS
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
-        return hash.recover(signature) == owner() ? MAGIC_VALUE : bytes4(0);
+        // 0x1626ba7e is the ERC-1271 magic value to be returned in case of success
+        return hash.recover(signature) == owner() ? bytes4(0x1626ba7e) : bytes4(0);
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         // forgefmt: disable-next-item
-        return interfaceId == ERC165_INTERFACE_ID
-            || interfaceId == ERC1271_INTERFACE_ID
-            || interfaceId == IHAPPYACCOUNT_INTERFACE_ID
-            || interfaceId == IHAPPYPAYMASTER_INTERFACE_ID;
+        return interfaceId == 0x01ffc9a7  // ERC-165
+            || interfaceId == 0x1626ba7e  // ERC-1271
+            || interfaceId == 0x2b39e81f  // IHappyAccount
+            || interfaceId == 0x24542ca5  // IHappyPaymaster
+            || interfaceId == 0xf0223481; // IExtensibleBoopAccount
     }
 
     receive() external payable {
