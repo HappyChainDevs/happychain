@@ -324,13 +324,13 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         // It's okay if the payment is only for the agreed-upon gas limit.
         // This should never happen if happyTx.gasLimit matches the submitter's tx gas limit.
-        consumedGas = consumedGas + payoutGas > happyTx.gasLimit ? happyTx.gasLimit : consumedGas + payoutGas;
+        consumedGas = output.gas > happyTx.gasLimit ? happyTx.gasLimit : output.gas;
 
         // `submitterFee` can be negative (rebates) but can't charge less than 0.
-        int256 _charged = int256(consumedGas * tx.gasprice) + happyTx.submitterFee;
-        uint256 charged = _charged > 0 ? uint256(_charged) : 0;
+        int256 _expected = int256(consumedGas * tx.gasprice) + happyTx.submitterFee;
+        uint256 expected = _expected > 0 ? uint256(_expected) : 0;
 
-        if (tx.origin.balance < balance + charged) {
+        if (tx.origin.balance < balance + expected) {
             revert PaymentFailed(output.payoutStatus);
         }
     }
