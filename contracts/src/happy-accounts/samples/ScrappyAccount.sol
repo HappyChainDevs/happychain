@@ -79,7 +79,7 @@ contract ScrappyAccount is
     bytes4 private constant MAGIC_VALUE = 0x1626ba7e; // ERC-1271
 
     /// @dev The amount of gas consumed by the payout function.
-    uint256 private constant PAYOUT_GAS = 10_000;
+    uint256 private constant PAYOUT_GAS = 15_000; // measured: 12833 + safety margin
 
     /// @dev Gas overhead for executing the execute function, not measured by gasleft()
     uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
