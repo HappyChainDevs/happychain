@@ -11,6 +11,10 @@ export const { values: cliArgs } = parseArgs({
             type: "boolean",
             default: false,
         },
+        "show-config": {
+            type: "boolean",
+            default: false,
+        },
     },
     strict: true,
     allowPositionals: true,
