@@ -10,7 +10,6 @@ import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
 import {
     ExecutionOutput,
-    InvalidNonce,
     FutureNonceDuringSimulation
 } from "../../../happy-accounts/interfaces/IHappyAccount.sol";
 import {HappyEntryPoint, CallStatus} from "../../../happy-accounts/core/HappyEntryPoint.sol";
@@ -36,7 +35,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
     DeployHappyAAContracts private deployer;
 
-    address private happyEntryPoint;
+    address private _happyEntryPoint;
     address private smartAccount;
     address private mockToken;
     uint256 private privKey;
@@ -52,7 +51,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(owner);
         deployer.deployForTests();
 
-        happyEntryPoint = address(deployer.happyEntryPoint());
+        happyEntryPoint = deployer.happyEntryPoint();
+        _happyEntryPoint = address(happyEntryPoint);
         smartAccount = deployer.scrappyAccountFactory().createAccount(SALT, owner);
 
         dest = deployer.scrappyAccountFactory().createAccount(SALT2, owner);
@@ -65,130 +65,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
-    // NONCE VALIDATION TESTS
-
-    function testValidateInvalidNonceStaleNonce() public {
-        // First, increment the account's nonce by submitting a transaction
-        _incrementAccountNonce();
-
-        // Get the initial nonce
-        uint64 origNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
-
-        // Create a happyTx with a nonce value less than the current nonce (negative nonceAhead)
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.nonceValue -= 1;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Validate function must be called by the HappyEntryPoint
-        vm.prank(happyEntryPoint);
-        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, abi.encodeWithSelector(InvalidNonce.selector));
-
-        // Check that the once wasn't incremented
-        uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
-        assertEq(newNonce, origNonce);
-    }
-
-    function testValidateInvalidNonceFutureNonce() public {
-        // Get the initial nonce
-        uint64 origNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
-
-        // Create a happyTx with a nonce value greater than the current nonce (positive nonceAhead)
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.nonceValue += 1;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Validate function must be called by the HappyEntryPoint
-        vm.prank(happyEntryPoint);
-        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, abi.encodeWithSelector(InvalidNonce.selector));
-
-        // Check that the once wasn't incremented
-        uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
-        assertEq(newNonce, origNonce);
-    }
-
-    function testNonceIncrementAfterSubmit() public {
-        // Check initial nonce
-        uint64 initialNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
-        assertEq(initialNonce, 0);
-
-        // Submit a transaction to increment the nonce
-        _incrementAccountNonce();
-
-        // Check that the nonce was incremented
-        uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
-        assertEq(newNonce, 1);
-    }
-
-    // ====================================================================================================
-    // NONCE VALIDATION TESTS (SIMULATION)
-
-    function testValidateSimulationInvalidNonceStaleNonce() public {
-        // First, increment the account's nonce by submitting a transaction
-        _incrementAccountNonce();
-
-        // Get the initial nonce
-        uint64 origNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
-
-        // Create a happyTx with a nonce value less than the current nonce (negative nonceAhead)
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.nonceValue -= 1;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Simulate a call from the entry point (tx.origin = address(0))
-        vm.prank(happyEntryPoint, ZERO_ADDRESS);
-        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-
-        // Even in simulation mode, a stale nonce (nonceAhead < 0) should still fail
-        assertEq(validationData, abi.encodeWithSelector(InvalidNonce.selector));
-
-        // Check that the once wasn't incremented
-        uint64 newNonce = getAccountNonceValue(smartAccount, DEFAULT_NONCETRACK);
-        assertEq(newNonce, origNonce);
-    }
-
-    function testSimulationValidateFutureNonce() public {
-        // Create a happyTx with a nonce value greater than the current nonce
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-
-        // Set the happyTx nonce to be greater than the current nonce (which is 0)
-        happyTx.nonceValue += 2;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        uint256 id = vm.snapshotState();
-
-        // First test in simulation mode - should be valid
-        vm.prank(happyEntryPoint, ZERO_ADDRESS);
-        bytes memory simulationValidationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(simulationValidationData, abi.encodeWithSelector(FutureNonceDuringSimulation.selector));
-
-        vm.revertToState(id);
-
-        // Now test in real mode - should fail with InvalidNonce
-        vm.prank(happyEntryPoint);
-        bytes memory realValidationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(realValidationData, abi.encodeWithSelector(InvalidNonce.selector)); // Should fail in real mode
-    }
-
-    function testSimulationValidateCorrectNonce() public {
-        // Create a happyTx with a nonce value equal to the current nonce
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        uint256 id = vm.snapshotState();
-
-        // Simulate a call from the entry point (tx.origin = address(0))
-        vm.prank(happyEntryPoint, ZERO_ADDRESS);
-        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-
-        // In simulation mode, a correct nonce should be valid
-        assertEq(validationData, abi.encodeWithSelector(bytes4(0))); // Should be valid
-
-        vm.revertToState(id);
-    }
-
-    // ====================================================================================================
     // SIGNATURE VALIDATION TESTS
 
     function testValidateEmptySignature() public {
@@ -196,7 +72,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
 
         // Validate function must be called by the HappyEntryPoint
-        vm.prank(happyEntryPoint);
+        vm.prank(_happyEntryPoint);
 
         // The function should revert with ValidationReverted(InvalidSignature.selector)
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()"))));
@@ -210,7 +86,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         happyTx.validatorData = hex"deadbeef";
 
         // Validate function must be called by the HappyEntryPoint
-        vm.prank(happyEntryPoint);
+        vm.prank(_happyEntryPoint);
 
         // The function should revert with ValidationReverted(InvalidSignature.selector)
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()"))));
@@ -225,7 +101,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
             hex"deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefde";
 
         // Validate function must be called by the HappyEntryPoint
-        vm.prank(happyEntryPoint);
+        vm.prank(_happyEntryPoint);
 
         // The function should revert with ValidationReverted(InvalidSignature.selector)
         vm.expectRevert(abi.encodeWithSelector(InvalidSignature.selector));
@@ -239,7 +115,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         happyTx.validatorData = signHappyTx(happyTx, DUMMY_PRIV_KEY);
 
         // Validate function must be called by the HappyEntryPoint
-        vm.prank(happyEntryPoint);
+        vm.prank(_happyEntryPoint);
 
         bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
         assertEq(validationData, abi.encodeWithSelector(InvalidSignature.selector));
@@ -254,7 +130,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         happyTx.validatorData = signHappyTx(happyTx, DUMMY_PRIV_KEY);
 
         // Validate function must be called by the HappyEntryPoint, with tx.origin = address(0)
-        vm.prank(happyEntryPoint, ZERO_ADDRESS);
+        vm.prank(_happyEntryPoint, ZERO_ADDRESS);
 
         bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
         assertEq(validationData, abi.encodeWithSelector(UnknownDuringSimulation.selector));
@@ -270,7 +146,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
 
         // Execute the transaction
-        vm.prank(happyEntryPoint);
+        vm.prank(_happyEntryPoint);
         ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
 
         assertGt(output.gas, 0);
@@ -290,7 +166,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Execute the transaction
-        vm.prank(happyEntryPoint);
+        vm.prank(_happyEntryPoint);
         ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
 
         assertGt(output.gas, 0);
@@ -308,7 +184,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, dest, privKey);
 
         // Execute the transaction
-        vm.prank(happyEntryPoint);
+        vm.prank(_happyEntryPoint);
         ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
 
         assertTrue(output.status == CallStatus.CALL_REVERTED);
@@ -341,7 +217,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.deal(smartAccount, owed * 2); // Ensure enough funds
 
         // Mock tx.origin to be our test recipient
-        vm.prank(happyEntryPoint, recipient);
+        vm.prank(_happyEntryPoint, recipient);
 
         // Call payout
         bytes memory payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
@@ -368,7 +244,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         uint256 initialBalance = recipient.balance;
 
         // Mock tx.origin to be our test recipient
-        vm.prank(happyEntryPoint, recipient);
+        vm.prank(_happyEntryPoint, recipient);
 
         // Call payout
         bytes memory payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, consumedGas);
@@ -434,16 +310,5 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         bytes4 happyPaymasterInterfaceId = 0x24542ca5; // IHappyPaymaster interface ID
         assertTrue(account.supportsInterface(happyPaymasterInterfaceId), "Should support IHappyPaymaster");
-    }
-
-    // ====================================================================================================
-    // HELPER FUNCTIONS
-
-    function _incrementAccountNonce() internal {
-        // Create a valid happyTx with the current nonce
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
-
-        // Submit the transaction to increment the nonce
-        HappyEntryPoint(payable(happyEntryPoint)).submit(happyTx.encode());
     }
 }

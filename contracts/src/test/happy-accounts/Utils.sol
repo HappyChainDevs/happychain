@@ -9,6 +9,7 @@ import {HappyTxLib} from "../../happy-accounts/libs/HappyTxLib.sol";
 import {ScrappyAccount} from "../../happy-accounts/samples/ScrappyAccount.sol";
 import {MockERC20} from "../../mocks/MockERC20.sol";
 import {MockRevert} from "../../mocks/MockRevert.sol";
+import {HappyEntryPoint} from "../../happy-accounts/core/HappyEntryPoint.sol";
 
 /// Common utility functions for HappyAccounts unit tests
 contract HappyTxTestUtils is Test {
@@ -17,6 +18,9 @@ contract HappyTxTestUtils is Test {
 
     uint256 public constant TOKEN_MINT_AMOUNT = 1000;
     uint192 public constant DEFAULT_NONCETRACK = type(uint192).max;
+
+    // To be initialized by subclasses.
+    HappyEntryPoint public happyEntryPoint;
 
     // ====================================================================================================
     // HAPPY TX HELPERS
@@ -56,7 +60,7 @@ contract HappyTxTestUtils is Test {
             paymaster: _paymaster,
             value: 0,
             nonceTrack: DEFAULT_NONCETRACK,
-            nonceValue: getAccountNonceValue(_account, DEFAULT_NONCETRACK),
+            nonceValue: happyEntryPoint.nonceValues(_account, DEFAULT_NONCETRACK),
             maxFeePerGas: 1200000000,
             submitterFee: 100,
             callData: _callData,
@@ -72,6 +76,8 @@ contract HappyTxTestUtils is Test {
         uint32 origExecuteGasLimit;
         uint256 origMaxFeePerGas;
         int256 origSubmitterFee;
+        // Store original validator data (normally we'll use the signature to erase this)
+        bytes memory origValidatorData;
 
         if (happyTx.paymaster != happyTx.account) {
             // If the happy-tx is not self-paying, we don't sign over the gas values
@@ -86,6 +92,7 @@ contract HappyTxTestUtils is Test {
             happyTx.maxFeePerGas = 0;
             happyTx.submitterFee = 0;
         }
+        happyTx.validatorData = ""; // erase existing signature if any
 
         bytes32 hash = keccak256(happyTx.encode()).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
@@ -98,6 +105,7 @@ contract HappyTxTestUtils is Test {
             happyTx.maxFeePerGas = origMaxFeePerGas;
             happyTx.submitterFee = origSubmitterFee;
         }
+        happyTx.validatorData = origValidatorData;
     }
 
     // ====================================================================================================
@@ -117,13 +125,6 @@ contract HappyTxTestUtils is Test {
 
     function getMockRevertEmptyCallData() public pure returns (bytes memory) {
         return abi.encodeCall(MockRevert.intentionalRevertEmpty, ());
-    }
-
-    // ====================================================================================================
-    // NONCE HELPERS
-
-    function getAccountNonceValue(address smartAccount, uint192 nonceTrack) public view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).nonceValue(nonceTrack));
     }
 
     // ====================================================================================================

@@ -10,7 +10,7 @@ import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
-import {ExecutionOutput, InvalidNonce} from "../interfaces/IHappyAccount.sol";
+import {ExecutionOutput} from "../interfaces/IHappyAccount.sol";
 
 import {ICustomBoopValidator, VALIDATOR_KEY} from "../interfaces/extensions/ICustomBoopValidator.sol";
 import {ICustomBoopExecutor, EXECUTOR_KEY} from "../interfaces/extensions/ICustomBoopExecutor.sol";
@@ -87,9 +87,6 @@ contract ScrappyAccount is
     /// The allowed EntryPoint contract
     address public immutable ENTRYPOINT;
 
-    /// Mapping from track => nonce
-    mapping(uint192 => uint256) public nonceValue;
-
     /// Mapping to check if an extension is registered by type
     mapping(ExtensionType => mapping(address => bool)) public extensions;
 
@@ -151,12 +148,6 @@ contract ScrappyAccount is
     }
 
     function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes memory) {
-
-        bool isSimulation = tx.origin == address(0);
-        int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - int256(nonceValue[happyTx.nonceTrack]);
-        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) return abi.encodeWithSelector(InvalidNonce.selector);
-        nonceValue[happyTx.nonceTrack]++;
-
         bytes4 validationResult;
         (bool found, bytes memory validatorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, VALIDATOR_KEY);
 
@@ -190,12 +181,8 @@ contract ScrappyAccount is
             // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
             validationResult = signer == owner()
                 ? bytes4(0)
-                : isSimulation ? UnknownDuringSimulation.selector : InvalidSignature.selector;
+                : tx.origin == address(0) ? UnknownDuringSimulation.selector : InvalidSignature.selector;
         }
-
-        validationResult = validationResult == bytes4(0)
-            ? nonceAhead == 0 ? bytes4(0) : FutureNonceDuringSimulation.selector
-            : validationResult;
 
         return abi.encodeWithSelector(validationResult);
     }

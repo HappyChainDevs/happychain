@@ -107,7 +107,7 @@ contract UpgradeSCATest is Test {
 
         // Create and submit upgrade transaction
         vm.prank(owner);
-        ScrappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, hex"");
+        ScrappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, "");
 
         // Verify implementation was updated
         bytes32 updatedImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
@@ -136,7 +136,7 @@ contract UpgradeSCATest is Test {
 
         // Expect revert when trying to upgrade
         vm.expectRevert(ScrappyAccount.NotSelfOrOwner.selector);
-        ScrappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, hex"");
+        ScrappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, "");
 
         // Verify implementation was not updated
         bytes32 impl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
@@ -168,16 +168,16 @@ contract UpgradeSCATest is Test {
             nonceValue: _getNonce(),
             maxFeePerGas: 1200000000,
             submitterFee: 100,
-            callData: hex"",
-            paymasterData: hex"",
-            validatorData: hex"",
-            extraData: hex""
+            callData: "",
+            paymasterData: "",
+            validatorData: "",
+            extraData: ""
         });
     }
 
     /// @dev Internal helper function to get the nonce of a smart account.
     function _getNonce() internal view returns (uint64) {
-        return uint64(ScrappyAccount(payable(smartAccount)).nonceValue(0));
+        return happyEntryPoint.nonceValues(smartAccount, 0);
     }
 
     /// @dev Internal helper function to sign a happy tx.
@@ -189,7 +189,7 @@ contract UpgradeSCATest is Test {
 
     /// @dev Internal helper function to create calldata for UUPSUpgradeable.upgradeToAndCall
     function _getUpgradeCallData() internal view returns (bytes memory) {
-        return abi.encodeCall(UUPSUpgradeable.upgradeToAndCall, (newImpl, hex""));
+        return abi.encodeCall(UUPSUpgradeable.upgradeToAndCall, (newImpl, ""));
     }
 
     /// @dev Internal helper function to create calldata for IERC20.mint().
