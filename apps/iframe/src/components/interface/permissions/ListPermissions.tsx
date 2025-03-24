@@ -32,7 +32,7 @@ interface ListItemProps {
 
 const ListItem = ({ permission }: ListItemProps) => {
     const hasPermission = useHasPermissions(permission.parentCapability, permission.invoker as AppURL)
-    const [, setTargetContracts] = useAtom(targetContractsAtom)
+    const [_, setTargetContracts] = useAtom(targetContractsAtom)
     return (
         <div className="w-full">
             <Switch
