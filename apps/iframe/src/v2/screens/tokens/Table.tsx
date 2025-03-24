@@ -41,9 +41,6 @@ type GetAllBalancesResult = ReadContractsReturnType<
     true
 >
 
-export function getQueryKeyGetAllBalancesWatchedToken(userAddress?: Address) {
-    return ["get-all-balances-watched-tokens", userAddress]
-}
 function useUserWatchedAssetsDataview() {
     const user = useAtomValue(userAtom)
     const watchedAssets = useAtomValue(watchedAssetsAtom)
@@ -62,8 +59,8 @@ function useUserWatchedAssetsDataview() {
         [userAssets],
     )
 
-    const queryBalancesWatchedAssets = useQuery({
-        queryKey: getQueryKeyGetAllBalancesWatchedToken(user?.address),
+    const queryBalances = useQuery({
+        queryKey: ["", user?.address],
         enabled: isAddress(`${user?.address}`),
         placeholderData,
         queryFn: async () => {
@@ -93,8 +90,8 @@ function useUserWatchedAssetsDataview() {
     })
 
     return {
-        query: queryBalancesWatchedAssets,
-        data: queryBalancesWatchedAssets.data as Array<TableTokensRow>,
+        query: queryBalances,
+        data: queryBalances.data as Array<TableTokensRow>,
         columns: [
             {
                 accessorKey: TableTokensColumn.Symbol,
