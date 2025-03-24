@@ -210,7 +210,7 @@ contract ScrappyAccount is
     // ====================================================================================================
     // PAYOUT
 
-    function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
+    function validatePayment(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
         // NOTE: For self-paid transaction, the submitter fee will be signed over so there is no
         // need to validate that it is reasonable.
         int256 _owed = int256((consumedGas + PAYOUT_GAS) * tx.gasprice) + happyTx.submitterFee;
