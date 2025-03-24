@@ -8,6 +8,11 @@ import { getConfigs } from "../lib/config/getConfigs"
 // load config
 const { default: configs } = await import(join(process.cwd(), cliArgs.config))
 
+if (cliArgs["show-config"]) {
+    process.stdout.write(JSON.stringify(getConfigs(configs, cliArgs), null, 2))
+    process.exit(0)
+}
+
 if (!cliArgs.watch) {
     await build({ configs, options: cliArgs })
     process.exit(0)
