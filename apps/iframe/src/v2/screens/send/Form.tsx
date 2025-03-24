@@ -8,7 +8,6 @@ import { Balance } from "#src/v2/components/Balance"
 
 export const FormSendTokens = () => {
     const user = useAtomValue(userAtom)
-    console.log(user?.address)
     const {
         form,
         mutationSendTransaction,
@@ -36,6 +35,10 @@ export const FormSendTokens = () => {
                     return (
                         <Field.Gui.Root>
                             <Combobox.Gui.Root
+                                readOnly={
+                                    mutationSendTransaction.status === "pending" ||
+                                    queryWaitForTransactionReceipt.isLoading
+                                }
                                 collection={tokens.collection}
                                 defaultValue={[tokens.defaultSelection.value]}
                                 placeholder="Select a token"
@@ -47,8 +50,13 @@ export const FormSendTokens = () => {
                             >
                                 <Combobox.Gui.Label>Token</Combobox.Gui.Label>
                                 <Combobox.Gui.Control>
-                                    <Combobox.Gui.Input className="pe-10 overflow-hidden text-ellipsis" />
-                                    <Combobox.Gui.Trigger>
+                                    <Combobox.Gui.Input className="!pe-10 overflow-hidden text-ellipsis" />
+                                    <Combobox.Gui.Trigger
+                                        aria-disabled={
+                                            mutationSendTransaction.status === "pending" ||
+                                            queryWaitForTransactionReceipt.isLoading
+                                        }
+                                    >
                                         <span className="sr-only">Open tokens list</span>
                                     </Combobox.Gui.Trigger>
                                 </Combobox.Gui.Control>
@@ -193,7 +201,11 @@ export const FormSendTokens = () => {
                                     onChange={(e) => handleChange(+e.currentTarget.value)}
                                 />
                                 <Button.Gui
-                                    aria-disabled={maxTokenAmount.status !== "success"}
+                                    aria-disabled={
+                                        maxTokenAmount.status !== "success" ||
+                                        mutationSendTransaction.status === "pending" ||
+                                        queryWaitForTransactionReceipt.isLoading
+                                    }
                                     type="button"
                                     scale="sm"
                                     onClick={() => {
