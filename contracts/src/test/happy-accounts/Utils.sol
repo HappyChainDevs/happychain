@@ -6,7 +6,6 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 
 import {HappyTx} from "../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../happy-accounts/libs/HappyTxLib.sol";
-import {ScrappyAccount} from "../../happy-accounts/samples/ScrappyAccount.sol";
 import {MockERC20} from "../../mocks/MockERC20.sol";
 import {MockRevert} from "../../mocks/MockRevert.sol";
 import {HappyEntryPoint} from "../../happy-accounts/core/HappyEntryPoint.sol";

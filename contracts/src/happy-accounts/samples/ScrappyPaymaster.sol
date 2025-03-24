@@ -69,7 +69,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // EXTERNAL FUNCTIONS
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
-
         // forgefmt: disable-next-item
         uint256 totalSize = MAX_TX_SIZE
             + STATIC_FIELDS_SIZE
