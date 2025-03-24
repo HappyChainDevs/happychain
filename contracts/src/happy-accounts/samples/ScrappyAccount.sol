@@ -23,7 +23,6 @@ import {
 } from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {
-    FutureNonceDuringSimulation,
     InvalidSignature,
     NotFromEntryPoint,
     UnknownDuringSimulation

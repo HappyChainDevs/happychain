@@ -28,9 +28,9 @@ contract HappyTxLibTest is Test {
             maxFeePerGas: 2000000000, // 0x77359400
             submitterFee: 100000000, // 0x5F5E100
             callData: hex"",
-            paymasterData : "",
-            validatorData : "",
-            extraData : ""
+            paymasterData: "",
+            validatorData: "",
+            extraData: ""
         });
 
         bytes memory expected =

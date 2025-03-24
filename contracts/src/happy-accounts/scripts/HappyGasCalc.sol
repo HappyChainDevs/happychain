@@ -245,8 +245,8 @@ contract HappyEntryPointGasEstimator is Test {
             submitterFee: 100, // 0x64
             callData: _getMintCallData(),
             paymasterData: "",
-            validatorData : "",
-            extraData : ""
+            validatorData: "",
+            extraData: ""
         });
     }
 
