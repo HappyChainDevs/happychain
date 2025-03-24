@@ -56,6 +56,8 @@ contract HappyTxTestUtils is Test {
             account: _account,
             gasLimit: 4000000000,
             executeGasLimit: 4000000000,
+            validateGasLimit: 4000000000,
+            payoutGasLimit: 4000000000,
             dest: _dest,
             paymaster: _paymaster,
             value: 0,

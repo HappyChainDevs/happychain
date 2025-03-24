@@ -10,8 +10,6 @@ import {IHappyPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IHappyPaymas
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {NotFromEntryPoint} from "boop/utils/Common.sol";
 
-// [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
-
 /**
  * An example paymaster contract implementing the IHappyPaymaster interface.
  * This paymaster sponsors any call, as long as its submitter fee is not too high
@@ -71,7 +69,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // EXTERNAL FUNCTIONS
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
-        // [LOGGAS_INTERNAL] uint256 gasStart = gasleft();
 
         // forgefmt: disable-next-item
         uint256 totalSize = MAX_TX_SIZE
@@ -95,8 +92,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
 
         // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
         (payable(tx.origin).call{value: owed}(""));
-
-        // [LOGGAS_INTERNAL] console.log("PAYOUT_GAS", gasStart - gasleft());
 
         return abi.encodeWithSelector(bytes4(0));
     }

@@ -10,8 +10,6 @@ import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {FutureNonceDuringSimulation, UnknownDuringSimulation} from "boop/utils/Common.sol";
 
-// [LOGGAS] import {console} from "forge-std/console.sol";
-
 enum CallStatus {
     SUCCEEDED, // The call succeeded.
     CALL_REVERTED, // The call reverted.
@@ -28,9 +26,19 @@ struct SubmitOutput {
     uint32 gas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
+     * {IHappyAccount.validate} from {EntryPoint.submit}.
+     */
+    uint32 validateGas;
+    /**
+     * An overestimation of the minimum gas limit necessary to successfully call
      * {IHappyAccount.execute} from {EntryPoint.submit}.
      */
     uint32 executeGas;
+    /**
+     * An overestimation of the minimum gas limit necessary to successfully call
+     * {IHappyPaymaster.execute} from {EntryPoint.submit}.
+     */
+    uint32 payoutGas;
     /**
      * Return value of {IHappyAccount.validate}.
      *
@@ -119,54 +127,19 @@ event CallReverted(bytes revertData);
  */
 event ExecutionReverted(bytes revertData);
 
-/// @notice The central contract that handles validation, execution, and fee payment for happyTxs.
+/// @notice cf. {HappyEntryPoint.submit}
 contract HappyEntryPoint is ReentrancyGuardTransient {
-    // Must be used to avoid gas exhaustion via return data.
+    // Avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
 
     // ====================================================================================================
     // CONSTANTS
 
     /**
-     * @dev Maximum amount of data allowed to be returned from {IHappyAccount.validate}.
-     * The returned data is as follows:
-     * 1st slot: bytes4 selector (minimum 32 bytes are used by the error selector)
-     * 2nd slot onwards: 224 bytes reserved for parameters of the error (if any)
-     */
-    uint16 private constant MAX_VALIDATE_RETURN_DATA_SIZE = 256;
-
-    /**
-     * @dev Maximum amount of data allowed to be returned from {IPaymaster.payout}.
-     * The returned data is as follows:
-     * 1st slot: bytes4 selector (minimum 32 bytes are used by the error selector)
-     * 2nd slot onwards: 224 bytes reserved for parameters of the error (if any)
-     */
-    uint16 private constant MAX_PAYOUT_RETURN_DATA_SIZE = 256;
-
-    /**
-     * @dev Maximum amount of data allowed to be returned from {IHappyAccount.execute}
-     * The encoding of the returned {ExecutionOutput} struct is as follows:
-     *
-     * 1st slot: Offset for the struct (returned values are encoded as a tuple)
-     * 2nd slot: {ExecutionOutput.status}
-     * 3rd slot: {ExecutionOutput.gas}
-     * 4th slot: offset for revertData from where the struct begins
-     * 5th slot: {ExecutionOutput.revertData.length}
-     * 6th slot (onwards): {ExecutionOutput.revertData} (max 256 bytes)
-     */
-    uint16 private constant MAX_EXECUTE_REVERT_DATA_SIZE = 416;
-
-    /**
      * Fixed max gas overhead for the logic around the ExcessivelySafeCall to
      * {HappyPaymaster.payout} that needs to be paid for by the payer.
      */
     uint256 private constant PAYOUT_CALL_OVERHEAD = 7000; // measured: 5038 + safety margin
-
-    /**
-     * Gas buffer to ensure we have enough gas to handle post-OOG revert scenarios.
-     * This amount will be reserved from the available gas for validate and payout operations.
-     */
-    uint256 private constant POST_OOG_GAS_BUFFER = 3000;
 
     // ====================================================================================================
     // State
@@ -224,10 +197,8 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
         bool isSimulation = tx.origin == address(0);
 
-        // [LOGGAS] uint256 decodeGasEnd = gasleft();
-        // [LOGGAS] console.log("HappyTxLib.decode gas usage: ", gasStart - decodeGasEnd);
-
-        // 1. Validate happyTx with account + extra checks
+        // ==========================================================================================
+        // 1. Validate gas price & validate with account
 
         if (tx.gasprice > happyTx.maxFeePerGas) {
             revert GasPriceTooHigh();
@@ -235,12 +206,15 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         bool success;
         bytes memory returnData;
+        bytes memory call = abi.encodeCall(IHappyAccount.validate, (happyTx));
+        uint256 gasBefore = gasleft();
         (success, returnData) = happyTx.account.excessivelySafeCall(
-            gasleft() - POST_OOG_GAS_BUFFER,
+            isSimulation && happyTx.validateGasLimit == 0 ? gasleft() : happyTx.validateGasLimit,
             0, // gas token transfer value
-            MAX_VALIDATE_RETURN_DATA_SIZE,
-            abi.encodeCall(IHappyAccount.validate, (happyTx))
+            256, // max return size: 32 bytes selector + 224 bytes for encoded params
+            call
         );
+        output.validateGas = uint32(gasBefore - gasleft());
 
         if (!success) revert ValidationReverted(returnData);
         output.validationStatus = abi.decode(returnData, (bytes));
@@ -258,6 +232,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             revert ValidationFailed(output.validationStatus);
         }
 
+        // ==========================================================================================
         // 2. Validate & update nonce
 
         int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
@@ -268,25 +243,18 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             output.validationStatus = abi.encodeWithSelector(FutureNonceDuringSimulation.selector);
         }
 
+        // ==========================================================================================
         // 3. Execute the call
 
-        // [LOGGAS] uint256 executeGasStart = gasleft();
-
+        call = abi.encodeCall(IHappyAccount.execute, (happyTx));
+        gasBefore = gasleft();
         (success, returnData) = happyTx.account.excessivelySafeCall(
-            // Pass the max possible gas if we need to estimate the gas limit.
             isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0, // gas token transfer value
-            // Allow the call revert data to take up the same size as the other revert data.
-            MAX_EXECUTE_REVERT_DATA_SIZE,
-            abi.encodeCall(IHappyAccount.execute, (happyTx))
+            384, // max return size: struct encoding + 256 bytes revertData
+            call
         );
-
-        // [LOGGAS] uint256 executeGasEnd = gasleft();
-        // [LOGGAS] uint256 executeCallGasUsed = executeGasStart - executeGasEnd;
-        // [LOGGAS] ExecutionOutput memory execOutputGasReport = abi.decode(returnData, (ExecutionOutput));
-        // [LOGGAS] uint256 executeCallOverhead = executeCallGasUsed - execOutputGasReport.gas;
-        // [LOGGAS] console.log("excessivelySafeCall (execute) gas usage: ", executeCallGasUsed);
-        // [LOGGAS] console.log("excessivelySafeCall (execute) overhead (gas used - execOutput.gas): ", executeCallOverhead);
+        output.executeGas = uint32(gasBefore - gasleft());
 
         // Don't revert if execution fails, as we still want to get the payment for a reverted call.
         if (!success) {
@@ -297,25 +265,20 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
             output.callStatus = execOutput.status;
             output.revertData = execOutput.revertData;
-            output.executeGas = execOutput.gas;
             if (execOutput.status == CallStatus.CALL_REVERTED) {
                 emit CallReverted(execOutput.revertData);
             }
         }
 
+        // ==========================================================================================
         // 4. Collect payment
 
-        // [LOGGAS] uint256 txGasFromCallStart = gasleft();
+        uint256 gasBeforePayout = gasleft();
 
         // This is an overestimation of the actual gas cost of the submitter.
         // WITHOUT the gas cost of the "payout" call (which is accounted for later).
         uint256 consumedGas =
-            HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
-
-        // [LOGGAS] uint256 txGasFromCallEnd = gasleft();
-        // [LOGGAS] uint256 txGasFromCallUsed = txGasFromCallStart - txGasFromCallEnd;
-        // [LOGGAS] console.log("txGasFromCallGas overall gas usage: ", txGasFromCallUsed);
-
+            HappyTxLib.txGasFromCallGas(gasStart - gasBeforePayout, 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
         if (happyTx.paymaster == address(0)) {
             // Sponsoring submitter, no need to charge anyone
             output.gas = uint32(consumedGas);
@@ -323,26 +286,18 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         }
 
         uint256 balance = tx.origin.balance;
-        uint256 gasBeforePayout = gasleft();
 
-        // [LOGGAS] uint256 payoutGasStart = gasleft();
-
+        call = abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas));
+        gasBefore = gasleft();
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
-            gasleft() - POST_OOG_GAS_BUFFER,
+            isSimulation && happyTx.payoutGasLimit == 0 ? gasleft() : happyTx.payoutGasLimit,
             0, // gas token transfer value
-            MAX_PAYOUT_RETURN_DATA_SIZE,
-            abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas))
+            256, // max return size: 32 bytes selector + 224 bytes for encoded params
+            call
         );
         if (!success) revert PaymentReverted(returnData);
+        output.payoutGas = uint32(gasBefore - gasleft());
         output.payoutStatus = abi.decode(returnData, (bytes));
-
-        // [LOGGAS] uint256 payoutGasEnd = gasleft();
-        // [LOGGAS] uint256 payoutCallGasUsed = payoutGasStart - payoutGasEnd;
-        // [LOGGAS] uint256 payoutLogicGasUsage = happyTx.account == happyTx.paymaster ? 9782 : 10104;
-        // ^From the happy_aa_gas_report.txt
-        // [LOGGAS] uint256 payoutCallOverhead = payoutCallGasUsed - payoutLogicGasUsage;
-        // [LOGGAS] console.log("excessivelySafeCall  (payout) gas usage: ", payoutCallGasUsed);
-        // [LOGGAS] console.log("excessivelySafeCall  (payout) overhead (gas used - payout logic gas usage): ", payoutCallOverhead);
 
         uint256 payoutGas = gasBeforePayout - gasleft();
         output.gas = uint32(consumedGas + payoutGas - PAYOUT_CALL_OVERHEAD);

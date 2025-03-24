@@ -54,7 +54,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     address private dest;
 
     function setUp() public {
-        console.log(""); // keep this to avoid linter to complain about an unused import
+        if (false) console.log(""); // keep this to avoid linter to complain about an unused import
+
 
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);

@@ -7,12 +7,10 @@ import {HappyTx} from "boop/core/HappyTx.sol";
 /**
  * Execution Output
  * @param status      - Status of the execution (succeeded, failed, call failed, or call reverted)
- * @param gas         - The amount of gas used by the {IHappyAccount.execute} function.
  * @param revertData  - The associated revert data if the call specified by the happyTx reverts; otherwise, it is empty.
  */
 struct ExecutionOutput {
     CallStatus status;
-    uint32 gas;
     bytes revertData;
 }
 
@@ -39,20 +37,13 @@ interface IHappyAccount {
      * according to its own rules, and an encoded custom error selector otherwise to indicate the
      * reason for rejection.
      *
-     * The function should return {GasPriceTooHigh} if the associated conditions are hit.
-     *
      * If the validity cannot be ascertained at simulation time (`tx.origin == 0`), then the
-     * function should return {UnknownDuringSimulation}.
-     *
-     * If the nonce is valid in the future during simulation, the function should return
-     * {FutureNonceDuringSimulation}. If both this and the previous paragraph apply, the function
-     * should return {UnknownDuringSimulation}.
-     *
-     * In those two cases, the function should consume at least as much gas as it would if the
-     * validation was successful, to allow for accurate gas estimation.
+     * function should return {UnknownDuringSimulation}. In that case, it should still consume
+     * at least as much gas as it would if the validation was successful.
      *
      * The function should consume a deterministic amount of gas for a given happyTx — more
-     * precisely, it is not allowed to consume more gas than it does when simulated via `eth_call`.
+     * precisely, it is not allowed to consume more gas than it does when simulated via `eth_call`
+     * with `tx.origin == 0`.
      *
      * This function is not allowed to revert except from lack of gas (which, if satisfying the
      * condition above, indicates a disfunctional submitter).

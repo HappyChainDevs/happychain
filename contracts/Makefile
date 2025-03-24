@@ -150,48 +150,6 @@ gas-logging-off:
 	@echo "Gas logging turned OFF"
 .PHONY: gas-logging-off
 
-# Turn internal gas logging on for ScrappyAccount and ScrappyPaymaster
-internal-gas-logging-on:
-	@find . -type f -name "*.sol" -exec sed -i '' 's|// \[LOGGAS_INTERNAL\]|/* [LOGGAS_INTERNAL] */|g' {} +
-	@echo "Internal Gas logging turned ON"
-.PHONY: internal-gas-logging-on
-
-# Turn internal gas logging off for ScrappyAccount and ScrappyPaymaster
-internal-gas-logging-off:
-	@find . -type f -name "*.sol" -exec sed -i '' 's|/\* \[LOGGAS_INTERNAL\] \*/|// [LOGGAS_INTERNAL]|g' {} +
-	@echo "Internal Gas logging turned OFF"
-.PHONY: internal-gas-logging-off
-
-####################################################################################################
-# Reports (require a local Ethereum node (Anvil) to be running)
-
-happy-aa-gas-report: ## Generates a gas report for the happy-aa contracts
-	@make entrypoint-submit-gas
-	@make internal-functions-gas
-.PHONY: happy-aa-gas-report
-
-entrypoint-submit-gas: ## Generates a gas report for the HappyEntrypoint's submit function.
-	@make gas-logging-on
-	@echo "Running submit function estimation tests..."
-	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForSelfPayingTx --rpc-url $(RPC_LOCAL) --isolate | awk '/HappyEntryPoint Gas Report For Self-Paying Transactions/{p=1} /Suite result:/{p=0}; p' > happy_aa_gas_report.txt
-	@forge test -vvv --match-test testEstimateEntryPointSubmitGasForPaymasterSponsoredTx --rpc-url $(RPC_LOCAL) --isolate | awk '/HappyEntryPoint Gas Report For Paymaster-Sponsored Transactions/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
-	@make gas-logging-off
-.PHONY: entrypoint-submit-gas
-
-internal-functions-gas: # Generates gas reports for the sample implementations' execute and payout functions.
-	@make internal-gas-logging-on
-	@echo "Running payout and execute function gas estimation tests..."
-	@forge test -vvv --match-test testEstimateScrappyAccountExecuteGas --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount execute gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
-	@forge test -vvv --match-test testEstimateScrappyAccountPayoutGas --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
-	@forge test -vvv --match-test testEstimateScrappyPaymasterPayoutGas --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyPaymaster payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
-	@forge test -vvv --match-test testEstimateFunctionDispatchOverhead --rpc-url $(RPC_LOCAL) --isolate | awk '/HappyTxLib txGasFromCallGas payout gas usage/{p=1} /Suite result:/{p=0}; p' >> happy_aa_gas_report.txt
-	@make internal-gas-logging-off
-.PHONY: internal-functions-gas
-
-paymaster-gas: ## Generates a gas report for the Paymaster contract.
-	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate | awk '/ScrappyAccount payout gas usage/{p=1} /Suite result:/{p=0}; p' > paymaster_gas_report.txt
-.PHONY: paymaster-gas
-
 paymaster-flamechart: ## Generates a flamechart for the gas usage of the Paymaster contract.
 	forge test -vv --match-contract GasEstimator --rpc-url $(RPC_LOCAL) --isolate --flamechart
 .PHONY: test-aa-gas-flamechart

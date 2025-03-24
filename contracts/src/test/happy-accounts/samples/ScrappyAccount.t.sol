@@ -146,7 +146,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(_happyEntryPoint);
         ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
 
-        assertGt(output.gas, 0);
         assertTrue(output.status == CallStatus.SUCCEEDED);
         assertEq(output.revertData, new bytes(0));
 
@@ -166,7 +165,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(_happyEntryPoint);
         ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
 
-        assertGt(output.gas, 0);
         assertTrue(output.status == CallStatus.SUCCEEDED);
         assertEq(output.revertData, new bytes(0));
 
