@@ -67,6 +67,12 @@ struct SubmitOutput {
 error GasPriceTooHigh();
 
 /**
+ * The entrypoint reverts with this error if the nonce fails to validate.
+ * This indicates an invalid nonce that cannot be used now or (in simulation mode) in the future.
+ */
+ error InvalidNonce();
+
+/**
  * When the account validation of the happyTx reverts (in violation of the spec).
  *
  * The parameter contains the revert data (truncated to {MAX_VALIDATE_RETURN_DATA_SIZE}
@@ -164,6 +170,11 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     uint256 private constant POST_OOG_GAS_BUFFER = 3000;
 
     // ====================================================================================================
+    // State
+
+    mapping(address account => mapping(uint192 nonceTrack => uint64 nonceValue)) public nonceValues;
+
+    // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
     /**
@@ -217,7 +228,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] uint256 decodeGasEnd = gasleft();
         // [LOGGAS] console.log("HappyTxLib.decode gas usage: ", gasStart - decodeGasEnd);
 
-        // 1. Validate happyTx with account
+        // 1. Validate happyTx with account + extra checks
 
         if (tx.gasprice > happyTx.maxFeePerGas) {
             revert GasPriceTooHigh();
@@ -233,7 +244,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         );
 
         if (!success) revert ValidationReverted(returnData);
-        output.validationStatus = abi.decode(returnData, ((bytes)));
+        output.validationStatus = abi.decode(returnData, (bytes));
         // If there is less than 4 bytes of data, the validation didn't strictly revert, however
         // it is improperly implemented.
         if (!success || output.validationStatus.length < 4) revert ValidationReverted(output.validationStatus);
@@ -244,14 +255,21 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             selector := mload(add(returnData, 96))
         }
 
-        if (selector != 0) {
-            bool shouldContinue = isSimulation
-                && (selector == UnknownDuringSimulation.selector || selector == FutureNonceDuringSimulation.selector);
-
-            if (!shouldContinue) revert ValidationFailed(output.validationStatus);
+        if (selector != 0 && !(isSimulation && selector == UnknownDuringSimulation.selector)) {
+            revert ValidationFailed(output.validationStatus);
         }
 
-        // 2. Execute the call
+        // 2. Validate & update nonce
+
+        int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
+        int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - expectedNonce;
+        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) revert InvalidNonce();
+        nonceValues[happyTx.account][happyTx.nonceTrack]++;
+        if (selector == 0 && nonceAhead > 0) {
+            output.validationStatus = abi.encodeWithSelector(FutureNonceDuringSimulation.selector);
+        }
+
+        // 3. Execute the call
 
         // [LOGGAS] uint256 executeGasStart = gasleft();
 
@@ -286,7 +304,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
             }
         }
 
-        // 3. Collect payment
+        // 4. Collect payment
 
         // [LOGGAS] uint256 txGasFromCallStart = gasleft();
 

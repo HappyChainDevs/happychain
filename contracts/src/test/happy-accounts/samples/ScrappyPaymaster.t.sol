@@ -25,7 +25,7 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
 
     DeployHappyAAContracts private deployer;
 
-    address private happyEntryPoint;
+    address private _happyEntryPoint;
     address private smartAccount;
     address private paymaster;
     uint256 private privKey;
@@ -41,7 +41,8 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         vm.prank(owner);
         deployer.deployForTests();
 
-        happyEntryPoint = address(deployer.happyEntryPoint());
+        happyEntryPoint = deployer.happyEntryPoint();
+        _happyEntryPoint = address(happyEntryPoint);
         smartAccount = deployer.scrappyAccountFactory().createAccount(SALT, owner);
 
         dest = deployer.scrappyAccountFactory().createAccount(SALT2, owner);
@@ -75,7 +76,7 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         vm.deal(paymaster, owed * 2); // Ensure enough funds
 
         // Mock tx.origin to be our test recipient
-        vm.prank(happyEntryPoint, RECIPIENT);
+        vm.prank(_happyEntryPoint, RECIPIENT);
 
         // Call payout
         bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).payout(happyTx, consumedGas);
@@ -100,7 +101,7 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         uint256 initialBalance = RECIPIENT.balance;
 
         // Mock tx.origin to be our test recipient
-        vm.prank(happyEntryPoint, RECIPIENT);
+        vm.prank(_happyEntryPoint, RECIPIENT);
 
         // Call payout
         bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).payout(happyTx, consumedGas);
@@ -120,7 +121,7 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         happyTx.submitterFee = type(int256).max;
 
         // Mock call from entry point
-        vm.prank(happyEntryPoint);
+        vm.prank(_happyEntryPoint);
 
         // Call payout - should return SubmitterFeeTooHigh
         bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).payout(happyTx, 0);

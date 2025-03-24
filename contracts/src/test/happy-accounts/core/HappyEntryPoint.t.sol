@@ -13,7 +13,7 @@ import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
 import {InvalidSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
 
-import {FutureNonceDuringSimulation, InvalidNonce} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
+import {FutureNonceDuringSimulation} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
 import {
     CallStatus,
     SubmitOutput,
@@ -22,7 +22,8 @@ import {
     PaymentReverted,
     ValidationFailed,
     ValidationReverted,
-    GasPriceTooHigh
+    GasPriceTooHigh,
+    InvalidNonce
 } from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
 import {console} from "forge-std/console.sol";
@@ -43,7 +44,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // STATE VARIABLES
 
     DeployHappyAAContracts private deployer;
-    HappyEntryPoint private happyEntryPoint;
 
     address private smartAccount;
     address private paymaster;
@@ -251,20 +251,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
     }
 
-    function testValidationFailedInvalidNonce() public {
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
-
-        // Set a very high tx nonce (higher than happyTx.nonceValue)
-        happyTx.nonceValue += 100;
-
-        vm.expectRevert(
-            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(InvalidNonce.selector))
-        );
-
-        // Submit the transaction to trigger the revert
-        happyEntryPoint.submit(happyTx.encode());
-    }
-
     function testValidationFailedInvalidSignature() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
 
@@ -282,42 +268,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // ====================================================================================================
     // VALIDATION TESTS (SIMULATION)
 
-    function testSimulateWithLowNonceValidationFailedInvalidNonce() public {
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
-        bytes memory encodedHappyTx = happyTx.encode();
-
-        // First execute the happyTx to increment the nonce
-        happyEntryPoint.submit(encodedHappyTx);
-
-        // Now use the same happyTx again, so it'll have a low nonce value this time, causing it to fail.
-        // Note: we don't need to re-sign the happyTx, as the call will revert before it reaches signature validation stage.
-
-        vm.expectRevert(
-            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(InvalidNonce.selector))
-        );
-
-        // Submit the transaction to trigger the revert
-        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        happyEntryPoint.submit(encodedHappyTx);
-    }
-
-    function testSimulateWithFutureNonce() public {
-        // Set a future nonce for the simulated happyTx
-        HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx.nonceValue += 100;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // The function should return output.validationStatus = FutureNonceDuringSimulation.selector
-        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-
-        // The output should be FutureNonceDuringSimulation.selector
-        _assertExpectedSubmitOutput(
-            output, FutureNonceDuringSimulation.selector, uint8(CallStatus.SUCCEEDED), new bytes(0)
-        );
-    }
-
     function testSimulateWithUnknownDuringSimulation() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
@@ -330,6 +280,88 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // The output should be UnknownDuringSimulation.selector
         _assertExpectedSubmitOutput(output, UnknownDuringSimulation.selector, uint8(CallStatus.SUCCEEDED), new bytes(0));
+    }
+
+    // ====================================================================================================
+    // NONCE VALIDATION TESTS
+
+    function testInvalidNonceStaleNonce() public {
+        // First, increment the account's nonce by submitting a transaction
+        _incrementAccountNonce();
+
+        // Get the initial nonce
+        uint64 origNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+
+        // Create a happyTx with a nonce value less than the current nonce (negative nonceAhead)
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        happyTx.nonceValue -= 1;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        vm.expectRevert(InvalidNonce.selector);
+        happyEntryPoint.submit(happyTx.encode());
+
+        // Check that the once wasn't incremented
+        uint64 newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        assertEq(newNonce, origNonce);
+
+        // simulation mode
+        uint256 id = vm.snapshotState();
+        vm.expectRevert(InvalidNonce.selector);
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        happyEntryPoint.submit(happyTx.encode());
+
+        // Check that the once wasn't incremented
+        newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        assertEq(newNonce, origNonce);
+        vm.revertToState(id);
+    }
+
+    function testInvalidNonceFutureNonce() public {
+        // Get the initial nonce
+        uint64 origNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+
+        // Create a happyTx with a nonce value greater than the current nonce (positive nonceAhead)
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        happyTx.nonceValue += 1;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        vm.expectRevert(InvalidNonce.selector);
+        happyEntryPoint.submit(happyTx.encode());
+
+        // Check that the once wasn't incremented
+        uint64 newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        assertEq(newNonce, origNonce);
+
+        // simulation
+        uint256 id = vm.snapshotState();
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        _assertExpectedSubmitOutput(
+            output, FutureNonceDuringSimulation.selector, uint8(CallStatus.SUCCEEDED), new
+            bytes(0)
+        );
+        vm.revertToState(id);
+    }
+
+    function testNonceIncrementAfterSubmit() public {
+        // Check initial nonce
+        uint64 initialNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        assertEq(initialNonce, 0);
+
+        // Submit a transaction to increment the nonce
+        _incrementAccountNonce();
+
+        // Check that the nonce was incremented
+        uint64 newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        assertEq(newNonce, 1);
+
+        // simulation
+        uint256 id = vm.snapshotState();
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        _incrementAccountNonce();
+        newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        assertEq(newNonce, 2);
+        vm.revertToState(id);
     }
 
     // ====================================================================================================
@@ -557,5 +589,11 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         assertEq(output.validationStatus, validationStatus);
         assertEq(uint8(output.callStatus), callStatus);
         assertEq(output.revertData, revertData);
+    }
+
+    function _incrementAccountNonce() internal {
+        // Create a valid happyTx with the current nonce & submit it
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
+        happyEntryPoint.submit(happyTx.encode());
     }
 }

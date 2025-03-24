@@ -17,12 +17,6 @@ struct ExecutionOutput {
 }
 
 /**
- * Selector returned by {IHappyAccount.validate} if the nonce fails to validate.
- * This indicates an invalid nonce that cannot be used now or in the future.
- */
-error InvalidNonce();
-
-/**
  * Selector returned by {IHappyAccount.validate} during simulation mode when
  * the nonce is greater than the current nonce but could be valid in the future.
  * This allows the EntryPoint to estimate gas even if the nonce isn't ready yet.
