@@ -7,6 +7,7 @@ import { StorageKey } from "../services/storage"
 import { type AppURL, getAppURL, getIframeURL, isApp, isStandaloneIframe } from "../utils/appURL"
 import { checkIfCaveatsMatch } from "../utils/checkIfCaveatsMatch"
 import { emitUserUpdate } from "../utils/emitUserUpdate"
+import { setTargetContracts } from "./interfaceState"
 import { getUser, userAtom } from "./user"
 
 // STORE INSTANTIATION
@@ -217,6 +218,16 @@ export function clearPermissions(): void {
 export function clearAppPermissions(app: AppURL): void {
     const user = getUser()
     if (!user) return
+
+    const perms = getAppPermissions(app)
+    const targetAddresses = Object.values(perms).flatMap((permission) =>
+        permission.caveats
+            .filter((caveat) => caveat.type === "target" && typeof caveat.value === "string")
+            .map((caveat) => caveat.value as Address),
+    )
+    setTargetContracts(targetAddresses)
+
+    // Remove app permissions from storage
     store.set(permissionsMapAtom, (prev) => {
         const {
             [user.address]: { [app]: _, ...otherApps },
