@@ -3,6 +3,7 @@ import { EntryPointStatus } from "#src/tmp/interface/status"
 import { isAddress } from "#src/utils/zod/refines/isAddress"
 import { isHexString } from "#src/utils/zod/refines/isHexString"
 import { receiptSchema } from "./receipt"
+import { transactionSchema } from "./transaction"
 
 export const happyReceiptSchema = z.object({
     happyTxHash: z.string().refine(isHexString).openapi({ example: "" }),
@@ -11,7 +12,7 @@ export const happyReceiptSchema = z.object({
     nonceValue: z.string().openapi({ example: "420" }),
     entryPoint: z.string().refine(isAddress).openapi({ example: "" }),
     status: z.string().openapi({ example: EntryPointStatus.Success }),
-    logs: z.string().array().openapi({ example: [] }),
+    logs: z.array(transactionSchema).openapi({ example: [] }),
     revertData: z.string().openapi({ example: "0x" }),
     failureReason: z.string().openapi({ example: "0x" }),
     gasUsed: z.string().openapi({ example: "0" }),

@@ -55,10 +55,6 @@ describe("submitter_submit", () => {
             transactions.map((tx) => client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx) } })),
         ).then(async (a) => await Promise.all(a.map((b) => b.json())))
 
-        expect(results.length).toBe(count)
-
-        expect(results.every((r) => r.status === SubmitSuccess)).toBe(true)
-
         const rs = await Promise.all(
             results.map((a) => {
                 if (a.status !== SubmitSuccess) return { status: a.status }
@@ -66,6 +62,8 @@ describe("submitter_submit", () => {
             }),
         )
 
+        expect(results.length).toBe(count)
+        expect(results.every((r) => r.status === SubmitSuccess)).toBe(true)
         expect(rs.length).toBe(count)
         expect(rs.every((r) => r.status === "success")).toBe(true)
     })

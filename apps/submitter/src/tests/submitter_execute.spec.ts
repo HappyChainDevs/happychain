@@ -44,20 +44,19 @@ describe("submitter_execute", () => {
 
         it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
-            const unsignedTx = await createMockTokenAMintHappyTx(
-                smartAccount,
-                await getNonce(smartAccount, nonceTrack),
-                nonceTrack,
-            )
+            const nonceValue = await getNonce(smartAccount, nonceTrack)
+            const unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
             // be your own paymaster! define your own gas!
             unsignedTx.gasLimit = 2000000n
             unsignedTx.executeGasLimit = 1000000n
             unsignedTx.paymaster = smartAccount
             const signedTx = await signTx(unsignedTx)
+
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
+            expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
             expect(response.status).toBe(SubmitSuccess)
             expect(response.state.included).toBe(true)
@@ -77,6 +76,7 @@ describe("submitter_execute", () => {
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
+            expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
             expect(response.status).toBe(ExecuteSuccess)
             expect(response.state.included).toBe(true)
@@ -142,9 +142,12 @@ describe("submitter_execute", () => {
                 nonceTrack,
             )
             const prepared = await signTx(dummyHappyTx)
-            const response = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(prepared) } })
+            const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(prepared) } })
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+            const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
-            expect(response.status).toBe(200)
+            expect(response.error).toBeUndefined()
+            expect(result.status).toBe(200)
             expect(afterBalance).toBeGreaterThan(beforeBalance)
         })
 
@@ -155,7 +158,7 @@ describe("submitter_execute", () => {
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
             // biome-ignore lint/suspicious/noExplicitAny: testing doesn't need strict types here
             const response = (await result.json()) as any
-
+            expect(response.error).toBeUndefined()
             expect(result.status).toBe(422)
             expect(response.status).toBe(EntryPointStatus.ValidationFailed)
             expect(response.failureReason).toBeUndefined()
@@ -170,8 +173,10 @@ describe("submitter_execute", () => {
             // again with same nonce, will fail
             const result2 = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
             // biome-ignore lint/suspicious/noExplicitAny: testing doesn't need strict types here
-            const response2 = (await result2.json()) as any
+            const [response1, response2] = (await Promise.all([result1.json(), result2.json()])) as [any, any]
 
+            expect(response1.error).toBeUndefined()
+            expect(response2.error).toBeUndefined()
             expect(result1.status).toBe(200)
             expect(result2.status).toBe(422)
             expect(response2.status).toBe(EntryPointStatus.ValidationFailed)
@@ -191,6 +196,7 @@ describe("submitter_execute", () => {
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
 
+            expect(response.error).toBeUndefined()
             expect(response.status).toBe(EntryPointStatus.PaymentReverted)
             expect(result.status).toBe(422)
         })
@@ -207,8 +213,10 @@ describe("submitter_execute", () => {
 
             const jsonTx = await signTx(tx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
-            // const response = await result.json()
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+            const response = (await result.json()) as any
 
+            expect(response.error).toBeUndefined() // ok its failed, should be standard error tho
             expect(result.status).toBe(422)
             // expect(response.status).toBe("entrypointPaymentReverted")
         })
@@ -223,8 +231,10 @@ describe("submitter_execute", () => {
 
             const jsonTx = await signTx(tx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
-            // const response = await result.json()
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+            const response = (await result.json()) as any
 
+            expect(response.error).toBeUndefined()
             expect(result.status).toBe(422) // @note contract issue, this should throw not succeed
             // expect(response.status).toBe("entrypointPaymentReverted")
         })
