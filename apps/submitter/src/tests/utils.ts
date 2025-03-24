@@ -1,12 +1,5 @@
-import {
-    http,
-    type Address,
-    type PublicClient,
-    type WalletClient,
-    createPublicClient,
-    createWalletClient,
-    zeroAddress,
-} from "viem"
+import type { Address, PublicClient, WalletClient } from "viem"
+import { http, createPublicClient, createWalletClient, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
 import { encodeFunctionData, parseEther } from "viem/utils"
@@ -19,19 +12,20 @@ import { computeHappyTxHash } from "#src/utils/getHappyTxHash"
 
 export type TestExecuteInput = z.input<typeof ExecuteInputSchema>
 
-const config = { chain: localhost, transport: http() } as const
+const chain = localhost
+
+const config = { chain, transport: http() } as const
 // generated using 'generatePrivateKey()' hardcoded here to skip re-deploying accounts for every test.
 export const testAccount = createTestAccount("0x513b9958a89be74b445362465c39ba0710d0e04aae3f0a8086e8ea064cdcea16")
-export const testPublicClient: PublicClient<typeof config.transport, typeof config.chain> = createPublicClient({
-    ...config,
-    batch: { multicall: true },
-})
+
+export const testPublicClient: PublicClient<typeof config.transport, typeof config.chain> = //
+    createPublicClient({ ...config, batch: { multicall: true } })
 export const testWalletClient: WalletClient<typeof config.transport, typeof config.chain, typeof testAccount.account> =
     createWalletClient({ ...config, account: testAccount.account })
 
 export async function fundAccount(address: Address) {
     const hash = await createWalletClient({
-        chain: localhost,
+        chain,
         transport: http(),
         account: findExecutionAccount(),
     }).sendTransaction({ to: address, value: parseEther("1") })
@@ -54,11 +48,11 @@ export function createTestAccount(privateKey = generatePrivateKey()) {
     }
 }
 
-export async function getNonce(account: Address, nonceTrack = 0n) {
+export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
     return await testPublicClient.readContract({
         address: account,
         abi: abis.ScrappyAccount,
-        functionName: "getNonce",
+        functionName: "nonceValue",
         args: [nonceTrack],
     })
 }
