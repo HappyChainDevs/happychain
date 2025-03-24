@@ -1,6 +1,7 @@
 import { createListCollection } from "@happy.tech/uikit-react"
 import { useForm } from "@tanstack/react-form"
 import { useNavigate } from "@tanstack/react-router"
+import { readContracts } from "@wagmi/core"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { type Address, type Hash, erc20Abi, isAddress, parseEther, parseUnits } from "viem"
@@ -10,6 +11,7 @@ import { coerce, number, object, string } from "zod"
 import { userAtom } from "#src/state/user"
 import { watchedAssetsAtom } from "#src/state/watchedAssets"
 import { queryClient } from "#src/tanstack-query/config"
+import { config } from "#src/wagmi/config.ts"
 import { useTokenBalance } from "./useTokenBalance"
 
 /**
@@ -71,7 +73,7 @@ export function useFormSendAssets() {
     // Tokens combobox
     const watchedAssets = useAtomValue(watchedAssetsAtom)
     const userAssets = watchedAssets?.[user!.address] ?? []
-    const [initialTokensList] = useState([
+    const [initialTokensList, setInitialTokensList] = useState([
         {
             address: "",
             symbol: "HAPPY",
@@ -117,11 +119,11 @@ export function useFormSendAssets() {
         },
     })
 
-    // Balance
+    // Balance (known token)
     const {
         queryBalanceNativeToken,
         queryBalanceERC20Token,
-        configQueryToken: [, setQueryTokenBalance],
+        erc20TokenAddress: [, setERC20TokenAddress],
         balance,
     } = useTokenBalance({
         userAddress: user?.address as Address,
@@ -129,18 +131,59 @@ export function useFormSendAssets() {
     })
 
     // Combobox handlers
-    function handleTokensComboboxInputChange(details: { inputValue: string }) {
-        const matchValue = details.inputValue.trim().toLowerCase()
-        const filtered = tokens.filter(
-            (item) => item.value.toLowerCase().includes(matchValue) || item.label.toLowerCase().includes(matchValue),
-        )
-        setTokens(filtered.length === 0 || matchValue.length === 0 ? initialTokensList : filtered)
+    async function handleTokensComboboxInputChange(details: { inputValue: string }) {
+        const unknownTokenAddress = details.inputValue.trim()
+        const matchValue = unknownTokenAddress.toLowerCase()
+        if (isAddress(matchValue) && !tokens.find((item) => item.value.toLowerCase() === matchValue)) {
+            const erc20Contract = {
+                abi: erc20Abi,
+                address: unknownTokenAddress as Address,
+            }
+            const [decimalsData, symbolData] = await readContracts(config, {
+                contracts: [
+                    {
+                        ...erc20Contract,
+                        functionName: "decimals",
+                    },
+                    {
+                        ...erc20Contract,
+                        functionName: "symbol",
+                    },
+                ],
+            })
+            if (decimalsData.error || symbolData.error) {
+                setTokens(initialTokensList)
+                return
+            }
+
+            const decimals = decimalsData.result as number
+            const symbol = symbolData.result as string
+
+            const unknownToken = {
+                type: "ERC20",
+                label: symbol,
+                value: unknownTokenAddress,
+                address: unknownTokenAddress,
+                symbol,
+                decimals,
+            }
+            setInitialTokensList([...initialTokensList, unknownToken])
+            setTokens([unknownToken, ...initialTokensList.filter((tokens) => tokens.address !== unknownTokenAddress)])
+
+            return
+        } else {
+            const filtered = tokens.filter(
+                (item) =>
+                    item.value.toLowerCase().includes(matchValue) || item.label.toLowerCase().includes(matchValue),
+            )
+            setTokens(filtered.length === 0 || matchValue.length === 0 ? initialTokensList : filtered)
+        }
     }
 
     function handleTokensComboboxValueChange(item: TokensComboboxItem) {
         form.setFieldValue(FieldFormSendAssets.Token, item.value)
         form.setFieldValue(FieldFormSendAssets.TokenDecimals, item?.decimals ?? 18)
-        setQueryTokenBalance(item.value as Address)
+        setERC20TokenAddress(item.value as Address)
     }
 
     // Form mutations & queries
@@ -194,7 +237,6 @@ export function useFormSendAssets() {
     // Side effects
     const onTransactionCompleted = useCallback(() => {
         mutationSendToken.reset()
-        //setForm(DEFAULT_FORM_STATE)
         navigate({ to: "/embed" })
     }, [navigate, mutationSendToken])
 
@@ -222,7 +264,7 @@ export function useFormSendAssets() {
             status: isAddress(form.getFieldValue(FieldFormSendAssets.Token))
                 ? queryBalanceERC20Token.status
                 : queryBalanceNativeToken.status,
-            amount: balance,
+            value: balance,
         },
     }
 }

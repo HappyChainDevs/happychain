@@ -12,13 +12,13 @@ export function useTokenBalance({
     userAddress: Address
     tokenAddress?: Address
 }) {
-    const configQueryToken = useState(tokenAddress)
-    const [config] = configQueryToken
+    const erc20TokenAddress = useState(tokenAddress)
+    const [config] = erc20TokenAddress
 
     const queryBalanceNativeToken = useBalance({
         address: userAddress,
         query: {
-            enabled: userAddress && isAddress(userAddress) && !isAddress(`${config}`),
+            enabled: isAddress(userAddress) && !config,
         },
     })
 
@@ -26,13 +26,13 @@ export function useTokenBalance({
         contracts: [
             {
                 abi: erc20Abi,
-                address: config,
+                address: config as Address,
                 functionName: "balanceOf",
                 args: [userAddress],
             },
             {
                 abi: erc20Abi,
-                address: config,
+                address: config as Address,
                 functionName: "decimals",
             },
         ],
@@ -42,20 +42,21 @@ export function useTokenBalance({
             retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
             select(data) {
                 const [balanceResult, decimalsResult] = data
-                const balance = balanceResult.result
-                const decimals = decimalsResult.result
-
-                return balance !== undefined && decimals !== undefined ? formatUnits(balance, decimals) : undefined
+                const balance = balanceResult.result as bigint
+                const decimals = decimalsResult.result as number
+                const formatted =
+                    balance !== undefined && decimals !== undefined ? +formatUnits(balance, decimals) : undefined
+                return formatted
             },
         },
     })
 
     const balance = useMemo(() => {
-        if (!isAddress(`${config}`)) {
+        if (!config) {
             if (queryBalanceNativeToken?.data?.value) return +formatEther(queryBalanceNativeToken?.data?.value)
             return 0
         }
-        if (queryBalanceERC20Token?.data) return +queryBalanceERC20Token?.data
+        if (queryBalanceERC20Token?.data) return queryBalanceERC20Token?.data ?? 0
 
         return 0
     }, [config, queryBalanceNativeToken?.data?.value, queryBalanceERC20Token?.data])
@@ -63,7 +64,7 @@ export function useTokenBalance({
     return {
         queryBalanceNativeToken,
         queryBalanceERC20Token,
-        configQueryToken,
+        erc20TokenAddress,
         balance,
     }
 }
