@@ -17,7 +17,6 @@ import {FutureNonceDuringSimulation} from "../../../happy-accounts/interfaces/IH
 import {
     CallStatus,
     SubmitOutput,
-    HappyEntryPoint,
     PaymentFailed,
     PaymentReverted,
     ValidationFailed,
@@ -55,7 +54,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function setUp() public {
         if (false) console.log(""); // keep this to avoid linter to complain about an unused import
-
 
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);

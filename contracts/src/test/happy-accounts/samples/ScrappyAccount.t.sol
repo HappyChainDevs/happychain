@@ -8,8 +8,8 @@ import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
 import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
-import {ExecutionOutput, FutureNonceDuringSimulation} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
-import {HappyEntryPoint, CallStatus} from "../../../happy-accounts/core/HappyEntryPoint.sol";
+import {ExecutionOutput} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
+import {CallStatus} from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
 import {InvalidSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
