@@ -18,7 +18,7 @@ export class GenericJsonRpcError extends Error {
     }
 
     /**
-     * Create an error instance from a full EIP1474ErrorObject
+     * Create an error instance from a full EIP1474ErrorObject.
      */
     static fromErrorObject(errObj: EIP1474ErrorObject): GenericJsonRpcError {
         return new GenericJsonRpcError({
@@ -46,8 +46,6 @@ export class GenericJsonRpcError extends Error {
 
 /**
  * Error: -32700 Parse Error
- * Invalid JSON received by the server
- * JSON-RPC 2.0
  */
 export class JsonRpcParseError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -61,8 +59,6 @@ export class JsonRpcParseError extends GenericJsonRpcError {
 
 /**
  * Error: -32600 Invalid Request
- * The JSON sent is not a valid Request object
- * JSON-RPC 2.0
  */
 export class JsonRpcInvalidRequestError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -76,8 +72,6 @@ export class JsonRpcInvalidRequestError extends GenericJsonRpcError {
 
 /**
  * Error: -32601 Method Not Found
- * The method does not exist / is not available
- * JSON-RPC 2.0
  */
 export class JsonRpcMethodNotFoundError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -91,8 +85,6 @@ export class JsonRpcMethodNotFoundError extends GenericJsonRpcError {
 
 /**
  * Error: -32602 Invalid Params
- * Invalid method parameters
- * JSON-RPC 2.0
  */
 export class JsonRpcInvalidParamsError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -106,8 +98,6 @@ export class JsonRpcInvalidParamsError extends GenericJsonRpcError {
 
 /**
  * Error: -32603 Internal Error
- * Internal JSON-RPC error
- * JSON-RPC 2.0
  */
 export class JsonRpcInternalError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -121,8 +111,6 @@ export class JsonRpcInternalError extends GenericJsonRpcError {
 
 /**
  * Error: -32000 Invalid Input
- * Missing or invalid parameters
- * Ethereum JSON-RPC
  */
 export class JsonRpcInvalidInputError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -136,8 +124,6 @@ export class JsonRpcInvalidInputError extends GenericJsonRpcError {
 
 /**
  * Error: -32001 Resource Not Found
- * Requested resource not found
- * Ethereum JSON-RPC
  */
 export class JsonRpcResourceNotFoundError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -151,8 +137,6 @@ export class JsonRpcResourceNotFoundError extends GenericJsonRpcError {
 
 /**
  * Error: -32002 Resource Unavailable
- * Requested resource not available
- * Ethereum JSON-RPC
  */
 export class JsonRpcResourceUnavailableError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -166,8 +150,6 @@ export class JsonRpcResourceUnavailableError extends GenericJsonRpcError {
 
 /**
  * Error: -32003 Transaction Rejected
- * Transaction creation failed
- * Ethereum JSON-RPC
  */
 export class JsonRpcTransactionRejectedError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -181,8 +163,6 @@ export class JsonRpcTransactionRejectedError extends GenericJsonRpcError {
 
 /**
  * Error: -32004 Method Not Supported
- * Method is not implemented
- * Ethereum JSON-RPC
  */
 export class JsonRpcMethodNotSupportedError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -196,8 +176,6 @@ export class JsonRpcMethodNotSupportedError extends GenericJsonRpcError {
 
 /**
  * Error: -32005 Limit Exceeded
- * Request exceeds defined limit
- * Ethereum JSON-RPC
  */
 export class JsonRpcLimitExceededError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -211,8 +189,6 @@ export class JsonRpcLimitExceededError extends GenericJsonRpcError {
 
 /**
  * Error: -32006 JSON-RPC Version Not Supported
- * Version of JSON-RPC protocol is not supported
- * JSON-RPC 2.0
  */
 export class JsonRpcVersionNotSupportedError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {
@@ -226,8 +202,6 @@ export class JsonRpcVersionNotSupportedError extends GenericJsonRpcError {
 
 /**
  * Error: -32042 Method Not Found (Duplicate code)
- * Alternative code for method not found, used by some providers
- * Non-standard
  */
 export class JsonRpcDuplicateMethodNotFoundError extends GenericJsonRpcError {
     constructor(message?: string, data?: unknown) {

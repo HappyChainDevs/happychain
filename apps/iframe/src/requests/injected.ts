@@ -2,7 +2,6 @@ import { HappyMethodNames, PermissionNames, TransactionType } from "@happy.tech/
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
 import {
     EIP1193DisconnectedError,
-    EIP1193ErrorCodes,
     EIP1193ProviderErrorCodes,
     type EIP1193RequestParameters,
     type EIP1193RequestResult,
