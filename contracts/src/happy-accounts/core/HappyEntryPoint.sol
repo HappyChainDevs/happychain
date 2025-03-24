@@ -288,7 +288,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
 
         uint256 balance = tx.origin.balance;
 
-        call = abi.encodeCall(IHappyPaymaster.payout, (happyTx, consumedGas));
+        call = abi.encodeCall(IHappyPaymaster.validatePayment, (happyTx, consumedGas));
         gasBefore = gasleft();
         (success, returnData) = happyTx.paymaster.excessivelySafeCall(
             isSimulation && happyTx.payoutGasLimit == 0 ? gasleft() : happyTx.payoutGasLimit,
