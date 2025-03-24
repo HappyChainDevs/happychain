@@ -4,16 +4,6 @@ pragma solidity ^0.8.20;
 /**
  * @notice Represents a Happy Transaction - a transaction made by a Happy Smart Account
  *         that can be submitted to the chain by a permissionless submitter.
- * The struct is arranged to optimize gas usage by ensuring efficient packing in storage.
- *
- * Slot 0:  |-pad(4)-|-execGasLimit(4)-|-gasLimit(4)-|-----------account(20)------------|
- * Slot 1:  |--------------pad(12)---------------|-------------dest(20)-----------------|
- * Slot 2:  |--------------pad(12)---------------|------------paymaster(20)-------------|
- * Slot 3:  |--------------------------------value(32)----------------------------------|
- * Slot 4:  |-------------------nonceValue(24)------------------|-----nonceTrack(8)-----|
- * Slot 5:  |----------------------------maxFeePerGas(32)-------------------------------|
- * Slot 6:  |----------------------------submitterFee(32)-------------------------------|
- * Slot 7+: |  Dynamic length fields (callData, paymasterData, validatorData, extraData) |
  */
 
 // forgefmt: disable-next-item
@@ -21,7 +11,9 @@ struct HappyTx {
     // Core Transaction Fields:
     address account;            // Account sending the transaction
     uint32 gasLimit;            // Gas limit for the transaction made by the submitter
-    uint32 executeGasLimit;     // Gas limit for the IHappyAccount.execute function
+    uint32 validateGasLimit;    // Gas limit for IHappyAccount.validate
+    uint32 executeGasLimit;     // Gas limit for IHappyAccount.execute
+    uint32 payoutGasLimit;      // Gas limit for IHappyPaymaster.payout
     address dest;               // Destination address for the transaction
     address paymaster;          // Fee payer: This can be the
                                     // 1. account (if it implements IHappyPaymaster)

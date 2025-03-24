@@ -234,6 +234,8 @@ contract HappyEntryPointGasEstimator is Test {
             account: 0x0000000000000000000000000000000000000000, // Stub value
             gasLimit: 4000000000, // 0xEE6B2800
             executeGasLimit: 4000000000, // 0xEE6B2800
+            validateGasLimit: 4000000000, // 0xEE6B2800
+            payoutGasLimit: 4000000000, // 0xEE6B2800
             dest: target,
             paymaster: 0x0000000000000000000000000000000000000000, // Stub value
             value: 0,
@@ -242,9 +244,9 @@ contract HappyEntryPointGasEstimator is Test {
             maxFeePerGas: 1200000000, // 0x47868C00
             submitterFee: 100, // 0x64
             callData: _getMintCallData(),
-            paymasterData: hex"",
-            validatorData: hex"",
-            extraData: hex""
+            paymasterData: "",
+            validatorData : "",
+            extraData : ""
         });
     }
 
