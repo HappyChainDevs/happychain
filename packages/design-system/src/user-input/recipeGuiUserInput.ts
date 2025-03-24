@@ -48,6 +48,8 @@ export const recipeGuiUserInput = cva({
         "placeholder:opacity-50",
         // border
         "border-hds-system-gui-foreground-default border",
+        // controls (color-scheme)
+        "scheme-only-dark",
     ],
     variants: {
         scale: {

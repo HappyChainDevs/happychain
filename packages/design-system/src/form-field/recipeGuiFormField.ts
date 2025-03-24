@@ -3,7 +3,7 @@ import { type GuiNativeSelectVariantsProps, recipeGuiNativeSelect } from "../nat
 import { type GuiUserInputVariantsProps, recipeGuiUserInput } from "../user-input/recipeGuiUserInput"
 
 const recipeGuiFormFieldContainer = cva({
-    base: ["flex flex-col"],
+    base: ["flex flex-col group"],
 })
 export type GuiFormFieldContainerVariantsProps = VariantProps<typeof recipeGuiFormFieldContainer>
 
@@ -26,7 +26,7 @@ const recipeGuiFormFieldHelperText = cva({
 export type GuiFormFieldHelperTextVariantsProps = VariantProps<typeof recipeGuiFormFieldHelperText>
 
 const recipeGuiFormFieldErrorText = cva({
-    base: "font-hds-system-gui-display text-hds-system-gui-foreground-intent-negative text-hds-system-gui-base",
+    base: ["font-hds-system-gui-display text-hds-system-gui-foreground-intent-negative text-hds-system-gui-base"],
     variants: {
         scale: {
             default: "pt-1.5",
