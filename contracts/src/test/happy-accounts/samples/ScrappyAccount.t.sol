@@ -371,9 +371,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         int256 submitterFee = happyTx.submitterFee;
 
         // Calculate expected owed amount
-        uint256 payoutGas = 10_000; // From ScrappyAccount.sol
-        int256 _owed =
-            int256((consumedGas + payoutGas) * tx.gasprice) + submitterFee;
+        uint256 payoutGas = 15_000; // From ScrappyAccount.sol
+        int256 _owed = int256((consumedGas + payoutGas) * tx.gasprice) + submitterFee;
         uint256 owed = _owed > 0 ? uint256(_owed) : 0;
 
         // Set up a test recipient address and record its initial balance

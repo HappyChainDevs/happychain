@@ -150,8 +150,7 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
      * Fixed max gas overhead for the logic around the ExcessivelySafeCall to
      * {HappyPaymaster.payout} that needs to be paid for by the payer.
      */
-    uint256 private constant PAYOUT_CALL_OVERHEAD = 4500;
-    //^ From the gas report, 2425 for self-paying, 4395 for paymaster-sponsored, taking the maximum.
+    uint256 private constant PAYOUT_CALL_OVERHEAD = 7000; // measured: 5038 + safety margin
 
     /**
      * Gas buffer to ensure we have enough gas to handle post-OOG revert scenarios.

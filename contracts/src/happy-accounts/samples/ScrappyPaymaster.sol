@@ -29,7 +29,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     uint256 private constant STATIC_FIELDS_SIZE = 212;
 
     /// @dev The amount of gas consumed by the payout function.
-    uint256 private constant PAYOUT_GAS = 12_000;
+    uint256 private constant PAYOUT_GAS = 12_000; // measured: 10097 + safety margin
 
     /// @dev The max size of a tx with empty calldata with an empty access list.
     ///      Given RLP encoding, this should usually be significantly less.
