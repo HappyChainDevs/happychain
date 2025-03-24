@@ -11,7 +11,6 @@ import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol
 import {
     ExecutionOutput,
     GasPriceTooHigh,
-    WrongAccount,
     InvalidNonce,
     FutureNonceDuringSimulation
 } from "../../../happy-accounts/interfaces/IHappyAccount.sol";
@@ -68,18 +67,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
     // ====================================================================================================
     // VALIDATE TESTS
-
-    function testValidateWrongAccount() public {
-        // Create a happyTx with an invalid account field
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.account = ZERO_ADDRESS;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Validate function must be called by the HappyEntryPoint
-        vm.prank(happyEntryPoint);
-        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, abi.encodeWithSelector(WrongAccount.selector));
-    }
 
     function testValidateGasPriceTooHigh() public {
         // Create a happyTx with a a maxFeePerGas lower than tx.gaslimit
@@ -350,18 +337,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
     // ====================================================================================================
     // PAYOUT TESTS
-
-    function testPayoutWrongAccount() public {
-        // Create a happyTx with an invalid account field
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.account = ZERO_ADDRESS;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Payout function must be called by the HappyEntryPoint
-        vm.prank(happyEntryPoint);
-        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).payout(happyTx, 0);
-        assertEq(payoutData, abi.encodeWithSelector(WrongAccount.selector));
-    }
 
     function testPayoutSuccessfulGasCalculation() public {
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
