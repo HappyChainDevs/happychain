@@ -232,15 +232,15 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
 
         bytes4 selector;
         assembly {
-            // skip tuple offset and length, then extract 4 first bytes
-            mcopy(selector, add(returnData, 64), 4)
+            // skip outer bytes length, tuple offset, and inner bytes length
+            selector := mload(add(returnData, 96))
         }
 
         if (selector != 0) {
             bool shouldContinue = isSimulation
                 && (selector == UnknownDuringSimulation.selector || selector == FutureNonceDuringSimulation.selector);
 
-            if (!shouldContinue) revert ValidationFailed(returnData);
+            if (!shouldContinue) revert ValidationFailed(output.validationStatus);
         }
 
         // 2. Execute the call
