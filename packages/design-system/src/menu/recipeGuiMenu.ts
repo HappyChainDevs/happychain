@@ -25,7 +25,9 @@ const recipeGuiMenuItem = cva({
         "tracking-hds-loose",
         "font-hds-system-gui-display",
         "text-hds-system-gui-foreground-default",
-        "inline-flex justify-between items-baseline",
+        "inline-flex items-center",
+        "[&_[data-part=icon]:block [&_[data-part=icon]]:aspect-square [&_[data-part=icon]]:bg-current",
+        "[&_[data-part=icon]]:[mask-repeat:no-repeat] [&_[data-part=icon]]:[mask-position:center]",
     ],
     variants: {
         intent: {
@@ -33,7 +35,7 @@ const recipeGuiMenuItem = cva({
             negative: "[&_[data-part=icon]]:text-hds-system-gui-foreground-intent-negative",
         },
         scale: {
-            default: "p-2 text-hds-system-gui-base gap-3",
+            default: "ps-1 py-1 pe-7 [&_[data-part=icon]]:w-4 text-hds-system-gui-base gap-3",
         },
     },
     defaultVariants: {
