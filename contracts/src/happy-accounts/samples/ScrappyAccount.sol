@@ -34,7 +34,7 @@ import {
 
 import {CallStatus} from "../core/HappyEntryPoint.sol";
 
-// [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
+// [LOGGAS_INTERNAL] import {console} from "forge-std/console.sol";
 
 /**
  * Example implementation of a Happy Account with nonce management, reentrancy protection,
@@ -247,7 +247,7 @@ contract ScrappyAccount is
         output.gas = uint32(gasStart - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD);
 
         // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
-        // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", startGas - endGas);
+        // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", gasStart - endGas);
         // [LOGGAS_INTERNAL] console.log("execute output.gas: ", output.gas);
 
         return output;

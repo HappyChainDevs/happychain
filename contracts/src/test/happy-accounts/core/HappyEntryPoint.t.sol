@@ -28,6 +28,8 @@ import {
     ValidationReverted
 } from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
+import {console} from "forge-std/console.sol";
+
 contract HappyEntryPointTest is HappyTxTestUtils {
     using HappyTxLib for HappyTx;
     using ECDSA for bytes32;
@@ -334,9 +336,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
 
         // The output should be UnknownDuringSimulation.selector
-        _assertExpectedSubmitOutput(
-            output, UnknownDuringSimulation.selector, uint8(CallStatus.SUCCEEDED), new bytes(0)
-        );
+        _assertExpectedSubmitOutput(output, UnknownDuringSimulation.selector, uint8(CallStatus.SUCCEEDED), new bytes(0));
     }
 
     // ====================================================================================================
