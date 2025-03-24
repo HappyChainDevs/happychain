@@ -239,11 +239,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // This will cause the recover function to revert during validation
         happyTx.validatorData = hex"deadbeef";
 
-        // The function should revert with ValidationReverted(InvalidSignature.selector)
-        bytes memory ecdsaError = abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()")));
-        vm.expectRevert(abi.encodeWithSelector(ValidationReverted.selector, ecdsaError));
-
-        // Submit the transaction to trigger the revert
+        vm.expectRevert(
+            abi.encodeWithSelector(ValidationReverted.selector, abi.encodeWithSelector(InvalidSignature.selector))
+        );
         happyEntryPoint.submit(happyTx.encode());
     }
 
@@ -253,8 +251,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Set a very high tx gas price (higher than happyTx.maxFeePerGas)
         vm.txGasPrice(happyTx.maxFeePerGas * 2);
 
-        // The function should revert with ValidationFailed(GasPriceTooHigh.selector)
-        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, GasPriceTooHigh.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(GasPriceTooHigh.selector))
+        );
 
         // Submit the transaction to trigger the revert
         happyEntryPoint.submit(happyTx.encode());
@@ -267,8 +266,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Set a very high tx nonce (higher than happyTx.nonceValue)
         happyTx.nonceValue += 100;
 
-        // The function should revert with ValidationFailed(InvalidNonce.selector)
-        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidNonce.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(InvalidNonce.selector))
+        );
 
         // Submit the transaction to trigger the revert
         happyEntryPoint.submit(happyTx.encode());
@@ -280,8 +280,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Change any field (except nonce) to invalid the signature over the happyTx
         happyTx.gasLimit += 10;
 
-        // The function should revert with ValidationFailed(InvalidSignature.selector)
-        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidSignature.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(InvalidSignature.selector))
+        );
 
         // Submit the transaction to trigger the revert
         happyEntryPoint.submit(happyTx.encode());
@@ -291,21 +292,22 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // VALIDATION TESTS (SIMULATION)
 
     function testSimulateWithLowNonceValidationFailedInvalidNonce() public {
-        // This should fail for both nonce too high and nonce too low cases
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
+        bytes memory encodedHappyTx = happyTx.encode();
 
         // First execute the happyTx to increment the nonce
-        happyEntryPoint.submit(happyTx.encode());
+        happyEntryPoint.submit(encodedHappyTx);
 
         // Now use the same happyTx again, so it'll have a low nonce value this time, causing it to fail.
         // Note: we don't need to re-sign the happyTx, as the call will revert before it reaches signature validation stage.
 
-        // The function should revert with ValidationFailed(InvalidNonce.selector)
-        vm.expectRevert(abi.encodeWithSelector(ValidationFailed.selector, InvalidNonce.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(InvalidNonce.selector))
+        );
 
         // Submit the transaction to trigger the revert
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        happyEntryPoint.submit(happyTx.encode());
+        happyEntryPoint.submit(encodedHappyTx);
     }
 
     function testSimulateWithFutureNonce() public {
@@ -473,7 +475,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     function testSelfPayoutRevertsOverFlow() public {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx.maxFeePerGas = type(uint256).max; // This will cause an overflow and revert
+        happyTx.submitterFee = type(int256).max; // This will cause an overflow and revert
+        vm.txGasPrice(happyTx.maxFeePerGas);
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Panic error 0x11: Arithmetic operation results in underflow or overflow.
