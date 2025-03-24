@@ -9,6 +9,7 @@
     "exports": {
         "./account-abstraction/sepolia": "./deployments/happy-sepolia/aa/abis.ts",
         "./happy-aa/anvil": "./deployments/anvil/happy-aa/abis.ts",
+        "./happy-aa/sepolia": "./deployments/happy-sepolia/happy-aa/abis.ts",
         "./mocks/anvil": "./deployments/anvil/mocks/abis.ts",
         "./mocks/sepolia": "./deployments/happy-sepolia/mocks/abis.ts",
         "./random/anvil": "./deployments/anvil/random/abis.ts"
