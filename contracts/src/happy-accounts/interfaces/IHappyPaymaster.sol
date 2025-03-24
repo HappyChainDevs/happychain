@@ -49,9 +49,9 @@ interface IHappyPaymaster {
      * case of successful validation.
      *
      * The function must revert with {NotFromEntryPoint} if not called from the EntryPoint contract
-     * (otherwise its funds will be at risk). It must also revert if the payment fails. This
-     * function is otherwise not allowed to revert. If validation fails it should return instead,
-     * as per the above.
+     * (otherwise its funds will be at risk), and should not otherwise revert, not even if the
+     * payment fails (the EntryPoint will validate the payment). If validation fails it should
+     * return instead, as per the above.
      */
     function payout(HappyTx memory happyTx, uint256 consumedGas) external returns (bytes memory);
 }
