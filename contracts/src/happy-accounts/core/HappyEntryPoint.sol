@@ -62,6 +62,11 @@ struct SubmitOutput {
 }
 
 /**
+ * The entrypoint reverts with this error when the gas price exceed {HappyTx.maxFeePerGas}.
+ */
+error GasPriceTooHigh();
+
+/**
  * When the account validation of the happyTx reverts (in violation of the spec).
  *
  * The parameter contains the revert data (truncated to {MAX_VALIDATE_RETURN_DATA_SIZE}
@@ -213,6 +218,10 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
         // [LOGGAS] console.log("HappyTxLib.decode gas usage: ", gasStart - decodeGasEnd);
 
         // 1. Validate happyTx with account
+
+        if (tx.gasprice > happyTx.maxFeePerGas) {
+            revert GasPriceTooHigh();
+        }
 
         bool success;
         bytes memory returnData;

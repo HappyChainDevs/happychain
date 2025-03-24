@@ -10,7 +10,7 @@ import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
-import {ExecutionOutput, GasPriceTooHigh, InvalidNonce} from "../interfaces/IHappyAccount.sol";
+import {ExecutionOutput, InvalidNonce} from "../interfaces/IHappyAccount.sol";
 
 import {ICustomBoopValidator, VALIDATOR_KEY} from "../interfaces/extensions/ICustomBoopValidator.sol";
 import {ICustomBoopExecutor, EXECUTOR_KEY} from "../interfaces/extensions/ICustomBoopExecutor.sol";
@@ -151,9 +151,6 @@ contract ScrappyAccount is
     }
 
     function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes memory) {
-        if (tx.gasprice > happyTx.maxFeePerGas) {
-            return abi.encodeWithSelector(GasPriceTooHigh.selector);
-        }
 
         bool isSimulation = tx.origin == address(0);
         int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - int256(nonceValue[happyTx.nonceTrack]);
