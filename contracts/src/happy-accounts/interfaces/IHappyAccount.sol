@@ -17,12 +17,6 @@ struct ExecutionOutput {
 }
 
 /**
- * Selector returned from {IHappyAccount.validate} when targeting the wrong account, and
- * optionally from {IHappyPaymaster.payout} (typically when implemented as part of an account).
- */
-error WrongAccount();
-
-/**
  * Selector returned when the gas price is too high compared to {HappyTx.maxFeePerGas}.
  */
 error GasPriceTooHigh();
@@ -56,8 +50,7 @@ interface IHappyAccount {
      * according to its own rules, and an encoded custom error selector otherwise to indicate the
      * reason for rejection.
      *
-     * The function should return {WrongAccount} and {GasPriceTooHigh} if the associated conditions are
-     * hit.
+     * The function should return {GasPriceTooHigh} if the associated conditions are hit.
      *
      * If the validity cannot be ascertained at simulation time (`tx.origin == 0`), then the
      * function should return {UnknownDuringSimulation}.

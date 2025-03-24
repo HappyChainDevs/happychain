@@ -10,7 +10,7 @@ import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
-import {ExecutionOutput, GasPriceTooHigh, InvalidNonce, WrongAccount} from "../interfaces/IHappyAccount.sol";
+import {ExecutionOutput, GasPriceTooHigh, InvalidNonce} from "../interfaces/IHappyAccount.sol";
 
 import {ICustomBoopValidator, VALIDATOR_KEY} from "../interfaces/extensions/ICustomBoopValidator.sol";
 import {ICustomBoopExecutor, EXECUTOR_KEY} from "../interfaces/extensions/ICustomBoopExecutor.sol";
@@ -151,10 +151,6 @@ contract ScrappyAccount is
     }
 
     function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes memory) {
-        if (happyTx.account != address(this)) {
-            return abi.encodeWithSelector(WrongAccount.selector);
-        }
-
         if (tx.gasprice > happyTx.maxFeePerGas) {
             return abi.encodeWithSelector(GasPriceTooHigh.selector);
         }
@@ -243,10 +239,6 @@ contract ScrappyAccount is
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
         // [LOGGAS_INTERNAL] uint256 gasStart = gasleft();
-
-        if (happyTx.account != address(this)) {
-            return abi.encodeWithSelector(WrongAccount.selector);
-        }
 
         // NOTE: For self-paid transaction, the submitter fee will be signed over so there is no
         // need to validate that it is reasonable.
