@@ -28,11 +28,8 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     ///      storing the lengths of the four dynamic fields
     uint256 private constant STATIC_FIELDS_SIZE = 212;
 
-    /// @dev Payout function logic cost before payment call
-    uint256 private constant PAYOUT_INTRINSIC_GAS_OVERHEAD = 800; // 742 from the gas report
-
-    /// @dev The amount of gas that is added to the payment of the submitter.
-    uint256 private constant PAYOUT_PAYMENT_OVERHEAD_GAS = 9500; // 9368 from the gas report
+    /// @dev The amount of gas consumed by the payout function.
+    uint256 private constant PAYOUT_GAS = 12_000;
 
     /// @dev The max size of a tx with empty calldata with an empty access list.
     ///      Given RLP encoding, this should usually be significantly less.
@@ -74,7 +71,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // EXTERNAL FUNCTIONS
 
     function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
-        // [LOGGAS_INTERNAL] uint256 gasOverheadStart = gasleft();
+        // [LOGGAS_INTERNAL] uint256 gasStart = gasleft();
 
         // forgefmt: disable-next-item
         uint256 totalSize = MAX_TX_SIZE
@@ -93,20 +90,13 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
             }
         }
 
-        int256 _owed = int256(
-            (consumedGas + PAYOUT_INTRINSIC_GAS_OVERHEAD + PAYOUT_PAYMENT_OVERHEAD_GAS) * happyTx.maxFeePerGas
-        ) + happyTx.submitterFee;
+        int256 _owed = int256((consumedGas + PAYOUT_GAS) * happyTx.maxFeePerGas) + happyTx.submitterFee;
         uint256 owed = _owed > 0 ? uint256(_owed) : 0;
-
-        // [LOGGAS_INTERNAL] uint256 gasPaymentStart = gasleft(); // emulates the cost of the top gasleft call
 
         // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
         (payable(tx.origin).call{value: owed}(""));
 
-        // [LOGGAS_INTERNAL] uint256 gasPaymentEnd = gasleft();
-        // [LOGGAS_INTERNAL] console.log("PAYOUT_PAYMENT_OVERHEAD_GAS", gasPaymentStart - gasPaymentEnd);
-        // [LOGGAS_INTERNAL] console.log("PAYOUT_INTRINSIC_GAS_OVERHEAD", gasOverheadStart - gasPaymentStart);
-        // [LOGGAS_INTERNAL] console.log("overall payout function gas usage = ", gasOverheadStart - gasPaymentEnd);
+        // [LOGGAS_INTERNAL] console.log("PAYOUT_GAS", gasStart - gasleft());
 
         return abi.encodeWithSelector(bytes4(0));
     }

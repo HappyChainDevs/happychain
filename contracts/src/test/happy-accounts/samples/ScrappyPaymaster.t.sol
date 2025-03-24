@@ -64,11 +64,8 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         int256 submitterFee = happyTx.submitterFee;
 
         // Calculate expected owed amount
-        uint256 payoutIntrinsicGasOverhead = 800; // From ScrappyPaymaster.sol
-        uint256 payoutPaymentOverheadGas = 9500; // From ScrappyPaymaster.sol
-
-        int256 _owed =
-            int256((consumedGas + payoutIntrinsicGasOverhead + payoutPaymentOverheadGas) * maxFeePerGas) + submitterFee;
+        uint256 payoutGas = 12_000; // From ScrappyPaymaster.sol
+        int256 _owed = int256((consumedGas + payoutGas) * maxFeePerGas) + submitterFee;
         uint256 owed = _owed > 0 ? uint256(_owed) : 0;
 
         // Set up a test recipient address and record its initial balance
