@@ -41,6 +41,8 @@ describe("submitter_state", () => {
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             .then((a) => a.json())) as any
 
+        expect(response.error).toBeUndefined()
+        expect(state.error).toBeUndefined()
         expect(state.status).toBe(StateRequestStatus.Success)
         expect(state.state.status).toBe(EntryPointStatus.Success)
         expect(state.state.included).toBe(true)
@@ -54,6 +56,7 @@ describe("submitter_state", () => {
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             .then((a) => a.json())) as any
 
+        expect(state.error).toBeUndefined()
         expect(state.status).toBe(StateRequestStatus.UnknownHappyTx)
         expect(state.state).toBeUndefined()
     })
@@ -68,11 +71,13 @@ describe("submitter_state", () => {
         client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx) } }).then((a) => a.json())
 
         await new Promise((resolve) => setTimeout(resolve, 1000))
+
         const state = (await client.api.v1.submitter.state[":hash"]
             .$get({ param: { hash: happyTxHash } })
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             .then((a) => a.json())) as any
 
+        expect(state.error).toBeUndefined()
         expect(state.status).toBe(StateRequestStatus.Success)
         expect(state.state.status).toBe(EntryPointStatus.Success)
         expect(state.state.included).toBe(false)
