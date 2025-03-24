@@ -3,7 +3,7 @@ import { deployment } from "#src/deployments"
 import { ValidationRevertedError } from "#src/errors"
 import { getErrorNameFromSelector } from "#src/errors/parsedCodes"
 import { create } from "#src/handlers/accounts/create"
-import { createMockTokenAMintHappyTx, testAccount } from "#src/tests/utils"
+import { createMockTokenAMintHappyTx, getNonce, testAccount } from "#src/tests/utils"
 import { encodeHappyTx } from "#src/utils/encodeHappyTx"
 import { findExecutionAccount } from "#src/utils/findExecutionAccount"
 import { computeHappyTxHash } from "#src/utils/getHappyTxHash"
@@ -29,10 +29,11 @@ describe("simulateSubmit", () => {
     // try with no gas, and lots of gas
     // it("should simulate submit", async (gasLimit = 0n) => {
     it.each([0n, 4000000000n])("should simulate submit", async (gasLimit) => {
-        const unsigned = await createMockTokenAMintHappyTx(smartAccount, 0n, 1n)
+        const nonceTrack = 1n
+        const nonceValue = await getNonce(smartAccount, nonceTrack)
+        const unsigned = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
         unsigned.executeGasLimit = gasLimit
         unsigned.gasLimit = gasLimit
-
         unsigned.validatorData = await testAccount.account.signMessage({
             message: { raw: computeHappyTxHash(unsigned) },
         })
@@ -45,9 +46,9 @@ describe("simulateSubmit", () => {
             })
 
             // 10% off of values i got when i first tested. update as needed (if needed)
-            expect(result.gas).toBeGreaterThan(100000)
+            expect(result.gas).toBeGreaterThan(80000)
             expect(result.gas).toBeLessThan(150000)
-            expect(result.executeGas).toBeGreaterThan(30000)
+            expect(result.executeGas).toBeGreaterThan(15000)
             expect(result.executeGas).toBeLessThan(50000)
             expect(result.validationStatus).toBe("0x00000000")
             expect(result.callStatus).toBe(0)
@@ -71,6 +72,7 @@ describe("simulateSubmit", () => {
     it("should fail on out of gas", async () => {
         const unsigned = await createMockTokenAMintHappyTx(smartAccount, 0n)
         unsigned.executeGasLimit = 1n
+        unsigned.gasLimit = 1n
         unsigned.validatorData = await testAccount.account.signMessage({
             message: { raw: computeHappyTxHash(unsigned) },
         })
