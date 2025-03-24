@@ -5,17 +5,15 @@ import {console, Test} from "forge-std/Test.sol";
 
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-import {HappyTx} from "../core/HappyTx.sol";
-import {HappyTxLib} from "../libs/HappyTxLib.sol";
-
+import {DeployHappyAAContracts} from "../../deploy/DeployHappyAA.s.sol";
 import {MockERC20} from "../../mocks/MockERC20.sol";
 
-import {HappyEntryPoint} from "../core/HappyEntryPoint.sol";
-import {ScrappyAccount} from "../samples/ScrappyAccount.sol";
-import {ScrappyPaymaster} from "../samples/ScrappyPaymaster.sol";
-import {ScrappyAccountFactory} from "../factories/ScrappyAccountFactory.sol";
-
-import {DeployHappyAAContracts} from "../../deploy/DeployHappyAA.s.sol";
+import {HappyEntryPoint} from "boop/core/HappyEntryPoint.sol";
+import {HappyTx} from "boop/core/HappyTx.sol";
+import {ScrappyAccountFactory} from "boop/factories/ScrappyAccountFactory.sol";
+import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
+import {ScrappyAccount} from "boop/samples/ScrappyAccount.sol";
+import {ScrappyPaymaster} from "boop/samples/ScrappyPaymaster.sol";
 
 contract HappyEntryPointGasEstimator is Test {
     using HappyTxLib for HappyTx;

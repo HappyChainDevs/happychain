@@ -2,10 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {ICustomBoopValidator} from "../../interfaces/extensions/ICustomBoopValidator.sol";
-import {HappyTx} from "../../core/HappyTx.sol";
-import {HappyTxLib} from "../../libs/HappyTxLib.sol";
-import {InvalidSignature} from "../../utils/Common.sol";
+
+import {HappyTx} from "boop/core/HappyTx.sol";
+import {ICustomBoopValidator} from "boop/interfaces/extensions/ICustomBoopValidator.sol";
+import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
+import {InvalidSignature} from "boop/utils/Common.sol";
 
 /// Selector returned if trying to validate an account-paid boop with a session key.
 error AccountPaidSessionKeyBoop();

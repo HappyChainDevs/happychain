@@ -5,10 +5,10 @@ import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/Reentrancy
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {IHappyPaymaster, SubmitterFeeTooHigh} from "../interfaces/IHappyPaymaster.sol";
-import {NotFromEntryPoint} from "../utils/Common.sol";
-import {HappyTxLib} from "../libs/HappyTxLib.sol";
-import {HappyTx} from "../core/HappyTx.sol";
+import {HappyTx} from "boop/core/HappyTx.sol";
+import {IHappyPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IHappyPaymaster.sol";
+import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
+import {NotFromEntryPoint} from "boop/utils/Common.sol";
 
 // [LOGGAS_INTERNAL] import {console} from "forge-std/Script.sol";
 

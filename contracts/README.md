@@ -98,7 +98,7 @@ USE_FOUNDRY_ACCOUNT=true
 Foundry dependency management used to rely solely on git submodules. These suck and I absolutely
 refuse to use them.
 
-At the moment, we use (p)npm to manage all dependencies, using the npmjs.com registry when
+At the moment, we use npm to manage all dependencies, using the npmjs.com registry when
 available, or importing from GitHub otherwise.
 
 Foundry now supports installing without creating a submodule, as well as the [Soldeer] package
@@ -111,7 +111,7 @@ In our current approaches, packages are installed in `node_modules`, so `make se
 them out to the `lib` directory.
 
 A note on [remappings](./remappings.txt) and these symlinks: we make sure that all libraries exist
-under `lib` and that the contracts are resolved from their `src` directory.
+under `lib` and that the remappings point to their `src` directory.
 
 This is because the IntelliJ IDEA plugin for Solidity will always resolve `my-library/Contract.sol`
 to `lib/my-library/src/Contract.sol`. It understands remappings, but whenever the name of the

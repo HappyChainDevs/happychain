@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {HappyTx} from "../core/HappyTx.sol";
-import {HappyTxLib} from "../libs/HappyTxLib.sol";
+import {HappyTx} from "boop/core/HappyTx.sol";
+import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 
 contract HappyTxLibTest is Test {
     using HappyTxLib for bytes;

@@ -2,18 +2,17 @@
 pragma solidity ^0.8.28;
 
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
-
-import {ECDSA} from "solady/utils/ECDSA.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
 
-import {IHappyPaymaster} from "../interfaces/IHappyPaymaster.sol";
-import {ExecutionOutput} from "../interfaces/IHappyAccount.sol";
-
-import {ICustomBoopValidator, VALIDATOR_KEY} from "../interfaces/extensions/ICustomBoopValidator.sol";
-import {ICustomBoopExecutor, EXECUTOR_KEY} from "../interfaces/extensions/ICustomBoopExecutor.sol";
+import {CallStatus} from "boop/core/HappyEntryPoint.sol";
+import {HappyTx} from "boop/core/HappyTx.sol";
+import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
+import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
+import {ICustomBoopExecutor, EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
+import {ICustomBoopValidator, VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomBoopValidator.sol";
 import {
     IExtensibleBoopAccount,
     ExtensionType,
@@ -21,18 +20,14 @@ import {
     ExtensionNotRegistered,
     InvalidExtensionValue,
     CallInfo
-} from "../interfaces/extensions/IExtensibleBoopAccount.sol";
-
-import {HappyTx} from "../core/HappyTx.sol";
-import {HappyTxLib} from "../libs/HappyTxLib.sol";
+} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
+import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {
     FutureNonceDuringSimulation,
     InvalidSignature,
     NotFromEntryPoint,
     UnknownDuringSimulation
-} from "../utils/Common.sol";
-
-import {CallStatus} from "../core/HappyEntryPoint.sol";
+} from "boop/utils/Common.sol";
 
 // [LOGGAS_INTERNAL] import {console} from "forge-std/console.sol";
 
