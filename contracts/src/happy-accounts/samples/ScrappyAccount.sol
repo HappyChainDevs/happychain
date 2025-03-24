@@ -248,11 +248,12 @@ contract ScrappyAccount is
             return abi.encodeWithSelector(WrongAccount.selector);
         }
 
-
+        // NOTE: For self-paid transaction, the submitter fee will be signed over so there is no
+        // need to validate that it is reasonable.
         int256 _owed = int256((consumedGas + PAYOUT_GAS) * tx.gasprice) + happyTx.submitterFee;
         uint256 owed = _owed > 0 ? uint256(_owed) : 0;
 
-        // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
+        // Ignoring the success of the transfer, as the balances are verified inside the HappyEntryPoint.
         (payable(tx.origin).call{value: owed}(""));
 
         // [LOGGAS_INTERNAL] console.log("PAYOUT_GAS", gasStart - gasleft());
