@@ -10,7 +10,6 @@ import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
 import {
     ExecutionOutput,
-    GasPriceTooHigh,
     InvalidNonce,
     FutureNonceDuringSimulation
 } from "../../../happy-accounts/interfaces/IHappyAccount.sol";
@@ -63,22 +62,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // Deploy a mock ERC20 token
         mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
-    }
-
-    // ====================================================================================================
-    // VALIDATE TESTS
-
-    function testValidateGasPriceTooHigh() public {
-        // Create a happyTx with a a maxFeePerGas lower than tx.gaslimit
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.maxFeePerGas = 1;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-        vm.txGasPrice(2);
-
-        // Validate function must be called by the HappyEntryPoint
-        vm.prank(happyEntryPoint);
-        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
-        assertEq(validationData, abi.encodeWithSelector(GasPriceTooHigh.selector));
     }
 
     // ====================================================================================================

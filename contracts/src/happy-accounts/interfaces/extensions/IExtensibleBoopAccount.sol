@@ -43,7 +43,7 @@ error InvalidExtensionValue();
  *     ^ IExtensibleBoopAccount.isExtensionRegistered.selector
  *     ^ IExtensibleBoopAccount.executeCall.selector
  * );
-  * ```
+ * ```
  */
 interface IExtensibleBoopAccount is IHappyAccount {
     // ====================================================================================================

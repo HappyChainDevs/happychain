@@ -17,11 +17,6 @@ struct ExecutionOutput {
 }
 
 /**
- * Selector returned when the gas price is too high compared to {HappyTx.maxFeePerGas}.
- */
-error GasPriceTooHigh();
-
-/**
  * Selector returned by {IHappyAccount.validate} if the nonce fails to validate.
  * This indicates an invalid nonce that cannot be used now or in the future.
  */

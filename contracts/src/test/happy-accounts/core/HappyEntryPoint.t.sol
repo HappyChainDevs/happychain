@@ -13,11 +13,7 @@ import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
 import {InvalidSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
 
-import {
-    FutureNonceDuringSimulation,
-    GasPriceTooHigh,
-    InvalidNonce
-} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
+import {FutureNonceDuringSimulation, InvalidNonce} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
 import {
     CallStatus,
     SubmitOutput,
@@ -25,7 +21,8 @@ import {
     PaymentFailed,
     PaymentReverted,
     ValidationFailed,
-    ValidationReverted
+    ValidationReverted,
+    GasPriceTooHigh
 } from "../../../happy-accounts/core/HappyEntryPoint.sol";
 
 import {console} from "forge-std/console.sol";
@@ -57,6 +54,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     address private dest;
 
     function setUp() public {
+        console.log(""); // keep this to avoid linter to complain about an unused import
+
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
 
@@ -245,22 +244,14 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
     }
 
-    function testValidationFailedGasPriceTooHigh() public {
+    function testGasPriceTooHigh() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
-
-        // Set a very high tx gas price (higher than happyTx.maxFeePerGas)
         vm.txGasPrice(happyTx.maxFeePerGas * 2);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(GasPriceTooHigh.selector))
-        );
-
-        // Submit the transaction to trigger the revert
+        vm.expectRevert(GasPriceTooHigh.selector);
         happyEntryPoint.submit(happyTx.encode());
     }
 
     function testValidationFailedInvalidNonce() public {
-        // This should fail for both nonce too high and nonce too low cases
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
         // Set a very high tx nonce (higher than happyTx.nonceValue)
