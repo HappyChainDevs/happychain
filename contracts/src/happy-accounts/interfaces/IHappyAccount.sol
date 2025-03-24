@@ -44,6 +44,9 @@ error FutureNonceDuringSimulation();
  * Interface to be implemented by smart contract accounts conforming to the Happy Account standard.
  * Accounts can optionally implement the {IHappyPaymaster} interface if they wish to support
  * paying submitters themselves without relying on external paymasters.
+ *
+ * The ERC-165 selector for this interface is 0x2b39e81f and can be obtained via:
+ * `console.logBytes4(IHappyAccount.validate.selector ^ IHappyAccount.execute.selector);`
  */
 interface IHappyAccount {
     /**
@@ -110,12 +113,13 @@ interface IHappyAccount {
      * and the provided ID is not 0xffffffff, as per https://eips.ethereum.org/EIPS/eip-165.
      *
      * Required interfaces:
-     * - {IHappyAccount}: This interface itself (0x858232cd)
+     * - {IHappyAccount}: This interface itself (0x2b39e81f)
      * - {IERC165}: Interface detection (0x01ffc9a7)
      * - {IERC1271}: Contract signature validation (0x1626ba7e)
      *
      * Optional interfaces:
-     * - {IHappyPaymaster}: For accounts that want to act as their own paymaster (0x255406e7)
+     * - {IHappyPaymaster}: For accounts that want to act as their own paymaster (0x24542ca5)
+     * - {IExtensibleBoopAccount}: For accounts that want to support extensions (0xf0223481)
      */
     function supportsInterface(bytes4 interfaceID) external view returns (bool);
 }

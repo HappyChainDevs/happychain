@@ -17,7 +17,9 @@ error SubmitterFeeTooHigh();
 
 /**
  * Interface for paymasters that can sponsor gas fees for HappyTx transactions.
- * Each user has a gas budget that refills over time, with a maximum cap.
+ *
+ * The ERC-165 selector for this interface is 0x24542ca5 and can be obtained via:
+ * `console.logBytes4(IHappyPaymaster.payout.selector);`
  */
 interface IHappyPaymaster {
     /**

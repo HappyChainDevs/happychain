@@ -29,8 +29,22 @@ error ExtensionNotRegistered(address extension, ExtensionType extensionType);
 /// extension is invalid.
 error InvalidExtensionValue();
 
-/// Interface for Boop accounts (as specified in IHappyAccount) that are extensible with validator
-/// and executor extensions.
+/**
+ * Interface for Boop accounts (as specified in IHappyAccount) that are extensible with validator
+ * and executor extensions.
+ *
+ * The ERC-165 selector for this interface is 0xf0223481 and can be obtained via:
+ * ```
+ * console.logBytes4(
+ *     IHappyAccount.validate.selector
+ *     ^ IHappyAccount.execute.selector
+ *     ^ IExtensibleBoopAccount.addExtension.selector
+ *     ^ IExtensibleBoopAccount.removeExtension.selector
+ *     ^ IExtensibleBoopAccount.isExtensionRegistered.selector
+ *     ^ IExtensibleBoopAccount.executeCall.selector
+ * );
+  * ```
+ */
 interface IExtensibleBoopAccount is IHappyAccount {
     // ====================================================================================================
     // EVENTS

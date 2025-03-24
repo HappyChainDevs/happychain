@@ -471,10 +471,10 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         bytes4 erc1271InterfaceId = 0x1626ba7e; // ERC-1271 interface ID
         assertTrue(account.supportsInterface(erc1271InterfaceId), "Should support ERC-1271");
 
-        bytes4 happyAccountInterfaceId = 0x909c11f4; // IHappyAccount interface ID
+        bytes4 happyAccountInterfaceId = 0x2b39e81f; // IHappyAccount interface ID
         assertTrue(account.supportsInterface(happyAccountInterfaceId), "Should support IHappyAccount");
 
-        bytes4 happyPaymasterInterfaceId = 0x9c7b367f; // IHappyPaymaster interface ID
+        bytes4 happyPaymasterInterfaceId = 0x24542ca5; // IHappyPaymaster interface ID
         assertTrue(account.supportsInterface(happyPaymasterInterfaceId), "Should support IHappyPaymaster");
     }
 
