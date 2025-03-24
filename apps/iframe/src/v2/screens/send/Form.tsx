@@ -8,7 +8,7 @@ import { Balance } from "#src/v2/components/Balance"
 
 export const FormSendTokens = () => {
     const user = useAtomValue(userAtom)
-
+    console.log(user?.address)
     const {
         form,
         mutationSendTransaction,
@@ -36,9 +36,10 @@ export const FormSendTokens = () => {
                     return (
                         <Field.Gui.Root>
                             <Combobox.Gui.Root
-                                onInputValueChange={handleTokensComboboxInputChange}
                                 collection={tokens.collection}
                                 defaultValue={[tokens.defaultSelection.value]}
+                                placeholder="Select a token"
+                                onInputValueChange={handleTokensComboboxInputChange}
                                 onValueChange={({ items }: { items: Array<TokensComboboxItem> }) => {
                                     const selected = items[0]
                                     handleTokensComboboxValueChange(selected)
@@ -46,7 +47,7 @@ export const FormSendTokens = () => {
                             >
                                 <Combobox.Gui.Label>Token</Combobox.Gui.Label>
                                 <Combobox.Gui.Control>
-                                    <Combobox.Gui.Input />
+                                    <Combobox.Gui.Input className="pe-10 overflow-hidden text-ellipsis" />
                                     <Combobox.Gui.Trigger>
                                         <span className="sr-only">Open tokens list</span>
                                     </Combobox.Gui.Trigger>
@@ -158,7 +159,7 @@ export const FormSendTokens = () => {
                     return (
                         <Field.Gui.Root
                             invalid={
-                                (state.meta.errors.length > 0 || state.value > maxTokenAmount.amount) &&
+                                (state.meta.errors.length > 0 || state.value > maxTokenAmount.value) &&
                                 state.meta.isTouched &&
                                 !state.meta.isValidating
                             }
@@ -174,7 +175,7 @@ export const FormSendTokens = () => {
                                 <span>Amount</span>
                                 <span className="text-[0.8em] opacity-75">
                                     Your balance:&nbsp;
-                                    <Balance status={maxTokenAmount.status} value={maxTokenAmount.amount} />
+                                    <Balance status={maxTokenAmount.status} value={maxTokenAmount.value} />
                                 </span>
                             </Field.Gui.Label>
                             <div className="relative isolate">
@@ -188,7 +189,7 @@ export const FormSendTokens = () => {
                                     type="number"
                                     min="0"
                                     value={state.value}
-                                    //max={maxTokenAmount.amount}
+                                    max={maxTokenAmount.value}
                                     onChange={(e) => handleChange(+e.currentTarget.value)}
                                 />
                                 <Button.Gui
@@ -201,7 +202,7 @@ export const FormSendTokens = () => {
                                             maxTokenAmount.status !== "success"
                                         )
                                             return
-                                        handleChange(maxTokenAmount.amount)
+                                        handleChange(maxTokenAmount.value)
                                     }}
                                     className="absolute font-bold z-1 end-0 top-1/2 -translate-y-1/2"
                                 >
@@ -212,8 +213,8 @@ export const FormSendTokens = () => {
                                 {state.meta.errors.length > 0 && !state.meta.isValidating && state.meta.isTouched
                                     ? (state.meta.errors[0] as unknown as { message: string })?.message
                                     : null}
-                                {state.value && state.value > maxTokenAmount.amount
-                                    ? `Ensure the amount is less or equal to ${maxTokenAmount.amount}.`
+                                {state.value && state.value > maxTokenAmount.value
+                                    ? `Ensure the amount is less or equal to ${maxTokenAmount.value}.`
                                     : null}
                             </Field.Gui.ErrorText>
                             <Field.Gui.HelperText>
