@@ -159,6 +159,8 @@ contract UpgradeSCATest is Test {
             account: smartAccount,
             gasLimit: 4000000000,
             executeGasLimit: 4000000000,
+            validateGasLimit: 4000000000,
+            payoutGasLimit: 4000000000,
             dest: 0x0000000000000000000000000000000000000000,
             paymaster: smartAccount,
             value: 0,

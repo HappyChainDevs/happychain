@@ -7,8 +7,9 @@ library HappyTxLib {
     /// Selector returned by {decode} when unable to properly decode a happyTx.
     error MalformedHappyTx();
 
-    /// @dev Encoded HappyTx takes up 196 bytes for the static fields.
-    uint256 private constant DYNAMIC_FIELDS_OFFSET = 196;
+    /// @dev Size of the static fields in the encoded HappyTx.
+    /// (20 + 4 + 4 + 4 + 4 20 + 20 + 32 + 24 + 8 + 32 + 32 = 204)
+    uint256 private constant DYNAMIC_FIELDS_OFFSET = 204;
 
     /// @dev Assuming all calldata bytes are non-zero (16 gas per byte).
     uint256 private constant CALLDATA_GAS_PER_BYTE = 16;
@@ -31,28 +32,29 @@ library HappyTxLib {
      * as uint32.
      *
      * Encoding Format:
-     * ┌─────────────────────────────────────────────────────────────┐
-     * │                       Fixed Size Fields                     │
-     * ├──────────┬──────┬──────┬──────────┬──────────┬──────────────┤
-     * │ account  │ gas  │ exec │  dest    │paymaster │    value     │
-     * │ (20b)    │ (4b) │ (4b) │  (20b)   │  (20b)   │    (32b)     │
-     * ├──────────┴──────┴──────┴──────────┴──────────┴──────────────┤
-     * │                  More Fixed Size Fields                     │
-     * ├──────────┬──────┬───────────────┬───────────────┐           │
-     * │nonceTrack│nonce │  maxFeePerGas │ submitterFee  │           │
-     * │  (24b)   │ (8b) │     (32b)     │    (32b)      │           │
-     * ├──────────┴──────┴───────────────┴───────────────┘           │
-     * │                     Dynamic Fields                          │
-     * ├─────┬─────────┬─────┬────────────┬─────┬──────────┬─────┬───┤
-     * │len  │callData │len  │paymaster   │len  │validator │len  │ext│
-     * │(4b) │  (Nb)   │(4b) │Data (Nb)   │(4b) │Data (Nb) │(4b) │(N)│
-     * └─────┴─────────┴─────┴────────────┴─────┴──────────┴─────┴───┘
+     * - fixed size fields
+     *      - account (20b)
+     *      - gasLimit (4b)
+     *      - validateGasLimit (4b)
+     *      - executeGasLimit (4b)
+     *      - payoutGasLimit (4b)
+     *      - destination (20b)
+     *      - paymaster (20b)
+     *      - value (32b)
+     *      - nonceTrack (24b)
+     *      - nonce (8b)
+     *      - maxFeePerGas (32b)
+     *      - submitterFee (32b)
+     * - dynamic fields
+     *      - callData (length: 4b = N, data: Nb)
+     *      - paymasterData (length: 4b = N, data: Nb)
+     *      - validatorData (length: 4b = N, data: Nb)
+     *      - extraData (length: 4b = N, data: Nb)
      */
     function encode(HappyTx memory happyTx) internal pure returns (bytes memory result) {
-        // Fixed size fields: 20 + 4 + 4 + 20 + 20 + 32 + 24 + 8 + 32 + 32 = 196 bytes
         // Dynamic fields: 4 bytes length + actual length for each dynamic field
         // Calculate total size needed for the encoded bytes
-        uint256 totalSize = 196 + (4 + happyTx.callData.length) + (4 + happyTx.paymasterData.length)
+        uint256 totalSize = DYNAMIC_FIELDS_OFFSET + (4 + happyTx.callData.length) + (4 + happyTx.paymasterData.length)
             + (4 + happyTx.validatorData.length) + (4 + happyTx.extraData.length);
         assembly {
             // Encoded tx will live at next free memory address.
@@ -76,7 +78,17 @@ library HappyTxLib {
             outPtr := add(outPtr, 4)
             inPtr := add(inPtr, 32)
 
+            // Copy validateGasLimit (4 bytes)
+            mcopy(outPtr, add(inPtr, 28), 4)
+            outPtr := add(outPtr, 4)
+            inPtr := add(inPtr, 32)
+
             // Copy executeGasLimit (4 bytes)
+            mcopy(outPtr, add(inPtr, 28), 4)
+            outPtr := add(outPtr, 4)
+            inPtr := add(inPtr, 32)
+
+            // Copy payoutGasLimit (4 bytes)
             mcopy(outPtr, add(inPtr, 28), 4)
             outPtr := add(outPtr, 4)
             inPtr := add(inPtr, 32)
@@ -177,7 +189,17 @@ library HappyTxLib {
             cdPtr := add(cdPtr, 4)
             memPtr := add(memPtr, 32)
 
-            // Copy executeGasLimit (4 bytes) + zero pad to 32 bytes
+            // Copy validateGasLimit (4 bytes) + zero pad to 32 bytes
+            calldatacopy(add(memPtr, 28), cdPtr, 4)
+            cdPtr := add(cdPtr, 4)
+            memPtr := add(memPtr, 32)
+
+            // Copy executeGaslimit (4 bytes) + zero pad to 32 bytes
+            calldatacopy(add(memPtr, 28), cdPtr, 4)
+            cdPtr := add(cdPtr, 4)
+            memPtr := add(memPtr, 32)
+
+            // Copy payoutGasLimit (4 bytes) + zero pad to 32 bytes
             calldatacopy(add(memPtr, 28), cdPtr, 4)
             cdPtr := add(cdPtr, 4)
             memPtr := add(memPtr, 32)

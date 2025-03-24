@@ -29,8 +29,6 @@ import {
     UnknownDuringSimulation
 } from "boop/utils/Common.sol";
 
-// [LOGGAS_INTERNAL] import {console} from "forge-std/console.sol";
-
 /**
  * Example implementation of a Happy Account with nonce management, reentrancy protection,
  * and proxy upgrade capability.
@@ -63,18 +61,8 @@ contract ScrappyAccount is
     // ====================================================================================================
     // CONSTANTS
 
-    /**
-     * @dev Maximum amount of data allowed to be returned from {IHappyAccount.validate}.
-     * The returned data is as follows:
-     * 1st slot: bytes4 selector (minimum 32 bytes are neded to decode the return data)
-     */
-    uint16 private constant MAX_VALIDATE_RETURN_DATA_SIZE = 32;
-
     /// @dev The amount of gas consumed by the payout function.
     uint256 private constant PAYOUT_GAS = 15_000; // measured: 12833 + safety margin
-
-    /// @dev Gas overhead for executing the execute function, not measured by gasleft()
-    uint256 private constant EXECUTE_INTRINSIC_GAS_OVERHEAD = 79;
 
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
@@ -104,7 +92,7 @@ contract ScrappyAccount is
     }
 
     // ====================================================================================================
-    // CONSTRUCTOR
+    // INITIALIZATION & UPDATES
 
     constructor(address _entrypoint) {
         ENTRYPOINT = _entrypoint;
@@ -117,8 +105,11 @@ contract ScrappyAccount is
         __UUPSUpgradeable_init();
     }
 
+    /// @dev Function that authorizes an upgrade of this contract via the UUPS proxy pattern
+    function _authorizeUpgrade(address newImplementation) internal override onlySelfOrOwner {}
+
     // ====================================================================================================
-    // EXTERNAL FUNCTIONS
+    // EXTENSIONS
 
     function isExtensionRegistered(address extension, ExtensionType extensionType) external view returns (bool) {
         return extensions[extensionType][extension];
@@ -141,6 +132,14 @@ contract ScrappyAccount is
         delete extensions[extensionType][extension];
         emit ExtensionRemoved(extension, extensionType);
     }
+
+    function executeCall(CallInfo memory info) external returns (bool success, bytes memory returnData) {
+        require(msg.sender == dispatchedExecutor, "not called from executor");
+        return info.dest.call{value: info.value}(info.callData);
+    }
+
+    // ====================================================================================================
+    // VALIDATE
 
     function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes memory) {
         bytes4 validationResult;
@@ -173,7 +172,6 @@ contract ScrappyAccount is
             address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
             happyTx.validatorData = signature; // revert back to original value
 
-            // NOTE: This piece of code may consume slightly more gas during simulation, which is conformant with the spec.
             validationResult = signer == owner()
                 ? bytes4(0)
                 : tx.origin == address(0) ? UnknownDuringSimulation.selector : InvalidSignature.selector;
@@ -182,10 +180,11 @@ contract ScrappyAccount is
         return abi.encodeWithSelector(validationResult);
     }
 
-    function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
-        uint256 gasStart = gasleft();
-        (bool found, bytes memory executorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, EXECUTOR_KEY);
+    // ====================================================================================================
+    // EXECUTE
 
+    function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
+        (bool found, bytes memory executorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, EXECUTOR_KEY);
         if (found) {
             if (executorAddress.length != 20) {
                 output.status = CallStatus.EXECUTE_FAILED;
@@ -206,19 +205,13 @@ contract ScrappyAccount is
             if (!success) output.revertData = returnData;
             output.status = success ? CallStatus.SUCCEEDED : CallStatus.CALL_REVERTED;
         }
-
-        output.gas = uint32(gasStart - gasleft() + EXECUTE_INTRINSIC_GAS_OVERHEAD);
-
-        // [LOGGAS_INTERNAL] uint256 endGas = gasleft();
-        // [LOGGAS_INTERNAL] console.log("execute function gas usage: ", gasStart - endGas);
-        // [LOGGAS_INTERNAL] console.log("execute output.gas: ", output.gas);
-
         return output;
     }
 
-    function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
-        // [LOGGAS_INTERNAL] uint256 gasStart = gasleft();
+    // ====================================================================================================
+    // PAYOUT
 
+    function payout(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
         // NOTE: For self-paid transaction, the submitter fee will be signed over so there is no
         // need to validate that it is reasonable.
         int256 _owed = int256((consumedGas + PAYOUT_GAS) * tx.gasprice) + happyTx.submitterFee;
@@ -227,18 +220,11 @@ contract ScrappyAccount is
         // Ignoring the success of the transfer, as the balances are verified inside the HappyEntryPoint.
         (payable(tx.origin).call{value: owed}(""));
 
-        // [LOGGAS_INTERNAL] console.log("PAYOUT_GAS", gasStart - gasleft());
-
         return abi.encodeWithSelector(bytes4(0));
     }
 
-    function executeCall(CallInfo memory info) external returns (bool success, bytes memory returnData) {
-        require(msg.sender == dispatchedExecutor, "not called from executor");
-        return info.dest.call{value: info.value}(info.callData);
-    }
-
     // ====================================================================================================
-    // SPECIAL FUNCTIONS
+    // OTHER
 
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4) {
         // 0x1626ba7e is the ERC-1271 magic value to be returned in case of success
@@ -257,10 +243,4 @@ contract ScrappyAccount is
     receive() external payable {
         emit Received(msg.sender, msg.value);
     }
-
-    // ====================================================================================================
-    // INTERNAL FUNCTIONS
-
-    /// @dev Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-    function _authorizeUpgrade(address newImplementation) internal override onlySelfOrOwner {}
 }
