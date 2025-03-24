@@ -5,6 +5,7 @@ import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {HappyTx} from "boop/core/HappyTx.sol";
+import {Staking, Stake} from "boop/core/Staking.sol";
 import {IHappyAccount, ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
 import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
@@ -128,7 +129,7 @@ event CallReverted(bytes revertData);
 event ExecutionReverted(bytes revertData);
 
 /// @notice cf. {HappyEntryPoint.submit}
-contract HappyEntryPoint is ReentrancyGuardTransient {
+contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     // Avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
 
@@ -142,12 +143,12 @@ contract HappyEntryPoint is ReentrancyGuardTransient {
     uint256 private constant PAYOUT_CALL_OVERHEAD = 7000; // measured: 5038 + safety margin
 
     // ====================================================================================================
-    // State
+    // STATE
 
     mapping(address account => mapping(uint192 nonceTrack => uint64 nonceValue)) public nonceValues;
 
     // ====================================================================================================
-    // EXTERNAL FUNCTIONS
+    // SUBMIT
 
     /**
      * Execute a Happy Transaction, and tries to ensure that the submitter
