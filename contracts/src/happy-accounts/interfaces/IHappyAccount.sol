@@ -37,18 +37,19 @@ interface IHappyAccount {
      * according to its own rules, and an encoded custom error selector otherwise to indicate the
      * reason for rejection.
      *
-     * If the validity cannot be ascertained at simulation time (`tx.origin == 0`), then the
-     * function should return {UnknownDuringSimulation}. In that case, it should still consume
-     * at least as much gas as it would if the validation was successful.
-     *
      * The function should consume a deterministic amount of gas for a given happyTx — more
      * precisely, it is not allowed to consume more gas than it does when simulated via `eth_call`
      * with `tx.origin == 0`.
      *
-     * This function is not allowed to revert except from lack of gas (which, if satisfying the
-     * condition above, indicates a disfunctional submitter).
+     * If the validity cannot be ascertained at simulation time (`tx.origin == 0`), then the
+     * function should return {UnknownDuringSimulation}. In that case, it should still consume
+     * at least as much gas as it would if the validation was successful.
      *
-     * This function is called directly by {EntryPoint.submit}.
+     * This function is called directly by {EntryPoint.submit} and should revert with
+     * {NotFromEntryPoint} if not called from an authorized entrypoint.
+     *
+     * This function is otherwise not allowed to revert. The EntryPoint is able to cope with that
+     * scenario, but submitters will mark the account as broken or malicious in that case.
      */
     function validate(HappyTx memory happyTx) external returns (bytes memory);
 
@@ -61,16 +62,29 @@ interface IHappyAccount {
      * If the call fails, this function must set {ExecutionOutput.revertData} to the call's revert
      * data.
      *
-     * Otherwise it sets {ExecutionOutput.gas} to the gas consumed by its entire execution (not only
-     * the call), and returns.
-     *
-     * This function is never allowed to revert if passed enough gas (according to
-     * {HappyTx.executeGasLimit}).
-     *
      * This function is called directly by {EntryPoint.submit} and should revert with
-     * {NotFromEntryPoint} if not called from the entrypoint.
+     * {NotFromEntryPoint} if not called from an authorized entrypoint.
+     *
+     * This function is otherwise not allowed to revert, meaning reverts of the specified call
+     * should be caught using ExcessivelySafeCall or similar, and some gas should be reserved to
+     * handle the case where the call runs out of gas.
      */
     function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory);
+
+    /**
+     * Pays out the given amount (in wei) to the submitter (tx.origin).
+     *
+     * This function is called directly by {EntryPoint.submit} and should revert with
+     * {NotFromEntryPoint} if not called from an authorized entrypoint.
+     *
+     * This function should simply be implemented as: `payable(tx.origin).call{value: amount}("");`
+     * This is important as the entrypoint will rely on the estimated gas cost of this call to
+     * validate the payment, which could otherwise lead to the boop reverting.
+     * There is no need to validate the status of the payment — the EntryPoint will do so.
+     *
+     * Validations pertaining to self-payment should be made in {validate}.
+     */
+    function payout(uint256 amount) external;
 
     /**
      * This enables the account to recognize an EOA signature as authoritative in the

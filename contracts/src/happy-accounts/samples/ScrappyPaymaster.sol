@@ -72,7 +72,7 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
      * This function validates that the submitter fee is reasonably priced, but otherwise accepts
      * to pay for any boop.
      */
-    function validatePayment(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes memory) {
+    function validatePayment(HappyTx memory happyTx) external view onlyFromEntryPoint returns (bytes memory) {
         // forgefmt: disable-next-item
         uint256 totalSize = MAX_TX_SIZE
             + STATIC_FIELDS_SIZE
