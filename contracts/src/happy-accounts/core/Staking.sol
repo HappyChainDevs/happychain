@@ -229,4 +229,16 @@ contract Staking {
         emit StakeWithdrawal(msg.sender, amount);
         payable(msg.sender).transfer(amount);
     }
+
+    /**
+     * Sends the requested amount of funds from the stake of the account to the specified
+     * destination address. This will revert with an arithmetic exception if the account does not
+     * hold sufficient stake.
+     */
+    function send(address account, address payable to, uint256 amount) internal {
+        stakes[account].balance -= amount;
+        uint256 balance = stakes[account].balance;
+        if (stakes[account].unlockedBalance > balance) stakes[account].unlockedBalance = balance;
+        to.transfer(amount);
+    }
 }

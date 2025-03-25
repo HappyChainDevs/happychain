@@ -68,7 +68,11 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
     // ====================================================================================================
     // EXTERNAL FUNCTIONS
 
-    function validatePayment(HappyTx memory happyTx, uint256 consumedGas) external onlyFromEntryPoint returns (bytes memory) {
+    /**
+     * This function validates that the submitter fee is reasonably priced, but otherwise accepts
+     * to pay for any boop.
+     */
+    function validatePayment(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes memory) {
         // forgefmt: disable-next-item
         uint256 totalSize = MAX_TX_SIZE
             + STATIC_FIELDS_SIZE
@@ -85,12 +89,6 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
                 return abi.encodeWithSelector(SubmitterFeeTooHigh.selector);
             }
         }
-
-        int256 _owed = int256((consumedGas + PAYOUT_GAS) * happyTx.maxFeePerGas) + happyTx.submitterFee;
-        uint256 owed = _owed > 0 ? uint256(_owed) : 0;
-
-        // Ignoring the return value of the transfer, as the balances are verified inside the HappyEntryPoint
-        (payable(tx.origin).call{value: owed}(""));
 
         return abi.encodeWithSelector(bytes4(0));
     }
