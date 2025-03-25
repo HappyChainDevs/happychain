@@ -1,5 +1,6 @@
 import { Dataview, Menu } from "@happy.tech/uikit-react"
 import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import type { CellContext } from "@tanstack/react-table"
 import { readContracts } from "@wagmi/core"
 import type { ReadContractsReturnType } from "@wagmi/core"
@@ -10,6 +11,7 @@ import { type Address, erc20Abi, formatUnits, isAddress } from "viem"
 import { userAtom } from "#src/state/user"
 import { removeWatchedAsset, watchedAssetsAtom } from "#src/state/watchedAssets"
 import { config } from "#src/wagmi/config.ts"
+import { PATHNAME_ROUTE_TOKEN_HISTORY } from "./history/TokenHistory"
 
 enum TableTokensColumn {
     Symbol = "symbol",
@@ -147,8 +149,10 @@ const TokenMenu = (props: TokenMenuProps) => {
             </Menu.Gui.Trigger>
             <Menu.Positioner className="[--z-index:1_!important]">
                 <Menu.Gui.Content className="w-full">
-                    <Menu.Gui.Item value="history">
-                        <span data-part="icon" className="mask-icon-hds-system-gui-clock" /> History
+                    <Menu.Gui.Item value="history" asChild>
+                        <Link params={{ tokenAdress: address }} to={PATHNAME_ROUTE_TOKEN_HISTORY}>
+                            <span data-part="icon" className="mask-icon-hds-system-gui-clock" /> History
+                        </Link>
                     </Menu.Gui.Item>
                     <Menu.Gui.Item value="website" className="relative">
                         <span data-part="icon" className="mask-icon-hds-system-gui-arrow-square-out" />
