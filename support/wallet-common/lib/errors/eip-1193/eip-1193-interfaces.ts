@@ -1,7 +1,7 @@
 import type { ProviderRpcErrorCode as ViemProviderRpcErrorCode } from "viem"
+import type { RpcErrorCodes } from "../eip-1474"
 
-// TODO remove the -1
-export type ProviderRpcErrorCode = ViemProviderRpcErrorCode | -1
+export type ProviderRpcErrorCode = ViemProviderRpcErrorCode
 
 /**
  * Error Object is used to transmit error messages
@@ -10,7 +10,7 @@ export type ProviderRpcErrorCode = ViemProviderRpcErrorCode | -1
  * so we can't send the raw Error class
  */
 export type EIP1193ErrorObject = {
-    code: ProviderRpcErrorCode
+    code: ProviderRpcErrorCode | RpcErrorCodes
     message: string
     data?: unknown
 }

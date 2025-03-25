@@ -6,6 +6,7 @@ import {
     UnsupportedProviderMethodError,
     UserRejectedRequestError,
 } from "viem"
+import { RpcErrorCodes } from "../eip-1474"
 import { EIP1193ProviderErrorCodes } from "./eip-1193-codes"
 import {
     EIP1193ChainDisconnectedError,
@@ -90,7 +91,7 @@ export function getEIP1193ErrorObjectFromUnknown(error: unknown): EIP1193ErrorOb
     }
 
     // biome-ignore lint/suspicious/noExplicitAny: error can be anything
-    const errorCode = (error as any)?.code ?? EIP1193ProviderErrorCodes.Unknown
+    const errorCode = (error as any)?.code ?? RpcErrorCodes.Unknown
     return getEIP1193ErrorObjectFromCode(errorCode, data)
 }
 

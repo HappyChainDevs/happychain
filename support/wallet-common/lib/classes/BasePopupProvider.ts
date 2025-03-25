@@ -1,6 +1,6 @@
 import { type RejectType, type ResolveType, type UUID, createUUID, promiseWithResolvers } from "@happy.tech/common"
 import SafeEventEmitter from "@metamask/safe-event-emitter"
-import { EIP1193ProviderErrorCodes, GenericJsonRpcError, GenericProviderRpcError, LoginRequiredError } from "../errors"
+import { GenericJsonRpcError, GenericProviderRpcError, LoginRequiredError, RpcErrorCodes } from "../errors"
 
 import { convertEIP1193ErrorObjectToErrorInstance } from "../errors/eip-1193/eip-1193-utils"
 import { createErrorFromParams } from "../errors/eip-1474/eip-1474-utils"
@@ -88,19 +88,23 @@ export abstract class BasePopupProvider extends SafeEventEmitter {
 
             return promise
         } catch (e) {
-            // forward login required errors to be handled elsewhere
+            // Forward known errors directly
             if (e instanceof LoginRequiredError) throw e
+            if (e instanceof GenericProviderRpcError || e instanceof GenericJsonRpcError) throw e
 
-            // all other errors must be some form of the standard eip1193 error...
-            // This normalizes for use with libraries such as viem & ethers
-            if (e instanceof GenericProviderRpcError) throw e
-
+            // construct generic error if error payload
+            // doesn't match the above interfaces
             const code =
-                (e as GenericProviderRpcError)?.code in EIP1193ProviderErrorCodes
-                    ? (e as GenericProviderRpcError).code
-                    : EIP1193ProviderErrorCodes.Unknown
-            const message: string = (e as Error)?.message || "An unknown error occurred"
-            throw new GenericProviderRpcError({ code, message, data: message })
+                e instanceof GenericProviderRpcError || e instanceof GenericJsonRpcError
+                    ? e.code
+                    : RpcErrorCodes.Unknown
+
+            // construct standardized EIP1193 error
+            throw new GenericProviderRpcError({
+                code,
+                message: e instanceof Error ? e.message : "An unknown error occurred",
+                data: e,
+            })
         }
     }
 

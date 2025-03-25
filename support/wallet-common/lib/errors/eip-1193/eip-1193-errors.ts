@@ -1,3 +1,4 @@
+import type { RpcErrorCodes } from "../eip-1474"
 import { EIP1193ProviderErrorCodes } from "./eip-1193-codes"
 import type { EIP1193ErrorObject, ProviderRpcErrorCode } from "./eip-1193-interfaces"
 
@@ -6,7 +7,7 @@ import type { EIP1193ErrorObject, ProviderRpcErrorCode } from "./eip-1193-interf
  * Can be instantiated from the deserialized ErrorObject
  */
 export class GenericProviderRpcError extends Error {
-    code: ProviderRpcErrorCode
+    code: ProviderRpcErrorCode | RpcErrorCodes
     data?: unknown
     constructor(errObj: EIP1193ErrorObject) {
         super(errObj.message)
