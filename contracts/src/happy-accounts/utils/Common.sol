@@ -8,18 +8,6 @@ pragma solidity ^0.8.20;
 // ERRORS
 
 /**
- * Selector returned by {HappyEntryPoint.submit} in simulation mode if the nonce can be valid in the
- * future but is not the current nonce (and so the happyTx would fail if submitted before the ones
- * matching missing nonces).
- *
- * This error is used during simulation to indicate that a transaction will be valid
- * once its nonce matches, allowing for gas estimation while preventing premature
- * submission. Outside of simulation, the function should return {InvalidNonce}
- * instead.
- */
-error FutureNonceDuringSimulation();
-
-/**
  * Selector returned by {IHappyAccount.validate} and
  * {IHappyPaymaster.payout} in simulation mode if the validity of the happyTx
  * cannot be ascertained during simulation.

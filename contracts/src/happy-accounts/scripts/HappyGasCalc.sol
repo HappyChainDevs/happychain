@@ -148,7 +148,7 @@ contract HappyEntryPointGasEstimator is Test {
         console.log(" ----------------------------------------------------");
         HappyTx memory happyTx = _createSignedHappyTx(smartAccount, smartAccount);
         vm.prank(address(happyEntryPoint));
-        ScrappyAccount(payable(smartAccount)).validatePayment(happyTx, 0);
+        ScrappyAccount(payable(smartAccount)).validatePayment(happyTx);
     }
 
     // ====================================================================================================
@@ -159,7 +159,7 @@ contract HappyEntryPointGasEstimator is Test {
         console.log(" ----------------------------------------------------");
         HappyTx memory happyTx = _createSignedHappyTx(smartAccount, paymaster);
         vm.prank(address(happyEntryPoint));
-        scrappyPaymaster.validatePayment(happyTx, 0);
+        scrappyPaymaster.validatePayment(happyTx);
     }
 
     // ====================================================================================================

@@ -53,5 +53,5 @@ interface IHappyPaymaster {
      * payment fails (the EntryPoint will validate the payment). If validation fails it should
      * return instead, as per the above.
      */
-    function validatePayment(HappyTx memory happyTx, uint256 consumedGas) external returns (bytes memory);
+    function validatePayment(HappyTx memory happyTx) external returns (bytes memory);
 }
