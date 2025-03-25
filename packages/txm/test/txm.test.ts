@@ -616,48 +616,52 @@ test("Transaction succeeds in congested blocks", async () => {
     expect(executedIncrementerTransaction.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
-test("Finalized transactions are automatically purged from db after finalizedTransactionPurgeTime elapses", async () => {
-    const previousFinalizedTransactionPurgeTime = txm.finalizedTransactionPurgeTime
+test(
+    "Finalized transactions are automatically purged from db after finalizedTransactionPurgeTime elapses",
+    async () => {
+        const previousFinalizedTransactionPurgeTime = txm.finalizedTransactionPurgeTime
 
-    const mockedFinalizedTransactionPurgeTime = 6000
+        const mockedFinalizedTransactionPurgeTime = 6000
 
-    Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
-        value: mockedFinalizedTransactionPurgeTime,
-        configurable: true,
-    })
+        Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
+            value: mockedFinalizedTransactionPurgeTime,
+            configurable: true,
+        })
 
-    const transaction = await createCounterTransaction()
+        const transaction = await createCounterTransaction()
 
-    transactionQueue.push(transaction)
+        transactionQueue.push(transaction)
 
-    await mineBlock(2)
+        await mineBlock(2)
 
-    const transactionPersisted = await getPersistedTransaction(transaction.intentId)
-
-    if (!assertIsDefined(transactionPersisted)) return
-
-    expect(transactionPersisted.status).toBe(TransactionStatus.Success)
-
-    const updatedAt = transactionPersisted.updatedAt
-    const purgeTime = updatedAt + mockedFinalizedTransactionPurgeTime
-
-    while (Date.now() < purgeTime) {
         const transactionPersisted = await getPersistedTransaction(transaction.intentId)
 
-        expect(transactionPersisted).toBeDefined()
-        expect(transactionPersisted?.status).toBe(TransactionStatus.Success)
+        if (!assertIsDefined(transactionPersisted)) return
+
+        expect(transactionPersisted.status).toBe(TransactionStatus.Success)
+
+        const updatedAt = transactionPersisted.updatedAt
+        const purgeTime = updatedAt + mockedFinalizedTransactionPurgeTime
+
+        while (Date.now() < purgeTime) {
+            const transactionPersisted = await getPersistedTransaction(transaction.intentId)
+
+            expect(transactionPersisted).toBeDefined()
+            expect(transactionPersisted?.status).toBe(TransactionStatus.Success)
+
+            await mineBlock()
+        }
 
         await mineBlock()
-    }
 
-    await mineBlock()
+        const persistedTransaction = await getPersistedTransaction(transaction.intentId)
 
-    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+        expect(persistedTransaction).toBeUndefined()
 
-    expect(persistedTransaction).toBeUndefined()
-
-    Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
-        value: previousFinalizedTransactionPurgeTime,
-        configurable: true,
-    })
-}, {timeout: 20000})
+        Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
+            value: previousFinalizedTransactionPurgeTime,
+            configurable: true,
+        })
+    },
+    { timeout: 20000 },
+)
