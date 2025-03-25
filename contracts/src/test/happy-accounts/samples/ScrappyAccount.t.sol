@@ -215,7 +215,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(_happyEntryPoint, recipient);
 
         // Call payout
-        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).validatePayment(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).validatePayment(happyTx);
 
         // Verify payout was successful
         assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
@@ -229,7 +229,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
 
         // Set up to make the owed amount negative (which should result in 0 transfer)
-        uint256 consumedGas = 100;
         happyTx.maxFeePerGas = 1; // Minimum gas price
         happyTx.submitterFee = -100000; // Large negative fee to ensure owed is negative
         happyTx.validatorData = signHappyTx(happyTx, privKey);
@@ -242,7 +241,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.prank(_happyEntryPoint, recipient);
 
         // Call payout
-        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).validatePayment(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).validatePayment(happyTx);
 
         // Verify payout was successful
         assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));

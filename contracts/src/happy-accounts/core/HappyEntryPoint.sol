@@ -9,7 +9,9 @@ import {Staking, Stake} from "boop/core/Staking.sol";
 import {IHappyAccount, ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
 import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {FutureNonceDuringSimulation, UnknownDuringSimulation} from "boop/utils/Common.sol";
+import {UnknownDuringSimulation} from "boop/utils/Common.sol";
+
+import {console} from "forge-std/console.sol";
 
 enum CallStatus {
     SUCCEEDED, // The call succeeded.
@@ -41,16 +43,22 @@ struct SubmitOutput {
      */
     uint32 payoutGas;
     /**
-     * Return value of {IHappyAccount.validate}.
-     *
-     * This is an encoded error, or encoded "error" with bytes4(0) as a selector in case of success.
-     * Standard errors include {UnknownDuringSimulation}, indicating that more data is needed (e.g.
-     * a signature over the gas fields) but gas could still be estimated, and
-     * {FutureNonceDuringSimulation}, indicating that the transaction is valid but can't be
-     * submitted until the nonce matches. Custom errors can be used to indicate further reasons for
-     * rejection.
+     * If true, indicates that the account couldn't ascertain whether the validation was successful
+     * in validation mode (e.g. it couldn't validate a signature because the simulation was used
+     * to populate some of the fields that the signature signs over).
      */
-    bytes validationStatus;
+    bool validityUnknownDuringSimulation;
+    /**
+     * If true, indicates that the account couldn't ascertain whether the validation was successful
+     * in validation mode (e.g. it couldn't validate a signature because the simulation was used
+     * to populate some of the fields that the signature signs over).
+     */
+    bool paymentValidityUnknownDuringSimulation;
+    /**
+     * If true, indicates that while the simulation succeeded, the nonce is ahead of the current
+     * nonce.
+     */
+    bool futureNonceDuringSimulation;
     /**
      * Status of the call specified by the happy tx.
      */
@@ -60,19 +68,18 @@ struct SubmitOutput {
      * (when the associated `callStatus` is set).
      */
     bytes revertData;
-    /**
-     * The return status of {IHappyPaymaster.payout}. If successful, this will be a 4-bytes 0 value,
-     * otherwise the result of an `abi.encodeWithSelector` call, using an error selector to
-     * communicate the reason for failure. This value is returned (not reverted) from `payout` to
-     * communicate the difference between an orderly rejection and an unexpected revert.
-     */
-    bytes payoutStatus;
 }
 
 /**
  * The entrypoint reverts with this error when the gas price exceed {HappyTx.maxFeePerGas}.
  */
 error GasPriceTooHigh();
+
+/**
+ * The entrypoint reverts with this error if the paymaster cannot cover the gas limit cost from his
+ * stake.
+ */
+error InsufficientStake();
 
 /**
  * The entrypoint reverts with this error if the nonce fails to validate.
@@ -83,33 +90,32 @@ error InvalidNonce();
 /**
  * When the account validation of the happyTx reverts (in violation of the spec).
  *
- * The parameter contains the revert data (truncated to {MAX_VALIDATE_RETURN_DATA_SIZE}
- * bytes), so that it can be parsed offchain.
+ * The parameter contains the revert data (truncated to 256 bytes).
  */
 error ValidationReverted(bytes revertData);
 
 /**
  * When the account validation of the happyTx fails.
  *
- * The parameter identifies the revert reason, which should be an encoded custom error
- * returned by {ExecutionOutput.validity}.
+ * The parameter identifies the revert reason (truncated to 192 bytes), which should be an encoded
+ * custom error returned by {IHappyAccount.validate}.
  */
 error ValidationFailed(bytes reason);
 
 /**
- * When payment for happyTx in {IPaymaster.payout} reverts (in violation of the spec).
- * The parameter contains the revert data, so that it can be parsed offchain.
+ * When the paymaster validation of the happyTx reverts (in violation of the spec).
+ *
+ * The parameter contains the revert data (truncated to 256 bytes)
  */
-error PaymentReverted(bytes revertData);
+error PaymentValidationReverted(bytes revertData);
 
 /**
- * When payment for the happyTx from the account or paymaster failed.
+ * When the paymaster validation of the happyTx fails.
  *
- * This could be because the payment was rejected (in which case `result` should contain an encoded
- * custom error) or because the payment wasn't (fully) done (in which case `result` will be
- * `abi.encodeWithSelector(bytes4(0))`.
+ * The parameter identifies the revert reason (truncated to 192 bytes), which should be an encoded
+ * custom error returned by {IHappyPaymaster.validatePayment}.
  */
-error PaymentFailed(bytes result);
+error PaymentValidationFailed(bytes reason);
 
 /**
  * When the {IHappyAccount.execute} call succeeds but reports that the
@@ -132,15 +138,6 @@ event ExecutionReverted(bytes revertData);
 contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     // Avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
-
-    // ====================================================================================================
-    // CONSTANTS
-
-    /**
-     * Fixed max gas overhead for the logic around the ExcessivelySafeCall to
-     * {HappyPaymaster.payout} that needs to be paid for by the payer.
-     */
-    uint256 private constant PAYOUT_CALL_OVERHEAD = 7000; // measured: 5038 + safety margin
 
     // ====================================================================================================
     // STATE
@@ -199,39 +196,45 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         bool isSimulation = tx.origin == address(0);
 
         // ==========================================================================================
-        // 1. Validate gas price & validate with account
+        // 1. Validate gas price & paymaster balance
 
         if (tx.gasprice > happyTx.maxFeePerGas) {
             revert GasPriceTooHigh();
         }
 
-        bool success;
-        bytes memory returnData;
-        bytes memory call = abi.encodeCall(IHappyAccount.validate, (happyTx));
-        uint256 gasBefore = gasleft();
-        (success, returnData) = happyTx.account.excessivelySafeCall(
-            isSimulation && happyTx.validateGasLimit == 0 ? gasleft() : happyTx.validateGasLimit,
-            0, // gas token transfer value
-            256, // max return size: 32 bytes selector + 224 bytes for encoded params
-            call
-        );
-        output.validateGas = uint32(gasBefore - gasleft());
-
-        if (!success) revert ValidationReverted(returnData);
-        output.validationStatus = abi.decode(returnData, (bytes));
-        // If there is less than 4 bytes of data, the validation didn't strictly revert, however
-        // it is improperly implemented.
-        if (!success || output.validationStatus.length < 4) revert ValidationReverted(output.validationStatus);
-
-        bytes4 selector;
-        assembly {
-            // skip outer bytes length, tuple offset, and inner bytes length
-            selector := mload(add(returnData, 96))
+        if (happyTx.paymaster != address(0)) {
+            if (stakes[happyTx.paymaster].balance < happyTx.gasLimit * tx.gasprice) {
+                revert InsufficientStake();
+            }
         }
 
-        if (selector != 0 && !(isSimulation && selector == UnknownDuringSimulation.selector)) {
-            revert ValidationFailed(output.validationStatus);
+        // ==========================================================================================
+        // 2. Validate with account
+
+        (Validity result, uint32 gasUsed, bytes memory revertData) =
+            validate(IHappyAccount.validate.selector, happyTx, happyTx.validateGasLimit);
+
+        if (result == Validity.CALL_REVERTED) revert ValidationReverted(revertData);
+        if (result == Validity.INVALID_RETURN_DATA) revert ValidationReverted(revertData);
+        if (result == Validity.VALIDATION_FAILED) revert ValidationFailed(revertData);
+        if (result == Validity.UNKNOWN_DURING_SIMULATION) {
+            output.validityUnknownDuringSimulation = true;
         }
+        output.validateGas = gasUsed;
+
+        // ==========================================================================================
+        // 3. Validate with paymaster
+
+        (result, gasUsed, revertData) =
+            validate(IHappyPaymaster.validatePayment.selector, happyTx, happyTx.payoutGasLimit);
+
+        if (result == Validity.CALL_REVERTED) revert PaymentValidationReverted(revertData);
+        if (result == Validity.INVALID_RETURN_DATA) revert PaymentValidationReverted(revertData);
+        if (result == Validity.VALIDATION_FAILED) revert PaymentValidationFailed(revertData);
+        if (result == Validity.UNKNOWN_DURING_SIMULATION) {
+            output.paymentValidityUnknownDuringSimulation = true;
+        }
+        output.validateGas = gasUsed;
 
         // ==========================================================================================
         // 2. Validate & update nonce
@@ -239,21 +242,19 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
         int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - expectedNonce;
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) revert InvalidNonce();
+        if (nonceAhead > 0) output.futureNonceDuringSimulation = true;
         nonceValues[happyTx.account][happyTx.nonceTrack]++;
-        if (selector == 0 && nonceAhead > 0) {
-            output.validationStatus = abi.encodeWithSelector(FutureNonceDuringSimulation.selector);
-        }
 
         // ==========================================================================================
-        // 3. Execute the call
+        // 4. Execute the call
 
-        call = abi.encodeCall(IHappyAccount.execute, (happyTx));
-        gasBefore = gasleft();
-        (success, returnData) = happyTx.account.excessivelySafeCall(
+        bytes memory callData = abi.encodeCall(IHappyAccount.execute, happyTx);
+        uint256 gasBefore = gasleft();
+        (bool success, bytes memory returnData) = happyTx.account.excessivelySafeCall(
             isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0, // gas token transfer value
             384, // max return size: struct encoding + 256 bytes revertData
-            call
+            callData
         );
         output.executeGas = uint32(gasBefore - gasleft());
 
@@ -263,56 +264,131 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             output.callStatus = CallStatus.EXECUTE_REVERTED;
             output.revertData = returnData;
         } else {
-            ExecutionOutput memory execOutput = abi.decode(returnData, (ExecutionOutput));
-            output.callStatus = execOutput.status;
-            output.revertData = execOutput.revertData;
-            if (execOutput.status == CallStatus.CALL_REVERTED) {
-                emit CallReverted(execOutput.revertData);
+            (output.callStatus, output.revertData) = parseExecutionOutput(returnData);
+            if (output.callStatus == CallStatus.CALL_REVERTED) {
+                emit CallReverted(output.revertData);
             }
         }
 
         // ==========================================================================================
-        // 4. Collect payment
+        // 5. Collect payment
 
-        uint256 gasBeforePayout = gasleft();
+        // Overestimation of the actual gas cost of the submitter.
+        // The constant 4 is the byte size for the selector for `submit`.
+        uint256 consumedGas;
 
-        // This is an overestimation of the actual gas cost of the submitter.
-        // WITHOUT the gas cost of the "payout" call (which is accounted for later).
-        uint256 consumedGas =
-            HappyTxLib.txGasFromCallGas(gasStart - gasBeforePayout, 4 + encodedHappyTx.length) + PAYOUT_CALL_OVERHEAD;
         if (happyTx.paymaster == address(0)) {
             // Sponsoring submitter, no need to charge anyone
+            consumedGas = HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length);
             output.gas = uint32(consumedGas);
             return output;
         }
 
-        uint256 balance = tx.origin.balance;
+        // The constant 16000 overestimates the the cost of the rest of execution, including
+        // - 2900 gas for writing to stake.balance (warm)
+        // - 100 gas for reading stake.balance (warm)
+        // - 2100 gas for reading stake.unlockedBalance (cold)
+        // - 9100 gas for the value transfer
+        // - not included: 2900 gas for writing stake.unlockedBalance (submitter can detect if needed)
+        consumedGas = HappyTxLib.txGasFromCallGas(gasStart - gasleft() + 16000, 4 + encodedHappyTx.length);
+        uint256 gasxx = gasleft(); // TODO
+        output.gas = uint32(consumedGas);
 
-        call = abi.encodeCall(IHappyPaymaster.validatePayment, (happyTx, consumedGas));
-        gasBefore = gasleft();
-        (success, returnData) = happyTx.paymaster.excessivelySafeCall(
-            isSimulation && happyTx.payoutGasLimit == 0 ? gasleft() : happyTx.payoutGasLimit,
-            0, // gas token transfer value
-            256, // max return size: 32 bytes selector + 224 bytes for encoded params
-            call
-        );
-        if (!success) revert PaymentReverted(returnData);
-        output.payoutGas = uint32(gasBefore - gasleft());
-        output.payoutStatus = abi.decode(returnData, (bytes));
-
-        uint256 payoutGas = gasBeforePayout - gasleft();
-        output.gas = uint32(consumedGas + payoutGas - PAYOUT_CALL_OVERHEAD);
-
-        // It's okay if the payment is only for the agreed-upon gas limit.
-        // This should never happen if happyTx.gasLimit matches the submitter's tx gas limit.
+        // Upper-bound the payment to the agree-upon gas limit.
         consumedGas = output.gas > happyTx.gasLimit ? happyTx.gasLimit : output.gas;
+        uint256 charged = consumedGas * tx.gasprice;
 
-        // `submitterFee` can be negative (rebates) but can't charge less than 0.
-        int256 _expected = int256(consumedGas * tx.gasprice) + happyTx.submitterFee;
-        uint256 expected = _expected > 0 ? uint256(_expected) : 0;
+        // The submitter fee can be negative (rebates) but we can't charge less than 0.
+        charged = -happyTx.submitterFee < int256(charged) ? uint256(int256(charged) + happyTx.submitterFee) : 0;
 
-        if (tx.origin.balance < balance + expected) {
-            revert PaymentFailed(output.payoutStatus);
+        // Pay submitter — no need for revert checks (submitter wants this to succeed).
+        send(happyTx.paymaster, payable(tx.origin), charged);
+        console.log("charged", charged); // TODO
+        console.log("gascost", gasxx - gasleft()); // TODO
+        return output;
+    }
+
+    // ====================================================================================================
+    // HELPERS
+
+    enum Validity {
+        SUCCESS,
+        CALL_REVERTED,
+        INVALID_RETURN_DATA,
+        VALIDATION_FAILED,
+        UNKNOWN_DURING_SIMULATION
+    }
+
+    /**
+     * This function abstracts common boilerplate for calling {IHappyAccount.validate} and
+     * {IHappyAccount.validatePayment}.
+     *
+     * It attempts to call the given function and returns the appropriate {Validity} status, the
+     * call's gas consumption, and data to be passed to a revert if appropriate.
+     */
+    function validate(bytes4 selector, HappyTx memory happyTx, uint256 gasLimit)
+        internal
+        returns (Validity result, uint32 gasUsed, bytes memory revertData)
+    {
+        bool isSimulation = tx.origin == address(0);
+        if (isSimulation && gasLimit == 0) gasLimit = gasleft();
+        bytes memory callData = abi.encodeWithSelector(selector, happyTx);
+
+        uint256 gasBefore = gasleft();
+        // max return size: 256, leaving 192 bytes usable for an encoded error
+        (bool success, bytes memory returnData) =
+            happyTx.account.excessivelySafeCall(gasLimit, /* value: */ 0, 256, callData);
+        gasUsed = uint32(gasBefore - gasleft());
+
+        if (!success) return (Validity.CALL_REVERTED, gasUsed, returnData);
+
+        bytes4 selector;
+        bytes memory status;
+        assembly {
+            // Decoding the return data of a `returns (bytes memory)` function.
+            // 0: outer bytes length, 32: inner bytes offset, 64: inner bytes length: 96: content
+            // If returnData is too short, this might read garbage, but will not revert.
+            // We avoid `abi.decode(returnData, (bytes))` because it can revert.
+            status := add(returnData, 64)
+            selector := mload(add(returnData, 96))
+        }
+
+        if (returnData.length < 96 || status.length < 4 || status.length > 192) {
+            // only 256 bytes were copied, and there's 64 for tuple offset and inner bytes length
+            return (Validity.INVALID_RETURN_DATA, gasUsed, returnData);
+        } else if (isSimulation && selector == UnknownDuringSimulation.selector) {
+            return (Validity.UNKNOWN_DURING_SIMULATION, gasUsed, "");
+        } else if (selector != 0) {
+            return (Validity.VALIDATION_FAILED, gasUsed, status);
+        } else {
+            return (Validity.SUCCESS, gasUsed, "");
+        }
+    }
+
+    /**
+     * Parses the {ExecutionOutput} returned by {IHappyAccount.execute} without reverting, which
+     * `abi.decode` can't do. A malicious input can't hurt us: at worse we'll read garbage (but the
+     * function could have returned garbage if it wanted to).
+     */
+    function parseExecutionOutput(bytes memory returnData)
+        internal
+        returns (CallStatus status, bytes memory revertData)
+    {
+        uint256 revertDataSize;
+        assembly {
+            // skip outer bytes length and struct offset, read status
+            status := mload(add(returnData, 64))
+            // skip output status and struct bytes offset, read size
+            revertDataSize := mload(add(returnData, 128))
+        }
+        if (revertDataSize > 256) revertDataSize = 256; // copy only what we have
+        revertData = new bytes(revertDataSize);
+        assembly {
+            mcopy(revertData, add(returnData, 160), revertDataSize)
+        }
+        if (status != CallStatus.SUCCEEDED && status != CallStatus.CALL_REVERTED) {
+            // The returned status is incorrect, treat this like a revert.
+            status = CallStatus.EXECUTE_REVERTED;
         }
     }
 }

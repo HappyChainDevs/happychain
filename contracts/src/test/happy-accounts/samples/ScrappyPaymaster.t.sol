@@ -79,7 +79,7 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         vm.prank(_happyEntryPoint, RECIPIENT);
 
         // Call payout
-        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
 
         // Verify payout was successful
         assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
@@ -93,7 +93,6 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, paymaster, new bytes(0));
 
         // Set up to make the owed amount negative (which should result in 0 transfer)
-        uint256 consumedGas = 100;
         happyTx.maxFeePerGas = 1; // Minimum gas price
         happyTx.submitterFee = -1000000; // Large negative fee to ensure owed is negative
 
@@ -104,7 +103,7 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         vm.prank(_happyEntryPoint, RECIPIENT);
 
         // Call payout
-        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx, consumedGas);
+        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
 
         // Verify payout was successful
         assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
@@ -124,7 +123,7 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         vm.prank(_happyEntryPoint);
 
         // Call payout - should return SubmitterFeeTooHigh
-        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx, 0);
+        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
 
         // Verify correct error code is returned
         assertEq(payoutData, abi.encodeWithSelector(SubmitterFeeTooHigh.selector));
