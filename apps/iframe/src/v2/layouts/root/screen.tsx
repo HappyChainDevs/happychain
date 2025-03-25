@@ -5,6 +5,7 @@ import { cx } from "cva"
 import { useAtomValue } from "jotai"
 import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
+import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
 
 /**
  * The display area and simulated screen reflection effect.
@@ -172,15 +173,15 @@ const RootBottomNavbarIsland = () => {
                 {[
                     {
                         label: "Tokens",
-                        pathname: "/",
+                        pathname: PATHNAME_ROUTE_TOKENS,
                     },
                     {
                         label: "Games",
-                        pathname: "/",
+                        pathname: "/games",
                     },
                     {
                         label: "History",
-                        pathname: "/",
+                        pathname: "/history",
                     },
                 ].map((item) => (
                     <BottomNavbar.Item asChild key={`island-bottomnav-${item.pathname}`}>
