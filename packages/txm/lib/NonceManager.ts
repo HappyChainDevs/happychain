@@ -57,7 +57,7 @@ export class NonceManager {
 
         const blockchainNonce = blockchainNonceResult.value
 
-        this.maxExecutedNonce = blockchainNonce
+        this.maxExecutedNonce = blockchainNonce - 1
 
         const highestDbNonce = this.txmgr.transactionRepository.getHighestNonce()
 
@@ -67,7 +67,7 @@ export class NonceManager {
         } else {
             this.nonce = highestDbNonce + 1
             this.returnedNonceQueue = this.txmgr.transactionRepository
-                .getNotReservedNoncesInRange(blockchainNonce, highestDbNonce)
+                .getNotReservedNoncesInRange(this.maxExecutedNonce, highestDbNonce)
                 .sort((a, b) => a - b)
         }
     }
@@ -113,6 +113,6 @@ export class NonceManager {
             return
         }
 
-        this.maxExecutedNonce = blockchainNonceResult.value
+        this.maxExecutedNonce = blockchainNonceResult.value - 1
     }
 }
