@@ -190,67 +190,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
-    // PAYOUT TESTS
-
-    function testPayoutSuccessfulGasCalculation() public {
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-
-        // Set up test parameters
-        uint256 consumedGas = 100000;
-        int256 submitterFee = happyTx.submitterFee;
-
-        // Calculate expected owed amount
-        uint256 payoutGas = 15_000; // From ScrappyAccount.sol
-        int256 _owed = int256((consumedGas + payoutGas) * tx.gasprice) + submitterFee;
-        uint256 owed = _owed > 0 ? uint256(_owed) : 0;
-
-        // Set up a test recipient address and record its initial balance
-        address payable recipient = payable(address(0x123));
-        uint256 initialBalance = recipient.balance;
-
-        // Fund the smart account
-        vm.deal(smartAccount, owed * 2); // Ensure enough funds
-
-        // Mock tx.origin to be our test recipient
-        vm.prank(_happyEntryPoint, recipient);
-
-        // Call payout
-        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).validatePayment(happyTx);
-
-        // Verify payout was successful
-        assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
-
-        // Verify recipient received the correct amount
-        assertEq(recipient.balance, initialBalance + owed);
-    }
-
-    function testPayoutZeroOwed() public {
-        // Create a valid happyTx with negative submitterFee to force owed to be zero
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-
-        // Set up to make the owed amount negative (which should result in 0 transfer)
-        happyTx.maxFeePerGas = 1; // Minimum gas price
-        happyTx.submitterFee = -100000; // Large negative fee to ensure owed is negative
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Set up a test recipient address and record its initial balance
-        address payable recipient = payable(address(0x123));
-        uint256 initialBalance = recipient.balance;
-
-        // Mock tx.origin to be our test recipient
-        vm.prank(_happyEntryPoint, recipient);
-
-        // Call payout
-        bytes memory payoutData = ScrappyAccount(payable(smartAccount)).validatePayment(happyTx);
-
-        // Verify payout was successful
-        assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
-
-        // Verify recipient balance didn't change (owed should be 0)
-        assertEq(recipient.balance, initialBalance);
-    }
-
-    // ====================================================================================================
     // ISVALIDSIGNATURE TESTS
 
     function testIsValidSignatureWithValidSignature() public view {

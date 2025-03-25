@@ -10,7 +10,6 @@ import {ECDSA} from "solady/utils/ECDSA.sol";
 import {CallStatus} from "boop/core/HappyEntryPoint.sol";
 import {HappyTx} from "boop/core/HappyTx.sol";
 import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
-import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
 import {ICustomBoopExecutor, EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
 import {ICustomBoopValidator, VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomBoopValidator.sol";
 import {
@@ -34,7 +33,6 @@ import {
  */
 contract ScrappyAccount is
     IExtensibleBoopAccount,
-    IHappyPaymaster,
     ReentrancyGuardTransient,
     OwnableUpgradeable,
     UUPSUpgradeable
@@ -204,14 +202,8 @@ contract ScrappyAccount is
     // ====================================================================================================
     // PAYOUT
 
-    /**
-     * We always accept to self-pay boops (that we previously validated via {validate}).
-     *
-     * Note that for self-paid transaction, the submitter fee will be signed over so there is no
-     * need to validate that it is reasonable.
-     */
-    function validatePayment(HappyTx memory /* happyTx */) external onlyFromEntryPoint returns (bytes memory) {
-        return abi.encodeWithSelector(bytes4(0));
+    function payout(uint256 amount) external {
+        tx.origin.call{value: amount}("");
     }
 
     // ====================================================================================================

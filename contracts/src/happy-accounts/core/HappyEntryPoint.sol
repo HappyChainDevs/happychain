@@ -118,6 +118,12 @@ error PaymentValidationReverted(bytes revertData);
 error PaymentValidationFailed(bytes reason);
 
 /**
+ * When self-paying and the payment from the account fails, either because {IHappyAccount.payout}
+ * reverts, consumes too much gas, or does not transfer the full cost to the submitter.
+ */
+error PayoutFailed();
+
+/**
  * When the {IHappyAccount.execute} call succeeds but reports that the
  * attempted call reverted.
  *
@@ -202,7 +208,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             revert GasPriceTooHigh();
         }
 
-        if (happyTx.paymaster != address(0)) {
+        if (happyTx.paymaster != address(0) && happyTx.paymaster != happyTx.account) {
             if (stakes[happyTx.paymaster].balance < happyTx.gasLimit * tx.gasprice) {
                 revert InsufficientStake();
             }
@@ -273,39 +279,37 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         // ==========================================================================================
         // 5. Collect payment
 
-        // Overestimation of the actual gas cost of the submitter.
-        // The constant 4 is the byte size for the selector for `submit`.
-        uint256 consumedGas;
+        uint256 cost;
 
-        if (happyTx.paymaster == address(0)) {
-            // Sponsoring submitter, no need to charge anyone
-            consumedGas = HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length);
-            output.gas = uint32(consumedGas);
-            return output;
+        if ( /* sponsoring submitter */ happyTx.paymaster == address(0)) {
+            output.gas = HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length);
+            // done!
+        } else if ( /* self-paying */ happyTx.paymaster == happyTx.account) {
+            uint256 balance = tx.origin.balance;
+            gasBefore = gasleft();
+            // The constant 12000 overestimates the cost of the rest of execution, including
+            // 9100 gas of the value transfer.
+            (output.gas, cost) = computeCost(happyTx, gasStart - gasBefore + 12000, encodedHappyTx.length);
+            (success,) = happyTx.account.excessivelySafeCall(
+                gasleft() - 3000,
+                0, // value
+                0, // maxCopy
+                abi.encodeWithSelector(IHappyAccount.payout.selector, cost)
+            );
+            if (!success || gasBefore - gasleft() > 12000 || tx.origin.balance < balance + cost) {
+                revert PayoutFailed();
+            }
+        } /* paymaster */ else {
+            // The constant 16000 overestimates the the cost of the rest of execution, including
+            // - 2900 gas for writing to stake.balance (warm)
+            // - 100 gas for reading stake.balance (warm)
+            // - 2100 gas for reading stake.unlockedBalance (cold)
+            // - 9100 gas for the value transfer
+            (output.gas, cost) = computeCost(happyTx, gasStart - gasleft() + 16000, encodedHappyTx.length);
+            // Pay submitter — no need for revert checks (submitter wants this to succeed).
+            // This should succeed by construction, because of the early staking balance check.
+            send(happyTx.paymaster, payable(tx.origin), cost);
         }
-
-        // The constant 16000 overestimates the the cost of the rest of execution, including
-        // - 2900 gas for writing to stake.balance (warm)
-        // - 100 gas for reading stake.balance (warm)
-        // - 2100 gas for reading stake.unlockedBalance (cold)
-        // - 9100 gas for the value transfer
-        // - not included: 2900 gas for writing stake.unlockedBalance (submitter can detect if needed)
-        consumedGas = HappyTxLib.txGasFromCallGas(gasStart - gasleft() + 16000, 4 + encodedHappyTx.length);
-        uint256 gasxx = gasleft(); // TODO
-        output.gas = uint32(consumedGas);
-
-        // Upper-bound the payment to the agree-upon gas limit.
-        consumedGas = output.gas > happyTx.gasLimit ? happyTx.gasLimit : output.gas;
-        uint256 charged = consumedGas * tx.gasprice;
-
-        // The submitter fee can be negative (rebates) but we can't charge less than 0.
-        charged = -happyTx.submitterFee < int256(charged) ? uint256(int256(charged) + happyTx.submitterFee) : 0;
-
-        // Pay submitter — no need for revert checks (submitter wants this to succeed).
-        send(happyTx.paymaster, payable(tx.origin), charged);
-        console.log("charged", charged); // TODO
-        console.log("gascost", gasxx - gasleft()); // TODO
-        return output;
     }
 
     // ====================================================================================================
@@ -320,19 +324,43 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     }
 
     /**
+     * Given a happyTx, the gas consumed by the entrypoint body (metered until the computeCost call
+     * + estimation of the rest of execution) and its encoded length, returns an estimation of the
+     * gas consumed by the submitter transaction (including intrinsic gas and data gas) and the
+     * total cost to charge to the fee payer.
+     */
+    function computeCost(HappyTx memory happyTx, uint256 entryPointGas, uint256 encodedLength)
+        internal
+        view
+        returns (uint32 consumedGas, uint256 cost)
+    {
+        // The constant 4 is the byte size for the selector for `submit`.
+        consumedGas = HappyTxLib.txGasFromCallGas(entryPointGas, 4 + encodedLength);
+
+        // Upper-bound the payment to the agree-upon gas limit.
+        uint256 boundedGas = consumedGas > happyTx.gasLimit ? happyTx.gasLimit : consumedGas;
+        int256 gasCost = int256(boundedGas * tx.gasprice);
+
+        // The submitter fee can be negative (rebates) but we can't charge less than 0.
+        cost = gasCost + happyTx.submitterFee > 0 ? uint256(gasCost + happyTx.submitterFee) : 0;
+
+        return (consumedGas, cost);
+    }
+
+    /**
      * This function abstracts common boilerplate for calling {IHappyAccount.validate} and
      * {IHappyAccount.validatePayment}.
      *
      * It attempts to call the given function and returns the appropriate {Validity} status, the
      * call's gas consumption, and data to be passed to a revert if appropriate.
      */
-    function validate(bytes4 selector, HappyTx memory happyTx, uint256 gasLimit)
+    function validate(bytes4 fn, HappyTx memory happyTx, uint256 gasLimit)
         internal
         returns (Validity result, uint32 gasUsed, bytes memory revertData)
     {
         bool isSimulation = tx.origin == address(0);
         if (isSimulation && gasLimit == 0) gasLimit = gasleft();
-        bytes memory callData = abi.encodeWithSelector(selector, happyTx);
+        bytes memory callData = abi.encodeWithSelector(fn, happyTx);
 
         uint256 gasBefore = gasleft();
         // max return size: 256, leaving 192 bytes usable for an encoded error
@@ -372,6 +400,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
      */
     function parseExecutionOutput(bytes memory returnData)
         internal
+        pure
         returns (CallStatus status, bytes memory revertData)
     {
         uint256 revertDataSize;
