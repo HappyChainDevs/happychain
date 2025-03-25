@@ -410,6 +410,13 @@
       "stateMutability": "pure"
     },
     {
+      "type": "function",
+      "name": "intentionalRevertEmpty",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "pure"
+    },
+    {
       "type": "error",
       "name": "CustomErrorMockRevert",
       "inputs": []
