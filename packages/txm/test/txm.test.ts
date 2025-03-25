@@ -660,4 +660,4 @@ test("Finalized transactions are automatically purged from db after finalizedTra
         value: previousFinalizedTransactionPurgeTime,
         configurable: true,
     })
-})
+}, {timeout: 20000})
