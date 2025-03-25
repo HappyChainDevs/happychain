@@ -1,9 +1,15 @@
-import { spawn } from "node:child_process"
+import { spawn, execSync } from "node:child_process"
 import { clearInterval } from "node:timers"
 import { mineBlock } from "./anvil"
 
 export async function deployMockContracts(): Promise<void> {
+    execSync("make -C ../../contracts clean")
+
     const deployProcess = spawn("make", ["-C", "../../contracts", "deploy-mocks"])
+    
+    deployProcess.stdout.on("data", (data) => {
+        console.log(`stdout: ${data}`)
+    })
 
     deployProcess.stderr.on("data", (data) => {
         console.error(`stderr: ${data}`)
