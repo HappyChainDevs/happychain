@@ -17,5 +17,6 @@
     "enforce-unique-senders-per-bundle": false,
     "max-gas-per-bundle": "20000000",
     "log-level": "trace",
-    "enable-instant-bundling-endpoint": true
+    "enable-instant-bundling-endpoint": true,
+    "polling-interval": 500
 }
