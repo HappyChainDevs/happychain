@@ -8,7 +8,7 @@ env:
   ORGANIZATION: happychaindevs
   PM2_PROCESS_NAME: happy-staging-bundler
   PORT: 49533
-  RPC_URL: https://rpc.testnet.happy.tech/http
+  RPC_URL: http://localhost:8545
   STAGING_BUNDLER_URL: https://bundler-staging.happy.tech
 
 jobs:
