@@ -25,7 +25,7 @@ const ACTIVITY_HEADLINE = {
         icon: Lightning,
     },
     [OperationType.SessionKeyRemoved]: {
-        label: "Session key removed",
+        label: "Session key(s) removed",
         icon: LightningSlash,
     },
     [OperationType.Failed]: {
