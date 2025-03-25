@@ -10,6 +10,9 @@ via_ir = true
 
 ignored_warnings_from = ["node_modules", "lib"]
 
+# Unlikely to lead to error + it's super hard to get rid of it.
+ignored_error_codes = ["unused-return"]
+
 # Compiler profile for the Kernel contract
 additional_compiler_profiles = [
   { name = "kernel", via_ir = true, optimizer = true, optimizer_runs = 200 }

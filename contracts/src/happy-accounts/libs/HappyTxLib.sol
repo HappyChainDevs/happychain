@@ -276,12 +276,12 @@ library HappyTxLib {
      *         - callGas
      *         - Function dispatch overhead
      */
-    function txGasFromCallGas(uint256 callGas, uint256 calldataLength) internal pure returns (uint256) {
+    function txGasFromCallGas(uint256 callGas, uint256 calldataLength) internal pure returns (uint32) {
         // forgefmt: disable-next-item
-        return (RLP_ENCODED_TX_LENGTH + calldataLength) * CALLDATA_GAS_PER_BYTE
+        return uint32((RLP_ENCODED_TX_LENGTH + calldataLength) * CALLDATA_GAS_PER_BYTE
             + callGas
             + INTRINSIC_TX_GAS
-            + FUNCTION_DISPATCH_OVERHEAD;
+            + FUNCTION_DISPATCH_OVERHEAD);
     }
 
     /**
