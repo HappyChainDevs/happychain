@@ -8,7 +8,7 @@ env:
   ORGANIZATION: happychaindevs
   PM2_PROCESS_NAME: happy-staging-bundler
   PORT: 49533
-  RPC_URL: http://127.0.0.1:8545
+  RPC_URL: https://rpc.testnet.happy.tech/http
   STAGING_BUNDLER_URL: https://bundler-staging.happy.tech
 
 jobs:
@@ -43,14 +43,20 @@ jobs:
             echo "🔁 Testing local curl to 127.0.0.1:8545..."
             curl -X POST --fail --silent --show-error \
               -H "Content-Type: application/json" \
-              -d '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}' \
+              -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
               http://127.0.0.1:8545 || echo "❌ Failed to reach 127.0.0.1:8545"
             
             echo "🌍 Testing curl to public IP..."
             curl -X POST --fail --silent --show-error \
               -H "Content-Type: application/json" \
-              -d '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}' \
+              -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
               http://148.113.212.211:8545 || echo "❌ Failed to reach public IP"
+
+            echo "Testing 127.0.0.1:8545 as the staging_bundler user..."
+            sudo -u staging_bundler curl -X POST \
+              -H "Content-Type: application/json" \
+              -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
+              http://127.0.0.1:8545 || echo "❌ staging_bundler user cannot connect"
       
       - name: Show wallets address and balances
         run: |
