@@ -29,6 +29,29 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       
+      - name: Diagnose
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_2_HOST }}
+          username: ${{ secrets.SERVER_2_USERNAME }}
+          key: ${{ secrets.SERVER_2_KEY }}
+          port: ${{ secrets.SERVER_2_PORT }}
+          script: |
+            echo "🔍 Checking if geth is listening on 8545..."
+            ss -tulnp | grep 8545 || echo "❌ Nothing listening on port 8545"
+            
+            echo "🔁 Testing local curl to 127.0.0.1:8545..."
+            curl -X POST --fail --silent --show-error \
+              -H "Content-Type: application/json" \
+              -d '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}' \
+              http://127.0.0.1:8545 || echo "❌ Failed to reach 127.0.0.1:8545"
+            
+            echo "🌍 Testing curl to public IP..."
+            curl -X POST --fail --silent --show-error \
+              -H "Content-Type: application/json" \
+              -d '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}' \
+              http://148.113.212.211:8545 || echo "❌ Failed to reach public IP"
+      
       - name: Show wallets address and balances
         run: |
           EXECUTOR_WALLETS='${{ secrets.STAGING_BUNDLER_EXECUTOR_WALLETS }}'
@@ -81,22 +104,7 @@ jobs:
           key: ${{ secrets.SERVER_2_KEY }}
           port: ${{ secrets.SERVER_2_PORT }}
           script: |
-            echo "🔍 Checking if geth is listening on 8545..."
-            ss -tulnp | grep 8545 || echo "❌ Nothing listening on port 8545"
-            
-            echo "🔁 Testing local curl to 127.0.0.1:8545..."
-            curl -X POST --fail --silent --show-error \
-              -H "Content-Type: application/json" \
-              -d '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}' \
-              http://127.0.0.1:8545 || echo "❌ Failed to reach 127.0.0.1:8545"
-            
-            echo "🌍 Testing curl to public IP..."
-            curl -X POST --fail --silent --show-error \
-              -H "Content-Type: application/json" \
-              -d '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}' \
-              http://148.113.212.211:8545 || echo "❌ Failed to reach public IP"
-            
-              chmod -R o+rX /home/deployer/happy-staging-bundler
+            chmod -R o+rX /home/deployer/happy-staging-bundler
             mv /home/deployer/happy-staging-bundler /tmp
             sudo -u staging_bundler bash -c '
               rm -rf /home/staging_bundler/happy-staging-bundler
