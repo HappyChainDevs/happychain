@@ -23,7 +23,7 @@ const recipeGuiTableRoot = cva({
 export type GuiTableRootVariantsProps = VariantProps<typeof recipeGuiTableRoot>
 
 const recipeGuiTableHeader = cva({
-    base: "sticky top-0 bg-hds-system-skeuo-surface-default",
+    base: "sticky z-1 top-0 bg-hds-system-skeuo-surface-default",
     variants: {
         intent: {
             default: "text-hds-system-gui-foreground-default/50 shadow-[0_1px_0_0_currentColor]",
