@@ -2,6 +2,7 @@ import { Button, Slider } from "@happy.tech/uikit-react"
 import { Link, useLocation } from "@tanstack/react-router"
 import { cx } from "cva"
 import type { PropsWithChildren } from "react"
+import { ActionsSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
 import { LayoutState, useRootLayout } from "./provider"
 
 /**
@@ -62,16 +63,21 @@ const ContextualActionsGrid = ({ children, cols = 1 }: GridActionsProps) => {
  * A set of contextual action buttons based on the current view/location.
  */
 const ContextualActions = () => {
-    const _location = useLocation()
+    const location = useLocation()
 
     // Based on the current pathname, we can render different actions
     // just export an <Actions /> component from your page/screen and render it here
-
+    if (location.pathname === PATHNAME_ROUTE_SEND_TOKEN)
+        return (
+            <ContextualActionsGrid cols={1}>
+                <ActionsSendToken />
+            </ContextualActionsGrid>
+        )
     // Default actions
     return (
         <ContextualActionsGrid cols={2}>
             {[
-                { label: "Send", pathname: "/" },
+                { label: "Send", pathname: PATHNAME_ROUTE_SEND_TOKEN },
                 { label: "Top up", pathname: "/" },
                 { label: "Buy", pathname: "/" },
                 { label: "Sell", pathname: "/" },
@@ -129,10 +135,9 @@ const ActionsIsland = () => {
                     className={cx(
                         "rounded-[inherit]",
                         "drop-shadow-[0_25px_25px_var(--color-hds-utility-shade-50))]",
-                        "translate-y-0",
-                        "group-[[data-state=ready]]:-translate-y-[150%]",
-                        "motion-safe:transition-[all_500ms_ease-in-out]",
-                        "delay-300",
+                        "motion-safe:transition-all",
+                        "motion-safe:group-[[data-state=transitioning]]:animate-[shutter-close_450ms_ease-in-out_forwards]",
+                        "motion-safe:group-[[data-state=ready]]:animate-[shutter-open_350ms_ease-in-out_forwards]",
                         "absolute size-full block z-1 inset-0",
                         "shadow-hds-bevel-inwards-advanced",
                         "bg-gradient-hds-154deg-system-skeuo-surface-850-700",

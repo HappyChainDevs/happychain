@@ -39,7 +39,7 @@ export interface GuiNativeSelectVariantsProps extends GuiUserInputVariantsProps,
  */
 export const recipeGuiNativeSelect = (props?: GuiNativeSelectVariantsProps) => {
     return cx(
-        "**:data-expandable-indicator:group-focus-within:mask-icon-hds-system-gui-caret-up",
+        "**:data-expandable-indicator:group-has-[&:open]:rotate-180",
         recipeBaseNativeSelect(),
         recipeGuiExpandable(props),
         recipeGuiUserInput(props),

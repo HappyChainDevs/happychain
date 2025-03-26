@@ -7,6 +7,7 @@ import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
 import { RootDialogsIsland } from "./dialogs"
 import { UserDetails } from "./user"
+import { BottomNavbarSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
 
 /**
  * The display area and simulated screen reflection effect.
@@ -168,6 +169,7 @@ const RootBottomNavbarIsland = () => {
     // Prevents rendering the navbar if user isn't connected
     if (PROTECTED_PATHNAMES.includes(pathname) || !user) return null
 
+    if (pathname === PATHNAME_ROUTE_SEND_TOKEN) return <BottomNavbarSendToken />
     // @todo - ... render conditionally any other navbar here ..
 
     // Default navbar
