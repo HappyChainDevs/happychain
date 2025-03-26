@@ -1,10 +1,10 @@
 import { type VariantProps, cva } from "cva"
 
 const recipeGuiTableRoot = cva({
-    base: ["font-hds-system-gui-display border-separate w-full"],
+    base: ["font-hds-system-gui-display border-separate h-fit w-full"],
     variants: {
         scale: {
-            default: "border-spacing-y-1 border-spacing-x-2",
+            default: "border-spacing-y-1 -ms-2 border-spacing-x-2",
         },
         columnsSizing: {
             auto: "table-auto",
@@ -23,7 +23,7 @@ const recipeGuiTableRoot = cva({
 export type GuiTableRootVariantsProps = VariantProps<typeof recipeGuiTableRoot>
 
 const recipeGuiTableHeader = cva({
-    base: "sticky top-0 bg-hds-system-skeuo-surface-default",
+    base: "sticky z-1 top-0 bg-hds-system-skeuo-surface-default",
     variants: {
         intent: {
             default: "text-hds-system-gui-foreground-default/50 shadow-[0_1px_0_0_currentColor]",
