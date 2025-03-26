@@ -11,9 +11,8 @@ import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
-import {InvalidSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
+import {InvalidSignature} from "../../../happy-accounts/utils/Common.sol";
 
-import {FutureNonceDuringSimulation} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
 import {
     CallStatus,
     SubmitOutput,
@@ -290,7 +289,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         _incrementAccountNonce();
 
         // Get the initial nonce
-        uint64 origNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        uint64 origNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
 
         // Create a happyTx with a nonce value less than the current nonce (negative nonceAhead)
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
@@ -301,7 +300,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
 
         // Check that the once wasn't incremented
-        uint64 newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        uint64 newNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, origNonce);
 
         // simulation mode
@@ -311,14 +310,14 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
 
         // Check that the once wasn't incremented
-        newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        newNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, origNonce);
         vm.revertToState(id);
     }
 
     function testInvalidNonceFutureNonce() public {
         // Get the initial nonce
-        uint64 origNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        uint64 origNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
 
         // Create a happyTx with a nonce value greater than the current nonce (positive nonceAhead)
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
@@ -329,7 +328,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
 
         // Check that the once wasn't incremented
-        uint64 newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        uint64 newNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, origNonce);
 
         // simulation
@@ -343,47 +342,27 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testNonceIncrementAfterSubmit() public {
         // Check initial nonce
-        uint64 initialNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        uint64 initialNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(initialNonce, 0);
 
         // Submit a transaction to increment the nonce
         _incrementAccountNonce();
 
         // Check that the nonce was incremented
-        uint64 newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        uint64 newNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, 1);
 
         // simulation
         uint256 id = vm.snapshotState();
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         _incrementAccountNonce();
-        newNonce = happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK);
+        newNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
         assertEq(newNonce, 2);
         vm.revertToState(id);
     }
 
     // ====================================================================================================
     // EXECUTION TESTS
-
-    // TODO: 🚧 Test under construction 🏗️
-    // function testExecuteWithLowExecutionGasLimitOOG() public {
-    //     HappyTx memory happyTx =
-    //         getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-
-    //     // Set a very low execution gas limit for the happyTx, and sign over it
-    //     happyTx.executeGasLimit = 200;
-    //     happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-    //     // Expect the ExecutionReverted event to be emitted
-    //     vm.expectEmit(true, false, false, true, address(happyEntryPoint));
-    //     emit ExecutionReverted(abi.encodePacked(bytes4(0x31fe52e8)));
-    //     SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-
-    //     assertEq(output.validationStatus, bytes4(0));
-    //     assertEq(uint8(output.callStatus), uint8(CallStatus.EXECUTION_REVERTED));
-    //     assertEq(output.revertData, abi.encodeWithSelector(bytes4(keccak256("outOfGas()"))));
-    //     assertEq(output.executeGas, 0);
-    // }
 
     function testExecuteInnerCallRevertsEmptyCallData() public {
         HappyTx memory happyTx = createSignedHappyTx(smartAccount, dest, paymaster, privKey, new bytes(10));

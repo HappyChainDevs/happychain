@@ -61,7 +61,7 @@ contract HappyTxTestUtils is Test {
             paymaster: _paymaster,
             value: 0,
             nonceTrack: DEFAULT_NONCETRACK,
-            nonceValue: happyEntryPoint.nonceValues(_account, DEFAULT_NONCETRACK),
+            nonceValue: uint64(happyEntryPoint.nonceValues(_account, DEFAULT_NONCETRACK)),
             maxFeePerGas: 1200000000,
             submitterFee: 100,
             callData: _callData,

@@ -4,23 +4,19 @@
 [profile.default]
 # For Shanghai hardfork + enables transient variables support.
 solc_version = "0.8.28"
-optimizer = true
-optimizer_runs = 20000
-via_ir = true
 
-ignored_warnings_from = ["node_modules", "lib"]
+ignored_warnings_from = ["node_modules", "lib", "src/deploy", "src/scripts", "src/test", "src/happy-accounts/test"]
 
-# Unlikely to lead to error + it's super hard to get rid of it.
-ignored_error_codes = ["unused-return"]
-
-# Compiler profile for the Kernel contract
+# Compiler profiles for contracts that require via_ir enabled
 additional_compiler_profiles = [
-  { name = "kernel", via_ir = true, optimizer = true, optimizer_runs = 200 }
+  { name = "kernel", via_ir = true, optimizer_runs = 200 },
+  { name = "happy-entrypoint", via_ir = true }
 ]
 
-# Restrict Kernel.sol to use the Kernel profile
+# Restrict Kernel.sol and HappyEntryPoint.sol to use the Kernel and HappyEntryPoint profiles, respectively
 compilation_restrictions = [
-  { paths = "lib/kernel/src/Kernel.sol", via_ir = true, optimizer = true, optimizer_runs = 200 }
+  { paths = "lib/kernel/src/Kernel.sol", via_ir = true, optimizer_runs = 200 },
+  { paths = "src/happy-accounts/core/HappyEntryPoint.sol", via_ir = true }
 ]
 
 # Forge targets Paris by default.

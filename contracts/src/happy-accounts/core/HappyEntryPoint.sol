@@ -19,6 +19,17 @@ enum CallStatus {
 
 }
 
+/// Represents the validation result from account or paymaster validation calls, used internally by the {validate} function
+enum Validity {
+    SUCCESS, // The validation call succeeded and returned a success status.
+    CALL_REVERTED, // The validation call itself reverted (in violation of the spec).
+    INVALID_RETURN_DATA, // The validation call returned malformed data (in violation of the spec).
+    VALIDATION_FAILED, // The validation call succeeded but returned a failure status (e.g., invalid signature).
+    UNKNOWN_DURING_SIMULATION // The validation result needs more data during simulation (e.g., missing gas limit).
+
+}
+
+/// Output structure returned by the {submit} function containing gas estimations and execution results
 struct SubmitOutput {
     /**
      * An overestimation of the minimum gas limit necessary to successfully call {EntryPoint.submit}
@@ -125,7 +136,7 @@ error PayoutFailed();
  * When the {IHappyAccount.execute} call succeeds but reports that the
  * attempted call reverted.
  *
- * The parameter contains the revert data (truncated to {MAX_EXECUTE_RETURN_DATA_SIZE}
+ * The parameter contains the revert data (truncated to {384}
  * bytes, so that it can be parsed offchain.
  */
 event CallReverted(bytes revertData);
@@ -141,7 +152,7 @@ event ExecutionFailed(bytes reason);
 /**
  * When the {IHappyAccount.execute} call reverts (in violation of the spec).
  *
- * The parameter contains the revert data (truncated to {MAX_EXECUTE_RETURN_DATA_SIZE}
+ * The parameter contains the revert data (truncated to {384}
  * bytes, so that it can be parsed offchain.
  */
 event ExecutionReverted(bytes revertData);
@@ -154,7 +165,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     // ====================================================================================================
     // STATE
 
-    mapping(address account => mapping(uint192 nonceTrack => uint64 nonceValue)) public nonceValues;
+    mapping(address account => mapping(uint192 nonceTrack => uint256 nonceValue)) public nonceValues;
 
     // ====================================================================================================
     // SUBMIT
@@ -168,16 +179,21 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
      *
      * This function will also, in this order:
      *
-     * 1. Call the account to validate the happyTx.
+     * 1. Validate gas price and check paymaster's staking balance.
+     *
+     * 2. Call the account to validate the happyTx.
      *    See {IHappyAccount.validate} for compliant behaviour.
      *
-     * 2. Call the account to execute the transaction.
+     * 3. Call the paymaster to validate payment.
+     *    See {IHappyPaymaster.validatePayment} for compliant behaviour.
+     *
+     * 4. Validate and update the nonce.
+     *
+     * 5. Call the account to execute the transaction.
      *    See {IHappyAccount.execute} for compliant behaviour.
      *
-     * 3. Produce a slight overestimation of the gas cost of submitting this
-     *    transaction, and charge it either to the paymaster (which can be the
-     *    account itself) by calling its {IPaymaster.payout} function.
-     *    The paymaster must pay this amount + the cost of the `payout` call.
+     * 6. Collect payment from the paymaster or account.
+     *    Payment is taken from the paymaster's stake or directly from the account.
      *
      * Gas estimation is then possible by doing an `eth_call` on this function
      * with `address(0)` as the sender (`tx.origin`) -— as this scenario is
@@ -257,7 +273,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         }
 
         // ==========================================================================================
-        // 4. Execute the call
+        // 5. Execute the call
 
         bytes memory callData = abi.encodeCall(IHappyAccount.execute, happyTx);
         uint256 gasBefore = gasleft();
@@ -326,14 +342,6 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
 
     // ====================================================================================================
     // HELPERS
-
-    enum Validity {
-        SUCCESS,
-        CALL_REVERTED,
-        INVALID_RETURN_DATA,
-        VALIDATION_FAILED,
-        UNKNOWN_DURING_SIMULATION
-    }
 
     /**
      * Given a happyTx, the gas consumed by the entrypoint body (metered until the computeCost call
