@@ -13,7 +13,7 @@ export const blockExplorerKeys = {
 
     /**
      * Smart contract related query keys
-     */ 
+     */
     contracts: {
         /**
          * Base key for all contract related queries
