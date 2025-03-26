@@ -33,9 +33,10 @@ function useTokenHistoryDataview() {
             {
                 accessorKey: TableTokenHistoryColumn.Amount,
                 header: "Amount",
-                cell: ({ getValue }: TableTokenHistoryCellProps) => (
-                    <Format.Number value={+getValue<string>()} notation="compact" compactDisplay="short" />
-                ),
+                cell: ({ getValue }: TableTokenHistoryCellProps) => {
+                    if (getValue<string>().includes("--")) return getValue<string>()
+                    return <Format.Number value={+getValue<string>()} notation="compact" compactDisplay="short" />
+                },
             },
             {
                 accessorKey: TableTokenHistoryColumn.Meta,

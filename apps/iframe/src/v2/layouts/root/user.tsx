@@ -1,5 +1,5 @@
 import { Clipboard } from "@ark-ui/react"
-import { Button, Collapsible } from "@happy.tech/uikit-react"
+import { Button, Collapsible, Format } from "@happy.tech/uikit-react"
 import { formatUserBalance, shortenAddress } from "@happy.tech/wallet-common"
 import { Link } from "@tanstack/react-router"
 import { atom, useAtom, useAtomValue } from "jotai"
@@ -102,7 +102,11 @@ export const UserDetails = () => {
             >
                 <Collapsible.Gui.Trigger>
                     <span className="inline-flex gap-1 items-baseline">
-                        <span>{formattedBalance}</span>
+                        {typeof formattedBalance === "number" ? (
+                            <Format.Number notation="compact" compactDisplay="short" value={formattedBalance} />
+                        ) : (
+                            <span>{formattedBalance}</span>
+                        )}
                         <span className="opacity-50">HAPPY</span>
                     </span>
                 </Collapsible.Gui.Trigger>

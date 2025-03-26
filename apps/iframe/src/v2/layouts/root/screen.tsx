@@ -5,11 +5,11 @@ import { cx } from "cva"
 import { useAtomValue } from "jotai"
 import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
-import { RootDialogsIsland } from "./dialogs"
-import { UserDetails } from "./user"
 import { BottomNavbarSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
 import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
 import { BottomNavbarTokenHistory, PATHNAME_ROUTE_TOKEN_HISTORY } from "#src/v2/screens/tokens/history/TokenHistory"
+import { RootDialogsIsland } from "./dialogs"
+import { UserDetails } from "./user"
 
 /**
  * The display area and simulated screen reflection effect.
@@ -61,7 +61,7 @@ const RootView = ({ className = "", children, ...props }: HTMLAttributes<HTMLDiv
         <div
             data-scope="display"
             data-part="view"
-            className={cx("relative group grid h-full grid-rows-[1fr_12fr_1fr]", className)}
+            className={cx("relative group grid h-full", "grid-rows-[auto_1fr_auto]", className)}
             {...props}
         >
             {children}
@@ -195,7 +195,15 @@ const RootBottomNavbarIsland = () => {
                     },
                 ].map((item) => (
                     <BottomNavbar.Item asChild key={`island-bottomnav-${item.pathname}`}>
-                        <Link to={item.pathname}>{item.label}</Link>
+                        <Link to={item.pathname}>
+                            {({ isActive }) => {
+                                return (
+                                    <>
+                                        <span className={isActive ? "opacity-100" : "opacity-50"}>{item.label}</span>
+                                    </>
+                                )
+                            }}
+                        </Link>
                     </BottomNavbar.Item>
                 ))}
             </nav>
@@ -211,6 +219,8 @@ const RootHeader = ({ children }: PropsWithChildren) => {
     )
 }
 const RootHeaderIsland = () => {
+    const matchTokenHistory = useMatch({ from: PATHNAME_ROUTE_TOKEN_HISTORY, shouldThrow: false })
+    if (matchTokenHistory) return null
     return (
         <RootHeader>
             <UserDetails />

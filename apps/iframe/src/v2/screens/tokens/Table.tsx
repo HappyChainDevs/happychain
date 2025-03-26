@@ -100,9 +100,10 @@ function useUserWatchedAssetsDataview() {
             {
                 accessorKey: TableTokensColumn.Balance,
                 header: "Amount",
-                cell: (props: TableTokensCellProps) => (
-                    <Format.Number value={+props.getValue<string>()} notation="compact" compactDisplay="short" />
-                ),
+                cell: ({ getValue }: TableTokenHistoryCellProps) => {
+                    if (getValue<string>().includes("--")) return getValue<string>()
+                    return <Format.Number value={+getValue<string>()} notation="compact" compactDisplay="short" />
+                },
             },
             {
                 accessorKey: TableTokensColumn.Meta,

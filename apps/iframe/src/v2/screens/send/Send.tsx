@@ -1,6 +1,7 @@
 import { Button } from "@happy.tech/uikit-react"
 import { Link } from "@tanstack/react-router"
 import { BottomNavbar, Scrollable } from "#src/v2/layouts/root/screen"
+import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
 import { FormSendTokens } from "./Form"
 
 export const PATHNAME_ROUTE_SEND_TOKEN = "/embed/send"
@@ -20,7 +21,7 @@ export const BottomNavbarSendToken = () => {
         <BottomNavbar asChild>
             <nav>
                 <BottomNavbar.Item asChild>
-                    <Link to="/embed" className="gap-2">
+                    <Link to={PATHNAME_ROUTE_TOKENS} className="gap-2">
                         <span
                             aria-hidden="true"
                             className="h-3.5 block aspect-square mask-icon-hds-system-gui-arrow-left bg-current"
