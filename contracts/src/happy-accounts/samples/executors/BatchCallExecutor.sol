@@ -9,7 +9,6 @@ import {IExtensibleBoopAccount, CallInfo} from "boop/interfaces/extensions/IExte
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {CallInfoCoding} from "boop/samples/executors/CallInfoCoding.sol";
 
-
 /**
  * @dev Key used in {HappyTx.extraData} for call information (array of {CallInfo}),
  * to be looked up by {BatchCallExecutor.execute}.
