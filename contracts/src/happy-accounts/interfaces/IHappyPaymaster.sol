@@ -4,12 +4,6 @@ pragma solidity ^0.8.20;
 import {HappyTx} from "boop/core/HappyTx.sol";
 
 /**
- * Selector returned from {IHappyPaymaster.payout} when the destination address of
- * the happyTx does not match the paymaster's target address.
- */
-error WrongTarget();
-
-/**
  * Selector returned from {IHappyPaymaster.payout} when the paymaster's fee exceeds
  * the maximum allowed.
  */
