@@ -1,7 +1,16 @@
-import { useRouterState } from "@tanstack/react-router"
-import { useAtomValue } from "jotai"
-import { type PropsWithChildren, type SetStateAction, createContext, useContext, useState } from "react"
+import { type RouterEvents, useRouter, useRouterState } from "@tanstack/react-router"
+import { useAtom, useAtomValue } from "jotai"
+import {
+    type PropsWithChildren,
+    type SetStateAction,
+    createContext,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from "react"
 import { userAtom } from "#src/state/user"
+import { dialogConfirmLogOutVisibility, userDetailsCollapsibleVisibility } from "./user"
 
 /**
  * The possible states of the wallet layout.
@@ -18,8 +27,11 @@ export enum LayoutState {
  * Centralizes and manages all state and logic for the root layout.
  */
 function useProviderValue() {
+    const router = useRouter()
     const state = useRouterState()
     const user = useAtomValue(userAtom)
+    const [isConfirmLogoutDialogVisible, setConfirmLogOutDialogVisibility] = useAtom(dialogConfirmLogOutVisibility)
+    const [, setUserDetailsCollapseVisibility] = useAtom(userDetailsCollapsibleVisibility)
 
     // Slider state slices and handlers
     const [ticks] = useState([0, 50, 100]) // the visible "ticks" on the device UI
@@ -45,13 +57,26 @@ function useProviderValue() {
         setNavSliderPosition([newPosition])
     }
 
+    function handleOnRouterResolvedEvent(_e: RouterEvents["onResolved"]) {
+        setUserDetailsCollapseVisibility(false)
+        setConfirmLogOutDialogVisibility(false)
+    }
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: we just want to run this onMount
+    useEffect(() => {
+        const unsubscribe = router.subscribe("onResolved", handleOnRouterResolvedEvent)
+        return unsubscribe
+    }, [])
+
+    const layoutState = useMemo(() => {
+        if (!user) return LayoutState.Unready
+        if (state.status === "pending" || isConfirmLogoutDialogVisible) return LayoutState.Transitioning
+        return LayoutState.Ready
+    }, [user, state.status, isConfirmLogoutDialogVisible])
+
     return {
         routerState: state,
-        layoutState: !user
-            ? LayoutState.Unready
-            : state.isLoading || state.isTransitioning
-              ? LayoutState.Transitioning
-              : LayoutState.Ready,
+        layoutState,
         navSliderPosition,
         handleNavValueChange,
         handleNavValueChangeEnd,

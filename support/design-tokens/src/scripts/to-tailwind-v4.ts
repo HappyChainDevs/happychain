@@ -291,6 +291,11 @@ function main(): void {
             transform: false,
         },
         {
+            path: "src/animations.css",
+            location: ContentPositionInFile.Start,
+            transform: false,
+        },
+        {
             path: "src/gradients.css",
             location: ContentPositionInFile.ThemeInline,
             transform: true,
