@@ -116,6 +116,15 @@ export type TransactionManagerConfig = {
          * @unit milliseconds
          */
         livenessDownDelay?: number
+
+        /**
+         * The interval between health check attempts for the RPC.
+         * When unhealthy, the system will send chainId requests at this interval
+         * until either the RPC recovers or the connection is terminated.
+         * @default 2000 (2 seconds)
+         * @unit milliseconds
+         */
+        livenessCheckInterval?: number
     }
     /** The private key of the account used for signing transactions. */
     privateKey: Hex
@@ -245,6 +254,7 @@ export class TransactionManager {
     public readonly livenessPingInterval: number
     public readonly livenessSuccessCount: number
     public readonly livenessDownDelay: number
+    public readonly livenessCheckInterval: number
 
     constructor(_config: TransactionManagerConfig) {
         initializeTelemetry({
@@ -361,6 +371,7 @@ export class TransactionManager {
         this.livenessSuccessCount = _config.rpc.livenessSuccessCount ?? 3
         this.livenessPingInterval = _config.rpc.livenessPingInterval ?? 2000
         this.livenessDownDelay = _config.rpc.livenessDownDelay ?? 5000
+        this.livenessCheckInterval = _config.rpc.livenessCheckInterval ?? 2000
     }
 
     /**
