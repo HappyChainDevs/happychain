@@ -1,11 +1,12 @@
 import { type HTMLArkProps, ark } from "@ark-ui/react"
 import { Button, type GuiButtonProps } from "@happy.tech/uikit-react"
-import { Link, useLocation } from "@tanstack/react-router"
+import { Link, useLocation, useMatch } from "@tanstack/react-router"
 import { cx } from "cva"
 import { useAtomValue } from "jotai"
 import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
 import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
+import { BottomNavbarTokenHistory, PATHNAME_ROUTE_TOKEN_HISTORY } from "#src/v2/screens/tokens/history/TokenHistory"
 
 /**
  * The display area and simulated screen reflection effect.
@@ -159,11 +160,12 @@ const PROTECTED_PATHNAMES: Array<string> = []
  */
 const RootBottomNavbarIsland = () => {
     const { pathname } = useLocation()
+    const matchTokenHistory = useMatch({ from: PATHNAME_ROUTE_TOKEN_HISTORY, shouldThrow: false })
     const user = useAtomValue(userAtom)
 
     // Prevents rendering the navbar if user isn't connected
     if (PROTECTED_PATHNAMES.includes(pathname) || !user) return null
-
+    if (matchTokenHistory) return <BottomNavbarTokenHistory />
     // @todo - ... render conditionally any other navbar here ..
 
     // Default navbar

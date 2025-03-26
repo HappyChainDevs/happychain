@@ -1,4 +1,4 @@
-import { Dataview, Menu } from "@happy.tech/uikit-react"
+import { Dataview, Format, Menu } from "@happy.tech/uikit-react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import type { CellContext } from "@tanstack/react-table"
@@ -6,12 +6,12 @@ import { readContracts } from "@wagmi/core"
 import type { ReadContractsReturnType } from "@wagmi/core"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import type { WatchAssetParameters } from "viem"
 import { type Address, erc20Abi, formatUnits, isAddress } from "viem"
 import { userAtom } from "#src/state/user"
-import { removeWatchedAsset, watchedAssetsAtom } from "#src/state/watchedAssets"
+import { removeWatchedAsset } from "#src/state/watchedAssets"
 import { config } from "#src/wagmi/config.ts"
 import { PATHNAME_ROUTE_TOKEN_HISTORY } from "./history/TokenHistory"
+import { useWatchedAssets } from "./useWatchedAssets"
 
 enum TableTokensColumn {
     Symbol = "symbol",
@@ -48,12 +48,7 @@ export function getQueryKeyGetAllBalancesWatchedToken(userAddress?: Address) {
 }
 function useUserWatchedAssetsDataview() {
     const user = useAtomValue(userAtom)
-    const watchedAssets = useAtomValue(watchedAssetsAtom)
-    const userAssets = useMemo(() => {
-        if (!user?.address) return [] as Array<WatchAssetParameters>
-        const tokens = watchedAssets[user.address] || []
-        return tokens.filter((asset) => asset.type === "ERC20") as Array<WatchAssetParameters>
-    }, [user, watchedAssets])
+    const userAssets = useWatchedAssets({ type: "ERC20" })
 
     const placeholderData = useMemo(
         () =>
@@ -105,6 +100,9 @@ function useUserWatchedAssetsDataview() {
             {
                 accessorKey: TableTokensColumn.Balance,
                 header: "Amount",
+                cell: (props: TableTokensCellProps) => (
+                    <Format.Number value={+props.getValue<string>()} notation="compact" compactDisplay="short" />
+                ),
             },
             {
                 accessorKey: TableTokensColumn.Meta,
