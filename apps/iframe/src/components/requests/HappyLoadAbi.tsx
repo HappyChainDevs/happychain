@@ -22,11 +22,7 @@ export const HappyLoadAbi = ({
     accept,
 }: RequestConfirmationProps<typeof HappyMethodNames.LOAD_ABI>) => {
     const classifiedAbi = useClassifyAbi(params.abi)
-    const {
-        data: contractData,
-        error: contractDataFetchError,
-        isPending,
-    } = useSmartContract(params.address)
+    const { data: contractData, error: contractDataFetchError, isPending } = useSmartContract(params.address)
 
     return (
         <Layout
@@ -67,7 +63,9 @@ export const HappyLoadAbi = ({
                     {!isPending && !contractDataFetchError && (
                         <SubsectionContent>
                             <SubsectionTitle>Contract Name</SubsectionTitle>
-                            <FormattedDetailsLine>{contractData?.name ?? "Unverified contract - name data not available"}</FormattedDetailsLine>
+                            <FormattedDetailsLine>
+                                {contractData?.name ?? "Unverified contract - name data not available"}
+                            </FormattedDetailsLine>
                         </SubsectionContent>
                     )}
                     {classifiedAbi.map(({ label, items }) => (
