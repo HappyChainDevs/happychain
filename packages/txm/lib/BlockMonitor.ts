@@ -41,6 +41,8 @@ export class BlockMonitor {
         TxmMetrics.getInstance().currentBlockGauge.record(Number(block.number))
         TxmMetrics.getInstance().newBlockDelayHistogram.record(Date.now() - Number(block.timestamp) * 1000)
 
+        this.txmgr.rpcLivenessMonitor.onSuccess()
+
         this.scheduleTimeout()
     }
 
@@ -53,6 +55,7 @@ export class BlockMonitor {
 
     private resetBlockSubscription() {
         TxmMetrics.getInstance().resetBlockMonitorCounter.add(1)
+        this.txmgr.rpcLivenessMonitor.onFailure()
         if (this.unwatch) {
             this.unwatch()
         }

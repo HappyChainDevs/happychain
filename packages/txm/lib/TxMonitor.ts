@@ -64,6 +64,11 @@ export class TxMonitor {
     }
 
     private async handleNewBlock(block: LatestBlock) {
+        if (!this.transactionManager.rpcLivenessMonitor.isAlive) {
+            Logger.instance.warn(LogTag.TXM, "RPC is not alive, skipping attempt to monitor transactions")
+            return
+        }
+
         const transactions = this.transactionManager.transactionRepository.getNotFinalizedTransactionsOlderThan(
             block.number,
         )
@@ -98,11 +103,15 @@ export class TxMonitor {
                                 isResolved = true
                                 resolve(attemptWithReceipt)
                             }
+                            this.transactionManager.rpcLivenessMonitor.onSuccess()
                             return ok(attemptWithReceipt)
                         }
                         if (receiptResult.error instanceof TransactionReceiptNotFoundError) {
+                            this.transactionManager.rpcLivenessMonitor.onSuccess()
                             return ok(null)
                         }
+
+                        this.transactionManager.rpcLivenessMonitor.onFailure()
                         return err(receiptResult.error)
                     },
                 )
