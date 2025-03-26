@@ -1,4 +1,6 @@
 import { LogTag, Logger } from "@happy.tech/common"
+import { Topics } from "./EventBus"
+import { eventBus } from "./EventBus"
 import type { TransactionManager } from "./TransactionManager"
 import { TxmMetrics } from "./telemetry/metrics"
 
@@ -53,7 +55,8 @@ export class RpcLivenessMonitor {
             this.isAlive = false
             this.isDownSince = new Date()
             this.consecutiveSuccessesWhileCheckingIfHealthy = 0
-            TxmMetrics.getInstance().rpcLivenessMonitorGauge.record(this.isAlive ? 1 : 0)
+            this.updateLivenessMetrics()
+            eventBus.emit(Topics.RpcIsDown)
             Logger.instance.error(LogTag.TXM, "Detected that the RPC is not healthy")
 
             this.checkIfHealthyInterval = setInterval(() => {
@@ -81,11 +84,16 @@ export class RpcLivenessMonitor {
             this.isDownSince = null
             this.consecutiveSuccessesWhileCheckingIfHealthy = 0
             this.events = []
-            TxmMetrics.getInstance().rpcLivenessMonitorGauge.record(this.isAlive ? 1 : 0)
+            this.updateLivenessMetrics()
+            eventBus.emit(Topics.RpcIsUp)
             if (this.checkIfHealthyInterval) {
                 clearInterval(this.checkIfHealthyInterval)
             }
         }
+    }
+
+    updateLivenessMetrics() {
+        TxmMetrics.getInstance().rpcLivenessMonitorGauge.record(this.isAlive ? 1 : 0)
     }
 
     ratioOfSuccess() {
