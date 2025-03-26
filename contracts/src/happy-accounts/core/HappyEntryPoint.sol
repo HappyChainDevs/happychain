@@ -275,15 +275,15 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         // ==========================================================================================
         // 5. Execute the call
 
-        bytes memory callData = abi.encodeCall(IHappyAccount.execute, happyTx);
-        uint256 gasBefore = gasleft();
+        bytes memory executeCallData = abi.encodeCall(IHappyAccount.execute, happyTx);
+        uint256 gasBeforeExecute = gasleft();
         (bool success, bytes memory returnData) = happyTx.account.excessivelySafeCall(
             isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
             0, // gas token transfer value
             384, // max return size: struct encoding + 256 bytes revertData
-            callData
+            executeCallData
         );
-        output.executeGas = uint32(gasBefore - gasleft());
+        output.executeGas = uint32(gasBeforeExecute - gasleft());
 
         // Don't revert if execution fails, as we still want to get the payment for a reverted call.
         if (!success) {
@@ -291,7 +291,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             output.callStatus = CallStatus.EXECUTE_REVERTED;
             output.revertData = returnData;
         } else {
-            (output.callStatus, output.revertData) = parseExecutionOutput(returnData);
+            (output.callStatus, output.revertData) = _parseExecutionOutput(returnData);
             if (output.callStatus == CallStatus.CALL_REVERTED) {
                 emit CallReverted(output.revertData);
             } else if (output.callStatus == CallStatus.EXECUTE_FAILED) {
@@ -314,17 +314,17 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             // done!
         } else if ( /* self-paying */ happyTx.paymaster == happyTx.account) {
             uint256 balance = tx.origin.balance;
-            gasBefore = gasleft();
+            uint256 gasBeforePayout = gasleft();
             // The constant 12000 overestimates the cost of the rest of execution, including
             // 9100 gas of the value transfer.
-            (output.gas, cost) = computeCost(happyTx, gasStart - gasBefore + 12000, encodedHappyTx.length);
+            (output.gas, cost) = _computeCost(happyTx, gasStart - gasBeforePayout + 12000, encodedHappyTx.length);
             (success,) = happyTx.account.excessivelySafeCall(
-                gasleft() - 3000,
+                gasleft() - 3000, // an OOG buffer
                 0, // value
                 0, // maxCopy
                 abi.encodeWithSelector(IHappyAccount.payout.selector, cost)
             );
-            if (!success || gasBefore - gasleft() > 12000 || tx.origin.balance < balance + cost) {
+            if (!success || gasBeforePayout - gasleft() > 12000 || tx.origin.balance < balance + cost) {
                 revert PayoutFailed();
             }
         } /* paymaster */ else {
@@ -333,7 +333,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             // - 100 gas for reading stake.balance (warm)
             // - 2100 gas for reading stake.unlockedBalance (cold)
             // - 9100 gas for the value transfer
-            (output.gas, cost) = computeCost(happyTx, gasStart - gasleft() + 16000, encodedHappyTx.length);
+            (output.gas, cost) = _computeCost(happyTx, gasStart - gasleft() + 16000, encodedHappyTx.length);
             // Pay submitter — no need for revert checks (submitter wants this to succeed).
             // This should succeed by construction, because of the early staking balance check.
             _transferTo(happyTx.paymaster, payable(tx.origin), cost);
@@ -419,7 +419,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
      * `abi.decode` can't do. A malicious input can't hurt us: at worse we'll read garbage (but the
      * function could have returned garbage if it wanted to).
      */
-    function parseExecutionOutput(bytes memory returnData)
+    function _parseExecutionOutput(bytes memory returnData)
         internal
         pure
         returns (CallStatus status, bytes memory revertData)
