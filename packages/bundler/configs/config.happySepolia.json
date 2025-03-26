@@ -1,6 +1,6 @@
 {
     "network-name": "happy-testnet",
-    "rpc-url": "http://148.113.212.211:8545",
+    "rpc-url": "http://localhost:8545",
     "min-entity-stake": 1,
     "min-executor-balance": "10000000000000000",
     "min-entity-unstake-delay": 1,
