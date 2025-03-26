@@ -45,7 +45,7 @@ interface IHappyAccount {
      * function should return {UnknownDuringSimulation}. In that case, it should still consume
      * at least as much gas as it would if the validation was successful.
      *
-     * This function is called directly by {EntryPoint.submit} and should revert with
+     * This function is called directly by {HappyEntryPoint.submit} and should revert with
      * {NotFromEntryPoint} if not called from an authorized entrypoint.
      *
      * This function is otherwise not allowed to revert. The EntryPoint is able to cope with that
@@ -62,7 +62,7 @@ interface IHappyAccount {
      * If the call fails, this function must set {ExecutionOutput.revertData} to the call's revert
      * data.
      *
-     * This function is called directly by {EntryPoint.submit} and should revert with
+     * This function is called directly by {HappyEntryPoint.submit} and should revert with
      * {NotFromEntryPoint} if not called from an authorized entrypoint.
      *
      * This function is otherwise not allowed to revert, meaning reverts of the specified call
@@ -74,7 +74,7 @@ interface IHappyAccount {
     /**
      * Pays out the given amount (in wei) to the submitter (tx.origin).
      *
-     * This function is called directly by {EntryPoint.submit} and should revert with
+     * This function is called directly by {HappyEntryPoint.submit} and should revert with
      * {NotFromEntryPoint} if not called from an authorized entrypoint.
      *
      * This function should simply be implemented as: `payable(tx.origin).call{value: amount}("");`
