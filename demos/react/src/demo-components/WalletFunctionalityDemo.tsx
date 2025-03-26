@@ -31,18 +31,28 @@ const WalletFunctionalityDemo = () => {
     async function mintTokens() {
         try {
             if (!walletClient || !user?.address) return
-
-            const writeCall = await walletClient.writeContract({
+            const writeCallResult = await walletClient.writeContract({
                 address: deployment.MockTokenA,
                 abi: abis.MockTokenA,
                 functionName: "mint",
                 args: [user.address, 1000000000000000000n],
                 chain: happyChainSepolia,
             })
-
-            if (writeCall) {
-                console.log("[mintTokens] success:", writeCall)
-                toast.success(`Tokens minted successfully! Tx hash: ${writeCall}`)
+            if (writeCallResult) {
+                console.log("[mintTokens] success:", writeCallResult)
+                toast.success(
+                    <div>
+                        Tokens minted successfully!{" "}
+                        <a
+                            href={`https://explorer.testnet.happy.tech/op/${writeCallResult}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: "underline" }}
+                        >
+                            View on Explorer
+                        </a>
+                    </div>,
+                )
             } else {
                 console.log("[mintTokens] failed; please try again!")
                 toast.error("Something went wrong, please try again!")
