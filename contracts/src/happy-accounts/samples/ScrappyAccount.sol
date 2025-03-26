@@ -19,11 +19,7 @@ import {
     CallInfo
 } from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {
-    InvalidSignature,
-    NotFromEntryPoint,
-    UnknownDuringSimulation
-} from "boop/utils/Common.sol";
+import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/utils/Common.sol";
 
 /**
  * Example implementation of an extensible Happy Account with proxy upgrade capability.
@@ -58,7 +54,7 @@ contract ScrappyAccount is
     mapping(ExtensionType => mapping(address => bool)) public extensions;
 
     /// Custom executor that was dispatched to during this transaction.
-    address private transient dispatchedExecutor;
+    address transient private dispatchedExecutor;
 
     // ====================================================================================================
     // MODIFIERS
@@ -196,7 +192,7 @@ contract ScrappyAccount is
     // PAYOUT
 
     function payout(uint256 amount) external onlyFromEntryPoint {
-        tx.origin.call{value: amount}("");
+        (tx.origin.call{value: amount}(""));
     }
 
     // ====================================================================================================
