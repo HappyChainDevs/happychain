@@ -44,6 +44,11 @@ export class TransactionCollector {
 
         TxmMetrics.getInstance().transactionCollectedCounter.add(transactionsBatch.length)
 
+        if (!this.txmgr.rpcLivenessMonitor.isAlive) {
+            Logger.instance.error(LogTag.TXM, "RPC is not alive, skipping attempt to submit transactions")
+            return
+        }
+
         await Promise.all(
             transactionsBatch.map(async (transaction) => {
                 const nonce = this.txmgr.nonceManager.requestNonce()

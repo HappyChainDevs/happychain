@@ -19,6 +19,7 @@ import { GasPriceOracle } from "./GasPriceOracle.js"
 import { HookManager, type TxmHookHandler, type TxmHookType } from "./HookManager.js"
 import { NonceManager } from "./NonceManager.js"
 import { DefaultRetryPolicyManager, type RetryPolicyManager } from "./RetryPolicyManager.js"
+import { RpcLivenessMonitor } from "./RpcLivenessMonitor"
 import { Transaction, type TransactionConstructorConfig } from "./Transaction.js"
 import { TransactionCollector } from "./TransactionCollector.js"
 import { TransactionRepository } from "./TransactionRepository.js"
@@ -75,6 +76,46 @@ export type TransactionManagerConfig = {
          * Defaults to 4000 milliseconds.
          */
         blockInactivityTimeout?: number
+
+        /**
+         * The minimum success rate of RPC calls required to consider the RPC healthy.
+         * Expressed as a decimal between 0 and 1.
+         * Example: 0.85 means 85% of calls must be successful.
+         * @default 0.85
+         */
+        livenessThreshold?: number
+
+        /**
+         * The monitoring window duration for evaluating RPC health.
+         * The success rate is calculated based on RPC calls within this time frame.
+         * @default 10000 (10 seconds)
+         * @unit milliseconds
+         */
+        livenessWindow?: number
+
+        /**
+         * Number of successful consecutive chainId requests required to mark the RPC healthy again.
+         * When marked unhealthy, the system will periodically send chainId requests
+         * to check if the RPC has recovered.
+         * @default 3
+         */
+        livenessSuccessCount?: number
+
+        /**
+         * The interval between health check attempts for the RPC.
+         * When unhealthy, the system will send chainId requests at this interval
+         * until either the RPC recovers or the connection is terminated.
+         * @default 2000 (2 seconds)
+         * @unit milliseconds
+         */
+        livenessPingInterval?: number
+
+        /**
+         * Margin of time after the RPC is marked as unhealthy before the txm starts checking if it is healthy again.
+         * @default 5000 (5 seconds)
+         * @unit milliseconds
+         */
+        livenessDownDelay?: number
     }
     /** The private key of the account used for signing transactions. */
     privateKey: Hex
@@ -187,6 +228,7 @@ export class TransactionManager {
     public readonly transactionSubmitter: TransactionSubmitter
     public readonly hookManager: HookManager
     public readonly retryPolicyManager: RetryPolicyManager
+    public readonly rpcLivenessMonitor: RpcLivenessMonitor
 
     public readonly chainId: number
     public readonly eip1559: EIP1559Parameters
@@ -198,6 +240,11 @@ export class TransactionManager {
     public readonly pollingInterval: number
     public readonly transportProtocol: "http" | "websocket"
     public readonly blockInactivityTimeout: number
+    public readonly livenessWindow: number
+    public readonly livenessThreshold: number
+    public readonly livenessPingInterval: number
+    public readonly livenessSuccessCount: number
+    public readonly livenessDownDelay: number
 
     constructor(_config: TransactionManagerConfig) {
         initializeTelemetry({
@@ -293,6 +340,7 @@ export class TransactionManager {
         this.transactionSubmitter = new TransactionSubmitter(this)
         this.hookManager = new HookManager()
         this.retryPolicyManager = _config.retryPolicyManager ?? new DefaultRetryPolicyManager()
+        this.rpcLivenessMonitor = new RpcLivenessMonitor(this)
 
         this.chainId = _config.chainId
         this.eip1559 = _config.eip1559 ?? opStackDefaultEIP1559Parameters
@@ -307,6 +355,12 @@ export class TransactionManager {
 
         this.pollingInterval = _config.rpc.pollingInterval ?? (Number(this.blockTime) * 1000) / 2
         this.blockInactivityTimeout = _config.rpc.blockInactivityTimeout ?? 4000
+
+        this.livenessWindow = _config.rpc.livenessWindow ?? 10000
+        this.livenessThreshold = _config.rpc.livenessThreshold ?? 0.85
+        this.livenessSuccessCount = _config.rpc.livenessSuccessCount ?? 3
+        this.livenessPingInterval = _config.rpc.livenessPingInterval ?? 2000
+        this.livenessDownDelay = _config.rpc.livenessDownDelay ?? 5000
     }
 
     /**
