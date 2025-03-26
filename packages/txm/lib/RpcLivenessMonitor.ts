@@ -61,7 +61,7 @@ export class RpcLivenessMonitor {
 
             this.checkIfHealthyInterval = setInterval(() => {
                 this.checkIfHealthy()
-            }, 2000)
+            }, this.txmgr.livenessCheckInterval)
         }
     }
 

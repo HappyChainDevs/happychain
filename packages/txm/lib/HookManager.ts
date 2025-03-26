@@ -171,9 +171,7 @@ export class HookManager {
     private async onRpcIsDown(): Promise<void> {
         this.hooks[TxmHookType.RpcIsDown].forEach((handler) => handler())
 
-        this.hooks[TxmHookType.All].forEach((handler) =>
-            handler({ type: TxmHookType.RpcIsDown }),
-        )
+        this.hooks[TxmHookType.All].forEach((handler) => handler({ type: TxmHookType.RpcIsDown }))
     }
 
     private async onRpcIsUp(): Promise<void> {
