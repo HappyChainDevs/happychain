@@ -1,10 +1,10 @@
 import { type VariantProps, cva } from "cva"
 
 const recipeGuiTableRoot = cva({
-    base: ["font-hds-system-gui-display border-separate w-full"],
+    base: ["font-hds-system-gui-display border-separate h-fit w-full"],
     variants: {
         scale: {
-            default: "border-spacing-y-1 border-spacing-x-2",
+            default: "border-spacing-y-1 -ms-2 border-spacing-x-2",
         },
         columnsSizing: {
             auto: "table-auto",
