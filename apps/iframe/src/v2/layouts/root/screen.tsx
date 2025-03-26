@@ -8,6 +8,7 @@ import { userAtom } from "#src/state/user"
 import { RootDialogsIsland } from "./dialogs"
 import { UserDetails } from "./user"
 import { BottomNavbarSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
+import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
 
 /**
  * The display area and simulated screen reflection effect.
@@ -179,15 +180,15 @@ const RootBottomNavbarIsland = () => {
                 {[
                     {
                         label: "Tokens",
-                        pathname: "/",
+                        pathname: PATHNAME_ROUTE_TOKENS,
                     },
                     {
                         label: "Games",
-                        pathname: "/",
+                        pathname: "/games",
                     },
                     {
                         label: "History",
-                        pathname: "/",
+                        pathname: "/history",
                     },
                 ].map((item) => (
                     <BottomNavbar.Item asChild key={`island-bottomnav-${item.pathname}`}>
