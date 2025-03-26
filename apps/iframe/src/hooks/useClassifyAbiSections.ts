@@ -30,7 +30,7 @@ type SectionMap = {
  * into distinct categories such as events, errors, constructors,
  * receive functions, fallback functions, and write functions.
  * View functions are excluded as they won't be displayed in the UI.
- * This is used in the popup for the custom `happy_useAbi` RPC call.
+ * This is used in the popup for the custom `happy_loadAbi` RPC call.
  *
  * The classifications are returned as an array of objects, each
  * containing a label and the corresponding items, allowing for

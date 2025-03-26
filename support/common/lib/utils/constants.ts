@@ -1,6 +1,6 @@
 export enum HappyMethodNames {
     USER = "happy_user",
-    LOAD_ABI = "happy_useAbi",
+    LOAD_ABI = "happy_loadAbi",
     REQUEST_SESSION_KEY = "happy_requestSessionKey",
 }
 
