@@ -12,5 +12,8 @@ export * from "./slider/slider"
 export { useDataviewTable } from "./table/use-dataview-table"
 
 // Unstyled Ark primitives
+// TODO enumerate
 export * from "@ark-ui/react/format"
 export * from "@ark-ui/react/factory"
+
+export { Format } from "@ark-ui/react/format"
