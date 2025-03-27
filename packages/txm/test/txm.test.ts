@@ -44,6 +44,9 @@ const txm = new TransactionManager({
     retryPolicyManager: retryManager,
     baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
     eip1559: ethereumDefaultEIP1559Parameters,
+    metrics: {
+        active: false,
+    },
 })
 
 const fromAddress = privateKeyToAddress(PRIVATE_KEY)
