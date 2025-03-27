@@ -132,11 +132,11 @@ export function isFailure(
  * statuses that need further checks ({@link SimulatedValidationStatus.Unknown} and {@link SimulatedValidationStatus.FutureNonce}).
  */
 export enum SimulatedValidationStatus {
-    /** Validation succeded during simulation. */
+    /** Validation succeeded during simulation. */
     Success = "simulationSuccess",
 
     /**
-     * Validation suceeded during simulation, but needs extra checks.
+     * Validation succeeded during simulation, but needs extra checks.
      *
      * e.g. use by validators that validators that check signature to enable simulation without a
      * signature, as the signing might need to cover gas values, and those need simulation to be

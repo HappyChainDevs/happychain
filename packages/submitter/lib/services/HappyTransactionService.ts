@@ -1,5 +1,6 @@
 import type { HappyTransaction } from "#lib/database/generated"
 import type { HappyTransactionRepository } from "#lib/database/repositories/HappyTransactionRepository"
+import { SubmitterError } from "#lib/errors/contract-errors"
 
 export class HappyTransactionService {
     constructor(private happyTransactionRepository: HappyTransactionRepository) {}
@@ -11,7 +12,7 @@ export class HappyTransactionService {
     async findByHappyTxHashOrThrow(happyTxHash: `0x${string}`) {
         const happyTransaction = await this.findByHappyTxHash(happyTxHash)
         if (!happyTransaction) {
-            throw new Error(`Happy transaction not found for hash: ${happyTxHash}`)
+            throw new SubmitterError(`Happy transaction not found for hash: ${happyTxHash}`)
         }
         return happyTransaction
     }

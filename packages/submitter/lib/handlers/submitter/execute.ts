@@ -1,3 +1,4 @@
+import { SubmitterError } from "#lib/errors/contract-errors"
 import { happyReceiptService } from "#lib/services"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
@@ -15,7 +16,8 @@ export async function execute(data: { entryPoint: `0x${string}`; tx: HappyTx }):
     }
 
     const receipt = await happyReceiptService.findByHappyTxHashWithTimeout(happyTxHash, 60_000)
-    if (!receipt || receipt.txReceipt.status !== "success") throw new Error("Unable to retrieve receipt")
+
+    if (!receipt || receipt.txReceipt.status !== "success") throw new SubmitterError("Unable to retrieve receipt")
 
     return {
         status: ExecuteSuccess,

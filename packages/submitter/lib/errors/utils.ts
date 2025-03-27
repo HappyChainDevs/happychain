@@ -19,47 +19,69 @@ function is0xString(str: unknown): str is `0x${string}` {
  * If this is not available, we will return the raw selector.
  */
 function parseRawArgs(args: readonly `0x${string}`[]) {
-    return args.map((a) => getErrorNameFromSelector(a) || a)
+    return args.map((a) => getErrorNameFromSelector(a))
 }
-export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
+
+export function decodeViemError(_err: unknown) {
     const err = getBaseError(_err)
-
     if (!err) return
-    if ("raw" in err && is0xString(err.raw)) {
-        // TODO: unsure if this is the correct way to handle this
-        if (err.raw === "0x" && "reason" in err && err.reason === "execution reverted") {
-            throw new ExecuteRevertedError("Out Of Gas")
-        }
+    if (!("raw" in err)) return
+    if (!is0xString(err.raw)) return
+    try {
         const error = decodeRawError(err.raw)
+        const knownArgs = parseRawArgs(error.args)
 
-        const [revertData] = parseRawArgs(error.args)
-        switch (error.errorName) {
-            // === FAILED ERRORS ===================================================================
-            case "ValidationFailed": {
-                return new ValidationFailedError(undefined, revertData)
-            }
-            // case "ExecuteFailed": {
-            //     return new ExecuteFailedError(undefined, revertData)
-            // }
-            case "PaymentFailed": {
-                return new PaymentFailedError(undefined, revertData)
-            }
-
-            // === REVERT ERRORS ===================================================================
-            case "ValidationReverted": {
-                // TODO: when executeGasLimit === 1 this is '0x' - is this an Out Of Gas error?
-                return new ValidationRevertedError((revertData as string) === "0x" ? "Out Of Gas" : revertData)
-            }
-            // case "ExecuteReverted": {
-            //     return new ExecuteRevertedError(revertData)
-            // }
-            case "PaymentReverted": {
-                return new PaymentRevertedError(revertData)
-            }
-            // case "UnexpectedReverted": {
-            //     return new UnexpectedRevertedError(revertData)
-            // }
+        return {
+            errorName: error.errorName,
+            knownArgs,
+            rawArgs: error.args,
+            raw: err.raw,
         }
+    } catch {
+        return
+    }
+}
+
+export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
+    const err = decodeViemError(_err)
+    if (!err) return
+    const [revertData] = err.knownArgs
+
+    // TODO: unsure if this is the correct way to handle this
+    if (err.raw === "0x" && "reason" in err && err.reason === "execution reverted") {
+        throw new ExecuteRevertedError("Out Of Gas")
+    }
+
+    switch (err.errorName) {
+        // === FAILED ERRORS ===================================================================
+        case "ValidationFailed": {
+            return new ValidationFailedError(undefined, revertData)
+        }
+        // case "ExecuteFailed": {
+        //     return new ExecuteFailedError(undefined, revertData)
+        // }
+        case "PaymentFailed": {
+            return new PaymentFailedError(undefined, revertData)
+        }
+
+        case "InvalidNonce": {
+            return new ValidationFailedError(undefined, "InvalidNonce")
+        }
+
+        // === REVERT ERRORS ===================================================================
+        case "ValidationReverted": {
+            // TODO: when executeGasLimit === 1 this is '0x' - is this an Out Of Gas error?
+            return new ValidationRevertedError((revertData as string) === "0x" ? "Out Of Gas" : revertData)
+        }
+        // case "ExecuteReverted": {
+        //     return new ExecuteRevertedError(revertData)
+        // }
+        case "PaymentReverted": {
+            return new PaymentRevertedError(revertData)
+        }
+        // case "UnexpectedReverted": {
+        //     return new UnexpectedRevertedError(revertData)
+        // }
     }
 }
 

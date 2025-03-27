@@ -1,7 +1,8 @@
+import { AccountNotFoundError } from "../errors"
 import { simulateSubmit } from "./simulateSubmit"
 
 export async function estimateSubmitGas(request: Parameters<typeof simulateSubmit>[0]) {
-    if (!request.account) throw new Error("Account Not Found - estimateGas")
+    if (!request.account) throw new AccountNotFoundError("estimateSubmitGas")
     const simulate = await simulateSubmit(request)
 
     return {

@@ -50,10 +50,10 @@ export function createTestAccount(privateKey = generatePrivateKey()) {
 
 export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
     return await testPublicClient.readContract({
-        address: account,
-        abi: abis.ScrappyAccount,
-        functionName: "nonceValue",
-        args: [nonceTrack],
+        address: deployment.HappyEntryPoint,
+        abi: abis.HappyEntryPoint,
+        functionName: "nonceValues",
+        args: [account, nonceTrack],
     })
 }
 
