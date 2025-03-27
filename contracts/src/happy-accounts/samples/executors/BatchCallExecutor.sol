@@ -7,7 +7,7 @@ import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
 import {ICustomBoopExecutor} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
 import {IExtensibleBoopAccount, CallInfo} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {CallInfoCoding} from "boop/samples/executors/CallInfoCoding.sol";
+import {CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
 
 /**
  * @dev Key used in {HappyTx.extraData} for call information (array of {CallInfo}),
@@ -22,13 +22,13 @@ bytes3 constant BATCH_CALL_INFO_KEY = 0x000100;
 error InvalidBatchCallInfo();
 
 /**
- * This executor executes multiples calls in an atomic way (all run, or all revert).
+ * This executor executes multiple calls in an atomic way (either all succeed, or all revert).
  *
  * Each call specified is specified in a {CallInfo} struct, which are together stored in an
  * ABI-encoded array in {HappyTx.extraData}, keyed on {BATCH_CALL_INFO_KEY}.
  */
 contract BatchCallExecutor is ICustomBoopExecutor {
-    using CallInfoCoding for bytes;
+    using CallInfoCodingLib for bytes;
 
     // ====================================================================================================
     // FUNCTIONS
