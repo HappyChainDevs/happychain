@@ -35,8 +35,13 @@ export const RootLayout = ({ children }: PropsWithChildren) => {
         <Layout.Root>
             <Layout.Device>
                 <Layout.Screen>
-                    <Layout.Screen.View className="motion-safe:transition-[all_250ms] [&:has([data-part=header]_[data-state=open])]:grid-rows-[12fr_0_1fr]">
-                        <Layout.Screen.View.HeaderIsland />
+                    <Layout.Screen.View
+                        className={`
+                            motion-safe:transition-[all_250ms]
+                            [&:has([data-part=header])]:grid-rows-[1fr_12fr_1fr]
+                            [&:has([data-part=header]_[data-state=open])]:grid-rows-[12fr_0_1fr]
+                    `}
+                    >
                         {children}
                         <Layout.Screen.View.BottomNavbarIsland />
                         <Layout.Screen.View.DialogsIsland />
