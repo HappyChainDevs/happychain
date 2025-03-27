@@ -61,7 +61,7 @@ library HappyTxLib {
             + (4 + happyTx.validatorData.length)
             + (4 + happyTx.extraData.length);
 
-        assembly {
+        assembly ("memory-safe") {
             // Encoded tx will live at next free memory address.
             result := mload(0x40)
             // Update free memory pointer to point past decoded bytes (+32 bytes is for length).
@@ -179,7 +179,7 @@ library HappyTxLib {
         uint32 len;
         uint256 offset;
 
-        assembly {
+        assembly ("memory-safe") {
             // Get pointer to the calldata bytes
             let cdPtr := encodedHappyTx.offset
             let memPtr := result
@@ -313,14 +313,14 @@ library HappyTxLib {
         bytes3 currentKey;
         uint24 currentLen;
         bytes32 offset;
-        assembly {
+        assembly ("memory-safe") {
             offset := add(extraData, 0x20) // skip length
         }
 
         uint256 end = uint256(offset) + extraData.length;
 
         while (uint256(offset) + 6 <= end) {
-            assembly {
+            assembly ("memory-safe") {
                 currentKey := mload(offset)
                 offset := add(offset, 3)
                 currentLen := shr(232, mload(offset))
@@ -333,13 +333,13 @@ library HappyTxLib {
 
             if (currentKey == key) {
                 value = new bytes(currentLen);
-                assembly {
+                assembly ("memory-safe") {
                     mcopy(add(value, 0x20), offset, currentLen)
                 }
                 return (true, value);
             }
 
-            assembly {
+            assembly ("memory-safe") {
                 offset := add(offset, currentLen)
             }
         }
