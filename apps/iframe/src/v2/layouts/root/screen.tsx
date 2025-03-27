@@ -5,6 +5,7 @@ import { cx } from "cva"
 import { useAtomValue } from "jotai"
 import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
+import { PATHNAME_ROUTE_GAMES } from "#src/v2/screens/games/Games"
 
 /**
  * The display area and simulated screen reflection effect.
@@ -16,18 +17,18 @@ const RootScreen = ({ children }: PropsWithChildren) => {
             <main
                 data-scope="screen"
                 data-part="display"
-                className={cx(
-                    "relative rounded-hds-xs h-[360px] w-full",
-                    "border",
-                    "overflow-hidden",
-                    "flex flex-col",
-                    "font-hds-system-gui-display",
-                    "text-hds-system-gui-foreground-default",
-                    "text-hds-system-gui-base",
-                    "tracking-hds-loose",
-                    "bg-hds-system-skeuo-surface-default",
-                    "px-3 pt-3",
-                )}
+                className={`
+                    relative rounded-hds-xs h-[360px] w-full
+                    border
+                    overflow-hidden
+                    flex flex-col
+                    font-hds-system-gui-display
+                    text-hds-system-gui-foreground-default
+                    text-hds-system-gui-base
+                    tracking-hds-loose
+                    bg-hds-system-skeuo-surface-default
+                    px-3 pt-3
+                `}
             >
                 {children}
             </main>
@@ -35,14 +36,14 @@ const RootScreen = ({ children }: PropsWithChildren) => {
                 data-scope="screen"
                 data-part="reflection"
                 aria-hidden="true"
-                className={cx(
-                    "pointer-events-none",
-                    "absolute inset-0 size-full",
-                    "before:sticky before:block before:inset-0 before:size-full before:rounded-inherit ",
-                    "before:bg-gradient-hds-utility-tint-30-transparent",
-                    "before:pointer-events-none",
-                    "before:z-1",
-                )}
+                className={`
+                    pointer-events-none
+                    absolute inset-0 size-full
+                    before:sticky before:block before:inset-0 before:size-full before:rounded-inherit 
+                    before:bg-gradient-hds-utility-tint-30-transparent
+                    before:pointer-events-none
+                    before:z-1
+                `}
             />
         </div>
     )
@@ -91,7 +92,13 @@ const NavbarItem = forwardRef<HTMLButtonElement, GuiButtonProps>(
                 ref={ref}
                 data-scope="navbar"
                 data-part="item"
-                className="pt-0.5 data-[scope=navbar]:tracking-normal first:justify-start first:ps-0 last:not-only:pe-0 justify-center last:not-only:justify-end uppercase"
+                className={`
+                    pt-0.5 
+                    uppercase data-[scope=navbar]:tracking-normal
+                    first:justify-start first:ps-0 last:not-only:pe-0 
+                    last:not-only:justify-end 
+                    justify-center
+                `}
                 asChild={asChild}
                 {...props}
             >
@@ -176,7 +183,7 @@ const RootBottomNavbarIsland = () => {
                     },
                     {
                         label: "Games",
-                        pathname: "/",
+                        pathname: PATHNAME_ROUTE_GAMES,
                     },
                     {
                         label: "History",
