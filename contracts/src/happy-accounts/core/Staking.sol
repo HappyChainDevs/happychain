@@ -77,7 +77,7 @@ contract Staking {
     mapping(address account => Stake) public stakes;
 
     /// Minimum unlock time (1 minute).
-    uint64 public constant MIN_WITHDRAW_DELAY = 60;
+    uint64 public constant MIN_WITHDRAW_DELAY = 60 seconds;
 
     /// When trying to set the withdraw delay to a value shorter than {MIN_WITHDRAW_DELAY} or
     /// shorter than {stake.minDelay}.
