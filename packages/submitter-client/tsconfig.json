@@ -1,0 +1,17 @@
+{
+    "extends": [
+        "@happy.tech/configs/tsconfig.base.json"
+    ],
+    "compilerOptions": {
+        "paths": {
+            "#lib/*": [
+                "./lib/*"
+            ]
+        }
+    },
+    "include": [
+        "*.ts",
+        "lib",
+        "./package.json"
+    ]
+}
