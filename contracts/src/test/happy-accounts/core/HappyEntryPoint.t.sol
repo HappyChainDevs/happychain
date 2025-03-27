@@ -72,6 +72,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.deal(paymaster, INITIAL_DEPOSIT);
         vm.deal(smartAccount, INITIAL_DEPOSIT);
 
+        // Stake the paymaster
+        happyEntryPoint.depositTo{value: INITIAL_DEPOSIT}(paymaster);
+
         // Deploy the mock contracts
         mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
         mockRevert = address(new MockRevert());
@@ -87,7 +90,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         // The balance of the smart account should decrease after paying for the tx.
         uint256 finalBalance = getEthBalance(smartAccount);
@@ -99,16 +102,16 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testPaymasterSponsoredTx() public {
         // Paymaster-sponsored: paymaster == ScrappyPaymaster
-        uint256 initialBalance = getEthBalance(paymaster);
+        uint256 initialStake = happyEntryPoint.balanceOf(paymaster);
         uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
 
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         // The balance of the paymaster should decrease after paying for the tx.
-        uint256 finalBalance = getEthBalance(paymaster);
-        assertLt(finalBalance, initialBalance);
+        uint256 finalStake = happyEntryPoint.balanceOf(paymaster);
+        assertLt(finalStake, initialStake);
 
         uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
         assertEq(finalTokenBalance, initialTokenBalance + TOKEN_MINT_AMOUNT);
@@ -125,7 +128,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
         vm.prank(submitter, submitter);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         // The balance should be the same as before, as the submitter payed for the tx.
         uint256 finalBalance = getEthBalance(submitter);
@@ -169,7 +172,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Paymaster-sponsored simulation: paymaster is the ScrappyPaymaster
         uint256 id = vm.snapshotState();
 
-        uint256 initialBalance = getEthBalance(smartAccount);
+        uint256 initialStake = happyEntryPoint.balanceOf(paymaster);
         uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
 
         HappyTx memory happyTx =
@@ -188,8 +191,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.revertToState(id); // EVM state is like before the .submit() call
 
         // The balance should be the same as before, as this was a simulated call, not actually submitted on-chain
-        uint256 finalBalance = getEthBalance(smartAccount);
-        assertEq(finalBalance, initialBalance);
+        uint256 finalStake = happyEntryPoint.balanceOf(paymaster);
+        assertEq(finalStake, initialStake);
 
         uint256 finalTokenBalance = getTokenBalance(mockToken, dest);
         assertEq(finalTokenBalance, initialTokenBalance);

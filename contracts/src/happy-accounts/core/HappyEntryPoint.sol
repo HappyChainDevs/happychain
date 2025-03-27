@@ -283,6 +283,9 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             384, // max return size: struct encoding + 256 bytes revertData
             executeCallData
         );
+        // uint256 gasAfterExecute = gasleft();
+        // console.log("gasBeforeExecute", gasBeforeExecute);
+        // console.log("gasAfterExecute", gasAfterExecute);
         output.executeGas = uint32(gasBeforeExecute - gasleft());
 
         // Don't revert if execution fails, as we still want to get the payment for a reverted call.
