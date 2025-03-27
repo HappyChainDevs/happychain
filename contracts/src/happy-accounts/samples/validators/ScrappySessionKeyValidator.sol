@@ -35,6 +35,15 @@ contract SessionKeyValidator is ICustomBoopValidator {
     event SessionKeyRemoved(address indexed account, address indexed target);
 
     // ====================================================================================================
+    // ERRORS
+
+    /// @dev Security error: Prevents registering a session key for the validator itself
+    error CannotRegisterSessionKeyForValidator();
+    
+    /// @dev Security error: Prevents an account from registering a session key for itself
+    error CannotRegisterSessionKeyForAccount();
+
+    // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES
 
     mapping(address account => mapping(address target => address sessionKey)) public sessionKeys;
@@ -43,8 +52,8 @@ contract SessionKeyValidator is ICustomBoopValidator {
     // FUNCTIONS
 
     function addSessionKey(address target, address sessionKey) public {
-        if (target == address(this)) revert("Security: can't register a session key for the validator");
-        if (target == msg.sender) revert("Security: can't register a session key for the account");
+        if (target == address(this)) revert CannotRegisterSessionKeyForValidator();
+        if (target == msg.sender) revert CannotRegisterSessionKeyForAccount();
 
         sessionKeys[msg.sender][target] = sessionKey;
         emit SessionKeyAdded(msg.sender, target, sessionKey);
