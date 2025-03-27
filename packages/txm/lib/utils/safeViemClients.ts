@@ -6,6 +6,7 @@ import type {
     Chain,
     EstimateGasErrorType,
     GetChainIdErrorType,
+    GetFeeHistoryErrorType,
     GetTransactionCountErrorType,
     GetTransactionReceiptErrorType,
     Hash,
@@ -102,6 +103,9 @@ export interface SafeViemPublicClient extends ViemPublicClient {
     safeGetTransactionCount: (
         ...args: Parameters<ViemPublicClient["getTransactionCount"]>
     ) => ResultAsync<Awaited<ReturnType<ViemPublicClient["getTransactionCount"]>>, GetTransactionCountErrorType>
+    safeFeeHistory: (
+        ...args: Parameters<ViemPublicClient["getFeeHistory"]>
+    ) => ResultAsync<Awaited<ReturnType<ViemPublicClient["getFeeHistory"]>>, GetFeeHistoryErrorType>
 }
 
 export interface MetricsHandlers {
@@ -218,6 +222,25 @@ export function convertToSafeViemPublicClient(
                     safeClient.rpcErrorCounter.add(1, { method: "getTransactionCount" })
                 }
                 return error as GetTransactionCountErrorType
+            })
+    }
+
+    safeClient.safeFeeHistory = (...args: Parameters<ViemPublicClient["getFeeHistory"]>) => {
+        if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "getFeeHistory" })
+        const startTime = Date.now()
+
+        return ResultAsync.fromPromise(client.getFeeHistory(...args), unknownToError)
+            .map((result) => {
+                const duration = Date.now() - startTime
+                if (safeClient.rpcResponseTimeHistogram)
+                    safeClient.rpcResponseTimeHistogram.record(duration, { method: "getFeeHistory" })
+                return result
+            })
+            .mapErr((error) => {
+                if (safeClient.rpcErrorCounter) {
+                    safeClient.rpcErrorCounter.add(1, { method: "getFeeHistory" })
+                }
+                return error as GetFeeHistoryErrorType
             })
     }
 

@@ -1,4 +1,5 @@
-import { bigIntMax } from "@happy.tech/common"
+import { bigIntMax, bigIntReplacer } from "@happy.tech/common"
+import { type Result, err, ok } from "neverthrow"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
@@ -24,6 +25,7 @@ import type { TransactionManager } from "./TransactionManager.js"
 export class GasPriceOracle {
     private txmgr: TransactionManager
     private expectedNextBaseFeePerGas!: bigint
+    private targetPriorityFee!: bigint
 
     constructor(_transactionManager: TransactionManager) {
         this.txmgr = _transactionManager
@@ -37,7 +39,7 @@ export class GasPriceOracle {
         this.onNewBlock(block)
     }
 
-    private onNewBlock(block: LatestBlock) {
+    private async onNewBlock(block: LatestBlock) {
         const baseFeePerGas = block.baseFeePerGas
         const gasUsed = block.gasUsed
         const gasLimit = block.gasLimit
@@ -47,6 +49,46 @@ export class GasPriceOracle {
             gasUsed,
             gasLimit,
         )
+        const targetPriorityFeeResult = await this.calculateTargetPriorityFee()
+        if (targetPriorityFeeResult.isErr()) {
+            if (!this.targetPriorityFee) {
+                this.targetPriorityFee = this.txmgr.maxPriorityFeePerGas ?? 0n
+            }
+            return
+        }
+        this.targetPriorityFee = targetPriorityFeeResult.value
+    }
+
+    private async calculateTargetPriorityFee(): Promise<Result<bigint, Error>> {
+        const feeHistory = await this.txmgr.viemClient.safeFeeHistory({
+            blockCount: this.txmgr.priorityFeeAnalysisBlocks,
+            blockTag: "latest",
+            rewardPercentiles: [this.txmgr.priorityFeeTargetPercentile],
+        })
+
+        console.log(JSON.stringify(feeHistory, bigIntReplacer, 2))
+
+        if (feeHistory.isErr()) {
+            return err(feeHistory.error)
+        }
+
+        if (!feeHistory.value.reward) {
+            return err(new Error("No fee history found"))
+        }
+
+        const priorityFee =
+            feeHistory.value.reward.flat().reduce((acc, curr) => acc + BigInt(curr), 0n) /
+            BigInt(feeHistory.value.reward.flat().length)
+
+        if (this.txmgr.minPriorityFeePerGas && priorityFee < this.txmgr.minPriorityFeePerGas) {
+            return ok(this.txmgr.minPriorityFeePerGas)
+        }
+
+        if (this.txmgr.maxPriorityFeePerGas && priorityFee > this.txmgr.maxPriorityFeePerGas) {
+            return ok(this.txmgr.maxPriorityFeePerGas)
+        }
+
+        return ok(priorityFee)
     }
 
     private calculateExpectedNextBaseFeePerGas(baseFeePerGas: bigint, gasUsed: bigint, gasLimit: bigint): bigint {
@@ -67,7 +109,7 @@ export class GasPriceOracle {
 
     public suggestGasForNextBlock(): { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint } {
         const maxBaseFeePerGas = (this.expectedNextBaseFeePerGas * (100n + this.txmgr.baseFeeMargin)) / 100n
-        const maxFeePerGas = maxBaseFeePerGas + this.txmgr.maxPriorityFeePerGas
-        return { maxFeePerGas, maxPriorityFeePerGas: this.txmgr.maxPriorityFeePerGas }
+        const maxFeePerGas = maxBaseFeePerGas + this.targetPriorityFee
+        return { maxFeePerGas, maxPriorityFeePerGas: this.targetPriorityFee }
     }
 }

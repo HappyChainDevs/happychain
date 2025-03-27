@@ -120,25 +120,58 @@ export type TransactionManagerConfig = {
     /** The private key of the account used for signing transactions. */
     privateKey: Hex
 
-    /** Optional EIP-1559 parameters. If not provided, defaults to the OP stack's stock parameters. */
-    eip1559?: EIP1559Parameters
-    /**
-     * Safety margin for transaction base fees, expressed as a percentage.
-     * For example, a 20% increase should be represented as 20n.
-     *
-     * This is used to calculate the maximum fee per gas and safeguard from unanticipated or
-     * unpredictable gas price increases, in particular when the transaction cannot be included in
-     * the very next block.
-     *
-     * If not provided, defaults to 20n (20% increase).
-     */
-    baseFeePercentageMargin?: bigint
-    /**
-     * Optional maximum priority fee per gas.
-     * This is the maximum amount of wei per gas the transaction is willing to pay as a tip to miners.
-     * If not provided, defaults to 0n.
-     */
-    maxPriorityFeePerGas?: bigint
+    gas: {
+        /** Optional EIP-1559 parameters. If not provided, defaults to the OP stack's stock parameters. */
+        eip1559?: EIP1559Parameters
+        /**
+         * Safety margin for transaction base fees, expressed as a percentage.
+         * For example, a 20% increase should be represented as 20n.
+         *
+         * This is used to calculate the maximum fee per gas and safeguard from unanticipated or
+         * unpredictable gas price increases, in particular when the transaction cannot be included in
+         * the very next block.
+         *l
+         * @default 20n (20% increase)
+         */
+        baseFeePercentageMargin?: bigint
+        /**
+         * Maximum allowed priority fee per gas unit (in wei).
+         * Acts as a safety cap to prevent overpaying for transaction priority.
+         * Even if the calculated priority fee based on percentile is higher,
+         * it will be capped at this value.
+         * @default undefined (no maximum cap)
+         * @example 2_000_000_000n // 2 Gwei max priority fee
+         */
+        maxPriorityFeePerGas?: bigint
+
+        /**
+         * Minimum required priority fee per gas unit (in wei).
+         * Ensures transactions don't get stuck in the mempool due to too low priority fees.
+         * If the calculated priority fee based on percentile is lower,
+         * it will be raised to this minimum value.
+         * @default undefined (no minimum)
+         * @example 500_000_000n // 0.5 Gwei minimum priority fee
+         */
+        minPriorityFeePerGas?: bigint
+
+        /**
+         * Target percentile for priority fee calculation (0-100).
+         * The system analyzes priority fees from transactions in the analyzed blocks
+         * and sets the fee at this percentile level.
+         * Higher percentiles mean higher priority but more expensive transactions.
+         * @default 50 (50th percentile - median priority fee)
+         */
+        priorityFeeTargetPercentile?: number
+
+        /**
+         * Number of blocks to analyze when calculating the priority fee percentile.
+         * The system will look at transactions from this many blocks back to determine
+         * the appropriate priority fee level.
+         * Higher values provide more stable fee estimates but may be less responsive to recent changes.
+         * @default 2 (analyze the last 2 blocks)
+         */
+        priorityFeeAnalysisBlocks?: number
+    }
 
     /** The ABIs used by the TransactionManager.
      * This is a record of aliases to ABIs. The aliases are used to reference the ABIs in the
@@ -233,7 +266,6 @@ export class TransactionManager {
     public readonly chainId: number
     public readonly eip1559: EIP1559Parameters
     public readonly baseFeeMargin: bigint
-    public readonly maxPriorityFeePerGas: bigint
     public readonly rpcAllowDebug: boolean
     public readonly blockTime: bigint
     public readonly finalizedTransactionPurgeTime: number
@@ -245,6 +277,10 @@ export class TransactionManager {
     public readonly livenessSuccessCount: number
     public readonly livenessDownDelay: number
     public readonly livenessCheckInterval: number
+    public readonly priorityFeeTargetPercentile: number
+    public readonly priorityFeeAnalysisBlocks: number
+    public readonly minPriorityFeePerGas: bigint | undefined
+    public readonly maxPriorityFeePerGas: bigint | undefined
 
     constructor(_config: TransactionManagerConfig) {
         initializeTelemetry({
@@ -343,11 +379,14 @@ export class TransactionManager {
         this.rpcLivenessMonitor = new RpcLivenessMonitor(this)
 
         this.chainId = _config.chainId
-        this.eip1559 = _config.eip1559 ?? opStackDefaultEIP1559Parameters
+        this.eip1559 = _config.gas.eip1559 ?? opStackDefaultEIP1559Parameters
         this.abiManager = new ABIManager(_config.abis)
 
-        this.baseFeeMargin = _config.baseFeePercentageMargin ?? 20n
-        this.maxPriorityFeePerGas = _config.maxPriorityFeePerGas ?? 0n
+        this.baseFeeMargin = _config.gas.baseFeePercentageMargin ?? 20n
+        this.maxPriorityFeePerGas = _config.gas.maxPriorityFeePerGas
+        this.minPriorityFeePerGas = _config.gas.minPriorityFeePerGas
+        this.priorityFeeTargetPercentile = _config.gas.priorityFeeTargetPercentile ?? 50
+        this.priorityFeeAnalysisBlocks = _config.gas.priorityFeeAnalysisBlocks ?? 2
 
         this.rpcAllowDebug = _config.rpc.allowDebug ?? false
         this.blockTime = _config.blockTime ?? 2n
