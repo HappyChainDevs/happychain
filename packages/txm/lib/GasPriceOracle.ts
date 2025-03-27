@@ -1,4 +1,4 @@
-import { bigIntMax, bigIntReplacer } from "@happy.tech/common"
+import { bigIntMax } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
@@ -51,7 +51,7 @@ export class GasPriceOracle {
         )
         const targetPriorityFeeResult = await this.calculateTargetPriorityFee()
         if (targetPriorityFeeResult.isErr()) {
-            if (!this.targetPriorityFee) {
+            if (this.targetPriorityFee === undefined) {
                 this.targetPriorityFee = this.txmgr.maxPriorityFeePerGas ?? 0n
             }
             return
@@ -65,8 +65,6 @@ export class GasPriceOracle {
             blockTag: "latest",
             rewardPercentiles: [this.txmgr.priorityFeeTargetPercentile],
         })
-
-        console.log(JSON.stringify(feeHistory, bigIntReplacer, 2))
 
         if (feeHistory.isErr()) {
             return err(feeHistory.error)

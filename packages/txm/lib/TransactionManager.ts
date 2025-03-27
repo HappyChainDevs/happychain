@@ -130,7 +130,7 @@ export type TransactionManagerConfig = {
          * This is used to calculate the maximum fee per gas and safeguard from unanticipated or
          * unpredictable gas price increases, in particular when the transaction cannot be included in
          * the very next block.
-         *l
+         *
          * @default 20n (20% increase)
          */
         baseFeePercentageMargin?: bigint
