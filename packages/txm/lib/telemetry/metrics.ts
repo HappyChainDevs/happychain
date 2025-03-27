@@ -244,10 +244,49 @@ export class TxmMetrics {
         },
     )
 
+    /* OS Metrics */
+    private readonly osMeter = metrics.getMeter("txm.os")
+
+    public readonly heapUsedGauge = this.osMeter.createObservableGauge("txm.os.heap-used", {
+        description: "Heap used in bytes",
+        unit: "bytes",
+        valueType: ValueType.INT,
+    })
+
+    public readonly heapTotalGauge = this.osMeter.createObservableGauge("txm.os.heap-total", {
+        description: "Heap total in bytes",
+        unit: "bytes",
+        valueType: ValueType.INT,
+    })
+
+    public readonly processUptimeGauge = this.osMeter.createObservableGauge("txm.os.process-uptime", {
+        description: "Process uptime in seconds",
+        unit: "seconds",
+        valueType: ValueType.INT,
+    })
+
+    public readonly processCpuUsageGauge = this.osMeter.createObservableGauge("txm.os.process-cpu-usage", {
+        description: "Process CPU usage in percentage",
+        unit: "%",
+        valueType: ValueType.INT,
+    })
+
     // Singleton instance
     private static instance: TxmMetrics
 
-    private constructor() {}
+    private constructor() {
+        this.heapUsedGauge.addCallback((result) => {
+            result.observe(process.memoryUsage().heapUsed)
+        })
+
+        this.heapTotalGauge.addCallback((result) => {
+            result.observe(process.memoryUsage().heapTotal)
+        })
+
+        this.processUptimeGauge.addCallback((result) => {
+            result.observe(process.uptime())
+        })
+    }
 
     public static getInstance(): TxmMetrics {
         if (!TxmMetrics.instance) {
