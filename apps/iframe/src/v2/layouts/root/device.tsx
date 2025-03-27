@@ -1,9 +1,9 @@
 import { Button, Slider } from "@happy.tech/uikit-react"
 import { Link, useLocation } from "@tanstack/react-router"
+import { cx } from "cva"
 import type { PropsWithChildren } from "react"
 import { ActionsSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
 import { LayoutState, useRootLayout } from "./provider"
-import { cx } from "cva"
 
 /**
  * Controls bottom navigation in screens.
