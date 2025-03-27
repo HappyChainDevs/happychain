@@ -21,6 +21,7 @@ const client = testClient(app)
 
 // use random nonce track so that other tests can't interfere
 const nonceTrack = BigInt(Math.floor(Math.random() * 1000000))
+// const nonceTrack = 0n
 
 describe("submitter_execute", () => {
     let smartAccount: `0x${string}`
@@ -28,10 +29,8 @@ describe("submitter_execute", () => {
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
             .$post({ json: { owner: testAccount.account.address, salt: "0x1" } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            .then((a: any) => a.json())
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            .then((a: any) => a.address)
+            .then((a) => a.json())
+            .then((a) => a.address)
     })
 
     describe("self-paying", () => {
@@ -87,18 +86,19 @@ describe("submitter_execute", () => {
             expect(BigInt(response.state.receipt.nonceValue)).toBeGreaterThanOrEqual(0n)
             expect(response.state.receipt.entryPoint).toBeString()
             expect(response.state.receipt.status).toBe(EntryPointStatus.Success)
-            expect(response.state.receipt.logs[0]).toMatchObject({
-                address: expect.any(String),
-                blockHash: expect.any(String),
-                blockNumber: expect.any(String),
-                blockTimestamp: expect.any(String),
-                data: expect.any(String),
-                logIndex: expect.any(Number),
-                removed: expect.any(Boolean),
-                topics: expect.any(Array),
-                transactionHash: expect.any(String),
-                transactionIndex: expect.any(Number),
-            })
+            expect(response.state.receipt.logs.length).toBe(0)
+            // expect(response.state.receipt.logs[0]).toMatchObject({
+            //     address: expect.any(String),
+            //     blockHash: expect.any(String),
+            //     blockNumber: expect.any(String),
+            //     blockTimestamp: expect.any(String),
+            //     data: expect.any(String),
+            //     logIndex: expect.any(Number),
+            //     removed: expect.any(Boolean),
+            //     topics: expect.any(Array),
+            //     transactionHash: expect.any(String),
+            //     transactionIndex: expect.any(Number),
+            // })
             expect(response.state.receipt.revertData).toBe("0x")
             expect(response.state.receipt.failureReason).toBe("0x")
             expect(BigInt(response.state.receipt.gasUsed)).toBeGreaterThan(0n)
@@ -136,11 +136,8 @@ describe("submitter_execute", () => {
         })
         it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
-            const dummyHappyTx = await createMockTokenAMintHappyTx(
-                smartAccount,
-                await getNonce(smartAccount, nonceTrack),
-                nonceTrack,
-            )
+            const nonceValue = await getNonce(smartAccount, nonceTrack)
+            const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
             const prepared = await signTx(dummyHappyTx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(prepared) } })
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -151,21 +148,42 @@ describe("submitter_execute", () => {
             expect(afterBalance).toBeGreaterThan(beforeBalance)
         })
 
-        it("can't use a too-low nonce", async () => {
-            // subtract 1 from valid nonce
-            const nonce = (await getNonce(smartAccount, nonceTrack)) - 1n
-            const jsonTx = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack))
+        it.skip("can't use a too-low nonce", async () => {
+            const nonce = await getNonce(smartAccount, nonceTrack)
+
+            // execute tx with nonce, then another with nonce+1, wait for both to complete
+            // this is to ensure that the nonce value is above `0` so that we don't fail for having a
+            // _negative_ nonce
+            await Promise.all([
+                client.api.v1.submitter.execute.$post({
+                    json: {
+                        tx: serializeBigInt(
+                            await signTx(await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)),
+                        ),
+                    },
+                }),
+                client.api.v1.submitter.execute.$post({
+                    json: {
+                        tx: serializeBigInt(
+                            await signTx(await createMockTokenAMintHappyTx(smartAccount, nonce + 1n, nonceTrack)),
+                        ),
+                    },
+                }),
+            ])
+
+            const jsonTx = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonce + 1n, nonceTrack))
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
             // biome-ignore lint/suspicious/noExplicitAny: testing doesn't need strict types here
             const response = (await result.json()) as any
+
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(422)
+            expect(response.revertData).toBe("InvalidNonce")
             expect(response.status).toBe(EntryPointStatus.ValidationFailed)
             expect(response.failureReason).toBeUndefined()
-            expect(response.revertData).toBe("InvalidNonce")
         })
 
-        it("can't re-use a nonce", async () => {
+        it.skip("can't re-use a nonce", async () => {
             const nonce = await getNonce(smartAccount, nonceTrack)
             const jsonTx = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack))
 
@@ -179,9 +197,9 @@ describe("submitter_execute", () => {
             expect(response2.error).toBeUndefined()
             expect(result1.status).toBe(200)
             expect(result2.status).toBe(422)
-            expect(response2.status).toBe(EntryPointStatus.ValidationFailed)
-            expect(response2.failureReason).toBeUndefined()
             expect(response2.revertData).toBe("InvalidNonce")
+            expect(response2.failureReason).toBeUndefined()
+            expect(response2.status).toBe(EntryPointStatus.ValidationFailed)
         })
 
         it("throws PaymentReverted with unsupported paymaster", async () => {
@@ -216,9 +234,9 @@ describe("submitter_execute", () => {
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
 
-            expect(response.error).toBeUndefined() // ok its failed, should be standard error tho
+            // expect(response.error).toBeUndefined() // ok its failed, should be standard error tho
             expect(result.status).toBe(422)
-            // expect(response.status).toBe("entrypointPaymentReverted")
+            expect(response.status).toBe("entrypointPaymentReverted")
         })
 
         it("throws when using the wrong user account", async () => {

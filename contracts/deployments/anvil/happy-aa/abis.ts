@@ -7,6 +7,30 @@ const contractToAbi = ({
   "HappyEntryPoint": [
     {
       "type": "function",
+      "name": "nonceValues",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "nonceTrack",
+          "type": "uint192",
+          "internalType": "uint192"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "nonceValue",
+          "type": "uint64",
+          "internalType": "uint64"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "submit",
       "inputs": [
         {
@@ -33,8 +57,8 @@ const contractToAbi = ({
             },
             {
               "name": "validationStatus",
-              "type": "bytes4",
-              "internalType": "bytes4"
+              "type": "bytes",
+              "internalType": "bytes"
             },
             {
               "name": "callStatus",
@@ -43,6 +67,11 @@ const contractToAbi = ({
             },
             {
               "name": "revertData",
+              "type": "bytes",
+              "internalType": "bytes"
+            },
+            {
+              "name": "payoutStatus",
               "type": "bytes",
               "internalType": "bytes"
             }
@@ -79,6 +108,16 @@ const contractToAbi = ({
     },
     {
       "type": "error",
+      "name": "GasPriceTooHigh",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidNonce",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "MalformedHappyTx",
       "inputs": []
     },
@@ -88,8 +127,8 @@ const contractToAbi = ({
       "inputs": [
         {
           "name": "result",
-          "type": "bytes4",
-          "internalType": "bytes4"
+          "type": "bytes",
+          "internalType": "bytes"
         }
       ]
     },
@@ -115,8 +154,8 @@ const contractToAbi = ({
       "inputs": [
         {
           "name": "reason",
-          "type": "bytes4",
-          "internalType": "bytes4"
+          "type": "bytes",
+          "internalType": "bytes"
         }
       ]
     },
@@ -173,6 +212,24 @@ const contractToAbi = ({
         }
       ],
       "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "addExtension",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
     },
     {
       "type": "function",
@@ -263,9 +320,14 @@ const contractToAbi = ({
           "internalType": "struct ExecutionOutput",
           "components": [
             {
+              "name": "status",
+              "type": "uint8",
+              "internalType": "enum CallStatus"
+            },
+            {
               "name": "gas",
-              "type": "uint256",
-              "internalType": "uint256"
+              "type": "uint32",
+              "internalType": "uint32"
             },
             {
               "name": "revertData",
@@ -279,19 +341,65 @@ const contractToAbi = ({
     },
     {
       "type": "function",
-      "name": "getNonce",
+      "name": "executeCall",
       "inputs": [
         {
-          "name": "nonceTrack",
-          "type": "uint192",
-          "internalType": "uint192"
+          "name": "info",
+          "type": "tuple",
+          "internalType": "struct CallInfo",
+          "components": [
+            {
+              "name": "dest",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "value",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "callData",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
         }
       ],
       "outputs": [
         {
-          "name": "nonce",
-          "type": "uint256",
-          "internalType": "uint256"
+          "name": "success",
+          "type": "bool",
+          "internalType": "bool"
+        },
+        {
+          "name": "returnData",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "extensions",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
         }
       ],
       "stateMutability": "view"
@@ -308,6 +416,30 @@ const contractToAbi = ({
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "isExtensionRegistered",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -329,25 +461,6 @@ const contractToAbi = ({
           "name": "",
           "type": "bytes4",
           "internalType": "bytes4"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "nonceValue",
-      "inputs": [
-        {
-          "name": "",
-          "type": "uint192",
-          "internalType": "uint192"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint64",
-          "internalType": "uint64"
         }
       ],
       "stateMutability": "view"
@@ -455,8 +568,8 @@ const contractToAbi = ({
       "outputs": [
         {
           "name": "",
-          "type": "bytes4",
-          "internalType": "bytes4"
+          "type": "bytes",
+          "internalType": "bytes"
         }
       ],
       "stateMutability": "nonpayable"
@@ -473,6 +586,24 @@ const contractToAbi = ({
         }
       ],
       "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "removeExtension",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
     },
     {
       "type": "function",
@@ -616,11 +747,49 @@ const contractToAbi = ({
       "outputs": [
         {
           "name": "",
-          "type": "bytes4",
-          "internalType": "bytes4"
+          "type": "bytes",
+          "internalType": "bytes"
         }
       ],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "ExtensionAdded",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "indexed": true,
+          "internalType": "enum ExtensionType"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "ExtensionRemoved",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "indexed": true,
+          "internalType": "enum ExtensionType"
+        }
+      ],
+      "anonymous": false
     },
     {
       "type": "event",
@@ -712,6 +881,38 @@ const contractToAbi = ({
       "type": "error",
       "name": "ERC1967NonPayable",
       "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ExtensionAlreadyRegistered",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ExtensionNotRegistered",
+      "inputs": [
+        {
+          "name": "extension",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "extensionType",
+          "type": "uint8",
+          "internalType": "enum ExtensionType"
+        }
+      ]
     },
     {
       "type": "error",
@@ -1021,8 +1222,8 @@ const contractToAbi = ({
       "outputs": [
         {
           "name": "",
-          "type": "bytes4",
-          "internalType": "bytes4"
+          "type": "bytes",
+          "internalType": "bytes"
         }
       ],
       "stateMutability": "nonpayable"
@@ -1147,10 +1348,10 @@ const aliasToContract = ({
 }) as const
 
 export const deployment = ({
-  "HappyEntryPoint": "0x434f1F8F5f66067C3781C9Aa37399F3C7Fe37029",
-  "ScrappyAccount": "0x48F78DfCC420F21E683EF6787EDA2f4F3bFbf757",
-  "ScrappyAccountFactory": "0xA5d2eA5b36858fB41DC6F85982A2C2a9e49ecF1D",
-  "ScrappyPaymaster": "0xc50aF5F9f2ff25dbfFBc324D46cbFA85FAf2344b"
+  "HappyEntryPoint": "0x8B875dd38a222737183a165519dcd52768d8b99f",
+  "ScrappyAccount": "0x95d8b82a439Df73d29DC84DcB347083a66244650",
+  "ScrappyAccountFactory": "0x264F1B27861402B1bC55199b23B7cB4B71022025",
+  "ScrappyPaymaster": "0x7f26e5DE61003caB1d154CE63202cD7B387B76E7"
 }) as const
 
 export type ContractToAbi = typeof contractToAbi

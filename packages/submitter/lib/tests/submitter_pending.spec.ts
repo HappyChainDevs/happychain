@@ -16,10 +16,8 @@ describe("submitter_pending", () => {
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
             .$post({ json: { owner: testAccount.account.address, salt: "0x1" } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            .then((a: any) => a.json())
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            .then((a: any) => a.address)
+            .then((a) => a.json())
+            .then((a) => a.address)
     })
 
     it("fetches pending transactions for a user", async () => {

@@ -7,12 +7,11 @@ export function encodeHappyTx(tx: EstimateGasInput["tx"]): `0x${string}` {
     const executeGasLimitHex = (tx.executeGasLimit || 0n)?.toString(16).padStart(8, "0")
     const destHex = tx.dest.slice(2)
     const paymasterHex = tx.paymaster.slice(2)
-    const valueHex = tx.value.toString(16).padStart(64, "0")
+    const valueHex = (tx.value || 0n).toString(16).padStart(64, "0")
     const nonceTrackHex = tx.nonceTrack.toString(16).padStart(48, "0") // 24 bytes
     const nonceValueHex = tx.nonceValue.toString(16).padStart(16, "0") // 8 bytes
     const maxFeePerGasHex = (tx.maxFeePerGas || "")?.toString(16).padStart(64, "0")
     const submitterFeeHex = (tx.submitterFee || "")?.toString(16).padStart(64, "0")
-
     // Dynamic fields with their 4-byte length prefixes
     const callDataHex = tx.callData.slice(2)
     const paymasterDataHex = tx.paymasterData.slice(2)

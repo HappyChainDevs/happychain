@@ -1,9 +1,11 @@
 import { submitterClient } from "#lib/clients"
 import { getBaseError } from "#lib/errors/utils"
+import { logger } from "#lib/logger"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import type { HappyTxState } from "#lib/tmp/interface/HappyTxState"
 import type { EntryPointStatus } from "#lib/tmp/interface/status"
 import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
+import { decodeHappyTx } from "#lib/utils/decodeHappyTx"
 import type { HappyReceiptService } from "./HappyReceiptService"
 import type {
     HappySimulationService,
@@ -39,28 +41,54 @@ export class SubmitterService {
         })
     }
 
-    async finalizeWhenReady(happyTx: HappyTx, persistedTxId: number, txHash: `0x${string}`) {
-        const happyTxHash = computeHappyTxHash(happyTx)
-        const receipt = await submitterClient.waitForSubmitReceipt({ happyTxHash, happyTx, txHash })
-        return await this.finalize(persistedTxId, {
-            status: receipt.status as unknown as EntryPointStatus.Success,
-            included: Boolean(receipt.txReceipt.transactionHash) as true,
-            receipt,
-        })
+    async finalizeWhenReady(happyTx: HappyTx, txHash: `0x${string}`) {
+        try {
+            const happyTxHash = computeHappyTxHash(happyTx)
+            const persisted = await this.happyTransactionService.findByHappyTxHash(happyTxHash)
+            if (!persisted?.id) {
+                const logData = { txHash, happyTxHash, happyTx }
+                logger.warn("Persisted HappyTx not found. Could not finalize.", logData)
+                return
+            }
+            const receipt = await submitterClient.waitForSubmitReceipt({ happyTxHash, txHash })
+            return await this.finalize(persisted.id, {
+                status: receipt.status as unknown as EntryPointStatus.Success,
+                included: Boolean(receipt.txReceipt.transactionHash) as true,
+                receipt,
+            })
+        } catch (err) {
+            logger.warn("Error while finalizing HappyTx", err)
+        }
     }
 
     async insertSimulationSuccess(
-        happyTxHash: `0x${string}`,
         request: SubmitContractSimulateParameters,
         result: SubmitContractSimulateReturnType["result"],
     ) {
+        const happyTxHash = computeHappyTxHash(decodeHappyTx(request.args[0]))
         return await this.happySimulationService.insertSuccessResult(happyTxHash, request, result)
     }
 
-    async insertSimulationFailure(happyTxHash: `0x${string}`, request: SubmitContractSimulateParameters, err: unknown) {
+    async insertSimulationReverted(request: SubmitContractSimulateParameters, err: unknown) {
+        const happyTxHash = computeHappyTxHash(decodeHappyTx(request.args[0]))
         const baseError = getBaseError(err)
+
         const hasRawData = baseError && "raw" in baseError && typeof baseError.raw === "string"
         const data = hasRawData ? (baseError.raw as `0x${string}`) || "0x" : "0x"
-        return await this.happySimulationService.insertFailureResult(happyTxHash, request, data)
+
+        return await this.happySimulationService.insertRevertedResult(happyTxHash, request, data)
+    }
+
+    async insertSimulation(
+        request: SubmitContractSimulateParameters,
+        result?: SubmitContractSimulateReturnType["result"] | undefined,
+        error?: unknown | undefined,
+    ) {
+        if (request && result) {
+            return await this.insertSimulationSuccess(request, result)
+        } else if (request && !result) {
+            return await this.insertSimulationReverted(request, error)
+        }
+        throw new Error("Invalid parameters for insertSimulation")
     }
 }

@@ -5,6 +5,7 @@ import type { SimulateContractReturnType } from "viem/actions"
 import type { HappySimulation } from "#lib/database/generated"
 import type { HappySimulationRepository } from "#lib/database/repositories/HappySimulationRepository"
 import type { abis } from "#lib/deployments"
+import { SubmitterError } from "#lib/errors/contract-errors"
 import { decodeRawError, getSelectorFromErrorName } from "#lib/errors/parsedCodes"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 import { EntryPointStatus, SimulatedValidationStatus, isFailure, isRevert } from "#lib/tmp/interface/status"
@@ -29,13 +30,19 @@ export type SubmitContractSimulateReturnType<account extends Account = Account> 
 
 // From HappyEntryPoint.sol
 const CallStatusTable: Record<number, EntryPointStatus> = {
-    0: EntryPointStatus.Success, // The call succeeded.
-    1: EntryPointStatus.UnexpectedReverted, // The call reverted. TODO: CALL_REVERTED
-    2: EntryPointStatus.ExecuteReverted, // The {IHappyAccount.execute} function reverted (in violation of the spec).
+    // 0: EntryPointStatus.Success, // The call succeeded.
+    // 1: EntryPointStatus.UnexpectedReverted, // The call reverted. TODO: CALL_REVERTED
+    // 2: EntryPointStatus.ExecuteReverted, // The {IHappyAccount.execute} function reverted (in violation of the spec).
+
+    0: EntryPointStatus.Success, //SUCCEEDED, // The call succeeded.
+    1: EntryPointStatus.ExecuteReverted, //CALL_REVERTED, // The call reverted.
+    2: EntryPointStatus.ExecuteFailed, //EXECUTE_FAILED, // The {IHappyAccount.execute} function failed (incorrect input).
+    3: EntryPointStatus.ExecuteReverted, //EXECUTE_REVERTED, // The {IHappyAccount.execute} function reverted (in violation of the spec).
 }
+
 function getCallStatus(status: number) {
     if (CallStatusTable[status]) return CallStatusTable[status]
-    throw new Error(`Unknown Call Status: ${status}`)
+    throw new SubmitterError(`Unknown Call Status: ${status}`)
 }
 
 export class HappySimulationService {
@@ -58,6 +65,7 @@ export class HappySimulationService {
     ) {
         // Store simulation result if happyTxHash is provided
         const status = getCallStatus(result.callStatus)
+
         const validationStatus =
             Number(result.validationStatus) === 0
                 ? SimulatedValidationStatus.Success
@@ -81,28 +89,67 @@ export class HappySimulationService {
         return this.getSimulationResult(inserted)
     }
 
-    async insertFailureResult(
+    async insertRevertedResult(
         happyTxHash: `0x${string}`,
         request: SubmitContractSimulateParameters,
         errData: `0x${string}`,
     ) {
         const decoded = decodeRawError(errData)
+        const failureReason = (decoded && getSelectorFromErrorName(decoded.errorName)) || "0x"
+        const revertData = decoded?.args?.[0] ?? errData
         const inserted = await this.insert({
             happyTxHash,
             entryPoint: request.address,
             executeGas: 0n,
             gas: 0n,
-            failureReason: getSelectorFromErrorName(decoded.errorName) || "0x",
-            revertData: decoded.args[0] || "0x",
-            // TODO: this statuses isn't correct
-            // TODO: proper lookup or conversion - how to determine these>
-            status: EntryPointStatus.PaymentReverted,
-            validationStatus: decoded.errorName.endsWith("Reverted")
-                ? SimulatedValidationStatus.Reverted
-                : SimulatedValidationStatus.Failed,
+            failureReason,
+            revertData,
+            validationStatus: SimulatedValidationStatus.Reverted,
+            status: this.getEntrypointStatus(decoded) ?? EntryPointStatus.UnexpectedReverted,
         })
 
         return this.getSimulationResult(inserted)
+    }
+
+    // private getSimulatedValidationStatus({ errorName }: { errorName: string }) {
+    //     console.log({ errorName })
+    //     switch (errorName) {
+    //         case "SimulationFailed":
+    //             return SimulatedValidationStatus.Failed
+    //         case "SimulationFutureNonce":
+    //             return SimulatedValidationStatus.FutureNonce
+    //         case "SimulationReverted":
+    //             return SimulatedValidationStatus.Reverted
+    //         case "SimulationSuccess":
+    //             return SimulatedValidationStatus.Success
+    //         case "SimulationUnexpectedReverted":
+    //             return SimulatedValidationStatus.UnexpectedReverted
+    //         case "SimulationUnknown":
+    //             return SimulatedValidationStatus.Unknown
+    //     }
+
+    //     return "Unknown"
+    // }
+
+    private getEntrypointStatus({ errorName }: { errorName?: string } = {}) {
+        switch (errorName) {
+            case "Success":
+                return EntryPointStatus.Success
+            case "ExecuteFailed":
+                return EntryPointStatus.ExecuteFailed
+            case "ExecuteReverted":
+                return EntryPointStatus.ExecuteReverted
+            case "PaymentFailed":
+                return EntryPointStatus.PaymentFailed
+            case "PaymentReverted":
+                return EntryPointStatus.PaymentReverted
+            case "UnexpectedReverted":
+                return EntryPointStatus.UnexpectedReverted
+            case "ValidationFailed":
+                return EntryPointStatus.ValidationFailed
+            case "ValidationReverted":
+                return EntryPointStatus.ValidationReverted
+        }
     }
 
     private getSimulationResult(

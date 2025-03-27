@@ -3,29 +3,30 @@ import type { Account, WriteContractParameters } from "viem"
 import { parseAccount } from "viem/accounts"
 import { walletClient } from "#lib/clients"
 import { abis } from "#lib/deployments"
+import { UnknownError } from "#lib/errors"
 import { parseFromViemError } from "#lib/errors/utils"
-import { happyTransactionService, submitterService } from "#lib/services"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
+import { submitterService } from "#lib/services"
 import { decodeHappyTx } from "#lib/utils/decodeHappyTx"
+import { AccountNotFoundError } from "../errors"
 
 export async function submit(request: Omit<SubmitWriteParameters, "abi" | "functionName">): Promise<`0x${string}`> {
     const { account: account_, ...params } = request
-    if (!account_) throw new Error("Account Not Found - submit")
+    if (!account_) throw new AccountNotFoundError("submit")
     const account = account_ ? parseAccount(account_) : null
 
     try {
-        const happyTxHash = computeHappyTxHash(decodeHappyTx(params.args[0]))
-        const persisted = await happyTransactionService.findByHappyTxHashOrThrow(happyTxHash)
         const transactionHash = await walletClient.writeContract({
             ...params,
             abi: abis.HappyEntryPoint,
             functionName: "submit",
             account,
         } as WriteContractParameters)
-        submitterService.finalizeWhenReady(decodeHappyTx(params.args[0]), persisted.id as number, transactionHash)
+
+        submitterService.finalizeWhenReady(decodeHappyTx(params.args[0]), transactionHash)
+
         return transactionHash
     } catch (_err) {
-        throw parseFromViemError(_err) || _err
+        throw parseFromViemError(_err) || new UnknownError(_err?.message || "Failed to simulate contract")
     }
 }
 

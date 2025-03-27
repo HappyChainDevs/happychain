@@ -1,23 +1,21 @@
-import type { Hex } from "viem"
+import type { Hex, TransactionReceipt } from "viem"
 import { publicClient } from "#lib/clients"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import { happyTransactionService } from "#lib/services"
 import type { HappyTxReceipt } from "#lib/tmp/interface/HappyTxReceipt"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
+import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "../errors"
 
 export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Promise<HappyTxReceipt> {
-    const { txHash, happyTxHash, happyTx } = params
+    const { txHash, happyTxHash } = params
+
+    const happyTx = await happyTransactionService.findByHappyTxHashOrThrow(happyTxHash)
 
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
-    if (typeof receipt.to !== "string") throw new Error(`[${happyTxHash}] Invalid receipt.to`)
+    if (typeof receipt.to !== "string") throw new InvalidTransactionRecipientError(happyTxHash)
+    if (!isValidTransactionType(receipt.type)) throw new InvalidTransactionTypeError(happyTxHash)
 
-    if (!isValidTransactionType(receipt.type)) throw new Error(`[${happyTxHash}] Invalid receipt.type`)
-
-    // TODO: is this the correct approach?
-    const entrypointLogs = receipt.logs.filter((l) => l.address === receipt.to)
-
-    // TODO: this makes many assumptions (such as it was fully a success)...
     return {
         happyTxHash,
 
@@ -32,22 +30,22 @@ export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Pr
         entryPoint: receipt.to,
 
         /** Result of onchain submission of the HappyTx. */
-        status: EntryPointStatus.Success,
+        status: receipt.status === "success" ? EntryPointStatus.Success : EntryPointStatus.UnexpectedReverted,
 
         /** Logs emitted by HappyTx. */
-        logs: entrypointLogs,
+        logs: receipt.logs.filter((l) => l.address === receipt.to),
 
         /**
          * The revertData carried by one of our custom error, or the raw deal for
          * "otherReverted". Empty if `!status.endsWith("Reverted")`.
          */
-        revertData: "0x" as const,
+        revertData: getRevertData(receipt),
 
         /**
          * The selector carried by one of our custom error.
          * Empty if `!status.endsWith("Failed")`
          */
-        failureReason: "0x" as const,
+        failureReason: getFailureReason(receipt),
 
         /** Gas used by the HappyTx */
         gasUsed: receipt.gasUsed,
@@ -82,4 +80,13 @@ export async function waitForSubmitReceipt(params: WaitForReceiptParameters): Pr
     }
 }
 
-type WaitForReceiptParameters = { txHash: Hex; happyTx: HappyTx; happyTxHash: Hex }
+type WaitForReceiptParameters = { txHash: Hex; happyTxHash: Hex }
+
+function getRevertData(_receipt: TransactionReceipt): `0x${string}` {
+    // TODO: handle failures
+    return "0x" as const
+}
+function getFailureReason(_receipt: TransactionReceipt): `0x${string}` {
+    // TODO: handle failures
+    return "0x" as const
+}

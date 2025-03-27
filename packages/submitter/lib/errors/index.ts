@@ -1,12 +1,22 @@
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 
 export abstract class HappyBaseError extends Error {
-    constructor() {
-        super()
+    constructor(message?: string, options?: ErrorOptions) {
+        super(message, options)
         this.name = this.constructor.name
     }
 
     abstract getResponseData(): Record<string, unknown>
+}
+
+export class UnknownError extends HappyBaseError {
+    constructor(public message: string) {
+        super()
+    }
+
+    getResponseData() {
+        return { status: "Unknown", message: this.message }
+    }
 }
 
 // === FAILED ERRORS ===============================================================================
