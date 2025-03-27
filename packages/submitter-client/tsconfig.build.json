@@ -1,0 +1,10 @@
+{
+    "extends": [
+        "./tsconfig.json",
+        "@happy.tech/configs/tsconfig.types.json"
+    ],
+    "include": [
+        "lib",
+        "./package.json"
+    ]
+}

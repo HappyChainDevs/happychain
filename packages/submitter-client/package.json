@@ -1,0 +1,21 @@
+{
+    "name": "@happy.tech/submitter-client",
+    "module": "./dist/index.es.js",
+    "type": "module",
+    "private": true,
+    "exports": {
+        ".": {
+            "types": "./dist/index.es.d.ts",
+            "default": "./dist/index.es.js"
+        }
+    },
+    "devDependencies": {
+        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/submitter": "workspace:0.0.0",
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    }
+}
