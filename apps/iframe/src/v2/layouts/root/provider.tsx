@@ -1,4 +1,4 @@
-import { type RouterEvents, useRouter, useRouterState } from "@tanstack/react-router"
+import { type RouterEvents, useCanGoBack, useMatch, useNavigate, useRouter, useRouterState } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
 import {
     type PropsWithChildren,
@@ -11,6 +11,11 @@ import {
 } from "react"
 import { userAtom } from "#src/state/user"
 import { dialogConfirmLogOutVisibility, userDetailsCollapsibleVisibility } from "./user"
+import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens.tsx"
+import { PATHNAME_ROUTE_GAMES } from "#src/v2/screens/games/Games.tsx"
+import { PATHNAME_ROUTE_HISTORY } from "#src/v2/screens/history/History.tsx"
+import { PATHNAME_ROUTE_TOKEN_HISTORY } from "#src/v2/screens/tokens/history/TokenHistory.tsx"
+import { PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send.tsx"
 
 /**
  * The possible states of the wallet layout.
@@ -22,20 +27,43 @@ export enum LayoutState {
     Unready = "unready",
 }
 
+const SCREEN_VALUES = {
+    Tokens: 0,
+    Games: 50,
+    History: 100
+}
+
 /**
  * Internal hook.
  * Centralizes and manages all state and logic for the root layout.
  */
 function useProviderValue() {
+    // Router
     const router = useRouter()
     const state = useRouterState()
+    const canGoBack = useCanGoBack()
+    const navigate = useNavigate()
+    const matchTokensPage = useMatch({ from: PATHNAME_ROUTE_TOKENS, shouldThrow: false })
+    const matchGamesPage = useMatch({ from: PATHNAME_ROUTE_GAMES, shouldThrow: false })
+    const matchHistoryPage= useMatch({ from: PATHNAME_ROUTE_HISTORY, shouldThrow: false })
+    const matchTokenHistoryPage= useMatch({ from: PATHNAME_ROUTE_TOKEN_HISTORY, shouldThrow: false })
+    const matchSendToken= useMatch({ from: PATHNAME_ROUTE_SEND_TOKEN, shouldThrow: false })
+    
+    // User
     const user = useAtomValue(userAtom)
+    
+    // UI element
     const [isConfirmLogoutDialogVisible, setConfirmLogOutDialogVisibility] = useAtom(dialogConfirmLogOutVisibility)
     const [, setUserDetailsCollapseVisibility] = useAtom(userDetailsCollapsibleVisibility)
 
     // Slider state slices and handlers
-    const [ticks] = useState([0, 50, 100]) // the visible "ticks" on the device UI
-    const [navSliderPosition, setNavSliderPosition] = useState([0])
+    const [ticks] = useState(() => Object.values(SCREEN_VALUES)) // the visible "ticks" on the device UI
+    const [navSliderPosition, setNavSliderPosition] = useState(() => {
+        if(matchTokensPage) return [SCREEN_VALUES.Tokens]
+        if(matchGamesPage) return [SCREEN_VALUES.Games]
+        if(matchHistoryPage) return [SCREEN_VALUES.History]
+        return [SCREEN_VALUES.Tokens]
+    })
 
     /**
      * Updates the slider position during user interaction.
@@ -48,18 +76,54 @@ function useProviderValue() {
      * Snaps the slider to the nearest tick when user interaction ends
      */
     function handleNavValueChangeEnd(details: { value: Array<number> }) {
-        const referencePosition = details.value[0]
-        const newPosition = ticks.reduce((prevPosition, currPosition) => {
-            return Math.abs(currPosition - referencePosition) < Math.abs(prevPosition - referencePosition)
+        const referencePosition = details.value[0];
+        const newPosition = findClosestTick(referencePosition, ticks);
+        setNavSliderPosition([newPosition]);
+        
+        if (matchSendToken || matchTokenHistoryPage) {
+            if (newPosition === SCREEN_VALUES.Tokens) {
+                canGoBack ? router.history.back() : navigate({to: PATHNAME_ROUTE_TOKENS});
+            }
+            return;
+        }
+        
+        const tickPositionToRoute = {
+            [SCREEN_VALUES.Tokens]: { match: matchTokensPage, route: PATHNAME_ROUTE_TOKENS },
+            [SCREEN_VALUES.Games]: { match: matchGamesPage, route: PATHNAME_ROUTE_GAMES },
+            [SCREEN_VALUES.History]: { match: matchHistoryPage, route: PATHNAME_ROUTE_HISTORY }
+        };
+        
+        const screen = tickPositionToRoute[newPosition];
+        if (screen && !screen.match) {
+            navigate({to: screen.route});
+        }
+    }
+    
+    function findClosestTick(reference: number, ticks: number[]): number {
+        return ticks.reduce((prevPosition, currPosition) => 
+            Math.abs(currPosition - reference) < Math.abs(prevPosition - reference)
                 ? currPosition
                 : prevPosition
-        })
-        setNavSliderPosition([newPosition])
+        );
     }
 
-    function handleOnRouterResolvedEvent(_e: RouterEvents["onResolved"]) {
+    function handleOnRouterResolvedEvent({ toLocation, fromLocation }: RouterEvents["onResolved"]) {
         setUserDetailsCollapseVisibility(false)
         setConfirmLogOutDialogVisibility(false)
+        if(fromLocation){
+        switch (toLocation.pathname) {
+            case PATHNAME_ROUTE_TOKENS:
+                setNavSliderPosition([SCREEN_VALUES.Tokens])
+            break
+            
+            case PATHNAME_ROUTE_GAMES:
+                setNavSliderPosition([SCREEN_VALUES.Games])
+            break
+
+            case PATHNAME_ROUTE_HISTORY:
+                setNavSliderPosition([SCREEN_VALUES.History])
+            break
+        }}
     }
 
     // biome-ignore lint/correctness/useExhaustiveDependencies: we just want to run this onMount
