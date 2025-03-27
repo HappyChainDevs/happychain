@@ -210,7 +210,9 @@ export class Transaction {
             status: this.status,
         })
 
-        TxmMetrics.getInstance().attemptsUntilFinalization.record(this.attempts.length)
+        if (!NotFinalizedStatuses.includes(status)) {
+            TxmMetrics.getInstance().attemptsUntilFinalization.record(this.attempts.length)
+        }
 
         eventBus.emit(Topics.TransactionStatusChanged, {
             transaction: this,
