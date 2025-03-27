@@ -288,6 +288,18 @@
         "typescript": "^5.0.0",
       },
     },
+    "packages/submitter-client": {
+      "name": "@happy.tech/submitter-client",
+      "devDependencies": {
+        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@happy.tech/submitter": "workspace:0.0.0",
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/txm": {
       "name": "@happy.tech/txm",
       "version": "0.1.0",
@@ -810,6 +822,8 @@
     "@happy.tech/react": ["@happy.tech/react@workspace:packages/react"],
 
     "@happy.tech/submitter": ["@happy.tech/submitter@workspace:packages/submitter"],
+
+    "@happy.tech/submitter-client": ["@happy.tech/submitter-client@workspace:packages/submitter-client"],
 
     "@happy.tech/testing": ["@happy.tech/testing@workspace:support/testing"],
 
