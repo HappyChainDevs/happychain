@@ -327,7 +327,11 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
                 0, // maxCopy
                 abi.encodeWithSelector(IHappyAccount.payout.selector, cost)
             );
-            if (!success || gasBeforePayout - gasleft() > 12000 || tx.origin.balance < balance + cost) {
+            uint256 gasAfterPayout = gasleft();
+            if (
+                !success || gasBeforePayout - gasAfterPayout > (isSimulation ? 35000 : 12000)
+                    || (!isSimulation && tx.origin.balance < balance + cost)
+            ) {
                 revert PayoutFailed();
             }
         } /* paymaster */ else {
