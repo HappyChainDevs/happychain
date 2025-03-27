@@ -3,6 +3,7 @@ import { privateKeyToAccount } from "viem/accounts"
 import { config, publicClient } from "#lib/clients"
 import { abis, deployment } from "#lib/deployments"
 import env from "#lib/env"
+import { SubmitterError } from "#lib/errors/contract-errors"
 import { logger } from "#lib/logger"
 import type { CreateAccountInput, CreateAccountOutput } from "#lib/tmp/interface/create_account.ts"
 import { isContractDeployed } from "#lib/utils/isContractDeployed"
@@ -39,15 +40,15 @@ export async function create({ owner, salt }: CreateAccountInput): Promise<Creat
     logger.trace(`Account Simulation Result: ${result}`)
 
     // Check if the predicted address matches the result
-    if (result !== predictedAddress) throw new Error("Address mismatch during simulation")
+    if (result !== predictedAddress) throw new SubmitterError("Address mismatch during simulation")
 
     const hash = await walletClient.writeContract(request)
     const receipt = await publicClient.waitForTransactionReceipt({ hash })
 
     // validate deployment
-    if (receipt.status !== "success") throw new Error("Transaction failed on-chain.")
+    if (receipt.status !== "success") throw new SubmitterError("Transaction failed on-chain.")
     if (!(await isContractDeployed(predictedAddress)))
-        throw new Error(`Contract deployment failed: No code found at ${predictedAddress}`)
+        throw new SubmitterError(`Contract deployment failed: No code found at ${predictedAddress}`)
 
     logger.trace(`Account Creation Result: ${result}`)
 

@@ -1,8 +1,9 @@
 import { Map2, Mutex } from "@happy.tech/common"
 import type { Address } from "viem/accounts"
 import { publicClient } from "#lib/clients"
-import { abis } from "#lib/deployments"
+import { abis, deployment } from "#lib/deployments"
 import env from "#lib/env"
+import { SubmitterError } from "#lib/errors/contract-errors"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import type { PendingHappyTxInfo } from "#lib/tmp/interface/submitter_pending"
 import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
@@ -39,14 +40,14 @@ export function getPendingTransactions(account: Address) {
 
 async function getOnchainNonce(account: Address, nonceTrack: NonceTrack) {
     return await publicClient.readContract({
-        address: account,
-        abi: abis.ScrappyAccount,
-        functionName: "getNonce",
-        args: [nonceTrack],
+        address: deployment.HappyEntryPoint,
+        abi: abis.HappyEntryPoint,
+        functionName: "nonceValues",
+        args: [account, nonceTrack],
     })
 }
 
-export async function isTxBlocked(_tx: HappyTx) {
+export async function checkLocalNonce(_tx: HappyTx) {
     const account = _tx.account
     const nonceTrack = _tx.nonceTrack
 
@@ -64,15 +65,15 @@ export async function waitUntilUnblocked(tx: HappyTx) {
     // wait until the tx is unblocked. when unblocked, we call 'resolve'
     return new Promise((resolve, reject) => {
         const track = pendingTxMap.getOrSet(tx.account, tx.nonceTrack, new Map())
-        if (track.size >= env.LIMITS_EXECUTE_BUFFER_LIMIT) throw new Error("bufferExceeded")
-        if (totalCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY) throw new Error("bufferExceeded")
+        if (track.size >= env.LIMITS_EXECUTE_BUFFER_LIMIT) throw new SubmitterError("bufferExceeded")
+        if (totalCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY) throw new SubmitterError("maxCapacity") // TODO: prune active account
 
         // reject previous tx so it can be replaced
         const value = track.get(tx.nonceValue)
         if (value) value.reject()
 
         // Timeout tx after 30 seconds if it hasn't been executed
-        const timeout = setTimeout(() => reject(new Error("transaction timeout")), MAX_WAIT_TIMEOUT_MS)
+        const timeout = setTimeout(() => reject(new SubmitterError("transaction timeout")), MAX_WAIT_TIMEOUT_MS)
 
         track.set(tx.nonceValue, {
             hash: computeHappyTxHash(tx),
@@ -82,7 +83,7 @@ export async function waitUntilUnblocked(tx: HappyTx) {
             },
             reject: () => {
                 clearTimeout(timeout)
-                reject(new Error("transaction rejected"))
+                reject(new SubmitterError("transaction rejected"))
             },
         })
         pendingTxMap.set(tx.account, tx.nonceTrack, track)

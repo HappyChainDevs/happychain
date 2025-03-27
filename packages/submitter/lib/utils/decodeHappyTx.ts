@@ -35,7 +35,6 @@ export function decodeHappyTx(encoded: Hex): HappyTx {
 
     const submitterFee = BigInt(`0x${encodedBytes.slice(offset, offset + 64)}`)
     offset += 64 // 32 bytes
-
     // Read dynamic fields with their 4-byte length prefixes
     const callDataLen = Number.parseInt(encodedBytes.slice(offset, offset + 8), 16)
     offset += 8

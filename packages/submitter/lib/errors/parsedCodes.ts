@@ -46,12 +46,12 @@ export const errorAbi = parseAbi([
 
     // HappyEntryPoint.sol ErrorSelectors
     "function ValidationReverted(bytes revertData)",
-    "function ValidationFailed(bytes4 reason)",
-    "function PaymentFailed(bytes4 result)",
+    "function ValidationFailed(bytes reason)",
+    "function PaymentFailed(bytes result)",
     "function PaymentReverted(bytes revertData)",
     "error ValidationReverted(bytes revertData)",
-    "error ValidationFailed(bytes4 reason)",
-    "error PaymentFailed(bytes4 result)",
+    "error ValidationFailed(bytes reason)",
+    "error PaymentFailed(bytes result)",
     "error PaymentReverted(bytes revertData)",
 
     // https://vectorized.github.io/solady/#/utils/ecdsa?id=toethsignedmessagehashbytes
@@ -69,6 +69,10 @@ export function getSelectorFromErrorName(name: string) {
 }
 
 export function decodeRawError(data: `0x${string}`) {
-    if (data === "0x") return { errorName: "Unknown", args: [] }
-    return decodeErrorResult({ abi: errorAbi, data })
+    if (data === "0x") return
+    const err = decodeErrorResult({ abi: errorAbi, data })
+    return {
+        ...err,
+        args: err.args ?? [],
+    }
 }

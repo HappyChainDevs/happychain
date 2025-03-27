@@ -1,5 +1,6 @@
 import { publicClient } from "#lib/clients"
 import type { HappyReceiptRepository } from "#lib/database/repositories/HappyReceiptRepository"
+import { SubmitterError } from "#lib/errors/contract-errors"
 import { logger } from "#lib/logger"
 import type { HappyTxReceipt } from "#lib/tmp/interface/HappyTxReceipt"
 import type { Hash, Receipt, TransactionTypeName } from "#lib/tmp/interface/common_chain"
@@ -17,7 +18,8 @@ export class HappyReceiptService {
 
         logger.warn("[HappyReceiptService.findByHash] Warning: Logs not yet implemented")
 
-        if (!isValidTransactionType(transactionReceipt.type)) throw new Error(`[${happyTxHash}] Invalid receipt.type`)
+        if (!isValidTransactionType(transactionReceipt.type))
+            throw new SubmitterError(`[${happyTxHash}] Invalid receipt.type`)
 
         return {
             happyTxHash: happyTxHash,
@@ -41,7 +43,7 @@ export class HappyReceiptService {
 
     async findByHappyTxHashOrThrow(happyTxHash: Hash) {
         const receipt = await this.findByHappyTxHash(happyTxHash)
-        if (!receipt) throw new Error("Failed to find receipt")
+        if (!receipt) throw new SubmitterError("Failed to find receipt")
         return receipt
     }
 
@@ -66,7 +68,7 @@ export class HappyReceiptService {
 
     async insertOrThrow(newData: HappyTxReceipt) {
         const data = await this.insert(newData)
-        if (!data) throw new Error("Failed to find receipt")
+        if (!data) throw new SubmitterError("Failed to find receipt")
         return data
     }
 }
