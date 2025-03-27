@@ -30,7 +30,9 @@ class RandomnessService {
                 allowDebug: true,
                 pollingInterval: 250,
             },
-            maxPriorityFeePerGas: 10n,
+            gas: {
+                minPriorityFeePerGas: 50n,
+            },
         })
         this.transactionFactory = new TransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS, env.PRECOMMIT_DELAY)
         this.drandService = new DrandService(this.drandRepository, this.transactionFactory)
