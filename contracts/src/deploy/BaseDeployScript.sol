@@ -117,7 +117,7 @@ abstract contract BaseDeployScript is Script {
      * Returns the size of the given contract.
      */
     function getContractSize(address addr) internal view returns (uint256 size) {
-        assembly {
+        assembly ("memory-safe") {
             size := extcodesize(addr)
         }
     }
@@ -126,7 +126,7 @@ abstract contract BaseDeployScript is Script {
         internal
         returns (address payable addr)
     {
-        assembly {
+        assembly ("memory-safe") {
             addr := create2(0, add(creationCode, 0x20), mload(creationCode), salt)
         }
     }

@@ -393,7 +393,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
 
         bytes4 selector;
         bytes memory status;
-        assembly {
+        assembly ("memory-safe") {
             // Decoding the return data of a `returns (bytes memory)` function.
             // 0: outer bytes length, 32: inner bytes offset, 64: inner bytes length: 96: content
             // If returnData is too short, this might read garbage, but will not revert.
@@ -425,7 +425,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         returns (CallStatus status, bytes memory revertData)
     {
         uint256 revertDataSize;
-        assembly {
+        assembly ("memory-safe") {
             // skip outer bytes length and struct offset, read status
             status := mload(add(returnData, 64))
             // skip output status and bytes offset, read size
@@ -433,8 +433,8 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         }
         if (revertDataSize > 256) revertDataSize = 256; // copy only what we have
         revertData = new bytes(revertDataSize);
-        assembly {
-            mcopy(add(revertData, 32), add(returnData, 160), revertDataSize)
+        assembly ("memory-safe") {
+            mcopy(revertData, add(returnData, 160), revertDataSize)
         }
         if (status > CallStatus.EXECUTE_REVERTED) {
             // The returned status is incorrect, treat this like a revert.
