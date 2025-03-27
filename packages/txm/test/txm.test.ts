@@ -44,8 +44,10 @@ const txm = new TransactionManager({
     abis: abis,
     gasEstimator: new TestGasEstimator(),
     retryPolicyManager: retryManager,
-    baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
-    eip1559: ethereumDefaultEIP1559Parameters,
+    gas: {
+        baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
+        eip1559: ethereumDefaultEIP1559Parameters,
+    },
     metrics: {
         active: false,
     },
