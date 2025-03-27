@@ -29,6 +29,19 @@ export type AttemptSubmissionError = {
 
 export type AttemptSubmissionResult = Result<undefined, AttemptSubmissionError>
 
+export enum RetryAttemptErrorCause {
+    ABINotFound = "ABINotFound",
+    FailedToSignTransaction = "FailedToSignTransaction",
+    FailedToSendRawTransaction = "FailedToSendRawTransaction",
+}
+
+export type RetryAttemptError = {
+    cause: RetryAttemptErrorCause
+    description: string
+}
+
+export type RetryAttemptResult = Result<undefined, RetryAttemptError>
+
 /**
  * This module is responsible for submitting a new attempt to the blockchain.
  * It coordinates the process using a transaction and an {@link AttemptSubmissionParameters}.
@@ -166,6 +179,64 @@ export class TransactionSubmitter {
         }
 
         this.txmgr.rpcLivenessMonitor.trackSuccess()
+
+        return ok(undefined)
+    }
+
+    async retryAttempt(transaction: Transaction, attempt: Attempt): Promise<RetryAttemptResult> {
+        const abi = this.txmgr.abiManager.get(transaction.contractName)
+
+        if (!abi) {
+            return err({
+                cause: RetryAttemptErrorCause.ABINotFound,
+                description: `ABI not found for contract ${transaction.contractName}`,
+            })
+        }
+
+        const functionName = transaction.functionName
+        const args = transaction.args
+        const data = encodeFunctionData({ abi, functionName, args })
+
+        const signedTransactionResult = await this.txmgr.viemWallet.safeSignTransaction({
+            nonce: attempt.nonce,
+            maxFeePerGas: attempt.maxFeePerGas,
+            maxPriorityFeePerGas: attempt.maxPriorityFeePerGas,
+            gas: attempt.gas,
+            to: transaction.address,
+            value: 0n,
+            data,
+        })
+
+        if (signedTransactionResult.isErr()) {
+            return err({
+                cause: RetryAttemptErrorCause.FailedToSignTransaction,
+                description: `Failed to sign transaction ${transaction.intentId} for retry. Details: ${signedTransactionResult.error}`,
+            })
+        }
+
+        const signedTransaction = signedTransactionResult.value
+
+        const sendRawTransactionResult = await this.txmgr.viemWallet.safeSendRawTransaction({
+            serializedTransaction: signedTransaction,
+        })
+
+        if (sendRawTransactionResult.isErr()) {
+            if (
+                sendRawTransactionResult.error instanceof TransactionRejectedRpcError &&
+                sendRawTransactionResult.error.message.includes("nonce too low")
+            ) {
+                this.txmgr.nonceManager.resync()
+            }
+
+            this.txmgr.rpcLivenessMonitor.onFailure()
+
+            return err({
+                cause: RetryAttemptErrorCause.FailedToSendRawTransaction,
+                description: `Failed to retry raw transaction ${transaction.intentId}. Details: ${sendRawTransactionResult.error}`,
+            })
+        }
+
+        this.txmgr.rpcLivenessMonitor.onSuccess()
 
         return ok(undefined)
     }
