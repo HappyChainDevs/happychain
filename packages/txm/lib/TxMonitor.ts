@@ -209,6 +209,20 @@ export class TxMonitor {
         }
     }
 
+    private shouldEmitNewAttempt(attempt: Attempt): boolean {
+        const { expectedNextBaseFeePerGas, targetPriorityFee } = this.transactionManager.gasPriceOracle
+
+        if (attempt.maxPriorityFeePerGas < targetPriorityFee) {
+            return true
+        }
+
+        if (attempt.maxFeePerGas - attempt.maxPriorityFeePerGas < expectedNextBaseFeePerGas) {
+            return true
+        }
+
+        return false
+    }
+
     private async handleExpiredTransaction(transaction: Transaction): Promise<void> {
         const attempt = transaction.lastAttempt
 
@@ -245,6 +259,20 @@ export class TxMonitor {
             )
             return
         }
+
+        if (!this.shouldEmitNewAttempt(attempt)) {
+            Logger.instance.info(
+                LogTag.TXM,
+                `Transaction ${transaction.intentId} is stuck, but the gas price is still sufficient for current network conditions. Sending same attempt again.`,
+            )
+            await this.transactionManager.transactionSubmitter.retryAttempt(transaction, attempt)
+            return
+        }
+
+        Logger.instance.info(
+            LogTag.TXM,
+            `Transaction ${transaction.intentId} is stuck and the gas price is below optimal network parameters. Sending new attempt.`,
+        )
 
         const { replacementMaxFeePerGas, replacementMaxPriorityFeePerGas } = this.calcReplacementFee(
             attempt.maxFeePerGas,

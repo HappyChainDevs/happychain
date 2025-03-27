@@ -24,8 +24,8 @@ import type { TransactionManager } from "./TransactionManager.js"
  */
 export class GasPriceOracle {
     private txmgr: TransactionManager
-    private expectedNextBaseFeePerGas!: bigint
-    private targetPriorityFee!: bigint
+    public expectedNextBaseFeePerGas!: bigint
+    public targetPriorityFee!: bigint
 
     constructor(_transactionManager: TransactionManager) {
         this.txmgr = _transactionManager
