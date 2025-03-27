@@ -2,20 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {IHappyAccount} from "boop/interfaces/IHappyAccount.sol";
+import {CallInfo} from "boop/libs/CallInfoCodingLib.sol";
 
 enum ExtensionType {
     Validator,
     Executor
-}
-
-/**
- * Information (destination, value and calldata) for a call to be made by the account on behalf
- * of an execution extension.
- */
-struct CallInfo {
-    address dest;
-    uint256 value;
-    bytes callData;
 }
 
 /// Thrown when calling addExtension with an already-registered extension.
