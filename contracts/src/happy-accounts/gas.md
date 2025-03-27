@@ -50,7 +50,7 @@ Seems frankly cleaner to keep the computation we have at the moment, and not do 
 
 Actually that issue was also why the paymaster had to know the cost of its own execution... But with staking plan and final debit, we can actually take care of that!
 
-## Implementation plan:
+## Implementation plan
 
 1. Meter all the current calls, and add validate and payout gas limits to the boop struct.
     - Temporarily charge the entire gasLimit to the paymaster.
