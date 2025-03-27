@@ -39,7 +39,7 @@ contract SessionKeyValidator is ICustomBoopValidator {
 
     /// @dev Security error: Prevents registering a session key for the validator itself
     error CannotRegisterSessionKeyForValidator();
-    
+
     /// @dev Security error: Prevents an account from registering a session key for itself
     error CannotRegisterSessionKeyForAccount();
 
