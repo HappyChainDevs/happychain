@@ -156,7 +156,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         vm.revertToState(id); // EVM state is like before the .submit() call
 
@@ -186,7 +186,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         vm.revertToState(id); // EVM state is like before the .submit() call
 
@@ -216,7 +216,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
 
         vm.revertToState(id); // EVM state is like before the .submit() call
 
