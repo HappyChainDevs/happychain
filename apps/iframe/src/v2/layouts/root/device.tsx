@@ -1,9 +1,9 @@
 import { Button, Slider } from "@happy.tech/uikit-react"
 import { Link, useLocation } from "@tanstack/react-router"
-import { cx } from "cva"
 import type { PropsWithChildren } from "react"
 import { ActionsSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
 import { LayoutState, useRootLayout } from "./provider"
+import { cx } from "cva"
 
 /**
  * Controls bottom navigation in screens.
@@ -103,26 +103,28 @@ const ActionsIsland = () => {
         <div
             data-scope="device"
             data-part="actions"
-            className={cx(
-                "relative bg-gradient-hds-332deg-system-skeuo-surface-450-550 p-0.25 rounded-t-hds-sm rounded-b-hds-lg",
-            )}
+            className={`
+                relative
+                bg-gradient-hds-332deg-system-skeuo-surface-450-550
+                p-0.25 rounded-t-hds-sm rounded-b-hds-lg
+            `}
         >
             <div
                 data-scope="actions"
                 data-part="root"
-                className={cx(
-                    "mt-auto relative rounded-[inherit]",
-                    "grid gap-2 p-3 min-h-[114px]",
-                    "overflow-hidden",
-                    "shadow-[var(--shadow-hds-inwards-300),var(--shadow-hds-overflow-edge-bottom)]",
-                    "relative before:absolute before:content-[' '] before:rounded-[inherit]",
-                    "before:inset-0 before:block before:size-full",
-                    "before:[background:var(--texture-hds-metal)]",
-                    "before:pointer-events-none",
-                    "before:mix-blend-multiply before:opacity-20",
-                    layoutState === LayoutState.Transitioning && "cursor-wait",
-                    layoutState === LayoutState.Unready && "cursor-not-allowed",
-                )}
+                className={`
+                    mt-auto rounded-[inherit]
+                    grid gap-2 p-3 min-h-[114px]
+                    overflow-hidden
+                    shadow-[var(--shadow-hds-inwards-300),var(--shadow-hds-overflow-edge-bottom)]
+                    relative before:absolute before:content-[' '] before:rounded-[inherit]
+                    before:inset-0 before:block before:size-full
+                    before:[background:var(--texture-hds-metal)]
+                    before:pointer-events-none
+                    before:mix-blend-multiply before:opacity-20
+                    ${layoutState === LayoutState.Transitioning ? "cursor-wait" : ""}
+                    ${layoutState === LayoutState.Unready ? "cursor-not-allowed" : ""}
+                `}
             >
                 <ContextualActions />
                 <div
@@ -170,21 +172,21 @@ const RootDevice = ({ children }: PropsWithChildren) => {
             data-part="root"
             data-state={layoutState}
             aria-busy={routerState.isLoading || routerState.isTransitioning}
-            className={cx(
-                "min-h-[550px] w-[328px] p-3",
-                "@md:mx-auto",
-                "group",
-                "flex flex-col rounded-t-hds-sm rounded-b-hds-lg",
-                "border-solid border-gradient-hds-155deg-utility-tint-system-skeuo-surface-600-350",
-                "border-[width:var(--size-scale-hds-0-375)]",
-                "bg-gradient-hds-152deg-system-skeuo-surface-950-700",
-                "shadow-[var(--shadow-hds-bevel-inwards-300),var(--shadow-hds-bevel-inwards-side),var(--shadow-hds-outwards-400)]",
-                "relative before:absolute before:content-[' '] before:rounded-[inherit]",
-                "before:inset-0 before:block before:size-full",
-                "before:opacity-20",
-                "before:pointer-events-none",
-                "before:[background:var(--texture-hds-metal)]",
-            )}
+            className={`
+                min-h-[550px] w-[328px] p-3
+                @md:mx-auto
+                group
+                flex flex-col rounded-t-hds-sm rounded-b-hds-lg
+                border-solid border-gradient-hds-155deg-utility-tint-system-skeuo-surface-600-350
+                border-[width:var(--size-scale-hds-0-375)]
+                bg-gradient-hds-152deg-system-skeuo-surface-950-700
+                shadow-[var(--shadow-hds-bevel-inwards-300),var(--shadow-hds-bevel-inwards-side),var(--shadow-hds-outwards-400)]
+                relative before:absolute before:content-[' '] before:rounded-[inherit]
+                before:inset-0 before:block before:size-full
+                before:opacity-20
+                before:pointer-events-none
+                before:[background:var(--texture-hds-metal)]
+            `}
         >
             {children}
         </div>
