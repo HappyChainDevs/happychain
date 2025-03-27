@@ -5,6 +5,7 @@ import { cx } from "cva"
 import { useAtomValue } from "jotai"
 import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
+import { PATHNAME_ROUTE_HISTORY } from "#src/v2/screens/history/History"
 
 /**
  * The display area and simulated screen reflection effect.
@@ -180,7 +181,7 @@ const RootBottomNavbarIsland = () => {
                     },
                     {
                         label: "History",
-                        pathname: "/",
+                        pathname: PATHNAME_ROUTE_HISTORY,
                     },
                 ].map((item) => (
                     <BottomNavbar.Item asChild key={`island-bottomnav-${item.pathname}`}>
