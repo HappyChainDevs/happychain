@@ -36,7 +36,7 @@ library CallInfoCodingLib {
         }
 
         uint256 length;
-        assembly {
+        assembly ("memory-safe") {
             length := mload(add(data, start))
         }
 
@@ -75,7 +75,7 @@ library CallInfoCodingLib {
             return (false, info); // not enough data (dest, value, callData length, callData)
         }
 
-        assembly {
+        assembly ("memory-safe") {
             let infoDest := info
             let infoValue := add(info, 32)
             let infocallDataPointer := add(info, 64)

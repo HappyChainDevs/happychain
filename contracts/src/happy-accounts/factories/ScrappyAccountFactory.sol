@@ -36,7 +36,7 @@ contract ScrappyAccountFactory {
         if (predictedAddress.code.length > 0) revert AlreadyDeployed();
 
         address payable proxy;
-        assembly {
+        assembly ("memory-safe") {
             proxy := create2(0, add(contractCode, 0x20), mload(contractCode), combinedSalt)
         }
         if (proxy == address(0)) revert InitializeError();
