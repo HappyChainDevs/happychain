@@ -33,7 +33,7 @@ error InvalidExtensionValue();
  * Interface for Boop accounts (as specified in IHappyAccount) that are extensible with validator
  * and executor extensions.
  *
- * The ERC-165 selector for this interface is 0xf0223481 and can be obtained via:
+ * The ERC-165 selector for this interface is 0xf0223481 and can be obtained via: todo: Update
  * ```
  * console.logBytes4(
  *     IHappyAccount.validate.selector
@@ -41,7 +41,7 @@ error InvalidExtensionValue();
  *     ^ IExtensibleBoopAccount.addExtension.selector
  *     ^ IExtensibleBoopAccount.removeExtension.selector
  *     ^ IExtensibleBoopAccount.isExtensionRegistered.selector
- *     ^ IExtensibleBoopAccount.executeCall.selector
+ *     ^ IExtensibleBoopAccount.executeCallFromExecutor.selector
  * );
  * ```
  */
