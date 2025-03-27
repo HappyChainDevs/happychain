@@ -54,8 +54,13 @@ library HappyTxLib {
     function encode(HappyTx memory happyTx) internal pure returns (bytes memory result) {
         // Dynamic fields: 4 bytes length + actual length for each dynamic field
         // Calculate total size needed for the encoded bytes
-        uint256 totalSize = DYNAMIC_FIELDS_OFFSET + (4 + happyTx.callData.length) + (4 + happyTx.paymasterData.length)
-            + (4 + happyTx.validatorData.length) + (4 + happyTx.extraData.length);
+        // forgefmt: disable-next-item
+        uint256 totalSize = DYNAMIC_FIELDS_OFFSET
+            + (4 + happyTx.callData.length)
+            + (4 + happyTx.paymasterData.length)
+            + (4 + happyTx.validatorData.length)
+            + (4 + happyTx.extraData.length);
+
         assembly {
             // Encoded tx will live at next free memory address.
             result := mload(0x40)
