@@ -5,6 +5,7 @@ import { cx } from "cva"
 import { useAtomValue } from "jotai"
 import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
+import { PATHNAME_ROUTE_HISTORY } from "#src/v2/screens/history/History"
 import { BottomNavbarSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
 import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
 import { BottomNavbarTokenHistory, PATHNAME_ROUTE_TOKEN_HISTORY } from "#src/v2/screens/tokens/history/TokenHistory"
@@ -190,7 +191,7 @@ const RootBottomNavbarIsland = () => {
                     },
                     {
                         label: "History",
-                        pathname: "/history",
+                        pathname: PATHNAME_ROUTE_HISTORY,
                     },
                 ].map((item) => (
                     <BottomNavbar.Item asChild key={`island-bottomnav-${item.pathname}`}>
