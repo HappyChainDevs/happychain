@@ -11,15 +11,60 @@ struct CallInfo {
     bytes callData;
 }
 
+/// Library for decoding encoded CallInfo(s).
 library CallInfoCodingLib {
+    /**
+     * Decodes a CallInfo[] encoded in `data` at offset `0`, and tightly packed (length taking 32 bytes,
+     * followed by the calls, taking exactly callData.length bytes).
+     */
+    function decodeCallInfoArray(bytes memory data) internal pure returns (bool success, CallInfo[] memory calls) {
+        return decodeCallInfoArray(data, 0);
+    }
+
+    /**
+     * Decodes a CallInfo[] encoded in `data` at offset `start`, and tightly packed (length taking 32 bytes,
+     * followed by the calls, taking exactly callData.length bytes).
+     * @param start The offset in bytes where the encoded data starts (position after the length slot)
+     */
+    function decodeCallInfoArray(bytes memory data, uint256 start)
+        internal
+        pure
+        returns (bool success, CallInfo[] memory calls)
+    {
+        if (start + 32 > data.length) {
+            return (false, calls); // length not present
+        }
+
+        uint256 length;
+        assembly {
+            length := mload(add(data, start))
+        }
+
+        success = true;
+        calls = new CallInfo[](length);
+
+        uint256 offset = start + 32;
+        for (uint256 i = 0; i < length; ++i) {
+            (success, calls[i]) = decodeCallInfo(data, offset);
+            if (!success) return (success, calls);
+            offset += 84 + calls[i].callData.length;
+        }
+    }
+
+    /**
+     * Decodes a CallInfo encoded in `data` at offset `0`, and tightly packed (dest taking 20 bytes,
+     * value taking 32 bytes, callData.length taking 32 bytes, followed by the calldata, taking exactly
+     * callData.length bytes).
+     */
     function decodeCallInfo(bytes memory data) internal pure returns (bool success, CallInfo memory info) {
         return decodeCallInfo(data, 0);
     }
 
     /**
-     * Decodes a CallInfo encoded in `data` at offset `start`, and tightly packed (dest on 20 bytes,
-     * value on 32 bytes, callData.length on 32 bytes, followed by the calldata, taking exactly
+     * Decodes a CallInfo encoded in `data` at offset `start`, and tightly packed (dest taking 20 bytes,
+     * value taking 32 bytes, callData.length taking 32 bytes, followed by the calldata, taking exactly
      * callData.length bytes).
+     * @param start The offset in bytes where the encoded data starts (position after the length slot)
      */
     function decodeCallInfo(bytes memory data, uint256 start)
         internal
@@ -27,7 +72,7 @@ library CallInfoCodingLib {
         returns (bool success, CallInfo memory info)
     {
         if (start + 84 > data.length) {
-            return (false, info); // not enough data (dest, value, callData length)
+            return (false, info); // not enough data (dest, value, callData length, callData)
         }
 
         assembly {
@@ -35,10 +80,10 @@ library CallInfoCodingLib {
             let infoValue := add(info, 32)
             let infocallDataPointer := add(info, 64)
 
-            let offset := add(add(data, 32), start)
+            let offset := add(add(data, 32), start) // skip data.length stored in 1st slot
 
             mstore(infoDest, 0) // clear out destination memory
-            mcopy(infoDest, offset, 20)
+            mcopy(add(infoDest, 20), offset, 20) // left pad 12 bytes
             offset := add(offset, 20)
 
             mcopy(infoValue, offset, 32)
@@ -69,36 +114,5 @@ library CallInfoCodingLib {
         }
 
         return (success, info);
-    }
-
-    function decodeCallInfoArray(bytes memory data) internal pure returns (bool success, CallInfo[] memory calls) {
-        return decodeCallInfoArray(data, 0);
-    }
-
-    function decodeCallInfoArray(bytes memory data, uint256 start)
-        internal
-        pure
-        returns (bool success, CallInfo[] memory calls)
-    {
-        if (start + 32 > data.length) {
-            return (false, calls); // length not present
-        }
-
-        uint256 length;
-        assembly {
-            length := mload(add(data, start))
-        }
-
-        success = true;
-        calls = new CallInfo[](length);
-
-        uint256 offset = start + 32;
-        for (uint256 i = 0; i < length; ++i) {
-            CallInfo memory call;
-            (success, call) = decodeCallInfo(data, offset);
-            if (!success) return (success, calls);
-            offset += 84 + call.callData.length;
-            calls[i] = call;
-        }
     }
 }
