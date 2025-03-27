@@ -99,6 +99,7 @@ test-gas: ## Runs test and generate a gas report
 
 test-happy-aa:
 	@make test-happyTxLib
+	@make test-callInfoCodingLib
 	@make test-happyEntryPoint
 	@make test-scrappyAccount
 	@make test-scrappyPaymaster
@@ -110,6 +111,10 @@ test-happy-aa:
 test-happyTxLib:
 	forge test --match-contract HappyTxLibTest -vvv
 .PHONY: test-happyTxLib
+
+test-callInfoCodingLib:
+	forge test --match-contract CallInfoCodingLibTest -vvv
+.PHONY: test-callInfoCodingLib
 
 test-happyEntryPoint:
 	forge test --match-contract HappyEntryPointTest -vvv
