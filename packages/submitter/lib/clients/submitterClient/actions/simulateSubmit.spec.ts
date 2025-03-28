@@ -4,9 +4,9 @@ import { ValidationRevertedError } from "#lib/errors"
 import { getErrorNameFromSelector } from "#lib/errors/parsedCodes"
 import { create } from "#lib/handlers/accounts/create"
 import { createMockTokenAMintHappyTx, getNonce, testAccount } from "#lib/tests/utils"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
 import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
-import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
 import { simulateSubmit } from "./simulateSubmit"
 
 const account = findExecutionAccount()

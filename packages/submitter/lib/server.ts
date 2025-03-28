@@ -1,4 +1,5 @@
 import { Hono } from "hono"
+import { openAPISpecs } from "hono-openapi"
 import { every, except } from "hono/combine"
 import { HTTPException } from "hono/http-exception"
 import { logger as loggerMiddleware } from "hono/logger"
@@ -7,13 +8,14 @@ import { requestId as requestIdMiddleware } from "hono/request-id"
 import { timeout as timeoutMiddleware } from "hono/timeout"
 import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
+import pkg from "../package.json" assert { type: "json" }
 import env from "./env"
 import { HappyBaseError } from "./errors"
 import { logger } from "./logger"
 import accountsApi from "./routes/api/accounts"
 import submitterApi from "./routes/api/submitter"
 
-export const app = new Hono()
+const app = new Hono()
     // middleware
     .use(
         except(
@@ -70,4 +72,21 @@ app.onError(async (err, c) => {
     return c.json(response, 500)
 })
 
+app.get(
+    "docs/openapi.json",
+    openAPISpecs(app, {
+        documentation: {
+            info: {
+                title: "Boop",
+                version: pkg.version,
+                description: "Happy Account Submitter",
+            },
+            servers: [
+                { url: "http://localhost:3001", description: "Local server" },
+                { url: "https://boop.happy.tech", description: "Production server" },
+            ],
+        },
+    }),
+)
 export type AppType = typeof app
+export { app }

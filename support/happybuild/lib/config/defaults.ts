@@ -1,5 +1,7 @@
 import { existsSync } from "node:fs"
+import { join } from "node:path"
 import { pkgExportNames } from "../utils/globals"
+import { pkg } from "../utils/globals"
 import { errorExit, normalizeRelativePath } from "../utils/misc"
 import type { InputConfig } from "./define"
 import { type GetExportPathInfoOpts, getExportPathInfo } from "./getExportPathInfo"
@@ -9,7 +11,7 @@ import type { Config } from "./types"
  * Constructs the effective config by merging the user-provided config with the default values
  * and applying other default heuristics.
  */
-export function applyDefaults(config: InputConfig): Config {
+export function applyDefaults(config: InputConfig, _index: number, configs: InputConfig[]): Config {
     //
     const exportDir = normalizeRelativePath(config.exportDir) ?? "./dist"
     const outDir = normalizeRelativePath(config.outDir) ?? "./build"
@@ -70,6 +72,7 @@ export function applyDefaults(config: InputConfig): Config {
         config.rollupTypes !== undefined //
             ? config.rollupTypes
             : !!apiExtractorConfig
+
     const checkExportedTypes =
         config.checkExportedTypes !== undefined //
             ? config.checkExportedTypes
@@ -91,10 +94,22 @@ export function applyDefaults(config: InputConfig): Config {
         errorExit("`emitTypes` must be true when `checkExportedTypes` is true")
     }
 
+    let fullName = ""
+    if (config.name) {
+        fullName = join(pkg.name, config.name)
+    } else if (configs.length === 1) {
+        fullName = pkg.name
+    } else if (config.exports) {
+        fullName =
+            exports.length === 1
+                ? join(pkg.name, exports[0].exportName)
+                : join(pkg.name, `{${config.exports.join(", ")}`)
+    }
+
     return {
         ...defaultConfig,
         ...config,
-        fullName: "", // set in build
+        fullName,
         exports,
         defaultConditions,
         bundle,

@@ -1,5 +1,5 @@
 import { keccak256 } from "viem/utils"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { HappyTx } from "../tmp/interface/HappyTx"
 import { encodeHappyTx } from "./encodeHappyTx"
 
 // with paymaster, don't include gas values in the signature!

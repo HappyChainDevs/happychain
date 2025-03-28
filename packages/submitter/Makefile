@@ -4,9 +4,9 @@ include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
 setup-symlinks::
-	@if ! [[ -r ./dist/rpc.es.js ]]; then \
-  		ln -sf ../lib/rpc.ts ./dist/rpc.es.js; \
-  		ln -sf ../lib/rpc.ts ./dist/rpc.es.d.ts; \
+	@if ! [[ -r ./dist/client.es.js ]]; then \
+  		ln -sf ../lib/client.ts ./dist/client.es.js; \
+  		ln -sf ../lib/client.ts ./dist/client.es.d.ts; \
 	fi
 .PHONY: setup-symlinks
 

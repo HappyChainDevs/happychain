@@ -5,7 +5,7 @@ import { abis } from "#lib/deployments"
 import env from "#lib/env"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import type { PendingHappyTxInfo } from "#lib/tmp/interface/submitter_pending"
-import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
 
 type NonceTrack = bigint
 type NonceValue = bigint

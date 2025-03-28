@@ -1,10 +1,12 @@
+SRC_ROOT_DIR ?= src
 include ../../makefiles/lib.mk
 include ../../makefiles/formatting.mk
+include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
-dev: ## Start the local dev server for development
-	@NODE_ENV=development bun --bun run --hot src/index.ts
-.PHONY: dev
+prod: ## Start the local dev server for development
+	@NODE_ENV=production bun --bun run build/index.es.js
+.PHONY: prod
 
 migrate: ## Runs latest migrations
 	@submitter-cli migrate latest

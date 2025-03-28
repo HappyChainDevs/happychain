@@ -117,11 +117,8 @@
       "dependencies": {
         "@happy.tech/submitter": "workspace:0.0.0",
         "@scalar/hono-api-reference": "^0.5.175",
-        "hono": "^4.7.2",
-        "hono-openapi": "^0.4.4",
       },
       "devDependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
         "@happy.tech/configs": "workspace:0.1.0",
         "@types/bun": "latest",
       },
@@ -293,6 +290,7 @@
     "packages/submitter-client": {
       "name": "@happy.tech/submitter-client",
       "devDependencies": {
+        "@happy.tech/common": "workspace:0.1.0",
         "@happy.tech/configs": "workspace:0.1.0",
         "@happy.tech/happybuild": "workspace:0.1.1",
         "@happy.tech/submitter": "workspace:0.0.0",

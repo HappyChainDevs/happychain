@@ -3,7 +3,7 @@ import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { type ExecuteOutput, ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
-import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
 import { submit } from "./submit"
 
 export async function execute(data: { entryPoint: `0x${string}`; tx: HappyTx }): Promise<ExecuteOutput> {

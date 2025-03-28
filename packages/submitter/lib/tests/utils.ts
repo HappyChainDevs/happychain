@@ -7,8 +7,8 @@ import type { z } from "zod"
 import { abis, deployment } from "#lib/deployments"
 import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/submitter/openApi/execute"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
-import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
 
 export type TestExecuteInput = z.input<typeof ExecuteInputSchema>
 
