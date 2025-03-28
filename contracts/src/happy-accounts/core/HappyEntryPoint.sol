@@ -218,7 +218,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         // 2. Validate with account
 
         (Validity result, uint32 gasUsed, bytes memory revertData) =
-            validate(IHappyAccount.validate.selector, happyTx, happyTx.validateGasLimit);
+            _validate(IHappyAccount.validate.selector, happyTx, happyTx.validateGasLimit);
 
         if (result == Validity.CALL_REVERTED) revert ValidationReverted(revertData);
         if (result == Validity.INVALID_RETURN_DATA) revert ValidationReverted(revertData);
@@ -232,7 +232,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         // 3. Validate with paymaster
 
         (result, gasUsed, revertData) =
-            validate(IHappyPaymaster.validatePayment.selector, happyTx, happyTx.payoutGasLimit);
+            _validate(IHappyPaymaster.validatePayment.selector, happyTx, happyTx.payoutGasLimit);
 
         if (result == Validity.CALL_REVERTED) revert PaymentValidationReverted(revertData);
         if (result == Validity.INVALID_RETURN_DATA) revert PaymentValidationReverted(revertData);
@@ -354,7 +354,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
      * It attempts to call the given function and returns the appropriate {Validity} status, the
      * call's gas consumption, and data to be passed to a revert if appropriate.
      */
-    function validate(bytes4 fn, HappyTx memory happyTx, uint256 gasLimit)
+    function _validate(bytes4 fn, HappyTx memory happyTx, uint256 gasLimit)
         internal
         returns (Validity result, uint32 gasUsed, bytes memory revertData)
     {
