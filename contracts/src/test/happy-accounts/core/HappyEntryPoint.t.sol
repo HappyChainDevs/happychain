@@ -10,6 +10,8 @@ import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 
+import {SubmitterFeeTooHigh} from "../../../happy-accounts/interfaces/IHappyPaymaster.sol";
+
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
 import {InvalidSignature} from "../../../happy-accounts/utils/Common.sol";
 
@@ -17,6 +19,7 @@ import {
     CallStatus,
     SubmitOutput,
     InsufficientStake,
+    PaymentValidationFailed,
     PaymentValidationReverted,
     ValidationFailed,
     ValidationReverted,
@@ -229,21 +232,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
-    // VALIDATION TESTS
-
-    function testValidatorRevertedAtEcdsaRecover() public {
-        // Create a basic HappyTx
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
-
-        // Corrupt the validatorData with invalid signature format (not proper r,s,v format)
-        // This will cause the recover function to revert during validation
-        happyTx.validatorData = hex"deadbeef";
-
-        vm.expectRevert(
-            abi.encodeWithSelector(ValidationReverted.selector, abi.encodeWithSelector(InvalidSignature.selector))
-        );
-        happyEntryPoint.submit(happyTx.encode());
-    }
+    // ENTRYPOINT PRE-VALIDATION TESTS
 
     function testGasPriceTooHigh() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
@@ -252,36 +241,12 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyEntryPoint.submit(happyTx.encode());
     }
 
-    function testValidationFailedInvalidSignature() public {
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
-
-        // Change any field (except nonce) to invalid the signature over the happyTx
-        happyTx.gasLimit += 10;
-
-        vm.expectRevert(
-            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(InvalidSignature.selector))
-        );
-
-        // Submit the transaction to trigger the revert
-        happyEntryPoint.submit(happyTx.encode());
-    }
-
-    // ====================================================================================================
-    // VALIDATION TESTS (SIMULATION)
-
-    function testSimulateWithUnknownDuringSimulation() public {
+    function testInsufficientStake() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
-
-        // Change any field to invalid the signature over the happyTx
-        happyTx.paymaster = ZERO_ADDRESS;
-
-        // The function should return output.validationStatus = UnknownDuringSimulation.selector
-        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
-        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-
-        // The output should be UnknownDuringSimulation.selector
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
-        assertTrue(output.validityUnknownDuringSimulation, "output.validityUnknownDuringSimulation");
+        happyTx.paymaster = dest; // An address which hasn't staked to the entrypoint
+        vm.txGasPrice(happyTx.maxFeePerGas / 2);
+        vm.expectRevert(InsufficientStake.selector);
+        happyEntryPoint.submit(happyTx.encode());
     }
 
     // ====================================================================================================
@@ -338,7 +303,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         uint256 id = vm.snapshotState();
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, true, CallStatus.SUCCEEDED, new bytes(0));
         assertTrue(output.futureNonceDuringSimulation, "output.futureNonceDuringSimulation");
         vm.revertToState(id);
     }
@@ -365,6 +330,68 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
+    // ACCOUNT VALIDATION TESTS
+
+    function testValidatorRevertedAtEcdsaRecover() public {
+        // Create a basic HappyTx
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
+
+        // Corrupt the validatorData with invalid signature format (not proper r,s,v format)
+        // This will cause the recover function to revert during validation
+        happyTx.validatorData = hex"deadbeef";
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ValidationReverted.selector, abi.encodeWithSelector(InvalidSignature.selector))
+        );
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    function testValidationFailedInvalidSignature() public {
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
+
+        // Change any field (except nonce) to invalid the signature over the happyTx
+        happyTx.gasLimit += 10;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ValidationFailed.selector, abi.encodeWithSelector(InvalidSignature.selector))
+        );
+
+        // Submit the transaction to trigger the revert
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    // ====================================================================================================
+    // ACCOUNT VALIDATION TESTS (SIMULATION)
+
+    function testSimulateWithUnknownDuringSimulation() public {
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
+
+        // Change any field to invalid the signature over the happyTx
+        happyTx.paymaster = ZERO_ADDRESS; // This way, we don't have to stake a new account
+
+        // The function should return output.validationStatus = UnknownDuringSimulation.selector
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The output should have UnknownDuringSimulation = true
+        _assertExpectedSubmitOutput(output, true, false, false, CallStatus.SUCCEEDED, new bytes(0));
+        assertTrue(output.validityUnknownDuringSimulation, "output.validityUnknownDuringSimulation");
+    }
+
+    // ====================================================================================================
+    // PAYMASTER VALIDATION TESTS
+
+    function testPaymasterValidationFailedSubmitterFeeTooHigh() public {
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
+         // maxFeePerByte = maxFeePerGas * 16
+         // maxSubmitterFee = maxFeePerByte * totalSize (totalSize <= 10000, in this case)
+        happyTx.submitterFee = int256(happyTx.maxFeePerGas * 16 * 2 * 10000);
+        
+        vm.expectRevert(abi.encodeWithSelector(PaymentValidationFailed.selector, abi.encodeWithSelector(SubmitterFeeTooHigh.selector)));
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    // ====================================================================================================
     // EXECUTION TESTS
 
     function testExecuteInnerCallRevertsEmptyCallData() public {
@@ -372,28 +399,28 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // This reverts with empty revertData: ← [Revert] EvmError: Revert
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.CALL_REVERTED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
     }
 
-    function testExecuteMockTokenAlwaysReverts() public {
+    function testExecuteMockRevertIntentionalRevert1() public {
         HappyTx memory happyTx =
             createSignedHappyTx(smartAccount, mockRevert, paymaster, privKey, getMockRevertCallData());
 
         // The result should be output.callStatus = CallReverted
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
 
-        // _assertExpectedSubmitOutput(
-        //     output, CallStatus.CALL_REVERTED, abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector)
-        // );
+        _assertExpectedSubmitOutput(
+            output, false, false, false,CallStatus.CALL_REVERTED, abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector)
+        );
     }
 
-    function testExecuteMockTokenAlwaysRevertsEmpty() public {
+    function testExecuteMockRevertIntentionalRevertEmpty() public {
         HappyTx memory happyTx =
             createSignedHappyTx(smartAccount, mockRevert, paymaster, privKey, getMockRevertEmptyCallData());
 
         // This reverts with empty revertData: ← [Revert] EvmError: Revert
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.CALL_REVERTED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
     }
 
     function testExecuteWithHighHappyTxValueGreaterThanSmartAccountBalance() public {
@@ -408,7 +435,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // The call should fail because the smartAccount address doesn't have enough funds
         vm.deal(smartAccount, 0);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.CALL_REVERTED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
 
         // Account balance should remain unchanged since the transaction would be unsuccessful
         uint256 newEthBalance = (smartAccount).balance;

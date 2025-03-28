@@ -181,13 +181,13 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
      *
      * 1. Validate gas price and check paymaster's staking balance.
      *
-     * 2. Call the account to validate the happyTx.
+     * 2. Validate and update the nonce.
+     *
+     * 3. Call the account to validate the happyTx.
      *    See {IHappyAccount.validate} for compliant behaviour.
      *
-     * 3. Call the paymaster to validate payment.
+     * 4. Call the paymaster to validate payment.
      *    See {IHappyPaymaster.validatePayment} for compliant behaviour.
-     *
-     * 4. Validate and update the nonce.
      *
      * 5. Call the account to execute the transaction.
      *    See {IHappyAccount.execute} for compliant behaviour.
@@ -236,14 +236,17 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             }
         }
 
-        int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
+        // ==========================================================================================
+        // 2. Validate & update nonce
+
+        int256 expectedNonce = int256(nonceValues[happyTx.account][happyTx.nonceTrack]);
         int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - expectedNonce;
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) revert InvalidNonce();
         if (nonceAhead > 0) output.futureNonceDuringSimulation = true;
         nonceValues[happyTx.account][happyTx.nonceTrack]++;
 
         // ==========================================================================================
-        // 2. Validate with account
+        // 3. Validate with account
 
         (Validity result, uint32 gasUsed, bytes memory revertData) =
             _validate(IHappyAccount.validate.selector, happyTx, happyTx.validateGasLimit);
@@ -257,7 +260,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         output.validateGas = gasUsed;
 
         // ==========================================================================================
-        // 3. Validate with paymaster
+        // 4. Validate with paymaster
 
         if (happyTx.paymaster != address(0) && happyTx.paymaster != happyTx.account) {
             (result, gasUsed, revertData) =
@@ -283,9 +286,6 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             384, // max return size: struct encoding + 256 bytes revertData
             executeCallData
         );
-        // uint256 gasAfterExecute = gasleft();
-        // console.log("gasBeforeExecute", gasBeforeExecute);
-        // console.log("gasAfterExecute", gasAfterExecute);
         output.executeGas = uint32(gasBeforeExecute - gasleft());
 
         // Don't revert if execution fails, as we still want to get the payment for a reverted call.
@@ -320,7 +320,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             uint256 gasBeforePayout = gasleft();
             // The constant 12000 overestimates the cost of the rest of execution, including
             // 9100 gas of the value transfer.
-            (output.gas, cost) = _computeCost(happyTx, gasStart - gasBeforePayout + 12000, encodedHappyTx.length);
+            (output.gas, cost) = computeCost(happyTx, gasStart - gasBeforePayout + 12000, encodedHappyTx.length);
             (success,) = happyTx.account.excessivelySafeCall(
                 gasleft() - 3000, // an OOG buffer
                 0, // value
@@ -340,7 +340,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             // - 100 gas for reading stake.balance (warm)
             // - 2100 gas for reading stake.unlockedBalance (cold)
             // - 9100 gas for the value transfer
-            (output.gas, cost) = _computeCost(happyTx, gasStart - gasleft() + 16000, encodedHappyTx.length);
+            (output.gas, cost) = computeCost(happyTx, gasStart - gasleft() + 16000, encodedHappyTx.length);
             // Pay submitter — no need for revert checks (submitter wants this to succeed).
             // This should succeed by construction, because of the early staking balance check.
             _transferTo(happyTx.paymaster, payable(tx.origin), cost);
@@ -441,7 +441,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         if (revertDataSize > 256) revertDataSize = 256; // copy only what we have
         revertData = new bytes(revertDataSize);
         assembly ("memory-safe") {
-            mcopy(revertData, add(returnData, 160), revertDataSize)
+            mcopy(add(revertData, 32), add(returnData, 160), revertDataSize)
         }
         if (status > CallStatus.EXECUTE_REVERTED) {
             // The returned status is incorrect, treat this like a revert.
