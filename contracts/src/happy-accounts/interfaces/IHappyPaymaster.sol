@@ -28,17 +28,7 @@ error SubmitterFeeTooHigh();
 interface IHappyPaymaster {
     /**
      * This function validates whether the passed happyTx is eligible for sponsorship by this
-     * paymaster ("validation"), and if so pays out to the submitter (tx.origin) the submitter tx
-     * cost + happyTx.submitterFee.
-     *
-     * The submitter tx gas usage is the the minimum amount of gas between:
-     * (a) consumedGas + the cost of payout's own execution or,
-     * (b) happyTx.gasLimit.
-     *
-     * The gas should be priced according to tx.gasPrice.
-     *
-     * This is also allowed to conduct extra operations (e.g. swap an ERC20 from the user to the gas
-     * token).
+     * paymaster.
      *
      * The function must return `abi.encodeWithSelector(bytes4(0))` iff it accepted to sponsor the
      * transaction. Otherwise it returns the result of `abi.encodeWithSelector` with a custom error
@@ -48,14 +38,13 @@ interface IHappyPaymaster {
      * to indicate that validity cannot be ascertained during simulation (e.g. we can't verify a
      * signature over the gas limit during simulation, as simulation is used to estimate the gas).
      *
-     * If validation fails with {UnknownDuringSimulation} during simulation, the function must carry
-     * on with the payment, and ensure that as much gas is consume by this function as would be in
-     * case of successful validation.
+     * If validation fails with {UnknownDuringSimulation} during simulation, the function must
+     * ensure that as much gas is consume by this function as would be in case of successful
+     * validation.
      *
      * The function must revert with {NotFromEntryPoint} if not called from the EntryPoint contract
-     * (otherwise its funds will be at risk), and should not otherwise revert, not even if the
-     * payment fails (the EntryPoint will validate the payment). If validation fails it should
-     * return instead, as per the above.
+     * (otherwise its funds will be at risk), and should not otherwise revert. If validation fails
+     * it should return instead, as per the above.
      */
     function validatePayment(HappyTx memory happyTx) external returns (bytes memory);
 }
