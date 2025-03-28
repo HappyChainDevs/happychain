@@ -16,7 +16,7 @@ export async function tscBuild(config: Config) {
     const noEmitOpt = `--noEmit ${!config.emitTypes}`
 
     spinner.setText(`${config.fullName} — Generating types (tsc)...`)
-
+    console.log(`bun tsc --build ${noEmitOpt} ${tsconfigPath} ${forceOpt}`)
     const out = await $`bun tsc --build ${{ raw: noEmitOpt }} ${tsconfigPath} ${forceOpt}`.nothrow()
 
     if (out.exitCode) {

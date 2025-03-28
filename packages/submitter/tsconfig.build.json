@@ -1,10 +1,13 @@
 {
-    "extends": [
-        "./tsconfig.json",
-        "@happy.tech/configs/tsconfig.types.json"
-    ],
-    "include": [
-        "lib",
-        "./package.json"
-    ]
+    "extends": ["./tsconfig.json", "@happy.tech/configs/tsconfig.types.json"],
+    "compilerOptions": {
+        "strict": true,
+        "jsx": "react-jsx",
+        "jsxImportSource": "hono/jsx",
+        "paths": {
+            "#lib/*": ["./lib/*"]
+        },
+        "moduleResolution": "bundler"
+    },
+    "include": ["lib", "./package.json"]
 }

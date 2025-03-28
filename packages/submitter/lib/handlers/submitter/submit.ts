@@ -1,13 +1,12 @@
 import { submitterClient } from "#lib/clients"
 import { submitterService } from "#lib/services"
 import { incrementLocalNonce, isTxBlocked, waitUntilUnblocked } from "#lib/services/nonceManager"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { type SubmitOutput, SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
+import { type SubmitInput, type SubmitOutput, SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
 import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 
-export async function submit(data: { entryPoint: `0x${string}`; tx: HappyTx }): Promise<SubmitOutput> {
+export async function submit(data: SubmitInput & { entryPoint: `0x${string}` }): Promise<SubmitOutput> {
     // Save original tx to the database for historic purposes and data recovery
     await submitterService.initialize(data.entryPoint, data.tx)
 

@@ -3,7 +3,7 @@ import { getBaseError } from "#lib/errors/utils"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import type { HappyTxState } from "#lib/tmp/interface/HappyTxState"
 import type { EntryPointStatus } from "#lib/tmp/interface/status"
-import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
 import type { HappyReceiptService } from "./HappyReceiptService"
 import type {
     HappySimulationService,

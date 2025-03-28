@@ -1,4 +1,8 @@
 import { defineConfig } from "@happy.tech/happybuild"
+
 export default defineConfig({
-    bunConfig: {},
+    bunConfig: {
+        target: "bun",
+        minify: false,
+    },
 })

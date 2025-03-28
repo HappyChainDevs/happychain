@@ -7,9 +7,9 @@ import { abis } from "#lib/deployments"
 import { parseFromViemError } from "#lib/errors/utils"
 import { submitterService } from "#lib/services"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
 import { decodeHappyTx } from "#lib/utils/decodeHappyTx"
 import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
-import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
 
 export async function simulateSubmit(
     request: Omit<SubmitSimulateParameters, "abi" | "functionName">,

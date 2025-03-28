@@ -9,12 +9,10 @@ import type { cliArgs } from "./cli-args"
 import type { DefineConfigParameters } from "./config/define"
 import { getConfigs } from "./config/getConfigs"
 import type { Config } from "./config/types"
-import { pkg } from "./utils/globals"
 import { spinner } from "./utils/spinner"
 
 export type Context = {
     usedTsConfigs: Set<string>
-    usedApiExtractorConfigs: Set<string>
     buildTimes: Map<string, Record<string, string>>
     start: DOMHighResTimeStamp
 }
@@ -34,7 +32,6 @@ export async function build({
 
     ctx = {
         usedTsConfigs: new Set(),
-        usedApiExtractorConfigs: new Set(),
         start: performance.now(),
         buildTimes: new Map(),
     }
@@ -42,16 +39,6 @@ export async function build({
     cleanOutDirs(configs)
 
     for (const config of configs) {
-        if (config.name) {
-            config.fullName = join(pkg.name, config.name)
-        } else if (configs.length === 1) {
-            config.fullName = pkg.name
-        } else if (config.exports) {
-            config.fullName =
-                config.exports.length === 1
-                    ? join(pkg.name, config.exports[0].exportName)
-                    : join(pkg.name, `{${config.exports.join(", ")}`)
-        }
         await buildConfig(config, ctx)
     }
 

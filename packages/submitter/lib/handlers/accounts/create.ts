@@ -4,6 +4,7 @@ import { config, publicClient } from "#lib/clients"
 import { abis, deployment } from "#lib/deployments"
 import env from "#lib/env"
 import { logger } from "#lib/logger"
+import type { CreateAccountInput, CreateAccountOutput } from "#lib/tmp/interface/create_account.ts"
 import { isContractDeployed } from "#lib/utils/isContractDeployed"
 
 // Account responsible for deploying ScrappyAccounts
@@ -12,7 +13,7 @@ import { isContractDeployed } from "#lib/utils/isContractDeployed"
 const account = privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
 const walletClient = createWalletClient({ ...config, account })
 
-export async function create({ owner, salt }: { owner: `0x${string}`; salt: `0x${string}` }) {
+export async function create({ owner, salt }: CreateAccountInput): Promise<CreateAccountOutput> {
     const predictedAddress = await publicClient.readContract({
         address: deployment.ScrappyAccountFactory,
         abi: abis.ScrappyAccountFactory,

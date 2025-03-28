@@ -1,7 +1,6 @@
-import { db } from "./database"
 import env from "./env"
 import { app } from "./server"
 import type { AppType } from "./server"
 
 export type { AppType }
-export { env, app, db }
+export { env, app }

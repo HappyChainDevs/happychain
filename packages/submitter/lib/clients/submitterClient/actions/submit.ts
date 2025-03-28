@@ -5,8 +5,8 @@ import { walletClient } from "#lib/clients"
 import { abis } from "#lib/deployments"
 import { parseFromViemError } from "#lib/errors/utils"
 import { happyTransactionService, submitterService } from "#lib/services"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
 import { decodeHappyTx } from "#lib/utils/decodeHappyTx"
-import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
 
 export async function submit(request: Omit<SubmitWriteParameters, "abi" | "functionName">): Promise<`0x${string}`> {
     const { account: account_, ...params } = request

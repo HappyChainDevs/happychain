@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs"
-import { join } from "node:path"
+import { basename, join } from "node:path"
 import { Extractor, ExtractorConfig, type ExtractorResult } from "@microsoft/api-extractor"
 import { $ } from "bun"
 import chalk from "chalk"
@@ -20,7 +20,6 @@ export async function rollupTypes(config: Config) {
 
     const apiExtractorJsonPath = join(base, config.apiExtractorConfig)
     const typesEntrypoint = ExtractorConfig.loadFile(apiExtractorJsonPath).mainEntryPointFilePath
-
     if (!existsSync(typesEntrypoint)) {
         // Force a full rebuild if the types entrypoint file (from where types are traced) does not
         // exist. This can happen with incremental builds when the types are removed, but the
@@ -29,6 +28,20 @@ export async function rollupTypes(config: Config) {
     }
 
     const extractorConfig = ExtractorConfig.loadFileAndPrepare(apiExtractorJsonPath)
+
+    const entryfilename = basename(
+        config.exports.find((ex) => ex.entrypoint === config.bunConfig?.entrypoints.find(Boolean))?.entrypoint || "",
+    ).replace(/\.ts/, "")
+    const typesfilename = basename(extractorConfig.mainEntryPointFilePath).replace(/(.es)?\.d\.ts/, "")
+    if (entryfilename !== typesfilename) {
+        console.warn(
+            `\n[${chalk.yellow(config.fullName)}] API-Extractor is configured to process '${chalk.red(`${typesfilename}.ts`)}', expecting '${chalk.green(`${entryfilename}.ts`)}'.`,
+        )
+        console.warn(
+            `[${chalk.yellow(config.fullName)}] Verify the api-extractor "mainEntryPointFilePath" and ensure its pointing to the correct path for this entrypoint.`,
+        )
+        throw new Error("API-Extractor mainEntryPointFilePath mismatch")
+    }
 
     // TODO: we run this for every export but it most likely doesn't work given the singular api-extractor.json
 
