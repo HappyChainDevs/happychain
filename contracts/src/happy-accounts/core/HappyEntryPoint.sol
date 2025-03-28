@@ -5,7 +5,7 @@ import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {HappyTx} from "boop/core/HappyTx.sol";
-import {Staking, Stake} from "boop/core/Staking.sol";
+import {Staking} from "boop/core/Staking.sol";
 import {IHappyAccount, ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
 import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";

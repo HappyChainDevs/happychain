@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
+import {console} from "forge-std/Console.sol";
 
 /**
  * Information about an address's stake in {Staking}.
@@ -218,6 +219,9 @@ contract Staking {
             }
         }
 
+        console.log("withdrawDelay: %s", withdrawDelay);
+        console.log("block.timestamp: %s", block.timestamp);
+        console.log("stake.withdrawalTimestamp: %s", stake.withdrawalTimestamp);
         uint256 timeElapsed = block.timestamp - stake.withdrawalTimestamp;
         if (timeElapsed < withdrawDelay) revert EarlyWithdraw();
 
