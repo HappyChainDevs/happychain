@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * Information about an address' stake in {Staking}.
+ * Information about an address's stake in {Staking}.
  */
 struct Stake {
     /**
@@ -10,14 +10,13 @@ struct Stake {
      */
     uint256 balance;
     /**
-     * Balance available for withdrawal after the effective effective withdraw delay,
-     * starting from {withdrawtimestamp}.
+     * Balance available for withdrawal after the withdraw delay, starting from {withdrawtimestamp}.
      */
     uint256 unlockedBalance;
     /**
-     * The withdraw delay is the time (in seconds) required to widthdraw funds, i.e. the time
+     * The withdraw delay is the time (in seconds) required to withdraw funds, i.e. the time
      * between {initiateWithdrawal} and {withdraw}). It is computed as:
-     * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDelayUpdate))`.
+     * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`.
      * Invariant: `minDelay == maxDelay == 0 || MIN_WITHDRAW_DELAY <= minDelay <= maxDelay`
      */
     uint64 maxDelay;
@@ -43,7 +42,7 @@ struct Stake {
 /**
  * This contracts maintains staking balances for accounts.
  *
- * It was written for as apart of the {HappyEntryPoint} with the purpose of holding paymasters'
+ * It was written for as a part of the {HappyEntryPoint} with the purpose of holding paymasters'
  * spending balances and serve as an anti-griefing/sybil mechanism via the withdrawal delays.
  * However, the logic here is generic and can be used for other purposes.
  *
@@ -57,7 +56,7 @@ struct Stake {
  * - {initiateWithdrawal}
  * - {withdraw}
  *
- * The withdraw delay can be increased instantly, but it cannot be increased instantly (which would
+ * The withdraw delay can be increased instantly, but it cannot be decreased instantly (which would
  * defeat its purpose). Instead increasing or decreasing the withdraw delay actually
  * increases/decreases the "minimum withdraw delay". The withdraw delay linearly decreases until it
  * reaches this target minimum. This ensures that any withdrawal done at the same time as a withdraw
@@ -70,7 +69,7 @@ struct Stake {
  * must be unstaked before the withdraw delay can be decreased.
  *
  * @dev The formula for the withdraw delay is:
- * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDelayUpdate))`
+ * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`
  */
 contract Staking {
     /// Staking information for accounts.
@@ -112,9 +111,9 @@ contract Staking {
     }
 
     /**
-     * Returns the withdraw delay, time (in seconds) required to widthdraw funds, i.e. the time
+     * Returns the withdraw delay, time (in seconds) required to withdraw funds, i.e. the time
      * between {initiateWithdrawal} and {withdraw}). It is computed as:
-     * `max(minDelay, maxDelay - (block.timestamp - lastDelayUpdate))`.
+     * `max(minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`.
      */
     function getWithdrawDelay(address account) public view returns (uint64) {
         Stake memory stake = stakes[account];
