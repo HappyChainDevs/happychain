@@ -67,6 +67,6 @@ export class BlockMonitor {
             this.unwatch = undefined
         }
 
-        setTimeout(() => this.start(), 1000)
+        setTimeout(() => this.start(), 500)
     }
 }
