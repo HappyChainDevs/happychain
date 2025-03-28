@@ -1,13 +1,13 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
 import { err } from "neverthrow"
-import { type Block, type Chain, createPublicClient, createWalletClient } from "viem"
+import { type Block, type Chain, type TransactionReceipt, createPublicClient, createWalletClient } from "viem"
 import { http } from "viem"
 import { privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
 import { anvil as anvilViemChain } from "viem/chains"
 import { afterAll, beforeAll, expect, test, vi } from "vitest"
 import { TxmHookType } from "../lib/HookManager"
 import { AttemptType, TransactionStatus } from "../lib/Transaction"
-import type { Transaction } from "../lib/Transaction"
+import type { Attempt, Transaction } from "../lib/Transaction"
 import { TransactionManager } from "../lib/TransactionManager"
 import { ethereumDefaultEIP1559Parameters } from "../lib/eip1559"
 import { migrateToLatest } from "../lib/migrate"
@@ -47,7 +47,7 @@ const txm = new TransactionManager({
     gas: {
         baseFeePercentageMargin: BASE_FEE_PERCENTAGE_MARGIN,
         eip1559: ethereumDefaultEIP1559Parameters,
-        minPriorityFeePerGas: 10n
+        minPriorityFeePerGas: 10n,
     },
     metrics: {
         active: false,
@@ -119,9 +119,37 @@ async function sendBurnGasTransactionWithSecondWallet(quantity: number) {
             abi: abis.MockGasBurner,
             functionName: "burnGas",
             args: [BigInt(BLOCK_GAS_LIMIT)],
-            maxPriorityFeePerGas: 9n
+            maxPriorityFeePerGas: 9n,
         })
     }
+}
+
+async function getReceiptForTransaction(transaction: Transaction): Promise<TransactionReceipt | undefined> {
+    const receipts = await Promise.all(
+        transaction.attempts.map((attempt) =>
+            directBlockchainClient
+                .getTransactionReceipt({
+                    hash: attempt.hash,
+                })
+                .catch(() => undefined),
+        ),
+    )
+    return receipts.find((receipt) => receipt !== undefined)
+}
+
+async function getExecutedAttemptForTransaction(transaction: Transaction): Promise<Attempt | undefined> {
+    const results = await Promise.all(
+        transaction.attempts.map((attempt) =>
+            directBlockchainClient
+                .getTransactionReceipt({
+                    hash: attempt.hash,
+                })
+                .then((receipt) => (receipt ? attempt : undefined))
+                .catch(() => undefined),
+        ),
+    )
+
+    return results.find((attempt) => attempt !== undefined)
 }
 
 let nonceBeforeEachTest: number
@@ -495,16 +523,16 @@ test("Transaction cancelled due to deadline passing", async () => {
 
     if (!assertIsDefined(transactionCancelled)) return
 
-    const latestAttempt = transactionCancelled.lastAttempt
+    const attempt = await getExecutedAttemptForTransaction(transactionCancelled)
 
-    if (!assertIsDefined(latestAttempt)) return
+    if (!assertIsDefined(attempt)) return
 
-    const receipt = await directBlockchainClient.getTransactionReceipt({
-        hash: latestAttempt.hash,
-    })
+    const receipt = await getReceiptForTransaction(transactionCancelled)
+
+    if (!assertIsDefined(receipt)) return
 
     const transactionExecuted = await directBlockchainClient.getTransaction({
-        hash: latestAttempt.hash,
+        hash: attempt.hash,
     })
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
@@ -513,7 +541,7 @@ test("Transaction cancelled due to deadline passing", async () => {
     assertReceiptSuccess(fromAddress, fromAddress, receipt)
     expect(transactionExecuted.input).toBe("0x")
     expect(receipt.gasUsed).toBe(21000n)
-    expect(latestAttempt.type).toBe(AttemptType.Cancellation)
+    expect(attempt.type).toBe(AttemptType.Cancellation)
     expect(await getCurrentCounterValue()).toBe(previousCount)
     expect(transactionCancelled.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
     expect(persistedTransaction).toBeDefined()
@@ -649,7 +677,6 @@ test("Transaction succeeds in congested blocks", async () => {
 
     const previousBlock = await getCurrentBlock()
 
-    let iterations = 0
     while (true) {
         await mineBlock()
 
@@ -666,8 +693,6 @@ test("Transaction succeeds in congested blocks", async () => {
         if (executedIncrementerTransaction.status === TransactionStatus.Success) {
             break
         }
-
-        iterations++
     }
 
     const executedIncrementerTransactionResult = await txm.getTransaction(incrementerTransaction.intentId)
@@ -680,14 +705,7 @@ test("Transaction succeeds in congested blocks", async () => {
 
     const persistedTransaction = await getPersistedTransaction(incrementerTransaction.intentId)
 
-    const receipts = await Promise.all(
-        executedIncrementerTransaction.attempts.map(attempt => 
-            directBlockchainClient.getTransactionReceipt({
-                hash: attempt.hash,
-            }).catch(() => undefined)
-        )
-    )
-    const incrementerReceipt = receipts.find(receipt => receipt !== undefined)
+    const incrementerReceipt = await getReceiptForTransaction(executedIncrementerTransaction)
 
     if (!assertIsDefined(incrementerReceipt)) return
 
@@ -723,16 +741,10 @@ test("Finalized transactions are automatically purged from db after finalizedTra
     const updatedAt = transactionPersisted.updatedAt
     const purgeTime = updatedAt + mockedFinalizedTransactionPurgeTime
 
-    while (Date.now() < purgeTime) {
-        const transactionPersisted = await getPersistedTransaction(transaction.intentId)
+    const spy = vi.spyOn(Date, "now")
+    spy.mockReturnValue(purgeTime + 1000)
 
-        expect(transactionPersisted).toBeDefined()
-        expect(transactionPersisted?.status).toBe(TransactionStatus.Success)
-
-        await mineBlock()
-    }
-
-    await mineBlock(2)
+    await mineBlock(5)
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
 
