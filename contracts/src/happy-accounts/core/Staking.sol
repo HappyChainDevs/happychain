@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
-import {console} from "forge-std/Console.sol";
 
 /**
- * Information about an address's stake in {Staking}.
+ * Information about an address' stake in {Staking}.
  */
 struct Stake {
     /**
      * Staked balance.
      */
-    uint128 balance;
+    uint256 balance;
     /**
-     * Balance available for withdrawal after the withdraw delay, starting from {withdrawtimestamp}.
+     * Balance available for withdrawal after the effective effective withdraw delay,
+     * starting from {withdrawtimestamp}.
      */
-    uint128 unlockedBalance;
+    uint256 unlockedBalance;
     /**
-     * The withdraw delay is the time (in seconds) required to withdraw funds, i.e. the time
+     * The withdraw delay is the time (in seconds) required to widthdraw funds, i.e. the time
      * between {initiateWithdrawal} and {withdraw}). It is computed as:
-     * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`.
+     * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDelayUpdate))`.
      * Invariant: `minDelay == maxDelay == 0 || MIN_WITHDRAW_DELAY <= minDelay <= maxDelay`
      */
     uint64 maxDelay;
@@ -43,7 +43,7 @@ struct Stake {
 /**
  * This contracts maintains staking balances for accounts.
  *
- * It was written for as a part of the {HappyEntryPoint} with the purpose of holding paymasters'
+ * It was written for as apart of the {HappyEntryPoint} with the purpose of holding paymasters'
  * spending balances and serve as an anti-griefing/sybil mechanism via the withdrawal delays.
  * However, the logic here is generic and can be used for other purposes.
  *
@@ -57,7 +57,7 @@ struct Stake {
  * - {initiateWithdrawal}
  * - {withdraw}
  *
- * The withdraw delay can be increased instantly, but it cannot be decreased instantly (which would
+ * The withdraw delay can be increased instantly, but it cannot be increased instantly (which would
  * defeat its purpose). Instead increasing or decreasing the withdraw delay actually
  * increases/decreases the "minimum withdraw delay". The withdraw delay linearly decreases until it
  * reaches this target minimum. This ensures that any withdrawal done at the same time as a withdraw
@@ -70,7 +70,7 @@ struct Stake {
  * must be unstaked before the withdraw delay can be decreased.
  *
  * @dev The formula for the withdraw delay is:
- * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`
+ * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDelayUpdate))`
  */
 contract Staking {
     /// Staking information for accounts.
@@ -93,31 +93,31 @@ contract Staking {
     /// When withdrawing before the withdraw delay has elapsed.
     error EarlyWithdraw();
 
-    event StakeDeposited(address account, uint256 deposited);
-    event StakeUnlocked(address account, uint256 unlocked);
-    event StakeWithdrawn(address account, uint256 withdrawn);
-    event WithdrawDelayIncreased(address account, uint64 unlockDelay);
-    event WithdrawDelayDecreased(address account, uint64 unlockDelay);
+    event StakeDeposit(address account, uint256 deposited);
+    event StakeUnlock(address account, uint256 unlocked);
+    event StakeWithdrawal(address account, uint256 withdrawn);
+    event WithdrawDelayIncrease(address account, uint64 unlockDelay);
+    event WithdrawDelayDecrease(address account, uint64 unlockDelay);
 
     /**
      * Called by an account to stake funds, which are passed as value.
      */
     function deposit() external payable {
-        stakes[msg.sender].balance += uint128(msg.value);
+        stakes[msg.sender].balance += msg.value;
         if (stakes[msg.sender].maxDelay == 0) {
             stakes[msg.sender].minDelay = MIN_WITHDRAW_DELAY;
             stakes[msg.sender].maxDelay = MIN_WITHDRAW_DELAY;
         }
-        emit StakeDeposited(msg.sender, msg.value);
+        emit StakeDeposit(msg.sender, msg.value);
     }
 
     /**
-     * Returns the withdraw delay, time (in seconds) required to withdraw funds, i.e. the time
+     * Returns the withdraw delay, time (in seconds) required to widthdraw funds, i.e. the time
      * between {initiateWithdrawal} and {withdraw}). It is computed as:
-     * `max(minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`.
+     * `max(minDelay, maxDelay - (block.timestamp - lastDelayUpdate))`.
      */
     function getWithdrawDelay(address account) public view returns (uint64) {
-        Stake storage stake = stakes[account];
+        Stake memory stake = stakes[account];
         if (stake.maxDelay == stake.minDelay) return stake.maxDelay;
         uint256 timeElapsed = block.timestamp - stake.lastDecreaseTimestamp;
         if (timeElapsed >= stake.maxDelay - stake.minDelay) return stake.minDelay;
@@ -128,7 +128,7 @@ contract Staking {
      * Called by an account to increase the minimum withdraw delay.
      */
     function increaseWithdrawDelay(uint64 withdrawDelay) external {
-        Stake storage stake = stakes[msg.sender];
+        Stake memory stake = stakes[msg.sender];
         // will revert if uninitialized
         if (withdrawDelay <= MIN_WITHDRAW_DELAY || withdrawDelay <= stake.minDelay) revert WithdrawDelayTooShort();
         if (stake.maxDelay == stake.minDelay) {
@@ -145,7 +145,7 @@ contract Staking {
                 stakes[msg.sender].minDelay = withdrawDelay;
             }
         }
-        emit WithdrawDelayIncreased(msg.sender, withdrawDelay);
+        emit WithdrawDelayIncrease(msg.sender, withdrawDelay);
     }
 
     /**
@@ -157,7 +157,7 @@ contract Staking {
      */
     function decreaseWithdrawDelay(uint64 withdrawDelay) external {
         if (withdrawDelay < MIN_WITHDRAW_DELAY) revert WithdrawDelayTooShort();
-        Stake storage stake = stakes[msg.sender];
+        Stake memory stake = stakes[msg.sender];
         // will revert if uninitialized
         if (withdrawDelay >= stake.minDelay) revert WithdrawDelayTooLong();
         if (stake.maxDelay == stake.minDelay) {
@@ -176,7 +176,7 @@ contract Staking {
                 stakes[msg.sender].minDelay = withdrawDelay;
             }
         }
-        emit WithdrawDelayDecreased(msg.sender, withdrawDelay);
+        emit WithdrawDelayDecrease(msg.sender, withdrawDelay);
     }
 
     /**
@@ -186,20 +186,20 @@ contract Staking {
      * cancel the remainder of the previous withdrawal. No funds will be lost, but the time spent
      * waiting on the previous withdrawal will not carry over to the new withdrawal.
      */
-    function initiateWithdrawal(uint128 amount) external payable {
+    function initiateWithdrawal(uint256 amount) external payable {
         Stake memory stake = stakes[msg.sender];
         if (amount > stake.balance) revert InsufficientBalance();
         stake.unlockedBalance = amount;
         stake.withdrawalTimestamp = uint64(block.timestamp);
         stakes[msg.sender] = stake;
-        emit StakeUnlocked(msg.sender, amount);
+        emit StakeUnlock(msg.sender, amount);
     }
 
     /**
      * Withdraw previously unlocked funds. It is possible to perform multiple partial withdrawals
      * of unlocked funds.
      */
-    function withdraw(uint128 amount) external payable {
+    function withdraw(uint256 amount) external payable {
         Stake memory stake = stakes[msg.sender];
         if (amount > stake.unlockedBalance) revert InsufficientBalance();
 
@@ -219,9 +219,6 @@ contract Staking {
             }
         }
 
-        console.log("withdrawDelay: %s", withdrawDelay);
-        console.log("block.timestamp: %s", block.timestamp);
-        console.log("stake.withdrawalTimestamp: %s", stake.withdrawalTimestamp);
         uint256 timeElapsed = block.timestamp - stake.withdrawalTimestamp;
         if (timeElapsed < withdrawDelay) revert EarlyWithdraw();
 
@@ -229,18 +226,18 @@ contract Staking {
         stake.unlockedBalance -= amount;
         if (stake.unlockedBalance == 0) stake.withdrawalTimestamp = 0;
         stakes[msg.sender] = stake;
-        emit StakeWithdrawn(msg.sender, amount);
+        emit StakeWithdrawal(msg.sender, amount);
         payable(msg.sender).transfer(amount);
     }
 
     /**
-     * Transfers the requested amount of funds from the stake of the account to the specified
+     * Sends the requested amount of funds from the stake of the account to the specified
      * destination address. This will revert with an arithmetic exception if the account does not
      * hold sufficient stake.
      */
-    function _transferTo(address account, address payable to, uint128 amount) internal {
+    function send(address account, address payable to, uint256 amount) internal {
         stakes[account].balance -= amount;
-        uint128 balance = stakes[account].balance;
+        uint256 balance = stakes[account].balance;
         if (stakes[account].unlockedBalance > balance) stakes[account].unlockedBalance = balance;
         to.transfer(amount);
     }
