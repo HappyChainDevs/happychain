@@ -1,5 +1,6 @@
 import { join } from "node:path"
 import { $ } from "bun"
+import chalk from "chalk"
 import type { Context } from "../build"
 import type { Config } from "../config/types"
 import { base } from "../utils/globals"
@@ -27,13 +28,16 @@ export async function handleTypes(config: Config, ctx: Context) {
 
     if (config.emitTypes && config.rollupTypes) {
         // Don't roll up from the same config more than once per build.
-        if (!ctx.usedApiExtractorConfigs.has(config.apiExtractorConfig!)) {
-            const t0 = performance.now()
+        const t0 = performance.now()
+        try {
             await rollupTypes(config)
-            const t1 = performance.now()
-            configBuildTimes.rollup = `${Math.ceil(t1 - t0)} ms`
-            ctx.usedApiExtractorConfigs.add(config.apiExtractorConfig!)
+        } catch (e) {
+            console.error(e)
+            console.warn(`[${chalk.yellow(config.fullName)}] ${chalk.red("Failed to rollup types. Creating Stub.")}`)
+            throw e
         }
+        const t1 = performance.now()
+        configBuildTimes.rollup = `${Math.ceil(t1 - t0)} ms`
     } else if (config.emitTypes) {
         await writeTypesStubs(config)
     }

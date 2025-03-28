@@ -1,0 +1,6 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+    "extends": "../../support/configs/api-extractor.jsonc",
+    "mainEntryPointFilePath": "build/types/lib/client.d.ts",
+    "bundledPackages": ["@happy.tech/*", "@happy.tech/common", "#lib", "hono", "hono/client"]
+}

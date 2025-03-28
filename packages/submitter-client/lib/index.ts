@@ -30,8 +30,8 @@ export type {
 } from "./types"
 
 // These are exported to make ApiExtractor Happy
-export { client as clientFactory, computeHappyTxHash } from "@happy.tech/submitter/client"
 export type {
+    clientType,
     CreateAccountResponse,
     CreateAccountRoute,
     EstimateGasResponse,
@@ -48,8 +48,5 @@ export type {
     SubmitRoute,
     Prettify,
     accountApiType,
-    pendingByAccountRouteType,
-    receiptByHashRouteType,
-    stateByHashRouteType,
     submitterApiType,
 } from "./types"

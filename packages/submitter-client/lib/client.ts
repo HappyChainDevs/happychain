@@ -1,4 +1,4 @@
-import { client as clientFactory, computeHappyTxHash } from "@happy.tech/submitter/client"
+import { clientFactory, computeHappyTxHash } from "@happy.tech/submitter/client"
 import { env } from "./env"
 
 import type {
@@ -49,40 +49,16 @@ export type {
     SubmitReturnType,
 }
 
-// These are exported to make ApiExtractor Happy
-export { client as clientFactory, computeHappyTxHash }
-export type {
-    CreateAccountResponse,
-    CreateAccountRoute,
-    EstimateGasResponse,
-    EstimateGasRoute,
-    ExecuteResponse,
-    ExecuteRoute,
-    PendingResponse,
-    PendingRoute,
-    ReceiptResponse,
-    ReceiptRoute,
-    StateResponse,
-    StateRoute,
-    SubmitResponse,
-    SubmitRoute,
-    Prettify,
-    accountApiType,
-    pendingByAccountRouteType,
-    receiptByHashRouteType,
-    stateByHashRouteType,
-    submitterApiType,
-} from "./types"
-
 // == Utilities ====================================================================================
 
 function getHash(tx: Parameters<typeof computeHappyTxHash>[0]): `0x${string}` {
     return computeHappyTxHash(tx)
 }
 
-const client = clientFactory(env.SUBMITTER_URL)
+const client: ReturnType<typeof clientFactory> = clientFactory(env.SUBMITTER_URL)
+
 export const accountApi = client.api.v1.accounts
-export const submitterApi = client.api.v1.submitter
+export const submitterApi: typeof client.api.v1.submitter = client.api.v1.submitter
 
 // == Account API Routes ===========================================================================
 

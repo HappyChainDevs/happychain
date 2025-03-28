@@ -30,8 +30,25 @@ export async function moveOutputsOverToExportDir(configs: Config[], opts: { js: 
                 await $`mv ${ex.bunOutputFile} ${ex.exportedPath}`
             }
             if (opts.types && config.emitTypes) {
-                await $`rm -f ${ex.exportedTypesPath}`
-                await $`mv ${ex.typesOutputFile} ${ex.exportedTypesPath}`
+                try {
+                    await $`rm -f ${ex.exportedTypesPath}`
+                } catch (e) {
+                    if (e && typeof e === "object" && "exitCode" in e && "stderr" in e) {
+                        console.error(`Failed to execute shell cmd: "rm -f ${ex.exportedTypesPath}"`)
+                        process.exit(Number(e.exitCode) || 1)
+                    }
+                    throw e
+                }
+
+                try {
+                    await $`mv ${ex.typesOutputFile} ${ex.exportedTypesPath}`
+                } catch (e) {
+                    if (e && typeof e === "object" && "exitCode" in e && "stderr" in e) {
+                        console.error(`Failed to execute shell cmd: "mv ${ex.typesOutputFile} ${ex.exportedTypesPath}"`)
+                        process.exit(Number(e.exitCode) || 1)
+                    }
+                    throw e
+                }
             }
         }
     }

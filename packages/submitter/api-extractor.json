@@ -2,8 +2,5 @@
     "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
     "extends": "../../support/configs/api-extractor.jsonc",
     "mainEntryPointFilePath": "build/types/lib/index.d.ts",
-    "bundledPackages": [
-        // "@happy.tech/submitter", // submitter types aren't resolving properly due to dynamic imports so this breaks it
-        "@happy.tech/common"
-    ]
+    "bundledPackages": ["@happy.tech/*", "@happy.tech/common", "#lib", "hono"]
 }

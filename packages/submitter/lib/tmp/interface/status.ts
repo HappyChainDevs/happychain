@@ -129,7 +129,7 @@ export function isFailure(
 /**
  * Possible outcomes of the validation of the HappyTx by the account during simulation.
  * This is distinct from {@link EntryPointStatus} because during simulation we have "successful"
- * statuses that need further checks ({@link Unknown} and {@link FutureNonce}).
+ * statuses that need further checks ({@link SimulatedValidationStatus.Unknown} and {@link SimulatedValidationStatus.FutureNonce}).
  */
 export enum SimulatedValidationStatus {
     /** Validation succeded during simulation. */
