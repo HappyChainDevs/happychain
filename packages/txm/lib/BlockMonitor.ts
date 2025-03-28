@@ -56,9 +56,17 @@ export class BlockMonitor {
     private resetBlockSubscription() {
         TxmMetrics.getInstance().resetBlockMonitorCounter.add(1)
         this.txmgr.rpcLivenessMonitor.trackError()
+
+        if (this.blockTimeout) {
+            clearTimeout(this.blockTimeout)
+            this.blockTimeout = undefined
+        }
+
         if (this.unwatch) {
             this.unwatch()
+            this.unwatch = undefined
         }
-        this.start()
+
+        setTimeout(() => this.start(), 1000)
     }
 }
