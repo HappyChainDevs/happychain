@@ -239,16 +239,18 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         // ==========================================================================================
         // 3. Validate with paymaster
 
-        (result, gasUsed, revertData) =
-            _validate(IHappyPaymaster.validatePayment.selector, happyTx, happyTx.payoutGasLimit);
+        if (happyTx.paymaster != address(0) && happyTx.paymaster != happyTx.account) {
+            (result, gasUsed, revertData) =
+                _validate(IHappyPaymaster.validatePayment.selector, happyTx, happyTx.payoutGasLimit);
 
-        if (result == Validity.CALL_REVERTED) revert PaymentValidationReverted(revertData);
-        if (result == Validity.INVALID_RETURN_DATA) revert PaymentValidationReverted(revertData);
-        if (result == Validity.VALIDATION_FAILED) revert PaymentValidationFailed(revertData);
-        if (result == Validity.UNKNOWN_DURING_SIMULATION) {
-            output.paymentValidityUnknownDuringSimulation = true;
+            if (result == Validity.CALL_REVERTED) revert PaymentValidationReverted(revertData);
+            if (result == Validity.INVALID_RETURN_DATA) revert PaymentValidationReverted(revertData);
+            if (result == Validity.VALIDATION_FAILED) revert PaymentValidationFailed(revertData);
+            if (result == Validity.UNKNOWN_DURING_SIMULATION) {
+                output.paymentValidityUnknownDuringSimulation = true;
+            }
+            output.paymentValidateGas = gasUsed;
         }
-        output.paymentValidateGas = gasUsed;
 
         // ==========================================================================================
         // 4. Validate & update nonce
