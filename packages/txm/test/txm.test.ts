@@ -327,14 +327,14 @@ test("Transaction retried", async () => {
     if (!assertIsDefined(transactionSuccess)) return
 
     const successReceipt = await directBlockchainClient.getTransactionReceipt({
-        hash: transactionSuccess.attempts[1].hash,
+        hash: transactionSuccess.attempts[0].hash,
     })
 
     const persistedTransaction = await getPersistedTransaction(transaction.intentId)
 
     assertReceiptSuccess(deployment.HappyCounter, fromAddress, successReceipt)
     expect(transactionSuccess.status).toBe(TransactionStatus.Success)
-    expect(transaction.attempts.length).toBe(2)
+    expect(transaction.attempts.length).toBe(1)
     expect(await getCurrentCounterValue()).toBe(previousCount + 1n)
     expect(transactionSuccess.lastAttempt?.nonce).toBe(nonceBeforeEachTest)
     expect(persistedTransaction).toBeDefined()
