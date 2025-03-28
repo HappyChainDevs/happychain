@@ -49,9 +49,9 @@ struct SubmitOutput {
      */
     bool validityUnknownDuringSimulation;
     /**
-     * If true, indicates that the account couldn't ascertain whether the validation was successful
-     * in validation mode (e.g. it couldn't validate a signature because the simulation was used
-     * to populate some of the fields that the signature signs over).
+     * If true, indicates that the paymaster couldn't ascertain whether the validation was
+     * successful in validation mode (e.g. it couldn't validate a signature because the simulation
+     * was used to populate some of the fields that the signature signs over).
      */
     bool paymentValidityUnknownDuringSimulation;
     /**
