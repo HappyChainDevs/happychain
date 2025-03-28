@@ -239,7 +239,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         // ==========================================================================================
         // 2. Validate & update nonce
 
-        int256 expectedNonce = int256(nonceValues[happyTx.account][happyTx.nonceTrack]);
+        int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
         int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - expectedNonce;
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) revert InvalidNonce();
         if (nonceAhead > 0) output.futureNonceDuringSimulation = true;
