@@ -97,7 +97,7 @@ error ValidationReverted(bytes revertData);
 /**
  * When the account validation of the happyTx fails.
  *
- * The parameter identifies the revert reason (truncated to 192 bytes), which should be an encoded
+ * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
  * custom error returned by {IHappyAccount.validate}.
  */
 error ValidationFailed(bytes reason);
@@ -112,7 +112,7 @@ error PaymentValidationReverted(bytes revertData);
 /**
  * When the paymaster validation of the happyTx fails.
  *
- * The parameter identifies the revert reason (truncated to 192 bytes), which should be an encoded
+ * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
  * custom error returned by {IHappyPaymaster.validatePayment}.
  */
 error PaymentValidationFailed(bytes reason);
@@ -374,9 +374,9 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         bytes memory callData = abi.encodeWithSelector(fn, happyTx);
 
         uint256 gasBefore = gasleft();
-        // max return size: 256, leaving 192 bytes usable for an encoded error
+        // max return size: 320, leaving 256 bytes usable for an encoded error
         (bool success, bytes memory returnData) =
-            targetAddress.excessivelySafeCall(gasLimit, /* value: */ 0, 256, callData);
+            targetAddress.excessivelySafeCall(gasLimit, /* value: */ 0, 320, callData);
         gasUsed = uint32(gasBefore - gasleft());
 
         if (!success) return (Validity.CALL_REVERTED, gasUsed, returnData);
@@ -392,7 +392,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             selector := mload(add(returnData, 96))
         }
 
-        if (returnData.length < 96 || status.length < 4 || status.length > 192) {
+        if (returnData.length < 96 || status.length < 4 || status.length > 256) {
             // only 256 bytes were copied, and there's 64 for tuple offset and inner bytes length
             return (Validity.INVALID_RETURN_DATA, gasUsed, returnData);
         } else if (isSimulation && selector == UnknownDuringSimulation.selector) {
