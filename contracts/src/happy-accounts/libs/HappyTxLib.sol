@@ -8,7 +8,7 @@ library HappyTxLib {
     error MalformedHappyTx();
 
     /// @dev Size of the static fields in the encoded HappyTx.
-    /// (20 + 4 + 4 + 4 + 4 20 + 20 + 32 + 24 + 8 + 32 + 32 = 204)
+    /// (20 + 4 + 4 + 4 + 4 + 20 + 20 + 32 + 24 + 8 + 32 + 32 = 204)
     uint256 private constant DYNAMIC_FIELDS_OFFSET = 204;
 
     /// @dev Assuming all calldata bytes are non-zero (16 gas per byte).
