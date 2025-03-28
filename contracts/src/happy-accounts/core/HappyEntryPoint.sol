@@ -349,7 +349,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
 
     /**
      * This function abstracts common boilerplate for calling {IHappyAccount.validate} and
-     * {IHappyAccount.validatePayment}.
+     * {IHappyPaymaster.validatePayment}.
      *
      * It attempts to call the given function and returns the appropriate {Validity} status, the
      * call's gas consumption, and data to be passed to a revert if appropriate.
