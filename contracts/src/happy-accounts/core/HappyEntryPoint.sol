@@ -360,12 +360,13 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     {
         bool isSimulation = tx.origin == address(0);
         if (isSimulation && gasLimit == 0) gasLimit = gasleft();
+        address targetAddress = fn == IHappyAccount.validate.selector ? happyTx.account : happyTx.paymaster;
         bytes memory callData = abi.encodeWithSelector(fn, happyTx);
 
         uint256 gasBefore = gasleft();
         // max return size: 256, leaving 192 bytes usable for an encoded error
         (bool success, bytes memory returnData) =
-            happyTx.account.excessivelySafeCall(gasLimit, /* value: */ 0, 256, callData);
+            targetAddress.excessivelySafeCall(gasLimit, /* value: */ 0, 256, callData);
         gasUsed = uint32(gasBefore - gasleft());
 
         if (!success) return (Validity.CALL_REVERTED, gasUsed, returnData);
