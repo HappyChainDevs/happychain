@@ -210,7 +210,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         bool isSimulation = tx.origin == address(0);
 
         // ==========================================================================================
-        // 1. Validate gas price & paymaster balance
+        // 1. Validate gas price & paymaster balance, validate & update nonce
 
         if (tx.gasprice > happyTx.maxFeePerGas) {
             revert GasPriceTooHigh();
@@ -221,6 +221,12 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
                 revert InsufficientStake();
             }
         }
+
+        int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
+        int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - expectedNonce;
+        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) revert InvalidNonce();
+        if (nonceAhead > 0) output.futureNonceDuringSimulation = true;
+        nonceValues[happyTx.account][happyTx.nonceTrack]++;
 
         // ==========================================================================================
         // 2. Validate with account
@@ -253,16 +259,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         }
 
         // ==========================================================================================
-        // 4. Validate & update nonce
-
-        int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
-        int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - expectedNonce;
-        if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) revert InvalidNonce();
-        if (nonceAhead > 0) output.futureNonceDuringSimulation = true;
-        nonceValues[happyTx.account][happyTx.nonceTrack]++;
-
-        // ==========================================================================================
-        // 5. Execute the call
+        // 4. Execute the call
 
         bytes memory callData = abi.encodeCall(IHappyAccount.execute, happyTx);
         uint256 gasBefore = gasleft();
@@ -289,7 +286,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         }
 
         // ==========================================================================================
-        // 6. Collect payment
+        // 5. Collect payment
 
         uint128 cost;
 
