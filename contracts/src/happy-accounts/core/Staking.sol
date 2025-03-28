@@ -77,7 +77,7 @@ contract Staking {
     mapping(address account => Stake) public stakes;
 
     /// Minimum unlock time (1 minute).
-    uint64 public constant MIN_WITHDRAW_DELAY = 60 seconds;
+    uint64 public constant MIN_WITHDRAW_DELAY = 60;
 
     /// When trying to set the withdraw delay to a value shorter than {MIN_WITHDRAW_DELAY} or
     /// shorter than {stake.minDelay}.
@@ -132,7 +132,7 @@ contract Staking {
         return uint64(stake.maxDelay - timeElapsed);
     }
 
-    function balanceOf(address account) public view returns (uint256) {
+    function balanceOf(address account) external view returns (uint256) {
         return stakes[account].balance;
     }
 
