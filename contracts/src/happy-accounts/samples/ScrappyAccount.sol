@@ -137,7 +137,7 @@ contract ScrappyAccount is
                 if (!extensions[ExtensionType.Validator][validator]) {
                     validationResult = ExtensionNotRegistered.selector;
                 } else {
-                    validationResult = ICustomBoopValidator(validator).validate(happyTx);
+                    return ICustomBoopValidator(validator).validate(happyTx);
                 }
             }
         } else {
