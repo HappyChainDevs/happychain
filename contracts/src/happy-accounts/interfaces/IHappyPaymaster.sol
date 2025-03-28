@@ -18,6 +18,10 @@ error SubmitterFeeTooHigh();
 /**
  * Interface for paymasters that can sponsor gas fees for HappyTx transactions.
  *
+ * Implementers of this interface should not write custom `receive` functions (or at least no such
+ * function that consumes more than 2300 gas), as that screws up the entry point's gas accounting
+ * and will cause the paymaster to revert if it consumes more than the 2300 gas allowance.
+ *
  * The ERC-165 selector for this interface is 0x24542ca5 and can be obtained via:
  * `console.logBytes4(IHappyPaymaster.payout.selector);`
  */
