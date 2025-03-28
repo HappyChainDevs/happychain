@@ -6,7 +6,7 @@ import {HappyTx} from "boop/core/HappyTx.sol";
 
 /**
  * Execution Output
- * @param status      - Status of the execution (succeeded, failed, call failed, or call reverted)
+ * @param status      - Status of the execution (succeeded, failed, or call reverted)
  * @param revertData  - The associated revert data if the call specified by the happyTx reverts; otherwise, it is empty.
  */
 struct ExecutionOutput {
