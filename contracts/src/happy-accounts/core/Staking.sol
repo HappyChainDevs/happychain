@@ -116,7 +116,7 @@ contract Staking {
      * `max(minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`.
      */
     function getWithdrawDelay(address account) public view returns (uint64) {
-        Stake memory stake = stakes[account];
+        Stake storage stake = stakes[account];
         if (stake.maxDelay == stake.minDelay) return stake.maxDelay;
         uint256 timeElapsed = block.timestamp - stake.lastDecreaseTimestamp;
         if (timeElapsed >= stake.maxDelay - stake.minDelay) return stake.minDelay;
@@ -127,7 +127,7 @@ contract Staking {
      * Called by an account to increase the minimum withdraw delay.
      */
     function increaseWithdrawDelay(uint64 withdrawDelay) external {
-        Stake memory stake = stakes[msg.sender];
+        Stake storage stake = stakes[msg.sender];
         // will revert if uninitialized
         if (withdrawDelay <= MIN_WITHDRAW_DELAY || withdrawDelay <= stake.minDelay) revert WithdrawDelayTooShort();
         if (stake.maxDelay == stake.minDelay) {
@@ -156,7 +156,7 @@ contract Staking {
      */
     function decreaseWithdrawDelay(uint64 withdrawDelay) external {
         if (withdrawDelay < MIN_WITHDRAW_DELAY) revert WithdrawDelayTooShort();
-        Stake memory stake = stakes[msg.sender];
+        Stake storage stake = stakes[msg.sender];
         // will revert if uninitialized
         if (withdrawDelay >= stake.minDelay) revert WithdrawDelayTooLong();
         if (stake.maxDelay == stake.minDelay) {
