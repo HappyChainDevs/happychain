@@ -240,7 +240,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         if (result == Validity.UNKNOWN_DURING_SIMULATION) {
             output.paymentValidityUnknownDuringSimulation = true;
         }
-        output.validateGas = gasUsed;
+        output.payoutGas = gasUsed;
 
         // ==========================================================================================
         // 2. Validate & update nonce
