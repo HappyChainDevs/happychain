@@ -39,7 +39,7 @@ const txm = new TransactionManager({
         pollingInterval: 200,
         allowDebug: true,
         livenessCheckInterval: 500,
-        livenessDownDelay: 1000,
+        livenessDownDelay: 1000
     },
     abis: abis,
     gasEstimator: new TestGasEstimator(),
