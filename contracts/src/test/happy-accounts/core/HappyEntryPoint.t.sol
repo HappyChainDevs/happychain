@@ -403,7 +403,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         _assertExpectedSubmitOutput(output, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
     }
 
-    function testExecuteMockRevertIntentionalRevert1() public {
+    function testExecuteMockRevertIntentionalRevert() public {
         HappyTx memory happyTx =
             createSignedHappyTx(smartAccount, mockRevert, paymaster, privKey, getMockRevertCallData());
 
@@ -415,7 +415,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         );
     }
 
-    function testExecuteMockRevertIntentionalRevertEmpty() public {
+    function testExecuteMockRevertIntentionalEmptyRevert() public {
         HappyTx memory happyTx =
             createSignedHappyTx(smartAccount, mockRevert, paymaster, privKey, getMockRevertEmptyCallData());
 
@@ -464,13 +464,14 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Submit the happyTx again, with the above execGasLimit
         HappyTx memory happyTx2 =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx2.executeGasLimit = output.executeGas + 10_000; // Buffer to make ext call
-        // TODO: removing this buffer, somehow correctly gives evmRevertst: OOG -> CallStatus.CALL_FAILED (which we want)
+        happyTx2.validateGasLimit = output.validateGas * 120/100;
+        happyTx2.executeGasLimit = output.executeGas * 120/100;
+        happyTx2.payoutGasLimit = output.paymentValidateGas * 120/100;
         happyTx2.validatorData = signHappyTx(happyTx2, privKey);
 
         // This should succeed now if the execute-gas-limit estimation is accurate
         SubmitOutput memory output2 = happyEntryPoint.submit(happyTx2.encode());
-        // _assertExpectedSubmitOutput(output2, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedSubmitOutput(output2, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
     }
 
     // ====================================================================================================
