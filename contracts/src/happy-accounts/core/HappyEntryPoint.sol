@@ -251,7 +251,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         output.paymentValidateGas = gasUsed;
 
         // ==========================================================================================
-        // 2. Validate & update nonce
+        // 4. Validate & update nonce
 
         int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
         int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - expectedNonce;
@@ -260,7 +260,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         nonceValues[happyTx.account][happyTx.nonceTrack]++;
 
         // ==========================================================================================
-        // 4. Execute the call
+        // 5. Execute the call
 
         bytes memory callData = abi.encodeCall(IHappyAccount.execute, happyTx);
         uint256 gasBefore = gasleft();
@@ -287,7 +287,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         }
 
         // ==========================================================================================
-        // 5. Collect payment
+        // 6. Collect payment
 
         uint128 cost;
 
