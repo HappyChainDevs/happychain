@@ -69,7 +69,7 @@ contract BatchCallExecutor is ICustomBoopExecutor {
 
         for (uint256 i = 0; i < calls.length; i++) {
             CallInfo memory info = calls[i];
-            (bool success, bytes memory revertData) = IExtensibleBoopAccount(account).executeCall(info);
+            (bool success, bytes memory revertData) = IExtensibleBoopAccount(account).executeCallFromExecutor(info);
             if (!success) {
                 assembly {
                     // pass the revert data through to the caller
