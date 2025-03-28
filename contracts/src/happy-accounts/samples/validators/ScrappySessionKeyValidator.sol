@@ -67,9 +67,9 @@ contract SessionKeyValidator is ICustomBoopValidator {
         }
     }
 
-    function validate(HappyTx memory happyTx) external view returns (bytes4) {
+    function validate(HappyTx memory happyTx) external view returns (bytes memory) {
         if (happyTx.paymaster == happyTx.account) {
-            return AccountPaidSessionKeyBoop.selector;
+            return abi.encodeWithSelector(AccountPaidSessionKeyBoop.selector);
         }
 
         // The happyTx is not self-paying.
@@ -85,6 +85,7 @@ contract SessionKeyValidator is ICustomBoopValidator {
         address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
 
         address sessionKey = sessionKeys[msg.sender][happyTx.dest];
-        return signer == sessionKey ? bytes4(0) : bytes4(InvalidSignature.selector);
+        bytes4 selector = signer == sessionKey ? bytes4(0) : bytes4(InvalidSignature.selector);
+        return abi.encodeWithSelector(selector);
     }
 }
