@@ -34,14 +34,14 @@ struct SubmitOutput {
     uint32 validateGas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
+     * {IHappyPaymaster.paymentValidateGas} from {EntryPoint.submit}.
+     */
+    uint32 paymentValidateGas;
+    /**
+     * An overestimation of the minimum gas limit necessary to successfully call
      * {IHappyAccount.execute} from {EntryPoint.submit}.
      */
     uint32 executeGas;
-    /**
-     * An overestimation of the minimum gas limit necessary to successfully call
-     * {IHappyPaymaster.execute} from {EntryPoint.submit}.
-     */
-    uint32 payoutGas;
     /**
      * If true, indicates that the account couldn't ascertain whether the validation was successful
      * in validation mode (e.g. it couldn't validate a signature because the simulation was used
@@ -240,7 +240,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         if (result == Validity.UNKNOWN_DURING_SIMULATION) {
             output.paymentValidityUnknownDuringSimulation = true;
         }
-        output.payoutGas = gasUsed;
+        output.paymentValidateGas = gasUsed;
 
         // ==========================================================================================
         // 2. Validate & update nonce
