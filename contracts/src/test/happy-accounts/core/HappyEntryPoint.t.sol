@@ -76,7 +76,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.deal(smartAccount, INITIAL_DEPOSIT);
 
         // Stake the paymaster
-        happyEntryPoint.depositTo{value: INITIAL_DEPOSIT}(paymaster);
+        vm.prank(paymaster);
+        happyEntryPoint.deposit{value: INITIAL_DEPOSIT}();
 
         // Deploy the mock contracts
         mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
