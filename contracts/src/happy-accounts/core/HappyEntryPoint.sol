@@ -133,6 +133,14 @@ error PayoutFailed();
 event CallReverted(bytes revertData);
 
 /**
+ * When the {IHappyAccount.execute} call fails but does not revert.
+ *
+ * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
+ * custom error returned by {IHappyAccount.execute}.
+ */
+event ExecutionFailed(bytes reason);
+
+/**
  * When the {IHappyAccount.execute} call reverts (in violation of the spec).
  *
  * The parameter contains the revert data (truncated to {MAX_EXECUTE_RETURN_DATA_SIZE}
@@ -273,6 +281,8 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             (output.callStatus, output.revertData) = parseExecutionOutput(returnData);
             if (output.callStatus == CallStatus.CALL_REVERTED) {
                 emit CallReverted(output.revertData);
+            } else if (output.callStatus == CallStatus.EXECUTE_FAILED) {
+                emit ExecutionFailed(output.revertData);
             }
         }
 
@@ -408,7 +418,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         assembly {
             // skip outer bytes length and struct offset, read status
             status := mload(add(returnData, 64))
-            // skip output status and struct bytes offset, read size
+            // skip output status and bytes offset, read size
             revertDataSize := mload(add(returnData, 128))
         }
         if (revertDataSize > 256) revertDataSize = 256; // copy only what we have
@@ -416,7 +426,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         assembly {
             mcopy(revertData, add(returnData, 160), revertDataSize)
         }
-        if (status != CallStatus.SUCCEEDED && status != CallStatus.CALL_REVERTED) {
+        if (status > CallStatus.EXECUTE_REVERTED) {
             // The returned status is incorrect, treat this like a revert.
             status = CallStatus.EXECUTE_REVERTED;
         }
