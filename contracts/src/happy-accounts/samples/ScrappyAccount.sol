@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.28;
 
-import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
@@ -28,18 +26,13 @@ import {
 } from "boop/utils/Common.sol";
 
 /**
- * Example implementation of a Happy Account with nonce management, reentrancy protection,
- * and proxy upgrade capability.
+ * Example implementation of an extensible Happy Account with proxy upgrade capability.
  */
 contract ScrappyAccount is
     IExtensibleBoopAccount,
-    ReentrancyGuardTransient,
     OwnableUpgradeable,
     UUPSUpgradeable
 {
-    // Must be used to avoid gas exhaustion via return data.
-    using ExcessivelySafeCall for address;
-
     using ECDSA for bytes32;
     using HappyTxLib for HappyTx;
 
