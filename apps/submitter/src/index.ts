@@ -1,27 +1,18 @@
 import { app, env } from "@happy.tech/submitter"
-import pkg from "@happy.tech/submitter/package.json"
-import { injectOpenAPIDocs } from "./docs"
+import { apiReference } from "@scalar/hono-api-reference"
 
-// Enable API Documentation page
-injectOpenAPIDocs(app, {
-    documentation: {
-        info: {
-            title: "Boop",
-            version: pkg.version,
-            description: "Happy Account Submitter",
-        },
-        servers: [
-            {
-                url: "http://localhost:3001",
-                description: "Local server",
-            },
-            {
-                url: "https://boop.happy.tech",
-                description: "Local server",
-            },
-        ],
-    },
-})
+// Adds Scalar UI for API docs
+app.get(
+    "/docs",
+    // https://github.com/scalar/scalar/blob/main/documentation/configuration.md
+    apiReference({
+        pageTitle: "Boop API Reference - HappyChain",
+        theme: "kepler",
+        spec: { url: "/docs/openapi.json" },
+        showSidebar: true,
+        hideSearch: false,
+    }),
+)
 
 export default {
     port: env.APP_PORT,

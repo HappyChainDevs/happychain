@@ -1,16 +1,13 @@
-import type { Prettify } from "@happy.tech/common"
 import { submitterClient } from "#lib/clients"
 import { happySimulationService } from "#lib/services"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { SubmitterErrorStatus, isEntryPointStatus, isSubmitterError } from "#lib/tmp/interface/status"
 import type { EstimateGasInput, EstimateGasOutput } from "#lib/tmp/interface/submitter_estimateGas"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
 import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
-import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
 
-export async function estimateGas(
-    data: Prettify<EstimateGasInput & { entryPoint: `0x${string}` }>,
-): Promise<EstimateGasOutput> {
+export async function estimateGas(data: EstimateGasInput & { entryPoint: `0x${string}` }): Promise<EstimateGasOutput> {
     const account = findExecutionAccount(data.tx)
 
     const estimates = await submitterClient.estimateSubmitGas({

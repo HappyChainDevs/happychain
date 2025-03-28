@@ -89,4 +89,4 @@ export type SubmitCancelOutput = {
  * This helper function submits a cancellation for a pending HappyTx. Under the hood, calls {@link
  * submitter_submit} with an empty replacement transaction.
  */
-export declare function submitter_executeCancel(input: Hash): SubmitCancelOutput
+export declare function submitter_submitCancel(input: Hash): SubmitCancelOutput

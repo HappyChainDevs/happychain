@@ -1,88 +1,23 @@
-import { client as clientFactory, computeHappyTxHash } from "@happy.tech/submitter/client"
-import { env } from "./env"
-
 import type {
-    CreateAccountParameters,
-    CreateAccountReturnType,
-    EstimateGasParameters,
-    EstimateGasReturnType,
-    ExecuteParameters,
-    ExecuteReturnType,
-    PendingParameters,
-    PendingReturnType,
-    ReceiptParameters,
-    ReceiptReturnType,
-    StateParameters,
-    StateReturnType,
-    SubmitParameters,
-    SubmitReturnType,
-} from "./types"
+    CreateAccountInput,
+    CreateAccountOutput,
+    EstimateGasInput,
+    EstimateGasOutput,
+    ExecuteInput,
+    ExecuteOutput,
+    PendingHappyTxInput,
+    PendingHappyTxOutput,
+    ReceiptInput,
+    StateRequestInput,
+    StateRequestOutput,
+    SubmitInput,
+    SubmitOutput,
+} from "@happy.tech/submitter/client"
+import { env } from "./env"
+import { ApiClient } from "./utils/api-client"
+import type { Result } from "./utils/neverthrow"
 
-// HappyClient Public Interface
-export {
-    // Utilities
-    getHash,
-    // API
-    createAccount,
-    submit,
-    execute,
-    estimateGas,
-    state,
-    receipt,
-    pending,
-}
-
-export type {
-    CreateAccountParameters,
-    CreateAccountReturnType,
-    EstimateGasParameters,
-    EstimateGasReturnType,
-    ExecuteParameters,
-    ExecuteReturnType,
-    PendingParameters,
-    PendingReturnType,
-    ReceiptParameters,
-    ReceiptReturnType,
-    StateParameters,
-    StateReturnType,
-    SubmitParameters,
-    SubmitReturnType,
-}
-
-// These are exported to make ApiExtractor Happy
-export { client as clientFactory, computeHappyTxHash }
-export type {
-    CreateAccountResponse,
-    CreateAccountRoute,
-    EstimateGasResponse,
-    EstimateGasRoute,
-    ExecuteResponse,
-    ExecuteRoute,
-    PendingResponse,
-    PendingRoute,
-    ReceiptResponse,
-    ReceiptRoute,
-    StateResponse,
-    StateRoute,
-    SubmitResponse,
-    SubmitRoute,
-    Prettify,
-    accountApiType,
-    pendingByAccountRouteType,
-    receiptByHashRouteType,
-    stateByHashRouteType,
-    submitterApiType,
-} from "./types"
-
-// == Utilities ====================================================================================
-
-function getHash(tx: Parameters<typeof computeHappyTxHash>[0]): `0x${string}` {
-    return computeHappyTxHash(tx)
-}
-
-const client = clientFactory(env.SUBMITTER_URL)
-export const accountApi = client.api.v1.accounts
-export const submitterApi = client.api.v1.submitter
+const client = new ApiClient({ baseUrl: env.SUBMITTER_URL })
 
 // == Account API Routes ===========================================================================
 
@@ -92,8 +27,10 @@ export const submitterApi = client.api.v1.submitter
  * @param data.owner User EOA address
  * @param data.salt Salt for the account creation
  */
-async function createAccount(data: CreateAccountParameters): Promise<CreateAccountReturnType> {
-    return await accountApi.create.$post({ json: data }).then((a) => a.json())
+export type { CreateAccountInput, CreateAccountOutput }
+export async function createAccount(data: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
+    const response = await client.post("/v1/accounts/create", data)
+    return response as Result<CreateAccountOutput, Error>
 }
 
 // == Submit API Routes ============================================================================
@@ -105,8 +42,10 @@ async function createAccount(data: CreateAccountParameters): Promise<CreateAccou
  * @param data.tx HappyTransaction to be submitted
  * @return transaction hash
  */
-async function submit(data: SubmitParameters): Promise<SubmitReturnType> {
-    return await submitterApi.submit.$post({ json: data }).then((a) => a.json())
+export type { SubmitInput, SubmitOutput }
+export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Error>> {
+    const response = await client.post("/v1/submit", data)
+    return response as Result<SubmitOutput, Error>
 }
 
 /**
@@ -116,8 +55,10 @@ async function submit(data: SubmitParameters): Promise<SubmitReturnType> {
  * @param data.tx HappyTransaction to be submitted
  * @return receipt
  */
-async function execute(data: ExecuteParameters): Promise<ExecuteReturnType> {
-    return await submitterApi.execute.$post({ json: data }).then((a) => a.json())
+export type { ExecuteInput, ExecuteOutput }
+export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, Error>> {
+    const response = await client.post("/v1/execute", data)
+    return response as Result<ExecuteOutput, Error>
 }
 
 /**
@@ -125,8 +66,10 @@ async function execute(data: ExecuteParameters): Promise<ExecuteReturnType> {
  * @param data
  * @returns
  */
-async function estimateGas(data: EstimateGasParameters): Promise<EstimateGasReturnType> {
-    return await submitterApi.estimateGas.$post({ json: data }).then((a) => a.json())
+export type { EstimateGasInput, EstimateGasOutput }
+export async function estimateGas(data: EstimateGasInput): Promise<Result<EstimateGasOutput, Error>> {
+    const response = await client.post("/v1/estimateGas", data)
+    return response as Result<EstimateGasOutput, Error>
 }
 
 /**
@@ -134,8 +77,10 @@ async function estimateGas(data: EstimateGasParameters): Promise<EstimateGasRetu
  * @param data
  * @returns
  */
-async function state(data: StateParameters): Promise<StateReturnType> {
-    return await submitterApi.state[":hash"].$get({ param: { hash: data.hash } }).then((a) => a.json())
+export type { StateRequestInput, StateRequestOutput }
+export async function state({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, Error>> {
+    const response = await client.get(`/v1/state/${hash}`)
+    return response as Result<StateRequestOutput, Error>
 }
 
 /**
@@ -143,10 +88,10 @@ async function state(data: StateParameters): Promise<StateReturnType> {
  * @param data
  * @returns
  */
-async function receipt(data: ReceiptParameters): Promise<ReceiptReturnType> {
-    return await submitterApi.receipt[":hash"]
-        .$get({ param: { hash: data.hash }, query: { timeout: data.timeout } })
-        .then((a) => a.json())
+export type { ReceiptInput }
+export async function receipt({ hash, timeout }: ReceiptInput): Promise<Result<StateRequestOutput, Error>> {
+    const response = await client.get(`/v1/receipt/${hash}`, { timeout: timeout })
+    return response as Result<StateRequestOutput, Error>
 }
 
 /**
@@ -154,6 +99,8 @@ async function receipt(data: ReceiptParameters): Promise<ReceiptReturnType> {
  * @param data
  * @returns
  */
-async function pending(data: PendingParameters): Promise<PendingReturnType> {
-    return await submitterApi.pending[":account"].$get({ param: { account: data.account } }).then((a) => a.json())
+export type { PendingHappyTxInput, PendingHappyTxOutput }
+export async function pending({ account }: PendingHappyTxInput): Promise<Result<PendingHappyTxOutput, Error>> {
+    const response = await client.get(`/v1/pending/${account}`)
+    return response as Result<PendingHappyTxOutput, Error>
 }

@@ -7,6 +7,9 @@
     "main": "./dist/index.es.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.es.d.ts",
+    "imports": {
+        "#lib/*": "./lib/*"
+    },
     "bin": {
         "submitter-cli": "./bin/cli.ts"
     },
@@ -14,12 +17,12 @@
         "./package.json": "./package.json",
         "./migrations": "./migrations",
         ".": {
-            "types": "./lib/index.ts",
-            "default": "./lib/index.ts"
+            "types": "./dist/index.es.d.ts",
+            "default": "./dist/index.es.js"
         },
         "./client": {
-            "types": "./dist/rpc.es.d.ts",
-            "default": "./dist/rpc.es.js"
+            "types": "./dist/client.es.d.ts",
+            "default": "./dist/client.es.js"
         }
     },
     "devDependencies": {

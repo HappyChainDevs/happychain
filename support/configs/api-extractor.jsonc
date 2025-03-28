@@ -3,10 +3,8 @@
  */
 {
     "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
-
     // must be here to respect the schema
     "mainEntryPointFilePath": "OVERRIDE THIS IN YOUR CONFIG",
-
     "compiler": {
         "tsconfigFilePath": "./tsconfig.build.json",
         "overrideTsconfig": {
@@ -21,12 +19,18 @@
             }
         }
     },
-
-    "tsdocMetadata": { "enabled": false },
-    "apiReport": { "enabled": false },
-    "docModel": { "enabled": false },
-    "dtsRollup": { "enabled": true },
-
+    "tsdocMetadata": {
+        "enabled": false
+    },
+    "apiReport": {
+        "enabled": false
+    },
+    "docModel": {
+        "enabled": false
+    },
+    "dtsRollup": {
+        "enabled": true
+    },
     "messages": {
         "compilerMessageReporting": {
             /**
@@ -35,7 +39,6 @@
             "default": {
                 "logLevel": "warning"
             }
-
             // "TS2551": {
             //   "logLevel": "warning",
             //   "addToApiReportFile": true
@@ -43,7 +46,6 @@
             //
             // . . .
         },
-
         "extractorMessageReporting": {
             "default": {
                 "logLevel": "warning"
@@ -58,7 +60,6 @@
             //
             // . . .
         },
-
         "tsdocMessageReporting": {
             "default": {
                 "logLevel": "none"

@@ -3,8 +3,7 @@
     "extends": "../../support/configs/api-extractor.jsonc",
     "mainEntryPointFilePath": "build/types/lib/index.d.ts",
     "bundledPackages": [
-        "@happy.tech/configs",
-        "@happy.tech/happybuild",
-        "@happy.tech/submitter"
+        "@happy.tech/submitter", // submitter types aren't resolving properly due to dynamic imports so this breaks it
+        "@happy.tech/common"
     ]
 }
