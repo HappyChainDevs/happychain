@@ -74,5 +74,5 @@ interface IExtensibleBoopAccount is IHappyAccount {
      * account set a transient variable to the executor that was dispatched in
      * {IHappyAccount.execute}, and check that variable here.
      */
-    function executeCall(CallInfo memory info) external returns (bool success, bytes memory returnData);
+    function executeCallFromExecutor(CallInfo memory info) external returns (bool success, bytes memory returnData);
 }

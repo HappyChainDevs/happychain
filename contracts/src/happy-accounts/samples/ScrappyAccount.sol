@@ -117,7 +117,7 @@ contract ScrappyAccount is
         emit ExtensionRemoved(extension, extensionType);
     }
 
-    function executeCall(CallInfo memory info) external returns (bool success, bytes memory returnData) {
+    function executeCallFromExecutor(CallInfo memory info) external returns (bool success, bytes memory returnData) {
         require(msg.sender == dispatchedExecutor, "not called from executor");
         return info.dest.call{value: info.value}(info.callData);
     }
