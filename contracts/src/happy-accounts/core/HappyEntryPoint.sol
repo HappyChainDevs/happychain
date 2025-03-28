@@ -308,7 +308,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             (output.gas, cost) = computeCost(happyTx, gasStart - gasleft() + 16000, encodedHappyTx.length);
             // Pay submitter — no need for revert checks (submitter wants this to succeed).
             // This should succeed by construction, because of the early staking balance check.
-            send(happyTx.paymaster, payable(tx.origin), cost);
+            _transferTo(happyTx.paymaster, payable(tx.origin), cost);
         }
     }
 
