@@ -279,7 +279,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         // ==========================================================================================
         // 5. Collect payment
 
-        uint256 cost;
+        uint128 cost;
 
         if ( /* sponsoring submitter */ happyTx.paymaster == address(0)) {
             output.gas = HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length);
@@ -332,7 +332,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     function computeCost(HappyTx memory happyTx, uint256 entryPointGas, uint256 encodedLength)
         internal
         view
-        returns (uint32 consumedGas, uint256 cost)
+        returns (uint32 consumedGas, uint128 cost)
     {
         // The constant 4 is the byte size for the selector for `submit`.
         consumedGas = HappyTxLib.txGasFromCallGas(entryPointGas, 4 + encodedLength);
@@ -342,7 +342,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         int256 gasCost = int256(boundedGas * tx.gasprice);
 
         // The submitter fee can be negative (rebates) but we can't charge less than 0.
-        cost = gasCost + happyTx.submitterFee > 0 ? uint256(gasCost + happyTx.submitterFee) : 0;
+        cost = gasCost + happyTx.submitterFee > 0 ? uint128(uint256(gasCost + happyTx.submitterFee)) : 0;
 
         return (consumedGas, cost);
     }

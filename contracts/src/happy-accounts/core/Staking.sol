@@ -8,11 +8,11 @@ struct Stake {
     /**
      * Staked balance.
      */
-    uint256 balance;
+    uint128 balance;
     /**
      * Balance available for withdrawal after the withdraw delay, starting from {withdrawtimestamp}.
      */
-    uint256 unlockedBalance;
+    uint128 unlockedBalance;
     /**
      * The withdraw delay is the time (in seconds) required to withdraw funds, i.e. the time
      * between {initiateWithdrawal} and {withdraw}). It is computed as:
@@ -102,7 +102,7 @@ contract Staking {
      * Called by an account to stake funds, which are passed as value.
      */
     function deposit() external payable {
-        stakes[msg.sender].balance += msg.value;
+        stakes[msg.sender].balance += uint128(msg.value);
         if (stakes[msg.sender].maxDelay == 0) {
             stakes[msg.sender].minDelay = MIN_WITHDRAW_DELAY;
             stakes[msg.sender].maxDelay = MIN_WITHDRAW_DELAY;
@@ -185,7 +185,7 @@ contract Staking {
      * cancel the remainder of the previous withdrawal. No funds will be lost, but the time spent
      * waiting on the previous withdrawal will not carry over to the new withdrawal.
      */
-    function initiateWithdrawal(uint256 amount) external payable {
+    function initiateWithdrawal(uint128 amount) external payable {
         Stake memory stake = stakes[msg.sender];
         if (amount > stake.balance) revert InsufficientBalance();
         stake.unlockedBalance = amount;
@@ -198,7 +198,7 @@ contract Staking {
      * Withdraw previously unlocked funds. It is possible to perform multiple partial withdrawals
      * of unlocked funds.
      */
-    function withdraw(uint256 amount) external payable {
+    function withdraw(uint128 amount) external payable {
         Stake memory stake = stakes[msg.sender];
         if (amount > stake.unlockedBalance) revert InsufficientBalance();
 
@@ -234,9 +234,9 @@ contract Staking {
      * destination address. This will revert with an arithmetic exception if the account does not
      * hold sufficient stake.
      */
-    function _transferTo(address account, address payable to, uint256 amount) internal {
+    function _transferTo(address account, address payable to, uint128 amount) internal {
         stakes[account].balance -= amount;
-        uint256 balance = stakes[account].balance;
+        uint128 balance = stakes[account].balance;
         if (stakes[account].unlockedBalance > balance) stakes[account].unlockedBalance = balance;
         to.transfer(amount);
     }
