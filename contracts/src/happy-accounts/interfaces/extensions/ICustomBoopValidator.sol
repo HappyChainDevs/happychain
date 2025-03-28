@@ -15,5 +15,5 @@ bytes3 constant VALIDATOR_KEY = 0x000001;
  */
 interface ICustomBoopValidator {
     /// Same interface and specification as {IBoopAccount.validate}.
-    function validate(HappyTx memory happyTx) external returns (bytes4);
+    function validate(HappyTx memory happyTx) external returns (bytes memory);
 }
