@@ -3,7 +3,7 @@ import { testClient } from "hono/testing"
 import env from "#lib/env"
 import { app } from "#lib/server"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
-import { serializeBigInt } from "#lib/utils/bigint-lossy"
+import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx, testAccount, testPublicClient } from "./utils"
 
 const client = testClient(app)

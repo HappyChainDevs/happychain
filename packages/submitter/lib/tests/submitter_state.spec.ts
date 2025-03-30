@@ -3,8 +3,8 @@ import { testClient } from "hono/testing"
 import { app } from "#lib/server"
 import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { serializeBigInt } from "#lib/utils/bigint-lossy"
 import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
+import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx, testAccount } from "./utils"
 
 const client = testClient(app)

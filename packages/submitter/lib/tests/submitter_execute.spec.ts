@@ -6,7 +6,7 @@ import { app } from "#lib/server"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
-import { serializeBigInt } from "#lib/utils/bigint-lossy"
+import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import {
     createMockTokenAMintHappyTx,
     fundAccount,
