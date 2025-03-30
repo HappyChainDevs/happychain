@@ -51,6 +51,7 @@ export type {
 
 // == Utilities ====================================================================================
 
+// TODO why wrap instead of re-export?
 function getHash(tx: Parameters<typeof computeHappyTxHash>[0]): `0x${string}` {
     return computeHappyTxHash(tx)
 }
@@ -61,6 +62,8 @@ export const accountApi = client.api.v1.accounts
 export const submitterApi: typeof client.api.v1.submitter = client.api.v1.submitter
 
 // == Account API Routes ===========================================================================
+
+// TODO all types here need to be spelled out explicitly — this is indirection HELL
 
 /**
  * Create a new ScrappyAccount

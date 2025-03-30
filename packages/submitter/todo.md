@@ -1,0 +1,13 @@
+- rebase on new contracts
+- fix tests
+- build issue: don't use hono api stuff, explicit types
+
+- inline the submitterClient
+- submitter-client: explicit type user-facing
+- don't throw errors in submit — integrate in SimulationResult
+- have a boop state repository & don't otherwise cache simulationcache
+- docs
+- remove estimateGas in favour of simulation
+- in submit/execute parallelize (1) fetch gas price & (2) simulate & (3) (maybe, see below) submitter wallet nonce
+- use Viem nonce manager ?? does this save us roundtrip?
+- genericity outside of happychain — start by just adding the chainID in the env

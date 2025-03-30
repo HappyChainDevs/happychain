@@ -10,6 +10,7 @@ const paymasterGasData = {
     submitterFee: 0n,
 } as const
 
+// TODO needs to sign over chainId to avoid cross-chain replay attacks
 export function computeHappyTxHash(happyTx: HappyTx): `0x${string}` {
     const isSelfPaying = happyTx.paymaster === happyTx.account
 

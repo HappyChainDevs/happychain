@@ -9,6 +9,8 @@ import { decodeRawError, getSelectorFromErrorName } from "#lib/errors/parsedCode
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 import { EntryPointStatus, SimulatedValidationStatus, isFailure, isRevert } from "#lib/tmp/interface/status"
 
+// TODO what is this? — doc
+
 export type SubmitContractSimulateParameters<account extends Account = Account> = SimulateContractParameters<
     typeof abis.HappyEntryPoint,
     "submit",
@@ -57,6 +59,10 @@ export class HappySimulationService {
     ) {
         // Store simulation result if happyTxHash is provided
         const status = getCallStatus(result.callStatus)
+
+        // TODO The validation status is open-ended and should not be erased when it doesn't match
+        //      the known values, instead it should be saved and passed back to the user for him
+        //      to parser it as an encoded error.
         const validationStatus =
             Number(result.validationStatus) === 0
                 ? SimulatedValidationStatus.Success

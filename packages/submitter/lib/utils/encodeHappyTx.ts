@@ -1,5 +1,7 @@
 import type { EstimateGasInput } from "../tmp/interface/submitter_estimateGas"
 
+// TODO add validation with proper errors
+// TODO this and decodeHappyTx should be exported from the top-level, possibly promoted outside of utils
 export function encodeHappyTx(tx: EstimateGasInput["tx"]): `0x${string}` {
     // Static fields
     const accountHex = tx.account.slice(2)
@@ -10,8 +12,8 @@ export function encodeHappyTx(tx: EstimateGasInput["tx"]): `0x${string}` {
     const valueHex = tx.value.toString(16).padStart(64, "0")
     const nonceTrackHex = tx.nonceTrack.toString(16).padStart(48, "0") // 24 bytes
     const nonceValueHex = tx.nonceValue.toString(16).padStart(16, "0") // 8 bytes
-    const maxFeePerGasHex = (tx.maxFeePerGas || "")?.toString(16).padStart(64, "0")
-    const submitterFeeHex = (tx.submitterFee || "")?.toString(16).padStart(64, "0")
+    const maxFeePerGasHex = (tx.maxFeePerGas || 0n)?.toString(16).padStart(64, "0")
+    const submitterFeeHex = (tx.submitterFee || 0n)?.toString(16).padStart(64, "0")
 
     // Dynamic fields with their 4-byte length prefixes
     const callDataHex = tx.callData.slice(2)

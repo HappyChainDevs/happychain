@@ -13,9 +13,11 @@ const logLevel: LogLevel =
           }[env.LOG_LEVEL]
 
 const _logger = Logger.instance
+// TODO these tags really shouldn't be defined in the common package
 _logger.enableTags(LogTag.SUBMITTER)
 _logger.setLogLevel(logLevel)
 
+// TODO create a factory for these in the common package
 // Create a type that omits the LogTag parameter from logger methods
 type SubmitterLogger = {
     [K in keyof Logger]: Logger[K] extends (tag: LogTag.SUBMITTER, ...args: infer P) => infer R

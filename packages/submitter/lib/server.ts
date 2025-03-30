@@ -41,6 +41,8 @@ export const app = new Hono()
     .route("/api/v1/submitter", submitterApi)
 
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
+
+// TODO this looks like it can return quite a colorful array of variously formatted error messages, can't we normalize?
 app.onError(async (err, c) => {
     if (err instanceof HTTPException && err.cause instanceof ZodError) {
         const error = err.cause.issues.map((i) => ({ path: i.path.join("."), message: i.message }))
@@ -56,6 +58,7 @@ app.onError(async (err, c) => {
     const response =
         env.NODE_ENV === "production"
             ? {
+                  // TODO why not? is this about avoiding to leak sensitive info (can only thing of keys for this?)
                   // don't include raw error in prod
                   message: `Something Happened, file a report with this key to find out more: ${c.get("requestId")}`,
                   url: c.req.url,

@@ -14,6 +14,7 @@ import * as stateByHashRoute from "./openApi/stateByHash"
 import * as submitRoute from "./openApi/submit"
 
 export default new Hono()
+    // TODO rename this simulate?
     .post("/estimateGas", estimateGasRoute.description, estimateGasRoute.validation, async (c) => {
         const input = c.req.valid("json")
         const output = await estimateGas(input)

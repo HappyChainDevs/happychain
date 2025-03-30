@@ -12,6 +12,8 @@ import {
     type ValueNode,
 } from "kysely"
 
+// TODO what is this? doc
+
 export type TransformerRule =
     | {
           to(value: unknown): unknown

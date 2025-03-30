@@ -15,6 +15,9 @@ export async function estimateGas(data: EstimateGasInput): Promise<EstimateGasOu
     const estimates = await submitterClient.estimateSubmitGas(account, entryPoint, encodeHappyTx(data.tx))
 
     const happyTxHash = computeHappyTxHash(data.tx as HappyTx)
+    // TODO these simulations are not evergreen (state changes) so we have to refresh them
+    // TODO it's unclear how the simulation result exists at this stage — will investigate but
+    //      I'm guessing it's a side-effect of estimateSubmitGas?
     const simulationResult = await happySimulationService.findResultByHappyTxHash(happyTxHash)
 
     if (simulationResult && isEntryPointStatus(simulationResult.status)) {

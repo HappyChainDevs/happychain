@@ -12,7 +12,9 @@ import { isContractDeployed } from "#lib/utils/isContractDeployed"
 const account = privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
 const walletClient = createWalletClient({ ...config, account })
 
+// TODO return type + document errors
 export async function create({ owner, salt }: { owner: `0x${string}`; salt: `0x${string}` }) {
+    // TODO implement offchain to avoid the roundtrip
     const predictedAddress = await publicClient.readContract({
         address: deployment.ScrappyAccountFactory,
         abi: abis.ScrappyAccountFactory,
@@ -28,6 +30,8 @@ export async function create({ owner, salt }: { owner: `0x${string}`; salt: `0x$
         return { address: predictedAddress, salt, owner }
     }
 
+    // TODO simulateContract is generally not necessary, can just pass the same args to writeContract
+    //      directly and viem will do the simulation.
     const { request, result } = await publicClient.simulateContract({
         address: deployment.ScrappyAccountFactory,
         abi: abis.ScrappyAccountFactory,
@@ -45,6 +49,7 @@ export async function create({ owner, salt }: { owner: `0x${string}`; salt: `0x$
 
     // validate deployment
     if (receipt.status !== "success") throw new Error("Transaction failed on-chain.")
+    // TODO I think we can skip this — if this happens we have more serious worries than whatever issue is caused by this
     if (!(await isContractDeployed(predictedAddress)))
         throw new Error(`Contract deployment failed: No code found at ${predictedAddress}`)
 
