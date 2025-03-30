@@ -22,15 +22,6 @@
             "default": "./dist/client.es.js"
         }
     },
-    "devDependencies": {
-        "@happy.tech/common": "workspace:0.1.0",
-        "@happy.tech/configs": "workspace:0.1.0",
-        "@happy.tech/happybuild": "workspace:0.1.1",
-        "@types/bun": "latest"
-    },
-    "peerDependencies": {
-        "typescript": "^5.0.0"
-    },
     "dependencies": {
         "@hono/zod-validator": "^0.4.3",
         "hono": "^4.7.2",
@@ -41,5 +32,14 @@
         "viem": "^2.21.53",
         "zod": "^3.23.8",
         "zod-openapi": "^4.2.3"
+    },
+    "peerDependencies": {
+        "typescript": "^5.0.0"
+    },
+    "devDependencies": {
+        "@happy.tech/common": "workspace:0.1.0",
+        "@happy.tech/configs": "workspace:0.1.0",
+        "@happy.tech/happybuild": "workspace:0.1.1",
+        "@types/bun": "latest"
     }
 }

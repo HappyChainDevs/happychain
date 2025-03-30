@@ -18,4 +18,3 @@ migrate-fresh: ## Deletes database and starts fresh
 migrate-rollback: ## Rollsback latest migrations
 	@submitter-cli migrate down
 .PHONY: rollback
-

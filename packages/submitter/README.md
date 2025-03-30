@@ -1,6 +1,9 @@
 # Submitter Service
 
-The Submitter service handles blockchain transaction submission and management. It provides a robust API for processing transactions with features like nonce tracking, gas estimation, and transaction monitoring. While initially developed for Happy Wallet, it can be integrated with any system requiring blockchain transaction management
+The Submitter service handles blockchain transaction submission and management. It provides a robust
+API for processing transactions with features like nonce tracking, gas estimation, and transaction
+monitoring. While initially developed for Happy Wallet, it can be integrated with any system
+requiring blockchain transaction management
 
 ## Quick Start
 

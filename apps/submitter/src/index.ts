@@ -8,7 +8,7 @@ injectOpenAPIDocs(app, {
         info: {
             title: "Boop",
             version: pkg.version,
-            description: "Happy Account Submitter",
+            description: "Boop Submitter",
         },
         servers: [
             {
