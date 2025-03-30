@@ -2,10 +2,9 @@
 pragma solidity ^0.8.20;
 
 /**
- * @notice Represents a Happy Transaction - a transaction made by a Happy Smart Account
- *         that can be submitted to the chain by a permissionless submitter.
+ * Represents a Happy Transaction - a transaction made by a Happy Smart Account that can be
+ * submitted to the chain by a permissionless submitter.
  */
-
 // forgefmt: disable-next-item
 struct HappyTx {
     // Core Transaction Fields:
@@ -40,3 +39,30 @@ struct HappyTx {
     bytes validatorData;        // Extra data for validation (e.g., signatures)
     bytes extraData;            // Reserved for future extensions and custom implementations
 }
+
+/**
+ * This event exposes a HappyTx as an event and is emitted by {EntryPoint.submit}, for easier
+ * indexing of HappyTxs and easier visibility on block explorers.
+ *
+ * Note that we deliberately choose to separate all the fields into dedicated arguments instead of
+ * having a single argument with the struct — this enables better display on some block explorers
+ * like Blockscout.
+ */
+event HappyTxSubmitted(
+    address account,
+    uint32 gasLimit,
+    uint32 validateGasLimit,
+    uint32 executeGasLimit,
+    uint32 payoutGasLimit,
+    address dest,
+    address paymaster,
+    uint256 value,
+    uint192 nonceTrack,
+    uint64 nonceValue,
+    uint256 maxFeePerGas,
+    int256 submitterFee,
+    bytes callData,
+    bytes paymasterData,
+    bytes validatorData,
+    bytes extraData
+);
