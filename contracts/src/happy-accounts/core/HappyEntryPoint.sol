@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-import {HappyTx} from "boop/core/HappyTx.sol";
+import {HappyTx, HappyTxSubmitted} from "boop/core/HappyTx.sol";
 import {Staking, Stake} from "boop/core/Staking.sol";
 import {IHappyAccount, ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
 import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
@@ -286,7 +286,12 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         }
 
         // ==========================================================================================
-        // 5. Collect payment
+        // 5. Emit HappyTxSubmitted
+
+        _emitHappyTxSubmitted(happyTx);
+
+        // ==========================================================================================
+        // 6. Collect payment
 
         uint128 cost;
 
@@ -428,6 +433,22 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         if (status > CallStatus.EXECUTE_REVERTED) {
             // The returned status is incorrect, treat this like a revert.
             status = CallStatus.EXECUTE_REVERTED;
+        }
+    }
+
+    /**
+     * Emits an {HappyTxSubmittedEvent} containing the struct. This needs assembly, as Solidity
+     * can handle max 15 arguments before running out of stack space (irrespective of context).
+     */
+    function _emitHappyTxSubmitted(HappyTx memory happyTx) internal {
+        // Structs are encoded as tuples, just like events, and the signature of the event matches
+        // that of the struct. The only difference is that the struct is prefixed with an offset.
+        bytes memory args = abi.encode(happyTx);
+        bytes32 topic = HappyTxSubmitted.selector;
+        assembly {
+            let data := add(args, 64) // skip bytes length and offset to struct
+            let size := sub(mload(args), 32) // length of the bytestring minus size of offset
+            log1(data, size, topic)
         }
     }
 }
