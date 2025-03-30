@@ -8,5 +8,5 @@
             "#lib/*": ["./lib/*"]
         }
     },
-    "include": ["*.ts", "lib", "./package.json"]
+    "include": ["*.ts", "lib", "bin", "./package.json"]
 }
