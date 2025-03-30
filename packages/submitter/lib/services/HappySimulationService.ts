@@ -43,8 +43,7 @@ export class HappySimulationService {
 
     async findResultByHappyTxHash(happyTxHash: Hex): Promise<SimulationResult | undefined> {
         const result = await this.happySimulationRepository.findByHappyTxHash(happyTxHash)
-        if (!result) return result
-        return this.getSimulationResult(result)
+        return result && this.getSimulationResult(result)
     }
 
     async insert(newHappyState: Omit<HappySimulation, "id">): Promise<HappySimulation | undefined> {

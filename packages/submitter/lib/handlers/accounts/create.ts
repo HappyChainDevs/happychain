@@ -6,9 +6,9 @@ import env from "#lib/env"
 import { logger } from "#lib/logger"
 import { isContractDeployed } from "#lib/utils/isContractDeployed"
 
-// Account responsible for deploying ScrappyAccounts
+// Account responsible for deploying ScrappyAccounts.
 // May or may not be the same as the global submitter accounts
-// so we define private/internal clients independently here
+// so we define private/internal clients independently here.
 const account = privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
 const walletClient = createWalletClient({ ...config, account })
 
