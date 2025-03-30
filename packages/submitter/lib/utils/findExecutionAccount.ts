@@ -15,8 +15,8 @@ import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 
 const defaultAccount = privateKeyToAccount(env.PRIVATE_KEY_LOCAL)
 
-// These fields where chosen as they could be useful when selection which account to execute with.
-// can be adjusted to fit the actual requirements
+// These fields where chosen as they could be useful when selecting which account to execute with.
+// Can be adjusted to fit the actual requirements
 type PartialTx = Pick<HappyTx, "account" | "nonceTrack" | "nonceValue" | "paymaster" | "dest">
 
 const accounts = [defaultAccount]
