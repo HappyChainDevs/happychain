@@ -34,7 +34,12 @@ export class BlockMonitor {
         })
     }
 
-    private onNewBlock(block: LatestBlock) {
+    private onNewBlock(block: LatestBlock | undefined) {
+        if (!block) {
+            Logger.instance.error(LogTag.TXM, "Received undefined block")
+            return
+        }
+
         if (this.blockTimeout) clearTimeout(this.blockTimeout)
         eventBus.emit(Topics.NewBlock, block)
 
