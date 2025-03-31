@@ -24,11 +24,7 @@ import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop
 /**
  * Example implementation of an extensible Happy Account with proxy upgrade capability.
  */
-contract ScrappyAccount is
-    IExtensibleBoopAccount,
-    OwnableUpgradeable,
-    UUPSUpgradeable
-{
+contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;
     using HappyTxLib for HappyTx;
 

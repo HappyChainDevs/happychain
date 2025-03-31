@@ -21,6 +21,7 @@ import {
     InsufficientStake,
     PaymentValidationFailed,
     PaymentValidationReverted,
+    PayoutFailed,
     ValidationFailed,
     ValidationReverted,
     GasPriceTooHigh,
@@ -55,8 +56,6 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     address private dest;
 
     function setUp() public {
-        if (false) console.log(""); // keep this to avoid linter to complain about an unused import
-
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
 
@@ -384,11 +383,29 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function testPaymasterValidationFailedSubmitterFeeTooHigh() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
-         // maxFeePerByte = maxFeePerGas * 16
-         // maxSubmitterFee = maxFeePerByte * totalSize (totalSize <= 10000, in this case)
+        // maxFeePerByte = maxFeePerGas * 16
+        // maxSubmitterFee = maxFeePerByte * totalSize (totalSize <= 10000, in this case)
         happyTx.submitterFee = int256(happyTx.maxFeePerGas * 16 * 2 * 10000);
-        
-        vm.expectRevert(abi.encodeWithSelector(PaymentValidationFailed.selector, abi.encodeWithSelector(SubmitterFeeTooHigh.selector)));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                PaymentValidationFailed.selector, abi.encodeWithSelector(SubmitterFeeTooHigh.selector)
+            )
+        );
+        happyEntryPoint.submit(happyTx.encode());
+    }
+
+    function testPaymasterPaymentValidationRevertsOverFlow() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.maxFeePerGas = type(uint256).max; // This will cause an overflow and revert
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Panic error 0x11: Arithmetic operation results in underflow or overflow.
+        bytes4 panicSelector = bytes4(keccak256("Panic(uint256)"));
+        bytes memory overflowError = abi.encodeWithSelector(panicSelector, 0x11);
+
+        vm.expectRevert(abi.encodeWithSelector(PaymentValidationReverted.selector, overflowError));
         happyEntryPoint.submit(happyTx.encode());
     }
 
@@ -411,7 +428,12 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
 
         _assertExpectedSubmitOutput(
-            output, false, false, false,CallStatus.CALL_REVERTED, abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector)
+            output,
+            false,
+            false,
+            false,
+            CallStatus.CALL_REVERTED,
+            abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector)
         );
     }
 
@@ -446,7 +468,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     // ====================================================================================================
     // EXECUTION TESTS (SIMULATION)
 
-    function testSimulationReturnsAccurateExecuteGasLimit() public {
+    function testSimulationReturnsAccurateGasLimits() public {
         uint256 id = vm.snapshotState();
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
@@ -464,9 +486,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Submit the happyTx again, with the above execGasLimit
         HappyTx memory happyTx2 =
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx2.validateGasLimit = output.validateGas * 120/100;
-        happyTx2.executeGasLimit = output.executeGas * 120/100;
-        happyTx2.payoutGasLimit = output.paymentValidateGas * 120/100;
+        happyTx2.validateGasLimit = output.validateGas * 120 / 100;
+        happyTx2.executeGasLimit = output.executeGas * 120 / 100;
+        happyTx2.payoutGasLimit = output.paymentValidateGas * 120 / 100;
         happyTx2.validatorData = signHappyTx(happyTx2, privKey);
 
         // This should succeed now if the execute-gas-limit estimation is accurate
@@ -475,7 +497,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
-    // PAYOUT TESTS
+    // PAYOUT TESTS (Self-Paying)
 
     function testSelfPayoutNegativeSubmitterFee() public {
         HappyTx memory happyTx =
@@ -485,20 +507,9 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         // Submit the transaction
+        vm.txGasPrice(happyTx.maxFeePerGas / 2);
         SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
-    }
-
-    function testPaymasterPayoutNegativeSubmitterFee() public {
-        HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx.maxFeePerGas = 10; // For simple case
-        happyTx.submitterFee = -1_500_000; // Enough to make _charged < 0 inside HEP
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Submit the transaction
-        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
-        // _assertExpectedSubmitOutput(output, CallStatus.SUCCEEDED, new bytes(0));
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
     }
 
     function testSelfPayoutRevertsOverFlow() public {
@@ -510,43 +521,8 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         // Panic error 0x11: Arithmetic operation results in underflow or overflow.
         bytes4 panicSelector = bytes4(keccak256("Panic(uint256)"));
-        bytes memory overflowError = abi.encodeWithSelector(panicSelector, 0x11);
 
-        vm.expectRevert(abi.encodeWithSelector(PaymentValidationReverted.selector, overflowError));
-        happyEntryPoint.submit(happyTx.encode());
-    }
-
-    function testPaymasterPayoutRevertsOverFlow() public {
-        HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx.maxFeePerGas = type(uint256).max; // This will cause an overflow and revert
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        // Panic error 0x11: Arithmetic operation results in underflow or overflow.
-        bytes4 panicSelector = bytes4(keccak256("Panic(uint256)"));
-        bytes memory overflowError = abi.encodeWithSelector(panicSelector, 0x11);
-
-        vm.expectRevert(abi.encodeWithSelector(PaymentValidationReverted.selector, overflowError));
-        happyEntryPoint.submit(happyTx.encode());
-    }
-
-    function testSelfPayoutExactFees() public {
-        HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx.maxFeePerGas = 1;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        vm.txGasPrice(1);
-        happyEntryPoint.submit(happyTx.encode());
-    }
-
-    function testPaymasterPayoutExactFees() public {
-        HappyTx memory happyTx =
-            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
-        happyTx.maxFeePerGas = 1;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
-
-        vm.txGasPrice(1);
+        vm.expectRevert(abi.encodeWithSelector(panicSelector, 0x11));
         happyEntryPoint.submit(happyTx.encode());
     }
 
@@ -556,19 +532,43 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // Give the account a low balance so it can't pay back the fee
         vm.deal(smartAccount, 0);
 
-        vm.expectRevert(abi.encodeWithSelector(InsufficientStake.selector, abi.encodeWithSelector(bytes4(0))));
+        vm.expectRevert(abi.encodeWithSelector(PayoutFailed.selector));
         vm.txGasPrice(happyTx.maxFeePerGas);
         happyEntryPoint.submit(happyTx.encode());
     }
 
+    // ====================================================================================================
+    // PAYOUT TESTS (Paymaster-Sponsored)
+
+    function testPaymasterPayoutNegativeSubmitterFee() public {
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.maxFeePerGas = 10; // For simple case
+        happyTx.submitterFee = -1_500_000; // Enough to make _charged < 0 inside HEP
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        // Submit the transaction
+        vm.txGasPrice(happyTx.maxFeePerGas / 2);
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+        _assertExpectedSubmitOutput(output, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+    }
+
     function testPayoutFailsDueToLowPaymasterBalance() public {
         HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
+        console.log("Current Stake: ", happyEntryPoint.balanceOf(paymaster));
 
-        // Give the paymaster a low balance so it can't pay back the fee
-        vm.deal(paymaster, 0);
+        // The 1st slot of struct Stake  is 128 bits balance, and 128 bits unlockedBalance
+        // We can safely set both (overall slot) to 0, for this testcase
 
-        vm.expectRevert(abi.encodeWithSelector(InsufficientStake.selector, abi.encodeWithSelector(bytes4(0))));
-        vm.txGasPrice(happyTx.maxFeePerGas);
+        bytes32 slot = keccak256(abi.encode(paymaster, 0));
+        // console.log("Current value: ", uint256(vm.load(address(happyEntryPoint), slot)));
+
+        // Store the new value with balance = 0, unlockedBalance = 0
+        vm.store(address(happyEntryPoint), slot, 0);
+        // console.log("New balance: ", happyEntryPoint.balanceOf(paymaster));
+
+        vm.expectRevert(abi.encodeWithSelector(InsufficientStake.selector));
+        vm.txGasPrice(happyTx.maxFeePerGas / 2);
         happyEntryPoint.submit(happyTx.encode());
     }
 
