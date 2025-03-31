@@ -13,11 +13,7 @@ export async function submit(data: { entryPoint: `0x${string}`; tx: HappyTx }): 
 
     const account = findExecutionAccount(data.tx)
 
-    const simulate = await submitterClient.simulateSubmit({
-        address: data.entryPoint,
-        args: [encodeHappyTx(data.tx)],
-        account,
-    })
+    const simulate = await submitterClient.simulateSubmit(account, data.entryPoint, encodeHappyTx(data.tx))
 
     if (simulate.simulation?.status !== EntryPointStatus.Success) {
         throw new Error("Simulation failed") // TODO: more information as to what failed

@@ -39,11 +39,11 @@ describe("simulateSubmit", () => {
         })
 
         try {
-            const { result } = await simulateSubmit({
-                account: findExecutionAccount(),
-                address: deployment.HappyEntryPoint,
-                args: [encodeHappyTx(unsigned)],
-            })
+            const { result } = await simulateSubmit(
+                findExecutionAccount(),
+                deployment.HappyEntryPoint,
+                encodeHappyTx(unsigned),
+            )
 
             // 10% off of values i got when i first tested. update as needed (if needed)
             expect(result.gas).toBeGreaterThan(80000)
@@ -64,9 +64,9 @@ describe("simulateSubmit", () => {
         // invalid signature
         unsigned.validatorData = "0x"
 
-        expect(
-            simulateSubmit({ account, address: deployment.HappyEntryPoint, args: [encodeHappyTx(unsigned)] }),
-        ).rejects.toEqual(new ValidationRevertedError("InvalidSignature"))
+        expect(simulateSubmit(account, deployment.HappyEntryPoint, encodeHappyTx(unsigned))).rejects.toEqual(
+            new ValidationRevertedError("InvalidSignature"),
+        )
     })
 
     it("should fail on out of gas", async () => {
@@ -76,8 +76,8 @@ describe("simulateSubmit", () => {
         unsigned.validatorData = await testAccount.account.signMessage({
             message: { raw: computeHappyTxHash(unsigned) },
         })
-        expect(
-            simulateSubmit({ account, address: deployment.HappyEntryPoint, args: [encodeHappyTx(unsigned)] }),
-        ).rejects.toEqual(new ValidationRevertedError("Out Of Gas"))
+        expect(simulateSubmit(account, deployment.HappyEntryPoint, encodeHappyTx(unsigned))).rejects.toEqual(
+            new ValidationRevertedError("Out Of Gas"),
+        )
     })
 })

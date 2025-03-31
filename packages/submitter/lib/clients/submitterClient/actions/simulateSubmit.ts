@@ -1,5 +1,5 @@
 import type { happyChainSepolia } from "@happy.tech/wallet-common"
-import type { Account, SimulateContractParameters, SimulateContractReturnType } from "viem"
+import type { Account, Address, Hex, SimulateContractParameters, SimulateContractReturnType } from "viem"
 import { zeroAddress } from "viem"
 import { parseAccount } from "viem/accounts"
 import { publicClient } from "#lib/clients"
@@ -12,16 +12,15 @@ import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
 import { computeHappyTxHash } from "#lib/utils/getHappyTxHash"
 
 export async function simulateSubmit(
-    request: Omit<SubmitSimulateParameters, "abi" | "functionName">,
+    account: Account,
+    entryPoint: Address,
+    encodedHappyTx: Hex,
 ): Promise<SubmitSimulateReturnType> {
-    if (!request.account) throw new Error("Account Not Found - simulateSubmit")
-    const requestAccount = parseAccount(request.account)
-    // Simulate with zero address to allow for future nonce simulation
-    const account = parseAccount(zeroAddress)
-
     const req = {
-        ...request,
-        account,
+        // enable simulation mode by setting the sender to the zero address
+        account: parseAccount(zeroAddress),
+        address: entryPoint,
+        args: [encodedHappyTx],
         abi: abis.HappyEntryPoint,
         functionName: "submit",
     } as SubmitSimulateParameters
@@ -60,7 +59,7 @@ export async function simulateSubmit(
             request: {
                 ...request,
                 args, // potentially updated gas values
-                account: requestAccount,
+                account: parseAccount(account),
             } as unknown as typeof request,
             result,
             simulation,

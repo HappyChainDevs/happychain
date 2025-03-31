@@ -12,11 +12,7 @@ export async function estimateGas(data: EstimateGasInput): Promise<EstimateGasOu
     const entryPoint = data.entryPoint ?? deployment.HappyEntryPoint
     const account = findExecutionAccount(data.tx)
 
-    const estimates = await submitterClient.estimateSubmitGas({
-        account,
-        address: entryPoint,
-        args: [encodeHappyTx(data.tx)],
-    })
+    const estimates = await submitterClient.estimateSubmitGas(account, entryPoint, encodeHappyTx(data.tx))
 
     const happyTxHash = computeHappyTxHash(data.tx as HappyTx)
     const simulationResult = await happySimulationService.findResultByHappyTxHash(happyTxHash)

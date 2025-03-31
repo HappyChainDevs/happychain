@@ -1,8 +1,8 @@
+import type { Account, Address, Hex } from "viem"
 import { simulateSubmit } from "./simulateSubmit"
 
-export async function estimateSubmitGas(request: Parameters<typeof simulateSubmit>[0]) {
-    if (!request.account) throw new Error("Account Not Found - estimateGas")
-    const simulate = await simulateSubmit(request)
+export async function estimateSubmitGas(account: Account, entryPoint: Address, encodedHappyTx: Hex) {
+    const simulate = await simulateSubmit(account, entryPoint, encodedHappyTx)
 
     return {
         executeGasLimit: BigInt(simulate.result.executeGas),
