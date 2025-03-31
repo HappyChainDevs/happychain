@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {HappyTxTestUtils} from "../Utils.sol";
 import {MockERC20} from "../../../mocks/MockERC20.sol";
+import {MockRevert} from "../../../mocks/MockRevert.sol";
 
 import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
 import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
@@ -10,6 +11,11 @@ import {HappyTxLib} from "../../../happy-accounts/libs/HappyTxLib.sol";
 import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol";
 import {ExecutionOutput} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
 import {CallStatus} from "../../../happy-accounts/core/HappyEntryPoint.sol";
+import {
+    ExtensionType,
+    ExtensionAlreadyRegistered,
+    ExtensionNotRegistered
+} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
 import {InvalidSignature, UnknownDuringSimulation} from "../../../happy-accounts/utils/Common.sol";
@@ -35,6 +41,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     address private _happyEntryPoint;
     address private smartAccount;
     address private mockToken;
+    address private mockRevert;
     uint256 private privKey;
     address private owner;
     address private dest;
@@ -57,8 +64,9 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Fund the smart account
         vm.deal(smartAccount, INITIAL_DEPOSIT);
 
-        // Deploy a mock ERC20 token
+        // Deploy a mock ERC20 token, and a mock token that always reverts
         mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
+        mockRevert = address(new MockRevert());
     }
 
     // ====================================================================================================
@@ -134,6 +142,9 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
+    // VALIDATION TESTS (EXTENSIONS)
+
+    // ====================================================================================================
     // EXECUTION TESTS
 
     function testExecuteMintToken() public {
@@ -190,6 +201,12 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
+    // EXECUTION TESTS (EXTENSIONS)
+
+    // ====================================================================================================
+    // PAYOUT TESTS
+
+    // ====================================================================================================
     // ISVALIDSIGNATURE TESTS
 
     function testIsValidSignatureWithValidSignature() public view {
@@ -243,5 +260,161 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         bytes4 happyPaymasterInterfaceId = 0x24542ca5; // IHappyPaymaster interface ID
         assertTrue(account.supportsInterface(happyPaymasterInterfaceId), "Should support IHappyPaymaster");
+    }
+
+    // ====================================================================================================
+    // ADD/REMOVE EXTENSIONS TESTS
+
+    function testAddExtension() public {
+        // Create a mock extension address
+        address mockValidatorExtension = address(0x1234);
+        address mockExecutorExtension = address(0x5678);
+
+        // Initially, the extensions should not be registered
+        assertFalse(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+        );
+        assertFalse(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
+        );
+
+        // Test adding a validator extension
+        vm.prank(owner);
+        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
+
+        // Verify the validator extension is now registered
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+        );
+
+        // Test adding an executor extension
+        vm.prank(owner);
+        ScrappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
+
+        // Verify the executor extension is now registered
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
+        );
+
+        // Try adding the same validator extension again - should revert with ExtensionAlreadyRegistered
+        vm.prank(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(ExtensionAlreadyRegistered.selector, mockValidatorExtension, ExtensionType.Validator)
+        );
+        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
+
+        // Try adding the same executor extension again - should revert with ExtensionAlreadyRegistered
+        vm.prank(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(ExtensionAlreadyRegistered.selector, mockExecutorExtension, ExtensionType.Executor)
+        );
+        ScrappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
+
+        // Test adding the same address but as a different extension type (should work)
+        vm.prank(owner);
+        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor);
+
+        // Verify both extension types are registered for the validator address
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+        );
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
+        );
+
+        // Test adding extension from the account itself (using onlySelfOrOwner modifier)
+        vm.prank(smartAccount);
+        ScrappyAccount(payable(smartAccount)).addExtension(address(0xABCD), ExtensionType.Validator);
+
+        // Verify the new extension is registered
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(address(0xABCD), ExtensionType.Validator)
+        );
+
+        // Test adding extension from a non-owner, non-self address (should revert with NotSelfOrOwner)
+        address nonOwner = address(0x9999);
+        vm.prank(nonOwner);
+        vm.expectRevert(ScrappyAccount.NotSelfOrOwner.selector);
+        ScrappyAccount(payable(smartAccount)).addExtension(address(0xDEAD), ExtensionType.Validator);
+    }
+
+    function testRemoveExtension() public {
+        // Create a mock extension address
+        address mockValidatorExtension = address(0x1234);
+        address mockExecutorExtension = address(0x5678);
+
+        // Add the extensions first
+        vm.startPrank(owner);
+        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
+        ScrappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
+        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor); // Same address, different type
+        vm.stopPrank();
+
+        // Verify the extensions are registered
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+        );
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
+        );
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
+        );
+
+        // Test removing a validator extension
+        vm.prank(owner);
+        ScrappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator);
+
+        // Verify the validator extension is no longer registered
+        assertFalse(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+        );
+
+        // But it should still be registered as an executor extension
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
+        );
+
+        // Test removing an executor extension
+        vm.prank(owner);
+        ScrappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Executor);
+
+        // Verify the executor extension is no longer registered
+        assertFalse(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
+        );
+
+        // Try removing an extension that's not registered - should revert with ExtensionNotRegistered
+        vm.prank(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(ExtensionNotRegistered.selector, mockValidatorExtension, ExtensionType.Validator)
+        );
+        ScrappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator);
+
+        // Test removing extension from the account itself (using onlySelfOrOwner modifier)
+        vm.prank(smartAccount);
+        ScrappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Executor);
+
+        // Verify the extension is no longer registered
+        assertFalse(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
+        );
+
+        // Test removing extension from a non-owner, non-self address (should revert with NotSelfOrOwner)
+        address nonOwner = address(0x9999);
+
+        // First add an extension to remove
+        vm.prank(owner);
+        ScrappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Validator);
+
+        // Try to remove it as non-owner
+        vm.prank(nonOwner);
+        vm.expectRevert(ScrappyAccount.NotSelfOrOwner.selector);
+        ScrappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Validator);
+
+        // Verify the extension is still registered
+        assertTrue(
+            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Validator)
+        );
     }
 }
