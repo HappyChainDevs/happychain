@@ -21,6 +21,8 @@ import {
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/utils/Common.sol";
 
+import {console} from "forge-std/Script.sol";
+
 /**
  * Example implementation of an extensible Happy Account with proxy upgrade capability.
  */
@@ -120,7 +122,8 @@ contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgra
     function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes memory) {
         bytes4 validationResult;
         (bool found, bytes memory validatorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, VALIDATOR_KEY);
-
+        console.log("Found: ", found);
+        console.log("Validator Address: ", address(uint160(bytes20(validatorAddress))));
         if (found) {
             if (validatorAddress.length != 20) {
                 validationResult = InvalidExtensionValue.selector;
