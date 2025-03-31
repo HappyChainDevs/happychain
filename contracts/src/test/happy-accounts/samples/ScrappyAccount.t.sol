@@ -12,6 +12,7 @@ import {ScrappyAccount} from "../../../happy-accounts/samples/ScrappyAccount.sol
 import {ExecutionOutput} from "../../../happy-accounts/interfaces/IHappyAccount.sol";
 import {CallStatus} from "../../../happy-accounts/core/HappyEntryPoint.sol";
 import {
+    CallInfo,
     ExtensionType,
     ExtensionAlreadyRegistered,
     ExtensionNotRegistered
@@ -416,5 +417,99 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         assertTrue(
             ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Validator)
         );
+    }
+
+    // ====================================================================================================
+    // EXECUTE FROM EXECUTOR TESTS (EXTENSIONS) // TODO: how do I set the transient storage slot
+
+    // function testExecuteCallFromExecutor() public {
+    //     // Setup
+    //     address mockExecutor = _setupMockExecutor();
+    //     address recipient = address(0xBEEF);
+    //     uint256 mintAmount = 100;
+
+    //     // Prepare calldata for token minting
+    //     bytes memory callData = abi.encodeWithSelector(MockERC20.mint.selector, recipient, mintAmount);
+
+    //     // Check initial token balance
+    //     uint256 initialBalance = MockERC20(mockToken).balanceOf(recipient);
+
+    //     // Set the dispatchedExecutor
+    //     _setDispatchedExecutor(mockExecutor);
+
+    //     // Execute the call
+    //     (bool success,) = _executeCallFromExecutor(mockExecutor, payable(mockToken), 0, callData);
+
+    //     // Verify results
+    //     assertTrue(success, "Call should succeed");
+    //     assertEq(MockERC20(mockToken).balanceOf(recipient), initialBalance + mintAmount, "Tokens should be minted");
+    // }
+
+    function testExecuteCallFromExecutorWithWrongSender() public {
+        // Setup
+        address mockExecutor = _setupMockExecutor();
+        address wrongSender = address(0x5678);
+        address recipient = address(0xBEEF);
+
+        // Set the dispatchedExecutor
+        _setDispatchedExecutor(mockExecutor);
+
+        // Create call info
+        CallInfo memory info = CallInfo({dest: payable(recipient), value: 0.1 ether, callData: ""});
+
+        // Try to call executeCallFromExecutor as the wrong sender
+        vm.prank(wrongSender);
+        vm.expectRevert("not called from executor");
+        ScrappyAccount(payable(smartAccount)).executeCallFromExecutor(info);
+    }
+
+    // function testExecuteCallFromExecutorWithFailingCall() public {
+    //     // Setup
+    //     address mockExecutor = _setupMockExecutor();
+
+    //     // Prepare calldata for a reverting function
+    //     bytes memory callData = abi.encodeWithSelector(MockRevert.intentionalRevert.selector);
+
+    //     // Set the dispatchedExecutor
+    //     _setDispatchedExecutor(mockExecutor);
+
+    //     // Execute the call
+    //     (bool success,) = _executeCallFromExecutor(mockExecutor, payable(mockRevert), 0, callData);
+
+    //     // Verify the call failed (but the executeCallFromExecutor function itself didn't revert)
+    //     assertFalse(success, "Call should fail");
+    // }
+
+    // ====================================================================================================
+    // HELPERS
+
+    // Helper function to set up a mock executor and register it as an extension
+    function _setupMockExecutor() internal returns (address) {
+        address mockExecutor = address(0x1234);
+
+        // Add the executor as an extension
+        vm.prank(owner);
+        ScrappyAccount(payable(smartAccount)).addExtension(mockExecutor, ExtensionType.Executor);
+
+        return mockExecutor;
+    }
+
+    // Helper function to set the dispatchedExecutor transient variable
+    function _setDispatchedExecutor(address _executor) internal {
+        // The dispatchedExecutor is a transient private variable in the ScrappyAccount contract
+        // https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#:~:text=The%20rules%20described,for%20transient%20storage.
+        bytes32 slot = bytes32(uint256(0));
+        vm.store(smartAccount, slot, bytes32(uint256(uint160(_executor))));
+    }
+
+    // Helper function to execute a call through the executor and return success
+    function _executeCallFromExecutor(address _executor, address payable _dest, uint256 _value, bytes memory _callData)
+        internal
+        returns (bool success, bytes memory returnData)
+    {
+        CallInfo memory info = CallInfo({dest: _dest, value: _value, callData: _callData});
+
+        vm.prank(_executor);
+        (success, returnData) = ScrappyAccount(payable(smartAccount)).executeCallFromExecutor(info);
     }
 }
