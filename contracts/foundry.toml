@@ -9,13 +9,13 @@ ignored_warnings_from = ["node_modules", "lib", "src/deploy", "src/scripts", "sr
 
 # Compiler profiles for contracts that require via_ir enabled
 additional_compiler_profiles = [
-  { name = "kernel", via_ir = true, optimizer_runs = 200 },
+  { name = "kernel", via_ir = true, optimizer = true, optimizer_runs = 200 },
   { name = "happy-entrypoint", via_ir = true }
 ]
 
 # Restrict Kernel.sol and HappyEntryPoint.sol to use the Kernel and HappyEntryPoint profiles, respectively
 compilation_restrictions = [
-  { paths = "lib/kernel/src/Kernel.sol", via_ir = true, optimizer_runs = 200 },
+  { paths = "lib/kernel/src/Kernel.sol", via_ir = true, optimizer = true, optimizer_runs = 200 },
   { paths = "src/happy-accounts/core/HappyEntryPoint.sol", via_ir = true }
 ]
 
