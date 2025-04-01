@@ -7,6 +7,11 @@ import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
 import { PATHNAME_ROUTE_GAMES } from "#src/v2/screens/games/Games"
 import { PATHNAME_ROUTE_HISTORY } from "#src/v2/screens/history/History"
+import { BottomNavbarPermissions, PATHNAME_DAPPS_WITH_PERMISSIONS } from "#src/v2/screens/permissions/Permissions"
+import {
+    BottomNavbarAppPermissions,
+    PATHNAME_DAPP_PERMISSIONS,
+} from "#src/v2/screens/permissions/[$dappId]/AppPermissions"
 import { BottomNavbarSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
 import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
 import { BottomNavbarTokenHistory, PATHNAME_ROUTE_TOKEN_HISTORY } from "#src/v2/screens/tokens/history/TokenHistory"
@@ -63,7 +68,7 @@ const RootView = ({ className = "", children, ...props }: HTMLAttributes<HTMLDiv
         <div
             data-scope="display"
             data-part="view"
-            className={cx("relative group grid h-full grid-rows-[1fr_12fr_1fr]", className)}
+            className={cx("relative group grid h-full grid-rows-[auto_1fr_auto]", className)}
             {...props}
         >
             {children}
@@ -176,11 +181,15 @@ const RootBottomNavbarIsland = () => {
     const { pathname } = useLocation()
     const matchTokenHistory = useMatch({ from: PATHNAME_ROUTE_TOKEN_HISTORY, shouldThrow: false })
     const user = useAtomValue(userAtom)
+    const matchPermissions = useMatch({ from: PATHNAME_DAPPS_WITH_PERMISSIONS, shouldThrow: false })
+    const matchAppPermissions = useMatch({ from: PATHNAME_DAPP_PERMISSIONS, shouldThrow: false })
 
     // Prevents rendering the navbar if user isn't connected
     if (PROTECTED_PATHNAMES.includes(pathname) || !user) return null
     if (pathname === PATHNAME_ROUTE_SEND_TOKEN) return <BottomNavbarSendToken />
     if (matchTokenHistory) return <BottomNavbarTokenHistory />
+    if (matchPermissions) return <BottomNavbarPermissions />
+    if (matchAppPermissions) return <BottomNavbarAppPermissions />
     // @todo - ... render conditionally any other navbar here ..
 
     // Default navbar
@@ -218,6 +227,10 @@ const RootHeader = ({ children }: PropsWithChildren) => {
     )
 }
 const RootHeaderIsland = () => {
+    const matchPermissions = useMatch({ from: PATHNAME_DAPPS_WITH_PERMISSIONS, shouldThrow: false })
+    const matchAppPermissions = useMatch({ from: PATHNAME_DAPP_PERMISSIONS, shouldThrow: false })
+
+    if (matchPermissions || matchAppPermissions) return null
     return (
         <RootHeader>
             <UserDetails />
