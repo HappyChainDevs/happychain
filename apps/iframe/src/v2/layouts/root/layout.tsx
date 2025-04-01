@@ -42,6 +42,7 @@ export const RootLayout = ({ children }: PropsWithChildren) => {
                             [&:has([data-part=header]_[data-state=open])]:grid-rows-[12fr_0_1fr]
                     `}
                     >
+                        <Layout.Screen.View.HeaderIsland />
                         {children}
                         <Layout.Screen.View.BottomNavbarIsland />
                         <Layout.Screen.View.DialogsIsland />
