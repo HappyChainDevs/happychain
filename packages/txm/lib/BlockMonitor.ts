@@ -18,6 +18,7 @@ export class BlockMonitor {
     private txmgr: TransactionManager
     private unwatch: (() => void) | undefined
     private blockTimeout: ReturnType<typeof setTimeout> | undefined
+    private latestProcessedBlockNumber: bigint | undefined
     constructor(_transactionManager: TransactionManager) {
         this.txmgr = _transactionManager
     }
@@ -27,10 +28,6 @@ export class BlockMonitor {
         this.unwatch = this.txmgr.viemClient.watchBlocks({
             onBlock: this.onNewBlock.bind(this),
             ...(this.txmgr.transportProtocol === "http" ? { pollingInterval: this.txmgr.pollingInterval } : {}),
-            onError: (error) => {
-                Logger.instance.error(LogTag.TXM, "Error watching blocks", error)
-                this.resetBlockSubscription()
-            },
         })
     }
 
@@ -39,6 +36,16 @@ export class BlockMonitor {
             Logger.instance.error(LogTag.TXM, "Received undefined block")
             return
         }
+
+        if (this.latestProcessedBlockNumber && block.number <= this.latestProcessedBlockNumber) {
+            Logger.instance.warn(
+                LogTag.TXM,
+                "Received block number less than or equal to latest processed block number. Skipping.",
+            )
+            return
+        }
+
+        this.latestProcessedBlockNumber = block.number
 
         if (this.blockTimeout) clearTimeout(this.blockTimeout)
         eventBus.emit(Topics.NewBlock, block)
