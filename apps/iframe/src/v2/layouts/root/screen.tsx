@@ -10,6 +10,11 @@ import { PATHNAME_ROUTE_HISTORY } from "#src/v2/screens/history/History"
 import { BottomNavbarSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
 import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
 import { BottomNavbarTokenHistory, PATHNAME_ROUTE_TOKEN_HISTORY } from "#src/v2/screens/tokens/history/TokenHistory"
+import { BottomNavbarPermissions, PATHNAME_DAPPS_WITH_PERMISSIONS } from "#src/v2/screens/permissions/Permissions"
+import {
+    BottomNavbarAppPermissions,
+    PATHNAME_DAPP_PERMISSIONS,
+} from "#src/v2/screens/permissions/[$dappId]/AppPermissions"
 import { RootDialogsIsland } from "./dialogs"
 import { UserDetails } from "./user"
 
@@ -176,9 +181,13 @@ const RootBottomNavbarIsland = () => {
     const { pathname } = useLocation()
     const matchTokenHistory = useMatch({ from: PATHNAME_ROUTE_TOKEN_HISTORY, shouldThrow: false })
     const user = useAtomValue(userAtom)
+    const matchPermissions = useMatch({ from: PATHNAME_DAPPS_WITH_PERMISSIONS, shouldThrow: false })
+    const matchAppPermissions = useMatch({ from: PATHNAME_DAPP_PERMISSIONS, shouldThrow: false })
 
     // Prevents rendering the navbar if user isn't connected
     if (PROTECTED_PATHNAMES.includes(pathname) || !user) return null
+    if (matchPermissions) return <BottomNavbarPermissions />
+    if (matchAppPermissions) return <BottomNavbarAppPermissions />
 
     if (pathname === PATHNAME_ROUTE_SEND_TOKEN) return <BottomNavbarSendToken />
     if (matchTokenHistory) return <BottomNavbarTokenHistory />
@@ -228,7 +237,10 @@ const RootHeader = ({ children }: PropsWithChildren) => {
 }
 const RootHeaderIsland = () => {
     const matchTokenHistory = useMatch({ from: PATHNAME_ROUTE_TOKEN_HISTORY, shouldThrow: false })
-    if (matchTokenHistory) return null
+    const matchPermissions = useMatch({ from: PATHNAME_DAPPS_WITH_PERMISSIONS, shouldThrow: false })
+    const matchAppPermissions = useMatch({ from: PATHNAME_DAPP_PERMISSIONS, shouldThrow: false })
+
+    if (matchPermissions || matchTokenHistory || matchAppPermissions) return null
     return (
         <RootHeader>
             <UserDetails />

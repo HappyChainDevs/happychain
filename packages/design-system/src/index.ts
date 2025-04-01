@@ -13,6 +13,11 @@ export * from "./expandable/recipeGuiExpandable"
 
 // Collapsible
 export * from "./collapsible/recipeGuiCollapsible"
+
+// Combobox
+export * from "./combobox/recipeGuiCombobox"
+
+// Form field
 export * from "./form-field/recipeGuiFormField"
 
 // Dialog
@@ -28,6 +33,9 @@ export * from "./menu/recipeGuiMenu"
 
 // Select (native input)
 export * from "./native-select/recipeGuiNativeSelect"
+
+// Switch (binary toggle input)
+export * from "./switch/recipeGuiSwitch"
 
 // Table (dataview)
 export * from "./table/recipeGuiTable"
