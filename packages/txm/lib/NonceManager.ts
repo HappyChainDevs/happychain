@@ -87,7 +87,7 @@ export class NonceManager {
 
     // Only called when a transaction that has reserved a nonce ultimately doesn't reach the mempool
     public returnNonce(nonce: number) {
-        const index = this.returnedNonceQueue.findIndex((n) => nonce > n)
+        const index = this.returnedNonceQueue.findIndex((n) => nonce < n)
 
         if (index === -1) {
             this.returnedNonceQueue.push(nonce)
