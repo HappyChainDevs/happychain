@@ -10,7 +10,7 @@ import { type GuiPanelVariantsProps, recipeGuiPanel } from "../panel/recipeGuiPa
 import type { GuiUserInputVariantsProps } from "../user-input/recipeGuiUserInput"
 
 const recipeGuiComboboxContainer = cva({
-    base: ["relative"],
+    base: ["relative group"],
 })
 
 export type GuiComboboxContainerVariantsProps = VariantProps<typeof recipeGuiComboboxContainer> &
@@ -41,7 +41,7 @@ const recipeGuiComboboxControl = cva({
 export type GuiComboboxControlVariantsProps = VariantProps<typeof recipeGuiComboboxControl> & GuiExpandableVariantsProps
 
 const recipeGuiComboboxContent = cva({
-    base: ["flex flex-col max-h-[130px] overflow-auto"],
+    base: ["flex flex-col group-has-[[data-scope=combobox][data-part=positioner]]:max-h-[130px] overflow-auto"],
 })
 export type GuiComboboxContentVariantsProps = VariantProps<typeof recipeGuiComboboxContent> & GuiPanelVariantsProps
 
