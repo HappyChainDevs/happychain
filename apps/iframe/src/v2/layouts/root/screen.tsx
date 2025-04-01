@@ -1,10 +1,15 @@
 import { type HTMLArkProps, ark } from "@ark-ui/react"
 import { Button, type GuiButtonProps } from "@happy.tech/uikit-react"
-import { Link, useLocation } from "@tanstack/react-router"
+import { Link, useLocation, useMatch } from "@tanstack/react-router"
 import { cx } from "cva"
 import { useAtomValue } from "jotai"
 import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
+import { BottomNavbarPermissions, PATHNAME_DAPPS_WITH_PERMISSIONS } from "#src/v2/screens/permissions/Permissions"
+import {
+    BottomNavbarAppPermissions,
+    PATHNAME_DAPP_PERMISSIONS,
+} from "#src/v2/screens/permissions/[$dappId]/AppPermissions"
 import { RootDialogsIsland } from "./dialogs"
 import { UserDetails } from "./user"
 
@@ -58,7 +63,7 @@ const RootView = ({ className = "", children, ...props }: HTMLAttributes<HTMLDiv
         <div
             data-scope="display"
             data-part="view"
-            className={cx("relative group grid h-full grid-rows-[1fr_12fr_1fr]", className)}
+            className={cx("relative group grid h-full grid-rows-[auto_1fr_auto]", className)}
             {...props}
         >
             {children}
@@ -164,9 +169,13 @@ const PROTECTED_PATHNAMES: Array<string> = []
 const RootBottomNavbarIsland = () => {
     const { pathname } = useLocation()
     const user = useAtomValue(userAtom)
+    const matchPermissions = useMatch({ from: PATHNAME_DAPPS_WITH_PERMISSIONS, shouldThrow: false })
+    const matchAppPermissions = useMatch({ from: PATHNAME_DAPP_PERMISSIONS, shouldThrow: false })
 
     // Prevents rendering the navbar if user isn't connected
     if (PROTECTED_PATHNAMES.includes(pathname) || !user) return null
+    if (matchPermissions) return <BottomNavbarPermissions />
+    if (matchAppPermissions) return <BottomNavbarAppPermissions />
 
     // @todo - ... render conditionally any other navbar here ..
 
@@ -205,6 +214,10 @@ const RootHeader = ({ children }: PropsWithChildren) => {
     )
 }
 const RootHeaderIsland = () => {
+    const matchPermissions = useMatch({ from: PATHNAME_DAPPS_WITH_PERMISSIONS, shouldThrow: false })
+    const matchAppPermissions = useMatch({ from: PATHNAME_DAPP_PERMISSIONS, shouldThrow: false })
+
+    if (matchPermissions || matchAppPermissions) return null
     return (
         <RootHeader>
             <UserDetails />
