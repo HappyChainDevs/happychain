@@ -71,9 +71,15 @@ export enum EntryPointStatus {
     ExecuteReverted = "entrypointExecuteReverted",
 
     /**
-     * The account's `execute` call failed.
+     * The account's `execute` function returned indicate a failure. This is typically caused
+     * by an incorrect input from the user.
      */
     ExecuteFailed = "entrypointExecuteFailed",
+
+    /**
+     * The call made by the account's `execute` function reverted.
+     */
+    CallReverted = "entrypointCallReverted",
 
     /**
      * The paymaster's `payout` call reverted.
@@ -93,8 +99,7 @@ export enum EntryPointStatus {
     UnexpectedReverted = "entrypointUnexpectedReverted",
 }
 
-// -------------------------------------------------------------------------------------------------
-
+/** cf. {@link EntryPointStatus} */
 export function isEntryPointStatus(status: string): status is EntryPointStatus {
     return status.startsWith("entrypoint")
 }
@@ -102,26 +107,50 @@ export function isEntryPointStatus(status: string): status is EntryPointStatus {
 // -------------------------------------------------------------------------------------------------
 
 /**
- * Whether the status indicates a revert, which should never occur for correct account, paymaster
- * and submitter implementations.
+ * Statuses indicating that either the entry point or one of the function it calls reverted, which
+ * should never occur for correct account, paymaster and submitter implementations.
  */
-export function isRevert(
-    status: EntryPointStatus,
-): status is
+export type EntryPointIllegalRevert =
     | EntryPointStatus.ValidationReverted
     | EntryPointStatus.ExecuteReverted
     | EntryPointStatus.PaymentReverted
-    | EntryPointStatus.UnexpectedReverted {
-    return status.endsWith("Reverted")
+    | EntryPointStatus.UnexpectedReverted
+
+/** cf. {@link EntryPointIllegalRevert} */
+export function isIllegalRevert(status: EntryPointStatus): status is EntryPointIllegalRevert {
+    return status.endsWith("Reverted") && status !== EntryPointStatus.CallReverted
 }
 
 // -------------------------------------------------------------------------------------------------
 
-/** Whether the status indicates either a validation or payment failure. */
-export function isFailure(
-    status: EntryPointStatus,
-): status is EntryPointStatus.ValidationFailed | EntryPointStatus.ExecuteFailed | EntryPointStatus.PaymentFailed {
+/**
+ * Statuses indicating rejected validation by the account or paymaster, or a failure to process the
+ * fee payer's payment.
+ */
+export type EntryPointRejection =
+    | EntryPointStatus.ValidationFailed
+    | EntryPointStatus.ExecuteFailed
+    | EntryPointStatus.PaymentFailed
+
+/** cf. {@link EntryPointRejection} */
+export function isRejection(status: EntryPointStatus): status is EntryPointRejection {
     return status.endsWith("Failed")
+}
+
+// -------------------------------------------------------------------------------------------------
+
+/**
+ * Status indicating that the submitter transaction reverted (either a non-execute illegal revert or a rejection).
+ */
+export type EntryPointRevertedTransaction =
+    | EntryPointRejection
+    | EntryPointStatus.ValidationReverted
+    | EntryPointStatus.PaymentReverted
+    | EntryPointStatus.UnexpectedReverted
+
+/** cf. {@link EntryPointRevertedTransaction} */
+export function isRevertedTransaction(status: EntryPointStatus): status is EntryPointRevertedTransaction {
+    return (isIllegalRevert(status) && status !== EntryPointStatus.ExecuteReverted) || isRejection(status)
 }
 
 // -------------------------------------------------------------------------------------------------

@@ -6,35 +6,18 @@ import type { EntryPointStatus, SimulatedValidationStatus } from "./status"
  * The result of simulating a HappyTx.
  */
 // biome-ignore format: readability
-export type SimulationResult = Prettify<{
+export type SimulationResult = {
     status: EntryPointStatus
     validationStatus: SimulatedValidationStatus
-    /** EntryPoint to which the HappyTx was submitted onchain. */
+    /**
+     * EntryPoint to which the HappyTx was submitted onchain.
+     */
     entryPoint: Address
-    /** The selector of the returned custom error. */
-    failureReason?: never | Hex
-    /** The revert data *carried* by the returned custom error. */
-    revertData?: never | Hex
-} & ({
-        status: EntryPointStatus.Success
-        failureReason?: never
-        revertData?: never
-    } | {
-        // check with `isFailure(status)`
-        status:
-            | EntryPointStatus.ValidationFailed
-            | EntryPointStatus.ExecuteFailed
-            | EntryPointStatus.PaymentFailed
-        failureReason: Hex
-        revertData: Hex
-    } | {
-        // check with `isRevert(status)`
-        status:
-            | EntryPointStatus.ValidationReverted
-            | EntryPointStatus.ExecuteReverted
-            | EntryPointStatus.PaymentReverted
-            | EntryPointStatus.UnexpectedReverted
-        revertData: Hex
-        failureReason?: never
-    }
-)>
+    /**
+     * Either the revert data matching an {@link EntryPointIllegalRevert} status, or the the
+     * returned encoded error matching an {@link EntryPointRejection} status.
+     *
+     * Empty if `status === EntryPointStatus.SUCCESS`
+     */
+    revertData: Hex
+}

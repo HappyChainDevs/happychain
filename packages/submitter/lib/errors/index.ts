@@ -1,9 +1,13 @@
+import type { Hex } from "viem"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 
 export abstract class HappyBaseError extends Error {
-    constructor() {
+    public name: string
+    public revertData: Hex
+    protected constructor(revertData: Hex) {
         super()
         this.name = this.constructor.name
+        this.revertData = revertData
     }
 
     abstract getResponseData(): Record<string, unknown>
@@ -22,39 +26,35 @@ export class BaseFailedError extends HappyBaseError {
             | EntryPointStatus.ExecuteFailed
             | EntryPointStatus.PaymentFailed,
 
-        /** The selector of the returned custom error. */
-        public failureReason?: string,
-
         /** The revert data *carried* by the returned custom error. */
-        public revertData?: string,
+        public revertData: Hex,
     ) {
-        super()
+        super(revertData)
     }
 
     getResponseData() {
         return {
             status: this.status,
-            failureReason: this.failureReason,
             revertData: this.revertData,
         }
     }
 }
 
 export class ValidationFailedError extends BaseFailedError {
-    constructor(failureReason?: string, revertData?: string) {
-        super(EntryPointStatus.ValidationFailed, failureReason, revertData)
+    constructor(revertData: Hex) {
+        super(EntryPointStatus.ValidationFailed, revertData)
     }
 }
 
 export class ExecuteFailedError extends BaseFailedError {
-    constructor(failureReason?: string, revertData?: string) {
-        super(EntryPointStatus.ExecuteFailed, failureReason, revertData)
+    constructor(revertData: Hex) {
+        super(EntryPointStatus.ExecuteFailed, revertData)
     }
 }
 
 export class PaymentFailedError extends BaseFailedError {
-    constructor(failureReason?: string, revertData?: string) {
-        super(EntryPointStatus.PaymentFailed, failureReason, revertData)
+    constructor(revertData: Hex) {
+        super(EntryPointStatus.PaymentFailed, revertData)
     }
 }
 
@@ -73,9 +73,9 @@ export class BaseRevertedError extends HappyBaseError {
             | EntryPointStatus.UnexpectedReverted,
 
         /** The revertData of the revert error. */
-        public revertData?: string,
+        public revertData: Hex,
     ) {
-        super()
+        super(revertData)
     }
 
     getResponseData() {
@@ -84,25 +84,25 @@ export class BaseRevertedError extends HappyBaseError {
 }
 
 export class ValidationRevertedError extends BaseRevertedError {
-    constructor(revertData?: string) {
+    constructor(revertData: Hex) {
         super(EntryPointStatus.ValidationReverted, revertData)
     }
 }
 
 export class ExecuteRevertedError extends BaseRevertedError {
-    constructor(revertData?: string) {
+    constructor(revertData: Hex) {
         super(EntryPointStatus.ExecuteReverted, revertData)
     }
 }
 
 export class PaymentRevertedError extends BaseRevertedError {
-    constructor(revertData?: string) {
+    constructor(revertData: Hex) {
         super(EntryPointStatus.PaymentReverted, revertData)
     }
 }
 
 export class UnexpectedRevertedError extends BaseRevertedError {
-    constructor(revertData?: string) {
+    constructor(revertData: Hex) {
         super(EntryPointStatus.UnexpectedReverted, revertData)
     }
 }

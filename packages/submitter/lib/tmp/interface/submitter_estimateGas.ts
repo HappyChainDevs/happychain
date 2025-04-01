@@ -2,7 +2,7 @@ import type { Optional } from "@happy.tech/common"
 import type { HappyTx } from "./HappyTx"
 import type { SimulationResult } from "./SimulationResult"
 import type { Address } from "./common_chain"
-import type { EntryPointStatus, SubmitterErrorSimulationUnavailable } from "./status"
+import type { EntryPointRevertedTransaction, EntryPointStatus, SubmitterErrorSimulationUnavailable } from "./status"
 
 export type EstimateGasInput = {
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
@@ -37,7 +37,7 @@ export type EstimateGasOutput = (
     }
 ) & (
     {
-        status: Exclude<EstimateGasStatus, EntryPointStatus.Success>
+        status: Exclude<EstimateGasStatus, EntryPointRevertedTransaction>
     } | {
         // check with `status === EntryPointStatus.Success`
         status: EntryPointStatus.Success

@@ -7,7 +7,7 @@ import type { HappySimulationRepository } from "#lib/database/repositories/Happy
 import type { abis } from "#lib/deployments"
 import { decodeRawError, getSelectorFromErrorName } from "#lib/errors/parsedCodes"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
-import { EntryPointStatus, SimulatedValidationStatus, isFailure, isRevert } from "#lib/tmp/interface/status"
+import { EntryPointStatus, SimulatedValidationStatus, isIllegalRevert, isRejection } from "#lib/tmp/interface/status"
 
 // TODO what is this? — doc
 
@@ -126,7 +126,7 @@ export class HappySimulationService {
             } satisfies SimulationResult
         }
 
-        if (isFailure(status)) {
+        if (isRejection(status)) {
             return {
                 failureReason: sim.failureReason,
                 revertData: sim.revertData,
@@ -136,7 +136,7 @@ export class HappySimulationService {
             } satisfies SimulationResult
         }
 
-        if (isRevert(status)) {
+        if (isIllegalRevert(status)) {
             return {
                 revertData: sim.revertData,
                 entryPoint: sim.entryPoint,

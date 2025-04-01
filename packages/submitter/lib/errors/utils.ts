@@ -1,6 +1,6 @@
 import { BaseError, ContractFunctionRevertedError } from "viem"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
-import type { HappyBaseError } from "./index"
+import { type HappyBaseError, UnexpectedRevertedError } from "./index"
 import {
     ExecuteRevertedError,
     PaymentFailedError,
@@ -38,9 +38,6 @@ export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
             case "ValidationFailed": {
                 return new ValidationFailedError(undefined, revertData)
             }
-            // case "ExecuteFailed": {
-            //     return new ExecuteFailedError(undefined, revertData)
-            // }
             case "PaymentFailed": {
                 return new PaymentFailedError(undefined, revertData)
             }
@@ -50,15 +47,11 @@ export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
                 // TODO: when executeGasLimit === 1 this is '0x' - is this an Out Of Gas error?
                 return new ValidationRevertedError((revertData as string) === "0x" ? "Out Of Gas" : revertData)
             }
-            // case "ExecuteReverted": {
-            //     return new ExecuteRevertedError(revertData)
-            // }
             case "PaymentReverted": {
                 return new PaymentRevertedError(revertData)
             }
-            // case "UnexpectedReverted": {
-            //     return new UnexpectedRevertedError(revertData)
-            // }
+            default:
+                return new UnexpectedRevertedError(revertData)
         }
     }
 }
