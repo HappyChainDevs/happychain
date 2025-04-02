@@ -86,7 +86,7 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
 
         // Create a CallInfo array with a single call
         CallInfo[] memory calls = new CallInfo[](1);
-        calls[0] = createCallInfo(mockToken, 7 wei, callData);
+        calls[0] = createCallInfo(mockToken, 0, callData);
 
         console.log("mockToken: ", mockToken);
         console.log("mockAccount: ", mockAccount);
@@ -283,31 +283,6 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
     /// @dev Encodes the CallInfo array for use in the extraData of a HappyTx
     function encodeExtensionData(CallInfo[] memory calls) internal pure returns (bytes memory) {
         bytes memory encodedCalls = encodeCallInfoArray(calls);
-        console.log("encodedCalls: ");
-        console.logBytes(encodedCalls);
         return abi.encodePacked(BATCH_CALL_INFO_KEY, bytes3(uint24(encodedCalls.length)), encodedCalls);
     }
 }
-
-// // 0x40c10f19
-
-// // dest:  0x8eE3B48D8c3dfce88355E3D286955e073F3bB6fc
-// orig callData: 
-// 0x
-// 40c10f19000000000000000000000000 // 16 bytes: selector (shouldn't this be 32 bytes tho?)
-// 8ee3b48d8c3dfce88355e3d286955e073f3bb6fc // 20 bytes: dest
-// 00000000000000000000000000000000000000000000000000000000000003e8 // 32 bytes 3x8 -> 1000
-
-// encoded extraData: 
-// 0x
-// 000100 // 3 bytes BATCH_EXEC_KEY
-// 0000b8 // 3 bytes length of encodedData: 184 (accurate)
-
-// 0x
-// 0000000000000000000000000000000000000000000000000000000000000001 // 1 CallInfo
-// 2e234dae75c793f67a35089c9d99245e1c58470b // mockToken (dest)
-// 0000000000000000000000000000000000000000000000000000000000000000 // value (shouldn't be 0)
-// 0000000000000000000000000000000000000000000000000000000000000044 // callData length: 68
-// 40c10f19000000000000000000000000 // selector
-// 8ee3b48d8c3dfce88355e3d286955e073f3bb6fc // input mintTo
-// 00000000000000000000000000000000000000000000000000000000000003e8 input amount
