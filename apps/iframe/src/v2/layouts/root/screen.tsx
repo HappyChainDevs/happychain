@@ -216,7 +216,7 @@ const RootBottomNavbarIsland = () => {
                             {({ isActive }) => {
                                 return (
                                     <>
-                                        <span className={isActive ? "opacity-100" : "opacity-50"}>{item.label}</span>
+                                        <span className={(isActive || (item.pathname === '/embed/' && pathname === '/embed/')) ? "opacity-100" : "opacity-50"}>{item.label}</span>
                                     </>
                                 )
                             }}

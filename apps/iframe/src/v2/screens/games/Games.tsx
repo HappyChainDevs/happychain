@@ -1,9 +1,11 @@
+import { Scrollable } from "#src/v2/layouts/root/screen.tsx"
 import { Button } from "@happy.tech/uikit-react"
 
 export const PATHNAME_ROUTE_GAMES = "/embed/games"
 
 export const ScreenGames = () => {
     return (
+        <Scrollable>
         <section className="flex flex-col gap-4 items-center text-center justify-center">
             <div className="w-12.5 h-21.5 [mask-position:center] [mask-size:contain] [mask-repeat:no-repeat] mask-icon-hds-system-gui-smiling-machine bg-current" />
             <div className="flex flex-col gap-1">
@@ -16,5 +18,6 @@ export const ScreenGames = () => {
                 </a>
             </Button.Gui>
         </section>
+        </Scrollable>
     )
 }
