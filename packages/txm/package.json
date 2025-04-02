@@ -26,7 +26,6 @@
         "@opentelemetry/sdk-metrics": "^1.30.1",
         "@opentelemetry/sdk-node": "^0.57.2",
         "@opentelemetry/sdk-trace-node": "^1.30.1",
-        "@pimlico/opentelemetry-instrumentation-viem": "^0.0.4",
         "better-sqlite3": "^11.5.0",
         "eventemitter3": "^5.0.1",
         "hono": "^4.7.2",
