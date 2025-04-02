@@ -1,11 +1,13 @@
 import { unknownToError } from "@happy.tech/common"
 import type { UUID } from "@happy.tech/common"
+import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { Topics, eventBus } from "./EventBus.js"
 import { NotFinalizedStatuses, Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { db } from "./db/driver.js"
 import { TxmMetrics } from "./telemetry/metrics"
+import { TraceMethod } from "./telemetry/traces"
 
 /**
  * This module acts as intermediate layer between the library and the database.
@@ -38,11 +40,15 @@ export class TransactionRepository {
         }
     }
 
+    @TraceMethod("txm.transaction-repository.get-not-finalized-transactions-older-than")
     getNotFinalizedTransactionsOlderThan(blockNumber: bigint): Transaction[] {
         return this.notFinalizedTransactions.filter((t) => t.collectionBlock && t.collectionBlock < blockNumber)
     }
 
+    @TraceMethod("txm.transaction-repository.get-transaction")
     async getTransaction(intentId: UUID): Promise<Result<Transaction | undefined, Error>> {
+        const span = trace.getSpan(context.active())!
+
         const cachedTransaction = this.notFinalizedTransactions.find((t) => t.intentId === intentId)
 
         if (cachedTransaction) {
@@ -72,6 +78,8 @@ export class TransactionRepository {
             TxmMetrics.getInstance().databaseErrorsCounter.add(1, {
                 operation: "getTransaction",
             })
+            span.recordException(persistedTransactionResult.error)
+            span.setStatus({ code: SpanStatusCode.ERROR })
             return err(persistedTransactionResult.error)
         }
 
@@ -80,7 +88,10 @@ export class TransactionRepository {
         return persistedTransaction ? ok(Transaction.fromDbRow(persistedTransaction)) : ok(undefined)
     }
 
+    @TraceMethod("txm.transaction-repository.save-transactions")
     async saveTransactions(transactions: Transaction[]): Promise<Result<void, Error>> {
+        const span = trace.getSpan(context.active())!
+
         const transactionsToFlush = transactions.filter((t) => t.pendingFlush)
 
         const notPersistedTransactions = transactions.filter((t) => t.notPersisted)
@@ -121,6 +132,8 @@ export class TransactionRepository {
 
             TxmMetrics.getInstance().notFinalizedTransactionsGauge.record(this.notFinalizedTransactions.length)
         } else {
+            span.recordException(result.error)
+            span.setStatus({ code: SpanStatusCode.ERROR })
             TxmMetrics.getInstance().databaseErrorsCounter.add(1, {
                 operation: "saveTransactions",
             })
@@ -129,19 +142,24 @@ export class TransactionRepository {
         return result
     }
 
+    @TraceMethod("txm.transaction-repository.get-highest-nonce")
     getHighestNonce(): number | undefined {
         return this.notFinalizedTransactions.length > 0
             ? Math.max(...this.notFinalizedTransactions.flatMap((t) => t.attempts.map((a) => a.nonce)))
             : undefined
     }
 
+    @TraceMethod("txm.transaction-repository.get-not-reserved-nonces-in-range")
     getNotReservedNoncesInRange(from: number, to: number): number[] {
         return Array.from({ length: to - from + 1 }, (_, i) => from + i).filter(
             (n) => !this.notFinalizedTransactions.some((t) => t.attempts.some((a) => a.nonce === n)),
         )
     }
 
+    @TraceMethod("txm.transaction-repository.purge-finalized-transactions")
     async purgeFinalizedTransactions() {
+        const span = trace.getSpan(context.active())!
+
         TxmMetrics.getInstance().databaseOperationsCounter.add(1, {
             operation: "purgeFinalizedTransactions",
         })
@@ -165,6 +183,8 @@ export class TransactionRepository {
             TxmMetrics.getInstance().databaseErrorsCounter.add(1, {
                 operation: "purgeFinalizedTransactions",
             })
+            span.recordException(result.error)
+            span.setStatus({ code: SpanStatusCode.ERROR })
         }
 
         return result

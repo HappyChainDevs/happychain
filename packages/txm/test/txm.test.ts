@@ -52,6 +52,9 @@ const txm = new TransactionManager({
     metrics: {
         active: false,
     },
+    traces: {
+        active: false,
+    },
 })
 
 const fromAddress = privateKeyToAddress(PRIVATE_KEY)

@@ -1,5 +1,5 @@
 import { LogTag, Logger } from "@happy.tech/common"
-import { context, trace } from "@opentelemetry/api"
+import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType, TransactionStatus } from "./Transaction.js"
@@ -37,20 +37,25 @@ export class TransactionCollector {
                 return transaction
             })
 
-        const saveResult = await this.txmgr.transactionRepository.saveTransactions(transactionsBatch)
-
         for (const transaction of transactionsBatch) {
-            span.addEvent("transaction-collector.collected-transaction", {
+            span.addEvent("txm.transaction-collector.on-new-block.collected-transaction", {
                 transactionIntentId: transaction.intentId,
+                transaction: transaction.toJson(),
                 blockNumber: Number(block.number),
             })
         }
+
+        const saveResult = await this.txmgr.transactionRepository.saveTransactions(transactionsBatch)
 
         if (saveResult.isErr()) {
             for (const transaction of transactionsBatch) {
                 eventBus.emit(Topics.TransactionSaveFailed, { transaction })
             }
             Logger.instance.error(LogTag.TXM, "Error saving transactions", saveResult.error)
+
+            span.addEvent("txm.transaction-collector.on-new-block.save-failed")
+            span.recordException(saveResult.error)
+            span.setStatus({ code: SpanStatusCode.ERROR })
             return
         }
 
@@ -58,12 +63,19 @@ export class TransactionCollector {
 
         if (!this.txmgr.rpcLivenessMonitor.isAlive) {
             Logger.instance.error(LogTag.TXM, "RPC is not alive, skipping attempt to submit transactions")
+            span.addEvent("txm.transaction-collector.on-new-block.rpc-not-alive")
+            span.setStatus({ code: SpanStatusCode.ERROR })
             return
         }
 
         await Promise.all(
             transactionsBatch.map(async (transaction) => {
                 const nonce = this.txmgr.nonceManager.requestNonce()
+
+                span.addEvent("txm.transaction-collector.on-new-block.requested-nonce", {
+                    transactionIntentId: transaction.intentId,
+                    nonce,
+                })
 
                 if (transaction.status === TransactionStatus.Interrupted) {
                     transaction.changeStatus(TransactionStatus.Pending)
@@ -83,7 +95,18 @@ export class TransactionCollector {
                         cause: submissionResult.error.cause,
                     })
 
+                    span.addEvent("txm.transaction-collector.on-new-block.submission-failed", {
+                        transactionIntentId: transaction.intentId,
+                        description: submissionResult.error.description,
+                        cause: submissionResult.error.cause,
+                    })
+                    span.setStatus({ code: SpanStatusCode.ERROR })
+
                     if (!submissionResult.error.flushed) {
+                        span.addEvent("txm.transaction-collector.on-new-block.returned-nonce", {
+                            transactionIntentId: transaction.intentId,
+                            nonce,
+                        })
                         this.txmgr.nonceManager.returnNonce(nonce)
                     }
                 }

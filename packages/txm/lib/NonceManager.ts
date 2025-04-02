@@ -1,6 +1,8 @@
 import { LogTag, Logger } from "@happy.tech/common"
+import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import type { TransactionManager } from "./TransactionManager"
 import { TxmMetrics } from "./telemetry/metrics"
+import { TraceMethod } from "./telemetry/traces"
 
 /*
 /*
@@ -72,21 +74,35 @@ export class NonceManager {
         }
     }
 
+    @TraceMethod("txm.nonce-manager.request-nonce")
     public requestNonce(): number {
+        const span = trace.getSpan(context.active())!
+
         if (this.returnedNonceQueue.length > 0) {
             const nonce = this.returnedNonceQueue.shift()!
+            span.addEvent("txm.nonce-manager.request-nonce.from-queue", {
+                nonce,
+            })
             TxmMetrics.getInstance().returnedNonceQueueGauge.record(this.returnedNonceQueue.length)
             return nonce
         }
 
         const requestedNonce = this.nonce
         this.nonce = this.nonce + 1
+
+        span.addEvent("txm.nonce-manager.request-nonce.new-nonce", {
+            nonce: requestedNonce,
+        })
+
         TxmMetrics.getInstance().nonceManagerGauge.record(this.nonce)
         return requestedNonce
     }
 
     // Only called when a transaction that has reserved a nonce ultimately doesn't reach the mempool
+    @TraceMethod("txm.nonce-manager.return-nonce")
     public returnNonce(nonce: number) {
+        const span = trace.getSpan(context.active())!
+
         const index = this.returnedNonceQueue.findIndex((n) => nonce < n)
 
         if (index === -1) {
@@ -95,11 +111,18 @@ export class NonceManager {
             this.returnedNonceQueue.splice(index, 0, nonce)
         }
 
+        span.addEvent("txm.nonce-manager.return-nonce.added-to-queue", {
+            nonce,
+        })
+
         TxmMetrics.getInstance().returnedNonceCounter.add(1)
         TxmMetrics.getInstance().returnedNonceQueueGauge.record(this.returnedNonceQueue.length)
     }
 
+    @TraceMethod("txm.nonce-manager.resync")
     public async resync() {
+        const span = trace.getSpan(context.active())!
+
         const address = this.txmgr.viemWallet.account.address
 
         const blockchainNonceResult = await this.txmgr.viemClient.safeGetTransactionCount({
@@ -111,11 +134,17 @@ export class NonceManager {
                 error: blockchainNonceResult.error,
             })
             this.txmgr.rpcLivenessMonitor.trackError()
+            span.recordException(blockchainNonceResult.error)
+            span.setStatus({ code: SpanStatusCode.ERROR })
             return
         }
 
         this.txmgr.rpcLivenessMonitor.trackSuccess()
 
         this.maxExecutedNonce = blockchainNonceResult.value - 1
+
+        span.addEvent("txm.nonce-manager.resync.updated-max-executed-nonce", {
+            maxExecutedNonce: this.maxExecutedNonce,
+        })
     }
 }

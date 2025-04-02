@@ -2,6 +2,7 @@ import { type Result, err, ok } from "neverthrow"
 import { type TransactionReceipt, encodeErrorResult } from "viem"
 import type { Attempt, Transaction } from "./Transaction"
 import type { TransactionManager } from "./TransactionManager"
+import { TraceMethod } from "./telemetry/traces"
 
 export type RevertedTransactionReceipt = TransactionReceipt<bigint, number, "reverted", "eip1559">
 
@@ -24,6 +25,7 @@ export interface RetryPolicyManager {
  * It will only retry if the transaction runs out of gas.
  */
 export class DefaultRetryPolicyManager implements RetryPolicyManager {
+    @TraceMethod("txm.retry-policy-manager.should-retry")
     public async shouldRetry(
         transactionManager: TransactionManager,
         _: Transaction,
@@ -40,6 +42,7 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
      * @param attempt - The attempt
      * @returns The revert message or undefined if it cannot be retrieved or the rpc does not allow debug
      */
+    @TraceMethod("txm.retry-policy-manager.get-revert-message-and-output")
     protected async getRevertMessageAndOutput(
         transactionManager: TransactionManager,
         attempt: Attempt,
@@ -57,6 +60,7 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
         return { message: traceResult.value.error, output: traceResult.value.output }
     }
 
+    @TraceMethod("txm.retry-policy-manager.is-out-of-gas")
     protected async isOutOfGas(
         transactionManager: TransactionManager,
         attempt: Attempt,
@@ -71,6 +75,7 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
         return message === "Out of Gas"
     }
 
+    @TraceMethod("txm.retry-policy-manager.is-reverted-with-message")
     protected async isRevertedWithMessage(
         transactionManager: TransactionManager,
         attempt: Attempt,
@@ -81,6 +86,7 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
         return _message === message
     }
 
+    @TraceMethod("txm.retry-policy-manager.is-custom-error")
     protected async isCustomError(
         transactionManager: TransactionManager,
         transaction: Transaction,

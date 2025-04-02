@@ -1,15 +1,10 @@
-import opentelemetry from "@opentelemetry/api"
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus"
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto"
 import { Resource } from "@opentelemetry/resources"
-import { MeterProvider, type MetricReader } from "@opentelemetry/sdk-metrics"
-import {
-    BatchSpanProcessor,
-    ConsoleSpanExporter,
-    NodeTracerProvider,
-    SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-node"
+import type { MetricReader } from "@opentelemetry/sdk-metrics"
+import { NodeSDK } from "@opentelemetry/sdk-node"
+import { ConsoleSpanExporter, type SpanExporter } from "@opentelemetry/sdk-trace-node"
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions"
+import { ViemInstrumentation } from "@pimlico/opentelemetry-instrumentation-viem"
 
 const resource = Resource.default().merge(
     new Resource({
@@ -19,32 +14,40 @@ const resource = Resource.default().merge(
 )
 
 export function initializeTelemetry({
-    active,
-    port,
-    metricReaders,
-}: { active: boolean; port: number; metricReaders?: MetricReader[] }): void {
-    if (!active) {
-        return
+    metricsActive,
+    prometheusPort,
+    userMetricReader,
+    tracesActive,
+    userTraceExporter,
+}: {
+    metricsActive: boolean
+    prometheusPort: number
+    userMetricReader?: MetricReader
+    userTraceExporter?: SpanExporter
+    tracesActive?: boolean
+}): void {
+    let metricReader: MetricReader | undefined
+    if (metricsActive) {
+        metricReader = userMetricReader || new PrometheusExporter({ port: prometheusPort })
     }
 
-    const meterProvider = new MeterProvider({
-        resource: resource,
-        readers: metricReaders || [new PrometheusExporter({ port })],
+    let traceExporter: SpanExporter | undefined
+    if (tracesActive) {
+        traceExporter = userTraceExporter || new ConsoleSpanExporter()
+    }
+
+    const viemInstrumentation = new ViemInstrumentation({
+        requireParentSpan: true,
+        captureOperationResult: true,
     })
 
-    opentelemetry.metrics.setGlobalMeterProvider(meterProvider)
+    const sdk = new NodeSDK({
+        resource,
+        traceExporter,
+        metricReader,
+        instrumentations: [viemInstrumentation],
+    })
+
+    sdk.start()
+    viemInstrumentation.enable()
 }
-
-const tracerProvider = new NodeTracerProvider({
-    resource,
-    spanProcessors: [
-        new BatchSpanProcessor(
-            new OTLPTraceExporter({
-                url: "http://localhost:4318/v1/traces",
-            }),
-        ),
-        new SimpleSpanProcessor(new ConsoleSpanExporter()),
-    ],
-})
-
-tracerProvider.register()

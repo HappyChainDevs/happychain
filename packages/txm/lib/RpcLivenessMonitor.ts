@@ -1,8 +1,10 @@
 import { LogTag, Logger } from "@happy.tech/common"
+import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { Topics } from "./EventBus"
 import { eventBus } from "./EventBus"
 import type { TransactionManager } from "./TransactionManager"
 import { TxmMetrics } from "./telemetry/metrics"
+import { TraceMethod } from "./telemetry/traces"
 
 interface SecondCounters {
     successCount: number
@@ -47,6 +49,7 @@ export class RpcLivenessMonitor {
         })
     }
 
+    @TraceMethod("txm.rpc-liveness-monitor.track-success")
     trackSuccess() {
         const currentSecond = this.getCurrentSecond()
 
@@ -58,6 +61,7 @@ export class RpcLivenessMonitor {
         this.checkIfDown()
     }
 
+    @TraceMethod("txm.rpc-liveness-monitor.track-error")
     trackError() {
         const currentSecond = this.getCurrentSecond()
 
@@ -69,7 +73,10 @@ export class RpcLivenessMonitor {
         this.checkIfDown()
     }
 
+    @TraceMethod("txm.rpc-liveness-monitor.check-if-down")
     private checkIfDown() {
+        const span = trace.getSpan(context.active())!
+
         if (this.isAlive && this.ratioOfSuccess() < this.txmgr.livenessThreshold) {
             this.isAlive = false
             this.isDownSince = new Date()
@@ -78,13 +85,20 @@ export class RpcLivenessMonitor {
             eventBus.emit(Topics.RpcIsDown)
             Logger.instance.error(LogTag.TXM, "Detected that the RPC is not healthy")
 
+            span.addEvent("txm.rpc-liveness-monitor.check-if-down.is-down")
+            span.setStatus({ code: SpanStatusCode.ERROR })
+
             this.checkIfHealthyInterval = setInterval(() => {
                 this.checkIfHealthy()
             }, this.txmgr.livenessCheckInterval)
+        } else {
+            span.addEvent("txm.rpc-liveness-monitor.check-if-down.is-up")
         }
     }
 
+    @TraceMethod("txm.rpc-liveness-monitor.check-if-healthy")
     private async checkIfHealthy() {
+        const span = trace.getSpan(context.active())!
         if (this.isDownSince && this.isDownSince.getTime() + this.txmgr.livenessDownDelay > new Date().getTime()) {
             return
         }
@@ -92,13 +106,16 @@ export class RpcLivenessMonitor {
         const chainIdResult = await this.txmgr.viemClient.safeGetChainId()
 
         if (chainIdResult.isOk()) {
+            span.addEvent("txm.rpc-liveness-monitor.check-if-healthy.increment-success-count")
             this.consecutiveSuccessesWhileCheckingIfHealthy++
         } else {
+            span.addEvent("txm.rpc-liveness-monitor.check-if-healthy.reset-success-count")
             this.consecutiveSuccessesWhileCheckingIfHealthy = 0
         }
 
         if (this.consecutiveSuccessesWhileCheckingIfHealthy > this.txmgr.livenessSuccessCount) {
             Logger.instance.info(LogTag.TXM, "Detected that the RPC is healthy")
+            span.addEvent("txm.rpc-liveness-monitor.check-if-healthy.is-up")
             this.isAlive = true
             this.isDownSince = null
             this.consecutiveSuccessesWhileCheckingIfHealthy = 0

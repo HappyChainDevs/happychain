@@ -33,6 +33,7 @@ const envSchema = z.object({
     EVM_DRAND_GENESIS_TIMESTAMP_SECONDS: z.string().transform((s) => BigInt(s)),
     EVM_DRAND_PERIOD_SECONDS: z.string().transform((s) => BigInt(s)),
     EVM_DRAND_MARGIN: z.string().transform((s) => BigInt(s)),
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.string().trim().optional(),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)
