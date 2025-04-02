@@ -11,14 +11,11 @@ import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {CallStatus} from "boop/core/HappyEntryPoint.sol";
 import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
 import {CallInfo, CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
-import {IExtensibleBoopAccount} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
 import {
     BatchCallExecutor, BATCH_CALL_INFO_KEY, InvalidBatchCallInfo
 } from "boop/samples/executors/BatchCallExecutor.sol";
 
 import {DeployHappyAAContracts} from "../../../../deploy/DeployHappyAA.s.sol";
-
-import {console} from "forge-std/Script.sol";
 
 contract BatchCallExecutorTest is HappyTxTestUtils {
     using HappyTxLib for HappyTx;
@@ -88,13 +85,10 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
         CallInfo[] memory calls = new CallInfo[](1);
         calls[0] = createCallInfo(mockToken, 0, callData);
 
-        console.log("mockToken: ", mockToken);
-        console.log("mockAccount: ", mockAccount);
-        console.log("dest: ", dest);
-
         // Add the CallInfo array to the extraData
         happyTx.extraData = encodeExtensionData(calls);
 
+        vm.prank(mockAccount);
         ExecutionOutput memory output = BatchCallExecutor(batchCallExecutor).execute(happyTx);
 
         // Verify execution was successful
@@ -107,6 +101,42 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
         happyTx.extraData = abi.encodePacked(bytes3(0x123456), uint16(0), new bytes(0)); // Wrong key
 
+        vm.prank(smartAccount);
+        ExecutionOutput memory output = BatchCallExecutor(batchCallExecutor).execute(happyTx);
+
+        // Verify execution failed with the correct error
+        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
+        assertEq(output.revertData, abi.encodeWithSelector(InvalidBatchCallInfo.selector));
+    }
+
+    function testExecuteWithInvalidCallInfo() public {
+        // Create a valid happyTx with a single call to transfer ETH
+        HappyTx memory happyTx = getStubHappyTx(mockAccount, mockToken, mockAccount, new bytes(0));
+        bytes memory callData = getMintTokenCallData(dest, TOKEN_MINT_AMOUNT);
+
+        // Create a CallInfo array with a single call
+        CallInfo[] memory calls = new CallInfo[](1);
+        calls[0] = createCallInfo(mockToken, 0, callData);
+
+        // Add the CallInfo array to the extraData
+        bytes memory extraData = encodeExtensionData(calls);
+
+        // Corrupt the encoded call by reducing the total length of encoded array
+        // add(00) -> points to BATCH_CALL_INFO_KEY
+        // add(03) -> points to length of callInfoArray
+        // add(03) -> points to encodedCallData (length slot)
+        // add(32) -> points to encodedCallData (after length), callInfoArray len slot
+        // add(32) -> points to first callInfo -> dest
+        // add(20) -> points to first callInfo -> value
+        // add(32) -> points to first callInfo -> cd Length
+        // add(32) -> points to first callInfo -> cd
+        assembly {
+            mstore(add(extraData, 122), 0x54) // reqd is 0x44 (68)
+        }
+
+        happyTx.extraData = extraData;
+
+        vm.prank(mockAccount);
         ExecutionOutput memory output = BatchCallExecutor(batchCallExecutor).execute(happyTx);
 
         // Verify execution failed with the correct error
@@ -116,54 +146,37 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
 
     function testExecuteWithCallRevert() public {
         // Create a valid happyTx with a call that will revert
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        HappyTx memory happyTx = getStubHappyTx(mockAccount, dest, mockAccount, new bytes(0));
 
         // Create a CallInfo array with a call to the MockRevert contract
         CallInfo[] memory calls = new CallInfo[](1);
-        calls[0] = createCallInfo(mockRevert, 0, abi.encodeWithSelector(MockRevert.intentionalRevert.selector));
+        calls[0] = createCallInfo(mockRevert, 0, abi.encodeCall(MockRevert.intentionalRevert, ()));
 
         // Add the CallInfo array to the extraData
         happyTx.extraData = encodeExtensionData(calls);
 
-        // Mock the behavior of the account's executeCallFromExecutor function to revert
-        bytes memory revertData = abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector);
-        vm.mockCall(
-            smartAccount,
-            abi.encodeWithSelector(IExtensibleBoopAccount.executeCallFromExecutor.selector, calls[0]),
-            abi.encode(false, revertData) // Return failure with revert data
-        );
-
+        vm.prank(mockAccount);
         ExecutionOutput memory output = BatchCallExecutor(batchCallExecutor).execute(happyTx);
 
         // Verify execution reverted with the correct status
         assertEq(uint8(output.status), uint8(CallStatus.CALL_REVERTED));
-        assertEq(output.revertData, revertData);
+        assertEq(output.revertData, abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector));
     }
 
     function testExecuteWithMultipleCalls() public {
         // Create a valid happyTx with multiple calls
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        HappyTx memory happyTx = getStubHappyTx(mockAccount, dest, mockAccount, new bytes(0));
 
         // Create a CallInfo array with multiple calls
         CallInfo[] memory calls = new CallInfo[](2);
-        calls[0] = createCallInfo(dest, 0.5 ether, new bytes(0)); // ETH transfer
-        calls[1] = createCallInfo(mockToken, 0, abi.encodeWithSelector(MockERC20.mint.selector, dest, 100)); // Token mint
+        calls[0] = createCallInfo(dest, 0.01 ether, new bytes(0)); // ETH transfer
+        calls[1] = createCallInfo(mockToken, 0, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT)); // Token mint
 
         // Add the CallInfo array to the extraData
         happyTx.extraData = encodeExtensionData(calls);
 
-        // Mock the behavior of the account's executeCallFromExecutor function for both calls
-        vm.mockCall(
-            smartAccount,
-            abi.encodeWithSelector(IExtensibleBoopAccount.executeCallFromExecutor.selector, calls[0]),
-            abi.encode(true, "") // Return success
-        );
-        vm.mockCall(
-            smartAccount,
-            abi.encodeWithSelector(IExtensibleBoopAccount.executeCallFromExecutor.selector, calls[1]),
-            abi.encode(true, "") // Return success
-        );
-
+        vm.deal(mockAccount, 1 ether);
+        vm.prank(mockAccount);
         ExecutionOutput memory output = BatchCallExecutor(batchCallExecutor).execute(happyTx);
 
         // Verify execution was successful
@@ -187,31 +200,20 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
     function testExecuteBatchRevertPropagation() public {
         // Create a CallInfo array with a call that will revert
         CallInfo[] memory calls = new CallInfo[](2);
-        calls[0] = createCallInfo(dest, 0.5 ether, new bytes(0)); // This will succeed
+        calls[0] = createCallInfo(dest, 0.01 ether, new bytes(0)); // This will succeed
         calls[1] = createCallInfo(mockRevert, 0, abi.encodeWithSelector(MockRevert.intentionalRevert.selector)); // This will revert
-
-        // Mock the behavior of the account's executeCallFromExecutor function
-        vm.mockCall(
-            smartAccount,
-            abi.encodeWithSelector(IExtensibleBoopAccount.executeCallFromExecutor.selector, calls[0]),
-            abi.encode(true, "") // Return success for first call
-        );
-        bytes memory revertData = abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector);
-        vm.mockCall(
-            smartAccount,
-            abi.encodeWithSelector(IExtensibleBoopAccount.executeCallFromExecutor.selector, calls[1]),
-            abi.encode(false, revertData) // Return failure with revert data for second call
-        );
 
         // Create a happyTx to test execute (which calls _executeBatch internally)
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
         happyTx.extraData = encodeExtensionData(calls);
 
+        vm.deal(mockAccount, 1 ether);
+        vm.prank(mockAccount);
         ExecutionOutput memory output = BatchCallExecutor(batchCallExecutor).execute(happyTx);
 
         // Verify execution reverted with the correct status and data
         assertEq(uint8(output.status), uint8(CallStatus.CALL_REVERTED));
-        assertEq(output.revertData, revertData);
+        assertEq(output.revertData, abi.encodeWithSelector(MockRevert.CustomErrorMockRevert.selector));
     }
 
     // ====================================================================================================
@@ -233,7 +235,7 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
         for (uint256 i = 0; i < calls.length; i++) {
             totalSize += 84 + calls[i].callData.length; // 20 (dest) + 32 (value) + 32 (callData.length) + callData.length
         }
-        console.log("totalSize: ", totalSize);
+
         encodedArray = new bytes(totalSize);
         bytes32 outputPtr;
         assembly {
