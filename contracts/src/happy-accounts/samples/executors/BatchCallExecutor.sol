@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {CallStatus} from "boop/core/HappyEntryPoint.sol";
 import {HappyTx} from "boop/core/HappyTx.sol";
+import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
+import {CallStatus} from "boop/core/HappyEntryPoint.sol";
+import {CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
 import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
 import {ICustomBoopExecutor} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
 import {IExtensibleBoopAccount, CallInfo} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
 
 /**
  * @dev Key used in {HappyTx.extraData} for call information (array of {CallInfo}),
