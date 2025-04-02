@@ -3,12 +3,14 @@ import { recipeGuiExpandable } from "../expandable/recipeGuiExpandable"
 
 const recipeGuiCollapsibleContainer = cva({
     base: [
+        "group",
         "relative w-full border text-hds-system-gui-foreground-default font-hds-system-gui-display",
         "**:data-expandable-indicator:absolute",
         "**:data-expandable-indicator:block",
         "**:data-expandable-indicator:top-0",
         "**:data-expandable-indicator:end-3",
         "**:data-expandable-indicator:w-3.5",
+        "data-[state=open]:**:data-expandable-indicator:rotate-180",
     ],
     variants: {
         intent: {
@@ -27,10 +29,10 @@ const recipeGuiCollapsibleContainer = cva({
 export type GuiCollapsibleContainerVariantsProps = VariantProps<typeof recipeGuiCollapsibleContainer>
 
 const recipeGuiCollapsibleTrigger = cva({
-    base: ["relative", "cursor-pointer is-disabled:cursor-not-allowed", "w-full inline-flex gap-3 justify-between"],
+    base: ["relative", "cursor-pointer is-disabled:cursor-not-allowed", "w-full inline-flex justify-between"],
     variants: {
         scale: {
-            default: "py-2 px-3",
+            default: "py-2 gap-3  px-3",
         },
     },
     defaultVariants: {
@@ -41,6 +43,11 @@ const recipeGuiCollapsibleTrigger = cva({
 export type GuiCollapsibleTriggerVariantsProps = VariantProps<typeof recipeGuiCollapsibleTrigger>
 
 const recipeGuiCollapsibleContent = cva({
+    base: [
+        "motion-safe:group-has-[&[data-state=open]]:animate-[hds-slide-down_270ms_ease-in-out]",
+        "motion-safe:group-has-[&[data-state=closed]]:animate-[hds-slide-up_160ms_ease-in-out]",
+        "overflow-hidden",
+    ],
     variants: {
         scale: {
             default: "pb-3 px-3",
