@@ -6,6 +6,7 @@ import { atom, useAtom, useAtomValue } from "jotai"
 import { useMemo } from "react"
 import { useBalance } from "wagmi"
 import { userAtom } from "#src/state/user"
+import { PATHNAME_DAPPS_WITH_PERMISSIONS } from "#src/v2/screens/permissions/Permissions"
 
 export const userDetailsCollapsibleVisibility = atom(false)
 export const dialogConfirmLogOutVisibility = atom(false)
@@ -126,7 +127,7 @@ export const UserDetails = () => {
                         <h1 className="sr-only">Actions</h1>
                         <Button.Gui asChild>
                             <Link
-                                to="/"
+                                to={PATHNAME_DAPPS_WITH_PERMISSIONS}
                                 className={`
                 inline-flex gap-3 items-center justify-between
                 after:content-[' ']

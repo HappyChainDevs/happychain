@@ -1,10 +1,13 @@
 export * from "./alert/alert"
 export * from "./button/button"
 export * from "./collapsible/collapsible"
+export * from "./combobox/combobox"
 export * from "./dialog/dialog"
 export * from "./field/field"
 export * from "./input/input"
 export * from "./menu/menu"
 export * from "./table/table"
 export * from "./slider/slider"
+export * from "./switch/switch"
+
 export { useDataviewTable } from "./table/use-dataview-table"
