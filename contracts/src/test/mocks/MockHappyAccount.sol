@@ -27,11 +27,11 @@ contract MockHappyAccount is IHappyAccount, IExtensibleBoopAccount {
         return info.dest.call{value: info.value}(info.callData);
     }
 
-    function validate(HappyTx memory /*happyTx*/) external pure returns (bytes memory) {
+    function validate(HappyTx memory /*happyTx*/ ) external pure returns (bytes memory) {
         return "";
     }
 
-    function execute(HappyTx memory /*happyTx*/) external pure returns (ExecutionOutput memory output) {
+    function execute(HappyTx memory /*happyTx*/ ) external pure returns (ExecutionOutput memory output) {
         output.status = CallStatus.SUCCEEDED;
         return output;
     }
@@ -40,11 +40,15 @@ contract MockHappyAccount is IHappyAccount, IExtensibleBoopAccount {
         (payable(tx.origin).call{value: amount}(""));
     }
 
-    function isValidSignature(bytes32 /*hash*/, bytes memory /*signature*/) external pure returns (bytes4 magicValue) {
+    function isValidSignature(bytes32, /*hash*/ bytes memory /*signature*/ )
+        external
+        pure
+        returns (bytes4 magicValue)
+    {
         return 0x1626ba7e;
     }
 
-    function supportsInterface(bytes4 /*interfaceID*/) external pure returns (bool) {
+    function supportsInterface(bytes4 /*interfaceID*/ ) external pure returns (bool) {
         return true;
     }
 
