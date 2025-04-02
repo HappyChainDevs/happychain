@@ -37,6 +37,8 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
     address private smartAccount;
     address private batchCallExecutor;
     uint256 private privKey;
+    uint256 private sessionKey;
+    address private publicKey;
     address private owner;
     address private dest;
     address private mockToken;
