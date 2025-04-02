@@ -92,22 +92,29 @@ contract Staking {
     /// When withdrawing before the withdraw delay has elapsed.
     error EarlyWithdraw();
 
-    event StakeDeposited(address account, uint256 deposited);
+    event StakeDeposited(address account, address source, uint256 deposited);
     event StakeUnlocked(address account, uint256 unlocked);
-    event StakeWithdrawn(address account, uint256 withdrawn);
+    event StakeWithdrawn(address account, address destination, uint256 withdrawn);
     event WithdrawDelayIncreased(address account, uint64 unlockDelay);
     event WithdrawDelayDecreased(address account, uint64 unlockDelay);
 
     /**
-     * Called by an account to stake funds, which are passed as value.
+     * Returns the staked balance of an account.
      */
-    function deposit() external payable {
-        stakes[msg.sender].balance += uint128(msg.value);
+    function balanceOf(address account) external view returns(uint128) {
+        return stakes[account].balance;
+    }
+
+    /**
+     * Called to deposit funds into an account.
+     */
+    function deposit(address account) public payable {
+        stakes[account].balance += uint128(msg.value);
         if (stakes[msg.sender].maxDelay == 0) {
             stakes[msg.sender].minDelay = MIN_WITHDRAW_DELAY;
             stakes[msg.sender].maxDelay = MIN_WITHDRAW_DELAY;
         }
-        emit StakeDeposited(msg.sender, msg.value);
+        emit StakeDeposited(account, msg.sender, msg.value);
     }
 
     /**
@@ -198,7 +205,7 @@ contract Staking {
      * Withdraw previously unlocked funds. It is possible to perform multiple partial withdrawals
      * of unlocked funds.
      */
-    function withdraw(uint128 amount) external payable {
+    function withdraw(uint128 amount, address payable destination) external payable {
         Stake memory stake = stakes[msg.sender];
         if (amount > stake.unlockedBalance) revert InsufficientBalance();
 
@@ -225,8 +232,8 @@ contract Staking {
         stake.unlockedBalance -= amount;
         if (stake.unlockedBalance == 0) stake.withdrawalTimestamp = 0;
         stakes[msg.sender] = stake;
-        emit StakeWithdrawn(msg.sender, amount);
-        payable(msg.sender).transfer(amount);
+        emit StakeWithdrawn(msg.sender, destination, amount);
+        destination.transfer(amount);
     }
 
     /**
