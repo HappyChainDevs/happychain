@@ -1,19 +1,20 @@
-import { beforeAll, describe, expect, it } from "bun:test"
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
 import { app } from "#lib/server"
+import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { serializeBigInt } from "#lib/utils/bigint-lossy"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
+import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx, testAccount } from "./utils"
 
-const client = testClient(app)
-
-// use random nonce track so that other tests can't interfere
-const nonceTrack = BigInt(Math.floor(Math.random() * 1000000))
-
 describe("submitter_receipt", () => {
+    const client = testClient(app)
     let smartAccount: `0x${string}`
+    let nonceTrack = 0n
+    let nonceValue = 0n
+    let unsignedTx: HappyTx
+    let signedTx: HappyTx
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
@@ -22,15 +23,18 @@ describe("submitter_receipt", () => {
             .then((a) => a.address)
     })
 
-    it("fetches state of recently completed tx with 0 timeout", async () => {
-        const nonce = await getNonce(smartAccount, nonceTrack)
+    beforeEach(async () => {
+        nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
+        nonceValue = await getNonce(smartAccount, nonceTrack)
+        unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        signedTx = await signTx(unsignedTx)
+    })
 
-        const unsigned = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
-        const tx = await signTx(unsigned)
-        const happyTxHash = computeHappyTxHash(tx)
+    it("fetches state of recently completed tx with 0 timeout", async () => {
+        const happyTxHash = computeHappyTxHash(signedTx)
 
         // submit transaction and wait to complete
-        await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(tx) } })
+        await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
 
         const state = (await client.api.v1.submitter.receipt[":hash"]
             .$get({ param: { hash: happyTxHash }, query: { timeout: "0" } })
@@ -46,12 +50,10 @@ describe("submitter_receipt", () => {
     })
 
     it("fetches both simulated and resolved states depending on timeout", async () => {
-        const nonce = await getNonce(smartAccount, nonceTrack)
-        const tx = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)) // create future tx
-        const happyTxHash = computeHappyTxHash(tx)
+        const happyTxHash = computeHappyTxHash(signedTx)
 
         // submit transaction but don't wait to complete
-        client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(tx) } })
+        client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
 
         const [stateSimulated, stateResolved] = await Promise.all([
             client.api.v1.submitter.receipt[":hash"]

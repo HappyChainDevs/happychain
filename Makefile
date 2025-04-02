@@ -142,6 +142,24 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 # ==================================================================================================
 ##@ Demos & Apps
 
+submitter.dev:setup.ts shared.dev
+	@cd contracts && make setup;
+	make anvil > /dev/null 2>&1 &
+	cd contracts && make deploy-happy-aa;
+	cd contracts && make deploy-mocks;
+	cd packages/submitter && make dev;
+	cd packages/submitter-client && make dev;
+	cd apps/submitter && make migrate;
+	cd apps/submitter && make dev;
+.PHONY: submitter.dev
+
+
+submitter.build:
+	cd packages/submitter && make build;
+	cd packages/submitter-client && make build;
+	cd apps/submitter && make build;
+.PHONY: submitter.build
+
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
 	cd apps/iframe && make dev
 .PHONY: iframe.dev

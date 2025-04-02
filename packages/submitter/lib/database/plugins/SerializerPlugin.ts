@@ -12,16 +12,22 @@ import {
     type ValueNode,
 } from "kysely"
 
-export type TransformerRule =
-    | {
-          to(value: unknown): unknown
-      }
-    | {
-          from(value: unknown): unknown
-      }
+/**
+ * Conversion rules to serialize and deserialize values.
+ */
+export type TransformerRule = { to(value: unknown): unknown } | { from(value: unknown): unknown }
 
+/**
+ * Map of conversion rules. keyed by 'typeof' value, e.g. "string", "number", "bigint"
+ */
 export type TransformerRules = Record<string, TransformerRule>
 
+/**
+ * Plugin to serialize and deserialize values in queries and results.
+ * This is useful for converting values to and from a format that can be stored in the database.
+ * For example, converting a `bigint` to a `string` for storage in a TEXT column, then back again
+ * to a `bigint` when reading from the database.
+ */
 export class SerializePlugin implements KyselyPlugin {
     transformer: ParametersTransformer
 
@@ -40,9 +46,7 @@ export class SerializePlugin implements KyselyPlugin {
     private parseRows(rows: UnknownRow[]): UnknownRow[] {
         const result: UnknownRow[] = []
         for (const row of rows) {
-            if (!row) {
-                continue
-            }
+            if (!row) continue
             const parsedRow: UnknownRow = {}
             for (const [key, value] of Object.entries(row)) {
                 parsedRow[key] = this.deserialize(value)
@@ -84,9 +88,7 @@ class ParametersTransformer extends OperationNodeTransformer {
     protected override transformColumnUpdate(node: ColumnUpdateNode): ColumnUpdateNode {
         const { value: valueNode } = node
 
-        if (!this.isValueNode(valueNode)) {
-            return super.transformColumnUpdate(node)
-        }
+        if (!this.isValueNode(valueNode)) return super.transformColumnUpdate(node)
 
         const { value, ...item } = valueNode
 

@@ -1,19 +1,20 @@
-import { beforeAll, describe, expect, it } from "bun:test"
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
 import { app } from "#lib/server"
+import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { serializeBigInt } from "#lib/utils/bigint-lossy"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
+import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx, testAccount } from "./utils"
 
-const client = testClient(app)
-
-// use random nonce track so that other tests can't interfere
-const nonceTrack = BigInt(Math.floor(Math.random() * 1000000))
-
 describe("submitter_state", () => {
+    const client = testClient(app)
     let smartAccount: `0x${string}`
+    let nonceTrack = 0n
+    let nonceValue = 0n
+    let unsignedTx: HappyTx
+    let signedTx: HappyTx
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
@@ -22,15 +23,17 @@ describe("submitter_state", () => {
             .then((a) => a.address)
     })
 
+    beforeEach(async () => {
+        nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
+        nonceValue = await getNonce(smartAccount, nonceTrack)
+        unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        signedTx = await signTx(unsignedTx)
+    })
+
     it("fetches state of recent tx", async () => {
-        const nonce = await getNonce(smartAccount, nonceTrack)
-
-        const unsigned = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
-        const tx = await signTx(unsigned)
-
         // submit all transactions, but only wait for the first to complete
         const response = (await client.api.v1.submitter.execute
-            .$post({ json: { tx: serializeBigInt(tx) } })
+            .$post({ json: { tx: serializeBigInt(signedTx) } })
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             .then((a) => a.json())) as any
 
@@ -48,7 +51,7 @@ describe("submitter_state", () => {
         expect(state.state.simulation).toBeUndefined()
     })
 
-    it("fetches state of recent tx", async () => {
+    it("fetches state of an unknown tx", async () => {
         const state = (await client.api.v1.submitter.state[":hash"]
             .$get({ param: { hash: smartAccount } })
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -59,16 +62,15 @@ describe("submitter_state", () => {
         expect(state.state).toBeUndefined()
     })
 
-    it("fetches state of simulated (unconfirmed) tx", async () => {
-        const nonce = (await getNonce(smartAccount, nonceTrack)) + 10n // future nonce so that is submits, but doesn't finalize
-        const unsigned = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
-        const tx = await signTx(unsigned)
-        unsigned.validatorData = tx.validatorData
-        const happyTxHash = computeHappyTxHash(unsigned)
+    it("fetches state of simulated (unconfirmed) future tx", async () => {
+        const nonce = nonceValue + 5n // future nonce so that is submits, but doesn't finalize
+        const unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
+        const signedTx = await signTx(unsignedTx)
+        const happyTxHash = computeHappyTxHash(signedTx)
         // submit transaction, but don't wait for it to complete
-        client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx) } }).then((a) => a.json())
+        client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } }).then((a) => a.json())
 
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 100))
 
         const state = (await client.api.v1.submitter.state[":hash"]
             .$get({ param: { hash: happyTxHash } })

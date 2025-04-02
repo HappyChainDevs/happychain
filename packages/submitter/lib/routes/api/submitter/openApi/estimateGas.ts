@@ -2,7 +2,7 @@ import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
-import { deployment } from "#lib/deployments"
+import { DEFAULT_ENTRYPOINT } from "#lib/data/defaults"
 import env from "#lib/env"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { toBigInt } from "#lib/utils/zod/transforms/toBigInt"
@@ -11,7 +11,7 @@ import { simulationResultSchema } from "#lib/validation/schemas/simulationResult
 
 const inputSchema = z.object({
     /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
-    entryPoint: z.string().refine(isAddress).optional().default(deployment.HappyEntryPoint),
+    entryPoint: z.string().refine(isAddress).optional().default(DEFAULT_ENTRYPOINT),
 
     /**
      * HappyTx for which to estimate gas limits and fee parameters. The gas limits and fee

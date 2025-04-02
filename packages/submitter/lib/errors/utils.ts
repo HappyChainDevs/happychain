@@ -1,13 +1,14 @@
 import { BaseError, ContractFunctionRevertedError } from "viem"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
-import type { HappyBaseError } from "./index"
 import {
     ExecuteRevertedError,
     PaymentFailedError,
     PaymentRevertedError,
+    UnexpectedRevertedError,
     ValidationFailedError,
     ValidationRevertedError,
-} from "./index"
+} from "./contract-errors"
+import type { HappyBaseError } from "./happy-base-error"
 import { decodeRawError, getErrorNameFromSelector } from "./parsedCodes"
 
 function is0xString(str: unknown): str is `0x${string}` {
@@ -29,6 +30,7 @@ export function decodeViemError(_err: unknown) {
     if (!is0xString(err.raw)) return
     try {
         const error = decodeRawError(err.raw)
+        if (!error) return
         const knownArgs = parseRawArgs(error.args)
 
         return {
@@ -55,33 +57,25 @@ export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
     switch (err.errorName) {
         // === FAILED ERRORS ===================================================================
         case "ValidationFailed": {
-            return new ValidationFailedError(undefined, revertData)
+            return new ValidationFailedError(revertData)
         }
-        // case "ExecuteFailed": {
-        //     return new ExecuteFailedError(undefined, revertData)
-        // }
         case "PaymentFailed": {
-            return new PaymentFailedError(undefined, revertData)
+            return new PaymentFailedError(revertData)
         }
-
         case "InvalidNonce": {
-            return new ValidationFailedError(undefined, "InvalidNonce")
+            return new ValidationFailedError("InvalidNonce")
         }
 
         // === REVERT ERRORS ===================================================================
         case "ValidationReverted": {
-            // TODO: when executeGasLimit === 1 this is '0x' - is this an Out Of Gas error?
+            // TODO: is this a reliable way to check out of gas?
             return new ValidationRevertedError((revertData as string) === "0x" ? "Out Of Gas" : revertData)
         }
-        // case "ExecuteReverted": {
-        //     return new ExecuteRevertedError(revertData)
-        // }
         case "PaymentReverted": {
             return new PaymentRevertedError(revertData)
         }
-        // case "UnexpectedReverted": {
-        //     return new UnexpectedRevertedError(revertData)
-        // }
+        default:
+            return new UnexpectedRevertedError(revertData)
     }
 }
 

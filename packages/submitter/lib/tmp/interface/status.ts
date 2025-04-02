@@ -71,9 +71,15 @@ export enum EntryPointStatus {
     ExecuteReverted = "entrypointExecuteReverted",
 
     /**
-     * The account's `execute` call failed.
+     * The account's `execute` function returned indicate a failure. This is typically caused
+     * by an incorrect input from the user.
      */
     ExecuteFailed = "entrypointExecuteFailed",
+
+    /**
+     * The call made by the account's `execute` function reverted.
+     */
+    CallReverted = "entrypointCallReverted",
 
     /**
      * The paymaster's `payout` call reverted.
@@ -94,7 +100,7 @@ export enum EntryPointStatus {
 }
 
 // -------------------------------------------------------------------------------------------------
-
+/** cf. {@link EntryPointStatus} */
 export function isEntryPointStatus(status: string): status is EntryPointStatus {
     return status.startsWith("entrypoint")
 }
@@ -102,8 +108,8 @@ export function isEntryPointStatus(status: string): status is EntryPointStatus {
 // -------------------------------------------------------------------------------------------------
 
 /**
- * Whether the status indicates a revert, which should never occur for correct account, paymaster
- * and submitter implementations.
+ * Statuses indicating that either the entry point or one of the function it calls reverted, which
+ * should never occur for correct account, paymaster and submitter implementations.
  */
 export function isRevert(
     status: EntryPointStatus,

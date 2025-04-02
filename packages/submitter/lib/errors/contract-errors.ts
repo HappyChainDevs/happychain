@@ -1,93 +1,106 @@
-/**
- * HappyEntryPoint.sol
- *
- * Global Errors
- *
- * error GasPriceTooHigh();
- * error InvalidNonce();
- * error ValidationReverted(bytes revertData);
- * error ValidationFailed(bytes reason);
- * error PaymentReverted(bytes revertData);
- * error PaymentFailed(bytes result);
- *
- * reverts
- *
- * GasPriceTooHigh()
- * ValidationReverted()
- * ValidationFailed
- * InvalidNonce
- * PaymentReverted
- * PaymentFailed
- *
- * ------------------------------------------
- * Common.sol
- *
- * Global Errors
- *
- * error FutureNonceDuringSimulation();
- * error UnknownDuringSimulation();
- * error NotFromEntryPoint();
- * error InvalidSignature();
- *
- * -----------------------------------------------
- *
- * ScrappyAccount.sol
- *
- *  Instance
- *
- * error NotSelfOrOwner()
- *
- * Reverts
- *
- * error NotFromEntryPoint()
- * error NotSelfOrOwner()
- * error ExtensionAlreadyRegistered(extension, extensionType)
- * error ExtensionNotRegistered(extension, extensionType)
- *
- * Returned Selectors
- * InvalidExtensionValue
- * ExtensionNotRegistered
- * UnknownDuringSimulation
- * InvalidSignature
- */
+import { EntryPointStatus } from "#lib/tmp/interface/status"
+import { HappyBaseError } from "./happy-base-error"
 
-import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
-import { isFailure, isRevert } from "#lib/tmp/interface/status"
-import { HappyBaseError } from "."
-import { getErrorNameFromSelector } from "./parsedCodes"
-
-/** Submitter errors, unintended states, validation failures, etc */
-export class SubmitterError extends Error {}
-
-/** Errors occurred during simulation */
-export class SimulationError extends HappyBaseError {
-    errorName: string
-    status: string
-    validationStatus: string
-    entryPoint: string
-
-    constructor(private result: SimulationResult) {
-        const errorName =
-            getErrorNameFromSelector(result.revertData || "0x") ??
-            (isRevert(result.status) ? "Revert" : isFailure(result.status) ? "Failure" : "Unknown")
-
-        super(`[Simulation Error] ${result.validationStatus} => ${errorName}`)
-
-        this.errorName = errorName
-        this.status = result.status
-        this.validationStatus = result.validationStatus
-        this.entryPoint = result.entryPoint
+export class UnknownError extends HappyBaseError {
+    constructor(public message: string) {
+        super()
     }
 
-    getResponseData(): Record<string, unknown> {
+    getResponseData() {
+        return { status: "Unknown", message: this.message }
+    }
+}
+
+/**
+ * Failed errors occur when one of our checks have failed
+ */
+class BaseFailedError extends HappyBaseError {
+    constructor(
+        // check with `isFailure(status)`
+        public status:
+            | EntryPointStatus.ValidationFailed
+            | EntryPointStatus.ExecuteFailed
+            | EntryPointStatus.PaymentFailed,
+
+        /** The revert data *carried* by the returned custom error. */
+        public revertData?: string,
+    ) {
+        super()
+    }
+
+    getResponseData() {
         return {
             status: this.status,
-            validationStatus: this.result.validationStatus,
-            failureReason: this.result.failureReason,
-            revertData: this.result.revertData && getErrorNameFromSelector(this.result.revertData),
+            revertData: this.revertData,
         }
     }
 }
 
-/** Errors occurred during execution */
-export class ExecuteError extends Error {}
+/**
+ * Revert Errors occur when code execution causes a revert
+ */
+class BaseRevertedError extends HappyBaseError {
+    constructor(
+        // check with `isRevert(status)`
+        public status:
+            | EntryPointStatus.ValidationReverted
+            | EntryPointStatus.ExecuteReverted
+            | EntryPointStatus.PaymentReverted
+            | EntryPointStatus.UnexpectedReverted,
+
+        /** The revertData of the revert error. */
+        public revertData?: string,
+    ) {
+        super()
+    }
+
+    getResponseData() {
+        return { status: this.status, revertData: this.revertData }
+    }
+}
+
+// === FAILED ERRORS ===============================================================================
+
+export class ValidationFailedError extends BaseFailedError {
+    constructor(revertData?: string) {
+        super(EntryPointStatus.ValidationFailed, revertData)
+    }
+}
+
+export class ExecuteFailedError extends BaseFailedError {
+    constructor(revertData?: string) {
+        super(EntryPointStatus.ExecuteFailed, revertData)
+    }
+}
+
+export class PaymentFailedError extends BaseFailedError {
+    constructor(revertData?: string) {
+        super(EntryPointStatus.PaymentFailed, revertData)
+    }
+}
+
+// === REVERT ERRORS ===============================================================================
+
+export class ValidationRevertedError extends BaseRevertedError {
+    constructor(revertData?: string) {
+        super(EntryPointStatus.ValidationReverted, revertData)
+    }
+}
+
+export class ExecuteRevertedError extends BaseRevertedError {
+    constructor(revertData?: string) {
+        super(EntryPointStatus.ExecuteReverted, revertData)
+    }
+}
+
+export class PaymentRevertedError extends BaseRevertedError {
+    constructor(revertData?: string) {
+        super(EntryPointStatus.PaymentReverted, revertData)
+    }
+}
+
+export class UnexpectedRevertedError extends BaseRevertedError {
+    constructor(revertData?: string) {
+        super(EntryPointStatus.UnexpectedReverted, revertData)
+    }
+}

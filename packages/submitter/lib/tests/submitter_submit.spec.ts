@@ -1,18 +1,19 @@
-import { beforeAll, describe, expect, it } from "bun:test"
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
 import env from "#lib/env"
 import { app } from "#lib/server"
+import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
-import { serializeBigInt } from "#lib/utils/bigint-lossy"
+import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx, testAccount, testPublicClient } from "./utils"
 
-const client = testClient(app)
-
-// use random nonce track so that other tests can't interfere
-const nonceTrack = BigInt(Math.floor(Math.random() * 1000000))
-
 describe("submitter_submit", () => {
+    const client = testClient(app)
     let smartAccount: `0x${string}`
+    let nonceTrack = 0n
+    let nonceValue = 0n
+    let unsignedTx: HappyTx
+    let signedTx: HappyTx
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
@@ -21,13 +22,15 @@ describe("submitter_submit", () => {
             .then((a) => a.address)
     })
 
-    it("submits mints token tx.", async () => {
-        const nonceTrackAlt = nonceTrack + 1n
-        const nonce = await getNonce(smartAccount, nonceTrackAlt)
-        const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrackAlt)
+    beforeEach(async () => {
+        nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
+        nonceValue = await getNonce(smartAccount, nonceTrack)
+        unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
+        signedTx = await signTx(unsignedTx)
+    })
 
-        const prepared = await signTx(dummyHappyTx)
-        const result = await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(prepared) } })
+    it("submits mints token tx.", async () => {
+        const result = await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         const response = (await result.json()) as any
         expect(result.status).toBe(200)
@@ -35,15 +38,14 @@ describe("submitter_submit", () => {
         expect((response as { hash: string }).hash).toBeString()
     })
 
-    it("submits 50 mints token tx quickly.", async () => {
-        const startingNonce = await getNonce(smartAccount, nonceTrack)
+    it("submits 50 mints token tx quickly and successfully.", async () => {
         const count = 50
         // test only works if submitter is configured to allow more than 50
         expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
         expect(env.LIMITS_EXECUTE_MAX_CAPACITY).toBeGreaterThanOrEqual(count)
 
         const transactions = await Promise.all(
-            Array.from({ length: count }, (_, idx) => BigInt(idx) + startingNonce).map(async (nonce) => {
+            Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
                 const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
                 return await signTx(dummyHappyTx)
             }),
@@ -67,24 +69,23 @@ describe("submitter_submit", () => {
     })
 
     // Skipped: very flakey due to timing issues
-    it.skip("replaces tx with the most recent one", async () => {
-        const startingNonce = await getNonce(smartAccount, nonceTrack)
+    it("replaces tx with the most recent one", async () => {
         const count = 50
         // test only works if submitter is configured to allow more than 50
         expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
         expect(env.LIMITS_EXECUTE_MAX_CAPACITY).toBeGreaterThanOrEqual(count)
 
-        const tx0 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 0n, nonceTrack))
-        const tx1 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 1n, nonceTrack))
-        const tx2 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 2n, nonceTrack))
-        const tx3 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 3n, nonceTrack))
-        const tx4 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 4n, nonceTrack))
-        const tx5 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 5n, nonceTrack))
-        const tx6 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 6n, nonceTrack))
-        const tx7 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 7n, nonceTrack))
-        const tx8 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 8n, nonceTrack))
-        const tx9 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 9n, nonceTrack))
-        const tx9_2 = await signTx(await createMockTokenAMintHappyTx(smartAccount, startingNonce + 9n, nonceTrack)) // 9 again!
+        const tx0 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 0n, nonceTrack))
+        const tx1 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack))
+        const tx2 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 2n, nonceTrack))
+        const tx3 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 3n, nonceTrack))
+        const tx4 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 4n, nonceTrack))
+        const tx5 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 5n, nonceTrack))
+        const tx6 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 6n, nonceTrack))
+        const tx7 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 7n, nonceTrack))
+        const tx8 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 8n, nonceTrack))
+        const tx9 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack))
+        const tx9_2 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack)) // 9 again!
 
         const tx0_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx0) } })
         const tx1_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx1) } })
@@ -125,7 +126,7 @@ describe("submitter_submit", () => {
         ])
 
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        const rejection = (await tx9_response.json()) as any
+        const tx9_rejection = (await tx9_response.json()) as any
 
         expect(tx0_response.status).toBe(200)
         expect(tx1_response.status).toBe(200)
@@ -136,10 +137,9 @@ describe("submitter_submit", () => {
         expect(tx6_response.status).toBe(200)
         expect(tx7_response.status).toBe(200)
         expect(tx8_response.status).toBe(200)
-        expect(tx9_response.status).toBe(500)
 
-        expect(tx9_2_response.status).toBe(200) // replaced!
-
-        expect(rejection.error).toBe("transaction rejected")
+        expect(tx9_response.status).toBe(500) // replaced!
+        expect(tx9_2_response.status).toBe(200)
+        expect(tx9_rejection.error).toBe("transaction rejected")
     })
 })

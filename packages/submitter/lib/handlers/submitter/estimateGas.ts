@@ -1,37 +1,31 @@
-import { submitterClient } from "#lib/clients"
-import { happySimulationService } from "#lib/services"
+import { DEFAULT_ENTRYPOINT } from "#lib/data/defaults"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
-import { SubmitterErrorStatus, isEntryPointStatus, isSubmitterError } from "#lib/tmp/interface/status"
+import { SubmitterErrorStatus } from "#lib/tmp/interface/status"
 import type { EstimateGasInput, EstimateGasOutput } from "#lib/tmp/interface/submitter_estimateGas"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
 import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
+import { simulateSubmit } from "./simulate"
 
-export async function estimateGas(data: EstimateGasInput & { entryPoint: `0x${string}` }): Promise<EstimateGasOutput> {
+export async function estimateGas(data: EstimateGasInput): Promise<EstimateGasOutput> {
+    const entryPoint = data.entryPoint ?? DEFAULT_ENTRYPOINT
+
     const account = findExecutionAccount(data.tx)
 
-    const estimates = await submitterClient.estimateSubmitGas({
+    const simulation = await simulateSubmit({
         account,
-        address: data.entryPoint,
-        args: [encodeHappyTx(data.tx)],
+        address: entryPoint,
+        args: [encodeHappyTx(data.tx as HappyTx)],
     })
 
-    const happyTxHash = computeHappyTxHash(data.tx as HappyTx)
-    const simulationResult = await happySimulationService.findResultByHappyTxHash(happyTxHash)
-
-    if (simulationResult && isEntryPointStatus(simulationResult.status)) {
+    if (simulation.isOk()) {
         return {
-            status: simulationResult.status,
-            simulationResult: isSubmitterError(simulationResult.status) ? simulationResult : undefined,
-            maxFeePerGas: estimates.maxFeePerGas,
-            submitterFee: estimates.submitterFee,
-            executeGasLimit: estimates.executeGasLimit,
-            gasLimit: estimates.gasLimit,
+            status: simulation.value.simulation.status,
+            simulationResult: simulation.value.simulation,
+            maxFeePerGas: 1200000000n,
+            submitterFee: 100n,
+            executeGasLimit: BigInt(simulation.value.result.executeGas),
+            gasLimit: BigInt(simulation.value.result.gas),
         } satisfies EstimateGasOutput
-    }
-
-    if (simulationResult && isSubmitterError(simulationResult.status)) {
-        return { status: simulationResult.status } satisfies EstimateGasOutput
     }
 
     return { status: SubmitterErrorStatus.UnexpectedError } satisfies EstimateGasOutput

@@ -1,8 +1,5 @@
-// import { computeHappyTxHash } from "@happy.tech/submitter/client"
+import { computeHappyTxHash as computeBoopHash } from "@happy.tech/submitter/client"
 
 // == Utilities ====================================================================================
 
-export function getHash(_tx: unknown): `0x${string}` {
-    return "0x"
-    //     return computeHappyTxHash(tx)
-}
+export { computeBoopHash }

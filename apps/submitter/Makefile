@@ -4,6 +4,10 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
+dev: 
+	@NODE_ENV=development bun --bun --hot src/index.ts
+.PHONY: dev
+
 prod: ## Start the local dev server for development
 	@NODE_ENV=production bun --bun run build/index.es.js
 .PHONY: prod
