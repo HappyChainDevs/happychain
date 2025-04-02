@@ -7,14 +7,14 @@ import { type HTMLAttributes, type PropsWithChildren, forwardRef } from "react"
 import { userAtom } from "#src/state/user"
 import { PATHNAME_ROUTE_GAMES } from "#src/v2/screens/games/Games"
 import { PATHNAME_ROUTE_HISTORY } from "#src/v2/screens/history/History"
-import { BottomNavbarSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
-import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
-import { BottomNavbarTokenHistory, PATHNAME_ROUTE_TOKEN_HISTORY } from "#src/v2/screens/tokens/history/TokenHistory"
 import { BottomNavbarPermissions, PATHNAME_DAPPS_WITH_PERMISSIONS } from "#src/v2/screens/permissions/Permissions"
 import {
     BottomNavbarAppPermissions,
     PATHNAME_DAPP_PERMISSIONS,
 } from "#src/v2/screens/permissions/[$dappId]/AppPermissions"
+import { BottomNavbarSendToken, PATHNAME_ROUTE_SEND_TOKEN } from "#src/v2/screens/send/Send"
+import { PATHNAME_ROUTE_TOKENS } from "#src/v2/screens/tokens/Tokens"
+import { BottomNavbarTokenHistory, PATHNAME_ROUTE_TOKEN_HISTORY } from "#src/v2/screens/tokens/history/TokenHistory"
 import { RootDialogsIsland } from "./dialogs"
 import { UserDetails } from "./user"
 
@@ -216,7 +216,15 @@ const RootBottomNavbarIsland = () => {
                             {({ isActive }) => {
                                 return (
                                     <>
-                                        <span className={(isActive || (item.pathname === '/embed/' && pathname === '/embed/')) ? "opacity-100" : "opacity-50"}>{item.label}</span>
+                                        <span
+                                            className={
+                                                isActive || (item.pathname === "/embed/" && pathname === "/embed/")
+                                                    ? "opacity-100"
+                                                    : "opacity-50"
+                                            }
+                                        >
+                                            {item.label}
+                                        </span>
                                     </>
                                 )
                             }}
