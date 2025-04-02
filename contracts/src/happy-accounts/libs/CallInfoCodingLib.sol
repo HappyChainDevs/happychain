@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
-pragma solidity ^0.8.20;
 
+pragma solidity ^0.8.20;
 /**
  * Information (destination, value and calldata) for a call to be made by the account on behalf
  * of an execution extension.
@@ -37,7 +37,7 @@ library CallInfoCodingLib {
 
         uint256 length;
         assembly ("memory-safe") {
-            length := mload(add(data, start))
+            length := mload(add(add(data, 32), start))
         }
 
         success = true;
@@ -94,7 +94,7 @@ library CallInfoCodingLib {
 
             let dataLength := mload(data)
             let requiredLength := add(add(start, 84), callDataLength)
-            success := gt(dataLength, requiredLength)
+            success := or(gt(dataLength, requiredLength), eq(dataLength, requiredLength))
 
             if success {
                 // copy length + calldata to free memory
