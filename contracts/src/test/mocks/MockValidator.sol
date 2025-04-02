@@ -39,7 +39,7 @@ contract MockValidator is ICustomBoopValidator {
      * The happyTx parameter is intentionally unused in this mock implementation
      * @return result The validation result
      */
-    function validate(HappyTx memory /* happyTx */) external view returns (bytes memory) {
+    function validate(HappyTx memory /* happyTx */ ) external view returns (bytes memory) {
         if (validationMode == 0) {
             // Approve mode: return empty bytes
             return "";
