@@ -45,6 +45,7 @@ export enum GasFieldName {
     VerificationGasLimit = "VerificationGasLimit",
     CallGasLimit = "CallGasLimit",
     EstimatedGas = "EstimatedGas",
+    GasUsed = "GasUsed",
 }
 
 /**
@@ -176,7 +177,7 @@ export const EthSendTransaction = ({
         // Calculate gasFee (min of maxFeePerGas and maxPriorityFeePerGas + baseFee)
         const gasFee = maxFeePerGas < maxPriorityFeePerGas + baseFee ? maxFeePerGas : maxPriorityFeePerGas + baseFee
         // Calculate gasUsed (sum of all gas fields)
-        const gasUsed = callGasLimit + verificationGasLimit + callGasLimit
+        const gasUsed = preVerificationGas + verificationGasLimit + callGasLimit
         const estimatedGasCost = gasFee * gasUsed
 
         return {
@@ -188,6 +189,7 @@ export const EthSendTransaction = ({
             maxFeePerGas: String(maxFeePerGas),
             maxPriorityFeePerGas: String(maxPriorityFeePerGas),
             estimatedGas: String(estimatedGasCost),
+            gasUsed: String(gasUsed),
         }
     }, [preparedUserOp, tx, blockData])
 
@@ -257,8 +259,8 @@ export const EthSendTransaction = ({
                             <FormattedDetailsLine>{formattedUserOpInfo?.callGasLimit}</FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
-                            <SubsectionTitle>{GasFieldName.EstimatedGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedUserOpInfo?.estimatedGas}</FormattedDetailsLine>
+                            <SubsectionTitle>{GasFieldName.GasUsed}</SubsectionTitle>
+                            <FormattedDetailsLine>{formattedUserOpInfo?.gasUsed}</FormattedDetailsLine>
                         </SubsectionContent>
                     </SubsectionBlock>
                 </SectionBlock>
