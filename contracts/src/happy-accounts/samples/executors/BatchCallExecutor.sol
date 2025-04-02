@@ -8,6 +8,7 @@ import {CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
 import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
 import {ICustomBoopExecutor} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
 import {IExtensibleBoopAccount, CallInfo} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
+import {console} from "forge-std/Script.sol";
 
 /**
  * @dev Key used in {HappyTx.extraData} for call information (array of {CallInfo}),
@@ -53,6 +54,11 @@ contract BatchCallExecutor is ICustomBoopExecutor {
         bool success;
         CallInfo[] memory calls;
         if (found) (success, calls) = _calls.decodeCallInfoArray();
+        console.log("Calls decoded: ", success);
+        console.log("Calls: ");
+        console.log(calls[0].dest);
+        console.log(calls[0].value);
+        console.logBytes(calls[0].callData);
 
         if (!found || !success) {
             output.status = CallStatus.EXECUTE_FAILED;
