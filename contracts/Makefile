@@ -103,6 +103,8 @@ test-happy-aa:
 	@make test-happyEntryPoint
 	@make test-scrappyAccount
 	@make test-scrappyPaymaster
+	@make test-batchCallExecutor
+	@make test-sessionKeyValidator
 	@make test-scrappyAccountFactory
 	@make test-scrappyAccount-upgradeability
 	@make test-predictDeploymentAddress
@@ -127,6 +129,14 @@ test-scrappyAccount:
 test-scrappyPaymaster:
 	forge test --match-contract ScrappyPaymasterTest -vvv
 .PHONY: test-scrappyPaymaster
+
+test-batchCallExecutor:
+	forge test --match-contract BatchCallExecutorTest -vvv
+.PHONY: test-batchCallExecutor
+
+test-sessionKeyValidator:
+	forge test --match-contract ScrappySessionKeyValidatorTest -vvv
+.PHONY: test-sessionKeyValidator
 
 test-scrappyAccountFactory:
 	forge test --match-contract ScrappyAccountFactoryTest -vvv
