@@ -244,7 +244,7 @@ export type TransactionManagerConfig = {
     traces?: {
         /**
          * Whether to enable traces collection.
-         * Defaults to true.
+         * Defaults to false.
          */
         active?: boolean
 
@@ -306,7 +306,7 @@ export class TransactionManager {
             metricsActive: _config.metrics?.active ?? true,
             prometheusPort: _config.metrics?.port ?? 9090,
             userMetricReader: _config.metrics?.metricReader,
-            tracesActive: _config.traces?.active ?? true,
+            tracesActive: _config.traces?.active ?? false,
             userTraceExporter: _config.traces?.spanExporter,
         })
 
