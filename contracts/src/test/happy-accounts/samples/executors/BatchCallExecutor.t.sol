@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {HappyTxTestUtils} from "../../Utils.sol";
 import {MockERC20} from "../../../../mocks/MockERC20.sol";
 import {MockRevert} from "../../../../mocks/MockRevert.sol";
+import {MockHappyAccount} from "../../../../test/mocks/MockHappyAccount.sol";
 
 import {HappyTx} from "boop/core/HappyTx.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
@@ -16,6 +17,8 @@ import {
 } from "boop/samples/executors/BatchCallExecutor.sol";
 
 import {DeployHappyAAContracts} from "../../../../deploy/DeployHappyAA.s.sol";
+
+import {console} from "forge-std/Script.sol";
 
 contract BatchCallExecutorTest is HappyTxTestUtils {
     using HappyTxLib for HappyTx;
@@ -41,6 +44,7 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
     address private dest;
     address private mockToken;
     address private mockRevert;
+    address private mockAccount;
 
     // ====================================================================================================
     // SETUP
@@ -54,8 +58,8 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
         vm.prank(owner);
         deployer.deployForTests();
 
+        happyEntryPoint = deployer.happyEntryPoint();
         smartAccount = deployer.scrappyAccountFactory().createAccount(SALT, owner);
-
         dest = deployer.scrappyAccountFactory().createAccount(SALT2, owner);
 
         // Fund the smart account
@@ -67,28 +71,29 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
 
         // Deploy the BatchCallExecutor
         batchCallExecutor = address(new BatchCallExecutor());
+
+        // Deploy the MockHappyAccount
+        mockAccount = address(new MockHappyAccount());
     }
 
     // ====================================================================================================
     // EXECUTE TESTS
 
-    function testExecuteSuccess() public {
+    function testExecuteSingleCall() public {
         // Create a valid happyTx with a single call to transfer ETH
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        HappyTx memory happyTx = getStubHappyTx(mockAccount, mockToken, mockAccount, new bytes(0));
+        bytes memory callData = getMintTokenCallData(dest, TOKEN_MINT_AMOUNT);
 
         // Create a CallInfo array with a single call
         CallInfo[] memory calls = new CallInfo[](1);
-        calls[0] = createCallInfo(dest, 1 ether, new bytes(0)); // Simple ETH transfer
+        calls[0] = createCallInfo(mockToken, 7 wei, callData);
+
+        console.log("mockToken: ", mockToken);
+        console.log("mockAccount: ", mockAccount);
+        console.log("dest: ", dest);
 
         // Add the CallInfo array to the extraData
         happyTx.extraData = encodeExtensionData(calls);
-
-        // Mock the behavior of the account's executeCallFromExecutor function
-        vm.mockCall(
-            smartAccount,
-            abi.encodeWithSelector(IExtensibleBoopAccount.executeCallFromExecutor.selector, calls[0]),
-            abi.encode(true, "") // Return success
-        );
 
         ExecutionOutput memory output = BatchCallExecutor(batchCallExecutor).execute(happyTx);
 
@@ -228,7 +233,7 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
         for (uint256 i = 0; i < calls.length; i++) {
             totalSize += 84 + calls[i].callData.length; // 20 (dest) + 32 (value) + 32 (callData.length) + callData.length
         }
-
+        console.log("totalSize: ", totalSize);
         encodedArray = new bytes(totalSize);
         bytes32 outputPtr;
         assembly {
@@ -245,7 +250,7 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
 
             // Encode dest (20 bytes)
             assembly {
-                destPtr := add(callInfo, 32)
+                destPtr := callInfo
                 mcopy(outputPtr, add(destPtr, 12), 20) // Address is left padded by 12 bytes
                 outputPtr := add(outputPtr, 20)
             }
@@ -278,6 +283,31 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
     /// @dev Encodes the CallInfo array for use in the extraData of a HappyTx
     function encodeExtensionData(CallInfo[] memory calls) internal pure returns (bytes memory) {
         bytes memory encodedCalls = encodeCallInfoArray(calls);
+        console.log("encodedCalls: ");
+        console.logBytes(encodedCalls);
         return abi.encodePacked(BATCH_CALL_INFO_KEY, bytes3(uint24(encodedCalls.length)), encodedCalls);
     }
 }
+
+// // 0x40c10f19
+
+// // dest:  0x8eE3B48D8c3dfce88355E3D286955e073F3bB6fc
+// orig callData: 
+// 0x
+// 40c10f19000000000000000000000000 // 16 bytes: selector (shouldn't this be 32 bytes tho?)
+// 8ee3b48d8c3dfce88355e3d286955e073f3bb6fc // 20 bytes: dest
+// 00000000000000000000000000000000000000000000000000000000000003e8 // 32 bytes 3x8 -> 1000
+
+// encoded extraData: 
+// 0x
+// 000100 // 3 bytes BATCH_EXEC_KEY
+// 0000b8 // 3 bytes length of encodedData: 184 (accurate)
+
+// 0x
+// 0000000000000000000000000000000000000000000000000000000000000001 // 1 CallInfo
+// 2e234dae75c793f67a35089c9d99245e1c58470b // mockToken (dest)
+// 0000000000000000000000000000000000000000000000000000000000000000 // value (shouldn't be 0)
+// 0000000000000000000000000000000000000000000000000000000000000044 // callData length: 68
+// 40c10f19000000000000000000000000 // selector
+// 8ee3b48d8c3dfce88355e3d286955e073f3bb6fc // input mintTo
+// 00000000000000000000000000000000000000000000000000000000000003e8 input amount

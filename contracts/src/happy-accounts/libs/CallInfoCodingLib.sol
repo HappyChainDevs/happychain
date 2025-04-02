@@ -83,7 +83,7 @@ library CallInfoCodingLib {
             let offset := add(add(data, 32), start) // skip data.length stored in 1st slot
 
             mstore(infoDest, 0) // clear out destination memory
-            mcopy(add(infoDest, 20), offset, 20) // left pad 12 bytes
+            mcopy(add(infoDest, 12), offset, 20) // left pad 12 bytes
             offset := add(offset, 20)
 
             mcopy(infoValue, offset, 32)
