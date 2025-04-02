@@ -1,10 +1,12 @@
 import { type UUID, bigIntReplacer, bigIntReviver, createUUID } from "@happy.tech/common"
+import { context, trace } from "@opentelemetry/api"
 import type { Insertable, Selectable } from "kysely"
 import type { Address, ContractFunctionArgs, Hash } from "viem"
 import type { LatestBlock } from "./BlockMonitor"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionTable } from "./db/types.js"
 import { TxmMetrics } from "./telemetry/metrics"
+import { TraceMethod } from "./telemetry/traces"
 
 export enum TransactionStatus {
     /**
@@ -202,7 +204,15 @@ export class Transaction {
         return this.deadline ? block.timestamp + blockTime > BigInt(this.deadline) : false
     }
 
+    @TraceMethod("txm.transaction.change-status")
     changeStatus(status: TransactionStatus): void {
+        const span = trace.getSpan(context.active())!
+
+        span.addEvent("transaction.change-status", {
+            transactionIntentId: this.intentId,
+            status,
+        })
+
         this.status = status
         this.markUpdated()
 
@@ -274,5 +284,9 @@ export class Transaction {
             notPersisted: false,
             pendingFlush: false,
         })
+    }
+
+    toJson(): string {
+        return JSON.stringify(this, bigIntReplacer)
     }
 }

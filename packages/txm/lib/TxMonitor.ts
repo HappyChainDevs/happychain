@@ -1,4 +1,5 @@
-import { LogTag, Logger, bigIntMax, promiseWithResolvers, unknownToError } from "@happy.tech/common"
+import { LogTag, Logger, bigIntMax, bigIntReplacer, promiseWithResolvers, unknownToError } from "@happy.tech/common"
+import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import { type GetTransactionReceiptErrorType, type TransactionReceipt, TransactionReceiptNotFoundError } from "viem"
 import type { LatestBlock } from "./BlockMonitor.js"
@@ -7,6 +8,7 @@ import type { RevertedTransactionReceipt } from "./RetryPolicyManager"
 import { type Attempt, AttemptType, type Transaction, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { TxmMetrics } from "./telemetry/metrics"
+import { TraceMethod } from "./telemetry/traces"
 
 type AttemptWithReceipt = { attempt: Attempt; receipt: TransactionReceipt }
 
@@ -39,14 +41,24 @@ export class TxMonitor {
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
+    @TraceMethod("txm.tx-monitor.on-new-block")
     private async onNewBlock(block: LatestBlock) {
+        const span = trace.getSpan(context.active())!
+
+        span.addEvent("txm.tx-monitor.on-new-block.started", {
+            blockNumber: Number(block.number),
+        })
+
         if (this.locked) {
+            span.addEvent("txm.tx-monitor.on-new-block.locked")
             const pending = promiseWithResolvers<void>()
             this.pendingBlockPromises.push(pending)
             try {
                 await pending.promise
+                span.addEvent("txm.tx-monitor.on-new-block.lock-resolved")
             } catch {
                 // A more recent block came while we were waiting, abort.
+                span.addEvent("txm.tx-monitor.on-new-block.lock-aborted")
                 return
             }
         }
@@ -55,6 +67,8 @@ export class TxMonitor {
         try {
             await this.handleNewBlock(block)
         } catch (error) {
+            span.recordException(unknownToError(error))
+            span.setStatus({ code: SpanStatusCode.ERROR })
             Logger.instance.error(LogTag.TXM, "Error in handleNewBlock: ", error)
         }
         this.locked = false
@@ -63,8 +77,17 @@ export class TxMonitor {
         this.pendingBlockPromises.forEach((p) => p.reject())
     }
 
+    @TraceMethod("txm.tx-monitor.handle-new-block")
     private async handleNewBlock(block: LatestBlock) {
+        const span = trace.getSpan(context.active())!
+
+        span.addEvent("txm.tx-monitor.handle-new-block.started", {
+            blockNumber: Number(block.number),
+        })
+
         if (!this.transactionManager.rpcLivenessMonitor.isAlive) {
+            span.addEvent("txm.tx-monitor.handle-new-block.rpc-not-alive")
+            span.setStatus({ code: SpanStatusCode.ERROR })
             Logger.instance.warn(LogTag.TXM, "RPC is not alive, skipping attempt to monitor transactions")
             return
         }
@@ -73,8 +96,19 @@ export class TxMonitor {
             block.number,
         )
 
+        for (const transaction of transactions) {
+            span.addEvent("txm.tx-monitor.handle-new-block.monitoring-transaction", {
+                transactionIntentId: transaction.intentId,
+            })
+        }
+
         const promises = transactions.map(async (transaction) => {
             const inAirAttempts = transaction.getInAirAttempts()
+
+            span.addEvent("txm.tx-monitor.handle-new-block.monitoring-transaction.in-air-attempts", {
+                transactionIntentId: transaction.intentId,
+                inAirAttempts: JSON.stringify(inAirAttempts, bigIntReplacer),
+            })
 
             // This could happen if, on the first try, the attempt to submit the transaction fails before flush
             if (inAirAttempts.length === 0) {
@@ -118,22 +152,30 @@ export class TxMonitor {
             const attemptOrResults = await Promise.race([receiptPromise, Promise.all(promises)])
 
             if (Array.isArray(attemptOrResults)) {
+                span.addEvent("txm.tx-monitor.handle-new-block.monitoring-transaction.array-of-results", {
+                    transactionIntentId: transaction.intentId,
+                    attemptOrResults: JSON.stringify(attemptOrResults, bigIntReplacer),
+                })
+
                 /*
                     If there are any errors, then we should return because there is a risk 
                     that the transaction was executed and we don’t know
                 */
                 if (attemptOrResults.some((v) => v.isErr())) {
-                    Logger.instance.error(
-                        LogTag.TXM,
-                        `Failed to get transaction receipt for transaction ${transaction.intentId}`,
-                    )
+                    const description = `Failed to get transaction receipt for transaction ${transaction.intentId}`
+                    span.recordException(new Error(description))
+                    span.setStatus({ code: SpanStatusCode.ERROR })
+                    Logger.instance.error(LogTag.TXM, description)
                     return
                 }
 
                 const nonce = transaction.lastAttempt?.nonce
 
                 if (nonce === undefined) {
-                    console.error(`Transaction ${transaction.intentId} inconsistent state: no nonce found`)
+                    const description = `Transaction ${transaction.intentId} inconsistent state: no nonce found`
+                    span.recordException(new Error(description))
+                    span.setStatus({ code: SpanStatusCode.ERROR })
+                    Logger.instance.error(LogTag.TXM, description)
                     return
                 }
 
@@ -148,6 +190,11 @@ export class TxMonitor {
             }
 
             const { attempt, receipt } = attemptOrResults
+
+            span.addEvent("txm.tx-monitor.handle-new-block.monitoring-transaction.receipt-received", {
+                transactionIntentId: transaction.intentId,
+                receipt: JSON.stringify(receipt, bigIntReplacer),
+            })
 
             TxmMetrics.getInstance().transactionInclusionBlockHistogram.record(
                 Number(block.number - transaction.collectionBlock!),
@@ -190,6 +237,7 @@ export class TxMonitor {
         }
     }
 
+    @TraceMethod("txm.tx-monitor.calc-replacement-fee")
     private calcReplacementFee(
         maxFeePerGas: bigint,
         maxPriorityFeePerGas: bigint,
@@ -209,6 +257,7 @@ export class TxMonitor {
         }
     }
 
+    @TraceMethod("txm.tx-monitor.should-emit-new-attempt")
     private shouldEmitNewAttempt(attempt: Attempt): boolean {
         const { expectedNextBaseFeePerGas, targetPriorityFee } = this.transactionManager.gasPriceOracle
 
@@ -218,14 +267,17 @@ export class TxMonitor {
         )
     }
 
+    @TraceMethod("txm.tx-monitor.handle-expired-transaction")
     private async handleExpiredTransaction(transaction: Transaction): Promise<void> {
+        const span = trace.getSpan(context.active())!
+
         const attempt = transaction.lastAttempt
 
         if (!attempt) {
-            Logger.instance.error(
-                LogTag.TXM,
-                `Transaction ${transaction.intentId} inconsistent state: no attempt found in handleExpiredTransaction`,
-            )
+            const description = `Transaction ${transaction.intentId} inconsistent state: no attempt found in handleExpiredTransaction`
+            span.recordException(new Error(description))
+            span.setStatus({ code: SpanStatusCode.ERROR })
+            Logger.instance.error(LogTag.TXM, description)
             return
         }
 
@@ -234,24 +286,39 @@ export class TxMonitor {
             attempt.maxPriorityFeePerGas,
         )
 
+        span.addEvent("txm.tx-monitor.handle-expired-transaction.attempting-submission", {
+            transactionIntentId: transaction.intentId,
+            nonce: attempt.nonce,
+            maxFeePerGas: Number(replacementMaxFeePerGas),
+            maxPriorityFeePerGas: Number(replacementMaxPriorityFeePerGas),
+        })
+
         transaction.changeStatus(TransactionStatus.Cancelling)
 
-        await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
+        const submissionResult = await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
             type: AttemptType.Cancellation,
             nonce: attempt.nonce,
             maxFeePerGas: replacementMaxFeePerGas,
             maxPriorityFeePerGas: replacementMaxPriorityFeePerGas,
         })
+
+        if (submissionResult.isErr()) {
+            span.recordException(unknownToError(submissionResult.error))
+            span.setStatus({ code: SpanStatusCode.ERROR })
+        }
     }
 
+    @TraceMethod("txm.tx-monitor.handle-stuck-transaction")
     private async handleStuckTransaction(transaction: Transaction): Promise<void> {
+        const span = trace.getSpan(context.active())!
+
         const attempt = transaction.lastAttempt
 
         if (!attempt) {
-            Logger.instance.error(
-                LogTag.TXM,
-                `Transaction ${transaction.intentId} inconsistent state: no attempt found in handleStuckTransaction`,
-            )
+            const description = `Transaction ${transaction.intentId} inconsistent state: no attempt found in handleStuckTransaction`
+            span.recordException(new Error(description))
+            span.setStatus({ code: SpanStatusCode.ERROR })
+            Logger.instance.error(LogTag.TXM, description)
             return
         }
 
@@ -260,7 +327,11 @@ export class TxMonitor {
                 LogTag.TXM,
                 `Transaction ${transaction.intentId} is stuck, but the gas price is still sufficient for current network conditions. Sending same attempt again.`,
             )
-            await this.transactionManager.transactionSubmitter.resubmitAttempt(transaction, attempt)
+            const result = await this.transactionManager.transactionSubmitter.resubmitAttempt(transaction, attempt)
+            if (result.isErr()) {
+                span.recordException(unknownToError(result.error))
+                span.setStatus({ code: SpanStatusCode.ERROR })
+            }
             return
         }
 
@@ -274,23 +345,49 @@ export class TxMonitor {
             attempt.maxPriorityFeePerGas,
         )
 
-        await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
+        span.addEvent("txm.tx-monitor.handle-stuck-transaction.attempting-submission", {
+            transactionIntentId: transaction.intentId,
+            nonce: attempt.nonce,
+            maxFeePerGas: Number(replacementMaxFeePerGas),
+            maxPriorityFeePerGas: Number(replacementMaxPriorityFeePerGas),
+        })
+
+        const submissionResult = await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
             type: AttemptType.Original,
             nonce: attempt.nonce,
             maxFeePerGas: replacementMaxFeePerGas,
             maxPriorityFeePerGas: replacementMaxPriorityFeePerGas,
         })
+
+        if (submissionResult.isErr()) {
+            span.recordException(unknownToError(submissionResult.error))
+            span.setStatus({ code: SpanStatusCode.ERROR })
+        }
     }
 
+    @TraceMethod("txm.tx-monitor.handle-not-attempted-transaction")
     private async handleNotAttemptedTransaction(transaction: Transaction, block: LatestBlock): Promise<void> {
+        const span = trace.getSpan(context.active())!
+
         if (transaction.isExpired(block, this.transactionManager.blockTime)) {
             return transaction.changeStatus(TransactionStatus.Expired)
         }
 
         const nonce = this.transactionManager.nonceManager.requestNonce()
 
+        span.addEvent("txm.tx-monitor.handle-not-attempted-transaction.requested-nonce", {
+            transactionIntentId: transaction.intentId,
+            nonce,
+        })
+
         const { maxFeePerGas: marketMaxFeePerGas, maxPriorityFeePerGas: marketMaxPriorityFeePerGas } =
             this.transactionManager.gasPriceOracle.suggestGasForNextBlock()
+
+        span.addEvent("txm.tx-monitor.handle-not-attempted-transaction.suggested-gas-price", {
+            transactionIntentId: transaction.intentId,
+            maxFeePerGas: Number(marketMaxFeePerGas),
+            maxPriorityFeePerGas: Number(marketMaxPriorityFeePerGas),
+        })
 
         const submissionResult = await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
             type: AttemptType.Original,
@@ -300,14 +397,31 @@ export class TxMonitor {
         })
 
         if (submissionResult.isErr() && !submissionResult.error.flushed) {
+            span.recordException(unknownToError(submissionResult.error))
+            span.setStatus({ code: SpanStatusCode.ERROR })
             this.transactionManager.nonceManager.returnNonce(nonce)
         }
     }
 
+    @TraceMethod("txm.tx-monitor.handle-retry-transaction")
     private async handleRetryTransaction(transaction: Transaction): Promise<void> {
+        const span = trace.getSpan(context.active())!
+
         const nonce = this.transactionManager.nonceManager.requestNonce()
+
+        span.addEvent("txm.tx-monitor.handle-retry-transaction.requested-nonce", {
+            transactionIntentId: transaction.intentId,
+            nonce,
+        })
+
         const { maxFeePerGas: marketMaxFeePerGas, maxPriorityFeePerGas: marketMaxPriorityFeePerGas } =
             this.transactionManager.gasPriceOracle.suggestGasForNextBlock()
+
+        span.addEvent("txm.tx-monitor.handle-retry-transaction.suggested-gas-price", {
+            transactionIntentId: transaction.intentId,
+            maxFeePerGas: Number(marketMaxFeePerGas),
+            maxPriorityFeePerGas: Number(marketMaxPriorityFeePerGas),
+        })
 
         const submissionResult = await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
             type: AttemptType.Original,
@@ -317,6 +431,8 @@ export class TxMonitor {
         })
 
         if (submissionResult.isErr() && !submissionResult.error.flushed) {
+            span.recordException(unknownToError(submissionResult.error))
+            span.setStatus({ code: SpanStatusCode.ERROR })
             this.transactionManager.nonceManager.returnNonce(nonce)
         }
     }

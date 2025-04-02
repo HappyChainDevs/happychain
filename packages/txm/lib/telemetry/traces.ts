@@ -1,5 +1,5 @@
 import { unknownToError } from "@happy.tech/common"
-import { trace } from "@opentelemetry/api"
+import { context, trace } from "@opentelemetry/api"
 
 export const blockMonitorTracer = trace.getTracer("txm.block-monitor")
 export const transactionCollectorTracer = trace.getTracer("txm.transaction-collector")
@@ -11,15 +11,30 @@ export function TraceMethod(spanName?: string) {
         descriptor.value = function (...args: unknown[]) {
             const tracer = trace.getTracer("txm")
             const name = spanName || propertyKey
-            return tracer.startActiveSpan(name, async (span) => {
+            const span = tracer.startSpan(name)
+
+            return context.with(trace.setSpan(context.active(), span), () => {
                 try {
-                    const result = await originalMethod.apply(this, args)
+                    const result = originalMethod.apply(this, args)
+
+                    if (result instanceof Promise) {
+                        return result
+                            .then((value) => {
+                                span.end()
+                                return value
+                            })
+                            .catch((err) => {
+                                span.recordException(unknownToError(err))
+                                span.end()
+                                throw err
+                            })
+                    }
+                    span.end()
                     return result
                 } catch (err) {
                     span.recordException(unknownToError(err))
-                    throw err
-                } finally {
                     span.end()
+                    throw err
                 }
             })
         }

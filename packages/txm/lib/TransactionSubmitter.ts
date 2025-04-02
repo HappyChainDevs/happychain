@@ -1,4 +1,5 @@
-import { context, trace } from "@opentelemetry/api"
+import { LogTag, Logger, bigIntReplacer } from "@happy.tech/common"
+import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { type Result, err, ok } from "neverthrow"
 import type { TransactionRequestEIP1559 } from "viem"
 import { TransactionRejectedRpcError, encodeFunctionData, keccak256 } from "viem"
@@ -78,6 +79,12 @@ export class TransactionSubmitter {
     ): Promise<AttemptSubmissionResult> {
         const span = trace.getSpan(context.active())!
 
+        span.addEvent("txm.transaction-submitter.send-attempt.started", {
+            transactionIntentId: transaction.intentId,
+            transaction: transaction.toJson(),
+            payload: JSON.stringify(attempt, bigIntReplacer),
+        })
+
         let transactionRequest: TransactionRequestEIP1559 & { gas: bigint }
 
         if (attempt.type === AttemptType.Cancellation) {
@@ -96,6 +103,12 @@ export class TransactionSubmitter {
             const abi = this.txmgr.abiManager.get(transaction.contractName)
 
             if (!abi) {
+                span.addEvent("txm.transaction-submitter.send-attempt.abi-not-found", {
+                    transactionIntentId: transaction.intentId,
+                    contractName: transaction.contractName,
+                })
+                span.setStatus({ code: SpanStatusCode.ERROR })
+                Logger.instance.error(LogTag.TXM, `ABI not found for contract ${transaction.contractName}`)
                 return err({
                     cause: AttemptSubmissionErrorCause.ABINotFound,
                     description: `ABI not found for contract ${transaction.contractName}`,
@@ -112,6 +125,11 @@ export class TransactionSubmitter {
                 const gasResult = await this.txmgr.gasEstimator.estimateGas(this.txmgr, transaction)
 
                 if (gasResult.isErr()) {
+                    span.addEvent("txm.transaction-submitter.send-attempt.gas-estimation-failed", {
+                        transactionIntentId: transaction.intentId,
+                        description: gasResult.error.description,
+                    })
+                    span.setStatus({ code: SpanStatusCode.ERROR })
                     return err({
                         cause: gasResult.error.cause,
                         description: gasResult.error.description,
@@ -140,9 +158,16 @@ export class TransactionSubmitter {
         const signedTransactionResult = await this.txmgr.viemWallet.safeSignTransaction(transactionRequest)
 
         if (signedTransactionResult.isErr()) {
+            const description = `Failed to sign transaction ${transaction.intentId}. Details: ${signedTransactionResult.error}`
+            span.addEvent("txm.transaction-submitter.attempt-submission.failed-to-sign-transaction", {
+                transactionIntentId: transaction.intentId,
+                description,
+            })
+            span.recordException(signedTransactionResult.error)
+            span.setStatus({ code: SpanStatusCode.ERROR })
             return err({
                 cause: AttemptSubmissionErrorCause.FailedToSignTransaction,
-                description: `Failed to sign transaction ${transaction.intentId} for retry. Details: ${signedTransactionResult.error}`,
+                description,
                 flushed: false,
             })
         }
@@ -174,25 +199,26 @@ export class TransactionSubmitter {
             }
         }
 
-        span.addEvent("transaction-submitter.attempt-submission", {
-            transactionIntentId: transaction.intentId,
-            attemptType: attempt.type,
-            attemptHash: hash,
-            attemptNonce: attempt.nonce,
-            attemptMaxFeePerGas: Number(attempt.maxFeePerGas),
-            attemptMaxPriorityFeePerGas: Number(attempt.maxPriorityFeePerGas),
-            attemptGas: Number(transactionRequest.gas),
-        })
-
         const sendRawTransactionResult = await this.txmgr.viemWallet.safeSendRawTransaction({
             serializedTransaction: signedTransaction,
         })
 
         if (sendRawTransactionResult.isErr()) {
+            const description = `Failed to send raw transaction ${transaction.intentId}. Details: ${sendRawTransactionResult.error}`
+            span.addEvent("txm.transaction-submitter.attempt-submission.failed-to-send-raw-transaction", {
+                transactionIntentId: transaction.intentId,
+                description,
+            })
+            span.recordException(sendRawTransactionResult.error)
+            span.setStatus({ code: SpanStatusCode.ERROR })
             if (
                 sendRawTransactionResult.error instanceof TransactionRejectedRpcError &&
                 sendRawTransactionResult.error.message.includes("nonce too low")
             ) {
+                span.addEvent("txm.transaction-submitter.attempt-submission.nonce-too-low", {
+                    transactionIntentId: transaction.intentId,
+                    nonce: attempt.nonce,
+                })
                 this.txmgr.nonceManager.resync()
             }
 

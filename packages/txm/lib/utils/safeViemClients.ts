@@ -1,5 +1,5 @@
-import { unknownToError } from "@happy.tech/common"
-import type { Counter, Histogram } from "@opentelemetry/api"
+import { bigIntReplacer, unknownToError } from "@happy.tech/common"
+import type { Counter, Histogram, Tracer } from "@opentelemetry/api"
 import { ResultAsync } from "neverthrow"
 import type {
     Account,
@@ -89,6 +89,7 @@ export interface SafeViemPublicClient extends ViemPublicClient {
     rpcCounter: Counter | undefined
     rpcErrorCounter: Counter | undefined
     rpcResponseTimeHistogram: Histogram | undefined
+    tracer: Tracer | undefined
 
     safeEstimateGas: (
         ...args: Parameters<ViemPublicClient["estimateGas"]>
@@ -117,14 +118,17 @@ export interface MetricsHandlers {
 export function convertToSafeViemPublicClient(
     client: ViemPublicClient,
     metrics?: MetricsHandlers,
+    tracer?: Tracer,
 ): SafeViemPublicClient {
     const safeClient = client as SafeViemPublicClient
 
     safeClient.rpcCounter = metrics?.rpcCounter
     safeClient.rpcErrorCounter = metrics?.rpcErrorCounter
     safeClient.rpcResponseTimeHistogram = metrics?.rpcResponseTimeHistogram
+    safeClient.tracer = tracer
 
     safeClient.safeEstimateGas = (...args: Parameters<ViemPublicClient["estimateGas"]>) => {
+        const span = safeClient.tracer?.startSpan("safe-viem-public-client.estimate-gas")
         if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "estimateGas" })
         const startTime = Date.now()
 
@@ -133,17 +137,24 @@ export function convertToSafeViemPublicClient(
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "estimateGas" })
+                span?.addEvent("safe-viem-public-client.estimate-gas.success", {
+                    result: JSON.stringify(result, bigIntReplacer),
+                })
+                span?.end()
                 return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
                     safeClient.rpcErrorCounter.add(1, { method: "estimateGas" })
                 }
+                span?.recordException(error)
+                span?.end()
                 return error as EstimateGasErrorType
             })
     }
 
     safeClient.safeGetTransactionReceipt = (...args: Parameters<ViemPublicClient["getTransactionReceipt"]>) => {
+        const span = safeClient.tracer?.startSpan("safe-viem-public-client.get-transaction-receipt")
         if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "getTransactionReceipt" })
         const startTime = Date.now()
 
@@ -152,17 +163,24 @@ export function convertToSafeViemPublicClient(
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "getTransactionReceipt" })
+                span?.addEvent("safe-viem-public-client.get-transaction-receipt.success", {
+                    result: JSON.stringify(result, bigIntReplacer),
+                })
+                span?.end()
                 return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
                     safeClient.rpcErrorCounter.add(1, { method: "getTransactionReceipt" })
                 }
+                span?.recordException(error)
+                span?.end()
                 return error as GetTransactionReceiptErrorType
             })
     }
 
     safeClient.safeDebugTransaction = (...args: DebugTransactionSchema["Parameters"]) => {
+        const span = safeClient.tracer?.startSpan("safe-viem-public-client.debug-transaction")
         if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "debug_traceTransaction" })
         const startTime = Date.now()
 
@@ -177,6 +195,10 @@ export function convertToSafeViemPublicClient(
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "debug_traceTransaction" })
+                span?.addEvent("safe-viem-public-client.debug-transaction.success", {
+                    result: JSON.stringify(result, bigIntReplacer),
+                })
+                span?.end()
                 return result as Call
             })
             .mapErr((error) => {
@@ -188,6 +210,7 @@ export function convertToSafeViemPublicClient(
     }
 
     safeClient.safeGetChainId = () => {
+        const span = safeClient.tracer?.startSpan("safe-viem-public-client.get-chain-id")
         if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "getChainId" })
         const startTime = Date.now()
 
@@ -196,17 +219,24 @@ export function convertToSafeViemPublicClient(
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "getChainId" })
+                span?.addEvent("safe-viem-public-client.get-chain-id.success", {
+                    result: result.toString(),
+                })
+                span?.end()
                 return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
                     safeClient.rpcErrorCounter.add(1, { method: "getChainId" })
                 }
+                span?.recordException(error)
+                span?.end()
                 return error as GetChainIdErrorType
             })
     }
 
     safeClient.safeGetTransactionCount = (...args: Parameters<ViemPublicClient["getTransactionCount"]>) => {
+        const span = safeClient.tracer?.startSpan("safe-viem-public-client.get-transaction-count")
         if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "getTransactionCount" })
         const startTime = Date.now()
 
@@ -215,17 +245,24 @@ export function convertToSafeViemPublicClient(
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "getTransactionCount" })
+                span?.addEvent("safe-viem-public-client.get-transaction-count.success", {
+                    result: result.toString(),
+                })
+                span?.end()
                 return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
                     safeClient.rpcErrorCounter.add(1, { method: "getTransactionCount" })
                 }
+                span?.recordException(error)
+                span?.end()
                 return error as GetTransactionCountErrorType
             })
     }
 
     safeClient.safeGetFeeHistory = (...args: Parameters<ViemPublicClient["getFeeHistory"]>) => {
+        const span = safeClient.tracer?.startSpan("safe-viem-public-client.get-fee-history")
         if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "getFeeHistory" })
         const startTime = Date.now()
 
@@ -234,12 +271,18 @@ export function convertToSafeViemPublicClient(
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "getFeeHistory" })
+                span?.addEvent("safe-viem-public-client.get-fee-history.success", {
+                    result: JSON.stringify(result, bigIntReplacer),
+                })
+                span?.end()
                 return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
                     safeClient.rpcErrorCounter.add(1, { method: "getFeeHistory" })
                 }
+                span?.recordException(error)
+                span?.end()
                 return error as GetFeeHistoryErrorType
             })
     }
@@ -251,6 +294,7 @@ export interface SafeViemWalletClient extends ViemWalletClient {
     rpcCounter?: Counter
     rpcErrorCounter?: Counter
     rpcResponseTimeHistogram?: Histogram
+    tracer?: Tracer
 
     safeSendRawTransaction: (
         ...args: Parameters<ViemWalletClient["sendRawTransaction"]>
@@ -263,14 +307,17 @@ export interface SafeViemWalletClient extends ViemWalletClient {
 export function convertToSafeViemWalletClient(
     client: ViemWalletClient,
     metrics?: MetricsHandlers,
+    tracer?: Tracer,
 ): SafeViemWalletClient {
     const safeClient = client as SafeViemWalletClient
 
     safeClient.rpcCounter = metrics?.rpcCounter
     safeClient.rpcErrorCounter = metrics?.rpcErrorCounter
     safeClient.rpcResponseTimeHistogram = metrics?.rpcResponseTimeHistogram
+    safeClient.tracer = tracer
 
     safeClient.safeSendRawTransaction = (...args: Parameters<ViemWalletClient["sendRawTransaction"]>) => {
+        const span = safeClient.tracer?.startSpan("safe-viem-wallet-client.send-raw-transaction")
         if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "sendRawTransaction" })
         const startTime = Date.now()
 
@@ -279,17 +326,24 @@ export function convertToSafeViemWalletClient(
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "sendRawTransaction" })
+                span?.addEvent("safe-viem-wallet-client.send-raw-transaction.success", {
+                    result: result.toString(),
+                })
+                span?.end()
                 return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
                     safeClient.rpcErrorCounter.add(1, { method: "sendRawTransaction" })
                 }
+                span?.recordException(error)
+                span?.end()
                 return error as SendRawTransactionErrorType
             })
     }
 
     safeClient.safeSignTransaction = (args: TransactionRequestEIP1559 & { gas: bigint }) => {
+        const span = safeClient.tracer?.startSpan("safe-viem-wallet-client.sign-transaction")
         if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "signTransaction" })
         const startTime = Date.now()
 
@@ -315,12 +369,18 @@ export function convertToSafeViemWalletClient(
                 const duration = Date.now() - startTime
                 if (safeClient.rpcResponseTimeHistogram)
                     safeClient.rpcResponseTimeHistogram.record(duration, { method: "signTransaction" })
+                span?.addEvent("safe-viem-wallet-client.sign-transaction.success", {
+                    result: JSON.stringify(result, bigIntReplacer),
+                })
+                span?.end()
                 return result
             })
             .mapErr((error) => {
                 if (safeClient.rpcErrorCounter) {
                     safeClient.rpcErrorCounter.add(1, { method: "signTransaction" })
                 }
+                span?.recordException(unknownToError(error))
+                span?.end()
                 return error as SignTransactionErrorType
             })
     }

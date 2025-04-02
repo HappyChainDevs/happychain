@@ -1,5 +1,7 @@
 import type { UUID } from "@happy.tech/common"
+import { trace } from "@opentelemetry/api"
 import type { MetricReader } from "@opentelemetry/sdk-metrics"
+import type { SpanExporter } from "@opentelemetry/sdk-trace-node"
 import type { Result } from "neverthrow"
 import {
     type Abi,
@@ -229,11 +231,28 @@ export type TransactionManagerConfig = {
          */
         port?: number
         /**
-         * Custom metric readers to use instead of the default Prometheus reader.
-         * If provided, these readers will be used and the port setting will be ignored.
+         * Custom metric reader to use instead of the default Prometheus reader.
+         * If provided, this reader will be used and the port setting will be ignored.
          * If not provided, a default Prometheus reader will be configured using the specified port.
          */
-        metricReaders?: MetricReader[]
+        metricReader?: MetricReader
+    }
+
+    /**
+     * The traces configuration.
+     */
+    traces?: {
+        /**
+         * Whether to enable traces collection.
+         * Defaults to true.
+         */
+        active?: boolean
+
+        /**
+         * The span exporter to use.
+         * Defaults to a console span exporter.
+         */
+        spanExporter?: SpanExporter
     }
 }
 
@@ -284,9 +303,11 @@ export class TransactionManager {
 
     constructor(_config: TransactionManagerConfig) {
         initializeTelemetry({
-            active: _config.metrics?.active ?? true,
-            port: _config.metrics?.port ?? 9090,
-            metricReaders: _config.metrics?.metricReaders,
+            metricsActive: _config.metrics?.active ?? true,
+            prometheusPort: _config.metrics?.port ?? 9090,
+            userMetricReader: _config.metrics?.metricReader,
+            tracesActive: _config.traces?.active ?? true,
+            userTraceExporter: _config.traces?.spanExporter,
         })
 
         this.collectors = []
@@ -352,6 +373,7 @@ export class TransactionManager {
                 rpcErrorCounter: TxmMetrics.getInstance().rpcErrorCounter,
                 rpcResponseTimeHistogram: TxmMetrics.getInstance().blockchainRpcResponseTimeHistogram,
             },
+            trace.getTracer("txm"),
         )
 
         this.viemClient = convertToSafeViemPublicClient(
@@ -364,6 +386,7 @@ export class TransactionManager {
                 rpcErrorCounter: TxmMetrics.getInstance().rpcErrorCounter,
                 rpcResponseTimeHistogram: TxmMetrics.getInstance().blockchainRpcResponseTimeHistogram,
             },
+            trace.getTracer("txm"),
         )
 
         this.nonceManager = new NonceManager(this)

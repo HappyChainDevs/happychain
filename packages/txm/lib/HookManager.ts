@@ -2,6 +2,7 @@ import type { LatestBlock } from "./BlockMonitor"
 import { Topics, eventBus } from "./EventBus.js"
 import type { Transaction } from "./Transaction.js"
 import type { AttemptSubmissionErrorCause } from "./TransactionSubmitter"
+import { TraceMethod } from "./telemetry/traces"
 
 export enum TxmHookType {
     All = "All",
@@ -114,6 +115,7 @@ export class HookManager {
         }
     }
 
+    @TraceMethod("txm.hook-manager.on-transaction-status-changed")
     private async onTransactionStatusChanged(payload: { transaction: Transaction }): Promise<void> {
         this.hooks[TxmHookType.TransactionStatusChanged].forEach((handler) => handler(payload.transaction))
 
@@ -125,6 +127,7 @@ export class HookManager {
         )
     }
 
+    @TraceMethod("txm.hook-manager.on-transaction-save-failed")
     private async onTransactionSaveFailed(payload: {
         transaction: Transaction
     }): Promise<void> {
@@ -138,6 +141,7 @@ export class HookManager {
         )
     }
 
+    @TraceMethod("txm.hook-manager.on-new-block")
     private async onNewBlock(block: LatestBlock): Promise<void> {
         this.hooks[TxmHookType.NewBlock].forEach((handler) => handler(block))
 
@@ -149,6 +153,7 @@ export class HookManager {
         )
     }
 
+    @TraceMethod("txm.hook-manager.on-transaction-submission-failed")
     private async onTransactionSubmissionFailed(payload: {
         transaction: Transaction
         description: string
@@ -168,12 +173,14 @@ export class HookManager {
         )
     }
 
+    @TraceMethod("txm.hook-manager.on-rpc-is-down")
     private async onRpcIsDown(): Promise<void> {
         this.hooks[TxmHookType.RpcIsDown].forEach((handler) => handler())
 
         this.hooks[TxmHookType.All].forEach((handler) => handler({ type: TxmHookType.RpcIsDown }))
     }
 
+    @TraceMethod("txm.hook-manager.on-rpc-is-up")
     private async onRpcIsUp(): Promise<void> {
         this.hooks[TxmHookType.RpcIsUp].forEach((handler) => handler())
 

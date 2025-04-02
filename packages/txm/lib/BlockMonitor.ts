@@ -1,5 +1,5 @@
 import { LogTag, Logger } from "@happy.tech/common"
-import { context, trace } from "@opentelemetry/api"
+import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
@@ -43,10 +43,10 @@ export class BlockMonitor {
         span.setAttribute("block.number", Number(block.number))
 
         if (this.latestProcessedBlockNumber && block.number <= this.latestProcessedBlockNumber) {
-            Logger.instance.warn(
-                LogTag.TXM,
-                "Received block number less than or equal to latest processed block number. Skipping.",
-            )
+            const description = `Received block number less than or equal to latest processed block number. Skipping. Latest processed block number: ${this.latestProcessedBlockNumber}, received block number: ${block.number}`
+            span.recordException(new Error(description))
+            span.setStatus({ code: SpanStatusCode.ERROR })
+            Logger.instance.warn(LogTag.TXM, description)
             return
         }
 
@@ -63,6 +63,7 @@ export class BlockMonitor {
         this.scheduleTimeout()
     }
 
+    @TraceMethod("txm.block-monitor.schedule-timeout")
     private scheduleTimeout() {
         this.blockTimeout = setTimeout(() => {
             Logger.instance.warn(LogTag.TXM, "Timeout reached. Resetting block subscription.")
@@ -70,6 +71,7 @@ export class BlockMonitor {
         }, this.txmgr.blockInactivityTimeout)
     }
 
+    @TraceMethod("txm.block-monitor.reset-block-subscription")
     private resetBlockSubscription() {
         TxmMetrics.getInstance().resetBlockMonitorCounter.add(1)
         this.txmgr.rpcLivenessMonitor.trackError()

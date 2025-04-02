@@ -1,6 +1,8 @@
 import { abis } from "@happy.tech/contracts/random/anvil"
 import { TransactionManager, TransactionStatus, TxmHookType } from "@happy.tech/txm"
 import type { LatestBlock, Transaction } from "@happy.tech/txm"
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto"
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node"
 import { CustomGasEstimator } from "./CustomGasEstimator.js"
 import { DrandRepository } from "./DrandRepository"
 import { DrandService } from "./DrandService"
@@ -32,6 +34,14 @@ class RandomnessService {
             },
             gas: {
                 minPriorityFeePerGas: 10n,
+            },
+            traces: {
+                active: true,
+                spanExporter: env.OTEL_EXPORTER_OTLP_ENDPOINT
+                    ? new OTLPTraceExporter({
+                          url: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+                      })
+                    : undefined,
             },
         })
         this.transactionFactory = new TransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS, env.PRECOMMIT_DELAY)

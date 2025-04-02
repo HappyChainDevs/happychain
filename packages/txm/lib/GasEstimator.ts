@@ -1,7 +1,9 @@
+import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { type Result, err, ok } from "neverthrow"
 import { encodeFunctionData } from "viem"
 import type { Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
+import { TraceMethod } from "./telemetry/traces"
 
 export enum EstimateGasErrorCause {
     EstimateGasABINotFound = "EstimateGasABINotFound",
@@ -61,16 +63,22 @@ export class DefaultGasLimitEstimator implements GasEstimator {
      * to use the default case without needing to reimplement it. This is particularly
      * useful for services like the Randomness service.
      */
+    @TraceMethod("txm.gas-estimator.simulate-transaction-for-gas")
     protected async simulateTransactionForGas(
         transactionManager: TransactionManager,
         transaction: Transaction,
     ): Promise<Result<bigint, EstimateGasError>> {
+        const span = trace.getSpan(context.active())!
+
         const abi = transactionManager.abiManager.get(transaction.contractName)
 
         if (!abi) {
+            const description = `ABI not found for contract ${transaction.contractName}`
+            span.recordException(new Error(description))
+            span.setStatus({ code: SpanStatusCode.ERROR })
             return err({
                 cause: EstimateGasErrorCause.EstimateGasABINotFound,
-                description: `ABI not found for contract ${transaction.contractName}`,
+                description,
             })
         }
 
@@ -86,11 +94,19 @@ export class DefaultGasLimitEstimator implements GasEstimator {
         })
 
         if (gasResult.isErr()) {
+            const description = `Failed to estimate gas for transaction ${transaction.intentId}. Details: ${gasResult.error}`
+            span.recordException(new Error(description))
+            span.setStatus({ code: SpanStatusCode.ERROR })
             return err({
                 cause: EstimateGasErrorCause.EstimateGasClientError,
-                description: `Failed to estimate gas for transaction ${transaction.intentId}. Details: ${gasResult.error}`,
+                description,
             })
         }
+
+        span.addEvent("txm.gas-estimator.simulate-transaction-for-gas.succeeded", {
+            transactionIntentId: transaction.intentId,
+            gas: Number(gasResult.value),
+        })
 
         return ok(gasResult.value)
     }

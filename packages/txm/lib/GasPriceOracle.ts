@@ -1,8 +1,10 @@
 import { bigIntMax } from "@happy.tech/common"
+import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { type Result, err, ok } from "neverthrow"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
+import { TraceMethod } from "./telemetry/traces"
 
 /**
  * This module estimates the gas price for transaction execution. It updates with each new block, basing its calculations on EIP-1559.
@@ -39,10 +41,20 @@ export class GasPriceOracle {
         await this.onNewBlock(block)
     }
 
+    @TraceMethod("txm.gas-price-oracle.on-new-block")
     private async onNewBlock(block: LatestBlock) {
+        const span = trace.getSpan(context.active())!
+
         const baseFeePerGas = block.baseFeePerGas
         const gasUsed = block.gasUsed
         const gasLimit = block.gasLimit
+
+        span.addEvent("txm.gas-price-oracle.on-new-block.started", {
+            blockNumber: Number(block.number),
+            baseFeePerGas: Number(baseFeePerGas),
+            gasUsed: Number(gasUsed),
+            gasLimit: Number(gasLimit),
+        })
 
         this.expectedNextBaseFeePerGas = this.calculateExpectedNextBaseFeePerGas(
             baseFeePerGas as bigint,
@@ -51,14 +63,23 @@ export class GasPriceOracle {
         )
         const targetPriorityFeeResult = await this.calculateTargetPriorityFee()
         if (targetPriorityFeeResult.isErr()) {
+            span.recordException(targetPriorityFeeResult.error)
+            span.setStatus({ code: SpanStatusCode.ERROR })
             if (this.targetPriorityFee === undefined) {
                 this.targetPriorityFee = this.txmgr.maxPriorityFeePerGas ?? 0n
             }
             return
         }
         this.targetPriorityFee = targetPriorityFeeResult.value
+
+        span.addEvent("txm.gas-price-oracle.on-new-block.succeeded", {
+            blockNumber: Number(block.number),
+            expectedNextBaseFeePerGas: Number(this.expectedNextBaseFeePerGas),
+            targetPriorityFee: Number(this.targetPriorityFee),
+        })
     }
 
+    @TraceMethod("txm.gas-price-oracle.calculate-target-priority-fee")
     private async calculateTargetPriorityFee(): Promise<Result<bigint, Error>> {
         const feeHistory = await this.txmgr.viemClient.safeGetFeeHistory({
             blockCount: this.txmgr.priorityFeeAnalysisBlocks,
