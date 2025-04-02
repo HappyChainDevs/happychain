@@ -2,7 +2,7 @@ import type { HappyTx } from "./HappyTx"
 import type { HappyTxReceipt } from "./HappyTxReceipt"
 import type { HappyTxState } from "./HappyTxState"
 import type { Address, Hash } from "./common_chain"
-import type { SubmitterErrorStatus } from "./status"
+import type { EntryPointStatus, SubmitterErrorStatus } from "./status"
 import { type SubmitStatus, SubmitSuccess } from "./submitter_submit"
 
 export type ExecuteSuccess = SubmitSuccess
@@ -22,7 +22,8 @@ export type ExecuteOutput =
           state: HappyTxState
       }
     | {
-          status: Exclude<SubmitStatus, SubmitSuccess>
+          status: Exclude<SubmitStatus, SubmitSuccess> | EntryPointStatus
+          revertData?: string
           hash?: never
       }
 

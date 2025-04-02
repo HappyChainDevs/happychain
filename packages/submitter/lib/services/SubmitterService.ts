@@ -1,11 +1,16 @@
-import { submitterClient } from "#lib/clients"
-import { getBaseError } from "#lib/errors/utils"
+import type { Hex } from "viem"
+import { publicClient } from "#lib/clients"
+import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#lib/errors/submitter-errors"
 import { logger } from "#lib/logger"
+import { happyTransactionService } from "#lib/services"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
+import type { HappyTxReceipt } from "#lib/tmp/interface/HappyTxReceipt"
 import type { HappyTxState } from "#lib/tmp/interface/HappyTxState"
-import type { EntryPointStatus } from "#lib/tmp/interface/status"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
+import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
+import { EntryPointStatus } from "#lib/tmp/interface/status"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
 import { decodeHappyTx } from "#lib/utils/decodeHappyTx"
+import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
 import type { HappyReceiptService } from "./HappyReceiptService"
 import type {
     HappySimulationService,
@@ -25,7 +30,7 @@ export class SubmitterService {
 
     async initialize(entryPoint: `0x${string}`, happyTx: HappyTx) {
         const happyTxHash = computeHappyTxHash(happyTx)
-        await this.happyTransactionService.insert({ happyTxHash, entryPoint, ...happyTx })
+        return await this.happyTransactionService.insert({ happyTxHash, entryPoint, ...happyTx })
     }
 
     async finalize(happyTransactionId: number, state: HappyTxState) {
@@ -50,7 +55,7 @@ export class SubmitterService {
                 logger.warn("Persisted HappyTx not found. Could not finalize.", logData)
                 return
             }
-            const receipt = await submitterClient.waitForSubmitReceipt({ happyTxHash, txHash })
+            const receipt = await this.waitForSubmitReceipt({ happyTxHash, txHash })
             return await this.finalize(persisted.id, {
                 status: receipt.status as unknown as EntryPointStatus.Success,
                 included: Boolean(receipt.txReceipt.transactionHash) as true,
@@ -61,34 +66,82 @@ export class SubmitterService {
         }
     }
 
-    async insertSimulationSuccess(
+    async insertSimulationResult(
         request: SubmitContractSimulateParameters,
-        result: SubmitContractSimulateReturnType["result"],
-    ) {
+        result: SubmitContractSimulateReturnType["result"] | undefined,
+        simulation: SimulationResult | undefined,
+    ): Promise<void> {
+        if (!simulation) return
         const happyTxHash = computeHappyTxHash(decodeHappyTx(request.args[0]))
-        return await this.happySimulationService.insertSuccessResult(happyTxHash, request, result)
+        await this.happySimulationService.insertSimulationResult(happyTxHash, request, result, simulation)
     }
 
-    async insertSimulationReverted(request: SubmitContractSimulateParameters, err: unknown) {
-        const happyTxHash = computeHappyTxHash(decodeHappyTx(request.args[0]))
-        const baseError = getBaseError(err)
+    private async waitForSubmitReceipt(params: { txHash: Hex; happyTxHash: Hex }): Promise<HappyTxReceipt> {
+        const { txHash, happyTxHash } = params
 
-        const hasRawData = baseError && "raw" in baseError && typeof baseError.raw === "string"
-        const data = hasRawData ? (baseError.raw as `0x${string}`) || "0x" : "0x"
+        const happyTx = await happyTransactionService.findByHappyTxHashOrThrow(happyTxHash)
 
-        return await this.happySimulationService.insertRevertedResult(happyTxHash, request, data)
-    }
+        const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
-    async insertSimulation(
-        request: SubmitContractSimulateParameters,
-        result?: SubmitContractSimulateReturnType["result"] | undefined,
-        error?: unknown | undefined,
-    ) {
-        if (request && result) {
-            return await this.insertSimulationSuccess(request, result)
-        } else if (request && !result) {
-            return await this.insertSimulationReverted(request, error)
+        if (typeof receipt.to !== "string") throw new InvalidTransactionRecipientError(happyTxHash)
+        if (!isValidTransactionType(receipt.type)) throw new InvalidTransactionTypeError(happyTxHash)
+
+        return {
+            happyTxHash,
+
+            /** Account that sent the HappyTx. */
+            account: happyTx.account,
+
+            /** The nonce of the HappyTx. */
+            nonceTrack: happyTx.nonceTrack,
+            nonceValue: happyTx.nonceValue,
+
+            /** EntryPoint to which the HappyTx was submitted onchain. */
+            entryPoint: receipt.to,
+
+            /** Result of onchain submission of the HappyTx. */
+            status: receipt.status === "success" ? EntryPointStatus.Success : EntryPointStatus.UnexpectedReverted,
+
+            /** Logs emitted by HappyTx. */
+            logs: receipt.logs.filter((l) => l.address === receipt.to),
+
+            /**
+             * The revertData carried by one of our custom error, or the raw deal for
+             * "otherReverted". Empty if `!status.endsWith("Reverted")`.
+             */
+            // TODO:
+            revertData: "0x",
+
+            /** Gas used by the HappyTx */
+            gasUsed: receipt.gasUsed,
+
+            /** Total gas cost for the HappyTx in wei (inclusive submitter fee) */
+            gasCost: receipt.gasUsed * receipt.effectiveGasPrice,
+
+            /**
+             * Receipt for the transaction that carried the HappyTx.
+             * Note that this transaction is allowed to do other things besides
+             * carrying the happyTx, and could potentially have carried multiple happyTxs.
+             */
+            txReceipt: {
+                blobGasPrice: receipt.blobGasPrice,
+                blobGasUsed: receipt.blobGasUsed,
+                blockHash: receipt.blockHash,
+                blockNumber: receipt.blockNumber,
+                contractAddress: receipt.contractAddress || null,
+                cumulativeGasUsed: receipt.cumulativeGasUsed,
+                effectiveGasPrice: receipt.effectiveGasPrice,
+                from: receipt.from,
+                gasUsed: receipt.gasUsed,
+                logs: receipt.logs.map((l) => ({ ...l, blockNumber: l.blockNumber })),
+                logsBloom: receipt.logsBloom,
+                root: receipt.root,
+                status: receipt.status,
+                to: receipt.to,
+                transactionHash: receipt.transactionHash,
+                transactionIndex: receipt.transactionIndex,
+                type: receipt.type,
+            },
         }
-        throw new Error("Invalid parameters for insertSimulation")
     }
 }

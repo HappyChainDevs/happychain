@@ -22,7 +22,6 @@ export class HappyReceiptRepository {
                 "happy_receipts.happyTxHash",
                 "happy_receipts.status",
                 "happy_receipts.revertData",
-                "happy_receipts.failureReason",
                 "happy_receipts.gasUsed",
                 "happy_receipts.gasCost",
                 "happy_receipts.transactionHash",
@@ -37,10 +36,10 @@ export class HappyReceiptRepository {
     }
 
     async insert(state: Omit<HappyReceipt, "id">) {
-        const { failureReason, gasCost, gasUsed, happyTxHash, revertData, status, transactionHash } = state
+        const { gasCost, gasUsed, happyTxHash, revertData, status, transactionHash } = state
         const response = await this.db //
             .insertInto("happy_receipts")
-            .values({ failureReason, gasCost, gasUsed, happyTxHash, revertData, status, transactionHash })
+            .values({ gasCost, gasUsed, happyTxHash, revertData, status, transactionHash })
             .returningAll()
             .executeTakeFirst()
 

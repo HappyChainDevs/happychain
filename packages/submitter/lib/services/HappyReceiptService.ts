@@ -1,6 +1,6 @@
 import { publicClient } from "#lib/clients"
 import type { HappyReceiptRepository } from "#lib/database/repositories/HappyReceiptRepository"
-import { SubmitterError } from "#lib/errors/contract-errors"
+import { SubmitterError } from "#lib/errors/submitter-errors"
 import { logger } from "#lib/logger"
 import type { HappyTxReceipt } from "#lib/tmp/interface/HappyTxReceipt"
 import type { Hash, Receipt, TransactionTypeName } from "#lib/tmp/interface/common_chain"
@@ -13,7 +13,6 @@ export class HappyReceiptService {
     async findByHappyTxHash(happyTxHash: Hash): Promise<HappyTxReceipt | undefined> {
         const happyReceipt = await this.happyReceiptRepository.findByHappyTxHash(happyTxHash)
         if (!happyReceipt) return
-
         const transactionReceipt = await publicClient.getTransactionReceipt({ hash: happyReceipt.transactionHash })
 
         logger.warn("[HappyReceiptService.findByHash] Warning: Logs not yet implemented")
@@ -30,7 +29,6 @@ export class HappyReceiptService {
             entryPoint: happyReceipt.entryPoint,
             logs: transactionReceipt.logs.filter((l) => l.address === happyReceipt.entryPoint),
             revertData: happyReceipt.revertData,
-            failureReason: happyReceipt.failureReason,
             gasUsed: happyReceipt.gasUsed,
             gasCost: happyReceipt.gasCost,
             txReceipt: {

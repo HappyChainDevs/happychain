@@ -1,12 +1,13 @@
 import { Map2, Mutex } from "@happy.tech/common"
+import { type Result, err, ok } from "neverthrow"
 import type { Address } from "viem/accounts"
 import { publicClient } from "#lib/clients"
 import { abis, deployment } from "#lib/deployments"
 import env from "#lib/env"
-import { SubmitterError } from "#lib/errors/contract-errors"
+import { SubmitterError } from "#lib/errors/submitter-errors"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import type { PendingHappyTxInfo } from "#lib/tmp/interface/submitter_pending"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
 
 type NonceTrack = bigint
 type NonceValue = bigint
@@ -20,7 +21,7 @@ const nonceMutexes = new Map2<Address, NonceTrack, Mutex>()
 const pendingTxMap = new Map2<
     Address,
     NonceTrack,
-    Map<NonceValue, { hash: `0x${string}`; resolve: (value: unknown) => void; reject: () => void }>
+    Map<NonceValue, { hash: `0x${string}`; resolve: (value: Result<undefined, SubmitterError>) => void }>
 >()
 
 export function getPendingTransactions(account: Address) {
@@ -47,43 +48,42 @@ async function getOnchainNonce(account: Address, nonceTrack: NonceTrack) {
     })
 }
 
-export async function checkLocalNonce(_tx: HappyTx) {
-    const account = _tx.account
-    const nonceTrack = _tx.nonceTrack
-
-    // TODO: is this race condition if 2 txs are submitted at the same time?
-    // does one mutex get overwritten with the other?
+async function getLocalNonce(account: `0x${string}`, nonceTrack: bigint) {
     const mutex = nonceMutexes.getOrSet(account, nonceTrack, () => new Mutex())
-
     return await mutex.locked(async () => {
-        const nonce = await nonces.getOrSetAsync(account, nonceTrack, () => getOnchainNonce(account, nonceTrack))
-        return _tx.nonceValue > nonce
+        return await nonces.getOrSetAsync(account, nonceTrack, () => getOnchainNonce(account, nonceTrack))
     })
 }
 
-export async function waitUntilUnblocked(tx: HappyTx) {
-    // wait until the tx is unblocked. when unblocked, we call 'resolve'
-    return new Promise((resolve, reject) => {
-        const track = pendingTxMap.getOrSet(tx.account, tx.nonceTrack, new Map())
-        if (track.size >= env.LIMITS_EXECUTE_BUFFER_LIMIT) throw new SubmitterError("bufferExceeded")
-        if (totalCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY) throw new SubmitterError("maxCapacity") // TODO: prune active account
+export async function checkFutureNonce(_tx: HappyTx) {
+    const account = _tx.account
+    const nonceTrack = _tx.nonceTrack
+    const localNonce = await getLocalNonce(account, nonceTrack)
+    return _tx.nonceValue > localNonce
+}
 
+export async function waitUntilUnblocked(tx: HappyTx): Promise<Result<undefined, SubmitterError>> {
+    const track = pendingTxMap.getOrSet(tx.account, tx.nonceTrack, new Map())
+    if (track.size >= env.LIMITS_EXECUTE_BUFFER_LIMIT) return err(new SubmitterError("bufferExceeded"))
+    if (totalCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY) return err(new SubmitterError("maxCapacity")) // TODO: prune active account
+    const localNonce = await getLocalNonce(tx.account, tx.nonceTrack)
+    const maxNonce = localNonce + BigInt(env.LIMITS_EXECUTE_BUFFER_LIMIT)
+    if (tx.nonceValue > maxNonce) return err(new SubmitterError("nonce out of range"))
+
+    // wait until the tx is unblocked. when unblocked, we call 'resolve'
+    return new Promise((resolve) => {
         // reject previous tx so it can be replaced
         const value = track.get(tx.nonceValue)
-        if (value) value.reject()
+        if (value) value.resolve(err(new SubmitterError("transaction replaced")))
 
         // Timeout tx after 30 seconds if it hasn't been executed
-        const timeout = setTimeout(() => reject(new SubmitterError("transaction timeout")), MAX_WAIT_TIMEOUT_MS)
+        const timeout = setTimeout(() => resolve(err(new SubmitterError("transaction timeout"))), MAX_WAIT_TIMEOUT_MS)
 
         track.set(tx.nonceValue, {
             hash: computeHappyTxHash(tx),
-            resolve: () => {
+            resolve: (response: Result<undefined, SubmitterError>) => {
                 clearTimeout(timeout)
-                resolve(undefined)
-            },
-            reject: () => {
-                clearTimeout(timeout)
-                reject(new SubmitterError("transaction rejected"))
+                resolve(response)
             },
         })
         pendingTxMap.set(tx.account, tx.nonceTrack, track)
@@ -106,7 +106,7 @@ export function incrementLocalNonce(tx: HappyTx) {
 
     if (!track || !pendingTx) return
 
-    pendingTx.resolve(undefined)
+    pendingTx.resolve(ok(undefined))
     track.delete(nextNonce)
     if (!track.size) pendingTxMap.delete(account, nonceTrack)
 }

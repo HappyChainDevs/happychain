@@ -1,33 +1,37 @@
+import { type Result, err, ok } from "neverthrow"
 import { createWalletClient } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { config, publicClient } from "#lib/clients"
 import { abis, deployment } from "#lib/deployments"
 import env from "#lib/env"
-import { SubmitterError } from "#lib/errors/contract-errors"
+import { SubmitterError } from "#lib/errors/submitter-errors"
 import { logger } from "#lib/logger"
-import type { CreateAccountInput, CreateAccountOutput } from "#lib/tmp/interface/create_account.ts"
+import type { CreateAccountInput, CreateAccountOutput } from "#lib/tmp/interface/create_account"
 import { isContractDeployed } from "#lib/utils/isContractDeployed"
 
-// Account responsible for deploying ScrappyAccounts
+// Account responsible for deploying ScrappyAccounts.
 // May or may not be the same as the global submitter accounts
-// so we define private/internal clients independently here
+// so we define private/internal clients independently here.
 const account = privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
 const walletClient = createWalletClient({ ...config, account })
 
-export async function create({ owner, salt }: CreateAccountInput): Promise<CreateAccountOutput> {
+export async function create({ owner, salt }: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
     const predictedAddress = await publicClient.readContract({
         address: deployment.ScrappyAccountFactory,
         abi: abis.ScrappyAccountFactory,
         functionName: "getAddress",
         args: [salt, owner],
     })
+    // TODO: replace when ready
+    // const predictedAddress = computeHappyAccount(salt, owner)
+
     logger.trace(`Predicted: ${predictedAddress}`)
 
     // Check if a contract is already deployed at the predicted address
     const alreadyDeployed = await isContractDeployed(predictedAddress)
     if (alreadyDeployed) {
         logger.trace("Already Deployed!")
-        return { address: predictedAddress, salt, owner }
+        return ok({ address: predictedAddress, salt, owner })
     }
 
     const { request, result } = await publicClient.simulateContract({
@@ -40,17 +44,12 @@ export async function create({ owner, salt }: CreateAccountInput): Promise<Creat
     logger.trace(`Account Simulation Result: ${result}`)
 
     // Check if the predicted address matches the result
-    if (result !== predictedAddress) throw new SubmitterError("Address mismatch during simulation")
+    if (result !== predictedAddress) return err(new SubmitterError("Address mismatch during simulation"))
 
     const hash = await walletClient.writeContract(request)
     const receipt = await publicClient.waitForTransactionReceipt({ hash })
 
-    // validate deployment
-    if (receipt.status !== "success") throw new SubmitterError("Transaction failed on-chain.")
-    if (!(await isContractDeployed(predictedAddress)))
-        throw new SubmitterError(`Contract deployment failed: No code found at ${predictedAddress}`)
-
+    if (receipt.status !== "success") return err(new SubmitterError("Transaction failed on-chain."))
     logger.trace(`Account Creation Result: ${result}`)
-
-    return { address: predictedAddress, salt, owner }
+    return ok({ address: predictedAddress, salt, owner })
 }

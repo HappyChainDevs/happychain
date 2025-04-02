@@ -1,6 +1,5 @@
 export const overrides = {
     columns: {
-        "happy_receipts.failureReason": "`0x${string}`",
         "happy_receipts.gasCost": "bigint",
         "happy_receipts.gasUsed": "bigint",
         "happy_receipts.happyTxHash": "`0x${string}`",
@@ -10,7 +9,6 @@ export const overrides = {
         "happy_receipts.transactionHash": "`0x${string}`",
         "happy_simulations.executeGas": "bigint",
         "happy_simulations.gas": "bigint",
-        "happy_simulations.failureReason": "`0x${string}`",
         "happy_simulations.revertData": "`0x${string}`",
         "happy_simulations.entryPoint": "`0x${string}`",
         "happy_states.included": "boolean",

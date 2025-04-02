@@ -34,7 +34,6 @@ const simulationResultFailureSchema = z.object({
     ]),
     validationStatus: validationStatus,
     entryPoint: z.string().refine(isAddress),
-    failureReason: z.string().refine(isHexString),
     revertData: z.string().refine(isHexString),
 })
 

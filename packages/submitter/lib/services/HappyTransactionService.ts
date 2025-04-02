@@ -1,6 +1,6 @@
 import type { HappyTransaction } from "#lib/database/generated"
 import type { HappyTransactionRepository } from "#lib/database/repositories/HappyTransactionRepository"
-import { SubmitterError } from "#lib/errors/contract-errors"
+import { SubmitterError } from "#lib/errors/submitter-errors"
 
 export class HappyTransactionService {
     constructor(private happyTransactionRepository: HappyTransactionRepository) {}

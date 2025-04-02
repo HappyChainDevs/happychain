@@ -21,13 +21,13 @@ const client = new ApiClient({ baseUrl: env.SUBMITTER_URL })
 
 // == Account API Routes ===========================================================================
 
+export type { CreateAccountInput, CreateAccountOutput }
 /**
  * Create a new ScrappyAccount
  * @param data User Creation Options
  * @param data.owner User EOA address
  * @param data.salt Salt for the account creation
  */
-export type { CreateAccountInput, CreateAccountOutput }
 export async function createAccount(data: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
     const response = await client.post("/v1/accounts/create", data)
     return response as Result<CreateAccountOutput, Error>
@@ -68,7 +68,7 @@ export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput,
  */
 export type { EstimateGasInput, EstimateGasOutput }
 export async function estimateGas(data: EstimateGasInput): Promise<Result<EstimateGasOutput, Error>> {
-    const response = await client.post("/v1/estimateGas", data)
+    const response = await client.post("/v1/simulate", data)
     return response as Result<EstimateGasOutput, Error>
 }
 

@@ -10,7 +10,7 @@ import { type getCommand, showHelp } from "../utils"
 
 const baseDir = join(import.meta.dir, "../../../")
 
-const typeGenOutFile = "lib/database/generated.d.ts"
+const typeGenOutFile = "lib/database/generated.d"
 const typeCodeGenOptions = {
     camelCase: false,
     db,

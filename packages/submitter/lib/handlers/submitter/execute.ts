@@ -1,30 +1,37 @@
-import { SubmitterError } from "#lib/errors/contract-errors"
+import { type Result, err, ok } from "neverthrow"
+import { getErrorNameFromSelector } from "#lib/errors/parsedCodes"
 import { happyReceiptService } from "#lib/services"
-import type { HappyTx } from "#lib/tmp/interface/HappyTx"
-import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { type ExecuteOutput, ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
-import { SubmitSuccess } from "#lib/tmp/interface/submitter_submit"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
+import { EntryPointStatus, SubmitterErrorStatus } from "#lib/tmp/interface/status"
+import { type ExecuteInput, type ExecuteOutput, ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
 import { submit } from "./submit"
 
-export async function execute(data: { entryPoint: `0x${string}`; tx: HappyTx }): Promise<ExecuteOutput> {
+export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, ExecuteOutput>> {
     const happyTxHash = computeHappyTxHash(data.tx)
     const status = await submit(data)
-
-    if (status.status !== SubmitSuccess || !status.hash) {
-        return status satisfies ExecuteOutput
+    if (status.isErr()) {
+        if ("simulation" in status.error && status.error.simulation) {
+            return err({
+                status: status.error.simulation.status || SubmitterErrorStatus.UnexpectedError,
+                revertData:
+                    getErrorNameFromSelector(status.error.simulation.revertData || "0x") ||
+                    status.error.simulation.revertData,
+            })
+        } else {
+            return err({ status: SubmitterErrorStatus.UnexpectedError })
+        }
     }
 
     const receipt = await happyReceiptService.findByHappyTxHashWithTimeout(happyTxHash, 60_000)
 
-    if (!receipt || receipt.txReceipt.status !== "success") throw new SubmitterError("Unable to retrieve receipt")
+    if (!receipt || receipt.txReceipt.status !== "success") return err({ status: SubmitterErrorStatus.UnexpectedError })
 
-    return {
+    return ok({
         status: ExecuteSuccess,
         state: {
             status: EntryPointStatus.Success,
             included: true,
             receipt: receipt,
         },
-    } satisfies ExecuteOutput
+    })
 }

@@ -11,7 +11,6 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("gas", "text", (col) => col.notNull())
         .addColumn("executeGas", "text", (col) => col.notNull())
         .addColumn("revertData", "text", (col) => col.notNull())
-        .addColumn("failureReason", "text", (col) => col.notNull())
         .addColumn("entryPoint", "text", (col) => col.notNull())
         .execute()
 }
