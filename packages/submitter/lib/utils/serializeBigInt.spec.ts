@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { serializeBigInt } from "./bigint-lossy"
+import { serializeBigInt } from "./serializeBigInt"
 
 describe("bigint.lossy", () => {
     it("converts bigints in object to strings", () => {

@@ -1,4 +1,4 @@
-export { getHash } from "./helpers"
+export { computeBoopHash } from "./helpers"
 export {
     createAccount,
     submit,

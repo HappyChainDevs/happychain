@@ -11,7 +11,6 @@ export class HappySimulationRepository {
                 "happy_simulations.status",
                 "happy_simulations.validationStatus",
                 "happy_simulations.revertData",
-                "happy_simulations.failureReason",
                 "happy_simulations.entryPoint",
             ])
             .where("happyTxHash", "=", happyTxHash)
@@ -20,7 +19,7 @@ export class HappySimulationRepository {
     }
 
     async insert(state: Insertable<HappySimulation>): Promise<HappySimulation | undefined> {
-        return (await this.db //
+        return await this.db //
             .insertInto("happy_simulations")
             .values(state)
             .onConflict((oc) =>
@@ -30,11 +29,10 @@ export class HappySimulationRepository {
                     gas: state.gas,
                     executeGas: state.executeGas,
                     revertData: state.revertData,
-                    failureReason: state.failureReason,
                     entryPoint: state.entryPoint,
                 }),
             )
             .returningAll()
-            .executeTakeFirst()) as HappySimulation | undefined // TODO: bug in code-gen update - Generated<number | null> column error?
+            .executeTakeFirst()
     }
 }

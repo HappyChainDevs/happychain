@@ -7,7 +7,7 @@ import type { z } from "zod"
 import { abis, deployment } from "#lib/deployments"
 import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/submitter/openApi/execute"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 
 export type TestExecuteInput = z.input<typeof ExecuteInputSchema>
@@ -66,7 +66,12 @@ export async function getMockTokenABalance(account: Address) {
     })
 }
 
-export function createMockTokenAMintHappyTx(account: Address, nonceValue: bigint, nonceTrack = 0n): HappyTx {
+export function createMockTokenAMintHappyTx(
+    account: Address,
+    nonceValue: bigint,
+    nonceTrack = 0n,
+    amount = 10n ** 18n,
+): HappyTx {
     return {
         account,
         dest: deployment.MockTokenA,
@@ -76,7 +81,7 @@ export function createMockTokenAMintHappyTx(account: Address, nonceValue: bigint
 
         // paymaster is default
         paymaster: zeroAddress,
-        executeGasLimit: 0n, // TODO: contract error, this breaks if set to zero
+        executeGasLimit: 0n,
         gasLimit: 0n,
         maxFeePerGas: 1200000000n,
         submitterFee: 100n,
@@ -84,7 +89,7 @@ export function createMockTokenAMintHappyTx(account: Address, nonceValue: bigint
         callData: encodeFunctionData({
             abi: abis.MockTokenA,
             functionName: "mint",
-            args: [account, 10n ** 18n],
+            args: [account, amount],
         }),
         paymasterData: "0x",
         validatorData: "0x",

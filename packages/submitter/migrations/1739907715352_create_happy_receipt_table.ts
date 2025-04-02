@@ -8,7 +8,6 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("happyTxHash", "text", (col) => col.notNull().unique())
         .addColumn("status", "text", (col) => col.notNull())
         .addColumn("revertData", "text", (col) => col.notNull())
-        .addColumn("failureReason", "text", (col) => col.notNull())
         .addColumn("gasUsed", "text", (col) => col.notNull())
         .addColumn("gasCost", "text", (col) => col.notNull())
         .addColumn("transactionHash", "text", (col) => col.notNull())

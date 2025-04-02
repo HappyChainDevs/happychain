@@ -10,7 +10,6 @@ import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
 import pkg from "../package.json" assert { type: "json" }
 import env from "./env"
-import { HappyBaseError } from "./errors"
 import { logger } from "./logger"
 import accountsApi from "./routes/api/accounts"
 import submitterApi from "./routes/api/submitter"
@@ -44,32 +43,31 @@ const app = new Hono()
 
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
 app.onError(async (err, c) => {
+    // re-format input validation errors
     if (err instanceof HTTPException && err.cause instanceof ZodError) {
         const error = err.cause.issues.map((i) => ({ path: i.path.join("."), message: i.message }))
-        logger.warn(error)
-        return c.json({ error }, 422)
+        return c.json({ error, requestId: c.get("requestId"), url: c.req.url }, 422)
     }
 
+    //
     logger.warn({ requestId: c.get("requestId"), url: c.req.url }, err)
 
+    // standard hono exceptions
+    // https://hono.dev/docs/api/exception#handling-httpexception
     if (err instanceof HTTPException) return err.getResponse()
-    if (err instanceof HappyBaseError) return c.json(err.getResponseData(), 422)
 
-    const response =
-        env.NODE_ENV === "production"
-            ? {
-                  // don't include raw error in prod
-                  message: `Something Happened, file a report with this key to find out more: ${c.get("requestId")}`,
-                  url: c.req.url,
-                  requestId: c.get("requestId"),
-              }
-            : {
-                  requestId: c.get("requestId"),
-                  url: c.req.url,
-                  error: err.message,
-              }
-
-    return c.json(response, 500)
+    // Unhandled Exceptions - should not occur
+    return c.json(
+        {
+            error:
+                env.NODE_ENV === "production"
+                    ? `Something Happened, file a report with this key to find out more: ${c.get("requestId")}`
+                    : err.message,
+            requestId: c.get("requestId"),
+            url: c.req.url,
+        },
+        500,
+    )
 })
 
 app.get(
@@ -79,7 +77,7 @@ app.get(
             info: {
                 title: "Boop",
                 version: pkg.version,
-                description: "Happy Account Submitter",
+                description: "Boop Submitter",
             },
             servers: [
                 { url: "http://localhost:3001", description: "Local server" },

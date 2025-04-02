@@ -1,15 +1,16 @@
 import { beforeAll, describe, expect, it } from "bun:test"
+import type { Result } from "neverthrow"
 import { encodeFunctionData } from "viem"
 import { deployment } from "#lib/deployments"
-import { SimulationError } from "#lib/errors/contract-errors"
 import { getErrorNameFromSelector } from "#lib/errors/parsedCodes"
 import { create } from "#lib/handlers/accounts/create"
 import { createMockTokenAMintHappyTx, getNonce, testAccount } from "#lib/tests/utils"
+import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 import { EntryPointStatus, SimulatedValidationStatus } from "#lib/tmp/interface/status"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash.ts"
+import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
 import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
-import { simulateSubmit } from "./simulateSubmit"
+import { simulateSubmit } from "./simulate"
 import { submit } from "./submit"
 
 describe("simulateSubmit", () => {
@@ -19,7 +20,7 @@ describe("simulateSubmit", () => {
         ;({ address: smartAccount } = await create({
             owner: testAccount.account.address,
             salt: "0x000000000000000000000000000000000000000000000000000000000000001",
-        }))
+        }).then((a) => (a.isOk() ? a.value : ({} as never))))
     })
 
     describe("utilities", () => {
@@ -41,11 +42,16 @@ describe("simulateSubmit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            const { result, simulation } = await simulateSubmit({
+            const simResult = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
                 address: deployment.HappyEntryPoint,
                 args: [encodeHappyTx(unsigned)],
             })
+            expect(simResult.isOk()).toBe(true)
+
+            const { result, simulation } = simResult.isOk()
+                ? simResult.value
+                : ({} as typeof simResult extends Result<infer U, never> ? U : never)
 
             expect(result.gas).toBeGreaterThan(80000)
             expect(result.gas).toBeLessThan(150000)
@@ -70,11 +76,15 @@ describe("simulateSubmit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            const { result, simulation } = await simulateSubmit({
+            const simResult = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
                 address: deployment.HappyEntryPoint,
                 args: [encodeHappyTx(unsigned)],
             })
+
+            const { result, simulation } = simResult.isOk()
+                ? simResult.value
+                : ({} as typeof simResult extends Result<infer U, never> ? U : never)
 
             expect(result.gas).toBeGreaterThan(80000)
             expect(result.gas).toBeLessThan(150000)
@@ -98,11 +108,15 @@ describe("simulateSubmit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            const { result, simulation } = await simulateSubmit({
+            const simResult = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
                 address: deployment.HappyEntryPoint,
                 args: [encodeHappyTx(unsigned)],
             })
+
+            const { result, simulation } = simResult.isOk()
+                ? simResult.value
+                : ({} as typeof simResult extends Result<infer U, never> ? U : never)
 
             expect(result.validationStatus).toBe("0xbc6fae2d")
             expect(result.callStatus).toBe(0)
@@ -111,24 +125,23 @@ describe("simulateSubmit", () => {
             expect(simulation?.status).toBe(EntryPointStatus.Success)
             expect(simulation?.entryPoint).toBe(deployment.HappyEntryPoint)
             expect(simulation?.validationStatus).toBe(SimulatedValidationStatus.FutureNonce)
+            expect(simulation?.revertData).toBeUndefined()
         })
     })
 
     describe("failure", () => {
+        // TODO: submit hasin't yet implemented nothrow so this fails
         it("can't use a too-low nonce", async () => {
             const nonceTrack = 1000n
             let nonceValue = await getNonce(smartAccount, nonceTrack)
-
             if (!nonceValue) {
                 const unsigned = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
                 unsigned.validatorData = await testAccount.account.signMessage({
                     message: { raw: computeHappyTxHash(unsigned) },
                 })
-                await submit({
-                    account: findExecutionAccount(unsigned),
-                    address: deployment.HappyEntryPoint,
-                    args: [encodeHappyTx(unsigned)],
-                })
+
+                await submit({ entryPoint: deployment.HappyEntryPoint, tx: unsigned })
+
                 nonceValue++
             }
 
@@ -137,21 +150,19 @@ describe("simulateSubmit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            try {
-                await simulateSubmit({
-                    account: findExecutionAccount(unsigned),
-                    address: deployment.HappyEntryPoint,
-                    args: [encodeHappyTx(unsigned)],
-                })
-                expect.unreachable()
-                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            } catch (err: any) {
-                expect(err).toBeInstanceOf(SimulationError)
-                expect(err.errorName).toBe("InvalidNonce")
-                expect(err.entryPoint).toBe(deployment.HappyEntryPoint)
-                expect(err.validationStatus).toBe(SimulatedValidationStatus.Reverted)
-                expect(err.status).toBe(EntryPointStatus.UnexpectedReverted)
-            }
+            const resp = await simulateSubmit({
+                account: findExecutionAccount(unsigned),
+                address: deployment.HappyEntryPoint,
+                args: [encodeHappyTx(unsigned)],
+            })
+
+            // @ts-expect-error
+            const sim = resp.error.simulation as SimulationResult
+
+            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
+            expect(sim.status).toBe(EntryPointStatus.UnexpectedReverted)
+            expect(sim.revertData).toBe("0x756688fe") // InvalidNonce
         })
 
         it("should simulate revert on unfunded self-sponsored", async () => {
@@ -165,21 +176,18 @@ describe("simulateSubmit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            try {
-                await simulateSubmit({
-                    account: findExecutionAccount(unsigned),
-                    address: deployment.HappyEntryPoint,
-                    args: [encodeHappyTx(unsigned)],
-                })
-                expect.unreachable()
-                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            } catch (err: any) {
-                expect(err).toBeInstanceOf(SimulationError)
-                expect(err.errorName).toBe("Failure")
-                expect(err.entryPoint).toBe(deployment.HappyEntryPoint)
-                expect(err.validationStatus).toBe(SimulatedValidationStatus.Reverted)
-                expect(err.status).toBe(EntryPointStatus.PaymentFailed)
-            }
+            const resp = await simulateSubmit({
+                account: findExecutionAccount(unsigned),
+                address: deployment.HappyEntryPoint,
+                args: [encodeHappyTx(unsigned)],
+            })
+            // @ts-expect-error
+            const sim = resp.error.simulation as SimulationResult
+
+            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
+            expect(sim.status).toBe(EntryPointStatus.PaymentFailed)
+            expect(sim.revertData).toBe("0x00000000")
         })
 
         it("should revert on invalid signature", async () => {
@@ -188,21 +196,19 @@ describe("simulateSubmit", () => {
             // invalid signature
             unsigned.validatorData = "0x"
 
-            try {
-                await simulateSubmit({
-                    account: findExecutionAccount(unsigned),
-                    address: deployment.HappyEntryPoint,
-                    args: [encodeHappyTx(unsigned)],
-                })
-                expect.unreachable()
-                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            } catch (err: any) {
-                expect(err).toBeInstanceOf(SimulationError)
-                expect(err.errorName).toBe("InvalidSignature")
-                expect(err.entryPoint).toBe(deployment.HappyEntryPoint)
-                expect(err.validationStatus).toBe(SimulatedValidationStatus.Reverted)
-                expect(err.status).toBe(EntryPointStatus.ValidationReverted)
-            }
+            const resp = await simulateSubmit({
+                account: findExecutionAccount(unsigned),
+                address: deployment.HappyEntryPoint,
+                args: [encodeHappyTx(unsigned)],
+            })
+
+            // @ts-expect-error
+            const sim = resp.error.simulation as SimulationResult
+
+            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.revertData).toBe("0x8baa579f")
+            expect(sim.status).toBe(EntryPointStatus.ValidationReverted)
+            expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
         })
 
         it("should revert on incorrect account", async () => {
@@ -212,21 +218,19 @@ describe("simulateSubmit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            try {
-                await simulateSubmit({
-                    account: findExecutionAccount(unsigned),
-                    address: deployment.HappyEntryPoint,
-                    args: [encodeHappyTx(unsigned)],
-                })
-                expect.unreachable()
-                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            } catch (err: any) {
-                expect(err).toBeInstanceOf(SimulationError)
-                expect(err.errorName).toBe("Revert")
-                expect(err.entryPoint).toBe(deployment.HappyEntryPoint)
-                expect(err.validationStatus).toBe(SimulatedValidationStatus.Reverted)
-                expect(err.status).toBe(EntryPointStatus.UnexpectedReverted)
-            }
+            const resp = await simulateSubmit({
+                account: findExecutionAccount(unsigned),
+                address: deployment.HappyEntryPoint,
+                args: [encodeHappyTx(unsigned)],
+            })
+
+            // @ts-expect-error
+            const sim = resp.error.simulation as SimulationResult
+
+            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.revertData).toBe("0x") // InvalidSignature
+            expect(sim.status).toBe(EntryPointStatus.UnexpectedReverted)
+            expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
         })
 
         it("should revert on invalid destination account", async () => {
@@ -237,21 +241,19 @@ describe("simulateSubmit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            try {
-                await simulateSubmit({
-                    account: findExecutionAccount(unsigned),
-                    address: deployment.HappyEntryPoint,
-                    args: [encodeHappyTx(unsigned)],
-                })
-                expect.unreachable()
-                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            } catch (err: any) {
-                expect(err).toBeInstanceOf(SimulationError)
-                expect(err.errorName).toBe("Revert")
-                expect(err.entryPoint).toBe(deployment.HappyEntryPoint)
-                expect(err.validationStatus).toBe(SimulatedValidationStatus.Success)
-                expect(err.status).toBe(EntryPointStatus.ExecuteReverted)
-            }
+            const resp = await simulateSubmit({
+                account: findExecutionAccount(unsigned),
+                address: deployment.HappyEntryPoint,
+                args: [encodeHappyTx(unsigned)],
+            })
+
+            // @ts-expect-error
+            const sim = resp.error.simulation as SimulationResult
+
+            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.revertData).toBe("0x")
+            expect(sim.status).toBe(EntryPointStatus.CallReverted)
+            expect(sim.validationStatus).toBe(SimulatedValidationStatus.Success)
         })
 
         it("simulates a revert when invalid ABI is used to make call", async () => {
@@ -266,22 +268,20 @@ describe("simulateSubmit", () => {
             unsigned.validatorData = await testAccount.account.signMessage({
                 message: { raw: computeHappyTxHash(unsigned) },
             })
-            try {
-                await simulateSubmit({
-                    account: findExecutionAccount(unsigned),
-                    address: deployment.HappyEntryPoint,
-                    args: [encodeHappyTx(unsigned)],
-                })
 
-                expect.unreachable()
-                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            } catch (err: any) {
-                expect(err).toBeInstanceOf(SimulationError)
-                expect(err.errorName).toBe("Revert")
-                expect(err.entryPoint).toBe(deployment.HappyEntryPoint)
-                expect(err.status).toBe(EntryPointStatus.ExecuteReverted)
-                expect(err.validationStatus).toBe(SimulatedValidationStatus.Success) // it does simulate success, but it's a revert
-            }
+            const resp = await simulateSubmit({
+                account: findExecutionAccount(unsigned),
+                address: deployment.HappyEntryPoint,
+                args: [encodeHappyTx(unsigned)],
+            })
+
+            // @ts-expect-error
+            const sim = resp.error.simulation as SimulationResult
+
+            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.revertData).toBe("0x")
+            expect(sim.status).toBe(EntryPointStatus.CallReverted)
+            expect(sim.validationStatus).toBe(SimulatedValidationStatus.Success)
         })
     })
 })

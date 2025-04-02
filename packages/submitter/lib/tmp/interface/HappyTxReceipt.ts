@@ -30,12 +30,6 @@ export type HappyTxReceipt = {
      */
     revertData: Hex
 
-    /**
-     * The selector carried by one of our custom error.
-     * Empty if `!status.endsWith("Failed")`
-     */
-    failureReason: Hex
-
     /** Gas used by the HappyTx */
     gasUsed: UInt256
 

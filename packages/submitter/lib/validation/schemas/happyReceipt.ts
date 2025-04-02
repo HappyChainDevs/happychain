@@ -14,7 +14,6 @@ export const happyReceiptSchema = z.object({
     status: z.string().openapi({ example: EntryPointStatus.Success }),
     logs: z.array(transactionSchema).openapi({ example: [] }),
     revertData: z.string().openapi({ example: "0x" }),
-    failureReason: z.string().openapi({ example: "0x" }),
     gasUsed: z.string().openapi({ example: "0" }),
     gasCost: z.string().openapi({ example: "0" }),
     txReceipt: receiptSchema,
