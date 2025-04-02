@@ -24,7 +24,7 @@ import {VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomBoopValidator.sol
 import {EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
 
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
-import {InvalidSignature, UnknownDuringSimulation} from "boop/utils/Common.sol";
+import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/utils/Common.sol";
 
 contract ScrappyAccountTest is HappyTxTestUtils {
     using HappyTxLib for HappyTx;
@@ -166,11 +166,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         bytes memory invalidValidatorAddress = "deadbeefdeadbeefde";
 
         // Add the invalid validator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(VALIDATOR_KEY),
-            bytes3(0x000010), // Length prefix for address (should be 10 bytes)
-            invalidValidatorAddress
-        );
+        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000010, invalidValidatorAddress);
 
         // Call validate as the entry point
         vm.prank(_happyEntryPoint);
@@ -188,11 +184,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         address unregisteredValidator = address(0xDEAD);
 
         // Add the unregistered validator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(VALIDATOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(unregisteredValidator)
-        );
+        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(unregisteredValidator));
 
         // Call validate as the entry point
         vm.prank(_happyEntryPoint);
@@ -210,11 +202,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockValidator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(VALIDATOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(mockValidator)
-        );
+        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
 
         // Call validate as the entry point
         vm.prank(_happyEntryPoint);
@@ -235,11 +223,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockValidator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(VALIDATOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(mockValidator)
-        );
+        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
 
         // Call validate as the entry point
         vm.prank(_happyEntryPoint);
@@ -260,11 +244,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockValidator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(VALIDATOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(mockValidator)
-        );
+        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
 
         // Call validate as the entry point
         vm.prank(_happyEntryPoint);
@@ -285,11 +265,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockValidator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(VALIDATOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(mockValidator)
-        );
+        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
 
         // Call validate as the entry point
         vm.prank(_happyEntryPoint);
@@ -297,165 +273,6 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // The validator should revert
         vm.expectRevert();
         ScrappyAccount(payable(smartAccount)).validate(happyTx);
-    }
-
-    // ====================================================================================================
-    // EXECUTOR TESTS (EXTENSIONS)
-
-    function testExecuteWithInvalidExtensionValue() public {
-        // Create a HappyTx with invalid executor address in extraData (not 20 bytes)
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-
-        // Create invalid executor address (less than 20 bytes)
-        bytes memory invalidExecutorAddress = "deadbeefdeadbeefde";
-
-        // Add the invalid executor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(EXECUTOR_KEY),
-            bytes3(0x000010), // Length prefix for address (should be 10 bytes)
-            invalidExecutorAddress
-        );
-
-        // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
-
-        // Should return EXECUTE_FAILED with InvalidExtensionValue selector
-        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
-        assertEq(output.revertData, abi.encodeWithSelector(InvalidExtensionValue.selector));
-    }
-
-    function testExecuteWithUnregisteredExtension() public {
-        // Create a HappyTx with unregistered executor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-
-        // Create an executor address that is not registered
-        address unregisteredExecutor = address(0xDEAD);
-
-        // Add the unregistered executor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(EXECUTOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(unregisteredExecutor)
-        );
-
-        // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
-
-        // Should return EXECUTE_FAILED with ExtensionNotRegistered selector
-        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
-        assertEq(output.revertData, abi.encodeWithSelector(ExtensionNotRegistered.selector));
-    }
-
-    function testExecuteWithMockExecutorSuccess() public {
-        // Register the MockExecutor as an executor extension
-        _setupMockExecutor(mockExecutor);
-
-        // Fund the smart account
-        vm.deal(smartAccount, 1 ether);
-
-        // Set up a recipient for ETH transfer
-        address recipient = address(0xBEEF);
-        uint256 transferAmount = 0.1 ether;
-        uint256 initialBalance = recipient.balance;
-
-        // Create a HappyTx with the MockExecutor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, recipient, smartAccount, new bytes(0));
-        happyTx.value = transferAmount;
-
-        // Add the MockExecutor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(EXECUTOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(mockExecutor)
-        );
-
-        // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
-
-        // Should return SUCCEEDED
-        assertEq(uint8(output.status), uint8(CallStatus.SUCCEEDED));
-
-        // Verify the ETH transfer was successful
-        assertEq(recipient.balance, initialBalance + transferAmount, "ETH should be transferred");
-    }
-
-    function testExecuteWithMockExecutorFail() public {
-        // Set execution mode to Fail
-        MockExecutor(mockExecutor).setExecutionMode(1);
-
-        // Register the MockExecutor as an executor extension
-        _setupMockExecutor(mockExecutor);
-
-        // Create a HappyTx with the MockExecutor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-
-        // Add the MockExecutor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(EXECUTOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(mockExecutor)
-        );
-
-        // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
-
-        // Should return EXECUTE_FAILED
-        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
-        assertEq(string(output.revertData), "MockExecutor: execution failed");
-    }
-
-    function testExecuteWithMockExecutorRevert() public {
-        // Set execution mode to Revert with custom error
-        MockExecutor(mockExecutor).setExecutionMode(2);
-
-        // Register the MockExecutor as an executor extension
-        _setupMockExecutor(mockExecutor);
-
-        // Create a HappyTx with the MockExecutor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-
-        // Add the MockExecutor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(EXECUTOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(mockExecutor)
-        );
-
-        // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-
-        // The executor should revert with a custom error
-        vm.expectRevert(abi.encodeWithSelector(MockExecutor.CustomErrorMockRevert.selector));
-        ScrappyAccount(payable(smartAccount)).execute(happyTx);
-    }
-
-    function testExecuteWithMockExecutorEmptyRevert() public {
-        // Set execution mode to Empty Revert
-        MockExecutor(mockExecutor).setExecutionMode(3);
-
-        // Register the MockExecutor as an executor extension
-        _setupMockExecutor(mockExecutor);
-
-        // Create a HappyTx with the MockExecutor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-
-        // Add the MockExecutor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = abi.encodePacked(
-            bytes3(EXECUTOR_KEY),
-            bytes3(0x000014), // Length prefix for address (20 bytes)
-            abi.encodePacked(mockExecutor)
-        );
-
-        // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-
-        // The executor should revert
-        vm.expectRevert("MockExecutor: empty revert");
-        ScrappyAccount(payable(smartAccount)).execute(happyTx);
     }
 
     // ====================================================================================================
@@ -517,8 +334,170 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     // ====================================================================================================
     // EXECUTION TESTS (EXTENSIONS)
 
+    function testExecuteWithInvalidExtensionValue() public {
+        // Create a HappyTx with invalid executor address in extraData (not 20 bytes)
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+
+        // Create invalid executor address (less than 20 bytes)
+        bytes memory invalidExecutorAddress = "deadbeefdeadbeefde";
+
+        // Add the invalid executor address to extraData with EXECUTOR_KEY
+        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000010, invalidExecutorAddress);
+
+        // Call execute as the entry point
+        vm.prank(_happyEntryPoint);
+        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+
+        // Should return EXECUTE_FAILED with InvalidExtensionValue selector
+        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
+        assertEq(output.revertData, abi.encodeWithSelector(InvalidExtensionValue.selector));
+    }
+
+    function testExecuteWithUnregisteredExtension() public {
+        // Create a HappyTx with unregistered executor address in extraData
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+
+        // Create an executor address that is not registered
+        address unregisteredExecutor = address(0xDEAD);
+
+        // Add the unregistered executor address to extraData with EXECUTOR_KEY
+        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(unregisteredExecutor));
+
+        // Call execute as the entry point
+        vm.prank(_happyEntryPoint);
+        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+
+        // Should return EXECUTE_FAILED with ExtensionNotRegistered selector
+        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
+        assertEq(output.revertData, abi.encodeWithSelector(ExtensionNotRegistered.selector));
+    }
+
+    function testExecuteWithMockExecutorSuccess() public {
+        // Register the MockExecutor as an executor extension
+        _setupMockExecutor(mockExecutor);
+
+        // Fund the smart account
+        vm.deal(smartAccount, 1 ether);
+
+        // Set up a recipient for ETH transfer
+        address recipient = address(0xBEEF);
+        uint256 transferAmount = 0.1 ether;
+        uint256 initialBalance = recipient.balance;
+
+        // Create a HappyTx with the MockExecutor address in extraData
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, recipient, smartAccount, new bytes(0));
+        happyTx.value = transferAmount;
+
+        // Add the MockExecutor address to extraData with EXECUTOR_KEY
+        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
+
+        // Call execute as the entry point
+        vm.prank(_happyEntryPoint);
+        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+
+        // Should return SUCCEEDED
+        assertEq(uint8(output.status), uint8(CallStatus.SUCCEEDED));
+
+        // Verify the ETH transfer was successful
+        assertEq(recipient.balance, initialBalance + transferAmount, "ETH should be transferred");
+    }
+
+    function testExecuteWithMockExecutorFail() public {
+        // Set execution mode to Fail
+        MockExecutor(mockExecutor).setExecutionMode(1);
+
+        // Register the MockExecutor as an executor extension
+        _setupMockExecutor(mockExecutor);
+
+        // Create a HappyTx with the MockExecutor address in extraData
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+
+        // Add the MockExecutor address to extraData with EXECUTOR_KEY
+        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
+
+        // Call execute as the entry point
+        vm.prank(_happyEntryPoint);
+        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+
+        // Should return EXECUTE_FAILED
+        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
+        assertEq(output.revertData, abi.encodeWithSelector(MockExecutor.InvalidInput.selector));
+    }
+
+    function testExecuteWithMockExecutorRevert() public {
+        // Set execution mode to Revert with custom error
+        MockExecutor(mockExecutor).setExecutionMode(2);
+
+        // Register the MockExecutor as an executor extension
+        _setupMockExecutor(mockExecutor);
+
+        // Create a HappyTx with the MockExecutor address in extraData
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+
+        // Add the MockExecutor address to extraData with EXECUTOR_KEY
+        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
+
+        // Call execute as the entry point
+        vm.prank(_happyEntryPoint);
+
+        // The executor should revert with a custom error
+        vm.expectRevert(abi.encodeWithSelector(MockExecutor.CustomErrorMockRevert.selector));
+        ScrappyAccount(payable(smartAccount)).execute(happyTx);
+    }
+
+    function testExecuteWithMockExecutorEmptyRevert() public {
+        // Set execution mode to Empty Revert
+        MockExecutor(mockExecutor).setExecutionMode(3);
+
+        // Register the MockExecutor as an executor extension
+        _setupMockExecutor(mockExecutor);
+
+        // Create a HappyTx with the MockExecutor address in extraData
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+
+        // Add the MockExecutor address to extraData with EXECUTOR_KEY
+        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
+
+        // Call execute as the entry point
+        vm.prank(_happyEntryPoint);
+
+        // The executor should revert without any revert data
+        vm.expectRevert();
+        ScrappyAccount(payable(smartAccount)).execute(happyTx);
+    }
+
     // ====================================================================================================
     // PAYOUT TESTS
+
+    function testPayoutNotFromEntryPoint() public {
+        vm.prank(address(1));
+        vm.expectRevert(NotFromEntryPoint.selector);
+        ScrappyAccount(payable(smartAccount)).payout(1 ether);
+    }
+
+    function testPayoutSucceeds() public {
+        address payable mockOrigin = payable(address(0xDeadBeef));
+        vm.deal(mockOrigin, 1 ether); // To make the account "non-empty", otherwise call takes extra 25K gas
+        uint256 initialTxOriginBalance = mockOrigin.balance;
+
+        vm.deal(smartAccount, 1 ether); // To pay the tx.origin
+
+        // Warm up the smartAccount address with a dummy call
+        vm.prank(_happyEntryPoint, mockOrigin);
+        ScrappyAccount(payable(smartAccount)).payout(0);
+
+        // Measure gas usage on the actual call we want to measure
+        vm.prank(_happyEntryPoint, mockOrigin);
+        uint256 gasBefore = gasleft();
+        ScrappyAccount(payable(smartAccount)).payout(1 ether);
+        uint256 gasUsed = gasBefore - gasleft();
+
+        // Check that tx.origin received the funds
+        assertEq(mockOrigin.balance, initialTxOriginBalance + 1 ether);
+
+        // Verify gas usage is within expected limits
+        assertLe(gasUsed, 12000);
+    }
 
     // ====================================================================================================
     // ISVALIDSIGNATURE TESTS
@@ -768,5 +747,16 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
     function _setupMockValidator(address _mockValidator) internal {
         _setupExtension(_mockValidator, ExtensionType.Validator);
+    }
+
+    /**
+     * @notice Helper function to encode extension data
+     * @param key The extension key (3 bytes)
+     * @param length The length prefix for the data (3 bytes)
+     * @param data The extension data
+     * @return bytes The encoded extension data
+     */
+    function encodeExtensionData(bytes3 key, bytes3 length, bytes memory data) internal pure returns (bytes memory) {
+        return abi.encodePacked(key, length, data);
     }
 }

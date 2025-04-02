@@ -26,5 +26,17 @@
         "tsconfig.json": "jsonc"
     },
     "typescript.preferences.importModuleSpecifierEnding": "minimal",
-    "solidity.compileUsingRemoteVersion": "v0.8.28+commit.7893614a"
+    "solidity.compileUsingRemoteVersion": "v0.8.28+commit.7893614a",
+    "wake.compiler.solc.remappings": [
+        "@kevincharm/=node_modules/@kevincharm/",
+        "@openzeppelin/=node_modules/@openzeppelin/",
+        "ExcessivelySafeCall/=node_modules/ExcessivelySafeCall/",
+        "account-abstraction/=node_modules/account-abstraction/",
+        "ds-test/=node_modules/ExcessivelySafeCall/lib/ds-test/src/",
+        "forge-std/=node_modules/forge-std/",
+        "hardhat-deploy/=node_modules/hardhat-deploy/",
+        "hardhat/=node_modules/hardhat/",
+        "kernel/=node_modules/kernel/",
+        "solady/=node_modules/solady/"
+    ]
 }

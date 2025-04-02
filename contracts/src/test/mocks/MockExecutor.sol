@@ -23,6 +23,9 @@ contract MockExecutor is ICustomBoopExecutor {
     // Custom error for revert mode
     error CustomErrorMockRevert();
 
+    // Custom error to simulate invalid input being sent to the executor
+    error InvalidInput();
+
     constructor() {
         executionMode = 0;
     }
@@ -67,13 +70,13 @@ contract MockExecutor is ICustomBoopExecutor {
         } else if (executionMode == 1) {
             // Return failed execution status
             output.status = CallStatus.EXECUTE_FAILED;
-            output.revertData = "MockExecutor: execution failed";
+            output.revertData = abi.encodeWithSelector(InvalidInput.selector);
         } else if (executionMode == 2) {
             // Revert with custom error
             revert CustomErrorMockRevert();
         } else {
-            // Empty revert
-            revert("MockExecutor: empty revert");
+            // solhint-disable-next-line reason-string
+            revert();
         }
 
         return output;
