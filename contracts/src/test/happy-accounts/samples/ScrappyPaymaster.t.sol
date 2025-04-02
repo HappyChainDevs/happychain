@@ -2,13 +2,14 @@
 pragma solidity ^0.8.20;
 
 import {HappyTxTestUtils} from "../Utils.sol";
-import {HappyTx} from "../../../happy-accounts/core/HappyTx.sol";
+import {HappyTx} from "boop/core/HappyTx.sol";
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
 
-import {ScrappyPaymaster} from "../../../happy-accounts/samples/ScrappyPaymaster.sol";
-import {SubmitterFeeTooHigh} from "../../../happy-accounts/interfaces/IHappyPaymaster.sol";
+import {ScrappyPaymaster} from "boop/samples/ScrappyPaymaster.sol";
+import {SubmitterFeeTooHigh} from "boop/interfaces/IHappyPaymaster.sol";
+import {NotFromEntryPoint} from "boop/utils/Common.sol";
 
 contract ScrappyPaymasterTest is HappyTxTestUtils {
     // ====================================================================================================
@@ -54,41 +55,9 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
-    // PAYOUT TESTS
+    // PAYMENT VALIDATION TESTS
 
-    function testPayoutSuccessfulGasCalculation() public {
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, paymaster, new bytes(0));
-
-        // Set up test parameters
-        uint256 consumedGas = 100000;
-        uint256 maxFeePerGas = happyTx.maxFeePerGas;
-        int256 submitterFee = happyTx.submitterFee;
-
-        // Calculate expected owed amount
-        uint256 payoutGas = 12_000; // From ScrappyPaymaster.sol
-        int256 _owed = int256((consumedGas + payoutGas) * maxFeePerGas) + submitterFee;
-        uint256 owed = _owed > 0 ? uint256(_owed) : 0;
-
-        // Set up a test recipient address and record its initial balance
-        uint256 initialBalance = RECIPIENT.balance;
-
-        // Fund the paymaster
-        vm.deal(paymaster, owed * 2); // Ensure enough funds
-
-        // Mock tx.origin to be our test recipient
-        vm.prank(_happyEntryPoint, RECIPIENT);
-
-        // Call payout
-        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
-
-        // Verify payout was successful
-        assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
-
-        // Verify recipient received the correct amount
-        assertEq(RECIPIENT.balance, initialBalance + owed);
-    }
-
-    function testPayoutZeroOwed() public {
+    function testPaymentValidationZeroOwed() public {
         // Create a valid happyTx with negative submitterFee to force owed to be zero
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, paymaster, new bytes(0));
 
@@ -96,37 +65,37 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         happyTx.maxFeePerGas = 1; // Minimum gas price
         happyTx.submitterFee = -1000000; // Large negative fee to ensure owed is negative
 
-        // Set up a test recipient address and record its initial balance
-        uint256 initialBalance = RECIPIENT.balance;
+        // Call validatePayment from the entrypoint
+        vm.prank(_happyEntryPoint);
+        bytes memory validationData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
 
-        // Mock tx.origin to be our test recipient
-        vm.prank(_happyEntryPoint, RECIPIENT);
-
-        // Call payout
-        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
-
-        // Verify payout was successful
-        assertEq(payoutData, abi.encodeWithSelector(bytes4(0)));
-
-        // Verify recipient balance didn't change (owed should be 0)
-        assertEq(RECIPIENT.balance, initialBalance);
+        // Verify validation was successful (returns empty selector)
+        assertEq(validationData, abi.encodeWithSelector(bytes4(0)));
     }
 
-    function testPayoutSubmitterFeeTooHigh() public {
+    function testPaymentValidationRevertsWhenNotCalledThroughEntrypoint() public {
+        // Create a valid happyTx
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, paymaster, new bytes(0));
+
+        // Call validatePayment from an address that is not the entrypoint
+        // This should revert with NotFromEntryPoint error
+        vm.expectRevert(NotFromEntryPoint.selector);
+        ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
+    }
+
+    function testPaymentValidationSubmitterFeeTooHigh() public {
         // Create a valid happyTx with high submitterFee
         HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, paymaster, new bytes(0));
 
         // Set a very high submitter fee
         happyTx.submitterFee = type(int256).max;
 
-        // Mock call from entry point
+        // Call validatePayment from the entrypoint
         vm.prank(_happyEntryPoint);
-
-        // Call payout - should return SubmitterFeeTooHigh
-        bytes memory payoutData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
+        bytes memory validationData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
 
         // Verify correct error code is returned
-        assertEq(payoutData, abi.encodeWithSelector(SubmitterFeeTooHigh.selector));
+        assertEq(validationData, abi.encodeWithSelector(SubmitterFeeTooHigh.selector));
     }
 
     // ====================================================================================================
