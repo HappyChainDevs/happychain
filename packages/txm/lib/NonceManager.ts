@@ -110,11 +110,11 @@ export class NonceManager {
             Logger.instance.error(LogTag.TXM, `Failed to get transaction count for address ${address}`, {
                 error: blockchainNonceResult.error,
             })
-            this.txmgr.rpcLivenessMonitor.onFailure()
+            this.txmgr.rpcLivenessMonitor.trackError()
             return
         }
 
-        this.txmgr.rpcLivenessMonitor.onSuccess()
+        this.txmgr.rpcLivenessMonitor.trackSuccess()
 
         this.maxExecutedNonce = blockchainNonceResult.value - 1
     }

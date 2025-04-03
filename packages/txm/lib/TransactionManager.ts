@@ -102,15 +102,6 @@ export type TransactionManagerConfig = {
         livenessSuccessCount?: number
 
         /**
-         * The interval between health check attempts for the RPC.
-         * When unhealthy, the system will send chainId requests at this interval
-         * until either the RPC recovers or the connection is terminated.
-         * @default 2000 (2 seconds)
-         * @unit milliseconds
-         */
-        livenessPingInterval?: number
-
-        /**
          * Margin of time after the RPC is marked as unhealthy before the txm starts checking if it is healthy again.
          * @default 5000 (5 seconds)
          * @unit milliseconds
@@ -251,7 +242,6 @@ export class TransactionManager {
     public readonly blockInactivityTimeout: number
     public readonly livenessWindow: number
     public readonly livenessThreshold: number
-    public readonly livenessPingInterval: number
     public readonly livenessSuccessCount: number
     public readonly livenessDownDelay: number
     public readonly livenessCheckInterval: number
@@ -369,7 +359,6 @@ export class TransactionManager {
         this.livenessWindow = _config.rpc.livenessWindow ?? 10000
         this.livenessThreshold = _config.rpc.livenessThreshold ?? 0.85
         this.livenessSuccessCount = _config.rpc.livenessSuccessCount ?? 3
-        this.livenessPingInterval = _config.rpc.livenessPingInterval ?? 2000
         this.livenessDownDelay = _config.rpc.livenessDownDelay ?? 5000
         this.livenessCheckInterval = _config.rpc.livenessCheckInterval ?? 2000
     }

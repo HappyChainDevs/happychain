@@ -27,7 +27,7 @@ export class RpcLivenessMonitor {
         TxmMetrics.getInstance().rpcLivenessMonitorGauge.record(this.isAlive ? 1 : 0)
     }
 
-    onSuccess() {
+    trackSuccess() {
         this.events.push({
             occurredAt: new Date(),
             success: true,
@@ -35,7 +35,7 @@ export class RpcLivenessMonitor {
         this.checkIfDown()
     }
 
-    onFailure() {
+    trackError() {
         this.events.push({
             occurredAt: new Date(),
             success: false,
