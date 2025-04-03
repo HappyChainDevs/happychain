@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
  */
 struct Stake {
     /**
-     * Staked balance.
+     * Staked balance, inclusive of the unlocked balance.
      */
     uint128 balance;
     /**
@@ -20,17 +20,19 @@ struct Stake {
      * Invariant: `minDelay == maxDelay == 0 || MIN_WITHDRAW_DELAY <= minDelay <= maxDelay`
      */
     uint64 maxDelay;
+    /**
+     * cf. {maxDelay}
+     */
     uint64 minDelay;
     /**
-     * Time at which the latest withdrawal was initiated, or 0 if all withdrawals have been
-     * entirely processed.
-     * Invariant: `(withdrawalTimestamp > 0) == (unlockedBalance > 0)`
+     * Earliest time at which them most recently initiated withdrawal can be executed, or 0 if all
+     * withdrawals have been entirely processed.
+     * Invariant: `(unlockedBalance > 0) ==> (withdrawalTimestamp > 0)`
      */
     uint64 withdrawalTimestamp;
     /**
-     * Reference timestamp for compute the time elapsed since a decrease was initiated, or 0 if
-     * no delay decrease is currently ongoing or requires update of the Stake struct.
-     * Invariant: `(lastDelayTimestamp == 0) == (maxDelay == minDelay)`
+     * Reference timestamp for computing the time elapsed since a decrease was initiated, or 0 if
+     * no decreases have ever been made.
      *
      * Note that a decrease can inherit the reference timestamp of a previous decrease
      * to preserve the previous' decrease progress — therefore this might not match up with
@@ -51,8 +53,7 @@ struct Stake {
  *
  * An account can perform five operations:
  * - {deposit}
- * - {increaseWithdrawDelay}
- * - {decreaseWithdrawDelay}
+ * - {updateWithdrawDelay}
  * - {initiateWithdrawal}
  * - {withdraw}
  *
@@ -95,13 +96,14 @@ contract Staking {
     event StakeDeposited(address account, address source, uint256 deposited);
     event StakeUnlocked(address account, uint256 unlocked);
     event StakeWithdrawn(address account, address destination, uint256 withdrawn);
-    event WithdrawDelayIncreased(address account, uint64 unlockDelay);
-    event WithdrawDelayDecreased(address account, uint64 unlockDelay);
+    event WithdrawDelayUpdated(address account, uint64 unlockDelay);
+
+    // NOTE: All functions are safe if the stake struct is uninitialized.
 
     /**
      * Returns the staked balance of an account.
      */
-    function balanceOf(address account) external view returns(uint128) {
+    function balanceOf(address account) external view returns (uint128) {
         return stakes[account].balance;
     }
 
@@ -131,58 +133,45 @@ contract Staking {
     }
 
     /**
-     * Called by an account to increase the minimum withdraw delay.
-     */
-    function increaseWithdrawDelay(uint64 withdrawDelay) external {
-        Stake storage stake = stakes[msg.sender];
-        // will revert if uninitialized
-        if (withdrawDelay <= MIN_WITHDRAW_DELAY || withdrawDelay <= stake.minDelay) revert WithdrawDelayTooShort();
-        if (stake.maxDelay == stake.minDelay) {
-            stakes[msg.sender].maxDelay = withdrawDelay;
-            stakes[msg.sender].minDelay = withdrawDelay;
-        } else {
-            uint256 timeElapsed = block.timestamp - stake.lastDecreaseTimestamp;
-            uint256 delayDiff = stake.maxDelay - withdrawDelay;
-            if (timeElapsed > delayDiff) {
-                stakes[msg.sender].maxDelay = withdrawDelay;
-                stakes[msg.sender].minDelay = withdrawDelay;
-                stakes[msg.sender].lastDecreaseTimestamp = 0;
-            } else {
-                stakes[msg.sender].minDelay = withdrawDelay;
-            }
-        }
-        emit WithdrawDelayIncreased(msg.sender, withdrawDelay);
-    }
-
-    /**
-     * Called by an account to decrease the minimum withdraw delay.
+     * Called by an account to set the minimum withdraw delay. The maximum will be adjusted to match
+     * if the current maximum withdraw delay is smaller than the new minimum withdraw delay.
      *
-     * The withdraw delay ({withdrawDelay}) decreases linearly from the time this function is
-     * called until it settles at the new minimum delay. Decreasing after a previous decrease
-     * preserves the ongoing progress of the previous decrease.
+     * If decreasing, the withdraw delay ({withdrawDelay}) decreases linearly from the time this
+     * function is called until it settles at the new minimum delay. Increasing or decreasing the
+     * min delay after a previous decrease preserves the ongoing progress of the previous decrease.
      */
-    function decreaseWithdrawDelay(uint64 withdrawDelay) external {
-        if (withdrawDelay < MIN_WITHDRAW_DELAY) revert WithdrawDelayTooShort();
+    function updateWithdrawDelay(uint64 withdrawDelay) external {
         Stake storage stake = stakes[msg.sender];
-        // will revert if uninitialized
-        if (withdrawDelay >= stake.minDelay) revert WithdrawDelayTooLong();
-        if (stake.maxDelay == stake.minDelay) {
-            stakes[msg.sender].minDelay = withdrawDelay;
-            stakes[msg.sender].lastDecreaseTimestamp = uint64(block.timestamp);
-        } else {
-            uint256 timeElapsed = block.timestamp - stake.lastDecreaseTimestamp;
-            uint256 delayDiff = stake.maxDelay - stake.minDelay;
-            if (timeElapsed > delayDiff) {
-                // previous decrease is complete, start a new one
-                stakes[msg.sender].maxDelay = stake.minDelay;
-                stakes[msg.sender].minDelay = withdrawDelay;
-                stakes[msg.sender].lastDecreaseTimestamp = uint64(block.timestamp);
+        uint64 prevMinDelay = stake.minDelay;
+
+        if (withdrawDelay < MIN_WITHDRAW_DELAY || withdrawDelay < prevMinDelay) {
+            revert WithdrawDelayTooShort();
+        } else if (withdrawDelay >= prevMinDelay) {
+            // min delay is increasing
+            if (withdrawDelay >= stake.maxDelay) {
+                stake.minDelay = withdrawDelay;
+                stake.maxDelay = withdrawDelay;
             } else {
-                // inherit timestamp of previous decrease
-                stakes[msg.sender].minDelay = withdrawDelay;
+                stake.minDelay = withdrawDelay;
+            }
+            // preserve existing decrease timestamp and progress
+        } else {
+            // min delay is decreasing
+            uint256 timeElapsed = block.timestamp - stake.lastDecreaseTimestamp;
+            uint256 delayDiff = stake.maxDelay - prevMinDelay;
+            if (timeElapsed > delayDiff) {
+                // Decrease to previous minDelay is complete, start a new decrease to avoid
+                // crediting the overtime of the previous decrease towards the new decrease.
+                stake.minDelay = withdrawDelay;
+                stake.maxDelay = prevMinDelay;
+                stake.lastDecreaseTimestamp = uint64(block.timestamp);
+            } else {
+                // otherwise preserve existing decrease timestamp & progress
+                stake.minDelay = withdrawDelay;
             }
         }
-        emit WithdrawDelayDecreased(msg.sender, withdrawDelay);
+
+        emit WithdrawDelayUpdated(msg.sender, withdrawDelay);
     }
 
     /**
@@ -196,7 +185,7 @@ contract Staking {
         Stake memory stake = stakes[msg.sender];
         if (amount > stake.balance) revert InsufficientBalance();
         stake.unlockedBalance = amount;
-        stake.withdrawalTimestamp = uint64(block.timestamp);
+        stake.withdrawalTimestamp = uint64(block.timestamp + getWithdrawDelay(msg.sender));
         stakes[msg.sender] = stake;
         emit StakeUnlocked(msg.sender, amount);
     }
@@ -206,32 +195,11 @@ contract Staking {
      * of unlocked funds.
      */
     function withdraw(uint128 amount, address payable destination) external {
-        Stake memory stake = stakes[msg.sender];
+        Stake storage stake = stakes[msg.sender];
         if (amount > stake.unlockedBalance) revert InsufficientBalance();
-
-        uint256 withdrawDelay;
-        if (stake.maxDelay == stake.minDelay) {
-            withdrawDelay = stake.maxDelay;
-        } else {
-            uint256 elapsedSinceDecrease = block.timestamp - stake.lastDecreaseTimestamp;
-            uint256 delayDiff = stake.maxDelay - stake.minDelay;
-            if (elapsedSinceDecrease >= delayDiff) {
-                // previous decrease is complete, normalize
-                stake.maxDelay = stake.minDelay;
-                stake.lastDecreaseTimestamp = 0;
-                withdrawDelay = stake.minDelay;
-            } else {
-                withdrawDelay = stake.maxDelay - elapsedSinceDecrease;
-            }
-        }
-
-        uint256 timeElapsed = block.timestamp - stake.withdrawalTimestamp;
-        if (timeElapsed < withdrawDelay) revert EarlyWithdraw();
-
+        if (block.timestamp < stake.withdrawalTimestamp) revert EarlyWithdraw();
         stake.balance -= amount;
         stake.unlockedBalance -= amount;
-        if (stake.unlockedBalance == 0) stake.withdrawalTimestamp = 0;
-        stakes[msg.sender] = stake;
         emit StakeWithdrawn(msg.sender, destination, amount);
         destination.transfer(amount);
     }
@@ -242,9 +210,10 @@ contract Staking {
      * hold sufficient stake.
      */
     function _transferTo(address account, address payable to, uint128 amount) internal {
-        stakes[account].balance -= amount;
-        uint128 balance = stakes[account].balance;
-        if (stakes[account].unlockedBalance > balance) stakes[account].unlockedBalance = balance;
+        Stake storage stake = stakes[account];
+        stake.balance -= amount;
+        uint128 balance = stake.balance;
+        if (stake.unlockedBalance > balance) stake.unlockedBalance = balance;
         to.transfer(amount);
     }
 }
