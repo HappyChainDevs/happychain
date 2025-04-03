@@ -6,7 +6,6 @@ import { Topics, eventBus } from "./EventBus.js"
 import type { RevertedTransactionReceipt } from "./RetryPolicyManager"
 import { type Attempt, AttemptType, type Transaction, TransactionStatus } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
-import { TXM_TAG, logger } from "./utils/logger.js"
 
 type AttemptWithReceipt = { attempt: Attempt; receipt: TransactionReceipt }
 
@@ -114,7 +113,22 @@ export class TxMonitor {
                     that the transaction was executed and we don’t know
                 */
                 if (attemptOrResults.some((v) => v.isErr())) {
-                    logger.error(TXM_TAG, `Failed to get transaction receipt for transaction ${transaction.intentId}`)
+                    Logger.instance.error(
+                        LogTag.TXM,
+                        `Failed to get transaction receipt for transaction ${transaction.intentId}`,
+                    )
+                    return
+                }
+
+                const nonce = transaction.lastAttempt?.nonce
+
+                if (nonce === undefined) {
+                    console.error(`Transaction ${transaction.intentId} inconsistent state: no nonce found`)
+                    return
+                }
+
+                if (nonce <= this.transactionManager.nonceManager.maxExecutedNonce) {
+                    transaction.changeStatus(TransactionStatus.Interrupted)
                     return
                 }
 
