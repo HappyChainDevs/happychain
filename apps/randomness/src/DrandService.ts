@@ -154,7 +154,7 @@ export class DrandService {
                 const drandBeacon = await this.getDrandBeacon(round)
 
                 if (drandBeacon.isErr()) {
-                    console.error("Failed to get drand beacon", drandBeacon?.error)
+                    logger.error(RAND_TAG, "Failed to get drand beacon", drandBeacon?.error)
                     return
                 }
 

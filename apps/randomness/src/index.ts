@@ -42,7 +42,7 @@ class RandomnessService {
         this.txm.addHook(TxmHookType.TransactionStatusChanged, this.onTransactionStatusChange.bind(this))
         this.txm.addHook(TxmHookType.NewBlock, this.onNewBlock.bind(this))
         this.txm.addHook(TxmHookType.TransactionSubmissionFailed, (_, description) => {
-            console.error(description)
+            logger.error(RAND_TAG, description)
         })
 
         await this.drandService.start()
@@ -94,7 +94,7 @@ class RandomnessService {
             }
 
             this.drandRepository.updateDrand(drand).catch((error) => {
-                console.error("Failed to update drand", error)
+                logger.error(RAND_TAG, "Failed to update drand", error)
             })
 
             return
