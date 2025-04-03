@@ -132,10 +132,6 @@ contract Staking {
         return uint64(stake.maxDelay - timeElapsed);
     }
 
-    function balanceOf(address account) external view returns (uint256) {
-        return stakes[account].balance;
-    }
-
     /**
      * Called by an account to set the minimum withdraw delay. The maximum will be adjusted to match
      * if the current maximum withdraw delay is smaller than the new minimum withdraw delay.
