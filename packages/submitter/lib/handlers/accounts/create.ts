@@ -2,7 +2,7 @@ import { type Result, err, ok } from "neverthrow"
 import { createWalletClient } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { config, publicClient } from "#lib/clients"
-import { abis, deployment } from "#lib/deployments"
+import { abis } from "#lib/deployments"
 import env from "#lib/env"
 import { SubmitterError } from "#lib/errors/submitter-errors"
 import { logger } from "#lib/logger"
@@ -17,7 +17,7 @@ const walletClient = createWalletClient({ ...config, account })
 
 export async function create({ owner, salt }: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
     const predictedAddress = await publicClient.readContract({
-        address: deployment.ScrappyAccountFactory,
+        address: env.DEPLOYMENT_ACCOUNT_FACTORY,
         abi: abis.ScrappyAccountFactory,
         functionName: "getAddress",
         args: [salt, owner],
@@ -35,7 +35,7 @@ export async function create({ owner, salt }: CreateAccountInput): Promise<Resul
     }
 
     const { request, result } = await publicClient.simulateContract({
-        address: deployment.ScrappyAccountFactory,
+        address: env.DEPLOYMENT_ACCOUNT_FACTORY,
         abi: abis.ScrappyAccountFactory,
         functionName: "createAccount",
         args: [salt, owner],

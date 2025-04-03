@@ -3,7 +3,8 @@ import { type Result, err, ok } from "neverthrow"
 import type { Account, WriteContractParameters } from "viem"
 import { parseAccount } from "viem/accounts"
 import { walletClient } from "#lib/clients"
-import { abis, deployment } from "#lib/deployments"
+import { abis } from "#lib/deployments"
+import env from "#lib/env"
 import { UnknownError } from "#lib/errors/contract-errors"
 import { parseFromViemError } from "#lib/errors/utils"
 import { submitterService } from "#lib/services"
@@ -14,7 +15,7 @@ import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 import { type SimulateResponseErr, simulateSubmit } from "./simulate"
 
 export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Error | SimulateResponseErr>> {
-    const entryPoint = data.entryPoint ?? deployment.HappyEntryPoint
+    const entryPoint = data.entryPoint ?? env.DEPLOYMENT_ENTRYPOINT
     // Save original tx to the database for historic purposes and data recovery
 
     await submitterService.initialize(entryPoint, data.tx)
@@ -33,8 +34,8 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
     // @note: we could check {simulate.simulation.validationStatus === SimulatedValidationStatus.FutureNonce}
     // however it isn't really needed as we need to compare with the local nonce anyways,
     // (potentially fetching from onchain)
-    if (await checkFutureNonce(data.tx)) {
-        const resp = await waitUntilUnblocked(data.tx)
+    if (await checkFutureNonce(entryPoint, data.tx)) {
+        const resp = await waitUntilUnblocked(entryPoint, data.tx)
         if (resp.isErr()) return err(resp.error)
 
         simulate = await simulateSubmit({ address: entryPoint, args: [encodeHappyTx(data.tx)], account })

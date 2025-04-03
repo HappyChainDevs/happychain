@@ -1,14 +1,18 @@
+import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/contracts/mocks/anvil"
 import type { Address, PublicClient, WalletClient } from "viem"
 import { http, createPublicClient, createWalletClient, zeroAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import type { z } from "zod"
-import { abis, deployment } from "#lib/deployments"
+import { abis } from "#lib/deployments"
+import env from "#lib/env"
 import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/submitter/openApi/execute"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
+
+export { mockAbis, mockDeployments }
 
 export type TestExecuteInput = z.input<typeof ExecuteInputSchema>
 
@@ -48,9 +52,12 @@ export function createTestAccount(privateKey = generatePrivateKey()) {
     }
 }
 
+/**
+ * Fetches the nonce using the configured deploy entryPoint
+ */
 export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
     return await testPublicClient.readContract({
-        address: deployment.HappyEntryPoint,
+        address: env.DEPLOYMENT_ENTRYPOINT,
         abi: abis.HappyEntryPoint,
         functionName: "nonceValues",
         args: [account, nonceTrack],
@@ -59,8 +66,8 @@ export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigin
 
 export async function getMockTokenABalance(account: Address) {
     return await testPublicClient.readContract({
-        address: deployment.MockTokenA,
-        abi: abis.MockTokenA,
+        address: mockDeployments.MockTokenA,
+        abi: mockAbis.MockTokenA,
         functionName: "balanceOf",
         args: [account],
     })
@@ -74,7 +81,7 @@ export function createMockTokenAMintHappyTx(
 ): HappyTx {
     return {
         account,
-        dest: deployment.MockTokenA,
+        dest: mockDeployments.MockTokenA,
         nonceTrack: nonceTrack, // using as default
         nonceValue: nonceValue,
         value: 0n,
@@ -87,7 +94,7 @@ export function createMockTokenAMintHappyTx(
         submitterFee: 100n,
 
         callData: encodeFunctionData({
-            abi: abis.MockTokenA,
+            abi: mockAbis.MockTokenA,
             functionName: "mint",
             args: [account, amount],
         }),
