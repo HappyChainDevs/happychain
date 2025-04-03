@@ -1,5 +1,5 @@
 import { LogTag, Logger } from "@happy.tech/common"
-import { SpanStatusCode, context, trace } from "@opentelemetry/api"
+import { ROOT_CONTEXT, SpanStatusCode, context, trace } from "@opentelemetry/api"
 import type { Block } from "viem"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionManager } from "./TransactionManager.js"
@@ -86,6 +86,10 @@ export class BlockMonitor {
             this.unwatch = undefined
         }
 
-        setTimeout(() => this.start(), 500)
+        setTimeout(() => {
+            context.with(ROOT_CONTEXT, () => {
+                this.start()
+            })
+        }, 500)
     }
 }
