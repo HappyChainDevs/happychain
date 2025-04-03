@@ -195,7 +195,7 @@ contract ScrappyAccount is
     // ====================================================================================================
     // PAYOUT
 
-    function payout(uint256 amount) external {
+    function payout(uint256 amount) external onlyFromEntryPoint {
         tx.origin.call{value: amount}("");
     }
 
