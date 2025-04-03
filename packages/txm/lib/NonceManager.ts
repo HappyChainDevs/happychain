@@ -44,9 +44,18 @@ export class NonceManager {
     public async start() {
         const address = this.txmgr.viemWallet.account.address
 
-        const blockchainNonce = await this.txmgr.viemClient.getTransactionCount({
+        const blockchainNonceResult = await this.txmgr.viemClient.safeGetTransactionCount({
             address: address,
         })
+
+        if (blockchainNonceResult.isErr()) {
+            Logger.instance.error(LogTag.TXM, `Failed to get transaction count for address ${address}`, {
+                error: blockchainNonceResult.error,
+            })
+            throw new Error("Failed to get transaction count for address")
+        }
+
+        const blockchainNonce = blockchainNonceResult.value
 
         this.maxExecutedNonce = blockchainNonce
 
