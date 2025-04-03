@@ -19,7 +19,7 @@ contract HappyTxLibTest is Test {
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
             executeGasLimit: 800001, // 0xC3501
-            payoutGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
             paymaster: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
@@ -46,7 +46,7 @@ contract HappyTxLibTest is Test {
             gasLimit: 1000000, // 0x000F4240
             validateGasLimit: 800000, // 0x000C3500
             executeGasLimit: 800001, // 0x000C3501
-            payoutGasLimit: 800002, // 0x000C3502
+            validatePaymentGasLimit: 800002, // 0x000C3502
             dest: 0x2345678901234567890123456789012345678901,
             paymaster: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
@@ -73,7 +73,7 @@ contract HappyTxLibTest is Test {
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
             executeGasLimit: 800001, // 0xC3501
-            payoutGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
             paymaster: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
@@ -107,7 +107,7 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.gasLimit, 1000000); // 000F4240
         assertEq(decoded.validateGasLimit, 800000); // 000C3500
         assertEq(decoded.executeGasLimit, 800001); // 000C3501
-        assertEq(decoded.payoutGasLimit, 800002); // 000C3502
+        assertEq(decoded.validatePaymentGasLimit, 800002); // 000C3502
         assertEq(decoded.dest, address(0x2345678901234567890123456789012345678901));
         assertEq(decoded.paymaster, address(0x3456789012345678901234567890123456789012));
         assertEq(decoded.value, 1000000000000000000);
@@ -131,7 +131,7 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.gasLimit, 1000000);
         assertEq(decoded.validateGasLimit, 800000);
         assertEq(decoded.executeGasLimit, 800001);
-        assertEq(decoded.payoutGasLimit, 800002);
+        assertEq(decoded.validatePaymentGasLimit, 800002);
         assertEq(decoded.dest, address(0x2345678901234567890123456789012345678901));
         assertEq(decoded.paymaster, address(0x3456789012345678901234567890123456789012));
         assertEq(decoded.value, 1000000000000000000);
@@ -155,7 +155,7 @@ contract HappyTxLibTest is Test {
         assertEq(decoded.gasLimit, 1000000);
         assertEq(decoded.validateGasLimit, 800000);
         assertEq(decoded.executeGasLimit, 800001);
-        assertEq(decoded.payoutGasLimit, 800002);
+        assertEq(decoded.validatePaymentGasLimit, 800002);
         assertEq(decoded.dest, address(0x2345678901234567890123456789012345678901));
         assertEq(decoded.paymaster, address(0x3456789012345678901234567890123456789012));
         assertEq(decoded.value, 1000000000000000000);
@@ -187,7 +187,7 @@ contract HappyTxLibTest is Test {
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
             executeGasLimit: 800001, // 0xC3501
-            payoutGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
             paymaster: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
@@ -226,7 +226,7 @@ contract HappyTxLibTest is Test {
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
             executeGasLimit: 800001, // 0xC3501
-            payoutGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
             paymaster: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
@@ -265,7 +265,7 @@ contract HappyTxLibTest is Test {
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
             executeGasLimit: 800001, // 0xC3501
-            payoutGasLimit: 800002, // 0xC3502
+            validatePaymentGasLimit: 800002, // 0xC3502
             dest: 0x2345678901234567890123456789012345678901,
             paymaster: 0x3456789012345678901234567890123456789012,
             value: 1000000000000000000, // 0xDE0B6B3A7640000
