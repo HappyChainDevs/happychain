@@ -1,12 +1,10 @@
-import { LogTag } from "@happy.tech/common"
-import { Logger } from "@happy.tech/common"
+import { LogTag, Logger } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import type { Hash, Hex, TransactionRequestEIP1559 } from "viem"
 import { TransactionRejectedRpcError, encodeFunctionData, keccak256 } from "viem"
 import type { EstimateGasErrorCause } from "./GasEstimator.js"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
-import { TXM_TAG, logger } from "./utils/logger.js"
 
 export interface SignReturn {
     signedTransaction: Hex

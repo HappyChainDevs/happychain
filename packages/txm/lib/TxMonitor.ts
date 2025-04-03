@@ -209,13 +209,8 @@ export class TxMonitor {
         const attempt = transaction.lastAttempt
 
         if (!attempt) {
-<<<<<<< HEAD
             Logger.instance.error(
                 LogTag.TXM,
-=======
-            logger.error(
-                TXM_TAG,
->>>>>>> 3a7875e0a (convert txm)
                 `Transaction ${transaction.intentId} inconsistent state: no attempt found in handleStuckTransaction`,
             )
             return

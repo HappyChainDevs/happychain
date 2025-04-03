@@ -22,7 +22,7 @@ export enum LogTag {
     ALL = "All",
     SUBMITTER = "Submitter",
     TXM = "Txm",
-    RANDOM = "Random"
+    RANDOM = "Random",
 }
 
 /**
