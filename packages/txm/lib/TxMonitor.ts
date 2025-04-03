@@ -103,15 +103,15 @@ export class TxMonitor {
                                 isResolved = true
                                 resolve(attemptWithReceipt)
                             }
-                            this.transactionManager.rpcLivenessMonitor.onSuccess()
+                            this.transactionManager.rpcLivenessMonitor.trackSuccess()
                             return ok(attemptWithReceipt)
                         }
                         if (receiptResult.error instanceof TransactionReceiptNotFoundError) {
-                            this.transactionManager.rpcLivenessMonitor.onSuccess()
+                            this.transactionManager.rpcLivenessMonitor.trackSuccess()
                             return ok(null)
                         }
 
-                        this.transactionManager.rpcLivenessMonitor.onFailure()
+                        this.transactionManager.rpcLivenessMonitor.trackError()
                         return err(receiptResult.error)
                     },
                 )
