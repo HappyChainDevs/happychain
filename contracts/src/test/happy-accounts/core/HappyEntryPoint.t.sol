@@ -260,7 +260,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         uint64 origNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
 
         // Create a happyTx with a nonce value less than the current nonce (negative nonceAhead)
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, ZERO_ADDRESS, new bytes(0));
         happyTx.nonceValue -= 1;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
@@ -288,7 +288,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         uint64 origNonce = uint64(happyEntryPoint.nonceValues(smartAccount, DEFAULT_NONCETRACK));
 
         // Create a happyTx with a nonce value greater than the current nonce (positive nonceAhead)
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, ZERO_ADDRESS, new bytes(0));
         happyTx.nonceValue += 1;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
@@ -379,6 +379,40 @@ contract HappyEntryPointTest is HappyTxTestUtils {
     }
 
     // ====================================================================================================
+    // ACCOUNT VALIDATION TESTS (Out of Gas)
+
+    function testAccountValidationOutOfGas() public {
+        uint256 id = vm.snapshotState();
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.executeGasLimit = 0;
+        happyTx.validateGasLimit = 0;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The output.validateGas gives the gas usage for validate() call
+        assertGt(output.validateGas, 0);
+
+        vm.revertToState(id); // Revert the state to before the simulation
+
+        // Submit the happyTx again, with half the validate gas limit
+        // This should cause the validation to run out of gas
+        // Submit the happyTx again, with the above execGasLimit
+        HappyTx memory happyTx2 =
+            getStubHappyTx(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx2.validateGasLimit = output.validateGas / 10;
+        happyTx2.executeGasLimit = output.executeGas * 120 / 100;
+        happyTx2.payoutGasLimit = output.paymentValidateGas * 120 / 100;
+        happyTx2.validatorData = signHappyTx(happyTx2, privKey);
+
+        // This should revert with ValidationReverted since validate() will run out of gas
+        vm.expectRevert(abi.encodeWithSelector(ValidationReverted.selector, new bytes(0)));
+        happyEntryPoint.submit(happyTx2.encode());
+    }
+
+    // ====================================================================================================
     // PAYMASTER VALIDATION TESTS
 
     function testPaymasterValidationFailedSubmitterFeeTooHigh() public {
@@ -407,6 +441,39 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
         vm.expectRevert(abi.encodeWithSelector(PaymentValidationReverted.selector, overflowError));
         happyEntryPoint.submit(happyTx.encode());
+    }
+
+    // ====================================================================================================
+    // PAYMENT VALIDATION TESTS (Out of Gas)
+
+    function testPaymasterPaymentValidationOutOfGas() public {
+        uint256 id = vm.snapshotState();
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.executeGasLimit = 0;
+        happyTx.payoutGasLimit = 0;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The output.paymentValidateGas gives the gas usage for validatePayment() call
+        assertGt(output.paymentValidateGas, 0);
+
+        vm.revertToState(id); // Revert the state to before the simulation
+
+        // Submit the happyTx again, with a fraction of the paymaster validation gas limit
+        // This should cause the paymaster validation to run out of gas
+        HappyTx memory happyTx2 =
+            getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx2.validateGasLimit = output.validateGas * 120 / 100; // Set this higher to ensure it's not the issue
+        happyTx2.payoutGasLimit = output.paymentValidateGas / 10; // Set to 1/10 of required gas
+        happyTx2.executeGasLimit = output.executeGas * 120 / 100; // Set this higher to ensure it's not the issue
+        happyTx2.validatorData = signHappyTx(happyTx2, privKey);
+
+        // This should revert with PaymentValidationReverted since validatePayment() will run out of gas
+        vm.expectRevert(abi.encodeWithSelector(PaymentValidationReverted.selector, new bytes(0)));
+        happyEntryPoint.submit(happyTx2.encode());
     }
 
     // ====================================================================================================
@@ -494,6 +561,40 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         // This should succeed now if the execute-gas-limit estimation is accurate
         SubmitOutput memory output2 = happyEntryPoint.submit(happyTx2.encode());
         _assertExpectedSubmitOutput(output2, false, false, false, CallStatus.SUCCEEDED, new bytes(0));
+    }
+
+    // ====================================================================================================
+    // EXECUTION TESTS (Out of Gas)
+
+    function testExecutionOutOfGas() public {
+        uint256 id = vm.snapshotState();
+        HappyTx memory happyTx =
+            getStubHappyTx(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx.executeGasLimit = 0;
+        happyTx.validatorData = signHappyTx(happyTx, privKey);
+
+        vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
+        SubmitOutput memory output = happyEntryPoint.submit(happyTx.encode());
+
+        // The output.executeGas gives the gas usage for execute() call
+        assertGt(output.executeGas, 0);
+
+        vm.revertToState(id); // Revert the state to before the simulation
+
+        // Submit the happyTx again, with the execute gas limit set too low
+        HappyTx memory happyTx2 =
+            getStubHappyTx(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
+        happyTx2.validateGasLimit = output.validateGas * 120 / 100; // Set this higher to ensure it's not the issue
+        happyTx2.executeGasLimit = output.executeGas / 10; // Set to 1/10 of required gas
+        happyTx2.payoutGasLimit = output.paymentValidateGas * 120 / 100; // Set this higher to ensure it's not the issue
+        happyTx2.validatorData = signHappyTx(happyTx2, privKey);
+
+        // Execute the transaction - note that execute() running out of gas doesn't cause a revert
+        // in the entry point, but instead sets the callStatus to EXECUTE_REVERTED
+        SubmitOutput memory output2 = happyEntryPoint.submit(happyTx2.encode());
+
+        // The execution should have reverted due to out of gas
+        _assertExpectedSubmitOutput(output2, false, false, false, CallStatus.EXECUTE_REVERTED, new bytes(0));
     }
 
     // ====================================================================================================
@@ -592,7 +693,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
 
     function _incrementAccountNonce() internal {
         // Create a valid happyTx with the current nonce & submit it
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
+        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
         happyEntryPoint.submit(happyTx.encode());
     }
 }

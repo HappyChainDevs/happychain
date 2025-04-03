@@ -329,7 +329,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             );
             uint256 gasAfterPayout = gasleft();
             if (
-                !success || gasBeforePayout - gasAfterPayout > (isSimulation ? 35000 : 12000)
+                !success || gasBeforePayout - gasAfterPayout > (isSimulation ? 40000 : 15000)
                     || (!isSimulation && tx.origin.balance < balance + cost)
             ) {
                 revert PayoutFailed();
