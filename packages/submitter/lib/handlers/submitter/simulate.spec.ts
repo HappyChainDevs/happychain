@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "bun:test"
 import type { Result } from "neverthrow"
 import { encodeFunctionData } from "viem"
-import { deployment } from "#lib/deployments"
+import env from "#lib/env"
 import { getErrorNameFromSelector } from "#lib/errors/parsedCodes"
 import { create } from "#lib/handlers/accounts/create"
 import { createMockTokenAMintHappyTx, getNonce, testAccount } from "#lib/tests/utils"
@@ -44,7 +44,7 @@ describe("simulateSubmit", () => {
 
             const simResult = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
-                address: deployment.HappyEntryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
             expect(simResult.isOk()).toBe(true)
@@ -62,7 +62,7 @@ describe("simulateSubmit", () => {
             expect(result.revertData).toBe("0x")
 
             expect(simulation?.status).toBe(EntryPointStatus.Success)
-            expect(simulation?.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(simulation?.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(simulation?.validationStatus).toBe(SimulatedValidationStatus.Success)
         })
 
@@ -78,7 +78,7 @@ describe("simulateSubmit", () => {
 
             const simResult = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
-                address: deployment.HappyEntryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
 
@@ -95,7 +95,7 @@ describe("simulateSubmit", () => {
             expect(result.revertData).toBe("0x")
 
             expect(simulation?.status).toBe(EntryPointStatus.Success)
-            expect(simulation?.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(simulation?.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(simulation?.validationStatus).toBe(SimulatedValidationStatus.Success)
         })
 
@@ -110,7 +110,7 @@ describe("simulateSubmit", () => {
 
             const simResult = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
-                address: deployment.HappyEntryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
 
@@ -123,7 +123,7 @@ describe("simulateSubmit", () => {
             expect(result.revertData).toBe("0x")
 
             expect(simulation?.status).toBe(EntryPointStatus.Success)
-            expect(simulation?.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(simulation?.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(simulation?.validationStatus).toBe(SimulatedValidationStatus.FutureNonce)
             expect(simulation?.revertData).toBeUndefined()
         })
@@ -140,7 +140,7 @@ describe("simulateSubmit", () => {
                     message: { raw: computeHappyTxHash(unsigned) },
                 })
 
-                await submit({ entryPoint: deployment.HappyEntryPoint, tx: unsigned })
+                await submit({ entryPoint: env.DEPLOYMENT_ENTRYPOINT, tx: unsigned })
 
                 nonceValue++
             }
@@ -152,14 +152,14 @@ describe("simulateSubmit", () => {
 
             const resp = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
-                address: deployment.HappyEntryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
 
             // @ts-expect-error
             const sim = resp.error.simulation as SimulationResult
 
-            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
             expect(sim.status).toBe(EntryPointStatus.UnexpectedReverted)
             expect(sim.revertData).toBe("0x756688fe") // InvalidNonce
@@ -178,13 +178,13 @@ describe("simulateSubmit", () => {
 
             const resp = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
-                address: deployment.HappyEntryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
             // @ts-expect-error
             const sim = resp.error.simulation as SimulationResult
 
-            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
             expect(sim.status).toBe(EntryPointStatus.PaymentFailed)
             expect(sim.revertData).toBe("0x00000000")
@@ -198,14 +198,14 @@ describe("simulateSubmit", () => {
 
             const resp = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
-                address: deployment.HappyEntryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
 
             // @ts-expect-error
             const sim = resp.error.simulation as SimulationResult
 
-            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(sim.revertData).toBe("0x8baa579f")
             expect(sim.status).toBe(EntryPointStatus.ValidationReverted)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
@@ -220,14 +220,14 @@ describe("simulateSubmit", () => {
 
             const resp = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
-                address: deployment.HappyEntryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
 
             // @ts-expect-error
             const sim = resp.error.simulation as SimulationResult
 
-            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(sim.revertData).toBe("0x") // InvalidSignature
             expect(sim.status).toBe(EntryPointStatus.UnexpectedReverted)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Reverted)
@@ -243,14 +243,14 @@ describe("simulateSubmit", () => {
 
             const resp = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
-                address: deployment.HappyEntryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
 
             // @ts-expect-error
             const sim = resp.error.simulation as SimulationResult
 
-            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(sim.revertData).toBe("0x")
             expect(sim.status).toBe(EntryPointStatus.CallReverted)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Success)
@@ -271,14 +271,14 @@ describe("simulateSubmit", () => {
 
             const resp = await simulateSubmit({
                 account: findExecutionAccount(unsigned),
-                address: deployment.HappyEntryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
 
             // @ts-expect-error
             const sim = resp.error.simulation as SimulationResult
 
-            expect(sim.entryPoint).toBe(deployment.HappyEntryPoint)
+            expect(sim.entryPoint).toBe(env.DEPLOYMENT_ENTRYPOINT)
             expect(sim.revertData).toBe("0x")
             expect(sim.status).toBe(EntryPointStatus.CallReverted)
             expect(sim.validationStatus).toBe(SimulatedValidationStatus.Success)

@@ -1,16 +1,12 @@
-import { abis as happyAAAbis, deployment as happyAADeployment } from "@happy.tech/contracts/happy-aa/anvil"
-import { abis as mockAbis, deployment as mockDeployment } from "@happy.tech/contracts/mocks/anvil"
+import { abis as happyAAAbisAnvil } from "@happy.tech/contracts/happy-aa/anvil"
+import { abis as happyAAAbisSepolia } from "@happy.tech/contracts/happy-aa/sepolia"
+import { localhost } from "viem/chains"
+import env from "./env"
 
-// Import and re-export contracts here for a simple way to switch between deployments throughout the app
-// TODO: move addresses to env file
-export const deployment = {
-    ...happyAADeployment,
-    ...mockDeployment,
-}
-
-export const abis = {
-    ...happyAAAbis,
-    ...mockAbis,
-}
-
-export default { abis, deployment }
+/**
+ * We will use anvil abi's if the the chain has been set to localhost
+ * This is because the anvil chain is used for local development and testing
+ * and may not always reflect what has been deployed. All other deployed chains
+ */
+const isAnvil = (env.CHAIN_ID === localhost.id) as boolean
+export const abis = isAnvil ? happyAAAbisAnvil : happyAAAbisSepolia

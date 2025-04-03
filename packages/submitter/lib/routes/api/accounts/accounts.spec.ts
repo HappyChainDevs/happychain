@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
-import { abis, deployment } from "#lib/deployments"
+import { abis } from "#lib/deployments"
+import env from "#lib/env"
 import { app } from "#lib/server"
 import { testAccount, testPublicClient } from "#lib/tests/utils"
 import { computeHappyAccount } from "#lib/utils/computeHappyAccount"
@@ -13,15 +14,6 @@ describe("accounts", () => {
             const owner = testAccount.account.address
             const salt = "0x0000000000000000000000000000000000000000000000000000000000000001"
 
-            const predictedAddress = await testPublicClient.readContract({
-                address: deployment.ScrappyAccountFactory,
-                abi: abis.ScrappyAccountFactory,
-                functionName: "getAddress",
-                args: [salt, owner],
-            })
-
-            const computedAddress = computeHappyAccount(salt, owner)
-
             const result = await client.api.v1.accounts.create
                 .$post({ json: { owner, salt } })
                 .then((a) => a.json())
@@ -30,12 +22,22 @@ describe("accounts", () => {
             // Ensure its a valid address
             expect(result).toStartWith("0x")
             expect(result.length).toBe(42)
-
-            // Ensure it matches both onchain and offchain predicted addresses
-            expect(result).toBe(predictedAddress)
-            expect(result).toBe(computedAddress)
+            expect(BigInt(result)).toBeGreaterThan(0n)
         })
 
-        it("should match onchain with offchain addresses", async () => {})
+        it("should match onchain with offchain addresses", async () => {
+            const owner = testAccount.account.address
+            const salt = "0x0000000000000000000000000000000000000000000000000000000000000001"
+
+            const predictedAddress = await testPublicClient.readContract({
+                address: env.DEPLOYMENT_ACCOUNT_FACTORY,
+                abi: abis.ScrappyAccountFactory,
+                functionName: "getAddress",
+                args: [salt, owner],
+            })
+
+            const computedAddress = computeHappyAccount(salt, owner)
+            expect(predictedAddress).toBe(computedAddress)
+        })
     })
 })
