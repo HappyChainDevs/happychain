@@ -5,13 +5,11 @@ import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {HappyTx, HappyTxSubmitted} from "boop/core/HappyTx.sol";
-import {Staking, Stake} from "boop/core/Staking.sol";
-import {IHappyAccount, ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
+import {Staking} from "boop/core/Staking.sol";
+import {IHappyAccount} from "boop/interfaces/IHappyAccount.sol";
 import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {UnknownDuringSimulation} from "boop/utils/Common.sol";
-
-import {console} from "forge-std/console.sol";
 
 enum CallStatus {
     SUCCEEDED, // The call succeeded.
