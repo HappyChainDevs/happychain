@@ -428,7 +428,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         if (revertDataSize > 256) revertDataSize = 256; // copy only what we have
         revertData = new bytes(revertDataSize);
         assembly {
-            mcopy(revertData, add(returnData, 160), revertDataSize)
+            mcopy(add(revertData, 32), add(returnData, 160), revertDataSize)
         }
         if (status > CallStatus.EXECUTE_REVERTED) {
             // The returned status is incorrect, treat this like a revert.
