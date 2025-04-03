@@ -228,7 +228,7 @@ export class TransactionSubmitter {
                 this.txmgr.nonceManager.resync()
             }
 
-            this.txmgr.rpcLivenessMonitor.onFailure()
+            this.txmgr.rpcLivenessMonitor.trackError()
 
             return err({
                 cause: RetryAttemptErrorCause.FailedToSendRawTransaction,
@@ -236,7 +236,7 @@ export class TransactionSubmitter {
             })
         }
 
-        this.txmgr.rpcLivenessMonitor.onSuccess()
+        this.txmgr.rpcLivenessMonitor.trackSuccess()
 
         return ok(undefined)
     }
