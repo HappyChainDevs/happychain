@@ -89,6 +89,7 @@ export async function sendUserOp({ user, tx, validator, signer, preparedOp }: Se
 
         const userOp: UserOperation = {
             sender: account,
+            paymaster: contractAddresses.HappyPaymaster,
             nonce,
             callData: _preparedUserOp.callData,
             callGasLimit: _preparedUserOp.callGasLimit,
