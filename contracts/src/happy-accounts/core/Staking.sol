@@ -192,7 +192,7 @@ contract Staking {
      * cancel the remainder of the previous withdrawal. No funds will be lost, but the time spent
      * waiting on the previous withdrawal will not carry over to the new withdrawal.
      */
-    function initiateWithdrawal(uint128 amount) external payable {
+    function initiateWithdrawal(uint128 amount) external {
         Stake memory stake = stakes[msg.sender];
         if (amount > stake.balance) revert InsufficientBalance();
         stake.unlockedBalance = amount;
@@ -205,7 +205,7 @@ contract Staking {
      * Withdraw previously unlocked funds. It is possible to perform multiple partial withdrawals
      * of unlocked funds.
      */
-    function withdraw(uint128 amount, address payable destination) external payable {
+    function withdraw(uint128 amount, address payable destination) external {
         Stake memory stake = stakes[msg.sender];
         if (amount > stake.unlockedBalance) revert InsufficientBalance();
 
