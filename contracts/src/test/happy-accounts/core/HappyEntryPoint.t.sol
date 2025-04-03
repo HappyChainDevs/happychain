@@ -75,8 +75,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         vm.deal(smartAccount, INITIAL_DEPOSIT);
 
         // Stake the paymaster
-        vm.prank(paymaster);
-        happyEntryPoint.deposit{value: INITIAL_DEPOSIT}();
+        happyEntryPoint.deposit{value: INITIAL_DEPOSIT}(paymaster);
 
         // Deploy the mock contracts
         mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
@@ -404,7 +403,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
             getStubHappyTx(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx2.validateGasLimit = output.validateGas / 10;
         happyTx2.executeGasLimit = output.executeGas * 120 / 100;
-        happyTx2.payoutGasLimit = output.paymentValidateGas * 120 / 100;
+        happyTx2.validatePaymentGasLimit = output.paymentValidateGas * 120 / 100;
         happyTx2.validatorData = signHappyTx(happyTx2, privKey);
 
         // This should revert with ValidationReverted since validate() will run out of gas
@@ -451,7 +450,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         HappyTx memory happyTx =
             getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx.executeGasLimit = 0;
-        happyTx.payoutGasLimit = 0;
+        happyTx.validatePaymentGasLimit = 0;
         happyTx.validatorData = signHappyTx(happyTx, privKey);
 
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
@@ -467,7 +466,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
         HappyTx memory happyTx2 =
             getStubHappyTx(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx2.validateGasLimit = output.validateGas * 120 / 100; // Set this higher to ensure it's not the issue
-        happyTx2.payoutGasLimit = output.paymentValidateGas / 10; // Set to 1/10 of required gas
+        happyTx2.validatePaymentGasLimit = output.paymentValidateGas / 10; // Set to 1/10 of required gas
         happyTx2.executeGasLimit = output.executeGas * 120 / 100; // Set this higher to ensure it's not the issue
         happyTx2.validatorData = signHappyTx(happyTx2, privKey);
 
@@ -555,7 +554,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
             getStubHappyTx(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx2.validateGasLimit = output.validateGas * 120 / 100;
         happyTx2.executeGasLimit = output.executeGas * 120 / 100;
-        happyTx2.payoutGasLimit = output.paymentValidateGas * 120 / 100;
+        happyTx2.validatePaymentGasLimit = output.paymentValidateGas * 120 / 100;
         happyTx2.validatorData = signHappyTx(happyTx2, privKey);
 
         // This should succeed now if the execute-gas-limit estimation is accurate
@@ -586,7 +585,7 @@ contract HappyEntryPointTest is HappyTxTestUtils {
             getStubHappyTx(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         happyTx2.validateGasLimit = output.validateGas * 120 / 100; // Set this higher to ensure it's not the issue
         happyTx2.executeGasLimit = output.executeGas / 10; // Set to 1/10 of required gas
-        happyTx2.payoutGasLimit = output.paymentValidateGas * 120 / 100; // Set this higher to ensure it's not the issue
+        happyTx2.validatePaymentGasLimit = output.paymentValidateGas * 120 / 100; // Set this higher to ensure it's not the issue
         happyTx2.validatorData = signHappyTx(happyTx2, privKey);
 
         // Execute the transaction - note that execute() running out of gas doesn't cause a revert
