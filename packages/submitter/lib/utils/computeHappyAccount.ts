@@ -1,7 +1,8 @@
 import type { Address, Hex } from "viem"
 import { concat, encodeDeployData, encodeFunctionData, getAddress, keccak256 } from "viem"
-import { abis, deployment } from "#lib/deployments"
-import { ERC1967_CREATION_CODE } from "../data/erc1967_creation_code"
+import { abis } from "#lib/deployments"
+import env from "#lib/env"
+import { ERC1967_CONSTRUCTOR_ABI, ERC1967_CREATION_CODE } from "../data/erc1967_creation_code"
 
 /**
  * Predicts the address of the ScrappyAccount that will be deployed by the ScrappyAccountFactory
@@ -9,36 +10,47 @@ import { ERC1967_CREATION_CODE } from "../data/erc1967_creation_code"
  * @param owner The owner address for initialization
  */
 export function computeHappyAccount(salt: Hex, owner: Address): Address {
-    const accountImplementation = deployment.ScrappyAccount
-    const deployer = deployment.ScrappyAccountFactory
+    const accountImplementation = env.DEPLOYMENT_ACCOUNT_IMPLEMENTATION
+    const deployer = env.DEPLOYMENT_ACCOUNT_FACTORY
 
     // Step 1: Create initialization data for the proxy
-    const initData = encodeFunctionData({
+    const initData = getInitData(owner)
+
+    // Step 2: Combine creation code with constructor args, and calculate the code hash
+    const codeHash = getCodeHash(accountImplementation, initData)
+
+    // Step 3: Prepare the salt and CREATE2 input, and calculate the final address
+    const predicted = getCreate2Address(deployer, salt, codeHash, owner)
+
+    // Step 4: Validate & return the address
+    return getAddress(predicted)
+}
+
+function getInitData(owner: `0x${string}`) {
+    return encodeFunctionData({
         abi: abis.ScrappyAccount,
         functionName: "initialize",
         args: [owner],
     })
+}
 
-    // Step 2: Combine creation code with constructor args, and calculate the code hash
+function getCodeHash(implementation: `0x${string}`, initData: `0x${string}`) {
     const contractCode = encodeDeployData({
-        abi: [
-            {
-                type: "constructor",
-                inputs: [
-                    { type: "address", name: "implementation" },
-                    { type: "bytes", name: "_data" },
-                ],
-            },
-        ],
+        abi: ERC1967_CONSTRUCTOR_ABI,
         bytecode: ERC1967_CREATION_CODE,
-        args: [accountImplementation, initData],
+        args: [implementation, initData],
     })
-    const codeHash = keccak256(contractCode)
+    return keccak256(contractCode)
+}
 
-    // Step 3: Prepare the salt and CREATE2 input, and calculate the final address
+function getCreate2Address(
+    deployer: `0x${string}`,
+    salt: `0x${string}`,
+    codeHash: `0x${string}`,
+    owner: `0x${string}`,
+): `0x${string}` {
+    const CREATE2_PREFIX = "0xff"
     const combinedSalt = keccak256(concat([salt, owner]))
-    const create2Input = concat(["0xff", deployer, combinedSalt, codeHash]) // 0xff is the CREATE2 prefix
-    const predicted = `0x${keccak256(create2Input).slice(26)}`
-
-    return getAddress(predicted)
+    const create2Input = concat([CREATE2_PREFIX, deployer, combinedSalt, codeHash])
+    return `0x${keccak256(create2Input).slice(26)}`
 }

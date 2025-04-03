@@ -2,7 +2,7 @@ import { Map2, Mutex } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import type { Address } from "viem/accounts"
 import { publicClient } from "#lib/clients"
-import { abis, deployment } from "#lib/deployments"
+import { abis } from "#lib/deployments"
 import env from "#lib/env"
 import { SubmitterError } from "#lib/errors/submitter-errors"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
@@ -39,34 +39,37 @@ export function getPendingTransactions(account: Address) {
     })
 }
 
-async function getOnchainNonce(account: Address, nonceTrack: NonceTrack) {
+async function getOnchainNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack) {
     return await publicClient.readContract({
-        address: deployment.HappyEntryPoint,
+        address: entryPoint,
         abi: abis.HappyEntryPoint,
         functionName: "nonceValues",
         args: [account, nonceTrack],
     })
 }
 
-async function getLocalNonce(account: `0x${string}`, nonceTrack: bigint) {
+async function getLocalNonce(entryPoint: `0x${string}`, account: `0x${string}`, nonceTrack: bigint) {
     const mutex = nonceMutexes.getOrSet(account, nonceTrack, () => new Mutex())
     return await mutex.locked(async () => {
-        return await nonces.getOrSetAsync(account, nonceTrack, () => getOnchainNonce(account, nonceTrack))
+        return await nonces.getOrSetAsync(account, nonceTrack, () => getOnchainNonce(entryPoint, account, nonceTrack))
     })
 }
 
-export async function checkFutureNonce(_tx: HappyTx) {
-    const account = _tx.account
-    const nonceTrack = _tx.nonceTrack
-    const localNonce = await getLocalNonce(account, nonceTrack)
-    return _tx.nonceValue > localNonce
+export async function checkFutureNonce(entryPoint: `0x${string}`, tx: HappyTx) {
+    const account = tx.account
+    const nonceTrack = tx.nonceTrack
+    const localNonce = await getLocalNonce(entryPoint, account, nonceTrack)
+    return tx.nonceValue > localNonce
 }
 
-export async function waitUntilUnblocked(tx: HappyTx): Promise<Result<undefined, SubmitterError>> {
+export async function waitUntilUnblocked(
+    entrypoint: `0x${string}`,
+    tx: HappyTx,
+): Promise<Result<undefined, SubmitterError>> {
     const track = pendingTxMap.getOrSet(tx.account, tx.nonceTrack, new Map())
     if (track.size >= env.LIMITS_EXECUTE_BUFFER_LIMIT) return err(new SubmitterError("bufferExceeded"))
     if (totalCapacity >= env.LIMITS_EXECUTE_MAX_CAPACITY) return err(new SubmitterError("maxCapacity")) // TODO: prune active account
-    const localNonce = await getLocalNonce(tx.account, tx.nonceTrack)
+    const localNonce = await getLocalNonce(entrypoint, tx.account, tx.nonceTrack)
     const maxNonce = localNonce + BigInt(env.LIMITS_EXECUTE_BUFFER_LIMIT)
     if (tx.nonceValue > maxNonce) return err(new SubmitterError("nonce out of range"))
 
