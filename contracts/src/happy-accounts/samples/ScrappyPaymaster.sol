@@ -9,6 +9,7 @@ import {HappyTx} from "boop/core/HappyTx.sol";
 import {IHappyPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IHappyPaymaster.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {NotFromEntryPoint} from "boop/utils/Common.sol";
+import {HappyEntryPoint} from "../core/HappyEntryPoint.sol";
 
 /**
  * An example paymaster contract implementing the IHappyPaymaster interface.
@@ -91,6 +92,45 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
         }
 
         return abi.encodeWithSelector(bytes4(0));
+    }
+
+    // ====================================================================================================
+    // STAKE MANAGEMENT
+
+    /**
+     * Adds the value to the paymaster's stake. cf. {Staking.deposit}
+     */
+    function deposit() external payable {
+        HappyEntryPoint(ENTRYPOINT).deposit{value: msg.value}(address(this));
+    }
+
+    /**
+     * cf. {Staking.updateWithdrawalDelay}
+     */
+    function updateWithdrawalDelay(uint64 withdrawDelay) external onlyOwner {
+        HappyEntryPoint(ENTRYPOINT).updateWithdrawDelay(withdrawDelay);
+    }
+
+    /**
+     * Equivalent to {updateWithdrawalDelay} followed by {deposit}.
+     */
+    function depositWithDelay(uint64 withdrawDelay) external payable onlyOwner {
+        HappyEntryPoint(ENTRYPOINT).updateWithdrawDelay(withdrawDelay);
+        HappyEntryPoint(ENTRYPOINT).deposit{value: msg.value}(address(this));
+    }
+
+    /**
+     * cf. {Staking.initiateWithdrawal}
+     */
+    function initiateWithdrawal(uint128 amount) external onlyOwner {
+        HappyEntryPoint(ENTRYPOINT).initiateWithdrawal(amount);
+    }
+
+    /**
+     * cf. {Staking.withdraw}
+     */
+    function withdraw(uint128 amount, address payable destination) external onlyOwner {
+        HappyEntryPoint(ENTRYPOINT).withdraw(amount, destination);
     }
 
     // ====================================================================================================
