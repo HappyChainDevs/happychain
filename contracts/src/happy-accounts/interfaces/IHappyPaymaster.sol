@@ -22,6 +22,10 @@ error SubmitterFeeTooHigh();
  * function that consumes more than 2300 gas), as that screws up the entry point's gas accounting
  * and will cause the paymaster to revert if it consumes more than the 2300 gas allowance.
  *
+ * Implementers of this interface must implement functionality that enables managing the stake
+ * with the {HappyEntryPoint}, by calling the functions implemented in `Staking.sol`. The paymaster
+ * itself is the only one authorized to change withdraw delays, initiate and finalize withdrawals.
+ *
  * The ERC-165 selector for this interface is 0x24542ca5 and can be obtained via:
  * `console.logBytes4(IHappyPaymaster.payout.selector);`
  */
