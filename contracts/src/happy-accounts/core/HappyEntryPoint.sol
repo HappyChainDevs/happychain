@@ -247,7 +247,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
 
         if (happyTx.paymaster != address(0) && happyTx.paymaster != happyTx.account) {
             (result, gasUsed, revertData) =
-                _validate(IHappyPaymaster.validatePayment.selector, happyTx, happyTx.payoutGasLimit);
+                _validate(IHappyPaymaster.validatePayment.selector, happyTx, happyTx.validatePaymentGasLimit);
 
             if (result == Validity.CALL_REVERTED) revert PaymentValidationReverted(revertData);
             if (result == Validity.INVALID_RETURN_DATA) revert PaymentValidationReverted(revertData);

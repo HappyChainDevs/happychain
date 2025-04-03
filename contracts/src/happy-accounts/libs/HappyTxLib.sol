@@ -37,7 +37,7 @@ library HappyTxLib {
      *      - gasLimit (4b)
      *      - validateGasLimit (4b)
      *      - executeGasLimit (4b)
-     *      - payoutGasLimit (4b)
+     *      - validatePaymentGasLimit (4b)
      *      - destination (20b)
      *      - paymaster (20b)
      *      - value (32b)
@@ -88,7 +88,7 @@ library HappyTxLib {
             outPtr := add(outPtr, 4)
             inPtr := add(inPtr, 32)
 
-            // Copy payoutGasLimit (4 bytes)
+            // Copy validatePaymentGasLimit (4 bytes)
             mcopy(outPtr, add(inPtr, 28), 4)
             outPtr := add(outPtr, 4)
             inPtr := add(inPtr, 32)
@@ -199,7 +199,7 @@ library HappyTxLib {
             cdPtr := add(cdPtr, 4)
             memPtr := add(memPtr, 32)
 
-            // Copy payoutGasLimit (4 bytes) + zero pad to 32 bytes
+            // Copy validatePaymentGasLimit (4 bytes) + zero pad to 32 bytes
             calldatacopy(add(memPtr, 28), cdPtr, 4)
             cdPtr := add(cdPtr, 4)
             memPtr := add(memPtr, 32)

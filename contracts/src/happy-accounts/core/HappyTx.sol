@@ -12,7 +12,7 @@ struct HappyTx {
     uint32 gasLimit;            // Gas limit for the transaction made by the submitter
     uint32 validateGasLimit;    // Gas limit for IHappyAccount.validate
     uint32 executeGasLimit;     // Gas limit for IHappyAccount.execute
-    uint32 payoutGasLimit;      // Gas limit for IHappyPaymaster.payout
+    uint32 validatePaymentGasLimit; // Gas limit for IHappyPaymaster.validatePayment
     address dest;               // Destination address for the transaction
     address paymaster;          // Fee payer: This can be the
                                     // 1. account (if it implements IHappyPaymaster)
@@ -53,7 +53,7 @@ event HappyTxSubmitted(
     uint32 gasLimit,
     uint32 validateGasLimit,
     uint32 executeGasLimit,
-    uint32 payoutGasLimit,
+    uint32 validatePaymentGasLimit,
     address dest,
     address paymaster,
     uint256 value,
