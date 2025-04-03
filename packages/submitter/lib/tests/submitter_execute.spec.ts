@@ -1,7 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
 import { encodeFunctionData } from "viem"
-import { deployment } from "#lib/deployments"
 import { app } from "#lib/server"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
@@ -13,6 +12,7 @@ import {
     fundAccount,
     getMockTokenABalance,
     getNonce,
+    mockDeployments,
     signTx,
     testAccount,
     testPublicClient,
@@ -184,7 +184,7 @@ describe("submitter_execute", () => {
             const tx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
 
             // invalid paymaster
-            tx.paymaster = deployment.MockTokenA
+            tx.paymaster = mockDeployments.MockTokenA
 
             const jsonTx = await signTx(tx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })

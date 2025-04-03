@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { deployment } from "#lib/deployments"
+import env from "#lib/env"
 import { EntryPointStatus, SimulatedValidationStatus } from "#lib/tmp/interface/status"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
@@ -21,14 +21,13 @@ const simulationResultSuccessSchema = z.object({
         example: SimulatedValidationStatus.Success,
     }),
     entryPoint: z.string().refine(isAddress).openapi({
-        example: deployment.HappyEntryPoint,
+        example: env.DEPLOYMENT_ENTRYPOINT,
     }),
 })
 
 const simulationResultFailureSchema = z.object({
     status: z.enum([
-        //
-        EntryPointStatus.ValidationFailed,
+        EntryPointStatus.ValidationFailed, //
         EntryPointStatus.ExecuteFailed,
         EntryPointStatus.PaymentFailed,
     ]),

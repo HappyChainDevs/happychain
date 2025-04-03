@@ -1,4 +1,4 @@
-import { DEFAULT_ENTRYPOINT } from "#lib/data/defaults"
+import env from "#lib/env"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { SubmitterErrorStatus } from "#lib/tmp/interface/status"
 import type { EstimateGasInput, EstimateGasOutput } from "#lib/tmp/interface/submitter_estimateGas"
@@ -7,7 +7,7 @@ import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 import { simulateSubmit } from "./simulate"
 
 export async function estimateGas(data: EstimateGasInput): Promise<EstimateGasOutput> {
-    const entryPoint = data.entryPoint ?? DEFAULT_ENTRYPOINT
+    const entryPoint = data.entryPoint ?? env.DEPLOYMENT_ENTRYPOINT
 
     const account = findExecutionAccount(data.tx)
 

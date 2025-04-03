@@ -1,14 +1,12 @@
 import { beforeAll, describe, expect, it } from "bun:test"
 import type { SubmitOutput } from "#lib/client"
-import { deployment } from "#lib/deployments"
+import env from "#lib/env"
 import { create } from "#lib/handlers/accounts/create"
 import { createMockTokenAMintHappyTx, getNonce, testAccount } from "#lib/tests/utils"
 import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
 import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 import { submit, submitWriteContract } from "./submit"
-
-const entryPoint = deployment.HappyEntryPoint
 
 describe("submit", () => {
     let smartAccount: `0x${string}`
@@ -31,7 +29,7 @@ describe("submit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            const resp = await submit({ entryPoint, tx: unsigned })
+            const resp = await submit({ entryPoint: env.DEPLOYMENT_ENTRYPOINT, tx: unsigned })
 
             // @ts-expect-error
             const { status, hash } = resp.value as SubmitOutput
@@ -52,7 +50,7 @@ describe("submit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            const resp = await submit({ entryPoint, tx: unsigned })
+            const resp = await submit({ entryPoint: env.DEPLOYMENT_ENTRYPOINT, tx: unsigned })
 
             // @ts-expect-error
             const { status, hash } = resp.value as SubmitOutput
@@ -73,7 +71,7 @@ describe("submit", () => {
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
-            const resp = await submit({ entryPoint, tx: unsigned })
+            const resp = await submit({ entryPoint: env.DEPLOYMENT_ENTRYPOINT, tx: unsigned })
 
             // @ts-expect-error
             const err = resp.error
@@ -90,7 +88,7 @@ describe("submit", () => {
 
             const resp = await submitWriteContract({
                 account: findExecutionAccount(unsigned),
-                address: entryPoint,
+                address: env.DEPLOYMENT_ENTRYPOINT,
                 args: [encodeHappyTx(unsigned)],
             })
 

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { deployment } from "#lib/deployments"
+import env from "#lib/env"
 import { TransactionTypeName } from "#lib/tmp/interface/common_chain"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
@@ -19,7 +19,7 @@ export const receiptSchema = z.object({
     logsBloom: z.string().refine(isHexString).openapi({ example: "0x" }),
     root: z.union([z.string(), z.undefined()]).openapi({ example: undefined }),
     status: z.string().openapi({ example: "success" }),
-    to: z.string().refine(isAddress).openapi({ example: deployment.HappyEntryPoint }),
+    to: z.string().refine(isAddress).openapi({ example: env.DEPLOYMENT_ENTRYPOINT }),
     transactionHash: z.string().refine(isHexString).openapi({ example: "0x" }),
     transactionIndex: z.number().openapi({ example: 0 }),
     type: z.string().openapi({ example: TransactionTypeName.EIP1559 }),
