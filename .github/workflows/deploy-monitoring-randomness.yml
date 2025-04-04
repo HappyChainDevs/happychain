@@ -34,7 +34,7 @@ jobs:
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SERVER_2_HOST_ }}
+          host: ${{ secrets.SERVER_2_HOST }}
           username: ${{ secrets.SERVER_2_USERNAME }}
           key: ${{ secrets.SERVER_2_KEY }}
           port: ${{ secrets.SERVER_2_PORT }}
@@ -46,7 +46,7 @@ jobs:
       - name: Deploy randomness to server
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: ${{ secrets.SERVER_2_HOST_ }}
+          host: ${{ secrets.SERVER_2_HOST }}
           username: ${{ secrets.SERVER_2_USERNAME }}
           key: ${{ secrets.SERVER_2_KEY }}
           port: ${{ secrets.SERVER_2_PORT }}
