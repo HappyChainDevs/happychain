@@ -315,19 +315,17 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         } else if ( /* self-paying */ happyTx.paymaster == happyTx.account) {
             uint256 balance = tx.origin.balance;
             uint256 gasBeforePayout = gasleft();
-            // The constant 12000 overestimates the cost of the rest of execution, including
-            // 9100 gas of the value transfer.
-            (output.gas, cost) = computeCost(happyTx, gasStart - gasBeforePayout + 12000, encodedHappyTx.length);
+            // The constant 15000 overestimates the cost of the rest of execution, including
+            // 9300 gas of the value transfer.
+            (output.gas, cost) = computeCost(happyTx, gasStart - gasBeforePayout + 15000, encodedHappyTx.length);
             (success,) = happyTx.account.excessivelySafeCall(
                 gasleft() - 3000, // an OOG buffer
                 0, // value
                 0, // maxCopy
                 abi.encodeWithSelector(IHappyAccount.payout.selector, cost)
             );
-            uint256 gasAfterPayout = gasleft();
             if (
-                !success || gasBeforePayout - gasAfterPayout > (isSimulation ? 40000 : 15000)
-                    || (!isSimulation && tx.origin.balance < balance + cost)
+                !success || gasBeforePayout - gasleft() > 15000 || (!isSimulation && tx.origin.balance < balance + cost)
             ) {
                 revert PayoutFailed();
             }
