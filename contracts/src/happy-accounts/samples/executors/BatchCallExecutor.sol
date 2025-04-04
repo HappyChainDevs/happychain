@@ -31,18 +31,6 @@ contract BatchCallExecutor is ICustomBoopExecutor {
     using CallInfoCodingLib for bytes;
 
     // ====================================================================================================
-    // ERRORS AND MODIFIERS
-
-    /// @dev Selector returned if the _executeBatch wasn't called from the contract itself
-    error NotSelf();
-
-    /// @dev Checks if the the call was made from the contract itself
-    modifier onlySelf() {
-        if (msg.sender != address(this)) revert NotSelf();
-        _;
-    }
-
-    // ====================================================================================================
     // FUNCTIONS
 
     function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory output) {
@@ -76,7 +64,8 @@ contract BatchCallExecutor is ICustomBoopExecutor {
      * revert, without reverting the `execute` call. This is sensitive code, and can only be called
      * from this contract, which we check.
      */
-    function _executeBatch(address account, CallInfo[] memory calls) external onlySelf {
+    function _executeBatch(address account, CallInfo[] memory calls) external {
+        require(msg.sender == address(this), "not called from self");
         for (uint256 i = 0; i < calls.length; i++) {
             (bool success, bytes memory revertData) = IExtensibleBoopAccount(account).executeCallFromExecutor(calls[i]);
             if (!success) {

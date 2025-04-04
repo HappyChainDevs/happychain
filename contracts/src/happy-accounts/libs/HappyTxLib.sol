@@ -61,7 +61,7 @@ library HappyTxLib {
             + (4 + happyTx.validatorData.length)
             + (4 + happyTx.extraData.length);
 
-        assembly ("memory-safe") {
+        assembly {
             // Encoded tx will live at next free memory address.
             result := mload(0x40)
             // Update free memory pointer to point past decoded bytes (+32 bytes is for length).
