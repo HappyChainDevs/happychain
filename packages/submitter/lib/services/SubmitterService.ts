@@ -2,21 +2,13 @@ import type { Hex } from "viem"
 import { publicClient } from "#lib/clients"
 import { InvalidTransactionRecipientError, InvalidTransactionTypeError } from "#lib/errors/submitter-errors"
 import { logger } from "#lib/logger"
-import { happyTransactionService } from "#lib/services"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import type { HappyTxReceipt } from "#lib/tmp/interface/HappyTxReceipt"
 import type { HappyTxState } from "#lib/tmp/interface/HappyTxState"
-import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
-import { decodeHappyTx } from "#lib/utils/decodeHappyTx"
 import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
 import type { HappyReceiptService } from "./HappyReceiptService"
-import type {
-    HappySimulationService,
-    SubmitContractSimulateParameters,
-    SubmitContractSimulateReturnType,
-} from "./HappySimulationService"
 import type { HappyStateService } from "./HappyStateService"
 import type { HappyTransactionService } from "./HappyTransactionService"
 
@@ -25,7 +17,6 @@ export class SubmitterService {
         private happyTransactionService: HappyTransactionService,
         private happyStateService: HappyStateService,
         private happyReceiptService: HappyReceiptService,
-        private happySimulationService: HappySimulationService,
     ) {}
 
     async initialize(entryPoint: `0x${string}`, happyTx: HappyTx) {
@@ -66,20 +57,10 @@ export class SubmitterService {
         }
     }
 
-    async insertSimulationResult(
-        request: SubmitContractSimulateParameters,
-        result: SubmitContractSimulateReturnType["result"] | undefined,
-        simulation: SimulationResult | undefined,
-    ): Promise<void> {
-        if (!simulation) return
-        const happyTxHash = computeHappyTxHash(decodeHappyTx(request.args[0]))
-        await this.happySimulationService.insertSimulationResult(happyTxHash, request, result, simulation)
-    }
-
     private async waitForSubmitReceipt(params: { txHash: Hex; happyTxHash: Hex }): Promise<HappyTxReceipt> {
         const { txHash, happyTxHash } = params
 
-        const happyTx = await happyTransactionService.findByHappyTxHashOrThrow(happyTxHash)
+        const happyTx = await this.happyTransactionService.findByHappyTxHashOrThrow(happyTxHash)
 
         const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash, pollingInterval: 500 })
 
@@ -109,7 +90,6 @@ export class SubmitterService {
              * The revertData carried by one of our custom error, or the raw deal for
              * "otherReverted". Empty if `!status.endsWith("Reverted")`.
              */
-            // TODO:
             revertData: "0x",
 
             /** Gas used by the HappyTx */

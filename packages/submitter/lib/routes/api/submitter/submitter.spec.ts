@@ -7,7 +7,7 @@ import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 
 const client = testClient(app)
-describe("submitter", () => {
+describe("routes: api/submitter", () => {
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
     let nonceValue = 0n
@@ -16,7 +16,7 @@ describe("submitter", () => {
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
-            .$post({ json: { owner: testAccount.account.address, salt: "0x1" } })
+            .$post({ json: { owner: testAccount.address, salt: "0x1" } })
             .then((a) => a.json())
             .then((a) => a.address)
     })
@@ -30,7 +30,10 @@ describe("submitter", () => {
     })
 
     describe("200", () => {
-        it.todo("should simulate a tx")
+        it("should simulate a tx", async () => {
+            const result = await client.api.v1.submitter.simulate.$post({ json: { tx: serializeBigInt(signedTx) } })
+            expect(result.status).toBe(200)
+        })
         it("should execute a tx", async () => {
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
             expect(result.status).toBe(200)
@@ -41,10 +44,8 @@ describe("submitter", () => {
         })
         it("should fetch state by hash", async () => {
             await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
-            const result = await client.api.v1.submitter.state[":hash"].$get({
-                param: { hash: computeHappyTxHash(unsignedTx) },
-            })
-
+            const hash = computeHappyTxHash(unsignedTx)
+            const result = await client.api.v1.submitter.state[":hash"].$get({ param: { hash } })
             expect(result.status).toBe(200)
         })
         it("should await state receipt by hash", async () => {

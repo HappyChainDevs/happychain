@@ -15,6 +15,7 @@ import { decodeErrorResult, getAbiItem, parseAbi, toFunctionSelector } from "vie
  * toFunctionSelector("function InvalidNonce()") //=> '0x756688fe'
  * ```
  */
+
 export const errorAbi = parseAbi([
     // IHappyAccount.sol ErrorSelectors
     "function InvalidNonce()",
@@ -47,12 +48,23 @@ export const errorAbi = parseAbi([
     // HappyEntryPoint.sol ErrorSelectors
     "function ValidationReverted(bytes revertData)",
     "function ValidationFailed(bytes reason)",
-    "function PaymentFailed(bytes result)",
-    "function PaymentReverted(bytes revertData)",
+    "function PaymentValidationReverted(bytes revertData)",
+    "function PaymentValidationFailed(bytes reason)",
+    "function PayoutFailed()",
     "error ValidationReverted(bytes revertData)",
     "error ValidationFailed(bytes reason)",
-    "error PaymentFailed(bytes result)",
-    "error PaymentReverted(bytes revertData)",
+    "error PaymentValidationReverted(bytes revertData)",
+    "error PaymentValidationFailed(bytes reason)",
+    "error PayoutFailed()",
+
+    "function NotSelfOrOwner()",
+    "error NotSelfOrOwner()",
+    "function InsufficientStake()",
+    "error InsufficientStake()",
+    "function NotFromEntryPoint()",
+    "error NotFromEntryPoint()",
+    "function InsufficientGasBudget()",
+    "error InsufficientGasBudget()",
 
     // https://vectorized.github.io/solady/#/utils/ecdsa?id=toethsignedmessagehashbytes
     "function InvalidSignature()",

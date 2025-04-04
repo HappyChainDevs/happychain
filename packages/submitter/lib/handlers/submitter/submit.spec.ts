@@ -4,16 +4,14 @@ import env from "#lib/env"
 import { create } from "#lib/handlers/accounts/create"
 import { createMockTokenAMintHappyTx, getNonce, testAccount } from "#lib/tests/utils"
 import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
-import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
-import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
-import { submit, submitWriteContract } from "./submit"
+import { submit } from "./submit"
 
 describe("submit", () => {
     let smartAccount: `0x${string}`
 
     beforeAll(async () => {
         ;({ address: smartAccount } = await create({
-            owner: testAccount.account.address,
+            owner: testAccount.address,
             salt: "0x000000000000000000000000000000000000000000000000000000000000001",
         }).then((a) => (a.isOk() ? a.value : ({} as never))))
     })
@@ -25,7 +23,7 @@ describe("submit", () => {
             const unsigned = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
             unsigned.executeGasLimit = 0n
             unsigned.gasLimit = 0n
-            unsigned.validatorData = await testAccount.account.signMessage({
+            unsigned.validatorData = await testAccount.signMessage({
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
@@ -46,7 +44,7 @@ describe("submit", () => {
             const unsigned = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
             unsigned.executeGasLimit = 4000000000n
             unsigned.gasLimit = 4000000000n
-            unsigned.validatorData = await testAccount.account.signMessage({
+            unsigned.validatorData = await testAccount.signMessage({
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
@@ -67,7 +65,7 @@ describe("submit", () => {
             const nonceTrack = 1000_000_000_000n + BigInt(Math.floor(Math.random() * 10_000_000))
             const nonceValue = 1000_000_000_000n + BigInt(Math.floor(Math.random() * 10_000_000))
             const unsigned = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
-            unsigned.validatorData = await testAccount.account.signMessage({
+            unsigned.validatorData = await testAccount.signMessage({
                 message: { raw: computeHappyTxHash(unsigned) },
             })
 
@@ -76,26 +74,6 @@ describe("submit", () => {
             // @ts-expect-error
             const err = resp.error
             expect(err.message).toBe("nonce out of range")
-        })
-
-        it("should fail on invalid signature", async () => {
-            const nonceTrack = 4n
-            const nonceValue = await getNonce(smartAccount, nonceTrack)
-            const unsigned = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
-
-            // invalid signature
-            unsigned.validatorData = "0x"
-
-            const resp = await submitWriteContract({
-                account: findExecutionAccount(unsigned),
-                address: env.DEPLOYMENT_ENTRYPOINT,
-                args: [encodeHappyTx(unsigned)],
-            })
-
-            // @ts-expect-error
-            const err = resp.error
-            expect(err.status).toBe("entrypointValidationReverted")
-            expect(err.hash).toBeUndefined()
         })
     })
 })

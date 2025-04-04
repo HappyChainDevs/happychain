@@ -8,3 +8,6 @@ export {
     receipt,
     pending,
 } from "./client"
+
+export type * from "@happy.tech/submitter/client"
+export type { Result, Ok, Err } from "./utils/neverthrow"

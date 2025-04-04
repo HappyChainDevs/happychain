@@ -23,4 +23,5 @@ export const receiptSchema = z.object({
     transactionHash: z.string().refine(isHexString).openapi({ example: "0x" }),
     transactionIndex: z.number().openapi({ example: 0 }),
     type: z.string().openapi({ example: TransactionTypeName.EIP1559 }),
+    account: z.string(),
 })

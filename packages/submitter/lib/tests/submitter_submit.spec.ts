@@ -17,7 +17,7 @@ describe("submitter_submit", () => {
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
-            .$post({ json: { owner: testAccount.account.address, salt: "0x1" } })
+            .$post({ json: { owner: testAccount.address, salt: "0x1" } })
             .then((a) => a.json())
             .then((a) => a.address)
     })
@@ -28,7 +28,7 @@ describe("submitter_submit", () => {
         unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
         signedTx = await signTx(unsignedTx)
     })
-
+    // there are some new HappyTx fields too ICYMI executeGasLimit  is replaced by validateGasLimit , executeGasLimit  and validatePaymentGasLimit
     it("submits mints token tx.", async () => {
         const result = await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -53,7 +53,8 @@ describe("submitter_submit", () => {
 
         const results = await Promise.all(
             transactions.map((tx) => client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx) } })),
-        ).then(async (a) => await Promise.all(a.map((b) => b.json())))
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
 
         const rs = await Promise.all(
             results.map((a) => {
@@ -138,8 +139,8 @@ describe("submitter_submit", () => {
         expect(tx7_response.status).toBe(200)
         expect(tx8_response.status).toBe(200)
 
-        expect(tx9_response.status).toBe(500) // replaced!
+        expect(tx9_response.status).toBe(422) // replaced!
         expect(tx9_2_response.status).toBe(200)
-        expect(tx9_rejection.error).toBe("transaction rejected")
+        expect(tx9_rejection.message).toBe("transaction replaced")
     })
 })
