@@ -165,7 +165,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     // ====================================================================================================
     // STATE
 
-    mapping(address account => mapping(uint192 nonceTrack => uint256 nonceValue)) public nonceValues;
+    mapping(address account => mapping(uint192 nonceTrack => uint64 nonceValue)) public nonceValues;
 
     // ====================================================================================================
     // SUBMIT
@@ -236,9 +236,6 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             }
         }
 
-        // ==========================================================================================
-        // 2. Validate & update nonce
-
         int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
         int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - expectedNonce;
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) revert InvalidNonce();
@@ -246,7 +243,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         nonceValues[happyTx.account][happyTx.nonceTrack]++;
 
         // ==========================================================================================
-        // 3. Validate with account
+        // 2. Validate with account
 
         (Validity result, uint32 gasUsed, bytes memory revertData) =
             _validate(IHappyAccount.validate.selector, happyTx, happyTx.validateGasLimit);
@@ -260,7 +257,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         output.validateGas = gasUsed;
 
         // ==========================================================================================
-        // 4. Validate with paymaster
+        // 3. Validate with paymaster (if specified)
 
         if (happyTx.paymaster != address(0) && happyTx.paymaster != happyTx.account) {
             (result, gasUsed, revertData) =
@@ -276,7 +273,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         }
 
         // ==========================================================================================
-        // 5. Execute the call
+        // 4. Execute the call
 
         bytes memory executeCallData = abi.encodeCall(IHappyAccount.execute, happyTx);
         uint256 gasBeforeExecute = gasleft();
