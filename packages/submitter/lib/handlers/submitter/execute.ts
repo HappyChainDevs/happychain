@@ -9,6 +9,7 @@ import { submit } from "./submit"
 export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, ExecuteOutput>> {
     const happyTxHash = computeHappyTxHash(data.tx)
     const status = await submit(data)
+
     if (status.isErr()) {
         if ("simulation" in status.error && status.error.simulation) {
             return err({
@@ -17,9 +18,8 @@ export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput,
                     getErrorNameFromSelector(status.error.simulation.revertData || "0x") ||
                     status.error.simulation.revertData,
             })
-        } else {
-            return err({ status: SubmitterErrorStatus.UnexpectedError })
         }
+        return err({ status: SubmitterErrorStatus.UnexpectedError })
     }
 
     const receipt = await happyReceiptService.findByHappyTxHashWithTimeout(happyTxHash, 60_000)

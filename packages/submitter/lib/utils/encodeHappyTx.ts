@@ -1,11 +1,15 @@
+import type { Optional } from "@happy.tech/common"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { toBytes, toDynamicLengthBytes } from "./bytes"
 
-export function encodeHappyTx(tx: HappyTx): `0x${string}` {
+type OptionalHappyTxFields = "gasLimit" | "executeGasLimit" | "maxFeePerGas" | "submitterFee"
+export function encodeHappyTx(tx: Optional<HappyTx, OptionalHappyTxFields>): `0x${string}` {
     // Static fields
     const accountHex = tx.account.slice(2)
     const gasLimitHex = toBytes(tx.gasLimit, 4)
+    const validateGasLimitHex = toBytes(tx.validateGasLimit, 4)
     const executeGasLimitHex = toBytes(tx.executeGasLimit, 4)
+    const validatePaymentGasLimitHex = toBytes(tx.validatePaymentGasLimit, 4)
     const destHex = tx.dest.slice(2)
     const paymasterHex = tx.paymaster.slice(2)
     const valueHex = toBytes(tx.value, 32)
@@ -25,7 +29,9 @@ export function encodeHappyTx(tx: HappyTx): `0x${string}` {
         // Static fields (196 bytes total)
         accountHex + // 20 bytes
         gasLimitHex + // 4 bytes
+        validateGasLimitHex +
         executeGasLimitHex + // 4 bytes
+        validatePaymentGasLimitHex +
         destHex + // 20 bytes
         paymasterHex + // 20 bytes
         valueHex + // 32 bytes

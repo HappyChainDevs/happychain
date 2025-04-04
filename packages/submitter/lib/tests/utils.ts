@@ -1,7 +1,7 @@
 import { abis as mockAbis, deployment as mockDeployments } from "@happy.tech/contracts/mocks/anvil"
-import type { Address, PublicClient, WalletClient } from "viem"
+import type { Address, PrivateKeyAccount, PublicClient, WalletClient } from "viem"
 import { http, createPublicClient, createWalletClient, zeroAddress } from "viem"
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
+import { privateKeyToAccount } from "viem/accounts"
 import { localhost } from "viem/chains"
 import { encodeFunctionData, parseEther } from "viem/utils"
 import type { z } from "zod"
@@ -20,12 +20,14 @@ const chain = localhost
 
 const config = { chain, transport: http() } as const
 // generated using 'generatePrivateKey()' hardcoded here to skip re-deploying accounts for every test.
-export const testAccount = createTestAccount("0x513b9958a89be74b445362465c39ba0710d0e04aae3f0a8086e8ea064cdcea16")
+export const testAccount: PrivateKeyAccount = privateKeyToAccount(
+    "0x513b9958a89be74b445362465c39ba0710d0e04aae3f0a8086e8ea064cdcea16",
+)
 
 export const testPublicClient: PublicClient<typeof config.transport, typeof config.chain> = //
     createPublicClient({ ...config, batch: { multicall: true } })
-export const testWalletClient: WalletClient<typeof config.transport, typeof config.chain, typeof testAccount.account> =
-    createWalletClient({ ...config, account: testAccount.account })
+export const testWalletClient: WalletClient<typeof config.transport, typeof config.chain, typeof testAccount> =
+    createWalletClient({ ...config, account: testAccount })
 
 export async function fundAccount(address: Address) {
     const hash = await createWalletClient({
@@ -35,21 +37,6 @@ export async function fundAccount(address: Address) {
     }).sendTransaction({ to: address, value: parseEther("1") })
 
     await testPublicClient.waitForTransactionReceipt({ hash })
-}
-
-export function createTestAccount(privateKey = generatePrivateKey()) {
-    const account = privateKeyToAccount(privateKey)
-    const nonceMap = new Map()
-    return {
-        account,
-        createHappyTx(nonceTrack = 0n) {
-            const nonceValue = nonceMap.get(nonceTrack) ?? 0n
-            const tx = createMockTokenAMintHappyTx(account.address, nonceValue)
-            nonceMap.set(nonceTrack, nonceValue + 1n)
-            tx.nonceTrack = nonceTrack
-            return tx
-        },
-    }
 }
 
 /**
@@ -90,6 +77,8 @@ export function createMockTokenAMintHappyTx(
         paymaster: zeroAddress,
         executeGasLimit: 0n,
         gasLimit: 0n,
+        validatePaymentGasLimit: 4000000000n,
+        validateGasLimit: 4000000000n,
         maxFeePerGas: 1200000000n,
         submitterFee: 100n,
 
@@ -106,6 +95,6 @@ export function createMockTokenAMintHappyTx(
 
 export async function signTx(happyTx: HappyTx): Promise<HappyTx> {
     const happyTxHash = computeHappyTxHash(happyTx)
-    const validatorData = await testAccount.account.signMessage({ message: { raw: happyTxHash } })
+    const validatorData = await testAccount.signMessage({ message: { raw: happyTxHash } })
     return { ...happyTx, validatorData }
 }

@@ -8,10 +8,10 @@ import { computeHappyAccount } from "#lib/utils/computeHappyAccount"
 
 const client = testClient(app)
 
-describe("accounts", () => {
+describe("routes: api/accounts", () => {
     describe("200", () => {
         it("should create account", async () => {
-            const owner = testAccount.account.address
+            const owner = testAccount.address
             const salt = "0x0000000000000000000000000000000000000000000000000000000000000001"
 
             const result = await client.api.v1.accounts.create
@@ -26,7 +26,7 @@ describe("accounts", () => {
         })
 
         it("should match onchain with offchain addresses", async () => {
-            const owner = testAccount.account.address
+            const owner = testAccount.address
             const salt = "0x0000000000000000000000000000000000000000000000000000000000000001"
 
             const predictedAddress = await testPublicClient.readContract({

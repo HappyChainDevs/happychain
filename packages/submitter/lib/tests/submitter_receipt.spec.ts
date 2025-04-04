@@ -18,7 +18,7 @@ describe("submitter_receipt", () => {
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
-            .$post({ json: { owner: testAccount.account.address, salt: "0x1" } })
+            .$post({ json: { owner: testAccount.address, salt: "0x1" } })
             .then((a) => a.json())
             .then((a) => a.address)
     })

@@ -1,4 +1,3 @@
-import type { Prettify } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
 import { DEFAULT_RECEIPT_TIMEOUT_MS } from "#lib/data/defaults"
 import { happyReceiptService, happySimulationService } from "#lib/services"
@@ -9,7 +8,7 @@ import type { ReceiptInput } from "#lib/tmp/interface/submitter_receipt"
 export async function receiptByHash({
     hash,
     timeout,
-}: Prettify<ReceiptInput>): Promise<Result<StateRequestOutput, StateRequestOutput>> {
+}: ReceiptInput): Promise<Result<StateRequestOutput, StateRequestOutput>> {
     const receipt = await happyReceiptService.findByHappyTxHashWithTimeout(hash, timeout ?? DEFAULT_RECEIPT_TIMEOUT_MS)
     if (receipt?.status === EntryPointStatus.Success) {
         return ok({

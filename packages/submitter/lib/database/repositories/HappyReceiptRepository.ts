@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely"
+import type { Insertable, Kysely } from "kysely"
 import type { DB, HappyReceipt } from "#lib/database/generated"
 import type { Hash } from "#lib/tmp/interface/common_chain"
 
@@ -6,16 +6,11 @@ export class HappyReceiptRepository {
     constructor(private db: Kysely<DB>) {}
 
     async findByHappyTxHash(happyHash: Hash) {
-        const query = this.selectReceipts().where("happy_receipts.happyTxHash", "=", happyHash)
+        const query = this.selectReceiptsQuery().where("happy_receipts.happyTxHash", "=", happyHash)
         return await query.executeTakeFirst()
     }
 
-    async findByTransactionHash(transactionHash: Hash) {
-        const query = this.selectReceipts().where("happy_receipts.transactionHash", "=", transactionHash)
-        return await query.executeTakeFirst()
-    }
-
-    private selectReceipts() {
+    private selectReceiptsQuery() {
         return this.db
             .selectFrom("happy_receipts")
             .select([
@@ -35,7 +30,7 @@ export class HappyReceiptRepository {
             ])
     }
 
-    async insert(state: Omit<HappyReceipt, "id">) {
+    async insert(state: Insertable<HappyReceipt>): Promise<HappyReceipt | undefined> {
         const { gasCost, gasUsed, happyTxHash, revertData, status, transactionHash } = state
         const response = await this.db //
             .insertInto("happy_receipts")

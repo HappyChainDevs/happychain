@@ -3,14 +3,8 @@ import { serializeBigInt } from "./serializeBigInt"
 
 describe("bigint.lossy", () => {
     it("converts bigints in object to strings", () => {
-        expect(
-            serializeBigInt({
-                num: 1n,
-                nested: { deeper: 2n },
-            }),
-        ).toStrictEqual({
-            num: "1",
-            nested: { deeper: "2" },
-        })
+        const before = { num: 1n, nested: { deeper: 2n } }
+        const after = { num: "1", nested: { deeper: "2" } }
+        expect(serializeBigInt(before)).toStrictEqual(after)
     })
 })

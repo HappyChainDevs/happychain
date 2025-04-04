@@ -85,7 +85,7 @@ export enum EntryPointStatus {
      * The paymaster's `payout` call reverted.
      * This indicates either a dysfunctional paymaster or a dysfunctional submitter.
      */
-    PaymentReverted = "entrypointPaymentReverted",
+    PaymentValidationReverted = "entrypointPaymentValidationReverted",
 
     /**
      * Either the paymaster rejected the payout request, or the payment failed
@@ -116,7 +116,7 @@ export function isRevert(
 ): status is
     | EntryPointStatus.ValidationReverted
     | EntryPointStatus.ExecuteReverted
-    | EntryPointStatus.PaymentReverted
+    | EntryPointStatus.PaymentValidationReverted
     | EntryPointStatus.UnexpectedReverted {
     return status.endsWith("Reverted")
 }
@@ -140,6 +140,9 @@ export function isFailure(
 export enum SimulatedValidationStatus {
     /** Validation succeeded during simulation. */
     Success = "simulationSuccess",
+
+    ValidityUnknown = "simulationValidityUnknown",
+    PaymentValidityUnknown = "simulationPaymentValidityUnknown",
 
     /**
      * Validation succeeded during simulation, but needs extra checks.

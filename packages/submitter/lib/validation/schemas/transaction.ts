@@ -1,9 +1,14 @@
+// import { checksum } from "ox/Address"
 import { z } from "zod"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 
 export const transactionSchema = z.object({
-    address: z.string().refine(isAddress).openapi({ example: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" }),
+    address: z
+        .string()
+        .refine(isAddress)
+        // .transform(checksum) // transform breaks when used as an outputSchema
+        .openapi({ example: "0xBC5F85819B9b970c956f80c1Ab5EfbE73c818eaa" }),
     blockHash: z.string().refine(isHexString).openapi({ example: "0x" }),
     blockNumber: z.string().openapi({ example: "12345" }),
     blockTimestamp: z.string().openapi({ example: Date.now().toString() }),

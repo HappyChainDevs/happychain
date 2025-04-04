@@ -12,26 +12,26 @@ const logLevel: LogLevel =
               error: LogLevel.ERROR,
           }[env.LOG_LEVEL]
 
-const _logger = Logger.instance
-_logger.enableTags(LogTag.SUBMITTER)
-_logger.setLogLevel(logLevel)
+export const logger = createLogger(LogTag.SUBMITTER, logLevel)
 
-// Create a type that omits the LogTag parameter from logger methods
-type SubmitterLogger = {
-    [K in keyof Logger]: Logger[K] extends (tag: LogTag.SUBMITTER, ...args: infer P) => infer R
-        ? (...args: P) => R
-        : Logger[K]
+// TODO: move into common/logger package
+type TaggedLogger = {
+    [K in keyof Logger]: Logger[K] extends (tag: LogTag, ...args: infer P) => infer R ? (...args: P) => R : Logger[K]
 }
+function createLogger(tag: LogTag, logLevel: LogLevel): TaggedLogger {
+    Logger.instance.enableTags(tag)
+    Logger.instance.setLogLevel(logLevel)
 
-export const logger = new Proxy(_logger, {
-    get(target, prop, receiver) {
-        const value = Reflect.get(target, prop, receiver)
-        if (typeof value === "function") {
-            return (...args: unknown[]) => {
-                const method = value as (tag: LogTag, ...args: unknown[]) => unknown
-                return method.call(target, LogTag.SUBMITTER, ...args)
+    return new Proxy(Logger.instance, {
+        get(target, prop, receiver) {
+            const value = Reflect.get(target, prop, receiver)
+            if (typeof value === "function") {
+                return (...args: unknown[]) => {
+                    const method = value as (tag: LogTag, ...args: unknown[]) => unknown
+                    return method.call(target, tag, ...args)
+                }
             }
-        }
-        return value
-    },
-}) as SubmitterLogger
+            return value
+        },
+    }) as TaggedLogger
+}
