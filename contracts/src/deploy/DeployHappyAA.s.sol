@@ -78,6 +78,10 @@ contract DeployHappyAAContracts is BaseDeployScript {
         if (isLocal) {
             // In local mode, fund the paymaster with some gas tokens.
             vm.deal(_scrappyPaymaster, PM_DEPOSIT);
+
+            // Send dust to address(0) to avoid the 25000 extra gas cost when sending to an empty account during simulation
+            // CALL opcode charges 25000 extra gas when the target has 0 balance (empty account)
+            vm.deal(address(0), 1 wei);
         }
 
         // -----------------------------------------------------------------------------------------
