@@ -142,7 +142,7 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 # ==================================================================================================
 ##@ Demos & Apps
 
-submitter.dev:setup.ts shared.dev
+submitter.dev: setup.ts shared.dev
 	@cd contracts && make setup;
 	make anvil > /dev/null 2>&1 &
 	cd contracts && make deploy-happy-aa;
@@ -153,17 +153,20 @@ submitter.dev:setup.ts shared.dev
 	cd apps/submitter && make dev;
 .PHONY: submitter.dev
 
-
-submitter.build:
+submitter.build: shared.build
 	cd packages/submitter && make build;
 	cd packages/submitter-client && make build;
 	cd apps/submitter && make build;
 .PHONY: submitter.build
 
+submitter.prod: submitter.build
+	cd apps/submitter && make migrate;
+	cd apps/submitter && make prod;
+.PHONY: submitter.prod
+
 iframe.dev: shared.dev sdk.dev ## Serves the wallet iframe at http://localhost:5160
 	cd apps/iframe && make dev
 .PHONY: iframe.dev
-
 
 demo-js.dev: setup.ts shared.dev sdk.dev ## Serves the VanillaJS demo application at http://localhost:6001
 	$(call with_optional_iframe, "demo-js", "demos/js", "dev")

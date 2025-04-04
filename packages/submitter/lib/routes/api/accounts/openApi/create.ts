@@ -1,13 +1,18 @@
 import { describeRoute } from "hono-openapi"
 import { resolver } from "hono-openapi/zod"
 import { validator as zv } from "hono-openapi/zod"
+import { checksum } from "ox/Address"
 import { z } from "zod"
 import env from "#lib/env"
 import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 
 const inputSchema = z.object({
-    owner: z.string().refine(isAddress).openapi({ example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" }),
+    owner: z
+        .string()
+        .refine(isAddress)
+        .transform(checksum)
+        .openapi({ example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" }),
     salt: z
         .string()
         .max(66)

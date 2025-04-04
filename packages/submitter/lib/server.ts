@@ -80,8 +80,11 @@ app.get(
                 description: "Boop Submitter",
             },
             servers: [
-                { url: "http://localhost:3001", description: "Local server" },
-                { url: "https://boop.happy.tech", description: "Production server" },
+                env.NODE_ENV === "development" && {
+                    url: `http://localhost:${env.APP_PORT}`,
+                    description: "Local server",
+                },
+                { url: "https://submitter.happy.tech", description: "Production server" },
             ],
         },
     }),

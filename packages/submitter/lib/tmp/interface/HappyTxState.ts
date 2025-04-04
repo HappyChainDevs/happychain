@@ -21,7 +21,7 @@ export type HappyTxStateSubmitterError = {
     simulation?: never
 }
 export type HappyTxStateEntryPointError = {
-    status: Prettify<EntryPointStatus | SubmitterErrorSimulationMaybeAvailable>
+    status: EntryPointStatus | SubmitterErrorSimulationMaybeAvailable
 
     /** Whether the happyTx was included and executed onchain. */
     included: false

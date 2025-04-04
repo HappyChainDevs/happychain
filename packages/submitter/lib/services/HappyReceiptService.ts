@@ -3,7 +3,7 @@ import type { HappyReceiptRepository } from "#lib/database/repositories/HappyRec
 import { SubmitterError } from "#lib/errors/submitter-errors"
 import { logger } from "#lib/logger"
 import type { HappyTxReceipt } from "#lib/tmp/interface/HappyTxReceipt"
-import type { Hash, Receipt, TransactionTypeName } from "#lib/tmp/interface/common_chain"
+import type { Hash, Receipt } from "#lib/tmp/interface/common_chain"
 import type { EntryPointStatus } from "#lib/tmp/interface/status"
 import { isValidTransactionType } from "#lib/utils/isValidTransactionType"
 
@@ -33,16 +33,10 @@ export class HappyReceiptService {
             gasCost: happyReceipt.gasCost,
             txReceipt: {
                 ...transactionReceipt,
-                type: transactionReceipt.type as TransactionTypeName, // TODO: validate this cast
+                type: transactionReceipt.type,
                 contractAddress: transactionReceipt.contractAddress || null,
             } satisfies Receipt,
         }
-    }
-
-    async findByHappyTxHashOrThrow(happyTxHash: Hash) {
-        const receipt = await this.findByHappyTxHash(happyTxHash)
-        if (!receipt) throw new SubmitterError("Failed to find receipt")
-        return receipt
     }
 
     async findByHappyTxHashWithTimeout(happyTxHash: Hash, timeout: number, pollInterval = 250) {
@@ -56,16 +50,16 @@ export class HappyReceiptService {
         }
     }
 
-    async insert(newData: HappyTxReceipt) {
+    private formatInsertData(newData: HappyTxReceipt) {
         const { txReceipt, ...newData2 } = newData
-        return await this.happyReceiptRepository.insert({
+        return {
             ...newData2,
             transactionHash: txReceipt.transactionHash,
-        })
+        }
     }
 
     async insertOrThrow(newData: HappyTxReceipt) {
-        const data = await this.insert(newData)
+        const data = await this.happyReceiptRepository.insert(this.formatInsertData(newData))
         if (!data) throw new SubmitterError("Failed to find receipt")
         return data
     }

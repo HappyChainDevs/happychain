@@ -17,7 +17,7 @@ describe("submitter_submit", () => {
 
     beforeAll(async () => {
         smartAccount = await client.api.v1.accounts.create
-            .$post({ json: { owner: testAccount.account.address, salt: "0x1" } })
+            .$post({ json: { owner: testAccount.address, salt: "0x1" } })
             .then((a) => a.json())
             .then((a) => a.address)
     })
@@ -29,7 +29,7 @@ describe("submitter_submit", () => {
         signedTx = await signTx(unsignedTx)
     })
 
-    it("submits mints token tx.", async () => {
+    it("submits 'mint token' tx successfully.", async () => {
         const result = await client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } })
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         const response = (await result.json()) as any
@@ -38,7 +38,7 @@ describe("submitter_submit", () => {
         expect((response as { hash: string }).hash).toBeString()
     })
 
-    it("submits 50 mints token tx quickly and successfully.", async () => {
+    it("submits 50 'mint token' tx's quickly and successfully.", async () => {
         const count = 50
         // test only works if submitter is configured to allow more than 50
         expect(env.LIMITS_EXECUTE_BUFFER_LIMIT).toBeGreaterThanOrEqual(count)
@@ -53,7 +53,8 @@ describe("submitter_submit", () => {
 
         const results = await Promise.all(
             transactions.map((tx) => client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx) } })),
-        ).then(async (a) => await Promise.all(a.map((b) => b.json())))
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        ).then(async (a) => await Promise.all(a.map((b) => b.json() as any)))
 
         const rs = await Promise.all(
             results.map((a) => {
@@ -68,7 +69,7 @@ describe("submitter_submit", () => {
         expect(rs.every((r) => r.status === "success")).toBe(true)
     })
 
-    // Skipped: very flakey due to timing issues
+    // can be skipped: very flakey due to timing issues
     it("replaces tx with the most recent one", async () => {
         const count = 50
         // test only works if submitter is configured to allow more than 50
@@ -87,6 +88,7 @@ describe("submitter_submit", () => {
         const tx9 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack))
         const tx9_2 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 9n, nonceTrack)) // 9 again!
 
+        // submit all transactions without waiting
         const tx0_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx0) } })
         const tx1_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx1) } })
         const tx2_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx2) } })
@@ -97,9 +99,13 @@ describe("submitter_submit", () => {
         const tx7_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx7) } })
         const tx8_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx8) } })
         const tx9_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx9) } })
-        const tx9_2_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx9_2) } })
 
+        // wait for the first transaction to be processed
+        // to be sure there is a queue
         const tx0_response = await tx0_request
+
+        // Submit a replacement for tx9
+        const tx9_2_request = client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(tx9_2) } })
 
         const [
             tx1_response,
@@ -138,8 +144,8 @@ describe("submitter_submit", () => {
         expect(tx7_response.status).toBe(200)
         expect(tx8_response.status).toBe(200)
 
-        expect(tx9_response.status).toBe(500) // replaced!
+        expect(tx9_response.status).toBe(422) // replaced!
         expect(tx9_2_response.status).toBe(200)
-        expect(tx9_rejection.error).toBe("transaction rejected")
+        expect(tx9_rejection.message).toBe("transaction replaced")
     })
 })

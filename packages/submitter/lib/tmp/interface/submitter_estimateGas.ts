@@ -42,11 +42,14 @@ export type EstimateGasOutput = (
         // check with `status === EntryPointStatus.Success`
         status: EntryPointStatus.Success
 
-        /** Estimated gas limit for the HappyTx. */
+        /** Gas limit for the transaction made by the submitter */
         gasLimit: bigint
-
-        /** Estimated gas limit for the account's `execute` call. */
+        /** Gas limit for IHappyAccount.execute */
         executeGasLimit: bigint
+        /** Gas limit for IHappyAccount.validate */
+        validateGasLimit: bigint
+        /** Gas limit for IHappyPaymaster.validatePayment */
+        validatePaymentGasLimit: bigint
     }
 )
 
