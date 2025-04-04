@@ -136,8 +136,8 @@ error PayoutFailed();
  * When the {IHappyAccount.execute} call succeeds but reports that the
  * attempted call reverted.
  *
- * The parameter contains the revert data (truncated to {384}
- * bytes, so that it can be parsed offchain.
+ * The parameter contains the revert data (truncated to 384 bytes),
+ * so that it can be parsed offchain.
  */
 event CallReverted(bytes revertData);
 
@@ -152,8 +152,8 @@ event ExecutionFailed(bytes reason);
 /**
  * When the {IHappyAccount.execute} call reverts (in violation of the spec).
  *
- * The parameter contains the revert data (truncated to {384}
- * bytes, so that it can be parsed offchain.
+ * The parameter contains the revert data (truncated to 384 bytes),
+ * so that it can be parsed offchain.
  */
 event ExecutionReverted(bytes revertData);
 
