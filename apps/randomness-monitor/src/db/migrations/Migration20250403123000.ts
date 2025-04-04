@@ -4,9 +4,11 @@ import type { Database } from "../types"
 export async function up(db: Kysely<Database>) {
     await db.schema
         .createTable("monitoring")
-        .addColumn("blockNumber", "text", (col) => col.notNull())
-        .addColumn("blockTimestamp", "text", (col) => col.notNull())
+        .addColumn("blockNumber", "integer", (col) => col.notNull())
+        .addColumn("blockTimestamp", "integer", (col) => col.notNull())
         .addColumn("result", "text", (col) => col.notNull())
+        .addColumn("errorDescription", "text")
+        .addColumn("value", "text")
         .execute()
 }
 
