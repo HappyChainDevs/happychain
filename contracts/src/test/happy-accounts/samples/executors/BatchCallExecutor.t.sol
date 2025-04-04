@@ -195,7 +195,7 @@ contract BatchCallExecutorTest is HappyTxTestUtils {
         calls[0] = createCallInfo(dest, 1 ether, new bytes(0));
 
         // Call _executeBatch directly (not from the contract itself)
-        vm.expectRevert(BatchCallExecutor.NotSelf.selector);
+        vm.expectRevert("not called from self");
         BatchCallExecutor(batchCallExecutor)._executeBatch(smartAccount, calls);
     }
 
