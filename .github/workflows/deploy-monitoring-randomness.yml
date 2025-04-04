@@ -68,8 +68,10 @@ jobs:
               cd /home/randomness-monitor
     
               rm -f .env
-
-              echo ${{vars.RANDOMNESS_MONITOR_ENV}} > .env
+  
+              cat > .env <<-EOF
+            ${{vars.RANDOMNESS_MONITOR_ENV}}
+            EOF
 
               npm rebuild
             
