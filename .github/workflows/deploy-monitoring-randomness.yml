@@ -29,7 +29,7 @@ jobs:
       
       - name: Build code
         run: |
-          make randomness.build
+          make randomness-monitor.build
 
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
