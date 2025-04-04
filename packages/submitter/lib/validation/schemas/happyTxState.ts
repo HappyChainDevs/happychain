@@ -21,7 +21,7 @@ const HappyTxStateEntryPointErrorSchema = z.object({
         EntryPointStatus.ValidationFailed,
         EntryPointStatus.ExecuteReverted,
         EntryPointStatus.ExecuteFailed,
-        EntryPointStatus.PaymentReverted,
+        EntryPointStatus.PaymentValidationReverted,
         EntryPointStatus.PaymentFailed,
         EntryPointStatus.UnexpectedReverted,
         // SubmitterErrorSimulationMaybeAvailable

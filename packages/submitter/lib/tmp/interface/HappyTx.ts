@@ -6,7 +6,9 @@ import type { Address, Bytes, Int256, UInt32, UInt256 } from "./common_chain"
 export type HappyTx = {
     account: Address
     gasLimit: UInt32 //
-    executeGasLimit: UInt32 //
+    validateGasLimit: UInt32
+    executeGasLimit: UInt32
+    validatePaymentGasLimit: UInt32
     maxFeePerGas: UInt256 //
     submitterFee: Int256 //
     dest: Address

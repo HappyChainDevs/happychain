@@ -5,17 +5,10 @@ import { z } from "zod"
 import env from "#lib/env"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { ExecuteSuccess } from "#lib/tmp/interface/submitter_execute"
-import { isAddress } from "#lib/utils/zod/refines/isAddress"
 import { happyReceiptSchema } from "#lib/validation/schemas/happyReceipt"
-import { happyTxInputSchema } from "#lib/validation/schemas/happyTx"
+import { inputSchema } from "./submit"
 
-export const inputSchema = z.object({
-    /** Optional target entrypoint, in case the submitter supports multiple entrypoints. */
-    entryPoint: z.string().refine(isAddress).optional().default(env.DEPLOYMENT_ENTRYPOINT),
-
-    /** HappyTx to execute. */
-    tx: happyTxInputSchema,
-})
+export { inputSchema }
 
 const outputSchema = z.object({
     status: z.literal(ExecuteSuccess),

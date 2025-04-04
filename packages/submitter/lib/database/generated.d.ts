@@ -13,17 +13,6 @@ export interface HappyReceipt {
   transactionHash: `0x${string}`;
 }
 
-export interface HappySimulation {
-  entryPoint: `0x${string}`;
-  executeGas: bigint;
-  gas: bigint;
-  happyTxHash: string;
-  id: number | null;
-  revertData: `0x${string}`;
-  status: string;
-  validationStatus: string;
-}
-
 export interface HappyState {
   happyReceiptId: number | null;
   happyTransactionId: number;
@@ -48,13 +37,14 @@ export interface HappyTransaction {
   paymaster: `0x${string}`;
   paymasterData: `0x${string}`;
   submitterFee: bigint;
+  validateGasLimit: bigint;
+  validatePaymentGasLimit: bigint;
   validatorData: `0x${string}`;
   value: bigint;
 }
 
 export interface DB {
   happy_receipts: HappyReceipt;
-  happy_simulations: HappySimulation;
   happy_states: HappyState;
   happy_transactions: HappyTransaction;
 }

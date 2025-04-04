@@ -1,8 +1,9 @@
 import type { PublicClient as BasePublicClient, WalletClient as BaseWalletClient } from "viem"
 import { http, createPublicClient, createWalletClient } from "viem"
-import { localhost } from "viem/chains"
+import { happychainTestnet, localhost } from "viem/chains"
+import env from "../env"
 
-export const chain = localhost
+export const chain = [localhost, happychainTestnet].find((chain) => chain.id === env.CHAIN_ID) ?? localhost
 
 export const config = { chain, transport: http() } as const
 

@@ -1,3 +1,9 @@
+/**
+ * This maps db columns to specific TS types. Note This of course only applies to the typescript
+ * generated types, not the actual database. Mainly to be used as a convenience, so columns such as
+ * transaction hash are not just strings, but `0x${string}`, and gas values can be `bigint` despite
+ * being stored as `text` in the database (see SerializerPlugin for more details on this)
+ */
 export const overrides = {
     columns: {
         "happy_receipts.gasCost": "bigint",
@@ -7,10 +13,10 @@ export const overrides = {
         "happy_receipts.nonceValue": "bigint",
         "happy_receipts.revertData": "`0x${string}`",
         "happy_receipts.transactionHash": "`0x${string}`",
-        "happy_simulations.executeGas": "bigint",
-        "happy_simulations.gas": "bigint",
-        "happy_simulations.revertData": "`0x${string}`",
-        "happy_simulations.entryPoint": "`0x${string}`",
+        // "happy_simulations.executeGas": "bigint",
+        // "happy_simulations.gas": "bigint",
+        // "happy_simulations.revertData": "`0x${string}`",
+        // "happy_simulations.entryPoint": "`0x${string}`",
         "happy_states.included": "boolean",
         "happy_transactions.account": "`0x${string}`",
         "happy_transactions.callData": "`0x${string}`",
@@ -19,6 +25,8 @@ export const overrides = {
         "happy_transactions.executeGasLimit": "bigint",
         "happy_transactions.extraData": "`0x${string}`",
         "happy_transactions.gasLimit": "bigint",
+        "happy_transactions.validateGasLimit": "bigint",
+        "happy_transactions.validatePaymentGasLimit": "bigint",
         "happy_transactions.happyTxHash": "`0x${string}`",
         "happy_transactions.maxFeePerGas": "bigint",
         "happy_transactions.nonceTrack": "bigint",

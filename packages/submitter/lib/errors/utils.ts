@@ -3,7 +3,7 @@ import { isHexString } from "#lib/utils/zod/refines/isHexString"
 import {
     ExecuteRevertedError,
     PaymentFailedError,
-    PaymentRevertedError,
+    PaymentValidationRevertedError,
     UnexpectedRevertedError,
     ValidationFailedError,
     ValidationRevertedError,
@@ -20,7 +20,7 @@ function is0xString(str: unknown): str is `0x${string}` {
  * If this is not available, we will return the raw selector.
  */
 function parseRawArgs(args: readonly `0x${string}`[]) {
-    return args.map((a) => getErrorNameFromSelector(a))
+    return args.map((a) => getErrorNameFromSelector(a) || a)
 }
 
 export function decodeViemError(_err: unknown) {
@@ -46,6 +46,7 @@ export function decodeViemError(_err: unknown) {
 
 export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
     const err = decodeViemError(_err)
+
     if (!err) return
     const [revertData] = err.knownArgs
 
@@ -59,7 +60,7 @@ export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
         case "ValidationFailed": {
             return new ValidationFailedError(revertData)
         }
-        case "PaymentFailed": {
+        case "PayoutFailed": {
             return new PaymentFailedError(revertData)
         }
         case "InvalidNonce": {
@@ -71,11 +72,12 @@ export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
             // TODO: is this a reliable way to check out of gas?
             return new ValidationRevertedError((revertData as string) === "0x" ? "Out Of Gas" : revertData)
         }
-        case "PaymentReverted": {
-            return new PaymentRevertedError(revertData)
+        case "PaymentValidationReverted": {
+            return new PaymentValidationRevertedError(revertData)
         }
-        default:
+        default: {
             return new UnexpectedRevertedError(revertData)
+        }
     }
 }
 

@@ -11,6 +11,8 @@ const validationStatus = z.enum([
     SimulatedValidationStatus.Reverted,
     SimulatedValidationStatus.Failed,
     SimulatedValidationStatus.UnexpectedReverted,
+    SimulatedValidationStatus.ValidityUnknown,
+    SimulatedValidationStatus.PaymentValidityUnknown,
 ])
 
 const simulationResultSuccessSchema = z.object({
@@ -40,8 +42,9 @@ const simulationResultRevertSchema = z.object({
     status: z.enum([
         EntryPointStatus.ValidationReverted,
         EntryPointStatus.ExecuteReverted,
-        EntryPointStatus.PaymentReverted,
+        EntryPointStatus.PaymentValidationReverted,
         EntryPointStatus.UnexpectedReverted,
+        EntryPointStatus.CallReverted,
     ]),
     validationStatus: validationStatus,
     entryPoint: z.string().refine(isAddress),

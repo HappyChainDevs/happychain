@@ -45,7 +45,7 @@ class BaseRevertedError extends HappyBaseError {
         public status:
             | EntryPointStatus.ValidationReverted
             | EntryPointStatus.ExecuteReverted
-            | EntryPointStatus.PaymentReverted
+            | EntryPointStatus.PaymentValidationReverted
             | EntryPointStatus.UnexpectedReverted,
 
         /** The revertData of the revert error. */
@@ -93,9 +93,9 @@ export class ExecuteRevertedError extends BaseRevertedError {
     }
 }
 
-export class PaymentRevertedError extends BaseRevertedError {
+export class PaymentValidationRevertedError extends BaseRevertedError {
     constructor(revertData?: string) {
-        super(EntryPointStatus.PaymentReverted, revertData)
+        super(EntryPointStatus.PaymentValidationReverted, revertData)
     }
 }
 
