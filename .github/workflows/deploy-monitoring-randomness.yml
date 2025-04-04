@@ -1,0 +1,83 @@
+name: Deploy Randomness Monitor
+
+on:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  ORGANIZATION: happychaindevs
+  PM2_PROCESS_NAME: randomness-monitor
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+      
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      
+      - name: Build code
+        run: |
+          make randomness.build
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_2_HOST_ }}
+          username: ${{ secrets.SERVER_2_USERNAME }}
+          key: ${{ secrets.SERVER_2_KEY }}
+          port: ${{ secrets.SERVER_2_PORT }}
+          source: "apps/randomness-monitor/build/*,node_modules/better-sqlite3,node_modules/bindings,node_modules/file-uri-to-path"
+          target: /home/deployer/randomness-monitor
+          strip_components: 1   
+          rm: true
+
+      - name: Deploy randomness to server
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_2_HOST_ }}
+          username: ${{ secrets.SERVER_2_USERNAME }}
+          key: ${{ secrets.SERVER_2_KEY }}
+          port: ${{ secrets.SERVER_2_PORT }}
+          # We copy better-sqlite3, bindings, and file-uri-to-path separately because the bundled file does not include
+          # better-sqlite3 and its dependencies
+          script: |
+            chmod -R o+rX /home/deployer/randomness-monitor
+            mv /home/deployer/randomness-monitor /tmp
+            sudo -u randomness-monitor bash -c '
+              rm -rf /home/randomness-monitor/build
+              rm -rf /home/randomness-monitor/node_modules
+              cp -r /tmp/randomness-monitor/randomness-monitor/build /home/randomness-monitor/build
+
+              mkdir -p /home/randomness-monitor/node_modules
+              cp -r /tmp/randomness-monitor/better-sqlite3 /home/randomness-monitor/node_modules/better-sqlite3
+              cp -r /tmp/randomness-monitor/bindings /home/randomness-monitor/node_modules/bindings
+              cp -r /tmp/randomness-monitor/file-uri-to-path /home/randomness-monitor/node_modules/file-uri-to-path
+          
+              cd /home/randomness-monitor
+    
+              rm -f .env
+
+              echo ${{vars.RANDOMNESS_MONITOR_ENV}} > .env
+
+              npm rebuild
+            
+              pm2 delete ${{ env.PM2_PROCESS_NAME }}
+        
+              source .env && node ./build/migrate.es.js
+
+              source .env && pm2 start ./build/index.es.js \
+                    --name ${{ env.PM2_PROCESS_NAME }}
+              pm2 save
+            '
+            rm -rf /tmp/randomness-monitor
