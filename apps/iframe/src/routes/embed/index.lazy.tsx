@@ -1,13 +1,16 @@
 import { createLazyFileRoute } from "@tanstack/react-router"
-import { WalletContentInfo } from "#src/components/interface/WalletContentInfo"
-import { ActionButtons } from "#src/components/interface/home/ActionButtons"
-import { AppStatus } from "#src/components/interface/home/AppStatus"
-import { HappyBalance } from "#src/components/interface/home/HappyBalance"
+import { ScreenTokens } from "#src/v2/screens/tokens/Tokens.tsx"
+
+// import { WalletContentInfo } from "#src/components/interface/WalletContentInfo"
+// import { ActionButtons } from "#src/components/interface/home/ActionButtons"
+// import { AppStatus } from "#src/components/interface/home/AppStatus"
+// import { HappyBalance } from "#src/components/interface/home/HappyBalance"
 
 export const Route = createLazyFileRoute("/embed/")({
-    component: EmbedHome,
+    component: ScreenTokens
 })
 
+/*
 function EmbedHome() {
     return (
         <>
@@ -20,3 +23,4 @@ function EmbedHome() {
         </>
     )
 }
+*/
