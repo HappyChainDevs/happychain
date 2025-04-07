@@ -241,27 +241,37 @@ export const EthSendTransaction = ({
                         </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.MaxFeePerGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedUserOpInfo?.maxFeePerGas}</FormattedDetailsLine>
+                            <FormattedDetailsLine formatAsNumber>
+                                {formattedUserOpInfo?.maxFeePerGas}
+                            </FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.MaxPriorityFeePerGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedUserOpInfo?.maxPriorityFeePerGas}</FormattedDetailsLine>
+                            <FormattedDetailsLine formatAsNumber>
+                                {formattedUserOpInfo?.maxPriorityFeePerGas}
+                            </FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.PreVerificationGas}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedUserOpInfo?.preVerificationGas}</FormattedDetailsLine>
+                            <FormattedDetailsLine formatAsNumber>
+                                {formattedUserOpInfo?.preVerificationGas}
+                            </FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.VerificationGasLimit}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedUserOpInfo?.verificationGasLimit}</FormattedDetailsLine>
+                            <FormattedDetailsLine formatAsNumber>
+                                {formattedUserOpInfo?.verificationGasLimit}
+                            </FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.CallGasLimit}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedUserOpInfo?.callGasLimit}</FormattedDetailsLine>
+                            <FormattedDetailsLine formatAsNumber>
+                                {formattedUserOpInfo?.callGasLimit}
+                            </FormattedDetailsLine>
                         </SubsectionContent>
                         <SubsectionContent>
                             <SubsectionTitle>{GasFieldName.GasUsed}</SubsectionTitle>
-                            <FormattedDetailsLine>{formattedUserOpInfo?.gasUsed}</FormattedDetailsLine>
+                            <FormattedDetailsLine formatAsNumber>{formattedUserOpInfo?.gasUsed}</FormattedDetailsLine>
                         </SubsectionContent>
                     </SubsectionBlock>
                 </SectionBlock>
