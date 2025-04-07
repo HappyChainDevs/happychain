@@ -87,7 +87,7 @@ contract UpgradeSCATest is Test {
         // Account should be able to mint tokens
         HappyTx memory mintTx = _createSignedHappyTx(mockToken, _getMintCallData());
         happyEntryPoint.submit(mintTx.encode());
-        assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");   
+        assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
 
         // non owner cannot upgrade via beacon
         vm.expectRevert();
