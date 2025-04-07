@@ -5,8 +5,8 @@ import {SessionKeyValidator} from "../../SessionKeyValidator.sol";
 
 contract SessionKeyValidatorUpgraded is SessionKeyValidator {
     string public addedField;
-    /// @custom:oz-upgrades-unsafe-allow constructor
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
