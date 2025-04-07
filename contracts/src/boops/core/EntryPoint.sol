@@ -4,18 +4,18 @@ pragma solidity ^0.8.20;
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-import {HappyTx, HappyTxSubmitted} from "boop/core/HappyTx.sol";
-import {Staking} from "boop/core/Staking.sol";
-import {IHappyAccount} from "boop/interfaces/IHappyAccount.sol";
-import {IHappyPaymaster} from "boop/interfaces/IHappyPaymaster.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {UnknownDuringSimulation} from "boop/utils/Common.sol";
+import {Boop, BoopSubmitted} from "boop/core/Boop.sol";
+import {Staker} from "boop/core/Staker.sol";
+import {IAccount} from "boop/interfaces/IAccount.sol";
+import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
+import {UnknownDuringSimulation} from "boop/core/Utils.sol";
 
 enum CallStatus {
     SUCCEEDED, // The call succeeded.
     CALL_REVERTED, // The call reverted.
-    EXECUTE_FAILED, // The {IHappyAccount.execute} function failed (incorrect input).
-    EXECUTE_REVERTED // The {IHappyAccount.execute} function reverted (in violation of the spec).
+    EXECUTE_FAILED, // The {IAccount.execute} function failed (incorrect input).
+    EXECUTE_REVERTED // The {IAccount.execute} function reverted (in violation of the spec).
 
 }
 
@@ -38,17 +38,17 @@ struct SubmitOutput {
     uint32 gas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * {IHappyAccount.validate} from {EntryPoint.submit}.
+     * {IAccount.validate} from {EntryPoint.submit}.
      */
     uint32 validateGas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * {IHappyPaymaster.paymentValidateGas} from {EntryPoint.submit}.
+     * {IPaymaster.paymentValidateGas} from {EntryPoint.submit}.
      */
     uint32 paymentValidateGas;
     /**
      * An overestimation of the minimum gas limit necessary to successfully call
-     * {IHappyAccount.execute} from {EntryPoint.submit}.
+     * {IAccount.execute} from {EntryPoint.submit}.
      */
     uint32 executeGas;
     /**
@@ -69,18 +69,18 @@ struct SubmitOutput {
      */
     bool futureNonceDuringSimulation;
     /**
-     * Status of the call specified by the happy tx.
+     * Status of the call specified by the boop.
      */
     CallStatus callStatus;
     /**
-     * The revertData with which either the call or the {IHappyAccount.execute} function reverted
+     * The revertData with which either the call or the {IAccount.execute} function reverted
      * (when the associated `callStatus` is set).
      */
     bytes revertData;
 }
 
 /**
- * The entrypoint reverts with this error when the gas price exceed {HappyTx.maxFeePerGas}.
+ * The entrypoint reverts with this error when the gas price exceed {Boop.maxFeePerGas}.
  */
 error GasPriceTooHigh();
 
@@ -97,43 +97,43 @@ error InsufficientStake();
 error InvalidNonce();
 
 /**
- * When the account validation of the happyTx reverts (in violation of the spec).
+ * When the account validation of the boop reverts (in violation of the spec).
  *
  * The parameter contains the revert data (truncated to 256 bytes).
  */
 error ValidationReverted(bytes revertData);
 
 /**
- * When the account validation of the happyTx fails.
+ * When the account validation of the boop fails.
  *
  * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
- * custom error returned by {IHappyAccount.validate}.
+ * custom error returned by {IAccount.validate}.
  */
 error ValidationFailed(bytes reason);
 
 /**
- * When the paymaster validation of the happyTx reverts (in violation of the spec).
+ * When the paymaster validation of the boop reverts (in violation of the spec).
  *
  * The parameter contains the revert data (truncated to 256 bytes)
  */
 error PaymentValidationReverted(bytes revertData);
 
 /**
- * When the paymaster validation of the happyTx fails.
+ * When the paymaster validation of the boop fails.
  *
  * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
- * custom error returned by {IHappyPaymaster.validatePayment}.
+ * custom error returned by {IPaymaster.validatePayment}.
  */
 error PaymentValidationFailed(bytes reason);
 
 /**
- * When self-paying and the payment from the account fails, either because {IHappyAccount.payout}
+ * When self-paying and the payment from the account fails, either because {IAccount.payout}
  * reverts, consumes too much gas, or does not transfer the full cost to the submitter.
  */
 error PayoutFailed();
 
 /**
- * When the {IHappyAccount.execute} call succeeds but reports that the
+ * When the {IAccount.execute} call succeeds but reports that the
  * attempted call reverted.
  *
  * The parameter contains the revert data (truncated to 384 bytes),
@@ -142,23 +142,23 @@ error PayoutFailed();
 event CallReverted(bytes revertData);
 
 /**
- * When the {IHappyAccount.execute} call fails but does not revert.
+ * When the {IAccount.execute} call fails but does not revert.
  *
  * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
- * custom error returned by {IHappyAccount.execute}.
+ * custom error returned by {IAccount.execute}.
  */
 event ExecutionFailed(bytes reason);
 
 /**
- * When the {IHappyAccount.execute} call reverts (in violation of the spec).
+ * When the {IAccount.execute} call reverts (in violation of the spec).
  *
  * The parameter contains the revert data (truncated to 384 bytes),
  * so that it can be parsed offchain.
  */
 event ExecutionReverted(bytes revertData);
 
-/// @notice cf. {HappyEntryPoint.submit}
-contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
+/// @notice cf. {EntryPoint.submit}
+contract EntryPoint is Staker, ReentrancyGuardTransient {
     // Avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
 
@@ -171,7 +171,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     // SUBMIT
 
     /**
-     * Execute a Happy Transaction, and tries to ensure that the submitter
+     * Execute a Boop, and tries to ensure that the submitter
      * (tx.origin) receives payment for submitting the transaction.
      *
      * This function immediately reverts or emits the errors and events defined
@@ -183,14 +183,14 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
      *
      * 2. Validate and update the nonce.
      *
-     * 3. Call the account to validate the happyTx.
-     *    See {IHappyAccount.validate} for compliant behaviour.
+     * 3. Call the account to validate the boop.
+     *    See {IAccount.validate} for compliant behaviour.
      *
      * 4. Call the paymaster to validate payment.
-     *    See {IHappyPaymaster.validatePayment} for compliant behaviour.
+     *    See {IPaymaster.validatePayment} for compliant behaviour.
      *
      * 5. Call the account to execute the transaction.
-     *    See {IHappyAccount.execute} for compliant behaviour.
+     *    See {IAccount.execute} for compliant behaviour.
      *
      * 6. Collect payment from the paymaster or account.
      *    Payment is taken from the paymaster's stake or directly from the account.
@@ -218,35 +218,35 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
      * that it requires a custom tracer and that those are incompatible between
      * node implementations.
      */
-    function submit(bytes calldata encodedHappyTx) external nonReentrant returns (SubmitOutput memory output) {
+    function submit(bytes calldata encodedBoop) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
-        HappyTx memory happyTx = HappyTxLib.decode(encodedHappyTx);
+        Boop memory boop = BoopLib.decode(encodedBoop);
         bool isSimulation = tx.origin == address(0);
 
         // ==========================================================================================
         // 1. Validate gas price & paymaster balance, validate & update nonce
 
-        if (tx.gasprice > happyTx.maxFeePerGas) {
+        if (tx.gasprice > boop.maxFeePerGas) {
             revert GasPriceTooHigh();
         }
 
-        if (happyTx.paymaster != address(0) && happyTx.paymaster != happyTx.account) {
-            if (stakes[happyTx.paymaster].balance < happyTx.gasLimit * tx.gasprice) {
+        if (boop.paymaster != address(0) && boop.paymaster != boop.account) {
+            if (stakes[boop.paymaster].balance < boop.gasLimit * tx.gasprice) {
                 revert InsufficientStake();
             }
         }
 
-        int256 expectedNonce = int256(uint256(nonceValues[happyTx.account][happyTx.nonceTrack]));
-        int256 nonceAhead = int256(uint256(happyTx.nonceValue)) - expectedNonce;
+        int256 expectedNonce = int256(uint256(nonceValues[boop.account][boop.nonceTrack]));
+        int256 nonceAhead = int256(uint256(boop.nonceValue)) - expectedNonce;
         if (nonceAhead < 0 || (!isSimulation && nonceAhead != 0)) revert InvalidNonce();
         if (nonceAhead > 0) output.futureNonceDuringSimulation = true;
-        nonceValues[happyTx.account][happyTx.nonceTrack]++;
+        nonceValues[boop.account][boop.nonceTrack]++;
 
         // ==========================================================================================
         // 2. Validate with account
 
         (Validity result, uint32 gasUsed, bytes memory revertData) =
-            _validate(IHappyAccount.validate.selector, happyTx, happyTx.validateGasLimit);
+            _validate(IAccount.validate.selector, boop, boop.validateGasLimit);
 
         if (result == Validity.CALL_REVERTED) revert ValidationReverted(revertData);
         if (result == Validity.INVALID_RETURN_DATA) revert ValidationReverted(revertData);
@@ -259,9 +259,9 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         // ==========================================================================================
         // 3. Validate with paymaster (if specified)
 
-        if (happyTx.paymaster != address(0) && happyTx.paymaster != happyTx.account) {
+        if (boop.paymaster != address(0) && boop.paymaster != boop.account) {
             (result, gasUsed, revertData) =
-                _validate(IHappyPaymaster.validatePayment.selector, happyTx, happyTx.validatePaymentGasLimit);
+                _validate(IPaymaster.validatePayment.selector, boop, boop.validatePaymentGasLimit);
 
             if (result == Validity.CALL_REVERTED) revert PaymentValidationReverted(revertData);
             if (result == Validity.INVALID_RETURN_DATA) revert PaymentValidationReverted(revertData);
@@ -275,10 +275,10 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         // ==========================================================================================
         // 4. Execute the call
 
-        bytes memory executeCallData = abi.encodeCall(IHappyAccount.execute, happyTx);
+        bytes memory executeCallData = abi.encodeCall(IAccount.execute, (boop));
         uint256 gasBeforeExecute = gasleft();
-        (bool success, bytes memory returnData) = happyTx.account.excessivelySafeCall(
-            isSimulation && happyTx.executeGasLimit == 0 ? gasleft() : happyTx.executeGasLimit,
+        (bool success, bytes memory returnData) = boop.account.excessivelySafeCall(
+            isSimulation && boop.executeGasLimit == 0 ? gasleft() : boop.executeGasLimit,
             0, // gas token transfer value
             384, // max return size: struct encoding + 256 bytes revertData
             executeCallData
@@ -300,29 +300,29 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
         }
 
         // ==========================================================================================
-        // 5. Emit HappyTxSubmitted
+        // 5. Emit Boop Submitted
 
-        _emitHappyTxSubmitted(happyTx);
+        _emitBoopSubmitted(boop);
 
         // ==========================================================================================
         // 6. Collect payment
 
         uint128 cost;
 
-        if ( /* sponsoring submitter */ happyTx.paymaster == address(0)) {
-            output.gas = HappyTxLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedHappyTx.length);
+        if ( /* sponsoring submitter */ boop.paymaster == address(0)) {
+            output.gas = BoopLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedBoop.length);
             // done!
-        } else if ( /* self-paying */ happyTx.paymaster == happyTx.account) {
+        } else if ( /* self-paying */ boop.paymaster == boop.account) {
             uint256 balance = tx.origin.balance;
             uint256 gasBeforePayout = gasleft();
             // The constant 15000 overestimates the cost of the rest of execution, including
             // 9300 gas of the value transfer.
-            (output.gas, cost) = computeCost(happyTx, gasStart - gasBeforePayout + 15000, encodedHappyTx.length);
-            (success,) = happyTx.account.excessivelySafeCall(
+            (output.gas, cost) = computeCost(boop, gasStart - gasBeforePayout + 15000, encodedBoop.length);
+            (success,) = boop.account.excessivelySafeCall(
                 gasleft() - 3000, // an OOG buffer
                 0, // value
                 0, // maxCopy
-                abi.encodeWithSelector(IHappyAccount.payout.selector, cost)
+                abi.encodeWithSelector(IAccount.payout.selector, cost)
             );
             if (
                 !success || gasBeforePayout - gasleft() > 15000 || (!isSimulation && tx.origin.balance < balance + cost)
@@ -335,10 +335,10 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
             // - 100 gas for reading stake.balance (warm)
             // - 2100 gas for reading stake.unlockedBalance (cold)
             // - 9100 gas for the value transfer
-            (output.gas, cost) = computeCost(happyTx, gasStart - gasleft() + 16000, encodedHappyTx.length);
+            (output.gas, cost) = computeCost(boop, gasStart - gasleft() + 16000, encodedBoop.length);
             // Pay submitter — no need for revert checks (submitter wants this to succeed).
             // This should succeed by construction, because of the early staking balance check.
-            _transferTo(happyTx.paymaster, payable(tx.origin), cost);
+            _transferTo(boop.paymaster, payable(tx.origin), cost);
         }
     }
 
@@ -346,44 +346,44 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     // HELPERS
 
     /**
-     * Given a happyTx, the gas consumed by the entrypoint body (metered until the computeCost call
+     * Given a boop, the gas consumed by the entrypoint body (metered until the computeCost call
      * + estimation of the rest of execution) and its encoded length, returns an estimation of the
      * gas consumed by the submitter transaction (including intrinsic gas and data gas) and the
      * total cost to charge to the fee payer.
      */
-    function computeCost(HappyTx memory happyTx, uint256 entryPointGas, uint256 encodedLength)
+    function computeCost(Boop memory boop, uint256 entryPointGas, uint256 encodedLength)
         internal
         view
         returns (uint32 consumedGas, uint128 cost)
     {
         // The constant 4 is the byte size for the selector for `submit`.
-        consumedGas = HappyTxLib.txGasFromCallGas(entryPointGas, 4 + encodedLength);
+        consumedGas = BoopLib.txGasFromCallGas(entryPointGas, 4 + encodedLength);
 
         // Upper-bound the payment to the agree-upon gas limit.
-        uint256 boundedGas = consumedGas > happyTx.gasLimit ? happyTx.gasLimit : consumedGas;
+        uint256 boundedGas = consumedGas > boop.gasLimit ? boop.gasLimit : consumedGas;
         int256 gasCost = int256(boundedGas * tx.gasprice);
 
         // The submitter fee can be negative (rebates) but we can't charge less than 0.
-        cost = gasCost + happyTx.submitterFee > 0 ? uint128(uint256(gasCost + happyTx.submitterFee)) : 0;
+        cost = gasCost + boop.submitterFee > 0 ? uint128(uint256(gasCost + boop.submitterFee)) : 0;
 
         return (consumedGas, cost);
     }
 
     /**
-     * This function abstracts common boilerplate for calling {IHappyAccount.validate} and
-     * {IHappyPaymaster.validatePayment}.
+     * This function abstracts common boilerplate for calling {IAccount.validate} and
+     * {IPaymaster.validatePayment}.
      *
      * It attempts to call the given function and returns the appropriate {Validity} status, the
      * call's gas consumption, and data to be passed to a revert if appropriate.
      */
-    function _validate(bytes4 fn, HappyTx memory happyTx, uint256 gasLimit)
+    function _validate(bytes4 fn, Boop memory boop, uint256 gasLimit)
         internal
         returns (Validity result, uint32 gasUsed, bytes memory revertData)
     {
         bool isSimulation = tx.origin == address(0);
         if (isSimulation && gasLimit == 0) gasLimit = gasleft();
-        address targetAddress = fn == IHappyAccount.validate.selector ? happyTx.account : happyTx.paymaster;
-        bytes memory callData = abi.encodeWithSelector(fn, happyTx);
+        address targetAddress = fn == IAccount.validate.selector ? boop.account : boop.paymaster;
+        bytes memory callData = abi.encodeWithSelector(fn, boop);
 
         uint256 gasBefore = gasleft();
         // max return size: 320, leaving 256 bytes usable for an encoded error
@@ -417,7 +417,7 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     }
 
     /**
-     * Parses the {ExecutionOutput} returned by {IHappyAccount.execute} without reverting, which
+     * Parses the {ExecutionOutput} returned by {IAccount.execute} without reverting, which
      * `abi.decode` can't do. A malicious input can't hurt us: at worse we'll read garbage (but the
      * function could have returned garbage if it wanted to).
      */
@@ -445,14 +445,14 @@ contract HappyEntryPoint is Staking, ReentrancyGuardTransient {
     }
 
     /**
-     * Emits an {HappyTxSubmittedEvent} containing the struct. This needs assembly, as Solidity
+     * Emits an {BoopSubmittedEvent} containing the struct. This needs assembly, as Solidity
      * can handle max 15 arguments before running out of stack space (irrespective of context).
      */
-    function _emitHappyTxSubmitted(HappyTx memory happyTx) internal {
+    function _emitBoopSubmitted(Boop memory boop) internal {
         // Structs are encoded as tuples, just like events, and the signature of the event matches
         // that of the struct. The only difference is that the struct is prefixed with an offset.
-        bytes memory args = abi.encode(happyTx);
-        bytes32 topic = HappyTxSubmitted.selector;
+        bytes memory args = abi.encode(boop);
+        bytes32 topic = BoopSubmitted.selector;
         assembly {
             let data := add(args, 64) // skip bytes length and offset to struct
             let size := sub(mload(args), 32) // length of the bytestring minus size of offset

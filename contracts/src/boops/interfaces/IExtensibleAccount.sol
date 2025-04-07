@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {IHappyAccount} from "boop/interfaces/IHappyAccount.sol";
+import {IAccount} from "boop/interfaces/IAccount.sol";
 import {CallInfo} from "boop/libs/CallInfoCodingLib.sol";
 
 enum ExtensionType {
@@ -21,22 +21,22 @@ error ExtensionNotRegistered(address extension, ExtensionType extensionType);
 error InvalidExtensionValue();
 
 /**
- * Interface for Boop accounts (as specified in IHappyAccount) that are extensible with validator
+ * Interface for Boop accounts (as specified in IAccount) that are extensible with validator
  * and executor extensions.
  *
  * The ERC-165 selector for this interface is 0xf0223481 and can be obtained via: todo: Update
  * ```
  * console.logBytes4(
- *     IHappyAccount.validate.selector
- *     ^ IHappyAccount.execute.selector
- *     ^ IExtensibleBoopAccount.addExtension.selector
- *     ^ IExtensibleBoopAccount.removeExtension.selector
- *     ^ IExtensibleBoopAccount.isExtensionRegistered.selector
- *     ^ IExtensibleBoopAccount.executeCallFromExecutor.selector
+ *     IAccount.validate.selector
+ *     ^ IAccount.execute.selector
+ *     ^ IExtensibleAccount.addExtension.selector
+ *     ^ IExtensibleAccount.removeExtension.selector
+ *     ^ IExtensibleAccount.isExtensionRegistered.selector
+ *     ^ IExtensibleAccount.executeCallFromExecutor.selector
  * );
  * ```
  */
-interface IExtensibleBoopAccount is IHappyAccount {
+interface IExtensibleAccount is IAccount {
     // ====================================================================================================
     // EVENTS
 
@@ -63,7 +63,7 @@ interface IExtensibleBoopAccount is IHappyAccount {
      *
      * This must check that the call was made from a registered executor. It is recommended that the
      * account set a transient variable to the executor that was dispatched in
-     * {IHappyAccount.execute}, and check that variable here.
+     * {IAccount.execute}, and check that variable here.
      */
     function executeCallFromExecutor(CallInfo memory info) external returns (bool success, bytes memory returnData);
 }

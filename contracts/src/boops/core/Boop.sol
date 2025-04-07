@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
  * submitted to the chain by a permissionless submitter.
  */
 // forgefmt: disable-next-item
-struct HappyTx {
+struct Boop {
     // Core Transaction Fields:
     address account;            // Account sending the transaction
     uint32 gasLimit;            // Gas limit for the transaction made by the submitter
@@ -28,7 +28,7 @@ struct HappyTx {
                                     // - Submitter asks for this on top of payment of gas. This can be used to pay
                                     //   for extra costs (e.g. DA costs on rollups, server costs), and for profit
                                     // - Acts as rebate when negative (e.g. to refund part of the intrinsic transaction
-                                    //   cost if the submitter batches multiple happyTxs together), but in no case does
+                                    //   cost if the submitter batches multiple boops together), but in no case does
                                     //   this lead to the submitter transferring funds to accounts
 
     // Transaction Data:
@@ -41,14 +41,14 @@ struct HappyTx {
 }
 
 /**
- * This event exposes a HappyTx as an event and is emitted by {EntryPoint.submit}, for easier
- * indexing of HappyTxs and easier visibility on block explorers.
+ * This event exposes a Boop as an event and is emitted by {EntryPoint.submit}, for easier
+ * indexing of Boops and easier visibility on block explorers.
  *
  * Note that we deliberately choose to separate all the fields into dedicated arguments instead of
  * having a single argument with the struct — this enables better display on some block explorers
  * like Blockscout.
  */
-event HappyTxSubmitted(
+event BoopSubmitted(
     address account,
     uint32 gasLimit,
     uint32 validateGasLimit,
