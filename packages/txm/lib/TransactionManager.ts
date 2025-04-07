@@ -1,4 +1,5 @@
 import type { UUID } from "@happy.tech/common"
+import type { MetricReader } from "@opentelemetry/sdk-metrics"
 import type { Result } from "neverthrow"
 import {
     type Abi,
@@ -24,12 +25,11 @@ import { TransactionRepository } from "./TransactionRepository.js"
 import { TransactionSubmitter } from "./TransactionSubmitter.js"
 import { TxMonitor } from "./TxMonitor.js"
 import { type EIP1559Parameters, opStackDefaultEIP1559Parameters } from "./eip1559.js"
+import { initializeTelemetry } from "./telemetry/instrumentation"
+import { TxmMetrics } from "./telemetry/metrics"
 import { getUrlProtocol } from "./utils/getUrlProtocol"
 import type { SafeViemPublicClient, SafeViemWalletClient } from "./utils/safeViemClients"
 import { convertToSafeViemPublicClient, convertToSafeViemWalletClient } from "./utils/safeViemClients"
-import { initializeTelemetry } from "./telemetry/instrumentation"
-import { TxmMetrics } from "./telemetry/metrics"
-import type { MetricReader } from "@opentelemetry/sdk-metrics"
 
 export type TransactionManagerConfig = {
     /**
