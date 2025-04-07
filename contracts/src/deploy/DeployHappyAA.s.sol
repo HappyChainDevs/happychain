@@ -4,7 +4,9 @@ pragma solidity ^0.8.20;
 import {BaseDeployScript} from "./BaseDeployScript.sol";
 
 import {HappyEntryPoint} from "../happy-accounts/core/HappyEntryPoint.sol";
+import {ScrappyAccountProxy} from "../happy-accounts/samples/ScrappyAccountProxy.sol";
 import {ScrappyAccount} from "../happy-accounts/samples/ScrappyAccount.sol";
+import {ScrappyAccountBeacon} from "../happy-accounts/samples/ScrappyAccountBeacon.sol";
 import {ScrappyPaymaster} from "../happy-accounts/samples/ScrappyPaymaster.sol";
 import {ScrappyAccountFactory} from "../happy-accounts/factories/ScrappyAccountFactory.sol";
 
@@ -14,10 +16,11 @@ contract DeployHappyAAContracts is BaseDeployScript {
     uint256 public constant PM_SUBMITTER_TIP_PER_BYTE = 2 gwei;
     uint256 public constant PM_DEPOSIT = 10 ether;
 
-    ScrappyAccount public scrappyAccount;
+    ScrappyAccountProxy public scrappyAccount;
     HappyEntryPoint public happyEntryPoint;
     ScrappyPaymaster public scrappyPaymaster;
     ScrappyAccountFactory public scrappyAccountFactory;
+    ScrappyAccountBeacon public scrappyAccountBeacon;
 
     function deploy() internal override {
         string memory config = vm.envOr("CONFIG", string(""));
@@ -51,14 +54,29 @@ contract DeployHappyAAContracts is BaseDeployScript {
             abi.encode(_happyEntryPoint),
             DEPLOYMENT_SALT //-
         );
-        scrappyAccount = ScrappyAccount(_scrappyAccount);
+
+        (address _scrappyAccountBeacon, ) = deployDeterministic( //-
+            "ScrappyAccountBeacon",
+            type(ScrappyAccountBeacon).creationCode,
+            abi.encode(_scrappyAccount, owner),
+            DEPLOYMENT_SALT //-
+        ); 
+
+        (address payable _scrappyAccountProxy,) = deployDeterministic( //-
+            "ScrappyAccountProxy",
+            type(ScrappyAccountProxy).creationCode,
+            abi.encode(_happyEntryPoint, _scrappyAccountBeacon, ""),
+            DEPLOYMENT_SALT //-
+        );
+        scrappyAccount = ScrappyAccountProxy(_scrappyAccountProxy);
+        scrappyAccountBeacon = ScrappyAccountBeacon(_scrappyAccountBeacon);
 
         // -----------------------------------------------------------------------------------------
 
         (address _scrappyAccountFactory,) = deployDeterministic( //-
             "ScrappyAccountFactory",
             type(ScrappyAccountFactory).creationCode,
-            abi.encode(_scrappyAccount),
+            abi.encode(scrappyAccountBeacon),
             DEPLOYMENT_SALT //-
         );
         scrappyAccountFactory = ScrappyAccountFactory(_scrappyAccountFactory);

@@ -5,6 +5,8 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 
 import {ScrappyAccount} from "boop/samples/ScrappyAccount.sol";
 
+import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+
 /// Sample factory contract for deploying deterministic ERC1967 proxies for {ScrappyAccount}.
 contract ScrappyAccountFactory {
     /// Error thrown when account initialization fails
@@ -14,10 +16,10 @@ contract ScrappyAccountFactory {
     error AlreadyDeployed();
 
     /// The implementation contract that all proxies will delegate to {ScrappyAccount}.
-    address public immutable ACCOUNT_IMPLEMENTATION;
+    address public immutable ACCOUNT_BEACON;
 
-    constructor(address accountImplementation) {
-        ACCOUNT_IMPLEMENTATION = accountImplementation;
+    constructor(address beacon) {
+        ACCOUNT_BEACON = beacon;
     }
 
     /**
@@ -67,9 +69,9 @@ contract ScrappyAccountFactory {
 
     /// @dev Prepares the contract creation code for ERC1967Proxy contract.
     function _prepareContractCode(address owner) internal view returns (bytes memory) {
-        bytes memory creationCode = type(ERC1967Proxy).creationCode;
+        bytes memory creationCode = type(BeaconProxy).creationCode;
         bytes memory initData = abi.encodeCall(ScrappyAccount.initialize, (owner));
-        bytes memory constructorArgs = abi.encode(ACCOUNT_IMPLEMENTATION, initData);
+        bytes memory constructorArgs = abi.encode(ACCOUNT_BEACON, initData);
         return abi.encodePacked(creationCode, constructorArgs);
     }
 }

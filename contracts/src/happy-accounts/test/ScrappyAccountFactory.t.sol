@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {ScrappyAccountFactory} from "boop/factories/ScrappyAccountFactory.sol";
 import {ScrappyAccount} from "boop/samples/ScrappyAccount.sol";
+import {ScrappyAccountBeacon} from "boop/samples/ScrappyAccountBeacon.sol";
 
 contract ScrappyAccountFactoryTest is Test {
     bytes32 private constant DEPLOYMENT_SALT = bytes32(uint256(0));
@@ -15,10 +16,13 @@ contract ScrappyAccountFactoryTest is Test {
 
     ScrappyAccountFactory private factory;
     ScrappyAccount private implementation;
+    ScrappyAccountBeacon private accountBeacon;
 
     function setUp() public {
+        
         implementation = new ScrappyAccount(STUB_ENTRYPOINT_ADDRESS);
-        factory = new ScrappyAccountFactory(address(implementation));
+        accountBeacon = new ScrappyAccountBeacon(address(implementation), address(this));
+        factory = new ScrappyAccountFactory(address(accountBeacon));
     }
 
     function testInitialDeployment() public {

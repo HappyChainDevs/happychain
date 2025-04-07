@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.28;
 
-import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
@@ -20,11 +19,12 @@ import {
 } from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/utils/Common.sol";
+import "forge-std/console.sol";
 
 /**
  * Example implementation of an extensible Happy Account with proxy upgrade capability.
  */
-contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgradeable {
+contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable {
     using ECDSA for bytes32;
     using HappyTxLib for HappyTx;
 
@@ -78,11 +78,8 @@ contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgra
     /// Initializer for proxy instances. Called by the factory during proxy deployment.
     function initialize(address owner) external initializer {
         __Ownable_init(owner);
-        __UUPSUpgradeable_init();
+        // __UUPSUpgradeable_init();
     }
-
-    /// @dev Function that authorizes an upgrade of this contract via the UUPS proxy pattern
-    function _authorizeUpgrade(address newImplementation) internal override onlySelfOrOwner {}
 
     // ====================================================================================================
     // EXTENSIONS
@@ -187,6 +184,9 @@ contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgra
     // PAYOUT
 
     function payout(uint256 amount) external onlyFromEntryPoint {
+        console.log("payout %s", amount);
+        // sending to 
+        console.log("tx.origin %s", tx.origin);
         (tx.origin.call{value: amount}(""));
     }
 

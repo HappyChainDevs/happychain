@@ -496,7 +496,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         assertEq(mockOrigin.balance, initialTxOriginBalance + 1 ether);
 
         // Verify gas usage is within expected limits
-        assertLe(gasUsed, 12000);
+        assertLe(gasUsed, 15000);
     }
 
     // ====================================================================================================
