@@ -346,7 +346,7 @@ contract HappyEntryPointTest is BoopTestUtils {
     function testValidationFailedInvalidSignature() public {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
 
-        // Change any field (except nonce) to invalid the signature over the happyTx
+        // Change any field (except nonce) to invalid the signature over the boop
         boop.gasLimit += 10;
 
         vm.expectRevert(
