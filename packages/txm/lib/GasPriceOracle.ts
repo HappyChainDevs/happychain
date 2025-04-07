@@ -36,7 +36,7 @@ export class GasPriceOracle {
         const block = await this.txmgr.viemClient.getBlock({
             blockTag: "latest",
         })
-        this.onNewBlock(block)
+        await this.onNewBlock(block)
     }
 
     private async onNewBlock(block: LatestBlock) {
