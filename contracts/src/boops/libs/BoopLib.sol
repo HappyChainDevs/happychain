@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTx} from "boop/core/HappyTx.sol";
+import {Boop} from "boop/core/Boop.sol";
 
-library HappyTxLib {
-    /// Selector returned by {decode} when unable to properly decode a happyTx.
-    error MalformedHappyTx();
+library BoopLib {
+    /// Selector returned by {decode} when unable to properly decode a boop.
+    error MalformedBoop();
 
-    /// @dev Size of the static fields in the encoded HappyTx.
+    /// @dev Size of the static fields in the encoded Boop.
     /// (20 + 4 + 4 + 4 + 4 + 20 + 20 + 32 + 24 + 8 + 32 + 32 = 204)
     uint256 private constant DYNAMIC_FIELDS_OFFSET = 204;
 
@@ -26,7 +26,7 @@ library HappyTxLib {
     uint256 private constant RLP_ENCODED_TX_LENGTH = 200;
 
     /**
-     * Encodes a HappyTx struct into a compact bytes array, for minimal memory usage.
+     * Encodes a Boop struct into a compact bytes array, for minimal memory usage.
      * The encoding is done by packing fields end-to-end without 32-byte word alignment, making it
      * more gas efficient than standard ABI encoding. Dynamic fields are prefixed with their lengths
      * as uint32.
@@ -51,15 +51,15 @@ library HappyTxLib {
      *      - validatorData (length: 4b = N, data: Nb)
      *      - extraData (length: 4b = N, data: Nb)
      */
-    function encode(HappyTx memory happyTx) internal pure returns (bytes memory result) {
+    function encode(Boop memory boop) internal pure returns (bytes memory result) {
         // Dynamic fields: 4 bytes length + actual length for each dynamic field
         // Calculate total size needed for the encoded bytes
         // forgefmt: disable-next-item
         uint256 totalSize = DYNAMIC_FIELDS_OFFSET
-            + (4 + happyTx.callData.length)
-            + (4 + happyTx.paymasterData.length)
-            + (4 + happyTx.validatorData.length)
-            + (4 + happyTx.extraData.length);
+            + (4 + boop.callData.length)
+            + (4 + boop.paymasterData.length)
+            + (4 + boop.validatorData.length)
+            + (4 + boop.extraData.length);
 
         assembly {
             // Encoded tx will live at next free memory address.
@@ -70,7 +70,7 @@ library HappyTxLib {
             mstore(result, totalSize)
 
             // Start writing to `result` after the length prefix slot
-            let inPtr := happyTx
+            let inPtr := boop
             let outPtr := add(result, 32)
 
             // Copy account (20 bytes)
@@ -171,17 +171,17 @@ library HappyTxLib {
         }
     }
 
-    /// Decodes an encodedHappyTx that was encoded using {HappyTxLib.encode}.
-    function decode(bytes calldata encodedHappyTx) internal pure returns (HappyTx memory result) {
+    /// Decodes an encodedBoop that was encoded using {BoopLib.encode}.
+    function decode(bytes calldata encodedBoop) internal pure returns (Boop memory result) {
         // First validate minimum length (196 bytes for the static fields)
-        if (encodedHappyTx.length < DYNAMIC_FIELDS_OFFSET) revert MalformedHappyTx();
+        if (encodedBoop.length < DYNAMIC_FIELDS_OFFSET) revert MalformedBoop();
 
         uint32 len;
         uint256 offset;
 
         assembly ("memory-safe") {
             // Get pointer to the calldata bytes
-            let cdPtr := encodedHappyTx.offset
+            let cdPtr := encodedBoop.offset
             let memPtr := result
 
             // Copy account (20 bytes) + zero pad to 32 bytes
@@ -244,31 +244,31 @@ library HappyTxLib {
             cdPtr := add(cdPtr, 32)
 
             // Dynamic fields offset is the difference between current and start position
-            offset := sub(cdPtr, encodedHappyTx.offset)
+            offset := sub(cdPtr, encodedBoop.offset)
         }
 
         // Read callData length (4 bytes) and data
-        len = uint32(bytes4(encodedHappyTx[offset:offset + 4]));
+        len = uint32(bytes4(encodedBoop[offset:offset + 4]));
         offset += 4;
-        result.callData = encodedHappyTx[offset:offset + len];
+        result.callData = encodedBoop[offset:offset + len];
         offset += len;
 
         // Read paymasterData length (4 bytes) and data
-        len = uint32(bytes4(encodedHappyTx[offset:offset + 4]));
+        len = uint32(bytes4(encodedBoop[offset:offset + 4]));
         offset += 4;
-        result.paymasterData = encodedHappyTx[offset:offset + len];
+        result.paymasterData = encodedBoop[offset:offset + len];
         offset += len;
 
         // Read validatorData length (4 bytes) and data
-        len = uint32(bytes4(encodedHappyTx[offset:offset + 4]));
+        len = uint32(bytes4(encodedBoop[offset:offset + 4]));
         offset += 4;
-        result.validatorData = encodedHappyTx[offset:offset + len];
+        result.validatorData = encodedBoop[offset:offset + len];
         offset += len;
 
         // Read extraData length (4 bytes) and data
-        uint32 extraDataLen = uint32(bytes4(encodedHappyTx[offset:offset + 4]));
+        uint32 extraDataLen = uint32(bytes4(encodedBoop[offset:offset + 4]));
         offset += 4;
-        result.extraData = encodedHappyTx[offset:offset + extraDataLen];
+        result.extraData = encodedBoop[offset:offset + extraDataLen];
     }
 
     /**
@@ -290,12 +290,12 @@ library HappyTxLib {
     }
 
     /**
-     * @dev Returns the maximum fee per byte for a HappyTx's calldata
+     * @dev Returns the maximum fee per byte for a Boop's calldata
      * @return The maximum fee per byte, calculated by overestimating all calldata bytes
      *         as non-zero (16 gas per byte).
      */
-    function maxCalldataFeePerByte(HappyTx memory happyTx) internal pure returns (uint256) {
-        return (happyTx.maxFeePerGas) * CALLDATA_GAS_PER_BYTE;
+    function maxCalldataFeePerByte(Boop memory boop) internal pure returns (uint256) {
+        return (boop.maxFeePerGas) * CALLDATA_GAS_PER_BYTE;
     }
 
     /**

@@ -17,11 +17,11 @@ These benefits come with intentional trade-offs: slightly higher gas costs (21k 
 ```txt
 happy-accounts/
 ├── core/               # Core contracts
-│   ├── HappyEntryPoint.sol    # The entrypoint for handling happyTxs on-chain, singleton contract.
-│   └── HappyTx.sol            # The definition of a happy-tx.
+│   ├── EntryPoint.sol      # The entrypoint for handling happyTxs on-chain, singleton contract.
+│   └── Boop.sol            # The definition of a happy-tx.
 │
 ├── libs/               # Library contracts (for use by `core/` and account/paymaster implementations)
-│   └── HappyTxLib.sol         # Utilities for handling HappyTx structs (encoding/decoding).
+│   └── BoopLib.sol         # Utilities for handling Boop structs (encoding/decoding).
 │
 ├── interfaces/         # Contract interfaces
 │   └── IHappyAccount.sol      # Account interface definitions.

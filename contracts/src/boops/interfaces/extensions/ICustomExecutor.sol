@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+pragma solidity ^0.8.20;
+
+import {Boop} from "boop/core/Boop.sol";
+import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
+
+/**
+ * @dev Key used in {Boop.extraData} to specify a custom executor address (must satisfy
+ * {ICustomExecutor}), to be looked up by {IExtensibleAccount.executeCallFromExecutor} implementations.
+ */
+bytes3 constant EXECUTOR_KEY = 0x000002;
+
+/**
+ * Interface for custom validators that can be registered with Boop accounts implementing
+ * {IExtensibleAccount}, with extension type {ExtensionType.Executor}.
+ */
+interface ICustomExecutor {
+    /// Same interface and specification as {IBoopAccount.execute}.
+    function execute(Boop memory boop) external returns (ExecutionOutput memory output);
+}
