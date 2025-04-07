@@ -95,40 +95,40 @@ test-gas: ## Runs test and generate a gas report
 .PHONY: test-gas
 
 ####################################################################################################
-# Happy-AA Unit Tests
+# Boop Unit Tests
 
-test-happy-aa:
-	@make test-happyTxLib
+test-boop:
+	@make test-boopLib
 	@make test-callInfoCodingLib
-	@make test-happyEntryPoint
-	@make test-scrappyAccount
-	@make test-scrappyPaymaster
+	@make test-entryPoint
+	@make test-happyAccount
+	@make test-happyPaymaster
 	@make test-batchCallExecutor
 	@make test-sessionKeyValidator
-	@make test-scrappyAccountFactory
-	@make test-scrappyAccount-upgradeability
+	@make test-happyAccountFactory
+	@make test-happyAccount-upgradeability
 	@make test-predictDeploymentAddress
-.PHONY: test-happy-aa
+.PHONY: test-boop
 
-test-happyTxLib:
-	forge test --match-contract HappyTxLibTest -vvv
-.PHONY: test-happyTxLib
+test-boopLib:
+	forge test --match-contract BoopLibTest -vvv
+.PHONY: test-boopLib
 
 test-callInfoCodingLib:
 	forge test --match-contract CallInfoCodingLibTest -vvv
 .PHONY: test-callInfoCodingLib
 
-test-happyEntryPoint:
-	forge test --match-contract HappyEntryPointTest -vvv
-.PHONY: test-happyEntryPoint
+test-entryPoint:
+	forge test --match-contract EntryPointTest -vvv
+.PHONY: test-entryPoint
 
-test-scrappyAccount:
-	forge test --match-contract ScrappyAccountTest -vvv
-.PHONY: test-scrappyAccount
+test-happyAccount:
+	forge test --match-contract HappyAccountTest -vvv
+.PHONY: test-happyAccount
 
-test-scrappyPaymaster:
-	forge test --match-contract ScrappyPaymasterTest -vvv
-.PHONY: test-scrappyPaymaster
+test-happyPaymaster:
+	forge test --match-contract HappyPaymasterTest -vvv
+.PHONY: test-happyPaymaster
 
 test-batchCallExecutor:
 	forge test --match-contract BatchCallExecutorTest -vvv
@@ -138,13 +138,13 @@ test-sessionKeyValidator:
 	forge test --match-contract ScrappySessionKeyValidatorTest -vvv
 .PHONY: test-sessionKeyValidator
 
-test-scrappyAccountFactory:
-	forge test --match-contract ScrappyAccountFactoryTest -vvv
-.PHONY: test-scrappyAccountFactory
+test-happyAccountFactory:
+	forge test --match-contract HappyAccountFactoryTest -vvv
+.PHONY: test-happyAccountFactory
 
-test-scrappyAccount-upgradeability:
+test-happyAccount-upgradeability:
 	forge test --match-contract UpgradeSCATest -vvv
-.PHONY: test-scrappyAccount-upgradeability
+.PHONY: test-happyAccount-upgradeability
 
 test-predictDeploymentAddress:
 	@bun run getAddressERC1967Tests
@@ -222,9 +222,9 @@ check: lint format-check
 format-check:
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
-	mv src/happy-accounts/samples/ScrappyAccount.sol src/happy-accounts/samples/ScrappyAccount.bak
-	forge fmt --check src || true
-	mv src/happy-accounts/samples/ScrappyAccount.bak src/happy-accounts/samples/ScrappyAccount.sol
+	@sed -i '' 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	@forge fmt src || true
+	@sed -i '' 's/address private dispatchedExecutor;/address transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 .PHONY: format-check
 
 lint:
@@ -235,9 +235,9 @@ format:
 	biome check ./ --write;
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
-	@sed -i '' 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/happy-accounts/samples/ScrappyAccount.sol
+	@sed -i '' 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@forge fmt src || true
-	@sed -i '' 's/address private dispatchedExecutor;/address transient private dispatchedExecutor;/' src/happy-accounts/samples/ScrappyAccount.sol
+	@sed -i '' 's/address private dispatchedExecutor;/address transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 .PHONY: format
 
 ####################################################################################################
@@ -426,10 +426,10 @@ endif
 	make deploy DEPLOY_SCRIPT=DeployL1Upgradeable.s.sol
 .PHONY: deploy-l1-upgradeable
 
-deploy-happy-aa: ## Deploys the Happy AA contracts.
-	$(eval $(call set-deployment-name,happy-aa))
-	make deploy DEPLOY_SCRIPT=DeployHappyAA.s.sol
-.PHONY: deploy-happy-aa
+deploy-boop: ## Deploys the Boop contracts.
+	$(eval $(call set-deployment-name,boop))
+	make deploy DEPLOY_SCRIPT=DeployBoop.s.sol
+.PHONY: deploy-boop
 
 deploy-aa: ## Deploys the AA contracts.
 	$(eval $(call set-deployment-name,aa))
