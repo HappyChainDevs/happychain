@@ -60,7 +60,7 @@ export class GasPriceOracle {
     }
 
     private async calculateTargetPriorityFee(): Promise<Result<bigint, Error>> {
-        const feeHistory = await this.txmgr.viemClient.safeFeeHistory({
+        const feeHistory = await this.txmgr.viemClient.safeGetFeeHistory({
             blockCount: this.txmgr.priorityFeeAnalysisBlocks,
             blockTag: "latest",
             rewardPercentiles: [this.txmgr.priorityFeeTargetPercentile],
