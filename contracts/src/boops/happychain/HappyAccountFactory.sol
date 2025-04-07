@@ -3,10 +3,10 @@ pragma solidity ^0.8.20;
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {ScrappyAccount} from "boop/samples/ScrappyAccount.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 
-/// Sample factory contract for deploying deterministic ERC1967 proxies for {ScrappyAccount}.
-contract ScrappyAccountFactory {
+/// Sample factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
+contract HappyAccountFactory {
     /// Error thrown when account initialization fails
     error InitializeError();
 
@@ -68,7 +68,7 @@ contract ScrappyAccountFactory {
     /// @dev Prepares the contract creation code for ERC1967Proxy contract.
     function _prepareContractCode(address owner) internal view returns (bytes memory) {
         bytes memory creationCode = type(ERC1967Proxy).creationCode;
-        bytes memory initData = abi.encodeCall(ScrappyAccount.initialize, (owner));
+        bytes memory initData = abi.encodeCall(HappyAccount.initialize, (owner));
         bytes memory constructorArgs = abi.encode(ACCOUNT_IMPLEMENTATION, initData);
         return abi.encodePacked(creationCode, constructorArgs);
     }

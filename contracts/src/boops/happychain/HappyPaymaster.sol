@@ -5,27 +5,27 @@ import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/Reentrancy
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {IHappyPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IHappyPaymaster.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {NotFromEntryPoint} from "boop/utils/Common.sol";
-import {HappyEntryPoint} from "../core/HappyEntryPoint.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {IPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
+import {NotFromEntryPoint} from "boop/core/Utils.sol";
+import {EntryPoint} from "../core/EntryPoint.sol";
 
 /**
- * An example paymaster contract implementing the IHappyPaymaster interface.
+ * An example paymaster contract implementing the IPaymaster interface.
  * This paymaster sponsors any call, as long as its submitter fee is not too high
  * (computed on the basis of a max gas cost per byte of calldata, configurable at deploy time).
  */
-contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable {
+contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
     using ECDSA for bytes32;
-    using HappyTxLib for HappyTx;
+    using BoopLib for Boop;
 
     // ====================================================================================================
     // CONSTANTS
 
-    /// @dev Fixed size of an encoded HappyTx: 196 bytes for static fields plus 16 bytes (4 bytes × 4) for
+    /// @dev Fixed size of an encoded Boop: 220 bytes for static fields plus 16 bytes (4 bytes × 4) for
     ///      storing the lengths of the four dynamic fields
-    uint256 private constant STATIC_FIELDS_SIZE = 212;
+    uint256 private constant STATIC_FIELDS_SIZE = 220;
 
     /// @dev The amount of gas consumed by the payout function.
     uint256 private constant PAYOUT_GAS = 12_000; // measured: 10097 + safety margin
@@ -73,20 +73,20 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
      * This function validates that the submitter fee is reasonably priced, but otherwise accepts
      * to pay for any boop.
      */
-    function validatePayment(HappyTx memory happyTx) external view onlyFromEntryPoint returns (bytes memory) {
+    function validatePayment(Boop memory boop) external view onlyFromEntryPoint returns (bytes memory) {
         // forgefmt: disable-next-item
         uint256 totalSize = MAX_TX_SIZE
             + STATIC_FIELDS_SIZE
-            + happyTx.callData.length
-            + happyTx.validatorData.length
-            + happyTx.extraData.length;
+            + boop.callData.length
+            + boop.validatorData.length
+            + boop.extraData.length;
 
         // Only validate positive submitter fees
-        if (happyTx.submitterFee > 0) {
-            uint256 maxFeePerByte = HappyTxLib.maxCalldataFeePerByte(happyTx);
+        if (boop.submitterFee > 0) {
+            uint256 maxFeePerByte = BoopLib.maxCalldataFeePerByte(boop);
             uint256 maxSubmitterFee = totalSize * (maxFeePerByte + SUBMITTER_TIP_PER_BYTE);
 
-            if (uint256(happyTx.submitterFee) > maxSubmitterFee) {
+            if (uint256(boop.submitterFee) > maxSubmitterFee) {
                 return abi.encodeWithSelector(SubmitterFeeTooHigh.selector);
             }
         }
@@ -101,36 +101,36 @@ contract ScrappyPaymaster is IHappyPaymaster, ReentrancyGuardTransient, Ownable 
      * Adds the value to the paymaster's stake. cf. {Staking.deposit}
      */
     function deposit() external payable {
-        HappyEntryPoint(ENTRYPOINT).deposit{value: msg.value}(address(this));
+        EntryPoint(ENTRYPOINT).deposit{value: msg.value}(address(this));
     }
 
     /**
      * cf. {Staking.updateWithdrawalDelay}
      */
     function updateWithdrawalDelay(uint64 withdrawDelay) external onlyOwner {
-        HappyEntryPoint(ENTRYPOINT).updateWithdrawDelay(withdrawDelay);
+        EntryPoint(ENTRYPOINT).updateWithdrawDelay(withdrawDelay);
     }
 
     /**
      * Equivalent to {updateWithdrawalDelay} followed by {deposit}.
      */
     function depositWithDelay(uint64 withdrawDelay) external payable onlyOwner {
-        HappyEntryPoint(ENTRYPOINT).updateWithdrawDelay(withdrawDelay);
-        HappyEntryPoint(ENTRYPOINT).deposit{value: msg.value}(address(this));
+        EntryPoint(ENTRYPOINT).updateWithdrawDelay(withdrawDelay);
+        EntryPoint(ENTRYPOINT).deposit{value: msg.value}(address(this));
     }
 
     /**
      * cf. {Staking.initiateWithdrawal}
      */
     function initiateWithdrawal(uint128 amount) external onlyOwner {
-        HappyEntryPoint(ENTRYPOINT).initiateWithdrawal(amount);
+        EntryPoint(ENTRYPOINT).initiateWithdrawal(amount);
     }
 
     /**
      * cf. {Staking.withdraw}
      */
     function withdraw(uint128 amount, address payable destination) external onlyOwner {
-        HappyEntryPoint(ENTRYPOINT).withdraw(amount, destination);
+        EntryPoint(ENTRYPOINT).withdraw(amount, destination);
     }
 
     // ====================================================================================================

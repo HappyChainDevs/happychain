@@ -3,10 +3,10 @@ pragma solidity ^0.8.20;
 
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {ICustomBoopValidator} from "boop/interfaces/extensions/ICustomBoopValidator.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {InvalidSignature} from "boop/utils/Common.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {ICustomValidator} from "boop/interfaces/extensions/ICustomValidator.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
+import {InvalidSignature} from "boop/core/Utils.sol";
 
 /// Selector returned if trying to validate an account-paid boop with a session key.
 error AccountPaidSessionKeyBoop();
@@ -24,9 +24,9 @@ error AccountPaidSessionKeyBoop();
  * The session key is represented as an address (as that is the result of ecrecover), which is not
  * strictly speaking a key, but we call it that anyway for simplicity.
  */
-contract SessionKeyValidator is ICustomBoopValidator {
+contract SessionKeyValidator is ICustomValidator {
     using ECDSA for bytes32;
-    using HappyTxLib for HappyTx;
+    using BoopLib for Boop;
 
     // ====================================================================================================
     // EVENTS
@@ -76,24 +76,24 @@ contract SessionKeyValidator is ICustomBoopValidator {
         }
     }
 
-    function validate(HappyTx memory happyTx) external view returns (bytes memory) {
-        if (happyTx.paymaster == happyTx.account) {
+    function validate(Boop memory boop) external view returns (bytes memory) {
+        if (boop.paymaster == boop.account) {
             return abi.encodeWithSelector(AccountPaidSessionKeyBoop.selector);
         }
 
-        // The happyTx is not self-paying.
+        // The boop is not self-paying.
         // The signer does not sign over these fields to avoid extra network roundtrips
         // validation policy falls to the paymaster or the sponsoring submitter.
-        happyTx.gasLimit = 0;
-        happyTx.executeGasLimit = 0;
-        happyTx.maxFeePerGas = 0;
-        happyTx.submitterFee = 0;
+        boop.gasLimit = 0;
+        boop.executeGasLimit = 0;
+        boop.maxFeePerGas = 0;
+        boop.submitterFee = 0;
 
-        bytes memory signature = happyTx.validatorData;
-        happyTx.validatorData = ""; // set to "" to get the hash
-        address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
+        bytes memory signature = boop.validatorData;
+        boop.validatorData = ""; // set to "" to get the hash
+        address signer = keccak256(boop.encode()).toEthSignedMessageHash().recover(signature);
 
-        address sessionKey = sessionKeys[msg.sender][happyTx.dest];
+        address sessionKey = sessionKeys[msg.sender][boop.dest];
         bytes4 selector = signer == sessionKey ? bytes4(0) : bytes4(InvalidSignature.selector);
         return abi.encodeWithSelector(selector);
     }
