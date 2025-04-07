@@ -17,9 +17,9 @@ import {
 } from "firebase/auth"
 import { AccountNotFoundError } from "permissionless"
 import type { EIP1193Provider } from "viem"
-import { getKernelAccountAddress } from "#src/state/kernelAccount.ts"
-import { getPermissions } from "#src/state/permissions.ts"
-import { getAppURL } from "#src/utils/appURL.ts"
+import { getBoopAccountAddress } from "#src/state/boopAccount"
+import { getPermissions } from "#src/state/permissions"
+import { getAppURL } from "#src/utils/appURL"
 import { firebaseAuth } from "../services/firebase"
 import { web3AuthConnect, web3AuthDisconnect, web3AuthEIP1193Provider } from "../services/web3auth"
 import {
@@ -137,7 +137,7 @@ export abstract class FirebaseConnector implements ConnectionProvider {
             try {
                 // have to refresh JWT since web3auth fails if duplicate token is found
                 const addresses = await web3AuthConnect(token)
-                const accountAddress = await getKernelAccountAddress(addresses[0])
+                const accountAddress = await getBoopAccountAddress(addresses[0])
                 if (!accountAddress) {
                     throw new AccountNotFoundError()
                 }
