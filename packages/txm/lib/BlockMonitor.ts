@@ -86,6 +86,9 @@ export class BlockMonitor {
             this.unwatch = undefined
         }
 
+        // Delay block monitor restart by 500ms
+        // This prevents an infinite loop of rapid restarts
+        // when the blockchain node is unresponsive or down
         setTimeout(() => {
             context.with(ROOT_CONTEXT, () => {
                 this.start()
