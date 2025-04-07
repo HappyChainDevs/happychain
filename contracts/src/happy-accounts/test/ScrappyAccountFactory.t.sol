@@ -19,7 +19,6 @@ contract ScrappyAccountFactoryTest is Test {
     ScrappyAccountBeacon private accountBeacon;
 
     function setUp() public {
-        
         implementation = new ScrappyAccount(STUB_ENTRYPOINT_ADDRESS);
         accountBeacon = new ScrappyAccountBeacon(address(implementation), address(this));
         factory = new ScrappyAccountFactory(address(accountBeacon));

@@ -17,6 +17,7 @@ contract DeployHappyAAContracts is BaseDeployScript {
     uint256 public constant PM_DEPOSIT = 10 ether;
 
     ScrappyAccountProxy public scrappyAccount;
+    ScrappyAccount public scrappyAccountImpl;
     HappyEntryPoint public happyEntryPoint;
     ScrappyPaymaster public scrappyPaymaster;
     ScrappyAccountFactory public scrappyAccountFactory;
@@ -55,12 +56,12 @@ contract DeployHappyAAContracts is BaseDeployScript {
             DEPLOYMENT_SALT //-
         );
 
-        (address _scrappyAccountBeacon, ) = deployDeterministic( //-
+        (address _scrappyAccountBeacon,) = deployDeterministic( //-
             "ScrappyAccountBeacon",
             type(ScrappyAccountBeacon).creationCode,
             abi.encode(_scrappyAccount, owner),
             DEPLOYMENT_SALT //-
-        ); 
+        );
 
         (address payable _scrappyAccountProxy,) = deployDeterministic( //-
             "ScrappyAccountProxy",
@@ -68,6 +69,7 @@ contract DeployHappyAAContracts is BaseDeployScript {
             abi.encode(_happyEntryPoint, _scrappyAccountBeacon, ""),
             DEPLOYMENT_SALT //-
         );
+        scrappyAccountImpl = ScrappyAccount(_scrappyAccount);
         scrappyAccount = ScrappyAccountProxy(_scrappyAccountProxy);
         scrappyAccountBeacon = ScrappyAccountBeacon(_scrappyAccountBeacon);
 

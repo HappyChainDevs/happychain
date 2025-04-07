@@ -19,7 +19,6 @@ import {
 } from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
 import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
 import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/utils/Common.sol";
-import "forge-std/console.sol";
 
 /**
  * Example implementation of an extensible Happy Account with proxy upgrade capability.
@@ -184,9 +183,6 @@ contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable {
     // PAYOUT
 
     function payout(uint256 amount) external onlyFromEntryPoint {
-        console.log("payout %s", amount);
-        // sending to 
-        console.log("tx.origin %s", tx.origin);
         (tx.origin.call{value: amount}(""));
     }
 

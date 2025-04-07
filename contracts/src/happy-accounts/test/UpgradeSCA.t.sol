@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import {MockERC20} from "../../mocks/MockERC20.sol";
 import {DeployHappyAAContracts} from "../../deploy/DeployHappyAA.s.sol";
@@ -22,10 +21,6 @@ contract UpgradeSCATest is Test {
 
     // ====================================================================================================
     // CONSTANTS
-
-    bytes32 private constant ERC1967_IMPLEMENTATION_SLOT =
-        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
-
     bytes32 private constant ERC1967_BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
     bytes32 private constant SALT = 0;
     uint256 private constant DEPOSIT = 10 ether;
@@ -37,13 +32,13 @@ contract UpgradeSCATest is Test {
     ScrappyAccountFactory private scrappyAccountFactory;
     HappyEntryPoint private happyEntryPoint;
     ScrappyAccountBeacon private accountBeacon;
+    ScrappyAccount private scrappyAccountImpl;
 
     address private smartAccount;
     address private mockToken;
     address private newImpl;
     uint256 private privKey;
     address private owner;
-    
 
     // ====================================================================================================
     // COMMON TEST SETUP
@@ -62,6 +57,7 @@ contract UpgradeSCATest is Test {
         scrappyAccountFactory = deployer.scrappyAccountFactory();
         happyEntryPoint = deployer.happyEntryPoint();
         accountBeacon = deployer.scrappyAccountBeacon();
+        scrappyAccountImpl = deployer.scrappyAccountImpl();
 
         // Deploy and initialize the proxy for scrappy account
         smartAccount = scrappyAccountFactory.createAccount(SALT, owner);
@@ -79,33 +75,40 @@ contract UpgradeSCATest is Test {
     // ====================================================================================================
     // TEST TO UPGRADE IMPL OF HAPPY ACCOUNT
 
-    /// @dev Test upgradeability via a boop
+    /// @dev Test upgradeability vai beacon
     function testUpgradeImplForSmartAccountViaBeacon() public {
-        console.log("beacon address", address(accountBeacon));
-        // Store the original implementation address
-        bytes32 oldImpl = vm.load(smartAccount, ERC1967_BEACON_SLOT);
-        assertEq(oldImpl, bytes32(uint256(uint160(address(accountBeacon)))), "Implementation not set correctly");
+        // Beacon slot should point to the beacon address
+        bytes32 beacon = vm.load(smartAccount, ERC1967_BEACON_SLOT);
+        assertEq(beacon, bytes32(uint256(uint160(address(accountBeacon)))), "Initial implementation not set correctly");
 
-        
+        // Beacon should point to the implementation
+        assertEq(accountBeacon.implementation(), address(scrappyAccountImpl));
+
+        // Account should be able to mint tokens
+        HappyTx memory mintTx = _createSignedHappyTx(mockToken, _getMintCallData());
+        happyEntryPoint.submit(mintTx.encode());
+        assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");   
+
         // non owner cannot upgrade via beacon
         vm.expectRevert();
         accountBeacon.upgradeTo(newImpl);
 
-        // Create and submit upgrade transaction
+        // Beacon is upgradable only by the owner
         vm.prank(owner);
         accountBeacon.upgradeTo(newImpl);
-        assertEq(accountBeacon.implementation(), newImpl, "Implementation not set correctly");
-        
+        assertEq(accountBeacon.implementation(), newImpl, "Upgraded implementation not set correctly");
+
         // Verify beacon address is constant
         bytes32 updatedImpl = vm.load(smartAccount, ERC1967_BEACON_SLOT);
-        assertEq(oldImpl, updatedImpl, "Implementation not updated correctly");
+        assertEq(beacon, updatedImpl, "Implementation not updated correctly");
 
         // Create and submit mint transaction to verify new implementation works
-        HappyTx memory mintTx = _createSignedHappyTx(mockToken, _getMintCallData());
-        happyEntryPoint.submit(mintTx.encode());
+        uint256 oldBalance = MockERC20(mockToken).balanceOf(owner);
+        HappyTx memory mintTx2 = _createSignedHappyTx(mockToken, _getMintCallData());
+        happyEntryPoint.submit(mintTx2.encode());
 
         // Verify mint was successful
-        assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
+        assertEq(MockERC20(mockToken).balanceOf(owner), (oldBalance + MINT_AMOUNT), "Mint operation failed");
     }
 
     // ====================================================================================================

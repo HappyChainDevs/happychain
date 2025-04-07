@@ -4,8 +4,5 @@ pragma solidity ^0.8.28;
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
 contract ScrappyAccountBeacon is UpgradeableBeacon {
-    constructor(address initialImplementation, address owner)
-        UpgradeableBeacon(initialImplementation, owner)
-    {
-    }
+    constructor(address initialImplementation, address owner) UpgradeableBeacon(initialImplementation, owner) {}
 }
