@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTx} from "boop/core/HappyTx.sol";
+import {Boop} from "boop/core/Boop.sol";
 import {CallInfo} from "boop/libs/CallInfoCodingLib.sol";
-import {CallStatus} from "boop/core/HappyEntryPoint.sol";
-import {ScrappyAccount} from "boop/samples/ScrappyAccount.sol";
-import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
-import {ICustomBoopExecutor} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
+import {CallStatus} from "boop/core/EntryPoint.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
+import {ICustomExecutor} from "boop/interfaces/extensions/ICustomExecutor.sol";
 
 /**
- * Mock implementation of ICustomBoopExecutor for testing purposes.
+ * Mock implementation of ICustomExecutor for testing purposes.
  * The execution behavior depends on the executionMode:
- * 0: Makes actual calls through the ScrappyAccount's executeCallFromExecutor
+ * 0: Makes actual calls through the HappyAccount's executeCallFromExecutor
  * 1: Returns a failed execution status
  * 2: Reverts with a custom error
  * 3: Reverts with an empty revert
  */
-contract MockExecutor is ICustomBoopExecutor {
+contract MockExecutor is ICustomExecutor {
     // Execution mode
     uint256 public executionMode;
 
@@ -40,23 +40,23 @@ contract MockExecutor is ICustomBoopExecutor {
 
     /**
      * Execute a transaction based on the current execution mode
-     * @param happyTx The transaction to execute
+     * @param boop The transaction to execute
      * @return output The execution result
      */
-    function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory output) {
+    function execute(Boop memory boop) external returns (ExecutionOutput memory output) {
         if (executionMode == 0) {
-            // Make actual calls through the ScrappyAccount
-            // Parse the call info from the happyTx
-            address target = happyTx.dest;
-            uint256 value = happyTx.value;
-            bytes memory callData = happyTx.callData;
+            // Make actual calls through the HappyAccount
+            // Parse the call info from the boop
+            address target = boop.dest;
+            uint256 value = boop.value;
+            bytes memory callData = boop.callData;
 
-            // Execute the call through the ScrappyAccount
+            // Execute the call through the HappyAccount
             bool success;
             bytes memory returnData;
 
-            // Cast msg.sender to ScrappyAccount to call executeCallFromExecutor
-            ScrappyAccount account = ScrappyAccount(payable(msg.sender));
+            // Cast msg.sender to HappyAccount to call executeCallFromExecutor
+            HappyAccount account = HappyAccount(payable(msg.sender));
             (success, returnData) =
                 account.executeCallFromExecutor(CallInfo({dest: target, value: value, callData: callData}));
 

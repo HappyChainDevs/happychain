@@ -3,21 +3,21 @@ pragma solidity ^0.8.20;
 
 import {BaseDeployScript} from "./BaseDeployScript.sol";
 
-import {HappyEntryPoint} from "../happy-accounts/core/HappyEntryPoint.sol";
-import {ScrappyAccount} from "../happy-accounts/samples/ScrappyAccount.sol";
-import {ScrappyPaymaster} from "../happy-accounts/samples/ScrappyPaymaster.sol";
-import {ScrappyAccountFactory} from "../happy-accounts/factories/ScrappyAccountFactory.sol";
+import {EntryPoint} from "boop/core/EntryPoint.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
+import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
 
-contract DeployHappyAAContracts is BaseDeployScript {
+contract DeployBoopContracts is BaseDeployScript {
     bytes32 public constant DEPLOYMENT_SALT = bytes32(uint256(0));
     address public constant CREATE2_PROXY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     uint256 public constant PM_SUBMITTER_TIP_PER_BYTE = 2 gwei;
     uint256 public constant PM_DEPOSIT = 10 ether;
 
-    ScrappyAccount public scrappyAccount;
-    HappyEntryPoint public happyEntryPoint;
-    ScrappyPaymaster public scrappyPaymaster;
-    ScrappyAccountFactory public scrappyAccountFactory;
+    EntryPoint public entryPoint;
+    HappyAccount public happyAccount;
+    HappyPaymaster public happyPaymaster;
+    HappyAccountFactory public happyAccountFactory;
 
     function deploy() internal override {
         string memory config = vm.envOr("CONFIG", string(""));
@@ -35,49 +35,49 @@ contract DeployHappyAAContracts is BaseDeployScript {
 
         // -----------------------------------------------------------------------------------------
 
-        (address payable _happyEntryPoint,) = deployDeterministic( //-
-            "HappyEntryPoint",
-            type(HappyEntryPoint).creationCode,
+        (address payable _entryPoint,) = deployDeterministic( //-
+            "EntryPoint",
+            type(EntryPoint).creationCode,
             abi.encode(),
             DEPLOYMENT_SALT //-
         );
-        happyEntryPoint = HappyEntryPoint(_happyEntryPoint);
+        entryPoint = EntryPoint(_entryPoint);
 
         // -----------------------------------------------------------------------------------------
 
-        (address payable _scrappyAccount,) = deployDeterministic( //-
-            "ScrappyAccount",
-            type(ScrappyAccount).creationCode,
-            abi.encode(_happyEntryPoint),
+        (address payable _happyAccount,) = deployDeterministic( //-
+            "HappyAccount",
+            type(HappyAccount).creationCode,
+            abi.encode(_entryPoint),
             DEPLOYMENT_SALT //-
         );
-        scrappyAccount = ScrappyAccount(_scrappyAccount);
+        happyAccount = HappyAccount(_happyAccount);
 
         // -----------------------------------------------------------------------------------------
 
-        (address _scrappyAccountFactory,) = deployDeterministic( //-
-            "ScrappyAccountFactory",
-            type(ScrappyAccountFactory).creationCode,
-            abi.encode(_scrappyAccount),
+        (address _happyAccountFactory,) = deployDeterministic( //-
+            "HappyAccountFactory",
+            type(HappyAccountFactory).creationCode,
+            abi.encode(_happyAccount),
             DEPLOYMENT_SALT //-
         );
-        scrappyAccountFactory = ScrappyAccountFactory(_scrappyAccountFactory);
+        happyAccountFactory = HappyAccountFactory(_happyAccountFactory);
 
         // -----------------------------------------------------------------------------------------
 
-        (address payable _scrappyPaymaster,) = deployDeterministic( //-
-            "ScrappyPaymaster",
-            type(ScrappyPaymaster).creationCode,
-            abi.encode(_happyEntryPoint, PM_SUBMITTER_TIP_PER_BYTE, owner),
+        (address payable _happyPaymaster,) = deployDeterministic( //-
+            "HappyPaymaster",
+            type(HappyPaymaster).creationCode,
+            abi.encode(_entryPoint, PM_SUBMITTER_TIP_PER_BYTE, owner),
             DEPLOYMENT_SALT //-
         );
-        scrappyPaymaster = ScrappyPaymaster(_scrappyPaymaster);
+        happyPaymaster = HappyPaymaster(_happyPaymaster);
 
         // -----------------------------------------------------------------------------------------
 
         if (isLocal) {
             // In local mode, fund the paymaster with some gas tokens.
-            vm.deal(_scrappyPaymaster, PM_DEPOSIT);
+            vm.deal(_happyPaymaster, PM_DEPOSIT);
 
             // Send dust to address(0) to avoid the 25000 extra gas cost when sending to an empty account during simulation
             // CALL opcode charges 25000 extra gas when the target has 0 balance (empty account)
