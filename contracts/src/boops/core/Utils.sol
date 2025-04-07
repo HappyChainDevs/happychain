@@ -2,14 +2,14 @@
 pragma solidity ^0.8.20;
 
 /// Each of these values is shared between at least two or more of IHappyPaymaster,
-/// IHappyAccount, and HappyEntryPoint contracts.
+/// IHappyAccount, and EntryPoint contracts.
 
 // ====================================================================================================
 // ERRORS
 
 /**
  * Selector returned by {IHappyAccount.validate} and
- * {IHappyPaymaster.payout} in simulation mode if the validity of the happyTx
+ * {IHappyPaymaster.payout} in simulation mode if the validity of the boop
  * cannot be ascertained during simulation.
  *
  * e.g. we can't verify a signature over the gas limit during simulation,

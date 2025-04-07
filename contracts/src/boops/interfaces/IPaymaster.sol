@@ -1,31 +1,31 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTx} from "boop/core/HappyTx.sol";
+import {Boop} from "boop/core/Boop.sol";
 
 /**
- * Selector returned from {IHappyPaymaster.payout} when the paymaster's fee exceeds
+ * Selector returned from {IPaymaster.payout} when the paymaster's fee exceeds
  * the maximum allowed.
  */
 error SubmitterFeeTooHigh();
 
 /**
- * Interface for paymasters that can sponsor gas fees for HappyTx transactions.
+ * Interface for paymasters that can sponsor gas fees for boop transactions.
  *
  * Implementers of this interface should not write custom `receive` functions (or at least no such
  * function that consumes more than 2300 gas), as that screws up the entry point's gas accounting
  * and will cause the paymaster to revert if it consumes more than the 2300 gas allowance.
  *
  * Implementers of this interface must implement functionality that enables managing the stake
- * with the {HappyEntryPoint}, by calling the functions implemented in `Staking.sol`. The paymaster
+ * with the {EntryPoint}, by calling the functions implemented in `Staking.sol`. The paymaster
  * itself is the only one authorized to change withdraw delays, initiate and finalize withdrawals.
  *
  * The ERC-165 selector for this interface is 0x24542ca5 and can be obtained via:
- * `console.logBytes4(IHappyPaymaster.payout.selector);`
+ * `console.logBytes4(IPaymaster.payout.selector);`
  */
-interface IHappyPaymaster {
+interface IPaymaster {
     /**
-     * This function validates whether the passed happyTx is eligible for sponsorship by this
+     * This function validates whether the passed boop is eligible for sponsorship by this
      * paymaster.
      *
      * The function must return `abi.encodeWithSelector(bytes4(0))` iff it accepted to sponsor the
@@ -44,5 +44,5 @@ interface IHappyPaymaster {
      * (otherwise its funds will be at risk), and should not otherwise revert. If validation fails
      * it should return instead, as per the above.
      */
-    function validatePayment(HappyTx memory happyTx) external returns (bytes memory);
+    function validatePayment(Boop memory boop) external returns (bytes memory);
 }

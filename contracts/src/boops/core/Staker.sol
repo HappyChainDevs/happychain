@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * Information about an address's stake in {Staking}.
+ * Information about an address's stake in {Staker}.
  */
 struct Stake {
     /**
@@ -72,7 +72,7 @@ struct Stake {
  * @dev The formula for the withdraw delay is:
  * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`
  */
-contract Staking {
+contract Staker {
     /// Staking information for accounts.
     mapping(address account => Stake) public stakes;
 
