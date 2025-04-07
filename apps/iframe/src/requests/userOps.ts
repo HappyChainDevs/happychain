@@ -89,7 +89,6 @@ export async function sendUserOp({ user, tx, validator, signer, preparedOp }: Se
 
         const userOp: UserOperation = {
             sender: account,
-            paymaster: contractAddresses.HappyPaymaster,
             nonce,
             callData: _preparedUserOp.callData,
             callGasLimit: _preparedUserOp.callGasLimit,
@@ -97,6 +96,9 @@ export async function sendUserOp({ user, tx, validator, signer, preparedOp }: Se
             maxPriorityFeePerGas: _preparedUserOp.maxPriorityFeePerGas,
             verificationGasLimit: _preparedUserOp.verificationGasLimit,
             preVerificationGas: _preparedUserOp.preVerificationGas,
+            paymaster: contractAddresses.HappyPaymaster,
+            paymasterPostOpGasLimit: _preparedUserOp.paymasterPostOpGasLimit,
+            paymasterVerificationGasLimit: _preparedUserOp.paymasterVerificationGasLimit,
             signature: "0x", // Will be set by signer
         }
 
