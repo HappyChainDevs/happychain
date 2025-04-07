@@ -103,7 +103,7 @@ export interface SafeViemPublicClient extends ViemPublicClient {
     safeGetTransactionCount: (
         ...args: Parameters<ViemPublicClient["getTransactionCount"]>
     ) => ResultAsync<Awaited<ReturnType<ViemPublicClient["getTransactionCount"]>>, GetTransactionCountErrorType>
-    safeFeeHistory: (
+    safeGetFeeHistory: (
         ...args: Parameters<ViemPublicClient["getFeeHistory"]>
     ) => ResultAsync<Awaited<ReturnType<ViemPublicClient["getFeeHistory"]>>, GetFeeHistoryErrorType>
 }
@@ -225,7 +225,7 @@ export function convertToSafeViemPublicClient(
             })
     }
 
-    safeClient.safeFeeHistory = (...args: Parameters<ViemPublicClient["getFeeHistory"]>) => {
+    safeClient.safeGetFeeHistory = (...args: Parameters<ViemPublicClient["getFeeHistory"]>) => {
         if (safeClient.rpcCounter) safeClient.rpcCounter.add(1, { method: "getFeeHistory" })
         const startTime = Date.now()
 
