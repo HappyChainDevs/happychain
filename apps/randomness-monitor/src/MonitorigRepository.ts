@@ -28,7 +28,10 @@ export class MonitoringRepository {
 
     async pruneMonitoring(blockTimestamp: bigint): Promise<Result<void, Error>> {
         return await ResultAsync.fromPromise(
-            db.deleteFrom("monitoring").where("blockTimestamp", "<", Number(blockTimestamp) - PRUNE_BLOCK_TIMESTAMP_THRESHOLD_SECONDS).execute(),
+            db
+                .deleteFrom("monitoring")
+                .where("blockTimestamp", "<", Number(blockTimestamp) - PRUNE_BLOCK_TIMESTAMP_THRESHOLD_SECONDS)
+                .execute(),
             unknownToError,
         ).map(() => undefined)
     }

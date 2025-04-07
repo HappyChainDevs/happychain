@@ -1,10 +1,11 @@
-import { createPublicClient, defineChain, http, webSocket, type Block, type PublicClient, type Transport } from "viem"
+import { bigIntReplacer, unknownToError } from "@happy.tech/common"
+import { abis } from "@happy.tech/contracts/random/anvil"
+import { type Result, err, ok } from "neverthrow"
+import { http, type Block, type PublicClient, type Transport, createPublicClient, defineChain, webSocket } from "viem"
 import { MonitoringRepository } from "./MonitorigRepository"
 import { Monitoring, MonitoringResult } from "./Monitoring"
-import { bigIntReplacer, getUrlProtocol, unknownToError } from "@happy.tech/common"
 import { env } from "./env"
-import { abis } from "@happy.tech/contracts/random/anvil"
-import { err, ok, type Result } from "neverthrow"
+import { getUrlProtocol } from "./utils/getUrlProtocol"
 
 /**
  * Main monitoring service for tracking blockchain randomness
@@ -78,7 +79,7 @@ export class MonitoringService {
             onError: (error) => {
                 console.error("Error in watching blocks:", error)
                 process.exit(1)
-            }
+            },
         })
     }
 
@@ -108,7 +109,7 @@ export class MonitoringService {
         this.monitoringRepository.pruneMonitoring(block.timestamp)
 
         this.latestBlockchainBlockNumber = block.number
-    
+
         await this.processPendingMonitoring()
     }
 
@@ -132,17 +133,17 @@ export class MonitoringService {
             }
 
             if (this.latestMonitoringBlockNumber && this.latestBlockchainBlockNumber) {
-                let blockToMonitor = this.latestMonitoringBlockNumber + 1n;
-                const endBlock = this.latestBlockchainBlockNumber;
-                
+                let blockToMonitor = this.latestMonitoringBlockNumber + 1n
+                const endBlock = this.latestBlockchainBlockNumber
+
                 while (blockToMonitor < endBlock) {
-                    const result = await this.monitorBlock(blockToMonitor);
+                    const result = await this.monitorBlock(blockToMonitor)
                     if (result.isErr()) {
-                        break;
+                        break
                     }
 
-                    this.latestMonitoringBlockNumber = blockToMonitor;
-                    blockToMonitor = blockToMonitor + 1n;
+                    this.latestMonitoringBlockNumber = blockToMonitor
+                    blockToMonitor = blockToMonitor + 1n
                 }
             }
         } catch (error) {
@@ -157,7 +158,6 @@ export class MonitoringService {
      */
     private async monitorBlock(blockNumber: bigint): Promise<Result<void, Error>> {
         console.log("Monitoring block", blockNumber)
-
 
         let block: Block<bigint, false, "latest"> | undefined
         try {
@@ -182,7 +182,7 @@ export class MonitoringService {
                 blockNumber,
             })
             await this.monitoringRepository.saveMonitoring(
-                new Monitoring(blockNumber, block.timestamp, MonitoringResult.Success, undefined, random)
+                new Monitoring(blockNumber, block.timestamp, MonitoringResult.Success, undefined, random),
             )
         } catch (err: unknown) {
             let errorMessage: string | undefined
@@ -194,7 +194,7 @@ export class MonitoringService {
             }
 
             await this.monitoringRepository.saveMonitoring(
-                new Monitoring(blockNumber, block.timestamp, MonitoringResult.Failure, errorMessage)
+                new Monitoring(blockNumber, block.timestamp, MonitoringResult.Failure, errorMessage),
             )
         }
 

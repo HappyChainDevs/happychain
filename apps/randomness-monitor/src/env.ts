@@ -1,10 +1,13 @@
-import { hexSchema } from "@happy.tech/common"
 import { z } from "zod"
+import { hexSchema } from "./utils/schemas"
 
 const envSchema = z.object({
     MONITORING_DB_PATH: z.string().trim(),
     RPC_URL: z.string().trim(),
-    CHAIN_ID: z.string().trim().transform((value) => Number(value)),
+    CHAIN_ID: z
+        .string()
+        .trim()
+        .transform((value) => Number(value)),
     RANDOM_CONTRACT_ADDRESS: hexSchema,
 })
 
