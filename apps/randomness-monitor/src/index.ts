@@ -183,7 +183,9 @@ export class MonitoringService {
             })
             await this.monitoringRepository.saveMonitoring(
                 new Monitoring(blockNumber, block.timestamp, MonitoringResult.Success, undefined, random),
-            )
+            ).catch((error) => {
+                console.error("Error in saving monitoring:", error)
+            })
         } catch (err: unknown) {
             let errorMessage: string | undefined
 
@@ -195,7 +197,9 @@ export class MonitoringService {
 
             await this.monitoringRepository.saveMonitoring(
                 new Monitoring(blockNumber, block.timestamp, MonitoringResult.Failure, errorMessage),
-            )
+            ).catch((error) => {
+                console.error("Error in saving monitoring:", error)
+            })
         }
 
         return ok(undefined)
