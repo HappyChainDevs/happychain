@@ -675,52 +675,96 @@ test("Transaction succeeds in congested blocks", async () => {
     expect(executedIncrementerTransaction.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
-test(
-    "Finalized transactions are automatically purged from db after finalizedTransactionPurgeTime elapses",
-    async () => {
-        const previousFinalizedTransactionPurgeTime = txm.finalizedTransactionPurgeTime
+test("Finalized transactions are automatically purged from db after finalizedTransactionPurgeTime elapses", async () => {
+    const previousFinalizedTransactionPurgeTime = txm.finalizedTransactionPurgeTime
 
-        const mockedFinalizedTransactionPurgeTime = 6000
+    const mockedFinalizedTransactionPurgeTime = 6000
 
-        Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
-            value: mockedFinalizedTransactionPurgeTime,
-            configurable: true,
-        })
+    Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
+        value: mockedFinalizedTransactionPurgeTime,
+        configurable: true,
+    })
 
+    const transaction = await createCounterTransaction()
+
+    transactionQueue.push(transaction)
+
+    await mineBlock(2)
+
+    const transactionPersisted = await getPersistedTransaction(transaction.intentId)
+
+    if (!assertIsDefined(transactionPersisted)) return
+
+    expect(transactionPersisted.status).toBe(TransactionStatus.Success)
+
+    const updatedAt = transactionPersisted.updatedAt
+    const purgeTime = updatedAt + mockedFinalizedTransactionPurgeTime
+
+    while (Date.now() < purgeTime) {
+        const transactionPersisted = await getPersistedTransaction(transaction.intentId)
+
+        expect(transactionPersisted).toBeDefined()
+        expect(transactionPersisted?.status).toBe(TransactionStatus.Success)
+
+        await mineBlock()
+    }
+
+    await mineBlock()
+
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    expect(persistedTransaction).toBeUndefined()
+
+    Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
+        value: previousFinalizedTransactionPurgeTime,
+        configurable: true,
+    })
+})
+
+test("RPC liveness monitor works correctly", async () => {
+    proxyServer.setMode(ProxyMode.Random, {
+        [ProxyBehavior.NotAnswer]: 0,
+        [ProxyBehavior.Fail]: 0.5,
+        [ProxyBehavior.Forward]: 0.5,
+    })
+
+    let isDownHookTriggered = false
+    let isUpHookTriggered = false
+
+    const cleanIsDownHook = await txm.addHook(TxmHookType.RpcIsDown, () => {
+        isDownHookTriggered = true
+    })
+
+    const cleanIsUpHook = await txm.addHook(TxmHookType.RpcIsUp, () => {
+        isUpHookTriggered = true
+    })
+
+    expect(txm.rpcLivenessMonitor.isAlive).toBe(true)
+
+    while (txm.rpcLivenessMonitor.isAlive) {
         const transaction = await createCounterTransaction()
 
         transactionQueue.push(transaction)
 
-        await mineBlock(2)
+        await mineBlock()
+    }
 
-        const transactionPersisted = await getPersistedTransaction(transaction.intentId)
+    expect(isDownHookTriggered).toBe(true)
+    expect(txm.rpcLivenessMonitor.isAlive).toBe(false)
 
-        if (!assertIsDefined(transactionPersisted)) return
+    proxyServer.setMode(ProxyMode.Deterministic)
 
-        expect(transactionPersisted.status).toBe(TransactionStatus.Success)
+    while (!txm.rpcLivenessMonitor.isAlive) {
+        const transaction = await createCounterTransaction()
 
-        const updatedAt = transactionPersisted.updatedAt
-        const purgeTime = updatedAt + mockedFinalizedTransactionPurgeTime
-
-        while (Date.now() < purgeTime) {
-            const transactionPersisted = await getPersistedTransaction(transaction.intentId)
-
-            expect(transactionPersisted).toBeDefined()
-            expect(transactionPersisted?.status).toBe(TransactionStatus.Success)
-
-            await mineBlock()
-        }
+        transactionQueue.push(transaction)
 
         await mineBlock()
+    }
 
-        const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+    expect(isUpHookTriggered).toBe(true)
+    expect(txm.rpcLivenessMonitor.isAlive).toBe(true)
 
-        expect(persistedTransaction).toBeUndefined()
-
-        Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
-            value: previousFinalizedTransactionPurgeTime,
-            configurable: true,
-        })
-    },
-    { timeout: 20000 },
-)
+    cleanIsDownHook()
+    cleanIsUpHook()
+})
