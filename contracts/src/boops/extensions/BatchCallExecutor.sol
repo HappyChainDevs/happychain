@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {CallStatus} from "boop/core/HappyEntryPoint.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
+import {CallStatus} from "boop/core/EntryPoint.sol";
 import {CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
-import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
-import {ICustomBoopExecutor} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
-import {IExtensibleBoopAccount, CallInfo} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
+import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
+import {ICustomExecutor} from "boop/interfaces/extensions/ICustomExecutor.sol";
+import {IExtensibleAccount, CallInfo} from "boop/interfaces/IExtensibleAccount.sol";
 
 /**
- * @dev Key used in {HappyTx.extraData} for call information (array of {CallInfo}),
+ * @dev Key used in {Boop.extraData} for call information (array of {CallInfo}),
  * to be looked up by {BatchCallExecutor.execute}.
  */
 bytes3 constant BATCH_CALL_INFO_KEY = 0x000100;
 
 /**
  * @dev Selector returned by {BatchCallExecutor.execute} when the call information is missing or
- * incorrectly encoded in {HappyTx.extraData}.
+ * incorrectly encoded in {Boop.extraData}.
  */
 error InvalidBatchCallInfo();
 
@@ -25,17 +25,17 @@ error InvalidBatchCallInfo();
  * This executor executes multiple calls in an atomic way (either all succeed, or all revert).
  *
  * Each call specified is specified in a {CallInfo} struct, which are together stored in an
- * ABI-encoded array in {HappyTx.extraData}, keyed on {BATCH_CALL_INFO_KEY}.
+ * ABI-encoded array in {Boop.extraData}, keyed on {BATCH_CALL_INFO_KEY}.
  */
-contract BatchCallExecutor is ICustomBoopExecutor {
+contract BatchCallExecutor is ICustomExecutor {
     using CallInfoCodingLib for bytes;
 
     // ====================================================================================================
     // FUNCTIONS
 
-    function execute(HappyTx memory happyTx) external returns (ExecutionOutput memory output) {
+    function execute(Boop memory boop) external returns (ExecutionOutput memory output) {
         // 1. Parse the extraData with a key, to retrieve the calls.
-        (bool found, bytes memory _calls) = HappyTxLib.getExtraDataValue(happyTx.extraData, BATCH_CALL_INFO_KEY);
+        (bool found, bytes memory _calls) = BoopLib.getExtraDataValue(boop.extraData, BATCH_CALL_INFO_KEY);
 
         // 2. Decode the call info.
         bool success;
@@ -67,7 +67,7 @@ contract BatchCallExecutor is ICustomBoopExecutor {
     function _executeBatch(address account, CallInfo[] memory calls) external {
         require(msg.sender == address(this), "not called from self");
         for (uint256 i = 0; i < calls.length; i++) {
-            (bool success, bytes memory revertData) = IExtensibleBoopAccount(account).executeCallFromExecutor(calls[i]);
+            (bool success, bytes memory revertData) = IExtensibleAccount(account).executeCallFromExecutor(calls[i]);
             if (!success) {
                 assembly ("memory-safe") {
                     // pass the revert data through to the caller

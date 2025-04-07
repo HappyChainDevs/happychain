@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * Represents a Happy Transaction - a transaction made by a Happy Smart Account that can be
+ * Represents a Boop - a transaction made by a Happy Account that can be
  * submitted to the chain by a permissionless submitter.
  */
 // forgefmt: disable-next-item
@@ -10,13 +10,13 @@ struct Boop {
     // Core Transaction Fields:
     address account;            // Account sending the transaction
     uint32 gasLimit;            // Gas limit for the transaction made by the submitter
-    uint32 validateGasLimit;    // Gas limit for IHappyAccount.validate
-    uint32 executeGasLimit;     // Gas limit for IHappyAccount.execute
-    uint32 validatePaymentGasLimit; // Gas limit for IHappyPaymaster.validatePayment
+    uint32 validateGasLimit;    // Gas limit for Account.validate
+    uint32 executeGasLimit;     // Gas limit for Account.execute
+    uint32 validatePaymentGasLimit; // Gas limit for Paymaster.validatePayment
     address dest;               // Destination address for the transaction
     address paymaster;          // Fee payer: This can be the
-                                    // 1. account (if it implements IHappyPaymaster)
-                                    // 2. external paymaster (implementing IHappyPaymaster)
+                                    // 1. account (if it implements Paymaster)
+                                    // 2. external paymaster (implementing IPaymaster)
                                     // 3. 0x0...0, representing payment by a sponsoring submitter
     uint256 value;              // Amount of native tokens (in gas token wei) to transfer
     uint192 nonceTrack;         // The nonce track enables the submitter to know how to queue nonces
