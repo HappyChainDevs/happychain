@@ -11,6 +11,7 @@ export enum StorageKey {
     WatchedAssets = "happychain:watched_assets:v1",
     LoadedAbis = "happychain:loaded_abis:v1",
     SessionKeys = "happychain:session_keys:v1",
+    Boops = "happychain:boops:v1",
 }
 
 export type SessionKeysByTargetContract = Record<Address, Hex>
@@ -20,12 +21,20 @@ type StorageSchema = {
     // cache user within iframe to manage auto-reconnect
     [StorageKey.HappyUser]: HappyUser | undefined
     [StorageKey.SessionKeys]: SessionKeysByHappyUser | undefined
+    [StorageKey.Boops]: Record<Address, any[]> | undefined
 }
 
 export const storage = createStorage<StorageSchema>()
 
 // biome-ignore lint/suspicious/noExplicitAny: let's not record the types for every version
-const migrations: Record<string, (oldVal: any) => any> = {}
+const migrations: Record<string, (oldVal: any) => any> = {
+    // Migration from UserOps to Boops if needed
+    [StorageKey.UserOps]: (oldVal) => {
+        // Convert UserOps to Boops format if needed
+        // This is a placeholder for actual migration logic
+        return oldVal
+    },
+}
 
 function cleanOrMigrateStorage() {
     if (typeof window === "undefined") return
