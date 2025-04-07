@@ -5,28 +5,28 @@ import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
-import {CallStatus} from "boop/core/HappyEntryPoint.sol";
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
-import {ICustomBoopExecutor, EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
-import {ICustomBoopValidator, VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomBoopValidator.sol";
+import {CallStatus} from "boop/core/EntryPoint.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
+import {ICustomExecutor, EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
+import {ICustomValidator, VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
 import {
-    IExtensibleBoopAccount,
+    IExtensibleAccount,
     ExtensionType,
     ExtensionAlreadyRegistered,
     ExtensionNotRegistered,
     InvalidExtensionValue,
     CallInfo
-} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/utils/Common.sol";
+} from "boop/interfaces/IExtensibleAccount.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
+import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/core/Utils.sol";
 
 /**
- * Example implementation of an extensible Happy Account with proxy upgrade capability.
+ * Example implementation of an extensible Account with proxy upgrade capability.
  */
-contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgradeable {
+contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;
-    using HappyTxLib for HappyTx;
+    using BoopLib for Boop;
 
     // ====================================================================================================
     // ERRORS
@@ -117,9 +117,9 @@ contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgra
     // ====================================================================================================
     // VALIDATE
 
-    function validate(HappyTx memory happyTx) external onlyFromEntryPoint returns (bytes memory) {
+    function validate(Boop memory boop) external onlyFromEntryPoint returns (bytes memory) {
         bytes4 validationResult;
-        (bool found, bytes memory validatorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, VALIDATOR_KEY);
+        (bool found, bytes memory validatorAddress) = BoopLib.getExtraDataValue(boop.extraData, VALIDATOR_KEY);
         if (found) {
             if (validatorAddress.length != 20) {
                 validationResult = InvalidExtensionValue.selector;
@@ -128,24 +128,24 @@ contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgra
                 if (!extensions[ExtensionType.Validator][validator]) {
                     validationResult = ExtensionNotRegistered.selector;
                 } else {
-                    return ICustomBoopValidator(validator).validate(happyTx);
+                    return ICustomValidator(validator).validate(boop);
                 }
             }
         } else {
-            if (happyTx.paymaster != address(this)) {
-                // The happyTx is not self-paying.
+            if (boop.paymaster != address(this)) {
+                // The boop is not self-paying.
                 // The signer does not sign over these fields to avoid extra network roundtrips
                 // validation policy falls to the paymaster or the sponsoring submitter.
-                happyTx.gasLimit = 0;
-                happyTx.executeGasLimit = 0;
-                happyTx.maxFeePerGas = 0;
-                happyTx.submitterFee = 0;
+                boop.gasLimit = 0;
+                boop.executeGasLimit = 0;
+                boop.maxFeePerGas = 0;
+                boop.submitterFee = 0;
             }
 
-            bytes memory signature = happyTx.validatorData;
-            happyTx.validatorData = ""; // set to "" to get the hash
-            address signer = keccak256(happyTx.encode()).toEthSignedMessageHash().recover(signature);
-            happyTx.validatorData = signature; // revert back to original value
+            bytes memory signature = boop.validatorData;
+            boop.validatorData = ""; // set to "" to get the hash
+            address signer = keccak256(boop.encode()).toEthSignedMessageHash().recover(signature);
+            boop.validatorData = signature; // revert back to original value
 
             validationResult = signer == owner()
                 ? bytes4(0)
@@ -158,8 +158,8 @@ contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgra
     // ====================================================================================================
     // EXECUTE
 
-    function execute(HappyTx memory happyTx) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
-        (bool found, bytes memory executorAddress) = HappyTxLib.getExtraDataValue(happyTx.extraData, EXECUTOR_KEY);
+    function execute(Boop memory boop) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
+        (bool found, bytes memory executorAddress) = BoopLib.getExtraDataValue(boop.extraData, EXECUTOR_KEY);
         if (found) {
             if (executorAddress.length != 20) {
                 output.status = CallStatus.EXECUTE_FAILED;
@@ -171,12 +171,12 @@ contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgra
                     output.revertData = abi.encodeWithSelector(ExtensionNotRegistered.selector);
                 } else {
                     dispatchedExecutor = executor;
-                    output = ICustomBoopExecutor(executor).execute(happyTx);
+                    output = ICustomExecutor(executor).execute(boop);
                     dispatchedExecutor = address(0);
                 }
             }
         } else {
-            (bool success, bytes memory returnData) = happyTx.dest.call{value: happyTx.value}(happyTx.callData);
+            (bool success, bytes memory returnData) = boop.dest.call{value: boop.value}(boop.callData);
             if (!success) output.revertData = returnData;
             output.status = success ? CallStatus.SUCCEEDED : CallStatus.CALL_REVERTED;
         }
@@ -202,9 +202,9 @@ contract ScrappyAccount is IExtensibleBoopAccount, OwnableUpgradeable, UUPSUpgra
         // forgefmt: disable-next-item
         return interfaceId == 0x01ffc9a7  // ERC-165
             || interfaceId == 0x1626ba7e  // ERC-1271
-            || interfaceId == 0x2b39e81f  // IHappyAccount
-            || interfaceId == 0x24542ca5  // IHappyPaymaster
-            || interfaceId == 0xf0223481; // IExtensibleBoopAccount
+            || interfaceId == 0x2b39e81f  // IAccount
+            || interfaceId == 0x24542ca5  // IPaymaster
+            || interfaceId == 0xf0223481; // IExtensibleAccount
     }
 
     receive() external payable {

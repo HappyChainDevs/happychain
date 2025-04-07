@@ -106,7 +106,7 @@ interface IAccount {
      *
      * Optional interfaces:
      * - {IPaymaster}: For accounts that want to act as their own paymaster (0x24542ca5)
-     * - {IExtensibleBoopAccount}: For accounts that want to support extensions (0xf0223481)
+     * - {IExtensibleAccount}: For accounts that want to support extensions (0xf0223481)
      */
     function supportsInterface(bytes4 interfaceID) external view returns (bool);
 }
