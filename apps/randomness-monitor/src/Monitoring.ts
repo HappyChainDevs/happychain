@@ -10,7 +10,13 @@ export class Monitoring {
     readonly errorDescription: string | undefined
     readonly value: string | undefined
 
-    constructor(blockNumber: bigint, blockTimestamp: bigint, result: MonitoringResult, errorDescription?: string, value?: string) {
+    constructor(
+        blockNumber: bigint,
+        blockTimestamp: bigint,
+        result: MonitoringResult,
+        errorDescription?: string,
+        value?: string,
+    ) {
         this.blockNumber = blockNumber
         this.blockTimestamp = blockTimestamp
         this.result = result

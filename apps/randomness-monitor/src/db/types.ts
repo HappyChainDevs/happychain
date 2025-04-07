@@ -9,7 +9,13 @@ export interface MonitoringRow {
 }
 
 export function monitoringRowToEntity(row: MonitoringRow): Monitoring {
-    return new Monitoring(BigInt(row.blockNumber), BigInt(row.blockTimestamp), row.result, row.errorDescription, row.value)
+    return new Monitoring(
+        BigInt(row.blockNumber),
+        BigInt(row.blockTimestamp),
+        row.result,
+        row.errorDescription,
+        row.value,
+    )
 }
 
 export function monitoringEntityToRow(entity: Monitoring): MonitoringRow {
