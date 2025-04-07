@@ -77,6 +77,9 @@ export async function sendUserOp({ user, tx, validator, signer, preparedOp }: Se
             (await smartAccountClient.prepareUserOperation({
                 account: smartAccountClient.account,
                 paymaster: contractAddresses.HappyPaymaster,
+                // Specify this array to avoid fetching the nonce from here too.
+                // We don't really need the dummy signature, but it does not incur an extra network
+                // call and it makes the type system happy.
                 parameters: ["factory", "fees", "gas", "signature"],
                 calls: [
                     {
@@ -86,6 +89,8 @@ export async function sendUserOp({ user, tx, validator, signer, preparedOp }: Se
                     },
                 ],
             } satisfies PrepareUserOperationParameters))
+
+        // [DEBUGLOG] // debugNonce = nonce
 
         const userOp: UserOperation = {
             sender: account,

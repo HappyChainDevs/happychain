@@ -105,7 +105,8 @@ export const EthSendTransaction = ({
         mutate,
     } = useMutation({
         mutationFn: async () => {
-            const smartAccountClient = await getSmartAccountClient()
+            const smartAccountClient = (await getSmartAccountClient())!
+
             if (!smartAccountClient) {
                 throw new Error("Smart account client not initialized")
             }
