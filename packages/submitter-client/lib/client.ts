@@ -17,7 +17,7 @@ import { env } from "./env"
 import { ApiClient } from "./utils/api-client"
 import type { Result } from "./utils/neverthrow"
 
-const client = new ApiClient({ baseUrl: env.SUBMITTER_URL })
+const client = new ApiClient({ baseUrl: `${env.SUBMITTER_URL}/api/v1` })
 
 // == Account API Routes ===========================================================================
 
@@ -29,7 +29,7 @@ export type { CreateAccountInput, CreateAccountOutput }
  * @param data.salt Salt for the account creation
  */
 export async function createAccount(data: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
-    const response = await client.post("/v1/accounts/create", data)
+    const response = await client.post("/accounts/create", data)
     return response as Result<CreateAccountOutput, Error>
 }
 
@@ -44,7 +44,7 @@ export async function createAccount(data: CreateAccountInput): Promise<Result<Cr
  */
 export type { SubmitInput, SubmitOutput }
 export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Error>> {
-    const response = await client.post("/v1/submit", data)
+    const response = await client.post("/submit", data)
     return response as Result<SubmitOutput, Error>
 }
 
@@ -57,7 +57,7 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
  */
 export type { ExecuteInput, ExecuteOutput }
 export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput, Error>> {
-    const response = await client.post("/v1/execute", data)
+    const response = await client.post("/execute", data)
     return response as Result<ExecuteOutput, Error>
 }
 
@@ -68,7 +68,7 @@ export async function execute(data: ExecuteInput): Promise<Result<ExecuteOutput,
  */
 export type { EstimateGasInput, EstimateGasOutput }
 export async function estimateGas(data: EstimateGasInput): Promise<Result<EstimateGasOutput, Error>> {
-    const response = await client.post("/v1/simulate", data)
+    const response = await client.post("/simulate", data)
     return response as Result<EstimateGasOutput, Error>
 }
 
@@ -79,7 +79,7 @@ export async function estimateGas(data: EstimateGasInput): Promise<Result<Estima
  */
 export type { StateRequestInput, StateRequestOutput }
 export async function state({ hash }: StateRequestInput): Promise<Result<StateRequestOutput, Error>> {
-    const response = await client.get(`/v1/state/${hash}`)
+    const response = await client.get(`/state/${hash}`)
     return response as Result<StateRequestOutput, Error>
 }
 
@@ -90,7 +90,7 @@ export async function state({ hash }: StateRequestInput): Promise<Result<StateRe
  */
 export type { ReceiptInput }
 export async function receipt({ hash, timeout }: ReceiptInput): Promise<Result<StateRequestOutput, Error>> {
-    const response = await client.get(`/v1/receipt/${hash}`, { timeout: timeout })
+    const response = await client.get(`/receipt/${hash}`, { timeout: timeout })
     return response as Result<StateRequestOutput, Error>
 }
 
@@ -101,6 +101,6 @@ export async function receipt({ hash, timeout }: ReceiptInput): Promise<Result<S
  */
 export type { PendingHappyTxInput, PendingHappyTxOutput }
 export async function pending({ account }: PendingHappyTxInput): Promise<Result<PendingHappyTxOutput, Error>> {
-    const response = await client.get(`/v1/pending/${account}`)
+    const response = await client.get(`/pending/${account}`)
     return response as Result<PendingHappyTxOutput, Error>
 }
