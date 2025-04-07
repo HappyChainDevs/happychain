@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {ICustomBoopValidator} from "boop/interfaces/extensions/ICustomBoopValidator.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {ICustomValidator} from "boop/interfaces/extensions/ICustomValidator.sol";
 
 /**
- * Mock implementation of ICustomBoopValidator for testing purposes.
+ * Mock implementation of ICustomValidator for testing purposes.
  * The validation behavior depends on the validationMode:
  * 0: Approves all transactions (returns empty bytes)
  * 1: Rejects all transactions (returns a custom error selector)
  * 2: Reverts all transactions (with custom error)
  * 3: Reverts all transactions (empty revert)
  */
-contract MockValidator is ICustomBoopValidator {
+contract MockValidator is ICustomValidator {
     // Validation mode
     uint256 public validationMode;
 
@@ -36,10 +36,10 @@ contract MockValidator is ICustomBoopValidator {
 
     /**
      * Validate a transaction based on the current validation mode
-     * The happyTx parameter is intentionally unused in this mock implementation
+     * The boop parameter is intentionally unused in this mock implementation
      * @return result The validation result
      */
-    function validate(HappyTx memory /* happyTx */ ) external view returns (bytes memory) {
+    function validate(Boop memory /* boop */ ) external view returns (bytes memory) {
         if (validationMode == 0) {
             // Approve mode: return empty bytes
             return "";

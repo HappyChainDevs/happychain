@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {IHappyAccount, ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
+import {IAccount, ExecutionOutput} from "boop/interfaces/IAccount.sol";
 import {
-    IExtensibleBoopAccount,
+    IExtensibleAccount,
     ExtensionType,
     ExtensionAlreadyRegistered,
     ExtensionNotRegistered,
     CallInfo
-} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {CallInfo} from "boop/libs/CallInfoCodingLib.sol";
-import {CallStatus} from "boop/core/HappyEntryPoint.sol";
+} from "boop/interfaces/IExtensibleAccount.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {CallStatus} from "boop/core/EntryPoint.sol";
 
 /**
- * Mock implementation of IHappyAccount and IExtensibleBoopAccount for testing purposes.
+ * Mock implementation of IAccount and IExtensibleAccount for testing purposes.
  * This mock provides stub implementations of all required functions and a simplified
  * executeCallFromExecutor function without the sender check.
  */
-contract MockHappyAccount is IHappyAccount, IExtensibleBoopAccount {
+contract MockHappyAccount is IAccount, IExtensibleAccount {
     // Track registered extensions
     mapping(ExtensionType => mapping(address => bool)) public extensions;
 
@@ -27,11 +26,11 @@ contract MockHappyAccount is IHappyAccount, IExtensibleBoopAccount {
         return info.dest.call{value: info.value}(info.callData);
     }
 
-    function validate(HappyTx memory /*happyTx*/ ) external pure returns (bytes memory) {
+    function validate(Boop memory /*boop*/ ) external pure returns (bytes memory) {
         return "";
     }
 
-    function execute(HappyTx memory /*happyTx*/ ) external pure returns (ExecutionOutput memory output) {
+    function execute(Boop memory /*boop*/ ) external pure returns (ExecutionOutput memory output) {
         output.status = CallStatus.SUCCEEDED;
         return output;
     }

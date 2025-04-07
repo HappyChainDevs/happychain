@@ -3,18 +3,18 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
 
-contract HappyTxLibTest is Test {
-    using HappyTxLib for bytes;
-    using HappyTxLib for HappyTx;
+contract BoopLibTest is Test {
+    using BoopLib for bytes;
+    using BoopLib for Boop;
 
     // ====================================================================================================
-    // TESTS FOR {HappyTxLib.encode}
+    // TESTS FOR {BoopLib.encode}
 
     function testEncodeEmptyDynamicFields() public pure {
-        HappyTx memory inputTx = HappyTx({
+        Boop memory input = Boop({
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
@@ -36,12 +36,12 @@ contract HappyTxLibTest is Test {
         bytes memory expected =
             hex"1234567890123456789012345678901234567890000f4240000c3500000c3501000c3502234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000000000000"; // solhint-disable-line max-line-length
 
-        bytes memory encoded = inputTx.encode();
+        bytes memory encoded = input.encode();
         assertEq(encoded, expected);
     }
 
     function testEncodeSmallDynamicFields() public pure {
-        HappyTx memory inputTx = HappyTx({
+        Boop memory input = Boop({
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0x000F4240
             validateGasLimit: 800000, // 0x000C3500
@@ -63,12 +63,12 @@ contract HappyTxLibTest is Test {
         bytes memory expected =
             hex"1234567890123456789012345678901234567890000f4240000c3500000c3501000c3502234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e100000000021234000000025678000000029abc00000002def0"; // solhint-disable-line max-line-length
 
-        bytes memory encoded = inputTx.encode();
+        bytes memory encoded = input.encode();
         assertEq(encoded, expected);
     }
 
     function testEncodeLongDynamicFields() public pure {
-        HappyTx memory inputTx = HappyTx({
+        Boop memory input = Boop({
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
@@ -90,18 +90,18 @@ contract HappyTxLibTest is Test {
         bytes memory expected =
             hex"1234567890123456789012345678901234567890000f4240000c3500000c3501000c3502234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e1000000004440c10f190000000000000000000000004bc8e81ad3be83276837f184138fc96770c1429700000000000000000000000000000000000000000000000000038d7ea4c680000000003078907890789078907890789078907890789078907890789078907890789078907890789078907890789078907890789000000041827a29d9e7e5e37adc8ae5ead7993f7d354da82a35a05da3fef21d133e22082f376916126bfece3e226c3a9bfb55354783deb43b58989d0a29ec53b4f36560cc1b00000022def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0"; // solhint-disable-line max-line-length
 
-        bytes memory encoded = inputTx.encode();
+        bytes memory encoded = input.encode();
         assertEq(encoded, expected);
     }
 
     // ====================================================================================================
-    // TESTS FOR {HappyTxLib.decode}
+    // TESTS FOR {BoopLib.decode}
 
     function testDecodeEmptyDynamicFields() public view {
         bytes memory encoded =
             hex"1234567890123456789012345678901234567890000f4240000c3500000c3501000c3502234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e10000000000000000000000000000000000"; // solhint-disable-line max-line-length
 
-        HappyTx memory decoded = this.decode(encoded);
+        Boop memory decoded = this.decode(encoded);
 
         assertEq(decoded.account, address(0x1234567890123456789012345678901234567890));
         assertEq(decoded.gasLimit, 1000000); // 000F4240
@@ -125,7 +125,7 @@ contract HappyTxLibTest is Test {
         bytes memory encoded =
             hex"1234567890123456789012345678901234567890000f4240000c3500000c3501000c3502234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e100000000021234000000025678000000029abc00000002def0"; // solhint-disable-line max-line-length
 
-        HappyTx memory decoded = this.decode(encoded);
+        Boop memory decoded = this.decode(encoded);
 
         assertEq(decoded.account, address(0x1234567890123456789012345678901234567890));
         assertEq(decoded.gasLimit, 1000000);
@@ -149,7 +149,7 @@ contract HappyTxLibTest is Test {
         bytes memory encoded =
             hex"1234567890123456789012345678901234567890000f4240000c3500000c3501000c3502234567890123456789012345678901234567890134567890123456789012345678901234567890120000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000004d2000000000000162e00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000005f5e1000000004440c10f190000000000000000000000004bc8e81ad3be83276837f184138fc96770c1429700000000000000000000000000000000000000000000000000038d7ea4c680000000003078907890789078907890789078907890789078907890789078907890789078907890789078907890789078907890789000000041827a29d9e7e5e37adc8ae5ead7993f7d354da82a35a05da3fef21d133e22082f376916126bfece3e226c3a9bfb55354783deb43b58989d0a29ec53b4f36560cc1b00000022def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0"; // solhint-disable-line max-line-length
 
-        HappyTx memory decoded = this.decode(encoded);
+        Boop memory decoded = this.decode(encoded);
 
         assertEq(decoded.account, address(0x1234567890123456789012345678901234567890));
         assertEq(decoded.gasLimit, 1000000);
@@ -179,10 +179,10 @@ contract HappyTxLibTest is Test {
     }
 
     // ====================================================================================================
-    // TESTS FOR {HappyTxLib.encode} <-> {HappyTxLib.decode}
+    // TESTS FOR {BoopLib.encode} <-> {BoopLib.decode}
 
     function testCombinedEmpty() public view {
-        HappyTx memory inputTx = HappyTx({
+        Boop memory input = Boop({
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
@@ -201,27 +201,27 @@ contract HappyTxLibTest is Test {
             extraData: ""
         });
 
-        bytes memory encoded = inputTx.encode();
-        HappyTx memory decoded = this.decode(encoded);
+        bytes memory encoded = input.encode();
+        Boop memory decoded = this.decode(encoded);
 
-        assertEq(decoded.account, inputTx.account);
-        assertEq(decoded.gasLimit, inputTx.gasLimit);
-        assertEq(decoded.executeGasLimit, inputTx.executeGasLimit);
-        assertEq(decoded.dest, inputTx.dest);
-        assertEq(decoded.paymaster, inputTx.paymaster);
-        assertEq(decoded.value, inputTx.value);
-        assertEq(decoded.nonceTrack, inputTx.nonceTrack);
-        assertEq(decoded.nonceValue, inputTx.nonceValue);
-        assertEq(decoded.maxFeePerGas, inputTx.maxFeePerGas);
-        assertEq(decoded.submitterFee, inputTx.submitterFee);
-        assertEq(decoded.callData, inputTx.callData);
-        assertEq(decoded.paymasterData, inputTx.paymasterData);
-        assertEq(decoded.validatorData, inputTx.validatorData);
-        assertEq(decoded.extraData, inputTx.extraData);
+        assertEq(decoded.account, input.account);
+        assertEq(decoded.gasLimit, input.gasLimit);
+        assertEq(decoded.executeGasLimit, input.executeGasLimit);
+        assertEq(decoded.dest, input.dest);
+        assertEq(decoded.paymaster, input.paymaster);
+        assertEq(decoded.value, input.value);
+        assertEq(decoded.nonceTrack, input.nonceTrack);
+        assertEq(decoded.nonceValue, input.nonceValue);
+        assertEq(decoded.maxFeePerGas, input.maxFeePerGas);
+        assertEq(decoded.submitterFee, input.submitterFee);
+        assertEq(decoded.callData, input.callData);
+        assertEq(decoded.paymasterData, input.paymasterData);
+        assertEq(decoded.validatorData, input.validatorData);
+        assertEq(decoded.extraData, input.extraData);
     }
 
     function testCombinedSmall() public view {
-        HappyTx memory inputTx = HappyTx({
+        Boop memory input = Boop({
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
@@ -240,27 +240,27 @@ contract HappyTxLibTest is Test {
             extraData: hex"def0"
         });
 
-        bytes memory encoded = inputTx.encode();
-        HappyTx memory decoded = this.decode(encoded);
+        bytes memory encoded = input.encode();
+        Boop memory decoded = this.decode(encoded);
 
-        assertEq(decoded.account, inputTx.account);
-        assertEq(decoded.gasLimit, inputTx.gasLimit);
-        assertEq(decoded.executeGasLimit, inputTx.executeGasLimit);
-        assertEq(decoded.dest, inputTx.dest);
-        assertEq(decoded.paymaster, inputTx.paymaster);
-        assertEq(decoded.value, inputTx.value);
-        assertEq(decoded.nonceTrack, inputTx.nonceTrack);
-        assertEq(decoded.nonceValue, inputTx.nonceValue);
-        assertEq(decoded.maxFeePerGas, inputTx.maxFeePerGas);
-        assertEq(decoded.submitterFee, inputTx.submitterFee);
-        assertEq(decoded.callData, inputTx.callData);
-        assertEq(decoded.paymasterData, inputTx.paymasterData);
-        assertEq(decoded.validatorData, inputTx.validatorData);
-        assertEq(decoded.extraData, inputTx.extraData);
+        assertEq(decoded.account, input.account);
+        assertEq(decoded.gasLimit, input.gasLimit);
+        assertEq(decoded.executeGasLimit, input.executeGasLimit);
+        assertEq(decoded.dest, input.dest);
+        assertEq(decoded.paymaster, input.paymaster);
+        assertEq(decoded.value, input.value);
+        assertEq(decoded.nonceTrack, input.nonceTrack);
+        assertEq(decoded.nonceValue, input.nonceValue);
+        assertEq(decoded.maxFeePerGas, input.maxFeePerGas);
+        assertEq(decoded.submitterFee, input.submitterFee);
+        assertEq(decoded.callData, input.callData);
+        assertEq(decoded.paymasterData, input.paymasterData);
+        assertEq(decoded.validatorData, input.validatorData);
+        assertEq(decoded.extraData, input.extraData);
     }
 
     function testCombinedLong() public view {
-        HappyTx memory inputTx = HappyTx({
+        Boop memory input = Boop({
             account: 0x1234567890123456789012345678901234567890,
             gasLimit: 1000000, // 0xF4240
             validateGasLimit: 800000, // 0xC3500
@@ -279,31 +279,31 @@ contract HappyTxLibTest is Test {
             extraData: hex"def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0"
         });
 
-        bytes memory encoded = inputTx.encode();
-        HappyTx memory decoded = this.decode(encoded);
+        bytes memory encoded = input.encode();
+        Boop memory decoded = this.decode(encoded);
 
-        assertEq(decoded.account, inputTx.account);
-        assertEq(decoded.gasLimit, inputTx.gasLimit);
-        assertEq(decoded.executeGasLimit, inputTx.executeGasLimit);
-        assertEq(decoded.dest, inputTx.dest);
-        assertEq(decoded.paymaster, inputTx.paymaster);
-        assertEq(decoded.value, inputTx.value);
-        assertEq(decoded.nonceTrack, inputTx.nonceTrack);
-        assertEq(decoded.nonceValue, inputTx.nonceValue);
-        assertEq(decoded.maxFeePerGas, inputTx.maxFeePerGas);
-        assertEq(decoded.submitterFee, inputTx.submitterFee);
-        assertEq(decoded.callData, inputTx.callData);
-        assertEq(decoded.paymasterData, inputTx.paymasterData);
-        assertEq(decoded.validatorData, inputTx.validatorData);
-        assertEq(decoded.extraData, inputTx.extraData);
+        assertEq(decoded.account, input.account);
+        assertEq(decoded.gasLimit, input.gasLimit);
+        assertEq(decoded.executeGasLimit, input.executeGasLimit);
+        assertEq(decoded.dest, input.dest);
+        assertEq(decoded.paymaster, input.paymaster);
+        assertEq(decoded.value, input.value);
+        assertEq(decoded.nonceTrack, input.nonceTrack);
+        assertEq(decoded.nonceValue, input.nonceValue);
+        assertEq(decoded.maxFeePerGas, input.maxFeePerGas);
+        assertEq(decoded.submitterFee, input.submitterFee);
+        assertEq(decoded.callData, input.callData);
+        assertEq(decoded.paymasterData, input.paymasterData);
+        assertEq(decoded.validatorData, input.validatorData);
+        assertEq(decoded.extraData, input.extraData);
     }
 
-    function decode(bytes calldata encodedHappyTx) external pure returns (HappyTx memory) {
-        return HappyTxLib.decode(encodedHappyTx);
+    function decode(bytes calldata encodedBoop) external pure returns (Boop memory) {
+        return BoopLib.decode(encodedBoop);
     }
 
     // ====================================================================================================
-    // TESTS FOR {HappyTxLib.getExtraDataValue}
+    // TESTS FOR {BoopLib.getExtraDataValue}
 
     function testGEDSingleKeyValue() public pure {
         // Test for single key-value pair
@@ -322,7 +322,7 @@ contract HappyTxLibTest is Test {
         data[7] = 0x79; // 'y'
         data[8] = 0x7a; // 'z'
 
-        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(data, bytes3(hex"616263"));
+        (bool found, bytes memory value) = BoopLib.getExtraDataValue(data, bytes3(hex"616263"));
         assertTrue(found, "Should find existing key");
         assertEq(value.length, 3, "Value length should match");
         assertEq(bytes1(value[0]), bytes1(0x78), "First byte should match");
@@ -347,7 +347,7 @@ contract HappyTxLibTest is Test {
         data[7] = 0x79; // 'y'
         data[8] = 0x7a; // 'z'
 
-        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(data, bytes3(hex"646566")); // 'def'
+        (bool found, bytes memory value) = BoopLib.getExtraDataValue(data, bytes3(hex"646566")); // 'def'
         assertFalse(found, "Should not find non-existent key");
         assertEq(value.length, 0, "Value should be empty for non-existent key");
     }
@@ -380,7 +380,7 @@ contract HappyTxLibTest is Test {
         multiData[16] = 0x32; // '2'
         multiData[17] = 0x33; // '3'
 
-        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(multiData, bytes3(hex"646566")); // 'def'
+        (bool found, bytes memory value) = BoopLib.getExtraDataValue(multiData, bytes3(hex"646566")); // 'def'
         assertTrue(found, "Should find second key");
         assertEq(value.length, 3, "Second value length should match");
         assertEq(bytes1(value[0]), bytes1(0x31), "First byte should match");
@@ -390,7 +390,7 @@ contract HappyTxLibTest is Test {
 
     function testGEDEmptyData() public pure {
         // Test for empty data
-        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(new bytes(0), bytes3(hex"616263"));
+        (bool found, bytes memory value) = BoopLib.getExtraDataValue(new bytes(0), bytes3(hex"616263"));
         assertFalse(found, "Should not find key in empty data");
         assertEq(value.length, 0, "Value should be empty for empty data");
     }
@@ -406,7 +406,7 @@ contract HappyTxLibTest is Test {
         invalidData[3] = 0x00;
         invalidData[4] = 0x00;
 
-        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(invalidData, bytes3(hex"616263"));
+        (bool found, bytes memory value) = BoopLib.getExtraDataValue(invalidData, bytes3(hex"616263"));
         assertFalse(found, "Should not find key in invalid data");
         assertEq(value.length, 0, "Value should be empty for invalid data");
     }
@@ -430,7 +430,7 @@ contract HappyTxLibTest is Test {
         // truncatedData[7], truncatedData[8], truncatedData[9] would be needed for the full value
         // but we don't have enough space, so the function should return not found
 
-        (bool found, bytes memory value) = HappyTxLib.getExtraDataValue(truncatedData, bytes3(hex"616263"));
+        (bool found, bytes memory value) = BoopLib.getExtraDataValue(truncatedData, bytes3(hex"616263"));
         assertFalse(found, "Should not find key when length exceeds available bytes");
         assertEq(value.length, 0, "Value should be empty when length exceeds available bytes");
     }

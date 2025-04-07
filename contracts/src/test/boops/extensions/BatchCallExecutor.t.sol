@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTxTestUtils} from "../../Utils.sol";
+import {BoopTestUtils} from "../../Utils.sol";
 import {MockERC20} from "../../../../mocks/MockERC20.sol";
 import {MockRevert} from "../../../../mocks/MockRevert.sol";
 import {MockHappyAccount} from "../../../../test/mocks/MockHappyAccount.sol";

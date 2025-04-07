@@ -4,54 +4,54 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-import {HappyTx} from "../../happy-accounts/core/HappyTx.sol";
-import {HappyTxLib} from "../../happy-accounts/libs/HappyTxLib.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
 import {MockERC20} from "../../mocks/MockERC20.sol";
 import {MockRevert} from "../../mocks/MockRevert.sol";
-import {HappyEntryPoint} from "../../happy-accounts/core/HappyEntryPoint.sol";
+import {EntryPoint} from "boop/core/EntryPoint.sol";
 
-/// Common utility functions for HappyAccounts unit tests
-contract HappyTxTestUtils is Test {
-    using HappyTxLib for HappyTx;
+/// Common utility functions for Boop unit tests
+contract BoopTestUtils is Test {
+    using BoopLib for Boop;
     using MessageHashUtils for bytes32;
 
     uint256 public constant TOKEN_MINT_AMOUNT = 1000;
     uint192 public constant DEFAULT_NONCETRACK = type(uint192).max;
 
     // To be initialized by subclasses.
-    HappyEntryPoint public happyEntryPoint;
+    EntryPoint public entryPoint;
 
     // ====================================================================================================
-    // HAPPY TX HELPERS
+    // BOOP HELPERS
 
-    function createSignedHappyTxForMintToken(
+    function createSignedBoopForMintToken(
         address account,
         address mintTokenTo,
         address paymaster,
         address token,
         uint256 privKey
-    ) public view returns (HappyTx memory happyTx) {
+    ) public view returns (Boop memory boop) {
         bytes memory mintCallData = getMintTokenCallData(mintTokenTo, TOKEN_MINT_AMOUNT);
-        happyTx = createSignedHappyTx(account, token, paymaster, privKey, mintCallData);
+        boop = createSignedBoop(account, token, paymaster, privKey, mintCallData);
     }
 
-    function createSignedHappyTx(
+    function createSignedBoop(
         address account,
         address dest,
         address paymaster,
         uint256 privKey,
         bytes memory callData
-    ) public view returns (HappyTx memory happyTx) {
-        happyTx = getStubHappyTx(account, dest, paymaster, callData);
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
+    ) public view returns (Boop memory boop) {
+        boop = getStubBoop(account, dest, paymaster, callData);
+        boop.validatorData = signBoop(boop, privKey);
     }
 
-    function getStubHappyTx(address _account, address _dest, address _paymaster, bytes memory _callData)
+    function getStubBoop(address _account, address _dest, address _paymaster, bytes memory _callData)
         public
         view
-        returns (HappyTx memory)
+        returns (Boop memory)
     {
-        return HappyTx({
+        return Boop({
             account: _account,
             gasLimit: 4000000000,
             executeGasLimit: 4000000000,
@@ -61,7 +61,7 @@ contract HappyTxTestUtils is Test {
             paymaster: _paymaster,
             value: 0,
             nonceTrack: DEFAULT_NONCETRACK,
-            nonceValue: happyEntryPoint.nonceValues(_account, DEFAULT_NONCETRACK),
+            nonceValue: entryPoint.nonceValues(_account, DEFAULT_NONCETRACK),
             maxFeePerGas: 1200000000,
             submitterFee: 100,
             callData: _callData,
@@ -71,7 +71,7 @@ contract HappyTxTestUtils is Test {
         });
     }
 
-    function signHappyTx(HappyTx memory happyTx, uint256 privKey) public pure returns (bytes memory signature) {
+    function signBoop(Boop memory boop, uint256 privKey) public pure returns (bytes memory signature) {
         // Store the original gas values
         uint32 origGasLimit;
         uint32 origExecuteGasLimit;
@@ -80,33 +80,33 @@ contract HappyTxTestUtils is Test {
         // Store original validator data (normally we'll use the signature to erase this)
         bytes memory origValidatorData;
 
-        if (happyTx.paymaster != happyTx.account) {
-            // If the happy-tx is not self-paying, we don't sign over the gas values
-            origGasLimit = happyTx.gasLimit;
-            origExecuteGasLimit = happyTx.executeGasLimit;
-            origMaxFeePerGas = happyTx.maxFeePerGas;
-            origSubmitterFee = happyTx.submitterFee;
+        if (boop.paymaster != boop.account) {
+            // If the boop is not self-paying, we don't sign over the gas values
+            origGasLimit = boop.gasLimit;
+            origExecuteGasLimit = boop.executeGasLimit;
+            origMaxFeePerGas = boop.maxFeePerGas;
+            origSubmitterFee = boop.submitterFee;
 
             // Temporarily make them zero to not sign over them
-            happyTx.gasLimit = 0;
-            happyTx.executeGasLimit = 0;
-            happyTx.maxFeePerGas = 0;
-            happyTx.submitterFee = 0;
+            boop.gasLimit = 0;
+            boop.executeGasLimit = 0;
+            boop.maxFeePerGas = 0;
+            boop.submitterFee = 0;
         }
-        happyTx.validatorData = ""; // erase existing signature if any
+        boop.validatorData = ""; // erase existing signature if any
 
-        bytes32 hash = keccak256(happyTx.encode()).toEthSignedMessageHash();
+        bytes32 hash = keccak256(boop.encode()).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
 
-        if (happyTx.paymaster != happyTx.account) {
+        if (boop.paymaster != boop.account) {
             // Restore the original gas values after signing
-            happyTx.gasLimit = origGasLimit;
-            happyTx.executeGasLimit = origExecuteGasLimit;
-            happyTx.maxFeePerGas = origMaxFeePerGas;
-            happyTx.submitterFee = origSubmitterFee;
+            boop.gasLimit = origGasLimit;
+            boop.executeGasLimit = origExecuteGasLimit;
+            boop.maxFeePerGas = origMaxFeePerGas;
+            boop.submitterFee = origSubmitterFee;
         }
-        happyTx.validatorData = origValidatorData;
+        boop.validatorData = origValidatorData;
     }
 
     // ====================================================================================================
