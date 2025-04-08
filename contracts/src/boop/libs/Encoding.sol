@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Boop} from "boop/core/Boop.sol";
+import {Boop} from "boop/interfaces/Types.sol";
 
 library Encoding {
     /// Selector returned by {decode} when unable to properly decode a boop.

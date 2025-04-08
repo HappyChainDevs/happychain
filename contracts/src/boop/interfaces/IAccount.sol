@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Boop} from "boop/core/Boop.sol";
-import {CallStatus} from "boop/interfaces/Types.sol";
+import {Boop, CallStatus} from "boop/interfaces/Types.sol";
 
 /**
  * Execution Output

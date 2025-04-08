@@ -9,11 +9,11 @@ import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
-import {EntryPoint} from "boop/core/EntryPoint.sol";
-import {Boop} from "boop/core/Boop.sol";
-import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
+import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
+import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
 
 contract UpgradeSCATest is Test {
     using Encoding for Boop;

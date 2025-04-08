@@ -9,8 +9,7 @@ import {
     ExtensionNotRegistered,
     CallInfo
 } from "boop/interfaces/IExtensibleAccount.sol";
-import {Boop} from "boop/core/Boop.sol";
-import {CallStatus} from "boop/core/EntryPoint.sol";
+import {Boop, CallStatus} from "boop/interfaces/Types.sol";
 
 /**
  * Mock implementation of IAccount and IExtensibleAccount for testing purposes.
