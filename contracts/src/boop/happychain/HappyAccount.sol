@@ -5,7 +5,6 @@ import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
-import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
 import {ICustomExecutor, EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
 import {ICustomValidator, VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
 import {
@@ -19,7 +18,7 @@ import {
 
 import {Utils} from "boop/libs/Utils.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
-import {Boop, CallStatus} from "boop/interfaces/Types.sol";
+import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
 import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
 
 /**

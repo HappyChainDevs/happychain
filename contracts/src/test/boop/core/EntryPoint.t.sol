@@ -299,7 +299,7 @@ contract EntryPointTest is BoopTestUtils {
         vm.prank(ZERO_ADDRESS, ZERO_ADDRESS);
         SubmitOutput memory output = entryPoint.submit(boop.encode());
         _assertExpectedSubmitOutput(output, false, false, true, CallStatus.SUCCEEDED, new bytes(0));
-        assertTrue(output.futureNonceDuringSimulation, "output.futureNonceDuringSimulation");
+        assertTrue(output.futureNonceDuringSimulation);
         vm.revertToState(id);
     }
 

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Boop} from "boop/interfaces/Types.sol";
-import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
+import {Boop, ExecutionOutput} from "boop/interfaces/Types.sol";
 
 /**
  * @dev Key used in {Boop.extraData} to specify a custom executor address (must satisfy
