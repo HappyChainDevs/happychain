@@ -8,7 +8,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Boop} from "boop/core/Boop.sol";
 import {IPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {BoopLib} from "boop/libs/BoopLib.sol";
-import {NotFromEntryPoint} from "boop/core/Utils.sol";
+import {NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
 import {EntryPoint} from "../core/EntryPoint.sol";
 
 /**

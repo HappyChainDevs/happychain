@@ -13,7 +13,7 @@ import {BoopLib} from "boop/libs/BoopLib.sol";
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
-import {InvalidSignature} from "boop/core/Utils.sol";
+import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
 
 import {
     CallStatus,
