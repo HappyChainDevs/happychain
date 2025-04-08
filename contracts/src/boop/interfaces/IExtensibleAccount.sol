@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {IAccount} from "boop/interfaces/IAccount.sol";
-import {CallInfo} from "boop/libs/extensions/CallInfoEncoding.sol";
+import {CallInfo} from "boop/interfaces/Types.sol";
 
 enum ExtensionType {
     Validator,

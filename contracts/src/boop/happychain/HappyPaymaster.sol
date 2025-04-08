@@ -11,7 +11,7 @@ import {IPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {Utils} from "boop/libs/Utils.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
 import {Boop} from "boop/interfaces/Types.sol";
-import {NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
+import {Received, NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
 
 /**
  * An example paymaster contract implementing the IPaymaster interface.
@@ -41,12 +41,6 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
 
     /// This paymaster refuses to pay more to the submitter than this amount of wei per byte of data.
     uint256 public immutable SUBMITTER_TIP_PER_BYTE;
-
-    // ====================================================================================================
-    // EVENTS
-
-    /// Emitted when ETH is received by the contract
-    event Received(address indexed sender, uint256 amount);
 
     // ====================================================================================================
     // MODIFIERS

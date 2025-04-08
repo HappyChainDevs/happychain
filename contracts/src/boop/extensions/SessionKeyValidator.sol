@@ -8,9 +8,6 @@ import {Encoding} from "boop/libs/Encoding.sol";
 import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
 import {ICustomValidator} from "boop/interfaces/extensions/ICustomValidator.sol";
 
-/// Selector returned if trying to validate an account-paid boop with a session key.
-error AccountPaidSessionKeyBoop();
-
 /**
  * This validator maintains a mapping from (account, target) pair to session keys, and authorizes
  * boops from the given account to the target if they are signed with the session key.
@@ -36,6 +33,9 @@ contract SessionKeyValidator is ICustomValidator {
 
     // ====================================================================================================
     // ERRORS
+
+    /// Selector returned if trying to validate an account-paid boop with a session key.
+    error AccountPaidSessionKeyBoop();
 
     /// @dev Security error: Prevents registering a session key for the validator itself
     error CannotRegisterSessionKeyForValidator();
