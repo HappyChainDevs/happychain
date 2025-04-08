@@ -3,24 +3,24 @@ pragma solidity ^0.8.20;
 
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
-import {HappyTxTestUtils} from "../../Utils.sol";
-import {MockERC20} from "../../../../mocks/MockERC20.sol";
-import {MockRevert} from "../../../../mocks/MockRevert.sol";
-import {MockHappyAccount} from "../../../../test/mocks/MockHappyAccount.sol";
+import {BoopTestUtils} from "../Utils.sol";
+import {MockERC20} from "../../../mocks/MockERC20.sol";
+import {MockRevert} from "../../../mocks/MockRevert.sol";
+import {MockHappyAccount} from "../../../test/mocks/MockHappyAccount.sol";
 
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
 import {
     SessionKeyValidator,
     AccountPaidSessionKeyBoop,
     InvalidSignature
-} from "boop/samples/validators/ScrappySessionKeyValidator.sol";
+} from "boop/extensions/SessionKeyValidator.sol";
 
-import {DeployHappyAAContracts} from "../../../../deploy/DeployHappyAA.s.sol";
+import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
-contract ScrappySessionKeyValidatorTest is HappyTxTestUtils {
+contract SessionKeyValidatorTest is BoopTestUtils {
     using ECDSA for bytes32;
-    using HappyTxLib for HappyTx;
+    using BoopLib for Boop;
 
     bytes32 private constant SALT = 0;
     bytes32 private constant SALT2 = bytes32(uint256(1));
@@ -30,7 +30,7 @@ contract ScrappySessionKeyValidatorTest is HappyTxTestUtils {
     // ====================================================================================================
     // STATE VARIABLES
 
-    DeployHappyAAContracts private deployer;
+    DeployBoopContracts private deployer;
 
     address private smartAccount;
     address private sessionKeyValidator;
@@ -52,14 +52,14 @@ contract ScrappySessionKeyValidatorTest is HappyTxTestUtils {
         sessionKey = 0xdeadbeefdeadbeef;
         publicKey = vm.addr(sessionKey);
 
-        // Set up the Deployment Script, and deploy the happy-aa contracts as foundry-account-0
-        deployer = new DeployHappyAAContracts();
+        // Set up the Deployment Script, and deploy the boop contracts as foundry-account-0
+        deployer = new DeployBoopContracts();
         vm.prank(owner);
         deployer.deployForTests();
 
-        happyEntryPoint = deployer.happyEntryPoint();
-        smartAccount = deployer.scrappyAccountFactory().createAccount(SALT, owner);
-        dest = deployer.scrappyAccountFactory().createAccount(SALT2, owner);
+        entryPoint = deployer.entryPoint();
+        smartAccount = deployer.happyAccountFactory().createAccount(SALT, owner);
+        dest = deployer.happyAccountFactory().createAccount(SALT2, owner);
 
         // Fund the smart account
         vm.deal(smartAccount, INITIAL_DEPOSIT);
@@ -143,12 +143,12 @@ contract ScrappySessionKeyValidatorTest is HappyTxTestUtils {
         vm.prank(smartAccount);
         SessionKeyValidator(sessionKeyValidator).addSessionKey(dest, publicKey);
 
-        // Create a valid HappyTx
-        HappyTx memory happyTx = createSignedHappyTx(smartAccount, dest, ZERO_ADDRESS, sessionKey, new bytes(0));
+        // Create a valid Boop
+        Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
 
         // Call validate
         vm.prank(smartAccount);
-        bytes memory result = SessionKeyValidator(sessionKeyValidator).validate(happyTx);
+        bytes memory result = SessionKeyValidator(sessionKeyValidator).validate(boop);
 
         // Should return empty bytes4(0) for success
         assertEq(result, abi.encodeWithSelector(bytes4(0)));
@@ -159,12 +159,12 @@ contract ScrappySessionKeyValidatorTest is HappyTxTestUtils {
         vm.prank(smartAccount);
         SessionKeyValidator(sessionKeyValidator).addSessionKey(dest, publicKey);
 
-        // Create a valid HappyTx
-        HappyTx memory happyTx = createSignedHappyTx(smartAccount, dest, ZERO_ADDRESS, uint256(0x2222), new bytes(0));
+        // Create a valid Boop
+        Boop memory boop = createSignedBoop(smartAccount, dest, ZERO_ADDRESS, uint256(0x2222), new bytes(0));
 
         // Call validate
         vm.prank(smartAccount);
-        bytes memory result = SessionKeyValidator(sessionKeyValidator).validate(happyTx);
+        bytes memory result = SessionKeyValidator(sessionKeyValidator).validate(boop);
 
         // Should return InvalidSignature selector
         assertEq(result, abi.encodeWithSelector(InvalidSignature.selector));
@@ -175,12 +175,12 @@ contract ScrappySessionKeyValidatorTest is HappyTxTestUtils {
         vm.prank(smartAccount);
         SessionKeyValidator(sessionKeyValidator).addSessionKey(dest, publicKey);
 
-        // Create a HappyTx where account is also the paymaster (self-paying)
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a Boop where account is also the paymaster (self-paying)
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Call validate
         vm.prank(smartAccount);
-        bytes memory result = SessionKeyValidator(sessionKeyValidator).validate(happyTx);
+        bytes memory result = SessionKeyValidator(sessionKeyValidator).validate(boop);
 
         // Should return AccountPaidSessionKeyBoop selector
         assertEq(result, abi.encodeWithSelector(AccountPaidSessionKeyBoop.selector));
