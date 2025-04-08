@@ -620,9 +620,7 @@ contract HappyAccountTest is BoopTestUtils {
         HappyAccount(payable(smartAccount)).addExtension(address(0xABCD), ExtensionType.Validator);
 
         // Verify the new extension is registered
-        assertTrue(
-            HappyAccount(payable(smartAccount)).isExtensionRegistered(address(0xABCD), ExtensionType.Validator)
-        );
+        assertTrue(HappyAccount(payable(smartAccount)).isExtensionRegistered(address(0xABCD), ExtensionType.Validator));
 
         // Test adding extension from a non-owner, non-self address (should revert with NotSelfOrOwner)
         address nonOwner = address(0x9999);
