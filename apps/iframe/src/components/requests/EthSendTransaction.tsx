@@ -1,5 +1,6 @@
 import { TransactionType, toBigIntSafe } from "@happy.tech/common"
 import { deployment as contractAddresses } from "@happy.tech/contracts/account-abstraction/sepolia"
+import { waitForCondition } from "@happy.tech/wallet-common"
 import { useMutation } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useEffect, useMemo, useState } from "react"
@@ -21,7 +22,7 @@ import type {
 } from "viem/account-abstraction"
 import { abiContractMappingAtom } from "#src/state/loadedAbis"
 import { publicClientAtom } from "#src/state/publicClient"
-import { getSmartAccountClient } from "#src/state/smartAccountClient"
+import { type ExtendedSmartAccountClient, getSmartAccountClient } from "#src/state/smartAccountClient"
 import { userAtom } from "#src/state/user"
 import { BlobTxWarning } from "./BlobTxWarning"
 import ArgsList from "./common/ArgsList"
@@ -105,7 +106,10 @@ export const EthSendTransaction = ({
         mutate,
     } = useMutation({
         mutationFn: async () => {
-            const smartAccountClient = (await getSmartAccountClient())!
+            await waitForCondition(async () => {
+                return await getSmartAccountClient()
+            })
+            const smartAccountClient = (await getSmartAccountClient()) as ExtendedSmartAccountClient
 
             if (!smartAccountClient) {
                 throw new Error("Smart account client not initialized")
