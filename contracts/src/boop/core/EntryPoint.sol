@@ -4,12 +4,12 @@ pragma solidity ^0.8.20;
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
+import {Utils} from "boop/libs/Utils.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
+
 import {Staker} from "boop/core/Staker.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
 import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
-
-import {Utils} from "boop/libs/Utils.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
 import {
     BoopSubmitted,
     CallReverted,
@@ -187,7 +187,7 @@ contract EntryPoint is Staker, ReentrancyGuardTransient {
             uint256 gasBeforePayout = gasleft();
             // The constant 15000 overestimates the cost of the rest of execution, including
             // 9300 gas of the value transfer.
-            (output.gas, cost) = computeCost(boop, gasStart - gasBeforePayout + 15000, encodedBoop.length);
+            (output.gas, cost) = _computeCost(boop, gasStart - gasBeforePayout + 15000, encodedBoop.length);
             (success,) = boop.account.excessivelySafeCall(
                 gasleft() - 3000, // an OOG buffer
                 0, // value
@@ -205,7 +205,7 @@ contract EntryPoint is Staker, ReentrancyGuardTransient {
             // - 100 gas for reading stake.balance (warm)
             // - 2100 gas for reading stake.unlockedBalance (cold)
             // - 9100 gas for the value transfer
-            (output.gas, cost) = computeCost(boop, gasStart - gasleft() + 16000, encodedBoop.length);
+            (output.gas, cost) = _computeCost(boop, gasStart - gasleft() + 16000, encodedBoop.length);
             // Pay submitter — no need for revert checks (submitter wants this to succeed).
             // This should succeed by construction, because of the early staking balance check.
             _transferTo(boop.paymaster, payable(tx.origin), cost);
@@ -216,12 +216,12 @@ contract EntryPoint is Staker, ReentrancyGuardTransient {
     // HELPERS
 
     /**
-     * Given a boop, the gas consumed by the entrypoint body (metered until the computeCost call
+     * Given a boop, the gas consumed by the entrypoint body (metered until the _computeCost call
      * + estimation of the rest of execution) and its encoded length, returns an estimation of the
      * gas consumed by the submitter transaction (including intrinsic gas and data gas) and the
      * total cost to charge to the fee payer.
      */
-    function computeCost(Boop memory boop, uint256 entryPointGas, uint256 encodedLength)
+    function _computeCost(Boop memory boop, uint256 entryPointGas, uint256 encodedLength)
         internal
         view
         returns (uint32 consumedGas, uint128 cost)

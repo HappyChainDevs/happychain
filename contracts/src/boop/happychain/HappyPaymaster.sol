@@ -1,32 +1,30 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
-import {EntryPoint} from "boop/core/EntryPoint.sol";
-import {IPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
+import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {Utils} from "boop/libs/Utils.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
+
 import {Boop} from "boop/interfaces/Types.sol";
+import {EntryPoint} from "boop/core/EntryPoint.sol";
+import {IPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {Received, NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
 
 /**
- * An example paymaster contract implementing the IPaymaster interface.
+ * Implementation of a paymaster contract implementing the IPaymaster interface.
  * This paymaster sponsors any call, as long as its submitter fee is not too high
  * (computed on the basis of a max gas cost per byte of calldata, configurable at deploy time).
  */
 contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
-    using ECDSA for bytes32;
     using Encoding for Boop;
 
     // ====================================================================================================
     // CONSTANTS
 
-    /// @dev Fixed size of an encoded Boop: 220 bytes for static fields plus 16 bytes (4 bytes × 4) for
-    ///      storing the lengths of the four dynamic fields
+    /// @dev Fixed size of an encoded Boop: 220 bytes for static fields plus 16 bytes (4 bytes × 4)
+    ///      for storing the lengths of the four dynamic fields
     uint256 private constant STATIC_FIELDS_SIZE = 220;
 
     /// @dev The amount of gas consumed by the payout function.
