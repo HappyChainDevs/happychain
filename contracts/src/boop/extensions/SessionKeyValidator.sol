@@ -5,7 +5,7 @@ import {ECDSA} from "solady/utils/ECDSA.sol";
 
 import {Boop} from "boop/core/Boop.sol";
 import {ICustomValidator} from "boop/interfaces/extensions/ICustomValidator.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
 import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
 
 /// Selector returned if trying to validate an account-paid boop with a session key.
@@ -26,7 +26,7 @@ error AccountPaidSessionKeyBoop();
  */
 contract SessionKeyValidator is ICustomValidator {
     using ECDSA for bytes32;
-    using BoopLib for Boop;
+    using Encoding for Boop;
 
     // ====================================================================================================
     // EVENTS

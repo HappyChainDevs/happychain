@@ -5,14 +5,14 @@ import {Test} from "forge-std/Test.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 import {Boop} from "boop/core/Boop.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
 import {MockERC20} from "../../mocks/MockERC20.sol";
 import {MockRevert} from "../../mocks/MockRevert.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 
 /// Common utility functions for Boop unit tests
 contract BoopTestUtils is Test {
-    using BoopLib for Boop;
+    using Encoding for Boop;
     using MessageHashUtils for bytes32;
 
     uint256 public constant TOKEN_MINT_AMOUNT = 1000;

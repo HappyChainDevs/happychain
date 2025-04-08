@@ -7,17 +7,17 @@ import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {MockHappyAccount} from "../../../test/mocks/MockHappyAccount.sol";
 
 import {Boop} from "boop/core/Boop.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
 import {CallStatus} from "boop/core/EntryPoint.sol";
 import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
-import {CallInfo, CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
+import {CallInfo, CallInfoEncoding} from "boop/libs/extensions/CallInfoEncoding.sol";
 import {BatchCallExecutor, BATCH_CALL_INFO_KEY, InvalidBatchCallInfo} from "boop/extensions/BatchCallExecutor.sol";
 
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
 contract BatchCallExecutorTest is BoopTestUtils {
-    using BoopLib for Boop;
-    using CallInfoCodingLib for bytes;
+    using Encoding for Boop;
+    using CallInfoEncoding for bytes;
 
     // ====================================================================================================
     // CONSTANTS
