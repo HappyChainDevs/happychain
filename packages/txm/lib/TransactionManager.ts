@@ -461,9 +461,22 @@ export class TransactionManager {
         })
     }
 
+    /**
+     * Submit a batch of transactions directly to the transaction collector for immediate processing.
+     * Transactions will be submitted to the blockchain immediately after collection without waiting for the next block.
+     * Ideal for time-sensitive transactions that don't depend on block context for their execution.
+     * @param transactionsBatch - An array of Transaction to be submitted
+     */
+    public async collectTransactions(transactionsBatch: Transaction[]): Promise<void> {
+        await this.transactionCollector.collectTransactions(transactionsBatch)
+    }
+
     public async start(): Promise<void> {
         // Start the gas price oracle to prevent other parts of the application from calling `suggestGasForNextBlock` before the gas price oracle has initialized the gas price after processing the first block
         const priceOraclePromise = this.gasPriceOracle.start()
+
+        // Initialize the transaction collector to fetch the latest block and prepare for processing new transactions
+        const transactionCollectorPromise = this.transactionCollector.start()
 
         // Get the chain ID of the RPC node
         const rpcChainIdPromise = this.viemClient.safeGetChainId()
@@ -488,6 +501,9 @@ export class TransactionManager {
         // Wait for the gas price oracle to initialize before starting the block monitor,
         // which emits 'NewBlock' events as the TXM heartbeat.
         await priceOraclePromise
+
+        // Wait for the transaction collector to initialize before proceeding with transaction collection
+        await transactionCollectorPromise
 
         await this.blockMonitor.start()
     }

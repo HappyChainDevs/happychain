@@ -2,6 +2,7 @@ import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import type { LatestBlock } from "./BlockMonitor.js"
 import { Topics, eventBus } from "./EventBus.js"
 import { AttemptType, TransactionStatus } from "./Transaction.js"
+import type { Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { TxmMetrics } from "./telemetry/metrics"
 import { TraceMethod } from "./telemetry/traces"
@@ -16,33 +17,49 @@ import { logger } from "./utils/logger"
 
 export class TransactionCollector {
     private readonly txmgr: TransactionManager
+    private latestBlock!: LatestBlock
 
     constructor(_txmgr: TransactionManager) {
         this.txmgr = _txmgr
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
     }
 
+    async start() {
+        const block = await this.txmgr.viemClient.getBlock({
+            blockTag: "latest",
+        })
+        this.latestBlock = block
+    }
+
     @TraceMethod("txm.transaction-collector.on-new-block")
     private async onNewBlock(block: LatestBlock) {
         const span = trace.getSpan(context.active())!
 
-        const { maxFeePerGas, maxPriorityFeePerGas } = this.txmgr.gasPriceOracle.suggestGasForNextBlock()
+        this.latestBlock = block
 
         const transactionUnsorted = await Promise.all(this.txmgr.collectors.map((c) => c(block)))
         const transactionsBatch = transactionUnsorted
             .flat()
             .sort((a, b) => (a.deadline ?? Number.POSITIVE_INFINITY) - (b.deadline ?? Number.POSITIVE_INFINITY))
-            .map((transaction) => {
-                transaction.addCollectionBlock(block.number)
-                return transaction
-            })
 
         for (const transaction of transactionsBatch) {
             span.addEvent("txm.transaction-collector.on-new-block.collected-transaction", {
                 transactionIntentId: transaction.intentId,
                 transaction: transaction.toJson(),
-                blockNumber: Number(block.number),
+                blockNumber: Number(this.latestBlock.number),
             })
+        }
+
+        await this.collectTransactions(transactionsBatch)
+    }
+
+    @TraceMethod("txm.transaction-collector.collect-transactions")
+    public async collectTransactions(transactionsBatch: Transaction[]) {
+        const span = trace.getSpan(context.active())!
+        const { maxFeePerGas, maxPriorityFeePerGas } = this.txmgr.gasPriceOracle.suggestGasForNextBlock()
+
+        for (const transaction of transactionsBatch) {
+            transaction.addCollectionBlock(this.latestBlock.number)
         }
 
         const saveResult = await this.txmgr.transactionRepository.saveTransactions(transactionsBatch)
@@ -53,7 +70,7 @@ export class TransactionCollector {
             }
             logger.error("Error saving transactions", saveResult.error)
 
-            span.addEvent("txm.transaction-collector.on-new-block.save-failed")
+            span.addEvent("txm.transaction-collector.collect-transactions.save-failed")
             span.recordException(saveResult.error)
             span.setStatus({ code: SpanStatusCode.ERROR })
             return
@@ -72,7 +89,7 @@ export class TransactionCollector {
             transactionsBatch.map(async (transaction) => {
                 const nonce = this.txmgr.nonceManager.requestNonce()
 
-                span.addEvent("txm.transaction-collector.on-new-block.requested-nonce", {
+                span.addEvent("txm.transaction-collector.collect-transactions.requested-nonce", {
                     transactionIntentId: transaction.intentId,
                     nonce,
                 })
@@ -95,7 +112,7 @@ export class TransactionCollector {
                         cause: submissionResult.error.cause,
                     })
 
-                    span.addEvent("txm.transaction-collector.on-new-block.submission-failed", {
+                    span.addEvent("txm.transaction-collector.collect-transactions.submission-failed", {
                         transactionIntentId: transaction.intentId,
                         description: submissionResult.error.description,
                         cause: submissionResult.error.cause,
@@ -103,7 +120,7 @@ export class TransactionCollector {
                     span.setStatus({ code: SpanStatusCode.ERROR })
 
                     if (!submissionResult.error.flushed) {
-                        span.addEvent("txm.transaction-collector.on-new-block.returned-nonce", {
+                        span.addEvent("txm.transaction-collector.collect-transactions.returned-nonce", {
                             transactionIntentId: transaction.intentId,
                             nonce,
                         })
