@@ -142,7 +142,7 @@ contract SessionKeyValidatorTest is BoopTestUtils {
         SessionKeyValidator(sessionKeyValidator).addSessionKey(dest, publicKey);
 
         // Create a valid Boop
-        Boop memory boop = createSignedBoop(smartAccount, dest, ZERO_ADDRESS, privKey, new bytes(0));
+        Boop memory boop = createSignedBoop(smartAccount, dest, ZERO_ADDRESS, sessionKey, new bytes(0));
 
         // Call validate
         vm.prank(smartAccount);
