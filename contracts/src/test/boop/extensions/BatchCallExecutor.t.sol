@@ -11,9 +11,7 @@ import {BoopLib} from "boop/libs/BoopLib.sol";
 import {CallStatus} from "boop/core/EntryPoint.sol";
 import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
 import {CallInfo, CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
-import {
-    BatchCallExecutor, BATCH_CALL_INFO_KEY, InvalidBatchCallInfo
-} from "boop/extensions/BatchCallExecutor.sol";
+import {BatchCallExecutor, BATCH_CALL_INFO_KEY, InvalidBatchCallInfo} from "boop/extensions/BatchCallExecutor.sol";
 
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 

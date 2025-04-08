@@ -11,9 +11,7 @@ import {MockHappyAccount} from "../../../test/mocks/MockHappyAccount.sol";
 import {Boop} from "boop/core/Boop.sol";
 import {BoopLib} from "boop/libs/BoopLib.sol";
 import {
-    SessionKeyValidator,
-    AccountPaidSessionKeyBoop,
-    InvalidSignature
+    SessionKeyValidator, AccountPaidSessionKeyBoop, InvalidSignature
 } from "boop/extensions/SessionKeyValidator.sol";
 
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
