@@ -5,7 +5,7 @@ import {BaseDeployScript} from "./BaseDeployScript.sol";
 import {HappyERC20} from "../HappyERC20.sol";
 
 /**
- * @dev Deploys the HappyERC20 contract
+ * @dev Deploys the HappyERC20 contract.
  */
 contract DeployL1 is BaseDeployScript {
     HappyERC20 public happyERC20;
