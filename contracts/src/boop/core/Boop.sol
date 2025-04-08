@@ -39,30 +39,3 @@ struct Boop {
     bytes validatorData;        // Extra data for validation (e.g., signatures)
     bytes extraData;            // Reserved for future extensions and custom implementations
 }
-
-/**
- * This event exposes a Boop as an event and is emitted by {EntryPoint.submit}, for easier
- * indexing of Boops and easier visibility on block explorers.
- *
- * Note that we deliberately choose to separate all the fields into dedicated arguments instead of
- * having a single argument with the struct — this enables better display on some block explorers
- * like Blockscout.
- */
-event BoopSubmitted(
-    address account,
-    uint32 gasLimit,
-    uint32 validateGasLimit,
-    uint32 executeGasLimit,
-    uint32 validatePaymentGasLimit,
-    address dest,
-    address paymaster,
-    uint256 value,
-    uint192 nonceTrack,
-    uint64 nonceValue,
-    uint256 maxFeePerGas,
-    int256 submitterFee,
-    bytes callData,
-    bytes paymasterData,
-    bytes validatorData,
-    bytes extraData
-);
