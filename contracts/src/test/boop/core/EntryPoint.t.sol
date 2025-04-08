@@ -28,7 +28,7 @@ import {
     InvalidNonce
 } from "boop/core/EntryPoint.sol";
 
-contract HappyEntryPointTest is BoopTestUtils {
+contract EntryPointTest is BoopTestUtils {
     using BoopLib for Boop;
     using ECDSA for bytes32;
 
@@ -57,7 +57,7 @@ contract HappyEntryPointTest is BoopTestUtils {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
 
-        // Set up the Deployment Script, and deploy the happy-aa contracts as foundry-account-0
+        // Set up the Deployment Script, and deploy the boop contracts as foundry-account-0
         deployer = new DeployBoopContracts();
         vm.prank(owner);
         deployer.deployForTests();
@@ -101,7 +101,7 @@ contract HappyEntryPointTest is BoopTestUtils {
     }
 
     function testPaymasterSponsoredTx() public {
-        // Paymaster-sponsored: paymaster == ScrappyPaymaster
+        // Paymaster-sponsored: paymaster == HappyPaymaster
         uint256 initialStake = entryPoint.balanceOf(paymaster);
         uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
 
@@ -169,7 +169,7 @@ contract HappyEntryPointTest is BoopTestUtils {
     }
 
     function testSimulatePaymasterSponsoredTx() public {
-        // Paymaster-sponsored simulation: paymaster is the ScrappyPaymaster
+        // Paymaster-sponsored simulation: paymaster is the HappyPaymaster
         uint256 id = vm.snapshotState();
 
         uint256 initialStake = entryPoint.balanceOf(paymaster);
@@ -363,7 +363,7 @@ contract HappyEntryPointTest is BoopTestUtils {
     function testSimulateWithUnknownDuringSimulation() public {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
 
-        // Change any field to invalid the signature over the happyTx
+        // Change any field to invalid the signature over the boop
         boop.paymaster = ZERO_ADDRESS; // This way, we don't have to stake a new account
 
         // The function should return output.validationStatus = UnknownDuringSimulation.selector
@@ -394,9 +394,8 @@ contract HappyEntryPointTest is BoopTestUtils {
 
         vm.revertToState(id); // Revert the state to before the simulation
 
-        // Submit the happyTx again, with half the validate gas limit
+        // Submit the boop again, with half the validate gas limit
         // This should cause the validation to run out of gas
-        // Submit the happyTx again, with the above execGasLimit
         Boop memory boop2 =
             getStubBoop(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         boop2.validateGasLimit = output.validateGas / 10;
@@ -459,7 +458,7 @@ contract HappyEntryPointTest is BoopTestUtils {
 
         vm.revertToState(id); // Revert the state to before the simulation
 
-        // Submit the happyTx again, with a fraction of the paymaster validation gas limit
+        // Submit the boop again, with a fraction of the paymaster validation gas limit
         // This should cause the paymaster validation to run out of gas
         Boop memory boop2 =
             getStubBoop(smartAccount, mockToken, paymaster, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
@@ -510,12 +509,12 @@ contract HappyEntryPointTest is BoopTestUtils {
         _assertExpectedSubmitOutput(output, false, false, false, CallStatus.CALL_REVERTED, new bytes(0));
     }
 
-    function testExecuteWithHighHappyTxValueGreaterThanSmartAccountBalance() public {
+    function testExecuteWithHighBoopValueGreaterThanSmartAccountBalance() public {
         // Set the initial balance of the smart account to 0
         vm.deal(smartAccount, 0);
         Boop memory boop = getStubBoop(smartAccount, dest, paymaster, new bytes(0));
 
-        // Set happyTx.value to a value higher than the smart account's balance
+        // Set boop.value to a value higher than the smart account's balance
         boop.value = 1 wei;
         boop.validatorData = signBoop(boop, privKey);
 
@@ -547,7 +546,7 @@ contract HappyEntryPointTest is BoopTestUtils {
 
         vm.revertToState(id); // Revert the state to before the simulation
 
-        // Submit the happyTx again, with the above execGasLimit
+        // Submit the boop again, with the above execGasLimit
         Boop memory boop2 =
             getStubBoop(smartAccount, mockToken, smartAccount, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         boop2.validateGasLimit = output.validateGas * 120 / 100;
@@ -578,7 +577,7 @@ contract HappyEntryPointTest is BoopTestUtils {
 
         vm.revertToState(id); // Revert the state to before the simulation
 
-        // Submit the happyTx again, with the execute gas limit set too low
+        // Submit the boop again, with the execute gas limit set too low
         Boop memory boop2 =
             getStubBoop(smartAccount, mockToken, ZERO_ADDRESS, getMintTokenCallData(dest, TOKEN_MINT_AMOUNT));
         boop2.validateGasLimit = output.validateGas * 120 / 100; // Set this higher to ensure it's not the issue
@@ -653,7 +652,7 @@ contract HappyEntryPointTest is BoopTestUtils {
 
     function testPayoutFailsDueToLowPaymasterBalance() public {
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, paymaster, mockToken, privKey);
-        // console.log("Current Stake: ", happyEntryPoint.balanceOf(paymaster));
+        // console.log("Current Stake: ", entryPoint.balanceOf(paymaster));
 
         // The 1st slot of struct Stake  is 128 bits balance, and 128 bits unlockedBalance
         // We can safely set both (overall slot) to 0, for this testcase
@@ -689,7 +688,7 @@ contract HappyEntryPointTest is BoopTestUtils {
     }
 
     function _incrementAccountNonce() internal {
-        // Create a valid happyTx with the current nonce & submit it
+        // Create a valid boop with the current nonce & submit it
         Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, ZERO_ADDRESS, mockToken, privKey);
         entryPoint.submit(boop.encode());
     }

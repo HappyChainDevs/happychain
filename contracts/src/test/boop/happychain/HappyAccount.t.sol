@@ -8,7 +8,7 @@ import {MockValidator} from "../../../test/mocks/MockValidator.sol";
 import {MockExecutor} from "../../../test/mocks/MockExecutor.sol";
 
 import {Boop} from "boop/core/Boop.sol";
-import {BoopLib} from "boop/libs/BoopTxLib.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
 
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
@@ -26,7 +26,7 @@ import {EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/core/Utils.sol";
 
-contract HappyAccountTest is HappyTxTestUtils {
+contract HappyAccountTest is BoopTestUtils {
     using BoopLib for Boop;
 
     // ====================================================================================================
@@ -58,7 +58,7 @@ contract HappyAccountTest is HappyTxTestUtils {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
 
-        // Set up the Deployment Script, and deploy the happy-aa contracts as foundry-account-0
+        // Set up the Deployment Script, and deploy the boop contracts as foundry-account-0
         deployer = new DeployBoopContracts();
         vm.prank(owner);
         deployer.deployForTests();
@@ -96,7 +96,7 @@ contract HappyAccountTest is HappyTxTestUtils {
         // The function should revert with ValidationReverted(InvalidSignature.selector)
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()"))));
 
-        ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        HappyAccount(payable(smartAccount)).validate(boop);
     }
 
     function testValidateInvalidSignatureLength() public {
@@ -148,7 +148,7 @@ contract HappyAccountTest is HappyTxTestUtils {
         Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
         boop.validatorData = signBoop(boop, DUMMY_PRIV_KEY);
 
-        // Validate function must be called by the HappyEntryPoint, with tx.origin = address(0)
+        // Validate function must be called by the EntryPoint, with tx.origin = address(0)
         vm.prank(_entryPoint, ZERO_ADDRESS);
 
         bytes memory validationData = HappyAccount(payable(smartAccount)).validate(boop);
@@ -286,7 +286,7 @@ contract HappyAccountTest is HappyTxTestUtils {
 
         // Execute the transaction
         vm.prank(_entryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(boop);
+        ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
         assertTrue(output.status == CallStatus.SUCCEEDED);
         assertEq(output.revertData, new bytes(0));
@@ -548,11 +548,11 @@ contract HappyAccountTest is HappyTxTestUtils {
         bytes4 erc1271InterfaceId = 0x1626ba7e; // ERC-1271 interface ID
         assertTrue(account.supportsInterface(erc1271InterfaceId), "Should support ERC-1271");
 
-        bytes4 happyAccountInterfaceId = 0x2b39e81f; // IAccount interface ID
-        assertTrue(account.supportsInterface(happyAccountInterfaceId), "Should support IHappyAccount");
+        bytes4 accountInterfaceId = 0x2b39e81f; // IAccount interface ID
+        assertTrue(account.supportsInterface(accountInterfaceId), "Should support IAccount");
 
-        bytes4 happyPaymasterInterfaceId = 0x24542ca5; // IPaymaster interface ID
-        assertTrue(account.supportsInterface(happyPaymasterInterfaceId), "Should support IHappyPaymaster");
+        bytes4 paymasterInterfaceId = 0x24542ca5; // IPaymaster interface ID
+        assertTrue(account.supportsInterface(paymasterInterfaceId), "Should support IPaymaster");
     }
 
     // ====================================================================================================
@@ -573,20 +573,20 @@ contract HappyAccountTest is HappyTxTestUtils {
 
         // Test adding a validator extension
         vm.prank(owner);
-        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
 
         // Verify the validator extension is now registered
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
         );
 
         // Test adding an executor extension
         vm.prank(owner);
-        ScrappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
 
         // Verify the executor extension is now registered
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
         );
 
         // Try adding the same validator extension again - should revert with ExtensionAlreadyRegistered
@@ -594,41 +594,41 @@ contract HappyAccountTest is HappyTxTestUtils {
         vm.expectRevert(
             abi.encodeWithSelector(ExtensionAlreadyRegistered.selector, mockValidatorExtension, ExtensionType.Validator)
         );
-        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
 
         // Try adding the same executor extension again - should revert with ExtensionAlreadyRegistered
         vm.prank(owner);
         vm.expectRevert(
             abi.encodeWithSelector(ExtensionAlreadyRegistered.selector, mockExecutorExtension, ExtensionType.Executor)
         );
-        ScrappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
 
         // Test adding the same address but as a different extension type (should work)
         vm.prank(owner);
-        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor);
 
         // Verify both extension types are registered for the validator address
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
         );
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
         );
 
         // Test adding extension from the account itself (using onlySelfOrOwner modifier)
         vm.prank(smartAccount);
-        ScrappyAccount(payable(smartAccount)).addExtension(address(0xABCD), ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(address(0xABCD), ExtensionType.Validator);
 
         // Verify the new extension is registered
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(address(0xABCD), ExtensionType.Validator)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(address(0xABCD), ExtensionType.Validator)
         );
 
         // Test adding extension from a non-owner, non-self address (should revert with NotSelfOrOwner)
         address nonOwner = address(0x9999);
         vm.prank(nonOwner);
-        vm.expectRevert(ScrappyAccount.NotSelfOrOwner.selector);
-        ScrappyAccount(payable(smartAccount)).addExtension(address(0xDEAD), ExtensionType.Validator);
+        vm.expectRevert(HappyAccount.NotSelfOrOwner.selector);
+        HappyAccount(payable(smartAccount)).addExtension(address(0xDEAD), ExtensionType.Validator);
     }
 
     function testRemoveExtension() public {
@@ -638,43 +638,43 @@ contract HappyAccountTest is HappyTxTestUtils {
 
         // Add the extensions first
         vm.startPrank(owner);
-        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
-        ScrappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
-        ScrappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor); // Same address, different type
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).addExtension(mockValidatorExtension, ExtensionType.Executor); // Same address, different type
         vm.stopPrank();
 
         // Verify the extensions are registered
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
         );
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
         );
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
         );
 
         // Test removing a validator extension
         vm.prank(owner);
-        ScrappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator);
 
         // Verify the validator extension is no longer registered
         assertFalse(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
         );
 
         // But it should still be registered as an executor extension
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
         );
 
         // Test removing an executor extension
         vm.prank(owner);
-        ScrappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Executor);
 
         // Verify the executor extension is no longer registered
         assertFalse(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
         );
 
         // Try removing an extension that's not registered - should revert with ExtensionNotRegistered
@@ -682,15 +682,15 @@ contract HappyAccountTest is HappyTxTestUtils {
         vm.expectRevert(
             abi.encodeWithSelector(ExtensionNotRegistered.selector, mockValidatorExtension, ExtensionType.Validator)
         );
-        ScrappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Validator);
 
         // Test removing extension from the account itself (using onlySelfOrOwner modifier)
         vm.prank(smartAccount);
-        ScrappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Executor);
+        HappyAccount(payable(smartAccount)).removeExtension(mockValidatorExtension, ExtensionType.Executor);
 
         // Verify the extension is no longer registered
         assertFalse(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Executor)
         );
 
         // Test removing extension from a non-owner, non-self address (should revert with NotSelfOrOwner)
@@ -698,16 +698,16 @@ contract HappyAccountTest is HappyTxTestUtils {
 
         // First add an extension to remove
         vm.prank(owner);
-        ScrappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Validator);
+        HappyAccount(payable(smartAccount)).addExtension(mockExecutorExtension, ExtensionType.Validator);
 
         // Try to remove it as non-owner
         vm.prank(nonOwner);
-        vm.expectRevert(ScrappyAccount.NotSelfOrOwner.selector);
-        ScrappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Validator);
+        vm.expectRevert(HappyAccount.NotSelfOrOwner.selector);
+        HappyAccount(payable(smartAccount)).removeExtension(mockExecutorExtension, ExtensionType.Validator);
 
         // Verify the extension is still registered
         assertTrue(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Validator)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Validator)
         );
     }
 
@@ -727,7 +727,7 @@ contract HappyAccountTest is HappyTxTestUtils {
         // Try to call executeCallFromExecutor as the wrong sender
         vm.prank(wrongSender);
         vm.expectRevert("not called from executor");
-        ScrappyAccount(payable(smartAccount)).executeCallFromExecutor(info);
+        HappyAccount(payable(smartAccount)).executeCallFromExecutor(info);
     }
 
     // ====================================================================================================
@@ -737,7 +737,7 @@ contract HappyAccountTest is HappyTxTestUtils {
     function _setupExtension(address _extension, ExtensionType _extensionType) internal {
         // Add the extension to the smart account
         vm.prank(owner);
-        ScrappyAccount(payable(smartAccount)).addExtension(_extension, _extensionType);
+        HappyAccount(payable(smartAccount)).addExtension(_extension, _extensionType);
     }
 
     // Helper function to set up a mock executor (for backward compatibility)
