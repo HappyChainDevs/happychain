@@ -44,7 +44,7 @@ class RandomnessService {
             },
         })
         this.transactionFactory = new TransactionFactory(this.txm, env.RANDOM_CONTRACT_ADDRESS, env.PRECOMMIT_DELAY)
-        this.drandService = new DrandService(this.drandRepository, this.transactionFactory)
+        this.drandService = new DrandService(this.drandRepository, this.transactionFactory, this.txm)
     }
 
     async start() {
@@ -191,24 +191,6 @@ class RandomnessService {
                 }
             })
         }
-
-        const drandTransactions = this.drandService.pullDrandTransactions()
-
-        transactions.push(...drandTransactions)
-
-        drandTransactions.map(async (transaction) => {
-            const drand = this.drandRepository.getDrandByTransactionIntentId(transaction.intentId)
-
-            if (!drand) {
-                logger.error("Drand not found for transaction", transaction.intentId)
-                return
-            }
-
-            drand.transactionSubmitted()
-            this.drandRepository.updateDrand(drand).catch((error) => {
-                logger.error("Failed to update drand", error)
-            })
-        })
 
         return transactions
     }

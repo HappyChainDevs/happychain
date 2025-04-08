@@ -1,5 +1,5 @@
 import { fetchWithRetry, nowInSeconds, promiseWithResolvers, sleep, unknownToError } from "@happy.tech/common"
-import type { Transaction } from "@happy.tech/txm"
+import type { TransactionManager } from "@happy.tech/txm"
 import { type Result, ResultAsync, err, ok } from "neverthrow"
 import type { Hex } from "viem"
 import { z } from "zod"
@@ -39,15 +39,16 @@ export enum DrandError {
 const MS_IN_SECOND = 1000
 
 export class DrandService {
+    private readonly txm: TransactionManager
     private readonly drandRepository: DrandRepository
     private readonly transactionFactory: TransactionFactory
-    private pendingPostDrandTransactions: Transaction[] = []
     private getDrandBeaconLocked = false
     private pendingGetDrandBeaconPromises: PromiseWithResolvers<void>[] = []
 
-    constructor(drandRepository: DrandRepository, transactionFactory: TransactionFactory) {
+    constructor(drandRepository: DrandRepository, transactionFactory: TransactionFactory, txm: TransactionManager) {
         this.drandRepository = drandRepository
         this.transactionFactory = transactionFactory
+        this.txm = txm
     }
 
     async start() {
@@ -109,12 +110,6 @@ export class DrandService {
                 1,
         )
         return BigInt(currentRound)
-    }
-
-    pullDrandTransactions() {
-        const returnTransactions = this.pendingPostDrandTransactions
-        this.pendingPostDrandTransactions = []
-        return returnTransactions
     }
 
     // Implements a mutex to ensure that only one instance of this function executes at a time.
@@ -183,7 +178,13 @@ export class DrandService {
                     return
                 }
 
-                this.pendingPostDrandTransactions.push(postDrandTransaction)
+                await this.txm.collectTransactions([postDrandTransaction])
+
+                drand.transactionSubmitted()
+
+                this.drandRepository.updateDrand(drand).catch((error) => {
+                    logger.error("Failed to update drand", error)
+                })
             }),
         )
     }
