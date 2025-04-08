@@ -98,8 +98,8 @@ test-gas: ## Runs test and generate a gas report
 # Boop Unit Tests
 
 test-boop-suite:
-	@make test-boopLib
-	@make test-callInfoCodingLib
+	@make test-boop-libs
+	@make test-callInfoEncoding
 	@make test-entryPoint
 	@make test-happyAccount
 	@make test-happyPaymaster
@@ -110,13 +110,14 @@ test-boop-suite:
 	@make test-predictDeploymentAddress
 .PHONY: test-boop-suite
 
-test-boopLib:
-	forge test --match-contract BoopLibTest -vvv
-.PHONY: test-boopLib
+test-boop-libs:
+	forge test --match-contract EncodingTest -vvv
+	forge test --match-contract UtilsTest -vvv
+.PHONY: test-boop-libs
 
-test-callInfoCodingLib:
-	forge test --match-contract CallInfoCodingLibTest -vvv
-.PHONY: test-callInfoCodingLib
+test-callInfoEncoding:
+	forge test --match-contract CallInfoEncodingTest -vvv
+.PHONY: test-callInfoEncoding
 
 test-entryPoint:
 	forge test --match-contract EntryPointTest -vvv

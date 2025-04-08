@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Boop} from "boop/core/Boop.sol";
-import {CallInfo} from "boop/libs/CallInfoCodingLib.sol";
+import {CallInfo} from "boop/libs/extensions/CallInfoEncoding.sol";
 import {CallStatus} from "boop/core/EntryPoint.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
