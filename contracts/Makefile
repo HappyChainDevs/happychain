@@ -97,7 +97,7 @@ test-gas: ## Runs test and generate a gas report
 ####################################################################################################
 # Boop Unit Tests
 
-test-boop:
+test-boop-suite:
 	@make test-boopLib
 	@make test-callInfoCodingLib
 	@make test-entryPoint
@@ -108,7 +108,7 @@ test-boop:
 	@make test-happyAccountFactory
 	@make test-happyAccount-upgradeability
 	@make test-predictDeploymentAddress
-.PHONY: test-boop
+.PHONY: test-boop-suite
 
 test-boopLib:
 	forge test --match-contract BoopLibTest -vvv
