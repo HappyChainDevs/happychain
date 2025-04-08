@@ -722,6 +722,16 @@ test("Finalized transactions are automatically purged from db after finalizedTra
 })
 
 test("RPC liveness monitor works correctly", async () => {
+    proxyServer.setMode(ProxyMode.Deterministic)
+
+    while (!txm.rpcLivenessMonitor.isAlive) {
+        const transaction = await createCounterTransaction()
+
+        transactionQueue.push(transaction)
+
+        await mineBlock()
+    }
+
     proxyServer.setMode(ProxyMode.Random, {
         [ProxyBehavior.NotAnswer]: 0,
         [ProxyBehavior.Fail]: 0.5,
@@ -738,6 +748,8 @@ test("RPC liveness monitor works correctly", async () => {
     const cleanIsUpHook = await txm.addHook(TxmHookType.RpcIsUp, () => {
         isUpHookTriggered = true
     })
+
+
 
     expect(txm.rpcLivenessMonitor.isAlive).toBe(true)
 
