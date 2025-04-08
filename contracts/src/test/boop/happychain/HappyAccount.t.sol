@@ -24,7 +24,7 @@ import {VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
 import {EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
 
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
-import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/core/Utils.sol";
+import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
 
 contract HappyAccountTest is BoopTestUtils {
     using BoopLib for Boop;
