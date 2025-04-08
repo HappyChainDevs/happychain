@@ -7,7 +7,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {Boop} from "boop/core/Boop.sol";
 import {IPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
+import {Utils} from "boop/libs/Utils.sol";
 import {NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
 import {EntryPoint} from "../core/EntryPoint.sol";
 
@@ -18,7 +19,7 @@ import {EntryPoint} from "../core/EntryPoint.sol";
  */
 contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
     using ECDSA for bytes32;
-    using BoopLib for Boop;
+    using Encoding for Boop;
 
     // ====================================================================================================
     // CONSTANTS
@@ -83,7 +84,7 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
 
         // Only validate positive submitter fees
         if (boop.submitterFee > 0) {
-            uint256 maxFeePerByte = BoopLib.maxCalldataFeePerByte(boop);
+            uint256 maxFeePerByte = Utils.maxCalldataFeePerByte(boop);
             uint256 maxSubmitterFee = totalSize * (maxFeePerByte + SUBMITTER_TIP_PER_BYTE);
 
             if (uint256(boop.submitterFee) > maxSubmitterFee) {
