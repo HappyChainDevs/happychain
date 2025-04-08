@@ -135,7 +135,7 @@ test-batchCallExecutor:
 .PHONY: test-batchCallExecutor
 
 test-sessionKeyValidator:
-	forge test --match-contract ScrappySessionKeyValidatorTest -vvv
+	forge test --match-contract SessionKeyValidatorTest -vvv
 .PHONY: test-sessionKeyValidator
 
 test-happyAccountFactory:

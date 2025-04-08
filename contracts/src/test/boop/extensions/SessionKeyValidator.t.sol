@@ -15,7 +15,7 @@ import {
 } from "boop/extensions/SessionKeyValidator.sol";
 
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
-
+import {console} from "forge-std/Script.sol";
 contract SessionKeyValidatorTest is BoopTestUtils {
     using ECDSA for bytes32;
     using BoopLib for Boop;
@@ -142,12 +142,13 @@ contract SessionKeyValidatorTest is BoopTestUtils {
         SessionKeyValidator(sessionKeyValidator).addSessionKey(dest, publicKey);
 
         // Create a valid Boop
-        Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
+        Boop memory boop = createSignedBoop(smartAccount, dest, ZERO_ADDRESS, privKey, new bytes(0));
 
         // Call validate
         vm.prank(smartAccount);
         bytes memory result = SessionKeyValidator(sessionKeyValidator).validate(boop);
-
+        console.log("returned result: ");
+        console.logBytes(result);
         // Should return empty bytes4(0) for success
         assertEq(result, abi.encodeWithSelector(bytes4(0)));
     }
