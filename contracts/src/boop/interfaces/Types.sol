@@ -168,3 +168,16 @@ struct ExecutionOutput {
     CallStatus status;
     bytes revertData;
 }
+
+// ====================================================================================================
+// EXTENSIONS TYPES
+
+/**
+ * Information (destination, value and calldata) for a call to be made by the account on behalf
+ * of an execution extension.
+ */
+struct CallInfo {
+    address dest;
+    uint256 value;
+    bytes callData;
+}

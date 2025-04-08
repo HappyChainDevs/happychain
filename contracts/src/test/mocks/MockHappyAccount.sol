@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {IAccount, ExecutionOutput} from "boop/interfaces/IAccount.sol";
+import {IAccount} from "boop/interfaces/IAccount.sol";
 import {
     IExtensibleAccount,
     ExtensionType,
@@ -9,7 +9,7 @@ import {
     ExtensionNotRegistered,
     CallInfo
 } from "boop/interfaces/IExtensibleAccount.sol";
-import {Boop, CallStatus} from "boop/interfaces/Types.sol";
+import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
 
 /**
  * Mock implementation of IAccount and IExtensibleAccount for testing purposes.

@@ -19,7 +19,9 @@ import {
 import {Utils} from "boop/libs/Utils.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
 import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
-import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
+import {
+    InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation, Received
+} from "boop/interfaces/EventsAndErrors.sol";
 
 /**
  * Example implementation of an extensible Account with proxy upgrade capability.
@@ -33,12 +35,6 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
 
     /// @dev Selector returned if the upgrade call is not made from the account itself, or from the owner.
     error NotSelfOrOwner();
-
-    // ====================================================================================================
-    // EVENTS
-
-    /// Emitted when ETH is received by the contract
-    event Received(address indexed sender, uint256 amount);
 
     // ====================================================================================================
     // IMMUTABLES AND STATE VARIABLES

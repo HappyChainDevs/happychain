@@ -10,7 +10,6 @@ import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
 import {Encoding} from "boop/libs/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
 import {
     CallInfo,
     ExtensionType,
@@ -20,7 +19,7 @@ import {
 } from "boop/interfaces/IExtensibleAccount.sol";
 import {VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
 import {EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
-import {Boop, CallStatus} from "boop/interfaces/Types.sol";
+import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
 import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
 
 contract HappyAccountTest is BoopTestUtils {

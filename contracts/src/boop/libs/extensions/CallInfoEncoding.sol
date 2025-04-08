@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-/**
- * Information (destination, value and calldata) for a call to be made by the account on behalf
- * of an execution extension.
- */
-struct CallInfo {
-    address dest;
-    uint256 value;
-    bytes callData;
-}
+import {CallInfo} from "boop/interfaces/Types.sol";
 
 /// Library for decoding encoded CallInfo(s).
 library CallInfoEncoding {
