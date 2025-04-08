@@ -137,7 +137,9 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
                 // The signer does not sign over these fields to avoid extra network roundtrips
                 // validation policy falls to the paymaster or the sponsoring submitter.
                 boop.gasLimit = 0;
+                boop.validateGasLimit = 0;
                 boop.executeGasLimit = 0;
+                boop.validatePaymentGasLimit = 0;
                 boop.maxFeePerGas = 0;
                 boop.submitterFee = 0;
             }

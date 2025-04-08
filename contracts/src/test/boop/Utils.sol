@@ -72,7 +72,9 @@ contract BoopTestUtils is Test {
     function signBoop(Boop memory boop, uint256 privKey) public pure returns (bytes memory signature) {
         // Store the original gas values
         uint32 origGasLimit;
+        uint32 origValidateGasLimit;
         uint32 origExecuteGasLimit;
+        uint32 origValidatePaymentGasLimit;
         uint256 origMaxFeePerGas;
         int256 origSubmitterFee;
         // Store original validator data (normally we'll use the signature to erase this)
@@ -81,13 +83,17 @@ contract BoopTestUtils is Test {
         if (boop.paymaster != boop.account) {
             // If the boop is not self-paying, we don't sign over the gas values
             origGasLimit = boop.gasLimit;
+            origValidateGasLimit = boop.validateGasLimit;
             origExecuteGasLimit = boop.executeGasLimit;
+            origValidatePaymentGasLimit = boop.validatePaymentGasLimit;
             origMaxFeePerGas = boop.maxFeePerGas;
             origSubmitterFee = boop.submitterFee;
 
             // Temporarily make them zero to not sign over them
             boop.gasLimit = 0;
+            boop.validateGasLimit = 0;
             boop.executeGasLimit = 0;
+            boop.validatePaymentGasLimit = 0;
             boop.maxFeePerGas = 0;
             boop.submitterFee = 0;
         }
@@ -100,7 +106,9 @@ contract BoopTestUtils is Test {
         if (boop.paymaster != boop.account) {
             // Restore the original gas values after signing
             boop.gasLimit = origGasLimit;
+            boop.validateGasLimit = origValidateGasLimit;
             boop.executeGasLimit = origExecuteGasLimit;
+            boop.validatePaymentGasLimit = origValidatePaymentGasLimit;
             boop.maxFeePerGas = origMaxFeePerGas;
             boop.submitterFee = origSubmitterFee;
         }
