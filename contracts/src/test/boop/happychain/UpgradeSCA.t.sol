@@ -6,17 +6,17 @@ import {Test} from "forge-std/Test.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import {MockERC20} from "../../mocks/MockERC20.sol";
-import {DeployHappyAAContracts} from "../../deploy/DeployHappyAA.s.sol";
+import {MockERC20} from "../../../mocks/MockERC20.sol";
+import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
-import {HappyEntryPoint} from "boop/core/HappyEntryPoint.sol";
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {ScrappyAccountFactory} from "boop/factories/ScrappyAccountFactory.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
-import {ScrappyAccount} from "boop/samples/ScrappyAccount.sol";
+import {EntryPoint} from "boop/core/EntryPoint.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
+import {BoopLib} from "boop/libs/BoopLib.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 
 contract UpgradeSCATest is Test {
-    using HappyTxLib for HappyTx;
+    using BoopLib for Boop;
     using MessageHashUtils for bytes32;
 
     // ====================================================================================================
@@ -31,8 +31,8 @@ contract UpgradeSCATest is Test {
     // ====================================================================================================
     // STATE VARIABLES
 
-    ScrappyAccountFactory private scrappyAccountFactory;
-    HappyEntryPoint private happyEntryPoint;
+    HappyAccountFactory private happyAccountFactory;
+    EntryPoint private entryPoint;
 
     address private smartAccount;
     address private mockToken;
@@ -48,20 +48,20 @@ contract UpgradeSCATest is Test {
         owner = vm.addr(privKey);
 
         // Set up the Deployment Script
-        DeployHappyAAContracts deployer = new DeployHappyAAContracts();
+        DeployBoopContracts deployer = new DeployBoopContracts();
 
-        // Deploy the happy-aa contracts as foundry-account-0
+        // Deploy the boop contracts as foundry-account-0
         vm.prank(owner);
         deployer.deployForTests();
 
-        scrappyAccountFactory = deployer.scrappyAccountFactory();
-        happyEntryPoint = deployer.happyEntryPoint();
+        happyAccountFactory = deployer.happyAccountFactory();
+        entryPoint = deployer.entryPoint();
 
-        // Deploy and initialize the proxy for scrappy account
-        smartAccount = scrappyAccountFactory.createAccount(SALT, owner);
+        // Deploy and initialize the proxy for happy account
+        smartAccount = happyAccountFactory.createAccount(SALT, owner);
 
         // Deploy the new implementation
-        newImpl = address(new ScrappyAccount(address(happyEntryPoint)));
+        newImpl = address(new HappyAccount(address(entryPoint)));
 
         // Deploy a mock ERC20 token
         mockToken = address(new MockERC20("MockTokenA", "MTA", uint8(18)));
@@ -79,8 +79,8 @@ contract UpgradeSCATest is Test {
         bytes32 oldImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
 
         // Create and submit upgrade transaction
-        HappyTx memory upgradeTx = _createSignedHappyTx(smartAccount, _getUpgradeCallData());
-        happyEntryPoint.submit(upgradeTx.encode());
+        Boop memory upgradeBoop = _createSignedBoop(smartAccount, _getUpgradeCallData());
+        entryPoint.submit(upgradeBoop.encode());
 
         // Verify implementation was updated
         bytes32 updatedImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
@@ -91,8 +91,8 @@ contract UpgradeSCATest is Test {
         assertEq(implAddr, newImpl, "Implementation not updated correctly");
 
         // Create and submit mint transaction to verify new implementation works
-        HappyTx memory mintTx = _createSignedHappyTx(mockToken, _getMintCallData());
-        happyEntryPoint.submit(mintTx.encode());
+        Boop memory mintBoop = _createSignedBoop(mockToken, _getMintCallData());
+        entryPoint.submit(mintBoop.encode());
 
         // Verify mint was successful
         assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
@@ -105,7 +105,7 @@ contract UpgradeSCATest is Test {
 
         // Create and submit upgrade transaction
         vm.prank(owner);
-        ScrappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, "");
+        HappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, "");
 
         // Verify implementation was updated
         bytes32 updatedImpl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
@@ -116,8 +116,8 @@ contract UpgradeSCATest is Test {
         assertEq(implAddr, newImpl, "Implementation not updated correctly");
 
         // Create and submit mint transaction to verify new implementation works
-        HappyTx memory mintTx = _createSignedHappyTx(mockToken, _getMintCallData());
-        happyEntryPoint.submit(mintTx.encode());
+        Boop memory mintBoop = _createSignedBoop(mockToken, _getMintCallData());
+        entryPoint.submit(mintBoop.encode());
 
         // Verify mint was successful
         assertEq(MockERC20(mockToken).balanceOf(owner), MINT_AMOUNT, "Mint operation failed");
@@ -133,8 +133,8 @@ contract UpgradeSCATest is Test {
         vm.prank(nonOwner);
 
         // Expect revert when trying to upgrade
-        vm.expectRevert(ScrappyAccount.NotSelfOrOwner.selector);
-        ScrappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, "");
+        vm.expectRevert(HappyAccount.NotSelfOrOwner.selector);
+        HappyAccount(payable(smartAccount)).upgradeToAndCall(newImpl, "");
 
         // Verify implementation was not updated
         bytes32 impl = vm.load(smartAccount, ERC1967_IMPLEMENTATION_SLOT);
@@ -142,20 +142,20 @@ contract UpgradeSCATest is Test {
     }
 
     // ====================================================================================================
-    // HAPPY TX CREATION UTILS
+    // BOOP CREATION UTILS
 
-    /// @dev Internal helper function to create a signed happy tx.
-    function _createSignedHappyTx(address dest, bytes memory callData) internal view returns (HappyTx memory) {
-        HappyTx memory happyTx = _getStubHappyTx();
-        happyTx.dest = dest;
-        happyTx.callData = callData;
-        happyTx.validatorData = _signHappyTx(happyTx);
-        return happyTx;
+    /// @dev Internal helper function to create a signed boop.
+    function _createSignedBoop(address dest, bytes memory callData) internal view returns (Boop memory) {
+        Boop memory boop = _getStubBoop();
+        boop.dest = dest;
+        boop.callData = callData;
+        boop.validatorData = _signBoop(boop);
+        return boop;
     }
 
-    /// @dev Internal helper function to create a stub happy tx.
-    function _getStubHappyTx() internal view returns (HappyTx memory) {
-        return HappyTx({
+    /// @dev Internal helper function to create a stub boop.
+    function _getStubBoop() internal view returns (Boop memory) {
+        return Boop({
             account: smartAccount,
             gasLimit: 4000000000,
             executeGasLimit: 4000000000,
@@ -177,12 +177,12 @@ contract UpgradeSCATest is Test {
 
     /// @dev Internal helper function to get the nonce of a smart account.
     function _getNonce() internal view returns (uint64) {
-        return happyEntryPoint.nonceValues(smartAccount, 0);
+        return entryPoint.nonceValues(smartAccount, 0);
     }
 
-    /// @dev Internal helper function to sign a happy tx.
-    function _signHappyTx(HappyTx memory happyTx) internal view returns (bytes memory signature) {
-        bytes32 hash = keccak256(happyTx.encode()).toEthSignedMessageHash();
+    /// @dev Internal helper function to sign a boop.
+    function _signBoop(Boop memory boop) internal view returns (bytes memory signature) {
+        bytes32 hash = keccak256(boop.encode()).toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
         signature = abi.encodePacked(r, s, v);
     }

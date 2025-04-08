@@ -1,33 +1,33 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTxTestUtils} from "../Utils.sol";
+import {BoopTestUtils} from "../Utils.sol";
 import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {MockValidator} from "../../../test/mocks/MockValidator.sol";
 import {MockExecutor} from "../../../test/mocks/MockExecutor.sol";
 
-import {HappyTx} from "boop/core/HappyTx.sol";
-import {HappyTxLib} from "boop/libs/HappyTxLib.sol";
+import {Boop} from "boop/core/Boop.sol";
+import {BoopLib} from "boop/libs/BoopTxLib.sol";
 
-import {ScrappyAccount} from "boop/samples/ScrappyAccount.sol";
-import {ExecutionOutput} from "boop/interfaces/IHappyAccount.sol";
-import {CallStatus} from "boop/core/HappyEntryPoint.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
+import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
+import {CallStatus} from "boop/core/EntryPoint.sol";
 import {
     CallInfo,
     ExtensionType,
     ExtensionAlreadyRegistered,
     ExtensionNotRegistered,
     InvalidExtensionValue
-} from "boop/interfaces/extensions/IExtensibleBoopAccount.sol";
-import {VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomBoopValidator.sol";
-import {EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomBoopExecutor.sol";
+} from "boop/interfaces/IExtensibleAccount.sol";
+import {VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
+import {EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
 
-import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
-import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/utils/Common.sol";
+import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
+import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/core/Utils.sol";
 
-contract ScrappyAccountTest is HappyTxTestUtils {
-    using HappyTxLib for HappyTx;
+contract HappyAccountTest is HappyTxTestUtils {
+    using BoopLib for Boop;
 
     // ====================================================================================================
     // CONSTANTS
@@ -42,9 +42,9 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     // ====================================================================================================
     // STATE VARIABLES
 
-    DeployHappyAAContracts private deployer;
+    DeployBoopContracts private deployer;
 
-    address private _happyEntryPoint;
+    address private _entryPoint;
     address private smartAccount;
     address private mockValidator;
     address private mockExecutor;
@@ -59,15 +59,15 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         owner = vm.addr(privKey);
 
         // Set up the Deployment Script, and deploy the happy-aa contracts as foundry-account-0
-        deployer = new DeployHappyAAContracts();
+        deployer = new DeployBoopContracts();
         vm.prank(owner);
         deployer.deployForTests();
 
-        happyEntryPoint = deployer.happyEntryPoint();
-        _happyEntryPoint = address(happyEntryPoint);
-        smartAccount = deployer.scrappyAccountFactory().createAccount(SALT, owner);
+        entryPoint = deployer.entryPoint();
+        _entryPoint = address(entryPoint);
+        smartAccount = deployer.happyAccountFactory().createAccount(SALT, owner);
 
-        dest = deployer.scrappyAccountFactory().createAccount(SALT2, owner);
+        dest = deployer.happyAccountFactory().createAccount(SALT2, owner);
 
         // Fund the smart account
         vm.deal(smartAccount, INITIAL_DEPOSIT);
@@ -87,11 +87,11 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     // SIGNATURE VALIDATION TESTS
 
     function testValidateEmptySignature() public {
-        // Create a happyTx with an empty signature
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with an empty signature
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
-        // Validate function must be called by the HappyEntryPoint
-        vm.prank(_happyEntryPoint);
+        // Validate function must be called by the EntryPoint
+        vm.prank(_entryPoint);
 
         // The function should revert with ValidationReverted(InvalidSignature.selector)
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()"))));
@@ -100,43 +100,43 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     }
 
     function testValidateInvalidSignatureLength() public {
-        // Create a happyTx with a signature of invalid length
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.validatorData = hex"deadbeef";
+        // Create a boop with a signature of invalid length
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
+        boop.validatorData = hex"deadbeef";
 
-        // Validate function must be called by the HappyEntryPoint
-        vm.prank(_happyEntryPoint);
+        // Validate function must be called by the EntryPoint
+        vm.prank(_entryPoint);
 
         // The function should revert with ValidationReverted(InvalidSignature.selector)
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InvalidSignature()"))));
 
-        ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        HappyAccount(payable(smartAccount)).validate(boop);
     }
 
     function testValidateInvalidSignature() public {
-        // Create a happyTx with a dummy signature of length 65 bytes
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.validatorData =
-            hex"deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefde";
+        // Create a boop with a dummy signature of length 65 bytes
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
+        boop.validatorData =
+            hex"deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefde";
 
-        // Validate function must be called by the HappyEntryPoint
-        vm.prank(_happyEntryPoint);
+        // Validate function must be called by the EntryPoint
+        vm.prank(_entryPoint);
 
         // The function should revert with ValidationReverted(InvalidSignature.selector)
         vm.expectRevert(abi.encodeWithSelector(InvalidSignature.selector));
 
-        ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        HappyAccount(payable(smartAccount)).validate(boop);
     }
 
     function testValidateInvalidOwnerSignature() public {
-        // Create a happyTx with a signature from a different owner
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.validatorData = signHappyTx(happyTx, DUMMY_PRIV_KEY);
+        // Create a boop with a signature from a different owner
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
+        boop.validatorData = signBoop(boop, DUMMY_PRIV_KEY);
 
-        // Validate function must be called by the HappyEntryPoint
-        vm.prank(_happyEntryPoint);
+        // Validate function must be called by the EntryPoint
+        vm.prank(_entryPoint);
 
-        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        bytes memory validationData = HappyAccount(payable(smartAccount)).validate(boop);
         assertEq(validationData, abi.encodeWithSelector(InvalidSignature.selector));
     }
 
@@ -144,14 +144,14 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     // SIGNATURE VALIDATION TESTS (SIMULATION)
 
     function testSimulationValidateUnknownDuringSimulation() public {
-        // Create a happyTx with a signature from a different owner
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.validatorData = signHappyTx(happyTx, DUMMY_PRIV_KEY);
+        // Create a boop with a signature from a different owner
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
+        boop.validatorData = signBoop(boop, DUMMY_PRIV_KEY);
 
         // Validate function must be called by the HappyEntryPoint, with tx.origin = address(0)
-        vm.prank(_happyEntryPoint, ZERO_ADDRESS);
+        vm.prank(_entryPoint, ZERO_ADDRESS);
 
-        bytes memory validationData = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        bytes memory validationData = HappyAccount(payable(smartAccount)).validate(boop);
         assertEq(validationData, abi.encodeWithSelector(UnknownDuringSimulation.selector));
     }
 
@@ -159,36 +159,36 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     // VALIDATION TESTS (EXTENSIONS)
 
     function testValidateWithInvalidExtensionValue() public {
-        // Create a HappyTx with invalid validator address in extraData (not 20 bytes)
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with invalid validator address in extraData (not 20 bytes)
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Create invalid validator address (less than 20 bytes)
         bytes memory invalidValidatorAddress = "deadbeefdeadbeefde";
 
         // Add the invalid validator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000010, invalidValidatorAddress);
+        boop.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000010, invalidValidatorAddress);
 
         // Call validate as the entry point
-        vm.prank(_happyEntryPoint);
-        bytes memory result = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        vm.prank(_entryPoint);
+        bytes memory result = HappyAccount(payable(smartAccount)).validate(boop);
 
         // Should return InvalidExtensionValue selector
         assertEq(result, abi.encodeWithSelector(InvalidExtensionValue.selector));
     }
 
     function testValidateWithUnregisteredExtension() public {
-        // Create a HappyTx with unregistered validator address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with unregistered validator address in extraData
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Create a validator address that is not registered
         address unregisteredValidator = address(0xDEAD);
 
         // Add the unregistered validator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(unregisteredValidator));
+        boop.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(unregisteredValidator));
 
         // Call validate as the entry point
-        vm.prank(_happyEntryPoint);
-        bytes memory result = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        vm.prank(_entryPoint);
+        bytes memory result = HappyAccount(payable(smartAccount)).validate(boop);
 
         // Should return ExtensionNotRegistered selector
         assertEq(result, abi.encodeWithSelector(ExtensionNotRegistered.selector));
@@ -198,15 +198,15 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Register the MockValidator as a validator extension
         _setupMockValidator(mockValidator);
 
-        // Create a HappyTx with the MockValidator address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with the MockValidator address in extraData
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockValidator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
+        boop.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
 
         // Call validate as the entry point
-        vm.prank(_happyEntryPoint);
-        bytes memory result = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        vm.prank(_entryPoint);
+        bytes memory result = HappyAccount(payable(smartAccount)).validate(boop);
 
         // Should return empty bytes (approved)
         assertEq(result, "");
@@ -219,15 +219,15 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Register the MockValidator as a validator extension
         _setupMockValidator(mockValidator);
 
-        // Create a HappyTx with the MockValidator address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with the MockValidator address in extraData
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockValidator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
+        boop.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
 
         // Call validate as the entry point
-        vm.prank(_happyEntryPoint);
-        bytes memory result = ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        vm.prank(_entryPoint);
+        bytes memory result = HappyAccount(payable(smartAccount)).validate(boop);
 
         // Should return ValidationRejected selector
         assertEq(result, abi.encodeWithSelector(MockValidator.ValidationRejected.selector));
@@ -240,18 +240,18 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Register the MockValidator as a validator extension
         _setupMockValidator(mockValidator);
 
-        // Create a HappyTx with the MockValidator address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with the MockValidator address in extraData
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockValidator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
+        boop.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
 
         // Call validate as the entry point
-        vm.prank(_happyEntryPoint);
+        vm.prank(_entryPoint);
 
         // The validator should revert
         vm.expectRevert(abi.encodeWithSelector(MockValidator.CustomErrorMockRevert.selector));
-        ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        HappyAccount(payable(smartAccount)).validate(boop);
     }
 
     function testValidateWithMockValidatorEmptyRevert() public {
@@ -261,18 +261,18 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Register the MockValidator as a validator extension
         _setupMockValidator(mockValidator);
 
-        // Create a HappyTx with the MockValidator address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with the MockValidator address in extraData
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockValidator address to extraData with VALIDATOR_KEY
-        happyTx.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
+        boop.extraData = encodeExtensionData(VALIDATOR_KEY, 0x000014, abi.encodePacked(mockValidator));
 
         // Call validate as the entry point
-        vm.prank(_happyEntryPoint);
+        vm.prank(_entryPoint);
 
         // The validator should revert
         vm.expectRevert();
-        ScrappyAccount(payable(smartAccount)).validate(happyTx);
+        HappyAccount(payable(smartAccount)).validate(boop);
     }
 
     // ====================================================================================================
@@ -281,12 +281,12 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     function testExecuteMintToken() public {
         uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
 
-        // Create a valid happyTx for minting mock tokens
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
+        // Create a valid boop for minting mock tokens
+        Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, smartAccount, mockToken, privKey);
 
         // Execute the transaction
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+        vm.prank(_entryPoint);
+        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(boop);
 
         assertTrue(output.status == CallStatus.SUCCEEDED);
         assertEq(output.revertData, new bytes(0));
@@ -298,31 +298,31 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     function testExecuteEthTransfer() public {
         uint256 initialBalance = getEthBalance(dest);
 
-        // Create a valid happyTx for transferring ETH
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
-        happyTx.value = 1 ether;
-        happyTx.validatorData = signHappyTx(happyTx, privKey);
+        // Create a valid boop for transferring ETH
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
+        boop.value = 1 ether;
+        boop.validatorData = signBoop(boop, privKey);
 
         // Execute the transaction
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+        vm.prank(_entryPoint);
+        ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
         assertTrue(output.status == CallStatus.SUCCEEDED);
         assertEq(output.revertData, new bytes(0));
 
         uint256 finalBalance = getEthBalance(dest);
-        assertEq(finalBalance, initialBalance + happyTx.value);
+        assertEq(finalBalance, initialBalance + boop.value);
     }
 
     function testExecuteInnerCallFails() public {
         uint256 initialTokenBalance = getTokenBalance(mockToken, dest);
 
-        // Create a happyTx with wrong token address, so the call reverts
-        HappyTx memory happyTx = createSignedHappyTxForMintToken(smartAccount, dest, smartAccount, dest, privKey);
+        // Create a boop with wrong token address, so the call reverts
+        Boop memory boop = createSignedBoopForMintToken(smartAccount, dest, smartAccount, dest, privKey);
 
         // Execute the transaction
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+        vm.prank(_entryPoint);
+        ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
         assertTrue(output.status == CallStatus.CALL_REVERTED);
         assertEq(output.revertData, new bytes(0));
@@ -335,18 +335,18 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     // EXECUTION TESTS (EXTENSIONS)
 
     function testExecuteWithInvalidExtensionValue() public {
-        // Create a HappyTx with invalid executor address in extraData (not 20 bytes)
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with invalid executor address in extraData (not 20 bytes)
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Create invalid executor address (less than 20 bytes)
         bytes memory invalidExecutorAddress = "deadbeefdeadbeefde";
 
         // Add the invalid executor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000010, invalidExecutorAddress);
+        boop.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000010, invalidExecutorAddress);
 
         // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+        vm.prank(_entryPoint);
+        ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
         // Should return EXECUTE_FAILED with InvalidExtensionValue selector
         assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
@@ -354,18 +354,18 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     }
 
     function testExecuteWithUnregisteredExtension() public {
-        // Create a HappyTx with unregistered executor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with unregistered executor address in extraData
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Create an executor address that is not registered
         address unregisteredExecutor = address(0xDEAD);
 
         // Add the unregistered executor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(unregisteredExecutor));
+        boop.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(unregisteredExecutor));
 
         // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+        vm.prank(_entryPoint);
+        ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
         // Should return EXECUTE_FAILED with ExtensionNotRegistered selector
         assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
@@ -384,16 +384,16 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         uint256 transferAmount = 0.1 ether;
         uint256 initialBalance = recipient.balance;
 
-        // Create a HappyTx with the MockExecutor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, recipient, smartAccount, new bytes(0));
-        happyTx.value = transferAmount;
+        // Create a boop with the MockExecutor address in extraData
+        Boop memory boop = getStubBoop(smartAccount, recipient, smartAccount, new bytes(0));
+        boop.value = transferAmount;
 
         // Add the MockExecutor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
+        boop.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
 
         // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+        vm.prank(_entryPoint);
+        ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
         // Should return SUCCEEDED
         assertEq(uint8(output.status), uint8(CallStatus.SUCCEEDED));
@@ -409,15 +409,15 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Register the MockExecutor as an executor extension
         _setupMockExecutor(mockExecutor);
 
-        // Create a HappyTx with the MockExecutor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with the MockExecutor address in extraData
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockExecutor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
+        boop.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
 
         // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
-        ExecutionOutput memory output = ScrappyAccount(payable(smartAccount)).execute(happyTx);
+        vm.prank(_entryPoint);
+        ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
         // Should return EXECUTE_FAILED
         assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
@@ -431,18 +431,18 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Register the MockExecutor as an executor extension
         _setupMockExecutor(mockExecutor);
 
-        // Create a HappyTx with the MockExecutor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with the MockExecutor address in extraData
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockExecutor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
+        boop.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
 
         // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
+        vm.prank(_entryPoint);
 
         // The executor should revert with a custom error
         vm.expectRevert(abi.encodeWithSelector(MockExecutor.CustomErrorMockRevert.selector));
-        ScrappyAccount(payable(smartAccount)).execute(happyTx);
+        HappyAccount(payable(smartAccount)).execute(boop);
     }
 
     function testExecuteWithMockExecutorEmptyRevert() public {
@@ -452,18 +452,18 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         // Register the MockExecutor as an executor extension
         _setupMockExecutor(mockExecutor);
 
-        // Create a HappyTx with the MockExecutor address in extraData
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, smartAccount, new bytes(0));
+        // Create a boop with the MockExecutor address in extraData
+        Boop memory boop = getStubBoop(smartAccount, dest, smartAccount, new bytes(0));
 
         // Add the MockExecutor address to extraData with EXECUTOR_KEY
-        happyTx.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
+        boop.extraData = encodeExtensionData(EXECUTOR_KEY, 0x000014, abi.encodePacked(mockExecutor));
 
         // Call execute as the entry point
-        vm.prank(_happyEntryPoint);
+        vm.prank(_entryPoint);
 
         // The executor should revert without any revert data
         vm.expectRevert();
-        ScrappyAccount(payable(smartAccount)).execute(happyTx);
+        HappyAccount(payable(smartAccount)).execute(boop);
     }
 
     // ====================================================================================================
@@ -472,7 +472,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     function testPayoutNotFromEntryPoint() public {
         vm.prank(address(1));
         vm.expectRevert(NotFromEntryPoint.selector);
-        ScrappyAccount(payable(smartAccount)).payout(1 ether);
+        HappyAccount(payable(smartAccount)).payout(1 ether);
     }
 
     function testPayoutSucceeds() public {
@@ -483,13 +483,13 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         vm.deal(smartAccount, 1 ether); // To pay the tx.origin
 
         // Warm up the smartAccount address with a dummy call
-        vm.prank(_happyEntryPoint, mockOrigin);
-        ScrappyAccount(payable(smartAccount)).payout(0);
+        vm.prank(_entryPoint, mockOrigin);
+        HappyAccount(payable(smartAccount)).payout(0);
 
         // Measure gas usage on the actual call we want to measure
-        vm.prank(_happyEntryPoint, mockOrigin);
+        vm.prank(_entryPoint, mockOrigin);
         uint256 gasBefore = gasleft();
-        ScrappyAccount(payable(smartAccount)).payout(1 ether);
+        HappyAccount(payable(smartAccount)).payout(1 ether);
         uint256 gasUsed = gasBefore - gasleft();
 
         // Check that tx.origin received the funds
@@ -511,7 +511,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         bytes memory signature = abi.encodePacked(r, s, v);
 
         // Call isValidSignature and verify it returns the correct magic value
-        bytes4 result = ScrappyAccount(payable(smartAccount)).isValidSignature(messageHash, signature);
+        bytes4 result = HappyAccount(payable(smartAccount)).isValidSignature(messageHash, signature);
         bytes4 expectedMagicValue = 0x1626ba7e; // MAGIC_VALUE from ERC-1271
         assertEq(result, expectedMagicValue);
     }
@@ -526,7 +526,7 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         bytes memory invalidSignature = abi.encodePacked(r, s, v);
 
         // Call isValidSignature and verify it returns bytes4(0) for invalid signature
-        bytes4 result = ScrappyAccount(payable(smartAccount)).isValidSignature(messageHash, invalidSignature);
+        bytes4 result = HappyAccount(payable(smartAccount)).isValidSignature(messageHash, invalidSignature);
         assertEq(result, bytes4(0));
     }
 
@@ -534,8 +534,8 @@ contract ScrappyAccountTest is HappyTxTestUtils {
     // INTERFACE SUPPORT TESTS
 
     function testSupportsInterface() public view {
-        // Get reference to the ScrappyAccount contract
-        ScrappyAccount account = ScrappyAccount(payable(smartAccount));
+        // Get reference to the HappyAccount contract
+        HappyAccount account = HappyAccount(payable(smartAccount));
 
         // Test that a random interface ID is not supported
         bytes4 randomInterfaceId = 0x12345678;
@@ -548,10 +548,10 @@ contract ScrappyAccountTest is HappyTxTestUtils {
         bytes4 erc1271InterfaceId = 0x1626ba7e; // ERC-1271 interface ID
         assertTrue(account.supportsInterface(erc1271InterfaceId), "Should support ERC-1271");
 
-        bytes4 happyAccountInterfaceId = 0x2b39e81f; // IHappyAccount interface ID
+        bytes4 happyAccountInterfaceId = 0x2b39e81f; // IAccount interface ID
         assertTrue(account.supportsInterface(happyAccountInterfaceId), "Should support IHappyAccount");
 
-        bytes4 happyPaymasterInterfaceId = 0x24542ca5; // IHappyPaymaster interface ID
+        bytes4 happyPaymasterInterfaceId = 0x24542ca5; // IPaymaster interface ID
         assertTrue(account.supportsInterface(happyPaymasterInterfaceId), "Should support IHappyPaymaster");
     }
 
@@ -565,10 +565,10 @@ contract ScrappyAccountTest is HappyTxTestUtils {
 
         // Initially, the extensions should not be registered
         assertFalse(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockValidatorExtension, ExtensionType.Validator)
         );
         assertFalse(
-            ScrappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
+            HappyAccount(payable(smartAccount)).isExtensionRegistered(mockExecutorExtension, ExtensionType.Executor)
         );
 
         // Test adding a validator extension
