@@ -16,6 +16,7 @@ import {
 
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {console} from "forge-std/Script.sol";
+
 contract SessionKeyValidatorTest is BoopTestUtils {
     using ECDSA for bytes32;
     using BoopLib for Boop;
