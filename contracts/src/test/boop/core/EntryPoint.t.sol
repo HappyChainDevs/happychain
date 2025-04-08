@@ -484,8 +484,7 @@ contract EntryPointTest is BoopTestUtils {
     }
 
     function testExecuteMockRevertIntentionalRevert() public {
-        Boop memory boop =
-            createSignedBoop(smartAccount, mockRevert, paymaster, privKey, getMockRevertCallData());
+        Boop memory boop = createSignedBoop(smartAccount, mockRevert, paymaster, privKey, getMockRevertCallData());
 
         // The result should be output.callStatus = CallReverted
         SubmitOutput memory output = entryPoint.submit(boop.encode());
@@ -501,8 +500,7 @@ contract EntryPointTest is BoopTestUtils {
     }
 
     function testExecuteMockRevertIntentionalEmptyRevert() public {
-        Boop memory boop =
-            createSignedBoop(smartAccount, mockRevert, paymaster, privKey, getMockRevertEmptyCallData());
+        Boop memory boop = createSignedBoop(smartAccount, mockRevert, paymaster, privKey, getMockRevertEmptyCallData());
 
         // This reverts with empty revertData: ← [Revert] EvmError: Revert
         SubmitOutput memory output = entryPoint.submit(boop.encode());

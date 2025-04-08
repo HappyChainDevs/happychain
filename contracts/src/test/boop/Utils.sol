@@ -35,13 +35,11 @@ contract BoopTestUtils is Test {
         boop = createSignedBoop(account, token, paymaster, privKey, mintCallData);
     }
 
-    function createSignedBoop(
-        address account,
-        address dest,
-        address paymaster,
-        uint256 privKey,
-        bytes memory callData
-    ) public view returns (Boop memory boop) {
+    function createSignedBoop(address account, address dest, address paymaster, uint256 privKey, bytes memory callData)
+        public
+        view
+        returns (Boop memory boop)
+    {
         boop = getStubBoop(account, dest, paymaster, callData);
         boop.validatorData = signBoop(boop, privKey);
     }
