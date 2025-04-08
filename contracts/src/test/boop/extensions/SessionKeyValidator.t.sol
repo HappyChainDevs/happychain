@@ -10,9 +10,7 @@ import {MockHappyAccount} from "../../../test/mocks/MockHappyAccount.sol";
 
 import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
-import {
-    SessionKeyValidator, AccountPaidSessionKeyBoop, InvalidSignature
-} from "boop/extensions/SessionKeyValidator.sol";
+import {SessionKeyValidator, InvalidSignature} from "boop/extensions/SessionKeyValidator.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
 contract SessionKeyValidatorTest is BoopTestUtils {
@@ -180,7 +178,7 @@ contract SessionKeyValidatorTest is BoopTestUtils {
         bytes memory result = SessionKeyValidator(sessionKeyValidator).validate(boop);
 
         // Should return AccountPaidSessionKeyBoop selector
-        assertEq(result, abi.encodeWithSelector(AccountPaidSessionKeyBoop.selector));
+        assertEq(result, abi.encodeWithSelector(SessionKeyValidator.AccountPaidSessionKeyBoop.selector));
     }
 
     // ====================================================================================================
