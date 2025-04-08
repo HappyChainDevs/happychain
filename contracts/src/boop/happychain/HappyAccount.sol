@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.28;
 
+import {ECDSA} from "solady/utils/ECDSA.sol";
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
-import {ECDSA} from "solady/utils/ECDSA.sol";
+
+import {Utils} from "boop/libs/Utils.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
 
 import {ICustomExecutor, EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
 import {ICustomValidator, VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
@@ -15,16 +18,13 @@ import {
     InvalidExtensionValue,
     CallInfo
 } from "boop/interfaces/IExtensibleAccount.sol";
-
-import {Utils} from "boop/libs/Utils.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
 import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
 import {
     InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation, Received
 } from "boop/interfaces/EventsAndErrors.sol";
 
 /**
- * Example implementation of an extensible Account with proxy upgrade capability.
+ * Implementation of an extensible account with proxy upgrade capability.
  */
 contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;

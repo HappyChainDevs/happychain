@@ -18,9 +18,7 @@ These benefits come with intentional trade-offs: slightly higher gas costs (21k 
 boop/
 ├── core/                       # Core contracts
 │   ├── EntryPoint.sol              # The entrypoint for handling boops on-chain, singleton contract.
-│   ├── Boop.sol                    # The definition of a boop transaction.
 │   ├── Staker.sol                  # Contract for staking ETH to be used as gas for boops.
-│   └── Utils.sol                   # Utility functions for the core contracts.
 │
 ├── libs/                       # Library contracts (for use by `core/` and account/paymaster implementations)
 │   ├── Encoding.sol                # Encoding/Decoding boops.
@@ -29,11 +27,11 @@ boop/
 │       └── CallInfoEncoding.sol        # Utilities for encoding/decoding CallInfo structs for executors.
 │
 ├── interfaces/                 # Contract interfaces
-│   ├── EventsAndErrors.sol         # Shared events and errors used across the protocol
-│   ├── Types.sol                   # Shared types and enums used across the protocol
 │   ├── IAccount.sol                # Account interface definitions.
 │   ├── IExtensibleAccount.sol      # Interface for extensible accounts.
 │   ├── IPaymaster.sol              # Paymaster interface definitions.
+│   ├── EventsAndErrors.sol         # Shared events and errors used across the protocol
+│   ├── Types.sol                   # Shared types and enums used across the protocol
 │   └── extensions/                 # Extension interfaces
 │       ├── ICustomExecutor.sol         # Interface for custom execution methods.
 │       └── ICustomValidator.sol        # Interface for custom validation methods.

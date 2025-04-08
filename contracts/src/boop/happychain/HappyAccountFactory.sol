@@ -5,20 +5,34 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 
-/// Sample factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
+/**
+ * Factory contract for deploying deterministic ERC1967 proxies for {HappyAccount}.
+ */
 contract HappyAccountFactory {
+    // ====================================================================================================
+    // ERRORS
+
     /// Error thrown when account initialization fails
     error InitializeError();
 
     /// Error thrown when attempting to deploy to an address that already has code
     error AlreadyDeployed();
 
-    /// The implementation contract that all proxies will delegate to {ScrappyAccount}.
+    // ====================================================================================================
+    // IMMUTABLES AND STATE VARIABLES
+
+    /// The implementation contract that all proxies will delegate to {HappyAccount}.
     address public immutable ACCOUNT_IMPLEMENTATION;
+
+    // ====================================================================================================
+    // CONSTRUCTOR
 
     constructor(address accountImplementation) {
         ACCOUNT_IMPLEMENTATION = accountImplementation;
     }
+
+    // ====================================================================================================
+    // EXTERNAL FUNCTIONS
 
     /**
      * Creates and deploys a new HappyAccount proxy contract
