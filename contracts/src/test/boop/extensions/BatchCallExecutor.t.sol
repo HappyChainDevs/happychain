@@ -6,9 +6,8 @@ import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {MockHappyAccount} from "../../../test/mocks/MockHappyAccount.sol";
 
-import {Boop} from "boop/core/Boop.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
-import {CallStatus} from "boop/core/EntryPoint.sol";
+import {Boop, CallStatus} from "boop/interfaces/Types.sol";
 import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
 import {CallInfo, CallInfoEncoding} from "boop/libs/extensions/CallInfoEncoding.sol";
 import {BatchCallExecutor, BATCH_CALL_INFO_KEY, InvalidBatchCallInfo} from "boop/extensions/BatchCallExecutor.sol";

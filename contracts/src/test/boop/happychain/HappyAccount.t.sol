@@ -6,13 +6,11 @@ import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {MockValidator} from "../../../test/mocks/MockValidator.sol";
 import {MockExecutor} from "../../../test/mocks/MockExecutor.sol";
+import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
-import {Boop} from "boop/core/Boop.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
-
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
-import {CallStatus} from "boop/core/EntryPoint.sol";
 import {
     CallInfo,
     ExtensionType,
@@ -22,8 +20,7 @@ import {
 } from "boop/interfaces/IExtensibleAccount.sol";
 import {VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
 import {EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
-
-import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
+import {Boop, CallStatus} from "boop/interfaces/Types.sol";
 import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
 
 contract HappyAccountTest is BoopTestUtils {
