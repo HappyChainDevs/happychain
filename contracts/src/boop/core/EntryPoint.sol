@@ -9,7 +9,7 @@ import {Staker} from "boop/core/Staker.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
 import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
 import {BoopLib} from "boop/libs/BoopLib.sol";
-import {UnknownDuringSimulation} from "boop/core/Utils.sol";
+import {UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
 
 enum CallStatus {
     SUCCEEDED, // The call succeeded.

@@ -9,7 +9,7 @@ import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
 import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
-import {NotFromEntryPoint} from "boop/core/Utils.sol";
+import {NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
 
 contract HappyPaymasterTest is BoopTestUtils {
     // ====================================================================================================

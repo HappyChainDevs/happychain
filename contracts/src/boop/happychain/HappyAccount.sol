@@ -19,7 +19,7 @@ import {
     CallInfo
 } from "boop/interfaces/IExtensibleAccount.sol";
 import {BoopLib} from "boop/libs/BoopLib.sol";
-import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/core/Utils.sol";
+import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
 
 /**
  * Example implementation of an extensible Account with proxy upgrade capability.
