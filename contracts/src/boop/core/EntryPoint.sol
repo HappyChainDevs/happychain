@@ -4,13 +4,12 @@ pragma solidity ^0.8.20;
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-import {Boop} from "boop/core/Boop.sol";
 import {Staker} from "boop/core/Staker.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
 import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
 
-import {Encoding} from "boop/libs/Encoding.sol";
 import {Utils} from "boop/libs/Utils.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
 import {
     BoopSubmitted,
     CallReverted,
@@ -26,7 +25,7 @@ import {
     PayoutFailed,
     UnknownDuringSimulation
 } from "boop/interfaces/EventsAndErrors.sol";
-import {CallStatus, Validity, SubmitOutput} from "boop/interfaces/Types.sol";
+import {Boop, CallStatus, Validity, SubmitOutput} from "boop/interfaces/Types.sol";
 
 /// @notice cf. {EntryPoint.submit}
 contract EntryPoint is Staker, ReentrancyGuardTransient {

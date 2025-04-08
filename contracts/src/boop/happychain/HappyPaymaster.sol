@@ -5,12 +5,13 @@ import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/Reentrancy
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {Boop} from "boop/core/Boop.sol";
+import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {IPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
+
 import {Utils} from "boop/libs/Utils.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
+import {Boop} from "boop/interfaces/Types.sol";
 import {NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
-import {EntryPoint} from "../core/EntryPoint.sol";
 
 /**
  * An example paymaster contract implementing the IPaymaster interface.

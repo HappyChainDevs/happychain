@@ -8,14 +8,12 @@ import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {MockHappyAccount} from "../../../test/mocks/MockHappyAccount.sol";
 
-import {Boop} from "boop/core/Boop.sol";
+import {Boop} from "boop/interfaces/Types.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
 import {
     SessionKeyValidator, AccountPaidSessionKeyBoop, InvalidSignature
 } from "boop/extensions/SessionKeyValidator.sol";
-
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
-import {console} from "forge-std/Script.sol";
 
 contract SessionKeyValidatorTest is BoopTestUtils {
     using ECDSA for bytes32;
@@ -148,8 +146,7 @@ contract SessionKeyValidatorTest is BoopTestUtils {
         // Call validate
         vm.prank(smartAccount);
         bytes memory result = SessionKeyValidator(sessionKeyValidator).validate(boop);
-        console.log("returned result: ");
-        console.logBytes(result);
+
         // Should return empty bytes4(0) for success
         assertEq(result, abi.encodeWithSelector(bytes4(0)));
     }
