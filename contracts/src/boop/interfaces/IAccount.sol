@@ -1,24 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Boop, CallStatus} from "boop/interfaces/Types.sol";
-
-/**
- * Execution Output
- * @param status      - Status of the execution (succeeded, failed, or call reverted)
- * @param revertData  - The associated revert data if the call specified by the boop reverts; otherwise, it is empty.
- */
-struct ExecutionOutput {
-    CallStatus status;
-    bytes revertData;
-}
-
-/**
- * Selector returned by {IAccount.validate} during simulation mode when
- * the nonce is greater than the current nonce but could be valid in the future.
- * This allows the EntryPoint to estimate gas even if the nonce isn't ready yet.
- */
-error FutureNonceDuringSimulation();
+import {Boop, ExecutionOutput} from "boop/interfaces/Types.sol";
 
 /**
  * Interface to be implemented by smart contract accounts conforming to the Boop Account standard.

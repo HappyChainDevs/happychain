@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
-
 // ====================================================================================================
+
 // BOOP
 
 /**
@@ -153,5 +153,18 @@ struct SubmitOutput {
      * The revertData with which either the call or the {IAccount.execute} function reverted
      * (when the associated `callStatus` is set).
      */
+    bytes revertData;
+}
+
+// ====================================================================================================
+// IACCOUNT TYPES
+
+/**
+ * Output struct returned by {IAccount.execute}.
+ * @param status      - Status of the execution (succeeded, failed, or call reverted)
+ * @param revertData  - The associated revert data if the call specified by the boop reverts; otherwise, it is empty.
+ */
+struct ExecutionOutput {
+    CallStatus status;
     bytes revertData;
 }
