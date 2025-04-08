@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {HappyTxTestUtils} from "../Utils.sol";
-import {HappyTx} from "boop/core/HappyTx.sol";
+import {BoopTestUtils} from "../Utils.sol";
+import {Boop} from "boop/core/Boop.sol";
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {DeployHappyAAContracts} from "../../../deploy/DeployHappyAA.s.sol";
+import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
-import {ScrappyPaymaster} from "boop/samples/ScrappyPaymaster.sol";
-import {SubmitterFeeTooHigh} from "boop/interfaces/IHappyPaymaster.sol";
-import {NotFromEntryPoint} from "boop/utils/Common.sol";
+import {HappyPaymaster} from "boop/happychain/HappyPaymaster.sol";
+import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
+import {NotFromEntryPoint} from "boop/core/Utils.sol";
 
-contract ScrappyPaymasterTest is HappyTxTestUtils {
+contract HappyPaymasterTest is BoopTestUtils {
     // ====================================================================================================
     // CONSTANTS
 
@@ -24,9 +24,9 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
     // ====================================================================================================
     // STATE VARIABLES
 
-    DeployHappyAAContracts private deployer;
+    DeployBoopContracts private deployer;
 
-    address private _happyEntryPoint;
+    address private _entryPoint;
     address private smartAccount;
     address private paymaster;
     uint256 private privKey;
@@ -37,18 +37,17 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
 
-        // Set up the Deployment Script, and deploy the happy-aa contracts as foundry-account-0
-        deployer = new DeployHappyAAContracts();
+        // Set up the Deployment Script, and deploy the boop contracts as foundry-account-0
+        deployer = new DeployBoopContracts();
         vm.prank(owner);
         deployer.deployForTests();
 
-        happyEntryPoint = deployer.happyEntryPoint();
-        _happyEntryPoint = address(happyEntryPoint);
-        smartAccount = deployer.scrappyAccountFactory().createAccount(SALT, owner);
+        _entryPoint = address(deployer.entryPoint());
+        smartAccount = deployer.happyAccountFactory().createAccount(SALT, owner);
 
-        dest = deployer.scrappyAccountFactory().createAccount(SALT2, owner);
+        dest = deployer.happyAccountFactory().createAccount(SALT2, owner);
 
-        paymaster = address(deployer.scrappyPaymaster());
+        paymaster = address(deployer.happyPaymaster());
 
         // Fund the paymaster
         vm.deal(paymaster, INITIAL_DEPOSIT);
@@ -58,41 +57,41 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
     // PAYMENT VALIDATION TESTS
 
     function testPaymentValidationZeroOwed() public {
-        // Create a valid happyTx with negative submitterFee to force owed to be zero
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, paymaster, new bytes(0));
+        // Create a valid boop with negative submitterFee to force owed to be zero
+        Boop memory boop = getStubBoop(smartAccount, dest, paymaster, new bytes(0));
 
         // Set up to make the owed amount negative (which should result in 0 transfer)
-        happyTx.maxFeePerGas = 1; // Minimum gas price
-        happyTx.submitterFee = -1000000; // Large negative fee to ensure owed is negative
+        boop.maxFeePerGas = 1; // Minimum gas price
+        boop.submitterFee = -1000000; // Large negative fee to ensure owed is negative
 
         // Call validatePayment from the entrypoint
-        vm.prank(_happyEntryPoint);
-        bytes memory validationData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
+        vm.prank(_entryPoint);
+        bytes memory validationData = HappyPaymaster(payable(paymaster)).validatePayment(boop);
 
         // Verify validation was successful (returns empty selector)
         assertEq(validationData, abi.encodeWithSelector(bytes4(0)));
     }
 
     function testPaymentValidationRevertsWhenNotCalledThroughEntrypoint() public {
-        // Create a valid happyTx
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, paymaster, new bytes(0));
+        // Create a valid boop
+        Boop memory boop = getStubBoop(smartAccount, dest, paymaster, new bytes(0));
 
         // Call validatePayment from an address that is not the entrypoint
         // This should revert with NotFromEntryPoint error
         vm.expectRevert(NotFromEntryPoint.selector);
-        ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
+        HappyPaymaster(payable(paymaster)).validatePayment(boop);
     }
 
     function testPaymentValidationSubmitterFeeTooHigh() public {
-        // Create a valid happyTx with high submitterFee
-        HappyTx memory happyTx = getStubHappyTx(smartAccount, dest, paymaster, new bytes(0));
+        // Create a valid boop with high submitterFee
+        Boop memory boop = getStubBoop(smartAccount, dest, paymaster, new bytes(0));
 
         // Set a very high submitter fee
-        happyTx.submitterFee = type(int256).max;
+        boop.submitterFee = type(int256).max;
 
         // Call validatePayment from the entrypoint
-        vm.prank(_happyEntryPoint);
-        bytes memory validationData = ScrappyPaymaster(payable(paymaster)).validatePayment(happyTx);
+        vm.prank(_entryPoint);
+        bytes memory validationData = HappyPaymaster(payable(paymaster)).validatePayment(boop);
 
         // Verify correct error code is returned
         assertEq(validationData, abi.encodeWithSelector(SubmitterFeeTooHigh.selector));
@@ -112,7 +111,7 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
 
         // Call withdraw as owner
         vm.prank(owner);
-        ScrappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
+        HappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
 
         // Verify balances after withdrawal
         assertEq(address(paymaster).balance, initialPaymasterBalance - withdrawAmount);
@@ -130,7 +129,7 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         // Call withdraw as owner with amount > balance
         vm.prank(owner);
         vm.expectRevert("Insufficient balance");
-        ScrappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
+        HappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
     }
 
     function testWithdrawOnlyOwner() public {
@@ -144,6 +143,6 @@ contract ScrappyPaymasterTest is HappyTxTestUtils {
         address nonOwner = address(0x456);
         vm.prank(nonOwner);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner));
-        ScrappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
+        HappyPaymaster(payable(paymaster)).withdraw(RECIPIENT, withdrawAmount);
     }
 }

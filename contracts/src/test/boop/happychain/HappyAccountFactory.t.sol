@@ -3,22 +3,22 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {ScrappyAccountFactory} from "boop/factories/ScrappyAccountFactory.sol";
-import {ScrappyAccount} from "boop/samples/ScrappyAccount.sol";
+import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
+import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 
-contract ScrappyAccountFactoryTest is Test {
+contract HappyAccountFactoryTest is Test {
     bytes32 private constant DEPLOYMENT_SALT = bytes32(uint256(0));
     bytes32 private constant DEPLOYMENT_SALT2 = bytes32(uint256(1));
     address private constant STUB_ENTRYPOINT_ADDRESS = address(1);
     address private constant OWNER = address(0xdead);
     address private constant OWNER2 = address(0xbeef);
 
-    ScrappyAccountFactory private factory;
-    ScrappyAccount private implementation;
+    HappyAccountFactory private factory;
+    HappyAccount private implementation;
 
     function setUp() public {
-        implementation = new ScrappyAccount(STUB_ENTRYPOINT_ADDRESS);
-        factory = new ScrappyAccountFactory(address(implementation));
+        implementation = new HappyAccount(STUB_ENTRYPOINT_ADDRESS);
+        factory = new HappyAccountFactory(address(implementation));
     }
 
     function testInitialDeployment() public {
@@ -42,7 +42,7 @@ contract ScrappyAccountFactoryTest is Test {
         factory.createAccount(DEPLOYMENT_SALT, OWNER);
 
         // Try to deploy again with same salt and owner - should revert
-        vm.expectRevert(ScrappyAccountFactory.AlreadyDeployed.selector);
+        vm.expectRevert(HappyAccountFactory.AlreadyDeployed.selector);
         factory.createAccount(DEPLOYMENT_SALT, OWNER);
     }
 
@@ -85,6 +85,6 @@ contract ScrappyAccountFactoryTest is Test {
 
     /// @dev Helper function to get the owner of an account
     function _getOwner(address account) internal view returns (address) {
-        return ScrappyAccount(payable(account)).owner();
+        return HappyAccount(payable(account)).owner();
     }
 }
