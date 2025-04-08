@@ -2,13 +2,14 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {CallInfo, CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
 
-contract CallInfoCodingLibTest is Test {
-    using CallInfoCodingLib for bytes;
+import {CallInfo, CallInfoEncoding} from "boop/libs/extensions/CallInfoEncoding.sol";
+
+contract CallInfoEncodingTest is Test {
+    using CallInfoEncoding for bytes;
 
     // ====================================================================================================
-    // TESTS FOR {CallInfoCodingLib.decodeCallInfoArray}
+    // TESTS FOR {CallInfoEncoding.decodeCallInfoArray}
 
     function testEncodeCallInfoArrayEmpty() public pure {
         bytes memory data = new bytes(0);
@@ -124,7 +125,7 @@ contract CallInfoCodingLibTest is Test {
     }
 
     // ====================================================================================================
-    // TESTS FOR {CallInfoCodingLib.decodeCallInfo}
+    // TESTS FOR {CallInfoEncoding.decodeCallInfo}
 
     function testDecodeCallInfoEmpty() public pure {
         bytes memory data = new bytes(0);

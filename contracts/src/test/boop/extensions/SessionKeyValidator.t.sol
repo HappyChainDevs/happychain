@@ -9,7 +9,7 @@ import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {MockHappyAccount} from "../../../test/mocks/MockHappyAccount.sol";
 
 import {Boop} from "boop/core/Boop.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
 import {
     SessionKeyValidator, AccountPaidSessionKeyBoop, InvalidSignature
 } from "boop/extensions/SessionKeyValidator.sol";
@@ -19,7 +19,7 @@ import {console} from "forge-std/Script.sol";
 
 contract SessionKeyValidatorTest is BoopTestUtils {
     using ECDSA for bytes32;
-    using BoopLib for Boop;
+    using Encoding for Boop;
 
     bytes32 private constant SALT = 0;
     bytes32 private constant SALT2 = bytes32(uint256(1));

@@ -8,7 +8,7 @@ import {MockValidator} from "../../../test/mocks/MockValidator.sol";
 import {MockExecutor} from "../../../test/mocks/MockExecutor.sol";
 
 import {Boop} from "boop/core/Boop.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
 
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
@@ -27,7 +27,7 @@ import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
 
 contract HappyAccountTest is BoopTestUtils {
-    using BoopLib for Boop;
+    using Encoding for Boop;
 
     // ====================================================================================================
     // CONSTANTS

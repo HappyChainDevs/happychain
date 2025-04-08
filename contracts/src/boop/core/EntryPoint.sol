@@ -8,7 +8,8 @@ import {Boop, BoopSubmitted} from "boop/core/Boop.sol";
 import {Staker} from "boop/core/Staker.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
 import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
+import {Utils} from "boop/libs/Utils.sol";
 import {UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
 
 enum CallStatus {
@@ -220,7 +221,7 @@ contract EntryPoint is Staker, ReentrancyGuardTransient {
      */
     function submit(bytes calldata encodedBoop) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
-        Boop memory boop = BoopLib.decode(encodedBoop);
+        Boop memory boop = Encoding.decode(encodedBoop);
         bool isSimulation = tx.origin == address(0);
 
         // ==========================================================================================
@@ -310,7 +311,7 @@ contract EntryPoint is Staker, ReentrancyGuardTransient {
         uint128 cost;
 
         if ( /* sponsoring submitter */ boop.paymaster == address(0)) {
-            output.gas = BoopLib.txGasFromCallGas(gasStart - gasleft(), 4 + encodedBoop.length);
+            output.gas = Utils.txGasFromCallGas(gasStart - gasleft(), 4 + encodedBoop.length);
             // done!
         } else if ( /* self-paying */ boop.paymaster == boop.account) {
             uint256 balance = tx.origin.balance;
@@ -357,7 +358,7 @@ contract EntryPoint is Staker, ReentrancyGuardTransient {
         returns (uint32 consumedGas, uint128 cost)
     {
         // The constant 4 is the byte size for the selector for `submit`.
-        consumedGas = BoopLib.txGasFromCallGas(entryPointGas, 4 + encodedLength);
+        consumedGas = Utils.txGasFromCallGas(entryPointGas, 4 + encodedLength);
 
         // Upper-bound the payment to the agree-upon gas limit.
         uint256 boundedGas = consumedGas > boop.gasLimit ? boop.gasLimit : consumedGas;

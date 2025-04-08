@@ -18,7 +18,8 @@ import {
     InvalidExtensionValue,
     CallInfo
 } from "boop/interfaces/IExtensibleAccount.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
+import {Utils} from "boop/libs/Utils.sol";
 import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
 
 /**
@@ -26,7 +27,7 @@ import {InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation} from "boop
  */
 contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable {
     using ECDSA for bytes32;
-    using BoopLib for Boop;
+    using Encoding for Boop;
 
     // ====================================================================================================
     // ERRORS
@@ -119,7 +120,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
 
     function validate(Boop memory boop) external onlyFromEntryPoint returns (bytes memory) {
         bytes4 validationResult;
-        (bool found, bytes memory validatorAddress) = BoopLib.getExtraDataValue(boop.extraData, VALIDATOR_KEY);
+        (bool found, bytes memory validatorAddress) = Utils.getExtraDataValue(boop.extraData, VALIDATOR_KEY);
         if (found) {
             if (validatorAddress.length != 20) {
                 validationResult = InvalidExtensionValue.selector;
@@ -161,7 +162,7 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
     // EXECUTE
 
     function execute(Boop memory boop) external onlyFromEntryPoint returns (ExecutionOutput memory output) {
-        (bool found, bytes memory executorAddress) = BoopLib.getExtraDataValue(boop.extraData, EXECUTOR_KEY);
+        (bool found, bytes memory executorAddress) = Utils.getExtraDataValue(boop.extraData, EXECUTOR_KEY);
         if (found) {
             if (executorAddress.length != 20) {
                 output.status = CallStatus.EXECUTE_FAILED;

@@ -23,16 +23,18 @@ boop/
 │   └── Utils.sol                   # Utility functions for the core contracts.
 │
 ├── libs/                       # Library contracts (for use by `core/` and account/paymaster implementations)
-│   ├── BoopLib.sol                 # Utilities for handling Boop structs (encoding/decoding).
-│   └── CallInfoCodingLib.sol       # Utilities for encoding/decoding call information.
+│   ├── Encoding.sol                # Encoding/Decoding boops.
+│   ├── Utils.sol                   # Utilities for boop processing on-chain.
+│   └── extensions/                 # Extension interfaces
+│       └── CallInfoEncoding.sol        # Utilities for encoding/decoding call information.
 │
 ├── interfaces/                 # Contract interfaces
 │   ├── IAccount.sol                # Account interface definitions.
 │   ├── IExtensibleAccount.sol      # Interface for extensible accounts.
 │   ├── IPaymaster.sol              # Paymaster interface definitions.
 │   └── extensions/                 # Extension interfaces
-│       ├── ICustomExecutor.sol     # Interface for custom execution methods.
-│       └── ICustomValidator.sol    # Interface for custom validation methods.
+│       ├── ICustomExecutor.sol         # Interface for custom execution methods.
+│       └── ICustomValidator.sol        # Interface for custom validation methods.
 │
 ├── extensions/                 # Extension implementations
 │   ├── BatchCallExecutor.sol       # Extension for executing multiple calls in a batch.

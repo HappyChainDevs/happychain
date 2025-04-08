@@ -12,7 +12,7 @@ struct CallInfo {
 }
 
 /// Library for decoding encoded CallInfo(s).
-library CallInfoCodingLib {
+library CallInfoEncoding {
     /**
      * Decodes a CallInfo encoded tightly in `data`. The encoding packs fields to their exact byte size,
      * and prefixes the {CallInfo.callData} with its length encoded over 32 bytes. No padding is added anywhere.

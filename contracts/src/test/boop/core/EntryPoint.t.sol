@@ -8,7 +8,7 @@ import {MockERC20} from "../../../mocks/MockERC20.sol";
 import {MockRevert} from "../../../mocks/MockRevert.sol";
 
 import {Boop} from "boop/core/Boop.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
 
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 
@@ -29,7 +29,7 @@ import {
 } from "boop/core/EntryPoint.sol";
 
 contract EntryPointTest is BoopTestUtils {
-    using BoopLib for Boop;
+    using Encoding for Boop;
     using ECDSA for bytes32;
 
     // ====================================================================================================

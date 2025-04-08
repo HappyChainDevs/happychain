@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {Boop} from "boop/core/Boop.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Utils} from "boop/libs/Utils.sol";
 import {CallStatus} from "boop/core/EntryPoint.sol";
-import {CallInfoCodingLib} from "boop/libs/CallInfoCodingLib.sol";
+import {CallInfoEncoding} from "boop/libs/extensions/CallInfoEncoding.sol";
 import {ExecutionOutput} from "boop/interfaces/IAccount.sol";
 import {ICustomExecutor} from "boop/interfaces/extensions/ICustomExecutor.sol";
 import {IExtensibleAccount, CallInfo} from "boop/interfaces/IExtensibleAccount.sol";
@@ -28,14 +28,14 @@ error InvalidBatchCallInfo();
  * ABI-encoded array in {Boop.extraData}, keyed on {BATCH_CALL_INFO_KEY}.
  */
 contract BatchCallExecutor is ICustomExecutor {
-    using CallInfoCodingLib for bytes;
+    using CallInfoEncoding for bytes;
 
     // ====================================================================================================
     // FUNCTIONS
 
     function execute(Boop memory boop) external returns (ExecutionOutput memory output) {
         // 1. Parse the extraData with a key, to retrieve the calls.
-        (bool found, bytes memory _calls) = BoopLib.getExtraDataValue(boop.extraData, BATCH_CALL_INFO_KEY);
+        (bool found, bytes memory _calls) = Utils.getExtraDataValue(boop.extraData, BATCH_CALL_INFO_KEY);
 
         // 2. Decode the call info.
         bool success;

@@ -12,11 +12,11 @@ import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {Boop} from "boop/core/Boop.sol";
 import {HappyAccountFactory} from "boop/happychain/HappyAccountFactory.sol";
-import {BoopLib} from "boop/libs/BoopLib.sol";
+import {Encoding} from "boop/libs/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
 
 contract UpgradeSCATest is Test {
-    using BoopLib for Boop;
+    using Encoding for Boop;
     using MessageHashUtils for bytes32;
 
     // ====================================================================================================
