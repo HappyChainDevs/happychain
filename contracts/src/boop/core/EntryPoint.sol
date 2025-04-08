@@ -4,159 +4,29 @@ pragma solidity ^0.8.20;
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-import {Boop, BoopSubmitted} from "boop/core/Boop.sol";
+import {Boop} from "boop/core/Boop.sol";
 import {Staker} from "boop/core/Staker.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
 import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
+
 import {Encoding} from "boop/libs/Encoding.sol";
 import {Utils} from "boop/libs/Utils.sol";
-import {UnknownDuringSimulation} from "boop/interfaces/EventsAndErrors.sol";
-
-enum CallStatus {
-    SUCCEEDED, // The call succeeded.
-    CALL_REVERTED, // The call reverted.
-    EXECUTE_FAILED, // The {IAccount.execute} function failed (incorrect input).
-    EXECUTE_REVERTED // The {IAccount.execute} function reverted (in violation of the spec).
-
-}
-
-/// Represents the validation result from account or paymaster validation calls, used internally by the {validate} function
-enum Validity {
-    SUCCESS, // The validation call succeeded and returned a success status.
-    CALL_REVERTED, // The validation call itself reverted (in violation of the spec).
-    INVALID_RETURN_DATA, // The validation call returned malformed data (in violation of the spec).
-    VALIDATION_FAILED, // The validation call succeeded but returned a failure status (e.g., invalid signature).
-    UNKNOWN_DURING_SIMULATION // The validation result needs more data during simulation (e.g., missing gas limit).
-
-}
-
-/// Output structure returned by the {submit} function containing gas estimations and execution results
-struct SubmitOutput {
-    /**
-     * An overestimation of the minimum gas limit necessary to successfully call {EntryPoint.submit}
-     * at the top-level of a transaction.
-     */
-    uint32 gas;
-    /**
-     * An overestimation of the minimum gas limit necessary to successfully call
-     * {IAccount.validate} from {EntryPoint.submit}.
-     */
-    uint32 validateGas;
-    /**
-     * An overestimation of the minimum gas limit necessary to successfully call
-     * {IPaymaster.paymentValidateGas} from {EntryPoint.submit}.
-     */
-    uint32 paymentValidateGas;
-    /**
-     * An overestimation of the minimum gas limit necessary to successfully call
-     * {IAccount.execute} from {EntryPoint.submit}.
-     */
-    uint32 executeGas;
-    /**
-     * If true, indicates that the account couldn't ascertain whether the validation was successful
-     * in validation mode (e.g. it couldn't validate a signature because the simulation was used
-     * to populate some of the fields that the signature signs over).
-     */
-    bool validityUnknownDuringSimulation;
-    /**
-     * If true, indicates that the paymaster couldn't ascertain whether the validation was
-     * successful in validation mode (e.g. it couldn't validate a signature because the simulation
-     * was used to populate some of the fields that the signature signs over).
-     */
-    bool paymentValidityUnknownDuringSimulation;
-    /**
-     * If true, indicates that while the simulation succeeded, the nonce is ahead of the current
-     * nonce.
-     */
-    bool futureNonceDuringSimulation;
-    /**
-     * Status of the call specified by the boop.
-     */
-    CallStatus callStatus;
-    /**
-     * The revertData with which either the call or the {IAccount.execute} function reverted
-     * (when the associated `callStatus` is set).
-     */
-    bytes revertData;
-}
-
-/**
- * The entrypoint reverts with this error when the gas price exceed {Boop.maxFeePerGas}.
- */
-error GasPriceTooHigh();
-
-/**
- * The entrypoint reverts with this error if the paymaster cannot cover the gas limit cost from his
- * stake.
- */
-error InsufficientStake();
-
-/**
- * The entrypoint reverts with this error if the nonce fails to validate.
- * This indicates an invalid nonce that cannot be used now or (in simulation mode) in the future.
- */
-error InvalidNonce();
-
-/**
- * When the account validation of the boop reverts (in violation of the spec).
- *
- * The parameter contains the revert data (truncated to 256 bytes).
- */
-error ValidationReverted(bytes revertData);
-
-/**
- * When the account validation of the boop fails.
- *
- * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
- * custom error returned by {IAccount.validate}.
- */
-error ValidationFailed(bytes reason);
-
-/**
- * When the paymaster validation of the boop reverts (in violation of the spec).
- *
- * The parameter contains the revert data (truncated to 256 bytes)
- */
-error PaymentValidationReverted(bytes revertData);
-
-/**
- * When the paymaster validation of the boop fails.
- *
- * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
- * custom error returned by {IPaymaster.validatePayment}.
- */
-error PaymentValidationFailed(bytes reason);
-
-/**
- * When self-paying and the payment from the account fails, either because {IAccount.payout}
- * reverts, consumes too much gas, or does not transfer the full cost to the submitter.
- */
-error PayoutFailed();
-
-/**
- * When the {IAccount.execute} call succeeds but reports that the
- * attempted call reverted.
- *
- * The parameter contains the revert data (truncated to 384 bytes),
- * so that it can be parsed offchain.
- */
-event CallReverted(bytes revertData);
-
-/**
- * When the {IAccount.execute} call fails but does not revert.
- *
- * The parameter identifies the revert reason (truncated to 256 bytes), which should be an encoded
- * custom error returned by {IAccount.execute}.
- */
-event ExecutionFailed(bytes reason);
-
-/**
- * When the {IAccount.execute} call reverts (in violation of the spec).
- *
- * The parameter contains the revert data (truncated to 384 bytes),
- * so that it can be parsed offchain.
- */
-event ExecutionReverted(bytes revertData);
+import {
+    BoopSubmitted,
+    CallReverted,
+    ExecutionFailed,
+    ExecutionReverted,
+    GasPriceTooHigh,
+    InsufficientStake,
+    InvalidNonce,
+    ValidationReverted,
+    ValidationFailed,
+    PaymentValidationReverted,
+    PaymentValidationFailed,
+    PayoutFailed,
+    UnknownDuringSimulation
+} from "boop/interfaces/EventsAndErrors.sol";
+import {CallStatus, Validity, SubmitOutput} from "boop/interfaces/Types.sol";
 
 /// @notice cf. {EntryPoint.submit}
 contract EntryPoint is Staker, ReentrancyGuardTransient {

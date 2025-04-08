@@ -26,9 +26,11 @@ boop/
 │   ├── Encoding.sol                # Encoding/Decoding boops.
 │   ├── Utils.sol                   # Utilities for boop processing on-chain.
 │   └── extensions/                 # Extension interfaces
-│       └── CallInfoEncoding.sol        # Utilities for encoding/decoding call information.
+│       └── CallInfoEncoding.sol        # Utilities for encoding/decoding CallInfo structs for executors.
 │
 ├── interfaces/                 # Contract interfaces
+│   ├── EventsAndErrors.sol         # Shared events and errors used across the protocol
+│   ├── Types.sol                   # Shared types and enums used across the protocol
 │   ├── IAccount.sol                # Account interface definitions.
 │   ├── IExtensibleAccount.sol      # Interface for extensible accounts.
 │   ├── IPaymaster.sol              # Paymaster interface definitions.
