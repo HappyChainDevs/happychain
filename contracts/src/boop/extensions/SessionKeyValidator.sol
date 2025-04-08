@@ -86,14 +86,15 @@ contract SessionKeyValidator is ICustomValidator {
         // validation policy falls to the paymaster or the sponsoring submitter.
         boop.gasLimit = 0;
         boop.validateGasLimit = 0;
-        boop.executeGasLimit = 0;
         boop.validatePaymentGasLimit = 0;
+        boop.executeGasLimit = 0;
         boop.maxFeePerGas = 0;
         boop.submitterFee = 0;
 
         bytes memory signature = boop.validatorData;
         boop.validatorData = ""; // set to "" to get the hash
         address signer = keccak256(boop.encode()).toEthSignedMessageHash().recover(signature);
+        boop.validatorData = signature; // revert back to original value
 
         address sessionKey = sessionKeys[msg.sender][boop.dest];
         bytes4 selector = signer == sessionKey ? bytes4(0) : bytes4(InvalidSignature.selector);
