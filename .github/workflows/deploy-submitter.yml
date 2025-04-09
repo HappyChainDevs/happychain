@@ -54,9 +54,9 @@ jobs:
             mv /home/deployer/happy-submitter /tmp
             sudo -u submitter bash -c '
               rm -rf /home/submitter/build
-              cp -r /tmp/submitter /home/submitter/build
+              cp -r /tmp/happy-submitter /home/submitter/build
             '
-            rm -rf /tmp/submitter
+            rm -rf /tmp/happy-submitter
             sudo systemctl restart submitter
       
       - name: Send chainId request (healthcheck)
