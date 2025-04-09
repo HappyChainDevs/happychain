@@ -7,9 +7,8 @@ on:
 env:
   REGISTRY: ghcr.io
   ORGANIZATION: happychaindevs
-  PM2_PROCESS_NAME: happy-staging-bundler
-  PORT: 49533
-  RPC_URL: https://rpc.testnet.happy.tech/http
+  PORT: 49534
+  LOG_LEVEL: info
 
 jobs:
   deploy:
@@ -55,11 +54,13 @@ jobs:
             sudo -u submitter bash -c '
               rm -rf /home/submitter/build
               cp -r /tmp/happy-submitter/* /home/submitter/build
+
+              cat > /home/submitter/build/.env <<-EOF
+            PRIVATE_KEY_LOCAL=${{ secrets.SUBMITTER_PRIVATE_KEY_LOCAL }}
+            PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
+            APP_PORT=${{ env.PORT }}
+            LOG_LEVEL=${{ env.LOG_LEVEL }}
+            EOF
             '
             rm -rf /tmp/happy-submitter
             sudo /bin/systemctl restart submitter.service
-      
-      - name: Send chainId request (healthcheck)
-        run: |
-          sleep 10 # wait for the server to start
-          curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' ${{ env.STAGING_BUNDLER_URL }} --fail
