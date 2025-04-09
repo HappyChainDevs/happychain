@@ -3,8 +3,6 @@ include ../../makefiles/formatting.mk
 include ../../makefiles/bundling.mk
 include ../../makefiles/help.mk
 
-include .env
-
 setup-symlinks::
 	@if ! [[ -r ./dist/client.es.js ]]; then \
   		ln -sf ../lib/client.ts ./dist/client.es.js; \
