@@ -33,10 +33,10 @@ jobs:
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SERVER_2_HOST }}
-          username: ${{ secrets.SERVER_2_USERNAME }}
-          key: ${{ secrets.SERVER_2_KEY }}
-          port: ${{ secrets.SERVER_2_PORT }}
+          host: ${{ secrets.SERVER_1_HOST }}
+          username: ${{ secrets.SERVER_1_USERNAME }}
+          key: ${{ secrets.SERVER_1_KEY }}
+          port: ${{ secrets.SERVER_1_PORT }}
           source: "apps/submitter/build/*"
           target: /home/deployer/happy-submitter
           strip_components: 2   
@@ -45,10 +45,10 @@ jobs:
       - name: Deploy submitter to server
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: ${{ secrets.SERVER_2_HOST }}
-          username: ${{ secrets.SERVER_2_USERNAME }}
-          key: ${{ secrets.SERVER_2_KEY }}
-          port: ${{ secrets.SERVER_2_PORT }}
+          host: ${{ secrets.SERVER_1_HOST }}
+          username: ${{ secrets.SERVER_1_USERNAME }}
+          key: ${{ secrets.SERVER_1_KEY }}
+          port: ${{ secrets.SERVER_1_PORT }}
           script: |
             chmod -R o+rX /home/deployer/happy-submitter
             mv /home/deployer/happy-submitter /tmp
