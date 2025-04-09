@@ -57,7 +57,7 @@ jobs:
               cp -r /tmp/happy-submitter /home/submitter/build
             '
             rm -rf /tmp/happy-submitter
-            sudo systemctl restart submitter
+            sudo /bin/systemctl restart submitter.service
       
       - name: Send chainId request (healthcheck)
         run: |
