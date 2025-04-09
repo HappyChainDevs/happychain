@@ -360,6 +360,10 @@ randomness.build: setup.ts shared.build
 	cd apps/randomness && make build
 .PHONY: randomness.build
 
+submitter.build: setup.ts shared.build
+	cd apps/submitter && make build
+.PHONY: submitter.build
+
 txm.build: setup.ts shared.build
 	cd packages/txm && make build
 .PHONY: txm.build
