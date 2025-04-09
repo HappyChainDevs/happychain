@@ -52,10 +52,10 @@ contract BoopTestUtils is Test {
     {
         return Boop({
             account: _account,
-            gasLimit: 4000000000,
-            executeGasLimit: 4000000000,
-            validateGasLimit: 4000000000,
-            validatePaymentGasLimit: 4000000000,
+            gasLimit: 4000000,
+            executeGasLimit: 4000000,
+            validateGasLimit: 4000000,
+            validatePaymentGasLimit: 4000000,
             dest: _dest,
             paymaster: _paymaster,
             value: 0,
