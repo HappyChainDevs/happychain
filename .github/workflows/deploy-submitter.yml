@@ -58,8 +58,7 @@ jobs:
               cat > /home/submitter/build/.env <<-EOF
             PRIVATE_KEY_LOCAL=${{ secrets.SUBMITTER_PRIVATE_KEY_LOCAL }}
             PRIVATE_KEY_ACCOUNT_DEPLOYER=${{ secrets.SUBMITTER_PRIVATE_KEY_ACCOUNT_DEPLOYER }}
-            APP_PORT=${{ env.PORT }}
-            LOG_LEVEL=${{ env.LOG_LEVEL }}
+            ${{vars.SUBMITTER_ENV}}
             EOF
             '
             rm -rf /tmp/happy-submitter
