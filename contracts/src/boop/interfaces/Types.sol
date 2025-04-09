@@ -132,7 +132,7 @@ struct SubmitOutput {
 }
 
 // ====================================================================================================
-// IACCOUNT TYPES
+// ACCOUNT TYPES
 
 /**
  * Output struct returned by {IAccount.execute}.
@@ -145,6 +145,17 @@ struct ExecutionOutput {
      * (with {CallStatus.EXECUTE_REJECTED}), otherwise empty.
      */
     bytes revertData;
+}
+
+// ====================================================================================================
+// PAYMASTER TYPES
+
+/**
+ * Information about a user's gas budget.
+ */
+struct UserInfo {
+    uint64 lastUpdated;
+    uint32 userGasBudget;
 }
 
 // ====================================================================================================
