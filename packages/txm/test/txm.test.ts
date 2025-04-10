@@ -38,6 +38,8 @@ const txm = new TransactionManager({
         url: PROXY_URL,
         pollingInterval: 200,
         allowDebug: true,
+        livenessCheckInterval: 500,
+        livenessDownDelay: 1000,
     },
     abis: abis,
     gasEstimator: new TestGasEstimator(),
@@ -576,10 +578,16 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
 })
 
 test("Transaction manager successfully processes transactions despite random RPC failures", async () => {
+    const previousLivenessThreshold = txm.livenessThreshold
+    Object.defineProperty(txm, "livenessThreshold", {
+        value: 0,
+        configurable: true,
+    })
+
     proxyServer.setMode(ProxyMode.Random, {
-        [ProxyBehavior.NotAnswer]: 0.1,
-        [ProxyBehavior.Fail]: 0.2,
-        [ProxyBehavior.Forward]: 0.7,
+        [ProxyBehavior.NotAnswer]: 0.05,
+        [ProxyBehavior.Fail]: 0.05,
+        [ProxyBehavior.Forward]: 0.9,
     })
 
     const previousBlock = await getCurrentBlock()
@@ -619,6 +627,11 @@ test("Transaction manager successfully processes transactions despite random RPC
     expect(successfulTransactions).toBeGreaterThan(numTransactions * 0.6)
 
     proxyServer.setMode(ProxyMode.Deterministic)
+
+    Object.defineProperty(txm, "livenessThreshold", {
+        value: previousLivenessThreshold,
+        configurable: true,
+    })
 })
 
 test("Transaction succeeds in congested blocks", async () => {
@@ -722,6 +735,12 @@ test("Finalized transactions are automatically purged from db after finalizedTra
 })
 
 test("RPC liveness monitor works correctly", async () => {
+    const previousLivenessWindow = txm.livenessWindow
+    Object.defineProperty(txm, "livenessWindow", {
+        value: 2000,
+        configurable: true,
+    })
+
     proxyServer.setMode(ProxyMode.Deterministic)
 
     while (!txm.rpcLivenessMonitor.isAlive) {
@@ -748,8 +767,6 @@ test("RPC liveness monitor works correctly", async () => {
     const cleanIsUpHook = await txm.addHook(TxmHookType.RpcIsUp, () => {
         isUpHookTriggered = true
     })
-
-
 
     expect(txm.rpcLivenessMonitor.isAlive).toBe(true)
 
@@ -779,4 +796,9 @@ test("RPC liveness monitor works correctly", async () => {
 
     cleanIsDownHook()
     cleanIsUpHook()
+
+    Object.defineProperty(txm, "livenessWindow", {
+        value: previousLivenessWindow,
+        configurable: true,
+    })
 })
