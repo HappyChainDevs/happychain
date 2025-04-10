@@ -33,8 +33,9 @@ happy.tech-**.tgz
 # Contract outputs
 contracts/cache/
 contracts/out/
-contracts/lib
+contracts/lib/
 contracts/broadcast/
+contracts/docs/
 # Local deployments
 contracts/deployments/LOCAL/
 

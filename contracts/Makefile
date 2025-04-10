@@ -217,7 +217,7 @@ bundler-gas-only: ## Generates a gas report (breakdown) for bundler transactions
 # Code Quality
 
 check: lint format-check
-	biome check ./;
+	biome check ./scripts;
 .PHONY: check
 
 format-check:
@@ -233,13 +233,24 @@ lint:
 .PHONY: lint
 
 format:
-	biome check ./ --write;
+	@biome check ./scripts --write;
 	@# Temp workaround for forge fmt not supporting transient variables.
 	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
 	@sed -i '' 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 	@forge fmt src || true
 	@sed -i '' 's/address private dispatchedExecutor;/address transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
 .PHONY: format
+
+####################################################################################################
+# Docs
+
+docs:
+	@# Temp workaround for forge fmt not supporting transient variables.
+	@# Tracked: https://github.com/foundry-rs/foundry/issues/9088
+	@sed -i '' 's/address transient private dispatchedExecutor;/address private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+	@forge doc || true
+	@sed -i '' 's/address private dispatchedExecutor;/address transient private dispatchedExecutor;/' src/boop/happychain/HappyAccount.sol
+.PHONY: docs
 
 ####################################################################################################
 # Devnet
