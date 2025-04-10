@@ -11,12 +11,10 @@ via_ir = true
 
 ignored_warnings_from = ["node_modules", "lib", "src/deploy", "src/scripts", "src/test"]
 
-# Compiler profiles for contracts that require via_ir enabled
 additional_compiler_profiles = [
   { name = "kernel", via_ir = true, optimizer = true, optimizer_runs = 200 },
 ]
 
-# Restrict Kernel.sol and Boop Contracts to use the Kernel and Boop profiles, respectively
 compilation_restrictions = [
   { paths = "lib/kernel/src/Kernel.sol", via_ir = true, optimizer = true, optimizer_runs = 200 },
 ]
