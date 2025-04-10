@@ -212,15 +212,10 @@ export class TxMonitor {
     private shouldEmitNewAttempt(attempt: Attempt): boolean {
         const { expectedNextBaseFeePerGas, targetPriorityFee } = this.transactionManager.gasPriceOracle
 
-        if (attempt.maxPriorityFeePerGas < targetPriorityFee) {
-            return true
-        }
-
-        if (attempt.maxFeePerGas - attempt.maxPriorityFeePerGas < expectedNextBaseFeePerGas) {
-            return true
-        }
-
-        return false
+        return (
+            attempt.maxPriorityFeePerGas < targetPriorityFee ||
+            attempt.maxFeePerGas - attempt.maxPriorityFeePerGas < expectedNextBaseFeePerGas
+        )
     }
 
     private async handleExpiredTransaction(transaction: Transaction): Promise<void> {

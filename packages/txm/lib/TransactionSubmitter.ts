@@ -5,7 +5,6 @@ import type { EstimateGasErrorCause } from "./GasEstimator.js"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
-
 export type AttemptSubmissionParameters = Omit<Attempt, "hash" | "gas">
 
 export enum AttemptSubmissionErrorCause {
