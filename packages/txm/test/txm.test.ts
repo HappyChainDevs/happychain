@@ -1,6 +1,13 @@
 import { abis, deployment } from "@happy.tech/contracts/mocks/anvil"
 import { err } from "neverthrow"
-import { type Block, type Chain, type TransactionReceipt, createPublicClient, createWalletClient, encodeFunctionData } from "viem"
+import {
+    type Block,
+    type Chain,
+    type TransactionReceipt,
+    createPublicClient,
+    createWalletClient,
+    encodeFunctionData,
+} from "viem"
 import { http } from "viem"
 import { privateKeyToAccount, privateKeyToAddress } from "viem/accounts"
 import { anvil as anvilViemChain } from "viem/chains"

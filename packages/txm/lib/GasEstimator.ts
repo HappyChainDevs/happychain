@@ -1,6 +1,5 @@
 import { SpanStatusCode, context, trace } from "@opentelemetry/api"
 import { type Result, err, ok } from "neverthrow"
-import { encodeFunctionData } from "viem"
 import type { Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 import { TraceMethod } from "./telemetry/traces"

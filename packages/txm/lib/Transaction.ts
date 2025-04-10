@@ -1,7 +1,7 @@
 import { type Hex, type UUID, bigIntReplacer, bigIntReviver, createUUID } from "@happy.tech/common"
 import { context, trace } from "@opentelemetry/api"
 import type { Insertable, Selectable } from "kysely"
-import { type Abi, type Address, type ContractFunctionArgs, type Hash, encodeFunctionData } from "viem"
+import { type Address, type ContractFunctionArgs, type Hash, encodeFunctionData } from "viem"
 import type { ABIManager } from "./AbiManager"
 import type { LatestBlock } from "./BlockMonitor"
 import { Topics, eventBus } from "./EventBus.js"
