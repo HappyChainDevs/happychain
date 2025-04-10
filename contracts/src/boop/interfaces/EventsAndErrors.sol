@@ -117,8 +117,10 @@ error PayoutFailed();
 // =================================================================================================
 // SHARED EVENTS
 
-/// Emitted when ETH is received by the contract
-event Received(address indexed sender, uint256 amount);
+/**
+ * Emitted by accounts and paymasters when the gas token is received by the contract.
+ */
+event Received(address sender, uint256 amount);
 
 // =================================================================================================
 // SHARED ERRORS
