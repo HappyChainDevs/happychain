@@ -1,181 +1,229 @@
-import type { Erc7579Actions } from "permissionless/actions/erc7579"
-import { type Address, type Hash, type Hex, concat, encodeFunctionData, numberToHex } from "viem"
-import type { SmartAccount } from "viem/account-abstraction"
-import { getCurrentChain } from "#src/state/chains"
-import type { ExtendedSmartAccountClient } from "#src/state/smartAccountClient"
-import { getAccountAbstractionAbis } from "#src/utils/getAccountAbstractionAbis"
-import { getAccountAbstractionContracts } from "#src/utils/getAccountAbstractionContracts"
+// @todo - switch to import from happy-sepolia ;
+// @todo - maybe write a helper function to return the appropriate contracts & ABIs depending on current chain ID ?
+import { abis as happyAccAbsAbis, deployment as happyAccAbsDeployment } from "@happy.tech/contracts/happy-aa/anvil"
+import { type HappyTx, computeBoopHash } from "@happy.tech/submitter-client"
+import { type Address, type Hash, type Hex, encodeFunctionData, isAddress } from "viem"
+import { privateKeyToAccount } from "viem/accounts"
+import { getBoopClient } from "#src/state/boopClient"
+import { getPublicClient } from "#src/state/publicClient"
 
-// The address used when installing a validator module to signify that the module has no hooks.
-// This is a special constant address that indicates the absence of any additional hooks.
-const NO_HOOKS_ADDRESS = "0x0000000000000000000000000000000000000001"
+// @todo - cleanup import
+import { EntryPointStatus } from "../../../../../../packages/submitter/lib/tmp/interface/status"
 
-// The function selector must be whitelisted when installing a validator module.
-// This is the selector for the execute() function that will be allowed to be called by session keys
-const EXECUTE_FUNCTION_SELECTOR = "0xe9ae5c53"
+export const SESSION_KEY_VALIDATOR_ADDRESS = happyAccAbsDeployment.SessionKeyValidator as Address
+const EXTENSION_TYPE_VALIDATOR = 0
 
 /**
- * Converts a number to a hex string of specified size without `0x` prefix.
- * @param number - The number to convert to hex
- * @param size - The size in bytes of the resulting hex string
- * @returns The hex string without `0x` prefix
+ * Creates extraData for custom validator according to Boop spec
+ * @see Utils.getExtraDataValue - The corresponding function that extracts values from extraData
+ *
+ * @param validatorAddress - Validator contract address
+ * @returns Hex string containing encoded extraData
  */
-function toHexDigits(number: bigint, size: number): string {
-    return numberToHex(number, { size }).slice(2)
+export function createValidatorExtraData(validatorAddress: Address): Hex {
+    // According to Boop docs, extraData is structured as a packed list of (key, length, value) triplets
+    // Key 1 is reserved for custom validator addresses
+
+    const keyBytes = "000001" // Key 1 in 3 bytes
+    const lengthBytes = "000014" // Length 20 in 3 bytes (address is 20 bytes)
+    const validatorAddressBytes = validatorAddress.slice(2).toLowerCase() // Remove 0x prefix
+    // @todo - Boop announcement noted this `We supply a library function to easily extract the value of a given key`
+    // dove in the codebase but couldn't seem to find aforementioned function ?
+    // so maybe this whole function is useless, TBD.
+
+    return ("0x" + keyBytes + lengthBytes + validatorAddressBytes) as Hex
 }
 
 /**
- * Gets initialization data for installing a validator module.
- * This follows the data layout specified in the Kernel smart contract
- * @see {@link https://github.com/zerodevapp/kernel/blob/release/v3.1/src/Kernel.sol#L361-L366}
- *
- * @param hookAddress - The address of the hook contract (or NO_HOOKS_ADDRESS if no hooks)
- * @param validatorData - The data to be passed to the validator (in our case, the session key address)
- * @param hookData - The data to be passed to the hook (empty in our case)
- * @param selectorData - The function selectors that are allowed to be called (execute function in our case)
- * @returns The encoded module initialization data
+ * Check if the SessionKeyValidator extension is registered with the account
+ * @param accountAddress - The address of the Boop account
+ * @returns `true` if the extension is registered, `false` otherwise
  */
-function getModuleInitData(hookAddress: Address, validatorData: Hex, hookData: Hex, selectorData: Hex): Hex {
-    // Calculate lengths of each data section
-    const validatorDataLen = validatorData.slice(2).length / 2
-    const hookDataLen = hookData.slice(2).length / 2
-    const selectorDataLen = selectorData.slice(2).length / 2
+export async function checkIsSessionKeyModuleInstalled(accountAddress: Address): Promise<boolean> {
+    const publicClient = getPublicClient()
 
-    // Convert lengths to hex format
-    const hexValidatorDataLength = toHexDigits(BigInt(validatorDataLen), 32)
-    const hexHookDataLength = toHexDigits(BigInt(hookDataLen), 32)
-    const hexSelectorDataLength = toHexDigits(BigInt(selectorDataLen), 32)
+    try {
+        // Using the IExtensibleAccount interface to check if the extension is registered
+        const isRegistered = await publicClient.readContract({
+            address: accountAddress,
+            abi: happyAccAbsAbis.IExtensibleAccount,
+            functionName: "isExtensionRegistered",
+            args: [SESSION_KEY_VALIDATOR_ADDRESS, EXTENSION_TYPE_VALIDATOR],
+        })
 
-    // Calculate offsets for each data section
-    // Each offset is relative to 0x34 in the final layout (but why? maybe backwards compat)
-
-    const validatorDataOffset = 32 + 32 + 32 // skip hookDataOffset, selectorDataOffset, and validatorDataLength.length
-    const hexValidatorDataOffset = toHexDigits(BigInt(validatorDataOffset), 32)
-    const hookDataOffset = validatorDataOffset + validatorDataLen + 32 // 32 = hookDataLength.length
-    const hexHookDataOffset = toHexDigits(BigInt(hookDataOffset), 32)
-    const selectorDataOffset = hookDataOffset + hookDataLen + 32 // 32 = selectorDataLength.length
-    const hexSelectorDataOffset = toHexDigits(BigInt(selectorDataOffset), 32)
-
-    // Concatenate all parts following the specified layout
-    return (hookAddress + // hook address (with 0x prefix)
-        hexValidatorDataOffset +
-        // offsets index from here
-        hexHookDataOffset +
-        hexSelectorDataOffset +
-        hexValidatorDataLength +
-        validatorData.slice(2) + // Remove 0x prefix from data sections
-        hexHookDataLength +
-        hookData.slice(2) +
-        hexSelectorDataLength +
-        selectorData.slice(2)) as Hex
-}
-
-/**
- * Checks if the SessionKeyValidator module is installed for the current smart account
- * @param client - The smart account client with ERC-7579 actions.
- * @returns `true` if the module is installed, `false` otherwise.
- */
-export async function checkIsSessionKeyModuleInstalled(client: Erc7579Actions<SmartAccount>) {
-    const currentChain = getCurrentChain()?.chainId
-    const contracts = getAccountAbstractionContracts(currentChain)
-    return await client.isModuleInstalled({
-        type: "validator",
-        address: contracts.SessionKeyValidator,
-        context: "0x",
-    })
-}
-
-/**
- * Installs the SessionKeyValidator module for the smart account.
- * This module will validate transactions signed by session keys.
- *
- * @param client - The smart account client with ERC-7579 actions support.
- * @param sessionKey - Address of the session key (account) that will be authorized to sign transactions.
- * @param targetContract - Address of the contract this session key will be authorized to interact with.
- *
- * @throws {Error} If the module installation fails.
- * @example
- * ```
- * const sessionKey = generatePrivateKey()
- * const accountSessionKey = privateKeyToAccount(sessionKey)
- *
- * await installSessionKeyModule(
- *   smartAccountClient,
- *   accountSessionKey.address,
- *   "0x1234567890123456789012345678901234567890" // Target contract address
- * )
- * ```
- */
-export async function installSessionKeyModule(
-    client: ExtendedSmartAccountClient,
-    sessionKey: Address,
-    targetContract: Address,
-) {
-    const currentChain = getCurrentChain()?.chainId
-    const contracts = getAccountAbstractionContracts(currentChain)
-    const onInstallData = concat([sessionKey, targetContract])
-
-    // Install the module with initial session key
-    const opHash = await client.installModule({
-        type: "validator",
-        address: contracts.SessionKeyValidator,
-        context: getModuleInitData(NO_HOOKS_ADDRESS, onInstallData, "0x", EXECUTE_FUNCTION_SELECTOR),
-        nonce: await client.account!.getNonce(),
-    })
-
-    // Wait for the installation transaction to be confirmed
-    const receipt = await client.waitForUserOperationReceipt({
-        hash: opHash,
-    })
-
-    if (!receipt.success) {
-        throw new Error("Module installation failed")
+        return Boolean(isRegistered)
+    } catch (error) {
+        console.error("Error checking if session key validator is installed:", error)
+        return false
     }
 }
 
 /**
- * Registers a new session key with the SessionKeyValidator module.
- * This should be called when the module is already installed and we want to add a new session key.
- *
- * @param client - The smart account client with user operation support.
- * @param sessionKey - Address of the session key (account) that will be authorized to sign transactions.
- * @param targetContract - Address of the contract this session key will be authorized to interact with.
- * @returns {Promise<`0x${string}`>} Hash of the user operation
- *
- * @example
- * ```
- * const sessionKey = generatePrivateKey()
- * const accountSessionKey = privateKeyToAccount(sessionKey)
- *
- * const userOpHash = await registerSessionKey(
- *   smartAccountClient,
- *   accountSessionKey.address,
- *   "0x1234567890123456789012345678901234567890" // Target contract address
- * )
- *
- * await smartAccountClient.waitForUserOperationReceipt({ hash: userOpHash })
- * ```
+ * Install the SessionKeyValidator extension on the account
+ * @param accountAddress - The address of the Boop account
+ * @param sessionKey - (Optional) Session key to authorize immediately during installation
+ * @param targetContract - (Optional) Target contract for the session key
+ * @returns Transaction hash
  */
-export async function registerSessionKey(
-    client: ExtendedSmartAccountClient,
-    sessionKey: Address,
-    targetContract: Address,
+export async function installSessionKeyModule(
+    accountAddress: Address,
+    sessionKey?: Address,
+    targetContract?: Address,
 ): Promise<Hash> {
-    const currentChain = getCurrentChain()?.chainId
-    const abi = getAccountAbstractionAbis(currentChain).SessionKeyValidator
-    const data = encodeFunctionData({
-        abi,
-        functionName: "addSessionKey",
-        args: [targetContract, sessionKey],
+    const boopClient = await getBoopClient()
+    if (!boopClient) throw new Error("Boop client not initialized")
+
+    // Prepare transaction to add the SessionKeyValidator extension
+    const callData = encodeFunctionData({
+        abi: happyAccAbsAbis.IExtensibleAccount,
+        functionName: "addExtension",
+        args: [SESSION_KEY_VALIDATOR_ADDRESS, EXTENSION_TYPE_VALIDATOR],
     })
 
-    return await client.sendUserOperation({
-        calls: [
-            {
-                to: getAccountAbstractionContracts(getCurrentChain()?.chainId)?.SessionKeyValidator,
-                data,
-                value: 0n,
-            },
-        ],
+    // Execute the transaction to add the extension
+    const result = await boopClient.boop.sendTransaction({
+        dest: accountAddress, // The account itself is the destination
+        callData,
+        estimateGas: true,
     })
+
+    if (result.isErr() || result.value.status !== EntryPointStatus.Success) {
+        throw new Error("Failed to install session key validator")
+    }
+
+    const hash = result.value.hash!
+
+    // If both session key & target contract are provided, register the session key directly
+    if (sessionKey && isAddress(targetContract!)) {
+        // Wait for installation to be confirmed...
+        const publicClient = getPublicClient()
+        await publicClient.waitForTransactionReceipt({ hash })
+
+        // Register session key
+        await registerSessionKey(sessionKey, targetContract as Address)
+    }
+
+    return hash
+}
+
+/**
+ * Register a session key for a specific target contract
+ * @param sessionKeyAddress - The address of the session key to register
+ * @param targetContract - The address of the contract the session key can interact with
+ * @returns Transaction hash
+ */
+export async function registerSessionKey(sessionKeyAddress: Address, targetContract: Address): Promise<Hash> {
+    const boopClient = await getBoopClient()
+    if (!boopClient) throw new Error("Boop client not initialized")
+
+    const callData = encodeFunctionData({
+        abi: happyAccAbsAbis.SessionKeyValidator,
+        functionName: "addSessionKey",
+        args: [targetContract, sessionKeyAddress],
+    })
+
+    const result = await boopClient.boop.sendTransaction({
+        dest: SESSION_KEY_VALIDATOR_ADDRESS,
+        callData,
+        estimateGas: true,
+    })
+
+    if (result.isErr() || result.value.status !== EntryPointStatus.Success) {
+        throw new Error("Failed to register session key") // @todo - use specific error ?
+    }
+
+    return result.value.hash!
+}
+
+/**
+ * Sign a transaction using session key
+ * @param privateKey - The private key associated to the session key
+ * @param boop - The Boop transaction to sign
+ */
+export async function signWithSessionKey(privateKey: Address, boop: HappyTx): Promise<HappyTx> {
+    // Create an account from the private key
+    const account = privateKeyToAccount(privateKey)
+
+    const boopToSign = {
+        ...boop,
+        validatorData: "" as Hex, // Temporarily empty for hash calculation
+        // When using a session key, we don't need to sign gas parameters
+        // These fields should be 0 according to SessionKeyValidator.sol
+        gasLimit: 0n,
+        validateGasLimit: 0n,
+        validatePaymentGasLimit: 0n,
+        executeGasLimit: 0n,
+        maxFeePerGas: 0n,
+        submitterFee: 0n,
+    }
+    const boopHash = computeBoopHash(boopToSign)
+    const validatorData = await account.signMessage({
+        message: { raw: boopHash },
+    })
+
+    // Create the extraData that specifies which validator to use
+    const extraData = createValidatorExtraData(SESSION_KEY_VALIDATOR_ADDRESS)
+
+    return {
+        ...boop,
+        validatorData,
+        extraData,
+    }
+}
+
+/**
+ * Remove a session key for a specific target contract
+ * @param targetContract - Contract address to remove the session key for
+ * @returns Transaction hash
+ */
+export async function removeSessionKey(targetContract: Address): Promise<Hash> {
+    const boopClient = await getBoopClient()
+    if (!boopClient) throw new Error("Boop client not initialized")
+
+    // Prepare transaction to remove the session key
+    const callData = encodeFunctionData({
+        abi: happyAccAbsAbis.SessionKeyValidator,
+        functionName: "removeSessionKey",
+        args: [targetContract],
+    })
+
+    const result = await boopClient.boop.sendTransaction({
+        dest: SESSION_KEY_VALIDATOR_ADDRESS,
+        callData,
+        estimateGas: true,
+    })
+
+    if (result.isErr() || result.value.status !== EntryPointStatus.Success) {
+        throw new Error("Failed to remove session key") // @todo - use specific error ?
+    }
+
+    return result.value.hash!
+}
+
+/**
+ * Remove the SessionKeyValidator extension from the account
+ * @param accountAddress - Boop account address
+ * @returns Transaction hash
+ */
+export async function uninstallSessionKeyModule(accountAddress: Address): Promise<Hash> {
+    const boopClient = await getBoopClient()
+    if (!boopClient) throw new Error("Boop client not initialized")
+
+    const callData = encodeFunctionData({
+        abi: happyAccAbsAbis.IExtensibleAccount,
+        functionName: "removeExtension",
+        args: [SESSION_KEY_VALIDATOR_ADDRESS, EXTENSION_TYPE_VALIDATOR],
+    })
+
+    const result = await boopClient.boop.sendTransaction({
+        dest: accountAddress,
+        callData,
+        estimateGas: true,
+    })
+
+    if (result.isErr() || result.value.status !== EntryPointStatus.Success) {
+        throw new Error("Failed to uninstall session key validator") // @todo - use specific error ?
+    }
+
+    return result.value.hash!
 }
