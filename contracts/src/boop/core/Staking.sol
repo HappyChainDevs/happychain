@@ -1,7 +1,42 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {Stake} from "boop/interfaces/Types.sol";
+struct Stake {
+    /**
+     * Staked balance, inclusive of the unlocked balance.
+     */
+    uint128 balance;
+    /**
+     * Balance available for withdrawal after the withdraw delay, starting from {withdrawtimestamp}.
+     */
+    uint128 unlockedBalance;
+    /**
+     * The withdraw delay is the time (in seconds) required to withdraw funds, i.e. the time
+     * between {initiateWithdrawal} and {withdraw}). It is computed as:
+     * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`.
+     * Invariant: `minDelay == maxDelay == 0 || MIN_WITHDRAW_DELAY <= minDelay <= maxDelay`
+     */
+    uint64 maxDelay;
+    /**
+     * cf. {maxDelay}
+     */
+    uint64 minDelay;
+    /**
+     * Earliest time at which them most recently initiated withdrawal can be executed, or 0 if all
+     * withdrawals have been entirely processed.
+     * Invariant: `(unlockedBalance > 0) ==> (withdrawalTimestamp > 0)`
+     */
+    uint64 withdrawalTimestamp;
+    /**
+     * Reference timestamp for computing the time elapsed since a decrease was initiated, or 0 if
+     * no decreases have ever been made.
+     *
+     * Note that a decrease can inherit the reference timestamp of a previous decrease
+     * to preserve the previous' decrease progress — therefore this might not match up with
+     * the actual timestamp of the latest decrease operation.
+     */
+    uint64 lastDecreaseTimestamp;
+}
 
 /**
  * This contracts maintains staking balances for accounts.
