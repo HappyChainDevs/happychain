@@ -2,9 +2,11 @@ import { createBigIntStorage } from "@happy.tech/common"
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import type { Address, Hash } from "viem"
-import type { ExecuteOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_execute"
 import { StorageKey } from "../services/storage"
 import { userAtom } from "./user"
+
+// @todo - edit imports
+import type { ExecuteOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_execute"
 
 export enum BoopStatus {
     Pending = "pending",

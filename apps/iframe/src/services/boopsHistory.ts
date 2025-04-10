@@ -1,32 +1,8 @@
 import type { Address, Hash } from "viem"
-import { StorageKey, storage } from "./storage"
+import { type BoopEntry, type PendingBoop, StorageKey, storage } from "./storage"
 
 // @todo - cleanup import
 import type { ExecuteOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_execute"
-
-export interface PendingBoop {
-    boopHash: Hash
-    value: bigint
-    createdAt: number
-    status: "submitted" | "confirmed" | "failed"
-}
-
-export interface ConfirmedBoop extends PendingBoop {
-    status: "confirmed"
-    receipt: any
-    confirmedAt: number
-}
-
-export interface FailedBoop extends PendingBoop {
-    status: "failed"
-    error?: {
-        message: string
-        code?: number | string
-    }
-    failedAt: number
-}
-
-export type BoopEntry = PendingBoop | ConfirmedBoop | FailedBoop
 
 export function addPendingBoop(account: Address, pendingBoop: Omit<PendingBoop, "createdAt" | "status">): void {
     const entry: PendingBoop = {
