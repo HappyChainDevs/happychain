@@ -51,7 +51,7 @@ enum CallStatus {
     /** The call reverted. */
     CALL_REVERTED,
     /** The {IAccount.execute} function rejected the boop (incorrect input). */
-    EXECUTE_FAILED,
+    EXECUTE_REJECTED,
     /** The {IAccount.execute} function reverted (in violation of the spec). */
     EXECUTE_REVERTED
 }
@@ -69,7 +69,7 @@ enum Validity {
     /** The validation call returned malformed data (in violation of the spec). */
     INVALID_RETURN_DATA,
     /** The validation call succeeded but returned rejection data (e.g., invalid signature). */
-    VALIDATION_FAILED,
+    VALIDATION_REJECTED,
     /**
      * Only in simulation mode: The validation call succeeded, but indicated that some needed
      * information is unavailable at simulation time (e.g., signature).
@@ -142,7 +142,7 @@ struct ExecutionOutput {
     /**
      * The associated revert data if the call specified by the boop reverts (with
      * {CallStatus.CALL_REVERTED}, or the rejection reason if {IAccount.execute} rejects the boop
-     * (with {CallStatus.EXECUTE_FAILED}), otherwise empty.
+     * (with {CallStatus.EXECUTE_REJECTED}), otherwise empty.
      */
     bytes revertData;
 }

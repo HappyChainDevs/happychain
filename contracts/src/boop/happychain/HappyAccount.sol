@@ -159,12 +159,12 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
         (bool found, bytes memory executorAddress) = Utils.getExtraDataValue(boop.extraData, EXECUTOR_KEY);
         if (found) {
             if (executorAddress.length != 20) {
-                output.status = CallStatus.EXECUTE_FAILED;
+                output.status = CallStatus.EXECUTE_REJECTED;
                 output.revertData = abi.encodeWithSelector(InvalidExtensionValue.selector);
             } else {
                 address executor = address(uint160(bytes20(executorAddress)));
                 if (!extensions[ExtensionType.Executor][executor]) {
-                    output.status = CallStatus.EXECUTE_FAILED;
+                    output.status = CallStatus.EXECUTE_REJECTED;
                     output.revertData = abi.encodeWithSelector(ExtensionNotRegistered.selector);
                 } else {
                     dispatchedExecutor = executor;

@@ -103,7 +103,7 @@ contract BatchCallExecutorTest is BoopTestUtils {
         ExecutionOutput memory output = BatchCallExecutor(batchCallExecutor).execute(boop);
 
         // Verify execution failed with the correct error
-        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
+        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_REJECTED));
         assertEq(output.revertData, abi.encodeWithSelector(InvalidBatchCallInfo.selector));
     }
 
@@ -138,7 +138,7 @@ contract BatchCallExecutorTest is BoopTestUtils {
         ExecutionOutput memory output = BatchCallExecutor(batchCallExecutor).execute(boop);
 
         // Verify execution failed with the correct error
-        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
+        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_REJECTED));
         assertEq(output.revertData, abi.encodeWithSelector(InvalidBatchCallInfo.selector));
     }
 

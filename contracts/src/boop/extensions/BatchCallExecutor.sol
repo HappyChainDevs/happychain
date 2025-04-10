@@ -41,7 +41,7 @@ contract BatchCallExecutor is ICustomExecutor {
         if (found) (success, calls) = _calls.decodeCallInfoArray();
 
         if (!found || !success) {
-            output.status = CallStatus.EXECUTE_FAILED;
+            output.status = CallStatus.EXECUTE_REJECTED;
             output.revertData = abi.encodeWithSelector(InvalidBatchCallInfo.selector);
             return output;
         }
