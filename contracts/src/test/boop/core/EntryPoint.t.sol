@@ -26,10 +26,6 @@ import {
     InvalidNonce
 } from "boop/core/EntryPoint.sol";
 
-import {IAccount} from "boop/interfaces/IAccount.sol";
-import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
-import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
-
 contract EntryPointTest is BoopTestUtils {
     using Encoding for Boop;
     using ECDSA for bytes32;
