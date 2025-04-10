@@ -271,6 +271,16 @@ export class TxmMetrics {
         valueType: ValueType.INT,
     })
 
+    /* RPC LIVENESS MONITOR METRICS */
+    private readonly rpcLivenessMonitorMeter = metrics.getMeter("txm.rpc-liveness-monitor")
+
+    public readonly rpcLivenessMonitorGauge = this.rpcLivenessMonitorMeter.createGauge(
+        "txm.rpc-liveness-monitor.is-alive",
+        {
+            description: "Whether the RPC is alive",
+        },
+    )
+
     // Singleton instance
     private static instance: TxmMetrics
 

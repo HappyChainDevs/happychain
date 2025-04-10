@@ -155,12 +155,17 @@ export class TransactionSubmitter {
             ) {
                 this.txmgr.nonceManager.resync()
             }
+
+            this.txmgr.rpcLivenessMonitor.trackError()
+
             return err({
                 cause: AttemptSubmissionErrorCause.FailedToSendRawTransaction,
                 description: `Failed to send raw transaction ${transaction.intentId}. Details: ${sendRawTransactionResult.error}`,
                 flushed: true,
             })
         }
+
+        this.txmgr.rpcLivenessMonitor.trackSuccess()
 
         return ok(undefined)
     }
