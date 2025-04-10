@@ -9,8 +9,8 @@ import {Boop, ExecutionOutput} from "boop/interfaces/Types.sol";
  * Accounts should emit the {Received} event (from EventsAndErrors.sol) whenever they receive the
  * gas token.
  *
- * The ERC-165 selector for this interface is 0x2b39e81f and can be obtained via:
- * `console.logBytes4(IAccount.validate.selector ^ IAccount.execute.selector);`
+ * The ERC-165 selector for this interface is 0xa1c9a6b3 and can be obtained via:
+ * `console.logBytes4(IAccount.validate.selector ^ IAccount.execute.selector ^ IAccount.payout.selector);`
  */
 interface IAccount {
     /**
@@ -83,7 +83,7 @@ interface IAccount {
      * and the provided ID is not 0xffffffff, as per https://eips.ethereum.org/EIPS/eip-165.
      *
      * Required interfaces:
-     * - {IAccount}: This interface itself (0x2b39e81f)
+     * - {IAccount}: This interface itself (0xa1c9a6b3)
      * - {IERC165}: Interface detection (0x01ffc9a7)
      * - {IERC1271}: Contract signature validation (0x1626ba7e)
      *

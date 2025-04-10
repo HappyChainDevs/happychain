@@ -199,9 +199,8 @@ contract HappyAccount is IExtensibleAccount, OwnableUpgradeable, UUPSUpgradeable
         // forgefmt: disable-next-item
         return interfaceId == 0x01ffc9a7  // ERC-165
             || interfaceId == 0x1626ba7e  // ERC-1271
-            || interfaceId == 0x2b39e81f  // IAccount
-            || interfaceId == 0x24542ca5  // IPaymaster
-            || interfaceId == 0xf0223481; // IExtensibleAccount
+            || interfaceId == 0xa1c9a6b3  // IAccount
+            || interfaceId == 0x2a73c833; // IExtensibleAccount
     }
 
     receive() external payable {

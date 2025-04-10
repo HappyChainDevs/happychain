@@ -8,7 +8,7 @@ import {CallInfo, ExtensionType} from "boop/interfaces/Types.sol";
  * Interface for Boop accounts (as specified in IAccount) that are extensible with validator
  * and executor extensions.
  *
- * The ERC-165 selector for this interface is 0xf0223481 and can be obtained via: todo: Update
+ * The ERC-165 selector for this interface is 0x2a73c833 and can be obtained via:
  * ```
  * console.logBytes4(
  *     IAccount.validate.selector
