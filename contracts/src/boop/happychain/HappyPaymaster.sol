@@ -23,16 +23,8 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
     // ====================================================================================================
     // CONSTANTS
 
-    /// @dev Fixed size of an encoded Boop: 204 bytes for static fields plus 16 bytes (4 bytes × 4)
-    ///      for storing the lengths of the four dynamic fields
-    uint256 private constant STATIC_FIELDS_SIZE = 220;
-
     /// @dev The amount of gas consumed by the payout function.
     uint256 private constant PAYOUT_GAS = 12_000; // measured: 10097 + safety margin
-
-    /// @dev The max size of a tx with empty calldata with an empty access list.
-    ///      Given RLP encoding, this should usually be significantly less.
-    uint256 private constant MAX_TX_SIZE = 280;
 
     /// The allowed EntryPoint contract
     address public immutable ENTRYPOINT;
@@ -68,17 +60,11 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
      * to pay for any boop.
      */
     function validatePayment(Boop memory boop) external view onlyFromEntryPoint returns (bytes memory) {
-        // forgefmt: disable-next-item
-        uint256 totalSize = MAX_TX_SIZE
-            + STATIC_FIELDS_SIZE
-            + boop.callData.length
-            + boop.validatorData.length
-            + boop.extraData.length;
-
         // Only validate positive submitter fees
         if (boop.submitterFee > 0) {
+            uint256 txSize = Utils.estimateSubmitterTxSize(boop);
             uint256 maxFeePerByte = Utils.maxCalldataFeePerByte(boop);
-            uint256 maxSubmitterFee = totalSize * (maxFeePerByte + SUBMITTER_TIP_PER_BYTE);
+            uint256 maxSubmitterFee = txSize * (maxFeePerByte + SUBMITTER_TIP_PER_BYTE);
 
             if (uint256(boop.submitterFee) > maxSubmitterFee) {
                 return abi.encodeWithSelector(SubmitterFeeTooHigh.selector);

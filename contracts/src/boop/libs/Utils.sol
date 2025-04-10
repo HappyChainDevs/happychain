@@ -19,6 +19,19 @@ library Utils {
     uint256 private constant RLP_ENCODED_TX_LENGTH = 200;
 
     /**
+     * Returns an overestimate of the size of a submitter transaction sending this boop directly
+     * to the {EntryPoint} contract, without an access list.
+     */
+    function estimateSubmitterTxSize(Boop memory boop) internal pure returns (uint256) {
+        // forgefmt: disable-next-item
+        return 280 // maximum size of tx with an empty access list, exclusive boop encoding
+            + 220 // encoding fixed part: 204 for static fields + 16 bytes for length of dynamic fields
+            + boop.callData.length
+            + boop.validatorData.length
+            + boop.extraData.length;
+    }
+
+    /**
      * @dev Returns an overestimation of the gas consumed by a transaction
      * @param callGas The gas consumed by the function call
      * @param calldataLength The length of the calldata
