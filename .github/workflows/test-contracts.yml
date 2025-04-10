@@ -13,6 +13,7 @@ on:
 env:
   FOUNDRY_PROFILE: default
   PRIVATE_KEY_LOCAL: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" # Forge/Anvil test private key 0
+  CONFIG: "LOCAL" # Config mode for running contract deploy scripts in local environment
 
 jobs:
   test:
