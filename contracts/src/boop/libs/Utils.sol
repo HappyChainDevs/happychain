@@ -50,15 +50,6 @@ library Utils {
     }
 
     /**
-     * @dev Returns the maximum fee per byte for a Boop's calldata
-     * @return The maximum fee per byte, calculated by overestimating all calldata bytes
-     *         as non-zero (16 gas per byte).
-     */
-    function maxCalldataFeePerByte(Boop memory boop) internal pure returns (uint256) {
-        return (boop.maxFeePerGas) * CALLDATA_GAS_PER_BYTE;
-    }
-
-    /**
      * @dev Retrieves a value from the extraData field by looking up a specific key
      * @param extraData The encoded extra data byte array to search in
      * @param key The 3-byte key to lookup in the extraData
