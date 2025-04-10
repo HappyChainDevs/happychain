@@ -4,23 +4,9 @@ pragma solidity ^0.8.20;
 import {Boop} from "boop/interfaces/Types.sol";
 
 library Utils {
-    /// @dev Assuming all calldata bytes are non-zero (16 gas per byte).
-    uint256 private constant CALLDATA_GAS_PER_BYTE = 16;
-
-    /// @dev Gas overhead for calling the txGasFromCallGas function
-    uint256 private constant FUNCTION_DISPATCH_OVERHEAD = 380;
-
-    /// @dev Standard Ethereum transaction base cost (21_000)
-    uint256 private constant INTRINSIC_TX_GAS = 21_000;
-
-    /// @dev Estimated length in bytes of a transaction after RLP encoding without calldata/access list.
-    ///      A transaction without calldata and an empty access list is at most ~220 bytes after RLP encoding.
-    ///      We use 200 as a good compromise since we already overcharge for zero-value bytes in the calldata.
-    uint256 private constant RLP_ENCODED_TX_LENGTH = 200;
-
     /**
      * Returns an overestimate of the size of a submitter transaction sending this boop directly
-     * to the {EntryPoint} contract, without an access list.
+     * to {EntryPoint.submit}, without an access list.
      */
     function estimateSubmitterTxSize(Boop memory boop) internal pure returns (uint256) {
         // forgefmt: disable-next-item
@@ -32,21 +18,18 @@ library Utils {
     }
 
     /**
-     * @dev Returns an overestimation of the gas consumed by a transaction
-     * @param callGas The gas consumed by the function call
-     * @param calldataLength The length of the calldata
-     * @return The estimated total gas consumption including:
-     *         - 21000 fixed intrinsic gas
-     *         - Calldata gas cost assuming all non-zero bytes (overestimation)
-     *         - callGas
-     *         - Function dispatch overhead
+     * Returns an overestimation of the gas consumed by a submitter transaction sending this boop
+     * directly to {EntryPoint.submit}, without an access list.
+     *
+     * @param submitGas Estimation of the gas consumed by the execution of {EntryPoint.submit}
+     * @param encodedBoopLength Length of the encoded boop
      */
-    function txGasFromCallGas(uint256 callGas, uint256 calldataLength) internal pure returns (uint32) {
-        // forgefmt: disable-next-item
-        return uint32((RLP_ENCODED_TX_LENGTH + calldataLength) * CALLDATA_GAS_PER_BYTE
-            + callGas
-            + INTRINSIC_TX_GAS
-            + FUNCTION_DISPATCH_OVERHEAD);
+    function estimateSubmitterTxGas(uint256 submitGas, uint256 encodedBoopLength) internal pure returns (uint32) {
+        return uint32(encodedBoopLength + 280 * 16 + submitGas + 21_000 + 3000);
+        // 280 = maximum size of tx with an empty access list, including allowance for 4 bytes selector
+        // 16 = calldata cost for non-zero byte
+        // 21_000 = fixed intrinsic gas
+        // 3000 = overestimation of {EntryPoint.submit} dispatch overhead
     }
 
     /**
