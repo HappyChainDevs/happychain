@@ -57,7 +57,7 @@ export class TransactionCollector {
                     transaction.changeStatus(TransactionStatus.Pending)
                 }
 
-                const submissionResult = await this.txmgr.transactionSubmitter.attemptSubmission(transaction, {
+                const submissionResult = await this.txmgr.transactionSubmitter.submitNewAttempt(transaction, {
                     type: AttemptType.Original,
                     nonce,
                     maxFeePerGas,

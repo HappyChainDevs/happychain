@@ -241,7 +241,7 @@ export class TxMonitor {
 
         transaction.changeStatus(TransactionStatus.Cancelling)
 
-        await this.transactionManager.transactionSubmitter.attemptSubmission(transaction, {
+        await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
             type: AttemptType.Cancellation,
             nonce: attempt.nonce,
             maxFeePerGas: replacementMaxFeePerGas,
@@ -265,7 +265,7 @@ export class TxMonitor {
                 LogTag.TXM,
                 `Transaction ${transaction.intentId} is stuck, but the gas price is still sufficient for current network conditions. Sending same attempt again.`,
             )
-            await this.transactionManager.transactionSubmitter.retryAttempt(transaction, attempt)
+            await this.transactionManager.transactionSubmitter.resubmitAttempt(transaction, attempt)
             return
         }
 
@@ -279,7 +279,7 @@ export class TxMonitor {
             attempt.maxPriorityFeePerGas,
         )
 
-        await this.transactionManager.transactionSubmitter.attemptSubmission(transaction, {
+        await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
             type: AttemptType.Original,
             nonce: attempt.nonce,
             maxFeePerGas: replacementMaxFeePerGas,
@@ -297,7 +297,7 @@ export class TxMonitor {
         const { maxFeePerGas: marketMaxFeePerGas, maxPriorityFeePerGas: marketMaxPriorityFeePerGas } =
             this.transactionManager.gasPriceOracle.suggestGasForNextBlock()
 
-        const submissionResult = await this.transactionManager.transactionSubmitter.attemptSubmission(transaction, {
+        const submissionResult = await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
             type: AttemptType.Original,
             nonce,
             maxFeePerGas: marketMaxFeePerGas,
@@ -314,7 +314,7 @@ export class TxMonitor {
         const { maxFeePerGas: marketMaxFeePerGas, maxPriorityFeePerGas: marketMaxPriorityFeePerGas } =
             this.transactionManager.gasPriceOracle.suggestGasForNextBlock()
 
-        const submissionResult = await this.transactionManager.transactionSubmitter.attemptSubmission(transaction, {
+        const submissionResult = await this.transactionManager.transactionSubmitter.submitNewAttempt(transaction, {
             type: AttemptType.Original,
             nonce,
             maxFeePerGas: marketMaxFeePerGas,
