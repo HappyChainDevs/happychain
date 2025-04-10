@@ -1,5 +1,4 @@
 import { HappyMethodNames, PermissionNames, TransactionType } from "@happy.tech/common"
-import { computeBoopHash } from "@happy.tech/submitter-client"
 import {
     EIP1193DisconnectedError,
     EIP1193ErrorCodes,
@@ -29,6 +28,12 @@ import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
 import { formatBoopReceiptToTransactionReceipt, sendBoop } from "./boop"
+import {
+    checkIsSessionKeyModuleInstalled,
+    installSessionKeyModule,
+    registerSessionKey,
+    signWithSessionKey,
+} from "./modules/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
 
@@ -90,18 +95,8 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                 return await sendBoop({
                     user,
                     tx,
-                    // validator: contractAddresses.<Session key validator would go here>,
                     signer: async (boop: HappyTx) => {
-                        const boopHash = computeBoopHash(boop)
-                        const validatorData = await getInjectedClient()!.signMessage({
-                            account: privateKeyToAccount(sessionKey),
-                            message: { raw: boopHash },
-                        })
-
-                        return {
-                            ...boop,
-                            validatorData,
-                        }
+                        return await signWithSessionKey(sessionKey, boop)
                     },
                 })
             }
@@ -129,7 +124,6 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                         value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
                     })
 
-                    // Also mark as confirmed if we already have the receipt
                     if (result.value.state.included) {
                         markBoopAsConfirmed(user.address, tx.value ? hexToBigInt(tx.value as Hex) : 0n, result.value)
                     }
@@ -137,7 +131,7 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                     return boopHash
                 }
 
-                throw new Error("Failed to execute boop transaction")
+                throw new Error("Failed to execute boop transaction") // @todo - use error code ?
             } catch (error) {
                 console.error("Sending Boop errored", error)
                 throw error
@@ -194,10 +188,10 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                     gas: receipt.gasUsed,
                     gasPrice: receipt.txReceipt.effectiveGasPrice,
                     hash,
-                    input: "0x", // should be `receipt.callData` ?
+                    input: "0x", // @todo - should be `receipt.callData` ?
                     nonce: receipt.nonceValue.toString(),
                     to: receipt?.dest || receipt.txReceipt.to, // should be `receipt.dest` ? @todo - confirm if `dest` should be returned by the submitter or not
-                    value: "0x", // should be `receipt.value` ?
+                    value: "0x", //  @todo - should be `receipt.value` ?
                     typeHex: TransactionType.EIP1559,
                     r: "0x0",
                     s: "0x0",
@@ -307,6 +301,8 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
         }
 
         case HappyMethodNames.REQUEST_SESSION_KEY: {
+            if (!user) throw new EIP1193UnauthorizedError()
+
             // address of contract the session key will be authorized to interact with
             const targetContract = request.payload.params[0]
 
@@ -320,15 +316,37 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
             // Check if we have any session keys stored for this account
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
-            const _hasExistingSessionKeys = Boolean(storedSessionKeys[user!.address])
+            const hasExistingSessionKeys = Boolean(storedSessionKeys[user.address])
 
-            // @todo: check if session key module is installed
+            // Get the Boop account address
+            const boopAccount = await getBoopAccount()
+            if (!boopAccount) throw new Error("Boop account not initialized")
+
+            // Only check module installation if we don't have any session keys stored
+            if (!hasExistingSessionKeys) {
+                const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(boopAccount.address)
+                if (!isSessionKeyValidatorInstalled) {
+                    // Install the SessionKeyValidator extension on the Boop account
+                    const hash = await installSessionKeyModule(boopAccount.address)
+
+                    // Wait for the installation transaction to be confirmed
+                    const publicClient = getPublicClient()
+                    await publicClient.waitForTransactionReceipt({ hash })
+                }
+            }
+
+            // Register the session key for the target contract
+            const hash = await registerSessionKey(boopAccount.address, accountSessionKey.address, targetContract)
+
+            // Wait for the registration transaction to be confirmed
+            const publicClient = getPublicClient()
+            await publicClient.waitForTransactionReceipt({ hash })
 
             // Store the session key
             storage.set(StorageKey.SessionKeys, {
                 ...storedSessionKeys,
-                [user!.address]: {
-                    ...(storedSessionKeys[user!.address] || {}),
+                [user.address]: {
+                    ...(storedSessionKeys[user.address] || {}),
                     [targetContract]: sessionKey,
                 },
             })

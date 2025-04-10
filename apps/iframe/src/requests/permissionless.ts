@@ -1,5 +1,4 @@
 import { FIFOCache, HappyMethodNames, PermissionNames } from "@happy.tech/common"
-import { computeBoopHash } from "@happy.tech/submitter-client"
 import {
     type EIP1193RequestResult,
     EIP1193UnauthorizedError,
@@ -27,15 +26,15 @@ import { getCurrentChain } from "#src/state/chains"
 import { getAllPermissions, getPermissions, hasPermissions, revokePermissions } from "#src/state/permissions"
 import { getPublicClient } from "#src/state/publicClient"
 import { getUser } from "#src/state/user"
-import { getWalletClient } from "#src/state/walletClient"
 import type { AppURL } from "#src/utils/appURL"
 import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestRequiresConfirmation"
 import { formatBoopReceiptToTransactionReceipt, formatTransactionFromBoopReceipt, sendBoop } from "./boop"
+import { signWithSessionKey } from "./modules/session-keys/helpers"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID, checkAuthenticated } from "./utils"
 
+// @todo - cleanup imports
 import type { HappyTx } from "../../../../packages/submitter/lib/tmp/interface/HappyTx"
-// Import types from your HappyTx system
 import type { HappyTxReceipt } from "../../../../packages/submitter/lib/tmp/interface/HappyTxReceipt"
 import { StateRequestStatus } from "../../../../packages/submitter/lib/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "../../../../packages/submitter/lib/tmp/interface/status"
@@ -75,24 +74,11 @@ export async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.Request
 
             const sessionKey = storage.get(StorageKey.SessionKeys)?.[user.address]?.[target]
             if (!sessionKey) throw new EIP1193UnauthorizedError()
-
-            // Use sendBoop instead of sendUserOp for Boop account abstraction
             return await sendBoop({
                 user,
                 tx,
                 signer: async (boop) => {
-                    // Sign the boop hash with the session key
-                    const boopHash = computeBoopHash(boop)
-
-                    const validatorData = await getWalletClient()!.signMessage({
-                        account: privateKeyToAccount(sessionKey),
-                        message: { raw: boopHash },
-                    })
-
-                    return {
-                        ...boop,
-                        validatorData,
-                    }
+                    return await signWithSessionKey(sessionKey, boop)
                 },
             })
         }
