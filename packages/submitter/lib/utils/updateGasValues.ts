@@ -15,13 +15,12 @@ export function updateGasValues(args: `0x${string}`, result: SubmitSimulateRespo
     if (!decoded.gasLimit && result.gas) {
         decoded.gasLimit = BigInt(result.gas)
     }
-    // TODO: check if these should be included in signing
-    // if (!decoded.validateGasLimit && result.validateGas) {
-    //     decoded.validateGasLimit = BigInt(result.validateGas)
-    // }
-    // if (!decoded.validatePaymentGasLimit && result.paymentValidateGas) {
-    //     decoded.validatePaymentGasLimit = BigInt(result.paymentValidateGas)
-    // }
+    if (!decoded.validateGasLimit && result.validateGas) {
+        decoded.validateGasLimit = BigInt(result.validateGas)
+    }
+    if (!decoded.validatePaymentGasLimit && result.paymentValidateGas) {
+        decoded.validatePaymentGasLimit = BigInt(result.paymentValidateGas)
+    }
     if (!decoded.executeGasLimit && result.executeGas) {
         decoded.executeGasLimit = BigInt(result.executeGas)
     }

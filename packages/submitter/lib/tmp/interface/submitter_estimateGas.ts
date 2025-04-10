@@ -1,4 +1,5 @@
 import type { Optional } from "@happy.tech/common"
+import type { Prettify } from "viem"
 import type { HappyTx } from "./HappyTx"
 import type { SimulationResult } from "./SimulationResult"
 import type { Address } from "./common_chain"
@@ -18,7 +19,7 @@ export type EstimateGasInput = {
 export type EstimateGasStatus = SubmitterErrorSimulationUnavailable | EntryPointStatus
 
 // biome-ignore format: readability
-export type EstimateGasOutput = (
+export type EstimateGasOutput = Prettify<(
     {
         // check with `isSubmitterError(status)`
         status: SubmitterErrorSimulationUnavailable
@@ -51,7 +52,7 @@ export type EstimateGasOutput = (
         /** Gas limit for IHappyPaymaster.validatePayment */
         validatePaymentGasLimit: bigint
     }
-)
+)>
 
 /**
  * POST /submitter_estimateGas

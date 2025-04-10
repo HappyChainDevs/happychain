@@ -9,7 +9,7 @@ import { logger } from "#lib/logger"
 import type { CreateAccountInput, CreateAccountOutput } from "#lib/tmp/interface/create_account"
 import { isContractDeployed } from "#lib/utils/isContractDeployed"
 
-// Account responsible for deploying ScrappyAccounts.
+// Account responsible for deploying HappyAccounts.
 // May or may not be the same as the global submitter accounts
 // so we define private/internal clients independently here.
 const account = privateKeyToAccount(env.PRIVATE_KEY_ACCOUNT_DEPLOYER)
@@ -18,7 +18,7 @@ const walletClient = createWalletClient({ ...config, account })
 export async function create({ owner, salt }: CreateAccountInput): Promise<Result<CreateAccountOutput, Error>> {
     const predictedAddress = await publicClient.readContract({
         address: env.DEPLOYMENT_ACCOUNT_FACTORY,
-        abi: abis.ScrappyAccountFactory,
+        abi: abis.HappyAccountFactory,
         functionName: "getAddress",
         args: [salt, owner],
     })
@@ -36,7 +36,7 @@ export async function create({ owner, salt }: CreateAccountInput): Promise<Resul
 
     const { request, result } = await publicClient.simulateContract({
         address: env.DEPLOYMENT_ACCOUNT_FACTORY,
-        abi: abis.ScrappyAccountFactory,
+        abi: abis.HappyAccountFactory,
         functionName: "createAccount",
         args: [salt, owner],
         account,

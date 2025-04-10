@@ -69,8 +69,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
      * sender (`tx.origin`), as this scenario is impossible onchain. We call this "simulation mode".
      *
      * In simulation mode, this function must ignore rejections (but not reverts) from account and
-     * paymaster validation if their results are the encoded {UnknownDuringSimulation} or
-     * {FutureNonceDuringSimulation} errors.
+     * paymaster validation if their results are the encoded {UnknownDuringSimulation} errors.
      *
      * The function returns a filled-in {SubmitOutput} structure. This is needed during simulation,
      * as the logs are not available with `eth_call`.

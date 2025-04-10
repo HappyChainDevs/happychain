@@ -33,7 +33,6 @@ export async function submit(data: SubmitInput): Promise<Result<SubmitOutput, Er
         simulate = await simulateBoop(entryPoint, encodeHappyTx(data.tx))
         if (simulate.isErr()) return err(simulate.error)
     }
-
     // use simulated result instead of the original tx as it may have updated gas values
     const writeResponse = await submitWriteContract(simulate.value.request)
 
@@ -53,7 +52,7 @@ async function submitWriteContract(request: SubmitParameters): Promise<Result<Su
         const transactionHash = await walletClient.writeContract({
             address: request.address,
             args: request.args,
-            abi: abis.HappyEntryPoint,
+            abi: abis.EntryPoint,
             functionName: "submit",
             account,
         } satisfies SubmitRequest)

@@ -5,7 +5,7 @@ import type { abis } from "#lib/deployments"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
 
 export type SubmitSimulateResults = SimulateContractReturnType<
-    typeof abis.HappyEntryPoint,
+    typeof abis.EntryPoint,
     "submit",
     readonly [`0x${string}`],
     typeof happyChainSepolia,
@@ -21,7 +21,7 @@ export type SubmitParameters = {
 
 export type SubmitRequest = SubmitParameters & {
     account: Account
-    abi: typeof abis.HappyEntryPoint
+    abi: typeof abis.EntryPoint
     functionName: "submit"
 }
 

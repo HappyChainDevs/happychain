@@ -27,7 +27,9 @@
         "lineWidth": 120,
         "attributePosition": "auto"
     },
-    "organizeImports": { "enabled": true },
+    "organizeImports": {
+        "enabled": true
+    },
     "linter": {
         "enabled": true,
         "rules": {
@@ -93,6 +95,16 @@
                 "rules": {
                     "correctness": {
                         "noUnusedVariables": "off"
+                    }
+                }
+            }
+        },
+        {
+            "include": ["*.spec.ts", "*.test.ts"],
+            "linter": {
+                "rules": {
+                    "suspicious": {
+                        "noExplicitAny": "off"
                     }
                 }
             }

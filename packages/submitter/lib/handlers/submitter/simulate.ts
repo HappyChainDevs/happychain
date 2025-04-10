@@ -1,5 +1,5 @@
 import env from "#lib/env"
-import { SubmitterErrorStatus } from "#lib/tmp/interface/status"
+import { SubmitterErrorStatus, isSubmitterError } from "#lib/tmp/interface/status"
 import type { EstimateGasInput, EstimateGasOutput } from "#lib/tmp/interface/submitter_estimateGas"
 import { encodeHappyTx } from "#lib/utils/encodeHappyTx"
 import { simulateBoop } from "./simulateBoop"
@@ -9,12 +9,15 @@ export async function simulate(data: EstimateGasInput): Promise<EstimateGasOutpu
 
     const simulation = await simulateBoop(entryPoint, encodeHappyTx(data.tx))
 
+    const maxFeePerGas = 1200000000n
+    const submitterFee = 100n
+
     if (simulation.isOk()) {
         return {
             status: simulation.value.simulation.status,
             simulationResult: simulation.value.simulation,
-            maxFeePerGas: 1200000000n,
-            submitterFee: 100n,
+            maxFeePerGas,
+            submitterFee,
 
             validateGasLimit: BigInt(simulation.value.result.validateGas),
             validatePaymentGasLimit: BigInt(simulation.value.result.paymentValidateGas),
@@ -23,5 +26,15 @@ export async function simulate(data: EstimateGasInput): Promise<EstimateGasOutpu
         } satisfies EstimateGasOutput
     }
 
-    return { status: SubmitterErrorStatus.UnexpectedError } satisfies EstimateGasOutput
+    if (!simulation.error.simulation || isSubmitterError(simulation.error.simulation.status)) {
+        return {
+            status: simulation.error.simulation?.status ?? SubmitterErrorStatus.UnexpectedError,
+            simulationResult: simulation.error.simulation,
+        } as EstimateGasOutput
+    }
+
+    return {
+        status: simulation.error.simulation.status,
+        simulationResult: simulation.error.simulation,
+    } as EstimateGasOutput
 }

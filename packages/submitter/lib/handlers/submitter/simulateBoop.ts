@@ -50,9 +50,10 @@ async function simulateContract(entryPoint: `0x${string}`, encodedBoop: `0x${str
             address: boopParameters.address,
             args: boopParameters.args,
             account: parseAccount(zeroAddress),
-            abi: abis.HappyEntryPoint,
+            abi: abis.EntryPoint,
             functionName: "submit",
         } satisfies SubmitRequest)
+
         const simulation = getSimulationResult(request, result)
 
         // if simulation wasn't successful, we won't attempt to execute
