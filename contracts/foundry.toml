@@ -11,14 +11,6 @@ via_ir = true
 
 ignored_warnings_from = ["node_modules", "lib", "src/deploy", "src/scripts", "src/test"]
 
-additional_compiler_profiles = [
-  { name = "kernel", via_ir = true, optimizer = true, optimizer_runs = 200 },
-]
-
-compilation_restrictions = [
-  { paths = "lib/kernel/src/Kernel.sol", via_ir = true, optimizer = true, optimizer_runs = 200 },
-]
-
 # Forge targets Paris by default.
 evm_version = "cancun"
 

@@ -45,10 +45,8 @@ setup:
 	mkdir -p lib/{openzeppelin,oz-upgradeable}
 	ln $(LN_FLAGS) ../$(NODE_MODULES)/ExcessivelySafeCall lib/ExcessivelySafeCall
 	ln $(LN_FLAGS) ../$(NODE_MODULES)/solady lib/solady
-	ln $(LN_FLAGS) ../$(NODE_MODULES)/kernel lib/kernel
 	ln $(LN_FLAGS) ../$(NODE_MODULES)/forge-std lib/forge-std
 	ln $(LN_FLAGS) ../$(NODE_MODULES)/@kevincharm/bls-bn254 lib/bls-bn254
-	ln $(LN_FLAGS) ../$(NODE_MODULES)/account-abstraction lib/account-abstraction
 	ln $(LN_FLAGS) ../../$(NODE_MODULES)/@openzeppelin/contracts lib/openzeppelin/src
 	ln $(LN_FLAGS) ../../$(NODE_MODULES)/@openzeppelin/contracts-upgradeable lib/oz-upgradeable/src
 
