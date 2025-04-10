@@ -142,8 +142,8 @@ error UnknownDuringSimulation();
 error NotFromEntryPoint();
 
 /**
- * Selector returned by {IAccount.validate} or {ICustomValidator} when a signature is
- * invalid.
+ * Selector returned by {IAccount.validate}, {ICustomValidator.validate} or
+ * {IPaymaster.validatePayment} when a signature is invalid.
  */
 error InvalidSignature();
 
