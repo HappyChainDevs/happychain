@@ -10,17 +10,16 @@ import {Encoding} from "boop/libs/Encoding.sol";
 
 import {ICustomExecutor, EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
 import {ICustomValidator, VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
+import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
+import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 import {
-    IExtensibleAccount,
-    ExtensionType,
+    InvalidSignature,
+    NotFromEntryPoint,
+    UnknownDuringSimulation,
+    Received,
     ExtensionAlreadyRegistered,
     ExtensionNotRegistered,
-    InvalidExtensionValue,
-    CallInfo
-} from "boop/interfaces/IExtensibleAccount.sol";
-import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
-import {
-    InvalidSignature, NotFromEntryPoint, UnknownDuringSimulation, Received
+    InvalidExtensionValue
 } from "boop/interfaces/EventsAndErrors.sol";
 
 /**
