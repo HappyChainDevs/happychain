@@ -8,10 +8,11 @@ import {MockValidator} from "../../../test/mocks/MockValidator.sol";
 import {MockExecutor} from "../../../test/mocks/MockExecutor.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
-import {Encoding} from "../../../boop/core/Encoding.sol";
+import {Encoding} from "boop/core/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {VALIDATOR_KEY} from "../../../boop/interfaces/ICustomValidator.sol";
-import {EXECUTOR_KEY} from "../../../boop/interfaces/ICustomExecutor.sol";
+import {IAccount} from "boop/interfaces/IAccount.sol";
+import {VALIDATOR_KEY} from "boop/interfaces/ICustomValidator.sol";
+import {EXECUTOR_KEY} from "boop/interfaces/ICustomExecutor.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 import {
     InvalidSignature,
@@ -544,11 +545,9 @@ contract HappyAccountTest is BoopTestUtils {
         bytes4 erc1271InterfaceId = 0x1626ba7e; // ERC-1271 interface ID
         assertTrue(account.supportsInterface(erc1271InterfaceId), "Should support ERC-1271");
 
-        bytes4 accountInterfaceId = 0x2b39e81f; // IAccount interface ID
+        // IAccount interface ID
+        bytes4 accountInterfaceId = IAccount.validate.selector ^ IAccount.execute.selector ^ IAccount.payout.selector;
         assertTrue(account.supportsInterface(accountInterfaceId), "Should support IAccount");
-
-        bytes4 paymasterInterfaceId = 0x24542ca5; // IPaymaster interface ID
-        assertTrue(account.supportsInterface(paymasterInterfaceId), "Should support IPaymaster");
     }
 
     // ====================================================================================================

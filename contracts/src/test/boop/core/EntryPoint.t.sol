@@ -26,6 +26,12 @@ import {
     InvalidNonce
 } from "boop/core/EntryPoint.sol";
 
+import {IAccount} from "boop/interfaces/IAccount.sol";
+import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
+import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
+
+import {console} from "forge-std/console.sol";
+
 contract EntryPointTest is BoopTestUtils {
     using Encoding for Boop;
     using ECDSA for bytes32;
@@ -52,6 +58,17 @@ contract EntryPointTest is BoopTestUtils {
     address private dest;
 
     function setUp() public {
+        console.logBytes4(IAccount.validate.selector ^ IAccount.execute.selector ^ IAccount.payout.selector);
+        console.logBytes4(IPaymaster.validatePayment.selector);
+        console.logBytes4(
+            IAccount.validate.selector
+            ^ IAccount.execute.selector
+            ^ IExtensibleAccount.addExtension.selector
+            ^ IExtensibleAccount.removeExtension.selector
+            ^ IExtensibleAccount.isExtensionRegistered.selector
+            ^ IExtensibleAccount.executeCallFromExecutor.selector
+        );
+
         privKey = uint256(vm.envBytes32("PRIVATE_KEY_LOCAL"));
         owner = vm.addr(privKey);
 

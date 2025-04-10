@@ -21,8 +21,8 @@ error SubmitterFeeTooHigh();
  * with the {EntryPoint}, by calling the functions implemented in `Staking.sol`. The paymaster
  * itself is the only one authorized to change withdraw delays, initiate and finalize withdrawals.
  *
- * The ERC-165 selector for this interface is 0x24542ca5 and can be obtained via:
- * `console.logBytes4(IPaymaster.payout.selector);`
+ * The ERC-165 selector for this interface is 0x8034b4ab and can be obtained via:
+ * `console.logBytes4(IPaymaster.validatePayment.selector);`
  */
 interface IPaymaster {
     /**
