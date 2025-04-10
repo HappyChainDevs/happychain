@@ -1,7 +1,8 @@
 import { bigIntReplacer, bigIntReviver, createStorage } from "@happy.tech/common"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Address } from "abitype"
-import type { Hex } from "viem"
+import type { Hash, Hex } from "viem"
+import type { ExecuteOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_execute"
 
 export enum StorageKey {
     HappyUser = "happychain:user:v1",
@@ -17,11 +18,35 @@ export enum StorageKey {
 export type SessionKeysByTargetContract = Record<Address, Hex>
 export type SessionKeysByHappyUser = Record<Address, SessionKeysByTargetContract>
 
+export interface PendingBoop {
+    boopHash: Hash
+    value: bigint
+    createdAt: number
+    status: "submitted" | "confirmed" | "failed"
+}
+
+export interface ConfirmedBoop extends PendingBoop {
+    status: "confirmed"
+    receipt: ExecuteOutput
+    confirmedAt: number
+}
+
+export interface FailedBoop extends PendingBoop {
+    status: "failed"
+    error?: {
+        message: string
+        code?: number | string
+    }
+    failedAt: number
+}
+
+export type BoopEntry = PendingBoop | ConfirmedBoop | FailedBoop
+
 type StorageSchema = {
     // cache user within iframe to manage auto-reconnect
     [StorageKey.HappyUser]: HappyUser | undefined
     [StorageKey.SessionKeys]: SessionKeysByHappyUser | undefined
-    [StorageKey.Boops]: Record<Address, any[]> | undefined
+    [StorageKey.Boops]: Record<Address, Array<BoopEntry>> | undefined
 }
 
 export const storage = createStorage<StorageSchema>()
