@@ -4,8 +4,8 @@ pragma solidity ^0.8.20;
 import {ExcessivelySafeCall} from "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-import {Utils} from "boop/libs/Utils.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
+import {Utils} from "./Utils.sol";
+import {Encoding} from "./Encoding.sol";
 
 import {Staking} from "boop/core/Staking.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";

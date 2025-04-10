@@ -9,7 +9,7 @@ import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
 import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
+import {Encoding} from "../../../boop/core/Encoding.sol";
 import {SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
 

@@ -8,10 +8,10 @@ import {MockValidator} from "../../../test/mocks/MockValidator.sol";
 import {MockExecutor} from "../../../test/mocks/MockExecutor.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 
-import {Encoding} from "boop/libs/Encoding.sol";
+import {Encoding} from "../../../boop/core/Encoding.sol";
 import {HappyAccount} from "boop/happychain/HappyAccount.sol";
-import {VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
-import {EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
+import {VALIDATOR_KEY} from "../../../boop/interfaces/ICustomValidator.sol";
+import {EXECUTOR_KEY} from "../../../boop/interfaces/ICustomExecutor.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 import {
     InvalidSignature,
