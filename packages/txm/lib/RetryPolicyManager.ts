@@ -1,4 +1,4 @@
-import { type Result, err, ok } from "neverthrow"
+import { type Result, ok } from "neverthrow"
 import { type Abi, type TransactionReceipt, encodeErrorResult } from "viem"
 import type { Attempt, Transaction } from "./Transaction"
 import type { TransactionManager } from "./TransactionManager"
