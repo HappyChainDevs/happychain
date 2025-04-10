@@ -44,9 +44,9 @@ struct Boop {
 }
 
 // ====================================================================================================
-// STAKE (cf. {Staker})
+// STAKE (cf. {Staking})
 
-/// Information about an address's stake in {Staker}.
+/// Information about an address's stake in {Staking}.
 struct Stake {
     /**
      * Staked balance, inclusive of the unlocked balance.

@@ -34,7 +34,7 @@ import {Stake} from "boop/interfaces/Types.sol";
  * @dev The formula for the withdraw delay is:
  * `max(MIN_WITHDRAW_DELAY, minDelay, maxDelay - (block.timestamp - lastDecreaseTimestamp))`
  */
-contract Staker {
+contract Staking {
     /// Staking information for accounts.
     mapping(address account => Stake) public stakes;
 
