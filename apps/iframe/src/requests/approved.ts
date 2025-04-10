@@ -10,7 +10,7 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { type Client, InvalidAddressError, isAddress } from "viem"
+import { type Client, type Hash, InvalidAddressError, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { StorageKey, storage } from "#src/services/storage"
 import { getBoopClient } from "#src/state/boopClient"
@@ -18,7 +18,7 @@ import { getChains, setChains } from "#src/state/chains"
 import { getCurrentChain, setCurrentChain } from "#src/state/chains"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { grantPermissions } from "#src/state/permissions"
-import { getSmartAccountClient } from "#src/state/smartAccountClient.ts"
+import { getPublicClient } from "#src/state/publicClient"
 import { getUser } from "#src/state/user"
 import { getWalletClient } from "#src/state/walletClient"
 import { addWatchedAsset } from "#src/state/watchedAssets"
@@ -123,7 +123,10 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
         case HappyMethodNames.LOAD_ABI: {
             return user ? loadAbiForUser(user.address, request.payload.params) : false
         }
+
         case HappyMethodNames.REQUEST_SESSION_KEY: {
+            if (!user) throw new EIP1193UnauthorizedError()
+
             // address of contract the session key will be authorized to interact with
             const targetContract = request.payload.params[0]
 
@@ -131,47 +134,41 @@ export async function dispatchHandlers(request: PopupMsgs[Msgs.PopupApprove]) {
                 throw new InvalidAddressError({ address: targetContract })
             }
 
+            const publicClient = getPublicClient()
             // Generate a new session key
             const sessionKey = generatePrivateKey()
             const accountSessionKey = privateKeyToAccount(sessionKey)
 
             // Check if we have any session keys stored for this account
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
-            const hasExistingSessionKeys = Boolean(storedSessionKeys[user!.address])
+            const hasExistingSessionKeys = Boolean(storedSessionKeys[user.address])
 
-            // @todo - how do we handle the following now ?
-            const smartAccountClient = (await getSmartAccountClient())!
-            let keyRegistered = false
-
+            let hash: Hash
             // Only check module installation if we don't have any session keys stored
             if (!hasExistingSessionKeys) {
-                const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(smartAccountClient)
+                const isSessionKeyValidatorInstalled = await checkIsSessionKeyModuleInstalled(user.address)
                 if (!isSessionKeyValidatorInstalled) {
-                    await installSessionKeyModule(smartAccountClient, accountSessionKey.address, targetContract)
-                    keyRegistered = true
+                    // Install the SessionKeyValidator AND register session key
+                    hash = await installSessionKeyModule(user.address, accountSessionKey.address, targetContract)
                 }
+            } else {
+                hash = await registerSessionKey(accountSessionKey.address, targetContract)
             }
 
-            // It's theoreticaly possible to have the validator uninstalled when there are local
-            // session keys, but if you're doing that you're looking for trouble.
+            await publicClient.waitForTransactionReceipt({ hash: hash! })
 
-            if (!keyRegistered) {
-                const hash = await registerSessionKey(smartAccountClient, accountSessionKey.address, targetContract)
-                await smartAccountClient.waitForUserOperationReceipt({ hash })
-                keyRegistered = true
-            }
-            // @todo - /end
-
+            // Grant permissions for the app to use this session key
             grantPermissions(app, {
                 [PermissionNames.SESSION_KEY]: {
                     target: targetContract,
                 },
             })
 
+            // Store the session key
             storage.set(StorageKey.SessionKeys, {
                 ...storedSessionKeys,
-                [user!.address]: {
-                    ...(storedSessionKeys[user!.address] || {}),
+                [user.address]: {
+                    ...(storedSessionKeys[user.address] || {}),
                     [targetContract]: sessionKey,
                 },
             })

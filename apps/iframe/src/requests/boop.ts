@@ -2,8 +2,10 @@ import { computeBoopHash } from "@happy.tech/submitter-client"
 import type { HappyUser } from "@happy.tech/wallet-common"
 import type { Address, Hash, RpcTransactionRequest, Transaction, TransactionReceipt } from "viem"
 import { addPendingBoop, markBoopAsConfirmed, markBoopAsFailed } from "#src/services/boopsHistory"
+import { StorageKey, storage } from "#src/services/storage"
 import { getBoopClient } from "#src/state/boopClient"
 import { getCurrentChain } from "#src/state/chains"
+import { signWithSessionKey } from "./modules/session-keys/helpers"
 
 import type { Result } from "../../../../packages/submitter-client/lib/utils/neverthrow"
 // @todo - cleanup imports
@@ -98,7 +100,18 @@ export function formatTransactionFromBoopReceipt(
 }
 
 /**
+ * Check if a session key exists for a specific target contract
+ */
+export function hasSessionKeyForTarget(userAddress: Address, targetContract: Address): boolean {
+    const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+    const accountSessionKeys = storedSessionKeys[userAddress]
+
+    return Boolean(accountSessionKeys && accountSessionKeys?.[targetContract])
+}
+
+/**
  * Sends a Boop transaction through the submitter
+ * Will automatically use a session key if one is available for the destination
  */
 export async function sendBoop({ user, tx, signer }: SendBoopArgs, retry = 2): Promise<Hash> {
     const boopClient = await getBoopClient()
@@ -113,7 +126,21 @@ export async function sendBoop({ user, tx, signer }: SendBoopArgs, retry = 2): P
             value: tx.value ? BigInt(tx.value as string) : 0n,
         })
 
-        const signedBoop = await signer(boop)
+        // Check if a session key is available for this destination
+        const hasSessionKey = hasSessionKeyForTarget(user.address, tx.to as Address)
+
+        let signedBoop: HappyTx
+
+        if (hasSessionKey) {
+            // Get the session key and sign the transaction with it
+            const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+            const sessionKey = storedSessionKeys[user.address][tx.to as Address]
+            signedBoop = await signWithSessionKey(sessionKey, boop)
+        } else {
+            // Use the regular signer
+            signedBoop = await signer(boop)
+        }
+
         boopHash = computeBoopHash(signedBoop) as Hash
 
         const pendingBoopDetails = {
