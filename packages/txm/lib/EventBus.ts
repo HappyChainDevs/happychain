@@ -5,6 +5,8 @@ export enum Topics {
     TransactionStatusChanged = "TransactionStatusChanged",
     TransactionSaveFailed = "TransactionSaveFailed",
     TransactionSubmissionFailed = "TransactionSubmissionFailed",
+    RpcIsDown = "RpcIsDown",
+    RpcIsUp = "RpcIsUp",
 }
 
 export type EventBus = EventEmitter<Topics>

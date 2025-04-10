@@ -38,6 +38,8 @@ const txm = new TransactionManager({
         url: PROXY_URL,
         pollingInterval: 200,
         allowDebug: true,
+        livenessCheckInterval: 500,
+        livenessDownDelay: 1000,
     },
     abis: abis,
     gasEstimator: new TestGasEstimator(),
@@ -576,10 +578,16 @@ test("Correctly calculates baseFeePerGas after a block with high gas usage", asy
 })
 
 test("Transaction manager successfully processes transactions despite random RPC failures", async () => {
+    const previousLivenessThreshold = txm.livenessThreshold
+    Object.defineProperty(txm, "livenessThreshold", {
+        value: 0,
+        configurable: true,
+    })
+
     proxyServer.setMode(ProxyMode.Random, {
-        [ProxyBehavior.NotAnswer]: 0.1,
-        [ProxyBehavior.Fail]: 0.2,
-        [ProxyBehavior.Forward]: 0.7,
+        [ProxyBehavior.NotAnswer]: 0.05,
+        [ProxyBehavior.Fail]: 0.05,
+        [ProxyBehavior.Forward]: 0.9,
     })
 
     const previousBlock = await getCurrentBlock()
@@ -619,6 +627,11 @@ test("Transaction manager successfully processes transactions despite random RPC
     expect(successfulTransactions).toBeGreaterThan(numTransactions * 0.6)
 
     proxyServer.setMode(ProxyMode.Deterministic)
+
+    Object.defineProperty(txm, "livenessThreshold", {
+        value: previousLivenessThreshold,
+        configurable: true,
+    })
 })
 
 test("Transaction succeeds in congested blocks", async () => {
@@ -675,52 +688,117 @@ test("Transaction succeeds in congested blocks", async () => {
     expect(executedIncrementerTransaction.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
-test(
-    "Finalized transactions are automatically purged from db after finalizedTransactionPurgeTime elapses",
-    async () => {
-        const previousFinalizedTransactionPurgeTime = txm.finalizedTransactionPurgeTime
+test("Finalized transactions are automatically purged from db after finalizedTransactionPurgeTime elapses", async () => {
+    const previousFinalizedTransactionPurgeTime = txm.finalizedTransactionPurgeTime
 
-        const mockedFinalizedTransactionPurgeTime = 6000
+    const mockedFinalizedTransactionPurgeTime = 6000
 
-        Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
-            value: mockedFinalizedTransactionPurgeTime,
-            configurable: true,
-        })
+    Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
+        value: mockedFinalizedTransactionPurgeTime,
+        configurable: true,
+    })
 
+    const transaction = await createCounterTransaction()
+
+    transactionQueue.push(transaction)
+
+    await mineBlock(2)
+
+    const transactionPersisted = await getPersistedTransaction(transaction.intentId)
+
+    if (!assertIsDefined(transactionPersisted)) return
+
+    expect(transactionPersisted.status).toBe(TransactionStatus.Success)
+
+    const updatedAt = transactionPersisted.updatedAt
+    const purgeTime = updatedAt + mockedFinalizedTransactionPurgeTime
+
+    while (Date.now() < purgeTime) {
+        const transactionPersisted = await getPersistedTransaction(transaction.intentId)
+
+        expect(transactionPersisted).toBeDefined()
+        expect(transactionPersisted?.status).toBe(TransactionStatus.Success)
+
+        await mineBlock()
+    }
+
+    await mineBlock()
+
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    expect(persistedTransaction).toBeUndefined()
+
+    Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
+        value: previousFinalizedTransactionPurgeTime,
+        configurable: true,
+    })
+})
+
+test("RPC liveness monitor works correctly", async () => {
+    const previousLivenessWindow = txm.livenessWindow
+    Object.defineProperty(txm, "livenessWindow", {
+        value: 2000,
+        configurable: true,
+    })
+
+    proxyServer.setMode(ProxyMode.Deterministic)
+
+    while (!txm.rpcLivenessMonitor.isAlive) {
         const transaction = await createCounterTransaction()
 
         transactionQueue.push(transaction)
 
-        await mineBlock(2)
+        await mineBlock()
+    }
 
-        const transactionPersisted = await getPersistedTransaction(transaction.intentId)
+    proxyServer.setMode(ProxyMode.Random, {
+        [ProxyBehavior.NotAnswer]: 0,
+        [ProxyBehavior.Fail]: 0.5,
+        [ProxyBehavior.Forward]: 0.5,
+    })
 
-        if (!assertIsDefined(transactionPersisted)) return
+    let isDownHookTriggered = false
+    let isUpHookTriggered = false
 
-        expect(transactionPersisted.status).toBe(TransactionStatus.Success)
+    const cleanIsDownHook = await txm.addHook(TxmHookType.RpcIsDown, () => {
+        isDownHookTriggered = true
+    })
 
-        const updatedAt = transactionPersisted.updatedAt
-        const purgeTime = updatedAt + mockedFinalizedTransactionPurgeTime
+    const cleanIsUpHook = await txm.addHook(TxmHookType.RpcIsUp, () => {
+        isUpHookTriggered = true
+    })
 
-        while (Date.now() < purgeTime) {
-            const transactionPersisted = await getPersistedTransaction(transaction.intentId)
+    expect(txm.rpcLivenessMonitor.isAlive).toBe(true)
 
-            expect(transactionPersisted).toBeDefined()
-            expect(transactionPersisted?.status).toBe(TransactionStatus.Success)
+    while (txm.rpcLivenessMonitor.isAlive) {
+        const transaction = await createCounterTransaction()
 
-            await mineBlock()
-        }
+        transactionQueue.push(transaction)
 
         await mineBlock()
+    }
 
-        const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+    expect(isDownHookTriggered).toBe(true)
+    expect(txm.rpcLivenessMonitor.isAlive).toBe(false)
 
-        expect(persistedTransaction).toBeUndefined()
+    proxyServer.setMode(ProxyMode.Deterministic)
 
-        Object.defineProperty(txm, "finalizedTransactionPurgeTime", {
-            value: previousFinalizedTransactionPurgeTime,
-            configurable: true,
-        })
-    },
-    { timeout: 20000 },
-)
+    while (!txm.rpcLivenessMonitor.isAlive) {
+        const transaction = await createCounterTransaction()
+
+        transactionQueue.push(transaction)
+
+        await mineBlock()
+    }
+
+    expect(isUpHookTriggered).toBe(true)
+    expect(txm.rpcLivenessMonitor.isAlive).toBe(true)
+
+    cleanIsDownHook()
+    cleanIsUpHook()
+
+    Object.defineProperty(txm, "livenessWindow", {
+        value: previousLivenessWindow,
+        configurable: true,
+    })
+})

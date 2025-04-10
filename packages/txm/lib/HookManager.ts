@@ -9,6 +9,8 @@ export enum TxmHookType {
     TransactionSaveFailed = "TransactionSaveFailed",
     NewBlock = "NewBlock",
     TransactionSubmissionFailed = "TransactionSubmissionFailed",
+    RpcIsDown = "RpcIsDown",
+    RpcIsUp = "RpcIsUp",
 }
 
 export type TxmTransactionStatusChangedHookPayload = {
@@ -33,11 +35,21 @@ export type TxmTransactionSubmissionFailedHookPayload = {
     cause: AttemptSubmissionErrorCause
 }
 
+export type TxmRpcIsDownHookPayload = {
+    type: TxmHookType.RpcIsDown
+}
+
+export type TxmRpcIsUpHookPayload = {
+    type: TxmHookType.RpcIsUp
+}
+
 export type TxmHookPayload =
     | TxmTransactionStatusChangedHookPayload
     | TxmNewBlockHookPayload
     | TxmTransactionSaveFailedHookPayload
     | TxmTransactionSubmissionFailedHookPayload
+    | TxmRpcIsDownHookPayload
+    | TxmRpcIsUpHookPayload
 
 export type TxmHooksRecord = {
     [TxmHookType.All]: ((event: TxmHookPayload) => void)[]
@@ -49,6 +61,8 @@ export type TxmHooksRecord = {
         description: string,
         cause: AttemptSubmissionErrorCause,
     ) => void)[]
+    [TxmHookType.RpcIsDown]: (() => void)[]
+    [TxmHookType.RpcIsUp]: (() => void)[]
 }
 
 export type TxmHookHandler<T extends TxmHookType = TxmHookType.All> = TxmHooksRecord[T][number]
@@ -75,11 +89,15 @@ export class HookManager {
             [TxmHookType.TransactionSaveFailed]: [],
             [TxmHookType.NewBlock]: [],
             [TxmHookType.TransactionSubmissionFailed]: [],
+            [TxmHookType.RpcIsDown]: [],
+            [TxmHookType.RpcIsUp]: [],
         }
         eventBus.on(Topics.TransactionStatusChanged, this.onTransactionStatusChanged.bind(this))
         eventBus.on(Topics.TransactionSaveFailed, this.onTransactionSaveFailed.bind(this))
         eventBus.on(Topics.NewBlock, this.onNewBlock.bind(this))
         eventBus.on(Topics.TransactionSubmissionFailed, this.onTransactionSubmissionFailed.bind(this))
+        eventBus.on(Topics.RpcIsDown, this.onRpcIsDown.bind(this))
+        eventBus.on(Topics.RpcIsUp, this.onRpcIsUp.bind(this))
     }
 
     public addHook<T extends TxmHookType>(type: T, handler: TxmHookHandler<T>): () => void {
@@ -148,5 +166,17 @@ export class HookManager {
                 cause: payload.cause,
             }),
         )
+    }
+
+    private async onRpcIsDown(): Promise<void> {
+        this.hooks[TxmHookType.RpcIsDown].forEach((handler) => handler())
+
+        this.hooks[TxmHookType.All].forEach((handler) => handler({ type: TxmHookType.RpcIsDown }))
+    }
+
+    private async onRpcIsUp(): Promise<void> {
+        this.hooks[TxmHookType.RpcIsUp].forEach((handler) => handler())
+
+        this.hooks[TxmHookType.All].forEach((handler) => handler({ type: TxmHookType.RpcIsUp }))
     }
 }
