@@ -23,7 +23,7 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
     // ====================================================================================================
     // CONSTANTS
 
-    /// @dev Fixed size of an encoded Boop: 220 bytes for static fields plus 16 bytes (4 bytes × 4)
+    /// @dev Fixed size of an encoded Boop: 204 bytes for static fields plus 16 bytes (4 bytes × 4)
     ///      for storing the lengths of the four dynamic fields
     uint256 private constant STATIC_FIELDS_SIZE = 220;
 
