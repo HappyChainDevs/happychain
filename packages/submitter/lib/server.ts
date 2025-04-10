@@ -81,7 +81,7 @@ app.get(
             },
             servers: [
                 { url: "http://localhost:3001", description: "Local server" },
-                { url: "https://boop.happy.tech", description: "Production server" },
+                { url: "https://submitter.happy.tech", description: "Production server" },
             ],
         },
     }),
