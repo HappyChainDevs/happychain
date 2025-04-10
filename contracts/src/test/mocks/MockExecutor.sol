@@ -7,7 +7,7 @@ import {ICustomExecutor} from "boop/interfaces/ICustomExecutor.sol";
 import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
 
 /**
- * Mock implementation of ICustomExecutor for testing purposes
+ * Mock implementation of ICustomExecutor for testing purpose
  * The execution behavior depends on the executionMode:
  * 0: Makes actual calls through the HappyAccount's executeCallFromExecutor
  * 1: Returns a failed execution status
