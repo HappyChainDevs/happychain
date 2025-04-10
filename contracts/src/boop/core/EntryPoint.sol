@@ -41,52 +41,45 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
     // SUBMIT
 
     /**
-     * Execute a Boop, and tries to ensure that the submitter
-     * (tx.origin) receives payment for submitting the transaction.
+     * Execute a Boop, and tries to ensure that the submitter (tx.origin) receives payment for
+     * submitting the transaction.
      *
-     * This function immediately reverts or emits the errors and events defined
-     * in this file whenever the associated condition is hit.
+     * This function immediately reverts or emits the errors and events defined in this file
+     * whenever the associated condition is hit.
      *
      * This function will also, in this order:
      *
-     * 1. Validate gas price and check paymaster's staking balance.
+     * 1. Validate the gas price, check the paymaster's staking balance, validate and update the
+     *    nonce.
      *
-     * 2. Validate and update the nonce.
-     *
-     * 3. Call the account to validate the boop.
+     * 2. Call the account to validate the boop.
      *    See {IAccount.validate} for compliant behaviour.
      *
-     * 4. Call the paymaster to validate payment.
+     * 3. Call the paymaster to validate payment.
      *    See {IPaymaster.validatePayment} for compliant behaviour.
      *
-     * 5. Call the account to execute the transaction.
+     * 4. Call the account to execute the transaction.
      *    See {IAccount.execute} for compliant behaviour.
      *
-     * 6. Collect payment from the paymaster or account.
-     *    Payment is taken from the paymaster's stake or directly from the account.
+     * 5. Collect payment from the paymaster or account.
+     *    Payment is taken from the paymaster's stake or sollicated from the account by calling
+     *    {IAccount.payout}.
      *
-     * Gas estimation is then possible by doing an `eth_call` on this function
-     * with `address(0)` as the sender (`tx.origin`) -— as this scenario is
-     * impossible onchain. We call this "simulation mode".
+     * Gas estimation is possible by doing an `eth_call` on this function with `address(0)` as the
+     * sender (`tx.origin`), as this scenario is impossible onchain. We call this "simulation mode".
      *
-     * In simulation mode, this function must ignore rejections (but not reverts) from
-     * account and paymaster validation if their result is
-     * the selector of {UnknownDuringSimulation} or
-     * {FutureNonceDuringSimulation}.
+     * In simulation mode, this function must ignore rejections (but not reverts) from account and
+     * paymaster validation if their results are the encoded {UnknownDuringSimulation} or
+     * {FutureNonceDuringSimulation} errors.
      *
-     * Note that the function actually ignores the return value of `payout` (except to report it back)
-     * as long as the payment is effectively made.
+     * The function returns a filled-in {SubmitOutput} structure. This is needed during simulation,
+     * as the logs are not available with `eth_call`.
      *
-     * The function returns a filled-in {SubmitOutput} structure.
-     * This is needed during simulation, as the logs are not available with
-     * `eth_call`.
-     *
-     * NOTE: When `eth_simulateV1` (which does allow simple RPC log access)
-     * becomes broadly available, the `SubmitOutput` structure can be removed
-     * entirely, and the function doesn't need to return anything.
-     * Also note that `debug_traceCall` is not an acceptable substitute, given
-     * that it requires a custom tracer and that those are incompatible between
-     * node implementations.
+     * NOTE: When `eth_simulateV1` (which does allow simple RPC log access) becomes broadly
+     * available, the `SubmitOutput` structure can be removed entirely, and the function doesn't
+     * need to return anything. Also note that `debug_traceCall` is not an acceptable substitute,
+     * given that it requires a custom tracer and that those are incompatible between node
+     * implementations.
      */
     function submit(bytes calldata encodedBoop) external nonReentrant returns (SubmitOutput memory output) {
         uint256 gasStart = gasleft();
