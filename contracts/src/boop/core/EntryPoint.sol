@@ -7,7 +7,7 @@ import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/Reentrancy
 import {Utils} from "boop/libs/Utils.sol";
 import {Encoding} from "boop/libs/Encoding.sol";
 
-import {Staker} from "boop/core/Staker.sol";
+import {Staking} from "boop/core/Staking.sol";
 import {IAccount} from "boop/interfaces/IAccount.sol";
 import {IPaymaster} from "boop/interfaces/IPaymaster.sol";
 import {
@@ -28,7 +28,7 @@ import {
 import {Boop, CallStatus, Validity, SubmitOutput} from "boop/interfaces/Types.sol";
 
 /// @notice cf. {EntryPoint.submit}
-contract EntryPoint is Staker, ReentrancyGuardTransient {
+contract EntryPoint is Staking, ReentrancyGuardTransient {
     // Avoid gas exhaustion via return data.
     using ExcessivelySafeCall for address;
 
