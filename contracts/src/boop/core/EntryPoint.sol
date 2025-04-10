@@ -113,7 +113,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
         if (result == Validity.CALL_REVERTED) revert ValidationReverted(revertData);
         if (result == Validity.INVALID_RETURN_DATA) revert ValidationReverted(revertData);
-        if (result == Validity.VALIDATION_FAILED) revert ValidationRejected(revertData);
+        if (result == Validity.VALIDATION_REJECTED) revert ValidationRejected(revertData);
         if (result == Validity.UNKNOWN_DURING_SIMULATION) {
             output.validityUnknownDuringSimulation = true;
         }
@@ -128,7 +128,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
 
             if (result == Validity.CALL_REVERTED) revert PaymentValidationReverted(revertData);
             if (result == Validity.INVALID_RETURN_DATA) revert PaymentValidationReverted(revertData);
-            if (result == Validity.VALIDATION_FAILED) revert PaymentValidationRejected(revertData);
+            if (result == Validity.VALIDATION_REJECTED) revert PaymentValidationRejected(revertData);
             if (result == Validity.UNKNOWN_DURING_SIMULATION) {
                 output.paymentValidityUnknownDuringSimulation = true;
             }
@@ -157,7 +157,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
             (output.callStatus, output.revertData) = _parseExecutionOutput(returnData);
             if (output.callStatus == CallStatus.CALL_REVERTED) {
                 emit CallReverted(output.revertData);
-            } else if (output.callStatus == CallStatus.EXECUTE_FAILED) {
+            } else if (output.callStatus == CallStatus.EXECUTE_REJECTED) {
                 emit ExecutionRejected(output.revertData);
             }
         }
@@ -272,7 +272,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         } else if (isSimulation && selector == UnknownDuringSimulation.selector) {
             return (Validity.UNKNOWN_DURING_SIMULATION, gasUsed, "");
         } else if (selector != 0) {
-            return (Validity.VALIDATION_FAILED, gasUsed, status);
+            return (Validity.VALIDATION_REJECTED, gasUsed, status);
         } else {
             return (Validity.SUCCESS, gasUsed, "");
         }

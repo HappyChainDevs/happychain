@@ -345,8 +345,8 @@ contract HappyAccountTest is BoopTestUtils {
         vm.prank(_entryPoint);
         ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
-        // Should return EXECUTE_FAILED with InvalidExtensionValue selector
-        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
+        // Should return EXECUTE_REJECTED with InvalidExtensionValue selector
+        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_REJECTED));
         assertEq(output.revertData, abi.encodeWithSelector(InvalidExtensionValue.selector));
     }
 
@@ -364,8 +364,8 @@ contract HappyAccountTest is BoopTestUtils {
         vm.prank(_entryPoint);
         ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
-        // Should return EXECUTE_FAILED with ExtensionNotRegistered selector
-        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
+        // Should return EXECUTE_REJECTED with ExtensionNotRegistered selector
+        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_REJECTED));
         assertEq(output.revertData, abi.encodeWithSelector(ExtensionNotRegistered.selector));
     }
 
@@ -416,8 +416,8 @@ contract HappyAccountTest is BoopTestUtils {
         vm.prank(_entryPoint);
         ExecutionOutput memory output = HappyAccount(payable(smartAccount)).execute(boop);
 
-        // Should return EXECUTE_FAILED
-        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_FAILED));
+        // Should return EXECUTE_REJECTED
+        assertEq(uint8(output.status), uint8(CallStatus.EXECUTE_REJECTED));
         assertEq(output.revertData, abi.encodeWithSelector(MockExecutor.InvalidInput.selector));
     }
 

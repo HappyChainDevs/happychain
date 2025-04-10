@@ -67,7 +67,7 @@ contract MockExecutor is ICustomExecutor {
             }
         } else if (executionMode == 1) {
             // Return failed execution status
-            output.status = CallStatus.EXECUTE_FAILED;
+            output.status = CallStatus.EXECUTE_REJECTED;
             output.revertData = abi.encodeWithSelector(InvalidInput.selector);
         } else if (executionMode == 2) {
             // Revert with custom error
