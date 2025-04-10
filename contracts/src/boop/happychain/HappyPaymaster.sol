@@ -116,7 +116,6 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
         return abi.encodeWithSelector(bytes4(0));
     }
 
-
     /**
      * @dev Updates the user's gas budget based on the time elapsed since the last update.
      * @return The updated gas budget for the user.

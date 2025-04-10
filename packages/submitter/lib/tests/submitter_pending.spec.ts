@@ -1,9 +1,14 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import env from "#lib/env"
 import { app } from "#lib/server"
+import type { HappyTx } from "#lib/tmp/interface/HappyTx.ts"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
-import { createMockTokenAMintHappyTx, getNonce, signTx, testAccount } from "./utils"
+import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
+
+const testAccount = privateKeyToAccount(generatePrivateKey())
+const sign = (tx: HappyTx) => signTx(testAccount, tx)
 
 describe("submitter_pending", () => {
     const client = testClient(app)
@@ -33,7 +38,7 @@ describe("submitter_pending", () => {
         const transactions = await Promise.all(
             Array.from({ length: count }, (_, idx) => BigInt(idx) + nonceValue).map(async (nonce) => {
                 const dummyHappyTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
-                return await signTx(dummyHappyTx)
+                return await sign(dummyHappyTx)
             }),
         )
 
@@ -44,7 +49,6 @@ describe("submitter_pending", () => {
 
         const pending = (await client.api.v1.submitter.pending[":account"]
             .$get({ param: { account: smartAccount } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             .then((a) => a.json())) as any
 
         expect(pending.error).toBeUndefined()

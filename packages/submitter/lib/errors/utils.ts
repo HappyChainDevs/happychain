@@ -19,8 +19,12 @@ function is0xString(str: unknown): str is `0x${string}` {
  * Will attempt to map the custom selector to a known error name.
  * If this is not available, we will return the raw selector.
  */
-function parseRawArgs(args: readonly `0x${string}`[]) {
-    return args.map((a) => getErrorNameFromSelector(a) || a)
+function parseRawArgs(args: readonly [] | readonly [`0x${string}`] | readonly [`0x${string}`, number]) {
+    return args.map((a) => {
+        if (typeof a !== "string") return a
+        if (!is0xString(a)) return a
+        return getErrorNameFromSelector(a) || a
+    })
 }
 
 export function decodeViemError(_err: unknown) {
@@ -30,6 +34,7 @@ export function decodeViemError(_err: unknown) {
     if (!is0xString(err.raw)) return
     try {
         const error = decodeRawError(err.raw)
+
         if (!error) return
         const knownArgs = parseRawArgs(error.args)
 
@@ -51,13 +56,16 @@ export function parseFromViemError(_err: unknown): HappyBaseError | undefined {
     const [revertData] = err.knownArgs
 
     // TODO: unsure if this is the correct way to handle this
-    if (err.raw === "0x" && "reason" in err && err.reason === "execution reverted") {
+    if (
+        typeof revertData !== "string" ||
+        (err.raw === "0x" && "reason" in err && err.reason === "execution reverted")
+    ) {
         throw new ExecuteRevertedError("Out Of Gas")
     }
 
     switch (err.errorName) {
         // === FAILED ERRORS ===================================================================
-        case "ValidationFailed": {
+        case "ValidationRejected": {
             return new ValidationFailedError(revertData)
         }
         case "PayoutFailed": {

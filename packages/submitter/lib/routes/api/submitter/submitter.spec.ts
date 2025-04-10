@@ -1,12 +1,16 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { computeHappyTxHash } from "#lib/client"
 import { app } from "#lib/server"
-import { createMockTokenAMintHappyTx, getNonce, signTx, testAccount } from "#lib/tests/utils"
+import { createMockTokenAMintHappyTx, getNonce, signTx } from "#lib/tests/utils"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 
+const testAccount = privateKeyToAccount(generatePrivateKey())
+const sign = (tx: HappyTx) => signTx(testAccount, tx)
 const client = testClient(app)
+
 describe("routes: api/submitter", () => {
     let smartAccount: `0x${string}`
     let nonceTrack = 0n
@@ -26,7 +30,7 @@ describe("routes: api/submitter", () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
         unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
-        signedTx = await signTx(unsignedTx)
+        signedTx = await sign(unsignedTx)
     })
 
     describe("200", () => {

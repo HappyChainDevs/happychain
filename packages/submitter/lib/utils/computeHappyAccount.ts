@@ -5,7 +5,7 @@ import env from "#lib/env"
 import { ERC1967_CONSTRUCTOR_ABI, ERC1967_CREATION_CODE } from "../data/erc1967_creation_code"
 
 /**
- * Predicts the address of the ScrappyAccount that will be deployed by the ScrappyAccountFactory
+ * Predicts the address of the HappyAccount that will be deployed by the HappyAccountFactory
  * @param salt The deployment salt
  * @param owner The owner address for initialization
  */
@@ -28,7 +28,7 @@ export function computeHappyAccount(salt: Hex, owner: Address): Address {
 
 function getInitData(owner: `0x${string}`) {
     return encodeFunctionData({
-        abi: abis.ScrappyAccount,
+        abi: abis.HappyAccount,
         functionName: "initialize",
         args: [owner],
     })

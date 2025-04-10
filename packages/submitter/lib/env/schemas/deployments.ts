@@ -1,13 +1,13 @@
-import { deployment } from "@happy.tech/contracts/happy-aa/anvil"
+import { deployment } from "@happy.tech/contracts/boop/anvil"
 import { localhost } from "viem/chains"
 import { z } from "zod"
 import { isHexString } from "#lib/utils/zod/refines/isHexString"
 
 // Defaults to Anvil. Configure the chain id and deployment addresses in the .env file
 const DEFAULT_CHAIN_ID = localhost.id
-const DEPLOYMENT_ENTRYPOINT = deployment.HappyEntryPoint
-const DEPLOYMENT_ACCOUNT_FACTORY = deployment.ScrappyAccountFactory
-const DEPLOYMENT_ACCOUNT_IMPLEMENTATION = deployment.ScrappyAccount
+const DEPLOYMENT_ENTRYPOINT = deployment.EntryPoint
+const DEPLOYMENT_ACCOUNT_FACTORY = deployment.HappyAccountFactory
+const DEPLOYMENT_ACCOUNT_IMPLEMENTATION = deployment.HappyAccount
 
 export const deploymentsSchema = z.object({
     CHAIN_ID: z.coerce.number().default(DEFAULT_CHAIN_ID),

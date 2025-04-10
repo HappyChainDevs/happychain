@@ -8,9 +8,8 @@ const paymasterGasData = {
     gasLimit: 0n,
     maxFeePerGas: 0n,
     submitterFee: 0n,
-    // TODO: Should these be signed? - update in estimateGas also
-    // validateGasLimit: 0n,
-    // validatePaymentGasLimit: 0n,
+    validateGasLimit: 0n,
+    validatePaymentGasLimit: 0n,
 } as const
 
 export function computeHappyTxHash(happyTx: HappyTx): `0x${string}` {

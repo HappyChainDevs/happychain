@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
 import { encodeFunctionData } from "viem"
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { app } from "#lib/server"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
@@ -14,9 +15,11 @@ import {
     getNonce,
     mockDeployments,
     signTx,
-    testAccount,
     testPublicClient,
 } from "./utils"
+
+const testAccount = privateKeyToAccount(generatePrivateKey())
+const sign = (tx: HappyTx) => signTx(testAccount, tx)
 
 describe("submitter_execute", () => {
     const client = testClient(app)
@@ -37,7 +40,7 @@ describe("submitter_execute", () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
         unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
-        signedTx = await signTx(unsignedTx)
+        signedTx = await sign(unsignedTx)
     })
 
     describe("self-paying", () => {
@@ -54,11 +57,10 @@ describe("submitter_execute", () => {
             unsignedTx.gasLimit = 2000000n
             unsignedTx.executeGasLimit = 1000000n
             unsignedTx.paymaster = smartAccount
-            const signedTx = await signTx(unsignedTx)
+            const signedTx = await sign(unsignedTx)
 
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
 
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
@@ -73,7 +75,6 @@ describe("submitter_execute", () => {
     describe("paymaster", () => {
         it("proper response structure (mint tokens success)", async () => {
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(200)
@@ -124,7 +125,6 @@ describe("submitter_execute", () => {
         it("mints tokens", async () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
@@ -136,9 +136,8 @@ describe("submitter_execute", () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
             unsignedTx.executeGasLimit = 0n
             unsignedTx.gasLimit = 0n
-            signedTx = await signTx(unsignedTx)
+            signedTx = await sign(unsignedTx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
@@ -150,9 +149,8 @@ describe("submitter_execute", () => {
             const beforeBalance = await getMockTokenABalance(smartAccount)
             unsignedTx.executeGasLimit = 4000000000n
             unsignedTx.gasLimit = 4000000000n
-            signedTx = await signTx(unsignedTx)
+            signedTx = await sign(unsignedTx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(signedTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
             const afterBalance = await getMockTokenABalance(smartAccount)
             expect(response.error).toBeUndefined()
@@ -164,8 +162,8 @@ describe("submitter_execute", () => {
             // execute tx with nonce, then another with nonce+1, wait for both to complete
             // this is to ensure that the nonce value is above `0` so that we don't fail for having a
             // _negative_ nonce
-            const tx1 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack))
-            const tx2 = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack))
+            const tx1 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack))
+            const tx2 = await sign(await createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack))
             await Promise.all([
                 client.api.v1.submitter.execute.$post({
                     json: { tx: serializeBigInt(tx1) },
@@ -175,12 +173,11 @@ describe("submitter_execute", () => {
                 }),
             ])
 
-            const jsonTx = await signTx(
+            const jsonTx = await sign(
                 // mints a different amount of tokens, computes a difference hash, same nonce though
                 await createMockTokenAMintHappyTx(smartAccount, nonceValue + 1n, nonceTrack, 5n * 10n ** 18n),
             )
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: testing doesn't need strict types here
             const response = (await result.json()) as any
 
             expect(response.error).toBeUndefined()
@@ -191,12 +188,11 @@ describe("submitter_execute", () => {
 
         it("can't re-use a nonce", async () => {
             const nonce = await getNonce(smartAccount, nonceTrack)
-            const jsonTx = await signTx(await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack))
+            const jsonTx = await sign(await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack))
 
             const result1 = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
             // again with same nonce, will fail
             const result2 = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: testing doesn't need strict types here
             const [response1, response2] = (await Promise.all([result1.json(), result2.json()])) as [any, any]
             expect(response1.error).toBeUndefined()
             expect(response2.error).toBeUndefined()
@@ -208,9 +204,8 @@ describe("submitter_execute", () => {
 
         it("should fail with out of range future nonce", async () => {
             unsignedTx.nonceValue = 1000_000_000_000n + BigInt(Math.floor(Math.random() * 10_000_000))
-            const jsonTx = await signTx(unsignedTx)
+            const jsonTx = await sign(unsignedTx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
             expect(response.status).toBe("submitterUnexpectedError")
             expect(result.status).toBe(422)
@@ -223,9 +218,8 @@ describe("submitter_execute", () => {
             // invalid paymaster
             tx.paymaster = mockDeployments.MockTokenA
 
-            const jsonTx = await signTx(tx)
+            const jsonTx = await sign(tx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
 
             expect(response.status).toBe(EntryPointStatus.PaymentValidationReverted)
@@ -242,9 +236,8 @@ describe("submitter_execute", () => {
                 args: [],
             })
 
-            const jsonTx = await signTx(tx)
+            const jsonTx = await sign(tx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
 
             // expect(response.error).toBeUndefined() // ok its failed, should be standard error tho
@@ -259,9 +252,8 @@ describe("submitter_execute", () => {
                 nonceTrack,
             )
 
-            const jsonTx = await signTx(tx)
+            const jsonTx = await sign(tx)
             const result = await client.api.v1.submitter.execute.$post({ json: { tx: serializeBigInt(jsonTx) } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             const response = (await result.json()) as any
             expect(response.error).toBeUndefined()
             expect(result.status).toBe(422) // @note contract issue, this should throw not succeed

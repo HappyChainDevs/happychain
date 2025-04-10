@@ -1,12 +1,16 @@
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { testClient } from "hono/testing"
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { app } from "#lib/server"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
 import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
-import { createMockTokenAMintHappyTx, getNonce, signTx, testAccount } from "./utils"
+import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
+
+const testAccount = privateKeyToAccount(generatePrivateKey())
+const sign = (tx: HappyTx) => signTx(testAccount, tx)
 
 describe("submitter_receipt", () => {
     const client = testClient(app)
@@ -27,7 +31,7 @@ describe("submitter_receipt", () => {
         nonceTrack = BigInt(Math.floor(Math.random() * 1_000_000_000))
         nonceValue = await getNonce(smartAccount, nonceTrack)
         unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonceValue, nonceTrack)
-        signedTx = await signTx(unsignedTx)
+        signedTx = await sign(unsignedTx)
     })
 
     it("fetches state of recently completed tx with 0 timeout", async () => {
@@ -38,7 +42,6 @@ describe("submitter_receipt", () => {
 
         const state = (await client.api.v1.submitter.receipt[":hash"]
             .$get({ param: { hash: happyTxHash }, query: { timeout: "0" } })
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             .then((a) => a.json())) as any
 
         expect(state.error).toBeUndefined()
@@ -58,11 +61,9 @@ describe("submitter_receipt", () => {
         const [stateSimulated, stateResolved] = await Promise.all([
             client.api.v1.submitter.receipt[":hash"]
                 .$get({ param: { hash: happyTxHash }, query: { timeout: "100" } }) // return near immediately
-                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
                 .then((a) => a.json()) as any,
             client.api.v1.submitter.receipt[":hash"]
                 .$get({ param: { hash: happyTxHash }, query: { timeout: "2100" } }) // wait 2 seconds to get next block
-                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
                 .then((a) => a.json()) as any,
         ])
 

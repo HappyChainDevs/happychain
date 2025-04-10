@@ -104,7 +104,7 @@ export class BoopNonceManagerService {
     private async getOnchainNonce(entryPoint: Address, account: Address, nonceTrack: NonceTrack): Promise<NonceValue> {
         return await publicClient.readContract({
             address: entryPoint,
-            abi: abis.HappyEntryPoint,
+            abi: abis.EntryPoint,
             functionName: "nonceValues",
             args: [account, nonceTrack],
         })

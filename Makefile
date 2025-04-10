@@ -145,7 +145,7 @@ format: ts.format contracts.format ## Formats code and tries to fix code quality
 submitter.dev: setup.ts shared.dev
 	@cd contracts && make setup;
 	make anvil > /dev/null 2>&1 &
-	cd contracts && make deploy-happy-aa;
+	cd contracts && make deploy-boop;
 	cd contracts && make deploy-mocks;
 	cd packages/submitter && make dev;
 	cd packages/submitter-client && make dev;
