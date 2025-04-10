@@ -1,4 +1,4 @@
-name: Deploy submitter temp
+name: Deploy submitter
 
 on:
   workflow_dispatch:
