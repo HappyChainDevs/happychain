@@ -323,6 +323,47 @@ test("Simple transaction executed", async () => {
     expect(retrievedTransaction.collectionBlock).toBe(previousBlock.number! + 1n)
 })
 
+test("A transaction created using calldata is executed correctly", async () => {
+    const previousCount = await getCurrentCounterValue()
+
+    const calldata = encodeFunctionData({
+        abi: abis.HappyCounter,
+        functionName: "increment",
+        args: [],
+    })
+
+    const transaction = await txm.createTransaction({
+        address: deployment.HappyCounter,
+        calldata,
+    })
+
+    transactionQueue.push(transaction)
+
+    await mineBlock(2)
+
+    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
+
+    if (!assertIsDefined(persistedTransaction)) return
+
+    const executedTransaction = await txm.getTransaction(transaction.intentId)
+
+    if (!assertIsOk(executedTransaction)) return
+
+    const executedTransactionValue = executedTransaction.value
+
+    if (!assertIsDefined(executedTransactionValue)) return
+
+    const receipt = await directBlockchainClient.getTransactionReceipt({
+        hash: executedTransactionValue.attempts[0].hash,
+    })
+
+    expect(persistedTransaction.status).toBe(TransactionStatus.Success)
+    expect(persistedTransaction.calldata).toBe(calldata)
+    expect(executedTransactionValue.status).toBe(TransactionStatus.Success)
+    expect(receipt.status).toBe("success")
+    expect(await getCurrentCounterValue()).toBe(previousCount + 1n)
+})
+
 test("Transaction retried", async () => {
     const previousCount = await getCurrentCounterValue()
 
@@ -844,45 +885,4 @@ test("RPC liveness monitor works correctly", async () => {
         value: previousLivenessWindow,
         configurable: true,
     })
-})
-
-test("A transaction created using calldata is executed correctly", async () => {
-    const previousCount = await getCurrentCounterValue()
-
-    const calldata = encodeFunctionData({
-        abi: abis.HappyCounter,
-        functionName: "increment",
-        args: [],
-    })
-
-    const transaction = await txm.createTransaction({
-        address: deployment.HappyCounter,
-        calldata,
-    })
-
-    transactionQueue.push(transaction)
-
-    await mineBlock(2)
-
-    const persistedTransaction = await getPersistedTransaction(transaction.intentId)
-
-    if (!assertIsDefined(persistedTransaction)) return
-
-    const executedTransaction = await txm.getTransaction(transaction.intentId)
-
-    if (!assertIsOk(executedTransaction)) return
-
-    const executedTransactionValue = executedTransaction.value
-
-    if (!assertIsDefined(executedTransactionValue)) return
-
-    const receipt = await directBlockchainClient.getTransactionReceipt({
-        hash: executedTransactionValue.attempts[0].hash,
-    })
-
-    expect(persistedTransaction.status).toBe(TransactionStatus.Success)
-    expect(persistedTransaction.calldata).toBe(calldata)
-    expect(executedTransactionValue.status).toBe(TransactionStatus.Success)
-    expect(receipt.status).toBe("success")
-    expect(await getCurrentCounterValue()).toBe(previousCount + 1n)
 })
