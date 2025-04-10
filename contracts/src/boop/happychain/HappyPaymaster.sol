@@ -7,10 +7,18 @@ import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/Reentrancy
 import {Utils} from "../core/Utils.sol";
 import {Encoding} from "../core/Encoding.sol";
 
-import {Boop, UserInfo} from "boop/interfaces/Types.sol";
+import {Boop} from "boop/interfaces/Types.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 import {IPaymaster, SubmitterFeeTooHigh} from "boop/interfaces/IPaymaster.sol";
 import {Received, NotFromEntryPoint} from "boop/interfaces/EventsAndErrors.sol";
+
+/**
+ * Information about a user's gas budget.
+ */
+struct UserInfo {
+    uint64 lastUpdated;
+    uint32 userGasBudget;
+}
 
 /**
  * Implementation of a paymaster contract implementing the IPaymaster interface.

@@ -148,17 +148,6 @@ struct ExecutionOutput {
 }
 
 // ====================================================================================================
-// PAYMASTER TYPES
-
-/**
- * Information about a user's gas budget.
- */
-struct UserInfo {
-    uint64 lastUpdated;
-    uint32 userGasBudget;
-}
-
-// ====================================================================================================
 // EXTENSIONS TYPES
 
 /**
