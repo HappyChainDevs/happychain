@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 
-import {Utils} from "boop/libs/Utils.sol";
+import {Utils} from "../../../boop/core/Utils.sol";
 
 contract UtilsTest is Test {
     using Utils for bytes;

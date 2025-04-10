@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
+import {Encoding} from "../../boop/core/Encoding.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";
 
 import {MockERC20} from "../../mocks/MockERC20.sol";

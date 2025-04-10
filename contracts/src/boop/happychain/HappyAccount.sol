@@ -5,11 +5,11 @@ import {ECDSA} from "solady/utils/ECDSA.sol";
 import {UUPSUpgradeable} from "oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "oz-upgradeable/access/OwnableUpgradeable.sol";
 
-import {Utils} from "boop/libs/Utils.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
+import {Utils} from "../core/Utils.sol";
+import {Encoding} from "../core/Encoding.sol";
 
-import {ICustomExecutor, EXECUTOR_KEY} from "boop/interfaces/extensions/ICustomExecutor.sol";
-import {ICustomValidator, VALIDATOR_KEY} from "boop/interfaces/extensions/ICustomValidator.sol";
+import {ICustomExecutor, EXECUTOR_KEY} from "../interfaces/ICustomExecutor.sol";
+import {ICustomValidator, VALIDATOR_KEY} from "../interfaces/ICustomValidator.sol";
 import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
 import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 import {

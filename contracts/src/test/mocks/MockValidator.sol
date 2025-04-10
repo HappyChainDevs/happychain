@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Boop} from "boop/interfaces/Types.sol";
-import {ICustomValidator} from "boop/interfaces/extensions/ICustomValidator.sol";
+import {ICustomValidator} from "../../boop/interfaces/ICustomValidator.sol";
 
 /**
  * Mock implementation of ICustomValidator for testing purposes.

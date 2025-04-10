@@ -9,7 +9,7 @@ import {MockRevert} from "../../../mocks/MockRevert.sol";
 import {MockHappyAccount} from "../../../test/mocks/MockHappyAccount.sol";
 
 import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
+import {Encoding} from "../../../boop/core/Encoding.sol";
 import {SessionKeyValidator, InvalidSignature} from "boop/extensions/SessionKeyValidator.sol";
 import {DeployBoopContracts} from "../../../deploy/DeployBoop.s.sol";
 

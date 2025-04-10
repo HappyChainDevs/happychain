@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 
 import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
+import {Encoding} from "../../../boop/core/Encoding.sol";
 
 contract CoreLibsTest is Test {
     using Encoding for Boop;

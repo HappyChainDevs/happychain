@@ -5,7 +5,7 @@ import {Boop, ExecutionOutput} from "boop/interfaces/Types.sol";
 
 /**
  * @dev Key used in {Boop.extraData} to specify a custom executor address (must satisfy
- * {ICustomExecutor}), to be looked up by {IExtensibleAccount.executeCallFromExecutor} implementations.
+ * {ICustomExecutor}).
  */
 bytes3 constant EXECUTOR_KEY = 0x000002;
 

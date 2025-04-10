@@ -4,8 +4,8 @@ pragma solidity ^0.8.20;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
-import {Utils} from "boop/libs/Utils.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
+import {Utils} from "../core/Utils.sol";
+import {Encoding} from "../core/Encoding.sol";
 
 import {Boop} from "boop/interfaces/Types.sol";
 import {EntryPoint} from "boop/core/EntryPoint.sol";

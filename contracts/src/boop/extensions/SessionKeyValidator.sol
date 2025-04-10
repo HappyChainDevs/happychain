@@ -4,9 +4,9 @@ pragma solidity ^0.8.20;
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
 import {Boop} from "boop/interfaces/Types.sol";
-import {Encoding} from "boop/libs/Encoding.sol";
+import {Encoding} from "../core/Encoding.sol";
 import {InvalidSignature} from "boop/interfaces/EventsAndErrors.sol";
-import {ICustomValidator} from "boop/interfaces/extensions/ICustomValidator.sol";
+import {ICustomValidator} from "../interfaces/ICustomValidator.sol";
 
 /**
  * This validator maintains a mapping from (account, target) pair to session keys, and authorizes
