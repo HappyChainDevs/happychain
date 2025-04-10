@@ -27,5 +27,8 @@
         "viem": "^2.21.53",
         "vocs": "1.0.0-alpha.62",
         "web3": "^4.16.0"
+    },
+    "dependencies": {
+        "@scalar/api-reference-react": "^0.6.13"
     }
 }

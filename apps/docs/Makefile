@@ -23,7 +23,7 @@ clean: typedoc.clean ## Removes build artifacts
 	rm -rf node_modules/.tmp
 .PHONY: clean
 
-preview: vocs ## Previews previously built docs
+preview: ## Previews previously built docs
 	vocs preview;
 .PHONY: preview
 

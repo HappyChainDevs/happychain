@@ -100,6 +100,10 @@ export default defineConfig({
                         },
                     ],
                 },
+                {
+                    text: "Rest API",
+                    link: "/boop/rest-api",
+                },
             ],
         },
     ],
