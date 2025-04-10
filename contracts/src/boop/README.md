@@ -1,24 +1,18 @@
 # Boop 👉🐈  
 
-A minimalist and efficient alternative to ERC-4337 for account abstraction. Focused on simplicity and low-latency use cases, while maintaining essential functionality.
+Boop is an account abstraction system focused on simplicity and enabling low-latency chain
+interactions, featuring a well thought-out extension system. To learn more, read the [introductory
+article][boop-article].
 
-## Key Features
-
-- **Minimum Viable Core**: Simplified implementation focusing on essential functionality
-- **Low Latency**: Optimized for minimal network roundtrips
-- **Flexible Fee Payment**: Supports self-funding, submitter-sponsored, and paymaster-sponsored transactions
-- **Improved Staking**: Improved UX by implementing a flexible staking model for paymasters, designed from scratch
-- **Simplified Gas Accounting**: Uses (`verificationGasLimit`, `executeGasLimit`, and `paymentValidationGasLimit`)
-
-These benefits come with intentional trade-offs: slightly higher gas costs (21k without bundling), increased trust in bundlers, and no built-in mempool management - all chosen to maintain simplicity and enable low-latency operations.
+[boop-article]: https://mirror.xyz/0x20Af38e22e1722F97f5A1b5afc96c00EECd566b2/x-u881uWh93iVHCnh8ELsFNh1_UJDopvyb4NoSy-Tos
 
 ## Directory Structure
 
 ```txt
 boop/
 ├── core/                       # Core contracts
-│   ├── EntryPoint.sol              # The entrypoint for handling boops on-chain, singleton contract.
-│   ├── Staker.sol                  # Contract for staking ETH to be used as gas for boops.
+│   ├── EntryPoint.sol              # Singleton contract to which all boops are posted.
+│   ├── Staker.sol                  # Paymaster staking logic inherited by the entry point.
 │
 ├── libs/                       # Library contracts (for use by `core/` and account/paymaster implementations)
 │   ├── Encoding.sol                # Encoding/Decoding boops.
