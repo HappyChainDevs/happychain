@@ -30,6 +30,14 @@ export class TestRetryManager extends DefaultRetryPolicyManager {
         attempt: Attempt,
         customError: string,
     ) {
-        return super.isCustomError(txm, transaction, attempt, customError)
+        if (!transaction.contractName) {
+            throw new Error("Contract name is required to check if a transaction has reverted with a custom error")
+        }
+
+        const abi = txm.abiManager.get(transaction.contractName)
+        if (!abi) {
+            throw new Error(`ABI not found for contract ${transaction.contractName}`)
+        }
+        return super.isCustomError(txm, attempt, abi, customError)
     }
 }

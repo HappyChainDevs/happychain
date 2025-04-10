@@ -101,26 +101,6 @@ export class TransactionSubmitter {
                 gas: attempt.gas ?? 21000n,
             }
         } else {
-            const abi = this.txmgr.abiManager.get(transaction.contractName)
-
-            if (!abi) {
-                span.addEvent("txm.transaction-submitter.send-attempt.abi-not-found", {
-                    transactionIntentId: transaction.intentId,
-                    contractName: transaction.contractName,
-                })
-                span.setStatus({ code: SpanStatusCode.ERROR })
-                logger.error(`ABI not found for contract ${transaction.contractName}`)
-                return err({
-                    cause: AttemptSubmissionErrorCause.ABINotFound,
-                    description: `ABI not found for contract ${transaction.contractName}`,
-                    flushed: false,
-                })
-            }
-
-            const functionName = transaction.functionName
-            const args = transaction.args
-            const data = encodeFunctionData({ abi, functionName, args })
-
             let gas: bigint
             if (attempt.gas === undefined) {
                 const gasResult = await this.txmgr.gasEstimator.estimateGas(this.txmgr, transaction)
@@ -147,7 +127,7 @@ export class TransactionSubmitter {
                 type: "eip1559",
                 from: this.txmgr.viemWallet.account.address,
                 to: transaction.address,
-                data,
+                data: transaction.calldata,
                 value: 0n,
                 nonce: attempt.nonce,
                 maxFeePerGas: attempt.maxFeePerGas,

@@ -1,4 +1,4 @@
-import type { UUID } from "@happy.tech/common"
+import type { Hex, UUID } from "@happy.tech/common"
 import type { Address } from "viem"
 import type { TransactionStatus } from "../Transaction"
 
@@ -7,9 +7,10 @@ export interface TransactionTable {
     from: Address
     chainId: number
     address: Address
-    functionName: string
-    args: string
-    contractName: string
+    functionName: string | undefined
+    args: string | undefined
+    contractName: string | undefined
+    calldata: Hex
     deadline: number | undefined
     status: TransactionStatus
     attempts: string
