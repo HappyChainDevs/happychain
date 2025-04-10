@@ -12,9 +12,10 @@ error SubmitterFeeTooHigh();
 /**
  * Interface for paymasters that can sponsor gas fees for boop transactions.
  *
- * Implementers of this interface should not write custom `receive` functions (or at least no such
- * function that consumes more than 2300 gas), as that screws up the entry point's gas accounting
- * and will cause the paymaster to revert if it consumes more than the 2300 gas allowance.
+ * Paymasters should emit the {Received} event (from EventsAndErrors.sol) whenever they receive the
+ * gas token, but should not otherwise write custom receive logic (or at least no such function that
+ * consumes more than 2300 gas), as that screws up the entry point's gas accounting and will cause
+ * the paymaster to revert if it consumes more than the 2300 gas allowance.
  *
  * Implementers of this interface must implement functionality that enables managing the stake
  * with the {EntryPoint}, by calling the functions implemented in `Staking.sol`. The paymaster

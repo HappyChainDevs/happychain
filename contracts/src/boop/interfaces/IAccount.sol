@@ -5,8 +5,9 @@ import {Boop, ExecutionOutput} from "boop/interfaces/Types.sol";
 
 /**
  * Interface to be implemented by smart contract accounts conforming to the Boop Account standard.
- * Accounts can optionally implement the {IPaymaster} interface if they wish to support
- * paying submitters themselves without relying on external paymasters.
+ *
+ * Accounts should emit the {Received} event (from EventsAndErrors.sol) whenever they receive the
+ * gas token.
  *
  * The ERC-165 selector for this interface is 0x2b39e81f and can be obtained via:
  * `console.logBytes4(IAccount.validate.selector ^ IAccount.execute.selector);`
