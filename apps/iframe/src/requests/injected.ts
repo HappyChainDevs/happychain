@@ -1,5 +1,4 @@
 import { HappyMethodNames, PermissionNames, TransactionType } from "@happy.tech/common"
-import { deployment as contractAddresses } from "@happy.tech/contracts/happy-aa/anvil"
 import { computeBoopHash } from "@happy.tech/submitter-client"
 import {
     EIP1193DisconnectedError,
@@ -13,12 +12,13 @@ import {
     getEIP1193ErrorObjectFromCode,
     requestPayloadIsHappyMethod,
 } from "@happy.tech/wallet-common"
-import { type Address, type Hash, type Hex, InvalidAddressError, hexToBigInt, isAddress } from "viem"
+import { type Address, type Hash, type Hex, InvalidAddressError, type Transaction, hexToBigInt, isAddress } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
-import { addPendingBoop } from "#src/services/boopsHistory"
+import { addPendingBoop, markBoopAsConfirmed } from "#src/services/boopsHistory"
 import { StorageKey, storage } from "#src/services/storage"
-import { getBoopClient } from "#src/state/boopClient"
-import { getChains, setChains, setCurrentChain } from "#src/state/chains"
+import { getBoopAccount } from "#src/state/boopAccount"
+import { getBoopClient, getNonce } from "#src/state/boopClient"
+import { getChains, getCurrentChain, setChains, setCurrentChain } from "#src/state/chains"
 import { getInjectedClient } from "#src/state/injectedClient"
 import { loadAbiForUser } from "#src/state/loadedAbis"
 import { getPermissions, grantPermissions, revokePermissions } from "#src/state/permissions"
@@ -28,14 +28,17 @@ import { checkIfRequestRequiresConfirmation } from "#src/utils/checkIfRequestReq
 import { isAddChainParams } from "#src/utils/isAddChainParam"
 import { getUser } from "../state/user"
 import type { AppURL } from "../utils/appURL"
-import { sendBoop } from "./boop"
+import { formatBoopReceiptToTransactionReceipt, sendBoop } from "./boop"
 import { sendResponse } from "./sendResponse"
 import { appForSourceID } from "./utils"
 
-import { getBoopAccount } from "#src/state/boopAccount.ts"
 // @todo - cleanup imports
 import type { HappyTx } from "../../../../packages/submitter/lib/tmp/interface/HappyTx"
+import { type HappyTxState, StateRequestStatus } from "../../../../packages/submitter/lib/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "../../../../packages/submitter/lib/tmp/interface/status"
+
+// Local cache for transaction receipts to avoid repeated calls
+const receiptCache = new Map<Hash, HappyTxState>()
 
 /**
  * Processes requests using the connected 'injected wallet' such as metamask. This will be the
@@ -87,9 +90,9 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                 return await sendBoop({
                     user,
                     tx,
+                    // validator: contractAddresses.<Session key validator would go here>,
                     signer: async (boop: HappyTx) => {
                         const boopHash = computeBoopHash(boop)
-
                         const validatorData = await getInjectedClient()!.signMessage({
                             account: privateKeyToAccount(sessionKey),
                             message: { raw: boopHash },
@@ -119,15 +122,22 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                     throw result.error
                 }
 
-                if (result.value.status !== "submitSuccess") return
+                if (result.value.status === "submitSuccess" && result.value.state.receipt) {
+                    const boopHash = result.value.state.receipt.happyTxHash as Hash
+                    addPendingBoop(user.address, {
+                        boopHash,
+                        value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
+                    })
 
-                const boopHash = result.value.state.receipt?.happyTxHash as Hash
-                addPendingBoop(user.address, {
-                    boopHash,
-                    value: tx.value ? hexToBigInt(tx.value as Hex) : 0n,
-                })
+                    // Also mark as confirmed if we already have the receipt
+                    if (result.value.state.included) {
+                        markBoopAsConfirmed(user.address, tx.value ? hexToBigInt(tx.value as Hex) : 0n, result.value)
+                    }
 
-                return boopHash
+                    return boopHash
+                }
+
+                throw new Error("Failed to execute boop transaction")
             } catch (error) {
                 console.error("Sending Boop errored", error)
                 throw error
@@ -139,31 +149,102 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             const boopClient = await getBoopClient()
 
             if (!boopClient) {
+                // Fall back to injected client if no Boop client is available
                 return await sendToInjectedClient(app, request)
             }
 
             try {
-                const result = await boopClient.boop.getStatus(hash)
+                // Get the transaction status using boop.getStatus instead of getUserOperation
+                const statusResult = await boopClient.boop.getStatus(hash)
 
-                if (result.isErr()) {
+                if (statusResult.isErr() || statusResult.value.status !== StateRequestStatus.Success) {
+                    // If we can't get the status or it's not successful, fall back to injected client
                     return await sendToInjectedClient(app, request)
                 }
 
-                return result.value.state?.receipt
+                const state = statusResult.value.state
+
+                if (!state.included || !state.receipt) {
+                    // Handle pending transaction (not yet included in a block)
+                    const boopAccount = await getBoopAccount()
+                    if (!boopAccount) return await sendToInjectedClient(app, request)
+
+                    return {
+                        hash,
+                        from: boopAccount.address,
+                        nonce: 0x0,
+                        blockHash: null,
+                        blockNumber: null,
+                        transactionIndex: null,
+                        input: "0x",
+                    } as Partial<Transaction>
+                }
+
+                // Cache the receipt for later use
+                receiptCache.set(hash, state)
+                const receipt = state.receipt
+                const currentChain = getCurrentChain()
+
+                return {
+                    accessList: [],
+                    blockHash: receipt.txReceipt.blockHash,
+                    blockNumber: receipt.txReceipt.blockNumber,
+                    chainId: Number(currentChain.chainId),
+                    from: receipt.account,
+                    gas: receipt.gasUsed,
+                    gasPrice: receipt.txReceipt.effectiveGasPrice,
+                    hash,
+                    input: "0x", // should be `receipt.callData` ?
+                    nonce: receipt.nonceValue.toString(),
+                    to: receipt?.dest || receipt.txReceipt.to, // should be `receipt.dest` ? @todo - confirm if `dest` should be returned by the submitter or not
+                    value: "0x", // should be `receipt.value` ?
+                    typeHex: TransactionType.EIP1559,
+                    r: "0x0",
+                    s: "0x0",
+                    v: "0x0",
+                    // Extra field
+                    boop: receipt,
+                } as unknown as Transaction
             } catch (_err) {
+                // Fall back to regular transaction lookup if anything fails
                 return await sendToInjectedClient(app, request)
             }
         }
 
         case "eth_getTransactionReceipt": {
-            const [_hash] = request.payload.params
+            const [hash] = request.payload.params
             const boopClient = await getBoopClient()
 
             if (!boopClient) {
                 return await sendToInjectedClient(app, request)
             }
 
-            // @todo
+            try {
+                if (receiptCache.has(hash)) {
+                    const cachedState = receiptCache.get(hash)
+                    if (cachedState?.included && cachedState?.receipt) {
+                        const receipt = cachedState.receipt
+                        return formatBoopReceiptToTransactionReceipt(hash, receipt)
+                    }
+                }
+
+                const statusResult = await boopClient.boop.getStatus(hash)
+
+                if (statusResult.isErr() || statusResult.value.status !== StateRequestStatus.Success) {
+                    return await sendToInjectedClient(app, request)
+                }
+
+                const state = statusResult.value.state
+
+                if (!state.included || !state.receipt) {
+                    return null
+                }
+
+                receiptCache.set(hash, state)
+                return formatBoopReceiptToTransactionReceipt(hash, state.receipt)
+            } catch (_err) {
+                return sendToInjectedClient(app, request)
+            }
         }
 
         case "eth_getTransactionCount": {
@@ -172,31 +253,11 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
             if (boopClient) {
                 const boopAccount = await getBoopAccount()
-
                 if (boopAccount && address.toLowerCase() === boopAccount.address.toLowerCase()) {
                     const nonceTrack = 0n
 
                     try {
-                        const publicClient = getPublicClient()
-                        const nonce = await publicClient.readContract({
-                            address: contractAddresses.HappyEntryPoint,
-                            abi: [
-                                {
-                                    name: "nonceValues",
-                                    type: "function",
-                                    inputs: [
-                                        { name: "account", type: "address" },
-                                        { name: "nonceTrack", type: "uint192" },
-                                    ],
-                                    outputs: [{ type: "uint64" }],
-                                    stateMutability: "view",
-                                },
-                            ],
-                            functionName: "nonceValues",
-                            args: [address as Address, nonceTrack],
-                        })
-
-                        return nonce
+                        return await getNonce(address as Address, nonceTrack)
                     } catch (error) {
                         console.error("Error fetching nonce:", error)
                         throw error
@@ -213,7 +274,6 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
 
             if (boopClient) {
                 try {
-                    // Prepare a transaction to be estimated
                     const boop = await boopClient.boop.prepareTransaction({
                         dest: tx.to as Address,
                         callData: tx.data || "0x",
@@ -223,15 +283,22 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
                     const estimateResult = await boopClient.boop.estimateGas(boop)
 
                     if (estimateResult.isErr()) {
-                        throw estimateResult.error
-                    } else if (estimateResult.value.status === EntryPointStatus.Success) {
-                        return {
-                            ...estimateResult.value,
-                        }
+                        // Fall back to injected client if estimation fails
+                        return await sendToInjectedClient(app, request)
                     }
+
+                    if (estimateResult.value.status === EntryPointStatus.Success) {
+                        // Return a properly formatted hex string for gas limit
+                        const gasLimit = estimateResult.value.gasLimit
+                        return `0x${gasLimit.toString(16)}`
+                    }
+
+                    // Fall back if status is not Success
+                    return await sendToInjectedClient(app, request)
                 } catch (error) {
                     console.error("Error estimating gas:", error)
-                    throw error
+                    // Fall back to injected client
+                    return await sendToInjectedClient(app, request)
                 }
             }
 
@@ -251,10 +318,13 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             const sessionKey = generatePrivateKey()
             const accountSessionKey = privateKeyToAccount(sessionKey)
 
-            // Store the session key for now without validator installation
-            // The actual validator installation will be implemented later
+            // Check if we have any session keys stored for this account
             const storedSessionKeys = storage.get(StorageKey.SessionKeys) || {}
+            const _hasExistingSessionKeys = Boolean(storedSessionKeys[user!.address])
 
+            // @todo: check if session key module is installed
+
+            // Store the session key
             storage.set(StorageKey.SessionKeys, {
                 ...storedSessionKeys,
                 [user!.address]: {
@@ -318,16 +388,11 @@ async function dispatchHandlers(request: ProviderMsgsFromApp[Msgs.RequestInjecte
             return [user.address]
         }
 
+        // Rest of the handlers remain mostly unchanged
         case "wallet_requestPermissions": {
-            // By default we will simply grant permissions here
-            // Cases which require injected wallet interactions
-            // such as eth_accounts must be special-cased and
-            // forwarded to the injected wallet for confirmation
-            // before proceeding
             const [{ eth_accounts, ...rest }] = request.payload.params
 
             if (eth_accounts) {
-                // 'eth_accounts' must be forwarded to the injected wallet to function
                 const injectedResponse = await sendToInjectedClient(app, {
                     ...request,
                     payload: { method: request.payload.method, params: [{ eth_accounts }] },
@@ -413,7 +478,7 @@ async function sendToInjectedClient<T extends ProviderMsgsFromApp[Msgs.RequestIn
     _app: AppURL,
     request: T,
 ): Promise<EIP1193RequestResult<T["payload"]["method"]>> {
-    const client: Client | undefined = getInjectedClient()
+    const client = getInjectedClient()
 
     if (!client) throw new EIP1193DisconnectedError()
 
@@ -431,7 +496,7 @@ async function sendToPublicClient<T extends ProviderMsgsFromApp[Msgs.RequestPerm
     if (checkIfRequestRequiresConfirmation(app, request.payload)) {
         throw new EIP1193UnauthorizedError()
     }
-    const client: Client = getPublicClient()
+    const client = getPublicClient()
 
     if (requestPayloadIsHappyMethod(request.payload)) {
         throw new EIP1193UnsupportedMethodError()

@@ -10,6 +10,7 @@ import {
     type Hash,
     type Hex,
     type Transport,
+    type WalletClient,
     encodeFunctionData,
     zeroAddress,
 } from "viem"
@@ -27,14 +28,15 @@ import type { ExecuteOutput } from "../../../../packages/submitter/lib/tmp/inter
 import type { StateRequestOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_state"
 import type { SubmitOutput } from "../../../../packages/submitter/lib/tmp/interface/submitter_submit"
 
-async function getNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
+export async function getNonce(account: Address, nonceTrack = 0n): Promise<bigint> {
     const publicClient = getPublicClient()
-    return await publicClient.readContract({
+    const nonce = await publicClient.readContract({
         address: happyAccAbsDeployment.HappyEntryPoint,
         abi: happyAccAbsAbis.HappyEntryPoint,
         functionName: "nonceValues",
         args: [account, nonceTrack],
     })
+    return nonce as unknown as bigint
 }
 
 export interface BoopActions {
@@ -43,6 +45,7 @@ export interface BoopActions {
         callData:
             | Hex
             | {
+                  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
                   abi: Array<any> | Record<string, any>
                   functionName: string
                   args: Array<unknown>
@@ -63,6 +66,7 @@ export interface BoopActions {
         callData:
             | Hex
             | {
+                  // biome-ignore lint/suspicious/noExplicitAny: flexibility required
                   abi: Array<any> | Record<string, any>
                   functionName: string
                   args: Array<unknown>
@@ -104,7 +108,7 @@ function boopify(options: {
 }) {
     const { entryPoint } = options
 
-    return (client: any) => {
+    return (client: WalletClient<Transport, Chain | undefined, Account | undefined>) => {
         return {
             ...client,
             // Scope the the Boop functionalities to a `boop` namespace
@@ -122,6 +126,7 @@ function boopify(options: {
                     submitterFee = 100n,
                 }: {
                     dest: Address
+                    // biome-ignore lint/suspicious/noExplicitAny: need any for flexibility
                     callData: Hex | { abi: any; functionName: string; args: Array<any> }
                     value?: bigint
                     paymaster?: Address
@@ -164,6 +169,7 @@ function boopify(options: {
                 async signTransaction(tx: HappyTx) {
                     const happyTxHash = computeBoopHash(tx)
                     const validatorData = await client.signMessage({
+                        account: client.account!,
                         message: { raw: happyTxHash },
                     })
 
@@ -213,6 +219,7 @@ function boopify(options: {
                     estimateGas: shouldEstimateGas = false,
                 }: {
                     dest: Address
+                    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
                     callData: Hex | { abi: any; functionName: string; args: Array<any> }
                     value?: bigint
                     paymaster?: Address
