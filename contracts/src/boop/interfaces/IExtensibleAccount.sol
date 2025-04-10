@@ -2,23 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {IAccount} from "boop/interfaces/IAccount.sol";
-import {CallInfo} from "boop/interfaces/Types.sol";
-
-enum ExtensionType {
-    Validator,
-    Executor
-}
-
-/// Thrown when calling addExtension with an already-registered extension.
-error ExtensionAlreadyRegistered(address extension, ExtensionType extensionType);
-
-/// Thrown when calling removeExtension with an unregistered extension, or returned by account
-/// functions if an extension is specified for use in the extraData, but isn't registered.
-error ExtensionNotRegistered(address extension, ExtensionType extensionType);
-
-/// Selector returned by extension functions and account functions if an extraData value read by an
-/// extension is invalid.
-error InvalidExtensionValue();
+import {CallInfo, ExtensionType} from "boop/interfaces/Types.sol";
 
 /**
  * Interface for Boop accounts (as specified in IAccount) that are extensible with validator

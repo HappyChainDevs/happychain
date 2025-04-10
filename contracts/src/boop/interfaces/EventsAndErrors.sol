@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-// ====================================================================================================
+import {ExtensionType} from "boop/interfaces/Types.sol";
+
+// ================================================================================================
 // ENTRYPOINT EVENTS
 
 /**
@@ -56,7 +58,7 @@ event ExecutionFailed(bytes reason);
  */
 event ExecutionReverted(bytes revertData);
 
-// ====================================================================================================
+// ================================================================================================
 // ENTRYPOINT ERRORS
 
 /**
@@ -112,13 +114,13 @@ error PaymentValidationFailed(bytes reason);
  */
 error PayoutFailed();
 
-// ====================================================================================================
+// =================================================================================================
 // SHARED EVENTS
 
 /// Emitted when ETH is received by the contract
 event Received(address indexed sender, uint256 amount);
 
-// ====================================================================================================
+// =================================================================================================
 // SHARED ERRORS
 
 /**
@@ -142,3 +144,23 @@ error NotFromEntryPoint();
  * invalid.
  */
 error InvalidSignature();
+
+// =================================================================================================
+// EXTENSIONS ERRORS
+
+/**
+ * Thrown when calling addExtension with an already-registered extension.
+ */
+error ExtensionAlreadyRegistered(address extension, ExtensionType extensionType);
+
+/**
+ * Thrown when calling removeExtension with an unregistered extension, or returned by account
+ * functions if an extension is specified for use in the extraData, but isn't registered.
+ */
+error ExtensionNotRegistered(address extension, ExtensionType extensionType);
+
+/**
+ * Selector returned by extension functions and account functions if an extraData value read by an
+ * extension is invalid.
+ */
+error InvalidExtensionValue();

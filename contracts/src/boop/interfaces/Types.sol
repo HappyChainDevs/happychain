@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 // ====================================================================================================
-
 // BOOP
 
 /**
@@ -171,6 +170,14 @@ struct ExecutionOutput {
 
 // ====================================================================================================
 // EXTENSIONS TYPES
+
+/**
+ * Possible types of extensions.
+ */
+enum ExtensionType {
+    Validator,
+    Executor
+}
 
 /**
  * Information (destination, value and calldata) for a call to be made by the account on behalf

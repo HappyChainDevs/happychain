@@ -1,22 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
 pragma solidity ^0.8.20;
 
-import {IAccount} from "boop/interfaces/IAccount.sol";
-import {
-    IExtensibleAccount,
-    ExtensionType,
-    ExtensionAlreadyRegistered,
-    ExtensionNotRegistered,
-    CallInfo
-} from "boop/interfaces/IExtensibleAccount.sol";
-import {Boop, CallStatus, ExecutionOutput} from "boop/interfaces/Types.sol";
+import {ExtensionAlreadyRegistered, ExtensionNotRegistered} from "boop/interfaces/EventsAndErrors.sol";
+import {IExtensibleAccount} from "boop/interfaces/IExtensibleAccount.sol";
+import {Boop, CallInfo, CallStatus, ExecutionOutput, ExtensionType} from "boop/interfaces/Types.sol";
 
 /**
  * Mock implementation of IAccount and IExtensibleAccount for testing purposes.
  * This mock provides stub implementations of all required functions and a simplified
  * executeCallFromExecutor function without the sender check.
  */
-contract MockHappyAccount is IAccount, IExtensibleAccount {
+contract MockHappyAccount is IExtensibleAccount {
     // Track registered extensions
     mapping(ExtensionType => mapping(address => bool)) public extensions;
 
