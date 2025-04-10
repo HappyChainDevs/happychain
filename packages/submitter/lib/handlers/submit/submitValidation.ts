@@ -3,7 +3,8 @@ import { resolver, validator as zv } from "hono-openapi/zod"
 import { z } from "zod"
 import { OnchainFail, SubmitterError, Success } from "#lib/types"
 import { isProduction } from "#lib/utils/isProduction"
-import { entryPointSchema, inputSchema } from "#lib/utils/validation/boop"
+import { inputSchema } from "#lib/utils/validation/boop"
+import { isAddress } from "#lib/utils/validation/isAddress.ts"
 import { isHexString } from "#lib/utils/validation/isHexString"
 import { Submit } from "./types"
 
@@ -14,7 +15,7 @@ const outputSchema = z.discriminatedUnion("status", [
             .string()
             .refine(isHexString)
             .openapi({ example: "0xa972fee74164415894187e2bdc820b38d3cca7786aa58db903b6bce7c5b535d7" }),
-        entryPoint: entryPointSchema,
+        entryPoint: z.string().refine(isAddress).optional(),
         gasLimit: z.coerce.number(),
         validateGasLimit: z.coerce.number(),
         validatePaymentGasLimit: z.coerce.number(),

@@ -5,7 +5,6 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import type { SimulateFailed, SimulateOutput, SimulateSuccess } from "#lib/handlers/simulate"
 import type { Boop } from "#lib/types"
 import { CallStatus, Onchain } from "#lib/types"
-import { publicClient } from "#lib/utils/clients"
 import { client, createMockTokenAMintBoop, createSmartAccount, getNonce, signTx } from "#lib/utils/test"
 
 const testAccount = privateKeyToAccount(generatePrivateKey())
@@ -104,14 +103,12 @@ describe("submitter_simulate", () => {
 
         it("should simulate revert on unfunded self-sponsored", async () => {
             unsignedTx.payer = smartAccount
-            console.log(await publicClient.getBalance({ address: smartAccount }))
             unsignedTx.executeGasLimit = 0
             unsignedTx.gasLimit = 0
             signedTx = await sign(unsignedTx)
             const json = { json: { boop: serializeBigInt(signedTx) } }
             const results = (await client.api.v1.boop.simulate.$post(json)) as ClientResponse<SimulateFailed>
             const response = (await results.json()) as SimulateFailed
-            console.log(response)
             expect(results.status).toBe(402)
             expect(response.status).toBe(Onchain.PayoutFailed)
         })

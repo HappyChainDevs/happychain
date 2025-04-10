@@ -1,13 +1,7 @@
 import { Hono } from "hono"
 import { openAPISpecs } from "hono-openapi"
-import { every, except } from "hono/combine"
-import { cors as corsMiddleware } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
-import { logger as loggerMiddleware } from "hono/logger"
-import { prettyJSON as prettyJSONMiddleware } from "hono/pretty-json"
 import { requestId as requestIdMiddleware } from "hono/request-id"
-import { timeout as timeoutMiddleware } from "hono/timeout"
-import { timing as timingMiddleware } from "hono/timing"
 import { ZodError } from "zod"
 import { env } from "#lib/env"
 import { isProduction } from "#lib/utils/isProduction"
@@ -16,33 +10,12 @@ import pkg from "../../package.json" assert { type: "json" }
 import accountsApi from "./accountRoute"
 import boopApi from "./boopRoute"
 
-const app = new Hono()
-    .use("/api/*", corsMiddleware())
-    .use(
-        except(
-            // don't run these during testing
-            () => env.NODE_ENV === "test",
-            every(
-                timingMiddleware(), // measure response times
-                loggerMiddleware(), // log all calls to the console
-                prettyJSONMiddleware(), // add '?pretty' to any json endpoint to prettyprint
-            ),
-        ),
-    )
-    .use(timeoutMiddleware(30_000))
+const app = new Hono() //
     .use(requestIdMiddleware())
-
-    // Routes
-    .get("/", (c) =>
-        c.html(
-            `Greetings from Happychain. 
-            Visit the <a href='https://docs.happy.tech'>Happy Docs</a> for more information, 
-            or the <a href='/docs'>Open API Spec</a>`,
-        ),
-    )
     .route("/api/v1/accounts", accountsApi)
     .route("/api/v1/boop", boopApi)
 
+// Don't chain these to simplify AppType
 app.notFound((c) => c.text("These aren't the droids you're looking for", 404))
 app.onError(async (err, c) => {
     // re-format input validation errors
@@ -70,7 +43,6 @@ app.onError(async (err, c) => {
         500,
     )
 })
-
 app.get(
     "docs/openapi.json",
     openAPISpecs(app, {

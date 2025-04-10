@@ -24,19 +24,19 @@ const inputSchema = z.object({
         .openapi({ example: "0x1" }),
 })
 
-const outputSchema = inputSchema.merge(
-    z.object({
-        status: z
-            .union([z.nativeEnum(CreateAccount), z.nativeEnum(SubmitterError)])
-            .openapi({ example: CreateAccount.Success }),
-        address: z
-            .string()
-            .refine(isHexString)
-            .optional()
-            .openapi({ example: "0x5b3064DD8C5A33e6F7Fb814FdCdb0c249bf57Ad2" }),
-        description: z.string().optional().openapi({ example: "Account creation failed onchain" }),
-    }),
-)
+const outputSchema = z.object({
+    owner: z.string().refine(isAddress).openapi({ example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" }),
+    salt: z.string().max(66).refine(isHexString).openapi({ example: "0x1" }),
+    status: z
+        .union([z.nativeEnum(CreateAccount), z.nativeEnum(SubmitterError)])
+        .openapi({ example: CreateAccount.Success }),
+    address: z
+        .string()
+        .refine(isHexString)
+        .optional()
+        .openapi({ example: "0x5b3064DD8C5A33e6F7Fb814FdCdb0c249bf57Ad2" }),
+    description: z.string().optional().openapi({ example: "Account creation failed onchain" }),
+})
 
 export const createAccountDescription = describeRoute({
     // Experimental option. Disable in production, but useful in development
