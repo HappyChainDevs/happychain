@@ -86,7 +86,7 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
     }
 
     // ====================================================================================================
-    // EXTERNAL FUNCTIONS
+    // PAYMENT VALIDATION
 
     /**
      * This function validates that the submitter fee is reasonably priced, but otherwise accepts
@@ -114,6 +114,28 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
         userInfo[boop.account] = info;
 
         return abi.encodeWithSelector(bytes4(0));
+    }
+
+
+    /**
+     * @dev Updates the user's gas budget based on the time elapsed since the last update.
+     * @return The updated gas budget for the user.
+     */
+    function _updateUserGasBudget(UserInfo memory info) internal view returns (uint32) {
+        uint64 currentTime = uint64(block.timestamp);
+
+        if (info.lastUpdated == 0) {
+            return uint32(MAX_GAS_BUDGET);
+        } else {
+            uint256 timeElapsed = currentTime - info.lastUpdated;
+            if (timeElapsed > REFILL_PERIOD) {
+                return uint32(MAX_GAS_BUDGET);
+            }
+            uint256 gasToRefill = timeElapsed * REFILL_RATE;
+            uint256 newGasBudget = info.userGasBudget + gasToRefill;
+
+            return uint32(newGasBudget);
+        }
     }
 
     // ====================================================================================================
@@ -167,29 +189,5 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
         if (amount > address(this).balance) revert("Insufficient balance");
         (bool success,) = payable(to).call{value: amount}("");
         require(success, "Failed to withdraw funds");
-    }
-
-    // ====================================================================================================
-    // INTERNAL FUNCTIONS
-
-    /**
-     * @dev Updates the user's gas budget based on the time elapsed since the last update.
-     * @return The updated gas budget for the user.
-     */
-    function _updateUserGasBudget(UserInfo memory info) internal view returns (uint32) {
-        uint64 currentTime = uint64(block.timestamp);
-
-        if (info.lastUpdated == 0) {
-            return uint32(MAX_GAS_BUDGET);
-        } else {
-            uint256 timeElapsed = currentTime - info.lastUpdated;
-            if (timeElapsed > REFILL_PERIOD) {
-                return uint32(MAX_GAS_BUDGET);
-            }
-            uint256 gasToRefill = timeElapsed * REFILL_RATE;
-            uint256 newGasBudget = info.userGasBudget + gasToRefill;
-
-            return uint32(newGasBudget);
-        }
     }
 }
