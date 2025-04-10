@@ -1,11 +1,11 @@
 import type { Kysely } from "kysely"
 import type { Database } from "../types"
 
-async function up(db: Kysely<Database>) {
+export async function up(db: Kysely<Database>) {
     await db.schema
         .alterTable("transaction")
-        .addColumn("from", "text")
+        .addColumn("calldata", "text")
         .execute()
 }
 
-export const migration20241205104400 = { up }
+export const migration20250410123000 = { up }

@@ -33,7 +33,9 @@ export class TransactionRepository {
             .selectAll()
             .execute()
 
-        this.notFinalizedTransactions = transactionRows.map((row) => Transaction.fromDbRow(row))
+        this.notFinalizedTransactions = transactionRows.map((row) =>
+            Transaction.fromDbRow(row, this.transactionManager.abiManager),
+        )
 
         if (this.transactionManager.finalizedTransactionPurgeTime > 0) {
             eventBus.on(Topics.NewBlock, this.purgeFinalizedTransactions.bind(this))
@@ -85,7 +87,9 @@ export class TransactionRepository {
 
         const persistedTransaction = persistedTransactionResult.value
 
-        return persistedTransaction ? ok(Transaction.fromDbRow(persistedTransaction)) : ok(undefined)
+        return persistedTransaction
+            ? ok(Transaction.fromDbRow(persistedTransaction, this.transactionManager.abiManager))
+            : ok(undefined)
     }
 
     @TraceMethod("txm.transaction-repository.save-transactions")

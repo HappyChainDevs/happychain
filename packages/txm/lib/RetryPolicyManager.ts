@@ -1,5 +1,5 @@
 import { type Result, err, ok } from "neverthrow"
-import { type TransactionReceipt, encodeErrorResult } from "viem"
+import { type Abi, type TransactionReceipt, encodeErrorResult } from "viem"
 import type { Attempt, Transaction } from "./Transaction"
 import type { TransactionManager } from "./TransactionManager"
 import { TraceMethod } from "./telemetry/traces"
@@ -89,20 +89,14 @@ export class DefaultRetryPolicyManager implements RetryPolicyManager {
     @TraceMethod("txm.retry-policy-manager.is-custom-error")
     protected async isCustomError(
         transactionManager: TransactionManager,
-        transaction: Transaction,
         attempt: Attempt,
+        abi: Abi,
         customError: string,
     ): Promise<Result<boolean, Error>> {
         const { output } = await this.getRevertMessageAndOutput(transactionManager, attempt)
 
         if (!output) {
             return ok(false)
-        }
-
-        const abi = transactionManager.abiManager.get(transaction.contractName)
-
-        if (!abi) {
-            return err(new Error("Contract not found"))
         }
 
         return ok(

@@ -454,11 +454,14 @@ export class TransactionManager {
      * @returns A new transaction.
      */
     public createTransaction(params: TransactionConstructorConfig): Transaction {
-        return new Transaction({
-            ...params,
-            from: this.viemWallet.account.address,
-            chainId: this.viemWallet.chain.id,
-        })
+        return new Transaction(
+            {
+                ...params,
+                from: this.viemWallet.account.address,
+                chainId: this.viemWallet.chain.id,
+            },
+            this.abiManager,
+        )
     }
 
     /**

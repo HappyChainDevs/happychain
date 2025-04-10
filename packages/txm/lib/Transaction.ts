@@ -1,7 +1,8 @@
-import { type UUID, bigIntReplacer, bigIntReviver, createUUID } from "@happy.tech/common"
+import { type Hex, type UUID, bigIntReplacer, bigIntReviver, createUUID } from "@happy.tech/common"
 import { context, trace } from "@opentelemetry/api"
 import type { Insertable, Selectable } from "kysely"
-import type { Address, ContractFunctionArgs, Hash } from "viem"
+import { type Abi, type Address, type ContractFunctionArgs, type Hash, encodeFunctionData } from "viem"
+import type { ABIManager } from "./AbiManager"
 import type { LatestBlock } from "./BlockMonitor"
 import { Topics, eventBus } from "./EventBus.js"
 import type { TransactionTable } from "./db/types.js"
@@ -54,26 +55,18 @@ export interface Attempt {
     gas: bigint
 }
 
+export enum TransactionCallDataFormat {
+    Raw = "Raw",
+    Function = "Function",
+}
+
 export const NotFinalizedStatuses = [TransactionStatus.Pending, TransactionStatus.Cancelling]
 
-export interface TransactionConstructorConfig {
+interface TransactionConstructorBaseConfig {
     /**
      * The address of the contract that will be called
      */
     address: Address
-    /**
-     * The function name of the contract that will be called
-     */
-    functionName: string
-    /**
-     * This doesn't need to match the Solidity contract name but must match the contract alias of one of the contracts
-     * that you have provided when initializing the transaction manager with the ABI Manager
-     */
-    contractName: string
-    /**
-     * The arguments of the function that will be called
-     */
-    args: ContractFunctionArgs
     /**
      * The deadline of the transaction in seconds (optional)
      * This is used to try to cancel the transaction if it is not included in a block after the deadline to save gas
@@ -85,6 +78,21 @@ export interface TransactionConstructorConfig {
     metadata?: Record<string, unknown>
 }
 
+type TransactionConstructorCalldataConfig = TransactionConstructorBaseConfig & {
+    calldata: Hex
+    functionName?: string
+    contractName?: string
+    args?: ContractFunctionArgs
+}
+
+type TransactionConstructorFunctionConfig = TransactionConstructorBaseConfig & {
+    functionName: string
+    contractName: string
+    args: ContractFunctionArgs
+}
+
+export type TransactionConstructorConfig = TransactionConstructorCalldataConfig | TransactionConstructorFunctionConfig
+
 export class Transaction {
     readonly intentId: UUID
 
@@ -94,12 +102,14 @@ export class Transaction {
 
     readonly address: Address
 
-    readonly functionName: string
+    readonly functionName?: string
 
-    readonly args: ContractFunctionArgs
+    readonly args?: ContractFunctionArgs
 
     // This doesn't need to match the Solidity contract name but must match the contract alias of one of the contracts that you have provided when initializing the transaction manager with the ABI Manager
-    readonly contractName: string
+    readonly contractName?: string
+
+    readonly calldata: Hex
 
     readonly deadline: number | undefined
 
@@ -129,51 +139,50 @@ export class Transaction {
      */
     readonly metadata: Record<string, unknown>
 
-    constructor({
-        address,
-        functionName,
-        contractName,
-        args,
-        deadline,
-        metadata,
-        intentId,
-        from,
-        chainId,
-        status,
-        attempts,
-        collectionBlock,
-        createdAt,
-        updatedAt,
-        pendingFlush,
-        notPersisted,
-    }: TransactionConstructorConfig & {
-        intentId?: UUID
-        from: Address
-        chainId: number
-        status?: TransactionStatus
-        attempts?: Attempt[]
-        collectionBlock?: bigint
-        createdAt?: Date
-        updatedAt?: Date
-        pendingFlush?: boolean
-        notPersisted?: boolean
-    }) {
-        this.intentId = intentId ?? createUUID()
-        this.from = from
-        this.chainId = chainId
-        this.address = address
-        this.functionName = functionName
-        this.contractName = contractName
-        this.args = args
-        this.deadline = deadline
-        this.status = status ?? TransactionStatus.Pending
-        this.attempts = attempts ?? []
-        this.collectionBlock = collectionBlock
-        this.createdAt = createdAt ?? new Date()
-        this.updatedAt = updatedAt ?? new Date()
-        this.metadata = metadata ?? {}
-        this.pendingFlush = pendingFlush ?? true
-        this.notPersisted = notPersisted ?? true
+    constructor(
+        config: TransactionConstructorConfig & {
+            intentId?: UUID
+            from: Address
+            chainId: number
+            status?: TransactionStatus
+            attempts?: Attempt[]
+            collectionBlock?: bigint
+            createdAt?: Date
+            updatedAt?: Date
+            pendingFlush?: boolean
+            notPersisted?: boolean
+        },
+        abiManager: ABIManager,
+    ) {
+        this.intentId = config.intentId ?? createUUID()
+        this.from = config.from
+        this.chainId = config.chainId
+        this.address = config.address
+        this.deadline = config.deadline
+        this.status = config.status ?? TransactionStatus.Pending
+        this.attempts = config.attempts ?? []
+        this.collectionBlock = config.collectionBlock
+        this.createdAt = config.createdAt ?? new Date()
+        this.updatedAt = config.updatedAt ?? new Date()
+        this.metadata = config.metadata ?? {}
+        this.pendingFlush = config.pendingFlush ?? true
+        this.notPersisted = config.notPersisted ?? true
+
+        if ("calldata" in config) {
+            this.calldata = config.calldata
+            this.functionName = config.functionName
+            this.contractName = config.contractName
+            this.args = config.args
+        } else {
+            const abi = abiManager.get(config.contractName)
+            if (!abi) {
+                throw new Error(`ABI not found for contract ${config.contractName}`)
+            }
+            this.calldata = encodeFunctionData({ abi, functionName: config.functionName, args: config.args })
+            this.functionName = config.functionName
+            this.contractName = config.contractName
+            this.args = config.args
+        }
     }
 
     addAttempt(attempt: Attempt): void {
@@ -261,7 +270,8 @@ export class Transaction {
             address: this.address,
             functionName: this.functionName,
             contractName: this.contractName,
-            args: JSON.stringify(this.args, bigIntReplacer),
+            calldata: this.calldata,
+            args: this.args ? JSON.stringify(this.args, bigIntReplacer) : undefined,
             deadline: this.deadline,
             collectionBlock: this.collectionBlock ? Number(this.collectionBlock) : undefined,
             status: this.status,
@@ -272,18 +282,21 @@ export class Transaction {
         }
     }
 
-    static fromDbRow(row: Selectable<TransactionTable>): Transaction {
-        return new Transaction({
-            ...row,
-            args: JSON.parse(row.args, bigIntReviver),
-            attempts: JSON.parse(row.attempts, bigIntReviver),
-            collectionBlock: row.collectionBlock ? BigInt(row.collectionBlock) : undefined,
-            metadata: row.metadata ? JSON.parse(row.metadata, bigIntReviver) : undefined,
-            createdAt: new Date(row.createdAt),
-            updatedAt: new Date(row.updatedAt),
-            notPersisted: false,
-            pendingFlush: false,
-        })
+    static fromDbRow(row: Selectable<TransactionTable>, abiManager: ABIManager): Transaction {
+        return new Transaction(
+            {
+                ...row,
+                args: row.args ? JSON.parse(row.args, bigIntReviver) : undefined,
+                attempts: JSON.parse(row.attempts, bigIntReviver),
+                collectionBlock: row.collectionBlock ? BigInt(row.collectionBlock) : undefined,
+                metadata: row.metadata ? JSON.parse(row.metadata, bigIntReviver) : undefined,
+                createdAt: new Date(row.createdAt),
+                updatedAt: new Date(row.updatedAt),
+                notPersisted: false,
+                pendingFlush: false,
+            },
+            abiManager,
+        )
     }
 
     toJson(): string {

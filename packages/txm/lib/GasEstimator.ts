@@ -70,26 +70,10 @@ export class DefaultGasLimitEstimator implements GasEstimator {
     ): Promise<Result<bigint, EstimateGasError>> {
         const span = trace.getSpan(context.active())!
 
-        const abi = transactionManager.abiManager.get(transaction.contractName)
-
-        if (!abi) {
-            const description = `ABI not found for contract ${transaction.contractName}`
-            span.recordException(new Error(description))
-            span.setStatus({ code: SpanStatusCode.ERROR })
-            return err({
-                cause: EstimateGasErrorCause.EstimateGasABINotFound,
-                description,
-            })
-        }
-
-        const functionName = transaction.functionName
-        const args = transaction.args
-        const data = encodeFunctionData({ abi, functionName, args })
-
         const gasResult = await transactionManager.viemClient.safeEstimateGas({
             account: transactionManager.viemWallet.account,
             to: transaction.address,
-            data,
+            data: transaction.calldata,
             value: 0n,
         })
 
