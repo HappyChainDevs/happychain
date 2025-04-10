@@ -180,7 +180,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         uint128 cost;
 
         if ( /* sponsoring submitter */ boop.paymaster == address(0)) {
-            output.gas = Utils.txGasFromCallGas(gasStart - gasleft(), 4 + encodedBoop.length);
+            output.gas = Utils.estimateSubmitterTxGas(gasStart - gasleft(), encodedBoop.length);
             // done!
         } else if ( /* self-paying */ boop.paymaster == boop.account) {
             uint256 balance = tx.origin.balance;
@@ -226,8 +226,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
         view
         returns (uint32 consumedGas, uint128 cost)
     {
-        // The constant 4 is the byte size for the selector for `submit`.
-        consumedGas = Utils.txGasFromCallGas(entryPointGas, 4 + encodedLength);
+        consumedGas = Utils.estimateSubmitterTxGas(entryPointGas, encodedLength);
 
         // Upper-bound the payment to the agree-upon gas limit.
         uint256 boundedGas = consumedGas > boop.gasLimit ? boop.gasLimit : consumedGas;
