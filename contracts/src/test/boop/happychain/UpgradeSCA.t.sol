@@ -53,7 +53,7 @@ contract UpgradeSCATest is Test {
         // Set up the Deployment Script
         DeployBoopContracts deployer = new DeployBoopContracts();
 
-        // Deploy the happy-aa contracts as foundry-account-0
+        // Deploy the boop contracts as foundry-account-0
         vm.prank(owner);
         deployer.deployForTests();
 
@@ -115,7 +115,7 @@ contract UpgradeSCATest is Test {
     }
 
     // ====================================================================================================
-    // HAPPY TX CREATION UTILS
+    // BOOP TX CREATION UTILS
 
     /// @dev Internal helper function to create a signed boop.
     function _createSignedBoop(address dest, bytes memory callData) internal view returns (Boop memory) {
