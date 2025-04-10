@@ -15,4 +15,4 @@ export type * from "./tmp/interface/SimulationResult"
 export type { Prettify, Optional } from "@happy.tech/common"
 
 // === UTILITIES ===================================================================================
-export { computeHappyTxHash } from "./utils/computeHappyTxHash"
+export { computeBoopHash as computeHappyTxHash } from "./utils/computeBoopHash"

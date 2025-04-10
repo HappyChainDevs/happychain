@@ -3,7 +3,7 @@
     "files": [],
     "references": [
         {
-            "path": "../../packages/txm/tsconfig.json"
+            "path": "../../packages/submitter-client/tsconfig.json"
         }
     ]
 }

@@ -1,7 +1,9 @@
 {
-    "extends": ["../../packages/core/tsconfig.json"],
-    "compilerOptions": {
-        "rootDir": "../../"
-    },
-    "include": ["../../packages/core/lib", "../../support/wallet-common/lib"]
+    "extends": ["@happy.tech/configs/tsconfig.base.json"],
+    "files": [],
+    "references": [
+        {
+            "path": "../../packages/core/tsconfig.json"
+        }
+    ]
 }

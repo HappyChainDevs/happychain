@@ -28,7 +28,7 @@ export type ExecuteOutput =
       }
 
 /**
- * POST /submitter_execute
+ * POST `/submitter_execute`
  *
  * Given a happyTx, submits it onchain to be executed, waits for and returns the result of
  * execution.

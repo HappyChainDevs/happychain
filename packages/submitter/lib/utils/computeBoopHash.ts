@@ -13,7 +13,10 @@ const paymasterGasData = {
     validatePaymentGasLimit: 0n,
 } as const
 
-export function computeHappyTxHash(happyTx: HappyTx): `0x${string}` {
+/**
+ * Given a Boop, returns the computed BoopHash of the transaction.
+ */
+export function computeBoopHash(happyTx: HappyTx): `0x${string}` {
     // Don't include validator data in the signature so that pre & post signing are the same
     const isSelfPaying = happyTx.payer === happyTx.account
 

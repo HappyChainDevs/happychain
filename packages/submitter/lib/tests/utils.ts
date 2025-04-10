@@ -8,7 +8,7 @@ import { abis } from "#lib/deployments"
 import env from "#lib/env"
 import type { inputSchema as ExecuteInputSchema } from "#lib/routes/api/submitter/openApi/execute"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
+import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
 import { findExecutionAccount } from "#lib/utils/findExecutionAccount"
 
 export { mockAbis, mockDeployments }
@@ -86,7 +86,7 @@ export function createMockTokenAMintHappyTx(
 }
 
 export async function signTx(account: PrivateKeyAccount, happyTx: HappyTx): Promise<HappyTx> {
-    const happyTxHash = computeHappyTxHash(happyTx)
+    const happyTxHash = computeBoopHash(happyTx)
     const validatorData = await account.signMessage({ message: { raw: happyTxHash } })
     return { ...happyTx, validatorData }
 }

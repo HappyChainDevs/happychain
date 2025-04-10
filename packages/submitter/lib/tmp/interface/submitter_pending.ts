@@ -16,7 +16,7 @@ export type PendingHappyTxInfo = {
 }
 
 /**
- * GET /submitter_pending/${account}
+ * GET `/submitter_pending/{account}`
  *
  * Returns a list of pending (not yet included on chain) HappyTx (identified by their hash and
  * nonce) for the given account.

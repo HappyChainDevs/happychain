@@ -1,6 +1,6 @@
 import type { Hex } from "viem"
 import type { SimulationResult } from "#lib/tmp/interface/SimulationResult"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
+import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
 import { decodeHappyTx } from "#lib/utils/decodeHappyTx"
 import type { SubmitSimulateResult } from "#lib/utils/simulation-interfaces"
 import type { SimulationCacheService } from "./SimulationCacheService"
@@ -18,7 +18,7 @@ export class HappySimulationService {
 
         if (!simulation) return
 
-        const happyTxHash = computeHappyTxHash(decodeHappyTx(request.args[0]))
+        const happyTxHash = computeBoopHash(decodeHappyTx(request.args[0]))
 
         this.simulationCacheService.set(happyTxHash, {
             entryPoint: request.address,

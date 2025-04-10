@@ -23,7 +23,7 @@ const client = new ApiClient({ baseUrl: env.SUBMITTER_URL })
 
 export type { CreateAccountInput, CreateAccountOutput }
 /**
- * Create a new ScrappyAccount
+ * Create a new HappyAccount. If the account already exists, it will be returned.
  * @param data User Creation Options
  * @param data.owner User EOA address
  * @param data.salt Salt for the account creation

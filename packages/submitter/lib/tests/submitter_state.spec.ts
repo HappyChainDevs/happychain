@@ -5,7 +5,7 @@ import { app } from "#lib/server"
 import type { HappyTx } from "#lib/tmp/interface/HappyTx"
 import { StateRequestStatus } from "#lib/tmp/interface/HappyTxState"
 import { EntryPointStatus } from "#lib/tmp/interface/status"
-import { computeHappyTxHash } from "#lib/utils/computeHappyTxHash"
+import { computeBoopHash } from "#lib/utils/computeBoopHash.ts"
 import { serializeBigInt } from "#lib/utils/serializeBigInt"
 import { createMockTokenAMintHappyTx, getNonce, signTx } from "./utils"
 
@@ -67,7 +67,7 @@ describe("submitter_state", () => {
         const nonce = nonceValue + 5n // future nonce so that is submits, but doesn't finalize
         const unsignedTx = await createMockTokenAMintHappyTx(smartAccount, nonce, nonceTrack)
         const signedTx = await sign(unsignedTx)
-        const happyTxHash = computeHappyTxHash(signedTx)
+        const happyTxHash = computeBoopHash(signedTx)
         // submit transaction, but don't wait for it to complete
         client.api.v1.submitter.submit.$post({ json: { tx: serializeBigInt(signedTx) } }).then((a) => a.json())
 
