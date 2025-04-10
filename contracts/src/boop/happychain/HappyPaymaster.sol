@@ -23,9 +23,6 @@ contract HappyPaymaster is IPaymaster, ReentrancyGuardTransient, Ownable {
     // ====================================================================================================
     // CONSTANTS
 
-    /// @dev The amount of gas consumed by the payout function.
-    uint256 private constant PAYOUT_GAS = 12_000; // measured: 10097 + safety margin
-
     /// The allowed EntryPoint contract
     address public immutable ENTRYPOINT;
 
