@@ -188,7 +188,7 @@ contract EntryPoint is Staking, ReentrancyGuardTransient {
                 abi.encodeWithSelector(IAccount.payout.selector, cost)
             );
             if (
-                !success || gasBeforePayout - gasleft() > 15000 || (!isSimulation && tx.origin.balance < balance + cost)
+                !success || gasBeforePayout - gasleft() > 15000 || (tx.origin.balance < balance + cost)
             ) {
                 revert PayoutFailed();
             }
