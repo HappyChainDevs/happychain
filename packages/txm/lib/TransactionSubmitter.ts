@@ -1,15 +1,10 @@
-import { LogTag, Logger } from "@happy.tech/common"
 import { type Result, err, ok } from "neverthrow"
-import type { Hash, Hex, TransactionRequestEIP1559 } from "viem"
+import type { TransactionRequestEIP1559 } from "viem"
 import { TransactionRejectedRpcError, encodeFunctionData, keccak256 } from "viem"
 import type { EstimateGasErrorCause } from "./GasEstimator.js"
 import { type Attempt, AttemptType, type Transaction } from "./Transaction.js"
 import type { TransactionManager } from "./TransactionManager.js"
 
-export interface SignReturn {
-    signedTransaction: Hex
-    hash: Hash
-}
 
 export type AttemptSubmissionParameters = Omit<Attempt, "hash" | "gas">
 
@@ -28,19 +23,6 @@ export type AttemptSubmissionError = {
 }
 
 export type AttemptSubmissionResult = Result<undefined, AttemptSubmissionError>
-
-export enum RetryAttemptErrorCause {
-    ABINotFound = "ABINotFound",
-    FailedToSignTransaction = "FailedToSignTransaction",
-    FailedToSendRawTransaction = "FailedToSendRawTransaction",
-}
-
-export type RetryAttemptError = {
-    cause: RetryAttemptErrorCause
-    description: string
-}
-
-export type RetryAttemptResult = Result<undefined, RetryAttemptError>
 
 /**
  * This module is responsible for submitting a new attempt to the blockchain.
@@ -63,30 +45,51 @@ export class TransactionSubmitter {
         this.txmgr = txmgr
     }
 
-    public async attemptSubmission(
+    public async submitNewAttempt(
         transaction: Transaction,
         payload: AttemptSubmissionParameters,
     ): Promise<AttemptSubmissionResult> {
         const { nonce, maxFeePerGas, maxPriorityFeePerGas, type } = payload
 
+        return await this.sendAttempt(
+            transaction,
+            {
+                type,
+                nonce,
+                maxFeePerGas,
+                maxPriorityFeePerGas,
+            },
+            true,
+        )
+    }
+
+    async resubmitAttempt(transaction: Transaction, attempt: Attempt): Promise<AttemptSubmissionResult> {
+        return await this.sendAttempt(transaction, attempt, false)
+    }
+
+    private async sendAttempt(
+        transaction: Transaction,
+        attempt: Omit<Attempt, "hash" | "gas"> & Partial<Pick<Attempt, "hash" | "gas">>,
+        saveAttempt = false,
+    ): Promise<AttemptSubmissionResult> {
         let transactionRequest: TransactionRequestEIP1559 & { gas: bigint }
-        if (type === AttemptType.Cancellation) {
+
+        if (attempt.type === AttemptType.Cancellation) {
             transactionRequest = {
                 type: "eip1559",
                 from: this.txmgr.viemWallet.account.address,
                 to: this.txmgr.viemWallet.account.address,
                 data: "0x",
                 value: 0n,
-                nonce,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
-                gas: 21000n,
+                nonce: attempt.nonce,
+                maxFeePerGas: attempt.maxFeePerGas,
+                maxPriorityFeePerGas: attempt.maxPriorityFeePerGas,
+                gas: attempt.gas ?? 21000n,
             }
         } else {
             const abi = this.txmgr.abiManager.get(transaction.contractName)
 
             if (!abi) {
-                Logger.instance.error(LogTag.TXM, `ABI not found for contract ${transaction.contractName}`)
                 return err({
                     cause: AttemptSubmissionErrorCause.ABINotFound,
                     description: `ABI not found for contract ${transaction.contractName}`,
@@ -98,17 +101,22 @@ export class TransactionSubmitter {
             const args = transaction.args
             const data = encodeFunctionData({ abi, functionName, args })
 
-            const gasResult = await this.txmgr.gasEstimator.estimateGas(this.txmgr, transaction)
+            let gas: bigint
+            if (attempt.gas === undefined) {
+                const gasResult = await this.txmgr.gasEstimator.estimateGas(this.txmgr, transaction)
 
-            if (gasResult.isErr()) {
-                return err({
-                    cause: gasResult.error.cause,
-                    description: gasResult.error.description,
-                    flushed: false,
-                })
+                if (gasResult.isErr()) {
+                    return err({
+                        cause: gasResult.error.cause,
+                        description: gasResult.error.description,
+                        flushed: false,
+                    })
+                }
+
+                gas = gasResult.value
+            } else {
+                gas = attempt.gas
             }
-
-            const gas = gasResult.value
 
             transactionRequest = {
                 type: "eip1559",
@@ -116,9 +124,9 @@ export class TransactionSubmitter {
                 to: transaction.address,
                 data,
                 value: 0n,
-                nonce,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
+                nonce: attempt.nonce,
+                maxFeePerGas: attempt.maxFeePerGas,
+                maxPriorityFeePerGas: attempt.maxPriorityFeePerGas,
                 gas,
             }
         }
@@ -128,7 +136,7 @@ export class TransactionSubmitter {
         if (signedTransactionResult.isErr()) {
             return err({
                 cause: AttemptSubmissionErrorCause.FailedToSignTransaction,
-                description: `Failed to sign transaction ${transaction.intentId}. Details: ${signedTransactionResult.error}`,
+                description: `Failed to sign transaction ${transaction.intentId} for retry. Details: ${signedTransactionResult.error}`,
                 flushed: false,
             })
         }
@@ -137,24 +145,27 @@ export class TransactionSubmitter {
 
         const hash = keccak256(signedTransaction)
 
-        transaction.addAttempt({
-            type,
-            hash: hash,
-            nonce: nonce,
-            maxFeePerGas: maxFeePerGas,
-            maxPriorityFeePerGas: maxPriorityFeePerGas,
-            gas: transactionRequest.gas,
-        })
-
-        const updateResult = await this.txmgr.transactionRepository.saveTransactions([transaction])
-
-        if (updateResult.isErr()) {
-            transaction.removeAttempt(hash)
-            return err({
-                cause: AttemptSubmissionErrorCause.FailedToUpdate,
-                description: `Failed to update transaction ${transaction.intentId}. Details: ${updateResult.error}`,
-                flushed: false,
+        if (saveAttempt) {
+            transaction.addAttempt({
+                type: attempt.type,
+                hash: hash,
+                nonce: attempt.nonce,
+                maxFeePerGas: attempt.maxFeePerGas,
+                maxPriorityFeePerGas: attempt.maxPriorityFeePerGas,
+                gas: transactionRequest.gas,
             })
+
+            const updateResult = await this.txmgr.transactionRepository.saveTransactions([transaction])
+
+            if (updateResult.isErr()) {
+                transaction.removeAttempt(hash)
+
+                return err({
+                    cause: AttemptSubmissionErrorCause.FailedToUpdate,
+                    description: `Failed to update transaction ${transaction.intentId}. Details: ${updateResult.error}`,
+                    flushed: false,
+                })
+            }
         }
 
         const sendRawTransactionResult = await this.txmgr.viemWallet.safeSendRawTransaction({
@@ -170,69 +181,10 @@ export class TransactionSubmitter {
             }
 
             this.txmgr.rpcLivenessMonitor.trackError()
-
             return err({
                 cause: AttemptSubmissionErrorCause.FailedToSendRawTransaction,
-                description: `Failed to send raw transaction ${transaction.intentId}. Details: ${sendRawTransactionResult.error}`,
-                flushed: true,
-            })
-        }
-
-        this.txmgr.rpcLivenessMonitor.trackSuccess()
-
-        return ok(undefined)
-    }
-
-    async retryAttempt(transaction: Transaction, attempt: Attempt): Promise<RetryAttemptResult> {
-        const abi = this.txmgr.abiManager.get(transaction.contractName)
-
-        if (!abi) {
-            return err({
-                cause: RetryAttemptErrorCause.ABINotFound,
-                description: `ABI not found for contract ${transaction.contractName}`,
-            })
-        }
-
-        const functionName = transaction.functionName
-        const args = transaction.args
-        const data = encodeFunctionData({ abi, functionName, args })
-
-        const signedTransactionResult = await this.txmgr.viemWallet.safeSignTransaction({
-            nonce: attempt.nonce,
-            maxFeePerGas: attempt.maxFeePerGas,
-            maxPriorityFeePerGas: attempt.maxPriorityFeePerGas,
-            gas: attempt.gas,
-            to: transaction.address,
-            value: 0n,
-            data,
-        })
-
-        if (signedTransactionResult.isErr()) {
-            return err({
-                cause: RetryAttemptErrorCause.FailedToSignTransaction,
-                description: `Failed to sign transaction ${transaction.intentId} for retry. Details: ${signedTransactionResult.error}`,
-            })
-        }
-
-        const signedTransaction = signedTransactionResult.value
-
-        const sendRawTransactionResult = await this.txmgr.viemWallet.safeSendRawTransaction({
-            serializedTransaction: signedTransaction,
-        })
-
-        if (sendRawTransactionResult.isErr()) {
-            if (
-                sendRawTransactionResult.error instanceof TransactionRejectedRpcError &&
-                sendRawTransactionResult.error.message.includes("nonce too low")
-            ) {
-                this.txmgr.nonceManager.resync()
-            }
-
-            this.txmgr.rpcLivenessMonitor.trackError()
-
-            return err({
-                cause: RetryAttemptErrorCause.FailedToSendRawTransaction,
-                description: `Failed to retry raw transaction ${transaction.intentId}. Details: ${sendRawTransactionResult.error}`,
+                description: `Failed to send raw transaction ${transaction.intentId} for retry. Details: ${sendRawTransactionResult.error}`,
+                flushed: saveAttempt,
             })
         }
 

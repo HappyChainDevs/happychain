@@ -39,7 +39,7 @@ const txm = new TransactionManager({
         pollingInterval: 200,
         allowDebug: true,
         livenessCheckInterval: 500,
-        livenessDownDelay: 1000
+        livenessDownDelay: 1000,
     },
     abis: abis,
     gasEstimator: new TestGasEstimator(),
@@ -474,6 +474,12 @@ test("Transaction failed for out of gas", async () => {
 })
 
 test("Transaction cancelled due to deadline passing", async () => {
+    const previousLivenessThreshold = txm.livenessThreshold
+    Object.defineProperty(txm, "livenessThreshold", {
+        value: 0,
+        configurable: true,
+    })
+
     const previousCount = await getCurrentCounterValue()
 
     const deadline = Math.round(Date.now() / 1000 + 2)
@@ -548,6 +554,11 @@ test("Transaction cancelled due to deadline passing", async () => {
     expect(persistedTransaction?.status).toBe(TransactionStatus.Cancelled)
     expect(await getCurrentNonce()).toBe(nonceBeforeEachTest + 1)
     expect(transactionCancelled.collectionBlock).toBe(previousBlock.number! + 1n)
+
+    Object.defineProperty(txm, "livenessThreshold", {
+        value: previousLivenessThreshold,
+        configurable: true,
+    })
 })
 
 test("Correctly calculates baseFeePerGas after a block with high gas usage", async () => {
